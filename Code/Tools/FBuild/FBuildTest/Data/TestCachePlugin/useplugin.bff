@@ -1,0 +1,40 @@
+//
+// Build an external cache plugin
+//
+//------------------------------------------------------------------------------
+
+
+// Toolchain Root
+//------------------------------------------------------------------------------
+.VSBasePath			= '../../../../External/SDK/VS12.0'
+
+// General Setting
+//------------------------------------------------------------------------------
+Settings		
+{ 
+	.Environment	= { 'PATH=$VSBasePath$/Common7/IDE/;$VSBasePath$/VC/bin/',
+						'TMP=C:\Windows\Temp',
+						'SystemRoot=C:\Windows' }
+	.CachePluginDLL = '../../../../ftmp/Test/CachePlugin/CachePlugin.dll'
+	.CachePath		= 'X:\' // passed to cache plugin
+}
+
+// Toolchain
+//------------------------------------------------------------------------------
+.Compiler			= '$VSBasePath$\VC\bin\x86_amd64\cl.exe'
+
+// Toolchain Options
+//------------------------------------------------------------------------------
+.CompilerOptions	= '"%1" /Fo"%2" /c /Z7 /WX /nologo /I"./" /MT'
+
+// Base compilation output
+//------------------------------------------------------------------------------
+.Out 				= '../../../../ftmp/Test/CachePlugin'
+
+// Plugin library
+//------------------------------------------------------------------------------
+ObjectList( 'TestFiles-Lib' )
+{
+	.CompilerInputFiles	= { 'Data/TestCachePlugin/TestA.cpp' }
+	.CompilerOutputPath	= '$Out$/'
+}

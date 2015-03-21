@@ -1,0 +1,77 @@
+// MemTracker.h
+//------------------------------------------------------------------------------
+#pragma once
+#ifndef CORE_MEM_MEMTRACKER_H
+#define CORE_MEM_MEMTRACKER_H
+
+// Enabled in DEBUG only
+//------------------------------------------------------------------------------
+#ifdef DEBUG
+	#if !defined( __APPLE__ ) // TODO:MAC Fix MemTracker
+		#define MEMTRACKER_ENABLED
+	#endif
+#endif
+
+// MemTracker
+//------------------------------------------------------------------------------
+#if !defined( MEMTRACKER_ENABLED )
+	#define MEMTRACKER_ALLOC( ptr, size, file, line )
+	#define MEMTRACKER_FREE( ptr )
+	#define MEMTRACKER_DUMP_ALLOCATIONS
+#else
+	// Includes
+	//------------------------------------------------------------------------------
+	#include "Core/Env/Types.h"
+	#include "Core/Process/Mutex.h"
+
+	// Forward Declarations
+	//------------------------------------------------------------------------------
+	class MemPoolBlock;
+
+	// Macros
+	//------------------------------------------------------------------------------
+	#define MEMTRACKER_ALLOC( ptr, size, file, line )	MemTracker::Alloc( ptr, size, file, line );
+	#define MEMTRACKER_FREE( ptr )						MemTracker::Free( ptr );
+	#define MEMTRACKER_DUMP_ALLOCATIONS					MemTracker::DumpAllocations();
+
+	// MemTracker
+	//------------------------------------------------------------------------------
+	class MemTracker
+	{
+	public:
+		static void Alloc( void * ptr, size_t size, const char * file, int line );
+		static void Free( void * ptr );
+
+		static void Reset();
+		static void DumpAllocations();
+
+		static inline uint32_t GetCurrentAllocationCount() { return s_AllocationCount; }
+
+		struct Allocation
+		{
+			void *			m_Ptr;
+			size_t			m_Size;
+			Allocation *	m_Next;
+			const char *	m_File;
+			uint32_t		m_Line;
+			uint32_t		m_Id;
+		};
+	private:
+		static void Init();
+
+		static Mutex & GetMutex() { return reinterpret_cast< Mutex & >( s_Mutex ); }
+
+		static uint32_t			s_Id;
+		static bool				s_Enabled;
+		static bool				s_Initialized;
+		static uint32_t			s_AllocationCount;
+		static Allocation *		s_LastAllocation;
+		static uint64_t			s_Mutex[ sizeof( Mutex ) / sizeof( uint64_t ) ];
+		static Allocation **	s_AllocationHashTable;
+		static MemPoolBlock *	s_Allocations;
+	};
+
+#endif // MEMTRACKER_ENABLED
+
+//------------------------------------------------------------------------------
+#endif // CORE_MEM_MEMTRACKER_H

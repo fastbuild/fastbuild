@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<link href="style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Change Log</title>
+</head>
+<body>
+  <script>generateHeader()</script>
+
+
+<h1>Changelog</h1>
+
+    <div class='newsitemheader'>
+      v0.77&nbsp;<font color='#bbbbbb'>(19-Mar-2015)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has changed : clean build will occur</li>
+  <li>Various internal changes to prepare for Linux & OSX</li>
+</ul>
+New
+<ul>
+  <li>Unity supports wildcard ExcludePattern (String or ArrayOfStrings)</li>
+</ul> 
+Fixes
+<ul>
+  <li>Fix path canonicalization bug for files with double slashes in path</li>
+  <li>Cache path env variable is no longer ignored when Settings() is missing in BFF</li>
+  <li>Database is once again saved when Ctrl+C is used from cmd line (broken in v0.73)</li>
+  <li>Fix potential crash in string/path manipulation</li>
+  <li>Test now correctly detects write failure when storing results to disk</li>
+  <li>Avoid hanging parent process if FBuildWorker launched from script/Visual Studio</li>
+</ul>
+Improvements
+<ul>
+  <li>Detect and report as error missing %1 or %2 args for Compiler/Librarian/Linker</li>
+  <li>Remove unnecessary re-parsing of BFF when cache path changes</li>
+  <li>Out of disc space on remote worker for detected and handeld for MSVC, GCC and Clang</li>
+  <li>Precompiled header generation is prioritized during scheduling</li>
+</ul>
+    </div>
+
+    <div class='newsitemheader'>
+      v0.76&nbsp;<font color='#bbbbbb'>(9-Feb-2015)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>Distributed protocol version changed; update workers
+  (Updated to isolate from workers without fixes from v0.72+)</li>
+  <li>Various internal changes to prepare for Linux & OSX</li>
+ </ul>
+Fixes
+<ul>
+  <li>Fix broken incremental linking with MSVC compiler (.ilk and .pdb were being deleted every time)</li>
+  <li>Fix bug handling UNC paths in CachePath (leading double slashes were not respected)</li>
+  <li>Fix double quotes not correctly canonizalized in some situations</li>
+  <li>Stop LinkerStampExe being incorrectly attached to the link line</li>
+</ul>
+Improvements
+<ul>
+  <li>Remove some unnecessary command line manipulation with MSVC compiler for Recode compatibility</li>
+</ul>
+    </div>
+
+    <div class='newsitemheader'>
+      v0.75&nbsp;<font color='#bbbbbb'>(11-Dec-2014)</font>
+    </div>
+    <div class='newsitembody'>
+Improvements
+<ul>
+  <li>Large optimization for highly recursive dependency graphs</li>
+  <li>Progress calculation optimized</li>
+  <li>Progress calculation accuracy greatly improved</li>
+</ul>
+    </div>
+
+    <div class='newsitemheader'>
+      v0.74&nbsp;<font color='#bbbbbb'>(1-Dec-2014)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>Database version changed : Clean build will occur</li>
+  <li>Various internal changes to prepare for Linux &amp; OSX</li>
+</ul>
+New
+<ul>
+  <li>CopyDir function - copy contents of one or more directories</li>
+</ul>
+Improvements
+<ul>
+  <li>Add explicit check and error msg for missing DLLs on remote machine</li>
+  <li>Alias can refer directly to files not built by FASTBuild</li>
+</ul>
+Fixes
+<ul>
+  <li>Massive speedup to directory listing performance when dealing with > 4096 files</li>
+  <li>Copy() dest timestamp is correctly set when using PreBuildDependencies</li>
+  <li>#once include directive not being respected in some cases</li>
+  <li>Fix included bff being considered always dirty in some cases</li>
+  <li>VCXProjectNodes can be referenced as files (allows copying)</li>
+  <li>Various cases where empty strings was not correctly reported as error 1004</li>
+  <li>Empty Alias() .Targets is reported as an error instead of silently doing nothing</li>
+</ul>
+    </div>
+
+
+    <div class='newsitemheader'>
+      v0.73&nbsp;<font color='#bbbbbb'>(11-Nov-2014)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>Database version changed : Clean build will occur</li>
+  <li>Various internal changes to prepare for Linux &amp; OSX</li>
+</ul>
+New
+  <ul>
+  <li>Link steps (DLL/Exe) have new options for post-link in-place stamping (.LinkerStampExe and .LinkerStampExeArgs)</li>
+  </ul>
+Fixes
+<ul>
+  <li>Preserve case of files discovered during compilation</li>
+  <li>Fix BFF parser crash caused by unterminated strings, arrays or structs under some circumstances (now emit Error 1002)</li>
+  <li>Ensure UnityInputExcludedFiles works correctly with full paths</li>
+  <li>Ensure directories for VS Project generation are created before use</li>
+  <li>Clang detection: *clang[.exe] and *clang-cl[.exe] detected in addition to existing *clang++[.exe]</li>
+  
+</ul>
+    </div>
+
+
+    <div class='newsitemheader'>
+      v0.72&nbsp;<font color='#bbbbbb'>(28-Sep-2014)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>Database version changed : Clean build will occur</li>
+</ul>
+New
+  <ul>
+  <li>Support for Wii toolchain (CodeWarrior)</li>
+  <li>Support for WiiU toolchain (GreenHills)</li>
+  <li>Support for CUDA (nvcc.exe) compiler</li>
+  </ul>
+<ul>
+</ul>
+Improvements
+<ul>
+  <li>Synchronized compiler files are locked by FBuildWorker.exe to prevent deletion on remote machine</li>
+  <li>Project generation includes CUDA *.cu files by default</li>
+</ul>
+Fixes
+<ul>
+  <li>UnityInputExcludedFiles matches only full filenames instead of just matching the end of file names</li>
+  <li>UnityInputExcludedFiles are canonicalized so double slashes no longer cause failure to exclude files</li>
+  <li>Gracefully handle compiler being terminated remotely due to shutdown of PC</li>
+</ul>
+    </div>
+
+
+    <div class='newsitemheader'>
+      v0.71&nbsp;<font color='#bbbbbb'>(19-Jul-2014)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has been increased; clean build will result after upgrading</li>
+  <li>Distributed worker protocol has changed; update workers</li>
+</ul>
+New
+  <ul>
+    <li>"-showcmds" option shows commands being executed during compilation (far less verbose than verbose)</li>
+    <li>"-cpus=n" option allows number of cpus to be controlled from the command line</li>
+    <li>"-mode=x" option allows worker mode to be controlled from the command line</li>
+    <li>"-wait" command line options to allow queueing of multiple builds</li>
+    <li>Add DeoptimizeWritableFiles option (use deoptimized settings for writable files)</li>
+  </ul>
+<ul>
+</ul>
+Improvements
+<ul>
+  <li>Prevent Executables/DLLs re-linking when a DLL they depend on changes, but the interface stays the same</li>
+  <li>Incremental link files (.ilk) deleted before linking when doing a -clean build</li>
+  <li>PDB files deleted before linking (if non-incremental) to avoid pdb bloat and link slowdown</li>
+  <li>Automatically strip /MP argument for MSVC compilers (FASTBuild controlls the parallelization)</li>
+</ul>
+Fixes
+<ul>
+  <li>Differentiate remote "system" failures from compilation failures
+  <ul>
+    <li>a remote failure will cause the worker to be blacklisted and the task retried on another worker</li>
+    <li>remote failure on 3 different workers will fail as before (indicates a configuration problem)</li>
+  </ul>
+  <li>Error path fixup now handles "remark:" and "fatal error:" style messages</li>
+  <li>Fix path fixup for SNC compiler output (errors, warnings etc)</li>
+  <li>PS4 linker uses response files to avoid 32KiB cmd line limit</li>
+  <li>PS4 linker tracks library dependencies passed directly on compiler command line</li>
+  <li>FBuildWorker.exe correctly exits on WM_CLOSE notifications (taskkill for example) instead of minimizing</li>
+  <li>PreBuildDependencies are correctly processed for -summary and -report</li>
+</ul>
+    </div>
+
+
+    <div class='newsitemheader'>
+      v0.70&nbsp;<font color='#bbbbbb'>(21-Jun-2014)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has been increased; clean build will result after upgrading</li>
+  <li>Cache format has changed; existing cache data will be ignored</li>
+  <li>Distributed worker protocol has changed; update workers</li>
+</ul>
+New
+  <ul>
+    <li>Distributed compilation is no longer in Beta.</li>
+  </ul>
+<ul>
+</ul>
+Improvements
+<ul>
+  <li>Cache size &amp; speed optimizations
+     <ul>
+	   <li>Cache compression switched to LZ4</li>
+	   <li>20-30% reduced output size (less space used on cache, less network transfer)</li>
+	   <li>20-30% faster compression (less time spent on local machine when storing to cache)</li>
+	   <li>600% faster decompression speed (when decompressing on local machine after retrieval from cache)</li>
+	 </ul>
+  </li>
+  <li>FBuildWorker can use tools synchronized from a previous run to reduce network IO</li>
+  <li>Distributed compilation speed optimizations
+    <ul>
+	  <li>Replace distributed compilation compression with LZ4</li>
+      <li>50% reduced transfer size (half the data sent to remote machine, half the memory usage locally when pending)</li>
+      <li>230% faster compression speed (less time spent compressing before sending)</li>
+	  <li>700% faster decompression speed (7x less work to decompress on remote machine)</li>
+	</ul>
+  </li>
+  <li>Use 64bit MurMur3 hash for faster/better cache key generation
+     <ul>
+	   <li>300% faster hash of preprocessed cache input</li>
+	   <li>Less chance of collisions vs CRC32</li>
+	   <li>Using 64bits MurMur3 for further reduced collision potential</li>
+	 </ul>
+  </li>
+  <li>Optimize include parsing for all compilers</li>
+  <li>Support /7i and /ZI debug format for distribution with MSVC compiler</li>
+</ul>
+Fixes
+<ul>
+  <li>Handle tool synchronization failure properly to avoid leaked jobs</li>
+  <li>Fix remote worker over-requesting jobs when not using full cpu allocation (was causing reduced scheduling efficiency)</li>
+  <li>Includes no longer implictly push an addition {} scope (this was preventing includes being useful in many cases)</li>
+  <li>-config args are correctly passed to sub-process when in -vs or -wrapper mode</li>
+  <li>Fix race condition preventing copy in FBuildWorker auto-restart, causing update to fail</li>
+</ul>
+    </div>
+
+
+
+
+    <div class='newsitemheader'>
+      v0.62&nbsp;<font color='#bbbbbb'>(28-Apr-2014)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has changed: full build will occur</li>
+  <li>Wrapper Mode (-wrapper) is now active as part of Visual Studio mode (-vs)</li>
+</ul>
+New
+<ul>
+  <li>FBuildWorker will auto-restart when updated (i.e. new version sync'd from revision control)</li>
+</ul>
+Improvements
+<ul>
+  <li>Allow ObjectList, Library and CSAssembly to take multiple exclusion paths</li>
+  <li>Add "DeploymentType" and "DeploymentFiles" to vcxproj generation for Xbox360</li>
+  <li>.m and .mm files are included in vcxproj generation by default</li>
+  <li>Multiple targets are built in parallel</li>
+  <li>Cost of progress calculation is massively reduced</li>
+  <li>Remotely compiled tasks are written to the cache on return</li>
+  <li>-summary shows total remote CPU time</li>
+  <li>Reduce FBuildWorker CPU usage when worker is idle</li>
+</ul>
+Fixes
+<ul>
+  <li>Deoptimized compilation settings were being ignored if using distributed compilation</li>
+  <li>Files using /FI (Force Include) with MSVC compiler compile correctly when using the cache or distribution</li>
+  <li>Fix -summary time output when building multiple targets</li>
+  <li>Consider PreBuildDependencies correctly in progress estimation</li>
+  <li>Fix report/chart colours not working in -report due to bad html</li>
+  <li>Fix bad report generation when using ObjectList</li>
+  <li>Fix collapsable report sections in IE and Firefox</li>
+  <li>Correct -summary build count for remotely compiled objects</li>
+  <li>Locally build distributable tasks can be written to the cache</li>
+  <li>Correct use of reponse files with orbis-ar.exe which requires slashes to be escaped in file</li>
+</ul>
+    </div>
+
+
+
+    <div class='newsitemheader'>
+      v0.61&nbsp;<font color='#bbbbbb'>(29-Mar-2014)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has been increased; clean build will result after upgrading</li>
+  <li>Cache format has changed; existing cache data will be ignored</li>
+  <li>Distributed worker protocol has changed; update workers</li>
+</ul>
+New
+<ul>
+  <li>Cache Plugin Architecture - allows cache IO functionality to be provided by a plugin dll</li>
+</ul>
+Improvements
+<ul>
+  <li>Distributed Compilation</li>
+  <ul>
+    <li>Increase distributed connection limit to 15</li>
+    <li>Minimization state of worker is persisted between runs</li>
+    <li>Worker default CPU allocation is 50%</li>
+    <li>Add icon the FBuildWorker.exe</li>
+    <li>Memory usage for distributed compilation is massively reduced</li>
+    <li>Distributed compilation will race remaining remote jobs locally, when there is no other work to do</li>
+  </ul>
+  <li>Improve validation of .LinkerOutput argument (ensure a file and not a path is provided)</li>
+  <li>Safely handle empty libraries passed to linker .Libraries</li>
+  <li>Check for and handle truncated data being returned from the cache</li>
+</ul>
+Fixes
+<ul>
+  <li>Distributed Compilation</li>
+  <ul>
+    <li>Fix crash in worker when compilation error contains %
+    <li>Fix job leak causing hang when synchronizing the same toolchain for 2 clients at the same time
+    <li>Prevent some unsafe access to management structures on Worker
+    <li>Fix potentially long shutdown when a remote worker is unresponsive
+    <li>Prevent potential hangs in networking
+    <li>Fix memory leak in worker if disconnected during tool synchronization
+  </ul>
+  <li>Fix crash when doing multiple rapid build/cancel cyles with -wrapper mode
+  <li>Use the compiler toolchain hash in the cache key
+  <li>Fix inability to detect fully pathed libs passed to .LinkerOptions
+  <li>Detect MSVC linker correctly when provided as file only (i.e. relying on system path for discovery)
+  <li>Fix path canonicalization when a relative path begins with a slash
+  <li>Fix  crash if cache path is empty, or a UNC path only to a machine
+  <li>A failure in one of multiple targets on the command line no longer causes all subsequent tasks to fail
+  <li>Librarian step uses response files to avoid 32KiB command line length limit
+</ul>
+    </div>
+
+
+
+
+    <div class='newsitemheader'>
+      v0.60&nbsp;<font color='#bbbbbb'>(10-Mar-2014)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has been increased; clean build will result after upgrading</li>
+</ul>
+New
+<ul>
+  <li>[BETA] Distributed compilation support</li>
+  <li>Deoptimization of writable files containing FASTBUILD_DEOPTIMIZE_OBJECT token</li>
+</ul>
+Improvements
+<ul>
+  <li>Project Generation</li>
+  <ul>
+    <li>Generated projects can directly launch/debug PS3/PS4</li>
+    <li>Allow options to be set per-configuration</li>
+    <li>Many new project generation options exposed</li>
+    <li>Supports multiple base paths</li>
+  </ul>
+  <li>Caching</li>
+  <ul>
+    <li>Show cache hits in standard output</li>
+    <li>Caching automatically disabled for files isolated from unity</li>
+    <li>Cache mode can be controlled via FASTBUILD_CACHE_MODE environment variable ('r', 'w' or 'rw')</li>
+    <li>Allow cache path to be set via an environment variable "FASTBUILD_CACHE_PATH"</li>
+  </ul>
+  <li>FASTBuild runs at below normal priority for improved machine responsiveness</li>
+  <li>When MS linker crashes and we retry, supress the error to prevent visual studio from failing</li>
+  <li>Exec with -verbose prints in a cut and pasteble format to assist config debugging</li>
+  <li>Saving of the dependency graph is performed atomically to reduce chance of corruption if fbuild.exe is terminated during DB serialization</li>
+  <li>[BETA] Add "-wrapper" command line argument for Process Isolation.  Allows graceful shutdown when terminated from Visual Studio.</li>
+  <li>Add .PreBuildDependencies to Copy() and Exec()</li>
+  <li>Add '-fixuperrorpaths' command line to reformat GCC/SNC/Clang errors to Visual Studio format</li>
+  <li>Prevent two objects being built to the same obj</li>
+  <li>Enabled Unity generation on multiple threads</li>
+  <li>PrecompiledHeader is used when locally building a distributable job, or if cache is in read-only mode</li>
+</ul>
+Fixes
+<ul>
+  <li>Prevent #pragma messages being incorrectly parsed as includes in some cases with GCC/SNC/Clang</li>
+  <li>Fix -I arguments not being removed from Clang when using preprocessed output</li>
+  <li>Precompiled headers with Clang are not prevented from working usefully</li>
+  <li>Don't try to use precompiled headers in link step with GCC/SNC/Clang</li>
+  <li>Project generation LocalDebuggerWorkingDirectory written to correct part of project</li>
+  <li>Fix missing carriage return in output with --help</li>
+  <li>Exec with -verbose prints args after substitutions (%1 etc)</li>
+  <li>Handle UNC cache path correctly</li>
+  <li>Format FASTBuild errors so that column is interpretted by VisualStudio correctly</li>
+  <li>Fix performance degradation when failure output is massive (>1MiB) - (e.g. link failure)</li>
+  <li>Correctly return error when multiple targets are built and one fails</li>
+  <li>Replace pattern matching of FindNextFile with our own (so *.cpp doesn't return files like *.cpp~)</li>
+  <li>Fix items not under project path not being double clickable</li>
+  <li>Library() deleted libraries before creation to ensure old symbols don't remain in library</li>
+  <li>Prevent bff included with ../ being considered dirty every time</li>
+</ul>
+    </div>
+
+
+    <div class='newsitemheader'>
+      v0.58&nbsp;<font color='#bbbbbb'>(23-Jan-2014)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has been increased; clean build will result after upgrading</li>
+  <li>BFF includes are now relative to includer (no "system" includes)</li>
+</ul>
+New
+<ul>
+  <li>Clang & PS4 support</li>
+  <li>Add #once pragma which allows BFF files to be included multiple times, but parsed only once</li>
+  <li>MSVC linker crashes (LNK1000) will be retried once as work around for bug in x64 incremental linker</li>
+</ul>
+Improvements
+<ul>
+  <li>VCXProject creates projects which are compatible with VS2010 as well as 2012/2013</li>
+  <li>VCXProject can specify debugger args (working dir, startup exe etc)</li>
+  <li>Path canonicalization handles \.\ and \..\ for better consistency in target names</li>
+  <li>Failure find include shows full path of where the include was expected to be found</li>
+  <li>Greatly improve performance of VS project generation when there are many folders</li>
+  <li>Dependencies passed directly to linker (instead of .Libraries) and have their dependencies tracked</li>
+  <li>Copy step shows source and dest for copy in tty</li>
+  <li>-verbose mode will specify the reason for building any nodes</li>
+  <li>Exec function supports build time substitutions %1 (input) and %2 (output)</li>
+  <li>/IMPLIB supported for MSVC linker.  Import lib specified will be used by dependent dlls.</li>
+  <li>Show in output when DB version has changed and rebuild will occur</li>
+  <li>Show when BFF files are modified and config re-parsing will occur</li>
+  <li>CachePath of wrong type emits an error instead of silently being ignored</li>
+  <li>Various system error messages are now formatted to appear in Visual Studio error window</li>
+  <li>Improve GCC detection - recognize g++ as well as gcc</li>
+  <li>Repeat name of object when compilation fails so task is clear</li>
+</ul>
+Fixes
+<ul>
+  <li>Caching can be safely used on objects using precompiled headers with MSVC, avoiding missing debug info.</li>
+  <li>CLR code is not distributed/cached (compiler bug prevents safe use of the preprocessor)</li>
+  <li>Fix temp file writing failure detection (ensure whole file is written)</li>
+  <li>Compiler and Linker use response files to avoid Windows 32KiB args limit</li>
+  <li>Detect cyclic BFF include dependencies and report new Error 1035 instead of crashing with stack overflow</li>
+  <li>Correctly detect changes to BFF files with the same name when one is bff relative and one is in the system directory</li>
+  <li>Fix duplicate folders in generated VS project, causing project size bloat</li>
+  <li>Correctly handle '-o FileName' as well as '-oFileName' arguments with GCC/SNC compiler when manipulating args</li>
+  <li>Fix error in command line arguments to SNC when using cache</li>
+  <li>Fix bad file extension for preprocessed temp file with SNC compiler</li>
+  <li>Disable cache when using /ZW (consume WinRT) with MSVC compiler due to incompatibility</li>
+  <li>Fix cache sensitivity on working dir drive letter causing cache misses</li>
+  <li>Correct reversed types in Error 1027 with String + ArrayOfStrings</li>
+  <li>Fix formatting so first error with GCC/SNC is always double-clickable in Visual Studio</li>
+</ul>
+    </div>
+
+
+    <div class='newsitemheader'>
+      v0.57&nbsp;<font color='#bbbbbb'>(8-Dec-2013)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has been increased; clean build will result after upgrading</li>
+</ul>
+New
+<ul>
+  <li>VisualStudio project generation</li>
+  <li>New .LinkerLinkObjects option on Executable() & DLL() allows control over linking objects instead of libs.</li>
+  <li>New .CompilerForceUsing option on Library() and ObjectList(), with %4 build-time substitution for use with MSVC /FU option.</li>
+  <li>New .LinkerAssemblyResources option on Executable() & DLL(), with %3 build-time substitution for use with MSVC /ASSEMBLYRESOURCE option.</li>
+  <li>New .PreBuildDependencies option for Library(), allows forced execution of an external process before a Library/ObjectList is built to better support extenal code generation.</li>
+  <li>New ObjectList() function allows building a list of items without linking into a library, to support buiding objects or resources without making libraries.</li>
+  <li>.LibrarianAdditionalInputs option on Library() to allow merging of objects, libraries or resources built externally or with Exec() or ObjectList().</li>
+
+</ul>
+Improvements
+<ul>
+  <li>Add '.UnityInputFiles' option to allow an explicit file list to be provided to a Unity node</li>
+  <li>Support various assignment/concatenation oprerations with ArrayOfStrings and ArrayOfStructs</li>
+  <li>For libraries with mixed Unity and Non-Unity nodes, favour Unity nodes for compilation</li>
+  <li>Prioritize linking over compiling to reduce DLL bottlenecks</li>
+  <li>Job queue manipulation overhead is reduced</li>
+  <li>DLL & Executable support referencing a library or dll via a copy (to ensure the copy happens at build time)</li>
+  <li>Copy() supports multiple inputs if an output path is specified</li>
+  <li>Unity files emit #pragma messages to clearly show file being compiled in case of failure</li>
+  <li>.CompilerOutputExtension can be specified on Library() to control the extension for built objects</li>
+  <li>FASTBuild emits an error and exits if another instance is already running</li>
+  <li>Allow use of %3 Compiler build-time expansion for PCH object in object compilation as well as precompiled header compilation</li>
+</ul>
+Fixes
+<ul>
+  <li>Escaping correctly works for all characters, not just "</li>
+  <li>-summary option shows cache hit time for cache hit nodes, instead of last known build time</li>
+  <li>Prevent a race where some additional jobs could be started after a failed task</li>
+  <li>Fix incorrect error message when attempting to concatenate Struct to ArrayOfStrings</li>
+  <li>Fix crash when self-assigning variables (i.e. .MyString = .MyString)</li>
+  <li>Assignment of structs was functioning as a concatenation (was keeping old members when it shouldn't)</li>
+  <li>Handle quoted build-time substitutions correctly to support spaces in paths (i.e. "%1" becomes "A" "B" "C" (instead of "A B C")</li>
+  <li>Unity uses "" style includes (instead of <>) to satisfy compilers like Clang</li>
+  <li>Fix bug causing massive slowdown generating large reports (-report)</li>
+  <li>Fix output to stdout being truncated to 8KiB in some cases when using -verbose</li>
+  <li>Copy can reference an alias as a source, including those aliasing multiple inputs</li>
+  <li>Correct bad formatting of Exec node in -verbose mode</li>
+  <li>Executable & DLL linking can accept an input built by Executable()</li>
+  <li>Fix failure to extract includes when include as on last line with no carriage return</li>
+</ul>
+    </div>
+
+
+
+    <div class='newsitemheader'>
+      v0.56&nbsp;<font color='#bbbbbb'>(10-Nov-2013)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has been increased; clean build will result after upgrading</li>
+</ul>
+New
+<ul>
+  <li>New -report command line argument which outputs a detailed report of the build, including:
+  <ul>
+    <li>Processing time by item.</li>
+    <li>Processing time by library.</li>
+    <li>Processing time by type (obj, exe, dll etc).</li>
+    <li>Cache statistics.</li>
+    <li>Include file usage.</li>
+  </ul>
+  <li>Add 'UnityInputIsolateWritableFiles' to unity generation.  Allows files which are "open for edit" in revision control to be built individually to speed up iterative compile times.</li>
+</ul>
+Improvements
+<ul>
+  <li>Tests can reference execuable via alias</li>
+  <li>-verbose output for Objects is improved: Timing is more accurate and number of includes found is displayed.
+  <li>Include processing optimizations</li>
+  <li>Dependency graph traversal optimizations</li>
+  <li>Progress estimation optimizations</li>
+  <li>Large database load/save time is greatly reduced</li>
+  <li>Database size is greatly reduced</li>
+  <li>Total build time includes some previously excluded overheads</li>
+  <li>Job queue contention optimization</li>
+  <li>Small optimization to Unity generation</li>
+</ul>
+Fixes
+<ul>
+  <li>Avoid using preprocessor with MSVC compiler unnecessarily</li>
+  <li>Fix C# dependencies not being tracked properly when using -clean</li>
+  <li>Fix C# dependencies not being tracked correctly for multiple explicitly listed .cs files</li>
+  <li>GCC includes not being correcly detected</li>
+  <li>MSVC includes being missed on some rare occasions</li>
+  <li>Fix poor unity splitting logic resulting in bad distribution and occassional empty unity files</li>
+  <li>Cache stats in -summary were not being displayed when in "writeonly" mode</li>
+  <li>Cache commit to existing entry no longer results in removal of entry</li>
+  <li>Allow concatenation of a String variable to an ArrayOfStrings variable instead of generating error 1034</li>
+  <li>Copy step outputs a line to the tty during build, consistent with other tasks</li>
+  <li>Copy outputs detailed information when -verbose is used</li>
+  <li>Copy outputs a failure message when copy fails</li>
+  <li>Fix progress calculation reaching 100% before completion</li>
+  <li>Fix small memory leak when generating unity files</li>
+  <li>Handle some highly unlikely cases of failing to set file time for cache retrieval</li>
+  <li>Empty arrays containing whitespace or comments are now handled correctly</li>
+</ul>
+    </div>
+
+
+    <div class='newsitemheader'>
+      v0.55&nbsp;<font color='#bbbbbb'>(5-Oct-2013)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has been increased; clean build will result after upgrading</li>
+</ul>
+Improvements
+<ul>
+  <li>Language Syntax Enhancements</li>
+    <ul>
+      <li>A new variable of type Struct can be defined, grouping other variables</li>
+      <li>Structures can be kept in Arrays and Arrays can be iterated over</li>
+      <li>A new Using function takes all the variables in a Struct and pushes them into the current scope</li>
+      <li>Add Print function to assist debugging configurations</li>
+      <li>Allow 0 size ForEach loops</li>
+      <li>Allow String to be concantenated to ArrayOfStrings</li>	
+    </ul>
+  <li>Build Functionality Enhancements</li>
+    <ul>
+      <li>Add SNC compiler detection</li>
+      <li>Add Exec() function - calls an arbitrary executable to create a file</li>
+      <li>Test() function can use existing executable, as well as one built by FASTBuild</li>
+    </ul>
+  <li>Static libs and DLLs automatically use precompiled header obj files</li>
+  <li>Errors are output contiguously, improving readability when there are multiple failed nodes</li>
+  <li>Improve thread number output when compiling with > 9 threads</li>
+  <li>Unity 'InputUnityExludePath' supports multiple exlude paths</li>
+  <li>More detailed errors when failing to write temp files</li>
+  <li>Linker failure message is imrproved (specifies Dll or Exe, rather than just "Linker")</li>
+  <li>Add wesbite and copyright info to "-version" output</li>
+  <li>Show total time taken by node type in -summary output</li>
+  <li>Various -summary formatting enhancements</li>
+  <li>Small performance improvement for processing very large objects</li>
+</ul>
+Fixes
+<ul>
+  <li>DLL Fixes</li>
+  <ul>
+    <li>DLLs comiled with MSVC correctly link export symbols</li>
+    <li>When linking a DLL, "DLL:" is shown in output instead of "Exe:"</li>
+    <li>Linking a DLL with another DLL deduces the import library automatically</li>
+    <li>Ensure DLLs are not rebuilt unnecessarily</li>
+  </ul>
+  <li>GCC/SNC/PS3 Fixes</li>
+  <ul>
+    <li>Fix broken PS3/SNC compilation (was reading stderr instead of stdout)</li>
+    <li>Standardize GCC and MSVC compiler detection (allow with and without .exe extension)</li>
+    <li>Fix detection of GCC compiler in PS3 SDK</li>
+    <li>Fix detection of C vs C++ for GCC/SNC when using the cache</li>
+  </ul>
+  <li>Correct errors not being double-clickable in VisualStudio in some situations due to thread numbering</li>
+  <li>Ensure active job count doesn't underflow when performing local jobs</li>
+  <li>Correct formatting of cache path to stdout in -verbose mode</li>
+  <li>Correct error message when attempting to append String to incompatible type</li>
+  <li>Don't spin @ 0% when failing the build</li>
+  <li>Save completion of items which are succesful even after the build as a whole has failed</li>
+  <li>-summary formatting is no longer reliant on tab width</li>
+</ul>
+    </div>
+
+
+    <div class='newsitemheader'>
+      v0.54&nbsp;<font color='#bbbbbb'>(3-Jun-2013)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has been increased; clean build will result after upgrading</li>
+</ul>
+Improvements
+<ul>
+  <li>Allow {} to be used alone to create a local scope (like a function)</li>
+  <li>Config files (bff) can now include other config files, e.g. #include "file.bff"</li>
+  <li>Direct variable assignment/concatenation now supported for variables (.X = .Y)</li>
+</ul>
+Fixes
+<ul>
+  <li>Unity generation parameter UnityInputExcludedFiles is no longer sensitive to slash type used</li>
+  <li>Stop tasks sometimes being started after build is aborted with Ctrl+C</li>
+  <li>Fix typographical error in command line usage output</li>
+  <li>Fix hang at startup if database file (.fdb) has been corrupted</li>
+  <li>Fix corrupt "Unknown argument" error message when passed bad cmd line arguments</li>
+</ul>
+    </div>
+
+    <div class='newsitemheader'>
+      v0.53&nbsp;<font color='#bbbbbb'>(24-Feb-2013)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+   <li>The cache is invalidated due to path/version changes (no old entries will be used)</li>
+</ul>
+Improvements
+<ul>
+  <li>Cache performance and space usage improvements</li>
+  <ul>
+    <li>Cache directory hierarchy is simplified to reduce IO</li>
+    <li>Cache contents are compressed, saving ~50% of disk space</li>
+    <li>Compression yields speedups on IO bound (local or network) builds</li>
+  </ul>
+  <li>Handle transient file opening failures due to other applications opening our files (Antivirus etc)</li>
+  <li>Add "Copy" function which can copy a file during the build</li>
+  <li>Library and CSAssembly 'CompilerInputPath' can now accept a list of paths (or a single path as before)</li>
+  <li>Optimize node lookups to reduce CPU usage</li>
+  <li>Hide distributed task counts on progress bar when not in distributed mode</li>
+</ul>
+Fixes
+<ul>
+  <li>Correct misleading error when unexpected character follows a variable operator (was displaying #1016, now displays new #1017)</li>
+  <li>Correctly handle comments in the middle of variable assignments (e.g. ".Var // comment" or ".Var = // comment")</li>
+  <li>Comments are correctly parsed inside {} scopes when starting at column 0</li>
+  <li>Add missing type safety checks on various CSAssembly and Library properties</li>
+  <li>Unity files are forced to be regenerated when "-clean" option is used</li>
+  <li>Build no longer gets stuck upon cache hit when running with "-j0"</li>
+  <li>Temp directory now correctly initialized when running with "-j0"</li>
+</ul>
+    </div>
+
+    <div class='newsitemheader'>
+      v0.52&nbsp;<font color='#bbbbbb'>(18-Feb-2013)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>The build database (fdb) version has changed, a clean build will forced on first use of this version</li>
+</ul>
+Improvements
+<ul>
+  <li>Unity 'UnityInputPath' can now accept a list of paths (or a single path as before)</li>
+</ul>
+Fixes
+<ul>
+  <li>Fix crash emitting a large errors to the TTY (&gt;64KB)</li>
+  <li>Detect non-unique Unity, Executable and DLL nodes (emit Error #1100)</li>
+  <li>Handle Unity output paths that are not \ terminated</li>
+</ul>
+    </div>
+
+
+    <div class='newsitemheader'>
+      v0.51&nbsp;<font color='#bbbbbb'>(17-Feb-2013)</font>
+    </div>
+    <div class='newsitembody'>
+New
+<ul>
+  <li>Config file now supports // style line comments as well as ; style</li>
+  <li>Add checks and errors (#1302, #1303) for bad precompiled header setup for cl.exe</li>
+  <li>Config markup helpers for VisualStudio and NotePad++</li>
+</ul>
+Improvements
+<ul>
+  <li>Improve precision of timer used to track task durations</li>
+</ul>
+Fixes
+<ul>
+  <li>All object and pch files are deleted before compilation to ensure rebuild/no old files left behind</li>
+  <li>Fix bad string output in "Unknown build target" message in x64</li>
+  <li>Compiler executable (MSVC & GCC) detection is no longer case sensitive</li>
+  <li>Removed detection of lower-case /z7 is as using Z7 debug format for cl.exe.  (Z7 debug format arg is uppercase, and cl.exe compiler options are case sensitive)</li>
+</ul>
+    </div>
+
+    <div class='newsitemheader'>
+      v0.50&nbsp;<font color='#bbbbbb'>(12-Feb-2013)</font>
+    </div>
+    <div class='newsitembody'>
+      The first public release of FASTBuild, with stable support for:
+      <ul>
+        <li>Optimal multi-threaded compilation</li>
+        <li>Build caching (network and/or local)</li>
+        <li>Unity/Blob generation</li>
+        <li>Unit Test Integration</li>
+      </ul>
+    </div>
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

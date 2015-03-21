@@ -1,0 +1,181 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Australia) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 257, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Texture Converter v0.1"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Convert",ID_BUTTON_CONVERT,105,181,50,14
+    GROUPBOX        "Files",IDC_STATIC,5,5,245,79
+    EDITTEXT        IDC_EDIT_SRC,45,15,180,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DST,47,65,180,14,ES_AUTOHSCROLL
+    CONTROL         "Override Destination",IDC_CHECK_OVERRIDE_DST,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,47,55,80,10
+    PUSHBUTTON      "...",IDC_BUTTON_CHOOSE_SRC,225,15,16,14
+    PUSHBUTTON      "...",IDC_BUTTON_CHOOSE_DST,227,65,16,14
+    RTEXT           "Source:",IDC_STATIC,15,20,26,8
+    RTEXT           "Destination:",IDC_STATIC,7,71,38,8
+    GROUPBOX        "Conversion Options",IDC_STATIC,5,90,245,85
+    COMBOBOX        IDC_COMBO_TEXTURE_FORMAT,50,100,110,95,CBS_DROPDOWNLIST | 
+                    WS_TABSTOP
+    RTEXT           "Format:",IDC_STATIC,20,105,24,8
+    LTEXT           "Alpha:",IDC_STATIC,27,127,21,8
+    GROUPBOX        "",IDC_STATIC,50,115,110,55,NOT WS_VISIBLE | WS_GROUP
+    CONTROL         "Average RGB",IDC_RADIO_RGBA,"Button",BS_AUTORADIOBUTTON,
+                    55,125,60,10
+    CONTROL         "Mask Purple (255,0,255)",IDC_RADIO_MASK,"Button",
+                    BS_AUTORADIOBUTTON,55,140,93,10
+    CONTROL         "Use Mask File",IDC_RADIO_MASKFILE,"Button",
+                    BS_AUTORADIOBUTTON,55,155,44,10
+    EDITTEXT        IDC_EDIT_SRC_ALPHA,45,30,180,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    LTEXT           "Alpha:",IDC_STATIC,20,35,21,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 195
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_DIALOG1 DLGINIT
+BEGIN
+    IDC_COMBO_TEXTURE_FORMAT, 0x403, 13, 0
+0x4752, 0x4142, 0x2820, 0x3233, 0x6962, 0x2974, "\000" 
+    IDC_COMBO_TEXTURE_FORMAT, 0x403, 12, 0
+0x4752, 0x2042, 0x3228, 0x6234, 0x7469, 0x0029, 
+    0
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "0c0904b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", " \0"
+            VALUE "FileDescription", "texconv\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "texconv\0"
+            VALUE "LegalCopyright", "Copyright © 2004\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "texconv.exe\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "  texconv\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0xc09, 1200
+    END
+END
+
+#endif    // !_MAC
+
+#endif    // English (Australia) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

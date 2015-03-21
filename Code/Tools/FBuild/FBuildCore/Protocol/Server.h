@@ -1,0 +1,97 @@
+// Server.h - Handles Server Side connections
+//------------------------------------------------------------------------------
+#pragma once
+#ifndef FBUILD_PROTOCOL_SERVER_H
+#define FBUILD_PROTOCOL_SERVER_H
+
+// Includes
+//------------------------------------------------------------------------------
+#include "Core/Network/TCPConnectionPool.h"
+#include "Core/Time/Timer.h"
+
+// Forward Declarations
+//------------------------------------------------------------------------------
+class Job;
+namespace Protocol
+{
+	class IMessage;
+	class MsgConnection;
+	class MsgJob;
+	class MsgManifest;
+	class MsgNoJobAvailable;
+	class MsgStatus;
+	class MsgFile;
+}
+class ToolManifest;
+
+// Protocol
+//------------------------------------------------------------------------------
+class Server : public TCPConnectionPool
+{
+public:
+	Server();
+	~Server();
+
+	static void GetHostForJob( const Job * job, AString & hostName );
+
+	bool IsSynchingTool( AString & statusStr ) const;
+	void StopRequestingJobs() { m_RequestJobs = false; }
+
+private:
+	// TCPConnection interface
+	virtual void OnConnected( const ConnectionInfo * connection );
+	virtual void OnDisconnected( const ConnectionInfo * connection );
+	virtual void OnReceive( const ConnectionInfo * connection, void * data, uint32_t size, bool & keepMemory );
+
+	// helpers to handle messages
+	void Process( const ConnectionInfo * connection, const Protocol::MsgConnection * msg );
+	void Process( const ConnectionInfo * connection, const Protocol::MsgStatus * msg );
+	void Process( const ConnectionInfo * connection, const Protocol::MsgNoJobAvailable * msg );
+	void Process( const ConnectionInfo * connection, const Protocol::MsgJob * msg, const void * payload, size_t payloadSize );
+	void Process( const ConnectionInfo * connection, const Protocol::MsgManifest * msg, const void * payload, size_t payloadSize );
+	void Process( const ConnectionInfo * connection, const Protocol::MsgFile * msg, const void * payload, size_t payloadSize );
+
+	static uint32_t ThreadFuncStatic( void * param );
+	void			ThreadFunc();
+
+	void			FindNeedyClients();
+	void			FinalizeCompletedJobs();
+	void			SendServerStatus();
+	void			CheckWaitingJobs( const ToolManifest * manifest );
+
+	void			RequestMissingFiles( const ConnectionInfo * connection, ToolManifest * manifest ) const;
+
+	struct ClientState
+	{
+		ClientState( const ConnectionInfo * ci ) : m_CurrentMessage( nullptr ), m_Connection( ci ), m_NumJobsAvailable( 0 ), m_NumJobsRequested( 0 ), m_NumJobsActive( 0 ), m_WaitingJobs( 16, true ) {}
+
+		inline bool operator < ( const ClientState & other ) const { return ( m_NumJobsAvailable > other.m_NumJobsAvailable ); }
+
+		Mutex					m_Mutex;
+
+		const Protocol::IMessage * m_CurrentMessage;
+		const ConnectionInfo *	m_Connection;
+		uint32_t				m_NumJobsAvailable;
+		uint32_t				m_NumJobsRequested;
+		uint32_t				m_NumJobsActive;
+
+		AString					m_HostName;
+
+		Array< Job * >			m_WaitingJobs; // jobs waiting for manifests/toolchains
+
+		Timer					m_StatusTimer;
+	};
+
+	volatile bool			m_ShouldExit;	// signal from main thread
+	volatile bool			m_Exited;		// flagged on exit
+	bool					m_RequestJobs;  // set to false when pending shutdown
+	Thread::ThreadHandle	m_Thread;		// the thread to manage workload
+	Mutex					m_ClientListMutex;
+	Array< ClientState * >	m_ClientList;
+
+	mutable Mutex			m_ToolManifestsMutex;
+	Array< ToolManifest * > m_Tools;
+};
+
+//------------------------------------------------------------------------------
+#endif // FBUILD_PROTOCOL_SERVER_H

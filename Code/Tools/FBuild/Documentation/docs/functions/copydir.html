@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - Copy</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>CopyDir</h1>
+    <div id='copy' class='newsitemheader'>
+      Summary
+    </div>
+    <div class='newsitembody'>
+      <p>
+Copies one or more directories.
+      </p>
+<div class='code'>CopyDir( 'name' ) // Name (required)
+{
+  // Basic options
+  .SourcePaths              // Directories to copy
+  .Dest                     // Destination path
+
+  // Filtering options
+  .SourcePathsPattern       // (optional) Wilcard pattern to filter source files (default: "*")
+  .SourcePathsRecurse       // (optional) Recurse into source sub-directories? (default: true)
+  .SourceExcludePaths       // (optional) Source directories to ignore when recursing
+  
+  // Additional options
+  .PreBuildDependencies     // (optional) Force targets to be built before this CopyDir (Only 
+                            // needed when other nodes output files to be copied)
+}
+</div>
+    </div>
+
+    <div id='copy' class='newsitemheader'>
+      Important
+    </div>
+    <div class='newsitembody'>
+      <p><font color='red'>NOTE:</font> Be sure  to specify <b>.PreBuildDependencies</b> if copying the results
+	  of other build steps.</p>
+	</div>	
+	
+    <div id='copy' class='newsitemheader'>
+      Details
+    </div>
+    <div class='newsitembody'>
+      <p>
+CopyDir() can be used to copy one or more directories to a provded new directory.  By default, the source directories are
+recursed and all files are copied to the destination.  Recursion can be controlled (.SourcePathsRecurse) and
+the source files can be filtered using a wildcard pattern (.SourcePathsPattern).
+      </p>
+      <p>
+The directory structure relative to the source path(s) is replicated in the destination folder.  Any missing 
+destination directories are created as required.  For example:
+<div class='code'>CopyDir( 'CopyExample' )
+{
+  .SourcePaths = 'folder\'
+  .Dest        = 'out\'
+}</div>
+With a source directory structure as follows:
+<div class='code'>folder\filea.dat
+folder\subdir\fileb.dat</div>
+Will be copied as:
+<div class='code'>out\filea.dat
+out\subdir\fileb.dat</div>
+At least one source path is required, but it is permissible for the source path(s) to contain no files.
+      </p>
+    </div>
+
+    <div id='copy' class='newsitemheader'>
+      Basic Options
+    </div>	
+    <div class='newsitembody'>
+      <p>
+	  <b>.SourcePaths</b> - String/ArrayOfStrings - (Required)
+	  </p>
+	  <p>	  
+	  One or more source paths can be provided, either as a string or an array of strings.  The contents of each 
+	  source path will be scanned for files. Recursion can be controlled (.SourcePathsRecurse) and the source files 
+	  can be filtered using a wildcard pattern (.SourcePathsPattern).</p>
+	  Example:
+<div class='code'>.SourcePaths = 'folder\'</div> 	  
+Or:
+<div class='code'>.SourcePaths = { 'folderA\', 'folderB\' }</div> 	  
+      </p>
+      <p>
+	  <hr><br>	 
+	  <b>.Dest</b> - String - (Required)
+	  </p>
+	  <p>	  
+	  All files discovered in the .SourcePaths (subject to recursion and filtering options) will be copied to the
+	  .Dest path.  The folder structure relative to the source path(s) will be re-created in the .Dest path.
+      </p>
+	  Example:
+<div class='code'>.Dest = 'out\'</div> 	  	  
+    </div>
+	
+    <div id='copy' class='newsitemheader'>
+      Filtering Options
+    </div>	
+    <div class='newsitembody'>
+      <p><b>.SourcePathsPattern</b> - String - (Optional)</p>
+	  <p>A wildcard pattern can be specified to filter the files to be copied. The default pattern is '*'.</p>
+	  <p>Example:
+<div class='code'>.SourcePathsPattern = '*.dll' // Copy only dll files</div> 
+      </p>
+	  <hr>
+	  <p><b>.SourcePathsRecurse</b> - Bool - (Optional)</p>
+	  <p>File discovery in the .SourcePaths is recursive by default.  This option can be enabled or disabled
+	  explicitly.</p>
+	  <p>Example:
+<div class='code'>.SourcePathsRecurse = false // disable recursion</div>
+      </p> 
+	  <hr>
+	  <p><b>.SourceExcludePaths</b> - String/ArrayOfStrings - (Optional)</p>
+	  <p>An optional list of source directories to ignore during the CopyDir() operation.</p> 
+	  <p>Example:
+<div class='code'>.SourcePaths        = 'files\'
+.SourceExcludePaths = 'files\badfiles\' // don't copy this sub-dir</div>
+	  </p>
+    </div>
+	
+    <div id='copy' class='newsitemheader'>
+      Other Options
+    </div>	
+    <div class='newsitembody'>
+      <p><b>.PreBuildDependencies</b> - String/ArrayOfStrings - (Optional)</p>
+	  <p>One or more nodes which must be built before this node is built.</p>	  
+	  <p>The .PreBuildDependencies option ensures the specified targets are up-to-date before the 
+	  CopyDir() is executed.  This is necessary in situations where files are generated as part of
+	  the build. Failure to specify these dependencies in this way could allow the CopyDir() operation
+	  to be performed before the source files are updated/generated. This will result in unreliable builds
+	  (wrong or missing files) or even build failure (copy attempted while source file is still being 
+	  written/updated).</p>
+	  <p>Example:
+<div class='code'>.SourcePaths          = 'generated\scripts\'
+.Dest                 = 'out\scripts\'
+.PreBuildDependencies = 'GenerateScriptFiles' // Make sure scripts are generated before copy
+                                              // (assuming this is a previously defined target)</div> 
+      </p>
+	  <p>For files which are present before the build starts (i.e. always on disk, or generated by
+	  some process external to the build) this option is unnecessary.</p>
+    </div>	
+	
+  <script>generateFooter()</script>
+</body>
+</html>

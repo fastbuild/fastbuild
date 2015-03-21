@@ -1,0 +1,42 @@
+// WorkerThreadRemote - object to process and manage jobs on a remote thread
+//------------------------------------------------------------------------------
+#pragma once
+#ifndef FBUILD_WORKERTHREADREMOTE_H
+#define FBUILD_WORKERTHREADREMOTE_H
+
+// Includes
+//------------------------------------------------------------------------------
+#include "WorkerThread.h"
+#include "Core/Process/Mutex.h"
+
+// Forward Declarations
+//------------------------------------------------------------------------------
+class Job;
+
+// WorkerThread
+//------------------------------------------------------------------------------
+class WorkerThreadRemote : public WorkerThread
+{
+public:
+	WorkerThreadRemote( uint32_t threadIndex );
+	virtual ~WorkerThreadRemote();
+
+	void GetStatus( AString & hostName, AString & status, bool & isIdle ) const;
+
+	// control remote CPU usage
+	static void		SetNumCPUsToUse( uint32_t c ) { s_NumCPUsToUse = c; }
+	static uint32_t GetNumCPUsToUse() { return s_NumCPUsToUse; }
+private:
+	virtual void Main();
+
+	bool IsEnabled() const;
+	
+	mutable Mutex m_CurrentJobMutex;
+	Job * m_CurrentJob;
+
+	// static
+	static uint32_t s_NumCPUsToUse;
+};
+
+//------------------------------------------------------------------------------
+#endif // FBUILD_WORKERTHREADREMOTE_H 

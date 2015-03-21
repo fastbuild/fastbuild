@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<link href="style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Basic Application Example</title>
+</head>
+<body>
+  <script>generateHeader()</script>
+
+
+    <h1>A Basic Application</h1>
+
+    <div class='newsitemheader'>
+      Overview
+    </div>
+    <div class='newsitembody'>
+<p>
+This configuration shown here shows how to define a basic executable application, comprising of several libraries linked together into an executable.  Additionally, it defines an 'all' target for convenience. When no target is specified on the command line, the default of 'all' is assumed.  This way calling fbuild.exe with no arguments will cause the executable to build.
+</p>
+</div>
+
+    <div class='newsitemheader'>
+      Configuration
+    </div>
+    <div class='newsitembody'>
+<div class='code'>
+  ; MSVC Toolchain
+  ;---------------
+  .Compiler          = 'Bin\VC\cl.exe'
+  .Librarian         = 'Bin\VC\lib.exe'
+  .Linker            = 'Bin\VC\link.exe'
+  .CompilerOptions   = '%1 /Fo%2 /c /Z7'
+  .LibrarianOptions  = '/NODEFAULTLIB /OUT:%2 %1'
+  .LinkerOptions     = '/NODEFAULTLIB /OUT:%2 %1 /SUBSYSTEM:CONSOLE'
+
+  ; Libraries
+  ;----------
+  Library( 'libA' )
+  {
+    .CompilerInputPath = 'Src\LibA\'
+    .CompilerOutputPath= 'Out\LibA\'
+    .LibrarianOutput   = 'Out\LibA\libA.lib'
+  }
+  Library( 'libB' )
+  {
+    .CompilerInputPath = 'Src\LibB\'
+    .CompilerOutputPath= 'Out\LibB\'
+    .LibrarianOutput   = 'Out\LibB\libB.lib'
+  }
+
+  ; Executables
+  ;------------
+  Executable( 'myExe' )
+  {
+    .Libraries    = { 'libA', 'libB' }
+    .LinkerOutput = 'Out\MyExe.exe'
+  }
+
+  ; 'all'
+  ;-------
+  Alias( 'all' )
+  {
+    .Targets = { 'myExe' }
+  }
+</div>
+</div>
+
+  <script>generateFooter()</script>
+</body>
+</html>

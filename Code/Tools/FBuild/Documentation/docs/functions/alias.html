@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - Alias</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>Alias</h1>
+    <div id='alias' class='newsitemheader'>
+      Summary
+    </div>
+    <div class='newsitembody'>
+      <p>
+Creates an alias for one or more targets.
+      </p>
+<div class='code'>Alias( 'name' ) // Name of alias (required)
+{
+  // Basic options
+  .Targets            // Targets to alias
+}
+</div>
+    </div>
+
+    <div id='alias' class='newsitemheader'>
+      Details
+    </div>
+    <div class='newsitembody'>
+      <p>Alias() can be used to create aliases to other nodes in the build.  Aliases can be referenced within other Functions in the
+	  BFF config or from the command line.  An Alias can refer to one or more nodes, and are typically used to simplify and de-duplicate
+	  configurations.
+	  </p>
+	  <p>For example, to group multiple build congfigurations under a common 'main' target:</p>
+<div class='code'>Alias( 'main' )
+{
+  .Targets = { 'main-x86', 'main-x64' }
+}</div> 
+	  <p>Or to provide a more human-friendly command line target:</p>
+<div class='code'>Alias( 'Editor' )
+{
+  .Targets = 'bin/Editor/X64/Release/Editor.exe'
+}</div> 
+	  <p>Aliases can be nested (i.e. they can refer to other Aliases).</p>
+    </div>
+	
+    <div id='copy' class='newsitemheader'>
+      Basic Options
+    </div>	
+    <div class='newsitembody'>
+      <p>
+	  <b>.Targets</b> - String/ArrayOfStrings - (Required)
+	  </p>
+	  <p>	  
+	  One or more targets must be provided, either as a string or an array of strings. Targets can be previously
+	  defined nodes, or files external to the build process.
+	  </p>
+	  Example:
+<div class='code'>.Targets = { 'Library-Alias'                         // A previously defined Alias()
+             'tmp/Libraries/X64/Release/Core.dll'    // A previously defined DLL()
+             'External/SDK/VS2012/libs/libcmt.lib' } // An external DLL import library
+</div>
+
+  <script>generateFooter()</script>
+</body>
+</html>

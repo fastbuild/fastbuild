@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<link href="style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Quick Start Guide</title>
+</head>
+<body>
+  <script>generateHeader()</script>
+
+
+    <h1>Quick Start Guide</h1>
+
+    <div class='newsitemheader'>
+      Welcome
+    </div>
+    <div class='newsitembody'>
+<p>
+Welcome to FASTBuild!
+</p>
+<p>This guide should help you quickly get upto speed with the basics of FASTBuild.
+</p>
+<p>
+NOTE: This guide glosses over a lot of the subtle details of the configuration language and what is possible with FASTBuild.  For a detailed guide to the configuration language, see the <a href='syntaxguide.html'>syntax guide</a>.
+</p>
+    </div>
+
+    <div class='newsitemheader'>
+      Running FASTBuild
+    </div>
+    <div class='newsitembody'>
+<p>
+FASTBuild is a stand alone executable that does not need to be installed.  It can be placed anywhere on your system. It simply needs to be in the path you wish to compile from. Simply unpack the "fbuild.exe" of your choice (64bit or 32bit) anywhere you like, and ensure it's in the environment path, or the current directory for the command prompt.
+</p>
+<p>
+To verify everything is correct, open a command prompt, and type "fbuild -version". You should see something like the following:
+</p>
+<div class='output'>c:\p4\Code>fbuild -version
+FBuild - v0.50 (x86)
+
+c:\p4\Code></div>
+<p>You're now ready to start configuring FASTBuild.
+</p>
+    </div>
+
+
+    <div class='newsitemheader'>
+      Configuration File
+    </div>
+    <div class='newsitembody'>
+<p>
+FASTBuild expects a configuration file called 'fbuild.bff' in the  current directory. This text file contains the configuration of all build targets, defined using a syntax which is similar in style to C.
+</p>
+<p>
+The fbuild.bff file is where all build configuration targets are defined.  Targets should be defined in dependency order. In this quick guide, everything is fixed for simplicity. More realistic build configurations will contains loop constructs and variables to avoid duplication of configuration information.  (See the detailed <a href='syntaxguide.html'>syntax guide</a> for more information).
+</p>
+    </div>
+
+
+    <div class='newsitemheader'>
+      Defining Targets
+    </div>
+    <div class='newsitembody'>
+<p>
+You can define some libraries in the fbuild.bff for FASTBuild to build as follows:
+
+<div class='code'>
+  .Compiler          = 'Bin\VC\cl.exe'
+  .Librarian         = 'Bin\VC\lib.exe'
+  .CompilerOptions   = '%1 /Fo%2 /c /Z7'
+  .LibrarianOptions  = '/NODEFAULTLIB /OUT:%2 %1'
+
+  Library( 'libA' )
+  {
+    .CompilerInputPath = 'Src\LibA\'
+    .CompilerOutputPath= 'Out\LibA\'
+    .LibrarianOutput   = 'Out\LibA\libA.lib'
+  }
+  Library( 'libB' )
+  {
+    .CompilerInputPath = 'Src\LibB\'
+    .CompilerOutputPath= 'Out\LibB\'
+    .LibrarianOutput   = 'Out\LibB\libB.lib'
+  }
+</div>
+<p>
+"Library" is one of several functions supported by FASTBuild. In the example above, some properties of the Library function are set outside the scope of the function to avoid duplication. This pattern is used a lot in FASTBuild configurations in order to reduce configuration complexity.
+</p>
+<p>
+In function properties, %1 and %2 are special tokens which are replaced at build time with context dependent values.  In this case, the compiler and linker input and output files. See the <a href='syntaxguide.html'>Syntax Guide</a> and
+<a href='functions.html'>Function Reference</a> for more details.
+</p>
+</div>
+
+
+
+    <div class='newsitemheader'>
+      Building Targets
+    </div>
+    <div class='newsitembody'>
+<p>
+Once targets are defined in the fbuild.bff, they can be built from the command line. You can build a target by specifying it on the fbuild command line as follows:
+</p>
+<div class='output'>c:\p4\Code>fbuild Out\LibA\LibA.lib</div>
+<p>
+"Library" is one of several functions that creates an alias for your target, so the following is also valid (as defined in the example above):
+</p>
+<div class='output'>c:\p4\Code>fbuild libA</div>
+<p>
+Naturally aliases are used a lot to simplify invoking builds of particular targets. 
+</p>
+</div>
+
+  <script>generateFooter()</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - DLL</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>DLL</h1>
+    <div id='dll' class='newsitemheader'>
+      DLL
+    </div>
+    <div class='newsitembody'>
+      <p>
+Builds a DLL by linking together one or more libraries.
+      </p>
+<div class='code'>DLL( alias )               ; (optional) Alias
+{
+  .Linker                  ; Linker executable to use
+  .LinkerOutput            ; Ouput from linker
+  .LinkerOptions           ; Options to pass to linker
+  .Libraries               ; Libraries to link into DLL
+  .LinkerLinkObjects       ; (optional) Link objects used to make libs instead of libs (default true)
+  .LinkerAssemblyResources ; (optional) List of assembly resources to use with %3
+  
+  .LinkerStampExe          ; (optional) Executable to run post-link to "stamp" executable in-place
+  .LinkerStampExeArgs      ; (optional) Arguments to pass to LinkerStampExe
+}
+</div>
+<p><b>Build-Time Substitutions</b>
+<ul>
+  <li><b>LinkerOptions</b></li>
+  <ul>
+    <li>%1 - Input file(s) for the link, as specified by the 'Libraries' parameter.</li>
+    <li>%2 - Output assembly as specified by 'LinkerOutput'.</li>
+    <li>%3 - AssemblyResources as specified in 'LinkerAssemblyResources'. For use with /ASSEMBLYRESOURCE"%3" (MSVC Only)</li>
+  </ul>
+</ul>
+</p>
+    </div>
+
+
+
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

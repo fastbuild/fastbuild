@@ -1,0 +1,36 @@
+{} // start of file
+
+//
+// Test scope
+//
+.String = "hello"
+
+// as a local override
+{
+	.String = "Hello Again"
+}
+
+// empty
+{}
+
+{// comments
+}// comments
+
+//nested
+{
+	{
+		{
+			{
+			}
+		}
+	}
+}
+
+// nested
+{{{{}}}}
+
+// stuff after scope
+.NewString = "x"
+
+//end of file
+{}

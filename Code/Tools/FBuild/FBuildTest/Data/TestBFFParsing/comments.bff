@@ -1,0 +1,101 @@
+;
+; This file tests parsing comments to ensure they are handled
+// correctly in various places
+//
+
+; Single line comments
+// Single line comments
+
+; semi-colons in comments
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+// slahses in comments
+/////////////////////////
+
+; comments after variable assigment
+.Var = "a"; comment
+.Array = { "a", "b" } ; comment after array var
+.Var = "a"// comment
+.Array = { "a", "b" } // comment after array var
+
+.Var ; comment ok here
+= ; and here
+"value" ; and here
+.Var // comment ok here
+= // and here
+"value" // and here
+
+; comments inside arrays
+// comments inside arrays
+.Array = { "a", ; comment in the middle of an array
+		   "b",
+		   ;"c", commented out entry in array
+		   "d" }
+.Array = { "a", // comment in the middle of an array
+		   "b",
+		   //"c", commented out entry in array
+		   "d" }
+
+; some vars to satisfy Library functions below
+// some vars to satisfy Library functions below
+.Compiler = "z"
+.CompilerOptions = "%1 %2"
+.CompilerInputPath = "c"
+.CompilerOutputPath = "c"
+.Librarian = "l"
+.LibrarianOptions = "%1 %2"
+
+Library(); comment after function name
+{ ; comment after bracket
+	; comment in library
+	.LibrarianOutput = "o"
+}; comment after bracket
+
+Library()// comment after function name
+{ // comment after bracket
+	// comment in library
+	.LibrarianOutput = "ob"
+}// comment after bracket
+
+Library( "hello"; comments in function args 
+		 )
+{.LibrarianOutput = "o2"}
+
+Library( "hello2"// comments in function args 
+		 )
+{.LibrarianOutput = "o2b"}
+
+Library( "hello3")
+{
+	.LibrarianOutput = "o3"
+	; {{{{{{{{  test ignoring of special chars in comments
+}
+
+Library( "hello4")
+{
+	.LibrarianOutput = "o3b"
+	// {{{{{{{{  test ignoring of special chars in comments
+}
+
+Library
+{
+	.LibrarianOutput = "o4"
+	; }}}}}}
+}
+
+Library
+{
+	.LibrarianOutput = "o4b"
+	// }}}}}}
+}
+
+// this particular construct uncovered a bug
+.B = { "a", "b" }
+ForEach( .A in .B )
+{
+// .X = { "c:\",  ; after this comment, the next line would have 1 extra char consumed
+//        "d:\" } ; which meant this closing bracket would not be ignored correctly
+}
+
+; end of file comment
+// end of file comment

@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<link href="style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Error Reference</title>
+</head>
+<body>
+  <script>generateHeader()</script>
+
+<h1>Error Reference</h1>
+<h2>Categories</h2>
+<ul>
+  <li><a href='#1000'>1000 - 1099</a> General Parsing Errors</li>
+  <li><a href='#1100'>1100 - 1199</a> Function Parameter Errors</li>
+  <li><a href='#1200'>1200 - 1299</a> ForEach Specific Errors</li>
+  <li><a href='#1300'>1300 - 1399</a> Library Specific Errors</li>
+</ul>
+<h2 id='1000'>1001 - 1099 : General Parsing Errors</h2>
+<!--------------- 1001 --------------->
+    <div class='newsitemheader'>1001 - Missing string start token " or '.</div>
+    <div class='newsitembody'>
+As string was expected at the location shown, but a string start token (" or ') was not encountered.
+<h4>Example Config:</h4>
+<div class='code'>Alias( name ) ; The name should be quoted
+{
+}</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(8) FASTBuild Error #1001 - Alias() - Missing string start token " or '.
+Alias( name )
+       ^
+       \--here
+</div>
+</div>
+
+<!--------------- 1002 --------------->
+    <div class='newsitemheader'>1002 - Matching closing token %c not found.</div>
+    <div class='newsitembody'>
+The terminating token for a construct (e.g. a String, Array or Struct) was not found.
+<h4>Example Config:</h4>
+<div class='code'>.String = 'Unterminated
+</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\test\fbuild.bff(1,11): FASTBuild Error #1002 - Matching closing token ' not found.
+.String = 'Unterminated
+          ^
+          \--here
+</div>
+</div>
+
+<!--------------- 1003 --------------->
+    <div class='newsitemheader'>1003 - Empty string not allowed in Function header.</div>
+    <div class='newsitembody'>
+A Function header was provided an empty string as an argument, when an empty string is not supported.
+<h4>Example Config:</h4>
+<div class='code'>Alias( "" ) ; Alias argument requires a non-empty string
+{
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(8) FASTBuild Error #1003 - Alias() - Empty string not allowed in Function header.
+Alias( "" )
+       ^
+       \--here
+</div>
+</div>
+
+<!--------------- 1004 --------------->
+    <div class='newsitemheader'>1004 - Empty string not allowed for property '%s'.</div>
+    <div class='newsitembody'>
+A property was defined as a string with an empty value in a context where this is not supported.
+<h4>Example Config:</h4>
+<div class='code'>Library
+{
+  .LibrarianOutput = "" ; This should be a valid path
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1004 - Library() - Empty string not allowed for property '%s'.
+Library
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1005 --------------->
+    <div class='newsitemheader'>1005 - Unsupported node type in '%s'. (Node: '%s', Type: '%s')</div>
+    <div class='newsitembody'>
+A Function references a previously defined node, but that node is of a type that cannot be sensibly handled in
+the context of said Function.  For example, an Executable can link previously defined libraries, but not Unity nodes.
+<h4>Example Config:</h4>
+<div class='code'>Unity( "MyUnity" )
+{
+  .UnityInputPath = "Code\"
+  .UnityOutputPath = "Tmp\"
+}
+Executable( "MyExe" )
+{
+  .Libraries = "MyUnity"  ; Can't link to unity generated files
+  .Linker = "link.exe"
+  .LinkerOptions = "%1 %2"
+  .LinkerOutput = "Tmp\my.exe"
+}</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(6):(1) FASTBuild Error #1005 - Executable() - Unsupported node type in 'Libraries'. 
+(Node: 'MyUnity', Type: 'Unity')
+Executable( "MyExe" )
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1006 --------------->
+    <div class='newsitemheader'>1006 - Nothing defined to be built.</div>
+    <div class='newsitembody'>
+A target was configured, but no inputs (or rules to find inputs) were provided. This Function can therefore
+never result in any useful build output.
+<h4>Example Config:</h4>
+<div class='code'>Library( "lib" )
+{
+  .Compiler = "cl.exe"
+  .CompilerOutputPath = "Tmp\"
+  .CompilerOptions = "%1 %2"
+  .Librarian = "lib.exe"
+  .LibrarianOutput = "Tmp\"
+  .LibrarianOptions = "%1 %2"
+
+  ; No inputs are specified for this library
+}</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1006 - Library() - Nothing defined to be built.
+Library( "lib" )
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1007 --------------->
+  <div class='newsitemheader'>1007 - Expected a variable at this location.</div>
+  <div class='newsitembody'>
+A variable was expected, but some other symbol was encountered.
+<h4>Example Config:</h4>
+<div class='code'>Using( "String" )</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1):(8) FASTBuild Error #1007 - Using() - Expected a variable at this location.
+Using( "String" )
+       ^
+       \--here
+</div>
+</div>
+
+
+<!--------------- 1008 --------------->
+  <div class='newsitemheader'>1008 - Expected a variable of type '%s', but got '%s'.</div>
+  <div class='newsitembody'>
+A variable of a particular type was expected, but a variable of some other type was encountered.
+<h4>Example Config:</h4>
+<div class='code'>.String = "String"
+Using( .String )</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(2):(8) FASTBuild Error #1008 - Using() - Expected a variable of type 'Struct', but got 'String'.
+Using( .String )
+       ^
+       \--here
+</div>
+</div>
+
+  <!--------------- 1009 --------------->
+    <div class='newsitemheader'>1009 - Unknown variable.</div>
+    <div class='newsitembody'>
+A variable which has not been defined was referenced inside another variable assignment or concatenation.
+<h4>Example Config:</h4>
+<div class='code'>.Var = "$OtherVar$"</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(10) FASTBuild Error #1009 - Unknown variable.
+.Var = "$OtherVar$"
+         ^
+         \--here
+</div>
+</div>
+
+<!--------------- 1010 --------------->
+    <div class='newsitemheader'>1010 - Unknown construct.</div>
+    <div class='newsitembody'>
+A high level construct (e.g. Function, Variable Assignment or Comment) was expected at the location shown,
+but instead an unknown construct was encountered.
+<h4>Example Config:</h4>
+<div class='code'>%</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1010 - Unknown construct.
+% ; There is no valid token that starts with a %
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1011 --------------->
+    <div class='newsitemheader'>1011 - Unnamed concatenation must follow a variable assignment in the same scope.</div>
+    <div class='newsitembody'>
+The variable concatenation operator was used without specifying the variable to append to. This is supported, provided the
+destination variable was previously referenced
+<h4>Example Config:</h4>
+<div class='code'>      + "String" ; No variable to assign to
+
+.MyVar = "hello"
+       + "String" ; The destination variable can be inferred</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(7) FASTBuild Error #1011 - Unnamed concatenation must follow a variable
+assignment in the same scope.
+      + "String"
+      ^
+      \--here
+</div>
+</div>
+
+<!--------------- 1012 --------------->
+    <div class='newsitemheader'>1012 - Unexpected end of file.</div>
+    <div class='newsitembody'>
+While processing a construct, the end of the file was encountered. The construct is therefore incomplete and
+cannot be understood.
+<h4>Example Config:</h4>
+<div class='code'>.MyVar</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(7) FASTBuild Error #1012 - Unexpected end of file.
+.MyVar
+      ^
+      \--here
+</div>
+</div>
+
+<!--------------- 1013 --------------->
+    <div class='newsitemheader'>1013 - Unexpected character '%c' in variable name.</div>
+    <div class='newsitembody'>
+Following a variable declaration character (.) an unsupported or unexpected character was encountered. Valid characters
+for variable names are A-Z, a-z and 0-9.
+<h4>Example Config:</h4>
+<div class='code'>.#MyVar</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(2) FASTBuild Error #1013 - Unexpected character '#' in variable name.
+.#MyVar
+ ^
+ \--here
+</div>
+</div>
+
+<!--------------- 1014 --------------->
+    <div class='newsitemheader'>1014 - Variable name is too long. (Length: %u, MaxLength: %u)</div>
+    <div class='newsitembody'>
+A variable with a name greater than 64 characters was encountered. 64 characters is imposed as a sanity check limit
+for variable names.
+<h4>Example Config:</h4>
+<div class='code'>.MyVarWhoseNameIsFarTooLongAndBecauseOfThisWillCauseFASTBuildToOutputAnError = "value"</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(77) FASTBuild Error #1014 - Variable name is too long. (Length: 76, MaxLength: 64)
+.MyVarWhoseNameIsFarTooLongAndBecauseOfThisWillCauseFASTBuildToOutputAnError = "value"
+                                                                            ^
+                                                                            \--here
+</div>
+</div>
+
+<!--------------- 1015 --------------->
+    <div class='newsitemheader'>1015 - Unknown Function.</div>
+    <div class='newsitembody'>
+A function style token was encountered, but the name does not correspond to any supported function.
+<h4>Example Config:</h4>
+<div class='code'>InvalidFunction()
+{
+}</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1015 - Unknown Function.
+InvalidFunction()
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1016 --------------->
+    <div class='newsitemheader'>1016 - Unexpected character '%c' following variable name.</div>
+    <div class='newsitembody'>
+Following the declaration of a variable, and unexpected or unsupported character was found where an operator was expected.
+<h4>Example Config:</h4>
+<div class='code'>.MyVarA  = 10
+.MyVarB. = 20
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(2):(8) FASTBuild Error #1016 - Unexpected character '.' following variable name.
+(Expected operator)
+.MyVarB. = 20
+       ^
+       \--here
+</div>
+</div>
+
+<!--------------- 1017 --------------->
+    <div class='newsitemheader'>1017 - Unexpected character '%c' in variable value.</div>
+    <div class='newsitembody'>
+At the location of an expected variable value, an unexpected character was encountered. See the <a href='syntaxguide.html#declaration'>Synax Guide</a>
+for details of valid variable types and their syntax.
+<h4>Example Config:</h4>
+<div class='code'>.Var = whatisthis ; if this is a string, it should be quoted</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1):(8) FASTBuild Error #1017 - Unexpected character 'w' in variable value.
+.Var = whatisthis ; if this is a string, it should be quoted
+       ^
+       \--here
+</div>
+</div>
+
+<!--------------- 1018 --------------->
+    <div class='newsitemheader'> 1018 - Integer value could not be parsed.</div>
+    <div class='newsitembody'>
+While parsing an integer variable declaration, an error was encountered because the integer is malformed or too large to
+be stored as a 32-bit signed value.
+<h4>Example Config:</h4>
+<div class='code'>.MyInt = 123456789123456789</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(10) FASTBuild Error #1018 - Integer value could not be parsed.
+.MyInt = 123456789123456789
+         ^
+         \--here
+</div>
+</div>
+
+<!--------------- 1020 --------------->
+    <div class='newsitemheader'>1020 - Function can only be invoked once.</div>
+    <div class='newsitembody'>
+A Function which can only be invoked once per configuration was encountered two or more times.
+<h4>Example Config:</h4>
+<div class='code'>Settings
+{
+  .CachePath ='c:\.cache'
+}
+Settings
+{
+  .CachePath ='d:\.cache'
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(5):(1) FASTBuild Error #1020 - Settings() - Function can only be invoked once.
+Settings
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1021 --------------->
+    <div class='newsitemheader'>1021 - Unexpected Function header.</div>
+    <div class='newsitembody'>
+An attempt to invoke a Function with a header was made, where the Function does not accept a header.
+<h4>Example Config:</h4>
+<div class='code'>Settings( "bad" )
+{
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(9) FASTBuild Error #1021 - Settings() - Unexpected Function header.
+Settings( "bad" )
+        ^
+        \--here
+</div>
+</div>
+
+<!--------------- 1022 --------------->
+    <div class='newsitemheader'>1022 - Missing Function header close token '%c'.</div>
+    <div class='newsitembody'>
+While parsing a function header, the closing ')' could not be found to terminate the header.
+<h4>Example Config:</h4>
+<div class='code'>Alias( "name"
+{
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(6) FASTBuild Error #1022 - Alias() - Missing Function header close token ')'.
+Alias( "name"
+     ^
+     \--here
+</div>
+</div>
+
+<!--------------- 1023 --------------->
+    <div class='newsitemheader'>1023 - Function requires a header.</div>
+    <div class='newsitembody'>
+An attempt was made to invoke a Function without a header, where the given Function requires one.
+<h4>Example Config:</h4>
+<div class='code'>Alias
+{
+  .Targets = { "a", "b" }
+}</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(2):(1) FASTBuild Error #1023 - Alias() - Function requires a header.
+{
+^
+\--here
+</div>
+</div>
+
+
+<!--------------- 1024 --------------->
+    <div class='newsitemheader'>1024 - Function requires a body.</div>
+    <div class='newsitembody'>
+An attempt was made to invoke a Function without a body, where the Function requires one.
+<h4>Example Config:</h4>
+<div class='code'>Alias( "name" )
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1024 - Alias() - Function requires a body.
+Alias( "name" )
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1025 --------------->
+    <div class='newsitemheader'>1025 - Missing scope close token '}'.</div>
+    <div class='newsitembody'>
+While parsing a Function body, the closing '}' token could not be found.
+<h4>Example Config:</h4>
+<div class='code'>Alias( "name" )
+{</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(2):(1) FASTBuild Error #1025 - Alias() - Missing scope close token '}'.
+{
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1026 --------------->
+    <div class='newsitemheader'>1026 - Variable '%s' not found for concatention.</div>
+    <div class='newsitembody'>
+An attempt was made to concatenate to a variable that was not previously defined.
+<h4>Example Config:</h4>
+<div class='code'>.Nonexistant + "string"</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(15) FASTBuild Error #1026 - Variable '.DoesNotExist' not found for concatention.
+.DoesNotExist + "string"
+              ^
+              \--here
+</div>
+</div>
+
+<!--------------- 1027 --------------->
+    <div class='newsitemheader'>1027 - Cannot concatenate &lt;%s&gt; to &lt;%s&gt; for Variable '%s'.</div>
+    <div class='newsitembody'>
+An attempt was made to concatenate two variables of differing types, where such an operation is not supported.
+<h4>Example Config:</h4>
+<div class='code'>.MyVar = "string";
+.MyVar + 7
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(2):(8) FASTBuild Error #1027 - Cannot concatenate &lt;Int&gt; to &lt;Any&gt; for Variable '.MyVar'.
+.MyVar + 7
+       ^
+       \--here
+</div>
+</div>
+
+<!--------------- 1028 --------------->
+    <div class='newsitemheader'>1028 - Cannot find '$' to end variable substitution</div>
+    <div class='newsitembody'>
+A variable substitution was begun, but not properly terminated.
+<h4>Example Config:</h4>
+<div class='code'>.String1 = "string"
+.String2 = "$String1" ; Missing the closing $
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(2):(13) FASTBuild Error #1028 - Cannot find '$' to end variable substitution.
+.String2 = "$String1"
+            ^
+            \--here
+</div>
+</div>
+
+
+<!--------------- 1029 --------------->
+    <div class='newsitemheader'>1029 - Variable for substitution '%s' is not a string (Type: <%s>).</div>
+    <div class='newsitembody'>
+A string substitution was attempted with a non-string variable.
+<h4>Example Config:</h4>
+<div class='code'>.MyBool = true
+.MyString = "$MyBool$"
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(2):(15) FASTBuild Error #1029 - Variable for substitution 'MyBool' is not a string (T
+ype: <Bool>).
+.MyString = "$MyBool$"
+              ^
+              \--here
+</div>
+</div>
+
+
+<!--------------- 1030 --------------->
+    <div class='newsitemheader'>1030 - Unknown directive '%s'.</div>
+    <div class='newsitembody'>
+An unkown directive was encountered during parsing.
+<h4>Example Config:</h4>
+<div class='code'>#zzz</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1):(2) FASTBuild Error #1030 - Unknown directive 'zzz'.
+#zzz
+ ^
+ \--here
+</div>
+</div>
+
+<!--------------- 1031 --------------->
+    <div class='newsitemheader'>1031 - Unknown char '%c' following '%s' directive. (Expected '%c').</div>
+    <div class='newsitembody'>
+Following a recognized directive, an unexpected character was encountered.  Expected characters vary depending on the directive.
+<h4>Example Config:</h4>
+<div class='code'>#include(</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1):(9) FASTBuild Error #1031 - Unknown char '(' following 'include' directive.
+(Expected '"').
+#include(
+        ^
+        \--here
+</div>
+</div>
+
+<!--------------- 1032 --------------->
+    <div class='newsitemheader'>1032 - Unable to open include '%s'.</div>
+    <div class='newsitembody'>
+The specified include file could not be opened.
+<h4>Example Config:</h4>
+<div class='code'>#include "missingfile.bff"</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1):(11) FASTBuild Error #1032 - Unable to open include 'missingfile.bff'.
+#include "missingfile.bff"
+          ^
+          \--here
+</div>
+</div>
+
+<!--------------- 1033 --------------->
+    <div class='newsitemheader'>1033 - Error reading include '%s' (Error: %u).</div>
+    <div class='newsitembody'>
+A read error occurred when reading the included file.
+<h4>Example Config:</h4>
+<div class='code'>#include "errorfile.bff"</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1):(11) FASTBuild Error #1033 - Error reading include 'errorfile.bff' (Error: 4).
+#include "errorfile.bff"
+          ^
+          \--here
+</div>
+</div>
+
+
+<!--------------- 1034 --------------->
+    <div class='newsitemheader'>1034 - Operation not supported: '%s' %s '%s'.</div>
+    <div class='newsitembody'>
+An operation was attempted between two types that cannot support the operation.
+<h4>Example Config:</h4>
+<div class='code'>.Var1 = 123
+.Var2 = "String"
+.Var2 + .Var1    // incompatible types</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(3):(9) FASTBuild Error #1034 - Operation not supported: 'String' + 'Int'.
+.Var2 + .Var1    // incompatible types
+        ^
+        \--here
+</div>
+</div>
+
+<!--------------- 1035 --------------->
+    <div class='newsitemheader'>1035 - Excessive depth complexity when parsing BFFs.</div>
+    <div class='newsitembody'>
+The maximum depth was reached during BFF parsing. This can be caused by a recursive include, or by an excessively complex BFF configuration.
+<h4>Example Config:</h4>
+<div class='code'>#include "fbuild.bff" // include self</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1):(10) FASTBuild Error #1035 - Excessive depth complexity when parsing BFFs.
+Check for resursive includes or simplify config.
+#include "fbuild.bff"
+         ^
+         \--here
+</div>
+</div>
+
+<!--------------- 1050 --------------->
+    <div class='newsitemheader'>1050 - Property '%s' must be of type <%s> (found <%s>).</div>
+    <div class='newsitembody'>
+The property of a Function was of a type other than that which is expected by the Function.
+<h4>Example Config:</h4>
+<div class='code'>Library( "lib" )
+{
+  .LibrarianOutput = true
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1050 - Library() - Property '.LibrarianOutput' must be of type
+&lt;String&gt; (found &lt;Bool&gt;).
+Library( "lib" )
+^
+\--here
+</div>
+</div>
+
+
+<!--------------- 1054 --------------->
+    <div class='newsitemheader'>1054 - Integer '%s' must be in range %u to %u.</div>
+    <div class='newsitembody'>
+An integer property of a Function was set out of range.
+<h4>Example Config:</h4>
+<div class='code'>Unity( "name" )
+{
+  .UnityInputPath = "Code/"
+  .UnityOutputPath = "Tmp/"
+  .UnityNumFiles = 99999999
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1054 - Unity() - Integer 'UnityNumFiles' must be in range 1 to 999.
+Unity( "name" )
+^
+\--here
+</div>
+</div>
+
+
+
+<h2 id='1100'>1100 - 1199 : Function Parameter Errors</h2>
+<!--------------- 1100 --------------->
+    <div class='newsitemheader'>1100 - Target '%s' already defined.</div>
+    <div class='newsitembody'>
+An attempt was made to define a target that was already defined.
+<h4>Example Config:</h4>
+<div class='code'>Unity( "unity1" )
+{
+  .UnityInputPath = "Code\"
+  .UnityOutputPath = "Tmp\"
+}
+Alias( "unity1" )
+{
+  .Targets = "unity1"
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(6):(1) FASTBuild Error #1100 - Alias() - Target 'unity1' already defined.
+Alias( "unity1" )
+^
+\--here
+</div>
+</div>
+<!--------------- 1101 --------------->
+    <div class='newsitemheader'>1101 - Missing required property '%s'.</div>
+    <div class='newsitembody'>
+An attempt was made to invoke a Function, but a required property was not set.
+<h4>Example Config:</h4>
+<div class='code'>Alias( "name" )
+{
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1101 - Alias() - Missing required property 'Targets'.
+Alias( "name" )
+^
+\--here
+</div>
+</div>
+<!--------------- 1102 --------------->
+    <div class='newsitemheader'>1102 - '%s' ('%s') is of unexpected type '%s'. Expected '%s'.</div>
+    <div class='newsitembody'>
+The property of a Function was not of the expected type.
+<h4>Example Config:</h4>
+<div class='code'>.Compiler = "cl.exe"
+.CompilerOptions = "%1 %2"
+.CompilerOutputPath = "Tmp\"
+.Librarian = "lib.exe"
+.LibrarianOptions = "%1 %2"
+Library( "lib1" )
+{
+  .CompilerInputPath = "Code\"
+  .LibrarianOutput = "lib1.lib"
+}
+
+Library( "lib2" )
+{
+  .LibrarianOutput = "lib2.lib"
+  .CompilerInputUnity = "lib1"
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(11):(1) FASTBuild Error #1102 - Library() - 'CompilerInputUnity' ('lib1') is of
+unexpected type 'Alias'. Expected 'Unity'.
+Library( "lib2" )
+^
+\--here
+</div>
+</div>
+<!--------------- 1103 --------------->
+    <div class='newsitemheader'>1103 - '%s' ('%s') is a '%s', which does not describe a file.</div>
+    <div class='newsitembody'>
+A Function parameter which can only reference a node which results in a file output references a non-file output node.
+<h4>Example Config:</h4>
+<div class='code'>Unity( "Test" )
+{
+  .UnityInputPath = "Code\"
+  .UnityOutputPath = "Tmp\"
+}
+Test( "RunTest" )
+{
+  .TestOutput = "Tmp\"
+  .TestExecutable = "Test"
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(6):(1) FASTBuild Error #1103 - Test() - 'TestExecutable' ('Test') is a 'Unity', which
+ does not describe a file.
+Test( "RunTest" )
+^
+\--here
+</div>
+</div>
+<!--------------- 1104 --------------->
+    <div class='newsitemheader'>1104 - '%s' ('%s') is not defined.</div>
+    <div class='newsitembody'>
+A Function references a node which has not been defined.
+<h4>Example Config:</h4>
+<div class='code'>Test( "RunTest" )
+{
+  .TestOutput = "Tmp\"
+  .TestExecutable = "Test.exe"
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1104 - Test() - 'TestExecutable' ('Test.exe') is not defined.
+Test( "RunTest" )
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1105 --------------->
+    <div class='newsitemheader'>1105 - Path not allowed for '%s' ('%s').</div>
+    <div class='newsitembody'>
+A path was provided for a property where a file is expected.
+<h4>Example Config:</h4>
+<div class='code'>Copy
+{
+  .Source = "Code\" // This should be a file
+  .Dest   = "tmp\"
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1):(1) FASTBuild Error #1105 - Copy() - Path not allowed for '.Source' ('c:\test\Code\').
+Copy
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1106 --------------->
+    <div class='newsitemheader'>1106 - Property '%s' is missing required token '%s'.</div>
+    <div class='newsitembody'>
+A token that is required for FASTBuild to function correctly was not provided.
+<h4>Example Config:</h4>
+<div class='code'>ObjectList( 'objlist' )
+{
+  .Compiler          = 'cl.exe'
+  .CompilerOutputPath= 'out/'
+  .CompilerOptions   = '/c %1' // NOTE missing %2
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1,1): FASTBuild Error #1106 - ObjectList() - Property '.CompilerOptions' is missing required token '%2'.
+ObjectList( 'objlist' )
+^
+\--here
+</div>
+</div>
+
+<h2 id='1200'>1200 - 1299 : ForEach Specific Errors</h2>
+<!--------------- 1200 --------------->
+    <div class='newsitemheader'>1200 - Expected a variable at this location.</div>
+    <div class='newsitembody'>
+The ForEach Function requires a specific syntax "ForEach( .X in .Y ) which has not been adhered to.
+<h4>Example Config:</h4>
+<div class='code'>ForEach( "bad" )
+{
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(10) FASTBuild Error #1200 - ForEach() - Expected a variable at this location.
+ForEach( "bad" )
+         ^
+         \--here
+</div>
+</div>
+<!--------------- 1201 --------------->
+    <div class='newsitemheader'>1201 - Missing 'in' at this location.</div>
+    <div class='newsitembody'>
+The ForEach Function requires a specific syntax "ForEach( .X in .Y ) which has not been adhered to.
+<h4>Example Config:</h4>
+<div class='code'>ForEach( .I )
+{
+}
+</div>
+<div class='output'>c:\Test\fbuild.bff(1):(13) FASTBuild Error #1201 - ForEach() - Missing 'in' at this location.
+ForEach( .I )
+            ^
+            \--here
+</div>
+<h4>Example Output:</h4>
+</div>
+<!--------------- 1202 --------------->
+    <div class='newsitemheader'>1202 - Expected a variable following 'in'.</div>
+    <div class='newsitembody'>
+The ForEach Function requires a specific syntax "ForEach( .X in .Y ) which has not been adhered to.
+<h4>Example Config:</h4>
+<div class='code'>ForEach( .I in )
+{
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(16) FASTBuild Error #1202 - ForEach() - Expected a variable following 'in'.
+ForEach( .I in )
+               ^
+               \--here
+</div>
+</div>
+<!--------------- 1204 --------------->
+    <div class='newsitemheader'>1204 - Variable '%s' contains %i elements, but loop is for %i elements.</div>
+    <div class='newsitembody'>
+A ForEach loop has been defined to loop through several Array properties, but not all Arrays are of the same size.
+<h4>Example Config:</h4>
+<div class='code'>.Configs = { "debug", "release", "master" }
+.Options = { "a",     "b" }
+ForEach( .Config in .Configs,
+         .Option in .Options )
+{
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(4):(21) FASTBuild Error #1204 - ForEach() - Variable '.Options' contains 2 elements,
+but loop is for 3 elements.
+         .Option in .Options )
+                    ^
+                    \--here
+</div>
+</div>
+
+<h2 id='1300'>1300 - 1399 : Library Specific Errors</h2>
+<!--------------- 1300 --------------->
+    <div class='newsitemheader'>1300 - Precompiled Header use requires 'PCHInputFile', 'PCHOutputFile' and 'PCHOptions' parameters.</div>
+    <div class='newsitembody'>
+An attempt was made to use Precompiled headers for a Library, but not all required properties were defined.
+<h4>Example Config:</h4>
+<div class='code'>Library( "lib" )
+{
+  .Compiler = "cl.exe"
+  .CompilerInputPath = "Code\"
+  .CompilerOutputPath = "Tmp\"
+  .CompilerOptions = "%1 %2"
+  .Librarian = "lib.exe"
+  .LibrarianOutput = "Tmp\"
+  .LibrarianOptions = "%1 %2"
+  .PCHInputFile = "PrecompiledHeader.cpp"
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1):(1) FASTBuild Error #1300 - Library() - Precompiled Header use requires
+'PCHInputFile', 'PCHOutputFile' and 'PCHOptions' parameters.
+Library( "lib" )
+^
+\--here
+</div>
+</div>
+<!--------------- 1301 --------------->
+    <div class='newsitemheader'>1301 - Precompiled Header target '%s' has already been defined.</div>
+    <div class='newsitembody'>
+A Library using Precompiled Headers was defined, but the Precompiled Header output conflicts with an existing target.
+<h4>Example Config:</h4>
+<div class='code'>.Configs = { "debug", "release" }
+ForEach( .Config in .Configs )
+{
+  Library( "lib-$Config$" )
+  {
+    .Compiler = "cl.exe"
+    .CompilerInputPath = "Code\"
+    .CompilerOutputPath = "Tmp\"
+    .CompilerOptions = "%1 %2"
+    .Librarian = "lib.exe"
+    .LibrarianOutput = "Tmp\"
+    .LibrarianOptions = "%1 %2"
+    .PCHInputFile = "PrecompiledHeader.cpp"
+    .PCHOutputFile = "ProcompiledHeader.pch"
+    .PCHOptions = "%1 %2"
+  }
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(4):(3) FASTBuild Error #1301 - Library() - Precompiled Header target 'ProcompiledHead
+er.pch' has already been defined.
+  Library( "lib-$Config$" )
+  ^
+  \--here
+</div>
+</div>
+<!--------------- 1302 --------------->
+    <div class='newsitemheader'>1302 - Missing Precompiled Header option '%s' in '%s'.</div>
+    <div class='newsitembody'>
+A Library using Precompiled Headers was missing a required option. Compilation will not work correctly.
+<h4>Example Config:</h4>
+<div class='code'>.Compiler = "cl.exe"
+.Librarian = "lib.exe"
+Library( "test" )
+{
+  .PCHInputFile   = "PrecompiledHeader.cpp"
+  .PCHOutputFile  = "tmp\PrecompiledHeader.pch"
+  .PCHOptions     = '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Fp"%2" /c'
+
+  .CompilerOutputPath = "tmp/"
+  .CompilerOptions = "%1 /Fo%2"   ; Missing options to use the PCH
+  .LibrarianOutput = "test.lib"
+  .LibrarianOptions = "/OUT:%2 %2"
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(3):(1) FASTBuild Error #1302 - Library() - Missing Precompiled Header option '/Yu'
+in 'CompilerOptions'.
+Library( "test" )
+^
+\--here
+</div>
+</div>
+
+<!--------------- 1303 --------------->
+    <div class='newsitemheader'>1303 - Precompiled Header option '%s' in '%s' invalid. Only allowed on Precompiled Header.</div>
+    <div class='newsitembody'>
+An option to create Precompiled Headers was specified on a non-precompiled header file. Compilation will not work correctly.
+To use Precompiled Headers in a library, use the various .PCH* options.
+<h4>Example Config:</h4>
+<div class='code'>.Compiler = "cl.exe"
+.Librarian = "lib.exe"
+Library( "test" )
+{
+  .CompilerOutputPath = "tmp/"
+  .CompilerOptions = "%1 /Fo%2 /Yc" ; Not valid to use /Yc here
+  .LibrarianOutput = "test.lib"
+  .LibrarianOptions = "/OUT:%2 %2"
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(3):(1) FASTBuild Error #1303 - Library() - Precompiled Header option '/Yc' in
+'CompilerOptions' invalid. Only allowed on Precompiled Header.
+Library( "test" )
+^
+\--here
+</div>
+</div>
+
+  <script>generateFooter()</script>
+</body>
+</html>

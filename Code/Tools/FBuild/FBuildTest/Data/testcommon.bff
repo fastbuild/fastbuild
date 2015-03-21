@@ -1,0 +1,53 @@
+//
+// Functionality commmon to multiple tests
+//
+
+//==============================================================================
+// Visual Studio
+//==============================================================================
+.VisualStudioPath		= '..\..\..\..\External\SDK\VS11.0'
+//.VisualStudioPath		= 'C:\Program Files (x86)\Microsoft Visual Studio 11.0'
+
+.VisualStudioToolChain = 
+[
+	.Compiler			= '$VisualStudioPath$\VC\bin\cl.exe'
+	.Librarian			= '$VisualStudioPath$\VC\bin\lib.exe'
+	.Linker				= '$VisualStudioPath$\VC\bin\link.exe'
+
+	.CompilerOptions	= '"%1" /Fo"%2" /c /Z7 /WX /nologo'
+						+ ' /D"WIN32_LEAN_AND_MEAN" /D_WIN32 /D__WINDOWS__'
+						+ ' /D"_CRT_SECURE_NO_WARNINGS"' // don't warn about unsafe functions
+                        + ' /D"_WINSOCK_DEPRECATED_NO_WARNINGS"' // don't warn about deprecated winsock functions
+	.LibrarianOptions	= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
+]
+.VisualStudioOptionsDebug =
+[
+	.Defines			= ' /DDEBUG /D_DEBUG'
+]
+.VisualStudionIncludePaths = ' /I"$VisualStudioPath$\VC\include"'
+
+//==============================================================================
+// WindowsSDK
+//==============================================================================
+.WindowsSDK				= '..\..\..\..\External\SDK\Windows8.1'
+//.WindowsSDK			= 'C:\Program Files (x86)\Windows Kits\8.1'
+
+.WindowsIncludePaths	= ' /I"$WindowsSDK$/include/um"'
+						+ ' /I"$WindowsSDK$/include/shared"'
+
+//==============================================================================
+// Clang
+//==============================================================================
+.ClangPath				= '..\..\..\..\External\SDK\ClangForWindows\3.4'
+//.ClangPath			= 'C:\Program Files (x86)\LLVM'
+
+//==============================================================================
+// Standard Environment
+//==============================================================================
+.StandardEnvironment =
+[
+	.Environment		= { 'PATH=$VisualStudioPath$\Common7\IDE\',
+							'TMP=C:\Windows\Temp',
+							'SystemRoot=C:\Windows' }
+	.CachePath			= 'C:\.fbuild.cache'
+]

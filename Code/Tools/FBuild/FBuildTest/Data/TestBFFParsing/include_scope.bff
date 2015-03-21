@@ -1,0 +1,6 @@
+
+// This file defines a variable
+#include "include_scope2.bff"
+
+// Should be available in this scope
+Print( '$var$' )

@@ -1,0 +1,56 @@
+
+#include "..\testcommon.bff"
+
+Settings		
+{ 
+	.CachePath		= "C:\.fbuild.cache"
+	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
+						"TMP=C:\Windows\Temp",
+						"SystemRoot=C:\Windows" }
+}
+
+.BaseIncludes = "/I^"$WindowsSDK$\Include\shared^" /I^"$WindowsSDK$\Include\um^" /I^"$VisualStudioPath$\VC\include^""
+
+.Compiler	= "$VisualStudioPath$\VC\bin\cl.exe"
+.Librarian	= "$VisualStudioPath$\VC\bin\lib.exe"
+.Linker		= "$VisualStudioPath$\VC\bin\link.exe"
+.CompilerOptions	= "%1 /Fo%2 /nologo /Z7 /c $BaseIncludes$"
+.LibrarianOptions	= "/NOLOGO /OUT:%2 %1"
+.LinkerOptions		= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1" /MACHINE:X86 /DLL /DEBUG /INCREMENTAL:NO'
+					+ " /IGNORE:4001" ; don't complain about linking libs only
+					+ ' /NODEFAULTLIB'
+					+ ' /ENTRY:DllMain'
+
+.Out 		= "..\..\..\..\ftmp"
+
+Library( "PCHTest-lib" )
+{
+	.PCHInputFile		= "Data\TestPrecompiledHeaders\PrecompiledHeader.cpp"
+	.PCHOutputFile		= "$Out$\Test\PrecompiledHeaders\PrecompiledHeader.pch"
+	.PCHOptions			= '%1 /Fo"%3" /Z7 /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c $BaseIncludes$'
+
+	.LibrarianOutput	= "$Out$\Test\PrecompiledHeaders\TestPCH.lib"
+	.CompilerInputPath	= "Data\TestPrecompiledHeaders\"
+	.CompilerOutputPath	= "$Out$\Test\PrecompiledHeaders\"
+	.CompilerOptions	+ ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+}
+
+DLL( "PCHTest" )
+{
+	.LinkerOutput		= "$Out$\Test\PrecompiledHeaders\PCHTest.exe"
+	.Libraries			= { "PCHTest-lib" }
+}
+
+ObjectList( "PCHTestClang" )
+{
+	.PCHInputFile		= "Data\TestPrecompiledHeaders\PrecompiledHeader.h"
+	.PCHOutputFile		= "$Out$\Test\PrecompiledHeaders\Clang\PrecompiledHeader.pch"
+
+	.PCHOptions			= ' -c -x c++-header $PCHInputFile$ -o"$PCHOutputFile$"'
+
+	.Compiler			= '$ClangPath$\bin\clang++.exe'
+	.CompilerOptions	= ' -c -g -include-pch "$PCHOutputFile$" %1 -o "%2" -integrated-as'
+
+	.CompilerInputFiles = "Data\TestPrecompiledHeaders\PCHUser.cpp"
+	.CompilerOutputPath	= "$Out$\Test\PrecompiledHeaders\Clang\"
+}

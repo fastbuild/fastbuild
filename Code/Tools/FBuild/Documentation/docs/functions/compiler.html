@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - Compiler</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>Compiler</h1>
+    <div id='compiler' class='newsitemheader'>
+      Compiler
+    </div>
+    <div class='newsitembody'>
+      <p>
+Specifies compiler and related files for network distribution.
+      </p>
+<div class='code'>Compiler( name )            ; (optional) Alias
+{
+  .Executable               ; Primary compiler executable
+  .ExtraFiles               ; (optional) Additional files (usually dlls) required by the compiler.
+}
+</div>
+<p>
+The relative location of the source files controls how they will be mirrored on the remote machine.  Files in 'ExtraFiles' in the same directory or in sub-directories under the primary 'Executable' will be placed in the same relative location on the remote machine.  'ExtraFiles' in other folders will be placed at the same level as the executable.
+
+<div class='code'>// Path behaviour example
+Compiler( 'Test' )
+{
+  .Executable	= 'C:\compiler\compiler.exe'       // dest: compiler.exe
+  .ExtraFiles = { 'C:\compiler\subdir\helper.dll'  // dest: subdir/helper.exe
+                  'C:\cruntime\mvscrt.dll'         // dest: msvcrt.dll
+}
+</div>
+</p>
+    </div>
+
+<div id='compiler' class='newsitemheader'>Examples</div>
+    <div class='newsitembody'>
+
+<b>Clang</b>
+<div class='code'>// Clang for Windows
+Compiler( 'Compiler-x86Clang' )
+{
+  .Executable  = '$ClangForWindowsBasePth$\clang++.exe'
+}
+
+Library( 'MyLibrary' )
+{
+  .Compiler = 'Compiler-x86Clang'
+
+  // other options as per normal
+}
+</div>
+<b>MSVC</b>
+<div class='code'>// VisualStudio 2013 x86 Compiler
+Compiler( 'Compiler-x86' )
+{
+  .Executable	= '$VSBasePath$\VC\bin\cl.exe'
+  .ExtraFiles = { '$VSBasePath$\VC\bin\c1.dll'
+                  '$VSBasePath$\VC\bin\c1ast.dll',
+                  '$VSBasePath$\VC\bin\c1xx.dll',
+                  '$VSBasePath$\VC\bin\c1xxast.dll',
+                  '$VSBasePath$\VC\bin\c2.dll',
+                  '$VSBasePath$\VC\bin\msobj120.dll'
+                  '$VSBasePath$\VC\bin\mspdb120.dll'
+                  '$VSBasePath$\VC\bin\mspdbcore.dll'
+                  '$VSBasePath$\VC\bin\mspft120.dll'
+                  '$VSBasePath$\VC\bin\1033\clui.dll'
+                  '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcp120.dll'
+                  '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll'
+                  '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\vccorlib120.dll'
+                }
+}
+
+Library( 'MyLibrary' )
+{
+  .Compiler = 'Compiler-x86'
+
+  // other options as per normal
+}
+</div>
+
+</div>
+
+  <script>generateFooter()</script>
+</body>
+</html>

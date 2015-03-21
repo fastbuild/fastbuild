@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - ForEach</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>ForEach</h1>
+    <div id='foreach' class='newsitemheader'>
+      ForEach
+    </div>
+    <div class='newsitembody'>
+      <p>
+Repeats content in a loop, iterating through one or more arrays in parallel. Arrays must be of the same size. For each "A in B" declaration, variable "A" will contain one value in the "B" array.
+      </p>
+<div class='code'>ForEach( .A in .ArrayA,  ; One or more arrays to loop through
+         .B in .ArrayB,
+         ... )
+{
+  ; Content to repeat
+}
+</div>
+    </div>
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

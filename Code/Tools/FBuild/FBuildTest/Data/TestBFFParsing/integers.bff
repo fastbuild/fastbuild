@@ -1,0 +1,15 @@
+
+
+; integers declared with varying layouts
+.IntA = 1
+.IntB=2
+.IntC=3;comment
+.IntD
+=
+4
+.IntE                =                          5
+
+; big int
+.IntBig = 1234567890
+
+

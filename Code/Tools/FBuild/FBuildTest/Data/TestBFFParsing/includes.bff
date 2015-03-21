@@ -1,0 +1,12 @@
+//
+// current dir
+#include "includes_a.bff"
+#include "includes_b.bff"
+
+// current dir
+#include "./includes_a.bff"
+#include ".\includes_b.bff"
+
+// relative to current dir
+#include "../TestBFFParsing/includes_a.bff"
+#include "..\TestBFFParsing\includes_b.bff"

@@ -1,0 +1,50 @@
+;
+; Build a test library
+;
+#include "..\testcommon.bff"
+
+Settings		
+{ 
+	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
+						"TMP=C:\Windows\Temp",
+						"SystemRoot=C:\Windows" }
+}
+
+; globals
+.Compiler			= "$VisualStudioPath$\VC\bin\cl.exe"
+.CompilerOptions	= "%1 /Fo%2 /c /Zi /Od /Zc:wchar_t /nologo /DWIN32 /DDEBUG"
+.Librarian			= "$VisualStudioPath$\VC\bin\lib.exe"
+.LibrarianOptions	= "/NOLOGO /NODEFAULTLIB /OUT:%2 %1"
+
+.Out		= "..\..\..\..\ftmp"
+
+.CompilerOutputPath = "$Out$\Test\BuildAndLinkLibrary\"
+
+Library
+{
+	.CompilerInputPath	= "Data\TestBuildAndLinkLibrary\"
+	.LibrarianOutput	= "$Out$\Test\BuildAndLinkLibrary\test.lib"
+}
+
+// merge libraries
+Library( 'libA' )
+{
+	.CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\a.cpp'
+	.LibrarianOutput	= '$Out$\Test\BuildAndLinkLibrary\a.lib'
+}
+Library( 'libB' )
+{
+	.CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\b.cpp'
+	.LibrarianOutput	= '$Out$\Test\BuildAndLinkLibrary\b.lib'
+}
+ObjectList( 'objListC' )
+{
+	.CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\c.cpp'
+}
+Library( 'libMerged' )
+{
+	.LibrarianAdditionalInputs  = { 'libA', // library by alias
+									'$Out$\Test\BuildAndLinkLibrary\b.lib', // library by name
+									 'objListC' } // object list
+	.LibrarianOutput	= '$Out$\Test\BuildAndLinkLibrary\merged.lib'
+}

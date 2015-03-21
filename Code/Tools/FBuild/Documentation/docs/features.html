@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<link href="style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Features</title>
+</head>
+<body>
+  <script>generateHeader()</script>
+
+<h1>Features</h1>
+
+
+<table style='width:90%;margin:auto;'>
+<tr>
+  <td valign=top style='width:49%;'>
+    <div class='newsitemheader'>Performance</div>
+    <div class='newsitembody' style='height:140;'>
+      <ul>
+        <li>Efficient parallel compilation</li>
+        <li>Local and network cache support</li>       
+        <li>Lightning fast "nothing to build"</li>
+        <li>Unity/Blob builds</li>
+        <li>Distributed compilation</li>
+      </ul>
+    </div>
+  </td>
+  <td />
+  <td valign=top style='width:49%;'>
+    <div class='newsitemheader'>Platforms</div>
+    <div class='newsitembody' style='height:140;'>
+      <ul>
+        <li>Build multiple platforms at once</li>
+        <li>Build multiple targets at once</li>
+        <li>Supports PC, Xbox 360, Xbox One, PS3, PS4, Wii & WiiU</li>
+		<li>Supports MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior & NVCC (CUDA)</li>
+      </ul>
+    </div>
+  </td>
+</tr>
+<tr>
+  <td valign=top>
+    <div class='newsitemheader'>Lightweight</div>
+    <div class='newsitembody' style='height:110;'>
+      <ul>
+        <li>Tiny, self-contained executable</li>
+        <li>Small run-time memory usage</li>
+        <li>No external dependencies</li>
+        <li>No installation required</li>
+      </ul>
+    </div>
+  </td>
+  <td />
+  <td valign=top>
+    <div class='newsitemheader'>Easy to use</div>
+    <div class='newsitembody' style='height:110;'>
+      <ul>
+        <li>Modern configuration syntax</li>
+        <li>Human readable errors</li>
+        <li>Visual studio compatible</li>
+      </ul>
+    </div>
+  </td>
+</tr>
+<tr>
+  <td valign=top>
+    <div class='newsitemheader'>More...</div>
+    <div class='newsitembody' style='height:110;'>
+      <ul>
+        <li>Unit Test support</li>
+        <li>Build statistics</li>
+        <li>Progress bar</li>
+        <li>Visual Studio project generation</li>
+      </ul>
+    </div>
+  </td>
+</tr>
+</table>
+
+<h1>Performance</h1>
+
+    <div class='newsitemheader'>Efficient parallel compilation</div>
+    <div class='newsitembody'>
+<p>FASTBuild was designed from the ground up to support parallel compilation.  The highly optimized main build pipeline is designed to be as thin as possible, dispatching build tasks to worker threads to maximize parallelism.</p>
+<p>FASTBuild has no artificial dependency bottlenecks like those present when compiling with Visual Studio/MSBuild.  Unlike Visual Studio, FASTBuild is able to precisely manage the number of CPU cores used during a build avoiding excessive idle spots or excessive context switching due to spawning too many threads.</p>
+<p>FASTBuild is a native Windows application, with all functionality built-in, avoiding the process-invocation overhead present in systems like make.</p>
+<p>Processing and management of the build graph occurs in highly optimized C++ code, avoiding performance issues present in systems like Scons.</p>
+</div>
+
+    <div class='newsitemheader'>Built-in cache support</div>
+    <div class='newsitembody'>
+<p>Build caching is supported as a built-in feature. A single line in the configuration file enables sharing of build results via a local or network cache.</p>
+<img src='timing_cache.png'>
+</div>
+
+    <div class='newsitemheader'>Lightning fast "nothing to build"</div>
+    <div class='newsitembody'>
+<p>FASTBuild knows the entire dependency graph before the build starts and can perform the absolute minimum IO required to determine which files need building.  The build state is saved between invocations to minimize work required for incremental and "nothing" builds.  The build configuration file is only parsed when it changes.</p>
+<img src='timing_noop.png'>
+</div>
+
+
+    <div class='newsitemheader'>Unity/Blob</div>
+    <div class='newsitembody'>
+FASTBuild supports automatically generated Unity/Blob builds.  By including many cpp files into single a single Unity (or Blob) file, compilation and link times can be greatly reduced.  Unity in FASTBuild is compatible with network distribution and caching.  Unity can automatically build "open for edit" (writable) files individually, allowing quicker iteration times when working.<br>
+<img src='timing_unity.png'>
+</div>
+
+    <div class='newsitemheader'>Distributed Compilation</div>
+    <div class='newsitembody'>
+<p>FASTBuild supports distributed compilation.</p>
+<img src='timing_dist.png'>
+</div>
+
+
+<h1>Lightweight</h1>
+
+    <div class='newsitemheader'>Tiny, self-contained executable</div>
+    <div class='newsitembody'>
+FASTBuild is a single executable, weighing in at around 400KB.  
+</div>
+
+    <div class='newsitemheader'>Small run-time memory usage</div>
+    <div class='newsitembody'>
+FASTBuild uses very little memory, apart from some per-cpu work buffers.  A typical 8 core machine has a footprint of under 100MB.  More free memory means better IO caching by Windows.
+</div>
+
+    <div class='newsitemheader'>No external dependencies</div>
+    <div class='newsitembody'>
+FASTBuild requires no external DLLs, libraries, 3rd party software or executables (other than those belonging to your compiler(s)).  It runs on a clean install of Windows (XP, 7 or server class equivalents).
+</div>
+
+    <div class='newsitemheader'>No installation required</div>
+    <div class='newsitembody'>
+The single executable for FASTBuild does not need installation.  It can simply be copied to a machine and run, or checked into revision control and versioned alongside your build (ideal for automated build systems).
+</div>
+
+
+<h1>Platforms</h1>
+
+    <div class='newsitemheader'>Build multiple platforms at once</div>
+    <div class='newsitembody'>
+FASTBuild can target mutiple (and any combination of) defined targets (or even all of them) simultaneously.  This is ideal for building mutiple platforms when verifying compilation before check-in, or as part of an automated build system.  This is especially useful if some of your targets have large linking bottlenecks, such as those introduced by Link-Time Code Generation.
+</div>
+
+    <div class='newsitemheader'>Build multiple targets at once</div>
+    <div class='newsitembody'>
+As with buiding multiple platforms simultaneously, FASTBuild can build multiple versions of the same platform simulatenously.  For example you can build the "debug", "release" and "retail" configurations in parallel.  Again, this is ideal for maximizing performance on automated build servers or during pre-submit "sanity-check" compiles.
+</div>
+
+    <div class='newsitemheader'>Support PC and Consoles</div>
+    <div class='newsitembody'>
+FASTBuild supports targetting Windows (X86 and X64) and all major consoles (PS3, PS4, Xbox360 & XboxOne).  Supported compilers are MSVC, GCC, SNC & Clang. It will also work with any other syntactially compatible command line compilers, preparing it for more platforms in the future.
+</div>
+
+
+
+
+<h1>Easy to Use</h1>
+
+    <div class="newsitemheader">Modern configuration syntax</div>
+    <div class='newsitembody'>
+FASTBuild has a uses a bespoke configuration language, designed to simplify the configuration of code compilation.  Configuration files are orders of magnitude smaller than Visual Studio project files or makefiles and are human readable.
+</div>
+
+    <div class="newsitemheader">Human readable errors</div>
+    <div class='newsitembody'>
+When FASTBuild fails to parse a configuration file, a human-readable error is emitted pinpointing the exact location of the error (in Visual Studio compatible) file(line:row) format.
+</div>
+
+    <div class="newsitemheader">Visual studio compatible</div>
+    <div class='newsitembody'>
+FASTBuild output, whether it be build progress or config parsing errors, is output in Visual Studio compatible format.  If you want to route FASTBuild output through Visual Studio, you will have the same error integration as if you were compiling using Visual Studio itself.
+</div>
+
+
+<h1>More...</h1>
+
+    <div class="newsitemheader">Unit Test support</div>
+    <div class='newsitembody'>
+FASTBuild contains built in support for Unit Tests.  Unit tests are automatically compiled and executed only when relevant source is modified.
+</div>
+
+    <div class="newsitemheader">Build statistics</div>
+    <div class='newsitembody'>
+FASTBuild gathers build statistics during the build and can report them upon completion.  A short compilation summary can be provided, or a full build report can be generated.  This information can be used to further improve compile times by targetting large compilation units or libraries, and clearly measuring gains as you optimize compilation.
+</div>
+
+    <div class="newsitemheader">Progress Bar</div>
+    <div class='newsitembody'>
+FASTBuild tracks build times across build and can use this information to estimate progress through the current build.
+</div>
+
+    <div class="newsitemheader">Visual Studio project generation</div>
+    <div class='newsitembody'>
+FASTBuild can generate vcxproj and vcxproj.filters to integrate FASTBuild compilation into the Visual Studio IDE.
+</div>
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

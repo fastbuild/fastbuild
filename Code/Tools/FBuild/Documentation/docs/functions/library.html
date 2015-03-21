@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - Library</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>Library</h1>
+    <div id='library' class='newsitemheader'>
+      Library
+    </div>
+    <div class='newsitembody'>
+      <p>
+Builds a statically linked library.
+      </p>
+<div class='code'>Library( alias )            ; (optional) Alias
+{
+  ; options for compilation
+  .Compiler                 ; Compiler to use
+  .CompilerOptions          ; Options for compiler
+  .CompilerOutputPath       ; Path to store intermediate objects
+  .CompilerOutputExtension  ; (optional) Specify the file extension for generated objects (default .obj)
+
+  ; Options for librarian
+  .Librarian                ; Librarian to collect intermediate objects
+  .LibrarianOptions         ; Options for librarian
+  .LibrarianOutput          ; Output path for lib file
+  .LibrarianAdditionalInputs; (optional) Additional inputs to merge into library
+
+  ; Specify inputs for compilation
+  .CompilerInputPath        ; (optional) Path to find files in
+  .CompilerInputPattern     ; (optional) Pattern to use when finding files (default *.cpp)
+  .CompilerInputPathRecurse ; (optional) Recurse into dirs when finding files (default true)
+  .CompilerInputExcludePath ; (optional) Path(s) to exclude from compilation
+  .CompilerInputFiles       ; (optional) Explicit array of files to build
+  .CompilerInputUnity       ; (optional) Unity to build
+
+  ; Additional compiler options
+  .CompilerForceUsing       ; (optional) List of objects to be used with /FU
+
+  ; (optional) Properties to control precompiled header use
+  .PCHInputFile             ; (optional) Precompiled header (.cpp) file to compile
+  .PCHOutputFile            ; (optional) Precompiled header compilation output
+  .PCHOptions               ; (optional) Options for compiler for precompiled header
+
+  ; Additional options
+  .PreBuildDependencies     ; (optional) Force targets to be built before this library (Rarely needed,
+                            ; but useful when a library relies on generated code).
+}
+</div>
+<p><b>Build-Time Substitutions</b>
+<ul>
+  <li><b>CompilerOptions</b></li>
+  <ul>
+    <li>%1 - Input file for each invocation of the compiler as determined by the various Input parameters.</li>
+    <li>%2 - Output name of object being compiled, as specified by CompilerOutputPath and the name of discovered objects
+             depending on the Compiler input options (extension is also replace with CompilerOutputExtension).</li>
+    <li>%3 - Object file for PCH file, as used in linking. (PCHOutputFile + CompilerOutputExtension). (MSVC Only)</li>
+    <li>%4 - CompilerForceUsing expansion.  Expand items with /FU"%4". (MSVC Only) </li>
+  </ul>
+  <li><b>LibrarianOptions</b></li>
+  <ul>
+    <li>%1 - List of objects to link.</li>
+    <li>%2 - Output library as specified by 'LibrarianOutput'.</li>
+  </ul>
+  <li><b>PCHOptions</b></li>
+  <ul>
+    <li>%1 - Input file for used to generate the PCH (PCHInputFile).</li>
+    <li>%2 - Output name of PCH file to generate (PCHOutputFile).</li>
+    <li>%3 - Object file for PCH, as used in linking. (PCHOutputFile + CompilerOutputExtension). (MSVC Only)</li>
+    <li>%4 - CompilerForceUsing expansion.  Expand items with /FU"%4". (MSVC Only)</li>
+  </ul>
+</ul>
+</p>
+    </div>
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+;
+; Test the compilation of Managed C (/clr) code
+;
+#include "..\testcommon.bff"
+
+Settings		
+{ 
+	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
+						"TMP=C:\Windows\Temp",
+						"SystemRoot=C:\Windows" }
+	.CachePath		= "C:\.fbuild.cache"
+}
+
+.Librarian			= "$VisualStudioPath$\VC\bin\lib.exe"
+.Compiler			= "$VisualStudioPath$\VC\bin\cl.exe"
+.CompilerOptions	= '/WX /nologo %1 /Fo%2 /c /Z7 /I"./" /clr'
+.LibrarianOptions	= "/NODEFAULTLIB /WX /NOLOGO /OUT:%2 %1"
+.Linker				= "$VisualStudioPath$\VC\bin\link.exe"
+
+.Out 				= "..\..\..\..\ftmp"
+
+Library( "CLR-Target" )
+{
+	.CompilerInputFiles	= "Data/TestCLR/a.cpp"
+	.CompilerOutputPath	= "$Out$/Test/CLR/"
+	.LibrarianOutput	= "$Out$/Test/CLR/clr.lib"
+}
+
+Library( "CLR-Parallel-Target" )
+{
+	.CompilerInputPath	= "Data/TestCLR/"
+	.CompilerOutputPath	= "$Out$/Test/CLR/"
+	.LibrarianOutput	= "$Out$/Test/CLR/clrmulti.lib"
+}
+
+//
+// Test building an EXE containing a CLR lib
+//
+Library( 'BrigeTest-CLR' )
+{
+	.CompilerInputFiles	= { 'Data/TestCLR/a.cpp',
+							'Data/TestCLR/b.cpp' }
+	.CompilerOutputPath	= '$Out$/Test/CLR/Bridge/'
+	.LibrarianOutput	= '$Out$/Test/CLR/Bridge/clr.lib'
+}
+Library( 'BridgeTest-CPP' )
+{
+	// regular C++
+	.CompilerOptions	= '/WX /nologo %1 /Fo%2 /c /Z7 /I"./"'
+
+	.CompilerInputFiles	= 'Data/TestCLR/exe.cxx'
+	.CompilerOutputPath	= '$Out$/Test/CLR/Bridge/'
+	.LibrarianOutput	= '$Out$/Test/CLR/Bridge/exe.lib'
+}
+
+Executable( 'BridgeTest-Exe' )
+{
+	.LinkerOptions		= "/NOLOGO /OUT:%2 %1 /MACHINE:X86"
+						+ " /IGNORE:4001" ; don't complain about linking libs only
+						+ " /SUBSYSTEM:CONSOLE"
+						+ ' /ENTRY:ExeMain'
+						+ ' MSVCRT.lib'
+						+ ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x86"'
+						+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+
+	.LinkerOutput		= '$Out$/Test/CLR/Bridge/Bridge.exe'
+	.Libraries			= { 'BridgeTest-CPP',
+							'BrigeTest-CLR'
+						  }
+}

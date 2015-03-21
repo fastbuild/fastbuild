@@ -1,0 +1,40 @@
+
+; double quoted
+.Var = "string"
+
+; single quoted
+.Var = 'string'
+
+; double quoted with single quotes inside
+.Var = "'''''''"
+
+; single quoted with double quotes inside
+.Var = '"""""""'
+
+; escaped quoted
+.Var = "^""
+.Var = '^''
+
+; quotes inside comments '"''"''"'''""""
+
+; comments inside strings
+.Var = ";"
+
+; scope tokens in strings
+Settings
+{
+	.A = "{{{{{"
+	.B = '{{{{{'
+	.C = ';'
+	.D = ";"
+}
+
+// assignment
+.String1 = "a string"
+.String2 = " and another string"
+.String3 = .String1
+
+// concatenation
+.StringA = .String1
+         + .String2
+

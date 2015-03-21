@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - Copy</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>Copy</h1>
+    <div id='copy' class='newsitemheader'>
+      Copy
+    </div>
+    <div class='newsitembody'>
+      <p>
+Copies a file.
+      </p>
+<div class='code'>Copy( name ) ; (optional) Alias
+{
+  .Source                   ; File(s) to copy
+  .Dest                     ; Destination (path or path and filename) 
+
+  ; Additional options
+  .PreBuildDependencies     ; (optional) Force targets to be built before this Copy (Rarely needed,
+                            ; but useful when Copy relies on externally generated files).
+}
+</div>
+    </div>
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+;
+; Test the compilation of C# code
+;
+
+.Compiler			= "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe"
+.CompilerOptions	= '/out:"%2" /target:library "%1"'
+
+.Out				= "../../../../ftmp"
+
+;
+; A single c# file
+;
+CSAssembly( "CSharp-Single-Target" )
+{
+	.CompilerInputFiles	= "Data/TestCSharp/a.cs"
+	.CompilerOutput		= "$Out$/Test/CSharp/csharpsingle.dll"
+}
+
+;
+; Multiple c# files
+;
+CSAssembly( "CSharp-Multi-Target" )
+{
+	.CompilerInputPath		= "Data/TestCSharp/"
+	.CompilerInputPattern	= "*.cs"
+	.CompilerOutput			= "$Out$/Test/CSharp/csharpmulti.dll"
+}
+
+;
+; Multiple c# assemblies
+;
+CSAssembly( "CSharp-AssemblyA" )
+{
+	.CompilerInputFiles		= "Data/TestCSharp/a.cs"
+	.CompilerOutput			= "$Out$/Test/CSharp/csharpassemblya.dll"
+}
+
+CSAssembly( "CSharp-AssemblyB" )
+{
+	.CompilerInputFiles		= "Data/TestCSharp/b.cs"
+	.CompilerOutput			= "$Out$/Test/CSharp/csharpassemblyb.dll"
+	.CompilerOptions		= "/reference:%3 $CompilerOptions$"
+	.CompilerReferences		= "CSharp-AssemblyA"
+}

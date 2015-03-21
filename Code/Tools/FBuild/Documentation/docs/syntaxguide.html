@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<link href="style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Syntax Guide</title>
+</head>
+<body>
+  <script>generateHeader()</script>
+
+
+<h1>Syntax Guide</h1>
+
+    <div class='newsitemheader'>
+      Overview
+    </div>
+    <div class='newsitembody'>
+<p>
+Details of the FASTBuild configuration file syntax can be grouped into 4 categories:
+</p>
+<b>Formatting</b>
+<ul>
+ <li><a href='#whitespace'>Whitespace</a></li>
+ <li><a href='#comments'>Comments</a></li>
+ <li><a href='#quotation'>Quotation</a></li>
+ <li><a href='#escaping'>Escaping</a></li>
+</ul>
+<b>Directives</b>
+<ul>
+  <li><a href='#include'>#include</a></li>
+  <li><a href='#once'>#once</a></li>
+</ul>
+<b>Variables</b>
+<ul>
+  <li><a href='#declaration'>Declaration and Types</a></li>
+  <li><a href='#modification'>Modification</a></li>
+  <li><a href='#scoping'>Scoping</a></li>
+  <li><a href='#structs'>Structs</a></li>
+</ul>
+<b>Functions</b>
+<ul>
+  <li><a href='#calling'>Calling</a></li>
+  <li><a href='#properties'>Properties</a></li>
+  <li><a href='#arguments'>Arguments</a></li>
+  <li><a href='#buildtimesubs'>Build-Time Substitutions</a></li>
+</ul>
+ </div>
+
+<h2>Formatting</h2>
+    <div class='newsitemheader' id='whitespace'>
+      Whitespace
+    </div>
+    <div class='newsitembody'>
+Whitespace (i.e. spaces, tabs, carriage returns and linefeeds) are all ignored during parsing and have no syntactic significance.
+ </div>
+
+    <div class='newsitemheader' id='comments'>
+      Comments
+    </div>
+    <div class='newsitembody'>
+Comments can occur anywhere in the file. All characters to the end of the current line are ignored when a comment character is encountered.
+Comments can be started with a double forward slash.
+<div class='code'>// A comment</div>
+Or a semi-colon:
+<div class='code'>; A comment</div>
+ </div>
+
+    <div class='newsitemheader' id='quotation'>
+      Quotation
+    </div>
+    <div class='newsitembody'>
+Strings are quoted with the " or ' character.  Two quotation characters are supported to
+allow strings which contains quotes. For example
+<div class='code'>"This contains ' inside the string"
+'This contains " inside the string'</div>
+Alternatively, strings can contains quotes through the use of escaping.
+ </div>
+
+    <div class='newsitemheader' id='escaping'>
+      Escaping
+    </div>
+    <div class='newsitembody'>
+Quotes can be escaped with the ^ character as follows:
+<div class='code'>"This string has ^" in it"
+'This string has ^' in it'
+"This string has both ^" and ' in it"</div>
+ </div>
+
+
+<h2>Directives</h2>
+    <div class='newsitemheader' id='include'>
+      #include
+    </div>
+    <div class='newsitembody'>
+<p>
+The #include directive allows a bff configuration file to include another.  This allows the configuration to be split
+along logical lines, such as per-platform or per-configuration.
+</p>
+Examples:
+<div class='code'>#include "platforms/x86.bff"
+#include "platforms/x64.bff"
+
+#include "libs/core.bff"
+#include "libs/graphics.bff"
+#include "libs/sound.bff"
+
+#include "game.bff"
+</div>
+ </div>
+
+    <div class='newsitemheader' id='once'>
+      #once
+    </div>
+    <div class='newsitembody'>
+<p>
+The #once directive specifies that a bff file should only be parsed once, regardless of how many times it is included.
+</p>
+Examples:
+<div class='code'>// Common.bff - containing common configuration options
+#once
+</div>
+<div class='code'>// LibraryA.bff
+#include "Common.bff"
+</div>
+<div class='code'>// LibraryB.bff
+#include "Common.bff"
+</div>
+<div class='code'>// fbuild.bff - the root config file
+#include "LibraryA.bff"
+#include "LibraryB.bff"
+</div>
+ </div>
+
+
+
+<h2>Variables</h2>
+    <div class='newsitemheader' id='declaration'>
+      Declaration and Type
+    </div>
+    <div class='newsitembody'>
+<p>
+Variable declarations begin with a period followed by a contiguous block of alphanumeric characters.  Variable names are case insensitive. Four variable types are supported (String, Integer, Boolean and Array). Variable types are implied by their declaration.
+</p>
+Examples:
+<div class='code'>.MyString = "hello"
+.MyBool   = true
+.MyInt    = 7
+.MyArray  = { "aaa", "bbb", "ccc" }
+</div>
+ </div>
+
+    <div class='newsitemheader' id='modification'>
+      Modification
+    </div>
+    <div class='newsitembody'>
+<p>
+Variables can be overridden or modified at any point after they have been declared, as follows:
+</p>
+<div class='code'>; Declaration
+.MyString = "hello"
+
+; Concatenation
+.MyString + " there"
+          + " FASTBuild user" ; Uses last referenced variable automatically
+
+; Re-assignment
+.MyString = "hello"
+</div>
+<p>
+Variables can be constructed from other variables:
+</p>
+<div class='code'>.StringA = "hello"
+.StringB = "$StringA$ FASTBuild user!"
+</div>
+</div>
+
+    <div class='newsitemheader' id='scoping'>
+      Scoping
+    </div>
+    <div class='newsitembody'>
+<p>
+Variables are valid for the scope they are declared in, and all sub-scopes. Modifications to variables within a scope exist only in the scope they are made.  For example:</p>
+<div class='code'>.MyString = 'hello'
+{
+  .MyString = 'goodbye'
+}
+; Mystring contains 'hello' again
+
+{
+  .MyString + ' hello'  ; string contains 'hello hello'
+}
+; Mystring contains 'hello' again
+</div>
+</div>
+
+    <div class='newsitemheader' id='structs'>
+      Structs
+    </div>
+    <div class='newsitembody'>
+<p>
+Structs allow the grouping of variables to allow reuse of settings in complex build configurations.  Structs contain any number of variables of any type (including other structs).  Arrays of structs are also permitted.
+</p>
+<div class='code'>.MyStruct =
+[
+  .MyString = "string"
+  .MyInt    = 7
+]
+</div>
+<p>
+A struct contains a number of properties, isolating them from the current namespace. The Using function allows all the members of a struct to be pushed into the current scope:
+<div class='code'>Using( .MyStruct )
+</div>
+<p>The Using function also allows Structs to effectively inherit and override other structs.</p>
+<div class='code'>.StructA = [ .StringA = 'a' ]
+.StructB =
+[
+  Using( .StructA ) // "inherit" - StructB now has a StringA property
+  .StringB = 'b'    // "extend" - An additional property
+]
+</div>
+<p>Looping through arrays of structures is a useful technique for minimizing configuration complexity.<p>
+<div class='code'>.ConfigX86 =
+[ 
+  .Compiler   = "compilers/x86/cl.exe"
+  .ConfigName = "x86"
+]
+.ConfigX64 =
+[
+  .Compiler = "compilers/x64/cl.exe"
+  .ConfigName = "x64"
+]
+.Configs = { .ConfigX86, .ConfigX64 }
+
+ForEach( .Config in .Configs )
+{
+  Using( .Config )
+  Library( "Util-$ConfigName$" )
+  {
+    .CompilerInputPath  = 'libs/util/'
+    .CompilerOutputPath = 'out/$ConfigName$/'
+    .LibrarianOutput 	= 'out/$ConfigName$/Util.lib'
+  }
+}
+</div>
+</div>
+
+
+
+<h2>Functions</h2>
+<p>NOTE: See the <a href='functions.html'>Function Reference</a> for a detailed list of all available functions and their Arguments and Properties.</p>
+    <div class='newsitemheader' id='calling'>
+      Calling
+    </div>
+    <div class='newsitembody'>
+<p>
+Functions describe the dependency information to FASTBuild. Each library, executable, unit test or other "node" is described to FASTBuild through the use of Functions.
+</p>
+<p>Functions generally take the form:</p>
+<div class='code'>Function( args )
+{
+  .Property1 = "value1"
+  .Property2 = "value2"
+	
+  ; etc...
+}
+</div>
+</div>
+
+    <div class='newsitemheader' id='properties'>
+      Properties
+    </div>
+    <div class='newsitembody'>
+<p>
+Functions are primarily controlled by their Properties, taken from active variable declarations (either internally declared or from an inherited scope). The recognized properties vary from function to function.
+</p>
+<p>The result of the following two examples are equivalent:</p>
+<div class='code'>; Example A
+Library( "mylib" )
+{
+  .Compiler = "cl.exe"
+}
+
+; Example B
+.Compiler = "cl.exe"
+Library( "mylib" )
+{
+}
+</div>
+<p>
+Variables interact with Function properties in this way to allow common declarations to be moved to higher level scope to avoid duplication.  Combined with the variable scoping rules, this also allows for bespoke specializations.
+</p>
+ </div>
+
+    <div class='newsitemheader' id='arguments'>
+      Arguments
+    </div>
+    <div class='newsitembody'>
+<p>
+Arguments are often optional, and their quantity and syntax varies from function to function.  Where they are not required (or optional), brackets should be omitted.
+</p>
+<p>As an example, the Library function takes an optional alias argument to allow a user-friendly name when targetting the library to be built on the command line:</p>
+<div class='code'>Library( "mylib" )                        ; can target "mylib"...
+{
+  .LibrarianOutput = "out\libs\mylib.lib" ; ...instead of this
+}
+</div>
+</div>
+
+    <div class='newsitemheader' id='buildtimesubs'>
+      Build-Time Substitutions
+    </div>
+    <div class='newsitembody'>
+<p>
+Build-Time Substitutions allow FASTBuild to replace certain configuration values at build time,
+as opposed to configuration parsing time ($ tokens). This functionality is used
+whenever the value of an argument can't be known at configuration time, or there is a many to one
+relationship between the configuration and the number of nodes it results in during the build.
+</p>
+<p>One common example of where build time substitutions are required is when building a library. 
+Since the compiler is invoked for each file, but we only define one set of 'CompilerOptions', 
+a build-time substitution is required.  For example:
+</p>
+<div class='code'>Library( "mylib" )
+{
+  ; NOTE: some option omitted for brevity
+  .CompilerInputPath = 'Code\'               ; will build all cpp files in this directory
+  .CompilerOutputPath= 'Tmp\'
+  .CompilerOptions   = '%1 /Fo%2 /nologo /c' ; substitutions detailed below
+}
+</div>
+<p>Assuming there are 3 files in the 'Code' directory ('a.cpp', 'b.cpp' and 'c.cpp'), the compiler will be
+invoked 3 times.  In each case %1 and %2 will be replaced with appropriate values for the input and output.  In
+this case, that means 'a.cpp' & 'Tmp\a.obj' for the first invocation, 'b.cpp' & 'Tmp\b.obj' for the second, and finally 
+'c.cpp' & 'Tmp\c.obj'.</p>
+<p>The behaviour of build-time substitutions is different for each Function (what values they provide and what
+properties they can be used on).  For details, see the <a href='functions.html'>Function Reference</a>.
+</div>
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

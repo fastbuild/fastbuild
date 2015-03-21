@@ -1,0 +1,52 @@
+;
+; Test the creation of a Unity/Blob/Munge file
+;
+#include "..\testcommon.bff"
+
+Settings		
+{ 
+	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
+						"TMP=C:\Windows\Temp",
+						"SystemRoot=C:\Windows" }
+}
+
+.Out		= "..\..\..\..\ftmp"
+
+Unity( "Unity-Test" )
+{
+	.UnityInputPath		= "Data/TestUnity"
+	.UnityInputPattern	= "*.cpp"
+	.UnityInputPathRecurse = false
+	.UnityInputExcludedFiles = "\b.cpp"
+	.UnityOutputPath	= "$Out$/Test/Unity/"
+	.UnityOutputPattern	= "Unity*.cpp"
+	.UnityNumFiles		= 2
+	.UnityPCH			= "PrecompiledHeader.h"
+	.UnityInputExcludedFiles = "wontcompile.cpp"
+}
+
+.Librarian			= "$VisualStudioPath$\VC\bin\lib.exe"
+.Compiler			= "$VisualStudioPath$\VC\bin\cl.exe"
+.CompilerOptions	= '/WX /nologo %1 /Fo%2 /c /Z7 /I"./" /I"Data/TestUnity"'
+.LibrarianOptions	= "/NODEFAULTLIB /WX /NOLOGO /OUT:%2 %1"
+
+Library( "Unity-Compiled" )
+{
+	.PCHInputFile		= "Data/TestUnity/PrecompiledHeader.cpp"
+	.PCHOutputFile		= "$Out$/Test/Unity/PrecompiledHeader.pch"
+	.PCHOptions			= '%1 /Fo%2.obj /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+
+	.CompilerInputUnity = "Unity-Test"
+	.CompilerOutputPath	= "$Out$/Test/Unity/"
+	.LibrarianOutput	= "$Out$/Test/Unity/Unity.lib"
+	.CompilerOptions	+ ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+}
+
+// Explicit list of files
+Unity( 'Unity-Explicit-Files' )
+{
+	.UnityInputFiles = { 'Data/TestUnity/a.cpp',
+						 'Data/TestUnity/b.cpp',
+						 'Data/TestUnity/c.cpp' }
+	.UnityOutputPath	= "$Out$/Test/Unity/Explicit/"
+}

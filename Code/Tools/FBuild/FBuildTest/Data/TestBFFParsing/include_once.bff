@@ -1,0 +1,22 @@
+
+// only process this file once, regardless of number of time it is included
+#once
+
+// define a dummy target
+Copy( "Copy" )
+{
+	.Source = "source.txt"
+	.Dest	= "dest.txt"
+}
+
+// include self to test "#once" behaviour
+// without #once, this would:
+//  a) be infinitely recursive
+//  b) multiply define the "Copy" target, which would be an error
+#include "include_once.bff"
+
+// check that different ways to ultimately reference the same file are
+// collapsed into one
+#include "../TestBFFParsing/include_once.bff"
+#include "..\TestBFFParsing\include_once.bff"
+

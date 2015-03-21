@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - Test</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>Test</h1>
+    <div id='test' class='newsitemheader'>
+      Test
+    </div>
+    <div class='newsitembody'>
+      <p>
+Defines the execution of an executable as a test. The executable must be previously defined with the Executable function.</p>
+<div class='code'>Test( alias )      ; (optional) Alias
+{
+  .TestExecutable  ; Executable to execute
+  .TestOutput      ; Output file for captured test output
+  .TestArguments   ; (optional) Arguments to pass to test executable
+  .TestWorkingDir  ; (optional) Working dir for test execution
+}
+</div>
+    </div>
+
+  <script>generateFooter()</script>
+</body>
+</html>

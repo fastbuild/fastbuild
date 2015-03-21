@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Features - Distribution</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>Network Distribution</h1>
+    <div id='alias' class='newsitemheader'>
+      Overview
+    </div>
+    <div class='newsitembody'>
+      <p>
+FASTBuild can scale compilation across the network to utilize additional CPU power to speed up a build. Distribution is supported for all major compilers, but has some restrictions/requirements:
+      </p>
+	  <p>
+	  Distribution requires:
+	  <ul>
+	    <li>Compatible compilation settings</li>
+            <li>Compiler Synchronization Setup</li>
+            <li>Configuration of worker discovery</li>
+            <li>Starting the worker process</li>
+            <li>Activation of distributed compilation</li>
+	  </ul>
+	  </p>
+</div>
+
+    <div id='alias' class='newsitemheader'>Compilation Settings</div>
+    <div class='newsitembody'>
+<p>Some compilation settings are incompatible with distribution. If any object cannot be safely distributed, it will automatically be built locally instead. A build can safely mix distributable and non-distributable objects.</p>
+<p>
+<b>GCC/SNC/Clang</b>
+<ul>
+  <li>No restrictions.</li>
+</ul>
+<b>MSVC</b>
+<ul>
+  <li>/ZW (Consume Windows Runtime) cannot be used.</li>
+  <li>Precompiled Headers cannot be distributed.  They are machine-specific. (Objects using PCH can be distributed.)</li>
+  <li>/clr (Managed C) cannot be distributed due to bugs in the Microsoft compiler's preprocessor.</li>
+</ul>
+</p>
+</div>
+
+
+    <div id='alias' class='newsitemheader'>Compiler Synchronization</div>
+    <div class='newsitembody'>
+<p>FASTBuild will synchronize the compiler toolchain to the remote machine in an isolated environment.  This avoids the need to install the toolchain on the remote machine, and ensures you are always compiling with the correct compiler.  To do this, FASTBuild needs to know which files to synchronize over the network. See the <a href="../functions/compiler.html">Compiler() function documentation</a> for details.</p>
+</div>
+
+
+    <div id='alias' class='newsitemheader'>Worker Discovery</div>
+    <div class='newsitembody'>
+<p>Workers are discovered through a brokerage location. The brokerage location is a network path accessible from both the host and workers. The brokerage path is configured by:
+<ul>
+  <li>Setting the FASTBUILD_BROKERAGE_PATH Environment Variable</li>
+</ul>
+<p>Windows and UNC format paths are supported.</p>
+<p>Workers signal their availability by writing a token to this location.  Clients discover workers by checking this location.</p>
+</div>
+
+    <div id='alias' class='newsitemheader'>Starting a Worker</div>
+    <div class='newsitembody'>
+<p>A worker is started by running the FBuildWorker.exe. With a configured Brokerage Path, it will signal its availability to clients.
+</div>
+
+    <div id='alias' class='newsitemheader'>Activation of Distribution</div>
+    <div class='newsitembody'>
+<p>To start a distributed build, add -dist on the command line.  Any distributable tasks will be passed to available workers.</p>
+</div>
+
+    </div>
+
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

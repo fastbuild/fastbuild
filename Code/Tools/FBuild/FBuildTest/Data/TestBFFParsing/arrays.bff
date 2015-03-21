@@ -1,0 +1,62 @@
+
+
+; empty array
+.EmptyArray = {}
+.EmptyArray = { } // empty with whitespace
+.EmptyArray = {// empty with comments
+}
+
+; array of one string
+.ArrayOfOneString = { "zzz" }
+
+; array of multiple strings
+.ArrayOfMultipleStrings = { "aaa", "bbb", "ccc" }
+
+; mixed quotes
+.MixedQuotes = { "aaa", 'bbb', "cc'cc", 'dd"dd' }
+
+; multiple lines
+.MultipleLines
+=
+{
+"a"
+,
+"b"
+,
+"c"
+}
+
+; commas optional
+.CommasOptional = { "a" "b" }
+
+; no whitepase
+.NoWhiteSpace={"a","b","c"}
+
+.String = "zzz"
+
+// assignment
+.Array1 = { "one", "two" }
+.Array2 = { "three", "four" }
+.Array1 = .Array2
+.Array1 = { .Array2 }
+.Array1 = { .String }
+.Array1 = .String
+
+// concatenation
+.ArrayA = .Array1
+		+ .Array2
+		+ { "five", "six" }
+		+ { .Array2 }
+		+ { .String }
+		+ .String
+
+// Mixed - concat String to ArrayOfStrings
+.ArrayOfStrings = { "Str", "Str2", "Str3" }
+				+ "Str4"
+
+.String4		= "Str4"
+.ArrayOfStrings + .String4
+
+// Concat to empty array
+.AnotherEmptyArray = {} // should default to array of strings
+.AnotherEmptyArray + "string"

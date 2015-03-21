@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<link href="style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Command Line Options Reference</title>
+</head>
+<body>
+  <script>generateHeader()</script>
+
+
+<h1>Command Line Options</h1>
+
+<h2>FBuild.exe</h2>
+
+    <div class='newsitembody'>
+
+<table width=700>
+  <tr>
+    <th width=150 align=left>Option</th>
+    <th align=left>Summary</th>
+  </tr>
+  <tr>
+    <td><a href="#cache">-cache[read|write]</a></td>
+    <td>Use the build cache.</td>
+  </tr>
+  <tr>
+    <td><a href="#clean">-clean</a></td>
+    <td>Force a clean build.</td>
+  </tr>
+  <tr>
+    <td><a href="#config">-config [path]</a></td>
+    <td>Explicity specify the config file to use.</td>
+  </tr>
+  <tr>
+    <td><a href="#dist">-dist</a></td>
+    <td>Enable distributed compilation.</td>
+  </tr>
+  <tr>
+    <td><a href="#fixuperrorpaths">-fixuperrorpaths</a></td>
+    <td>Reformat GCC/SNC/Clang error messages in Visual Studio format.</td>
+  </tr>
+  <tr>
+    <td><a href="#help">-help</a></td>
+    <td>Show usage help.</td>
+  </tr>
+  <tr>
+    <td><a href="#jx">-jX</a></td>
+    <td>Explicitly set worker thread count.</td>
+  </tr>
+  <tr>
+    <td><a href="#nooutputbuffering">-nooutputbuffering</a></td>
+    <td>Don't buffer output written to stdout.</td>
+  </tr>
+  <tr>
+    <td><a href="#noprogress">-noprogress</a></td>
+    <td>Don't show the progress bar while building.</td>
+  </tr>
+  <tr>
+    <td><a href="#report">-report</a></td>
+    <td>Output a report at build termination.</td>
+  </tr>
+  <tr>
+    <td><a href="#showcmds">-showcmds</a></td>
+    <td>Show command lines used to launch external processes.</td>
+  </tr>
+  <tr>
+    <td><a href="#summary">-summary</a></td>
+    <td>Show a summary at the end of the build.</td>
+  </tr>
+  <tr>
+    <td><a href="#verbose">-verbose</a></td>
+    <td>Show detailed diagnostic information for debugging.</td>
+  </tr>
+  <tr>
+    <td><a href="#version">-version</a></td>
+    <td>Print version and exit.</td>
+  </tr>
+  <tr>
+    <td><a href="#version">-vs</a></td>
+    <td>VisualStudio mode.</td>
+  </tr>
+  <tr>
+    <td><a href="#wait">-wait</a></td>
+    <td>Wait for a previous build to complete before starting.</td>
+  </tr>  
+  <tr>
+    <td><a href="#wrapper">-wrapper</a></td>
+    <td>Wrapper mode for Visual Studio.</td>
+  </tr>
+</table>
+</div>
+
+<h2>FBuildWorker.exe</h2>
+
+    <div class='newsitembody'>
+
+<table width=700>
+  <tr>
+    <th width=250 align=left>Option</th>
+    <th align=left>Summary</th>
+  </tr>
+  <tr>
+    <td><a href="#cpus">-cpus=[n|-n|n%]</a></td>
+    <td>Control worker CPUs allocation.</td>
+  </tr>
+  <tr>
+    <td><a href="#mode">-mode=[disabled|idle|dedicated]</a></td>
+    <td>Control worker availability.</td>
+  </tr>
+  <tr>
+    <td><a href="#nosubprocess">-nosubprocess</a></td>
+    <td>Don't spawn as a sub-process.</td>
+  </tr>
+</table>
+</div>
+
+<h2>FBuild.exe Detailed</h2>
+
+    <div class='newsitemheader' id="cache">-cache[read|write]</div>
+    <div class='newsitembody'>
+<p>Enable usage of the build cache.  The cache options need to be configured in the build configuration file.</p>
+<p>The cache can be enabled as read only or write only with '-cacheread' or '-cachewrite'.  This can be useful for automated build systems, where you might like one machine to populate the cache for read-only use by other users.</p>
+<p>Use of '-cache' is equivalent to '-cachread' and '-cachewrite' together.</p>
+</div>
+
+    <div class='newsitemheader' id="clean">-clean</div>
+    <div class='newsitembody'>
+<p>Force a clean build.  The build configuration file is re-parsed and all exsiting dependency information is discarded.  A build is performed as if building for the first time with no built files present.</p>
+</div>
+
+    <div class='newsitemheader' id="config">-config [path]</div>
+    <div class='newsitembody'>
+<p>Explicity specify the config file to use.  By default, FASTBuild looks for "fbuild.bff" in the current directory.  This options allows a file to be explicitly
+specified instead.</p>
+</div>
+
+    <div class='newsitemheader' id="dist">-dist</div>
+    <div class='newsitembody'>
+<p>Enable distributed compilation. Requires some build configuration.</p>
+</div>
+
+    <div class='newsitemheader' id="fixuperrorpaths">-fixuperrorpaths</div>
+    <div class='newsitembody'>
+<p>Enables re-formatting of warnings, errors and notes for GCC/SNC & Clang to Visual Studio format. Additionally, relative paths are expanded to full paths. This allows these errors to be double-clickable inside Visual Studio.</p>
+<p>Enabled automatically when '-vs' is used.</p>
+</div>
+
+
+    <div class='newsitemheader' id="help">-help</div>
+    <div class='newsitembody'>
+<p>Prints command line usage information, as per the summary at the top of this page.</p>
+</div>
+
+    <div class='newsitemheader' id="jx">-jX</div>
+    <div class='newsitembody'>
+<p>Overrides the number of tasks which can be built in parallel, which by default is controlled by the standard NUMBER_OF_PROCESSORS windows environment variable.</p>
+<p>A value of 0 for X indicates that no additional threads should be spawned, and build graph processing and compilation should occur on the same thread.  This can be useful for buid process debugging, especially when combined with the '-verbose' option.</p>
+<p>Positive values can be used to exactly set the number of tasks which can be performed in parallel.  This can be used to limit CPU usage on a machine that needs to perform other work while compilation is in progress.  Values greater than the number of physical processors are accepted, but will almost certainly result in degraded performance.</p>
+<p><b>Generally, this option should be omitted for optimal compilation performance, but it's possible that on some systems, tweaking this might yield improved performance.</b></p>
+</div>
+
+    <div class='newsitemheader' id="nooutputbuffering">-nooutputbuffering</div>
+    <div class='newsitembody'>
+<p>Don't buffer output written to stdout.</p>
+<p>This should be used when targetting compilation from within Visual Studio or another IDE. (or use -vs)</p>
+</div>
+
+    <div class='newsitemheader' id="noprogress">-noprogress</div>
+    <div class='newsitembody'>
+<p>Suppresses the progress bar that is normally shown while compiling.</p>
+<p>This should be used when targetting compilation from within Visual Studio or another IDE. (or use -vs)</p>
+</div>
+
+    <div class='newsitemheader' id="report">-report</div>
+    <div class='newsitembody'>
+<p>Ouput a detailed report at the end of the build.  The report is written to report.html in the current directory.</p>
+<p>The build report contains details of:
+<ul>
+  <li>The build environment (version, cmd line used etc.)</li>
+  <li>All items built.</li>
+  <li>Cache utilization.</li>
+  <li>Include file usage.</li>
+</ul>
+</p>
+<p>NOTE: This option will lengthen the total build time, depending on the complexity of the build.</p>
+</div>
+
+    <div class='newsitemheader' id="showcmds">-showcmds</div>
+    <div class='newsitembody'>
+<p>Displays the full command lines passed to external tools as they are invoked.</p>
+<p>This option is useful for debugging build configurations, where the -verbose mode is too spammy.</p>
+<p>NOTE: This option may have an impact on build performance.</p>
+<p></p>
+</div>
+
+    <div class='newsitemheader' id="summary">-summary</div>
+    <div class='newsitembody'>
+<p>Displays a summary upon build completion.</p>
+<p></p>
+</div>
+
+    <div class='newsitemheader' id="verbose">-verbose</div>
+    <div class='newsitembody'>
+<p>Show detailed diagnostic information for debugging.</p>
+<p>This can be used to provide more information when debugging a build configuration problem. It will display detailed information as the build configuration is parsed, as well as detailed information during the build, including full command line arguments passed to external executables.</p>
+<p>It is usually useful to combine this flag with <a href="#jx">-j0</a> to serialize the build process and output (avoiding the output of different threads being mixed together).</p>
+</div>
+
+    <div class='newsitemheader' id="version">-version</div>
+    <div class='newsitembody'>
+<p>Prints executable version information and exits.  No configuration parsing or building is performed.</p>
+</div>
+
+    <div class='newsitemheader' id="vs">-vs</div>
+    <div class='newsitembody'>
+<p>VisualStudio mode.  Same as '<a href="#nooutputbuffering">-nooutputbuffering</a>', '<a href="#noprogress">-noprogress</a>', '<a href="#fixuperrorpaths">-fixuperrorpaths</a>' and '<a href="#wrapper">-wrapper</a>'.</p>
+</div>
+
+    <div class='newsitemheader' id="wait">-wait</div>
+    <div class='newsitembody'>
+<p>Wait for a previous build to complete before starting.</p>
+<p>Only one instance of FASTBuild can run at a time.  Normally, if you wish to build multiple targets, you specify
+them together on the command line.  This allows for paralellization across both targets.</p>
+<p>If a second process is launched with -wait command line arg, instead of failing, it will start 
+after the first process completes.  This will be slower than if both targets were invoked together 
+on the original command line.</p>
+</div>
+
+
+    <div class='newsitemheader' id="wrapper">-wrapper</div>
+    <div class='newsitembody'>
+<p>Spawns FASTBuild via an intermediate sub-process to be able to cleanly terminate a build from Visual Studio.</p>
+<p>When cancelling a build in Visual Studio, the FASTBuild process will be killed, with no opportunity to save the build database, resulting in lost compilation work. Specifying this option spawns an orpaphaned child process to do the actual work. When the parent process is terminated by Visual Studio, the child process detects this and cleanly shuts down.</p>
+<p>Is a subsequent "wrapper mode" build is initiated before the first terminates, FASTBuild will wait for this first process to complete.</p>
+</div>
+
+<h2>FBuildWorker.exe Detailed</h2>
+
+    <div class='newsitemheader' id="cpus">-cpus=[n|-n|n%]</div>
+    <div class='newsitembody'>
+<p>Control worker CPUs allocation.</p>
+<p>The number of workers available is normally controlled through the UI of the FBuildWorker.exe. The "-cpus" command line option will override this as follows:
+<table>
+  <tr><th width=150>Syntax</th><th>Description</th></tr>
+  <tr><td>-cpus=n</td><td>Value n will be used.</td></tr>
+  <tr><td>-cpus=-n</td><td>Value of NUMBER_OF_PROCESSORS-n will be used.</td>
+  <tr><td>-cpus=n%</td><td>Specify number of CPUs as a percentage of NUMBER_OF_PROCESSORS.</td></tr>
+</table>
+</p>
+<p>In all cases, the number used will be clamped between 1 and the NUMBER_OF_PROCESSORS environment variable.</p>
+<p>NOTE: The newly overridden options will be saved and used on subsequent restarts of the worker.</p>
+</div>
+
+
+    <div class='newsitemheader' id="mode">-mode=[disabled|idle|dedicated]</div>
+    <div class='newsitembody'>
+<p>Control worker availability.</p>
+<p>The FBuildWorker.exe mode is normally controlled through the UI. The "-mode" command line option will override this as follows:
+<table>
+  <tr><th width=150>Syntax</th><th>Description</th></tr>
+  <tr><td>-mode=disabled</td><td>Worker will accept no tasks.</td></tr>
+  <tr><td>-mode=idle</td><td>Worker will accept tasks when PC is considerd idle.</td>
+  <tr><td>-mode=dedicated</td><td>Worker will accept tasks regardless of PC state.</td></tr>
+</table>
+</p>
+<p>NOTE: The newly overridden options will be saved and used on subsequent restarts of the worker.</p>
+</div>
+
+    <div class='newsitemheader' id="nosubprocess">-nosubprocess</div>
+    <div class='newsitembody'>
+<p>Don't spawn a sub-process copy of the worker.</p>
+<p>By default, when the FBuildWorker is launched, it makes a copy of itself (FBuildWorker.exe.copy), launches the copy and terminates.  The duplicate process monitors the original executable file for changes, and re-launches itself if the file is updated. In this way, the FBuildWorker.exe can be kept under revision control, and when synchronized to a new version, will automatically re-start.</p>
+<p>The "-nosubprocess" option supresses this behaviour.</p>
+</div>
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

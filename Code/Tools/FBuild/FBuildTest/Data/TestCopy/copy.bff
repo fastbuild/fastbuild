@@ -1,0 +1,33 @@
+//
+// Test the Copy Function/Node
+//
+
+.Out				= "../../../../ftmp"
+
+//
+// Copying a single file
+//
+Copy( "TestCopyFileToFile" )
+{
+	.Source = "Data/TestCopy/copy.bff"
+	.Dest	= "$Out$/Test/Copy/copy.bff.copy"
+}
+
+//
+// Copy to a directory
+//
+Copy( "TestCopyFileToDir" )
+{
+	.Source = "Data/TestCopy/copy.bff"
+	.Dest	= "$Out$/Test/Copy/"
+}
+
+//
+// Copy multiple files to directory 
+//
+Copy( "TestMultiCopyToDir" )
+{
+	.Source = { "Data/TestCopy/a.txt",
+				"Data/TestCopy/b.txt" }
+	.Dest = "$Out$/Test/Copy/"
+}
