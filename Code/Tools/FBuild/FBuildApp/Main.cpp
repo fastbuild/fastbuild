@@ -9,6 +9,7 @@
 
 #include "Core/Containers/Array.h"
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/Process/Process.h"
 #include "Core/Process/SharedMemory.h"
 #include "Core/Process/SystemMutex.h"
@@ -45,7 +46,7 @@ void DisplayVersion();
     // TODO:MAC Implement CtrlHandler
     // TODO:LINUX Implement CtrlHandler
 #endif
-int WrapperMainProcess( const AString & args );
+int WrapperMainProcess(const AString & args, SystemMutex& finalProcess);
 int WrapperIntermediateProcess( const AString & args );
 
 // Misc
@@ -68,13 +69,6 @@ struct SharedData
 // Global
 //------------------------------------------------------------------------------
 SharedMemory g_SharedMemory;
-
-// ensure only one FASTBuild instance is running at a time
-SystemMutex mainProcess( "Global\\FASTBuild" );
-
-// in "wrapper" mode, Main process monitors life of final process using this
-// (when main process can acquire, final process has terminated)
-SystemMutex finalProcess( "Global\\FASTBuild_Final" );
 
 // main
 //------------------------------------------------------------------------------
@@ -299,6 +293,21 @@ int main(int argc, char * argv[])
 		setvbuf(stderr, NULL, _IONBF, 0);
 	}
 
+    //Need to set WorkingDir parameter here because global mutex names depend on workingDir.
+    FBuildOptions options;
+    {
+        AString workingDir;
+        VERIFY(FileIO::GetCurrentDir(workingDir));
+        options.SetWorkingDir(workingDir);
+    }
+
+    // ensure only one FASTBuild instance is running at a time
+    SystemMutex mainProcess( options.GetMainProcessMutexName().Get() );
+
+    // in "wrapper" mode, Main process monitors life of final process using this
+    // (when main process can acquire, final process has terminated)
+    SystemMutex finalProcess( options.GetMainProcessMutexName().Get() );
+
 	// only 1 instance running at a time
 	if ( ( wrapperMode == WRAPPER_MODE_MAIN_PROCESS ) ||
 		 ( wrapperMode == WRAPPER_MODE_NONE ) )
@@ -325,7 +334,7 @@ int main(int argc, char * argv[])
 
 	if ( wrapperMode == WRAPPER_MODE_MAIN_PROCESS )
 	{
-		return WrapperMainProcess( args );
+		return WrapperMainProcess( args, finalProcess );
 	}
 
 	ASSERT( ( wrapperMode == WRAPPER_MODE_NONE ) ||
@@ -357,7 +366,6 @@ int main(int argc, char * argv[])
 		sharedData->Started = true;
 	}
 
-	FBuildOptions options;
 	options.m_ShowProgress = progressBar;
 	options.m_ShowInfo = verbose;
 	options.m_ShowCommandLines = showCommands;
@@ -499,7 +507,7 @@ void DisplayVersion()
 
 // WrapperMainProcess
 //------------------------------------------------------------------------------
-int WrapperMainProcess( const AString & args )
+int WrapperMainProcess( const AString & args, SystemMutex& finalProcess )
 {
 	// Create SharedMemory to communicate between Main and Final process
 	SharedMemory sm;
