@@ -104,4 +104,19 @@ AString FBuildOptions::GetFinalProcessMutexName() const
     return result;
 }
 
+AString FBuildOptions::GetSharedMemoryName() const
+{
+    AString result;
+    if (m_WorkingDir.IsEmpty())
+    {
+        result = "FASTBuildSharedMemory";
+    }
+    else
+    {
+        uint32_t workingDirCRC = CRC32::CalcLower(m_WorkingDir);
+        result.Format("FASTBuildSharedMemory_%08x", workingDirCRC);
+    }
+    return result;
+}
+
 //------------------------------------------------------------------------------

@@ -41,6 +41,7 @@ public:
 
     AString GetMainProcessMutexName() const;
     AString GetFinalProcessMutexName() const;
+    AString GetSharedMemoryName() const;
 
 private:
 	AString m_WorkingDir;

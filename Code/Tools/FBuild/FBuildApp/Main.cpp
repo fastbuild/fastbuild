@@ -306,7 +306,7 @@ int main(int argc, char * argv[])
 
     // in "wrapper" mode, Main process monitors life of final process using this
     // (when main process can acquire, final process has terminated)
-    SystemMutex finalProcess( options.GetMainProcessMutexName().Get() );
+    SystemMutex finalProcess( options.GetFinalProcessMutexName().Get() );
 
 	// only 1 instance running at a time
 	if ( ( wrapperMode == WRAPPER_MODE_MAIN_PROCESS ) ||
@@ -354,7 +354,7 @@ int main(int argc, char * argv[])
 			Thread::Sleep( 1000 );
 		}
 
-		g_SharedMemory.Open( "FASTBuildSharedMemory", sizeof( SharedData ) );
+		g_SharedMemory.Open( options.GetSharedMemoryName().Get(), sizeof( SharedData ) );
 
 		// signal to "main" process that we have started
 		sharedData = (SharedData *)g_SharedMemory.GetPtr();
@@ -511,7 +511,7 @@ int WrapperMainProcess( const AString & args, const FBuildOptions& options, Syst
 {
 	// Create SharedMemory to communicate between Main and Final process
 	SharedMemory sm;
-	g_SharedMemory.Create( "FASTBuildSharedMemory", sizeof( SharedData ) );
+	g_SharedMemory.Create( options.GetSharedMemoryName().Get(), sizeof( SharedData ) );
 	SharedData * sd = (SharedData *)g_SharedMemory.GetPtr();
 	memset( sd, 0, sizeof( SharedData ) );
 
