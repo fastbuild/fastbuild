@@ -9,6 +9,7 @@
 
 #include "Core/Containers/Array.h"
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/Process/Process.h"
 #include "Core/Process/SharedMemory.h"
 #include "Core/Process/SystemMutex.h"
@@ -45,8 +46,8 @@ void DisplayVersion();
     // TODO:MAC Implement CtrlHandler
     // TODO:LINUX Implement CtrlHandler
 #endif
-int WrapperMainProcess( const AString & args );
-int WrapperIntermediateProcess( const AString & args );
+int WrapperMainProcess(const AString & args, const FBuildOptions& options, SystemMutex& finalProcess);
+int WrapperIntermediateProcess(const AString & args, const FBuildOptions& options);
 
 // Misc
 //------------------------------------------------------------------------------
@@ -68,13 +69,6 @@ struct SharedData
 // Global
 //------------------------------------------------------------------------------
 SharedMemory g_SharedMemory;
-
-// ensure only one FASTBuild instance is running at a time
-SystemMutex mainProcess( "Global\\FASTBuild" );
-
-// in "wrapper" mode, Main process monitors life of final process using this
-// (when main process can acquire, final process has terminated)
-SystemMutex finalProcess( "Global\\FASTBuild_Final" );
 
 // main
 //------------------------------------------------------------------------------
@@ -281,9 +275,17 @@ int main(int argc, char * argv[])
 		}
 	}
 
+    //Need to set WorkingDir parameter here because global mutex names depend on workingDir.
+    FBuildOptions options;
+    {
+        AString workingDir;
+        VERIFY(FileIO::GetCurrentDir(workingDir));
+        options.SetWorkingDir(workingDir);
+    }
+
 	if ( wrapperMode == WRAPPER_MODE_INTERMEDIATE_PROCESS )
 	{
-		return WrapperIntermediateProcess( args );
+		return WrapperIntermediateProcess( args, options );
 	}
 
     #if defined( __WINDOWS__ )
@@ -298,6 +300,13 @@ int main(int argc, char * argv[])
 		setvbuf(stdout, NULL, _IONBF, 0);
 		setvbuf(stderr, NULL, _IONBF, 0);
 	}
+
+    // ensure only one FASTBuild instance is running at a time
+    SystemMutex mainProcess( options.GetMainProcessMutexName().Get() );
+
+    // in "wrapper" mode, Main process monitors life of final process using this
+    // (when main process can acquire, final process has terminated)
+    SystemMutex finalProcess( options.GetMainProcessMutexName().Get() );
 
 	// only 1 instance running at a time
 	if ( ( wrapperMode == WRAPPER_MODE_MAIN_PROCESS ) ||
@@ -325,7 +334,7 @@ int main(int argc, char * argv[])
 
 	if ( wrapperMode == WRAPPER_MODE_MAIN_PROCESS )
 	{
-		return WrapperMainProcess( args );
+		return WrapperMainProcess( args, options, finalProcess );
 	}
 
 	ASSERT( ( wrapperMode == WRAPPER_MODE_NONE ) ||
@@ -357,7 +366,6 @@ int main(int argc, char * argv[])
 		sharedData->Started = true;
 	}
 
-	FBuildOptions options;
 	options.m_ShowProgress = progressBar;
 	options.m_ShowInfo = verbose;
 	options.m_ShowCommandLines = showCommands;
@@ -499,7 +507,7 @@ void DisplayVersion()
 
 // WrapperMainProcess
 //------------------------------------------------------------------------------
-int WrapperMainProcess( const AString & args )
+int WrapperMainProcess( const AString & args, const FBuildOptions& options, SystemMutex& finalProcess )
 {
 	// Create SharedMemory to communicate between Main and Final process
 	SharedMemory sm;
@@ -512,7 +520,8 @@ int WrapperMainProcess( const AString & args )
 	argsCopy += " -wrapperintermediate";
 
 	Process p;
-	if ( !p.Spawn( "fbuild.exe", argsCopy.Get(), nullptr, nullptr, true ) ) // true = forward output to our tty
+    const char* workingDir = options.GetWorkingDir().IsEmpty() ? nullptr : options.GetWorkingDir().Get();
+	if ( !p.Spawn( "fbuild.exe", argsCopy.Get(), workingDir, nullptr, true ) ) // true = forward output to our tty
 	{
 		return FBUILD_FAILED_TO_SPAWN_WRAPPER;
 	}
@@ -542,14 +551,15 @@ int WrapperMainProcess( const AString & args )
 
 // WrapperIntermediateProcess
 //------------------------------------------------------------------------------
-int WrapperIntermediateProcess( const AString & args )
+int WrapperIntermediateProcess( const AString & args, const FBuildOptions& options  )
 {
 	// launch final process
 	AStackString<> argsCopy( args );
 	argsCopy += " -wrapperfinal";
 
 	Process p;
-	if ( !p.Spawn( "fbuild.exe", argsCopy.Get(), nullptr, nullptr, true ) ) // true = forward output to our tty
+    const char* workingDir = options.GetWorkingDir().IsEmpty() ? nullptr : options.GetWorkingDir().Get();
+    if (!p.Spawn("fbuild.exe", argsCopy.Get(), workingDir, nullptr, true)) // true = forward output to our tty
 	{
 		return FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL;
 	}

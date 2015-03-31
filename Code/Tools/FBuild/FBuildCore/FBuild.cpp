@@ -348,7 +348,7 @@ bool FBuild::Build( Node * nodeToBuild )
 		{
 			if ( m_Options.m_WrapperChild )
 			{
-				SystemMutex wrapperMutex( "Global\\FASTBuild" );
+                SystemMutex wrapperMutex(m_Options.GetMainProcessMutexName().Get());
 				if ( wrapperMutex.TryLock() )
 				{
 					// parent process has terminated
