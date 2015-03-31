@@ -65,10 +65,10 @@ public:
 	inline bool IsMSVC() const { return GetFlag( FLAG_MSVC ); }
 	inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
 
-	virtual void Save( IOStream & stream ) const;
+	virtual void Save( IOStream & stream ) const override;
 	static Node * Load( IOStream & stream );
 
-	virtual void SaveRemote( IOStream & stream ) const;
+	virtual void SaveRemote( IOStream & stream ) const override;
 	static Node * LoadRemote( IOStream & stream );
 
 	inline Node * GetCompiler() const { return m_StaticDependencies[ 0 ].GetNode(); }
@@ -81,9 +81,9 @@ public:
 
 	const char * GetObjExtension() const;
 private:
-	virtual BuildResult DoBuild( Job * job );
-	virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
-	virtual bool Finalize();
+	virtual BuildResult DoBuild( Job * job ) override;
+	virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
+	virtual bool Finalize() override;
 
 	BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
 	BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache );
