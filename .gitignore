@@ -1,8 +1,12 @@
 # FASTBuild
 External/SDK
-*.fdb
 *.exe
+*.fdb
+*.log
 *.pdb
+*.sdf
+*.suo
+*.user
 *.vcxproj
 *.vcxproj.filters
 tmp/
