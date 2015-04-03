@@ -3,6 +3,7 @@ External/SDK
 *.exe
 *.fdb
 *.log
+*.opensdf
 *.pdb
 *.sdf
 *.suo
