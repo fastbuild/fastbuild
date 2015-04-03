@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -122,10 +123,26 @@ CSNode::~CSNode()
 
 	EmitCompilationMessage( fullArgs );
 
+	// use response file?
+	ResponseFile rf;
+	AStackString<> responseFileArgs;
+	bool useResponseFile = true;
+	if (useResponseFile)
+	{
+		// write args to response file
+		if (!rf.Create(fullArgs))
+		{
+			return NODE_RESULT_FAILED; // Create will have emitted error
+		}
+
+		// override args to use response file
+		responseFileArgs.Format("@\"%s\"", rf.GetResponseFilePath().Get());
+	}
+
 	// spawn the process
 	Process p;
-	if ( p.Spawn( m_CompilerPath.Get(), fullArgs.Get(),
-				  workingDir, environment ) == false )
+	if (p.Spawn(m_CompilerPath.Get(), responseFileArgs.Get(),
+		workingDir, environment) == false)
 	{
 		FLOG_ERROR( "Failed to spawn process to build '%s'", GetName().Get() );
 		return NODE_RESULT_FAILED;
