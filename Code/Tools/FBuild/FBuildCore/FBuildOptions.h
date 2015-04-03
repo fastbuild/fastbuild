@@ -39,10 +39,6 @@ public:
 	uint32_t m_NumWorkerThreads;
 	AString m_ConfigFile;
 
-    AString GetMainProcessMutexName() const;
-    AString GetFinalProcessMutexName() const;
-    AString GetSharedMemoryName() const;
-
 private:
 	AString m_WorkingDir;
 };

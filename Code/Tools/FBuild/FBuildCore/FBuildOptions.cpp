@@ -11,7 +11,6 @@
 // Core
 #include "Core/Env/Env.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Math/CRC32.h"
 
 // CONSTRUCTOR - FBuildOptions
 //------------------------------------------------------------------------------
@@ -72,51 +71,6 @@ void FBuildOptions::SetWorkingDir( const AString & path )
 			m_WorkingDir[ 0 ] = ( 'A' + ( m_WorkingDir[ 0 ] - 'a' ) );
 		}
 	#endif
-}
-
-AString FBuildOptions::GetMainProcessMutexName() const
-{
-    AString result;
-    if(m_WorkingDir.IsEmpty())
-    {
-        result = "Global\\FASTBuild";
-    }
-    else
-    {
-        uint32_t workingDirCRC = CRC32::CalcLower(m_WorkingDir);
-        result.Format("Global\\FASTBuild-0x%08x", workingDirCRC);
-    }
-    return result;
-}
-
-AString FBuildOptions::GetFinalProcessMutexName() const
-{
-    AString result;
-    if (m_WorkingDir.IsEmpty())
-    {
-        result = "Global\\FASTBuild_Final";
-    }
-    else
-    {
-        uint32_t workingDirCRC = CRC32::CalcLower(m_WorkingDir);
-        result.Format("Global\\FASTBuild_Final-0x%08x", workingDirCRC);
-    }
-    return result;
-}
-
-AString FBuildOptions::GetSharedMemoryName() const
-{
-    AString result;
-    if (m_WorkingDir.IsEmpty())
-    {
-        result = "FASTBuildSharedMemory";
-    }
-    else
-    {
-        uint32_t workingDirCRC = CRC32::CalcLower(m_WorkingDir);
-        result.Format("FASTBuildSharedMemory_%08x", workingDirCRC);
-    }
-    return result;
 }
 
 //------------------------------------------------------------------------------

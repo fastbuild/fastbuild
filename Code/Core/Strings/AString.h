@@ -25,11 +25,11 @@
 class AString
 {
 public:
-	AString();
+	explicit AString();
 	explicit AString( uint32_t reserve );
-	AString( const AString & string );
+	explicit AString( const AString & string );
 	explicit AString( const char * string );
-	AString( const char * start, const char * end );
+	explicit AString( const char * start, const char * end );
 	~AString();
 
 	inline uint32_t		GetLength() const	{ return m_Length; }
