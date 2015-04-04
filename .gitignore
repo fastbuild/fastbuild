@@ -1,3 +1,13 @@
+# FASTBuild
+External/SDK
+*.fdb
+*.exe
+*.pdb
+*.vcxproj
+*.vcxproj.filters
+tmp/
+ftmp/
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
