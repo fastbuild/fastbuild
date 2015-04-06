@@ -89,8 +89,8 @@ void TestExe::Build() const
 	CheckStatsNode ( 1,		1,		Node::OBJECT_NODE );
 	CheckStatsNode ( 1,		1,		Node::LIBRARY_NODE );
 	CheckStatsNode ( 1,		1,		Node::EXE_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 6,		5 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 6,		6 );
 }
 
 // CheckValidExe
@@ -123,8 +123,8 @@ void TestExe::Build_NoRebuild() const
 	CheckStatsNode ( 1,		0,		Node::OBJECT_NODE );
 	CheckStatsNode ( 1,		0,		Node::LIBRARY_NODE );
 	CheckStatsNode ( 1,		0,		Node::EXE_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 6,		1 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 6,		2 );
 
 }
 

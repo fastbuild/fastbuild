@@ -173,6 +173,7 @@ void UnitTestManager::TestEnd()
 		{
 			OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", m_CurrentTestName, timeTaken );
 			MemTracker::DumpAllocations();
+			TEST_ASSERT( false );
 			return;
 		}
 	#endif

@@ -64,7 +64,7 @@ void TestResources::BuildResource() const
 	CheckStatsNode ( 2,		2,		Node::OBJECT_NODE );
 	CheckStatsNode ( 1,		1,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::LIBRARY_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( 1,		1,		Node::EXE_NODE );
 }
 
@@ -88,7 +88,7 @@ void TestResources::BuildResource_NoRebuild() const
 	CheckStatsNode ( 2,		0,		Node::OBJECT_NODE );
 	CheckStatsNode ( 1,		0,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		0,		Node::LIBRARY_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( 1,		0,		Node::EXE_NODE );
 }
 

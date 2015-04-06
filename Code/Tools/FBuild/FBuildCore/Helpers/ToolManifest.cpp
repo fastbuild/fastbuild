@@ -97,13 +97,21 @@ bool ToolManifest::Generate( const Node * mainExecutable, const Dependencies & d
 
 	// create a hash for the whole tool chain
 	const size_t numFiles( m_Files.GetSize() );
-	const size_t memSize( numFiles * sizeof( uint32_t ) );
+	const size_t memSize( numFiles * sizeof( uint32_t ) * 2 );
 	uint32_t * mem = (uint32_t *)ALLOC( memSize );
 	uint32_t * pos = mem;
 	for ( size_t i=0; i<numFiles; ++i )
 	{
 		const File & f = m_Files[ i ];
+
+		// file contents
 		*pos = f.m_Hash;
+		++pos;
+
+		// file name & sub-path (relative to remote folder)
+		AStackString<> relativePath;
+		GetRemoteFilePath( (uint32_t)i, relativePath, false ); // false = don't use full path
+		*pos = Murmur3::Calc32( relativePath );
 		++pos;
 	}
 	uint64_t hashA, hashB;
@@ -380,10 +388,17 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
 
 // GetRemoteFilePath
 //------------------------------------------------------------------------------
-void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & exe ) const
+void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & exe, bool fullPath ) const
 {
 	// we'll store in the sub dir
-	GetRemotePath( exe );
+	if ( fullPath )
+	{
+		GetRemotePath( exe );
+	}
+	else
+	{
+		exe.Clear();
+	}
 
 	// determine primary root
 	const File & primaryFile = m_Files[ 0 ];
@@ -411,9 +426,9 @@ void ToolManifest::GetRemotePath( AString & path ) const
 	VERIFY( FileIO::GetTempDir( path ) );
 	AStackString<> subDir;
     #if defined( __WINDOWS__ )
-        subDir.Format( ".fbuild.tmp\\worker\\%016llx\\", m_ToolId );
+        subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016llx\\", m_ToolId );
     #else
-        subDir.Format( "_fbuild.tmp/worker/%016llx/", m_ToolId );
+        subDir.Format( "_fbuild.tmp/worker/toolchain.%016llx/", m_ToolId );
     #endif
 	path += subDir;
 }

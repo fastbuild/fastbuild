@@ -128,7 +128,7 @@
                                                 'TestFrameWork-Lib-$Platform$-$Config$'
                                                 'Core-Lib-$Platform$-$Config$'                
                                               }
-            .LinkerOutput                   = '$OutputBase$\Core\CoreTest\CoreTest'
+            .LinkerOutput                   = '$OutputBase$\Core\CoreTest\coretest'
             .LinkerOptions                  + ' -pthread'
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }

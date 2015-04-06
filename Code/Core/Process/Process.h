@@ -45,6 +45,7 @@ public:
 		inline void DisableHandleRedirection() { m_RedirectHandles = false; }
     #endif
     
+	static uint32_t GetCurrentId();
 private:
     #if defined( __WINDOWS__ )
         void Read( void * handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
@@ -63,16 +64,16 @@ private:
     #endif
     
 	#if defined ( WIN64 )
-		unsigned char m_ProcessInfo[ 8 + 8 + 4 + 4 ]; // PROCESS_INFORMATION
+		uint32_t m_ProcessInfo[ 2 + 2 + 1 + 1 ]; // PROCESS_INFORMATION
 	#elif defined ( WIN32 )
-		unsigned char m_ProcessInfo[ 4 + 4 + 4 + 4 ]; // PROCESS_INFORMATION
+		uint32_t m_ProcessInfo[ 1 + 1 + 1 + 1 ]; // PROCESS_INFORMATION
 	#endif
             
 	bool m_Started;
     #if defined( __WINDOWS__ )
 		bool m_SharingHandles;
-	#endif
-	bool m_RedirectHandles;
+		bool m_RedirectHandles;
+    #endif
 
     #if defined( __WINDOWS__ )
         void * m_StdOutRead;	// HANDLE

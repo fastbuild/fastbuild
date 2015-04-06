@@ -66,8 +66,8 @@ void TestCSharp::TestSingleFile() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );	// cs
 	CheckStatsNode ( 1,		1,		Node::CS_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 3,		2 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 3,		3 );
 }
 
 // TestSingleFile_NoRebuild
@@ -88,8 +88,8 @@ void TestCSharp::TestSingleFile_NoRebuild() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );	// cs
 	CheckStatsNode ( 1,		0,		Node::CS_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 3,		1 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 3,		2 );
 }
 
 // TestMultipleFiles
@@ -118,9 +118,9 @@ void TestCSharp::TestMultipleFiles() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 3,		3,		Node::FILE_NODE );	// 3x cs
 	CheckStatsNode ( 1,		1,		Node::CS_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( 1,		1,		Node::DIRECTORY_LIST_NODE );
-	CheckStatsTotal( 6,		5 );
+	CheckStatsTotal( 6,		6 );
 }
 
 // TestMultipleFiles_NoRebuild
@@ -141,9 +141,9 @@ void TestCSharp::TestMultipleFiles_NoRebuild() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 3,		3,		Node::FILE_NODE );	// 3x cs
 	CheckStatsNode ( 1,		0,		Node::CS_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( 1,		1,		Node::DIRECTORY_LIST_NODE );
-	CheckStatsTotal( 6,		4 );
+	CheckStatsTotal( 6,		5 );
 }
 
 // TestMultipleAssemblies
@@ -174,8 +174,8 @@ void TestCSharp::TestMultipleAssemblies() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );	// 2x cs
 	CheckStatsNode ( 2,		2,		Node::CS_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 5,		4 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 5,		5 );
 }
 
 
@@ -197,8 +197,8 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );	// 2x cs
 	CheckStatsNode ( 2,		0,		Node::CS_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 5,		2 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 5,		3 );
 }
 
 

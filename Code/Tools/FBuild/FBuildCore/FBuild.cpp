@@ -73,12 +73,6 @@ FBuild::FBuild( const FBuildOptions & options )
 	// track the old working dir to restore if modified (mainly for unit tests)
 	VERIFY( FileIO::GetCurrentDir( m_OldWorkingDir ) );
 
-	// use specified working dir, or the current dir if not provided
-	if ( options.GetWorkingDir().IsEmpty() )
-	{
-		m_Options.SetWorkingDir( m_OldWorkingDir );
-	}
-
 	// check for cache environment variable to use as default
 	AStackString<> cachePath;
 	if ( Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", cachePath ) )
@@ -348,7 +342,7 @@ bool FBuild::Build( Node * nodeToBuild )
 		{
 			if ( m_Options.m_WrapperChild )
 			{
-				SystemMutex wrapperMutex( "Global\\FASTBuild" );
+                SystemMutex wrapperMutex( m_Options.GetMainProcessMutexName().Get() );
 				if ( wrapperMutex.TryLock() )
 				{
 					// parent process has terminated

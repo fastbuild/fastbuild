@@ -74,7 +74,7 @@ int LZ4_compressHC2_limitedOutput (const char* source, char* dest, int inputSize
 */
 
 /* Note :
-Decompression functions are provided within LZ4 source code (see "lz4.h") (BSD license)
+   Decompression functions are provided within LZ4 source code (see "lz4.h") (BSD license)
 */
 
 
@@ -95,76 +95,78 @@ int LZ4_sizeofStateHC();
 
 Note that tables must be aligned for pointer (32 or 64 bits), otherwise compression will fail (return code 0).
 
-The allocated memory can be provided to the compressions functions using 'void* state' parameter.
+The allocated memory can be provided to the compression functions using 'void* state' parameter.
 LZ4_compress_withStateHC() and LZ4_compress_limitedOutput_withStateHC() are equivalent to previously described functions.
-They just use the externally allocated memory area instead of allocating their own (on stack, or on heap).
+They just use the externally allocated memory for state instead of allocating their own (on stack, or on heap).
 */
 
 
+
 /**************************************
-   Streaming Functions
+   Experimental Streaming Functions
 **************************************/
+#define LZ4_STREAMHCSIZE_U64 32774
+#define LZ4_STREAMHCSIZE     (LZ4_STREAMHCSIZE_U64 * sizeof(unsigned long long))
+typedef struct { unsigned long long table[LZ4_STREAMHCSIZE_U64]; } LZ4_streamHC_t;
+/*
+LZ4_streamHC_t
+This structure allows static allocation of LZ4 HC streaming state.
+State must then be initialized using LZ4_resetStreamHC() before first use.
+
+Static allocation should only be used with statically linked library.
+If you want to use LZ4 as a DLL, please use construction functions below, which are more future-proof.
+*/
+
+
+LZ4_streamHC_t* LZ4_createStreamHC(void);
+int             LZ4_freeStreamHC (LZ4_streamHC_t* LZ4_streamHCPtr);
+/*
+These functions create and release memory for LZ4 HC streaming state.
+Newly created states are already initialized.
+Existing state space can be re-used anytime using LZ4_resetStreamHC().
+If you use LZ4 as a DLL, please use these functions instead of direct struct allocation,
+to avoid size mismatch between different versions.
+*/
+
+void LZ4_resetStreamHC (LZ4_streamHC_t* LZ4_streamHCPtr, int compressionLevel);
+int  LZ4_loadDictHC (LZ4_streamHC_t* LZ4_streamHCPtr, const char* dictionary, int dictSize);
+
+int LZ4_compressHC_continue (LZ4_streamHC_t* LZ4_streamHCPtr, const char* source, char* dest, int inputSize);
+int LZ4_compressHC_limitedOutput_continue (LZ4_streamHC_t* LZ4_streamHCPtr, const char* source, char* dest, int inputSize, int maxOutputSize);
+
+int LZ4_saveDictHC (LZ4_streamHC_t* LZ4_streamHCPtr, char* safeBuffer, int maxDictSize);
+
+/*
+These functions compress data in successive blocks of any size, using previous blocks as dictionary.
+One key assumption is that each previous block will remain read-accessible while compressing next block.
+
+Before starting compression, state must be properly initialized, using LZ4_resetStreamHC().
+A first "fictional block" can then be designated as initial dictionary, using LZ4_loadDictHC() (Optional).
+
+Then, use LZ4_compressHC_continue() or LZ4_compressHC_limitedOutput_continue() to compress each successive block.
+They work like usual LZ4_compressHC() or LZ4_compressHC_limitedOutput(), but use previous memory blocks to improve compression.
+Previous memory blocks (including initial dictionary when present) must remain accessible and unmodified during compression.
+
+If, for any reason, previous data block can't be preserved in memory during next compression block,
+you must save it to a safer memory space,
+using LZ4_saveDictHC().
+*/
+
+
+
+/**************************************
+ * Deprecated Streaming Functions
+ * ************************************/
+/* Note : these streaming functions follows the older model, and should no longer be used */
 void* LZ4_createHC (const char* inputBuffer);
-int   LZ4_compressHC_continue (void* LZ4HC_Data, const char* source, char* dest, int inputSize);
-int   LZ4_compressHC_limitedOutput_continue (void* LZ4HC_Data, const char* source, char* dest, int inputSize, int maxOutputSize);
 char* LZ4_slideInputBufferHC (void* LZ4HC_Data);
 int   LZ4_freeHC (void* LZ4HC_Data);
 
 int   LZ4_compressHC2_continue (void* LZ4HC_Data, const char* source, char* dest, int inputSize, int compressionLevel);
 int   LZ4_compressHC2_limitedOutput_continue (void* LZ4HC_Data, const char* source, char* dest, int inputSize, int maxOutputSize, int compressionLevel);
 
-/*
-These functions allow the compression of dependent blocks, where each block benefits from prior 64 KB within preceding blocks.
-In order to achieve this, it is necessary to start creating the LZ4HC Data Structure, thanks to the function :
-
-void* LZ4_createHC (const char* inputBuffer);
-The result of the function is the (void*) pointer on the LZ4HC Data Structure.
-This pointer will be needed in all other functions.
-If the pointer returned is NULL, then the allocation has failed, and compression must be aborted.
-The only parameter 'const char* inputBuffer' must, obviously, point at the beginning of input buffer.
-The input buffer must be already allocated, and size at least 192KB.
-'inputBuffer' will also be the 'const char* source' of the first block.
-
-All blocks are expected to lay next to each other within the input buffer, starting from 'inputBuffer'.
-To compress each block, use either LZ4_compressHC_continue() or LZ4_compressHC_limitedOutput_continue().
-Their behavior are identical to LZ4_compressHC() or LZ4_compressHC_limitedOutput(),
-but require the LZ4HC Data Structure as their first argument, and check that each block starts right after the previous one.
-If next block does not begin immediately after the previous one, the compression will fail (return 0).
-
-When it's no longer possible to lay the next block after the previous one (not enough space left into input buffer), a call to :
-char* LZ4_slideInputBufferHC(void* LZ4HC_Data);
-must be performed. It will typically copy the latest 64KB of input at the beginning of input buffer.
-Note that, for this function to work properly, minimum size of an input buffer must be 192KB.
-==> The memory position where the next input data block must start is provided as the result of the function.
-
-Compression can then resume, using LZ4_compressHC_continue() or LZ4_compressHC_limitedOutput_continue(), as usual.
-
-When compression is completed, a call to LZ4_freeHC() will release the memory used by the LZ4HC Data Structure.
-*/
-
-int LZ4_sizeofStreamStateHC(void);
-int LZ4_resetStreamStateHC(void* state, const char* inputBuffer);
-
-/*
-These functions achieve the same result as :
-void* LZ4_createHC (const char* inputBuffer);
-
-They are provided here to allow the user program to allocate memory using its own routines.
-
-To know how much space must be allocated, use LZ4_sizeofStreamStateHC();
-Note also that space must be aligned for pointers (32 or 64 bits).
-
-Once space is allocated, you must initialize it using : LZ4_resetStreamStateHC(void* state, const char* inputBuffer);
-void* state is a pointer to the space allocated.
-It must be aligned for pointers (32 or 64 bits), and be large enough.
-The parameter 'const char* inputBuffer' must, obviously, point at the beginning of input buffer.
-The input buffer must be already allocated, and size at least 192KB.
-'inputBuffer' will also be the 'const char* source' of the first block.
-
-The same space can be re-used multiple times, just by initializing it each time with LZ4_resetStreamState().
-return value of LZ4_resetStreamStateHC() must be 0 is OK.
-Any other value means there was an error (typically, state is not aligned for pointers (32 or 64 bits)).
-*/
+int   LZ4_sizeofStreamStateHC(void);
+int   LZ4_resetStreamStateHC(void* state, const char* inputBuffer);
 
 
 #if defined (__cplusplus)

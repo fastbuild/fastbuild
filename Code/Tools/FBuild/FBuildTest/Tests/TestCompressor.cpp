@@ -78,6 +78,12 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 										   size_t expectedCompressedSize,
 										   bool shouldCompress ) const
 {
+    // raw input strings may not be aligned on Linux/OSX, so copy
+    // them to achieve our required alignment
+    char * alignedData = FNEW( char[ size ] );
+    memcpy( alignedData, data, size );
+    data = alignedData;
+    
 	// compress
 	Compressor c;
 	const bool compressed = c.Compress( data, size );
@@ -95,6 +101,8 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 	const size_t decompressedSize = d.GetResultSize();
 	TEST_ASSERT( decompressedSize == size );
 	TEST_ASSERT( memcmp( data, d.GetResult(), size ) == 0 );
+    
+    FDELETE_ARRAY( alignedData );
 }
 
 // CompressPreprocessedFile

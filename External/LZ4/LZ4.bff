@@ -1,6 +1,6 @@
 // LZ4
 //------------------------------------------------------------------------------
-.LZ4BasePath		= '../External/LZ4/lz4-r117'
+.LZ4BasePath		= '../External/LZ4/lz4-r127'
 .LZ4_Windows_MSVC	= [ .LZ4IncludePaths	= ' /I"$LZ4BasePath$"'
 						.LZ4CompilerOptions	= ' /wd6262'	// Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
 											+ ' /wd28251'	// warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
@@ -8,10 +8,10 @@
 .LZ4_Windows_Clang	= [ .LZ4IncludePaths	= ' -I"$LZ4BasePath$"'
 						.LZ4CompilerOptions = ' -x c++'
 					  ]
-.LZ4_Linux_GCC      = [ .LZ4IncludePaths    = ' -I"$LZ4BasePath$"'
+.LZ4_Linux_GCC      = [ .LZ4IncludePaths    = ' "-I$LZ4BasePath$"'
                         .LZ4CompilerOptions = ''
                       ]
-.LZ4_OSX_Clang      = [ .LZ4IncludePaths    = ' -I"$LZ4BasePath$"'
+.LZ4_OSX_Clang      = [ .LZ4IncludePaths    = ' "-I$LZ4BasePath$"'
                         .LZ4CompilerOptions = ''
                       ]
 
@@ -87,7 +87,8 @@
         // Static Library
         Library( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
-            .CompilerOptions            + .LZ4IncludePaths
+            .CompilerOptions            = .CompilerOptionsC
+                                        + .LZ4IncludePaths
                                         + .LZ4CompilerOptions
 
             // Output

@@ -72,7 +72,11 @@ void FBuildTest::GetCodeDir( AString & codeDir ) const
 {
 	// we want the working dir to be the 'Code' directory
 	TEST_ASSERT( FileIO::GetCurrentDir( codeDir ) );
-	const char * codePos = codeDir.FindI( "\\code\\" );
+    #if defined( __WINDOWS__ )
+        const char * codePos = codeDir.FindI( "\\code\\" );
+    #else
+        const char * codePos = codeDir.FindI( "/code/" );
+    #endif
 	TEST_ASSERT( codePos );
 	codeDir.SetLength( (uint16_t)( codePos - codeDir.Get() + 6 ) );
 }

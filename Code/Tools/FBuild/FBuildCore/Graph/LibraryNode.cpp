@@ -253,8 +253,8 @@ LibraryNode::~LibraryNode()
 	// use response file?
 	ResponseFile rf;
 	AStackString<> responseFileArgs;
-    #if defined( __APPLE__ )
-        const bool useResponseFile = false; // OSX ar doesn't support response files
+    #if defined( __APPLE__ ) || defined( __LINUX__ )
+        const bool useResponseFile = false; // OSX/Linux ar doesn't support response files
     #else
         const bool useResponseFile = GetFlag( LIB_FLAG_LIB ) || GetFlag( LIB_FLAG_AR ) || GetFlag( LIB_FLAG_ORBIS_AR ) || GetFlag( LIB_FLAG_GREENHILLS_AX );
     #endif

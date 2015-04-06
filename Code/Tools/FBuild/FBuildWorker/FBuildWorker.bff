@@ -133,7 +133,7 @@
                                             'Core-Lib-$Platform$-$Config$',
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }
-            .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildWorker\FBuildWorker'
+            .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildWorker\fbuildworker'
             .LinkerOptions              + ' -pthread'
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }

@@ -48,10 +48,18 @@ void TestProjectGeneration::Test() const
 	AStackString<> oldDir;
 	TEST_ASSERT( FileIO::GetCurrentDir( oldDir ) );
 	AStackString<> baseDir( oldDir );
-	const char * codeLoc = baseDir.FindI( "\\code\\" );	
+    #if defined( __WINDOWS__ )
+        const char * codeLoc = baseDir.FindI( "\\code\\" );	
+    #else
+        const char * codeLoc = baseDir.FindI( "/code/" ); 
+    #endif
 	TEST_ASSERT( codeLoc );
 	baseDir.SetLength( (uint32_t)( codeLoc - baseDir.Get() ) );
-	baseDir += "\\Code\\Core\\";
+    #if defined( __WINDOWS__ )
+        baseDir += "\\Code\\Core\\";
+    #else
+        baseDir += "/Code/Core/";
+    #endif
 	Array< AString > baseDirs;
 	baseDirs.Append( baseDir );
 
@@ -128,8 +136,8 @@ void TestProjectGeneration::Test() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::TestFunction() const
 {
-	AStackString<> project( "..\\..\\..\\..\\ftmp\\Test\\ProjectGeneration\\testproj.vcxproj" );
-	AStackString<> filters( "..\\..\\..\\..\\ftmp\\Test\\ProjectGeneration\\testproj.vcxproj.filters" );
+	AStackString<> project( "../../../../ftmp/Test/ProjectGeneration/testproj.vcxproj" );
+	AStackString<> filters( "../../../../ftmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
 	EnsureFileDoesNotExist( project );
 	EnsureFileDoesNotExist( filters );
 
@@ -141,7 +149,7 @@ void TestProjectGeneration::TestFunction() const
 	TEST_ASSERT( fBuild.Initialize() );
 
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestProj" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "..\\..\\..\\..\\ftmp\\Test\\ProjectGeneration\\fbuild.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/ProjectGeneration/fbuild.fdb" ) );
 
 	EnsureFileExists( project );
 	EnsureFileExists( filters );
@@ -150,16 +158,16 @@ void TestProjectGeneration::TestFunction() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::DIRECTORY_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::VCXPROJECT_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 3,		2 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 3,		3 );
 }
 
 // TestFunction_NoRebuild
 //------------------------------------------------------------------------------
 void TestProjectGeneration::TestFunction_NoRebuild() const
 {
-	AStackString<> project( "..\\..\\..\\..\\ftmp\\Test\\ProjectGeneration\\testproj.vcxproj" );
-	AStackString<> filters( "..\\..\\..\\..\\ftmp\\Test\\ProjectGeneration\\testproj.vcxproj.filters" );
+	AStackString<> project( "../../../../ftmp/Test/ProjectGeneration/testproj.vcxproj" );
+	AStackString<> filters( "../../../../ftmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
 	EnsureFileExists( project );
 	EnsureFileExists( filters );
 
@@ -177,7 +185,7 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
 	options.m_ConfigFile = "Data/TestProjectGeneration/fbuild.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "..\\..\\..\\..\\ftmp\\Test\\ProjectGeneration\\fbuild.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/ProjectGeneration/fbuild.fdb" ) );
 
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestProj" ) ) );
 
@@ -189,8 +197,8 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::DIRECTORY_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::VCXPROJECT_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 3,		2 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 3,		3 );
 }
 
 // TestFunction_Speed
@@ -231,7 +239,7 @@ void TestProjectGeneration::TestFunction_Speed() const
 		fileTypes.Append( ft );
 	}
 
-	AStackString<> projectFileName( "C:\\Windows\\System\\dummry.vcxproj" );
+	AStackString<> projectFileName( "C:\\Windows\\System\\dummy.vcxproj" );
 
 	{
 		Timer t;

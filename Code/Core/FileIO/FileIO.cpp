@@ -26,6 +26,14 @@
     #include <sys/stat.h>
     #include <unistd.h>
 #endif
+#if defined( __LINUX__ )
+    #include <fcntl.h>
+    #include <sys/sendfile.h>
+#endif
+#if defined( __APPLE__ )
+    #include <copyfile.h>
+    #include <sys/time.h>
+#endif
 
 // Exists
 //------------------------------------------------------------------------------
@@ -66,6 +74,10 @@
 	}
 	return true; // delete ok
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
+    if ( GetReadOnly( fileName ) )
+    {
+        return false;
+    }
     return ( remove( fileName ) == 0 );
 #else
     #error Unknown platform
@@ -112,9 +124,49 @@
 
 	return ( result == TRUE );
 #elif defined( __APPLE__ )
-    return false; // TODO:MAC Implement FileCopy
+    if ( allowOverwrite == false )
+    {
+        if ( FileExists( dstFileName ) )
+        {
+            return false;
+        }
+    }
+    copyfile_state_t s;
+    s = copyfile_state_alloc();
+    bool result = ( copyfile( srcFileName, dstFileName, s, COPYFILE_DATA | COPYFILE_XATTR ) == 0 );
+    copyfile_state_free(s);
+    return result;
 #elif defined( __LINUX__ )
-    return false; // TODO:LINUX Implement FileCopy
+    if ( allowOverwrite == false )
+    {
+        if ( FileExists( dstFileName ) )
+        {
+            return false;
+        }
+    }
+    
+    int source = open( srcFileName, O_RDONLY, 0 );
+    if ( source < 0 )
+    {
+        return false;
+    }
+    
+    int dest = open( dstFileName, O_WRONLY | O_CREAT | O_TRUNC, 0644 ); // TODO:LINUX Check args for FileCopy dst
+    if ( dest < 0 )
+    {
+        close( source );
+        return false;
+    }
+    
+    struct stat stat_source;
+    VERIFY( fstat( source, &stat_source ) == 0 );
+
+    ssize_t bytesCopied = sendfile( dest, source, 0, stat_source.st_size );
+    
+    close(source);
+    close(dest);
+
+    return ( bytesCopied == stat_source.st_size );
 #else
     #error Unknown platform
 #endif
@@ -197,10 +249,20 @@
             info.m_Size = (uint64_t)fileAttribs.nFileSizeLow | ( (uint64_t)fileAttribs.nFileSizeHigh << 32 );
             return true;
         }
-    #elif defined( __APPLE__ )
-        ASSERT( false ); // TODO:MAC Implement GetFileInfo
-    #elif defined( __LINUX__ )
-        ASSERT( false ); // TODO:LINUX Implement GetFileInfo    
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        struct stat s;
+        if ( stat( fileName.Get(), &s ) == 0 )
+        {
+            info.m_Name = fileName;
+            info.m_Attributes = s.st_mode;
+            #if defined( __APPLE__ )
+                info.m_LastWriteTime = ( ( (uint64_t)s.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)s.st_mtimespec.tv_nsec );
+            #else
+                info.m_LastWriteTime = ( ( (uint64_t)s.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)s.st_mtim.tv_nsec );
+            #endif
+            info.m_Size = s.st_size;
+            return true;
+        }
     #endif
     return false;
 }
@@ -471,6 +533,11 @@
         struct stat st;
         if ( stat( fileName.Get(), &st ) == 0 )
         {
+            // OSX only supports setting filetimes at usec granularity
+            // so if we ever receive times with sub-usec granularity
+            // we will lose accuracy.
+            ASSERT( ( st.st_mtimespec.tv_nsec % 1000 ) == 0 );
+
             return ( ( (uint64_t)st.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)st.st_mtimespec.tv_nsec );
         }
 	#elif defined( __LINUX__ )
@@ -514,9 +581,18 @@
     
         return true;
     #elif defined( __APPLE__ )
-        return false; // TODO:MAC Implement SetFileLastWriteTime
-	#elif defined( __LINUX__ )
-        return false; // TODO:LINUX Implement SetFileLastWriteTime
+        struct timeval t[ 2 ];
+        t[0].tv_sec = fileTime / 1000000000ULL;
+        ASSERT( ( ( fileTime % 1000000000ULL ) % 1000 ) == 0 ); // ensure no loss of accuracy
+        t[0].tv_usec = ( fileTime % 1000000000ULL ) / 1000;
+        t[1] = t[0];
+        return ( utimes( fileName.Get(), t ) == 0 );
+	#elif defined( __LINUX__ ) || defined( __APPLE__ )
+        struct timespec t[ 2 ];
+        t[0].tv_sec = fileTime / 1000000000ULL;
+        t[0].tv_nsec = ( fileTime % 1000000000ULL );
+        t[1] = t[0];
+        return ( utimensat( 0, fileName.Get(), t, 0 ) == 0 );
     #else
         #error Unknown platform
     #endif
@@ -551,10 +627,35 @@
         }
 
         return true;
-    #elif defined( __APPLE__ )
-        return false; // TODO:MAC Implement SetReadOnly
-	#elif defined( __LINUX__ )
-        return false; // TODO:LINUX Implement SetReadOnly
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        struct stat s;
+        if ( stat( fileName, &s ) != 0 )
+        {
+            return true; // can't even get the attributes, treat as not read only
+        }
+        const bool currentlyReadOnly = !( ( s.st_mode & S_IWUSR ) == S_IWUSR ); // TODO:LINUX Is this the correct behaviour?
+        if ( readOnly == currentlyReadOnly )
+        {
+            return true; // already in desired state
+        }
+        
+        // update writable flag
+        if ( readOnly )
+        {
+            // remove writable flag
+            s.st_mode &= ( ~S_IWUSR ); // TODO:LINUX Is this the correct behaviour?
+        }
+        else
+        {
+            // add writable flag
+            s.st_mode |= S_IWUSR; // TODO:LINUX Is this the correct behaviour?
+        }
+        
+        if ( chmod( fileName, s.st_mode ) == 0 )
+        {
+            return true;
+        }
+        return false; // failed to chmod
     #else
         #error Unknown platform
     #endif
@@ -562,11 +663,11 @@
 
 // GetReadOnly
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::GetReadOnly( const AString & fileName )
+/*static*/ bool FileIO::GetReadOnly( const char * fileName )
 {
     #if defined( __WINDOWS__ )
         // see if dst file is read-only
-        DWORD dwAttrs = GetFileAttributes( fileName.Get() );
+        DWORD dwAttrs = GetFileAttributes( fileName );
         if ( dwAttrs == INVALID_FILE_ATTRIBUTES )
         {
             return false; // can't even get the attributes, treat as not read only
@@ -575,10 +676,13 @@
         // determine the new attributes
 		bool readOnly = ( dwAttrs & FILE_ATTRIBUTE_READONLY );
         return readOnly;
-    #elif defined( __APPLE__ )
-        return false; // TODO:MAC Implement GetReadOnly
-	#elif defined( __LINUX__ )
-        return false; // TODO:LINUX Implement GetReadOnly
+	#elif defined( __LINUX__ ) || defined( __APPLE__ )
+        struct stat s;
+        if ( stat( fileName, &s ) != 0 )
+        {
+            return false; // can't even get the attributes, treat as not read only
+        }
+        return ( ( s.st_mode & S_IWUSR ) == 0 );// TODO:LINUX Is this the correct behaviour?
     #else
         #error Unknown platform
     #endif
@@ -907,7 +1011,7 @@
                 VERIFY( stat( pathCopy.Get(), &info ) == 0 );
                 newInfo.m_Attributes = info.st_mode;
 				#if defined( __APPLE__ )
-					newInfo.m_LastWriteTime = 0; // TODO:MAC Implement
+					newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
 				#else
 	                newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtim.tv_nsec );
 				#endif
@@ -1008,7 +1112,7 @@
                 VERIFY( stat( pathCopy.Get(), &info ) == 0 );
                 newInfo.m_Attributes = info.st_mode;
 				#if defined( __APPLE__ )
-					newInfo.m_LastWriteTime = 0;
+                    newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
 				#else
 	                newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtim.tv_nsec );
 				#endif

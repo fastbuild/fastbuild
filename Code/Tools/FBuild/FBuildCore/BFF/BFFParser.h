@@ -64,6 +64,9 @@ private:
 	bool ParseUnnamedScope( BFFIterator & iter );
 	bool ParsePreprocessorDirective( BFFIterator & iter );
 	bool ParseIncludeDirective( BFFIterator & iter );
+	bool ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter );
+	bool ParseEndIfDirective( const BFFIterator & directiveStart );
+	bool CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result );
 
 	bool StoreVariableString( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
 	bool StoreVariableArray( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
@@ -80,6 +83,9 @@ private:
 
 	// track recursion depth to detect recursion or excessive complexity
 	static uint32_t s_Depth;
+
+	// track nested preprocessor directives
+	static uint32_t s_IfDepth;
 };
 
 //------------------------------------------------------------------------------

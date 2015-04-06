@@ -29,6 +29,7 @@ Details of the FASTBuild configuration file syntax can be grouped into 4 categor
 </ul>
 <b>Directives</b>
 <ul>
+  <li><a href='#if'>#if / #endif</a></li>
   <li><a href='#include'>#include</a></li>
   <li><a href='#once'>#once</a></li>
 </ul>
@@ -90,6 +91,35 @@ Quotes can be escaped with the ^ character as follows:
 
 
 <h2>Directives</h2>
+    <div class='newsitemheader' id='if'>
+      #if / #endif
+    </div>
+    <div class='newsitembody'>
+<p><b>NOTE: This syntax is very simple and will be expanded in the future.</b></p>
+<p>
+The #if / #endif directive pair allows parts of a bff configuration file to be applied conditionally.
+The following pre-defined symbols can be used:
+<table>
+<tr><th>Symbol</th><th>Value</th></tr>
+<tr><td>__LINUX__</td><td>0 or 1 if running on Windows</td></tr>
+<tr><td>__OSX__</td><td>0 or 1 if running on OSX</td></tr>
+<tr><td>__WINDOWS__</td><td>0 or 1 if running on Linux</td></tr>
+</table>
+<br>
+</p>
+Examples:
+<div class='code'>#if __WINDOWS__
+	.CompilerOptions = '/c "%1" /Fo"%2"' 
+#endif
+#if __OSX__
+	.CompilerOptions = '-c "%1" -o "%2"' 
+#endif
+#if __LINUX__
+	.CompilerOptions = '-c "%1" -o "%2"' 
+#endif
+</div>
+ </div>
+ 
     <div class='newsitemheader' id='include'>
       #include
     </div>

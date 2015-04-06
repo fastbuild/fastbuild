@@ -32,6 +32,7 @@ private:
 	void Structs() const;
 	void Struct_Unterminated() const;
 	void IncludeScope() const;
+	void IfDirective() const;
 
 	void Parse( const char * fileName, bool expectFailure = false ) const;
 };
@@ -53,6 +54,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
 	REGISTER_TEST( Structs )
 	REGISTER_TEST( Struct_Unterminated )
 	REGISTER_TEST( IncludeScope )
+	REGISTER_TEST( IfDirective )
 REGISTER_TESTS_END
 
 // Empty
@@ -181,6 +183,13 @@ void TestBFFParsing::Parse( const char * fileName, bool expectFailure ) const
 void TestBFFParsing::IncludeScope() const
 {
 	Parse( "Data/TestBFFParsing/include_scope.bff" );
+}
+
+// IfDerective
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfDirective() const
+{
+	Parse( "Data/TestBFFParsing/if_directive.bff" );
 }
 
 //------------------------------------------------------------------------------

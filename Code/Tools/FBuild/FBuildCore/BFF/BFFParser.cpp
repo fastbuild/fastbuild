@@ -29,6 +29,7 @@
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ uint32_t BFFParser::s_Depth( 0 );
+/*static*/ uint32_t BFFParser::s_IfDepth( 0 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -557,6 +558,8 @@ bool BFFParser::ParseUnnamedScope( BFFIterator & iter )
 //------------------------------------------------------------------------------
 bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 {
+	const BFFIterator directiveStart( iter );
+
 	// skip directive start token
 	ASSERT( *iter == BFF_PREPROCESSOR_START );
 	iter++;
@@ -586,6 +589,14 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 	{
 		FBuild::Get().GetDependencyGraph().SetCurrentFileAsOneUse();
 		return true;
+	}
+	else if ( directive == "if" )
+	{
+		return ParseIfDirective( directiveStart, iter );
+	}
+	else if ( directive == "endif" )
+	{
+		return ParseEndIfDirective( directiveStartIter );
 	}
 
 	// unknown
@@ -664,6 +675,136 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
 	BFFParser parser;
 	const bool pushStackFrame = false; // include is treated as if injected at this point
 	return parser.Parse( mem.Get(), fileSize, includeToUseClean.Get(), includeTimeStamp, pushStackFrame ); 
+}
+
+// ParseIfDirective
+//------------------------------------------------------------------------------
+bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+{
+	// parse out condition
+	const BFFIterator conditionStart( iter );
+	while ( ( iter.IsAtEnd() == false ) &&
+			( *iter != '\r' ) &&
+			( *iter != '\n' ) )
+	{
+		iter++;
+	}
+	const BFFIterator conditionEnd( iter );
+
+	// Evaluate the condition
+	bool result;
+	if ( CheckIfCondition( conditionStart, conditionEnd, result ) == false )
+	{
+		return false; // CheckIfCondition will have emitted an error
+	}
+
+	if ( result )
+	{
+		++s_IfDepth; // Track that we're inside an if block
+		return true; // continue parsing like normal
+	}
+
+	// Advance iterator past entire #if block
+	size_t depth = 1; // handle nested ifs
+	while ( depth > 0 )
+	{
+		// did we hit the end of the file?
+		if ( iter.IsAtEnd() )
+		{
+			(void)directiveStart; // TODO: Show we're looking for matching endif to this
+			Error::Error_1012_UnexpectedEndOfFile( iter ); // TODO:B better error for this?
+			return false;
+		}
+
+		// find the next preprocessor directive
+		iter.SkipWhiteSpace();
+		if ( *iter == BFF_PREPROCESSOR_START )
+		{
+			iter++; // skip #
+			iter.SkipWhiteSpace(); // allow whitespace between # and directive
+			const BFFIterator directiveNameStart( iter );
+			while ( iter.IsAtValidDirectiveNameCharacter() )
+			{
+				iter++;
+			}
+			const BFFIterator directiveNameEnd( iter );
+			AStackString<> directiveName( directiveNameStart.GetCurrent(), directiveNameEnd.GetCurrent() );
+			if ( directiveName == "endif" )
+			{
+				--depth;
+			}
+			else if ( directiveName == "if" )
+			{
+				++depth;
+			}
+
+			// continue to skip rest of line....
+		}
+
+		// skip rest of line
+		while ( ( iter.IsAtEnd() == false ) &&
+				( *iter != '\r' ) &&
+				( *iter != '\n' ) )
+		{
+			iter++;
+		}
+	}
+
+	return true;
+}
+
+// ParseEndIfDirective
+//------------------------------------------------------------------------------
+bool BFFParser::ParseEndIfDirective( const BFFIterator & directiveStart )
+{
+	if ( s_IfDepth == 0 )
+	{
+		// unexpected endif
+		Error::Error_1037_EndIfWithoutIf( directiveStart );
+		return false;
+	}
+
+	s_IfDepth--;
+	return true;
+}
+
+// CheckIfCondition
+//------------------------------------------------------------------------------
+bool BFFParser::CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result )
+{
+	// trim condition
+	AStackString<> condition( conditionStart.GetCurrent(), conditionEnd.GetCurrent() );
+	condition.Replace( '\t', ' ' );
+	condition.Replace( " ", "" );
+
+	result = false;
+
+	// For now we only support trivial pre-defined expressions - TODO:B Support more complex expressions
+	if ( condition == "__WINDOWS__" )
+	{
+		#if defined( __WINDOWS__ )
+			result = true;
+		#endif
+		return true;
+	}
+	if ( condition == "__LINUX__" )
+	{
+		#if defined( __LINUX__ )
+			result = true;
+		#endif
+		return true;
+	}
+	if ( condition == "__OSX__" )
+	{
+		#if defined( __OSX__ )
+			result = true;
+		#endif
+		return true;
+	}
+
+	// We found an expression we don't understand
+	Error::Error_1036_UnknownTokenInIfDirective( conditionStart );
+	return false;
 }
 
 // StoreVariableString

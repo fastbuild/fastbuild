@@ -8,6 +8,7 @@
 #include "Process.h"
 
 #include "Core/Env/Assert.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/Math/Conversions.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
@@ -33,9 +34,7 @@ Process::Process()
 : m_Started( false )
 #if defined( __WINDOWS__ )
 	, m_SharingHandles( false )
-#endif
 	, m_RedirectHandles( true )
-#if defined( __WINDOWS__ )
     , m_StdOutRead( nullptr )
     , m_StdOutWrite( nullptr )
     , m_StdErrRead( nullptr )
@@ -182,6 +181,11 @@ bool Process::Spawn( const char * executable,
             VERIFY( close( stdErrPipeFDs[ 0 ] ) == 0 );
             VERIFY( close( stdErrPipeFDs[ 1 ] ) == 0 );
 
+            if ( workingDir )
+            {
+                FileIO::SetCurrentDir( AStackString<>( workingDir ) );
+            }
+
             // split args
             AString fullArgs( args );
             Array< AString > splitArgs( 64, true );
@@ -194,8 +198,14 @@ bool Process::Spawn( const char * executable,
             for ( size_t i=0; i<numArgs; ++i )
             {
                 AString & thisArg = splitArgs[ i ];
-                thisArg.Replace( "\"", "" ); // TODO:LINUX Is this the right way to manage this?
-                argv[ i + 1 ] = thisArg.Get();
+				if ( thisArg.BeginsWith( '"' ) && thisArg.EndsWith( '"' ) )
+				{
+					// strip quotes
+					thisArg.SetLength( thisArg.GetLength() - 1 ); // trim end quote
+	                argv[ i + 1 ] = thisArg.Get() + 1; // skip start quote
+					continue;
+				}
+                argv[ i + 1 ] = thisArg.Get(); // leave arg as-is
             }
             argv[ numArgs + 1 ] = nullptr;                      
                                     
@@ -591,5 +601,18 @@ void Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
         return bytesToRead;
     }
 #endif
+
+// GetCurrentId
+//------------------------------------------------------------------------------
+/*static*/ uint32_t Process::GetCurrentId()
+{
+	#if defined( __WINDOWS__ )
+		return ::GetCurrentProcessId();
+	#elif defined( __LINUX__ )
+		return 0; // TODO: Implement GetCurrentId()
+	#elif defined( __OSX__ )
+		return 0; // TODO: Implement GetCurrentId()
+	#endif
+}
 
 //------------------------------------------------------------------------------

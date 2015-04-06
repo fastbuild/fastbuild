@@ -6,11 +6,11 @@ INCLUDEPATHS="-I ~/p4/Code"
 if [[ $OSTYPE == darwin* ]]; then
 	DEFINES="-DDEBUG -D__OSX__ -D__APPLE__"
 	LINKEROPTIONS=
-    OPTIONS="-x c++ -c -g -O0 -Wall -Wfatal-errors"
+    OPTIONS="-x c++ -c -g -O0 -Wall -Wfatal-errors -std=c++11"
 else
 	DEFINES="-DDEBUG -D__LINUX__"
 	LINKEROPTIONS=-pthread
-    OPTIONS="-c -g -O0 -Wall -Wfatal-errors"
+    OPTIONS="-c -g -O0 -Wall -Wfatal-errors -std=c++11"
 fi
 
 mkdir -p ../tmp
@@ -67,6 +67,7 @@ echo CoreTest - compiling...
 mkdir -p ../tmp/Core/CoreTest/Tests
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Core/CoreTest/Tests/TestAtomic.cpp -o ../tmp/Core/CoreTest/Tests/TestAtomic.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Core/CoreTest/Tests/TestAString.cpp -o ../tmp/Core/CoreTest/Tests/TestAString.o
+g++  $OPTIONS -I ~/p4/Code $DEFINES ./Core/CoreTest/Tests/TestFileIO.cpp -o ../tmp/Core/CoreTest/Tests/TestFileIO.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Core/CoreTest/Tests/TestHash.cpp -o ../tmp/Core/CoreTest/Tests/TestHash.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Core/CoreTest/Tests/TestMemPoolBlock.cpp -o ../tmp/Core/CoreTest/Tests/TestMemPoolBlock.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Core/CoreTest/Tests/TestMutex.cpp -o ../tmp/Core/CoreTest/Tests/TestMutex.o
@@ -76,7 +77,7 @@ g++  $OPTIONS -I ~/p4/Code $DEFINES ./Core/CoreTest/Tests/TestTimer.cpp -o ../tm
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Core/CoreTest/TestMain.cpp -o ../tmp/Core/CoreTest/TestMain.o
 echo CoreTest - archiving...
 pushd ../tmp/Core/CoreTest > /dev/null
-ar rcs libCoreTest.a Tests/TestAtomic.o Tests/TestAString.o Tests/TestHash.o Tests/TestMemPoolBlock.o Tests/TestMutex.o Tests/TestPathUtils.o Tests/TestTCPConnectionPool.o Tests/TestTimer.o TestMain.o
+ar rcs libCoreTest.a Tests/TestAtomic.o Tests/TestAString.o Tests/TestFileIO.o Tests/TestHash.o Tests/TestMemPoolBlock.o Tests/TestMutex.o Tests/TestPathUtils.o Tests/TestTCPConnectionPool.o Tests/TestTimer.o TestMain.o
 popd > /dev/null
 
 # TestFramework
@@ -156,7 +157,7 @@ g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildCore/Graph/VCXProjectNo
 mkdir -p ../tmp/Tools/FBuild/FBuildCore/Helpers
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildCore/Helpers/Args.cpp -o ../tmp/Tools/FBuild/FBuildCore/Helpers/Args.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildCore/Helpers/CIncludeParser.cpp -o ../tmp/Tools/FBuild/FBuildCore/Helpers/CIncludeParser.o
-g++  $OPTIONS -I ~/p4/Code $DEFINES -I ~/p4/External/LZ4/lz4-r117 ./Tools/FBuild/FBuildCore/Helpers/Compressor.cpp -o ../tmp/Tools/FBuild/FBuildCore/Helpers/Compressor.o
+g++  $OPTIONS -I ~/p4/Code $DEFINES -I ~/p4/External/LZ4/lz4-r127 ./Tools/FBuild/FBuildCore/Helpers/Compressor.cpp -o ../tmp/Tools/FBuild/FBuildCore/Helpers/Compressor.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildCore/Helpers/FBuildStats.cpp -o ../tmp/Tools/FBuild/FBuildCore/Helpers/FBuildStats.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildCore/Helpers/Report.cpp -o ../tmp/Tools/FBuild/FBuildCore/Helpers/Report.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildCore/Helpers/ResponseFile.cpp -o ../tmp/Tools/FBuild/FBuildCore/Helpers/ResponseFile.o
@@ -184,6 +185,7 @@ mkdir -p ../tmp/Tools/FBuild/FBuildTest
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildTest/TestMain.cpp -o ../tmp/Tools/FBuild/FBuildTest/TestMain.o
 mkdir -p ../tmp/Tools/FBuild/FBuildTest/Tests
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildTest/Tests/FBuildTest.cpp -o ../tmp/Tools/FBuild/FBuildTest/Tests/FBuildTest.o
+g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildTest/Tests/TestAlias.cpp -o ../tmp/Tools/FBuild/FBuildTest/Tests/TestAlias.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildTest/Tests/TestBFFParsing.cpp -o ../tmp/Tools/FBuild/FBuildTest/Tests/TestBFFParsing.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildTest/Tests/TestBuildAndLinkLibrary.cpp -o ../tmp/Tools/FBuild/FBuildTest/Tests/TestBuildAndLinkLibrary.o
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildTest/Tests/TestBuildFBuild.cpp -o ../tmp/Tools/FBuild/FBuildTest/Tests/TestBuildFBuild.o
@@ -206,7 +208,7 @@ g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildTest/Tests/TestUnity.cp
 g++  $OPTIONS -I ~/p4/Code $DEFINES ./Tools/FBuild/FBuildTest/Tests/TestVariableStack.cpp -o ../tmp/Tools/FBuild/FBuildTest/Tests/TestVariableStack.o
 echo FBuildTest - archiving...
 pushd ../tmp/Tools/FBuild/FBuildTest > /dev/null
-ar rcs libFBuildTest.a TestMain.o Tests/FBuildTest.o Tests/TestBFFParsing.o Tests/TestBuildAndLinkLibrary.o Tests/TestBuildFBuild.o Tests/TestCachePlugin.o Tests/TestCLR.o Tests/TestCompressor.o Tests/TestCopy.o Tests/TestCSharp.o Tests/TestCUDA.o Tests/TestDistributed.o Tests/TestDLL.o Tests/TestExe.o Tests/TestGraph.o Tests/TestIncludeParser.o Tests/TestPrecompiledHeaders.o Tests/TestProjectGeneration.o Tests/TestResources.o Tests/TestTest.o Tests/TestUnity.o Tests/TestVariableStack.o
+ar rcs libFBuildTest.a TestMain.o Tests/FBuildTest.o Tests/TestAlias.o Tests/TestBFFParsing.o Tests/TestBuildAndLinkLibrary.o Tests/TestBuildFBuild.o Tests/TestCachePlugin.o Tests/TestCLR.o Tests/TestCompressor.o Tests/TestCopy.o Tests/TestCSharp.o Tests/TestCUDA.o Tests/TestDistributed.o Tests/TestDLL.o Tests/TestExe.o Tests/TestGraph.o Tests/TestIncludeParser.o Tests/TestPrecompiledHeaders.o Tests/TestProjectGeneration.o Tests/TestResources.o Tests/TestTest.o Tests/TestUnity.o Tests/TestVariableStack.o
 popd > /dev/null
 
 # FBuildWorker
@@ -227,7 +229,7 @@ popd > /dev/null
 # LZ4
 echo LZ4 - compiling...
 mkdir -p ../tmp/LZ4
-g++  $OPTIONS -I ~/p4/Code $DEFINES ../External/LZ4/lz4-r117/lz4.c -o ../tmp/LZ4/lz4.o
+g++  $OPTIONS -I ~/p4/Code $DEFINES ../External/LZ4/lz4-r127/lz4.c -o ../tmp/LZ4/lz4.o
 echo LZ4 - archiving...
 pushd ../tmp/LZ4 > /dev/null
 ar rcs libLZ4.a lz4.o

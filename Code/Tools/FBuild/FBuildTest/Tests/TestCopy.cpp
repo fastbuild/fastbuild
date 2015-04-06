@@ -167,14 +167,14 @@ void TestCopy::TestCopyFunction_FileToFile() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	const AStackString<> dst( "..\\..\\..\\..\\ftmp\\Test\\Copy\\copy.bff.copy" );
+	AStackString<> dst( "../../../../ftmp/Test/Copy/copy.bff.copy" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( dst );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToFile" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "..\\..\\..\\..\\ftmp\\Test\\Copy\\filetofile.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/Copy/filetofile.fdb" ) );
 
 	// make sure all output is where it is expected
 	EnsureFileExists( dst );
@@ -183,8 +183,8 @@ void TestCopy::TestCopyFunction_FileToFile() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::COPY_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 3,		2 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 3,		3 );
 }
 
 // TestCopyFunction_FileToFile_NoRebuild
@@ -195,9 +195,7 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild() const
 	options.m_ConfigFile = "Data/TestCopy/copy.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "..\\..\\..\\..\\ftmp\\Test\\Copy\\filetofile.fdb" ) );
-
-	const AStackString<> dst( "..\\..\\..\\..\\ftmp\\Test\\Copy\\copy.bff.copy" );
+	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/Copy/filetofile.fdb" ) );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToFile" ) ) );
@@ -206,8 +204,8 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
 	CheckStatsNode ( 1,		0,		Node::COPY_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 3,		1 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 3,		2 );
 }
 
 // TestCopyFunction_FileToDir
@@ -220,14 +218,14 @@ void TestCopy::TestCopyFunction_FileToDir() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	const AStackString<> dst( "..\\..\\..\\..\\ftmp\\Test\\Copy\\copy.bff" );
+	const AStackString<> dst( "../../../../ftmp/Test/Copy/copy.bff" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( dst );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToDir" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "..\\..\\..\\..\\ftmp\\Test\\Copy\\filetodir.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/Copy/filetodir.fdb" ) );
 
 	EnsureFileExists( dst );
 
@@ -235,8 +233,8 @@ void TestCopy::TestCopyFunction_FileToDir() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::COPY_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 3,		2 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 3,		3 );
 }
 
 // TestCopyFunction_FileToDir_NoRebuild
@@ -247,9 +245,7 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild() const
 	options.m_ConfigFile = "Data/TestCopy/copy.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "..\\..\\..\\..\\ftmp\\Test\\Copy\\filetodir.fdb" ) );
-
-	const AStackString<> dst( "..\\..\\..\\..\\ftmp\\Test\\Copy\\copy.bff" );
+	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/Copy/filetodir.fdb" ) );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToDir" ) ) );
@@ -258,8 +254,8 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
 	CheckStatsNode ( 1,		0,		Node::COPY_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 3,		1 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 3,		2 );
 }
 
 // TestCopyFunction_MultiFileToDir
@@ -272,8 +268,8 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	const AStackString<> dst1( "..\\..\\..\\..\\ftmp\\Test\\Copy\\a.txt" );
-	const AStackString<> dst2( "..\\..\\..\\..\\ftmp\\Test\\Copy\\b.txt" );
+	const AStackString<> dst1( "../../../../ftmp/Test/Copy/a.txt" );
+	const AStackString<> dst2( "../../../../ftmp/Test/Copy/b.txt" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( dst1 );
@@ -281,7 +277,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "..\\..\\..\\..\\ftmp\\Test\\Copy\\multifiletodir.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/Copy/multifiletodir.fdb" ) );
 
 	EnsureFileExists( dst1 );
 	EnsureFileExists( dst2 );
@@ -290,8 +286,8 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
 	CheckStatsNode ( 2,		2,		Node::COPY_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 5,		4 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 5,		5 );
 }
 
 // TestCopyFunction_MultiFileToDir_NoRebuild
@@ -302,7 +298,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
 	options.m_ConfigFile = "Data/TestCopy/copy.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "..\\..\\..\\..\\ftmp\\Test\\Copy\\multifiletodir.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/Copy/multifiletodir.fdb" ) );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
@@ -311,8 +307,8 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
 	CheckStatsNode ( 2,		0,		Node::COPY_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 5,		2 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 5,		3 );
 }
 
 //------------------------------------------------------------------------------

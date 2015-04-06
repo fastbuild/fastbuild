@@ -30,7 +30,7 @@ JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads ) :
 	m_CompletedJobsFailed( 1024, true ),
 	m_Workers( numWorkerThreads, false )
 {
-	WorkerThread::InitTmpDir();
+	WorkerThread::InitTmpDir( true ); // remote == true
 
 	for ( uint32_t i=0; i<numWorkerThreads; ++i )
 	{

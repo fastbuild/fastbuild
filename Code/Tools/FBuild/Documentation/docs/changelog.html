@@ -13,6 +13,38 @@
 
 <h1>Changelog</h1>
 
+
+    <div class='newsitemheader'>
+      v0.80&nbsp;<font color='#bbbbbb'>(5-Apr-2015)</font>
+    </div>
+    <div class='newsitembody'>
+Note
+<ul>
+  <li>DB version has changed : clean build will occur</li>
+  <li>Protocol version changed : update workers</li>
+</ul>
+New
+<ul>
+  <li>OS X & Linux now supported (Alpha)</li>
+  <ul>
+    <li>All features except distributed compilation (coming in Beta)</li>
+  </ul>
+  <li>Add #if/#endif directives to assist in cross-platform bff configs</li>
+  <li>Add built-in __WINDOWS__, __LINUX__ & __OSX__ symbols for use with #if</li>
+</ul> 
+Fixes
+<ul>
+  <li>Toolchain distribution is correctly uniquified when compiler uses exe name to alter behaviour (PS4 Clang)</li>
+  <li>Aliases to missing items will now report an error at build time</li>
+  <li>Use response files to avoid command line limit on Windows when compiling C# (Thanks to Vitalii Trubchaninov)</li>
+  <li>Linking a dynamic library created with GCC/SNC/Clang in a subsequent link step no longer causes an error</li>
+</ul>
+Improvements
+<ul>
+  <li>Support multiple concurrent FASTBuilds if run in different root folders (Thanks to Vitalii Trubchaninov)</li>
+</ul>
+    </div>
+
     <div class='newsitemheader'>
       v0.77&nbsp;<font color='#bbbbbb'>(19-Mar-2015)</font>
     </div>

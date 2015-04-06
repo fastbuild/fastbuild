@@ -81,7 +81,7 @@ public:
 	bool			ReceiveFileData( uint32_t fileId, const void * data, size_t & dataSize );
 
 	void			GetRemotePath( AString & path ) const;
-	void			GetRemoteFilePath( uint32_t fileId, AString & exe ) const;
+	void			GetRemoteFilePath( uint32_t fileId, AString & exe, bool fullPath = true ) const;
 	const char *	GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
 private:
 	bool			AddFile( const Node * node );

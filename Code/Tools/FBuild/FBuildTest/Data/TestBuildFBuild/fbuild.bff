@@ -1,166 +1,228 @@
-;
-; Build FBuild using FBuild
-;
+//
+// Build FBuild using FBuild
+//
 #include "..\testcommon.bff"
+Using( .StandardEnvironment )
 
-// TODO:B Fix relative dir and make this work properly
-.VisualStudioPath		= '..\External\SDK\VS11.0'
-.WindowsSDK				= '..\External\SDK\Windows8.1'
+// TODO:B It is a shame this can't come from testcommon due to relative path differences
+#if __WINDOWS__
+	.VisualStudioPath		= '..\External\SDK\VS11.0'
+	.WindowsSDK				= '..\External\SDK\Windows8.1'
+	.Compiler				= "$VisualStudioPath$\VC\bin\cl.exe"
+	.Librarian				= "$VisualStudioPath$\VC\bin\lib.exe"
+	.Linker					= "$VisualStudioPath$\VC\bin\link.exe"
+#endif
 
-Settings		
-{ 
-	.CachePath		= "C:\.fbuild.cache\"
-	.Workers		= { "127.0.0.1" }
-	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
-						"TMP=C:\Windows\Temp",
-						"SystemRoot=C:\Windows" }
-}
+// Override for different relative VisualStudioPath
+#if __WINDOWS__
+	Settings		
+	{ 
+		.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
+							"TMP=C:\Windows\Temp",
+							"SystemRoot=C:\Windows" }
+	}
+#endif
 
-;
-; globals
-;
+// For OSX/Linux use the standard settings
+#if __OSX__
+    Settings {}
+#endif
+#if __LINUX__
+    Settings {}
+#endif
 
-; Tools
-.Compiler	= "$VisualStudioPath$\VC\bin\cl.exe"
-.Librarian	= "$VisualStudioPath$\VC\bin\lib.exe"
-.Linker		= "$VisualStudioPath$\VC\bin\link.exe"
-
-.IncludePaths		= ' /I"./"'
-					+ ' /I"$WindowsSDK$\Include\shared"'
-					+ ' /I"$WindowsSDK$\Include\um"'
-					+ ' /I"$VisualStudioPath$\VC\include"'
-
-.Defines			= ' /DWIN32 /D_WIN32 /D__WINDOWS__ /DWIN32_LEAN_AND_MEAN'
-					+ ' /D"_CRT_SECURE_NO_WARNINGS"'
-
-.CompilerOptions	= '/WX /nologo "%1" /Fo%2 /W4 /Gd /Gm- /fp:precise /Zc:wchar_t /Zc:forScope /c /Z7 $Defines$ $IncludePaths$'
-.LibrarianOptions	= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
-.LinkerOptions		= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1" /MACHINE:X86 /SUBSYSTEM:console /DEBUG /INCREMENTAL:NO'
-					+ " /IGNORE:4001" ; don't complain about linking libs only
-					+ " /LIBPATH:^"$WindowsSDK$\Lib\winv6.3\um\x86^""
-					+ " /LIBPATH:^"$VisualStudioPath$\VC\lib^""
-					+ " kernel32.lib"
-					+ " Ws2_32.lib"
-					+ " LIBCMT.LIB"
-
+// Windows
+//--------
+#if __WINDOWS__
+	.CompilerOptions	+ ' /I"./"'
+						+ ' /I"$WindowsSDK$\Include\shared"'
+						+ ' /I"$WindowsSDK$\Include\um"'
+						+ ' /I"$VisualStudioPath$\VC\include"'
+	.LinkerOptions		+ ' /IGNORE:4001' // don't complain about linking libs only
+						+ ' /MACHINE:X86'
+						+ ' /SUBSYSTEM:console'
+						+ ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x86"'
+						+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+						+ ' kernel32.lib'
+						+ ' Ws2_32.lib'
+						+ ' LIBCMT.LIB'
+#endif
 
 // External Libs
 //------------------------------------------------------------------------------
-.LZ4BasePath				= '..\External\LZ4\lz4-r117'
+.LZ4BasePath				= '../External/LZ4/lz4-r127'
 .LZ4IncludePath				= '$LZ4BasePath$'
 
-;
-; Define per-configuration data
-;
-.Configs				= { "debug",							"release" }
-.CompilerExtraOptions	= { "/DDEBUG /Od /RTC1 /GS /Oy- /MTd",	"/DRELEASE /Ox /Oy /Oi /GS- /MT /GF /GL /Gy" }
-.LibrarianExtraOptions	= { "",									"/LTCG" }
-.LinkerExtraOptions		= { "^"user32.lib^"",					"/LTCG /OPT:REF,ICF /NXCOMPAT /DYNAMICBASE" }
+//
+// Configs
+//------------------------------------------------------------------------------
+#if __WINDOWS__
+	.Configs				= { "Debug",							"Release" }
+	.CompilerExtraOptions	= { "/DDEBUG /Od /RTC1 /GS /Oy- /MTd",	"/DRELEASE /Ox /Oy /Oi /GS- /MT /GF /GL /Gy" }
+	.LibrarianExtraOptions	= { "",									"/LTCG" }
+	.LinkerExtraOptions		= { "^"user32.lib^"",					"/LTCG /OPT:REF,ICF /NXCOMPAT /DYNAMICBASE" }
 
+	.OutputBase				= '../ftmp/Win32/'
+#endif
+#if __OSX__
+    .Configs				= { "Debug",							"Release" }
+    .CompilerExtraOptions	= { "-DDEBUG -O0",                      "-DRELEASE -O2" }
+    .LibrarianExtraOptions	= { "",									"" }
+    .LinkerExtraOptions		= { "",                                 "" }
 
-;
-; Build each configuration
-;
+    .OutputBase				= '../ftmp/OSX/'
+#endif
+#if __LINUX__
+    .Configs				= { "Debug",							"Release" }
+    .CompilerExtraOptions	= { "-DDEBUG -O0",                      "-DRELEASE -O2" }
+    .LibrarianExtraOptions	= { "",									"" }
+    .LinkerExtraOptions		= { "",                                 "" }
+
+    .OutputBase				= '../ftmp/Linux/'
+#endif
+
+// Libraries
+//------------------------------------------------------------------------------
+.ExtraOptions		= ''
+.Exclude			= {}
+.Files				= {}
+.LZ4Lib				= [ .LibName = 'LZ4'			.LibPath = '$LZ4BasePath$'
+						.Files = '$LZ4BasePath$/lz4.c' ]
+.CoreLib			= [ .LibName = 'Core'			.LibPath = 'Core\'
+						.Exclude = { 'Core\CoreTest\' } ]
+.CoreTestLib		= [ .LibName = 'CoreTest'		.LibPath = 'Core\CoreTest\' ]
+.FBuildCoreLib		= [ .LibName = 'FBuildCore'		.LibPath = 'Tools\FBuild\FBuildCore\'
+						#if __WINDOWS__
+							.ExtraOptions = ' /I"$LZ4IncludePath$"'
+						#endif
+                        #if __OSX__
+                            .ExtraOptions = ' "-I$LZ4IncludePath$"'
+                        #endif
+                        #if __LINUX__
+                            .ExtraOptions = ' "-I$LZ4IncludePath$"'
+                        #endif
+                      ]
+.FBuildAppLib		= [ .LibName = 'FBuildApp'		.LibPath = 'Tools\FBuild\FBuildApp\' ]
+.FBuildTestLib		= [ .LibName = 'FBuildTest'		.LibPath = 'Tools\FBuild\FBuildTest\'
+						.Exclude = { 'Tools\FBuild\FBuildTest\Data\' } ]
+.TestFrameworkLib	= [ .LibName = 'TestFramework'	.LibPath = 'TestFramework\'
+						#if __WINDOWS__
+							.ExtraOptions = ' /EHsc'
+						#endif
+                        #if __OSX__
+                            .ExtraOptions = ' -fexceptions'
+                        #endif
+                        #if __LINUX__
+                            .ExtraOptions = ' -fexceptions'
+                        #endif
+]
+.Libs				= { 
+						.LZ4Lib
+						.CoreLib, 
+						.CoreTestLib, 
+						.FBuildCoreLib, 
+						.FBuildAppLib, 
+						.FBuildTestLib
+						.TestFrameworkLib
+					  }
+
+// Unity
+//------------------------------------------------------------------------------
+ForEach( .Lib in .Libs )
+{
+	Using( .Lib )
+
+	Unity( '$LibName$-Unity' )
+	{
+		.UnityInputPath			= .LibPath
+		.UnityInputFiles		= .Files
+		.UnityInputExcludePath	= .Exclude
+		.UnityOutputPath		= '$OutputBase$\Unity\$LibName$\'
+	}
+}
+
+//
+// Build each configuration
+//------------------------------------------------------------------------------
 ForEach( .Config			in .Configs,
 		 .CompilerExtras	in .CompilerExtraOptions,
 		 .LibrarianExtras	in .LibrarianExtraOptions,
 		 .LinkerExtras		in .LinkerExtraOptions )
 {
-	;
-	; Modify base properties for current configuration
-	;
-	.CompilerOptions	+ " $CompilerExtras$"
-	.LibrarianOptions	+ " $LibrarianExtras$"
-	.LinkerOptions		+ " $LinkerExtras$"
+	//
+	// Modify base properties for current configuration
+	//
+	.CompilerOptions	+ ' $CompilerExtras$'
+	.LibrarianOptions	+ ' $LibrarianExtras$'
+	.LinkerOptions		+ ' $LinkerExtras$'
 
-	.OutputBase = "..\ftmp\Win32\$Config$"
+	.OutputBase			+ '\$Config$'
 
-	Library( 'LZ4-$Config$' )
+	// Libs
+	//------------------------------------------------------------------------------
+	ForEach( .Lib in .Libs )
 	{
- 		.LibrarianOutput 			= '$OutputBase$\LZ4\LZ4.lib'
-		.CompilerInputFiles			= '$LZ4BasePath$\lz4.c'
-		.CompilerOutputPath			= '$OutputBase$\LZ4\'
-		.CompilerOptions			+ ' /wd6262'	// Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
-									+ ' /wd28251'	// warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
+		Using( .Lib )
+
+		Library( '$LibName$-$Config$' )
+		{
+			.CompilerOptions			+ .ExtraOptions
+
+			// Input
+			.CompilerInputUnity			= '$LibName$-Unity'
+
+			// Output
+			.CompilerOutputPath			= '$OutputBase$\$LibName$\'
+			.LibrarianOutput			= '$OutputBase$\$LibName$\$LibName$.lib'
+		}
 	}
 
-	Library( "Core-$Config$" )
-	{
-		.LibrarianOutput	= "$OutputBase$\Core\core.lib"
-		.CompilerInputPath	= "Core\"
-		.CompilerInputExcludePath = "Core\CoreTest\"
-		.CompilerOutputPath	= "$OutputBase$\Core\"
-	}
-
-	Library( "CoreTest-$Config$" )
-	{
-		.CompilerInputPath	= "Core\CoreTest"
-		.CompilerOutputPath	= "$OutputBase$\Core\CoreTest\"
-		.LibrarianOutput	= "$OutputBase$\Core\CoreTest\coretest.lib"
-	}
-
-	Library( "FBuildCore-$Config$" )
-	{
-		.CompilerInputPath	= "Tools\FBuild\FBuildCore\"
-		.CompilerOutputPath	= "$OutputBase$\Tools\FBuild\FBuildCore\"
-		.CompilerOptions	+ ' /I"$LZ4IncludePath$"'
-		.LibrarianOutput	= "$OutputBase$\Tools\FBuild\FBuildCore\fbuildcore.lib"
-	}
-
-	Library( "FBuildApp-$Config$" )
-	{
-		.CompilerInputPath	= "Tools\FBuild\FBuildApp\"
-		.CompilerOutputPath	= "$OutputBase$\Tools\FBuild\FBuildApp\"
-		.LibrarianOutput	= "$OutputBase$\Tools\FBuild\FBuildApp\fbuildapp.lib"
-	}
-
-	Library( "FBuildTest-$Config$" )
-	{
-		.CompilerInputPath			= "Tools\FBuild\FBuildTest\"
-		.CompilerInputExcludePath	= "Tools\FBuild\FBuildTest\Data\"
-		.CompilerOutputPath			= "$OutputBase$\Tools\FBuild\FBuildTest\"
-		.LibrarianOutput			= "$OutputBase$\Tools\FBuild\FBuildTest\fbuildtest.lib"
-	}
-
-	Library( "TestFramework-$Config$" )
-	{
-		.CompilerInputPath	= "TestFramework\"
-		.CompilerOptions	+ " /EHsc" ; enable exception handling
-		.CompilerOutputPath = "$OutputBase$\TestFramework\"
-		.LibrarianOutput	= "$OutputBase$\TestFramework\testframework.lib"
-	}
-
+	// Exes
+	//------------------------------------------------------------------------------
 	Executable
 	{
 		.LinkerOutput		= "$OutputBase$\Core\CoreTest\CoreTest.exe"
-		.LinkerOptions		+ " /PDB:^"$OutputBase$\Core\CoreTest\CoreTest.pdb^""
-		.Libraries			= { "Core-$Config$", 
-								"CoreTest-$Config$",
+		#if __WINDOWS__
+			.LinkerOptions		+ " /PDB:^"$OutputBase$\Core\CoreTest\CoreTest.pdb^""
+		#endif
+        #if __LINUX__
+            .LinkerOptions      + " -pthread"
+        #endif
+		.Libraries			= { "CoreTest-$Config$",
+                                "Core-$Config$", 
 								"TestFramework-$Config$" }
-		Print( '$LinkerOptions$' )
 	}
 
 	Executable
 	{
 		.LinkerOutput		= "$OutputBase$\Tools\FBuild\FBuildApp\FBuild.exe"
-		.LinkerOptions		+ " /PDB:^"$OutputBase$\Tools\FBuild\FBuildApp\FBuild.pdb^""
-		.Libraries			= { "Core-$Config$", 
+		#if __WINDOWS__
+			.LinkerOptions		+ " /PDB:^"$OutputBase$\Tools\FBuild\FBuildApp\FBuild.pdb^""            
+		#endif
+        #if __LINUX__
+            .LinkerOptions      + " -pthread"
+        #endif
+		.Libraries			= { "FBuildApp-$Config$",
 								"FBuildCore-$Config$",
-								"FBuildApp-$Config$",
-								"LZ4-$Config$" }
-		Print( '$LinkerOptions$' )
+                                "Core-$Config$", 
+								"LZ4-$Config$" }								
 	}
 
 	Executable
 	{
 		.LinkerOutput		= "$OutputBase$\Tools\FBuild\FBuildTest\FBuildTest.exe"
-		.LinkerOptions		+ " /PDB:^"$OutputBase$\Tools\FBuild\FBuildTest\FBuildTest.pdb^""
-		.Libraries			= { "Core-$Config$", 
+		#if __WINDOWS__
+			.LinkerOptions		+ " /PDB:^"$OutputBase$\Tools\FBuild\FBuildTest\FBuildTest.pdb^""
+		#endif
+        #if __LINUX__
+            .LinkerOptions      + " -pthread"
+        #endif
+		.Libraries			= { 
+                                "FBuildTest-$Config$",
 								"FBuildCore-$Config$",
-								"FBuildTest-$Config$",
 								"TestFramework-$Config$",
+                                "Core-$Config$", 
 								"LZ4-$Config$" }
-		Print( '$LinkerOptions$' )
 	}
 
 	Alias( "all-$Config$" )
