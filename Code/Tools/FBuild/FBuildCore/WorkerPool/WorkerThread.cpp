@@ -54,7 +54,7 @@ WorkerThread::~WorkerThread()
 
 // InitTmpDir
 //------------------------------------------------------------------------------
-/*static*/ void WorkerThread::InitTmpDir()
+/*static*/ void WorkerThread::InitTmpDir( bool remote )
 {
 	VERIFY( FileIO::GetTempDir( s_TmpRoot ) );
     #if defined( __WINDOWS__ )
@@ -62,6 +62,14 @@ WorkerThread::~WorkerThread()
     #else
         s_TmpRoot += "_fbuild.tmp/";
     #endif
+
+    // use the working dir hash to uniquify the path
+    AStackString<> buffer;
+    const uint32_t workingDirHash = remote ? 0 : FBuild::Get().GetOptions().GetWorkingDirHash();
+    buffer.Format( "0x%08x", workingDirHash );
+    s_TmpRoot += buffer;
+    s_TmpRoot += NATIVE_SLASH;
+
 	VERIFY( FileIO::EnsurePathExists( s_TmpRoot ) );
 }
 

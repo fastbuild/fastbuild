@@ -3,18 +3,10 @@
 ;
 #include "..\testcommon.bff"
 
-Settings		
-{ 
-	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
-						"TMP=C:\Windows\Temp",
-						"SystemRoot=C:\Windows" }
-}
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
 
-; globals
-.Compiler			= "$VisualStudioPath$\VC\bin\cl.exe"
-.CompilerOptions	= "%1 /Fo%2 /c /Zi /Od /Zc:wchar_t /nologo /DWIN32 /DDEBUG"
-.Librarian			= "$VisualStudioPath$\VC\bin\lib.exe"
-.LibrarianOptions	= "/NOLOGO /NODEFAULTLIB /OUT:%2 %1"
 
 .Out		= "..\..\..\..\ftmp"
 

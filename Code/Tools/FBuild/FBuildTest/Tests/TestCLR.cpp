@@ -85,8 +85,8 @@ void TestCLR::Test() const
 	CheckStatsNode ( stats,	1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::OBJECT_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::LIBRARY_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( stats,	7,		4 );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( stats,	7,		5 );
 
 	TEST_ASSERT( stats.GetCacheStores() == 0 ); // cache not supported due to compiler bug
 }
@@ -105,8 +105,8 @@ void TestCLR::Test_NoBuild() const
 	CheckStatsNode ( stats,	1,		0,		Node::COMPILER_NODE );
 	CheckStatsNode ( stats,	1,		0,		Node::OBJECT_NODE );
 	CheckStatsNode ( stats,	1,		0,		Node::LIBRARY_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( stats,	7,		3 );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( stats,	7,		4 );
 }
 
 // TestCache
@@ -130,8 +130,8 @@ void TestCLR::TestCache() const
 	CheckStatsNode ( stats,	1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::OBJECT_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::LIBRARY_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( stats,	7,		4 );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( stats,	7,		5 );
 
 	TEST_ASSERT( stats.GetCacheHits() == 0 ); // cache not supported dur to compiler bug
 }
@@ -157,8 +157,8 @@ void TestCLR::TestParallelBuild() const
 	CheckStatsNode ( stats,	1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( stats,	3,		3,		Node::OBJECT_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::LIBRARY_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( stats,	12,		9 );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( stats,	12,		10 );
 }
 
 // TestParallelBuild_NoBuild
@@ -177,8 +177,8 @@ void TestCLR::TestParallelBuild_NoBuild() const
 	CheckStatsNode ( stats,	1,		0,		Node::COMPILER_NODE );
 	CheckStatsNode ( stats,	3,		0,		Node::OBJECT_NODE );
 	CheckStatsNode ( stats,	1,		0,		Node::LIBRARY_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( stats,	12,		6 );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( stats,	12,		7 );
 }
 
 // TestCLRToCPPBridge

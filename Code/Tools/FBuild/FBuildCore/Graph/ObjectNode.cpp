@@ -36,7 +36,9 @@
 #if defined( __WINDOWS__ )
 	#include <windows.h> // for FILETIME etc
 #endif
-
+#if defined( __OSX__ ) || defined( __LINUX__ )
+    #include <sys/time.h>
+#endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -881,16 +883,13 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 					return false;
 				}
 				uint64_t fileTimeNow = ( (uint64_t)ft.dwLowDateTime | ( (uint64_t)ft.dwHighDateTime << 32 ) );
-			#elif defined( __APPLE__ )
-				uint64_t fileTimeNow = 0; // TODO:MAC Implement setting file to current time
-				ASSERT( false );
-			#elif defined( __LINUX__ )
-				uint64_t fileTimeNow = 0; // TODO:LINUX Implement setting file to current time
-				ASSERT( false );
+                const bool timeSetOK = objFile.SetLastWriteTime( fileTimeNow );
+			#elif defined( __APPLE__ ) || defined( __LINUX__ )
+                const bool timeSetOK = ( utimes( m_Name.Get(), nullptr ) == 0 );
 			#endif
 	
 			// set the time on the local file
-			if ( objFile.SetLastWriteTime( fileTimeNow ) == false )
+            if ( timeSetOK == false )
 			{
 				FLOG_ERROR( "Failed to set timestamp on file after cache hit '%s' (%u)", m_Name.Get(), Env::GetLastErr() );
 				return false;

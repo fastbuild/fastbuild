@@ -1,4 +1,8 @@
+endif
+if
 in
+include
+once
 
 Alias
 Compiler

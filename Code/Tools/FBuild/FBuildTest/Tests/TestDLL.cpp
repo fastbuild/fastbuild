@@ -372,8 +372,8 @@ void TestDLL::TestLinkWithCopy() const
 	CheckStatsNode ( 2,		2,		Node::OBJECT_NODE );
 	CheckStatsNode ( 2,		2,		Node::LIBRARY_NODE );
 	CheckStatsNode ( 2,		2,		Node::DLL_NODE );
-	CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( 15,	11 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 15,	12 );
 }
 
 //------------------------------------------------------------------------------

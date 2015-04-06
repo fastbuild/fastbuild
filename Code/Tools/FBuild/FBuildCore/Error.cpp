@@ -321,6 +321,20 @@
 	FormatError( iter, 1035u, nullptr, "Excessive depth complexity when parsing BFFs. Check for resursive includes or simplify config." );
 }
 
+// Error_1036_UnknownTokenInIfDirective
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1036_UnknownTokenInIfDirective( const BFFIterator & iter )
+{
+	FormatError( iter, 1036u, nullptr, "Unknown token in #if directive." );
+}
+
+// Error_1037_EndIfWithoutIf
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1037_EndIfWithoutIf( const BFFIterator & iter )
+{
+	FormatError( iter, 1037u, nullptr, "#endif without matching #if." );
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFIterator & iter,

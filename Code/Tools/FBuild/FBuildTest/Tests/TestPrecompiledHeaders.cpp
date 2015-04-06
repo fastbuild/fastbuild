@@ -93,9 +93,9 @@ void TestPrecompiledHeaders::TestPCH() const
 	CheckStatsNode ( stats,	2,		2,		Node::OBJECT_NODE );// obj + pch obj
 	CheckStatsNode ( stats,	1,		1,		Node::LIBRARY_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::DIRECTORY_LIST_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::DLL_NODE );
-	CheckStatsTotal( stats,	10,		8 );
+	CheckStatsTotal( stats,	10,		9 );
 
 	// check we wrote all objects to the cache
 	TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 1 ); // only the main obj can be cached
@@ -114,9 +114,9 @@ void TestPrecompiledHeaders::TestPCH_NoRebuild() const
 	CheckStatsNode ( stats,	2,		0,		Node::OBJECT_NODE );// obj + pch obj
 	CheckStatsNode ( stats,	1,		0,		Node::LIBRARY_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::DIRECTORY_LIST_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( stats,	1,		0,		Node::DLL_NODE );
-	CheckStatsTotal( stats,	10,		4 );
+	CheckStatsTotal( stats,	10,		5 );
 }
 
 // TestPCHWithCache
@@ -148,9 +148,9 @@ void TestPrecompiledHeaders::TestPCHWithCache() const
 	CheckStatsNode ( stats,	2,		1,		Node::OBJECT_NODE );// obj + pch obj (build pch only)
 	CheckStatsNode ( stats,	1,		1,		Node::LIBRARY_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::DIRECTORY_LIST_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::DLL_NODE );
-	CheckStatsTotal( stats,	10,		7 );
+	CheckStatsTotal( stats,	10,		8 );
 
 	// check all objects came from the cache
 	TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits == 1 );
@@ -169,9 +169,9 @@ void TestPrecompiledHeaders::TestPCHWithCache_NoRebuild() const
 	CheckStatsNode ( stats,	2,		0,		Node::OBJECT_NODE );// obj + pch obj
 	CheckStatsNode ( stats,	1,		0,		Node::LIBRARY_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::DIRECTORY_LIST_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( stats,	1,		0,		Node::DLL_NODE );
-	CheckStatsTotal( stats,	10,		4 );
+	CheckStatsTotal( stats,	10,		5 );
 }
 
 // TestPCHClang

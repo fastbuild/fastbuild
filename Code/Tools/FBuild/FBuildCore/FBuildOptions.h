@@ -39,8 +39,18 @@ public:
 	uint32_t m_NumWorkerThreads;
 	AString m_ConfigFile;
 
+    inline uint32_t GetWorkingDirHash() const					{ return m_WorkingDirHash; }
+    inline const AString & GetMainProcessMutexName() const		{ return m_ProcessMutexName; }
+    inline const AString & GetFinalProcessMutexName( ) const	{ return m_FinalProcessMutexName; }
+    inline const AString & GetSharedMemoryName() const			{ return m_SharedMemoryName; }
+
 private:
 	AString m_WorkingDir;
+
+    uint32_t m_WorkingDirHash;
+    AString m_ProcessMutexName;
+    AString m_FinalProcessMutexName;
+    AString m_SharedMemoryName;
 };
 
 //------------------------------------------------------------------------------

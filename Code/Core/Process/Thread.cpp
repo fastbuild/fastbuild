@@ -189,8 +189,15 @@ public:
 		timedOut = false;
 		return -1;
     #elif defined( __APPLE__ )
-        return 0; // TODO:MAC Implement Thread
-    #elif defined( __LINUX__ )         
+        timedOut = false; // TODO:MAC Implement timeout support
+        void * ret;
+        if ( pthread_join( (pthread_t)handle, &ret ) == 0 )
+        {
+            return (int)( (size_t)ret );
+        }
+        ASSERT( false ); // usage failure
+        return 0;
+    #elif defined( __LINUX__ )
         // timeout is specified in absolute time        
         // - get current time
         struct timespec abstime;
@@ -236,9 +243,9 @@ public:
 	#if defined( __WINDOWS__ )
 		::CloseHandle( h );
     #elif defined( __APPLE__ )
-        // TODO:MAC Implement Thread
+        // TODO:MAC Implement CloseHandle
     #elif defined( __LINUX__ )
-        // TODO:LINUX Implement Thread
+        // TODO:LINUX Implement CloseHandle
     #else
         #error Unknown platform
 	#endif
@@ -271,7 +278,7 @@ public:
 				(void)0;
 			}
 		#else
-			// TODO:MAC Implement
+			// TODO:MAC TODO:LINUX Implement SetThreadName
 		#endif
 	}
 #endif

@@ -23,7 +23,7 @@ public:
 	void Init();
 	virtual ~WorkerThread();
 
-	static void InitTmpDir();
+	static void InitTmpDir( bool remote = false );
 
 	inline void Stop()				{ m_ShouldExit = true; }
 	inline bool HasExited() const	{ return m_Exited; }

@@ -58,8 +58,8 @@
 			.CompilerInputUnity			= '$ProjectName$-Unity-Windows'
 
 			// Output
-			.CompilerOutputPath			= '$OutputBase$\$ProjectName$\'
- 			.LibrarianOutput 			= '$OutputBase$\$ProjectName$\$ProjectName$.lib'
+			.CompilerOutputPath			= '$OutputBase$/$ProjectName$/'
+ 			.LibrarianOutput 			= '$OutputBase$/$ProjectName$/$ProjectName$.lib'
 		}
 
 		// Executable
@@ -70,7 +70,7 @@
 											'FBuildTest-Lib-$Platform$-$Config$',
 											'TestFrameWork-Lib-$Platform$-$Config$',
 											'LZ4-Lib-$Platform$-$Config$' }
-			.LinkerOutput				= '$OutputBase$\Tools\FBuild\FBuildTest\FBuildTest.exe'
+			.LinkerOutput				= '$OutputBase$/Tools/FBuild/FBuildTest/FBuildTest.exe'
 			.LinkerOptions				+ ' /SUBSYSTEM:CONSOLE'
 										+ ' kernel32.lib'
 										+ ' Ws2_32.lib'
@@ -83,8 +83,8 @@
 		Test( '$ProjectName$-RunTest-$Platform$-$Config$' )
 		{
 			.TestExecutable				= '$ProjectName$-Exe-$Platform$-$Config$'			
-			.TestOutput					= '$OutputBase$\$ProjectPath$\TestOutput.txt'
-			.TestWorkingDir				= 'Tools\FBuild\FBuildTest'
+			.TestOutput					= '$OutputBase$/$ProjectPath$/TestOutput.txt'
+			.TestWorkingDir				= 'Tools/FBuild/FBuildTest'
 		}
 	}
 
@@ -102,8 +102,8 @@
 			.CompilerInputUnity			= '$ProjectName$-Unity-Windows'
 
 			// Output
-			.CompilerOutputPath			= '$OutputBase$\$ProjectName$\'
- 			.LibrarianOutput 			= '$OutputBase$\$ProjectName$\$ProjectName$.lib'
+			.CompilerOutputPath			= '$OutputBase$/$ProjectName$/'
+ 			.LibrarianOutput 			= '$OutputBase$/$ProjectName$/$ProjectName$.lib'
 		}
 		Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
 	}
@@ -113,7 +113,7 @@
     ForEach( .Config in .Configs_Linux_GCC )
     {
         Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
+        .OutputBase + '/$Platform$-$Config$'
 
         // Static Library
         Library( '$ProjectName$-Lib-$Platform$-$Config$' )
@@ -122,8 +122,8 @@
             .CompilerInputUnity         = '$ProjectName$-Unity-Linux'
 
             // Output
-            .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$.a'
         }
 
         // Executable
@@ -136,7 +136,7 @@
                                             'Core-Lib-$Platform$-$Config$',
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }
-            .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildTest\FBuildTest'
+            .LinkerOutput               = '$OutputBase$/Tools/FBuild/FBuildTest/fbuildtest'
             .LinkerOptions              + ' -pthread'
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
@@ -145,8 +145,8 @@
         Test( '$ProjectName$-RunTest-$Platform$-$Config$' )
         {
             .TestExecutable             = '$ProjectName$-Exe-$Platform$-$Config$'           
-            .TestOutput                 = '$OutputBase$\$ProjectPath$\TestOutput.txt'
-            .TestWorkingDir             = 'Tools\FBuild\FBuildTest'
+            .TestOutput                 = '$OutputBase$/$ProjectPath$/TestOutput.txt'
+            .TestWorkingDir             = 'Tools/FBuild/FBuildTest'
         }
     }
 
@@ -155,7 +155,7 @@
     ForEach( .Config in .Configs_OSX_Clang )
     {
         Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
+        .OutputBase + '/$Platform$-$Config$'
 
         // Static Library
         Library( '$ProjectName$-Lib-$Platform$-$Config$' )
@@ -164,8 +164,8 @@
             .CompilerInputUnity         = '$ProjectName$-Unity-OSX'
 
             // Output
-            .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$.a'
         }
 
         // Executable
@@ -178,7 +178,7 @@
                                             'Core-Lib-$Platform$-$Config$',
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }
-            .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildTest\FBuildTest'
+            .LinkerOutput               = '$OutputBase$/Tools/FBuild/FBuildTest/FBuildTest'
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
 
@@ -186,8 +186,8 @@
         Test( '$ProjectName$-RunTest-$Platform$-$Config$' )
         {
             .TestExecutable             = '$ProjectName$-Exe-$Platform$-$Config$'
-            .TestOutput                 = '$OutputBase$\$ProjectPath$\TestOutput.txt'
-            .TestWorkingDir             = 'Tools\FBuild\FBuildTest'
+            .TestOutput                 = '$OutputBase$/$ProjectPath$/TestOutput.txt'
+            .TestWorkingDir             = 'Tools/FBuild/FBuildTest'
         }
     }
 

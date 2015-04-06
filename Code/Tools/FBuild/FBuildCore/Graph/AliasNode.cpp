@@ -34,16 +34,32 @@ AliasNode::~AliasNode()
 /*virtual*/ bool AliasNode::DetermineNeedToBuild( bool forceClean ) const
 {
 	(void)forceClean;
-	// GroupNode never needs building - it just serves to collect other nodes
-	return false;
+	return true;
 }
 
 // DoBuild
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult AliasNode::DoBuild( Job * UNUSED( job ) )
 {
-	ASSERT( false ); // should never get in here
-	return NODE_RESULT_FAILED;
+	const Dependencies::Iter end = m_StaticDependencies.End();
+	for ( Dependencies::Iter it = m_StaticDependencies.Begin();
+		  it != end;
+		  ++it )
+	{
+		// If any nodes are file nodes ...
+		const Node * n = it->GetNode();
+		if ( n->GetType() == Node::FILE_NODE )
+		{
+			// ... and the file is missing ...
+			if ( n->GetStamp() == 0 )
+			{
+				// ... the build should fail
+				FLOG_ERROR( "Alias: %s\nFailed due to missing file: %s\n", GetName().Get(), n->GetName().Get() );
+				return Node::NODE_RESULT_FAILED;
+			}
+		}
+	}
+	return NODE_RESULT_OK;
 }
 
 // Load

@@ -43,7 +43,7 @@ function generateHeaderinternal( path )
 function generateFooter()
 {
 	write("</div>");
-	write("<div class='footer'>&copy; 2012 Franta Fulin</div>");
+	write("<div class='footer'>&copy; 2012-2015 Franta Fulin</div>");
 	write("</div>");
 }
 

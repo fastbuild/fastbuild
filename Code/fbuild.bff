@@ -13,10 +13,18 @@
 ;-------------------------------------------------------------------------------
 Settings
 {
-	.Environment	= { "PATH=$VSBasePath$\Common7\IDE\;$VSBasePath$\VC\bin\",
-						"TMP=C:\Windows\Temp",
-						"SystemRoot=C:\Windows" }
-	.CachePath		= "C:\.fbuild.cache"
+    #if __WINDOWS__
+        .Environment	= { "PATH=$VSBasePath$\Common7\IDE\;$VSBasePath$\VC\bin\",
+                            "TMP=C:\Windows\Temp",
+                            "SystemRoot=C:\Windows" }
+        .CachePath		= "C:\.fbuild.cache"
+    #endif
+    #if __OSX__
+        .CachePath		= "/tmp/.fbuild.cache"
+    #endif
+    #if __LINUX__
+        .CachePath		= "/tmp/.fbuild.cache"
+    #endif
 }
 
 //------------------------------------------------------------------------------
@@ -93,7 +101,7 @@ Compiler( 'Compiler-x64-OSX' )
 							+ ' /we4905' // wide string literal cast to 'LPSTR'
 							+ ' /we4906' // string literal cast to 'LPWSTR'
 
-	.CompilerOptions 		= '"%1" /Z7 /d2Zi+ /nologo /c /W4 /WX'
+	.CompilerOptions 		= '"%1" /Z7 /nologo /c /W4 /WX'
 							+ ' /Zc:inline'			// Remove unreferenced COMDATs at compile time (VS2013.2+)
 							+ ' /Zc:strictStrings'	// Require const only usage of string literals (VS2013+)
 							+ .AdditionalWarnings
@@ -161,6 +169,7 @@ Compiler( 'Compiler-x64-OSX' )
 	Using( .X86BaseConfig )
 	.Config					= 'Release'
 	.CompilerOptions		+ ' /DRELEASE'
+							+ ' /d2Zi+'		// Improve optimized debugging VS2013.3+
 	.PCHOptions				+ ' /DRELEASE'
 
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
@@ -302,11 +311,17 @@ Compiler( 'Compiler-x64-OSX' )
     .Librarian              = '/usr/bin/ar'
     .Linker                 = '/usr/bin/g++'
     
-    .CompilerOptions        = '-o"%2" "%1" -c -g'
+    .BaseCompilerOptions    = '-o "%2" "%1" -c -g'
                             + ' -I./'
                             + ' -D__LINUX__'
                             + ' -Wall -Werror -Wfatal-errors'                    // warnings as errors
-    .LinkerOptions          = '"%1" -o"%2"'
+                            + ' -m64'                           // x86-64
+                            
+    .CompilerOptionsC       = .BaseCompilerOptions
+    .CompilerOptions        = .BaseCompilerOptions
+                            + ' -std=c++11'                     // allow C++11 features
+                            
+    .LinkerOptions          = '"%1" -o "%2"'
                                 
     .LibrarianOptions       = 'rcs "%2" "%1"'
     
@@ -358,14 +373,17 @@ Compiler( 'Compiler-x64-OSX' )
     .Librarian              = '/usr/bin/ar'
     .Linker                 = '/usr/bin/g++'
 
-    .CompilerOptions        = '-x c++ -o"%2" "%1" -c -g'
+    .CompilerOptions        = '-x c++ -o "%2" "%1" -c -g'
                             + ' -I./'
                             + ' -D__APPLE__'
                             + ' -D__OSX__'
                             + ' -Wall -Wfatal-errors'                    // warnings as errors
                             + ' -Wno-#pragma-messages'
+                            + ' -std=c++11'                     // allow C++11 features
+                            + ' -m64'                           // x86-64
+                            
     .CompilerOutputExtension= '.o'
-    .LinkerOptions          = '"%1" -o"%2"'
+    .LinkerOptions          = '"%1" -o "%2" -g'
 
     .LibrarianOptions       = 'rcs "%2" "%1"'
 
@@ -421,7 +439,7 @@ Compiler( 'Compiler-x64-OSX' )
 //------------------------------------------------------------------------------
 // 
 //------------------------------------------------------------------------------
-.OutputBase	= '..\tmp'
+.OutputBase	= '../tmp'
 
 //------------------------------------------------------------------------------
 // Unity/Blob files (shared across configs)
@@ -481,7 +499,7 @@ VCXProject( 'All-proj' )
 .Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
 // External
-#include "..\External\LZ4\lz4-r117\LZ4.bff"
+#include "..\External\LZ4\LZ4.bff"
 
 // Test Framework
 #include "TestFramework\TestFramework.bff"
@@ -539,25 +557,59 @@ Alias( 'All-x86Clang' )
 
 // Aliases : All
 //------------------------------------------------------------------------------
-Alias( 'All' )
-{
-	.Targets		= { 'All-x86',
-						'All-x86Clang',
-						'All-x64'
-					  }
-}
+#if __WINDOWS__
+    Alias( 'All' )
+    {
+        .Targets		= { 'All-x86',
+                            'All-x86Clang',
+                            'All-x64'
+                          }
+    }
+#endif
+#if __OSX__
+    Alias( 'All' )
+    {
+        .Targets		= { 'All-x64OSX' }
+    }
+#endif
+#if __LINUX__
+    Alias( 'All' )
+    {
+        .Targets		= { 'All-x64Linux' }
+    }
+#endif
 
 // Aliases : Tests
 //------------------------------------------------------------------------------
-Alias( 'Tests' )
-{
-	.Targets		= { 'CoreTest-RunTest-x86-Debug',
-						'CoreTest-RunTest-x86-Release',
-						'CoreTest-RunTest-x64-Debug',
-						'CoreTest-RunTest-x64-Release',
-						'FBuildTest-RunTest-x64-Debug'
-					  }
-}
+#if __WINDOWS__
+    Alias( 'Tests' )
+    {
+        .Targets		= { 'CoreTest-RunTest-x86-Debug',
+                            'CoreTest-RunTest-x86-Release',
+                            'CoreTest-RunTest-x64-Debug',
+                            'CoreTest-RunTest-x64-Release',
+                            'FBuildTest-RunTest-x64-Debug'
+                          }
+    }
+#endif
+#if __OSX__
+    Alias( 'Tests' )
+    {
+        .Targets		= { 'CoreTest-RunTest-x64OSX-Debug',
+                            'CoreTest-RunTest-x64OSX-Release',
+                            'FBuildTest-RunTest-x64OSX-Debug'
+                          }
+    }
+#endif
+#if __LINUX__
+    Alias( 'Tests' )
+    {
+        .Targets		= { 'CoreTest-RunTest-x64Linux-Debug',
+                            'CoreTest-RunTest-x64Linux-Release',
+                            'FBuildTest-RunTest-x64Linux-Debug'
+                          }
+    }
+#endif
 
 // Aliases : All+Tests
 //------------------------------------------------------------------------------

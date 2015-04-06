@@ -31,8 +31,10 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestIncludeParser )
-	REGISTER_TEST( TestMSVCPreprocessedOutput );
-	REGISTER_TEST( TestMSVCShowIncludesOutput );
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( TestMSVCPreprocessedOutput );
+        REGISTER_TEST( TestMSVCShowIncludesOutput );
+    #endif
 	REGISTER_TEST( TestGCCPreprocessedOutput );
 	REGISTER_TEST( TestEdgeCases );
 REGISTER_TESTS_END
@@ -42,7 +44,7 @@ REGISTER_TESTS_END
 void TestIncludeParser::TestMSVCPreprocessedOutput() const
 {
 	FileStream f;
-	TEST_ASSERT( f.Open( "Data\\TestIncludeParser\\MSVCPreProcessor.cpp", FileStream::READ_ONLY) )
+	TEST_ASSERT( f.Open( "Data/TestIncludeParser/MSVCPreProcessor.cpp", FileStream::READ_ONLY) )
 	const size_t fileSize = (size_t)f.GetFileSize();
 	AutoPtr< char > mem( (char *)ALLOC( fileSize + 1 ) );
 	TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
@@ -73,7 +75,7 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
 void TestIncludeParser::TestMSVCShowIncludesOutput() const
 {
 	FileStream f;
-	TEST_ASSERT( f.Open( "Data\\TestIncludeParser\\MSVCShowIncludes.dat", FileStream::READ_ONLY) )
+	TEST_ASSERT( f.Open( "Data/TestIncludeParser/MSVCShowIncludes.dat", FileStream::READ_ONLY) )
 	const size_t fileSize = (size_t)f.GetFileSize();
 	AutoPtr< char > mem( (char *)Alloc( fileSize + 1 ) );
 	TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
@@ -106,7 +108,7 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
 	FBuild fBuild; // needed fer CleanPath for relative dirs
 
 	FileStream f;
-	TEST_ASSERT( f.Open( "Data\\TestIncludeParser\\GCCPreProcessor.cpp", FileStream::READ_ONLY) )
+	TEST_ASSERT( f.Open( "Data/TestIncludeParser/GCCPreProcessor.cpp", FileStream::READ_ONLY) )
 	const size_t fileSize = (size_t)f.GetFileSize();
 	AutoPtr< char > mem( (char *)ALLOC( fileSize + 1 ) );
 	TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );

@@ -15,10 +15,11 @@
 	.Linker				= '$VisualStudioPath$\VC\bin\link.exe'
 
 	.CompilerOptions	= '"%1" /Fo"%2" /c /Z7 /WX /nologo'
-						+ ' /D"WIN32_LEAN_AND_MEAN" /D_WIN32 /D__WINDOWS__'
+						+ ' /D"WIN32_LEAN_AND_MEAN" /D_WIN32 /DWIN32 /D__WINDOWS__'
 						+ ' /D"_CRT_SECURE_NO_WARNINGS"' // don't warn about unsafe functions
                         + ' /D"_WINSOCK_DEPRECATED_NO_WARNINGS"' // don't warn about deprecated winsock functions
 	.LibrarianOptions	= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
+	.LinkerOptions		= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1" /DEBUG'
 ]
 .VisualStudioOptionsDebug =
 [
@@ -42,12 +43,66 @@
 //.ClangPath			= 'C:\Program Files (x86)\LLVM'
 
 //==============================================================================
+// Linux GCC
+//==============================================================================
+.LinuxGCCToolChain =
+[
+    .Compiler           = '/usr/bin/gcc'
+    .Librarian          = '/usr/bin/ar'
+    .Linker             = '/usr/bin/g++'
+    
+    .CompilerOptions    = '-o "%2" "%1" -c -g'
+                        + ' -I./'
+                        + ' -D__LINUX__'
+                        + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                        + ' -std=gnu++11'                   // allow C++11 features
+                        + ' -ffreestanding'                 // prevent extra magic includes like stdc-predefs.h
+                            
+    .LinkerOptions      = '"%1" -o "%2"'
+                                
+    .LibrarianOptions   = 'rcs "%2" "%1"'
+]
+
+//==============================================================================
+// OSX Clang
+//==============================================================================
+.OSXClangToolChain =
+[
+    .Compiler           = '/usr/bin/g++'
+    .Librarian          = '/usr/bin/ar'
+    .Linker             = '/usr/bin/g++'
+
+    .CompilerOptions    = '-x c++ -o "%2" "%1" -c -g'
+                        + ' -I./'
+                        + ' -D__APPLE__'
+                        + ' -D__OSX__'
+                        + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                        + ' -std=c++11'                     // allow C++11 features
+                        + ' -Wno-#pragma-messages'
+
+    .LinkerOptions      = '"%1" -o "%2"'
+
+    .LibrarianOptions   = 'rcs "%2" "%1"'
+]
+
+//==============================================================================
 // Standard Environment
 //==============================================================================
 .StandardEnvironment =
 [
-	.Environment		= { 'PATH=$VisualStudioPath$\Common7\IDE\',
-							'TMP=C:\Windows\Temp',
-							'SystemRoot=C:\Windows' }
-	.CachePath			= 'C:\.fbuild.cache'
+    #if __WINDOWS__
+        .Environment		= { 'PATH=$VisualStudioPath$\Common7\IDE\',
+                                'TMP=C:\Windows\Temp',
+                                'SystemRoot=C:\Windows' }
+        .CachePath			= 'C:\.fbuild.cache'
+        Using( .VisualStudioToolChain )
+    #endif
+    #if __LINUX__
+        .CachePath			= '/tmp/.fbuild.cache'
+        Using( .LinuxGCCToolChain )
+    #endif
+    #if __OSX__
+        .CachePath			= '/tmp/.fbuild.cache'
+        Using( .OSXClangToolChain )
+    #endif
 ]

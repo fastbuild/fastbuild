@@ -1177,9 +1177,13 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 						if ( dst > fullPath.Get() + 3 )
 						{
 							--dst; // remove slash
-
-							// remove one level of path (but never past first slash ( e.g. leave at least c:\ ))
-							while ( dst > fullPath.Get() + 3 )
+                            
+							// remove one level of path (but never past the absolute root)
+                            #if defined( __WINDOWS__ )
+                                while ( dst > fullPath.Get() + 3 ) // e.g. "c:\"
+                            #else
+                                while ( dst > fullPath.Get() + 1 ) // e.g. "/"
+                            #endif
 							{
 								--dst;
 								if ( *dst == NATIVE_SLASH ) // only need to check for cleaned slashes

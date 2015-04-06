@@ -60,10 +60,24 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildOptions options, bool useDB ) 
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize( useDB ? dbFile : nullptr ) );
 
-	const AStackString<> lib( "../ftmp/Win32/Debug/Core/core.lib" );
-	const AStackString<> lib2( "../ftmp/Win32/Debug/Tools/FBuild/FBuildCore/fbuildcore.lib" );
-	const AStackString<> lib3( "../ftmp/Win32/Release/Tools/FBuild/FBuildApp/fbuildapp.lib" );
-	const AStackString<> exe( "../ftmp/Win32/Release/Tools/FBuild/FBuildApp/fbuild.exe" );
+    #if defined( __WINDOWS__ )
+        const AStackString<> lib( "../ftmp/Win32/Debug/Core/core.lib" );
+        const AStackString<> lib2( "../ftmp/Win32/Debug/FBuildCore/fbuildcore.lib" );
+        const AStackString<> lib3( "../ftmp/Win32/Release/FBuildApp/fbuildapp.lib" );
+        const AStackString<> exe( "../ftmp/Win32/Release/Tools/FBuild/FBuildApp/fbuild.exe" );
+    #endif
+    #if defined( __OSX__ )
+        const AStackString<> lib( "../ftmp/OSX/Debug/Core/core.lib" );
+        const AStackString<> lib2( "../ftmp/OSX/Debug/FBuildCore/fbuildcore.lib" );
+        const AStackString<> lib3( "../ftmp/OSX/Release/FBuildApp/fbuildapp.lib" );
+        const AStackString<> exe( "../ftmp/OSX/Release/Tools/FBuild/FBuildApp/fbuild.exe" );
+    #endif
+    #if defined( __LINUX__ )
+        const AStackString<> lib( "../ftmp/Linux/Debug/Core/Core.lib" );
+        const AStackString<> lib2( "../ftmp/Linux/Debug/FBuildCore/FBuildCore.lib" );
+        const AStackString<> lib3( "../ftmp/Linux/Release/FBuildApp/FBuildApp.lib" );
+        const AStackString<> exe( "../ftmp/Linux/Release/Tools/FBuild/FBuildApp/FBuild.exe" );
+    #endif
 	const AStackString<> target( "fbuild" );
 
 	TEST_ASSERT( fBuild.Build( target ) );
@@ -103,7 +117,7 @@ void TestBuildFBuild::BuildClean() const
 
 	// check everything was built and stored to the cache
 	const FBuildStats::Stats & objStats = stats.GetStatsFor( Node::OBJECT_NODE );
-	TEST_ASSERT( objStats.m_NumProcessed > 100 ); // not exact so we don't have to update it
+	TEST_ASSERT( objStats.m_NumProcessed > 10 ); // not exact so we don't have to update it
 	TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed ); // everything rebuilt
 	TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumBuilt ); // everything stored to the cache
 }
@@ -132,7 +146,7 @@ void TestBuildFBuild::BuildCleanWithCache() const
 
 	// test everything was retrieved from the cache
 	const FBuildStats::Stats & objStats = stats.GetStatsFor( Node::OBJECT_NODE );
-	TEST_ASSERT( objStats.m_NumProcessed > 100 ); // not exact so we don't have to update it
+	TEST_ASSERT( objStats.m_NumProcessed > 10 ); // not exact so we don't have to update it
 	TEST_ASSERT( objStats.m_NumBuilt == 0 ); // nothing built
 	TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed ); // everything read from cache
 }

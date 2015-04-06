@@ -32,6 +32,11 @@
         Unity( '$ProjectName$-Unity-Linux' )
         {
         }
+
+        // OSX
+        Unity( '$ProjectName$-Unity-OSX' )
+        {
+        }
     }       
 
 	// Windows (MSVC)
@@ -116,8 +121,40 @@
                                             'Core-Lib-$Platform$-$Config$',
                                             'LZ4-Lib-$Platform$-$Config$' 
                                           }
-            .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildApp\FBuild'
+            .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildApp\fbuild'
             .LinkerOptions              + ' -pthread'
+        }
+        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
+    }	
+
+    // OSX (Clang)
+    //--------------------------------------------------------------------------
+    ForEach( .Config in .Configs_OSX_Clang )
+    {
+        Using( .Config )
+        .OutputBase + '\$Platform$-$Config$'
+
+        // Static Library
+        Library( '$ProjectName$-Lib-$Platform$-$Config$' )
+        {
+            // Input (Unity)
+            .CompilerInputUnity         = '$ProjectName$-Unity-OSX'
+
+            // Output
+            .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
+            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
+        }
+
+        // Executable
+        Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
+        {
+            .Libraries                  = { 
+                                            'FBuildApp-Lib-$Platform$-$Config$',
+                                            'FBuildCore-Lib-$Platform$-$Config$',
+                                            'Core-Lib-$Platform$-$Config$',
+                                            'LZ4-Lib-$Platform$-$Config$' 
+                                          }
+            .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildApp\FBuild'
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
     }	
@@ -133,7 +170,8 @@
 	Alias( '$ProjectName$-X86' )		{ .Targets = { '$ProjectName$-X86-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X86-Profile' } }
 	Alias( '$ProjectName$-X64' )		{ .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X64-Profile' } }
 	Alias( '$ProjectName$-X86Clang' )	{ .Targets = { '$ProjectName$-X86Clang-Debug' } }
-    Alias( '$ProjectName$-x64Linux' )   { .Targets = { '$ProjectName$-X64Linux-Debug', '$ProjectName$-X64Linux-Release', '$ProjectName$-X64Linux-Profile' } }
+    	Alias( '$ProjectName$-x64Linux' )   	{ .Targets = { '$ProjectName$-X64Linux-Debug', 	'$ProjectName$-X64Linux-Release', '$ProjectName$-X64Linux-Profile' } }
+    	Alias( '$ProjectName$-x64OSX' )   	{ .Targets = { '$ProjectName$-X64OSX-Debug', 	'$ProjectName$-X64OSX-Release',   '$ProjectName$-X64OSX-Profile' } }
 
 	// All
 	Alias( '$ProjectName$' )

@@ -56,7 +56,8 @@ public:
 	static bool		SetFileLastWriteTime( const AString & fileName, uint64_t fileTime );
 
 	static bool		SetReadOnly( const char * fileName, bool readOnly );
-	static bool		GetReadOnly( const AString & fileName );
+    static bool     GetReadOnly( const char * fileName );
+	static inline bool GetReadOnly( const AString & fileName ) { return GetReadOnly( fileName.Get() ); }
 
     #if defined( __WINDOWS__ )
         static void		WorkAroundForWindowsFilePermissionProblem( const AString & fileName );

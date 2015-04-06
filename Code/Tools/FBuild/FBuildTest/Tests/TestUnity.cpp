@@ -156,8 +156,8 @@ void TestUnity::TestCompile() const
 	CheckStatsNode ( stats,	1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( stats,	3,		3,		Node::OBJECT_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::LIBRARY_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( stats,	18,		10 );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( stats,	18,		11 );
 }
 
 // TestCompile_NoRebuild
@@ -174,8 +174,8 @@ void TestUnity::TestCompile_NoRebuild() const
 	CheckStatsNode ( stats,	1,		0,		Node::COMPILER_NODE );
 	CheckStatsNode ( stats,	3,		0,		Node::OBJECT_NODE );
 	CheckStatsNode ( stats,	1,		0,		Node::LIBRARY_NODE );
-	CheckStatsNode ( stats,	1,		0,		Node::ALIAS_NODE );
-	CheckStatsTotal( stats,	18,		12 );
+	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( stats,	18,		13 );
 }
 
 // TestGenerateFromExplicitList

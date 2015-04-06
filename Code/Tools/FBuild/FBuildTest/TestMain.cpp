@@ -13,22 +13,32 @@ int main(int , char * [])
 	REGISTER_TESTGROUP( TestBFFParsing )
 	REGISTER_TESTGROUP( TestBuildAndLinkLibrary )
 	REGISTER_TESTGROUP( TestBuildFBuild )
-	REGISTER_TESTGROUP( TestCachePlugin )
-	REGISTER_TESTGROUP( TestCLR )
+    #if defined( __WINDOWS__ )
+    	REGISTER_TESTGROUP( TestCachePlugin ) // TODO:LINUX TODO:MAC Enable
+        REGISTER_TESTGROUP( TestCLR )
+    #endif
 	REGISTER_TESTGROUP( TestCompressor )
 	REGISTER_TESTGROUP( TestCopy )
-	REGISTER_TESTGROUP( TestCSharp )
-	REGISTER_TESTGROUP( TestCUDA )
-	REGISTER_TESTGROUP( TestDistributed )
-	REGISTER_TESTGROUP( TestDLL )
-	REGISTER_TESTGROUP( TestExe )
+    #if defined( __WINDOWS__ )
+        REGISTER_TESTGROUP( TestCSharp )
+        REGISTER_TESTGROUP( TestCUDA )
+    #endif
+    #if defined( __WINDOWS__ )
+        REGISTER_TESTGROUP( TestDistributed ) // TODO:LINUX TODO:MAC Enable
+        REGISTER_TESTGROUP( TestDLL ) // TODO:LINUX TODO:MAC Enable
+        REGISTER_TESTGROUP( TestExe ) // TODO:LINUX TODO:MAC Enable
+    #endif
 	REGISTER_TESTGROUP( TestGraph )
 	REGISTER_TESTGROUP( TestIncludeParser )
-	REGISTER_TESTGROUP( TestPrecompiledHeaders )
+    #if defined( __WINDOWS__ )
+        REGISTER_TESTGROUP( TestPrecompiledHeaders ) // TODO:LINUX TODO:MAC Enable
+    #endif
 	REGISTER_TESTGROUP( TestProjectGeneration )
-	REGISTER_TESTGROUP( TestResources )
-	REGISTER_TESTGROUP( TestTest )
-	REGISTER_TESTGROUP( TestUnity )
+    #if defined( __WINDOWS__ )
+        REGISTER_TESTGROUP( TestResources )
+        REGISTER_TESTGROUP( TestTest ) // TODO:LINUX TODO:MAC Enable
+        REGISTER_TESTGROUP( TestUnity ) // TODO:LINUX TODO:MAC Enable
+    #endif
 	REGISTER_TESTGROUP( TestVariableStack )
 
 	UnitTestManager utm;
