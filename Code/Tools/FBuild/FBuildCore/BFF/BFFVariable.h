@@ -61,11 +61,14 @@ public:
 	inline bool IsStruct() const	{ return m_Type == BFFVariable::VAR_STRUCT; }
 	inline bool IsArrayOfStructs() const { return m_Type == BFFVariable::VAR_ARRAY_OF_STRUCTS; }
 
+    BFFVariable * DeepConcat(const AString & dstName, const BFFVariable & other) const;
+
 private:
 	friend class BFFStackFrame;
 
 	explicit BFFVariable( const BFFVariable & other );
 
+    explicit BFFVariable( const AString & name, VarType type );
 	explicit BFFVariable( const AString & name, const AString & value );
 	explicit BFFVariable( const AString & name, bool value );
 	explicit BFFVariable( const AString & name, const Array< AString > & values );
