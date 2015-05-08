@@ -1295,37 +1295,8 @@ bool BFFParser::StoreVariableToVariable( const char * varNameDstStart, const cha
 			const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
 			if ( concat )
 			{
-				// set all the variable in 
-				ASSERT( varDst ); // have checked this earlier
-				const Array< const BFFVariable * > & dstMembers = varDst->GetStructMembers();
-
-				// we'll take all the src members
-				Array< const BFFVariable * > allMembers( srcMembers.GetSize() + dstMembers.GetSize(), false );
-				allMembers = srcMembers;
-
-				// and keep original (dst) members where the name doesn't clash
-				for ( const BFFVariable ** it = dstMembers.Begin(); it != dstMembers.End(); ++it )
-				{
-					// if the existing members with conflicting names
-					bool exists = false;
-					for ( const BFFVariable ** it2 = srcMembers.Begin(); it2 != srcMembers.End(); ++it2 )
-					{
-						if ( ( *it2 )->GetName() == ( *it )->GetName() )
-						{
-							// already exists in src data, which will override existing in dst
-							exists = true;
-							break;
-						}
-					}
-					if ( exists == false )
-					{
-						// keep existing dst since there is no src override
-						allMembers.Append( *it );
-					}
-				}
-
-				BFFStackFrame::SetVarStruct( dstName, allMembers );
-				FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), allMembers.GetSize() );
+				BFFVariable *const newVar = BFFStackFrame::ConcatVars( dstName, varSrc, varDst );
+				FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), newVar->GetStructMembers().GetSize() );
 			}
 			else
 			{
