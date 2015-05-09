@@ -649,7 +649,19 @@ bool AString::EndsWith( const char * string ) const
 	return ( StrNCmp( possiblePos, string, stringLen ) == 0 );
 }
 
-// EnsWithI
+// EndsWith
+//------------------------------------------------------------------------------
+bool AString::EndsWith( const AString & other ) const
+{
+    const size_t otherLen = other.GetLength();
+    if ( otherLen > GetLength() )
+    {
+        return false;
+    }
+    return ( StrNCmp( GetEnd() - otherLen, other.Get(), otherLen ) == 0 );
+}
+
+// EndsWithI
 //------------------------------------------------------------------------------
 bool AString::EndsWithI( const char * other ) const
 {

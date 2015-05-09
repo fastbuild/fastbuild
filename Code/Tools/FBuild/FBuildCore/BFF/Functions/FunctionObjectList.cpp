@@ -101,6 +101,29 @@ FunctionObjectList::FunctionObjectList()
 		return false; // GetNodeList will have emitted an error
 	}
 
+	// Get the (optional) Preprocessor & PreprocessorOptions
+	const BFFVariable * preprocessor = nullptr;
+	const BFFVariable * preprocessorOptions = nullptr;
+    CompilerNode * preprocessorNode = nullptr;
+	if ( !GetString( funcStartIter, preprocessor, ".Preprocessor", false ) )
+	{
+		return false; // GetString will have emitted an error
+	}
+	if ( preprocessor )
+    {
+		// get the preprocessor executable
+        if ( !FunctionObjectList::GetCompilerNode( funcStartIter, preprocessor->GetString(), preprocessorNode ) )
+        {
+            return false; // GetCompilerNode will have emitted an error
+        }
+
+		// get the command line args for the preprocessor
+        if ( !GetString( funcStartIter, preprocessorOptions, ".PreprocessorOptions", true ) ) // required
+		{
+			return false; // GetString will have emitted an error
+		}
+    }
+
 	// Pre-build dependencies
 	Dependencies preBuildDependencies;
 	if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
@@ -165,7 +188,9 @@ FunctionObjectList::FunctionObjectList()
 												  compilerForceUsing,
 												  preBuildDependencies,
 												  deoptimizeWritableFiles,
-												  deoptimizeWritableFilesWithToken );
+												  deoptimizeWritableFilesWithToken,
+                                                  preprocessorNode,
+                                                  preprocessorOptions ? preprocessorOptions->GetString() : AString::GetEmpty() );
 	if ( compilerOutputExtension )
 	{
 		o->m_ObjExtensionOverride = compilerOutputExtension->GetString();
@@ -199,8 +224,13 @@ bool FunctionObjectList::GetCompilerNode( const BFFIterator & iter, const AStrin
 	{
 		// create a compiler node - don't allow distribution
 		// (only explicitly defined compiler nodes can be distributed)
+#ifdef USE_NODE_REFLECTION
+		compilerNode = ng.CreateCompilerNode( compiler );
+        VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
+#else
 		const bool allowDistribution = false;
 		compilerNode = ng.CreateCompilerNode( compiler, Dependencies( 0, false ), allowDistribution );
+#endif
 	}
 
 	return true;
@@ -315,7 +345,8 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( const BFFIterator & iter,
 													 pchFlags,
 													 compilerForceUsing,
 													 deoptimizeWritableFiles,
-													 deoptimizeWritableFilesWithToken );
+													 deoptimizeWritableFilesWithToken,
+                                                     nullptr, AString::GetEmpty(), 0 ); // preprocessor args not supported
 	}
 
 	return true;
@@ -376,6 +407,13 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 			return false; // GetFolderPaths will have emitted an error
 		}
 
+        Array< AString > filesToExclude;
+        if ( !GetStrings( iter, filesToExclude, ".CompilerInputExcludedFiles", false ) ) // not required
+        {
+            return false; // GetStrings will have emitted an error
+        }
+	    CleanFileNames( filesToExclude );
+
 		// Input paths
 		Array< AString > inputPaths;
 		if ( !GetFolderPaths( iter, inputPaths, ".CompilerInputPath", false ) )
@@ -384,7 +422,7 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 		}
 
 		Dependencies dirNodes( inputPaths.GetSize() );
-		if ( !GetDirectoryListNodeList( iter, inputPaths, excludePaths, recurse, pattern, "CompilerInputPath", dirNodes ) )
+		if ( !GetDirectoryListNodeList( iter, inputPaths, excludePaths, filesToExclude, recurse, pattern, "CompilerInputPath", dirNodes ) )
 		{
 			return false; // GetDirectoryListNodeList will have emitted an error
 		}

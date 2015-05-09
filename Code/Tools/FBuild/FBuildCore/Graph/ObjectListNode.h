@@ -29,7 +29,9 @@ public:
 							 const Dependencies & compilerForceUsing,
 							 const Dependencies & preBuildDependencies,
 							 bool deoptimizeWritableFiles,
-							 bool deoptimizeWritableFilesWithToken );
+							 bool deoptimizeWritableFilesWithToken,
+                             CompilerNode * preprocessor,
+                             const AString & preprocessorArgs );
 	virtual ~ObjectListNode();
 
 	static inline Node::Type GetType() { return Node::OBJECT_LIST_NODE; }
@@ -60,6 +62,8 @@ private:
 	AString			m_ObjExtensionOverride;
 	bool			m_DeoptimizeWritableFiles;
 	bool			m_DeoptimizeWritableFilesWithToken;
+	CompilerNode *	m_Preprocessor;
+	AString			m_PreprocessorArgs;
 };
 
 //------------------------------------------------------------------------------

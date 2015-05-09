@@ -38,6 +38,8 @@ public:
 	static bool IsFullPath( const AString & path );
 	static bool ArePathsEqual( const AString & cleanPathA, const AString & cleanPathB );
 	static bool IsWildcardMatch( const char * pattern, const char * path );
+    static bool PathBeginsWith( const AString & cleanPath, const AString & cleanSubPath );
+    static bool PathEndsWithFile( const AString & cleanPath, const AString & fileName );
 
 	// Cleanup Helpers
 	//----------------

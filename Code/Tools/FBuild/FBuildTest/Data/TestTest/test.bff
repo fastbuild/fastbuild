@@ -29,7 +29,6 @@ Library( "Exe-Lib" )
 Executable( "Exe" )
 {
 	.LinkerOptions		= "/NOLOGO /OUT:%2 %1 /MACHINE:X86"
-						+ " /IGNORE:4001" ; don't complain about linking libs only
 						+ " /SUBSYSTEM:CONSOLE"
 						+ ' /NODEFAULTLIB'
 						+ ' /ENTRY:ExeMain'

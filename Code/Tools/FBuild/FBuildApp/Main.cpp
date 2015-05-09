@@ -474,7 +474,7 @@ void DisplayVersion()
 		#define VERSION_CONFIG " "
 	#endif
 	OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " FBUILD_VERSION_PLATFORM VERSION_CONFIG " - "
-			"Copyright 2012-2014 Franta Fulin - http://www.fastbuild.org\n" );
+			"Copyright 2012-2015 Franta Fulin - http://www.fastbuild.org\n" );
 	#undef VERSION_CONFIG
 }
 

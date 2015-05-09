@@ -28,6 +28,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
@@ -36,6 +37,7 @@
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/CRC32.h"
+#include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Strings/AStackString.h"
 
 // system
@@ -64,6 +66,18 @@
 	"CopyDirNode"
 };
 
+// Custom MetaData
+//------------------------------------------------------------------------------
+IMetaData & MetaName( const char * name )
+{
+	return *FNEW( Meta_Name( name ) );
+}
+
+// Reflection
+//------------------------------------------------------------------------------
+REFLECT_BEGIN_ABSTRACT( Node, Object, MetaNone() )
+REFLECT_END( Node )
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Node::Node( const AString & name, Type type, uint32_t controlFlags )
@@ -77,10 +91,9 @@ Node::Node( const AString & name, Type type, uint32_t controlFlags )
 	, m_LastBuildTimeMs( 0 )
 	, m_ProcessingTime( 0 )
 	, m_ProgressAccumulator( 0 )
-	, m_Name( name )
 	, m_Index( INVALID_NODE_INDEX )
 {
-	m_NameCRC = CRC32::CalcLower( name );
+	SetName( name );
 
 	// Compile time check to ensure name vector is in sync
 	CTASSERT( sizeof( s_NodeTypeNames ) / sizeof(const char *) == NUM_NODE_TYPES );
@@ -309,6 +322,11 @@ void Node::SaveNode( IOStream & fileStream, const Node * node ) const
 	{
 		return false;
 	}
+    if ( node == nullptr )
+    {
+        compilerNode = nullptr;
+        return true;
+    }
 	if ( node->GetType() != Node::COMPILER_NODE )
 	{
 		return false;
@@ -326,6 +344,11 @@ void Node::SaveNode( IOStream & fileStream, const Node * node ) const
 	{
 		return false;
 	}
+    if ( node == nullptr )
+    {
+        fileNode = nullptr;
+        return true;
+    }
 	if ( !node->IsAFile() )
 	{
 		return false;
@@ -472,6 +495,150 @@ void Node::SaveNode( IOStream & fileStream, const Node * node ) const
 	// a) Derived Node is missing SaveRemote implementation
 	// b) Serializing an unexpected type
 	ASSERT( false );
+}
+
+// Serialize
+//------------------------------------------------------------------------------
+void Node::Serialize( IOStream & stream ) const
+{
+	// Deps
+	NODE_SAVE_DEPS( m_PreBuildDependencies );
+	NODE_SAVE_DEPS( m_StaticDependencies );
+	NODE_SAVE_DEPS( m_DynamicDependencies );
+
+	// Properties
+	const ReflectionInfo * const ri = GetReflectionInfoV();
+	const ReflectionIter end = ri->End();
+	for ( ReflectionIter it = ri->Begin(); it != end; ++it )
+	{
+		const ReflectedProperty & property = *it;
+
+		const PropertyType pt = property.GetType();
+		switch ( pt )
+		{
+			case PT_ASTRING:
+			{
+				if ( property.IsArray() )
+				{
+					const Array< AString > * arrayOfStrings( nullptr );
+					property.GetProperty( this, arrayOfStrings );
+					VERIFY( stream.Write( *arrayOfStrings ) );
+				}
+				else
+				{
+					AString string; // TODO:C remove this copy
+					property.GetProperty( this, &string );
+					VERIFY( stream.Write( string ) );
+				}
+				break;
+			}
+			case PT_BOOL:
+			{
+				bool b( false );
+				property.GetProperty( this, &b );
+				VERIFY( stream.Write( b ) );
+				break;
+			}
+			case PT_UINT32:
+			{
+				uint32_t u32( 0 );
+				property.GetProperty( this, &u32 );
+				VERIFY( stream.Write( u32 ) );
+				break;
+			}
+			default:
+			{
+				ASSERT( false ); // Unsupported type
+				break;
+			}
+		}
+	}
+}
+
+// Deserialize
+//------------------------------------------------------------------------------
+bool Node::Deserialize( IOStream & stream )
+{
+	// Deps
+	NODE_LOAD_DEPS( 0,			preBuildDeps );
+	ASSERT( m_PreBuildDependencies.IsEmpty() );
+	m_PreBuildDependencies.Append( preBuildDeps );
+	NODE_LOAD_DEPS( 0,			staticDeps );
+	ASSERT( m_StaticDependencies.IsEmpty() );
+	m_StaticDependencies.Append( staticDeps );
+	NODE_LOAD_DEPS( 0,			dynamicDeps );
+	ASSERT( m_DynamicDependencies.IsEmpty() );
+	m_DynamicDependencies.Append( dynamicDeps );
+
+	// Properties
+	const ReflectionInfo * const ri = GetReflectionInfoV();
+	const ReflectionIter end = ri->End();
+	for ( ReflectionIter it = ri->Begin(); it != end; ++it )
+	{
+		const ReflectedProperty & property = *it;
+
+		const PropertyType pt = property.GetType();
+		switch ( pt )
+		{
+			case PT_ASTRING:
+			{
+				if ( property.IsArray() )
+				{
+					Array< AString > arrayOfStrings; // TODO:C Eliminate this copy
+					if ( stream.Read( arrayOfStrings ) == false )
+					{
+						return false;
+					}
+					property.SetProperty( this, arrayOfStrings );
+				}
+				else
+				{
+					AStackString<> string; // TODO:C remove this copy
+					if ( stream.Read( string ) == false )
+					{
+						return false;
+					}
+					property.SetProperty( this, string );
+				}
+				break;
+			}
+			case PT_BOOL:
+			{
+				bool b( false );
+				if ( stream.Read( b ) == false )
+				{
+					return false;
+				}
+				property.SetProperty( this, b );
+				break;
+			}
+			case PT_UINT32:
+			{
+				uint32_t u32( 0 );
+				if ( stream.Read( u32 ) == false )
+				{
+					return false;
+				}
+				property.SetProperty( this, u32 );
+				break;
+			}
+			default:
+			{
+				ASSERT( false ); // Unsupported type
+				break;
+			}
+		}
+	}
+
+	return true;
+}
+
+// SetName
+//------------------------------------------------------------------------------
+void Node::SetName( const AString & name )
+{
+	m_Name = name;
+	m_NameCRC = CRC32::CalcLower( name );
 }
 
 // ReplaceDummyName

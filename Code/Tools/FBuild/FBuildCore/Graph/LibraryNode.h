@@ -33,7 +33,9 @@ public:
 						  const Dependencies & preBuildDependencies,
 						  const Dependencies & additionalInputs,
 						  bool deoptimizeWritableFiles,
-						  bool deoptimizeWritableFilesWithToken );
+						  bool deoptimizeWritableFilesWithToken,
+                          CompilerNode * preprocessor,
+                          const AString & preprocessorArgs );
 	virtual ~LibraryNode();
 
 	static inline Node::Type GetType() { return Node::LIBRARY_NODE; }
@@ -81,6 +83,8 @@ private:
 	Dependencies m_AdditionalInputs;
 	bool m_DeoptimizeWritableFiles;
 	bool m_DeoptimizeWritableFilesWithToken;
+	CompilerNode *	m_Preprocessor;
+	AString			m_PreprocessorArgs;
 };
 
 //------------------------------------------------------------------------------

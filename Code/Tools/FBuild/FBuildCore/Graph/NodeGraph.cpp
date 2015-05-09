@@ -545,14 +545,15 @@ DirectoryListNode * NodeGraph::CreateDirectoryListNode( const AString & name,
 													    const AString & path,
 													    const AString & wildCard,
 													    bool recursive,
-													    const Array< AString > & excludePaths )
+													    const Array< AString > & excludePaths,
+                                                        const Array< AString > & filesToExclude )
 {
 	ASSERT( Thread::IsMainThread() );
 
 	// NOTE: DirectoryListNode assumes valid values from here
 	// and will assert as such (so we don't check here)
 
-	DirectoryListNode * node = FNEW( DirectoryListNode( name, path, wildCard, recursive, excludePaths ) );
+	DirectoryListNode * node = FNEW( DirectoryListNode( name, path, wildCard, recursive, excludePaths, filesToExclude ) );
 	AddNode( node );
 	return node;
 }
@@ -573,7 +574,9 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
 											const Dependencies & preBuildDependencies,
 											const Dependencies & additionalInputs,
 											bool deoptimizeWritableFiles,
-											bool deoptimizeWritableFilesWithToken )
+											bool deoptimizeWritableFilesWithToken,
+                                            CompilerNode * preprocessor,
+                                            const AString & preprocessorArgs )
 {
 	ASSERT( Thread::IsMainThread() );
 
@@ -594,7 +597,9 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
 										  preBuildDependencies, 
 										  additionalInputs, 
 										  deoptimizeWritableFiles,
-										  deoptimizeWritableFilesWithToken ) );
+										  deoptimizeWritableFilesWithToken,
+                                          preprocessor,
+                                          preprocessorArgs ) );
 	AddNode( node );
 	return node;
 }
@@ -610,20 +615,38 @@ ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName,
 										  uint32_t flags,
 										  const Dependencies & compilerForceUsing,
 										  bool deoptimizeWritableFiles,
-										  bool deoptimizeWritableFilesWithToken )
+										  bool deoptimizeWritableFilesWithToken,
+                                          Node * preprocessorNode,
+                                          const AString & preprocessorArgs,
+                                          uint32_t preprocessorFlags )
 {
 	ASSERT( Thread::IsMainThread() );
 
 	AStackString< 512 > fullPath;
 	CleanPath( objectName, fullPath );
 
-	ObjectNode * node = FNEW( ObjectNode( fullPath, inputNode, compilerNode, compilerArgs, compilerArgsDeoptimized, precompiledHeader, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken ) );
+	ObjectNode * node = FNEW( ObjectNode( fullPath, inputNode, compilerNode, compilerArgs, compilerArgsDeoptimized, precompiledHeader, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, preprocessorNode, preprocessorArgs, preprocessorFlags ) );
 	AddNode( node );
 	return node;
 }
 
 // CreateAliasNode
 //------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName )
+{
+	ASSERT( Thread::IsMainThread() );
+
+	AliasNode * node = FNEW( AliasNode() );
+	node->SetName( aliasName );
+	AddNode( node );
+	return node;
+}
+#endif
+
+// CreateAliasNode
+//------------------------------------------------------------------------------
+#ifndef USE_NODE_REFLECTION
 AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName,
 										const Dependencies & targets )
 {
@@ -633,6 +656,7 @@ AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName,
 	AddNode( node );
 	return node;
 }
+#endif
 
 // CreateDLLNode
 //------------------------------------------------------------------------------
@@ -699,6 +723,21 @@ ExeNode * NodeGraph::CreateExeNode( const AString & linkerOutputName,
 
 // CreateUnityNode
 //------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+UnityNode *	NodeGraph::CreateUnityNode( const AString & unityName )
+{
+	ASSERT( Thread::IsMainThread() );
+
+	UnityNode * node = FNEW( UnityNode() );
+	node->SetName( unityName );
+	AddNode( node );
+	return node;
+}
+#endif
+
+// CreateUnityNode
+//------------------------------------------------------------------------------
+#ifndef USE_NODE_REFLECTION
 UnityNode *	NodeGraph::CreateUnityNode( const AString & unityName,
 										const Dependencies & dirNodes,
 										const Array< AString > & files,
@@ -706,8 +745,6 @@ UnityNode *	NodeGraph::CreateUnityNode( const AString & unityName,
 										const AString & outputPattern,
 										uint32_t numUnityFilesToCreate,
 										const AString & precompiledHeader,
-										const Array< AString > & pathsToExclude,
-										const Array< AString > & filesToExclude,
 										bool isolateWritableFiles,
 										uint32_t maxIsolatedFiles,
 										const Array< AString > & excludePatterns )
@@ -721,15 +758,16 @@ UnityNode *	NodeGraph::CreateUnityNode( const AString & unityName,
 									  outputPattern,
 									  numUnityFilesToCreate,
 									  precompiledHeader,
-									  pathsToExclude,
-									  filesToExclude,
 									  isolateWritableFiles,
 									  maxIsolatedFiles,
 									  excludePatterns ));
 	AddNode( node );
 	return node;
 }
+#endif
 
+// CreateCSNode
+//------------------------------------------------------------------------------
 CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 								  const Dependencies & inputNodes,
 								  const AString & compiler,
@@ -773,6 +811,21 @@ TestNode * NodeGraph::CreateTestNode( const AString & testOutput,
 
 // CreateCompilerNode
 //------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+CompilerNode * NodeGraph::CreateCompilerNode( const AString & executable )
+{
+	ASSERT( Thread::IsMainThread() );
+
+	CompilerNode * node = FNEW( CompilerNode() );
+	node->SetName( executable );
+	AddNode( node );
+	return node;
+}
+#endif
+
+// CreateCompilerNode
+//------------------------------------------------------------------------------
+#ifndef USE_NODE_REFLECTION
 CompilerNode * NodeGraph::CreateCompilerNode( const AString & executable,
 											  const Dependencies & extraFiles,
 											  bool allowDistribution )
@@ -786,6 +839,7 @@ CompilerNode * NodeGraph::CreateCompilerNode( const AString & executable,
 	AddNode( node );
 	return node;
 }
+#endif
 
 // CreateVCXProjectNode
 //------------------------------------------------------------------------------
@@ -841,7 +895,9 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
 												  const Dependencies & compilerForceUsing,
 												  const Dependencies & preBuildDependencies,
 												  bool deoptimizeWritableFiles,
-												  bool deoptimizeWritableFilesWithToken )
+												  bool deoptimizeWritableFilesWithToken,
+                                                  CompilerNode * preprocessor,
+                                                  const AString & preprocessorArgs )
 {
 	ASSERT( Thread::IsMainThread() );
 
@@ -855,7 +911,9 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
 												compilerForceUsing,
 												preBuildDependencies,
 												deoptimizeWritableFiles,
-												deoptimizeWritableFilesWithToken ) );
+												deoptimizeWritableFilesWithToken,
+                                                preprocessor,
+                                                preprocessorArgs ) );
 	AddNode( node );
 	return node;
 

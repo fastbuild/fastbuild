@@ -149,20 +149,32 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
 
 	// special case for include on first line
 	// (out of loop to keep loop logic simple)
-	if ( strncmp( pos, "# ", 2 ) == 0 )
+	if ( pos[ 0 ] == '#' )
 	{
-		pos += 2;
-		goto foundInclude;
+		++pos;
+		goto possibleInclude;
 	}
 
 	for (;;)
 	{
-		pos = strstr( pos, "\n# " );
+		pos = strstr( pos, "\n#" );
 		if ( !pos )
 		{
 			break;
 		}
-		pos += 3;
+		pos += 2;
+    possibleInclude:
+        if ( *pos == ' ' )
+        {
+            ++pos;
+            goto foundInclude;
+        }
+        if ( strncmp( pos, "line ", 5 ) == 0 )
+        {
+            pos += 5;
+            goto foundInclude;
+        }
+        continue; // some other directive we don't care about
 
 	foundInclude:
 
