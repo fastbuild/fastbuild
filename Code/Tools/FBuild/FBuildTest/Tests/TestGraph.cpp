@@ -89,7 +89,11 @@ void TestGraph::TestNodeTypes() const
 	CompilerNode * cn( nullptr );
 	{
 		Dependencies extraFiles( 0, false );
+#ifdef USE_NODE_REFLECTION
+		cn = ng.CreateCompilerNode( AStackString<>( "cl.exe" ) );
+#else
 		cn = ng.CreateCompilerNode( AStackString<>( "cl.exe" ), extraFiles, false );
+#endif
 		TEST_ASSERT( cn->GetType() == Node::COMPILER_NODE );
 		TEST_ASSERT( AStackString<>( "Compiler" ) == cn->GetTypeName() );
 	}
@@ -111,6 +115,7 @@ void TestGraph::TestNodeTypes() const
     #endif
                                                             AStackString<>( "*.cpp"),
                                                             false,
+                                                            Array< AString >(),
                                                             Array< AString >() );
 	TEST_ASSERT( dn->GetType() == Node::DIRECTORY_LIST_NODE );
 	TEST_ASSERT( DirectoryListNode::GetType() == Node::DIRECTORY_LIST_NODE );
@@ -133,20 +138,25 @@ void TestGraph::TestNodeTypes() const
 										 Dependencies(),
 										 Dependencies(),
 										 Dependencies(),
-										 false, false );
+										 false, false,
+                                         nullptr, AString::GetEmpty() );
 		TEST_ASSERT( n->GetType() == Node::LIBRARY_NODE );
 		TEST_ASSERT( LibraryNode::GetType() == Node::LIBRARY_NODE );
 		TEST_ASSERT( AStackString<>( "Library" ) == n->GetTypeName() );
 	}
 	{
-		Node * n = ng.CreateObjectNode( AStackString<>( "obj" ), fn, cn, AString::GetEmpty(), AString::GetEmpty(), nullptr, 0, Dependencies(), false, false );
+        Node * n = ng.CreateObjectNode(AStackString<>("obj"), fn, cn, AString::GetEmpty(), AString::GetEmpty(), nullptr, 0, Dependencies(), false, false, nullptr, AString::GetEmpty(), 0 );
 		TEST_ASSERT( n->GetType() == Node::OBJECT_NODE );
 		TEST_ASSERT( ObjectNode::GetType() == Node::OBJECT_NODE );
 		TEST_ASSERT( AStackString<>( "Object" ) == n->GetTypeName() );
 	}
 	{
 		Dependencies targets( 0, false );
+#ifdef USE_NODE_REFLECTION
+		Node * n = ng.CreateAliasNode( AStackString<>( "alias" ) );
+#else
 		Node * n = ng.CreateAliasNode( AStackString<>( "alias" ), targets );
+#endif
 		TEST_ASSERT( n->GetType() == Node::ALIAS_NODE );
 		TEST_ASSERT( AliasNode::GetType() == Node::ALIAS_NODE );
 		TEST_ASSERT( AStackString<>( "Alias" ) == n->GetTypeName() );
@@ -170,6 +180,9 @@ void TestGraph::TestNodeTypes() const
 	{
 		Dependencies dNodes( 1, false );
 		dNodes.Append( Dependency( dn ) );
+#ifdef USE_NODE_REFLECTION
+		Node * n = ng.CreateUnityNode( AStackString<>( "Unity" ) );
+#else
 		Node * n = ng.CreateUnityNode( AStackString<>( "Unity" ), 
 									dNodes,
 									Array< AString >(),
@@ -177,11 +190,10 @@ void TestGraph::TestNodeTypes() const
 									AString::GetEmpty(),
 									3,
 									AString::GetEmpty(),
-									Array< AString >(),
-									Array< AString >(),
 									false,
 									0,
 									Array< AString >() );
+#endif
 		TEST_ASSERT( n->GetType() == Node::UNITY_NODE);
 		TEST_ASSERT( UnityNode::GetType() == Node::UNITY_NODE );
 		TEST_ASSERT( AStackString<>( "Unity" ) == n->GetTypeName() );
@@ -309,6 +321,7 @@ void TestGraph::TestDirectoryListNode() const
 														   testFolder,
 														   AStackString<>( "library.*" ),
 														   true,
+														   Array< AString >(),
 														   Array< AString >() );
 	TEST_ASSERT( ng.FindNode( name ) == node );
 

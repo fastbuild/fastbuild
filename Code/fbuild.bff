@@ -6,7 +6,7 @@
 ;-------------------------------------------------------------------------------
 .VSBasePath			= '../External/SDK/VS13.4'
 .WindowsSDKBasePath	= '../External/SDK/Windows8.1'
-.ClangBasePath		= '../External/SDK/ClangForWindows/3.4'
+.ClangBasePath		= '../External/SDK/ClangForWindows/3.6'
 
 ;-------------------------------------------------------------------------------
 ; Settings
@@ -114,7 +114,6 @@ Compiler( 'Compiler-x64-OSX' )
 	.CompilerOptions		+ ' /Fo"%2"'
 	.LibrarianOptions		= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
 	.LinkerOptions			= '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
-							+ ' /IGNORE:4001' ; don't complain about linking libs only
 
 	// Optimizations
 	.CompilerDebugOptimizations		= ' /MTd /Od /RTC1 /GS /Oy- /GR- /analyze'
@@ -256,44 +255,54 @@ Compiler( 'Compiler-x64-OSX' )
 
 	.WindowsLibPaths		= '$WindowsSDKBasePath$/lib/winv6.3/um'
 
-	.CompilerOptions		= '-o"%2" "%1" -c -g'
+	.BaseCompilerOptions	= '-o"%2" "%1" -c -g'
+                            + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+
+                            // includes
 							+ ' -I"./"'
 							+ ' -I"$VSBasePath$/VC/include/"'
 							+ ' -I"$WindowsSDKBasePath$/include/um"'
 							+ ' -I"$WindowsSDKBasePath$/include/shared"'
+
+                            // defines
 							+ ' -D"WIN32_LEAN_AND_MEAN" -D_WIN32 -D__WINDOWS__'
-							+ ' -DWIN32 -D_WIN32'
+							+ ' -DWIN32'
+                            + ' -D_CRT_SECURE_NO_WARNINGS'
+
+                            // release
 							+ ' -DRELEASE'
+
+                            // x86
+                            + ' -m32'
 							+ ' -D"_X86_=1" -D_M_IX86'
 							+ ' -D"_INTEGRAL_MAX_BITS=64"'
-							+ ' -D"_MSC_VER=1500"'
 
 							// MS compatibility
 							+ ' -fms-compatibility'
 							+ ' -fms-extensions'
 							+ ' -fmsc-version=1700'
-							+ ' -mms-bitfields'
-							+ ' -Wno-microsoft' // suppress "enumerator value is not representable in the underlying type 'int' [-Wmicrosoft]'"
-							+ ' -Wno-#pragma-messages'
 
-							+ ' -Werror'					// warnings as errors
+                            // as of v3.6, these warnings fire inside system headers
+							+ ' -Wno-#pragma-messages'      // warning : %s [-W#pragma-messages]
+                            + ' -Wno-unknown-pragmas'       // unknown pragma ignored [-Wunknown-pragmas]
+                            + ' -Wno-unused-function'       // unused function '%s' [-Wunused-function]
+							+ ' -Wno-microsoft'             // enumerator value is not representable in the underlying type 'int' [-Wmicrosoft]'
+							+ ' -Wno-unused-value'          // expression result unused [-Wunused-value]
+							+ ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
+                            + ' -Wno-incompatible-ms-struct'    // ms_struct may not produce MSVC-compatible layouts for classes with base classes or virtual functions [-Wincompatible-ms-struct]
+
 							+ ' -fno-exceptions'
 							+ ' -fno-rtti'
-							+ ' -Wno-ignored-attributes' // ignore 'restrict, noalias' keyword
-							+ ' -Wno-c++11-extensions'
-							+ ' -Wno-c++11-long-long' // don't want about use of "long long"
-							+ ' -Wno-deprecated-declarations'
-							+ ' -Wno-unused-value' // TODO: Need to re-enable this
-							+ ' -integrated-as' // use the built-in assembler (don't try to use gcc)
 
-							+ ' -fdata-sections'
-							+ ' -ffunction-sections'
+    .CompilerOptionsC       = '-x c '
+                            + .BaseCompilerOptions
+    .CompilerOptions        = '-std=c++11 '                     // allow C++11 features
+                            + .BaseCompilerOptions
 
 	.PCHOptions				= .CompilerOptions // TODO: Configure this properly
 
 	.LibrarianOptions		= 'rc "%2" "%1"' // NOTE: output must come first
 	.LinkerOptions			= '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
-							+ ' /IGNORE:4001' ; don't complain about linking libs only
 							+ ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib"'
 							+ ' /MACHINE:X86'
 
@@ -320,6 +329,9 @@ Compiler( 'Compiler-x64-OSX' )
     .CompilerOptionsC       = .BaseCompilerOptions
     .CompilerOptions        = .BaseCompilerOptions
                             + ' -std=c++11'                     // allow C++11 features
+                            
+                            // Disabled warnings
+                            + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
                             
     .LinkerOptions          = '"%1" -o "%2"'
                                 

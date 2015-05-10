@@ -45,8 +45,8 @@
 		Using( .Config )
 		.OutputBase + '\$Platform$-$Config$'
 
-		// Static Library
-		Library( '$ProjectName$-Lib-$Platform$-$Config$' )
+		// Objects
+		ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
 		{
 			// Test framework uses exceptions
 			.CompilerOptions			+ .UseExceptions
@@ -64,6 +64,7 @@
 		{
 			.Libraries						= { 'Core-Lib-$Platform$-$Config$',
 												'CoreTest-Lib-$Platform$-$Config$',
+            									'LZ4-Lib-$Platform$-$Config$'
 												'TestFrameWork-Lib-$Platform$-$Config$' }
 			.LinkerOutput					= '$OutputBase$\Core\CoreTest\CoreTest.exe'
 			.LinkerOptions					+ ' /SUBSYSTEM:CONSOLE'
@@ -98,6 +99,9 @@
 			// Output
 			.CompilerOutputPath			= '$OutputBase$\$ProjectName$\'
  			.LibrarianOutput 			= '$OutputBase$\$ProjectName$\$ProjectName$.lib'
+
+            // TODO: Remove this when linking is working with Clang
+            .LibrarianAdditionalInputs  = 'LZ4-$Platform$-$Config$'
 		}
 		Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
 	}
@@ -127,6 +131,7 @@
                                                 'CoreTest-Lib-$Platform$-$Config$'
                                                 'TestFrameWork-Lib-$Platform$-$Config$'
                                                 'Core-Lib-$Platform$-$Config$'                
+            									'LZ4-Lib-$Platform$-$Config$'
                                               }
             .LinkerOutput                   = '$OutputBase$\Core\CoreTest\coretest'
             .LinkerOptions                  + ' -pthread'
@@ -166,6 +171,7 @@
                                                 'CoreTest-Lib-$Platform$-$Config$'
                                                 'TestFrameWork-Lib-$Platform$-$Config$'
                                                 'Core-Lib-$Platform$-$Config$'
+            									'LZ4-Lib-$Platform$-$Config$'
                                               }
             .LinkerOutput                   = '$OutputBase$\Core\CoreTest\CoreTest'
         }
@@ -187,7 +193,7 @@
 	Alias( '$ProjectName$-Release' )	{ .Targets = { '$ProjectName$-X86-Release', '$ProjectName$-X64-Release' } }
 
 	// Per-Platform
-	Alias( '$ProjectName$-X86' )		{ .Targets = { '$ProjectName$-X86-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X86-Profile' } }
+	Alias( '$ProjectName$-X86' )		{ .Targets = { '$ProjectName$-X86-Debug', '$ProjectName$-X86-Release', '$ProjectName$-X86-Profile' } }
 	Alias( '$ProjectName$-X64' )		{ .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X64-Profile' } }
 	Alias( '$ProjectName$-X86Clang' )	{ .Targets = { '$ProjectName$-X86Clang-Debug' } }
     Alias( '$ProjectName$-x64Linux' )   { .Targets = { '$ProjectName$-X64Linux-Debug', '$ProjectName$-X64Linux-Release', '$ProjectName$-X64Linux-Profile' } }

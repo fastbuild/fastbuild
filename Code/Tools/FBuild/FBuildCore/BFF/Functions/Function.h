@@ -16,7 +16,10 @@ class BFFIterator;
 class BFFVariable;
 class Dependencies;
 class DirectoryListNode;
+class Meta_File;
+class Meta_Path;
 class Node;
+class ReflectionInfo;
 
 // Function
 //------------------------------------------------------------------------------
@@ -55,6 +58,23 @@ public:
 	// most functions will override this to commit the effects of the function
 	virtual bool Commit( const BFFIterator & funcStartIter ) const;
 
+	// helpers to clean/fixup paths to files and folders
+	static void CleanFolderPaths( Array< AString > & folders );
+	static void CleanFilePaths( Array< AString > & files );
+	void CleanFileNames( Array< AString > & fileNames ) const;
+
+	bool GetDirectoryListNodeList( const BFFIterator & iter,
+								   const Array< AString > & paths,
+								   const Array< AString > & excludePaths,
+                                   const Array< AString > & filesToExclude,
+								   bool recurse,
+								   const AString & pattern,
+								   const char * inputVarName,
+								   Dependencies & nodes ) const;
+
+	bool GetNodeList( const BFFIterator & iter, const char * name, Dependencies & nodes, bool required = false,
+					  bool allowCopyDirNodes = false, bool allowUnityNodes = false ) const;
+
 private:
 	Function *	m_NextFunction;
 	static Function * s_FirstFunction;
@@ -74,26 +94,25 @@ protected:
 	bool GetBool( const BFFIterator & iter, bool & var, const char * name, bool defaultValue, bool required = false ) const;
 	bool GetInt( const BFFIterator & iter, int32_t & var, const char * name, int32_t defaultValue, bool required ) const;
 	bool GetInt( const BFFIterator & iter, int32_t & var, const char * name, int32_t defaultValue, bool required, int minVal, int maxVal ) const;
-	bool GetNodeList( const BFFIterator & iter, const char * name, Dependencies & nodes, bool required = false,
-					  bool allowCopyDirNodes = false, bool allowUnityNodes = false ) const;
-	bool GetDirectoryListNodeList( const BFFIterator & iter,
-								   const Array< AString > & paths,
-								   const Array< AString > & excludePaths,
-								   bool recurse,
-								   const AString & pattern,
-								   const char * inputVarName,
-								   Dependencies & nodes ) const;
 	bool GetStrings( const BFFIterator & iter, Array< AString > & strings, const char * name, bool required = false ) const;
 	bool GetFolderPaths( const BFFIterator & iter, Array< AString > & strings, const char * name, bool required = false ) const;
 	bool GetFileNode( const BFFIterator & iter, Node * & fileNode, const char * name, bool required = false ) const;
 
-	// helpers to clean/fixup paths to files and folders
-	void CleanFolderPaths( Array< AString > & folders ) const;
-	void CleanFilePaths( Array< AString > & files ) const;
-
 	// helper function to make alias for target
 	bool ProcessAlias( const BFFIterator & iter, Node * nodeToAlias ) const;
 	bool ProcessAlias( const BFFIterator & iter, Dependencies & nodesToAlias ) const;
+
+	// Reflection based property population
+#ifdef USE_NODE_REFLECTION
+	bool GetNameForNode( const BFFIterator & iter, const ReflectionInfo * ri, AString & name ) const;
+	bool PopulateProperties( const BFFIterator & iter, Node * node ) const;
+	bool PopulateArrayOfStrings( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateString( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateBool( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateUInt32( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
+
+	bool PopulatePathAndFileHelper( const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const AString & variableName, const AString & originalValue, AString & valueToFix ) const;
+#endif
 private:
 	bool GetNodeListRecurse( const BFFIterator & iter, const char * name, Dependencies & nodes, const AString & nodeName,
 							 bool allowCopyDirNodes, bool allowUnityNodes ) const;

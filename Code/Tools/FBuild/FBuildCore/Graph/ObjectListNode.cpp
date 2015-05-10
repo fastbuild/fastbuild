@@ -32,7 +32,9 @@ ObjectListNode::ObjectListNode( const AString & listName,
 						  const Dependencies & compilerForceUsing,
 						  const Dependencies & preBuildDependencies,
 						  bool deoptimizeWritableFiles,
-						  bool deoptimizeWritableFilesWithToken )
+						  bool deoptimizeWritableFilesWithToken,
+                          CompilerNode * preprocessor,
+                          const AString &preprocessorArgs )
 : Node( listName, Node::OBJECT_LIST_NODE, Node::FLAG_NONE )
 , m_CompilerForceUsing( compilerForceUsing )
 , m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
@@ -52,6 +54,9 @@ ObjectListNode::ObjectListNode( const AString & listName,
 	m_CompilerArgs = compilerArgs;
 	m_CompilerArgsDeoptimized = compilerArgsDeoptimized;
 	m_CompilerOutputPath = compilerOutputPath;
+
+    m_Preprocessor     = preprocessor;
+    m_PreprocessorArgs = preprocessorArgs;
 
 	m_PreBuildDependencies = preBuildDependencies;
 }
@@ -303,7 +308,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, bool isUnityNode
 	Node * on = ng.FindNode( objFile );
 	if ( on == nullptr )
 	{
-		// determine flags
+		// determine flags - TODO:B Move DetermineFlags call out of build-time
 		uint32_t flags = ObjectNode::DetermineFlags( m_Compiler, m_CompilerArgs );
 		if ( isUnityNode )
 		{
@@ -313,8 +318,14 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, bool isUnityNode
 		{
 			flags |= ObjectNode::FLAG_ISOLATED_FROM_UNITY;
 		}
+		uint32_t preprocessorFlags = 0;
+		if ( m_Preprocessor )
+		{
+			// determine flags - TODO:B Move DetermineFlags call out of build-time
+			preprocessorFlags = ObjectNode::DetermineFlags( m_Preprocessor, m_PreprocessorArgs );
+        }
 
-		on = ng.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerArgs, m_CompilerArgsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken );
+		on = ng.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerArgs, m_CompilerArgsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken, m_Preprocessor, m_PreprocessorArgs, preprocessorFlags );
 	}
 	else if ( on->GetType() != Node::OBJECT_NODE )
 	{
@@ -356,6 +367,8 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, bool isUnityNode
 	NODE_LOAD_DEPS( 0,			preBuildDependencies );
 	NODE_LOAD( bool,			deoptimizeWritableFiles );
 	NODE_LOAD( bool,			deoptimizeWritableFilesWithToken );
+	NODE_LOAD_NODE( CompilerNode, preprocessorNode );
+	NODE_LOAD( AStackString<>,	preprocessorArgs );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	ObjectListNode * n = ng.CreateObjectListNode( name, 
@@ -368,7 +381,9 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, bool isUnityNode
 								compilerForceUsing,
 								preBuildDependencies,
 								deoptimizeWritableFiles,
-								deoptimizeWritableFilesWithToken );
+								deoptimizeWritableFilesWithToken,
+								preprocessorNode,
+								preprocessorArgs );
 	n->m_ObjExtensionOverride = objExtensionOverride;
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
@@ -398,6 +413,8 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, bool isUnityNode
 	NODE_SAVE_DEPS( m_PreBuildDependencies );
 	NODE_SAVE( m_DeoptimizeWritableFiles );
 	NODE_SAVE( m_DeoptimizeWritableFilesWithToken );
+	NODE_SAVE_NODE( m_Preprocessor );
+	NODE_SAVE( m_PreprocessorArgs );
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
 	// but we can't right now because we rely on the nodes we depend on 

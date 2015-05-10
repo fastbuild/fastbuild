@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 
 // Core
@@ -44,6 +45,7 @@ FunctionUnity::FunctionUnity()
 
 // Commit
 //------------------------------------------------------------------------------
+#ifndef USE_NODE_REFLECTION
 /*virtual*/ bool FunctionUnity::Commit( const BFFIterator & funcStartIter ) const
 {
 	Array< AString > paths;
@@ -88,12 +90,6 @@ FunctionUnity::FunctionUnity()
 	const AString & inputPattern = inputPatternV ? inputPatternV->GetString() : (const AString &)AStackString<>( "*.cpp" );
 	const AString & outputPattern = outputPatternV ? outputPatternV->GetString() : (const AString &)AStackString<>( "Unity*.cpp" );
 
-	Dependencies dirNodes( paths.GetSize() );
-	if ( !GetDirectoryListNodeList( funcStartIter, paths, pathsToExclude, inputPathRecurse, inputPattern, "UnityInputPath", dirNodes ) )
-	{
-		return false; // GetDirectoryListNodeList will have emitted an error
-	}
-
 	// uses precompiled header?
 	AStackString< 512 > precompiledHeader;
 	const BFFVariable * pchV = nullptr;
@@ -114,24 +110,7 @@ FunctionUnity::FunctionUnity()
 	{
 		return false; // GetStrings will have emitted an error
 	}
-	// cleanup slashes (keep path relative)
-	AString * const end = filesToExclude.End();
-	for ( AString * it = filesToExclude.Begin(); it != end; ++it )
-	{
-		AString & file = *it;
-
-		// normalize slashes
-		PathUtils::FixupFilePath( file );
-
-		// ensure file starts with slash, so we only match full paths
-		if ( PathUtils::IsFullPath( file ) == false )
-		{
-			AStackString<> tmp;
-			tmp += NATIVE_SLASH;
-			tmp += file;
-			file = tmp;
-		}
-	}
+    CleanFileNames( filesToExclude );
 
 	// automatically exclude the associated CPP file for a PCH (if there is one)
 	if ( precompiledHeader.EndsWithI( ".h" ) )
@@ -149,6 +128,12 @@ FunctionUnity::FunctionUnity()
 	NodeGraph::CleanPath( outputPathV->GetString(), fullOutputPath );
 	PathUtils::EnsureTrailingSlash( fullOutputPath );
 
+	Dependencies dirNodes( paths.GetSize() );
+	if ( !GetDirectoryListNodeList( funcStartIter, paths, pathsToExclude, filesToExclude, inputPathRecurse, inputPattern, "UnityInputPath", dirNodes ) )
+	{
+		return false; // GetDirectoryListNodeList will have emitted an error
+	}
+
 	// Check for existing node
 	if ( ng.FindNode( m_AliasForFunction ) )
 	{
@@ -163,8 +148,6 @@ FunctionUnity::FunctionUnity()
 										 outputPattern,
 										 numFiles,
 										 precompiledHeader,
-										 pathsToExclude, // TODO:B Remove this (handled by DirectoryListNode now)
-										 filesToExclude,
 										 isolateWritableFiles,
 										 maxIsolatedFiles,
 										 excludePatterns );
@@ -172,5 +155,33 @@ FunctionUnity::FunctionUnity()
 
 	return true;
 }
+#endif
+
+// Commit
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+/*virtual*/ bool FunctionUnity::Commit( const BFFIterator & funcStartIter ) const
+{
+	// parsing logic should guarantee we have a string for our name
+	ASSERT( m_AliasForFunction.IsEmpty() == false );
+
+	// Check for existing node
+	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+	if ( ng.FindNode( m_AliasForFunction ) )
+	{
+		Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
+		return false;
+	}
+
+	UnityNode * un = ng.CreateUnityNode( m_AliasForFunction );
+
+	if ( !PopulateProperties( funcStartIter, un ) )
+	{
+		return false;
+	}
+
+	return un->Initialize( funcStartIter, this );
+}
+#endif
 
 //------------------------------------------------------------------------------

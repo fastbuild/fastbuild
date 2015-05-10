@@ -76,6 +76,13 @@ FunctionCSAssembly::FunctionCSAssembly()
 			return false; // GetFolderPaths will have emitted an error
 		}
 
+        Array< AString > filesToExclude(0, true);
+        if ( !GetStrings( funcStartIter, filesToExclude, ".CompilerInputExcludedFiles", false ) ) // not required
+        {
+            return false; // GetStrings will have emitted an error
+        }
+	    CleanFileNames( filesToExclude );
+
 		// Input paths
 		Array< AString > inputPaths;
 		if ( !GetFolderPaths( funcStartIter, inputPaths, ".CompilerInputPath", false ) )
@@ -84,7 +91,7 @@ FunctionCSAssembly::FunctionCSAssembly()
 		}
 
 		Dependencies dirNodes( inputPaths.GetSize() );
-		if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, recurse, pattern, "CompilerInputPath", dirNodes ) )
+		if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, filesToExclude, recurse, pattern, "CompilerInputPath", dirNodes ) )
 		{
 			return false; // GetDirectoryListNodeList will have emitted an error
 		}

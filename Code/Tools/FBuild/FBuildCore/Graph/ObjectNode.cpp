@@ -51,7 +51,10 @@ ObjectNode::ObjectNode( const AString & objectName,
 						uint32_t flags,
 						const Dependencies & compilerForceUsing,
 						bool deoptimizeWritableFiles,
-						bool deoptimizeWritableFilesWithToken )
+						bool deoptimizeWritableFilesWithToken,
+                        Node * preprocessorNode,
+                        const AString & preprocessorArgs,
+                        uint32_t preprocessorFlags )
 : FileNode( objectName, Node::FLAG_NONE )
 , m_Includes( 0, true )
 , m_Flags( flags )
@@ -61,6 +64,10 @@ ObjectNode::ObjectNode( const AString & objectName,
 , m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
 , m_DeoptimizeWritableFilesWithToken( deoptimizeWritableFilesWithToken )
 , m_Remote( false )
+, m_PCHNode( precompiledHeader )
+, m_PreprocessorNode( preprocessorNode )
+, m_PreprocessorArgs( preprocessorArgs )
+, m_PreprocessorFlags( preprocessorFlags )
 {
 	m_StaticDependencies.SetCapacity( 3 );
 
@@ -74,6 +81,10 @@ ObjectNode::ObjectNode( const AString & objectName,
 	{
 		m_StaticDependencies.Append( Dependency( precompiledHeader ) );
 	}
+    if ( preprocessorNode )
+    {
+        m_StaticDependencies.Append( Dependency( preprocessorNode ) );
+    }
 
 	m_StaticDependencies.Append( compilerForceUsing );
 
@@ -94,6 +105,10 @@ ObjectNode::ObjectNode( const AString & objectName,
 , m_DeoptimizeWritableFiles( false )
 , m_DeoptimizeWritableFilesWithToken( false )
 , m_Remote( true )
+, m_PCHNode( nullptr )
+, m_PreprocessorNode( nullptr )
+, m_PreprocessorArgs()
+, m_PreprocessorFlags( 0 )
 {
 	m_Type = OBJECT_NODE;
 	m_LastBuildTimeMs = 5000; // higher default than a file node
@@ -149,6 +164,11 @@ ObjectNode::~ObjectNode()
 	bool useCache = ShouldUseCache();
 	bool useDist = GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && FBuild::Get().GetOptions().m_AllowDistributed;
 	bool usePreProcessor = ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
+    if ( GetDedicatedPreprocessor() )
+    {
+        usePreProcessor = true;
+        useDeoptimization = false; // disable deoptimization
+    }
 
 	if ( usePreProcessor )
 	{
@@ -455,7 +475,15 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 		ASSERT( output && outputSize );
 
 		CIncludeParser parser;
-		bool msvcStyle = GetFlag( FLAG_MSVC ) || GetFlag( FLAG_CUDA_NVCC );
+		bool msvcStyle;
+		if ( GetDedicatedPreprocessor() != nullptr )
+		{
+			msvcStyle = GetPreprocessorFlag( FLAG_MSVC ) || GetPreprocessorFlag( FLAG_CUDA_NVCC );
+		}
+		else
+		{
+			msvcStyle = GetFlag( FLAG_MSVC ) || GetFlag( FLAG_CUDA_NVCC );
+		}
 		bool result = msvcStyle ? parser.ParseMSCL_Preprocessed( output, outputSize )
 								: parser.ParseGCC_Preprocessed( output, outputSize );
 		if ( result == false )
@@ -490,25 +518,25 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 	NODE_LOAD_DEPS( 0,			compilerForceUsing );
 	NODE_LOAD( bool,			deoptimizeWritableFiles );
 	NODE_LOAD( bool,			deoptimizeWritableFilesWithToken );
+    NODE_LOAD_NODE( Node,       m_PCHNode )
+	NODE_LOAD_NODE( CompilerNode, preprocessor );
+    NODE_LOAD( AStackString<>, 	preprocessorArgs );
+    NODE_LOAD( uint32_t, 		preprocessorFlags );
 
 	// we are making inferences from the size of the staticDeps
 	// ensure we catch if those asumptions break
-	size_t numStaticDepsExcludingForceUsing = staticDeps.GetSize() - compilerForceUsing.GetSize();
-	ASSERT( ( numStaticDepsExcludingForceUsing == 2 ) ||
- 			( numStaticDepsExcludingForceUsing == 3 ) );
+    #if defined( ASSERTS_ENABLED )
+	    size_t numStaticDepsExcludingForceUsing = staticDeps.GetSize() - compilerForceUsing.GetSize();
+        // compiler + source file + (optional)precompiledHeader + (optional)preprocessor
+	    ASSERT( ( numStaticDepsExcludingForceUsing >= 2 ) && ( numStaticDepsExcludingForceUsing <= 4 ) );
+    #endif
 
 	ASSERT( staticDeps.GetSize() >= 2 );
 	Node * compiler = staticDeps[ 0 ].GetNode();
 	Node * staticDepNode = staticDeps[ 1 ].GetNode();
 
-	Node * precompiledHeader = nullptr;
-	if ( numStaticDepsExcludingForceUsing == 3 )
-	{
-		precompiledHeader = staticDeps[ 2 ].GetNode();
-	}
-
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * on = ng.CreateObjectNode( name, staticDepNode, compiler, compilerArgs, compilerArgsDeoptimized, precompiledHeader, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken );
+	Node * on = ng.CreateObjectNode( name, staticDepNode, compiler, compilerArgs, compilerArgsDeoptimized, m_PCHNode, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, preprocessor, preprocessorArgs, preprocessorFlags );
 
 	ObjectNode * objNode = on->CastTo< ObjectNode >();
 	objNode->m_DynamicDependencies.Swap( dynamicDeps );
@@ -544,15 +572,15 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 	// Compiler Type
 	if ( compiler.EndsWithI( "\\cl.exe" ) ||
 		 compiler.EndsWithI( "\\cl" ) )
-	{
+    {
 		flags |= ObjectNode::FLAG_MSVC;
 	}
 	else if ( compiler.EndsWithI( "clang++.exe" ) ||
 			  compiler.EndsWithI( "clang++" ) ||
 			  compiler.EndsWithI( "clang.exe" ) ||
 			  compiler.EndsWithI( "clang" ) ||
-			  compiler.EndsWithI( "clang-cl.exe" ) ||
-			  compiler.EndsWithI( "clang-cl" ) )
+              compiler.EndsWithI( "clang-cl.exe" ) ||
+		      compiler.EndsWithI( "clang-cl" ) )
 	{
 		flags |= ObjectNode::FLAG_CLANG;
 	}
@@ -712,6 +740,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 	NODE_SAVE_DEPS( m_CompilerForceUsing );
 	NODE_SAVE( m_DeoptimizeWritableFiles );
 	NODE_SAVE( m_DeoptimizeWritableFilesWithToken );
+    NODE_SAVE_NODE( m_PCHNode )
+	NODE_SAVE_NODE( m_PreprocessorNode );
+    NODE_SAVE( m_PreprocessorArgs );
+    NODE_SAVE( m_PreprocessorFlags );
 }
 
 // SaveRemote
@@ -768,7 +800,7 @@ const char * ObjectNode::GetObjExtension() const
 
 // DumpOutput
 //------------------------------------------------------------------------------
-/*static*/ void ObjectNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name )
+/*static*/ void ObjectNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings )
 {
 	if ( ( data != nullptr ) && ( dataSize > 0 ) )
 	{
@@ -777,7 +809,7 @@ const char * ObjectNode::GetObjExtension() const
 		exclusions.Append( AString( "#line" ) );
 
 		AStackString<> msg;
-		msg.Format( "PROBLEM: %s\n", name.Get() );
+		msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
 
 		AutoPtr< char > mem( (char *)Alloc( dataSize + msg.GetLength() ) );
 		memcpy( mem.Get(), msg.Get(), msg.GetLength() );
@@ -964,7 +996,7 @@ void ObjectNode::WriteToCache( Job * job )
 
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
-void ObjectNode::EmitCompilationMessage( const AString & fullArgs, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob ) const
+void ObjectNode::EmitCompilationMessage( const AString & fullArgs, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob, bool useDedicatedPreprocessor ) const
 {
 	// print basic or detailed output, depending on options
 	// we combine everything into one string to ensure it is contiguous in
@@ -987,7 +1019,7 @@ void ObjectNode::EmitCompilationMessage( const AString & fullArgs, bool useDeopt
 	output += '\n';
 	if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
 	{
-		output += GetCompiler()->GetName();
+		output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetName() : GetCompiler()->GetName();
 		output += ' ';
 		output += fullArgs;
 		output += '\n';
@@ -1029,7 +1061,13 @@ void ObjectNode::EmitCompilationMessage( const AString & fullArgs, bool useDeopt
 void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, bool useDeoptimization ) const
 {
 	Array< AString > tokens( 1024, true );
-	if ( useDeoptimization )
+
+	const bool useDedicatedPreprocessor = ( ( pass == PASS_PREPROCESSOR_ONLY ) && GetDedicatedPreprocessor() );
+	if ( useDedicatedPreprocessor )
+	{
+		m_PreprocessorArgs.Tokenize( tokens );
+	}
+	else if ( useDeoptimization )
 	{
 		ASSERT( !m_CompilerArgsDeoptimized.IsEmpty() );
 		m_CompilerArgsDeoptimized.Tokenize( tokens );
@@ -1040,6 +1078,14 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 	}
 	fullArgs.Clear();
 
+	const bool isMSVC 	= ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_MSVC ) : GetFlag( FLAG_MSVC );
+	const bool isClang	= ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CLANG ) : GetFlag( FLAG_CLANG );
+	const bool isGCC	= ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_GCC ) : GetFlag( FLAG_GCC );
+	const bool isSNC	= ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_SNC ) : GetFlag( FLAG_SNC );
+	const bool isCWWii	= ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( CODEWARRIOR_WII ) : GetFlag( CODEWARRIOR_WII );
+	const bool isGHWiiU	= ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( GREENHILLS_WIIU ) : GetFlag( GREENHILLS_WIIU );
+	const bool isCUDA	= ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CUDA_NVCC ) : GetFlag( FLAG_CUDA_NVCC );
+
 	const size_t numTokens = tokens.GetSize();
 	for ( size_t i = 0; i < numTokens; ++i )
 	{
@@ -1049,7 +1095,7 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 		// -o removal for preprocessor
 		if ( pass == PASS_PREPROCESSOR_ONLY )
 		{
-			if ( GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( FLAG_CUDA_NVCC ) )
+			if ( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA )
 			{
 				if ( StripTokenWithArg( "-o", token, i ) )
 				{
@@ -1063,7 +1109,7 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 			}
 		}
 
-		if ( GetFlag( FLAG_CLANG ) )
+		if ( isClang )
 		{
 			// The pch can only be utilized when doing a direct compilation
 			//  - Can't be used to generate the preprocessed output
@@ -1077,7 +1123,7 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 			}
 		}
 
-		if ( GetFlag( FLAG_MSVC ) )
+		if ( isMSVC )
 		{
 			if ( pass == PASS_COMPILE_PREPROCESSED )
 			{
@@ -1103,7 +1149,7 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 			}
 		}
 
-		if ( GetFlag( FLAG_MSVC ) )
+		if ( isMSVC )
 		{
 			// FASTBuild handles the multiprocessor scheduling
 			if ( StripToken( "/MP", token, true ) ) // true = strip '/MP' and starts with '/MP'
@@ -1115,7 +1161,7 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 		// remove includes for second pass
 		if ( pass == PASS_COMPILE_PREPROCESSED ) 
 		{
-			if ( GetFlag( FLAG_CLANG ) )
+			if ( isClang )
 			{
 				// Clang requires -I options be stripped when compiling preprocessed code
 				// (it raises an error if we don't remove these)
@@ -1124,7 +1170,7 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 					continue; // skip this token in both cases
 				}
 			}
-			if ( GetFlag( FLAG_MSVC ) )
+			if ( isMSVC )
 			{
 				// NOTE: Leave /I includes for compatibility with Recode
 				// (unlike Clang, MSVC is ok with leaving the /I when compiling preprocessed code)
@@ -1160,7 +1206,7 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 		}
 
 		// %3 -> PrecompiledHeader Obj
-		if ( GetFlag( FLAG_MSVC ) )
+		if ( isMSVC )
 		{
 			found = token.Find( "%3" );
 			if ( found )
@@ -1176,7 +1222,7 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 		}
 
 		// %4 -> CompilerForceUsing list
-		if ( GetFlag( FLAG_MSVC ) )
+		if ( isMSVC )
 		{
 			found = token.Find( "%4" );
 			if ( found )
@@ -1196,13 +1242,13 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 
 	if ( pass == PASS_PREPROCESSOR_ONLY )
 	{
-		if ( GetFlag( FLAG_MSVC ) )
+		if ( isMSVC )
 		{
 			fullArgs += "/E"; // run pre-processor only
 		}
 		else
 		{
-			ASSERT( GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( FLAG_CUDA_NVCC ) );
+			ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA );
 			fullArgs += "-E"; // run pre-processor only
 		}
 	}
@@ -1238,7 +1284,8 @@ void ObjectNode::ExpandTokenList( const Dependencies & nodes, AString & fullArgs
 //------------------------------------------------------------------------------
 bool ObjectNode::BuildPreprocessedOutput( const AString & fullArgs, Job * job, bool useDeoptimization ) const
 {
-	EmitCompilationMessage( fullArgs, useDeoptimization );
+	const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
+	EmitCompilationMessage( fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor );
 
 	// spawn the process
 	CompileHelper ch( false ); // don't handle output (we'll do that)
@@ -1247,7 +1294,10 @@ bool ObjectNode::BuildPreprocessedOutput( const AString & fullArgs, Job * job, b
     #else
         const bool useResponseFile = false;
     #endif
-	if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs, useResponseFile ) )
+
+	if ( !ch.SpawnCompiler( job, GetName(),
+        useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetName() : GetCompiler()->GetName(),
+        fullArgs, useResponseFile ) )
 	{
 		// only output errors in failure case
 		// (as preprocessed output goes to stdout, normal logging is pushed to
@@ -1445,7 +1495,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 	// output any errors (even if succeeded, there might be warnings)
 	if ( m_HandleOutput && m_Err.Get() )
 	{ 
-		DumpOutput( job, m_Err.Get(), m_ErrSize, name );
+        const bool treatAsWarnings = true; // change msg formatting
+		DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
 	}
 
 	// failed?

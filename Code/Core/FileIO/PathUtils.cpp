@@ -71,6 +71,53 @@
 	#endif
 }
 
+// PathBeginsWith
+//------------------------------------------------------------------------------
+/*static*/ bool PathUtils::PathBeginsWith( const AString & cleanPath, const AString & cleanSubPath )
+{
+    #if defined( __LINUX__ )
+		// Linux : Case sensitive
+		return cleanPath.BeginsWith( cleanSubPath );
+    #else
+		// Windows & OSX : Case insensitive
+		return cleanPath.BeginsWithI( cleanSubPath );
+    #endif
+}
+
+// PathEndsWithFile
+//------------------------------------------------------------------------------
+/*static*/ bool PathUtils::PathEndsWithFile( const AString & cleanPath, const AString & fileName )
+{
+    // Work out if ends match
+    #if defined( __LINUX__ )
+		// Linux : Case sensitive
+        bool endMatch = cleanPath.EndsWith( fileName );
+    #else
+		// Windows & OSX : Case insensitive
+        bool endMatch = cleanPath.EndsWithI( fileName );
+    #endif
+    if ( !endMatch )
+    {
+        return false;
+    }
+
+    // if it's an entire match (a full path for example)
+    if ( cleanPath.GetLength() == fileName.GetLength() )
+    {
+        return true;
+    }
+
+    // Sanity check - if fileName was longer then path (or equal) we can't get here
+    ASSERT( cleanPath.GetLength() > fileName.GetLength() );
+    const size_t potentialSlashIndex = ( cleanPath.GetLength() - fileName.GetLength() ) - 1; // -1 for char before match
+    const char potentialSlash = cleanPath[ potentialSlashIndex ];
+    if ( potentialSlash == NATIVE_SLASH )
+    {
+        return true; // full filename part matches (e.g. c:\thing\stuff.cpp | stuff.cpp )
+    }
+    return false; // fileName is only a partial match (e.g. c:\thing\otherstuff.cpp | stuff.cpp )
+}
+
 // EnsureTrailingSlash
 //------------------------------------------------------------------------------
 /*static*/ void PathUtils::EnsureTrailingSlash( AString & path )
@@ -124,7 +171,7 @@
 	}
 }
 
-// FixupFilerPath
+// FixupFilePath
 //------------------------------------------------------------------------------
 /*static*/ void PathUtils::FixupFilePath( AString & path )
 {

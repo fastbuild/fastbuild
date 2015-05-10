@@ -128,7 +128,7 @@ LinkerNode::~LinkerNode()
 
 		if ( !spawnOK )
 		{
-			FLOG_ERROR( "Failed to spawn process for %s creation for '%s'", GetDLLOrExe(), GetName().Get() );
+			FLOG_ERROR( "Failed to spawn process '%s' for %s creation for '%s'", m_Linker.Get(), GetDLLOrExe(), GetName().Get() );
 			return NODE_RESULT_FAILED;
 		}
 

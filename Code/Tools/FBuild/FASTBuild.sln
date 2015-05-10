@@ -27,7 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Apps", "3. Apps", "{767B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0. External", "0. External", "{C8586BEA-5A87-4AD4-9D9F-B46719D6EF97}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LZ4", "..\..\..\External\LZ4\lz4-r117\LZ4.vcxproj", "{14D37D96-6C94-4F93-BC2A-7F5284B7D434}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LZ4", "..\..\..\External\LZ4\lz4-r127\LZ4.vcxproj", "{14D37D96-6C94-4F93-BC2A-7F5284B7D434}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

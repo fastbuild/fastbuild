@@ -14,6 +14,42 @@
 <h1>Changelog</h1>
 
 
+<div class='newsitemheader'>
+    v0.81&nbsp;<font color='#bbbbbb'>(9-May-2015)</font>
+</div>
+<div class='newsitembody'>
+    Note
+    <ul>
+        <li>DB version has changed : clean build will occur</li>
+    </ul>
+    New
+    <ul>
+        <li>Add custom preprocessor support for ObjectList and Library (Thanks to Jussi Knuuttila):<br>
+            This allows for:</li>
+        <ul>
+            <li>Different complier version for preprocessor</li>
+            <li>Completely different preprocessor (e.g. clang)</li>
+            <li>Compiler for preprocessor/dependency tracking, combined with calling a custom tool</li>
+        </ul>
+    </ul>
+    Fixes
+    <ul>
+        <li>[Linux] UnityInputExcludedFiles is now case-sensitive on Linux</li>
+        <li>Includes now discovered correctly with Clang for Windows and -fms-compatibility</li>
+        <li>Avoid LNK4221 warning when all files in a unity are isolated due to .UnityInputIsolateWritableFiles</li>
+        <li>Fix incorrect 'missing despite success' error message when primary compiler executable is not found</li>
+    </ul>
+    Improvements
+    <ul>
+        <li>Print "WARNING:" instead of "PROBLEM:" in output when compiler passes, but emits text to stderr (like msvc when /nologo is not specified)</li>
+        <li>Show exe path when failing to spawn linker (typically due to bad path to exe)</li>
+        <li>Add CompilerInputExcludedFiles option to ObjectList, Library and CSNode (Thanks to Jean-Sebastien Pelletier)</li>
+    </ul>
+</div>
+            
+            
+
+
     <div class='newsitemheader'>
       v0.80&nbsp;<font color='#bbbbbb'>(5-Apr-2015)</font>
     </div>

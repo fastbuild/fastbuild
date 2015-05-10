@@ -9,6 +9,7 @@
 #include "Core/Math/CRC32.h"
 #include "Core/Math/Murmur3.h"
 #include "Core/Math/Random.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
@@ -42,7 +43,7 @@ void TestHash::CompareHashTimes_Large() const
 	Random r( seed );
 
 	// fill a buffer to use for tests
-	const size_t dataSize( 32 * 1024 * 1024 );
+	const size_t dataSize( 64 * 1024 * 1024 );
 	AutoPtr< uint32_t > data( (uint32_t *)ALLOC( dataSize ) );
 	for ( size_t i=0; i<dataSize / sizeof( uint32_t ); ++i )
 	{
@@ -61,8 +62,8 @@ void TestHash::CompareHashTimes_Large() const
 			++it;
 		}
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "Sum64           : %2.3fs @ %2.3f MiB/s (sum: %016llx)\n", time, speed, sum );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "Sum64           : %2.3fs @ %2.3f GiB/s (sum: %016llx)\n", time, speed, sum );
 	}
 
 
@@ -78,17 +79,35 @@ void TestHash::CompareHashTimes_Large() const
 			++it;
 		}
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "Sum32           : %2.3fs @ %2.3f MiB/s (sum: 0x%x)\n", time, speed, sum );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "Sum32           : %2.3fs @ %6.3f GiB/s (sum: 0x%x)\n", time, speed, sum );
 	}
+
+    // xxHash32
+    {
+		Timer t;
+		uint32_t crc = xxHash::Calc32( data.Get(), dataSize );
+		float time = t.GetElapsed();
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "xxHash-32       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
+    }
+
+    // xxHash64
+    {
+		Timer t;
+		uint64_t crc = xxHash::Calc64( data.Get(), dataSize );
+		float time = t.GetElapsed();
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016llx)\n", time, speed, crc );
+    }
 
 	// Murmur3 - 32
 	{
 		Timer t;
 		uint32_t crc = Murmur3::Calc32( data.Get(), dataSize );
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "Murmur3-32      : %2.3fs @ %2.3f MiB/s (hash: 0x%x)\n", time, speed, crc );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "Murmur3-32      : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
 	}
 
 	// Murmur3 - 128
@@ -97,8 +116,8 @@ void TestHash::CompareHashTimes_Large() const
 		uint64_t hashB( 0 );
 		uint64_t hashA = Murmur3::Calc128( data.Get(), dataSize, hashB );
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "Murmur3-128     : %2.3fs @ %2.3f MiB/s (%016llx, %016llx)\n", time, speed, hashA, hashB );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "Murmur3-128     : %2.3fs @ %6.3f GiB/s (%016llx, %016llx)\n", time, speed, hashA, hashB );
 	}
 
 	// CRC32 - 8x8 slicing
@@ -106,8 +125,8 @@ void TestHash::CompareHashTimes_Large() const
 		Timer t;
 		uint32_t crc = CRC32::Calc( data.Get(), dataSize );
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "CRC32 8x8       : %2.3fs @ %2.3f MiB/s (hash: 0x%x)\n", time, speed, crc );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "CRC32 8x8       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
 	}
 
 	// CRC32 - "standard" algorithm
@@ -117,8 +136,8 @@ void TestHash::CompareHashTimes_Large() const
 		crc = CRC32::Update( crc, data.Get(), dataSize );
 		crc = CRC32::Stop( crc );
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "CRC32           : %2.3fs @ %2.3f MiB/s (hash: 0x%x)\n", time, speed, crc );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "CRC32           : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
 	}
 
 	// CRC32Lower
@@ -126,8 +145,8 @@ void TestHash::CompareHashTimes_Large() const
 		Timer t;
 		uint32_t crc = CRC32::CalcLower( data.Get(), dataSize );
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "CRC32Lower      : %2.3fs @ %2.3f MiB/s (hash: 0x%x)\n", time, speed, crc );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "CRC32Lower      : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
 	}
 
 	// Murmur3 - 32 Lower
@@ -150,8 +169,8 @@ void TestHash::CompareHashTimes_Large() const
 		// hash it
 		uint32_t crc = Murmur3::Calc32( dataCopy.Get(), dataSize );
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "Murmur3-32-Lower: %2.3fs @ %2.3f MiB/s (hash: 0x%x)\n", time, speed, crc );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "Murmur3-32-Lower: %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
 	}
 
 }
@@ -178,6 +197,38 @@ void TestHash::CompareHashTimes_Small() const
 	}
 	dataSize *= numIterations;
 
+	// xxHash - 32
+	{
+		Timer t;
+		uint32_t crc( 0 );
+		for ( size_t j=0; j<numIterations; ++j )
+		{
+			for ( size_t i=0; i<numStrings; ++i )
+			{
+				crc += xxHash::Calc32( strings[ i ].Get(), strings[ i ].GetLength() );
+			}
+		}
+		float time = t.GetElapsed();
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "xxHash-32       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
+    }
+
+	// xxHash - 64
+	{
+		Timer t;
+		uint64_t crc( 0 );
+		for ( size_t j=0; j<numIterations; ++j )
+		{
+			for ( size_t i=0; i<numStrings; ++i )
+			{
+				crc += xxHash::Calc64( strings[ i ].Get(), strings[ i ].GetLength() );
+			}
+		}
+		float time = t.GetElapsed();
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016llx)\n", time, speed, crc );
+    }
+
 	// Murmur3 - 32
 	{
 		Timer t;
@@ -190,8 +241,8 @@ void TestHash::CompareHashTimes_Small() const
 			}
 		}
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "Murmur3-32      : %2.3fs @ %2.3f MiB/s (hash: 0x%x)\n", time, speed, crc );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "Murmur3-32      : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
 	}
 
 	// Murmur3 - 128
@@ -207,8 +258,8 @@ void TestHash::CompareHashTimes_Small() const
 			}
 		}
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "Murmur3-128     : %2.3fs @ %2.3f MiB/s (%016llx, %016llx)\n", time, speed, hashA, hashB );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "Murmur3-128     : %2.3fs @ %6.3f GiB/s (%016llx, %016llx)\n", time, speed, hashA, hashB );
 	}
 
 	// CRC32 - 8x8 slicing
@@ -223,8 +274,8 @@ void TestHash::CompareHashTimes_Small() const
 			}
 		}
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "CRC32 8x8       : %2.3fs @ %2.3f MiB/s (hash: 0x%x)\n", time, speed, crc );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "CRC32 8x8       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
 	}
 
 	// CRC32 - "standard" algorithm
@@ -241,8 +292,8 @@ void TestHash::CompareHashTimes_Small() const
 			}
 		}
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "CRC32           : %2.3fs @ %2.3f MiB/s (hash: 0x%x)\n", time, speed, crc );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "CRC32           : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
 	}
 
 	// CRC32Lower
@@ -257,8 +308,8 @@ void TestHash::CompareHashTimes_Small() const
 			}
 		}
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "CRC32Lower      : %2.3fs @ %2.3f MiB/s (hash: 0x%x)\n", time, speed, crc );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "CRC32Lower      : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
 	}
 
 	// Murmur3 - 32 Lower
@@ -284,8 +335,8 @@ void TestHash::CompareHashTimes_Small() const
 			}
 		}
 		float time = t.GetElapsed();
-		float speed = ( (float)dataSize / (float)( 1024 * 1024 ) ) / time;
-		OUTPUT( "Murmur3-32-Lower: %2.3fs @ %2.3f MiB/s (hash: 0x%x)\n", time, speed, crc );
+		float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
+		OUTPUT( "Murmur3-32-Lower: %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
 	}
 }
 

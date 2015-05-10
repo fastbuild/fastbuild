@@ -11,6 +11,7 @@
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Reflection/Object.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
@@ -18,6 +19,7 @@
 class IOStream;
 class CompilerNode;
 class FileNode;
+class IMetaData;
 class Job;
 
 // Defines
@@ -38,10 +40,19 @@ class Job;
 	type * node = nullptr; \
 	if ( Node::LoadNode( stream, node ) == false ) { return nullptr; }
 
+// Enable reflection system refactor work in progress
+//------------------------------------------------------------------------------
+//#define USE_NODE_REFLECTION
+
+// Custom MetaData
+//------------------------------------------------------------------------------
+IMetaData & MetaName( const char * name );
+
 // FBuild
 //------------------------------------------------------------------------------
-class Node
+class Node : public Object
 {
+	REFLECT_DECLARE( Node )
 public:
 	enum Type
 	{
@@ -114,7 +125,6 @@ public:
 	explicit Node( const AString & name, Type type, uint32_t controlFlags );
 	virtual ~Node();
 
-	inline const AString & GetName() const { return m_Name; }
 	inline uint32_t 	   GetNameCRC() const { return m_NameCRC; }
 	inline Type GetType() const { return m_Type; }
 	inline const char * GetTypeName() const { return s_NodeTypeNames[ m_Type ]; }
@@ -144,6 +154,9 @@ public:
 	static Node *	LoadRemote( IOStream & stream );
 	static void		SaveRemote( IOStream & stream, const Node * node );
 
+	void Serialize( IOStream & stream ) const;
+	bool Deserialize( IOStream & stream );
+
 	static bool EnsurePathExistsForFile( const AString & name );
 
 	inline uint64_t GetStamp() const { return m_Stamp; }
@@ -161,6 +174,7 @@ public:
 protected:
 	friend class FBuild;
 	friend struct FBuildStats;
+	friend class Function;
 	friend class JobQueue;
 	friend class JobQueueRemote;
 	friend class NodeGraph;
@@ -170,6 +184,8 @@ protected:
 	inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
 	inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
 	inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
+
+	void SetName( const AString & name );
 
 	void ReplaceDummyName( const AString & newName );
 
@@ -212,7 +228,6 @@ protected:
 	uint32_t m_LastBuildTimeMs;	// time it took to do last known full build of this node
 	uint32_t m_ProcessingTime;	// time spent on this node
 	mutable uint32_t m_ProgressAccumulator;
-	AString	m_Name;
 	uint32_t		m_Index;
 
 	Dependencies m_PreBuildDependencies;

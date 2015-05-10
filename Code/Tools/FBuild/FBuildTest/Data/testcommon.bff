@@ -14,10 +14,14 @@
 	.Librarian			= '$VisualStudioPath$\VC\bin\lib.exe'
 	.Linker				= '$VisualStudioPath$\VC\bin\link.exe'
 
-	.CompilerOptions	= '"%1" /Fo"%2" /c /Z7 /WX /nologo'
+	.BaseCompilerOptions= '"%1" /Fo"%2" /c /Z7 /WX /nologo'
 						+ ' /D"WIN32_LEAN_AND_MEAN" /D_WIN32 /DWIN32 /D__WINDOWS__'
 						+ ' /D"_CRT_SECURE_NO_WARNINGS"' // don't warn about unsafe functions
                         + ' /D"_WINSOCK_DEPRECATED_NO_WARNINGS"' // don't warn about deprecated winsock functions
+
+    .CompilerOptionsC   = .BaseCompilerOptions
+    .CompilerOptions    = .BaseCompilerOptions
+
 	.LibrarianOptions	= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
 	.LinkerOptions		= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1" /DEBUG'
 ]
@@ -51,13 +55,17 @@
     .Librarian          = '/usr/bin/ar'
     .Linker             = '/usr/bin/g++'
     
-    .CompilerOptions    = '-o "%2" "%1" -c -g'
+    .BaseCompilerOptions= '-o "%2" "%1" -c -g'
                         + ' -I./'
                         + ' -D__LINUX__'
                         + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
-                        + ' -std=gnu++11'                   // allow C++11 features
                         + ' -ffreestanding'                 // prevent extra magic includes like stdc-predefs.h
-                            
+                        
+    .CompilerOptionsC   = .BaseCompilerOptions
+    .CompilerOptions    = .BaseCompilerOptions
+                        + ' -std=gnu++11'                   // allow C++11 features
+                        + ' -Wno-invalid-offsetof'          // allow offset of members in non-POD types
+                        
     .LinkerOptions      = '"%1" -o "%2"'
                                 
     .LibrarianOptions   = 'rcs "%2" "%1"'
@@ -72,13 +80,16 @@
     .Librarian          = '/usr/bin/ar'
     .Linker             = '/usr/bin/g++'
 
-    .CompilerOptions    = '-x c++ -o "%2" "%1" -c -g'
+    .BaseCompilerOptions= '-x c++ -o "%2" "%1" -c -g'
                         + ' -I./'
                         + ' -D__APPLE__'
                         + ' -D__OSX__'
                         + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
                         + ' -std=c++11'                     // allow C++11 features
                         + ' -Wno-#pragma-messages'
+
+    .CompilerOptionsC   = .BaseCompilerOptions
+    .CompilerOptions    = .BaseCompilerOptions
 
     .LinkerOptions      = '"%1" -o "%2"'
 
