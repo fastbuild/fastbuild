@@ -11,15 +11,25 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class BFFIterator;
+class Function;
 
 // CompilerNode
 //------------------------------------------------------------------------------
 class CompilerNode : public FileNode
 {
+#ifdef USE_NODE_REFLECTION
+	REFLECT_DECLARE( CompilerNode )
+#endif
 public:
+#ifdef USE_NODE_REFLECTION
+	explicit CompilerNode();
+	bool Initialize( const BFFIterator & iter, const Function * function );
+#else
 	explicit CompilerNode( const AString & exe,
 						   const Dependencies & extraFiles,
 						   bool allowDistribution );
+#endif
 	virtual ~CompilerNode();
 
 	static inline Node::Type GetType() { return Node::COMPILER_NODE; }
@@ -32,6 +42,11 @@ public:
 	inline bool CanBeDistributed() const { return m_AllowDistribution; }
 private:
 	virtual BuildResult DoBuild( Job * job );
+
+	// Exposed params
+#ifdef USE_NODE_REFLECTION
+	Array< AString >	m_ExtraFiles;
+#endif
 
 	bool			m_AllowDistribution;
 	ToolManifest	m_Manifest;

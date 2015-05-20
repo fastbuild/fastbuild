@@ -8,6 +8,7 @@
 #include "UnityNode.h"
 #include "DirectoryListNode.h"
 
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h" // TODO:C Remove this
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -20,8 +21,53 @@
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
+// Reflection
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+REFLECT_BEGIN( UnityNode, Node, MetaNone() )
+	REFLECT_ARRAY( m_InputPaths,		"UnityInputPath",						MetaOptional() + MetaPath() )
+	REFLECT_ARRAY( m_PathsToExclude,	"UnityInputExcludePath",				MetaOptional() + MetaPath() )
+	REFLECT( m_InputPathRecurse,		"UnityInputPathRecurse",				MetaOptional() )
+	REFLECT( m_InputPattern,			"UnityInputPattern",					MetaOptional() )
+	REFLECT_ARRAY( m_Files,				"UnityInputFiles",						MetaOptional() + MetaFile() )
+	REFLECT_ARRAY( m_FilesToExclude,	"UnityInputExcludedFiles",				MetaOptional() + MetaFile( true ) ) // relative
+	REFLECT_ARRAY( m_ExcludePatterns,	"UnityInputExcludePattern",				MetaOptional() + MetaFile( true ) ) // relative
+	REFLECT( m_OutputPath,				"UnityOutputPath",						MetaPath() )
+	REFLECT( m_OutputPattern,			"UnityOutputPattern",					MetaOptional() )
+	REFLECT( m_NumUnityFilesToCreate,	"UnityNumFiles",						MetaOptional() + MetaRange( 1, 1048576 ) )
+	REFLECT( m_MaxIsolatedFiles,		"UnityInputIsolateWritableFilesLimit",	MetaOptional() + MetaRange( 0, 1048576 ) )
+	REFLECT( m_IsolateWritableFiles,	"UnityInputIsolateWritableFiles",		MetaOptional() )
+	REFLECT( m_PrecompiledHeader,		"UnityPCH",								MetaOptional() + MetaFile( true ) ) // relative
+REFLECT_END( UnityNode )
+#endif
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+UnityNode::UnityNode()
+: Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_NONE )
+, m_InputPattern( "*.cpp" )
+, m_InputPathRecurse( true )
+, m_Files( 0, true )
+, m_OutputPath()
+, m_OutputPattern( "Unity*.cpp" )
+, m_NumUnityFilesToCreate( 1 )
+, m_UnityFileNames( 0, true )
+, m_PrecompiledHeader()
+, m_PathsToExclude( 0, true )
+, m_FilesToExclude( 0, true )
+, m_IsolateWritableFiles( false )
+, m_MaxIsolatedFiles( 0 )
+, m_ExcludePatterns( 0, true )
+, m_IsolatedFiles( 0, true )
+{
+	m_LastBuildTimeMs = 100; // higher default than a file node
+}
+#endif
+
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+#ifndef USE_NODE_REFLECTION
 UnityNode::UnityNode( const AString & unityName,
 						const Dependencies & dirNodes,
 						const Array< AString > & files,
@@ -29,8 +75,6 @@ UnityNode::UnityNode( const AString & unityName,
 						const AString & outputPattern,
 						uint32_t numUnityFilesToCreate,
 						const AString & precompiledHeader,
-						const Array< AString > & pathsToExclude,
-						const Array< AString > & filesToExclude,
 						bool isolateWritableFiles,
 						uint32_t maxIsolatedFiles,
 						const Array< AString > & excludePatterns )
@@ -39,14 +83,12 @@ UnityNode::UnityNode( const AString & unityName,
 , m_OutputPath( outputPath )
 , m_OutputPattern( outputPattern )
 , m_NumUnityFilesToCreate( numUnityFilesToCreate )
-, m_UnityFileNames( numUnityFilesToCreate, false )
 , m_PrecompiledHeader( precompiledHeader )
-, m_PathsToExclude( pathsToExclude )
-, m_FilesToExclude( filesToExclude )
 , m_IsolateWritableFiles( isolateWritableFiles )
 , m_MaxIsolatedFiles( maxIsolatedFiles )
 , m_ExcludePatterns( excludePatterns )
 , m_IsolatedFiles( 0, true )
+, m_UnityFileNames( 0, true )
 {
 	m_LastBuildTimeMs = 100; // higher default than a file node
 
@@ -57,21 +99,37 @@ UnityNode::UnityNode( const AString & unityName,
 
 	// ensure path is properly formatted
 	ASSERT( m_OutputPath.EndsWith( NATIVE_SLASH ) );
-
-	// generate the destination unity file names
-	// TODO:C move this processing to the FunctionUnity
-	AStackString<> tmp;
-	for ( size_t i=0; i< m_NumUnityFilesToCreate; ++i )
-	{
-		tmp.Format( "%u", i + 1 ); // number from 1
-
-		AStackString<> unityFileName( m_OutputPath );
-		unityFileName += m_OutputPattern;
-		unityFileName.Replace( "*", tmp.Get() );
-
-		m_UnityFileNames.Append( unityFileName );
-	}
 }
+#endif
+
+// Initialize
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+bool UnityNode::Initialize( const BFFIterator & iter, const Function * function )
+{
+	if ( m_PrecompiledHeader.IsEmpty() == false )
+	{
+		// automatically exclude the associated CPP file for a PCH (if there is one)
+		if ( m_PrecompiledHeader.EndsWithI( ".h" ) )
+		{
+			AStackString<> pchCPP( m_PrecompiledHeader.Get(), 
+								   m_PrecompiledHeader.Get() + m_PrecompiledHeader.GetLength() - 2 );
+			pchCPP += ".cpp";
+			m_FilesToExclude.Append( pchCPP );
+		}
+	}
+
+	Dependencies dirNodes( m_InputPaths.GetSize() );
+	if ( !function->GetDirectoryListNodeList( iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_InputPathRecurse, m_InputPattern, "UnityInputPath", dirNodes ) )
+	{
+		return false; // GetDirectoryListNodeList will have emitted an error
+	}
+	ASSERT( m_StaticDependencies.IsEmpty() );
+	m_StaticDependencies.Append( dirNodes );
+
+	return true;
+}
+#endif
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
@@ -94,6 +152,8 @@ UnityNode::~UnityNode()
 	{
 		return NODE_RESULT_FAILED;
 	}
+
+	m_UnityFileNames.SetCapacity( m_NumUnityFilesToCreate );
 
 	// get the files
 	Array< FileIO::FileInfo * > files( 4096, true );
@@ -164,6 +224,7 @@ UnityNode::~UnityNode()
 
 		// write allocation of includes for this unity file
 		const FileIO::FileInfo * const * end = filesInThisUnity.End();
+        size_t numFilesActuallyIsolatedInThisUnity( 0 );
 		for ( FileIO::FileInfo ** it = filesInThisUnity.Begin(); it != end; ++it )
 		{
 			const FileIO::FileInfo * file = *it;
@@ -187,6 +248,7 @@ UnityNode::~UnityNode()
 					// disable compilation of this file (comment it out)
 					output += "//";
 					m_IsolatedFiles.Append( file->m_Name );
+                    numFilesActuallyIsolatedInThisUnity++;
 				}
 			}
 
@@ -198,7 +260,19 @@ UnityNode::~UnityNode()
 		output += "\r\n";
 
 		// generate the destination unity file name
-		const AString & unityName = m_UnityFileNames[ i ];
+		AStackString<> unityName( m_OutputPath );
+		unityName += m_OutputPattern;
+		{
+			AStackString<> tmp;
+			tmp.Format( "%u", i + 1 ); // number from 1
+			unityName.Replace( "*", tmp.Get() );
+		}
+
+		// only keep track of non-empty unity files (to avoid link errors with empty objects)
+        if ( filesInThisUnity.GetSize() != numFilesActuallyIsolatedInThisUnity )
+        {
+			m_UnityFileNames.Append( unityName );
+        }
 
 		// need to write the unity file?
 		bool needToWrite = false;
@@ -279,6 +353,19 @@ UnityNode::~UnityNode()
 //------------------------------------------------------------------------------
 /*static*/ Node * UnityNode::Load( IOStream & stream )
 {
+#ifdef USE_NODE_REFLECTION
+	NODE_LOAD( AStackString<>,	name );
+
+	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+	UnityNode * un = ng.CreateUnityNode( name );
+
+	if ( un->Deserialize( stream ) == false )
+	{
+		return nullptr;
+	}
+
+	return un;
+#else
 	NODE_LOAD( AStackString<>,	name );
 	NODE_LOAD( AStackString<>,	outputPath );
 	NODE_LOAD( AStackString<>,	outputPattern );
@@ -286,8 +373,6 @@ UnityNode::~UnityNode()
 	NODE_LOAD_DEPS( 1,			staticDeps );
 	NODE_LOAD( Array< AString >, files )
 	NODE_LOAD( AStackString<>,	precompiledHeader );
-	NODE_LOAD( Array< AString >, pathsToExclude );
-	NODE_LOAD( Array< AString >, filesToExclude );
 	NODE_LOAD( bool,			isolateWritableFiles );
 	NODE_LOAD( uint32_t,		maxIsolatedFiles );
 	NODE_LOAD( Array< AString >, excludePatterns );
@@ -300,18 +385,21 @@ UnityNode::~UnityNode()
 								 outputPattern, 
 								 numFiles,
 								 precompiledHeader,
-								 pathsToExclude,
-								 filesToExclude,
 								 isolateWritableFiles,
 								 maxIsolatedFiles,
 								 excludePatterns );
 	return n;
+#endif
 }
 
 // Save
 //------------------------------------------------------------------------------
 /*virtual*/ void UnityNode::Save( IOStream & stream ) const
 {
+#ifdef USE_NODE_REFLECTION
+	NODE_SAVE( m_Name );
+	Node::Serialize( stream );
+#else
 	NODE_SAVE( m_Name );
 	NODE_SAVE( m_OutputPath );
 	NODE_SAVE( m_OutputPattern );
@@ -319,11 +407,10 @@ UnityNode::~UnityNode()
 	NODE_SAVE_DEPS( m_StaticDependencies );
 	NODE_SAVE( m_Files );
 	NODE_SAVE( m_PrecompiledHeader );
-	NODE_SAVE( m_PathsToExclude );
-	NODE_SAVE( m_FilesToExclude );
 	NODE_SAVE( m_IsolateWritableFiles );
 	NODE_SAVE( m_MaxIsolatedFiles );
 	NODE_SAVE( m_ExcludePatterns );
+#endif
 }
 
 // GetFiles
@@ -342,45 +429,15 @@ void UnityNode::GetFiles( Array< FileIO::FileInfo * > & files )
 		{
 			bool keep = true;
 
-			// filter excluded files
-			const AString * fit = m_FilesToExclude.Begin();
-			const AString * const fend = m_FilesToExclude.End();
-			for ( ; fit != fend; ++fit )
+			// filter patterns
+			const AString * pit = m_ExcludePatterns.Begin();
+			const AString * const pend = m_ExcludePatterns.End();
+			for ( ; pit != pend; ++pit )
 			{
-				if ( filesIt->m_Name.EndsWithI( *fit ) )
+				if ( PathUtils::IsWildcardMatch( pit->Get(), filesIt->m_Name.Get() ) )
 				{
 					keep = false;
 					break;
-				}
-			}
-
-			// filter excluded directories
-			if ( keep )
-			{
-				const AString * pit = m_PathsToExclude.Begin();
-				const AString * const pend = m_PathsToExclude.End();
-				for ( ; pit != pend; ++pit )
-				{
-					if ( filesIt->m_Name.BeginsWithI( *pit ) )
-					{
-						keep = false;
-						break;
-					}
-				}
-			}
-
-			// filter patterns
-			if ( keep )
-			{
-				const AString * pit = m_ExcludePatterns.Begin();
-				const AString * const pend = m_ExcludePatterns.End();
-				for ( ; pit != pend; ++pit )
-				{
-					if ( PathUtils::IsWildcardMatch( pit->Get(), filesIt->m_Name.Get() ) )
-					{
-						keep = false;
-						break;
-					}
 				}
 			}
 

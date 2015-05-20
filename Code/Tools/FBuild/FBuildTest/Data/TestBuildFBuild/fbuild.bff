@@ -33,12 +33,14 @@ Using( .StandardEnvironment )
 
 // Windows
 //--------
+.ExtraCompilerOptions   = ''
+.ExtraLinkerOptions     = ''
 #if __WINDOWS__
-	.CompilerOptions	+ ' /I"./"'
+	.ExtraCompilerOptions+ ' /I"./"'
 						+ ' /I"$WindowsSDK$\Include\shared"'
 						+ ' /I"$WindowsSDK$\Include\um"'
 						+ ' /I"$VisualStudioPath$\VC\include"'
-	.LinkerOptions		+ ' /IGNORE:4001' // don't complain about linking libs only
+	.ExtraLinkerOptions	+ ' /IGNORE:4001' // don't complain about linking libs only
 						+ ' /MACHINE:X86'
 						+ ' /SUBSYSTEM:console'
 						+ ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x86"'
@@ -85,9 +87,9 @@ Using( .StandardEnvironment )
 //------------------------------------------------------------------------------
 .ExtraOptions		= ''
 .Exclude			= {}
-.Files				= {}
 .LZ4Lib				= [ .LibName = 'LZ4'			.LibPath = '$LZ4BasePath$'
-						.Files = '$LZ4BasePath$/lz4.c' ]
+                        .CompilerInputFiles = { '$LZ4BasePath$/lz4.c', '$LZ4BasePath$/xxhash.c' }
+                        .CompilerOptions = .CompilerOptionsC ]
 .CoreLib			= [ .LibName = 'Core'			.LibPath = 'Core\'
 						.Exclude = { 'Core\CoreTest\' } ]
 .CoreTestLib		= [ .LibName = 'CoreTest'		.LibPath = 'Core\CoreTest\' ]
@@ -135,7 +137,6 @@ ForEach( .Lib in .Libs )
 	Unity( '$LibName$-Unity' )
 	{
 		.UnityInputPath			= .LibPath
-		.UnityInputFiles		= .Files
 		.UnityInputExcludePath	= .Exclude
 		.UnityOutputPath		= '$OutputBase$\Unity\$LibName$\'
 	}
@@ -167,6 +168,7 @@ ForEach( .Config			in .Configs,
 		Library( '$LibName$-$Config$' )
 		{
 			.CompilerOptions			+ .ExtraOptions
+                                        + .ExtraCompilerOptions
 
 			// Input
 			.CompilerInputUnity			= '$LibName$-Unity'
@@ -188,9 +190,11 @@ ForEach( .Config			in .Configs,
         #if __LINUX__
             .LinkerOptions      + " -pthread"
         #endif
+        .LinkerOptions      + .ExtraLinkerOptions
 		.Libraries			= { "CoreTest-$Config$",
                                 "Core-$Config$", 
-								"TestFramework-$Config$" }
+								"TestFramework-$Config$"
+								"LZ4-$Config$" }								
 	}
 
 	Executable
@@ -202,6 +206,7 @@ ForEach( .Config			in .Configs,
         #if __LINUX__
             .LinkerOptions      + " -pthread"
         #endif
+        .LinkerOptions      + .ExtraLinkerOptions
 		.Libraries			= { "FBuildApp-$Config$",
 								"FBuildCore-$Config$",
                                 "Core-$Config$", 
@@ -217,6 +222,7 @@ ForEach( .Config			in .Configs,
         #if __LINUX__
             .LinkerOptions      + " -pthread"
         #endif
+        .LinkerOptions      + .ExtraLinkerOptions
 		.Libraries			= { 
                                 "FBuildTest-$Config$",
 								"FBuildCore-$Config$",

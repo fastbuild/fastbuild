@@ -11,14 +11,24 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class BFFIterator;
+class Function;
 
 // AliasNode
 //------------------------------------------------------------------------------
 class AliasNode : public Node
 {
+#ifdef USE_NODE_REFLECTION
+    REFLECT_DECLARE( AliasNode )
+#endif
 public:
+#ifdef USE_NODE_REFLECTION
+	explicit AliasNode();
+	bool Initialize( const BFFIterator & iter, const Function * function );
+#else
 	explicit AliasNode( const AString & groupName,
 						const Dependencies & targets );
+#endif
 	virtual ~AliasNode();
 
 	static inline Node::Type GetType() { return Node::ALIAS_NODE; }
@@ -32,6 +42,10 @@ public:
 private:
 	virtual bool DetermineNeedToBuild( bool forceClean ) const;
 	virtual BuildResult DoBuild( Job * job );
+
+#ifdef USE_NODE_REFLECTION
+    Array< AString > m_Targets;
+#endif
 };
 
 //------------------------------------------------------------------------------

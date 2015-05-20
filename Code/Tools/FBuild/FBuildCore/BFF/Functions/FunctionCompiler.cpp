@@ -39,6 +39,7 @@ FunctionCompiler::FunctionCompiler()
 
 // Commit
 //------------------------------------------------------------------------------
+#ifndef USE_NODE_REFLECTION
 /*virtual*/ bool FunctionCompiler::Commit( const BFFIterator & funcStartIter ) const
 {
 	const BFFVariable * executableV;
@@ -80,5 +81,41 @@ FunctionCompiler::FunctionCompiler()
 	// handle alias creation
 	return ProcessAlias( funcStartIter, compilerNode );
 }
+#endif
+
+// Commit
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+/*virtual*/ bool FunctionCompiler::Commit( const BFFIterator & funcStartIter ) const
+{
+	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+	AStackString<> name;
+	if ( GetNameForNode( funcStartIter, CompilerNode::GetReflectionInfoS(), name ) == false )
+	{
+		return false;
+	}
+
+	if ( ng.FindNode( name ) )
+	{
+		Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
+		return false;
+	}
+
+	CompilerNode * compilerNode = ng.CreateCompilerNode( name );
+
+	if ( !PopulateProperties( funcStartIter, compilerNode ) )
+	{
+		return false;
+	}
+
+	if ( !compilerNode->Initialize( funcStartIter, this ) )
+    {
+        return false;
+    }
+
+	// handle alias creation
+	return ProcessAlias( funcStartIter, compilerNode );
+}
+#endif
 
 //------------------------------------------------------------------------------

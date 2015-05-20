@@ -7,6 +7,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h" // TODO:C remove when USE_NODE_REFLECTION is removed
 
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
@@ -50,7 +51,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 52 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 55 };
 
 	bool IsValid() const
 	{
@@ -102,7 +103,9 @@ public:
 												 const AString & path,
 												 const AString & wildCard,
 												 bool recursive,
-												 const Array< AString > & excludePaths );
+                                                 const Array< AString > & excludePaths,
+                                                 const Array< AString > & filesToExclude
+                                                 );
 	LibraryNode *	CreateLibraryNode( const AString & libraryName,
 									   const Dependencies & inputNodes,
 									   CompilerNode * compilerNode,
@@ -117,7 +120,9 @@ public:
 									   const Dependencies & preBuildDependencies,
 									   const Dependencies & additionalInputs,
 									   bool deoptimizeWritableFiles,
-									   bool deoptimizeWritableFilesWithToken );
+									   bool deoptimizeWritableFilesWithToken,
+                                       CompilerNode * preprocessor,
+                                       const AString & preprocessorArgs );
 	ObjectNode *	CreateObjectNode( const AString & objectName,
 									  Node * inputNode,
 									  Node * compilerNode,
@@ -127,9 +132,16 @@ public:
 									  uint32_t flags,
 									  const Dependencies & compilerForceUsing,
 									  bool deoptimizeWritableFiles,
-									  bool deoptimizeWritableFilesWithToken );
+									  bool deoptimizeWritableFilesWithToken,
+                                      Node * preprocessorNode,
+                                      const AString & preprocessorArgs,
+                                      uint32_t preprocessorFlags );
+#ifdef USE_NODE_REFLECTION
+	AliasNode *		CreateAliasNode( const AString & aliasName );
+#else
 	AliasNode *		CreateAliasNode( const AString & aliasName,
 									 const Dependencies & targets );
+#endif
 	DLLNode *		CreateDLLNode( const AString & linkerOutputName,
 								   const Dependencies & inputLibraries,
 								   const Dependencies & otherLibraries,
@@ -149,6 +161,9 @@ public:
 								   const Dependencies & assemblyResources,
 								   Node * linkerStampExe,
 								   const AString & linkerStampExeArgs );
+#ifdef USE_NODE_REFLECTION
+	UnityNode *	CreateUnityNode( const AString & unityName );
+#else
 	UnityNode *	CreateUnityNode( const AString & unityName,
 								 const Dependencies & dirNodes,
 								 const Array< AString > & files,
@@ -156,11 +171,10 @@ public:
 								 const AString & outputPattern,
 								 uint32_t numUnityFilesToCreate,
 								 const AString & precompiledHeader,
-								 const Array< AString > & pathsToExclude,
-								 const Array< AString > & filesToExclude,
 								 bool isolateWritableFiles,
 								 uint32_t maxIsolatedFiles,
 								 const Array< AString > & excludePatterns );
+#endif
 	CSNode * CreateCSNode( const AString & compilerOutput,
 						   const Dependencies & inputNodes,
 						   const AString & compiler,
@@ -170,9 +184,13 @@ public:
 							   FileNode * testExecutable,
 							   const AString & arguments,
 							   const AString & workingDir );
+#ifdef USE_NODE_REFLECTION
+	CompilerNode * CreateCompilerNode( const AString & executable );
+#else
 	CompilerNode * CreateCompilerNode( const AString & executable,
 									   const Dependencies & extraFiles,
 									   bool allowDistribution );
+#endif
 	VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
 										   const Array< AString > & projectBasePaths,
 										   const Dependencies & paths,
@@ -198,7 +216,9 @@ public:
 							 const Dependencies & compilerForceUsing,
 							 const Dependencies & preBuildDependencies,
 							 bool deoptimizeWritableFiles,
-							 bool deoptimizeWritableFilesWithToken );
+							 bool deoptimizeWritableFilesWithToken,
+                             CompilerNode * preprocessor,
+                             const AString & preprocessorArgs );
 
 	void DoBuildPass( Node * nodeToBuild );
 

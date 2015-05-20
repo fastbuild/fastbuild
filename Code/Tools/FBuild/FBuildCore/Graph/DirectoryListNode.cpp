@@ -23,11 +23,13 @@ DirectoryListNode::DirectoryListNode( const AString & name,
 									  const AString & path,
 									  const AString & wildcard,
 								      bool recursive,
-									  const Array< AString > & excludePaths )
+									  const Array< AString > & excludePaths,
+                                      const Array< AString > & filesToExclude )
 : Node( name, Node::DIRECTORY_LIST_NODE, Node::FLAG_NONE )
 	, m_Path( path )
 	, m_WildCard( wildcard )
 	, m_ExcludePaths( excludePaths )
+    , m_FilesToExclude( filesToExclude )
 	, m_Recursive( recursive )
 	, m_Files( 4096, true )
 {
@@ -64,6 +66,7 @@ DirectoryListNode::~DirectoryListNode()
 											   const AString & pattern,
 											   bool recursive,
 											   const Array< AString > & excludePaths,
+                                               const Array< AString > & excludeFiles,
 											   AString & result )
 {
 	ASSERT( path.EndsWith( NATIVE_SLASH ) );
@@ -81,6 +84,18 @@ DirectoryListNode::~DirectoryListNode()
 		result += excludePath;
 		result += '<';
 	}
+
+    if ( !excludeFiles.IsEmpty() )
+    {
+        result += '|';
+        const AString * const endFiles = excludeFiles.End();
+        for ( const AString * itFiles = excludeFiles.Begin(); itFiles != endFiles; ++itFiles )
+        {
+            const AString & excludedFile = *itFiles;
+            result += excludedFile;
+            result += '<';
+        }
+    }
 }
 
 // DoBuild
@@ -100,15 +115,33 @@ DirectoryListNode::~DirectoryListNode()
 	for ( const FileIO::FileInfo * it = files.Begin(); it != end; it++ )
 	{
 		bool excluded = false;
+        
+		// filter excluded paths
 		const AString * const eEnd = m_ExcludePaths.End();
 		for ( const AString * eIt=m_ExcludePaths.Begin(); eIt != eEnd; ++eIt )
 		{
-			if ( it->m_Name.BeginsWithI( *eIt ) )
+			if ( PathUtils::PathBeginsWith( it->m_Name, *eIt ) )
 			{
 				excluded = true;
 				break;
 			}
 		}
+
+        // filter excluded files
+		if ( !excluded )
+		{
+	        const AString * fit = m_FilesToExclude.Begin();
+	        const AString * const fend = m_FilesToExclude.End();
+	        for ( ; fit != fend; ++fit )
+	        {
+				if ( PathUtils::PathEndsWithFile( it->m_Name, *fit ) )
+	            {
+	                excluded = true;
+	                break;
+	            }
+	        }
+		}
+
 		if ( !excluded )
 		{
 			m_Files.Append( *it );
@@ -139,9 +172,11 @@ DirectoryListNode::~DirectoryListNode()
 	NODE_LOAD( AStackString<>,	wildCard );
 	NODE_LOAD( Array< AString >,excludePaths );
 	NODE_LOAD( bool,			recursive );
+    NODE_LOAD( Array< AString >, filesToExclude );
+
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * n = ng.CreateDirectoryListNode( name, path, wildCard, recursive, excludePaths );
+	Node * n = ng.CreateDirectoryListNode( name, path, wildCard, recursive, excludePaths, filesToExclude );
 	ASSERT( n );
 	return n;
 }
@@ -155,6 +190,7 @@ DirectoryListNode::~DirectoryListNode()
 	NODE_SAVE( m_WildCard );
 	NODE_SAVE( m_ExcludePaths );
 	NODE_SAVE( m_Recursive );
+    NODE_SAVE( m_FilesToExclude );
 }
 
 //------------------------------------------------------------------------------

@@ -30,7 +30,10 @@ public:
 						 uint32_t flags,
 						 const Dependencies & compilerForceUsing,
 						 bool deoptimizeWritableFiles,
-						 bool deoptimizeWritableFilesWithToken );
+						 bool deoptimizeWritableFilesWithToken,
+                         Node * preprocessorNode,
+                         const AString & preprocessorArgs,
+                         uint32_t preprocessorFlags);
 	// simplified remote constructor
 	explicit ObjectNode( const AString & objectName,
 						 NodeProxy * srcFile,
@@ -65,14 +68,15 @@ public:
 	inline bool IsMSVC() const { return GetFlag( FLAG_MSVC ); }
 	inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
 
-	virtual void Save( IOStream & stream ) const;
+	virtual void Save( IOStream & stream ) const override;
 	static Node * Load( IOStream & stream );
 
-	virtual void SaveRemote( IOStream & stream ) const;
+	virtual void SaveRemote( IOStream & stream ) const override;
 	static Node * LoadRemote( IOStream & stream );
 
 	inline Node * GetCompiler() const { return m_StaticDependencies[ 0 ].GetNode(); }
 	inline Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
+    inline Node * GetDedicatedPreprocessor() const { return m_PreprocessorNode; }
 	inline Node * GetPrecompiledHeaderCPPFile() const { ASSERT( GetFlag( FLAG_CREATING_PCH ) ); return m_StaticDependencies[ 1 ].GetNode(); }
 
 	void GetPDBName( AString & pdbName ) const;
@@ -81,9 +85,9 @@ public:
 
 	const char * GetObjExtension() const;
 private:
-	virtual BuildResult DoBuild( Job * job );
-	virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
-	virtual bool Finalize();
+	virtual BuildResult DoBuild( Job * job ) override;
+	virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
+	virtual bool Finalize() override;
 
 	BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
 	BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache );
@@ -97,9 +101,9 @@ private:
 	bool RetrieveFromCache( Job * job );
 	void WriteToCache( Job * job );
 
-	static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name );
+	static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
 
-	void EmitCompilationMessage( const AString & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false ) const;
+	void EmitCompilationMessage( const AString & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false ) const;
 
 	enum Pass
 	{
@@ -117,6 +121,7 @@ private:
 	bool BuildFinalOutput( Job * job, const AString & fullArgs ) const;
 
 	inline bool GetFlag( uint32_t flag ) const { return ( ( m_Flags & flag ) != 0 ); }
+	inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
 
 	static void HandleSystemFailures( Job * job, int result, const char * stdOut, const char * stdErr );
 	bool ShouldUseDeoptimization() const;
@@ -160,6 +165,10 @@ private:
 	bool m_DeoptimizeWritableFiles;
 	bool m_DeoptimizeWritableFilesWithToken;
 	bool m_Remote;
+    Node* m_PCHNode;
+    Node* m_PreprocessorNode;
+    AString m_PreprocessorArgs;
+	uint32_t m_PreprocessorFlags;
 };
 
 //------------------------------------------------------------------------------

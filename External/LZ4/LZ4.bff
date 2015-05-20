@@ -6,7 +6,7 @@
 											+ ' /wd28251'	// warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
 					  ]
 .LZ4_Windows_Clang	= [ .LZ4IncludePaths	= ' -I"$LZ4BasePath$"'
-						.LZ4CompilerOptions = ' -x c++'
+						.LZ4CompilerOptions = ' -Wno-shift-count-overflow'
 					  ]
 .LZ4_Linux_GCC      = [ .LZ4IncludePaths    = ' "-I$LZ4BasePath$"'
                         .LZ4CompilerOptions = ''
@@ -25,11 +25,14 @@
 	{
 		.ProjectOutput				= '$ProjectPath$\$ProjectName$.vcxproj'
 		.ProjectInputPaths			= '$ProjectPath$\'
+        .ProjectFiles               = '../External/LZ4/LZ4.bff'
 		.ProjectBasePath			= '$ProjectPath$\'
 	}
 
 	// Only 1 file to build
-	.CompilerInputFiles				= '$LZ4BasePath$\lz4.c'
+	.CompilerInputFiles				= { '$LZ4BasePath$\lz4.c'
+                                        '$LZ4BasePath$\xxhash.c'
+    }
 
 	// Windows (MSVC)
 	//--------------------------------------------------------------------------
@@ -65,7 +68,8 @@
 		// Static Library
 		Library( '$ProjectName$-Lib-$Platform$-$Config$' )
 		{
-			.CompilerOptions			+ .LZ4IncludePaths
+            .CompilerOptions            = .CompilerOptionsC
+			                            + .LZ4IncludePaths
 										+ .LZ4CompilerOptions
 
 			// Output

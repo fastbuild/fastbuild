@@ -37,9 +37,14 @@ Builds a statically linked library.
   .CompilerInputPattern     ; (optional) Pattern to use when finding files (default *.cpp)
   .CompilerInputPathRecurse ; (optional) Recurse into dirs when finding files (default true)
   .CompilerInputExcludePath ; (optional) Path(s) to exclude from compilation
+  .CompilerInputExcludedFiles;(optional) File(s) to exclude from compilation
   .CompilerInputFiles       ; (optional) Explicit array of files to build
   .CompilerInputUnity       ; (optional) Unity to build
 
+  ; Custom preprocessor support
+  .Preprocessor				; (optional) Compiler to use for preprocessing
+  .PreprocessorOptions		; (optional) Args to pass to compiler if using custom preprocessor
+  
   ; Additional compiler options
   .CompilerForceUsing       ; (optional) List of objects to be used with /FU
 

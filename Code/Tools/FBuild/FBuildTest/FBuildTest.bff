@@ -48,8 +48,8 @@
 		Using( .Config )
 		.OutputBase + '\$Platform$-$Config$'
 
-		// Static Library
-		Library( '$ProjectName$-Lib-$Platform$-$Config$' )
+		// Objects
+		ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
 		{
 			// Test framework uses exceptions
 			.CompilerOptions			+ .UseExceptions

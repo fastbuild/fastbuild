@@ -43,7 +43,7 @@
         long numCPUs = sysconf( _SC_NPROCESSORS_ONLN );
         if ( numCPUs <= 0 )
         {
-            ASSERT( false ); // this should this whould never fail
+            ASSERT( false ); // this should never fail
             numCPUs = 1;
         }
         return ( uint32_t )numCPUs;

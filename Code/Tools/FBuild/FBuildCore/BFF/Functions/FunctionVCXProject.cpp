@@ -272,7 +272,7 @@ FunctionVCXProject::FunctionVCXProject()
 	// create all of the DirectoryListNodes we need
 	AStackString<> inputPattern( "*" );
 	Dependencies dirNodes( inputPaths.GetSize() );
-	if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, Array< AString >(), true, inputPattern, "ProjectInputPaths", dirNodes ) )
+	if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, Array< AString >(), Array< AString >(), true, inputPattern, "ProjectInputPaths", dirNodes ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}

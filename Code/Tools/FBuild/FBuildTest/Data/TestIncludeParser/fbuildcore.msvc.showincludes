@@ -1,0 +1,326 @@
+Unity1.cpp
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/Function.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\Function.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\Function.h
+Note: including file:   c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Error.h
+Note: including file:    c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/Node.h
+Note: including file:     c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/Dependencies.h
+Note: including file:     c:\Users\Franta\p4\Code\Core/Reflection/Object.h
+Note: including file:      c:\users\franta\p4\code\core\reflection\ReflectionMacros.h
+Note: including file:       c:\Users\Franta\p4\Code\Core/Reflection/ReflectionInfo.h
+Note: including file:        c:\Users\Franta\p4\Code\Core/Containers/Ref.h
+Note: including file:         c:\Users\Franta\p4\Code\Core/Reflection/RefObject.h
+Note: including file:        c:\Users\Franta\p4\Code\Core/Containers/WeakRef.h
+Note: including file:        c:\Users\Franta\p4\Code\Core/Reflection/ReflectionIter.h
+Note: including file:        c:\Users\Franta\p4\Code\Core/Reflection/PropertyType.h
+Note: including file:       c:\Users\Franta\p4\Code\Core/Reflection/MetaData/MetaData.h
+Note: including file:    c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/BFF/BFFVariable.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionAlias.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionCompiler.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionCopy.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionCopyDir.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionCSAssembly.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionDLL.h
+Note: including file:   c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionExecutable.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionExec.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionForEach.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionLibrary.h
+Note: including file:   c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionObjectList.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionPrint.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionSettings.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionTest.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionUnity.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionUsing.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\bff\functions\FunctionVCXProject.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/BFF/BFFIterator.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/BFF/BFFParser.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/FBuild.h
+Note: including file:   c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/FBuildOptions.h
+Note: including file:   c:\users\franta\p4\code\tools\fbuild\fbuildcore\Helpers/FBuildStats.h
+Note: including file:   c:\users\franta\p4\code\tools\fbuild\fbuildcore\WorkerPool/WorkerBrokerage.h
+Note: including file:   c:\Users\Franta\p4\Code\Core/Containers/Singleton.h
+Note: including file:   c:\Users\Franta\p4\Code\Core/Time/Timer.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/AliasNode.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h
+Note: including file:   c:\users\franta\p4\code\tools\fbuild\fbuildcore\graph\FileNode.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/NodeGraph.h
+Note: including file:   c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h
+Note: including file:   c:\Users\Franta\p4\Code\Core/Reflection/MetaData/MetaDataInterface.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/FileIO/PathUtils.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Reflection/ReflectedProperty.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Reflection/MetaData/Meta_File.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Reflection/MetaData/Meta_Optional.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Reflection/MetaData/Meta_Path.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Reflection/MetaData/Meta_Range.h
+Note: including file:  c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\stdio.h
+Note: including file:   c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\crtdefs.h
+Note: including file:   c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\swprintf.inl
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionAlias.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionAlias.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionCompiler.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionCompiler.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/CompilerNode.h
+Note: including file:   c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Helpers/ToolManifest.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionCopy.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionCopy.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/FLog.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/CopyNode.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionCopyDir.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionCopyDir.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionCSAssembly.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionCSAssembly.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/CSNode.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionDLL.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionDLL.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionExec.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionExec.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/ExecNode.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionExecutable.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionExecutable.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/DLLNode.h
+Note: including file:   c:\users\franta\p4\code\tools\fbuild\fbuildcore\graph\LinkerNode.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/ExeNode.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Helpers/Args.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Env/Env.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionForEach.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionForEach.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionLibrary.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionLibrary.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/LibraryNode.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/ObjectNode.h
+Note: including file:   c:\Users\Franta\p4\Code\Core/Containers/AutoPtr.h
+Note: including file:   c:\Users\Franta\p4\Code\Core/Process/Process.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionObjectList.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/ObjectListNode.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionPrint.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionPrint.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionSettings.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionSettings.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionTest.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionTest.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/TestNode.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionUnity.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionUnity.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/UnityNode.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionUsing.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionUsing.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/Functions/FunctionVCXProject.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionVCXProject.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/BFFIterator.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\BFFIterator.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/BFFParser.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\BFFParser.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Tracing/Tracing.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/BFFStackFrame.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\BFFStackFrame.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/BFF/BFFVariable.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\BFF\BFFVariable.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Cache/Cache.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Cache\Cache.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\cache\Cache.h
+Note: including file:   c:\users\franta\p4\code\tools\fbuild\fbuildcore\cache\ICache.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Cache/CachePlugin.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Cache\CachePlugin.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\cache\CachePlugin.h
+Note: including file:   c:\users\franta\p4\code\tools\fbuild\fbuildcore\cache\CachePluginInterface.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\MetaData\Meta_Name.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/AliasNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\AliasNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/CompilerNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\CompilerNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/CopyDirNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\CopyDirNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\graph\CopyDirNode.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/CopyNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\CopyNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/CSNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\CSNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Helpers/ResponseFile.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Math/CRC32.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/Dependencies.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\Dependencies.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/DirectoryListNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\DirectoryListNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/DLLNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\DLLNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/ExecNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\ExecNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/ExeNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\ExeNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/FileNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\FileNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/LibraryNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\LibraryNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/LinkerNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\LinkerNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/Node.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\Node.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Graph/NodeProxy.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/WorkerPool/Job.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/NodeGraph.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\NodeGraph.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/FileIO/ConstMemoryStream.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Math/Murmur3.h
+Note: including file:   c:\Users\Franta\p4\Code\Core/Math/MurmurHash3/MurmurHash3.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Process/Thread.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/NodeProxy.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\NodeProxy.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/ObjectListNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\ObjectListNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/ObjectNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\ObjectNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Helpers/Compressor.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/TestNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\TestNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/UnityNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\UnityNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Graph/VCXProjectNode.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Graph\VCXProjectNode.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Helpers/Args.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Helpers\Args.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Helpers/CIncludeParser.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Helpers\CIncludeParser.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Helpers/Compressor.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Helpers\Compressor.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\External\LZ4\lz4-r127\lz4.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Helpers/FBuildStats.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Helpers\FBuildStats.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Helpers/Report.h
+Note: including file:   c:\Users\Franta\p4\Code\Core/Mem/MemPoolBlock.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Helpers/Report.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Helpers\Report.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/FBuildVersion.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Helpers/ResponseFile.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Helpers\ResponseFile.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Helpers/ToolManifest.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Helpers\ToolManifest.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/FileIO/MemoryStream.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Helpers\VSProjectGenerator.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Protocol/Client.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Protocol\Client.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\protocol\Client.h
+Note: including file:   c:\Users\Franta\p4\Code\Core/Network/TCPConnectionPool.h
+Note: including file:    c:\users\franta\p4\code\core\network\NetworkStartupHelper.h
+Note: including file:     c:\Users\Franta\p4\External\SDK\Windows8.1\include\um\winsock2.h
+Note: including file:      c:\Users\Franta\p4\External\SDK\Windows8.1\include\shared\ws2def.h
+Note: including file:       c:\Users\Franta\p4\External\SDK\Windows8.1\include\shared\inaddr.h
+Note: including file:      c:\Users\Franta\p4\External\SDK\Windows8.1\include\shared\qos.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/Protocol/Protocol.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Math/Random.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Protocol/Protocol.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Protocol\Protocol.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Protocol/Server.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Protocol\Server.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\users\franta\p4\code\tools\fbuild\fbuildcore\protocol\Server.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/WorkerPool/WorkerThreadRemote.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/WorkerPool/Job.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\WorkerPool\Job.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Process/Atomic.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/WorkerPool/JobQueue.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\WorkerPool\JobQueue.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\WorkerPool\JobQueueRemote.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerage.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\WorkerPool\WorkerBrokerage.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Network/Network.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\WorkerPool\WorkerThread.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Profile/Profile.h
+Note: including file:   c:\users\franta\p4\code\core\profile\ProfileManager.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/WorkerPool/WorkerThreadRemote.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\WorkerPool\WorkerThreadRemote.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/Error.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\Error.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/FBuild.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\FBuild.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\Code\Core/Process/SystemMutex.h
+Note: including file:  c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\time.h
+Note: including file:   c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\crtdefs.h
+Note: including file:   c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\wtime.inl
+Note: including file:   c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\time.inl
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/FBuildOptions.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\FBuildOptions.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+C:/Users/Franta/p4/Code/Tools/FBuild/FBuildCore/FLog.cpp
+Note: including file: C:\Users\Franta\p4\Code\Tools\FBuild\FBuildCore\FLog.cpp
+Note: including file:  c:\Users\Franta\p4\Code\Tools/FBuild/FBuildCore/PrecompiledHeader.h
+Note: including file:  c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\stdlib.h
+Note: including file:   c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\crtdefs.h
+Note: including file:   c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\limits.h
+Note: including file:    c:\Users\Franta\p4\External\SDK\VS13.4\VC\include\crtdefs.h

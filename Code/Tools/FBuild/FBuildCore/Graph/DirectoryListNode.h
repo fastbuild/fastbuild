@@ -20,7 +20,8 @@ public:
 								const AString & path,
 								const AString & wildcard,
 								bool recursive,
-								const Array< AString > & excludePaths );
+								const Array< AString > & excludePaths,
+                                const Array< AString > & filesToExclude );
 	virtual ~DirectoryListNode();
 
 	const AString & GetPath() const { return m_Path; }
@@ -34,6 +35,7 @@ public:
 							const AString & pattern,
 							bool recursive,
 							const Array< AString > & excludePaths,
+                            const Array< AString > & excludeFiles,
 							AString & result );
 
 	static Node * Load( IOStream & stream );
@@ -45,6 +47,7 @@ private:
 	AString m_Path;
 	AString m_WildCard;
 	Array< AString > m_ExcludePaths;
+    Array< AString > m_FilesToExclude;
 	bool m_Recursive;
 
 	Array< FileIO::FileInfo > m_Files;

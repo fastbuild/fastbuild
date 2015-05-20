@@ -40,7 +40,9 @@ LibraryNode::LibraryNode( const AString & libraryName,
 						  const Dependencies & preBuildDependencies,
 						  const Dependencies & additionalInputs,
 						  bool deoptimizeWritableFiles,
-						  bool deoptimizeWritableFilesWithToken )
+						  bool deoptimizeWritableFilesWithToken,
+                          CompilerNode * preprocessor,
+                          const AString &preprocessorArgs )
 : FileNode( libraryName, Node::FLAG_NONE )
 , m_CompilerForceUsing( compilerForceUsing )
 , m_AdditionalInputs( additionalInputs )
@@ -61,6 +63,10 @@ LibraryNode::LibraryNode( const AString & libraryName,
 	m_CompilerArgs = compilerArgs;
 	m_CompilerArgsDeoptimized = compilerArgsDeoptimized;
 	m_CompilerOutputPath = compilerOutputPath;
+
+    m_Preprocessor     = preprocessor;
+    m_PreprocessorArgs = preprocessorArgs;
+
 	m_LibrarianPath = librarian; // TODO:C This should be a node
 	m_LibrarianArgs = librarianArgs;
 	m_Flags = flags;
@@ -482,6 +488,7 @@ bool LibraryNode::CreateDynamicObjectNode( Node * inputFile, bool isUnityNode, b
 	Node * on = ng.FindNode( objFile );
 	if ( on == nullptr )
 	{
+		// determine flags - TODO:B Move DetermineFlags call out of build-time
 		uint32_t flags = ObjectNode::DetermineFlags( m_Compiler, m_CompilerArgs );
 		if ( isUnityNode )
 		{
@@ -491,8 +498,14 @@ bool LibraryNode::CreateDynamicObjectNode( Node * inputFile, bool isUnityNode, b
 		{
 			flags |= ObjectNode::FLAG_ISOLATED_FROM_UNITY;
 		}
+		uint32_t preprocessorFlags = 0;
+		if ( m_Preprocessor )
+		{
+			// determine flags - TODO:B Move DetermineFlags call out of build-time
+			preprocessorFlags = ObjectNode::DetermineFlags( m_Preprocessor, m_PreprocessorArgs );
+        }
 
-		on = ng.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerArgs, m_CompilerArgsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken );
+		on = ng.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerArgs, m_CompilerArgsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken, m_Preprocessor, m_PreprocessorArgs, preprocessorFlags );
 	}
 	else if ( on->GetType() != Node::OBJECT_NODE )
 	{
@@ -556,6 +569,8 @@ void LibraryNode::EmitCompilationMessage( const AString & fullArgs ) const
 	NODE_LOAD_DEPS( 0,			additionalInputs );
 	NODE_LOAD( bool,			deoptimizeWritableFiles );
 	NODE_LOAD( bool,			deoptimizeWritableFilesWithToken );
+	NODE_LOAD_NODE( CompilerNode, preprocessorNode );
+	NODE_LOAD( AStackString<>,	preprocessorArgs );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	LibraryNode * n = ng.CreateLibraryNode( name, 
@@ -572,7 +587,9 @@ void LibraryNode::EmitCompilationMessage( const AString & fullArgs ) const
 								 preBuildDependencies,
 								 additionalInputs,
 								 deoptimizeWritableFiles,
-								 deoptimizeWritableFilesWithToken );
+								 deoptimizeWritableFilesWithToken,
+								 preprocessorNode,
+								 preprocessorArgs );
 	n->m_ObjExtensionOverride = objExtensionOverride;
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
@@ -606,6 +623,8 @@ void LibraryNode::EmitCompilationMessage( const AString & fullArgs ) const
 	NODE_SAVE_DEPS( m_AdditionalInputs );
 	NODE_SAVE( m_DeoptimizeWritableFiles );
 	NODE_SAVE( m_DeoptimizeWritableFilesWithToken );
+	NODE_SAVE_NODE( m_Preprocessor );
+	NODE_SAVE( m_PreprocessorArgs );
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
 	// but we can't right now because we rely on the nodes we depend on 

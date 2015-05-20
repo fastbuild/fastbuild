@@ -47,6 +47,10 @@
     <td>Show usage help.</td>
   </tr>
   <tr>
+    <td><a href="#ide">-ide</a></td>
+    <td>Enable multiple options for IDE integration.</td>
+  </tr>
+  <tr>
     <td><a href="#jx">-jX</a></td>
     <td>Explicitly set worker thread count.</td>
   </tr>
@@ -80,7 +84,7 @@
   </tr>
   <tr>
     <td><a href="#version">-vs</a></td>
-    <td>VisualStudio mode.</td>
+    <td>Same as -ide.</td>
   </tr>
   <tr>
     <td><a href="#wait">-wait</a></td>
@@ -88,7 +92,7 @@
   </tr>  
   <tr>
     <td><a href="#wrapper">-wrapper</a></td>
-    <td>Wrapper mode for Visual Studio.</td>
+    <td>Wrapper mode for Visual Studio. (Windows only)</td>
   </tr>
 </table>
 </div>
@@ -154,6 +158,19 @@ specified instead.</p>
 <p>Prints command line usage information, as per the summary at the top of this page.</p>
 </div>
 
+    <div class='newsitemheader' id="ide">-ide</div>
+    <div class='newsitembody'>
+<p>IDE integration mode.  Enables several options that are commonly desired when running from within an IDE such as VisualStudio, XCode or kDevelop.
+The following options are enabled:
+<ul>
+<li><a href="#nooutputbuffering">-nooutputbuffering</a></li>
+<li><a href="#noprogress">-noprogress</a></li>
+<li><a href="#fixuperrorpaths">-fixuperrorpaths</a></li>
+<li><a href="#wrapper">-wrapper</a> (Windows only)</li>
+</ul>
+</div>
+
+
     <div class='newsitemheader' id="jx">-jX</div>
     <div class='newsitembody'>
 <p>Overrides the number of tasks which can be built in parallel, which by default is controlled by the standard NUMBER_OF_PROCESSORS windows environment variable.</p>
@@ -216,25 +233,27 @@ specified instead.</p>
 
     <div class='newsitemheader' id="vs">-vs</div>
     <div class='newsitembody'>
-<p>VisualStudio mode.  Same as '<a href="#nooutputbuffering">-nooutputbuffering</a>', '<a href="#noprogress">-noprogress</a>', '<a href="#fixuperrorpaths">-fixuperrorpaths</a>' and '<a href="#wrapper">-wrapper</a>'.</p>
+<p>VisualStudio mode - same is <a href="#ide">-ide</a>.</p>
 </div>
 
     <div class='newsitemheader' id="wait">-wait</div>
     <div class='newsitembody'>
-<p>Wait for a previous build to complete before starting.</p>
-<p>Only one instance of FASTBuild can run at a time.  Normally, if you wish to build multiple targets, you specify
-them together on the command line.  This allows for paralellization across both targets.</p>
-<p>If a second process is launched with -wait command line arg, instead of failing, it will start 
-after the first process completes.  This will be slower than if both targets were invoked together 
+<p>Queue build after an already running build completes.</p>
+<p>Only one instance of FASTBuild can run at a time within the same root working directory. If you launch another FASTBuild while
+one is already running, the error "Another FASTBuild is already running." will be emitted.</p>
+<p>If you wish to build multiple targets, you should specify them together on the command line.  
+This allows for paralellization across both targets.</p>
+<p>Alternatively, the -wait command line arg allows you to queue the second build, so instead of failing, it will start 
+after the first build completes.  This will be slower than if both targets were invoked together 
 on the original command line.</p>
 </div>
 
 
-    <div class='newsitemheader' id="wrapper">-wrapper</div>
+    <div class='newsitemheader' id="wrapper">-wrapper (Windows Only)</div>
     <div class='newsitembody'>
 <p>Spawns FASTBuild via an intermediate sub-process to be able to cleanly terminate a build from Visual Studio.</p>
 <p>When cancelling a build in Visual Studio, the FASTBuild process will be killed, with no opportunity to save the build database, resulting in lost compilation work. Specifying this option spawns an orpaphaned child process to do the actual work. When the parent process is terminated by Visual Studio, the child process detects this and cleanly shuts down.</p>
-<p>Is a subsequent "wrapper mode" build is initiated before the first terminates, FASTBuild will wait for this first process to complete.</p>
+<p>If a subsequent "wrapper mode" build is initiated before the first terminates, FASTBuild will wait for this first process to complete.</p>
 </div>
 
 <h2>FBuildWorker.exe Detailed</h2>

@@ -85,7 +85,10 @@ bool ToolManifest::Generate( const Node * mainExecutable, const Dependencies & d
 
 	// unify "main executable" and "extra files"
 	// (loads contents of file into memory, and creates hashes)
-	AddFile( mainExecutable );
+    if ( !AddFile( mainExecutable ) )
+    {
+        return false; // AddFile will have emitted error
+    }
 	for ( size_t i=0; i<dependencies.GetSize(); ++i )
 	{
 		const FileNode & n = *( dependencies[ i ].GetNode()->CastTo< FileNode >() );

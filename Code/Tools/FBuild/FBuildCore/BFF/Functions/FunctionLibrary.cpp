@@ -126,6 +126,29 @@ FunctionLibrary::FunctionLibrary()
 		return false; // GetNodeList will have emitted an error
 	}
 
+	// Get the (optional) Preprocessor & PreprocessorOptions
+	const BFFVariable * preprocessor = nullptr;
+	const BFFVariable * preprocessorOptions = nullptr;
+    CompilerNode * preprocessorNode = nullptr;
+	if ( !GetString( funcStartIter, preprocessor, ".Preprocessor", false ) )
+	{
+		return false; // GetString will have emitted an error
+	}
+	if ( preprocessor )
+    {
+		// get the preprocessor executable
+        if ( !FunctionObjectList::GetCompilerNode( funcStartIter, preprocessor->GetString(), preprocessorNode ) )
+        {
+            return false; // GetCompilerNode will have emitted an error
+        }
+
+		// get the command line args for the preprocessor
+        if ( !GetString( funcStartIter, preprocessorOptions, ".PreprocessorOptions", true ) ) // required
+		{
+			return false; // GetString will have emitted an error
+		}
+    }
+
 	// Pre-build dependencies
 	Dependencies preBuildDependencies;
 	if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
@@ -198,7 +221,9 @@ FunctionLibrary::FunctionLibrary()
 						  preBuildDependencies,
 						  additionalInputs,
 						  deoptimizeWritableFiles,
-						  deoptimizeWritableFilesWithToken );
+						  deoptimizeWritableFilesWithToken,
+                          preprocessorNode,
+                          preprocessorOptions ? preprocessorOptions->GetString() : AString::GetEmpty() );
 	if ( compilerOutputExtension )
 	{
 		libNode->m_ObjExtensionOverride = compilerOutputExtension->GetString();

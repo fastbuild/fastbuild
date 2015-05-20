@@ -95,6 +95,7 @@ public:
 	char *			FindLast( char c ) { return const_cast< char *>( ((const AString *)this)->FindLast( c ) ); }
 	bool			EndsWith( char c ) const;
 	bool			EndsWith( const char * string ) const;
+    bool            EndsWith( const AString & other ) const;
 	bool			EndsWithI( const char * other ) const;
 	bool			EndsWithI( const AString & other ) const;
 	bool			BeginsWith( char c ) const;

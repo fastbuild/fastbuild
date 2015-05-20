@@ -33,11 +33,18 @@
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 
 // Core
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Reflection/ReflectedProperty.h"
+#include "Core/Reflection/MetaData/Meta_File.h"
+#include "Core/Reflection/MetaData/Meta_Optional.h"
+#include "Core/Reflection/MetaData/Meta_Path.h"
+#include "Core/Reflection/MetaData/Meta_Range.h"
 
+// system
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -267,10 +274,6 @@ bool Function::GetString( const BFFIterator & iter, AString & var, const char * 
 	{
 		var = stringVar->GetString();
 	}
-	else
-	{
-		var.Clear();
-	}
 	return true;
 }
 
@@ -295,7 +298,6 @@ bool Function::GetStringOrArrayOfStrings( const BFFIterator & iter, const BFFVar
 
 
 	// UnityInputPath can be string or array of strings
-	Array< AString > paths;
 	if ( v->IsString() || v->IsArrayOfStrings() )
 	{
 		var = v;
@@ -451,6 +453,7 @@ bool Function::GetNodeList( const BFFIterator & iter, const char * name, Depende
 bool Function::GetDirectoryListNodeList( const BFFIterator & iter,
 										 const Array< AString > & paths,
 										 const Array< AString > & excludePaths,
+                                         const Array< AString > & filesToExclude,
 										 bool recurse,
 										 const AString & pattern,
 										 const char * inputVarName,
@@ -465,7 +468,7 @@ bool Function::GetDirectoryListNodeList( const BFFIterator & iter,
 
 		// get node for the dir we depend on
 		AStackString<> name;
-		DirectoryListNode::FormatName( path, pattern, recurse, excludePaths, name );
+		DirectoryListNode::FormatName( path, pattern, recurse, excludePaths, filesToExclude, name );
 		Node * node = ng.FindNode( name );
 		if ( node == nullptr )
 		{
@@ -473,7 +476,8 @@ bool Function::GetDirectoryListNodeList( const BFFIterator & iter,
 											   path,
 											   pattern,
 											   recurse,
-											   excludePaths );
+											   excludePaths, 
+                                               filesToExclude );
 		}
 		else if ( node->GetType() != Node::DIRECTORY_LIST_NODE )
 		{
@@ -644,7 +648,7 @@ bool Function::GetFileNode( const BFFIterator & iter, Node * & fileNode, const c
 
 // CleanFolderPaths
 //------------------------------------------------------------------------------
-void Function::CleanFolderPaths( Array< AString > & folders ) const
+/*static*/ void Function::CleanFolderPaths( Array< AString > & folders )
 {
 	AStackString< 512 > tmp;
 
@@ -663,7 +667,7 @@ void Function::CleanFolderPaths( Array< AString > & folders ) const
 }
 
 //------------------------------------------------------------------------------
-void Function::CleanFilePaths( Array< AString > & files ) const
+/*static*/ void Function::CleanFilePaths( Array< AString > & files )
 {
 	AStackString< 512 > tmp;
 
@@ -675,6 +679,19 @@ void Function::CleanFilePaths( Array< AString > & files ) const
 
 		// replace original
 		*it = tmp;
+	}
+}
+
+// CleanFileNames
+//------------------------------------------------------------------------------
+void Function::CleanFileNames( Array< AString > & fileNames ) const
+{
+    // cleanup slashes (keep path relative)
+	AString * const end = fileNames.End();
+	for ( AString * it = fileNames.Begin(); it != end; ++it )
+	{
+		// normalize slashes
+		PathUtils::FixupFilePath( *it );
 	}
 }
 
@@ -705,12 +722,354 @@ bool Function::ProcessAlias( const BFFIterator & iter, Dependencies & nodesToAli
 	}
 
 	// create an alias against the node
+#ifdef USE_NODE_REFLECTION
+    AliasNode * an = ng.CreateAliasNode( m_AliasForFunction );
+    an->m_StaticDependencies = nodesToAlias; // TODO: make this use m_Targets & Initialize()
+#else
 	VERIFY( ng.CreateAliasNode( m_AliasForFunction, nodesToAlias ) );
+#endif
 
 	// clear the string so it can't be used again
 	m_AliasForFunction.Clear();
 
 	return true;
 }
+
+// GetNameForNode
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+bool Function::GetNameForNode( const BFFIterator & iter, const ReflectionInfo * ri, AString & name ) const
+{
+	// get object MetaData
+	const Meta_Name * nameMD = ri->HasMetaData< Meta_Name >();
+	ASSERT( nameMD ); // should not call this on types without this MetaData
+
+	// Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
+	AStackString<> propertyName( "." );
+	propertyName += nameMD->GetName();
+
+	// Find the value for this property from the BFF
+	const BFFVariable * variable = BFFStackFrame::GetVar( propertyName );
+	if ( variable->IsString() )
+	{
+		// Handle empty strings
+		if ( variable->GetString().IsEmpty() )
+		{
+			Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
+			return false;
+		}
+
+		AStackString<> string( variable->GetString() );
+
+		// Path/File fixup needed?
+		if ( !PopulatePathAndFileHelper( iter,
+										 ri->HasMetaData< Meta_Path >(), 
+										 ri->HasMetaData< Meta_File >(), 
+										 variable->GetName(),
+										 variable->GetString(),
+										 string ) )
+		{
+			return false;
+		}
+
+		// Check that name isn't already used
+		NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+		if ( ng.FindNode( string ) )
+		{
+			Error::Error_1100_AlreadyDefined( iter, this, string );
+			return false;
+		}
+
+		name = string;
+		return true;
+	}
+
+	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRING );
+	return false;
+}
+#endif
+
+// PopulateProperties
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+bool Function::PopulateProperties( const BFFIterator & iter, Node * node ) const
+{
+	const ReflectionInfo * const ri = node->GetReflectionInfoV();
+	const ReflectionIter end = ri->End();
+	for ( ReflectionIter it = ri->Begin(); it != end; ++it )
+	{
+		const ReflectedProperty & property = *it;
+
+		// Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
+		AStackString<> propertyName( "." );
+		propertyName += property.GetName();
+
+		// Find the value for this property from the BFF
+		const BFFVariable * v = BFFStackFrame::GetVar( propertyName );
+
+		// Handle missing but required
+		if ( v == nullptr )
+		{
+			const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
+			if ( required )
+			{
+				Error::Error_1101_MissingProperty( iter, this, propertyName );
+				return false;
+			}
+
+			continue; // missing but not required
+		}
+
+		const PropertyType pt = property.GetType();
+		switch ( pt )
+		{
+			case PT_ASTRING:
+			{
+				if ( property.IsArray() )
+				{
+					if ( !PopulateArrayOfStrings( iter, node, property, v ) )
+					{
+						return false;
+					}
+				}
+				else
+				{
+					if ( !PopulateString( iter, node, property, v ) )
+					{
+						return false;
+					}
+				}
+				break;
+			}
+			case PT_BOOL:
+			{
+				if ( !PopulateBool( iter, node, property, v ) )
+				{
+					return false;
+				}
+				break;
+			}
+			case PT_UINT32:
+			{
+				if ( !PopulateUInt32( iter, node, property, v ) )
+				{
+					return false;
+				}
+				break;
+			}
+			default:
+			{
+				ASSERT( false ); // Unsupported type
+				break;
+			}
+		}
+	}
+	return true;
+}
+#endif
+
+// PopulatePathAndFileHelper
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
+										  const Meta_Path * pathMD,
+										  const Meta_File * fileMD,
+										  const AString & variableName,
+										  const AString & originalValue, 
+										  AString & valueToFix ) const
+{
+	// Only one is allowed (having neither is ok too)
+	ASSERT( ( fileMD == nullptr ) || ( pathMD == nullptr ) );
+
+	if ( pathMD )
+	{
+		if ( pathMD->IsRelative() )
+		{
+			PathUtils::FixupFolderPath( valueToFix );
+		}
+		else
+		{
+			// Make absolute, clean slashes and canonicalize
+			NodeGraph::CleanPath( originalValue, valueToFix );
+
+			// Ensure slash termination
+			PathUtils::EnsureTrailingSlash( valueToFix );
+		}
+	}
+
+	if ( fileMD )
+	{
+		if ( fileMD->IsRelative() )
+		{
+			PathUtils::FixupFilePath( valueToFix );
+		}
+		else
+		{
+			// Make absolute, clean slashes and canonicalize
+			NodeGraph::CleanPath( originalValue, valueToFix );
+		}
+
+		// check that a path hasn't been given when we expect a file
+		if ( PathUtils::IsFolderPath( valueToFix ) )
+		{
+			Error::Error_1105_PathNotAllowed( iter, this, variableName.Get(), valueToFix );
+			return false;
+		}
+	}
+
+	return true;
+}
+#endif
+
+// PopulateArrayOfStrings
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+bool Function::PopulateArrayOfStrings( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
+{
+	// Array to Array
+	if ( variable->IsArrayOfStrings() )
+	{
+		Array< AString > strings( variable->GetArrayOfStrings() );
+
+		Array< AString >::Iter end = strings.End();
+		for ( Array< AString >::Iter it = strings.Begin();
+				it != end;
+				++it )
+		{
+			AString & string = *it;
+
+			// Path/File fixup needed?
+			if ( !PopulatePathAndFileHelper( iter,
+											 property.HasMetaData< Meta_Path >(), 
+											 property.HasMetaData< Meta_File >(), 
+											 variable->GetName(),
+											 variable->GetArrayOfStrings()[ it - strings.Begin() ],
+											 string ) )
+			{
+				return false;
+			}
+		}
+
+		property.SetProperty( node, strings );
+		return true;
+	}
+
+	if ( variable->IsString() )
+	{
+		// Handle empty strings
+		if ( variable->GetString().IsEmpty() )
+		{
+			Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
+			return false;
+		}
+
+		AStackString<> string( variable->GetString() );
+
+		// Path/File fixup needed?
+		if ( !PopulatePathAndFileHelper( iter, 
+										 property.HasMetaData< Meta_Path >(), 
+										 property.HasMetaData< Meta_File >(), 
+										 variable->GetName(),
+										 variable->GetString(),
+										 string ) )
+		{
+			return false;
+		}
+
+		// Make array with 1 string
+		Array< AString > strings( 1, false );
+		strings.Append( string );
+		property.SetProperty( node, strings );
+		return true;
+	}
+
+	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRING, BFFVariable::VAR_ARRAY_OF_STRINGS );
+	return false;
+}
+#endif
+
+// PopulateString
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+bool Function::PopulateString( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
+{
+	if ( variable->IsString() )
+	{
+		// Handle empty strings
+		if ( variable->GetString().IsEmpty() )
+		{
+			Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
+			return false;
+		}
+
+		AStackString<> string( variable->GetString() );
+
+		// Path/File fixup needed?
+		if ( !PopulatePathAndFileHelper( iter,
+											property.HasMetaData< Meta_Path >(), 
+											property.HasMetaData< Meta_File >(), 
+											variable->GetName(),
+											variable->GetString(),
+											string ) )
+		{
+			return false;
+		}
+
+		// String to String
+		property.SetProperty( node, string );
+		return true;
+	}
+
+	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRING );
+	return false;
+}
+#endif
+
+// PopulateBool
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+bool Function::PopulateBool( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
+{
+	if ( variable->IsBool() )
+	{
+		// Bool to Bool
+		property.SetProperty( node, variable->GetBool() );
+		return true;
+	}
+
+	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_BOOL );
+	return false;
+}
+#endif
+
+// PopulateUInt32
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+bool Function::PopulateUInt32( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
+{
+	if ( variable->IsInt() )
+	{
+		const int32_t value = variable->GetInt();
+
+		// Check range
+		const Meta_Range * rangeMD = property.HasMetaData< Meta_Range >();
+		if ( rangeMD )
+		{
+			if ( ( value < rangeMD->GetMin() ) || ( value > rangeMD->GetMax() ) )
+			{
+				Error::Error_1054_IntegerOutOfRange( iter, this, variable->GetName().Get(), rangeMD->GetMin(), rangeMD->GetMax() );
+				return false;
+			}
+		}
+
+		// Int32 to UInt32
+		property.SetProperty( node, (uint32_t)value );
+		return true;
+	}
+
+	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_INT );
+	return false;
+}
+#endif
 
 //------------------------------------------------------------------------------

@@ -8,6 +8,7 @@
 #include "FunctionAlias.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -32,6 +33,7 @@ FunctionAlias::FunctionAlias()
 
 // Commit
 //------------------------------------------------------------------------------
+#ifndef USE_NODE_REFLECTION
 /*virtual*/ bool FunctionAlias::Commit( const BFFIterator & funcStartIter ) const
 {
 	// make sure all required variables are defined
@@ -61,5 +63,28 @@ FunctionAlias::FunctionAlias()
 
 	return true;
 }
+#endif
+
+// Commit
+//------------------------------------------------------------------------------
+#ifdef USE_NODE_REFLECTION
+/*virtual*/ bool FunctionAlias::Commit( const BFFIterator & funcStartIter ) const
+{
+	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+	if ( ng.FindNode( m_AliasForFunction ) )
+	{
+		Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
+		return false;
+	}
+	AliasNode * aliasNode = ng.CreateAliasNode( m_AliasForFunction );
+
+	if ( !PopulateProperties( funcStartIter, aliasNode ) )
+	{
+		return false;
+	}
+
+	return aliasNode->Initialize( funcStartIter, this );
+}
+#endif
 
 //------------------------------------------------------------------------------
