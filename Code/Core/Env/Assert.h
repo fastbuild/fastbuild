@@ -61,14 +61,10 @@ bool IsDebuggerAttached();
 	#define VERIFY( code ) ASSERT( code )
 
 	// compile time assertion
-	#define CTASSERT( expression )												\
-		do {																	\
-		PRAGMA_DISABLE_PUSH_MSVC(4127)                                          \
-			compile_time_assert_failure< ( expression ) > ();					\
-		} while ( false );														\
-		PRAGMA_DISABLE_POP_MSVC
-	template<bool> struct compile_time_assert_failure;
-	template<> struct compile_time_assert_failure<true>{};
+    #define CTASSERT( expression ) static_assert( expression,                   \
+        "\n================ COMPILE TIME ASSERTION FAILURE ================\n"  \
+                                   "Expression: " #expression                   \
+        "\n================================================================\n" )
 
 	class AssertHandler
 	{

@@ -13,6 +13,7 @@
 #include "Core/Network/Network.h"
 #include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Time/Timer.h"
 
 // System
@@ -27,12 +28,10 @@
     #include <sys/ioctl.h>
     #include <sys/socket.h>
     #include <netinet/in.h>
+    #include <netinet/tcp.h>	
     #include <fcntl.h>
     #include <unistd.h>
-    // TODO:LINUX Implement TCPConnectionPool
-    // TODO:MAC Implement TCPConnectionPool
-    // TODO:LINUX Check that this is valid
-    #define INVALID_SOCKET (~0) // TODO:MAC Check that this is valid
+	#define INVALID_SOCKET ( -1 )
     #define SOCKET_ERROR -1
 #else
     #error Unknown platform
@@ -86,6 +85,8 @@ TCPConnectionPool::~TCPConnectionPool()
 //------------------------------------------------------------------------------
 void TCPConnectionPool::ShutdownAllConnections()
 {
+    PROFILE_FUNCTION
+
 	m_ConnectionsMutex.Lock();
 
 	// signal all remaining connections to close
@@ -140,14 +141,19 @@ bool TCPConnectionPool::Listen( uint16_t port )
     }
 
     // allow socket re-use
-    static const char yes = 1;
-    int ret = setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof( yes ) );
+    static const int yes = 1;
+    int ret = setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof( yes ) );
     if ( ret != 0 )
     {
         TCPDEBUG( "setsockopt failed: %i\n", GetLastError() );
         CloseSocket( sockfd );
         return false;
     }
+
+	if ( !DisableNagle( sockfd ) )
+	{
+        return false; // DisableNagle will close socket
+	}
 
     // set up the listen params
     struct sockaddr_in addrInfo;
@@ -212,7 +218,11 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
     }
 
 	// set send/recv timeout
-	uint32_t bufferSize = ( 10 * 1024 * 1024 );
+	#if defined( __APPLE__ )
+		uint32_t bufferSize = ( 7 * 1024 * 1024 ); // larger values fail on OS X
+	#else
+		uint32_t bufferSize = ( 10 * 1024 * 1024 );
+	#endif
     int ret = setsockopt( sockfd, SOL_SOCKET, SO_RCVBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
     if ( ret != 0 )
     {
@@ -228,6 +238,11 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
 		return nullptr;
     }
 
+	if ( !DisableNagle( sockfd ) )
+	{
+        return nullptr; // DisableNagle will close socket
+	}
+
     // we have a socket now
     //m_Socket = sockfd;
 
@@ -236,7 +251,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
     #if defined( __WINDOWS__ )
         ioctlsocket( sockfd, FIONBIO, &nonBlocking );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        ioctl( sockfd, FIONBIO, &nonBlocking );
+        VERIFY( ioctl( sockfd, FIONBIO, &nonBlocking ) >= 0 );
     #else
         #error Unknown platform
     #endif
@@ -278,13 +293,13 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
 		FD_SET( sockfd, &err );
 		PRAGMA_DISABLE_POP_MSVC // 6319
  
-		// check connection every 100ms
+		// check connection every 10ms
 		timeval pollingTimeout;
 		memset( &pollingTimeout, 0, sizeof( timeval ) );
-		pollingTimeout.tv_usec = 100;
+		pollingTimeout.tv_usec = 10 * 1000;
 
 		// check if the socket is ready
-		int selRet = select( 0, nullptr, &write, &err, &pollingTimeout );
+		int selRet = Select( sockfd+1, nullptr, &write, &err, &pollingTimeout );
 		if ( selRet == SOCKET_ERROR )
 		{
 			// connection failed
@@ -396,6 +411,8 @@ size_t TCPConnectionPool::GetNumConnections() const
 //------------------------------------------------------------------------------
 bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * data, size_t size, uint32_t timeoutMS )
 {
+    PROFILE_FUNCTION
+
 	ASSERT( connection );
 
 	// closing connection, possibly from a previous failure
@@ -534,6 +551,8 @@ bool TCPConnectionPool::Broadcast( const void * data, size_t size )
 //------------------------------------------------------------------------------
 bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
 {
+    PROFILE_FUNCTION
+
     // work out how many bytes there are
     uint32_t size( 0 );
 	uint32_t bytesToRead = 4;
@@ -622,7 +641,7 @@ bool TCPConnectionPool::WouldBlock() const
     #if defined( __WINDOWS__ )
         return ( WSAGetLastError() == WSAEWOULDBLOCK );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return ( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) );
+        return ( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) || ( errno == EINPROGRESS ) );
     #else
         #error Unknown platform
     #endif
@@ -643,13 +662,14 @@ int TCPConnectionPool::CloseSocket( TCPSocket a_Socket ) const
 
 // Select
 //------------------------------------------------------------------------------
-int TCPConnectionPool::Select( TCPSocket UNUSED( a_MaxSocketPlusOne ),
+int TCPConnectionPool::Select( TCPSocket socket,
                     		   void * a_ReadSocketSet, // TODO: Using void * to avoid including header is ugly
 				   void * a_WriteSocketSet,
                     		   void * a_ExceptionSocketSet,
 				   timeval * a_TimeOut ) const
 {
-    return select( 0, // ignored by Windows
+    PROFILE_SECTION( "Select" )
+    return select( (int)socket, // NOTE: ignored by Windows
                     (fd_set *)a_ReadSocketSet,
                     (fd_set *)a_WriteSocketSet,
                     (fd_set *)a_ExceptionSocketSet,
@@ -762,7 +782,11 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         #endif
         
 		// set send/recv timeout
-		uint32_t bufferSize = ( 10 * 1024 * 1024 );
+		#if defined( __APPLE__ )
+			uint32_t bufferSize = ( 7 * 1024 * 1024 ); // larger values fail on OS X
+		#else
+			uint32_t bufferSize = ( 10 * 1024 * 1024 );
+		#endif
 		int ret = setsockopt( newSocket, SOL_SOCKET, SO_RCVBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
 		if ( ret != 0 )
 		{
@@ -917,6 +941,22 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
 
     // thread exit
     TCPDEBUG( "connection thread exited\n" );
+}
+
+// DisableNagle
+//------------------------------------------------------------------------------
+bool TCPConnectionPool::DisableNagle( TCPSocket sockfd )
+{
+    // disable TCP nagle
+    static const int disableNagle = 1;
+    const int ret = setsockopt( sockfd, IPPROTO_TCP, TCP_NODELAY, (const char *)&disableNagle, sizeof( disableNagle ) );
+    if ( ret != 0 )
+    {
+        TCPDEBUG( "setsockopt TCP_NODELAY failed: %i\n", GetLastError() );
+        CloseSocket( sockfd );
+        return false;
+    }
+	return true;
 }
 
 //------------------------------------------------------------------------------

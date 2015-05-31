@@ -11,10 +11,16 @@
 #include "Core/Strings/AString.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
 
 // system
 #if defined( __WINDOWS__ )
     #include <Winsock2.h>
+#endif
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+    #include <arpa/inet.h>
+    #include <netdb.h>
+    #include <unistd.h>
 #endif
 
 // Static
@@ -25,82 +31,73 @@
 //------------------------------------------------------------------------------
 /*static*/ void Network::GetHostName( AString & hostName )
 {
-    #if defined( __WINDOWS__ )
-        NetworkStartupHelper nsh; // ensure network is up if not already
+    NetworkStartupHelper nsh; // ensure network is up if not already
 
-        char buffer[ 64 ];
-        if ( ::gethostname( buffer, 64 ) == 0 )
-        {
-            hostName = buffer;
-        }
-        else
-        {
-            ASSERT( false && "This should never fail" );
-            hostName = "Unknown";
-        }
-    #elif defined( __APPLE__ )
-        ASSERT( false ); // TODO:MAC Implement GetHostName
-    #endif
+    char buffer[ 64 ];
+    if ( ::gethostname( buffer, 64 ) == 0 )
+    {
+        hostName = buffer;
+    }
+    else
+    {
+        ASSERT( false && "This should never fail" );
+        hostName = "Unknown";
+    }
 }
 
 // GetHostIPFromName
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Network::GetHostIPFromName( const AString & hostName, uint32_t timeoutMS )
 {
-    #if defined( __WINDOWS__ )
-        // see if string it already in ip4 format
-        uint32_t ip = inet_addr( hostName.Get() );
-        if ( ip != INADDR_NONE )
-        {
-            return ip;
-        }
+    // see if string it already in ip4 format
+    uint32_t ip = inet_addr( hostName.Get() );
+    if ( ip != INADDR_NONE )
+    {
+        return ip;
+    }
 
-        // Perform name resolution on another thread
+    // Perform name resolution on another thread
 
-        // Data to communicate between threads
-        NameResolutionData data;
-        data.hostName = hostName;
-        data.safeToFree = false; // will be marked by other thread
+    // Data to communicate between threads
+    NameResolutionData data;
+    data.hostName = hostName;
+    data.safeToFree = false; // will be marked by other thread
 
-        // Create thread to perform resolution
-        Thread::ThreadHandle handle = Thread::CreateThread( NameResolutionThreadFunc,
-                                                            "NameResolution",
-                                                            ( 32 * KILOBYTE ),
-                                                            &data );
+    // Create thread to perform resolution
+    Thread::ThreadHandle handle = Thread::CreateThread( NameResolutionThreadFunc,
+                                                        "NameResolution",
+                                                        ( 32 * KILOBYTE ),
+                                                        &data );
 
-        // wait for name resolution with timeout
-        bool timedOut( false );
-        int returnCode = Thread::WaitForThread( handle, timeoutMS, timedOut );
-        Thread::CloseHandle( handle );
+    // wait for name resolution with timeout
+    bool timedOut( false );
+    int returnCode = Thread::WaitForThread( handle, timeoutMS, timedOut );
+    Thread::CloseHandle( handle );
 
-        // handle race where timeout occurred before thread marked data as
-        // safe to delete (this could happen if system was under load and timeout was very small)
-        while ( !data.safeToFree )
-        {
-            Thread::Sleep( 1 );
-        }
+    // handle race where timeout occurred before thread marked data as
+    // safe to delete (this could happen if system was under load and timeout was very small)
+    while ( !data.safeToFree )
+    {
+        Thread::Sleep( 1 );
+    }
 
-        if ( timedOut )
-        {
-            returnCode = 0; // timeout was hit
-        }
-	
-        // return result of resolution (could also have failed)
-        return returnCode;
-    #elif defined( __APPLE__ )
-        ASSERT( false ); // TODO:MAC Implement GetHostIPFromName
-        return 0;
-    #elif defined( __LINUX__ )
-        ASSERT( false ); // TODO:LINUX Implement GetHostIPFromName
-        return 0;
-    #endif
+    if ( timedOut )
+    {
+        returnCode = 0; // timeout was hit
+    }
+
+    // return result of resolution (could also have failed)
+    return returnCode;
 }
 
 // NameResolutionThreadFunc
 //------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-    /*static*/ uint32_t Network::NameResolutionThreadFunc( void * userData )
+/*static*/ uint32_t Network::NameResolutionThreadFunc( void * userData )
+{
+    uint32_t ip( 0 );
     {
+        PROFILE_FUNCTION
+
         AStackString<> hostName;
 
         {
@@ -123,11 +120,10 @@
         hostent * host = ::gethostbyname( hostName.Get() );
         if ( host )
         {
-            uint32_t ip = *( ( unsigned int * )host->h_addr );
-            return ip;
+            ip = *( ( unsigned int * )host->h_addr );
         }
-        return 0; // lookup failed
     }
-#endif // __WINDOWS__
+    return ip;
+}
 
 //------------------------------------------------------------------------------

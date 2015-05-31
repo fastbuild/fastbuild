@@ -12,6 +12,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class CompilerNode;
+class DirectoryListNode;
 class ObjectNode;
 
 // LibraryNode
@@ -63,7 +64,7 @@ private:
 
 	// internal helpers
 	void GetFullArgs( AString & fullArgs ) const;
-	bool CreateDynamicObjectNode( Node * inputFile, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
+	bool CreateDynamicObjectNode( Node * inputFile, const DirectoryListNode * dirList, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
 	void EmitCompilationMessage( const AString & fullArgs ) const;
 
 	virtual Priority GetPriority() const { return PRIORITY_HIGH; }

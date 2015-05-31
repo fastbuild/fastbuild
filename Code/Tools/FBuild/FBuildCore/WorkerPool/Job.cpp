@@ -14,6 +14,7 @@
 #include "Core/Env/Assert.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/Process/Atomic.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
 
@@ -102,6 +103,8 @@ void Job::Error( const char * format, ... )
 //------------------------------------------------------------------------------
 void Job::Serialize( IOStream & stream )
 {
+    PROFILE_FUNCTION
+
 	// write jobid
 	stream.Write( m_JobId );
 	stream.Write( m_Node->GetName() );

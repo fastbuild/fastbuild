@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 
 #include "Core/Env/Types.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Tracing/Tracing.h"
 
 #include <stdarg.h>
@@ -167,6 +168,8 @@ static AStackString< 64 > g_OutputString( "\r99.9 % [....................] " );
 									  uint32_t numJobsDist, 
 									  uint32_t numJobsDistActive )
 {
+    PROFILE_FUNCTION
+
 	ASSERT( s_ShowProgress );
 
 	// format progress % (we know it never goes above 99.9%)

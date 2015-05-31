@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Troubleshooting - Distributed Compilation</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>Distributed Compilation Troubleshooting</h1>
+    <div id='alias' class='newsitemheader'>
+      Overview
+    </div>
+    <div class='newsitembody'>
+      <p>If you've followed the <a href="../features/distribution.html">setup instructions</a> and still can't
+         seem to make it work, this guide is for you.</p>
+      <p>Try each each section in order.</p>
+      <table width="90%">
+        <tr><th>Section</th><th>Check that...</th></tr>
+        <tr><td><a href="#brokerage">Brokerage</a></a></td><td>... the brokerage folder is configured.</td></tr>
+        <tr><td><a href="#availability">Availability</a></td><td>... workers are available.</td></tr>
+        <tr><td><a href="#activation">Activation</a></td><td>... distributed compilation is enabled.</td></tr>
+        <tr><td><a href="#discovery">Discovery</a></td><td>... workers are discovered and connected to.</td></tr>
+        <tr><td><a href="#compatibility">Compatibility</a></td><td>... compatible compiler and options are used.</tr>
+        <tr><td><a href="#results">Results</a></td><td>... you see distributed compilation taking place.</td></tr>
+      </table>
+</div>
+
+<div id='brokerage' class='newsitemheader'>Worker Discovery / Brokerage</div>
+<div class='newsitembody'>
+  <h4>1. Confirm FASTBUILD_BROKERAGE_PATH is Set</h4>
+     <p>Make sure the brokerage path environment variable (FASTBUILD_BROKERAGE_PATH) is set on the Client 
+     (machine initiating the build) and the Server(s) (machines running the FBuildWorker).<p/>
+     <p>You may need to reboot/logout to propagate new Environment Variables.</p>
+  <h4>2. Confirm Brokerage Read/Write Access</h4>
+     <p>Make sure your brokerage path can be accessed from both the Client and Server(s).  Viewing the path
+     through Windows Explorer/Finder/etc is usually sufficient to ensure the path is correct and permissions
+     don't prevent read access.</p>
+     <p>Try creating a file in this directory to ensure write permissions are
+     granted.</p>
+  <h4>3. Verify the brokerage structure</h4>
+     <p>With at least one worker running, a directory strucure should be created in your brokerage path:
+     <div class='output'>\\server-pc\.fastbuild.brokerage\main\%version%</div>
+     where %version% is the current distributed protocol version.</p>
+     <p>If this folder structure is missing, check for write permissions.</p>
+</div>
+
+<div id='availability' class='newsitemheader'>Worker Availability</div>
+<div class='newsitembody'>
+  <h4>1. Ensure Worker(s) are Available</h4>
+     <p>Check the UI of your worker(s) to ensure they show some CPUs as "Idle" (and therefore available for use).</p>
+     <p><div align="center"><img src='../img/worker_available.png' /></div></p>
+     <p>It your worker PC has other applications constantly consuming non-trivial amounts of CPU time (>10%), the
+     worker may never become available.</p>
+     <p>To force a worker to be available, ignoring local CPU usage of other processes, you can set the 
+     "Current Mode" to "Work For Others Always":</p>
+     <p><div align="center"><img src='../img/worker_available_always.png' /></div></p>
+  <h4>2. Check Worker is Available in Brokerage</h4>
+     <p>When a worker is available, it will create a token in the brokerage structure:
+     <div class='output'>\\server-pc\.fastbuild.brokerage\main\%version%\%hostname%</div>
+     where %version% is the current distributed protocol version and %hostname% is the name
+     of the worker PC.</p>
+     <p>If this token is missing, check for write permissions.</p>
+</div>
+
+<div id='activation' class='newsitemheader'>Distribution Activated</div>
+<div class='newsitembody'>
+  <h4>1. Ensure Distribution is Activated</h4>
+    <p>Distributed compilation must be activated on the command line with -dist.</p>
+</div>
+
+<div id='discovery' class='newsitemheader'>Worker Discovery</div>
+<div class='newsitembody'>
+  <h4>1. Ensure Client is finding Workers</h4>
+    <p>When the build starts, you should see some output in the console:</p>
+    <p><div class='output'>Distributed Compilation : 1 Workers in pool</div></p>
+    <p>This confirms that the distributed build is discovering the workers.</p>
+  <h4>2. Ensure Connection to Workers</h4>
+    <p>Shortly after a distributed build starts, FASTBuild will start connecting
+       to the available FBuildWorkers. Verify that your workers are being connected to by
+       checking the UI. (If you are troubleshooting, you may like to limit your
+       setup to one worker so you can control which workers will be used.)</p>
+       <p><div align="center"><img src='../img/worker_connection.png' /></div></p>
+       <p>Failure to establish any connections could indicate a routing or firewall problem
+       on your network.</p>
+    </p>
+</div>
+
+
+<div id='compatibility' class='newsitemheader'>Compatible Compiler &amp; Options</div>
+<div class='newsitembody'>
+  <h4>1. Ensure Compatible Compiler</h4>
+      <p>Make sure the compiler being used is compatible with network distribution,
+         as described <a href="../features/distribution.html">here</a>.</p>
+  <h4>2. Compiler() Setup</h4>
+      <p>Ensure your compiler is configured using the <a href="../functions/compiler.html">Compiler()</a>
+        function in the BFF config. If you are using a compiler (such as MSVC) that requires additional
+         DLLs, be sure to configure those as well (see <a href="../functions/compiler.html">Compiler()</a>
+         for more details).</p>
+  <h4>3. Ensure Compatible Compatible Options</h4> 
+      <p>Some compiler options prevent distribution as described 
+         <a href="../features/distribution.html">here</a>. Use -showcmds to ensure none
+         of those options are on your command line.</p> 
+</div>
+  
+<div id='results' class='newsitemheader'>Results</div>
+<div class='newsitembody'>
+  <p>If everything is working, you should see output similar to the following for any distributed tasks:</p>
+  <div class='output'>-> Obj: C:\Test\tmp\x86-Profile\TestFramework\Unity1.obj &lt;REMOTE: 192.168.0.8&gt;
+-> Obj: C:\Test\tmp\x86-Debug\TestFramework\Unity1.obj &lt;REMOTE: 192.168.0.8&gt;
+-> Obj: C:\Test\tmp\x86Clang-Debug\CoreTest\Unity1.obj &lt;REMOTE: 192.168.0.8&gt;</div>
+</div>
+
+  <script>generateFooter()</script>
+</body>
+</html>

@@ -164,7 +164,11 @@ void UnitTestManager::TestBegin( const char * testName )
 //------------------------------------------------------------------------------
 void UnitTestManager::TestEnd()
 {
-	PROFILE_SYNCHRONIZE
+    #ifdef PROFILING_ENABLED
+        // flush the profiling buffers, but don't profile the sync itself
+        // (because it leaves an outstanding memory alloc, it looks like a leak)
+        ProfileManager::SynchronizeNoTag();
+    #endif
 
 	float timeTaken = m_Timer.GetElapsed();
 

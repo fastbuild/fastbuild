@@ -452,24 +452,6 @@ void LinkerNode::GetAssemblyResourceFiles( AString & fullArgs, const AString & p
 		flags |= LinkerNode::LINK_FLAG_CODEWARRIOR_LD;
 	}
 
-	if ( flags & ( LINK_FLAG_GCC | LINK_FLAG_SNC | LINK_FLAG_ORBIS_LD ) )
-	{
-		// Parse args for some other flags
-		Array< AString > tokens;
-		args.Tokenize( tokens );
-
-        const AString * const end = tokens.End();
-		for ( const AString * it=tokens.Begin(); it!=end; ++it )
-		{
-			const AString & token = *it;
-			if ( ( token == "-shared" ) || ( token == "-dynamiclib" ) )
-			{
-				flags |= LinkerNode::LINK_FLAG_DLL;
-				continue;
-			}
-        }
-    }
-
 	if ( flags & LINK_FLAG_MSVC )
 	{
 		// Parse args for some other flags
@@ -556,6 +538,23 @@ void LinkerNode::GetAssemblyResourceFiles( AString & fullArgs, const AString & p
 		{
 			flags |= LINK_FLAG_INCREMENTAL;
 		}
+	}
+	else
+	{
+		// Parse args for some other flags
+		Array< AString > tokens;
+		args.Tokenize( tokens );
+
+        const AString * const end = tokens.End();
+		for ( const AString * it=tokens.Begin(); it!=end; ++it )
+		{
+			const AString & token = *it;
+			if ( ( token == "-shared" ) || ( token == "-dynamiclib" ) )
+			{
+				flags |= LinkerNode::LINK_FLAG_DLL;
+				continue;
+			}
+        }
 	}
 
 	return flags;

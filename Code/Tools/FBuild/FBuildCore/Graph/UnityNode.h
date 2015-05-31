@@ -46,7 +46,26 @@ public:
 	static inline Node::Type GetType() { return Node::UNITY_NODE; }
 
 	inline const Array< AString > & GetUnityFileNames() const { return m_UnityFileNames; }
-	inline const Array< AString > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
+
+    // For each file isolated from Unity, we track the original dir list (if available)
+    // This allows ObjectList/Library to create a sensible (relative) output dir.
+    class FileAndOrigin
+    {
+    public:
+        FileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin )
+         : m_Info( info )
+         , m_DirListOrigin( dirListOrigin )
+        {}
+
+        inline const AString &              GetName() const             { return m_Info->m_Name; }
+        inline bool                         IsReadOnly() const          { return m_Info->IsReadOnly(); }
+        inline const DirectoryListNode *    GetDirListOrigin() const    { return m_DirListOrigin; }
+
+    protected:
+        FileIO::FileInfo *      m_Info;
+        DirectoryListNode *     m_DirListOrigin;
+    };
+	inline const Array< FileAndOrigin > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
 	static Node * Load( IOStream & stream );
 	virtual void Save( IOStream & stream ) const;
@@ -55,7 +74,7 @@ private:
 
 	virtual bool IsAFile() const { return false; }
 
-	void GetFiles( Array< FileIO::FileInfo * > & files );
+	bool GetFiles( Array< FileAndOrigin > & files );
 
 	// Exposed properties
 #ifdef USE_NODE_REFLECTION
@@ -75,7 +94,7 @@ private:
 	bool m_IsolateWritableFiles;
 	uint32_t m_MaxIsolatedFiles;
 	Array< AString > m_ExcludePatterns;
-	Array< AString > m_IsolatedFiles;
+	Array< FileAndOrigin > m_IsolatedFiles;
 
 	// Temporary data
 	Array< AString > m_UnityFileNames;

@@ -21,11 +21,8 @@ int main(int , char * [])
 	REGISTER_TESTGROUP( TestMutex )
 	REGISTER_TESTGROUP( TestPathUtils )
 	REGISTER_TESTGROUP( TestReflection )
-	#if defined( __WINDOWS__ )
-		// TODO:MAC Re-enabled TestTestTCPConnectionPool
-		// TODO:LINUX Re-enabled TestTestTCPConnectionPool
-		REGISTER_TESTGROUP( TestTestTCPConnectionPool )
-	#endif
+	REGISTER_TESTGROUP( TestSemaphore )
+	REGISTER_TESTGROUP( TestTestTCPConnectionPool )
 	REGISTER_TESTGROUP( TestTimer )
 
 	UnitTestManager utm;

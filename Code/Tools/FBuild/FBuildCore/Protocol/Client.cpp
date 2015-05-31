@@ -22,6 +22,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/Random.h"
+#include "Core/Profile/Profile.h"
 
 // Defines
 //------------------------------------------------------------------------------
@@ -105,6 +106,8 @@ Client::~Client()
 //------------------------------------------------------------------------------
 void Client::ThreadFunc()
 {
+    PROFILE_FUNCTION
+
 	// ensure first status update will be sent more rapidly
 	m_StatusUpdateTimer.Start( CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS * 0.5f );
 
@@ -260,6 +263,7 @@ void Client::CommunicateJobAvailability()
 			MutexHolder ssMH( it->m_Mutex );
 			if ( it->m_NumJobsAvailable != numJobsAvailable )
 			{
+                PROFILE_SECTION( "UpdateJobAvailability" )
 				msg.Send( it->m_Connection );
 				it->m_NumJobsAvailable = numJobsAvailable;
 			}
@@ -382,6 +386,8 @@ void Client::CheckForTimeouts()
 //------------------------------------------------------------------------------
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequestJob * )
 {
+    PROFILE_SECTION( "MsgRequestJob" )
+
 	if ( JobQueue::IsValid() == false )
 	{
 		return;
@@ -402,6 +408,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 	Job * job = JobQueue::Get().GetDistributableJobToProcess( true );
 	if ( job == nullptr )
 	{
+        PROFILE_SECTION( "NoJob" )
 		// tell the client we don't have anything right now
 		// (we completed or gave away the job already)
 		MutexHolder mh( ss->m_Mutex );
@@ -429,14 +436,19 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 	TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), address );
 	FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), address.Get() );
 
-	Protocol::MsgJob msg( toolId );
-	msg.Send( connection, stream );
+    {
+        PROFILE_SECTION( "SendJob" )
+	    Protocol::MsgJob msg( toolId );
+	    msg.Send( connection, stream );
+    }
 }
 
 // Process( MsgJobResult )
 //------------------------------------------------------------------------------
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobResult *, const void * payload, size_t payloadSize )
 {
+    PROFILE_SECTION( "MsgJobResult" )
+
 	// find server
 	ServerState * ss = (ServerState *)connection->GetUserData();
 	ASSERT( ss );
@@ -614,6 +626,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 //------------------------------------------------------------------------------
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequestManifest * msg )
 {
+    PROFILE_SECTION( "MsgRequestManifest" )
+
 	// find a job associated with this client with this toolId
 	const uint64_t toolId = msg->GetToolId();
 	ASSERT( toolId );
@@ -639,6 +653,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 //------------------------------------------------------------------------------
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequestFile * msg )
 {
+    PROFILE_SECTION( "MsgRequestFile" )
+
 	// find a job associated with this client with this toolId
 	const uint64_t toolId = msg->GetToolId();
 	ASSERT( toolId != 0 ); // server should not request 'no sync' tool id
@@ -673,6 +689,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 //------------------------------------------------------------------------------
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgServerStatus * msg )
 {
+    PROFILE_SECTION( "MsgServerStatus" )
+
 	(void)msg;
 
 	// find server

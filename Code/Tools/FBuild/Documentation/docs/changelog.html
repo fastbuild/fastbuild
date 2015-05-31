@@ -15,6 +15,49 @@
 
 
 <div class='newsitemheader'>
+    v0.82&nbsp;<font color='#bbbbbb'>(30-May-2015)</font>
+</div>
+<div class='newsitembody'>
+    Note
+    <ul>
+		<li>DB version has changed : clean build will occur</li>
+		<li>Location of compiled object files has changed (now in relative sub-dirs)</li>
+		<li>"-nooutputbuffering" is deprecated: output is now always written in a timely fashion</li>
+    </ul>
+    Fixes
+    <ul>
+		<li>Object files are built into sub dirs, avoiding "Conflicting objects found:" for cpp files with the same name in the same library</li>
+        <li>Unity node no longer silently ignores input files that don't exist</li>
+		<li>[Linux][OS X] Fix missing progress bar on Linux and OS X</li>
+		<li>Fix dll (-shared and -dynamiclib) detection for gcc/clang linker</li>
+    </ul>
+    Improvements
+    <ul>
+		<li>Auto-fixup incorrectly escaped closing quotes in MSVC include paths (common user error)</li>
+		<li>Detect missing /c or -c compiler options (common user error)</li>
+		<li>Total build time shown is more accurate (includes -summary and -report time)</li>
+		<li>CompilerOutputpath in ObjectList and Library is auto-slash terminated</li>
+		<li>Optimizations</li>
+		<ul>
+			<li>Network brokerage is no longer accessed if not in distributed mode</li>
+			<li>Optimize thread pool creation, saving upto 16ms per cpu core</li>
+			<li>Reduce all job scheduling latency by upto 30ms</li>
+			<li>Optimized scheduling to eliminate additional latency in various situations</li>	
+			<li>Optimize unity file generation</li>
+			<li>Optimize database loading for Compiler() nodes by eliminating unnecessary IO</li>
+			<li>Reduce latency of distributed compilation by disabling TCP Nagle</li>
+			<li>Reduce context switches on network threads (FBuild and FBuildWorker)</li>
+			<li>Eliminate unnecessary progress calculation during shutdown</li>
+			<li>Reduce context switches on main thread</li>
+			<li>Optimized -summary output</li>
+			<li>Optimized all console output slightly</li>	
+		</ul>
+    </ul>
+</div>
+
+
+
+<div class='newsitemheader'>
     v0.81&nbsp;<font color='#bbbbbb'>(9-May-2015)</font>
 </div>
 <div class='newsitembody'>

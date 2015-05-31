@@ -7,6 +7,8 @@
 
 #include "Thread.h"
 #include "Core/Env/Assert.h"
+#include "Core/Mem/Mem.h"
+#include "Core/Profile/Profile.h"
 
 // system
 #if defined( __WINDOWS__ )
@@ -42,13 +44,11 @@ public:
 	ThreadStartInfo( Thread::ThreadEntryFunction entryFunc, void * userData, const char * threadName )
 		: m_UserEntryFunction( entryFunc )
 		, m_UserData( userData )
-		, m_Started( false )
 		, m_ThreadName( threadName )
 	{}
 
 	Thread::ThreadEntryFunction	m_UserEntryFunction;
 	void *			m_UserData;
-	bool			m_Started;
 	const char *	m_ThreadName;
 
     #if defined( __WINDOWS__ )
@@ -70,10 +70,9 @@ public:
 			}
 		#endif
 
-		// signal main thread as started, so it can safely destroy ThreadStartInfo
+		// done with ThreadStartInfo
 		MemoryBarrier();
-		originalInfo->m_Started = true;
-		originalInfo = nullptr; // no longer accessible
+        FDELETE( originalInfo );
 
 		// enter into real thread function
         #if defined( __WINDOWS__ )
@@ -107,6 +106,8 @@ public:
 //------------------------------------------------------------------------------
 /*static*/ void Thread::Sleep( int32_t ms )
 {
+    PROFILE_FUNCTION
+
     #if defined( WIN32 ) || defined( WIN64 )
         ::Sleep( ms );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
@@ -123,7 +124,7 @@ public:
 													  uint32_t stackSize,
 													  void * userData )
 {
-    ThreadStartInfo info( entryFunc, userData, threadName );
+    ThreadStartInfo& info = *FNEW( ThreadStartInfo( entryFunc, userData, threadName ) );
     MemoryBarrier();
         
 	#if defined( __WINDOWS__ )
@@ -146,12 +147,6 @@ public:
 	#endif
         
     ASSERT( h != nullptr );
-	
-    // wait until ThreadStartInfo is safe to free
-    while ( !info.m_Started )
-    {
-        Sleep(1);
-    }
 
     return (Thread::ThreadHandle)h;
 }

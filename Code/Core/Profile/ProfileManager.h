@@ -26,6 +26,7 @@ class ProfileManager
 public:
 	// call once per frame (or other synchronization point)
 	static void Synchronize();
+    static void SynchronizeNoTag(); // don't push a tag around synchronization
 
 	// macros usually wrap these, but they can be called directly
 	// NOTE: id must be valid for lifetime of application!

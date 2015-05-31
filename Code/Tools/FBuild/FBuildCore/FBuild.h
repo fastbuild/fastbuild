@@ -84,7 +84,7 @@ public:
 	inline ICache * GetCache() const { return m_Cache; }
 
 private:
-	void UpdateBuildStatus( const Node * node, bool forceUpdate );
+	void UpdateBuildStatus( const Node * node );
 
 	static bool s_StopBuild;
 
