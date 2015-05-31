@@ -459,6 +459,19 @@ void AString::Append( const char * string, size_t len )
 	m_Length = newLen;
 }
 
+// AppendFormat
+//------------------------------------------------------------------------------
+void AString::AppendFormat( const char * fmtString, ... )
+{
+    AStackString< 1024 > buffer;
+	va_list args;
+	va_start(args, fmtString);
+	buffer.VFormat( fmtString, args );
+	va_end( args );
+
+    Append( buffer );
+}
+
 // Replace ( char, char )
 //------------------------------------------------------------------------------
 uint32_t AString::Replace( char from, char to, uint32_t maxReplaces )

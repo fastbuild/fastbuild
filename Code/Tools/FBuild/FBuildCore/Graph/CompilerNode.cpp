@@ -103,7 +103,7 @@ CompilerNode::~CompilerNode()
 	{
 		return nullptr;
 	}
-	cn->m_Manifest.Deserialize( stream );
+	cn->m_Manifest.Deserialize( stream, false ); // false == not remote
 	return cn;
 #else
 	NODE_LOAD( AStackString<>, exeName );
@@ -112,7 +112,7 @@ CompilerNode::~CompilerNode()
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	CompilerNode * n = ng.CreateCompilerNode( exeName, staticDeps, allowDistribution );
-	n->m_Manifest.Deserialize( stream );
+	n->m_Manifest.Deserialize( stream, false ); // false == not remote
 	return n;
 #endif
 }

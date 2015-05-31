@@ -32,7 +32,7 @@ public:
 	inline uint64_t GetTimeStamp() const { return m_TimeStamp; }
 
 	void Serialize( IOStream & ms ) const;
-	void Deserialize( IOStream & ms );
+	void Deserialize( IOStream & ms, bool remote );
 
 	inline bool IsSynchronized() const { return m_Synchronized; }
 	bool GetSynchronizationStatus( uint32_t & syncDone, uint32_t & syncTotal ) const;

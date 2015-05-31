@@ -16,6 +16,7 @@
 #include "Core/Time/Timer.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Atomic.h"
+#include "Core/Profile/Profile.h"
 
 // JobSubQueue CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -113,6 +114,8 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
 	m_CompletedJobsFailed2( 1024, true ),
 	m_Workers( numWorkerThreads, false )
 {
+    PROFILE_FUNCTION
+
 	WorkerThread::InitTmpDir();
 
 	for ( uint32_t i=0; i<numWorkerThreads; ++i )
@@ -150,6 +153,9 @@ JobQueue::~JobQueue()
 		m_Workers[ i ]->WaitForStop();
 		FDELETE m_Workers[ i ];
 	}
+
+    ASSERT( m_CompletedJobs.IsEmpty() );
+    ASSERT( m_CompletedJobsFailed.IsEmpty() );
 }
 
 // SignalStopWorkers (Main Thread)
@@ -380,6 +386,8 @@ void JobQueue::ReturnUnfinishedDistributableJob( Job * job, bool systemError )
 //------------------------------------------------------------------------------
 void JobQueue::FinalizeCompletedJobs()
 {
+    PROFILE_FUNCTION
+
 	{
 		MutexHolder m( m_CompletedJobsMutex );
 		m_CompletedJobs2.Swap( m_CompletedJobs );
@@ -417,6 +425,14 @@ void JobQueue::FinalizeCompletedJobs()
 		FDELETE job;
 	}
 	m_CompletedJobsFailed2.Clear();
+}
+
+// MainThreadWait
+//------------------------------------------------------------------------------
+void JobQueue::MainThreadWait( uint32_t maxWaitMS )
+{
+	PROFILE_SECTION( "MainThreadWait" )
+	m_MainThreadSemaphore.Wait( maxWaitMS );
 }
 
 // GetJobToProcess (Worker Thread)
@@ -472,15 +488,20 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 		AtomicDecU32( &m_NumLocalJobsActive );
 	}
 
-	MutexHolder m( m_CompletedJobsMutex );
-	if ( success )
 	{
-		m_CompletedJobs.Append( job );
+		MutexHolder m( m_CompletedJobsMutex );
+		if ( success )
+		{
+			m_CompletedJobs.Append( job );
+		}
+		else
+		{
+			m_CompletedJobsFailed.Append( job );
+		}
 	}
-	else
-	{
-		m_CompletedJobsFailed.Append( job );
-	}
+
+	// Wake main thread to process completed jobs
+	WakeMainThread();
 }
 
 // DoBuild
@@ -502,7 +523,11 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 		}
 	}
 
-	Node::BuildResult result = node->DoBuild( job );
+    Node::BuildResult result;
+    {
+        PROFILE_SECTION( node->GetTypeName() );
+	    result = node->DoBuild( job );
+    }
 
 	uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 

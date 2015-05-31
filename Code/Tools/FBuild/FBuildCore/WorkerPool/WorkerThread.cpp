@@ -38,6 +38,8 @@ WorkerThread::WorkerThread( uint32_t threadIndex )
 //------------------------------------------------------------------------------
 void WorkerThread::Init()
 {
+    PROFILE_FUNCTION
+
 	// Start thread
 	Thread::ThreadHandle h = Thread::CreateThread( ThreadWrapperFunc,
 												   "WorkerThread",
@@ -56,6 +58,8 @@ WorkerThread::~WorkerThread()
 //------------------------------------------------------------------------------
 /*static*/ void WorkerThread::InitTmpDir( bool remote )
 {
+    PROFILE_FUNCTION
+
 	VERIFY( FileIO::GetTempDir( s_TmpRoot ) );
     #if defined( __WINDOWS__ )
         s_TmpRoot += ".fbuild.tmp\\";
@@ -77,6 +81,8 @@ WorkerThread::~WorkerThread()
 //------------------------------------------------------------------------------
 void WorkerThread::WaitForStop()
 {
+    PROFILE_FUNCTION
+
 	while ( m_Exited == false )
 	{
 		Thread::Sleep( 1 );
@@ -107,10 +113,10 @@ void WorkerThread::WaitForStop()
 //------------------------------------------------------------------------------
 /*virtual*/ void WorkerThread::Main()
 {
+    PROFILE_SECTION( "WorkerThread" )
+
 	while ( ( m_ShouldExit == false ) && ( FBuild::GetStopBuild() == false ) )
 	{
-		PROFILE_FUNCTION
-
 		bool didSomeWork = Update();
 		if ( didSomeWork )
 		{
@@ -118,13 +124,16 @@ void WorkerThread::WaitForStop()
 		}
 
 		// no work to do right now
-		{
-			PROFILE_SECTION( "WorkerThread::Main::Sleep" )
-			Thread::Sleep( 1 ); // wait and try again later
-		}
+		Thread::Sleep( 1 ); // wait and try again later
 	}
 
 	m_Exited = true;
+
+    // wake up main thread
+    if ( JobQueue::IsValid() ) // Unit Tests
+    {
+        JobQueue::Get().WakeMainThread();
+    }
 }
 
 // Update

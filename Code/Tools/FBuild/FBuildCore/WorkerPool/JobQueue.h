@@ -10,6 +10,7 @@
 #include "Core/Containers/Singleton.h"
 
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
+#include "Core/Process/Semaphore.h"
 #include "Core/Process/Mutex.h"
 
 // Forward Declarations
@@ -52,6 +53,10 @@ public:
 	// main thread calls these
 	void QueueJob( Node * node );
 	void FinalizeCompletedJobs();
+	void MainThreadWait( uint32_t maxWaitMS );
+
+	// main thread can be signalled
+	inline void WakeMainThread() { m_MainThreadSemaphore.Signal(); }
 
 	// handle shutting down
 	void SignalStopWorkers();
@@ -105,6 +110,9 @@ private:
 		Job *		m_Job;
 	};
 	Array< CancelledJob > m_DistributedJobsCancelled;		// Distirbutable job in progress remotely, which should be discarded upon completion
+
+	// Semaphore to manage thread idle
+	Semaphore			m_MainThreadSemaphore;
 
 	// completed jobs
 	mutable Mutex		m_CompletedJobsMutex;

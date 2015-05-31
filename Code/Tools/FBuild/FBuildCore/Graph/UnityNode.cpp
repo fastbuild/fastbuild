@@ -150,14 +150,18 @@ UnityNode::~UnityNode()
 	// TODO:C Would be good to refactor things to avoid this special case
 	if ( EnsurePathExistsForFile( m_OutputPath ) == false )
 	{
-		return NODE_RESULT_FAILED;
+		return NODE_RESULT_FAILED; // EnsurePathExistsForFile will have emitted error
 	}
 
 	m_UnityFileNames.SetCapacity( m_NumUnityFilesToCreate );
 
 	// get the files
-	Array< FileIO::FileInfo * > files( 4096, true );
-	GetFiles( files );
+	Array< FileAndOrigin > files( 4096, true );
+
+	if ( !GetFiles( files ) )
+    {
+        return NODE_RESULT_FAILED; // GetFiles will have emitted an error
+    }
 
     // TODO:A Sort files for consistent ordering across file systems/platforms
     
@@ -170,6 +174,8 @@ UnityNode::~UnityNode()
 
 	size_t index = 0;
 
+    AString output;
+    output.SetReserved( 32 * 1024 );
 
 	// create each unity file
 	for ( size_t i=0; i<m_NumUnityFilesToCreate; ++i )
@@ -178,7 +184,7 @@ UnityNode::~UnityNode()
 		remainingInThisUnity += numFilesPerUnity;
 
 		// header
-		AStackString<4096> output( "// Auto-generated Unity file - do not modify\r\n\r\n" );
+		output = "// Auto-generated Unity file - do not modify\r\n\r\n";
 		
 		// precompiled header
 		if ( !m_PrecompiledHeader.IsEmpty() )
@@ -192,7 +198,7 @@ UnityNode::~UnityNode()
 		// for floating point imprecision
 
 		// determine allocation of includes for this unity file
-		Array< FileIO::FileInfo * > filesInThisUnity( 256, true );
+		Array< FileAndOrigin > filesInThisUnity( 256, true );
 		uint32_t numIsolated( 0 );
 		const bool lastUnity = ( i == ( m_NumUnityFilesToCreate - 1 ) );
 		while ( ( remainingInThisUnity > 0.0f ) || lastUnity )
@@ -211,7 +217,7 @@ UnityNode::~UnityNode()
 			if ( m_IsolateWritableFiles )
 			{
 				// is the file writable?
-				if ( files[ index ]->IsReadOnly() == false )
+				if ( files[ index ].IsReadOnly() == false )
 				{
 					numIsolated++;
 				}
@@ -223,14 +229,12 @@ UnityNode::~UnityNode()
 		}
 
 		// write allocation of includes for this unity file
-		const FileIO::FileInfo * const * end = filesInThisUnity.End();
+		const FileAndOrigin * const end = filesInThisUnity.End();
         size_t numFilesActuallyIsolatedInThisUnity( 0 );
-		for ( FileIO::FileInfo ** it = filesInThisUnity.Begin(); it != end; ++it )
+		for ( const FileAndOrigin * file = filesInThisUnity.Begin(); file != end; ++file )
 		{
-			const FileIO::FileInfo * file = *it;
-
 			// write pragma showing cpp file being compiled to assist resolving compilation errors
-			AStackString<> buffer( file->m_Name.Get() );
+			AStackString<> buffer( file->GetName().Get() );
 			buffer.Replace( BACK_SLASH, FORWARD_SLASH ); // avoid problems with slashes in generated code
             #if defined( __LINUX__ )
                 output += "//"; // TODO:LINUX - Find how to avoid GCC spamming "note:" about use of pragma
@@ -247,14 +251,14 @@ UnityNode::~UnityNode()
 				{
 					// disable compilation of this file (comment it out)
 					output += "//";
-					m_IsolatedFiles.Append( file->m_Name );
+					m_IsolatedFiles.Append( *file );
                     numFilesActuallyIsolatedInThisUnity++;
 				}
 			}
 
 			// write include
 			output += "#include \"";
-			output += file->m_Name;
+			output += file->GetName();
 			output += "\"\r\n\r\n";
 		}
 		output += "\r\n";
@@ -415,7 +419,7 @@ UnityNode::~UnityNode()
 
 // GetFiles
 //------------------------------------------------------------------------------
-void UnityNode::GetFiles( Array< FileIO::FileInfo * > & files )
+bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 {
 	// find all the directory lists
 	const Dependency * const sEnd = m_StaticDependencies.End();
@@ -443,12 +447,13 @@ void UnityNode::GetFiles( Array< FileIO::FileInfo * > & files )
 
 			if ( keep )
 			{
-				files.Append( filesIt );
+				files.Append( FileAndOrigin( filesIt, dirNode ) );
 			}
 		}
 	}
 
 	// explicitly listed files
+    bool ok = true;
 	size_t numFiles = m_Files.GetSize();
 	if ( numFiles )
 	{
@@ -462,10 +467,17 @@ void UnityNode::GetFiles( Array< FileIO::FileInfo * > & files )
 			if ( FileIO::GetFileInfo( m_Files[ i ], m_FilesInfo[ i ] ) )
 			{
 				// only add files that exist
-				files.Append( &m_FilesInfo[ i ] );
+				files.Append( FileAndOrigin( &m_FilesInfo[ i ], nullptr ) );
 			}
+            else
+            {
+                FLOG_ERROR( "FBuild: Error: Unity missing file: '%s'\n", m_Files[ i ].Get() );
+                ok = false;
+            }
 		}
 	}
+
+    return ok;
 }
 
 //------------------------------------------------------------------------------

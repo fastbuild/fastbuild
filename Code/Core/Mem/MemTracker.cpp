@@ -240,6 +240,8 @@
 	//------------------------------------------------------------------------------
 	/*static*/ void MemTracker::Init()
 	{
+        CTASSERT( sizeof( MemTracker::s_Mutex ) == sizeof( Mutex ) );
+
 		ASSERT( g_MemTrackerDisabledOnThisThread );
 
 		// first caller does init

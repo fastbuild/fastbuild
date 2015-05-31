@@ -37,6 +37,7 @@
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/CRC32.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Strings/AStackString.h"
 
@@ -382,6 +383,8 @@ void Node::SaveNode( IOStream & fileStream, const Node * node ) const
 	{
 		return nullptr;
 	}
+
+    PROFILE_SECTION(Node::GetTypeName((Type)nodeType));
 
 	// read stamp (but not for file nodes)
 	uint64_t stamp( 0 );

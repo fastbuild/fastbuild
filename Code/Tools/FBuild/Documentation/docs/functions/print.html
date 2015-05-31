@@ -11,16 +11,53 @@
   <script>generateHeaderParent()</script>
 
 <h1>Print</h1>
-    <div id='print' class='newsitemheader'>
-      Print
-    </div>
-    <div class='newsitembody'>
-      <p>
-Prints some text during BFF parsing. Can be used for targetting build configuration debugging where the "-verbose" command line is overwhelming.
-      </p>
-<div class='code'>Print( "string" )
+
+<div id='print' class='newsitemheader'>Summary</div>
+<div class='newsitembody'>
+  <p>
+  Prints some text during BFF parsing.
+  </p>
+  <div class='code'>Print( "String or $VarName$" )</div>
 </div>
-    </div>
+	
+<div id='print' class='newsitemheader'>Details</div>
+<div class='newsitembody'>
+  <p>
+  The Print() function allows output to be emitted during the parsing of BFF files, in order
+  to assist in configuring/debugging them.  It allows targeted debugging, where the 
+  <a href="../options.html#verbose">-verbose</a> command line option is overwhelming.
+  </p>
+  <p>
+  NOTE: Output will only be generated during BFF parsing (i.e. after the BFF is modified).
+  </p>
+</div>
+
+<div id='print' class='newsitemheader'>Examples</div>
+<div class='newsitembody'>
+  <p>
+  The following sample BFF:
+  </p>
+  <div class='code'>.X86_Debug     = [ .Config = 'Debug'   .Platform = 'X86' ]
+.X86_Release   = [ .Config = 'Release' .Platform = 'X86' ]
+.X64_Debug     = [ .Config = 'Debug'   .Platform = 'X64' ]
+.X64_Release   = [ .Config = 'Release' .Platform = 'X64' ]
+.Configs       = { .X86_Debug, .X86_Release, .X64_Debug, .X64_Release }
+  
+ForEach( .Config in .Configs )
+{
+  Using( .Config )
+  .TargetName = '$Platform$-$Config$'
+	
+  Print( 'TargetName = $TargetName$' )
+}</div>
+  <p>
+  Will generate the following output:
+  </p>
+  <div class='output'>TargetName = X86-Debug
+TargetName = X86-Release
+TargetName = X64-Debug
+TargetName = X64-Release</div>
+</div>
 
   <script>generateFooter()</script>
 </body>

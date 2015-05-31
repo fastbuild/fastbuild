@@ -20,6 +20,9 @@
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
+// Core
+#include "Core/FileIO/PathUtils.h"
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionLibrary::FunctionLibrary()
@@ -51,7 +54,7 @@ FunctionLibrary::FunctionLibrary()
 	const BFFVariable * compiler;
 	const BFFVariable * compilerOptions;
 	AStackString<> compilerOptionsDeoptimized;
-	const BFFVariable * compilerOutputPath;
+	AStackString<> compilerOutputPath;
 	const BFFVariable * compilerOutputExtension;
 	const BFFVariable * librarian;
 	const BFFVariable * librarianOptions;
@@ -66,6 +69,8 @@ FunctionLibrary::FunctionLibrary()
 	{
 		return false;
 	}
+
+    PathUtils::FixupFolderPath( compilerOutputPath );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
@@ -100,7 +105,25 @@ FunctionLibrary::FunctionLibrary()
 			Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "%2" );
 			return false;
 		}
-	}
+
+        // check /c or -c
+        if ( objFlags & ObjectNode::FLAG_MSVC )
+        {
+            if ( args.Find( "/c" ) == nullptr )
+            {
+		        Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "/c" );
+			    return false;
+		    }
+        }
+        else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG ) )
+        {
+            if ( args.Find( "-c" ) == nullptr )
+            {
+		        Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "-c" );
+			    return false;
+		    }
+        }
+    }
 
 	// Check input/output for Librarian
 	{
@@ -212,7 +235,7 @@ FunctionLibrary::FunctionLibrary()
 						  compilerNode,
 						  compilerOptions->GetString(),
 						  compilerOptionsDeoptimized,
-						  compilerOutputPath->GetString(),
+						  compilerOutputPath,
 						  librarian->GetString(),
 						  librarianOptions->GetString(),
 						  flags,

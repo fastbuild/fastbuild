@@ -63,7 +63,9 @@ public:
 	AString & operator += ( char c );
 	AString & operator += ( const char * string );
 	AString & operator += ( const AString & string );
+	inline void Append( const AString & string ) { this->operator +=( string ); }
 	void Append( const char * string, size_t len );
+	void AppendFormat( const char * fmtString, ... );
 
 	// comparison
 	bool operator == ( const char * other ) const;

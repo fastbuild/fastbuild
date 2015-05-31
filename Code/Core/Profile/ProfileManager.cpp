@@ -13,6 +13,8 @@
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
+#include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -180,6 +182,14 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 //------------------------------------------------------------------------------
 /*static*/ void ProfileManager::Synchronize()
 {
+    PROFILE_SECTION( "ProfileManager::Synchronize" )
+	SynchronizeNoTag();
+}
+
+// SynchronizeNoTag
+//------------------------------------------------------------------------------
+/*static*/ void ProfileManager::SynchronizeNoTag()
+{
 	Array< ProfileEventInfo > infos( 0, true );
 	{
 		MutexHolder mh( g_ProfileManagerMutex );
@@ -189,19 +199,34 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 	// first time? open log file
 	if ( g_ProfileEventLog.IsOpen() == false )
 	{
-		g_ProfileEventLog.Open( "c:\\test\\profile.log", FileStream::WRITE_ONLY | FileStream::NO_RETRY_ON_SHARING_VIOLATION );
+		if ( g_ProfileEventLog.Open( "profile.json", FileStream::WRITE_ONLY | FileStream::NO_RETRY_ON_SHARING_VIOLATION ) )
+        {
+            g_ProfileEventLog.WriteBuffer( "[ ", 2 ); // json array opening tag
+		}
 	}
 
 	// write all the events we have
 	const ProfileEventInfo * const end = infos.End();
+    AStackString<> buffer;
 	for ( const ProfileEventInfo * it = infos.Begin(); it != end; ++it )
 	{
 		const ProfileEventInfo & info = *it;
 		if ( g_ProfileEventLog.IsOpen() )
 		{
-			g_ProfileEventLog.Write( info.m_ThreadId );
-			g_ProfileEventLog.Write( (uint32_t)info.m_NumEvents );
-			g_ProfileEventLog.Write( info.m_Events, sizeof( ProfileEventInfo ) * info.m_NumEvents );
+            const size_t numEvents( info.m_NumEvents );
+            for ( size_t i=0; i<numEvents; ++i )
+            {
+                const ProfileEvent& e = info.m_Events[i];
+
+                // {"name": "Asub", "ph": "B", "pid": 22630, "tid": 22630, "ts": 829},
+                buffer.Format( "{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":0,\"tid\":%u,\"ts\":%llu},\n",
+                        e.m_Id ? e.m_Id : "", 
+                        e.m_Id ? 'B' : 'E', 
+                        info.m_ThreadId, 
+                        (uint64_t)( (double)e.m_TimeStamp * (double)Timer::GetFrequencyInvFloatMS() * 1000.0f ) );
+
+                g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+            }
 		}
 		FDELETE [] info.m_Events;
 	}

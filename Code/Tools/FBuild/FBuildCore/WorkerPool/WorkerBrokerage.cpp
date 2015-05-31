@@ -16,6 +16,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Network/Network.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
 // CONSTRUCTOR
@@ -36,8 +37,6 @@ WorkerBrokerage::WorkerBrokerage()
         #else
             m_BrokerageRoot.Format( "%s/main/%u/", root.Get(), protocolVersion );
         #endif
-
-        FileIO::EnsurePathExists( m_BrokerageRoot );
     }
 }
 
@@ -51,6 +50,8 @@ WorkerBrokerage::~WorkerBrokerage()
 //------------------------------------------------------------------------------
 void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 {
+    PROFILE_FUNCTION
+
 	if ( m_BrokerageRoot.IsEmpty() )
 	{
 		return;

@@ -117,6 +117,9 @@ private:
     static uint32_t     ConnectionThreadWrapperFunction( void * data );
 	void                ConnectionThreadFunction( ConnectionInfo * ci );
 
+    // internal helpers
+    bool                DisableNagle( TCPSocket sockfd );
+
     // listen socket related info
 	ConnectionInfo *			m_ListenConnection;
 

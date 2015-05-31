@@ -8,6 +8,7 @@
 #include "Tracing.h"
 #include "Core/Env/Assert.h"
 
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
 #include <stdio.h>
@@ -31,6 +32,8 @@
 	//------------------------------------------------------------------------------
 	/*static*/ void Tracing::DebugSpam( const char * message )
 	{
+        PROFILE_FUNCTION
+
 		// pass through callback if there is one
 		if ( m_CallbackDebugSpam )
 		{
@@ -41,7 +44,7 @@
 		}
 
 		// normal output that goes to the TTY
-		printf( "%s", message );
+    	fputs( message, stdout );
 
 		// emit to the debugger as well if possible
         #if defined( __WINDOWS__ )
@@ -99,6 +102,8 @@
 //------------------------------------------------------------------------------
 /*static*/ void Tracing::Output( const char * message )
 {
+    PROFILE_FUNCTION
+
 	// pass through callback if there is one
 	if ( m_CallbackOutput )
 	{
@@ -109,7 +114,7 @@
 	}
 
 	// normal output that goes to the TTY
-	printf( "%s", message );
+	fputs( message, stdout );
 
 	// emit to the debugger as well if possible
     #if defined( __WINDOWS__ )

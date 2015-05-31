@@ -28,7 +28,6 @@ public:
 	bool m_ShowProgress;
 	bool m_AllowDistributed;
 	bool m_ShowSummary;
-	bool m_ShowBuildTime;
 	bool m_SaveDBOnCompletion;
 	bool m_GenerateReport;
 	bool m_NoLocalConsumptionOfRemoteJobs;

@@ -22,7 +22,7 @@
         <li>Efficient parallel compilation</li>
         <li>Local and network cache support</li>       
         <li>Lightning fast "nothing to build"</li>
-        <li>Unity/Blob builds</li>
+        <li>Unity/Blob builds with iteration enhancements</li>
         <li>Distributed compilation</li>
       </ul>
     </div>
@@ -34,7 +34,8 @@
       <ul>
         <li>Build multiple platforms at once</li>
         <li>Build multiple targets at once</li>
-        <li>Supports PC, Xbox 360, Xbox One, PS3, PS4, Wii & WiiU</li>
+		<li>Compile on Windows, OS X and Linux</li>
+        <li>Target Windows, OS X, Linux, IOS, Android, Xbox 360, Xbox One, PS3, PS4, Wii & WiiU</li>
 		<li>Supports MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior & NVCC (CUDA)</li>
       </ul>
     </div>
@@ -85,7 +86,7 @@
     <div class='newsitembody'>
 <p>FASTBuild was designed from the ground up to support parallel compilation.  The highly optimized main build pipeline is designed to be as thin as possible, dispatching build tasks to worker threads to maximize parallelism.</p>
 <p>FASTBuild has no artificial dependency bottlenecks like those present when compiling with Visual Studio/MSBuild.  Unlike Visual Studio, FASTBuild is able to precisely manage the number of CPU cores used during a build avoiding excessive idle spots or excessive context switching due to spawning too many threads.</p>
-<p>FASTBuild is a native Windows application, with all functionality built-in, avoiding the process-invocation overhead present in systems like make.</p>
+<p>FASTBuild is a native Windows/OS X/Linux application, with all functionality built-in, avoiding the process-invocation overhead present in systems like make.</p>
 <p>Processing and management of the build graph occurs in highly optimized C++ code, avoiding performance issues present in systems like Scons.</p>
 </div>
 
@@ -124,12 +125,12 @@ FASTBuild is a single executable, weighing in at around 400KB.
 
     <div class='newsitemheader'>Small run-time memory usage</div>
     <div class='newsitembody'>
-FASTBuild uses very little memory, apart from some per-cpu work buffers.  A typical 8 core machine has a footprint of under 100MB.  More free memory means better IO caching by Windows.
+FASTBuild uses very little memory, apart from some per-cpu work buffers.  A typical 8 core machine has a footprint of under 100MB.  More free memory means better IO caching by the OS.
 </div>
 
     <div class='newsitemheader'>No external dependencies</div>
     <div class='newsitembody'>
-FASTBuild requires no external DLLs, libraries, 3rd party software or executables (other than those belonging to your compiler(s)).  It runs on a clean install of Windows (Vista, 7, 8.1 or server class equivalents).
+FASTBuild requires no external DLLs, libraries, 3rd party software or executables (other than those belonging to your compiler(s)).  It runs on a clean install of Windows (Vista, 7, 8.1 or server class equivalents), OS X (10.7+) or Linux.
 </div>
 
     <div class='newsitemheader'>No installation required</div>
@@ -152,7 +153,7 @@ As with buiding multiple platforms simultaneously, FASTBuild can build multiple 
 
     <div class='newsitemheader'>Support Consoles, Windows, Linux and OS X</div>
     <div class='newsitembody'>
-FASTBuild supports targetting Windows, Linux and OS X (X86 and X64) and all major consoles (PS3, PS4, Xbox360 & XboxOne).  Supported compilers are MSVC, GCC, SNC & Clang. It will also work with any other syntactically compatible command line compilers, preparing it for more platforms in the future.
+FASTBuild runs on Windows, Linux and OS X, targeting those platforms. It also supports all major consoles (PS3, PS4, Xbox360, XboxOne, Wii & WiiU) and smartphones (IOS & Android).  Supported compilers are MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior &amp; CUDA. It will also work with any other syntactically compatible command line compilers, preparing it for more platforms in the future.
 </div>
 
 

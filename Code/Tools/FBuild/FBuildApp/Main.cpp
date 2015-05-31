@@ -13,6 +13,7 @@
 #include "Core/Process/SharedMemory.h"
 #include "Core/Process/SystemMutex.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -47,6 +48,7 @@ void DisplayVersion();
 #endif
 int WrapperMainProcess( const AString & args, const FBuildOptions & options, SystemMutex & finalProcess );
 int WrapperIntermediateProcess( const AString & args, const FBuildOptions & options );
+int Main(int argc, char * argv[]);
 
 // Misc
 //------------------------------------------------------------------------------
@@ -73,11 +75,23 @@ SharedMemory g_SharedMemory;
 //------------------------------------------------------------------------------
 int main(int argc, char * argv[])
 {
+    // This wrapper is purely for profiling scope
+    int result = Main( argc, argv );
+    PROFILE_SYNCHRONIZE // make sure no tags are active and do one final sync
+    return result;
+}
+
+// Main
+//------------------------------------------------------------------------------
+int Main(int argc, char * argv[])
+{
+    PROFILE_FUNCTION
+
+	Timer t;
+
     #if defined( __WINDOWS__ )
         VERIFY( SetConsoleCtrlHandler( (PHANDLER_ROUTINE)CtrlHandler, TRUE ) ); // Register
     #endif
-
-	Timer t;
 
 	// handle cmd line args
 	Array< AString > targets( 8, true );
@@ -89,7 +103,6 @@ int main(int argc, char * argv[])
 	bool allowDistributed = false;
 	bool showCommands = false;
 	bool showSummary = false;
-	bool noOutputBuffering = false;
 	bool report = false;
 	bool fixupErrorPaths = false;
 	bool waitMode = false;
@@ -173,7 +186,8 @@ int main(int argc, char * argv[])
 			}
 			else if ( thisArg == "-nooutputbuffering" )
 			{
-				noOutputBuffering = true;
+				// this doesn't do anything any more
+				OUTPUT( "FBuild: Warning: -nooutputbuffering is deprecated." );
 				continue;
 			}
 			else if ( thisArg == "-noprogress" )
@@ -209,7 +223,6 @@ int main(int argc, char * argv[])
 			else if ( ( thisArg == "-ide" ) || ( thisArg == "-vs" ) )
 			{
 				progressBar = false;
-				noOutputBuffering = true;
 				fixupErrorPaths = true;
                 #if defined( __WINDOWS__ )
                     wrapperMode = WRAPPER_MODE_MAIN_PROCESS;
@@ -296,12 +309,9 @@ int main(int argc, char * argv[])
         VERIFY( SetPriorityClass( GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS ) );
     #endif
 
-	if ( noOutputBuffering )
-	{
-		// prevent buffering, so output in Visual Studio is quick
-		setvbuf(stdout, NULL, _IONBF, 0);
-		setvbuf(stderr, NULL, _IONBF, 0);
-	}
+	// don't buffer output
+	VERIFY( setvbuf(stdout, nullptr, _IONBF, 0) == 0 );
+	VERIFY( setvbuf(stderr, nullptr, _IONBF, 0) == 0 );
 
     // ensure only one FASTBuild instance is running at a time
     SystemMutex mainProcess( options.GetMainProcessMutexName().Get() );
@@ -417,6 +427,20 @@ int main(int argc, char * argv[])
 		sharedData->ReturnCode = ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
 	}
 
+    // final line of output - status of build
+    float totalBuildTime = t.GetElapsed(); // FBuildStats::GetTotalBuildTimeS();
+	uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
+	totalBuildTime -= ( minutes * 60.0f );
+	float seconds = totalBuildTime;
+	if ( minutes > 0 )
+	{
+		FLOG_BUILD( "Time: %um %05.3fs\n", minutes, seconds );
+	}
+	else
+	{
+		FLOG_BUILD( "Time: %05.3fs\n", seconds );
+	}
+
 	return ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
 }
 
@@ -439,13 +463,11 @@ void DisplayHelp()
 	        " -fixuperrorpaths Reformat error paths to be VisualStudio friendly.\n"
 			" -help          Show this help.\n"
             " -ide           Enable multiple options when building from an IDE.\n"
-            "                Enables: -noprogress, -nooutputbuffering\n"
-            "                -fixuperrorpaths & -wrapper (Windows)\n"
+            "                Enables: -noprogress, -fixuperrorpaths &\n"
+			"                -wrapper (Windows)\n"
 			" -jX            Explicitly set worker thread count X, instead of\n"
 			"                default of NUMBER_OF_PROCESSORS. Set to 0 to build\n"
 			"                everything in the main thread.\n"
-			" -nooutputbuffering Don't buffer output when writing to stdout and\n"
-			"                stderr.  Useful if monitoring build output.\n"
 			" -noprogress    Don't show the progress bar while building.\n"
 			" -report        Ouput a detailed report at the end of the build,\n"
 			"                to report.html.  This will lengthen the total build\n"

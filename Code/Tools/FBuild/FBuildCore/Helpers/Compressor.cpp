@@ -12,6 +12,7 @@
 #include "Core/Env/Types.h"
 #include "Core/Math/Conversions.h"
 #include "Core/Mem/Mem.h"
+#include "Core/Profile/Profile.h"
 
 #include "lz4.h"
 
@@ -55,6 +56,8 @@ bool Compressor::IsValidData( const void * data, size_t dataSize ) const
 //------------------------------------------------------------------------------
 bool Compressor::Compress( const void * data, size_t dataSize )
 {
+    PROFILE_FUNCTION
+
 	ASSERT( data );
 	ASSERT( ( (size_t)data % 4 ) == 0 ); // input must be 4 byte aligned
 	ASSERT( m_Result == nullptr );
@@ -97,6 +100,8 @@ bool Compressor::Compress( const void * data, size_t dataSize )
 //------------------------------------------------------------------------------
 void Compressor::Decompress( const void * data )
 {
+    PROFILE_FUNCTION
+
 	ASSERT( data );
 	ASSERT( ( (size_t)data % 4 ) == 0 ); // output must be 4 byte aligned
 	ASSERT( m_Result == nullptr );

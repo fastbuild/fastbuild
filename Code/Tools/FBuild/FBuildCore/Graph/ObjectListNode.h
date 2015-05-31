@@ -11,6 +11,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class DirectoryListNode;
 class CompilerNode;
 class ObjectNode;
 
@@ -51,7 +52,7 @@ private:
 	virtual BuildResult DoBuild( Job * job );
 
 	// internal helpers
-	bool CreateDynamicObjectNode( Node * inputFile, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
+	bool CreateDynamicObjectNode( Node * inputFile, const DirectoryListNode * dirNode, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
 
 	CompilerNode *	m_Compiler;
 	AString			m_CompilerArgs;
