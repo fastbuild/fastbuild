@@ -154,7 +154,7 @@ void ToolManifest::Serialize( IOStream & ms ) const
 
 // Deserialize
 //------------------------------------------------------------------------------
-void ToolManifest::Deserialize( IOStream & ms )
+void ToolManifest::Deserialize( IOStream & ms, bool remote )
 {
 	ms.Read( m_ToolId );
 
@@ -176,6 +176,12 @@ void ToolManifest::Deserialize( IOStream & ms )
 		ms.Read( contentSize );
 		m_Files.Append( File( name, timeStamp, hash, nullptr, contentSize ) );
 	}
+
+    // everything else is only needed remotely (in the worker)
+    if ( remote == false )
+    {
+        return;
+    }
 
 	// determine if any files are remaining from a previous run
 	size_t numFilesAlreadySynchronized = 0;

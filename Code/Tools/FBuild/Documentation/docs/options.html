@@ -55,10 +55,6 @@
     <td>Explicitly set worker thread count.</td>
   </tr>
   <tr>
-    <td><a href="#nooutputbuffering">-nooutputbuffering</a></td>
-    <td>Don't buffer output written to stdout.</td>
-  </tr>
-  <tr>
     <td><a href="#noprogress">-noprogress</a></td>
     <td>Don't show the progress bar while building.</td>
   </tr>
@@ -163,7 +159,6 @@ specified instead.</p>
 <p>IDE integration mode.  Enables several options that are commonly desired when running from within an IDE such as VisualStudio, XCode or kDevelop.
 The following options are enabled:
 <ul>
-<li><a href="#nooutputbuffering">-nooutputbuffering</a></li>
 <li><a href="#noprogress">-noprogress</a></li>
 <li><a href="#fixuperrorpaths">-fixuperrorpaths</a></li>
 <li><a href="#wrapper">-wrapper</a> (Windows only)</li>
@@ -177,12 +172,6 @@ The following options are enabled:
 <p>A value of 0 for X indicates that no additional threads should be spawned, and build graph processing and compilation should occur on the same thread.  This can be useful for buid process debugging, especially when combined with the '-verbose' option.</p>
 <p>Positive values can be used to exactly set the number of tasks which can be performed in parallel.  This can be used to limit CPU usage on a machine that needs to perform other work while compilation is in progress.  Values greater than the number of physical processors are accepted, but will almost certainly result in degraded performance.</p>
 <p><b>Generally, this option should be omitted for optimal compilation performance, but it's possible that on some systems, tweaking this might yield improved performance.</b></p>
-</div>
-
-    <div class='newsitemheader' id="nooutputbuffering">-nooutputbuffering</div>
-    <div class='newsitembody'>
-<p>Don't buffer output written to stdout.</p>
-<p>This should be used when targetting compilation from within Visual Studio or another IDE. (or use -vs)</p>
 </div>
 
     <div class='newsitemheader' id="noprogress">-noprogress</div>

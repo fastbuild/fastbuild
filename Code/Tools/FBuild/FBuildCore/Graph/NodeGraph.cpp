@@ -41,6 +41,7 @@
 #include "Core/Math/Murmur3.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -80,6 +81,8 @@ NodeGraph::~NodeGraph()
 bool NodeGraph::Initialize( const char * bffFile,
 							const char * nodeGraphDBFile )
 {
+    PROFILE_FUNCTION
+
 	ASSERT( bffFile ); // must be supplied (or left as default)
 
 	ASSERT( m_UsedFiles.IsEmpty() ); // NodeGraph cannot be recycled
@@ -957,6 +960,8 @@ void NodeGraph::AddNode( Node * node )
 //------------------------------------------------------------------------------
 void NodeGraph::DoBuildPass( Node * nodeToBuild )
 {
+    PROFILE_FUNCTION
+
 	s_BuildPassTag++;
 
 	if ( nodeToBuild->GetType() == Node::PROXY_NODE )
@@ -981,6 +986,12 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 			if ( n->GetState() != Node::BUILDING )
 			{
 				BuildRecurse( n );
+
+                // check for nodes that become up-to-date immediately (trivial build)
+    			if ( n->GetState() == Node::UP_TO_DATE )
+                {
+    				upToDateCount++;
+                }
 			}
 		}
 
@@ -993,7 +1004,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 	}
 	else
 	{
-		if ( nodeToBuild->GetState() != Node::BUILDING )
+		if ( nodeToBuild->GetState() < Node::BUILDING )
 		{
 			BuildRecurse( nodeToBuild );
 		}

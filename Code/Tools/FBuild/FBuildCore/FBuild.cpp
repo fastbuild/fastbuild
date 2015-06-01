@@ -95,6 +95,8 @@ FBuild::FBuild( const FBuildOptions & options )
 //------------------------------------------------------------------------------
 FBuild::~FBuild()
 {
+    PROFILE_FUNCTION
+
 	Function::Destroy();
 
 	FDELETE m_DependencyGraph;
@@ -119,6 +121,8 @@ FBuild::~FBuild()
 //------------------------------------------------------------------------------
 bool FBuild::Initialize( const char * nodeGraphDBFile )
 {
+    PROFILE_FUNCTION
+
 	// handle working dir
 	if ( !FileIO::SetCurrentDir( m_Options.GetWorkingDir() ) )
 	{
@@ -198,8 +202,6 @@ bool FBuild::Build( const AString & target )
 //------------------------------------------------------------------------------
 bool FBuild::Build( const Array< AString > & targets )
 {
-	PROFILE_FUNCTION
-
 	ASSERT( !targets.IsEmpty() );
 
 	// Get the nodes for all the targets
@@ -246,6 +248,8 @@ bool FBuild::Build( const Array< AString > & targets )
 //------------------------------------------------------------------------------
 bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 {
+    PROFILE_FUNCTION
+
 	nodeGraphDBFile = nodeGraphDBFile ? nodeGraphDBFile : GetDependencyGraphFileName();
 
 	FLOG_INFO( "Saving DepGraph '%s'", nodeGraphDBFile );
@@ -292,8 +296,6 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 //------------------------------------------------------------------------------
 bool FBuild::Build( Node * nodeToBuild )
 {
-	PROFILE_FUNCTION
-
 	ASSERT( nodeToBuild );
 
 	s_StopBuild = false; // allow multiple runs in same process
@@ -319,6 +321,21 @@ bool FBuild::Build( Node * nodeToBuild )
 	// keep doing build passes until completed/failed
 	for ( ;; )
 	{
+        // process completed jobs
+        m_JobQueue->FinalizeCompletedJobs();
+
+		if ( !stopping )
+		{
+			// do a sweep of the graph to create more jobs
+			m_DependencyGraph->DoBuildPass( nodeToBuild );
+		}
+
+		if ( m_Options.m_NumWorkerThreads == 0 )
+		{
+			// no local threads - do build directly
+			WorkerThread::Update();
+		}
+
 		bool complete = ( nodeToBuild->GetState() == Node::UP_TO_DATE ) ||
 						( nodeToBuild->GetState() == Node::FAILED );
 
@@ -351,40 +368,24 @@ bool FBuild::Build( Node * nodeToBuild )
 			}
 		}
 
-		if ( !stopping )
-		{
-			// do a sweep of the graph to create more jobs
-			m_DependencyGraph->DoBuildPass( nodeToBuild );
-		}
-
-		if ( m_Options.m_NumWorkerThreads == 0 )
-		{
-			// no local threads - do build directly
-			WorkerThread::Update();
-		}
-
-		// process completed jobs
-		m_JobQueue->FinalizeCompletedJobs();
-
 		// completely stopped?
 		if ( stopping && m_JobQueue->HaveWorkersStopped() )
 		{
 			break;
 		}
 
-		Thread::Sleep( 16 );
+		// Wait until more work to process or time has elapsed
+		m_JobQueue->MainThreadWait( 100 );
 
 		// update progress
-		UpdateBuildStatus( nodeToBuild, false );
-
-		PROFILE_SYNCHRONIZE
+		UpdateBuildStatus( nodeToBuild );
 	}
+
+    // wrap up/free any jobs that come from the last build pass
+    m_JobQueue->FinalizeCompletedJobs();
 
 	FDELETE m_JobQueue;
 	m_JobQueue = nullptr;
-
-	// force one more update to show completion time
-	UpdateBuildStatus( nodeToBuild, true );
 
 	FLog::StopBuild();
 
@@ -403,25 +404,7 @@ bool FBuild::Build( Node * nodeToBuild )
 
 	m_BuildStats.OnBuildStop( nodeToBuild );
 
-	bool buildOK = ( nodeToBuild->GetState() == Node::UP_TO_DATE );
-
-	// final line of output - status of build
-	if ( m_Options.m_ShowBuildTime )
-	{
-		uint32_t minutes = uint32_t( timeTaken / 60.0f );
-		timeTaken -= ( minutes * 60.0f );
-		float seconds = timeTaken;
-		if ( minutes > 0 )
-		{
-			FLOG_BUILD( "Time: %um %05.3fs\n", minutes, seconds );
-		}
-		else
-		{
-			FLOG_BUILD( "Time: %05.3fs\n", seconds );
-		}
-	}
-
-	return buildOK;
+	return ( nodeToBuild->GetState() == Node::UP_TO_DATE );
 }
 
 // SetEnvironmentString
@@ -464,7 +447,7 @@ void FBuild::GetLibEnvVar( AString & value ) const
 
 // UpdateBuildStatus
 //------------------------------------------------------------------------------
-void FBuild::UpdateBuildStatus( const Node * node, bool forceUpdate )
+void FBuild::UpdateBuildStatus( const Node * node )
 {
 	PROFILE_FUNCTION
 
@@ -479,8 +462,6 @@ void FBuild::UpdateBuildStatus( const Node * node, bool forceUpdate )
 	float timeNow = m_Timer.GetElapsed();
 
 	bool doUpdate = ( ( timeNow - m_LastProgressOutputTime ) >= OUTPUT_FREQUENCY );	
-	doUpdate |= forceUpdate;
-
 	if ( doUpdate == false )
 	{
 		return;
@@ -489,6 +470,8 @@ void FBuild::UpdateBuildStatus( const Node * node, bool forceUpdate )
 	// recalculate progress estimate?
 	if ( ( timeNow - m_LastProgressCalcTime ) >= CALC_FREQUENCY )
 	{
+        PROFILE_SECTION( "CalcPogress" )
+
 		FBuildStats & bs = m_BuildStats;
 		bs.m_NodeTimeProgressms = 0;
 		bs.m_NodeTimeTotalms = 0;

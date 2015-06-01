@@ -51,7 +51,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 55 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 56 };
 
 	bool IsValid() const
 	{

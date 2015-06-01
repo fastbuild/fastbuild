@@ -1234,6 +1234,25 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 				continue;
 			}
 		}
+
+        // cl.exe treats \" as an escaped quote
+        // It's a common user error to terminate things (like include paths) with a quote 
+        // this way, messing up the rest of the args and causing bizarre failures. 
+        // Since " is not a valid character in a path, just strip the escape char
+        if ( isMSVC )
+        {
+            // Is this invalid? 
+            //  bad: /I"directory\"  - TODO:B Handle other args with this problem
+            //  ok : /I\"directory\"
+            //  ok : /I"directory"
+            if ( token.BeginsWith( "/I\"" ) && token.EndsWith( "\\\"" ) )
+            {
+				fullArgs.Append( token.Get(), token.GetLength() - 2 );
+				fullArgs += '"';
+		        fullArgs += ' ';
+                continue;
+            }
+        }
 				
 		// untouched token
 		fullArgs += token;

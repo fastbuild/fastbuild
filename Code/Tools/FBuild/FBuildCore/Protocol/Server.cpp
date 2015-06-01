@@ -390,7 +390,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgMani
 		ToolManifest ** found = m_Tools.FindDeref( toolId );
 		ASSERT( found );
 		manifest = *found;
-		manifest->Deserialize( ms );
+		manifest->Deserialize( ms, true ); // true == remote
 	}
 
 	// manifest has checked local files, from previous sessions an may

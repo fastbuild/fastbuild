@@ -19,6 +19,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -272,7 +273,11 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 		FileIO::FileDelete( pdbName.Get() );
 	}
 
-	Node::BuildResult result = ((Node *)node )->DoBuild2( job, racingRemoteJob );
+    Node::BuildResult result;
+    {
+        PROFILE_SECTION( "RACE" );
+    	result = ((Node *)node )->DoBuild2( job, racingRemoteJob );
+    }
 
 	uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 

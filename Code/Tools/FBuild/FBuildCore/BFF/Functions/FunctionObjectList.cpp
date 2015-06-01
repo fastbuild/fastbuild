@@ -19,6 +19,9 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
+// Core
+#include "Core/FileIO/PathUtils.h"
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionObjectList::FunctionObjectList()
@@ -48,7 +51,7 @@ FunctionObjectList::FunctionObjectList()
 	const BFFVariable * compiler;
 	const BFFVariable * compilerOptions;
 	AStackString<> compilerOptionsDeoptimized;
-	const BFFVariable * compilerOutputPath;
+	AStackString<> compilerOutputPath;
 	const BFFVariable * compilerOutputExtension;
 	if ( !GetString( funcStartIter, compiler, ".Compiler", true ) ||
 		 !GetString( funcStartIter, compilerOptions, ".CompilerOptions", true ) ||
@@ -58,6 +61,8 @@ FunctionObjectList::FunctionObjectList()
 	{
 		return false;
 	}
+
+    PathUtils::FixupFolderPath( compilerOutputPath );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
@@ -92,6 +97,24 @@ FunctionObjectList::FunctionObjectList()
 			Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "%2" );
 			return false;
 		}
+
+        // check /c or -c
+        if ( objFlags & ObjectNode::FLAG_MSVC )
+        {
+            if ( args.Find( "/c" ) == nullptr )
+            {
+		        Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "/c" );
+			    return false;
+		    }
+        }
+        else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG ) )
+        {
+            if ( args.Find( "-c" ) == nullptr )
+            {
+		        Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "-c" );
+			    return false;
+		    }
+        }
 	}
 
 	// Compiler Force Using
@@ -183,7 +206,7 @@ FunctionObjectList::FunctionObjectList()
 												  compilerNode,
 												  compilerOptions->GetString(),
 												  compilerOptionsDeoptimized,
-												  compilerOutputPath->GetString(),
+												  compilerOutputPath,
 												  precompiledHeaderNode,
 												  compilerForceUsing,
 												  preBuildDependencies,

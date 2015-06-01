@@ -12,6 +12,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/Report.h"
 
 // Core
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -85,6 +86,8 @@ void FBuildStats::OnBuildStop( Node * node )
 //------------------------------------------------------------------------------
 void FBuildStats::GatherPostBuildStatistics( Node * node )
 {
+    PROFILE_FUNCTION
+
 	// recurse and gather the per-node-type statistics
 	GatherPostBuildStatisticsRecurse( node );
 
@@ -106,27 +109,30 @@ void FBuildStats::GatherPostBuildStatistics( Node * node )
 //------------------------------------------------------------------------------
 void FBuildStats::OutputSummary() const
 {
+    PROFILE_FUNCTION
+
+    AStackString< 2048 > output;
 
 	// Top 10 cost items
 	if ( m_NodesByTime.IsEmpty() == false )
 	{
-		OUTPUT( "--- Most Expensive ----------------------------------------------\n" );
-		OUTPUT( "Time (s)  Name:\n" );
+        output += "--- Most Expensive ----------------------------------------------\n";
+		output += "Time (s)  Name:\n";
 		size_t itemsToDisplay = Math::Min( m_NodesByTime.GetSize(), (size_t)20 );
 		for ( size_t i=0; i<itemsToDisplay; ++i )
 		{
 			const Node * n = m_NodesByTime[ i ];
-			OUTPUT( "%-9.3f %s\n", ( (float)n->GetProcessingTime() / 1000.0f ), n->GetName().Get() );
+			output.AppendFormat( "%-9.3f %s\n", ( (float)n->GetProcessingTime() / 1000.0f ), n->GetName().Get() );
 		}
-		OUTPUT( "\n" );
+		output += "\n";
 	}
 
-	OUTPUT( "--- Summary -----------------------------------------------------\n" );
+	output += "--- Summary -----------------------------------------------------\n";
 
 	// Per-Node type stats
 	// NOTE: Only showing the interesting nodes
-	OUTPUT( "                                 /----- Cache -----\\\n" );
-	OUTPUT( "Build:          Seen    Built   Hit     Miss    Store   CPU\n" );
+	output += "                                 /----- Cache -----\\\n";
+	output += "Build:          Seen    Built   Hit     Miss    Store   CPU\n";
 	for ( uint32_t i=0; i< Node::NUM_NODE_TYPES; ++i )
 	{
 		// don't show nodes with no task
@@ -153,14 +159,14 @@ void FBuildStats::OutputSummary() const
 		{
 			cacheInfo = "-       -       -       ";
 		}
-		OUTPUT( " - %-10s : %-8u%-8u%s%s\n",
+		output.AppendFormat( " - %-10s : %-8u%-8u%s%s\n",
 						typeName,
 						stats.m_NumProcessed,
 						stats.m_NumBuilt,
 						cacheInfo.Get(),
 						cpuTime.Get() );
 	}
-	OUTPUT( "Cache:\n" );
+	output += "Cache:\n";
 	{
 		const uint32_t hits = m_Totals.m_NumCacheHits;
 		const uint32_t misses = m_Totals.m_NumCacheMisses;
@@ -170,24 +176,26 @@ void FBuildStats::OutputSummary() const
 		{
 			hitPerc = ( (float)hits / float( hits + misses ) * 100.0f );
 		}
-		OUTPUT( " - Hits       : %u (%2.1f %%)\n", hits, hitPerc );
-		OUTPUT( " - Misses     : %u\n", misses );
-		OUTPUT( " - Stores     : %u\n", stores );
+		output.AppendFormat( " - Hits       : %u (%2.1f %%)\n", hits, hitPerc );
+		output.AppendFormat( " - Misses     : %u\n", misses );
+		output.AppendFormat( " - Stores     : %u\n", stores );
 	}
 
 	AStackString<> buffer;
 	FormatTime( m_TotalBuildTime, buffer );
-	OUTPUT( "Time:\n" );
-	OUTPUT( " - Real       : %s\n", buffer.Get() );
+	output += "Time:\n";
+	output.AppendFormat( " - Real       : %s\n", buffer.Get() );
 	float totalLocalCPUInSeconds = (float)( (double)m_TotalLocalCPUTimeMS / (double)1000 );
 	float totalRemoteCPUInSeconds = (float)( (double)m_TotalRemoteCPUTimeMS / (double)1000 );
 	FormatTime( totalLocalCPUInSeconds, buffer );
 	float localRatio = ( totalLocalCPUInSeconds / m_TotalBuildTime );
-	OUTPUT( " - Local CPU  : %s (%2.1f:1)\n", buffer.Get(), localRatio );
+	output.AppendFormat( " - Local CPU  : %s (%2.1f:1)\n", buffer.Get(), localRatio );
 	FormatTime( totalRemoteCPUInSeconds, buffer );
 	float remoteRatio = ( totalRemoteCPUInSeconds / m_TotalBuildTime );
-	OUTPUT( " - Remote CPU : %s (%2.1f:1)\n", buffer.Get(), remoteRatio );
-	OUTPUT( "-----------------------------------------------------------------\n" );
+	output.AppendFormat( " - Remote CPU : %s (%2.1f:1)\n", buffer.Get(), remoteRatio );
+	output += "-----------------------------------------------------------------\n";
+
+	OUTPUT( "%s", output.Get() );
 }
 
 // GatherPostBuildStatisticsRecurse

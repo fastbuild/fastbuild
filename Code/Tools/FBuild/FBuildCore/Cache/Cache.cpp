@@ -16,6 +16,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Mem/Mem.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
 // CONSTRUCTOR
@@ -34,6 +35,8 @@
 //------------------------------------------------------------------------------
 /*virtual*/ bool Cache::Init( const AString & cachePath )
 {
+    PROFILE_FUNCTION
+
 	m_CachePath = cachePath;
 	PathUtils::EnsureTrailingSlash( m_CachePath );
 	if ( FileIO::EnsurePathExists( m_CachePath ) )

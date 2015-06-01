@@ -130,7 +130,7 @@ ObjectListNode::~ObjectListNode()
 				}
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n ) == false )
+				if ( CreateDynamicObjectNode( n, dln ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -139,7 +139,7 @@ ObjectListNode::~ObjectListNode()
 		else if ( i->GetNode()->GetType() == Node::FILE_NODE )
 		{
 			// a single file, create the object that will compile it
-			if ( CreateDynamicObjectNode( i->GetNode() ) == false )
+			if ( CreateDynamicObjectNode( i->GetNode(), nullptr ) == false )
 			{
 				return false; // CreateDynamicObjectNode will have emitted error
 			}
@@ -167,22 +167,22 @@ ObjectListNode::~ObjectListNode()
 				}
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, true ) == false )
+				if ( CreateDynamicObjectNode( n, nullptr, true ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
 			}
 			
 			// files from unity to build individually
-			const Array< AString > & isolatedFiles = un->GetIsolatedFileNames();
-			for ( Array< AString >::Iter it = isolatedFiles.Begin();
+			const Array< UnityNode::FileAndOrigin > & isolatedFiles = un->GetIsolatedFileNames();
+			for ( Array< UnityNode::FileAndOrigin >::Iter it = isolatedFiles.Begin();
 				  it != isolatedFiles.End();
 				  it++ )
 			{
-				Node * n = ng.FindNode( *it );
+				Node * n = ng.FindNode( it->GetName() );
 				if ( n == nullptr )
 				{
-					n = ng.CreateFileNode( *it );
+					n = ng.CreateFileNode( it->GetName() );
 				}
 				else if ( n->IsAFile() == false )
 				{
@@ -191,7 +191,7 @@ ObjectListNode::~ObjectListNode()
 				}
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, false, true ) == false )
+				if ( CreateDynamicObjectNode( n, it->GetDirListOrigin(), false, true ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -287,7 +287,7 @@ void ObjectListNode::GetInputFiles( AString & fullArgs, const AString & pre, con
 
 // CreateDynamicObjectNode
 //------------------------------------------------------------------------------
-bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, bool isUnityNode, bool isIsolatedFromUnityNode )
+bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryListNode * dirNode, bool isUnityNode, bool isIsolatedFromUnityNode )
 {
 	const AString & fileName = inputFile->GetName();
 
@@ -297,6 +297,20 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, bool isUnityNode
 	lastSlash = lastSlash ? ( lastSlash + 1 ) : fileName.Get();
 	const char * lastDot = fileName.FindLast( '.' );
 	lastDot = lastDot && ( lastDot > lastSlash ) ? lastDot : fileName.GetEnd();
+
+    // if source comes from a directory listing, use path relative to dirlist base
+    // to replicate the folder hierearchy in the output
+    if ( dirNode )
+    {
+        const AString & baseDir = dirNode->GetPath();
+        ASSERT( PathUtils::PathBeginsWith( fileName, baseDir ) );
+        if ( PathUtils::PathBeginsWith( fileName, baseDir ) )
+        {
+            // ... use everything after that
+            lastSlash = fileName.Get() + baseDir.GetLength();
+        }
+    }
+
 	AStackString<> fileNameOnly( lastSlash, lastDot );
 	AStackString<> objFile( m_CompilerOutputPath );
 	objFile += fileNameOnly;
