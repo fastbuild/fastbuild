@@ -12,6 +12,7 @@ External/SDK
 *.vcxproj.filters
 tmp/
 ftmp/
+bin/
 
 # Windows image file caches
 Thumbs.db
