@@ -253,15 +253,11 @@ popd > /dev/null
 echo LZ4 - compiling...
 mkdir -p ../tmp/LZ4
 g++  $OPTIONS $INCLUDEPATHS $DEFINES ../External/LZ4/lz4-r127/lz4.c -o ../tmp/LZ4/lz4.o
+g++  $OPTIONS $INCLUDEPATHS $DEFINES ../External/LZ4/lz4-r127/xxhash.c -o ../tmp/LZ4/xxhash.o
 echo LZ4 - archiving...
 pushd ../tmp/LZ4 > /dev/null
 ar rcs libLZ4.a lz4.o
 popd > /dev/null
-
-# xxHash
-echo xxHash - compiling...
-mkdir -p ../tmp/xxHash
-g++  $OPTIONS $INCLUDEPATHS $DEFINES ../External/xxHash/xxhash.c -o ../tmp/xxHash/xxhash.o
 
 #fi
 
