@@ -35,7 +35,7 @@ ReflectedProperty::ReflectedProperty( const char * name, uint32_t offset, Proper
 	m_Offset = offset;
 	m_Type = (uint32_t)type;
 
-	#if defined( __WINDOWS__ )
+	#if defined( REFLECTION_KEEP_STRING_NAMES )
 		m_Name = name;
 	#endif
 

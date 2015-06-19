@@ -21,7 +21,7 @@ public:
 						const Dependencies & preBuildDependencies );
 	virtual ~CopyNode();
 
-	static inline Node::Type GetType() { return Node::COPY_NODE; }
+	static inline Node::Type GetTypeS() { return Node::COPY_NODE; }
 
 	static Node * Load( IOStream & stream );
 	virtual void Save( IOStream & stream ) const;

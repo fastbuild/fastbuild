@@ -6,7 +6,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FileNode.h"
+#include "ObjectListNode.h"
 #include "Core/Containers/Array.h"
 
 // Forward Declarations
@@ -17,7 +17,7 @@ class ObjectNode;
 
 // LibraryNode
 //------------------------------------------------------------------------------
-class LibraryNode : public FileNode
+class LibraryNode : public ObjectListNode
 {
 public:
 	explicit LibraryNode( const AString & libraryName,
@@ -39,14 +39,12 @@ public:
                           const AString & preprocessorArgs );
 	virtual ~LibraryNode();
 
-	static inline Node::Type GetType() { return Node::LIBRARY_NODE; }
+	static inline Node::Type GetTypeS() { return Node::LIBRARY_NODE; }
+
+	virtual bool IsAFile() const override;
 
 	static Node * Load( IOStream & stream );
-	virtual void Save( IOStream & stream ) const;
-
-	const char * GetObjExtension() const;
-
-	void GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const;
+	virtual void Save( IOStream & stream ) const override;
 
 	enum Flag
 	{
@@ -59,33 +57,19 @@ public:
 private:
 	friend class FunctionLibrary;
 
-	virtual bool DoDynamicDependencies( bool forceClean );
-	virtual BuildResult DoBuild( Job * job );
+    virtual bool GatherDynamicDependencies( bool forceClean ) override;
+	virtual BuildResult DoBuild( Job * job ) override;
 
 	// internal helpers
 	void GetFullArgs( AString & fullArgs ) const;
-	bool CreateDynamicObjectNode( Node * inputFile, const DirectoryListNode * dirList, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
 	void EmitCompilationMessage( const AString & fullArgs ) const;
-
-	virtual Priority GetPriority() const { return PRIORITY_HIGH; }
 
 	inline bool GetFlag( Flag flag ) const { return ( ( m_Flags & (uint32_t)flag ) != 0 ); }
 
-	CompilerNode * m_Compiler;
-	AString m_CompilerArgs;
-	AString m_CompilerArgsDeoptimized;
-	AString m_CompilerOutputPath;
-	Dependencies m_CompilerForceUsing;
 	AString m_LibrarianPath;
 	AString m_LibrarianArgs;
 	uint32_t m_Flags;
-	ObjectNode * m_PrecompiledHeader;
-	AString m_ObjExtensionOverride;
 	Dependencies m_AdditionalInputs;
-	bool m_DeoptimizeWritableFiles;
-	bool m_DeoptimizeWritableFilesWithToken;
-	CompilerNode *	m_Preprocessor;
-	AString			m_PreprocessorArgs;
 };
 
 //------------------------------------------------------------------------------

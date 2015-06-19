@@ -23,7 +23,7 @@ public:
 					   const AString & m_WorkingDir );
 	virtual ~TestNode();
 
-	static inline Node::Type GetType() { return Node::TEST_NODE; }
+	static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
 
 	virtual void Save( IOStream & stream ) const;
 	static Node * Load( IOStream & stream );

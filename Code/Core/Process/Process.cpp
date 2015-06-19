@@ -376,7 +376,9 @@ void Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
         if ( IsRunning() )
         {
             // no data available, but process is still going, so wait
-            Thread::Sleep( 32 );
+            // TODO:C Replace this sleep with event-based wait
+            // (tricky to do on Windows since unnamed pipes are not waitable :(
+            Thread::Sleep( 15 );
             continue;
         }
 

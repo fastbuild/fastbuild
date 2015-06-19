@@ -25,6 +25,7 @@ Builds a statically linked library.
   .CompilerOptions          ; Options for compiler
   .CompilerOutputPath       ; Path to store intermediate objects
   .CompilerOutputExtension  ; (optional) Specify the file extension for generated objects (default .obj)
+  .CompilerOutputPrefix     ; (optional) Specify a prefix for generated objects (default none)
 
   ; Options for librarian
   .Librarian                ; Librarian to collect intermediate objects
@@ -39,7 +40,7 @@ Builds a statically linked library.
   .CompilerInputExcludePath ; (optional) Path(s) to exclude from compilation
   .CompilerInputExcludedFiles;(optional) File(s) to exclude from compilation
   .CompilerInputFiles       ; (optional) Explicit array of files to build
-  .CompilerInputUnity       ; (optional) Unity to build
+  .CompilerInputUnity       ; (optional) Unity to build (or Unities)
 
   ; Custom preprocessor support
   .Preprocessor				; (optional) Compiler to use for preprocessing

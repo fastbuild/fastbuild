@@ -726,7 +726,6 @@ ExeNode * NodeGraph::CreateExeNode( const AString & linkerOutputName,
 
 // CreateUnityNode
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 UnityNode *	NodeGraph::CreateUnityNode( const AString & unityName )
 {
 	ASSERT( Thread::IsMainThread() );
@@ -736,38 +735,6 @@ UnityNode *	NodeGraph::CreateUnityNode( const AString & unityName )
 	AddNode( node );
 	return node;
 }
-#endif
-
-// CreateUnityNode
-//------------------------------------------------------------------------------
-#ifndef USE_NODE_REFLECTION
-UnityNode *	NodeGraph::CreateUnityNode( const AString & unityName,
-										const Dependencies & dirNodes,
-										const Array< AString > & files,
-										const AString & outputPath,
-										const AString & outputPattern,
-										uint32_t numUnityFilesToCreate,
-										const AString & precompiledHeader,
-										bool isolateWritableFiles,
-										uint32_t maxIsolatedFiles,
-										const Array< AString > & excludePatterns )
-{
-	ASSERT( Thread::IsMainThread() );
-
-	UnityNode * node = FNEW( UnityNode( unityName,
-									  dirNodes,
-									  files,
-									  outputPath,
-									  outputPattern,
-									  numUnityFilesToCreate,
-									  precompiledHeader,
-									  isolateWritableFiles,
-									  maxIsolatedFiles,
-									  excludePatterns ));
-	AddNode( node );
-	return node;
-}
-#endif
 
 // CreateCSNode
 //------------------------------------------------------------------------------
@@ -985,7 +952,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 			}
 			if ( n->GetState() != Node::BUILDING )
 			{
-				BuildRecurse( n );
+				BuildRecurse( n, 0 );
 
                 // check for nodes that become up-to-date immediately (trivial build)
     			if ( n->GetState() == Node::UP_TO_DATE )
@@ -1006,25 +973,31 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 	{
 		if ( nodeToBuild->GetState() < Node::BUILDING )
 		{
-			BuildRecurse( nodeToBuild );
+			BuildRecurse( nodeToBuild, 0 );
 		}
 	}
+
+    // Make available all the jobs we discovered in this pass
+	JobQueue::Get().FlushJobBatch();
 }
 
 // BuildRecurse
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::BuildRecurse( Node * nodeToBuild )
+/*static*/ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 {
 	ASSERT( nodeToBuild );
 
 	// already building, or queued to build?
 	ASSERT( nodeToBuild->GetState() != Node::BUILDING )
 
+	// accumulate recursive cost
+	cost += nodeToBuild->GetLastBuildTime();
+
 	// check pre-build dependencies
 	if ( nodeToBuild->GetState() == Node::NOT_PROCESSED )
 	{
 		// all static deps done?
-		bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies() );
+		bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
 		if ( allDependenciesUpToDate == false )
 		{
 			return; // not ready or failed
@@ -1041,7 +1014,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 	if ( nodeToBuild->GetState() == Node::PRE_DEPS_READY )
 	{
 		// all static deps done?
-		bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies() );
+		bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
 		if ( allDependenciesUpToDate == false )
 		{
 			return; // not ready or failed
@@ -1071,7 +1044,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 	// dynamic deps
 	{
 		// all static deps done?
-		bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies() );
+		bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
 		if ( allDependenciesUpToDate == false )
 		{
 			return; // not ready or failed
@@ -1084,7 +1057,8 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 	nodeToBuild->SetStatFlag( Node::STATS_PROCESSED );
 	if ( nodeToBuild->DetermineNeedToBuild( forceClean ) )
 	{
-		JobQueue::Get().QueueJob( nodeToBuild );
+		nodeToBuild->m_RecursiveCost = cost;
+		JobQueue::Get().AddJobToBatch( nodeToBuild );
 	}
 	else
 	{
@@ -1094,7 +1068,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 
 // CheckDependencies
 //------------------------------------------------------------------------------
-/*static*/ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies )
+/*static*/ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost )
 {
 	ASSERT( nodeToBuild->GetType() != Node::PROXY_NODE );
 
@@ -1119,7 +1093,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 				// prevent multiple recursions in this pass
 				n->SetBuildPassTag( passTag );
 	
-				BuildRecurse( n );
+				BuildRecurse( n, cost );
 			}
 		}
 
@@ -1128,6 +1102,15 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 		if ( state == Node::UP_TO_DATE )
 		{
 			continue;
+		}
+
+		if ( state == Node::BUILDING )
+		{
+			// ensure deepest traversal cost is kept
+			if ( cost > nodeToBuild->m_RecursiveCost )
+			{
+				nodeToBuild->m_RecursiveCost = cost;
+			}
 		}
 
 		allDependenciesUpToDate = false;

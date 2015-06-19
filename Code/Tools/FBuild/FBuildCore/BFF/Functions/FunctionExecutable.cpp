@@ -540,15 +540,11 @@ bool FunctionExecutable::GetOtherLibraries( const BFFIterator & iter,
 		}
 
 		// file does not exist on disk, and there is no rule to build it
-        #if defined( __WINDOWS__ )
-            // TODO:MAC Manage missing libs for targets defined for other platforms
-            // TODO:LINUX Manage missing libs for targets defined for other platforms
-            if ( !found )
-            {
-                Error::Error_1104_TargetNotDefined( iter, this, ".LinkerOptions", *itL );
-                return false;
-            }
-        #endif
+        // Don't complain about this, because:
+        //  a) We may be parsing rules on another OS (i.e. parsing Linux rules on Windows)
+        //  b) User may have filtered some libs for platforms they don't care about (i.e. libs
+        //     for PS4 on a PC developer's machine on a cross-platform team)
+        // If the file is actually needed, the linker will emit an error during link-time.
 	}
 
 	return true;

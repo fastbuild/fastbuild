@@ -490,6 +490,69 @@ bool Function::GetDirectoryListNodeList( const BFFIterator & iter,
 	return true;
 }
 
+// GetFileNodes
+//------------------------------------------------------------------------------
+bool Function::GetFileNodes( const BFFIterator & iter,
+                             const Array< AString > & files,
+                             const char * inputVarName,
+                             Dependencies & nodes ) const
+{
+    NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+
+	const AString * const  end = files.End();
+	for ( const AString * it = files.Begin(); it != end; ++it )
+	{
+		const AString & file = *it;
+
+		// get node for the dir we depend on
+		Node * node = ng.FindNode( file );
+		if ( node == nullptr )
+		{
+			node = ng.CreateFileNode( file );
+        }
+		else if ( node->IsAFile() == false )
+		{
+			Error::Error_1005_UnsupportedNodeType( iter, this, inputVarName, node->GetName(), node->GetType() );
+			return false;
+		}
+
+		nodes.Append( Dependency( node ) );
+	}
+	return true;
+}
+
+// GetObjectListNodes
+//------------------------------------------------------------------------------
+bool Function::GetObjectListNodes( const BFFIterator & iter,
+                                   const Array< AString > & objectLists,
+                                   const char * inputVarName,
+                                   Dependencies & nodes ) const
+{
+    NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+
+	const AString * const  end = objectLists.End();
+	for ( const AString * it = objectLists.Begin(); it != end; ++it )
+	{
+		const AString & objectList = *it;
+
+		// get node for the dir we depend on
+		Node * node = ng.FindNode( objectList );
+		if ( node == nullptr )
+		{
+            Error::Error_1104_TargetNotDefined( iter, this, inputVarName, objectList );
+            return false;
+        }
+		else if ( node->GetType() != Node::OBJECT_LIST_NODE )
+		{
+			Error::Error_1102_UnexpectedType( iter, this, inputVarName, node->GetName(), node->GetType(), Node::OBJECT_LIST_NODE );
+			return false;
+		}
+
+		nodes.Append( Dependency( node ) );
+	}
+	return true;
+}
+
 // GetNodeListRecurse
 //------------------------------------------------------------------------------
 bool Function::GetNodeListRecurse( const BFFIterator & iter, const char * name, Dependencies & nodes, const AString & nodeName,
@@ -737,7 +800,6 @@ bool Function::ProcessAlias( const BFFIterator & iter, Dependencies & nodesToAli
 
 // GetNameForNode
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 bool Function::GetNameForNode( const BFFIterator & iter, const ReflectionInfo * ri, AString & name ) const
 {
 	// get object MetaData
@@ -787,11 +849,9 @@ bool Function::GetNameForNode( const BFFIterator & iter, const ReflectionInfo * 
 	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRING );
 	return false;
 }
-#endif
 
 // PopulateProperties
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 bool Function::PopulateProperties( const BFFIterator & iter, Node * node ) const
 {
 	const ReflectionInfo * const ri = node->GetReflectionInfoV();
@@ -866,11 +926,9 @@ bool Function::PopulateProperties( const BFFIterator & iter, Node * node ) const
 	}
 	return true;
 }
-#endif
 
 // PopulatePathAndFileHelper
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 										  const Meta_Path * pathMD,
 										  const Meta_File * fileMD,
@@ -919,11 +977,9 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 
 	return true;
 }
-#endif
 
 // PopulateArrayOfStrings
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 bool Function::PopulateArrayOfStrings( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
 	// Array to Array
@@ -986,11 +1042,9 @@ bool Function::PopulateArrayOfStrings( const BFFIterator & iter, Node * node, co
 	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRING, BFFVariable::VAR_ARRAY_OF_STRINGS );
 	return false;
 }
-#endif
 
 // PopulateString
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 bool Function::PopulateString( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
 	if ( variable->IsString() )
@@ -1023,11 +1077,9 @@ bool Function::PopulateString( const BFFIterator & iter, Node * node, const Refl
 	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRING );
 	return false;
 }
-#endif
 
 // PopulateBool
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 bool Function::PopulateBool( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
 	if ( variable->IsBool() )
@@ -1040,11 +1092,9 @@ bool Function::PopulateBool( const BFFIterator & iter, Node * node, const Reflec
 	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_BOOL );
 	return false;
 }
-#endif
 
 // PopulateUInt32
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 bool Function::PopulateUInt32( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
 	if ( variable->IsInt() )
@@ -1070,6 +1120,5 @@ bool Function::PopulateUInt32( const BFFIterator & iter, Node * node, const Refl
 	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_INT );
 	return false;
 }
-#endif
 
 //------------------------------------------------------------------------------

@@ -46,7 +46,7 @@ void TestTest::CreateNode() const
 											 AString::GetEmpty() );
 
 	TEST_ASSERT( testNode->GetType() == Node::TEST_NODE );
-	TEST_ASSERT( TestNode::GetType() == Node::TEST_NODE );
+	TEST_ASSERT( TestNode::GetTypeS() == Node::TEST_NODE );
 	TEST_ASSERT( AStackString<>( "Test" ) == testNode->GetTypeName() );
 }
 

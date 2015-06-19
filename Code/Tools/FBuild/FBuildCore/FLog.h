@@ -28,6 +28,13 @@
 	} while ( false );								\
 	PRAGMA_DISABLE_POP_MSVC
 
+#define FLOG_BUILD_DIRECT( message )			    \
+	do {											\
+		FLog::BuildDirect( message );               \
+	PRAGMA_DISABLE_PUSH_MSVC(4127)					\
+	} while ( false );								\
+	PRAGMA_DISABLE_POP_MSVC
+
 #define FLOG_WARN( fmtString, ... )					\
 	do {											\
 		FLog::Warning( fmtString, ##__VA_ARGS__ );	\
@@ -63,6 +70,7 @@ public:
 	static void Error( const char * formatString, ... );
 
 	// for large, already formatted messages
+    static void BuildDirect( const char * message );
 	static void ErrorDirect( const char * message );
 
 	static void StartBuild();

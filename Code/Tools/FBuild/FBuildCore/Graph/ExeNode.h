@@ -27,7 +27,7 @@ public:
 					  const AString & linkerStampExeArgs );
 	virtual ~ExeNode();
 
-	static inline Node::Type GetType() { return Node::EXE_NODE; }
+	static inline Node::Type GetTypeS() { return Node::EXE_NODE; }
 
 	static Node * Load( IOStream & stream );
 private:

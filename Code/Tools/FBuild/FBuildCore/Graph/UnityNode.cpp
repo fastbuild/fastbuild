@@ -13,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -23,7 +24,6 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 REFLECT_BEGIN( UnityNode, Node, MetaNone() )
 	REFLECT_ARRAY( m_InputPaths,		"UnityInputPath",						MetaOptional() + MetaPath() )
 	REFLECT_ARRAY( m_PathsToExclude,	"UnityInputExcludePath",				MetaOptional() + MetaPath() )
@@ -32,6 +32,7 @@ REFLECT_BEGIN( UnityNode, Node, MetaNone() )
 	REFLECT_ARRAY( m_Files,				"UnityInputFiles",						MetaOptional() + MetaFile() )
 	REFLECT_ARRAY( m_FilesToExclude,	"UnityInputExcludedFiles",				MetaOptional() + MetaFile( true ) ) // relative
 	REFLECT_ARRAY( m_ExcludePatterns,	"UnityInputExcludePattern",				MetaOptional() + MetaFile( true ) ) // relative
+	REFLECT_ARRAY( m_ObjectLists,		"UnityInputObjectLists",				MetaOptional() )
 	REFLECT( m_OutputPath,				"UnityOutputPath",						MetaPath() )
 	REFLECT( m_OutputPattern,			"UnityOutputPattern",					MetaOptional() )
 	REFLECT( m_NumUnityFilesToCreate,	"UnityNumFiles",						MetaOptional() + MetaRange( 1, 1048576 ) )
@@ -39,20 +40,17 @@ REFLECT_BEGIN( UnityNode, Node, MetaNone() )
 	REFLECT( m_IsolateWritableFiles,	"UnityInputIsolateWritableFiles",		MetaOptional() )
 	REFLECT( m_PrecompiledHeader,		"UnityPCH",								MetaOptional() + MetaFile( true ) ) // relative
 REFLECT_END( UnityNode )
-#endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 UnityNode::UnityNode()
 : Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_NONE )
-, m_InputPattern( "*.cpp" )
 , m_InputPathRecurse( true )
+, m_InputPattern( "*.cpp" )
 , m_Files( 0, true )
 , m_OutputPath()
 , m_OutputPattern( "Unity*.cpp" )
 , m_NumUnityFilesToCreate( 1 )
-, m_UnityFileNames( 0, true )
 , m_PrecompiledHeader()
 , m_PathsToExclude( 0, true )
 , m_FilesToExclude( 0, true )
@@ -60,51 +58,13 @@ UnityNode::UnityNode()
 , m_MaxIsolatedFiles( 0 )
 , m_ExcludePatterns( 0, true )
 , m_IsolatedFiles( 0, true )
-{
-	m_LastBuildTimeMs = 100; // higher default than a file node
-}
-#endif
-
-// CONSTRUCTOR
-//------------------------------------------------------------------------------
-#ifndef USE_NODE_REFLECTION
-UnityNode::UnityNode( const AString & unityName,
-						const Dependencies & dirNodes,
-						const Array< AString > & files,
-						const AString & outputPath,
-						const AString & outputPattern,
-						uint32_t numUnityFilesToCreate,
-						const AString & precompiledHeader,
-						bool isolateWritableFiles,
-						uint32_t maxIsolatedFiles,
-						const Array< AString > & excludePatterns )
-: Node( unityName, Node::UNITY_NODE, Node::FLAG_NONE )
-, m_Files( files )
-, m_OutputPath( outputPath )
-, m_OutputPattern( outputPattern )
-, m_NumUnityFilesToCreate( numUnityFilesToCreate )
-, m_PrecompiledHeader( precompiledHeader )
-, m_IsolateWritableFiles( isolateWritableFiles )
-, m_MaxIsolatedFiles( maxIsolatedFiles )
-, m_ExcludePatterns( excludePatterns )
-, m_IsolatedFiles( 0, true )
 , m_UnityFileNames( 0, true )
 {
 	m_LastBuildTimeMs = 100; // higher default than a file node
-
-	// depend on the input nodes
-	m_StaticDependencies.Append( dirNodes );
-
-	ASSERT( m_NumUnityFilesToCreate > 0 );
-
-	// ensure path is properly formatted
-	ASSERT( m_OutputPath.EndsWith( NATIVE_SLASH ) );
 }
-#endif
 
 // Initialize
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 bool UnityNode::Initialize( const BFFIterator & iter, const Function * function )
 {
 	if ( m_PrecompiledHeader.IsEmpty() == false )
@@ -124,17 +84,36 @@ bool UnityNode::Initialize( const BFFIterator & iter, const Function * function 
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}
+
+    Dependencies fileNodes( m_Files.GetSize() );
+    if ( !function->GetFileNodes( iter, m_Files, "UnityInputFiles", fileNodes ) )
+    {
+		return false; // GetFileNodes will have emitted an error
+    }
+
+    Dependencies objectListNodes( m_ObjectLists.GetSize() );
+    if ( !function->GetObjectListNodes( iter, m_ObjectLists, "UnityInputObjectLists", objectListNodes ) )
+    {
+		return false; // GetObjectListNodes will have emitted an error
+    }
+
 	ASSERT( m_StaticDependencies.IsEmpty() );
 	m_StaticDependencies.Append( dirNodes );
+	m_StaticDependencies.Append( objectListNodes );
+	m_StaticDependencies.Append( fileNodes );
 
 	return true;
 }
-#endif
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 UnityNode::~UnityNode()
 {
+    // cleanup extra FileInfo structures
+    for ( auto* info : m_FilesInfo )
+    {
+        FDELETE info;
+    }
 }
 
 // DoBuild
@@ -327,7 +306,10 @@ UnityNode::~UnityNode()
 		{
 			if ( hasOutputMessage == false )
 			{
-				FLOG_BUILD( "Uni: %s\n", GetName().Get() );
+                AStackString< 512 > buffer( "Uni: " );
+                buffer += GetName();
+                buffer += '\n';
+				FLOG_BUILD_DIRECT( buffer.Get() );
 				hasOutputMessage = true;
 			}
 
@@ -357,7 +339,6 @@ UnityNode::~UnityNode()
 //------------------------------------------------------------------------------
 /*static*/ Node * UnityNode::Load( IOStream & stream )
 {
-#ifdef USE_NODE_REFLECTION
 	NODE_LOAD( AStackString<>,	name );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
@@ -369,112 +350,96 @@ UnityNode::~UnityNode()
 	}
 
 	return un;
-#else
-	NODE_LOAD( AStackString<>,	name );
-	NODE_LOAD( AStackString<>,	outputPath );
-	NODE_LOAD( AStackString<>,	outputPattern );
-	NODE_LOAD( uint32_t,		numFiles );
-	NODE_LOAD_DEPS( 1,			staticDeps );
-	NODE_LOAD( Array< AString >, files )
-	NODE_LOAD( AStackString<>,	precompiledHeader );
-	NODE_LOAD( bool,			isolateWritableFiles );
-	NODE_LOAD( uint32_t,		maxIsolatedFiles );
-	NODE_LOAD( Array< AString >, excludePatterns );
-
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	UnityNode * n = ng.CreateUnityNode( name, 
-								 staticDeps, // all static deps are DirectoryListNode
-								 files,
-								 outputPath, 
-								 outputPattern, 
-								 numFiles,
-								 precompiledHeader,
-								 isolateWritableFiles,
-								 maxIsolatedFiles,
-								 excludePatterns );
-	return n;
-#endif
 }
 
 // Save
 //------------------------------------------------------------------------------
 /*virtual*/ void UnityNode::Save( IOStream & stream ) const
 {
-#ifdef USE_NODE_REFLECTION
 	NODE_SAVE( m_Name );
 	Node::Serialize( stream );
-#else
-	NODE_SAVE( m_Name );
-	NODE_SAVE( m_OutputPath );
-	NODE_SAVE( m_OutputPattern );
-	NODE_SAVE( m_NumUnityFilesToCreate );
-	NODE_SAVE_DEPS( m_StaticDependencies );
-	NODE_SAVE( m_Files );
-	NODE_SAVE( m_PrecompiledHeader );
-	NODE_SAVE( m_IsolateWritableFiles );
-	NODE_SAVE( m_MaxIsolatedFiles );
-	NODE_SAVE( m_ExcludePatterns );
-#endif
 }
 
 // GetFiles
 //------------------------------------------------------------------------------
 bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 {
-	// find all the directory lists
+    bool ok = true;
+
 	const Dependency * const sEnd = m_StaticDependencies.End();
 	for ( const Dependency * sIt = m_StaticDependencies.Begin(); sIt != sEnd; ++sIt )
 	{
-		DirectoryListNode * dirNode = sIt->GetNode()->CastTo< DirectoryListNode >();
-		const FileIO::FileInfo * const filesEnd = dirNode->GetFiles().End();
+        const Node* node = sIt->GetNode();
 
-		// filter files in the dir list
-		for ( FileIO::FileInfo * filesIt = dirNode->GetFiles().Begin(); filesIt != filesEnd; ++filesIt )
-		{
-			bool keep = true;
+        if ( node->GetType() == Node::DIRECTORY_LIST_NODE )
+        {
+            DirectoryListNode * dirNode = sIt->GetNode()->CastTo< DirectoryListNode >();
+		    const FileIO::FileInfo * const filesEnd = dirNode->GetFiles().End();
 
-			// filter patterns
-			const AString * pit = m_ExcludePatterns.Begin();
-			const AString * const pend = m_ExcludePatterns.End();
-			for ( ; pit != pend; ++pit )
-			{
-				if ( PathUtils::IsWildcardMatch( pit->Get(), filesIt->m_Name.Get() ) )
-				{
-					keep = false;
-					break;
-				}
-			}
+		    // filter files in the dir list
+		    for ( FileIO::FileInfo * filesIt = dirNode->GetFiles().Begin(); filesIt != filesEnd; ++filesIt )
+		    {
+			    bool keep = true;
 
-			if ( keep )
-			{
-				files.Append( FileAndOrigin( filesIt, dirNode ) );
-			}
-		}
-	}
+			    // filter patterns
+			    const AString * pit = m_ExcludePatterns.Begin();
+			    const AString * const pend = m_ExcludePatterns.End();
+			    for ( ; pit != pend; ++pit )
+			    {
+				    if ( PathUtils::IsWildcardMatch( pit->Get(), filesIt->m_Name.Get() ) )
+				    {
+					    keep = false;
+					    break;
+				    }
+			    }
 
-	// explicitly listed files
-    bool ok = true;
-	size_t numFiles = m_Files.GetSize();
-	if ( numFiles )
-	{
-		// presize to the worst case so we can safely keep 
-		// pointers into this array
-		m_FilesInfo.SetSize( numFiles );
-		for ( size_t i=0; i<numFiles; ++i )
-		{
-			// obtain file info for this file so we can handle
-			// writable files			
-			if ( FileIO::GetFileInfo( m_Files[ i ], m_FilesInfo[ i ] ) )
+			    if ( keep )
+			    {
+				    files.Append( FileAndOrigin( filesIt, dirNode ) );
+			    }
+		    }
+        }
+        else if ( node->GetType() == Node::OBJECT_LIST_NODE )
+        {
+            ObjectListNode * objListNode = sIt->GetNode()->CastTo< ObjectListNode >();
+
+            // iterate all the files in the object list
+            Array< AString > objListFiles;
+            objListNode->GetInputFiles( objListFiles );
+		    for ( const auto& file : objListFiles )
+		    {
+                FileIO::FileInfo * fi = FNEW( FileIO::FileInfo() );
+                m_FilesInfo.Append( fi ); // keep ptr to delete later
+                fi->m_Name = file;
+                fi->m_LastWriteTime = 0;
+                #if defined( __WINDOWS__ )
+                    fi->m_Attributes = 0xFFFFFFFF; // FILE_ATTRIBUTE_READONLY set
+                #else
+                    fi->m_Attributes = 0; // No writable bits set
+                #endif
+                fi->m_Size = 0;
+				files.Append( FileAndOrigin( fi, nullptr ) );
+		    }
+        }
+        else if ( node->IsAFile() )
+        {
+            FileIO::FileInfo * fi = FNEW( FileIO::FileInfo() );
+            m_FilesInfo.Append( fi ); // keep ptr to delete later
+			if ( FileIO::GetFileInfo( node->GetName(), *fi ) )
 			{
 				// only add files that exist
-				files.Append( FileAndOrigin( &m_FilesInfo[ i ], nullptr ) );
+				files.Append( FileAndOrigin( fi, nullptr ) );
 			}
             else
             {
-                FLOG_ERROR( "FBuild: Error: Unity missing file: '%s'\n", m_Files[ i ].Get() );
+                FLOG_ERROR( "FBuild: Error: Unity missing file: '%s'\n", node->GetName().Get() );
                 ok = false;
             }
-		}
+        }
+        else
+        {
+            ASSERT( false ); // Something is terribly wrong - bad node
+        }
 	}
 
     return ok;

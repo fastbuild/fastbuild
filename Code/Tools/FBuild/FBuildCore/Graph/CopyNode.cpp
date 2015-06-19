@@ -112,7 +112,7 @@ void CopyNode::EmitCopyMessage() const
 	output += " -> ";
 	output += GetName();
 	output += '\n';
-	FLOG_BUILD( "%s", output.Get() );
+    FLOG_BUILD_DIRECT( output.Get() );
 }
 
 //------------------------------------------------------------------------------

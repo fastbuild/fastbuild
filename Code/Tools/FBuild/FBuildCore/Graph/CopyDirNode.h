@@ -22,7 +22,7 @@ public:
 						  const Dependencies & preBuildDeps );
 	virtual ~CopyDirNode();
 
-	static inline Node::Type GetType() { return Node::COPY_DIR_NODE; }
+	static inline Node::Type GetTypeS() { return Node::COPY_DIR_NODE; }
 	virtual bool IsAFile() const;
 
 	static Node * Load( IOStream & stream );

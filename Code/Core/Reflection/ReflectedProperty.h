@@ -7,6 +7,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Env/Types.h"
+#include "Core/Reflection/ReflectionSettings.h"
 #include "Core/Reflection/PropertyType.h"
 #include "Core/Reflection/MetaData/MetaDataInterface.h"
 
@@ -36,7 +37,7 @@ public:
 	inline uint32_t GetOffset() const { return m_Offset; }
 	size_t GetPropertySize() const;
 	inline bool IsArray() const { return m_IsArray; }
-	#if defined( __WINDOWS__ )
+	#if defined( REFLECTION_KEEP_STRING_NAMES )
 		inline const char * GetName() const { return m_Name; }
 	#endif
 
@@ -118,7 +119,7 @@ protected:
 	uint32_t m_IsArray:1;
 	uint32_t m_Unused:7;
 
-	#if defined( __WINDOWS__ )
+	#if defined( REFLECTION_KEEP_STRING_NAMES )
 		const char * m_Name;
 	#endif
 

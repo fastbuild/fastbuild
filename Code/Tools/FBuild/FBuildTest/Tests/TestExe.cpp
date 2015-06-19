@@ -55,7 +55,7 @@ void TestExe::CreateNode() const
 											AString::GetEmpty() ); // assembly resources
 
 	TEST_ASSERT( exeNode->GetType() == Node::EXE_NODE );
-	TEST_ASSERT( ExeNode::GetType() == Node::EXE_NODE );
+	TEST_ASSERT( ExeNode::GetTypeS() == Node::EXE_NODE );
 	TEST_ASSERT( AStackString<>( "Exe" ) == exeNode->GetTypeName() );
 }
 

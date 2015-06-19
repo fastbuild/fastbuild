@@ -55,6 +55,7 @@ FunctionLibrary::FunctionLibrary()
 	const BFFVariable * compilerOptions;
 	AStackString<> compilerOptionsDeoptimized;
 	AStackString<> compilerOutputPath;
+    AStackString<> compilerOutputPrefix;
 	const BFFVariable * compilerOutputExtension;
 	const BFFVariable * librarian;
 	const BFFVariable * librarianOptions;
@@ -63,6 +64,7 @@ FunctionLibrary::FunctionLibrary()
 		 !GetString( funcStartIter, compilerOptions, ".CompilerOptions", true ) ||
 		 !GetString( funcStartIter, compilerOptionsDeoptimized, ".CompilerOptionsDeoptimized", false ) ||
 		 !GetString( funcStartIter, compilerOutputPath, ".CompilerOutputPath", true ) ||
+		 !GetString( funcStartIter, compilerOutputPrefix, ".CompilerOutputPrefix", false ) ||
 		 !GetString( funcStartIter, compilerOutputExtension, ".CompilerOutputExtension", false ) ||
 		 !GetString( funcStartIter, librarian, ".Librarian", true ) ||
 		 !GetString( funcStartIter, librarianOptions, ".LibrarianOptions", true ) )
@@ -251,6 +253,7 @@ FunctionLibrary::FunctionLibrary()
 	{
 		libNode->m_ObjExtensionOverride = compilerOutputExtension->GetString();
 	}
+    libNode->m_CompilerOutputPrefix = compilerOutputPrefix;
 
 	return ProcessAlias( funcStartIter, libNode );
 }

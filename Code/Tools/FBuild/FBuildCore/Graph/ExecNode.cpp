@@ -169,7 +169,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
 	}
 
 	// output all at once for contiguousness
-	FLOG_BUILD( "%s", output.Get() );
+    FLOG_BUILD_DIRECT( output.Get() );
 }
 
 //------------------------------------------------------------------------------

@@ -41,7 +41,7 @@ public:
 						 uint32_t flags );
 	virtual ~ObjectNode();
 
-	static inline Node::Type GetType() { return Node::OBJECT_NODE; }
+	static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
 
 
 	enum Flags
@@ -65,6 +65,7 @@ public:
 	static uint32_t DetermineFlags( const Node * compilerNode, const AString & args );
 
 	inline bool IsCreatingPCH() const { return GetFlag( FLAG_CREATING_PCH ); }
+    inline bool IsUsingPCH() const { return GetFlag( FLAG_USING_PCH ); }
 	inline bool IsMSVC() const { return GetFlag( FLAG_MSVC ); }
 	inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
 
@@ -80,8 +81,6 @@ public:
 	inline Node * GetPrecompiledHeaderCPPFile() const { ASSERT( GetFlag( FLAG_CREATING_PCH ) ); return m_StaticDependencies[ 1 ].GetNode(); }
 
 	void GetPDBName( AString & pdbName ) const;
-
-	virtual Priority GetPriority() const override;
 
 	const char * GetObjExtension() const;
 private:

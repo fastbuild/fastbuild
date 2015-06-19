@@ -71,6 +71,14 @@ public:
 								   const AString & pattern,
 								   const char * inputVarName,
 								   Dependencies & nodes ) const;
+    bool GetFileNodes( const BFFIterator & iter,
+                       const Array< AString > & files,
+                       const char * inputVarName,
+                       Dependencies & nodes ) const;
+    bool GetObjectListNodes( const BFFIterator & iter,
+                             const Array< AString > & objectLists,
+                             const char * inputVarName,
+                             Dependencies & nodes ) const;
 
 	bool GetNodeList( const BFFIterator & iter, const char * name, Dependencies & nodes, bool required = false,
 					  bool allowCopyDirNodes = false, bool allowUnityNodes = false ) const;
@@ -103,7 +111,6 @@ protected:
 	bool ProcessAlias( const BFFIterator & iter, Dependencies & nodesToAlias ) const;
 
 	// Reflection based property population
-#ifdef USE_NODE_REFLECTION
 	bool GetNameForNode( const BFFIterator & iter, const ReflectionInfo * ri, AString & name ) const;
 	bool PopulateProperties( const BFFIterator & iter, Node * node ) const;
 	bool PopulateArrayOfStrings( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
@@ -112,7 +119,6 @@ protected:
 	bool PopulateUInt32( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
 
 	bool PopulatePathAndFileHelper( const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const AString & variableName, const AString & originalValue, AString & valueToFix ) const;
-#endif
 private:
 	bool GetNodeListRecurse( const BFFIterator & iter, const char * name, Dependencies & nodes, const AString & nodeName,
 							 bool allowCopyDirNodes, bool allowUnityNodes ) const;

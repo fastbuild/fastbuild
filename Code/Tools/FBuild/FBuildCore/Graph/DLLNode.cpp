@@ -48,13 +48,21 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
 		return;
 	}
 
-	// get name minus extension (handle no extension gracefully)
-	const char * lastDot = GetName().FindLast( '.' );
-	lastDot = lastDot ? lastDot : GetName().GetEnd();
-	importLibName.Assign( GetName().Get(), lastDot );
+    // with msvc, we need to link the import lib that matches the dll
+    if (GetFlag(LinkerNode::LINK_FLAG_MSVC))
+    {
+	    // get name minus extension (handle no extension gracefully)
+	    const char * lastDot = GetName().FindLast( '.' );
+	    lastDot = lastDot ? lastDot : GetName().GetEnd();
+	    importLibName.Assign( GetName().Get(), lastDot );
 
-	// assume .lib extension for import
-	importLibName += ".lib";
+	    // assume .lib extension for import
+	    importLibName += ".lib";
+        return;
+    }
+
+    // for other platforms, use the object directly (e.g. .so or .dylib)
+    importLibName = GetName();
 }
 
 // Load

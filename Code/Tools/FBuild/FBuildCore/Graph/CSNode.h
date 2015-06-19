@@ -24,7 +24,7 @@ public:
 					 const Dependencies & extraRefs );
 	virtual ~CSNode();
 
-	static inline Node::Type GetType() { return Node::CS_NODE; }
+	static inline Node::Type GetTypeS() { return Node::CS_NODE; }
 
 	virtual void Save( IOStream & stream ) const;
 	static Node * Load( IOStream & stream );

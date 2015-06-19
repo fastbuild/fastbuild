@@ -127,7 +127,7 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
 			output += '\n';
 		}
 	}
-	FLOG_BUILD( "%s", output.Get() );
+    FLOG_BUILD_DIRECT( output.Get() );
 }
 
 // Save

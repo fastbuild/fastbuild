@@ -63,7 +63,14 @@ static AStackString< 64 > g_OutputString( "\r99.9 % [....................] " );
 	buffer.VFormat( formatString, args );
 	va_end( args );
 
-	Output( nullptr, buffer.Get() );
+	Tracing::Output( buffer.Get() );
+}
+
+// BuildDirect
+//------------------------------------------------------------------------------
+/*static*/ void FLog::BuildDirect( const char * message )
+{
+    Tracing::Output( message );
 }
 
 // Warning
@@ -111,7 +118,7 @@ static AStackString< 64 > g_OutputString( "\r99.9 % [....................] " );
 		return;
 	}
 
-	Tracing::Output( message );
+    Tracing::Output( message );
 }
 
 // Output - write to stdout and debugger

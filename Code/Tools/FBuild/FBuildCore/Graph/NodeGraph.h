@@ -51,7 +51,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 56 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 59 };
 
 	bool IsValid() const
 	{
@@ -161,20 +161,7 @@ public:
 								   const Dependencies & assemblyResources,
 								   Node * linkerStampExe,
 								   const AString & linkerStampExeArgs );
-#ifdef USE_NODE_REFLECTION
 	UnityNode *	CreateUnityNode( const AString & unityName );
-#else
-	UnityNode *	CreateUnityNode( const AString & unityName,
-								 const Dependencies & dirNodes,
-								 const Array< AString > & files,
-								 const AString & outputPath,
-								 const AString & outputPattern,
-								 uint32_t numUnityFilesToCreate,
-								 const AString & precompiledHeader,
-								 bool isolateWritableFiles,
-								 uint32_t maxIsolatedFiles,
-								 const Array< AString > & excludePatterns );
-#endif
 	CSNode * CreateCSNode( const AString & compilerOutput,
 						   const Dependencies & inputNodes,
 						   const AString & compiler,
@@ -237,8 +224,8 @@ private:
 
 	void AddNode( Node * node );
 
-	static void BuildRecurse( Node * nodeToBuild );
-	static bool CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies );
+	static void BuildRecurse( Node * nodeToBuild, uint32_t cost );
+	static bool CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost );
 	static void UpdateBuildStatusRecurse( const Node * node, 
 										  uint32_t & nodesBuiltTime, 
 										  uint32_t & totalNodeTime );

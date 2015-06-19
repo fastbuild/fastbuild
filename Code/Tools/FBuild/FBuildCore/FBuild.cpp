@@ -375,7 +375,7 @@ bool FBuild::Build( Node * nodeToBuild )
 		}
 
 		// Wait until more work to process or time has elapsed
-		m_JobQueue->MainThreadWait( 100 );
+		m_JobQueue->MainThreadWait( 500 );
 
 		// update progress
 		UpdateBuildStatus( nodeToBuild );
