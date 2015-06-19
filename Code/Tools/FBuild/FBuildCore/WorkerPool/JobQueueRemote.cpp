@@ -275,7 +275,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 
     Node::BuildResult result;
     {
-        PROFILE_SECTION( "RACE" );
+        PROFILE_SECTION( racingRemoteJob ? "RACE" : "LOCAL" );
     	result = ((Node *)node )->DoBuild2( job, racingRemoteJob );
     }
 

@@ -32,7 +32,7 @@ public:
 #endif
 	virtual ~CompilerNode();
 
-	static inline Node::Type GetType() { return Node::COMPILER_NODE; }
+	static inline Node::Type GetTypeS() { return Node::COMPILER_NODE; }
 
 	static Node * Load( IOStream & stream );
 	virtual void Save( IOStream & stream ) const;

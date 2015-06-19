@@ -62,9 +62,6 @@ public:
 	void Deserialize( IOStream & stream );
 
 private:
-	friend class JobSubQueue;
-	Job * m_Next;
-
 	uint32_t m_JobId;
 	Node * m_Node;
 	void * m_Data;

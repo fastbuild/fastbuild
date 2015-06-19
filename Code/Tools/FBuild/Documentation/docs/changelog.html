@@ -15,6 +15,42 @@
 
 
 <div class='newsitemheader'>
+    v0.83&nbsp;<font color='#bbbbbb'>(18-Jun-2015)</font>
+</div>
+<div class='newsitembody'>
+    Note
+    <ul>
+		<li>DB version has changed : clean build will occur</li>
+    </ul>
+    Fixes
+    <ul>
+      <li>Fix formating of "-nooutputbuffering is deprecated" message</li>
+      <li>Fix Exec and Copy steps fed explicitly to ObjectList/Library (via .CompilerInputFiles) being ignored</li>
+      <li>Fix ObjectList sometimes being displayed as "??" in the -report output</li>
+      <li>Don't look for import .lib when linking a DLL unless using the MS linker</li>
+      <li>Unity() correctly depends on .UnityInputFiles that are output by other build steps</li>
+    </ul>
+    Improvements
+    <ul>
+      <li>BFF parsing no longer complains about missing libs (leave this upto the linker)</li>
+      <li>CompilerInputUnity can accept multiple Unity inputs in ObjectList() and Library()</li>
+      <li>Unity can take output of an ObjectList(s) as input via new UnityInputObjectLists</li>
+      <li>Add CompilerOutputPrefix option to ObjectList() and Library()</li>
+  		<li>Optimizations</li>
+  		<ul>
+        <li>Reduce latency of Worker requesting jobs from Client</li>
+        <li>Avoid remote workers underrequesting jobs when available job count is low (start and end of build)</li>
+        <li>Use timing information from previous builds to improve local and remote scheduling</li>
+        <li>Compile time improved slightly by using reponse files only when args are > 32767 characters</li>
+        <li>Small optimization to console output</li>
+        <li>Reduce external process invocation overhead by upto 16ms</li>
+        <li>Reduce main thread context switches</li>
+      </ul>
+    </ul>
+</div>
+
+
+<div class='newsitemheader'>
     v0.82&nbsp;<font color='#bbbbbb'>(30-May-2015)</font>
 </div>
 <div class='newsitembody'>

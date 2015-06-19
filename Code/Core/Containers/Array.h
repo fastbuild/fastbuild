@@ -36,6 +36,12 @@ public:
 	inline T &			Top()		{ ASSERT( m_Begin < m_End ); return m_End[ -1 ]; }
 	inline const T &	Top() const	{ ASSERT( m_Begin < m_End ); return m_End[ -1 ]; }
 
+    // C++11 style for range based for
+	Iter		begin()	        { return m_Begin; }
+	ConstIter	begin()	const   { return m_Begin; }
+	Iter		end()           { return m_End; }
+	ConstIter	end() const     { return m_End; }
+
 	// modify capacity/size
 	void SetCapacity( size_t capacity );
 	void SetSize( size_t size );

@@ -62,8 +62,6 @@ protected:
 
 	inline const char * GetDLLOrExe() const { return GetFlag( LINK_FLAG_DLL ) ? "DLL" : "Exe"; }
 
-	virtual Priority GetPriority() const { return PRIORITY_HIGH; }
-
 	AString m_Linker;
 	AString m_LinkerArgs;
 	uint32_t m_Flags;

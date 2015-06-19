@@ -20,15 +20,14 @@
 
 // Static Data
 //------------------------------------------------------------------------------
+/*static*/ uint32_t UnitTestManager::s_NumTests( 0 );
+/*static*/ UnitTestManager::TestInfo UnitTestManager::s_TestInfos[ MAX_TESTS ];
 /*static*/ UnitTestManager * UnitTestManager::s_Instance = nullptr;
 /*static*/ UnitTest * UnitTestManager::s_FirstTest = nullptr;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 UnitTestManager::UnitTestManager()
-: m_TestsRun( 0 )
-, m_TestsPassed( 0 )
-, m_CurrentTestName( nullptr )
 {
 	// manage singleton
 	ASSERT( s_Instance == nullptr );
@@ -107,9 +106,6 @@ loop:
 //------------------------------------------------------------------------------
 bool UnitTestManager::RunTests( const char * testGroup )
 {
-	m_TestsRun = 0;
-	m_TestsPassed = 0;
-
 	// check for compile time filter
 	UnitTest * test = s_FirstTest;
 	while ( test )
@@ -133,27 +129,55 @@ bool UnitTestManager::RunTests( const char * testGroup )
 		}
 		catch (...)
 		{
-			OUTPUT( " - Test '%s' *** FAILED ***\n", m_CurrentTestName );
+			OUTPUT( " - Test '%s' *** FAILED ***\n", s_TestInfos[ s_NumTests - 1 ].m_TestName );
 		}
 		test = test->m_NextTestGroup;
 	}
 
-	OUTPUT( "------------------------------\n" );
+	OUTPUT( "------------------------------------------------------------\n" );
 	OUTPUT( "Summary For All Tests\n" );
-	OUTPUT( " - Passed: %u\n", m_TestsPassed );
-	OUTPUT( " - Failed: %u\n", (m_TestsRun - m_TestsPassed ) );
-	OUTPUT( "------------------------------\n" );
+    uint32_t numPassed = 0;
+    UnitTest * lastGroup = nullptr;
+    for ( size_t i=0; i<s_NumTests; ++i )
+	{
+        const TestInfo& info = s_TestInfos[ i ];
+        if ( info.m_TestGroup != lastGroup )
+        {
+        	OUTPUT( "------------------------------------------------------------\n" );
+            OUTPUT( "                :        : %s\n", info.m_TestGroup->GetName() );
+            lastGroup = info.m_TestGroup;
+        }
 
-	return ( m_TestsRun == m_TestsPassed );
+        const char * status = "OK";
+        if ( info.m_Passed )
+        {
+            ++numPassed;
+        }
+        else 
+        {
+            status = ( info.m_MemoryLeaks ) ? "FAILED (LEAKS)" : "FAILED";
+        }
+
+        OUTPUT( "%15s : %5.1fs : %30s\n", status, info.m_TimeTaken, info.m_TestName );
+    }
+	OUTPUT( "------------------------------------------------------------\n" );
+	OUTPUT( " - Passed: %u / %u (%u failures)\n", numPassed, s_NumTests, ( s_NumTests - numPassed ) );
+	OUTPUT( "------------------------------------------------------------\n" );
+
+	return ( s_NumTests == numPassed );
 }
 
 // TestBegin
 //------------------------------------------------------------------------------
-void UnitTestManager::TestBegin( const char * testName )
+void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
 {
-	m_TestsRun++;
+    // record info for this test
+    TestInfo& info = s_TestInfos[ s_NumTests ];
+    info.m_TestGroup = testGroup;
+    info.m_TestName = testName;
+    ++s_NumTests;
+
 	OUTPUT( " - Test '%s'\n", testName );
-	m_CurrentTestName = testName;
 	#ifdef MEMTRACKER_ENABLED
 		MemTracker::Reset();
 	#endif
@@ -172,18 +196,22 @@ void UnitTestManager::TestEnd()
 
 	float timeTaken = m_Timer.GetElapsed();
 
+    TestInfo& info = s_TestInfos[ s_NumTests - 1 ];
+    info.m_TimeTaken = timeTaken;
+
 	#ifdef MEMTRACKER_ENABLED
 		if ( MemTracker::GetCurrentAllocationCount() != 0 )
 		{
-			OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", m_CurrentTestName, timeTaken );
+            info.m_MemoryLeaks = true;
+			OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, timeTaken );
 			MemTracker::DumpAllocations();
 			TEST_ASSERT( false );
 			return;
 		}
 	#endif
 
-	OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", m_CurrentTestName, timeTaken );
-	m_TestsPassed++;
+	OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", info.m_TestName, timeTaken );
+    info.m_Passed = true;
 }
 
 // Assert

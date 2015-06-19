@@ -549,29 +549,38 @@ void Server::FindNeedyClients()
 	// sort clients to find neediest first
 	m_ClientList.SortDeref();
 
-	iter = m_ClientList.Begin();
-	for ( ; iter != end; ++iter )
-	{
-		ClientState * cs = *iter;
+    Protocol::MsgRequestJob msg;
 
-		MutexHolder mh2( cs->m_Mutex );
+    while ( availableJobs > 0 )
+    {
+        bool anyJobsRequested = false;
 
-		size_t reservedJobs = cs->m_NumJobsRequested +
-							  cs->m_NumJobsActive;
-		if ( reservedJobs >= cs->m_NumJobsAvailable )
-		{
-			continue; // we've maxed out the requests to this worker
-		}
+	    iter = m_ClientList.Begin();
+	    for ( ; iter != end; ++iter )
+	    {
+		    ClientState * cs = *iter;
 
-		// request job from this client
-		Protocol::MsgRequestJob msg;
-		msg.Send( cs->m_Connection );
-		cs->m_NumJobsRequested++;
-		availableJobs--;
-		if ( availableJobs == 0 )
-		{
-			return; // used up all jobs
-		}
+		    MutexHolder mh2( cs->m_Mutex );
+
+            size_t reservedJobs = cs->m_NumJobsRequested;
+    
+            if ( reservedJobs >= cs->m_NumJobsAvailable )
+    		{
+    		    continue; // we've maxed out the requests to this worker
+    		}
+
+		    // request job from this client
+		    msg.Send( cs->m_Connection );
+		    cs->m_NumJobsRequested++;
+		    availableJobs--;
+			anyJobsRequested = true;
+        }
+
+        // if we did a pass and couldn't request any more jobs, then bail out
+        if ( anyJobsRequested == false )
+        {
+            break;
+        }
 	}
 }
 

@@ -12,18 +12,29 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
 #include "Core/Time/Timer.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 
+// JobCostSorter
+//------------------------------------------------------------------------------
+class JobCostSorter
+{
+public:
+	inline bool operator () ( const Job * job1, const Job * job2 ) const
+	{
+		return ( job1->GetNode()->GetRecursiveCost() < job2->GetNode()->GetRecursiveCost() );
+	}
+};
+
 // JobSubQueue CONSTRUCTOR
 //------------------------------------------------------------------------------
 JobSubQueue::JobSubQueue()
 	: m_Count( 0 )
-	, m_Head( nullptr )
-	, m_Tail( nullptr )
+	, m_Jobs( 1024, true )
 {
 }
 
@@ -31,32 +42,40 @@ JobSubQueue::JobSubQueue()
 //------------------------------------------------------------------------------
 JobSubQueue::~JobSubQueue()
 {
-	ASSERT( m_Head == nullptr );
-	ASSERT( m_Tail == nullptr );
+    ASSERT( m_Jobs.IsEmpty() );
 	ASSERT( m_Count == 0 );
 }
 
-// JobSubQueue:QueueJob
+// JobSubQueue:QueueJobs
 //------------------------------------------------------------------------------
-void JobSubQueue::QueueJob( Job * job )
+void JobSubQueue::QueueJobs( Array< Node * > & nodes )
 {
+    // Create wrapper Jobs around Nodes
+    Array< Job * > jobs( nodes.GetSize() );
+    for ( Node * node : nodes )
+    {
+    	Job * job = FNEW( Job( node ) );
+        jobs.Append( job );
+    }
+
+    // Sort Jobs by cost
+	JobCostSorter sorter;
+	jobs.Sort( sorter );
+
 	// lock to add job
 	MutexHolder mh( m_Mutex );
+    const bool wasEmpty = m_Jobs.IsEmpty();
 
-	if ( m_Head == nullptr )
-	{
-		ASSERT( m_Tail == nullptr ); // if empty, both should be null
-		m_Head = job;
-		m_Tail = job;
-	}
-	else
-	{
-		ASSERT( m_Tail ); // must not be null if queue not empty
-		m_Tail->m_Next = job;
-		m_Tail = job;
-	}
+	m_Jobs.Append( jobs );
+    m_Count += (uint32_t)jobs.GetSize();
 
-	++m_Count;
+    if ( wasEmpty )
+    {
+        return; // skip re-sorting
+    }
+
+    // sort merged lists
+	m_Jobs.Sort( sorter );
 }
 
 // RemoveJob
@@ -73,28 +92,16 @@ Job * JobSubQueue::RemoveJob()
 	MutexHolder mh( m_Mutex );
 
 	// possible that job has been removed between job count check and mutex lock
-	if ( !m_Head )
+	if ( m_Jobs.IsEmpty() )
 	{
 		return nullptr;
 	}
 
-	// reduce count for job we're about to remove
 	ASSERT( m_Count );
 	--m_Count;
 
-	// sanity check
-	ASSERT( m_Tail ); // m_Tail should always be valid when m_Head is
-
-	// remove job from head
-	Job * job = m_Head;
-	m_Head = job->m_Next;
-
-	// clear m_Tail if this is the last job
-	if ( m_Tail == job )
-	{
-		ASSERT( m_Head == nullptr ); // if last job, should be no next
-		m_Tail = nullptr;
-	}
+	Job * job = m_Jobs.Top();
+	m_Jobs.Pop();
 
 	return job;
 }
@@ -137,13 +144,10 @@ JobQueue::~JobQueue()
 	SignalStopWorkers();
 
 	// delete incomplete jobs
-	for ( size_t i=0; i<Node::NUM_PRIORITY_LEVELS; ++i )
+	while( m_LocalJobs_Available.GetCount() > 0 )
 	{
-		while( m_LocalAvailableJobs[ i ].GetCount() > 0 )
-		{
-			Job * job = m_LocalAvailableJobs[ i ].RemoveJob();
-			FDELETE job;
-		}
+		Job * job = m_LocalJobs_Available.RemoveJob();
+		FDELETE job;
 	}
 
 	// wait for workers to finish - ok if they stopped before this
@@ -200,11 +204,7 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
 							uint32_t & numJobsDistActive ) const
 {
 	{
-		numJobs = 0;
-		for ( size_t i=0; i<Node::NUM_PRIORITY_LEVELS; ++i )
-		{
-			numJobs += m_LocalAvailableJobs[ i ].GetCount();
-		}
+		numJobs = m_LocalJobs_Available.GetCount();
 		MutexHolder m( m_DistributableAvailableJobsMutex );
 		numJobsDist = (uint32_t)m_DistributableAvailableJobs.GetSize();
 	}
@@ -216,9 +216,9 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
 									m_DistributedJobsBeingRaced.GetSize() );
 }
 
-// QueueJob (Main Thread)
+// AddJobToBatch (Main Thread)
 //------------------------------------------------------------------------------
-void JobQueue::QueueJob( Node * node )
+void JobQueue::AddJobToBatch( Node * node )
 {
 	ASSERT( node->GetState() == Node::DYNAMIC_DEPS_DONE );
 
@@ -239,10 +239,20 @@ void JobQueue::QueueJob( Node * node )
 		return;
 	}
 
-	Job * job = FNEW( Job( node ) );
+    m_LocalJobs_Staging.Append( node );
+}
 
-	// stick in queue
-	m_LocalAvailableJobs[ node->GetPriority() ].QueueJob( job );
+// FlushJobBatch (Main Thread)
+//------------------------------------------------------------------------------
+void JobQueue::FlushJobBatch()
+{
+    if ( m_LocalJobs_Staging.IsEmpty() )
+    {
+        return;
+    }
+
+    m_LocalJobs_Available.QueueJobs( m_LocalJobs_Staging );
+    m_LocalJobs_Staging.Clear();
 }
 
 // QueueJob2
@@ -439,14 +449,11 @@ void JobQueue::MainThreadWait( uint32_t maxWaitMS )
 //------------------------------------------------------------------------------
 Job * JobQueue::GetJobToProcess()
 {
-	for ( size_t i=0; i<Node::NUM_PRIORITY_LEVELS; ++i )
+	Job * job = m_LocalJobs_Available.RemoveJob();
+	if ( job )
 	{
-		Job * job = m_LocalAvailableJobs[ i ].RemoveJob();
-		if ( job )
-		{
-			AtomicIncU32( &m_NumLocalJobsActive );
-			return job;
-		}
+		AtomicIncU32( &m_NumLocalJobsActive );
+		return job;
 	}
 
 	return nullptr;
@@ -525,7 +532,15 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     Node::BuildResult result;
     {
-        PROFILE_SECTION( node->GetTypeName() );
+        #ifdef PROFILING_ENABLED
+            const char * profilingTag = node->GetTypeName();
+            if ( node->GetType() == Node::OBJECT_NODE )
+            {
+                ObjectNode * on = (ObjectNode *)node;
+                profilingTag = on->IsCreatingPCH() ? "PCH" : on->IsUsingPCH() ? "Obj (+PCH)" : profilingTag;
+            }
+            PROFILE_SECTION( profilingTag );
+        #endif
 	    result = node->DoBuild( job );
     }
 

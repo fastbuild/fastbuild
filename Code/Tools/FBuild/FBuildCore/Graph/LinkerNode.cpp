@@ -93,7 +93,7 @@ LinkerNode::~LinkerNode()
 	// handle response file
 	ResponseFile rf;
 	AStackString<> responseFileArgs;
-	const bool useResponseFile = GetFlag( LINK_FLAG_MSVC ) || GetFlag( LINK_FLAG_GCC ) || GetFlag( LINK_FLAG_SNC ) || GetFlag( LINK_FLAG_ORBIS_LD ) || GetFlag( LINK_FLAG_GREENHILLS_ELXR ) || GetFlag( LINK_FLAG_CODEWARRIOR_LD );
+    const bool useResponseFile = ( fullArgs.GetLength() > 32767 ) && ( GetFlag( LINK_FLAG_MSVC ) || GetFlag( LINK_FLAG_GCC ) || GetFlag( LINK_FLAG_SNC ) || GetFlag( LINK_FLAG_ORBIS_LD ) || GetFlag( LINK_FLAG_GREENHILLS_ELXR ) || GetFlag( LINK_FLAG_CODEWARRIOR_LD ) );
 	if ( useResponseFile )
 	{
 		// orbis-ld.exe requires escaped slashes inside response file
@@ -576,7 +576,7 @@ void LinkerNode::EmitCompilationMessage( const AString & fullArgs ) const
 		output += fullArgs;
 		output += '\n';
 	}
-	FLOG_BUILD( "%s", output.Get() );
+    FLOG_BUILD_DIRECT( output.Get() );
 }
 
 // EmitStampMessage
@@ -596,7 +596,7 @@ void LinkerNode::EmitStampMessage() const
 		output += m_LinkerStampExeArgs;
 		output += '\n';
 	}
-	FLOG_BUILD( "%s", output.Get() );
+    FLOG_BUILD_DIRECT( output.Get() );
 }
 
 // Save

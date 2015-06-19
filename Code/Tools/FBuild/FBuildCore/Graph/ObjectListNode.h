@@ -35,21 +35,23 @@ public:
                              const AString & preprocessorArgs );
 	virtual ~ObjectListNode();
 
-	static inline Node::Type GetType() { return Node::OBJECT_LIST_NODE; }
+	static inline Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
 
-	virtual bool IsAFile() const;
+	virtual bool IsAFile() const override;
 
 	static Node * Load( IOStream & stream );
-	virtual void Save( IOStream & stream ) const;
+	virtual void Save( IOStream & stream ) const override;
 
 	const char * GetObjExtension() const;
 
 	void GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const;
-private:
+	void GetInputFiles( Array< AString > & files ) const;
+protected:
 	friend class FunctionObjectList;
 
-	virtual bool DoDynamicDependencies( bool forceClean );
-	virtual BuildResult DoBuild( Job * job );
+    virtual bool GatherDynamicDependencies( bool forceClean );
+	virtual bool DoDynamicDependencies( bool forceClean ) override;
+	virtual BuildResult DoBuild( Job * job ) override;
 
 	// internal helpers
 	bool CreateDynamicObjectNode( Node * inputFile, const DirectoryListNode * dirNode, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
@@ -61,6 +63,7 @@ private:
 	Dependencies	m_CompilerForceUsing;
 	ObjectNode *	m_PrecompiledHeader;
 	AString			m_ObjExtensionOverride;
+    AString         m_CompilerOutputPrefix;
 	bool			m_DeoptimizeWritableFiles;
 	bool			m_DeoptimizeWritableFilesWithToken;
 	CompilerNode *	m_Preprocessor;

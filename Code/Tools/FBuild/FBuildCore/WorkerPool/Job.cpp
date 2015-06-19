@@ -25,8 +25,7 @@ static uint32_t s_LastJobId( 0 );
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Job::Job( Node * node ) 
-	: m_Next( nullptr )
-	, m_Node( node )
+	: m_Node( node )
 	, m_Data( nullptr )
 	, m_DataSize( 0 ) 
 	, m_UserData( nullptr )
@@ -41,8 +40,7 @@ Job::Job( Node * node )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Job::Job( IOStream & stream ) 
-	: m_Next( nullptr )
-	, m_Node( nullptr )
+	: m_Node( nullptr )
 	, m_Data( nullptr )
 	, m_DataSize( 0 ) 
 	, m_UserData( nullptr )

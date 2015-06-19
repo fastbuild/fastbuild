@@ -238,7 +238,8 @@ ObjectNode::~ObjectNode()
 
 	// spawn the process
 	CompileHelper ch;
-	if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs, true ) ) // use response file for MSVC
+    const bool useResponseFile = ( fullArgs.GetLength() > 32767 ) && ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
+	if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs, useResponseFile ) ) // use response file for MSVC
 	{
 		return NODE_RESULT_FAILED; // SpawnCompiler has logged error
 	}
@@ -780,13 +781,6 @@ void ObjectNode::GetPDBName( AString & pdbName ) const
 	pdbName += ".pdb";
 }
 
-// GetPriority
-//------------------------------------------------------------------------------
-/*virtual*/ Node::Priority ObjectNode::GetPriority() const
-{
-	return IsCreatingPCH() ? Node::PRIORITY_HIGH : Node::PRIORITY_NORMAL;
-}
-
 // GetObjExtension
 //------------------------------------------------------------------------------
 const char * ObjectNode::GetObjExtension() const
@@ -1024,7 +1018,7 @@ void ObjectNode::EmitCompilationMessage( const AString & fullArgs, bool useDeopt
 		output += fullArgs;
 		output += '\n';
 	}
-	FLOG_BUILD( "%s", output.Get() );
+    FLOG_BUILD_DIRECT( output.Get() );
 }
 
 // StripTokenWithArg
@@ -1309,7 +1303,7 @@ bool ObjectNode::BuildPreprocessedOutput( const AString & fullArgs, Job * job, b
 	// spawn the process
 	CompileHelper ch( false ); // don't handle output (we'll do that)
     #if defined( __WINDOWS__ )
-        const bool useResponseFile = GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU );
+        const bool useResponseFile = ( fullArgs.GetLength() > 32767 ) && ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
     #else
         const bool useResponseFile = false;
     #endif
@@ -1417,7 +1411,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const AString & fullArgs ) const
 	// spawn the process
 	CompileHelper ch;
     #if defined( __WINDOWS__ )
-        const bool useResponseFile = GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU );
+        const bool useResponseFile = ( fullArgs.GetLength() > 32767 ) && ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
     #else
         const bool useResponseFile = false;
     #endif
@@ -1491,15 +1485,15 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 	}
 
 	// spawn the process
-	if ( false == m_Process.Spawn( compiler.Get(), 
-								   useResponseFile ? responseFileArgs.Get() : fullArgs.Get(),
-								   workingDir,
-								   environmentString ) )
-	{
-		job->Error( "Failed to spawn process (error 0x%x) to build '%s'\n", Env::GetLastErr(), name.Get() );
-		job->OnSystemError();
-		return false;
-	}
+    if ( false == m_Process.Spawn( compiler.Get(), 
+							       useResponseFile ? responseFileArgs.Get() : fullArgs.Get(),
+							       workingDir,
+							       environmentString ) )
+    {
+	    job->Error( "Failed to spawn process (error 0x%x) to build '%s'\n", Env::GetLastErr(), name.Get() );
+	    job->OnSystemError();
+	    return false;
+    }
 
 	// capture all of the stdout and stderr
 	m_Process.ReadAllData( m_Out, &m_OutSize, m_Err, &m_ErrSize );

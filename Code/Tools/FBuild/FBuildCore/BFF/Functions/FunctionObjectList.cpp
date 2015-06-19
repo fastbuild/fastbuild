@@ -52,11 +52,13 @@ FunctionObjectList::FunctionObjectList()
 	const BFFVariable * compilerOptions;
 	AStackString<> compilerOptionsDeoptimized;
 	AStackString<> compilerOutputPath;
+    AStackString<> compilerOutputPrefix;
 	const BFFVariable * compilerOutputExtension;
 	if ( !GetString( funcStartIter, compiler, ".Compiler", true ) ||
 		 !GetString( funcStartIter, compilerOptions, ".CompilerOptions", true ) ||
 		 !GetString( funcStartIter, compilerOptionsDeoptimized, ".CompilerOptionsDeoptimized", false ) ||
 		 !GetString( funcStartIter, compilerOutputPath, ".CompilerOutputPath", true ) ||
+		 !GetString( funcStartIter, compilerOutputPrefix, ".CompilerOutputPrefix", false ) ||
 		 !GetString( funcStartIter, compilerOutputExtension, ".CompilerOutputExtension", false ) )
 	{
 		return false;
@@ -218,6 +220,7 @@ FunctionObjectList::FunctionObjectList()
 	{
 		o->m_ObjExtensionOverride = compilerOutputExtension->GetString();
 	}
+    o->m_CompilerOutputPrefix = compilerOutputPrefix;
 
 	return true;
 }
@@ -382,26 +385,26 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
 	// do we want to build files via a unity blob?
-	const BFFVariable * inputUnity = nullptr;
-	if ( !GetString( iter, inputUnity, ".CompilerInputUnity" ) )
+    Array< AString > inputUnities;
+    if ( !GetStrings( iter, inputUnities, ".CompilerInputUnity", false ) ) // not required
 	{
 		return false;
 	}
-	if ( inputUnity )
-	{
-		Node * n = ng.FindNode( inputUnity->GetString() );
+    for ( const auto& unity : inputUnities )
+    {
+        Node * n = ng.FindNode( unity );
 		if ( n == nullptr )
 		{
-			Error::Error_1104_TargetNotDefined( iter, this, "CompilerInputUnity", inputUnity->GetString() );
+			Error::Error_1104_TargetNotDefined( iter, this, "CompilerInputUnity", unity );
 			return false;
 		}
 		if ( n->GetType() != Node::UNITY_NODE )
 		{
-			Error::Error_1102_UnexpectedType( iter, this, "CompilerInputUnity", inputUnity->GetString(), n->GetType(), Node::UNITY_NODE );
+			Error::Error_1102_UnexpectedType( iter, this, "CompilerInputUnity", unity, n->GetType(), Node::UNITY_NODE );
 			return false;
 		}
 		inputs.Append( Dependency( n ) );
-	}
+    }
 
 	// do we want to build a files in a directory?
 	const BFFVariable * inputPath = BFFStackFrame::GetVar( ".CompilerInputPath" );

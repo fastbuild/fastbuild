@@ -84,7 +84,7 @@ void TestGraph::TestNodeTypes() const
 
 	FileNode * fn = ng.CreateFileNode( AStackString<>( "file" ) );
 	TEST_ASSERT( fn->GetType() == Node::FILE_NODE);
-	TEST_ASSERT( FileNode::GetType() == Node::FILE_NODE);
+	TEST_ASSERT( FileNode::GetTypeS() == Node::FILE_NODE);
 
 	CompilerNode * cn( nullptr );
 	{
@@ -102,7 +102,7 @@ void TestGraph::TestNodeTypes() const
 		Dependencies empty;
 		Node * n = ng.CreateCopyNode( AStackString<>( "aaa" ), fn, empty );
 		TEST_ASSERT( n->GetType() == Node::COPY_NODE );
-		TEST_ASSERT( CopyNode::GetType() == Node::COPY_NODE );
+		TEST_ASSERT( CopyNode::GetTypeS() == Node::COPY_NODE );
 		TEST_ASSERT( AStackString<>( "Copy" ) == n->GetTypeName() );
 	}
 
@@ -118,14 +118,14 @@ void TestGraph::TestNodeTypes() const
                                                             Array< AString >(),
                                                             Array< AString >() );
 	TEST_ASSERT( dn->GetType() == Node::DIRECTORY_LIST_NODE );
-	TEST_ASSERT( DirectoryListNode::GetType() == Node::DIRECTORY_LIST_NODE );
+	TEST_ASSERT( DirectoryListNode::GetTypeS() == Node::DIRECTORY_LIST_NODE );
 	TEST_ASSERT( AStackString<>( "Directory" ) == dn->GetTypeName() );
 
 	{
 		Dependencies empty;
 		Node * n = ng.CreateExecNode( AStackString<>( "dst" ), fn, fn, AStackString<>( "args" ), AStackString<>( "workingDir" ), 0, empty );
 		TEST_ASSERT( n->GetType() == Node::EXEC_NODE );
-		TEST_ASSERT( ExecNode::GetType() == Node::EXEC_NODE);
+		TEST_ASSERT( ExecNode::GetTypeS() == Node::EXEC_NODE);
 		TEST_ASSERT( AStackString<>( "Exec" ) == n->GetTypeName() );
 	}
 	{
@@ -141,13 +141,13 @@ void TestGraph::TestNodeTypes() const
 										 false, false,
                                          nullptr, AString::GetEmpty() );
 		TEST_ASSERT( n->GetType() == Node::LIBRARY_NODE );
-		TEST_ASSERT( LibraryNode::GetType() == Node::LIBRARY_NODE );
+		TEST_ASSERT( LibraryNode::GetTypeS() == Node::LIBRARY_NODE );
 		TEST_ASSERT( AStackString<>( "Library" ) == n->GetTypeName() );
 	}
 	{
         Node * n = ng.CreateObjectNode(AStackString<>("obj"), fn, cn, AString::GetEmpty(), AString::GetEmpty(), nullptr, 0, Dependencies(), false, false, nullptr, AString::GetEmpty(), 0 );
 		TEST_ASSERT( n->GetType() == Node::OBJECT_NODE );
-		TEST_ASSERT( ObjectNode::GetType() == Node::OBJECT_NODE );
+		TEST_ASSERT( ObjectNode::GetTypeS() == Node::OBJECT_NODE );
 		TEST_ASSERT( AStackString<>( "Object" ) == n->GetTypeName() );
 	}
 	{
@@ -158,7 +158,7 @@ void TestGraph::TestNodeTypes() const
 		Node * n = ng.CreateAliasNode( AStackString<>( "alias" ), targets );
 #endif
 		TEST_ASSERT( n->GetType() == Node::ALIAS_NODE );
-		TEST_ASSERT( AliasNode::GetType() == Node::ALIAS_NODE );
+		TEST_ASSERT( AliasNode::GetTypeS() == Node::ALIAS_NODE );
 		TEST_ASSERT( AStackString<>( "Alias" ) == n->GetTypeName() );
 	}
 	{
@@ -166,7 +166,7 @@ void TestGraph::TestNodeTypes() const
 		libraries.Append( Dependency( fn ) );
 		Node * n = ng.CreateDLLNode( AStackString<>( "zz.dll" ), libraries, Dependencies(), AString::GetEmpty(), AString::GetEmpty(), 0, Dependencies(), AStackString<>(), nullptr, AString::GetEmpty() );
 		TEST_ASSERT( n->GetType() == Node::DLL_NODE );
-		TEST_ASSERT( DLLNode::GetType() == Node::DLL_NODE );
+		TEST_ASSERT( DLLNode::GetTypeS() == Node::DLL_NODE );
 		TEST_ASSERT( AStackString<>( "DLL" ) == n->GetTypeName() );
 	}
 	{
@@ -174,28 +174,15 @@ void TestGraph::TestNodeTypes() const
 		libraries.Append( Dependency( fn ) );
 		Node * n = ng.CreateExeNode( AStackString<>( "zz.exe" ), libraries, Dependencies(), AString::GetEmpty(), AString::GetEmpty(), 0, Dependencies(), nullptr, AString::GetEmpty() );
 		TEST_ASSERT( n->GetType() == Node::EXE_NODE );
-		TEST_ASSERT( ExeNode::GetType() == Node::EXE_NODE );
+		TEST_ASSERT( ExeNode::GetTypeS() == Node::EXE_NODE );
 		TEST_ASSERT( AStackString<>( "Exe" ) == n->GetTypeName() );
 	}
 	{
 		Dependencies dNodes( 1, false );
 		dNodes.Append( Dependency( dn ) );
-#ifdef USE_NODE_REFLECTION
 		Node * n = ng.CreateUnityNode( AStackString<>( "Unity" ) );
-#else
-		Node * n = ng.CreateUnityNode( AStackString<>( "Unity" ), 
-									dNodes,
-									Array< AString >(),
-									AStackString<>( NATIVE_SLASH_STR ),
-									AString::GetEmpty(),
-									3,
-									AString::GetEmpty(),
-									false,
-									0,
-									Array< AString >() );
-#endif
 		TEST_ASSERT( n->GetType() == Node::UNITY_NODE);
-		TEST_ASSERT( UnityNode::GetType() == Node::UNITY_NODE );
+		TEST_ASSERT( UnityNode::GetTypeS() == Node::UNITY_NODE );
 		TEST_ASSERT( AStackString<>( "Unity" ) == n->GetTypeName() );
 	}
 	{
@@ -207,7 +194,7 @@ void TestGraph::TestNodeTypes() const
 									AString::GetEmpty(),
 									Dependencies() );
 		TEST_ASSERT( n->GetType() == Node::CS_NODE);
-		TEST_ASSERT( CSNode::GetType() == Node::CS_NODE );
+		TEST_ASSERT( CSNode::GetTypeS() == Node::CS_NODE );
 		TEST_ASSERT( AStackString<>( "C#" ) == n->GetTypeName() );
 	}
 }

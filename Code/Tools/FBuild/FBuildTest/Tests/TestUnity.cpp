@@ -194,7 +194,7 @@ void TestUnity::TestGenerateFromExplicitList() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::UNITY_NODE );
-	CheckStatsTotal( 1,		1 );
+	CheckStatsTotal( 4,		4 );
 }
 
 //------------------------------------------------------------------------------

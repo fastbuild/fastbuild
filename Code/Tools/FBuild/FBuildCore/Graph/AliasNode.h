@@ -31,7 +31,7 @@ public:
 #endif
 	virtual ~AliasNode();
 
-	static inline Node::Type GetType() { return Node::ALIAS_NODE; }
+	static inline Node::Type GetTypeS() { return Node::ALIAS_NODE; }
 
 	virtual bool IsAFile() const { return false; }
 

@@ -26,7 +26,7 @@ public:
 						const Dependencies & preBuildDependencies );
 	virtual ~ExecNode();
 
-	static inline Node::Type GetType() { return Node::EXEC_NODE; }
+	static inline Node::Type GetTypeS() { return Node::EXEC_NODE; }
 
 	static Node * Load( IOStream & stream );
 	virtual void Save( IOStream & stream ) const;

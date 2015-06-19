@@ -131,12 +131,16 @@ CSNode::~CSNode()
 		return NODE_RESULT_FAILED; // Create will have emitted error
 	}
 
-	// override args to use response file
-	responseFileArgs.Format( "@\"%s\"", rf.GetResponseFilePath().Get() );
+    const bool useResponseFile = ( fullArgs.GetLength() > 32767 );
+    if ( useResponseFile )
+    {
+	    // override args to use response file
+	    responseFileArgs.Format( "@\"%s\"", rf.GetResponseFilePath().Get() );
+    }
 
 	// spawn the process
 	Process p;
-	if ( p.Spawn( m_CompilerPath.Get(), responseFileArgs.Get(),
+	if ( p.Spawn( m_CompilerPath.Get(), useResponseFile ? responseFileArgs.Get() : fullArgs.Get(),
 				  workingDir, environment ) == false )
 	{
 		FLOG_ERROR( "Failed to spawn process to build '%s'", GetName().Get() );
@@ -236,7 +240,7 @@ void CSNode::EmitCompilationMessage( const AString & fullArgs ) const
 		output += fullArgs;
 		output += '\n';
 	}
-	FLOG_BUILD( "%s", output.Get() );
+    FLOG_BUILD_DIRECT( output.Get() );
 }
 
 // GetFullArgs

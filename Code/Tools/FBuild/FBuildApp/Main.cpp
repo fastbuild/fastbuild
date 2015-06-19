@@ -187,7 +187,7 @@ int Main(int argc, char * argv[])
 			else if ( thisArg == "-nooutputbuffering" )
 			{
 				// this doesn't do anything any more
-				OUTPUT( "FBuild: Warning: -nooutputbuffering is deprecated." );
+				OUTPUT( "FBuild: Warning: -nooutputbuffering is deprecated.\n" );
 				continue;
 			}
 			else if ( thisArg == "-noprogress" )

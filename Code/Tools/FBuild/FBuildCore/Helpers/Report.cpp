@@ -620,13 +620,14 @@ void Report::DoCPUTimeByLibrary()
 		const uint32_t objCount = ls.objectCount_OutOfDate;
 		const float time = ( (float)ls.cpuTimeMS * 0.001f ); // ms to s
 		const float perc = (float)( (double)time / (double)totalS * 100 );
-		const char * type = "??";
+		const char * type = ls.library->GetTypeName();
 		switch ( ls.library->GetType() )
 		{
 			case Node::LIBRARY_NODE: type = "Static"; break;
 			case Node::DLL_NODE: type = "DLL"; break;
 			case Node::CS_NODE: type = "C# DLL"; break;
-			default: ASSERT( false ); break;
+			case Node::OBJECT_LIST_NODE: type = "ObjectList"; break;
+			default: break;
 		}
 		const char * name = ls.library->GetName().Get();
 		Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%2.3fs</td><td style=\"width:50px;\">%2.1f</td><td style=\"width:70px;\">%u</td><td style=\"width:50px;\">%s</td><td>%s</td></tr>\n"

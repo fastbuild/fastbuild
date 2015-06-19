@@ -80,7 +80,7 @@ FunctionPrint::FunctionPrint()
 		}
 		tmp += '\n';
 
-		FLOG_BUILD( "%s", tmp.Get() );
+		FLOG_BUILD_DIRECT( tmp.Get() );
 	}
 
 	return true;

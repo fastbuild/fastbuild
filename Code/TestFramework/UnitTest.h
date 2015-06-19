@@ -56,7 +56,7 @@ private:
 		(void)utm;
 
 #define REGISTER_TEST( testFunction )								\
-		utm.TestBegin( #testFunction );								\
+		utm.TestBegin( this, #testFunction );					    \
 		testFunction();												\
 		utm.TestEnd();
 

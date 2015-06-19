@@ -31,15 +31,14 @@ public:
 	inline uint32_t GetCount() const { return m_Count; }
 
 	// jobs pushed by the main thread
-	void QueueJob( Job * job );
+	void QueueJobs( Array< Node * > & nodes );
 
 	// jobs consumed by workers
 	Job * RemoveJob();
 private:
 	uint32_t	m_Count;	// access the current count
 	Mutex		m_Mutex;	// lock to add/remove jobs
-	Job *		m_Head;		// remove oldest from head
-	Job *		m_Tail;		// push newest to tail
+	Array< Job * > m_Jobs;  // Sorted, most expensive at end
 };
 
 // JobQueue
@@ -51,7 +50,8 @@ public:
 	~JobQueue();
 
 	// main thread calls these
-	void QueueJob( Node * node );
+	void AddJobToBatch( Node * node ); // Add new job to the staging queue
+    void FlushJobBatch();              // Sort and flush the staging queue
 	void FinalizeCompletedJobs();
 	void MainThreadWait( uint32_t maxWaitMS );
 
@@ -86,7 +86,8 @@ private:
 	void		ReturnUnfinishedDistributableJob( Job * job, bool systemError = false );
 
 	// Jobs available for local processing
-	JobSubQueue			m_LocalAvailableJobs[ Node::NUM_PRIORITY_LEVELS ];
+    Array< Node * >     m_LocalJobs_Staging;
+	JobSubQueue			m_LocalJobs_Available;
 
 	// Jobs in progress locally
 	uint32_t			m_NumLocalJobsActive;

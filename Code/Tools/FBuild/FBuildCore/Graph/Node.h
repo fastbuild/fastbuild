@@ -115,13 +115,6 @@ public:
 		UP_TO_DATE,			// built, or confirmed as not needing building
 	};
 
-	enum Priority
-	{
-		PRIORITY_HIGH,
-		PRIORITY_NORMAL,
-		NUM_PRIORITY_LEVELS
-	};
-
 	explicit Node( const AString & name, Type type, uint32_t controlFlags );
 	virtual ~Node();
 
@@ -142,11 +135,10 @@ public:
 
 	inline uint32_t GetLastBuildTime() const	{ return m_LastBuildTimeMs; }
 	inline uint32_t GetProcessingTime() const	{ return m_ProcessingTime; }
+	inline uint32_t GetRecursiveCost() const	{ return m_RecursiveCost; }
 
 	inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
 	inline void		SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
-
-	virtual Priority GetPriority() const { return PRIORITY_NORMAL; }
 
 	static Node *	Load( IOStream & stream );
 	static void		Save( IOStream & stream, const Node * node );
@@ -222,6 +214,7 @@ protected:
 	uint32_t		m_ControlFlags;
 	mutable uint32_t		m_StatsFlags;
 	uint64_t		m_Stamp;
+	uint32_t		m_RecursiveCost;
 	Type m_Type;
 	Node *			m_Next; // node map linked list pointer
 	uint32_t		m_NameCRC;
@@ -241,7 +234,7 @@ protected:
 template < class T >
 inline T * Node::CastTo() const
 {
-	ASSERT( T::GetType() == GetType() );
+	ASSERT( T::GetTypeS() == GetType() );
 	return (T *)this;
 }
 

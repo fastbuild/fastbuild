@@ -40,10 +40,9 @@ ObjectListNode::ObjectListNode( const AString & listName,
 , m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
 , m_DeoptimizeWritableFilesWithToken( deoptimizeWritableFilesWithToken )
 {
-	m_LastBuildTimeMs = 10000;
+	m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved
 
 	// depend on the input nodes
-	ASSERT( !inputNodes.IsEmpty() );
 	m_StaticDependencies = inputNodes;
 
 	// store precompiled headers if provided
@@ -74,9 +73,9 @@ ObjectListNode::~ObjectListNode()
 	return false;
 }
 
-// DoDynamicDependencies
+// GatherDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::DoDynamicDependencies( bool forceClean )
+/*virtual*/ bool ObjectListNode::GatherDynamicDependencies( bool forceClean )
 {
 	(void)forceClean; // dynamic deps are always re-added here, so this is meaningless
 
@@ -136,14 +135,6 @@ ObjectListNode::~ObjectListNode()
 				}
 			}
 		}
-		else if ( i->GetNode()->GetType() == Node::FILE_NODE )
-		{
-			// a single file, create the object that will compile it
-			if ( CreateDynamicObjectNode( i->GetNode(), nullptr ) == false )
-			{
-				return false; // CreateDynamicObjectNode will have emitted error
-			}
-		}
 		else if ( i->GetNode()->GetType() == Node::UNITY_NODE )
 		{
 			// get the dir list from the unity node
@@ -197,6 +188,14 @@ ObjectListNode::~ObjectListNode()
 				}
 			}
 		}
+        else if ( i->GetNode()->IsAFile() )
+		{
+			// a single file, create the object that will compile it
+			if ( CreateDynamicObjectNode( i->GetNode(), nullptr ) == false )
+			{
+				return false; // CreateDynamicObjectNode will have emitted error
+			}
+		}
 		else
 		{
 			ASSERT( false ); // unexpected node type
@@ -206,13 +205,6 @@ ObjectListNode::~ObjectListNode()
 	//float time = t.GetElapsed();
 	//FLOG_WARN( "DynamicDeps: %2.3f\t%s", time, GetName().Get() );
 
-	// make sure we have something to build!
-	if ( m_DynamicDependencies.GetSize() == 0 )
-	{
-		FLOG_ERROR( "No files found to build '%s'", GetName().Get() );
-		return false;
-	}
-
 	// If we have a precompiled header, add that to our dynamic deps so that
 	// any symbols in the PCH's .obj are also linked, when either:
 	// a) we are a static library
@@ -220,6 +212,25 @@ ObjectListNode::~ObjectListNode()
 	if ( m_PrecompiledHeader )
 	{
 		m_DynamicDependencies.Append( Dependency( m_PrecompiledHeader ) );
+	}
+
+    return true;
+}
+
+// DoDynamicDependencies
+//------------------------------------------------------------------------------
+/*virtual*/ bool ObjectListNode::DoDynamicDependencies( bool forceClean )
+{
+    if ( GatherDynamicDependencies( forceClean ) == false )
+    {
+        return false; // GatherDynamicDependencies will have emitted error
+    }
+
+	// make sure we have something to build!
+	if ( m_DynamicDependencies.GetSize() == 0 )
+	{
+		FLOG_ERROR( "No files found to build '%s'", GetName().Get() );
+		return false;
 	}
 
 	return true;
@@ -246,7 +257,6 @@ ObjectListNode::~ObjectListNode()
 //------------------------------------------------------------------------------
 void ObjectListNode::GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const
 {
-	// substitute "function variables" if needed
 	for ( Dependencies::Iter i = m_DynamicDependencies.Begin();
 		  i != m_DynamicDependencies.End();
 		  i++ )
@@ -277,11 +287,39 @@ void ObjectListNode::GetInputFiles( AString & fullArgs, const AString & pre, con
 			}
 		}
 
+		// extract objects from additional lists
+		if ( n->GetType() == Node::OBJECT_LIST_NODE )
+		{
+            ASSERT( GetType() == Node::LIBRARY_NODE ); // should only be possible for a LibraryNode
+
+			// insert all the objects in the object list
+			ObjectListNode * oln = n->CastTo< ObjectListNode >();
+			oln->GetInputFiles( fullArgs, pre, post );
+			continue;
+		}
+
 		// normal object
 		fullArgs += pre;
 		fullArgs += n->GetName();
 		fullArgs += post;
 		fullArgs += ' ';
+	}
+}
+
+// GetInputFiles
+//------------------------------------------------------------------------------
+void ObjectListNode::GetInputFiles( Array< AString > & files ) const
+{
+    // only valid to call on ObjectListNode (not LibraryNode)
+    ASSERT( GetType() == Node::OBJECT_LIST_NODE );
+
+    files.SetCapacity( files.GetCapacity() + m_DynamicDependencies.GetSize() );
+    for ( Dependencies::Iter i = m_DynamicDependencies.Begin();
+		  i != m_DynamicDependencies.End();
+		  i++ )
+	{
+		const Node * n = i->GetNode();
+        files.Append( n->GetName() );
 	}
 }
 
@@ -300,6 +338,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 
     // if source comes from a directory listing, use path relative to dirlist base
     // to replicate the folder hierearchy in the output
+    AStackString<> subPath;
     if ( dirNode )
     {
         const AString & baseDir = dirNode->GetPath();
@@ -307,12 +346,14 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
         if ( PathUtils::PathBeginsWith( fileName, baseDir ) )
         {
             // ... use everything after that
-            lastSlash = fileName.Get() + baseDir.GetLength();
+            subPath.Assign(fileName.Get() + baseDir.GetLength(), lastSlash ); // includes last slash
         }
     }
 
 	AStackString<> fileNameOnly( lastSlash, lastDot );
 	AStackString<> objFile( m_CompilerOutputPath );
+    objFile += subPath;
+    objFile += m_CompilerOutputPrefix;
 	objFile += fileNameOnly;
 	objFile += GetObjExtension();
 
@@ -377,6 +418,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	NODE_LOAD_DEPS( 16,			staticDeps );
 	NODE_LOAD_NODE( Node,		precompiledHeader );
 	NODE_LOAD( AStackString<>,	objExtensionOverride );
+    NODE_LOAD( AStackString<>,	compilerOutputPrefix );
 	NODE_LOAD_DEPS( 0,			compilerForceUsing );
 	NODE_LOAD_DEPS( 0,			preBuildDependencies );
 	NODE_LOAD( bool,			deoptimizeWritableFiles );
@@ -399,6 +441,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 								preprocessorNode,
 								preprocessorArgs );
 	n->m_ObjExtensionOverride = objExtensionOverride;
+    n->m_CompilerOutputPrefix = compilerOutputPrefix;
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
 	// but we can't right now because we rely on the nodes we depend on 
@@ -423,6 +466,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	NODE_SAVE_DEPS( m_StaticDependencies );
 	NODE_SAVE_NODE( m_PrecompiledHeader );
 	NODE_SAVE( m_ObjExtensionOverride );
+    NODE_SAVE( m_CompilerOutputPrefix );
 	NODE_SAVE_DEPS( m_CompilerForceUsing );
 	NODE_SAVE_DEPS( m_PreBuildDependencies );
 	NODE_SAVE( m_DeoptimizeWritableFiles );

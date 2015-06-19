@@ -16,7 +16,7 @@ public:
 	explicit FileNode( const AString & fileName, uint32_t controlFlags = Node::FLAG_TRIVIAL_BUILD );
 	virtual ~FileNode();
 
-	static inline Node::Type GetType() { return Node::FILE_NODE; }
+	static inline Node::Type GetTypeS() { return Node::FILE_NODE; }
 
 	virtual bool IsAFile() const { return true; }
 

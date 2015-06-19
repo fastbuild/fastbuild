@@ -27,7 +27,7 @@ public:
 	const AString & GetPath() const { return m_Path; }
 	const Array< FileIO::FileInfo > & GetFiles() const { return m_Files; }
 
-	static inline Node::Type GetType() { return Node::DIRECTORY_LIST_NODE; }
+	static inline Node::Type GetTypeS() { return Node::DIRECTORY_LIST_NODE; }
 
 	virtual bool IsAFile() const { return false; }
 
