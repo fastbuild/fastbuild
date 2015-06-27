@@ -191,6 +191,7 @@ UnityNode::~UnityNode()
 		// determine allocation of includes for this unity file
 		Array< FileAndOrigin > filesInThisUnity( 256, true );
 		uint32_t numIsolated( 0 );
+        uint64_t updatedTimestamp = 0;
 		const bool lastUnity = ( i == ( m_NumUnityFilesToCreate - 1 ) );
 		while ( ( remainingInThisUnity > 0.0f ) || lastUnity )
 		{
@@ -201,6 +202,12 @@ UnityNode::~UnityNode()
 			{
 				break;
 			}
+
+            // find most recently written file in this unity
+            if ( files[index].GetLastWriteTime() > updatedTimestamp )
+            {
+                updatedTimestamp = files[index].GetLastWriteTime();
+            }
 
 			filesInThisUnity.Append( files[index ] );
 
@@ -339,6 +346,35 @@ UnityNode::~UnityNode()
 
 			f.Close();
 		}
+        // checks if any dependency was written later than generated unity file
+        else if ( m_IsolateWritableFiles == false ) // don't check if files are isolated
+        {
+            FileIO::FileInfo unityFileInfo;
+            if ( FileIO::GetFileInfo( unityName, unityFileInfo ) == false )
+            {
+                FLOG_ERROR( "Failed to get Unity file '%s' info", unityName.Get() );
+                return NODE_RESULT_FAILED;
+            }
+
+            if ( unityFileInfo.m_LastWriteTime < updatedTimestamp )
+            {
+                if ( hasOutputMessage == false )
+                {
+                    AStackString< 512 > buffer( "Uni: " );
+                    buffer += GetName();
+                    buffer += '\n';
+                    FLOG_BUILD_DIRECT( buffer.Get() );
+                    hasOutputMessage = true;
+                }
+
+                // update unity file last write to summon compilation
+                if ( FileIO::SetFileLastWriteTime( unityName, updatedTimestamp ) == false )
+                {
+                    FLOG_ERROR( "Error setting Unity file '%s' last write time", unityName.Get() );
+                    return NODE_RESULT_FAILED;
+                }
+            }
+        }
 	}
 
 	// Sanity check that all files were written
