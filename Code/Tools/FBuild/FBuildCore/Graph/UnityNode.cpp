@@ -22,6 +22,17 @@
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+struct FileAndOriginCompare
+{
+    bool operator ()(   const UnityNode::FileAndOrigin& lhs,
+                        const UnityNode::FileAndOrigin& rhs ) const
+    {
+        return lhs.GetName() < rhs.GetName();
+    }
+};
+
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_BEGIN( UnityNode, Node, MetaNone() )
@@ -142,7 +153,8 @@ UnityNode::~UnityNode()
         return NODE_RESULT_FAILED; // GetFiles will have emitted an error
     }
 
-    // TODO:A Sort files for consistent ordering across file systems/platforms
+    // sort files for consistent ordering across file systems/platforms
+    files.Sort( FileAndOriginCompare() );
     
 	// how many files should go in each unity file?
 	const size_t numFiles = files.GetSize();
