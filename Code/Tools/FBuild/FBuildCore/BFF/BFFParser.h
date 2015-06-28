@@ -67,6 +67,7 @@ private:
 	bool ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter );
 	bool ParseEndIfDirective( const BFFIterator & directiveStart );
 	bool CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result );
+	bool ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter );
 
 	bool StoreVariableString( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
 	bool StoreVariableArray( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );

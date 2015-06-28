@@ -598,6 +598,10 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 	{
 		return ParseEndIfDirective( directiveStartIter );
 	}
+	else if ( directive == "import" )
+	{
+		return ParseImportDirective( directiveStart, iter );
+	}
 
 	// unknown
 	Error::Error_1030_UnknownDirective( directiveStartIter, directive );
@@ -805,6 +809,64 @@ bool BFFParser::CheckIfCondition( const BFFIterator & conditionStart, const BFFI
 	// We found an expression we don't understand
 	Error::Error_1036_UnknownTokenInIfDirective( conditionStart );
 	return false;
+}
+
+// ParseImportDirective
+//------------------------------------------------------------------------------
+bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+{
+	iter.SkipWhiteSpace();
+
+	// make sure we haven't hit the end of the file
+	if ( iter.IsAtEnd() )
+	{
+		Error::Error_1012_UnexpectedEndOfFile( directiveStart );
+		return false;
+	}
+
+	// make sure this is a variable name
+	if ( iter.IsAtValidVariableNameCharacter() == false )
+	{
+		Error::Error_1013_UnexpectedCharInVariableName( iter, nullptr );
+		return false;
+	}
+
+	// find the end of the variable name
+	const BFFIterator varNameStart( iter );
+	iter.SkipVariableName();
+	if ( iter.IsAtEnd() )
+	{
+		Error::Error_1012_UnexpectedEndOfFile( iter );
+		return false;
+	}
+	const BFFIterator varNameEnd( iter );
+
+	// sanity check it is a sensible length
+	size_t varNameLen = varNameStart.GetDistTo( varNameEnd );
+	if ( varNameLen > MAX_VARIABLE_NAME_LENGTH )
+	{
+		Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)varNameLen, (uint32_t)MAX_VARIABLE_NAME_LENGTH );
+		return false;
+	}
+	AStackString<> varName( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
+
+	// look for varName in system environment
+	AStackString<> varValue;
+	if ( Env::GetEnvVariable( varName.Get(), varValue ) == false )
+	{
+		Error::Error_1009_UnknownVariable( varNameStart, nullptr );
+		return false;
+	}
+
+	// add the dot to variable name
+	varName = ".";
+	varName.Append( varNameStart.GetCurrent(), varNameLen );
+
+	// import variable in current scope
+	BFFStackFrame::SetVarString( varName, varValue );
+	FLOG_INFO( "Imported <string> variable '%s' with value '%s' from system environment", varName.Get(), varValue.Get() );
+
+	return true;
 }
 
 // StoreVariableString
