@@ -99,6 +99,8 @@ public:
 	static void Error_1035_ExcessiveDepthComplexity( const BFFIterator & iter );
 	static void Error_1036_UnknownTokenInIfDirective( const BFFIterator & iter );
 	static void Error_1037_EndIfWithoutIf( const BFFIterator & iter );
+	static void Error_1038_OverwritingTokenInDefine( const BFFIterator & iter );
+	static void Error_1039_UnknownTokenInUndef( const BFFIterator & iter );
 
 	// 1050 - 1099 : Variable type errors
 	//------------------------------------------------------------------------------

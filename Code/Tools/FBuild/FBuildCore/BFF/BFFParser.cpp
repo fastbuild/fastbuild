@@ -7,6 +7,7 @@
 
 #include "BFFParser.h"
 #include "BFFIterator.h"
+#include "BFFMacros.h"
 #include "BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -590,6 +591,14 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 		FBuild::Get().GetDependencyGraph().SetCurrentFileAsOneUse();
 		return true;
 	}
+	else if ( directive == "define" )
+	{
+		return ParseDefineDirective( directiveStart, iter );
+	}
+	else if ( directive == "undef" )
+	{
+		return ParseUndefDirective( directiveStart, iter );
+	}
 	else if ( directive == "if" )
 	{
 		return ParseIfDirective( directiveStart, iter );
@@ -679,6 +688,62 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
 	BFFParser parser;
 	const bool pushStackFrame = false; // include is treated as if injected at this point
 	return parser.Parse( mem.Get(), fileSize, includeToUseClean.Get(), includeTimeStamp, pushStackFrame ); 
+}
+
+// ParseDefineDirective
+//------------------------------------------------------------------------------
+bool BFFParser::ParseDefineDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+{
+	// parse out token
+	const BFFIterator tokenStart( iter );
+	while ( ( iter.IsAtEnd() == false ) &&
+			( *iter != '\r' ) &&
+			( *iter != '\n' ) )
+	{
+		iter++;
+	}
+	const BFFIterator tokenEnd( iter );
+
+	// trim token
+	AStackString<> token( tokenStart.GetCurrent(), tokenEnd.GetCurrent() );
+	token.Replace( '\t', ' ' );
+	token.Replace( " ", "" );
+
+	if ( BFFMacros::Get().Define( token ) == false )
+	{
+		Error::Error_1038_OverwritingTokenInDefine( directiveStart );
+		return false;
+	}
+
+	return true;
+}
+
+// ParseUndefDirective
+//------------------------------------------------------------------------------
+bool BFFParser::ParseUndefDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+{
+	// parse out token
+	const BFFIterator tokenStart( iter );
+	while ( ( iter.IsAtEnd() == false ) &&
+			( *iter != '\r' ) &&
+			( *iter != '\n' ) )
+	{
+		iter++;
+	}
+	const BFFIterator tokenEnd( iter );
+
+	// trim token
+	AStackString<> token( tokenStart.GetCurrent(), tokenEnd.GetCurrent() );
+	token.Replace( '\t', ' ' );
+	token.Replace( " ", "" );
+
+	if ( BFFMacros::Get().Undefine( token ) == false )
+	{
+		Error::Error_1039_UnknownTokenInUndef( directiveStart );
+		return false;
+	}
+
+	return true;
 }
 
 // ParseIfDirective
@@ -781,34 +846,9 @@ bool BFFParser::CheckIfCondition( const BFFIterator & conditionStart, const BFFI
 	condition.Replace( '\t', ' ' );
 	condition.Replace( " ", "" );
 
-	result = false;
+	result = BFFMacros::Get().IsDefined( condition );
 
-	// For now we only support trivial pre-defined expressions - TODO:B Support more complex expressions
-	if ( condition == "__WINDOWS__" )
-	{
-		#if defined( __WINDOWS__ )
-			result = true;
-		#endif
-		return true;
-	}
-	if ( condition == "__LINUX__" )
-	{
-		#if defined( __LINUX__ )
-			result = true;
-		#endif
-		return true;
-	}
-	if ( condition == "__OSX__" )
-	{
-		#if defined( __OSX__ )
-			result = true;
-		#endif
-		return true;
-	}
-
-	// We found an expression we don't understand
-	Error::Error_1036_UnknownTokenInIfDirective( conditionStart );
-	return false;
+	return true;
 }
 
 // ParseImportDirective
