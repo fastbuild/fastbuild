@@ -852,7 +852,8 @@ bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIte
 
 	// look for varName in system environment
 	AStackString<> varValue;
-	if ( Env::GetEnvVariable( varName.Get(), varValue ) == false )
+	uint32_t varHash = 0;
+	if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), varValue, varHash ) == false )
 	{
 		Error::Error_1009_UnknownVariable( varNameStart, nullptr );
 		return false;
