@@ -69,6 +69,25 @@ public:
 	inline const char * GetEnvironmentString() const			{ return m_EnvironmentString; }
 	inline uint32_t		GetEnvironmentStringSize() const		{ return m_EnvironmentStringSize; }
 
+	class EnvironmentVarAndHash
+    {
+    public:
+        EnvironmentVarAndHash( const char * name, uint32_t hash )
+         : m_Name( name )
+         , m_Hash( hash )
+        {}
+
+        inline const AString &              GetName() const             { return m_Name; }
+        inline uint32_t                     GetHash() const          	{ return m_Hash; }
+
+    protected:
+        AString		m_Name;
+        uint32_t 	m_Hash;
+    };
+
+    bool ImportEnvironmentVar( const char * name, AString & value, uint32_t & hash );
+    const Array< EnvironmentVarAndHash > & GetImportedEnvironmentVars() const { return m_ImportedEnvironmentVars; }
+
 	void GetLibEnvVar( AString & libEnvVar ) const;
 
 	// stats - read access
@@ -116,6 +135,8 @@ private:
 	char *		m_EnvironmentString;
 	uint32_t	m_EnvironmentStringSize; // size excluding last null
 	AString		m_LibEnvVar; // LIB= value
+
+	Array< EnvironmentVarAndHash > m_ImportedEnvironmentVars;
 };
 
 //------------------------------------------------------------------------------
