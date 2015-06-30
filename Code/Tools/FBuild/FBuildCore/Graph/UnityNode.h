@@ -43,6 +43,7 @@ public:
         {}
 
         inline const AString &              GetName() const             { return m_Info->m_Name; }
+        inline uint64_t                     GetLastWriteTime() const    { return m_Info->m_LastWriteTime; }
         inline bool                         IsReadOnly() const          { return m_Info->IsReadOnly(); }
         inline const DirectoryListNode *    GetDirListOrigin() const    { return m_DirListOrigin; }
 
