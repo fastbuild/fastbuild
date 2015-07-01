@@ -15,6 +15,35 @@ class IOStream;
 class VSProjectConfig;
 class VCXProjectNode;
 
+// SLNSolutionFolder
+//------------------------------------------------------------------------------
+class SLNSolutionFolder
+{
+public:
+  AString m_Path;
+  Array< AString > m_ProjectNames;
+
+  static bool Load( IOStream & stream, Array< SLNSolutionFolder > & solutionFolders );
+  static void Save( IOStream & stream, const Array< SLNSolutionFolder > & solutionFolders );
+};
+
+// SolutionConfig
+//------------------------------------------------------------------------------
+struct SolutionConfig
+{
+    AString m_Config;
+    AString m_Platform;
+    AString m_SolutionPlatform;
+
+    bool operator < ( const SolutionConfig& other ) const
+    {
+        int32_t cmpConfig = m_Config.CompareI( other.m_Config );
+        return ( cmpConfig == 0 )
+            ? m_SolutionPlatform < other.m_SolutionPlatform
+            : cmpConfig < 0 ;
+    }
+};
+
 // SLNGenerator
 //------------------------------------------------------------------------------
 class SLNGenerator
@@ -27,17 +56,24 @@ public:
                                  const AString & solutionVisualStudioVersion,
                                  const AString & solutionMinimumVisualStudioVersion,
                                  const Array< VSProjectConfig > & configs,
-                                 const Array< VCXProjectNode * > & projects );
+                                 const Array< VCXProjectNode * > & projects,
+                                 const Array< SLNSolutionFolder > & folders );
 
 private:
     void WriteHeader( const AString & solutionVisualStudioVersion,
                       const AString & solutionMinimumVisualStudioVersion );
     void WriteProjectListings(  const AString& solutionBasePath,
                                 const Array< VCXProjectNode * > & projects,
-                                Array< AString > & projectGuids );
-    void WriteSolutionConfigs(  const Array< VSProjectConfig > & configs );
-    void WriteSolutionMappings( const Array< VSProjectConfig > & configs,
-                                const Array< AString > & projectGuids );
+                                const Array< SLNSolutionFolder > & folders,
+                                Array< AString > & projectGuids,
+                                Array< AString > & solutionProjectsToFolder );
+    void WriteSolutionFolderListings( const Array< SLNSolutionFolder > & folders,
+                                      Array< AString > & solutionFolderPaths );
+    void WriteSolutionConfigurationPlatforms(  const Array< SolutionConfig > & solutionConfigs );
+    void WriteProjectConfigurationPlatforms(  const Array< SolutionConfig > & solutionConfigs,
+                                              const Array< AString > & projectGuids );
+    void WriteNestedProjects( const Array< AString > & solutionProjectsToFolder,
+                              const Array< AString > & solutionFolderPaths );
     void WriteFooter();
 
     // Helper to format some text

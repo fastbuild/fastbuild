@@ -26,6 +26,7 @@ protected:
     virtual bool Commit( const BFFIterator & funcStartIter ) const;
 
     bool GetStringFromStruct( const BFFVariable * s, const char * name, AString & result ) const;
+    bool GetArrayOfStringsFromStruct( const BFFVariable * s, const char * name, Array< AString > & result ) const;
 };
 
 //------------------------------------------------------------------------------

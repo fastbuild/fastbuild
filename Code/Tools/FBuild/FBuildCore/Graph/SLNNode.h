@@ -9,6 +9,7 @@
 #include "FileNode.h"
 
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
+#include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/FileIO/FileIO.h"
@@ -27,7 +28,8 @@ public:
                         const AString & solutionVisualStudioVersion,
                         const AString & solutionMinimumVisualStudioVersion,
                         const Array< VSProjectConfig > & configs,
-                        const Array< VCXProjectNode * > & projects );
+                        const Array< VCXProjectNode * > & projects,
+                        const Array< SLNSolutionFolder > & folders );
     virtual ~SLNNode();
 
     static inline Node::Type GetTypeS() { return Node::SLN_NODE; }
@@ -39,9 +41,11 @@ private:
 
     bool Save( const AString & content, const AString & fileName ) const;
 
-    Array< VSProjectConfig > m_Configs;
     AString m_SolutionVisualStudioVersion;
     AString m_SolutionMinimumVisualStudioVersion;
+
+    Array< VSProjectConfig > m_Configs;
+    Array< SLNSolutionFolder > m_Folders;
 };
 
 //------------------------------------------------------------------------------

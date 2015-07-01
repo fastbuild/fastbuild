@@ -31,11 +31,13 @@ SLNNode::SLNNode(   const AString & solutionOuput,
                     const AString & solutionVisualStudioVersion,
                     const AString & solutionMinimumVisualStudioVersion,
                     const Array< VSProjectConfig > & configs,
-                    const Array< VCXProjectNode * > & projects )
+                    const Array< VCXProjectNode * > & projects,
+                    const Array< SLNSolutionFolder > & folders )
 : FileNode( solutionOuput, Node::FLAG_NONE )
-, m_Configs( configs )
 , m_SolutionVisualStudioVersion( solutionVisualStudioVersion )
 , m_SolutionMinimumVisualStudioVersion( solutionMinimumVisualStudioVersion )
+, m_Configs( configs )
+, m_Folders( folders )
 {
     m_LastBuildTimeMs = 100; // higher default than a file node
     m_Type = Node::SLN_NODE;
@@ -73,7 +75,8 @@ SLNNode::~SLNNode()
                                             m_SolutionVisualStudioVersion,
                                             m_SolutionMinimumVisualStudioVersion,
                                             m_Configs,
-                                            projects );
+                                            projects,
+                                            m_Folders );
     if ( Save( sln, m_Name ) == false )
     {
         return NODE_RESULT_FAILED; // Save will have emitted an error
@@ -171,6 +174,9 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     Array< VSProjectConfig > configs;
     VSProjectConfig::Load( stream, configs );
 
+    Array< SLNSolutionFolder > folders;
+    SLNSolutionFolder::Load( stream, folders );
+
     Array< VCXProjectNode * > projects( staticDeps.GetSize(), false );
     const Dependency * const end = staticDeps.End();
     for ( const Dependency * it = staticDeps.Begin() ; it != end ; ++it )
@@ -183,7 +189,8 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
                                     visualStudioVersion,
                                     minimumVisualStudioVersion,
                                     configs,
-                                    projects );
+                                    projects,
+                                    folders );
     return n;
 }
 
@@ -196,6 +203,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     NODE_SAVE( m_SolutionMinimumVisualStudioVersion );
     NODE_SAVE_DEPS( m_StaticDependencies );
     VSProjectConfig::Save( stream, m_Configs );
+    SLNSolutionFolder::Save( stream, m_Folders );
 }
 
 //------------------------------------------------------------------------------

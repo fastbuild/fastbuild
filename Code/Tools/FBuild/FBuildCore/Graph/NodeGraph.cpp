@@ -912,7 +912,8 @@ SLNNode * NodeGraph::CreateSLNNode(	const AString & solutionOutput,
 									const AString & solutionVisualStudioVersion,
                         			const AString & solutionMinimumVisualStudioVersion,
 									const Array< VSProjectConfig > & configs,
-									const Array< VCXProjectNode * > & projects )
+									const Array< VCXProjectNode * > & projects,
+									const Array< SLNSolutionFolder > & folders )
 {
 	ASSERT( Thread::IsMainThread() );
 
@@ -923,7 +924,8 @@ SLNNode * NodeGraph::CreateSLNNode(	const AString & solutionOutput,
 									solutionVisualStudioVersion,
 									solutionMinimumVisualStudioVersion,
 									configs,
-									projects) );
+									projects,
+									folders ) );
 	AddNode( node );
 	return node;
 }

@@ -37,7 +37,8 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
                                             const AString & solutionVisualStudioVersion,
                                             const AString & solutionMinimumVisualStudioVersion,
                                             const Array< VSProjectConfig > & configs,
-                                            const Array< VCXProjectNode * > & projects )
+                                            const Array< VCXProjectNode * > & projects,
+                                            const Array< SLNSolutionFolder > & folders )
 {
     // preallocate to avoid re-allocations
     m_Tmp.SetReserved( MEGABYTE );
@@ -48,13 +49,42 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
     AStackString<> solutionBasePath( solutionFile.Get(), lastSlash ? lastSlash + 1 : solutionFile.Get() );
 
     Array< AString > projectGuids( projects.GetSize(), false );
+    Array< AString > solutionProjectsToFolder( projects.GetSize(), true );
+    Array< AString > solutionFolderPaths( folders.GetSize(), true );
+
+    // Create solution configs (solves Visual Studio weirdness)
+    const size_t configCount = configs.GetSize();
+    Array< SolutionConfig > solutionConfigs( configCount, false );
+    solutionConfigs.SetSize( configCount );
+    for ( size_t i = 0 ; i < configCount ;  ++i )
+    {
+        const VSProjectConfig & projectConfig = configs[ i ];
+        SolutionConfig & solutionConfig = solutionConfigs[ i ];
+
+        solutionConfig.m_Config = projectConfig.m_Config;
+        solutionConfig.m_Platform = projectConfig.m_Platform;
+
+        if ( projectConfig.m_Platform.MatchesI( "Win32" ) )
+        {
+            solutionConfig.m_SolutionPlatform = "x86";
+        }
+        else
+        {
+            solutionConfig.m_SolutionPlatform = projectConfig.m_Platform;
+        }
+    }
+
+    // Sort again with substituted solution platforms
+    solutionConfigs.Sort();
 
     // construct sln file
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
-    WriteProjectListings( solutionBasePath, projects, projectGuids );
+    WriteProjectListings( solutionBasePath, projects, folders, projectGuids, solutionProjectsToFolder );
+    WriteSolutionFolderListings( folders, solutionFolderPaths );
     Write( "Global\n" );
-    WriteSolutionConfigs( configs );
-    WriteSolutionMappings( configs, projectGuids );
+    WriteSolutionConfigurationPlatforms( solutionConfigs );
+    WriteProjectConfigurationPlatforms( solutionConfigs, projectGuids );
+    WriteNestedProjects( solutionProjectsToFolder, solutionFolderPaths );
     WriteFooter();
 
     m_OutputSLN = m_Tmp;
@@ -94,7 +124,9 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
                                             const Array< VCXProjectNode * > & projects,
-                                            Array< AString > & projectGuids )
+                                            const Array< SLNSolutionFolder > & folders,
+                                            Array< AString > & projectGuids,
+                                            Array< AString > & solutionProjectsToFolder )
 {
     // Project Listings
 
@@ -132,54 +164,179 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
         Write( "EndProject\n" );
 
         projectGuids.Append( projectGuid );
+
+        // check if this project is in a solution folder
+        const SLNSolutionFolder * const foldersEnd = folders.End();
+        for ( const SLNSolutionFolder * it2 = folders.Begin() ; it2 != foldersEnd ; ++it2 )
+        {
+            // this has to be done here to have the same order of declaration (like visual)
+            if ( it2->m_ProjectNames.Find( (*it)->GetName() ) )
+            {
+                // generate a guid for the solution folder
+                AString solutionFolderGuid;
+                VSProjectGenerator::FormatDeterministicProjectGUID( &solutionFolderGuid, it2->m_Path );
+
+                solutionFolderGuid.ToUpper();
+
+                AStackString<> projectToFolder;
+                projectToFolder.Format( "\t\t%s = %s\n", projectGuid.Get(), solutionFolderGuid.Get() );
+
+                solutionProjectsToFolder.Append( projectToFolder );
+            }
+        }
     }
 }
 
 // WriteSolutionConfigs
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteSolutionConfigs( const Array< VSProjectConfig > & configs )
+void SLNGenerator::WriteSolutionFolderListings( const Array< SLNSolutionFolder > & folders,
+                                                Array< AString > & solutionFolderPaths )
 {
-    Write( "    GlobalSection(SolutionConfigurationPlatforms) = preSolution\n" );
-
-    // Solution Configurations
-    VSProjectConfig * const end = configs.End();
-    for( VSProjectConfig * it = configs.Begin() ; it != end ; ++it )
+    // Create every intermediate path
+    const SLNSolutionFolder * const foldersEnd = folders.End();
+    for( const SLNSolutionFolder * it = folders.Begin() ; it != foldersEnd ; ++it )
     {
-        Write(  "        %s|%s = %s|%s\n",
-                it->m_Config.Get(), it->m_Platform.Get(),
-                it->m_Config.Get(), it->m_Platform.Get() );
+        if ( solutionFolderPaths.Find( it->m_Path ) == false )
+        {
+            solutionFolderPaths.Append( it->m_Path );
+        }
+
+        const char * pathEnd = it->m_Path.Find( NATIVE_SLASH );
+        while ( pathEnd )
+        {
+            AStackString<> solutionFolderPath( it->m_Path.Get(), pathEnd );
+            if ( solutionFolderPaths.Find( solutionFolderPath ) == false )
+            {
+                solutionFolderPaths.Append( solutionFolderPath );
+            }
+
+            pathEnd = it->m_Path.Find( NATIVE_SLASH, pathEnd + 1 );
+        }
     }
 
-    Write( "    EndGlobalSection\n" );
+    solutionFolderPaths.Sort();
+
+    // Solution Folders Listings
+
+    const AString * const solutionFolderPathsEnd = solutionFolderPaths.End();
+    for( const AString * it = solutionFolderPaths.Begin() ; it != solutionFolderPathsEnd ; ++it )
+    {
+        // parse solution folder name
+        const char * solutionFolderName = it->FindLast( NATIVE_SLASH );
+        solutionFolderName = solutionFolderName ? solutionFolderName + 1 : it->Get();
+
+        // generate a guid for the solution folder
+        AString solutionFolderGuid;
+        VSProjectGenerator::FormatDeterministicProjectGUID( &solutionFolderGuid, *it );
+
+        // Guid must be uppercase (like visual)
+        solutionFolderGuid.ToUpper();
+
+        Write( "Project(\"{2150E333-8FDC-42A3-9474-1A3956D46DE8}\") = \"%s\", \"%s\", \"%s\"\n",
+               solutionFolderName, solutionFolderName, solutionFolderGuid.Get() );
+
+        Write( "EndProject\n" );
+    }
 }
 
-// WriteSolutionMappings
+// WriteSolutionConfigurationPlatforms
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteSolutionMappings(   const Array< VSProjectConfig > & configs,
-                                            const Array< AString > & projectGuids )
+void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs )
 {
-    Write( "    GlobalSection(ProjectConfigurationPlatforms) = postSolution\n" );
+    Write( "\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\n" );
+
+    // Solution Configurations
+    const SolutionConfig * const end = solutionConfigs.End();
+    for( const SolutionConfig * it = solutionConfigs.Begin() ; it != end ; ++it )
+    {
+        Write(  "\t\t%s|%s = %s|%s\n",
+                it->m_Config.Get(), it->m_SolutionPlatform.Get(),
+                it->m_Config.Get(), it->m_SolutionPlatform.Get() );
+    }
+
+    Write( "\tEndGlobalSection\n" );
+}
+
+// WriteProjectConfigurationPlatforms
+//------------------------------------------------------------------------------
+void SLNGenerator::WriteProjectConfigurationPlatforms(  const Array< SolutionConfig > & solutionConfigs,
+                                                        const Array< AString > & projectGuids )
+{
+    Write( "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\n" );
 
     // Solution Configuration Mappings to Projects
     const AString * const projectGuidsEnd = projectGuids.End();
     for( const AString * it = projectGuids.Begin() ; it != projectGuidsEnd ; ++it )
     {
-        const VSProjectConfig * const configsEnd = configs.End();
-        for( const VSProjectConfig * it2 = configs.Begin() ; it2 != configsEnd ; ++it2 )
+        const SolutionConfig * const solutionConfigsEnd = solutionConfigs.End();
+        for( const SolutionConfig * it2 = solutionConfigs.Begin() ; it2 != solutionConfigsEnd ; ++it2 )
         {
-            Write(  "        %s.%s|%s.ActiveCfg = %s|%s\n",
+            Write(  "\t\t%s.%s|%s.ActiveCfg = %s|%s\n",
                     it->Get(),
-                    it2->m_Config.Get(), it2->m_Platform.Get(),
+                    it2->m_Config.Get(), it2->m_SolutionPlatform.Get(),
                     it2->m_Config.Get(), it2->m_Platform.Get() );
 
-            Write(  "        %s.%s|%s.Build.0 = %s|%s\n",
+            Write(  "\t\t%s.%s|%s.Build.0 = %s|%s\n",
                     it->Get(),
-                    it2->m_Config.Get(), it2->m_Platform.Get(),
+                    it2->m_Config.Get(), it2->m_SolutionPlatform.Get(),
                     it2->m_Config.Get(), it2->m_Platform.Get() );
         }
     }
 
-    Write( "    EndGlobalSection\n" );
+    Write( "\tEndGlobalSection\n" );
+    Write( "\tGlobalSection(SolutionProperties) = preSolution\n" );
+    Write( "\t\tHideSolutionNode = FALSE\n" );
+    Write( "\tEndGlobalSection\n" );
+}
+
+// WriteNestedProjects
+//------------------------------------------------------------------------------
+void SLNGenerator::WriteNestedProjects( const Array< AString > & solutionProjectsToFolder,
+                                        const Array< AString > & solutionFolderPaths )
+{
+    if ( solutionProjectsToFolder.GetSize() == 0 &&
+         solutionFolderPaths.GetSize() == 0 )
+    {
+        return; // skip global section
+    }
+
+    Write( "\tGlobalSection(NestedProjects) = preSolution\n" );
+
+    // Write every project to solution folder relationships
+    const AString * const solutionProjectsToFolderEnd = solutionProjectsToFolder.End();
+    for( const AString * it = solutionProjectsToFolder.Begin() ; it != solutionProjectsToFolderEnd ; ++it )
+    {
+        Write( it->Get() );
+    }
+
+    // Write every intermediate path
+    const AString * const solutionFolderPathsEnd = solutionFolderPaths.End();
+    for( const AString * it = solutionFolderPaths.Begin() ; it != solutionFolderPathsEnd ; ++it )
+    {
+        // parse solution folder parent path
+        AStackString<> solutionFolderParentGuid;
+        const char * lastSlash = it->FindLast( NATIVE_SLASH );
+        if ( lastSlash )
+        {
+            AStackString<> solutionFolderParentPath( it->Get(), lastSlash );
+            VSProjectGenerator::FormatDeterministicProjectGUID( &solutionFolderParentGuid, solutionFolderParentPath );
+        }
+
+        if ( solutionFolderParentGuid.GetLength() > 0 )
+        {
+            // generate a guid for the solution folder
+            AString solutionFolderGuid;
+            VSProjectGenerator::FormatDeterministicProjectGUID( &solutionFolderGuid, *it );
+
+            solutionFolderGuid.ToUpper();
+            solutionFolderParentGuid.ToUpper();
+
+            // write parent solution folder relationship
+            Write( "\t\t%s = %s\n", solutionFolderGuid.Get(), solutionFolderParentGuid.Get() );
+        }
+    }
+
+    Write( "\tEndGlobalSection\n" );
 }
 
 // WriteFooter
@@ -187,9 +344,6 @@ void SLNGenerator::WriteSolutionMappings(   const Array< VSProjectConfig > & con
 void SLNGenerator::WriteFooter()
 {
     // footer
-    Write( "    GlobalSection(SolutionProperties) = preSolution\n" );
-    Write( "        HideSolutionNode = FALSE\n" );
-    Write( "    EndGlobalSection\n" );
     Write( "EndGlobal\n" );
 }
 
@@ -211,6 +365,44 @@ void SLNGenerator::Write( const char * fmtString, ... )
     }
 
     m_Tmp += tmp;
+}
+
+
+// SLNSolutionFolder::Save
+//------------------------------------------------------------------------------
+/*static*/ void SLNSolutionFolder::Save( IOStream & stream, const Array< SLNSolutionFolder > & solutionFolders )
+{
+    uint32_t numSolutionFolders = (uint32_t)solutionFolders.GetSize();
+    stream.Write( numSolutionFolders );
+    for ( uint32_t i=0; i<numSolutionFolders; ++i )
+    {
+        const SLNSolutionFolder & sln = solutionFolders[ i ];
+
+        stream.Write( sln.m_Path );
+        stream.Write( sln.m_ProjectNames );
+    }
+}
+
+// SLNSolutionFolder::Load
+//------------------------------------------------------------------------------
+/*static*/ bool SLNSolutionFolder::Load( IOStream & stream, Array< SLNSolutionFolder > & solutionFolders )
+{
+    ASSERT( solutionFolders.IsEmpty() );
+
+    uint32_t numSolutionFolders( 0 );
+    if ( !stream.Read( numSolutionFolders ) )
+    {
+        return false;
+    }
+    solutionFolders.SetSize( numSolutionFolders );
+    for ( uint32_t i=0; i<numSolutionFolders; ++i )
+    {
+        SLNSolutionFolder & sln = solutionFolders[ i ];
+
+        if ( stream.Read( sln.m_Path ) == false ) { return false; }
+        if ( stream.Read( sln.m_ProjectNames ) == false ) { return false; }
+    }
+    return true;
 }
 
 //------------------------------------------------------------------------------

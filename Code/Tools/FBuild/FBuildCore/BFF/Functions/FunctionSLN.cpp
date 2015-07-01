@@ -16,6 +16,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
 
 // Core
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
 // CONSTRUCTOR
@@ -74,9 +75,10 @@ struct VSProjectConfigComp
 {
     bool operator ()( const VSProjectConfig & a, const VSProjectConfig & b ) const
     {
-        return ( a.m_Config == b.m_Config )
+        int32_t cmpConfig = a.m_Config.CompareI( b.m_Config );
+        return ( cmpConfig == 0 )
             ? a.m_Platform < b.m_Platform
-            : a.m_Config   < b.m_Config ;
+            : cmpConfig < 0 ;
     }
 };
 
@@ -177,6 +179,76 @@ struct VCXProjectNodeComp
     // sort project configs by config and by platform (like visual)
     configs.Sort( VSProjectConfigComp() );
 
+    // create solution folders
+    Array< SLNSolutionFolder > folders( 16, true );
+
+    const BFFVariable * solutionFolders = BFFStackFrame::GetVar( ".SolutionFolders" );
+    if ( solutionFolders )
+    {
+        if ( solutionFolders->IsArrayOfStructs() == false )
+        {
+            Error::Error_1050_PropertyMustBeOfType( funcStartIter, this, ".SolutionFolders", solutionFolders->GetType(), BFFVariable::VAR_ARRAY_OF_STRUCTS );
+            return false;
+        }
+
+        const Array< const BFFVariable * > & structs = solutionFolders->GetArrayOfStructs();
+        const BFFVariable * const * end = structs.End();
+        for ( const BFFVariable ** it = structs.Begin(); it != end; ++it )
+        {
+            const BFFVariable * s = *it;
+
+            // start with the base configuration
+            SLNSolutionFolder newFolder;
+
+            // .Path must be provided
+            if ( !GetStringFromStruct( s, ".Path", newFolder.m_Path ) )
+            {
+                // TODO:B custom error
+                Error::Error_1101_MissingProperty( funcStartIter, this, AStackString<>( ".Path" ) );
+                return false;
+            }
+
+            newFolder.m_Path.Replace( OTHER_SLASH, NATIVE_SLASH );
+
+            // check if this path was already defined
+            {
+                const SLNSolutionFolder * const end2 = folders.End();
+                for ( const SLNSolutionFolder * it2 = folders.Begin() ; it2 != end2 ; ++it2 )
+                {
+                    if ( it2->m_Path == newFolder.m_Path  )
+                    {
+                        // TODO:B custom error
+                        Error::Error_1100_AlreadyDefined( funcStartIter, this, it2->m_Path );
+                        return false;
+                    }
+                }
+            }
+
+            // .Projects must be provided
+            if ( !GetArrayOfStringsFromStruct( s, ".Projects", newFolder.m_ProjectNames ) )
+            {
+                // TODO:B custom error
+                Error::Error_1101_MissingProperty( funcStartIter, this, AStackString<>( ".Projects" ) );
+                return false;
+            }
+            // check if this project is included in the solution
+            {
+                const AString * const end2 = newFolder.m_ProjectNames.End();
+                for ( const AString * it2 = newFolder.m_ProjectNames.Begin() ; it2 != end2 ; ++it2 )
+                {
+                    if ( solutionProjects.Find( *it2 ) == false )
+                    {
+                        // TODO:B custom error
+                        Error::Error_1104_TargetNotDefined( funcStartIter, this, ".Projects", *it2 );
+                        return false;
+                    }
+                }
+            }
+
+            folders.Append( newFolder );
+        }
+    }
+
     NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
     // Check for existing node
@@ -194,19 +266,26 @@ struct VCXProjectNodeComp
         {
             Node * const node = ng.FindNode( *it );
 
+            if ( node == nullptr )
+            {
+                Error::Error_1104_TargetNotDefined( funcStartIter, this, ".SolutionProjects", *it );
+                return false;
+            }
+
             VCXProjectNode * const project = ResolveVCXProjectRecurse( node );
 
             if ( project == nullptr )
             {
                 // don't know how to handle this type of node
-                Error::Error_1005_UnsupportedNodeType( funcStartIter, this, "SolutionProjects", node->GetName(), node->GetType() );
+                Error::Error_1005_UnsupportedNodeType( funcStartIter, this, ".SolutionProjects", node->GetName(), node->GetType() );
                 return false;
             }
 
             // check that this project contains all .SolutionConfigs
             const Array< VSProjectConfig > & projectConfigs = project->GetConfigs();
 
-            for ( size_t i = 0 ; i < configs.GetSize() ; ++i )
+            const size_t configsSize = configs.GetSize();
+            for ( size_t i = 0 ; i < configsSize ; ++i )
             {
                 bool containsConfig = false;
 
@@ -240,11 +319,51 @@ struct VCXProjectNodeComp
     // sort projects by name (like visual)
     projects.Sort( VCXProjectNodeComp() );
 
+    // resolves VCXProject nodes associated to solutionFolders
+    {
+        SLNSolutionFolder * const end = folders.End();
+        for ( SLNSolutionFolder * it = folders.Begin(); it != end; ++it )
+        {
+            // retrieves full path of contained vcxprojects
+
+            AString * const end2 = it->m_ProjectNames.End();
+            for ( AString * it2 = it->m_ProjectNames.Begin(); it2 != end2; ++it2 )
+            {
+                Node * const node = ng.FindNode( *it2 );
+
+                if ( node == nullptr )
+                {
+                    Error::Error_1104_TargetNotDefined( funcStartIter, this, ".Projects", *it2 );
+                    return false;
+                }
+
+                VCXProjectNode * const project = ResolveVCXProjectRecurse( node );
+
+                if ( project == nullptr )
+                {
+                    // don't know how to handle this type of node
+                    Error::Error_1005_UnsupportedNodeType( funcStartIter, this, ".Projects", node->GetName(), node->GetType() );
+                    return false;
+                }
+
+                if ( projects.Find( project ) == false )
+                {
+                    // project referenced in a solution folder is not referenced in .SolutionProjects
+                    Error::Error_1104_TargetNotDefined( funcStartIter, this, ".SolutionProjects", project->GetName() );
+                    return false;
+                }
+
+                *it2 = project->GetName();
+            }
+        }
+    }
+
     SLNNode * sln = ng.CreateSLNNode(   solutionOutput,
                                         solutionVisualStudioVersion,
                                         solutionMinimumVisualStudioVersion,
                                         configs,
-                                        projects );
+                                        projects,
+                                        folders );
 
     ASSERT( sln );
 
@@ -267,6 +386,28 @@ bool FunctionSLN::GetStringFromStruct( const BFFVariable * s, const char * name,
         if ( v->GetName() == name )
         {
             result = v->GetString();
+            return true; // found
+        }
+    }
+    return false; // not found - caller decides if this is an error
+}
+
+// GetArrayOfStringsFromStruct
+//------------------------------------------------------------------------------
+bool FunctionSLN::GetArrayOfStringsFromStruct( const BFFVariable * s, const char * name, Array< AString > & result ) const
+{
+    const Array< const BFFVariable * > & members = s->GetStructMembers();
+    const BFFVariable * const * end = members.End();
+    for ( const BFFVariable ** it = members.Begin(); it != end; ++it )
+    {
+        const BFFVariable * v = *it;
+        if ( v->IsArrayOfStrings() == false )
+        {
+            continue; // ignore non-strings
+        }
+        if ( v->GetName() == name )
+        {
+            result = v->GetArrayOfStrings();
             return true; // found
         }
     }
