@@ -86,6 +86,7 @@ public:
 	uint32_t Replace( char from, char to, uint32_t maxReplaces = 0 );
 	uint32_t Replace( const char * from, const char * to, uint32_t maxReplaces = 0 );
 	void ToLower();
+	void ToUpper();
 
 	// searching
 	const char *	Find( char c, const char * startPos = nullptr ) const;
