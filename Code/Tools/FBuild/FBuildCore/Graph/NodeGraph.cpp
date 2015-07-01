@@ -26,6 +26,7 @@
 #include "LibraryNode.h"
 #include "ObjectListNode.h"
 #include "ObjectNode.h"
+#include "SLNNode.h"
 #include "TestNode.h"
 #include "UnityNode.h"
 #include "VCXProjectNode.h"
@@ -904,6 +905,29 @@ VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
 	AddNode( node );
 	return node;
 }
+
+// CreateSLNNode
+//------------------------------------------------------------------------------
+SLNNode * NodeGraph::CreateSLNNode(	const AString & solutionOutput,
+									const AString & solutionVisualStudioVersion,
+                        			const AString & solutionMinimumVisualStudioVersion,
+									const Array< VSProjectConfig > & configs,
+									const Array< VCXProjectNode * > & projects )
+{
+	ASSERT( Thread::IsMainThread() );
+
+	AStackString< 1024 > fullPath;
+	CleanPath( solutionOutput, fullPath );
+
+	SLNNode * node = FNEW( SLNNode( fullPath,
+									solutionVisualStudioVersion,
+									solutionMinimumVisualStudioVersion,
+									configs,
+									projects) );
+	AddNode( node );
+	return node;
+}
+
 
 // CreateObjectListNode
 //------------------------------------------------------------------------------

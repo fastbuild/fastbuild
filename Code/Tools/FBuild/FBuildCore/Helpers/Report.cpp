@@ -43,7 +43,9 @@ uint32_t g_ReportNodeColors[] = { 0x000000, // PROXY_NODE (never seen)
 								  0xFFCC88, // DLL_NODE
 								  0xFFFFFF, // VCXPROJ_NODE
 								  0x444444, // OBJECT_LIST_NODE
-								  0x000000 }; // COPY_DIR_NODE (never seen)
+								  0x000000, // COPY_DIR_NODE (never seen)
+								  0x77DDAA, // SLN_NODE
+								};
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

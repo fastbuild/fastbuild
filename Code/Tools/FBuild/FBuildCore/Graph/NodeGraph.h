@@ -33,6 +33,7 @@ class LinkerNode;
 class Node;
 class ObjectListNode;
 class ObjectNode;
+class SLNNode;
 class TestNode;
 class UnityNode;
 class VCXProjectNode;
@@ -193,6 +194,11 @@ public:
 										   const Array< VSProjectFileType > & fileTypes,
 										   const Array< AString > & references,
 										   const Array< AString > & projectReferences );
+	SLNNode * CreateSLNNode( 	const AString & solutionOutput,
+								const AString & solutionVisualStudioVersion,
+                        		const AString & solutionMinimumVisualStudioVersion,
+								const Array< VSProjectConfig > & configs,
+								const Array< VCXProjectNode * > & projects );
 	ObjectListNode * CreateObjectListNode( const AString & listName,
 							 const Dependencies & inputNodes,
 							 CompilerNode * compiler,
