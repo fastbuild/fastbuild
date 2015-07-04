@@ -34,6 +34,7 @@ SLNGenerator::~SLNGenerator()
 // GenerateVCXProj
 //------------------------------------------------------------------------------
 const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
+                                            const AString & solutionBuildProject,
                                             const AString & solutionVisualStudioVersion,
                                             const AString & solutionMinimumVisualStudioVersion,
                                             const Array< VSProjectConfig > & configs,
@@ -48,6 +49,7 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
     const char * lastSlash = solutionFile.FindLast( NATIVE_SLASH );
     AStackString<> solutionBasePath( solutionFile.Get(), lastSlash ? lastSlash + 1 : solutionFile.Get() );
 
+    AStackString<> solutionBuildProjectGuid;
     Array< AString > projectGuids( projects.GetSize(), false );
     Array< AString > solutionProjectsToFolder( projects.GetSize(), true );
     Array< AString > solutionFolderPaths( folders.GetSize(), true );
@@ -79,11 +81,11 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
 
     // construct sln file
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
-    WriteProjectListings( solutionBasePath, projects, folders, projectGuids, solutionProjectsToFolder );
+    WriteProjectListings( solutionBasePath, solutionBuildProject, projects, folders, solutionBuildProjectGuid, projectGuids, solutionProjectsToFolder );
     WriteSolutionFolderListings( folders, solutionFolderPaths );
     Write( "Global\n" );
     WriteSolutionConfigurationPlatforms( solutionConfigs );
-    WriteProjectConfigurationPlatforms( solutionConfigs, projectGuids );
+    WriteProjectConfigurationPlatforms( solutionBuildProjectGuid, solutionConfigs, projectGuids );
     WriteNestedProjects( solutionProjectsToFolder, solutionFolderPaths );
     WriteFooter();
 
@@ -123,8 +125,10 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 // WriteProjectListings
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
+                                            const AString& solutionBuildProject,
                                             const Array< VCXProjectNode * > & projects,
                                             const Array< SLNSolutionFolder > & folders,
+                                            AString & solutionBuildProjectGuid,
                                             Array< AString > & projectGuids,
                                             Array< AString > & solutionProjectsToFolder )
 {
@@ -133,6 +137,9 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
     VCXProjectNode ** const projectsEnd = projects.End();
     for( VCXProjectNode ** it = projects.Begin() ; it != projectsEnd ; ++it )
     {
+        // check if this project is the master project
+        const bool projectIsActive = ( solutionBuildProject.CompareI( (*it)->GetName() ) == 0 );
+
         // project relative path
         AStackString<> projectPath( (*it)->GetName() );
         projectPath.Replace( solutionBasePath.Get(), "" );
@@ -155,8 +162,14 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
             projectGuid = (*it)->GetProjectGuid();
         }
 
-        // projectGuid must be uppercase (visual does that, it change the .sln otherwise)
+        // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
         projectGuid.ToUpper();
+
+        if ( projectIsActive )
+        {
+            ASSERT( solutionBuildProjectGuid.GetLength() == 0 );
+            solutionBuildProjectGuid = projectGuid;
+        }
 
         Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\n",
                projectName.Get(), projectPath.Get(), projectGuid.Get() );
@@ -259,7 +272,8 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
 
 // WriteProjectConfigurationPlatforms
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteProjectConfigurationPlatforms(  const Array< SolutionConfig > & solutionConfigs,
+void SLNGenerator::WriteProjectConfigurationPlatforms(  const AString & solutionBuildProjectGuid,
+                                                        const Array< SolutionConfig > & solutionConfigs,
                                                         const Array< AString > & projectGuids )
 {
     Write( "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\n" );
@@ -268,6 +282,9 @@ void SLNGenerator::WriteProjectConfigurationPlatforms(  const Array< SolutionCon
     const AString * const projectGuidsEnd = projectGuids.End();
     for( const AString * it = projectGuids.Begin() ; it != projectGuidsEnd ; ++it )
     {
+        // only one project active in the solution build
+        const bool projectIsActive = ( solutionBuildProjectGuid == *it );
+
         const SolutionConfig * const solutionConfigsEnd = solutionConfigs.End();
         for( const SolutionConfig * it2 = solutionConfigs.Begin() ; it2 != solutionConfigsEnd ; ++it2 )
         {
@@ -276,10 +293,13 @@ void SLNGenerator::WriteProjectConfigurationPlatforms(  const Array< SolutionCon
                     it2->m_Config.Get(), it2->m_SolutionPlatform.Get(),
                     it2->m_Config.Get(), it2->m_Platform.Get() );
 
-            Write(  "\t\t%s.%s|%s.Build.0 = %s|%s\n",
-                    it->Get(),
-                    it2->m_Config.Get(), it2->m_SolutionPlatform.Get(),
-                    it2->m_Config.Get(), it2->m_Platform.Get() );
+            if ( projectIsActive )
+            {
+                Write(  "\t\t%s.%s|%s.Build.0 = %s|%s\n",
+                        it->Get(),
+                        it2->m_Config.Get(), it2->m_SolutionPlatform.Get(),
+                        it2->m_Config.Get(), it2->m_Platform.Get() );
+            }
         }
     }
 

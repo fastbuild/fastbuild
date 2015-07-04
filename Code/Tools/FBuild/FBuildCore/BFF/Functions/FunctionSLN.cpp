@@ -106,9 +106,11 @@ struct VCXProjectNodeComp
     }
 
     // optional inputs
+    AString solutionBuildProject;
     AString solutionVisualStudioVersion;
     AString solutionMinimumVisualStudioVersion;
-    if ( !GetString( funcStartIter, solutionVisualStudioVersion,          ".SolutionVisualStudioVersion", false ) ||
+    if ( !GetString( funcStartIter, solutionBuildProject,                 ".SolutionBuildProject", false ) ||
+         !GetString( funcStartIter, solutionVisualStudioVersion,          ".SolutionVisualStudioVersion", false ) ||
          !GetString( funcStartIter, solutionMinimumVisualStudioVersion,   ".SolutionMinimumVisualStudioVersion", false ) )
     {
         return false;
@@ -358,7 +360,38 @@ struct VCXProjectNodeComp
         }
     }
 
+    // resolves VCXProject node referenced by solutionBuildProject
+    if ( solutionBuildProject.GetLength() > 0 )
+    {
+        Node * const node = ng.FindNode( solutionBuildProject );
+
+        if ( node == nullptr )
+        {
+            Error::Error_1104_TargetNotDefined( funcStartIter, this, ".SolutionBuildProject", solutionBuildProject );
+            return false;
+        }
+
+        VCXProjectNode * const project = ResolveVCXProjectRecurse( node );
+
+        if ( project == nullptr )
+        {
+            // don't know how to handle this type of node
+            Error::Error_1005_UnsupportedNodeType( funcStartIter, this, ".SolutionBuildProject", node->GetName(), node->GetType() );
+            return false;
+        }
+
+        if ( projects.Find( project ) == false )
+        {
+            // project referenced in .SolutionBuildProject is not referenced in .SolutionProjects
+            Error::Error_1104_TargetNotDefined( funcStartIter, this, ".SolutionBuildProject", project->GetName() );
+            return false;
+        }
+
+        solutionBuildProject = project->GetName();
+    }
+
     SLNNode * sln = ng.CreateSLNNode(   solutionOutput,
+                                        solutionBuildProject,
                                         solutionVisualStudioVersion,
                                         solutionMinimumVisualStudioVersion,
                                         configs,

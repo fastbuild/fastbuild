@@ -53,6 +53,7 @@ public:
     ~SLNGenerator();
 
     const AString & GenerateSLN( const AString & solutionFile,
+                                 const AString & solutionBuildProject,
                                  const AString & solutionVisualStudioVersion,
                                  const AString & solutionMinimumVisualStudioVersion,
                                  const Array< VSProjectConfig > & configs,
@@ -63,14 +64,17 @@ private:
     void WriteHeader( const AString & solutionVisualStudioVersion,
                       const AString & solutionMinimumVisualStudioVersion );
     void WriteProjectListings(  const AString& solutionBasePath,
+                                const AString & solutionBuildProject,
                                 const Array< VCXProjectNode * > & projects,
                                 const Array< SLNSolutionFolder > & folders,
+                                AString & solutionBuildProjectGuid,
                                 Array< AString > & projectGuids,
                                 Array< AString > & solutionProjectsToFolder );
     void WriteSolutionFolderListings( const Array< SLNSolutionFolder > & folders,
                                       Array< AString > & solutionFolderPaths );
     void WriteSolutionConfigurationPlatforms(  const Array< SolutionConfig > & solutionConfigs );
-    void WriteProjectConfigurationPlatforms(  const Array< SolutionConfig > & solutionConfigs,
+    void WriteProjectConfigurationPlatforms(  const AString & solutionBuildProjectGuid,
+                                              const Array< SolutionConfig > & solutionConfigs,
                                               const Array< AString > & projectGuids );
     void WriteNestedProjects( const Array< AString > & solutionProjectsToFolder,
                               const Array< AString > & solutionFolderPaths );

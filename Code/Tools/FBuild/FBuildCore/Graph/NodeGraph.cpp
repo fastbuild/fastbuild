@@ -909,6 +909,7 @@ VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
 // CreateSLNNode
 //------------------------------------------------------------------------------
 SLNNode * NodeGraph::CreateSLNNode(	const AString & solutionOutput,
+									const AString & solutionBuildProject,
 									const AString & solutionVisualStudioVersion,
                         			const AString & solutionMinimumVisualStudioVersion,
 									const Array< VSProjectConfig > & configs,
@@ -921,6 +922,7 @@ SLNNode * NodeGraph::CreateSLNNode(	const AString & solutionOutput,
 	CleanPath( solutionOutput, fullPath );
 
 	SLNNode * node = FNEW( SLNNode( fullPath,
+									solutionBuildProject,
 									solutionVisualStudioVersion,
 									solutionMinimumVisualStudioVersion,
 									configs,

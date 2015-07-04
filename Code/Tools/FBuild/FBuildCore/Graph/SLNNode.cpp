@@ -28,12 +28,14 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 SLNNode::SLNNode(   const AString & solutionOuput,
+                    const AString & solutionBuildProject,
                     const AString & solutionVisualStudioVersion,
                     const AString & solutionMinimumVisualStudioVersion,
                     const Array< VSProjectConfig > & configs,
                     const Array< VCXProjectNode * > & projects,
                     const Array< SLNSolutionFolder > & folders )
 : FileNode( solutionOuput, Node::FLAG_NONE )
+, m_SolutionBuildProject( solutionBuildProject )
 , m_SolutionVisualStudioVersion( solutionVisualStudioVersion )
 , m_SolutionMinimumVisualStudioVersion( solutionMinimumVisualStudioVersion )
 , m_Configs( configs )
@@ -72,6 +74,7 @@ SLNNode::~SLNNode()
 
     // .sln solution file
     const AString & sln = sg.GenerateSLN(   m_Name,
+                                            m_SolutionBuildProject,
                                             m_SolutionVisualStudioVersion,
                                             m_SolutionMinimumVisualStudioVersion,
                                             m_Configs,
@@ -167,6 +170,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
 /*static*/ Node * SLNNode::Load( IOStream & stream )
 {
     NODE_LOAD( AStackString<>,  name );
+    NODE_LOAD( AStackString<>,  buildProject );
     NODE_LOAD( AStackString<>,  visualStudioVersion );
     NODE_LOAD( AStackString<>,  minimumVisualStudioVersion );
     NODE_LOAD_DEPS( 1,          staticDeps );
@@ -186,6 +190,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
 
     NodeGraph & ng = FBuild::Get().GetDependencyGraph();
     SLNNode * n = ng.CreateSLNNode( name,
+                                    buildProject,
                                     visualStudioVersion,
                                     minimumVisualStudioVersion,
                                     configs,
@@ -199,6 +204,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
 /*virtual*/ void SLNNode::Save( IOStream & stream ) const
 {
     NODE_SAVE( m_Name );
+    NODE_SAVE( m_SolutionBuildProject );
     NODE_SAVE( m_SolutionVisualStudioVersion );
     NODE_SAVE( m_SolutionMinimumVisualStudioVersion );
     NODE_SAVE_DEPS( m_StaticDependencies );

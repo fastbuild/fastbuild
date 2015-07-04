@@ -25,6 +25,7 @@ class SLNNode : public FileNode
 {
 public:
     explicit SLNNode(   const AString & solutionOutput,
+                        const AString & solutionBuildProject,
                         const AString & solutionVisualStudioVersion,
                         const AString & solutionMinimumVisualStudioVersion,
                         const Array< VSProjectConfig > & configs,
@@ -41,6 +42,7 @@ private:
 
     bool Save( const AString & content, const AString & fileName ) const;
 
+    AString m_SolutionBuildProject;
     AString m_SolutionVisualStudioVersion;
     AString m_SolutionMinimumVisualStudioVersion;
 

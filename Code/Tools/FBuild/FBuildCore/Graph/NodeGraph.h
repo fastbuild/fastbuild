@@ -196,6 +196,7 @@ public:
 										   const Array< AString > & references,
 										   const Array< AString > & projectReferences );
 	SLNNode * CreateSLNNode( 	const AString & solutionOutput,
+								const AString & solutionBuildProject,
 								const AString & solutionVisualStudioVersion,
                         		const AString & solutionMinimumVisualStudioVersion,
 								const Array< VSProjectConfig > & configs,
