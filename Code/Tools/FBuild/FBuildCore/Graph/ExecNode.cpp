@@ -25,19 +25,22 @@ ExecNode::ExecNode( const AString & dstFileName,
 						const AString & arguments,
 						const AString & workingDir,
 						int32_t expectedReturnCode,
-						const Dependencies & preBuildDependencies )
+						const Dependencies & preBuildDependencies,
+						const Dependencies & additionalDependencies )
 : FileNode( dstFileName, Node::FLAG_NONE )
 , m_SourceFile( sourceFile )
 , m_Executable( executable )
 , m_Arguments( arguments )
 , m_WorkingDir( workingDir )
 , m_ExpectedReturnCode( expectedReturnCode )
+, m_AdditionalDependencies( additionalDependencies )
 {
 	ASSERT( sourceFile );
 	ASSERT( executable );
 	m_StaticDependencies.SetCapacity( 2 );
 	m_StaticDependencies.Append( Dependency( sourceFile ) );
 	m_StaticDependencies.Append( Dependency( executable ) );
+	m_StaticDependencies.Append( additionalDependencies );
 	m_Type = EXEC_NODE;
 
 	m_PreBuildDependencies = preBuildDependencies;
@@ -113,6 +116,7 @@ ExecNode::~ExecNode()
 	NODE_LOAD( AStackString<>,	workingDir );
 	NODE_LOAD( int32_t,			expectedReturnCode );
 	NODE_LOAD_DEPS( 0,			preBuildDependencies );
+	NODE_LOAD_DEPS( 0,			additionalDependencies );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	Node * srcNode = ng.FindNode( sourceFile );
@@ -127,7 +131,8 @@ ExecNode::~ExecNode()
 								  arguments,
 								  workingDir,
 								  expectedReturnCode,
-								  preBuildDependencies );
+								  preBuildDependencies,
+								  additionalDependencies );
 	ASSERT( n );
 
 	return n;
@@ -144,6 +149,7 @@ ExecNode::~ExecNode()
 	NODE_SAVE( m_WorkingDir );
 	NODE_SAVE( m_ExpectedReturnCode );
 	NODE_SAVE_DEPS( m_PreBuildDependencies );
+	NODE_SAVE_DEPS( m_AdditionalDependencies );
 }
 
 // EmitCompilationMessage

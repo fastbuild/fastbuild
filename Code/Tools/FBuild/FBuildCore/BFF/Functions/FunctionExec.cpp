@@ -61,6 +61,12 @@ FunctionExec::FunctionExec()
 		return false; // GetNodeList will have emitted an error
 	}
 
+	Dependencies additionalDependencies;
+	if (!GetNodeList(funcStartIter, ".ExecAdditionalDependencies", additionalDependencies, false))
+	{
+		return false; // GetNodeList will have emitted an error
+	}
+
 	// get executable node
 	Node * exeNode = ng.FindNode( executableV->GetString() );
 	if ( exeNode == nullptr )
@@ -96,7 +102,8 @@ FunctionExec::FunctionExec()
 										   arguments,
 										   workingDir, 
 										   expectedReturnCode,
-										   preBuildDependencies );
+										   preBuildDependencies,
+										   additionalDependencies);
 	
 	return ProcessAlias( funcStartIter, outputNode );
 }
