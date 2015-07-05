@@ -97,7 +97,8 @@ public:
 							   const AString & arguments, 
 							   const AString & workingDir,
 							   int32_t expectedReturnCode,
-							   const Dependencies & preBuildDependencies );
+							   const Dependencies & preBuildDependencies,
+							   const Dependencies & additionalDependencies );
 	FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
 	DirectoryListNode * CreateDirectoryListNode( const AString & name,
 												 const AString & path,
