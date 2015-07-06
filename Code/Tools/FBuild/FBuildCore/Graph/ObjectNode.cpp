@@ -244,8 +244,24 @@ ObjectNode::~ObjectNode()
 		return NODE_RESULT_FAILED; // SpawnCompiler has logged error
 	}
 
+	const char *output = nullptr;
+	uint32_t outputSize = 0;
+
+	// MSVC will write /ShowIncludes output on stderr sometimes (ex: /Fi)
+	if ( GetFlag( FLAG_INCLUDES_IN_STDERR ) == true )
+	{
+		output = ch.GetErr().Get();
+		outputSize = ch.GetErrSize();
+	}
+	// but most of the time it will be on stdout
+	else
+	{
+		output = ch.GetOut().Get();
+		outputSize = ch.GetOutSize();
+	}
+
 	// compiled ok, try to extract includes
-	if ( ProcessIncludesMSCL( ch.GetOut().Get(), ch.GetOutSize() ) == false )
+	if ( (output == nullptr) || ( ProcessIncludesMSCL( output, outputSize ) == false ) )
 	{
 		return NODE_RESULT_FAILED; // ProcessIncludesMSCL will have emitted an error
 	}
@@ -620,6 +636,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 	{
 		bool usingCLR = false;
 		bool usingWinRT = false;
+		bool usingPreprocessorOnly = false;
 
 		Array< AString > tokens;
 		args.Tokenize( tokens );
@@ -649,13 +666,18 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 			{
 				flags |= ObjectNode::FLAG_CREATING_PCH;
 			}
+			else if ( token == "/Fi" )
+			{
+				usingPreprocessorOnly = true;
+				flags |= ObjectNode::FLAG_INCLUDES_IN_STDERR;
+			}
 		}
 
 		// 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
 		// statements are truncated
 		// 2) code consuming the windows runtime cannot be cached due to preprocessing weirdness
 		// 3) pch files are machine specific
-		if ( !usingWinRT && !usingCLR && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
+		if ( !usingWinRT && !usingCLR && !usingPreprocessorOnly && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
 		{
 			if ( isDistributableCompiler )
 			{

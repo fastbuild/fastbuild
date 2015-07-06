@@ -61,6 +61,7 @@ public:
 		CODEWARRIOR_WII			=	0x2000,
 		GREENHILLS_WIIU			=	0x4000,
 		FLAG_CUDA_NVCC			=   0x10000,
+		FLAG_INCLUDES_IN_STDERR =   0x20000,
 	};
 	static uint32_t DetermineFlags( const Node * compilerNode, const AString & args );
 
