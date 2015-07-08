@@ -718,6 +718,8 @@ bool BFFParser::ParseDefineDirective( const BFFIterator & directiveStart, BFFIte
 		return false;
 	}
 
+	FLOG_INFO( "Define macro <%s>", token.Get() );
+
 	return true;
 }
 
@@ -748,6 +750,8 @@ bool BFFParser::ParseUndefDirective( const BFFIterator & directiveStart, BFFIter
 		Error::Error_1039_UnknownTokenInUndef( directiveStart );
 		return false;
 	}
+
+	FLOG_INFO( "Undefine macro <%s>", token.Get() );
 
 	return true;
 }
