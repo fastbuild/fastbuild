@@ -694,20 +694,23 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
 //------------------------------------------------------------------------------
 bool BFFParser::ParseDefineDirective( const BFFIterator & directiveStart, BFFIterator & iter )
 {
+	if ( iter.IsAtEnd() )
+	{
+		Error::Error_1012_UnexpectedEndOfFile( iter );
+		return false;
+	}
+
 	// parse out token
 	const BFFIterator tokenStart( iter );
-	while ( ( iter.IsAtEnd() == false ) &&
-			( *iter != '\r' ) &&
-			( *iter != '\n' ) )
+	iter.SkipVariableName();
+	if ( tokenStart.GetCurrent() == iter.GetCurrent() )
 	{
-		iter++;
+		Error::Error_1007_ExpectedVariable( iter, nullptr );
+		return false;
 	}
 	const BFFIterator tokenEnd( iter );
 
-	// trim token
 	AStackString<> token( tokenStart.GetCurrent(), tokenEnd.GetCurrent() );
-	token.Replace( '\t', ' ' );
-	token.Replace( " ", "" );
 
 	if ( BFFMacros::Get().Define( token ) == false )
 	{
@@ -722,20 +725,23 @@ bool BFFParser::ParseDefineDirective( const BFFIterator & directiveStart, BFFIte
 //------------------------------------------------------------------------------
 bool BFFParser::ParseUndefDirective( const BFFIterator & directiveStart, BFFIterator & iter )
 {
+	if ( iter.IsAtEnd() )
+	{
+		Error::Error_1012_UnexpectedEndOfFile( iter );
+		return false;
+	}
+
 	// parse out token
 	const BFFIterator tokenStart( iter );
-	while ( ( iter.IsAtEnd() == false ) &&
-			( *iter != '\r' ) &&
-			( *iter != '\n' ) )
+	iter.SkipVariableName();
+	if ( tokenStart.GetCurrent() == iter.GetCurrent() )
 	{
-		iter++;
+		Error::Error_1007_ExpectedVariable( iter, nullptr );
+		return false;
 	}
 	const BFFIterator tokenEnd( iter );
 
-	// trim token
 	AStackString<> token( tokenStart.GetCurrent(), tokenEnd.GetCurrent() );
-	token.Replace( '\t', ' ' );
-	token.Replace( " ", "" );
 
 	if ( BFFMacros::Get().Undefine( token ) == false )
 	{
@@ -750,13 +756,19 @@ bool BFFParser::ParseUndefDirective( const BFFIterator & directiveStart, BFFIter
 //------------------------------------------------------------------------------
 bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter )
 {
+	if ( iter.IsAtEnd() )
+	{
+		Error::Error_1012_UnexpectedEndOfFile( iter );
+		return false;
+	}
+
 	// parse out condition
 	const BFFIterator conditionStart( iter );
-	while ( ( iter.IsAtEnd() == false ) &&
-			( *iter != '\r' ) &&
-			( *iter != '\n' ) )
+	iter.SkipVariableName();
+	if ( conditionStart.GetCurrent() == iter.GetCurrent() )
 	{
-		iter++;
+		Error::Error_1007_ExpectedVariable( directiveStart, nullptr );
+		return false;
 	}
 	const BFFIterator conditionEnd( iter );
 
@@ -843,8 +855,6 @@ bool BFFParser::CheckIfCondition( const BFFIterator & conditionStart, const BFFI
 {
 	// trim condition
 	AStackString<> condition( conditionStart.GetCurrent(), conditionEnd.GetCurrent() );
-	condition.Replace( '\t', ' ' );
-	condition.Replace( " ", "" );
 
 	result = BFFMacros::Get().IsDefined( condition );
 
