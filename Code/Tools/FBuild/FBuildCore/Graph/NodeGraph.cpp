@@ -502,20 +502,19 @@ CopyDirNode * NodeGraph::CreateCopyDirNode( const AString & nodeName,
 // CreateCopyNode
 //------------------------------------------------------------------------------
 ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName, 
-									  FileNode * sourceFile, 
+									  const Dependencies & inputFiles, 
 									  FileNode * executable, 
 									  const AString & arguments,									  
 									  const AString & workingDir,
 									  int32_t expectedReturnCode,
-									  const Dependencies & preBuildDependencies,
-									  const Dependencies & additionalDependencies )
+									  const Dependencies & preBuildDependencies )
 {
 	ASSERT( Thread::IsMainThread() );
 
 	AStackString< 512 > fullPath;
 	CleanPath( dstFileName, fullPath );
 
-	ExecNode * node = FNEW( ExecNode( fullPath, sourceFile, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies, additionalDependencies ) );
+	ExecNode * node = FNEW( ExecNode( fullPath, inputFiles, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies ) );
 	AddNode( node );
 	return node;
 }

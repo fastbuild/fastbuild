@@ -92,13 +92,12 @@ public:
 									 const AString & destPath,
 									 const Dependencies & preBuildDependencies );
 	ExecNode * CreateExecNode( const AString & dstFileName, 
-							   FileNode * sourceFile, 
+							   const Dependencies & inputFiles, 
 							   FileNode * executable, 
 							   const AString & arguments, 
 							   const AString & workingDir,
 							   int32_t expectedReturnCode,
-							   const Dependencies & preBuildDependencies,
-							   const Dependencies & additionalDependencies );
+							   const Dependencies & preBuildDependencies );
 	FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
 	DirectoryListNode * CreateDirectoryListNode( const AString & name,
 												 const AString & path,

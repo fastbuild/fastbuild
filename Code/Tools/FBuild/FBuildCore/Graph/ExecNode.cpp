@@ -20,27 +20,23 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ExecNode::ExecNode( const AString & dstFileName,
-					    FileNode * sourceFile,
+						const Dependencies & inputFiles,
 						FileNode * executable,
 						const AString & arguments,
 						const AString & workingDir,
 						int32_t expectedReturnCode,
-						const Dependencies & preBuildDependencies,
-						const Dependencies & additionalDependencies )
+						const Dependencies & preBuildDependencies )
 : FileNode( dstFileName, Node::FLAG_NONE )
-, m_SourceFile( sourceFile )
+, m_InputFiles( inputFiles )
 , m_Executable( executable )
 , m_Arguments( arguments )
 , m_WorkingDir( workingDir )
 , m_ExpectedReturnCode( expectedReturnCode )
-, m_AdditionalDependencies( additionalDependencies )
 {
-	ASSERT( sourceFile );
 	ASSERT( executable );
 	m_StaticDependencies.SetCapacity( 2 );
-	m_StaticDependencies.Append( Dependency( sourceFile ) );
+	m_StaticDependencies.Append(m_InputFiles);
 	m_StaticDependencies.Append( Dependency( executable ) );
-	m_StaticDependencies.Append( additionalDependencies );
 	m_Type = EXEC_NODE;
 
 	m_PreBuildDependencies = preBuildDependencies;
@@ -59,9 +55,9 @@ ExecNode::~ExecNode()
 	// If the workingDir is empty, use the current dir for the process
 	const char * workingDir = m_WorkingDir.IsEmpty() ? nullptr : m_WorkingDir.Get();
 
-	AStackString<> fullArgs( m_Arguments );
-	fullArgs.Replace( "%1", m_SourceFile->GetName().Get() );
-	fullArgs.Replace( "%2", GetName().Get() );
+	// Format compiler args string
+	AStackString< 4 * KILOBYTE > fullArgs;
+	GetFullArgs(fullArgs);
 
 	EmitCompilationMessage( fullArgs );
 
@@ -110,29 +106,24 @@ ExecNode::~ExecNode()
 /*static*/ Node * ExecNode::Load( IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	fileName );
-	NODE_LOAD( AStackString<>,	sourceFile );
+	NODE_LOAD_DEPS( 0,			inputFiles );
 	NODE_LOAD( AStackString<>,	executable );
 	NODE_LOAD( AStackString<>,	arguments );
 	NODE_LOAD( AStackString<>,	workingDir );
 	NODE_LOAD( int32_t,			expectedReturnCode );
 	NODE_LOAD_DEPS( 0,			preBuildDependencies );
-	NODE_LOAD_DEPS( 0,			additionalDependencies );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * srcNode = ng.FindNode( sourceFile );
-	ASSERT( srcNode ); // load/save logic should ensure the src was saved first
-	ASSERT( srcNode->IsAFile() );
 	Node * execNode = ng.FindNode( executable );
 	ASSERT( execNode ); // load/save logic should ensure the src was saved first
 	ASSERT( execNode->IsAFile() );
 	ExecNode * n = ng.CreateExecNode( fileName, 
-								  (FileNode *)srcNode,
+								  inputFiles,
 								  (FileNode *)execNode,
 								  arguments,
 								  workingDir,
 								  expectedReturnCode,
-								  preBuildDependencies,
-								  additionalDependencies );
+								  preBuildDependencies );
 	ASSERT( n );
 
 	return n;
@@ -143,13 +134,12 @@ ExecNode::~ExecNode()
 /*virtual*/ void ExecNode::Save( IOStream & stream ) const
 {
 	NODE_SAVE( m_Name );
-	NODE_SAVE( m_SourceFile->GetName() );
+	NODE_SAVE_DEPS( m_InputFiles );
 	NODE_SAVE( m_Executable->GetName() );
 	NODE_SAVE( m_Arguments );
 	NODE_SAVE( m_WorkingDir );
 	NODE_SAVE( m_ExpectedReturnCode );
 	NODE_SAVE_DEPS( m_PreBuildDependencies );
-	NODE_SAVE_DEPS( m_AdditionalDependencies );
 }
 
 // EmitCompilationMessage
@@ -176,6 +166,87 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
 
 	// output all at once for contiguousness
     FLOG_BUILD_DIRECT( output.Get() );
+}
+
+// GetFullArgs
+//------------------------------------------------------------------------------
+void ExecNode::GetFullArgs(AString & fullArgs) const
+{
+	// split into tokens
+	Array< AString > tokens(1024, true);
+	m_Arguments.Tokenize(tokens);
+
+	AStackString<> quote("\"");
+
+	const AString * const end = tokens.End();
+	for (const AString * it = tokens.Begin(); it != end; ++it)
+	{
+		const AString & token = *it;
+		if (token.EndsWith("%1"))
+		{
+			// handle /Option:%1 -> /Option:A /Option:B /Option:C
+			AStackString<> pre;
+			if (token.GetLength() > 2)
+			{
+				pre.Assign(token.Get(), token.GetEnd() - 2);
+			}
+
+			// concatenate files, unquoted
+			GetInputFiles(fullArgs, pre, AString::GetEmpty());
+		}
+		else if (token.EndsWith("\"%1\""))
+		{
+			// handle /Option:"%1" -> /Option:"A" /Option:"B" /Option:"C"
+			AStackString<> pre(token.Get(), token.GetEnd() - 3); // 3 instead of 4 to include quote
+
+			// concatenate files, quoted
+			GetInputFiles(fullArgs, pre, quote);
+		}
+		else if (token.EndsWith("%2"))
+		{
+			// handle /Option:%2 -> /Option:A
+			if (token.GetLength() > 2)
+			{
+				fullArgs += AStackString<>(token.Get(), token.GetEnd() - 2);
+			}
+			fullArgs += GetName().Get();
+		}
+		else if (token.EndsWith("\"%2\""))
+		{
+			// handle /Option:"%2" -> /Option:"A"
+			AStackString<> pre(token.Get(), token.GetEnd() - 3); // 3 instead of 4 to include quote
+			fullArgs += pre;
+			fullArgs += GetName().Get();
+			fullArgs += '"'; // post
+		}
+		else
+		{
+			fullArgs += token;
+		}
+
+		fullArgs += ' ';
+	}
+}
+
+// GetInputFiles
+//------------------------------------------------------------------------------
+void ExecNode::GetInputFiles(AString & fullArgs, const AString & pre, const AString & post) const
+{
+	bool first = true;
+	const Dependency * const end = m_InputFiles.End();
+	for (const Dependency * it = m_InputFiles.Begin();
+		it != end;
+		++it)
+	{
+		if (!first)
+		{
+			fullArgs += ' ';
+		}
+		fullArgs += pre;
+		fullArgs += it->GetNode()->GetName();
+		fullArgs += post;
+		first = false;
+	}
 }
 
 //------------------------------------------------------------------------------

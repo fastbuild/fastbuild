@@ -61,12 +61,6 @@ FunctionExec::FunctionExec()
 		return false; // GetNodeList will have emitted an error
 	}
 
-	Dependencies additionalDependencies;
-	if (!GetNodeList(funcStartIter, ".ExecAdditionalDependencies", additionalDependencies, false))
-	{
-		return false; // GetNodeList will have emitted an error
-	}
-
 	// get executable node
 	Node * exeNode = ng.FindNode( executableV->GetString() );
 	if ( exeNode == nullptr )
@@ -80,15 +74,26 @@ FunctionExec::FunctionExec()
 	}
 
 	// source node
-	Node * inputNode = ng.FindNode( inputV->GetString() );
-	if ( inputNode == nullptr )
+	Dependencies inputNodes;
+	if (!GetNodeList(funcStartIter, ".ExecInput", inputNodes, false))
 	{
-		inputNode = ng.CreateFileNode( inputV->GetString() );
+		return false; // GetNodeList will have emitted an error
 	}
-	else if ( inputNode->IsAFile() == false )
+	else
 	{
-		Error::Error_1103_NotAFile( funcStartIter, this, "ExecInput", exeNode->GetName(), exeNode->GetType() );
-		return false;
+		// Make sure all nodes are files
+		const Dependency * const end = inputNodes.End();
+		for (const Dependency * it = inputNodes.Begin();
+			it != end;
+			++it)
+		{
+			Node * node = it->GetNode();
+			if (node->IsAFile() == false)
+			{
+				Error::Error_1103_NotAFile(funcStartIter, this, "ExecInput", node->GetName(), node->GetType());
+				return false;
+			}
+		}
 	}
 
 	// optional args
@@ -97,13 +102,12 @@ FunctionExec::FunctionExec()
 
 	// create the TestNode
 	Node * outputNode = ng.CreateExecNode( outputV->GetString(), 
-										   (FileNode *)inputNode,
+										   inputNodes,
 										   (FileNode *)exeNode,
 										   arguments,
 										   workingDir, 
 										   expectedReturnCode,
-										   preBuildDependencies,
-										   additionalDependencies);
+										   preBuildDependencies);
 	
 	return ProcessAlias( funcStartIter, outputNode );
 }
