@@ -32,13 +32,11 @@ FunctionExec::FunctionExec()
 	// make sure all required variables are defined
 	const BFFVariable * outputV;
 	const BFFVariable * executableV;
-	const BFFVariable * inputV;
 	const BFFVariable * argsV;
 	const BFFVariable * workingDirV;
 	int32_t expectedReturnCode;
 	if ( !GetString( funcStartIter, outputV,		".ExecOutput", true ) ||
 		 !GetString( funcStartIter, executableV,	".ExecExecutable", true ) ||
-		 !GetString( funcStartIter, inputV,			".ExecInput", true ) ||
 		 !GetString( funcStartIter, argsV,			".ExecArguments" ) ||
 		 !GetString( funcStartIter, workingDirV,	".ExecWorkingDir" ) ||
 		 !GetInt( funcStartIter, expectedReturnCode, ".ExecReturnCode", 0, false ) )
