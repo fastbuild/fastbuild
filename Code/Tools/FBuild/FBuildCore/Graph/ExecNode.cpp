@@ -34,7 +34,7 @@ ExecNode::ExecNode( const AString & dstFileName,
 , m_ExpectedReturnCode( expectedReturnCode )
 {
 	ASSERT( executable );
-	m_StaticDependencies.SetCapacity( 2 );
+	m_StaticDependencies.SetCapacity( m_InputFiles.GetSize() + 1 );
 	m_StaticDependencies.Append(m_InputFiles);
 	m_StaticDependencies.Append( Dependency( executable ) );
 	m_Type = EXEC_NODE;
