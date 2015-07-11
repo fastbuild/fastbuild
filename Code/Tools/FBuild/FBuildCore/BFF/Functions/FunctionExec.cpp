@@ -36,12 +36,14 @@ FunctionExec::FunctionExec()
 	const BFFVariable * argsV;
 	const BFFVariable * workingDirV;
 	int32_t expectedReturnCode;
+	bool useStdOutAsOutput;
 	if ( !GetString( funcStartIter, outputV,		".ExecOutput", true ) ||
 		 !GetString( funcStartIter, executableV,	".ExecExecutable", true ) ||
 		 !GetString( funcStartIter, inputV,			".ExecInput", true ) ||
 		 !GetString( funcStartIter, argsV,			".ExecArguments" ) ||
 		 !GetString( funcStartIter, workingDirV,	".ExecWorkingDir" ) ||
-		 !GetInt( funcStartIter, expectedReturnCode, ".ExecReturnCode", 0, false ) )
+		 !GetInt( funcStartIter, expectedReturnCode, ".ExecReturnCode", 0, false ) ||
+		 !GetBool( funcStartIter, useStdOutAsOutput, ".ExecUseStdOutAsOutput ", false, false))
 	{
 		return false;
 	}
@@ -96,7 +98,8 @@ FunctionExec::FunctionExec()
 										   arguments,
 										   workingDir, 
 										   expectedReturnCode,
-										   preBuildDependencies );
+										   preBuildDependencies,
+										   useStdOutAsOutput);
 	
 	return ProcessAlias( funcStartIter, outputNode );
 }
