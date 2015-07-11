@@ -68,10 +68,13 @@ FunctionUsing::FunctionUsing()
 
 		// find variable name
 		BFFIterator stop( start );
-		stop++;
-		stop.SkipVariableName();
-		ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
 		AStackString<> varName( start.GetCurrent(), stop.GetCurrent() );
+		if ( BFFParser::ParseVariableName( stop, varName ) == false )
+		{
+			return false;
+		}
+
+		ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
 
 		// find variable
 		const BFFVariable * v = BFFStackFrame::GetVar( varName );

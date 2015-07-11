@@ -60,24 +60,14 @@ FunctionForEach::FunctionForEach()
 			Error::Error_1200_ExpectedVar( pos, this );
 			return false;
 		}
-		BFFIterator varNameStart( pos );
-		pos++;
-		if ( pos.IsAtValidVariableNameCharacter() == false )
-		{
-			Error::Error_1013_UnexpectedCharInVariableName( pos, this );
-			return false;
-		}
-		pos.SkipVariableName();
-		BFFIterator varNameEnd( pos );
 
-		// sanity check it is a sensible length
-		size_t varNameLen = varNameStart.GetDistTo( varNameEnd );
-		if ( varNameLen > BFFParser::MAX_VARIABLE_NAME_LENGTH )
+		const BFFIterator arrayVarNameBegin = pos;
+		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > localName;
+		if ( BFFParser::ParseVariableName( pos, localName ) == false )
 		{
-			Error::Error_1014_VariableNameIsTooLong( varNameStart, (uint32_t)varNameLen, (uint32_t)BFFParser::MAX_VARIABLE_NAME_LENGTH );
 			return false;
 		}
-		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > localName( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
+
 		localNames.Append( localName );
 
 		pos.SkipWhiteSpace();
@@ -100,29 +90,17 @@ FunctionForEach::FunctionForEach()
 		pos++;
 		pos.SkipWhiteSpace();
 
-		BFFIterator arrayVarNameBegin( pos );
 		if ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL )
 		{
 			Error::Error_1202_ExpectedVarFollowingIn( pos, this );
 			return false;
 		}
-		pos++;
-		if ( pos.IsAtValidVariableNameCharacter() == false )
-		{
-			Error::Error_1013_UnexpectedCharInVariableName( pos, this );
-			return false;
-		}
-		pos.SkipVariableName();
-		BFFIterator arrayVarNameEnd( pos );
 
-		// sanity check it is a sensible length
-		size_t arrayVarNameLen = arrayVarNameBegin.GetDistTo( arrayVarNameEnd );
-		if ( arrayVarNameLen > BFFParser::MAX_VARIABLE_NAME_LENGTH )
+		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > arrayVarName;
+		if ( BFFParser::ParseVariableName( pos, arrayVarName ) == false )
 		{
-			Error::Error_1014_VariableNameIsTooLong( arrayVarNameBegin, (uint32_t)arrayVarNameLen, (uint32_t)BFFParser::MAX_VARIABLE_NAME_LENGTH );
 			return false;
 		}
-		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > arrayVarName( arrayVarNameBegin.GetCurrent(), arrayVarNameEnd.GetCurrent() );
 
 		const BFFVariable * var = BFFStackFrame::GetVar( arrayVarName );
 		if ( var == nullptr )
