@@ -180,28 +180,77 @@ bool BFFParser::Parse( BFFIterator & iter )
 		return false;
 	}
 
-	// make sure immediately after the symbol starts a variable name
-	if ( iter.IsAtValidVariableNameCharacter() == false )
+	if ( *iter == '\'' || *iter == '"' )
 	{
-		Error::Error_1013_UnexpectedCharInVariableName( iter, nullptr );
-		return false;
+		// parse the string
+		const BFFIterator openToken = iter;
+		iter.SkipString( *openToken );
+		if ( *iter != *openToken )
+		{
+			Error::Error_1002_MatchingClosingTokenNotFound( openToken, nullptr, *openToken );
+			return false;
+		}
+		BFFIterator stringStart = openToken;
+		stringStart++;
+
+		// unescape and subsitute embedded variables
+		AStackString< 2048 > value;
+		if ( PerformVariableSubstitutions( stringStart, iter, value ) == false )
+		{
+			return false;
+		}
+		iter++; // skip close token
+
+		BFFIterator varNameIter( value.Get(), value.GetLength(), iter.GetFileName().Get(), iter.GetFileTimeStamp() );
+
+		// sanity check it is a sensible length
+		if ( value.GetLength() + 1/* '.' will be added */  > MAX_VARIABLE_NAME_LENGTH )
+		{
+			Error::Error_1014_VariableNameIsTooLong( varNameIter, (uint32_t)value.GetLength(), (uint32_t)MAX_VARIABLE_NAME_LENGTH );
+			return false;
+		}
+
+		// sanity check it is a valid variable name
+		while ( varNameIter.IsAtEnd() == false )
+		{
+			if ( varNameIter.IsAtValidVariableNameCharacter() == false )
+			{
+				Error::Error_1013_UnexpectedCharInVariableName( varNameIter, nullptr );
+				return false;
+			}
+			varNameIter++;
+		}
+
+		// append '.' to variable name
+		name = ".";
+		name.Append( value );
+	}
+	else
+	{
+		// make sure immediately after the symbol starts a variable name
+		if ( iter.IsAtValidVariableNameCharacter() == false )
+		{
+			Error::Error_1013_UnexpectedCharInVariableName( iter, nullptr );
+			return false;
+		}
+
+		// find the end of the variable name
+		iter.SkipVariableName();
+		const BFFIterator varNameEnd = iter;
+
+		// sanity check it is a sensible length
+		size_t varNameLen = varNameStart.GetDistTo( varNameEnd );
+		if ( varNameLen > MAX_VARIABLE_NAME_LENGTH )
+		{
+			Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)varNameLen, (uint32_t)MAX_VARIABLE_NAME_LENGTH );
+			return false;
+		}
+
+		// store variable name
+		name.Assign( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
 	}
 
-	// find the end of the variable name
-	iter.SkipVariableName();
-	const BFFIterator varNameEnd = iter;
-
-	// sanity check it is a sensible length
-	size_t varNameLen = varNameStart.GetDistTo( varNameEnd );
-	if ( varNameLen > MAX_VARIABLE_NAME_LENGTH )
-	{
-		Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)varNameLen, (uint32_t)MAX_VARIABLE_NAME_LENGTH );
-		return false;
-	}
-
-	// store variable name
-	name.Assign( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
-
+	ASSERT( name.GetLength() > 0 );
 	if ( parentScope )
 	{
 		// exchange '^' with '.'
