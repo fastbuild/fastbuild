@@ -103,7 +103,12 @@ ExecNode::~ExecNode()
 	{
 		FileStream f;
 		f.Open( m_Name.Get(), FileStream::WRITE_ONLY );
-		f.WriteBuffer( memOut.Get(), memOutSize );
+		if (memOut.Get())
+		{
+			f.WriteBuffer(memOut.Get(), memOutSize);
+		}
+		
+		f.Close();
 	}
 
 	// update the file's "last modified" time
