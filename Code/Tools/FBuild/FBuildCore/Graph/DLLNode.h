@@ -34,6 +34,7 @@ public:
 
 	static Node * Load( IOStream & stream );
 private:
+	virtual BuildResult DoBuild( Job * job ) override;
 	virtual void Save( IOStream & stream ) const;
 
 	AString m_ImportLibName;
