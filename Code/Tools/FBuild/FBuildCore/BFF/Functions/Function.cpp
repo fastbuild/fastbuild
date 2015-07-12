@@ -19,6 +19,7 @@
 #include "FunctionObjectList.h"
 #include "FunctionPrint.h"
 #include "FunctionSettings.h"
+#include "FunctionSLN.h"
 #include "FunctionTest.h"
 #include "FunctionUnity.h"
 #include "FunctionUsing.h"
@@ -115,6 +116,7 @@ Function::~Function()
 	FNEW( FunctionLibrary );
 	FNEW( FunctionPrint );
 	FNEW( FunctionSettings );
+	FNEW( FunctionSLN );
 	FNEW( FunctionTest );
 	FNEW( FunctionUnity );
 	FNEW( FunctionUsing );

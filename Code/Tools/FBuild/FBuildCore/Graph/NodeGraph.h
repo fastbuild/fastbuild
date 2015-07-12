@@ -7,6 +7,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
+#include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h" // TODO:C remove when USE_NODE_REFLECTION is removed
 
 #include "Core/Containers/Array.h"
@@ -33,6 +34,7 @@ class LinkerNode;
 class Node;
 class ObjectListNode;
 class ObjectNode;
+class SLNNode;
 class TestNode;
 class UnityNode;
 class VCXProjectNode;
@@ -193,6 +195,13 @@ public:
 										   const Array< VSProjectFileType > & fileTypes,
 										   const Array< AString > & references,
 										   const Array< AString > & projectReferences );
+	SLNNode * CreateSLNNode( 	const AString & solutionOutput,
+								const AString & solutionBuildProject,
+								const AString & solutionVisualStudioVersion,
+                        		const AString & solutionMinimumVisualStudioVersion,
+								const Array< VSProjectConfig > & configs,
+								const Array< VCXProjectNode * > & projects,
+								const Array< SLNSolutionFolder > & folders );
 	ObjectListNode * CreateObjectListNode( const AString & listName,
 							 const Dependencies & inputNodes,
 							 CompilerNode * compiler,
