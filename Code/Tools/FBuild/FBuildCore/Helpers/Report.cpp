@@ -27,25 +27,27 @@
 
 // Globals
 //------------------------------------------------------------------------------
-uint32_t g_ReportNodeColors[] = { 0x000000, // PROXY_NODE (never seen)
-								  0xFFFFFF, // COPY_NODE
-								  0xAAAAAA, // DIRECTORY_LIST_NODE
-								  0x000000, // EXEC_NODE
-								  0x888888, // FILE_NODE
-								  0x88FF88, // LIBRARY_NODE
-								  0xFF8888, // OBJECT_NODE
-								  0x228B22, // ALIAS_NODE
-								  0xFFFF88, // EXE_NODE
-								  0x88AAFF, // UNITY_NODE
-								  0x88CCFF,	// CS_NODE
-								  0xFFAAFF, // TEST_NODE
-								  0xDDA0DD, // COMPILER_NODE
-								  0xFFCC88, // DLL_NODE
-								  0xFFFFFF, // VCXPROJ_NODE
-								  0x444444, // OBJECT_LIST_NODE
-								  0x000000, // COPY_DIR_NODE (never seen)
-								  0x77DDAA, // SLN_NODE
-								};
+uint32_t g_ReportNodeColors[Node::NUM_NODE_TYPES] = {
+	0x000000, // PROXY_NODE (never seen)
+	0xFFFFFF, // COPY_NODE
+	0xAAAAAA, // DIRECTORY_LIST_NODE
+	0x000000, // EXEC_NODE
+	0x888888, // FILE_NODE
+	0x88FF88, // LIBRARY_NODE
+	0xFF8888, // OBJECT_NODE
+	0x228B22, // ALIAS_NODE
+	0xFFFF88, // EXE_NODE
+	0x88AAFF, // UNITY_NODE
+	0x88CCFF,	// CS_NODE
+	0xFFAAFF, // TEST_NODE
+	0xDDA0DD, // COMPILER_NODE
+	0xFFCC88, // DLL_NODE
+	0xFFFFFF, // VCXPROJ_NODE
+	0x444444, // OBJECT_LIST_NODE
+	0x000000, // COPY_DIR_NODE (never seen)
+	0xFF3030, // REMOVE_DIR_NODE
+	0x77DDAA, // SLN_NODE
+};
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

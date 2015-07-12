@@ -26,6 +26,7 @@
 #include "LibraryNode.h"
 #include "ObjectListNode.h"
 #include "ObjectNode.h"
+#include "RemoveDirNode.h"
 #include "SLNNode.h"
 #include "TestNode.h"
 #include "UnityNode.h"
@@ -548,6 +549,19 @@ CopyDirNode * NodeGraph::CreateCopyDirNode( const AString & nodeName,
 	ASSERT( Thread::IsMainThread() );
 
 	CopyDirNode * node = FNEW( CopyDirNode( nodeName, staticDeps, destPath, preBuildDependencies ) );
+	AddNode( node );
+	return node;
+}
+
+// CreateRemoveDirNode
+//------------------------------------------------------------------------------
+RemoveDirNode * NodeGraph::CreateRemoveDirNode( const AString & nodeName, 
+												Dependencies & staticDeps,
+												const Dependencies & preBuildDependencies )
+{
+	ASSERT( Thread::IsMainThread() );
+
+	RemoveDirNode * node = FNEW( RemoveDirNode( nodeName, staticDeps, preBuildDependencies ) );
 	AddNode( node );
 	return node;
 }
