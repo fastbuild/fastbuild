@@ -50,32 +50,89 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
 	//const char * end = pos + compilerOutputSize;
 	for (;;)
 	{
-		// find next include note
-		const char * token = strstr( pos, "\nNote: including file: " );
-		if ( !token )
-		{
-			break;
-		}
-		pos = token + 23;
-
-		// skip whitespace (alwways spaces)
-		while ( *pos == ' ' )
-		{
-			++pos;
-		}
-
 		const char * lineStart = pos;
 
-		// find end of line
+		// find end of the line
 		pos = strchr( pos, '\r' );
 		if ( !pos )
 		{
-			return false;
+			break; // end of output
 		}
 
 		const char * lineEnd = pos;
 
-		AddInclude( lineStart, lineEnd );
+		ASSERT( *pos == '\r' );
+		++pos; // skip \r for next line
+
+		const char * ch = lineStart;
+
+		// count colons in the line
+		const char * colon1 = nullptr;
+		for ( ; ch < lineEnd ; ++ch )
+		{
+			if ( *ch == ':' )
+			{
+				if ( colon1 == nullptr )
+				{
+					colon1 = ch;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+
+		// check that we have two colons separated by at least one char
+		if ( colon1 == nullptr || colon1 == lineStart ||
+			 *ch != ':' || (ch - colon1) < 2 )
+		{
+			continue; // next line
+		}
+
+		ASSERT( *ch == ':' );
+		const char * colon2 = ch;
+
+		// skip whitespace (always spaces)
+		do
+		{
+			++ch;
+		}
+		while ( *ch == ' ' );
+
+		// must have whitespaces
+		if ( ch == colon2 )
+		{
+			continue; // next line
+		}
+
+		const char * includeStart = ch;
+		const char * includeEnd = lineEnd;
+
+		// validates the windows path
+		bool validated = ( includeStart < includeEnd );
+		for ( ; validated && ch < includeEnd ; ++ch )
+		{
+			switch ( *ch )
+			{
+			// https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
+			case '<':
+			case '>':
+			case '"':
+			case '|':
+			case '?':
+			case '*':
+				validated = false;
+				break;
+			default:
+				break;
+			}
+		}
+
+		if ( validated )
+		{
+			AddInclude( includeStart, includeEnd );
+		}
 	}
 
 	return true;
