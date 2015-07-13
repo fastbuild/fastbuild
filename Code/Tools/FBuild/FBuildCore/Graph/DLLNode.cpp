@@ -46,7 +46,12 @@ DLLNode::~DLLNode()
 	{
 		AStackString<> cleanPath;
 		NodeGraph::CleanPath( m_ImportLibName, cleanPath );
-		EnsurePathExistsForFile( cleanPath );
+
+		if ( EnsurePathExistsForFile( cleanPath ) == false )
+		{
+			// EnsurePathExistsForFile will have emitted error
+			return NODE_RESULT_FAILED; 
+		}
 	}
 
 	return LinkerNode::DoBuild( job );
