@@ -37,6 +37,26 @@ DLLNode::~DLLNode()
 {
 }
 
+// DoBuild
+//------------------------------------------------------------------------------
+/*virtual*/ Node::BuildResult DLLNode::DoBuild( Job * job )
+{
+	// Make sure the implib output directory exists
+	if ( m_ImportLibName.IsEmpty() == false)
+	{
+		AStackString<> cleanPath;
+		NodeGraph::CleanPath( m_ImportLibName, cleanPath );
+
+		if ( EnsurePathExistsForFile( cleanPath ) == false )
+		{
+			// EnsurePathExistsForFile will have emitted error
+			return NODE_RESULT_FAILED; 
+		}
+	}
+
+	return LinkerNode::DoBuild( job );
+}
+
 // GetImportLibName
 //------------------------------------------------------------------------------
 void DLLNode::GetImportLibName( AString & importLibName ) const
