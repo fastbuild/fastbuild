@@ -94,7 +94,7 @@ public:
 									 const AString & destPath,
 									 const Dependencies & preBuildDependencies );
 	ExecNode * CreateExecNode( const AString & dstFileName, 
-							   FileNode * sourceFile, 
+							   const Dependencies & inputFiles, 
 							   FileNode * executable, 
 							   const AString & arguments, 
 							   const AString & workingDir,

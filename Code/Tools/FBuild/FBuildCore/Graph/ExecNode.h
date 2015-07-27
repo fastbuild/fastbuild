@@ -18,7 +18,7 @@ class ExecNode : public FileNode
 {
 public:
 	explicit ExecNode( const AString & dstFileName,
-					    FileNode * sourceFile,
+						const Dependencies & inputFiles,
 						FileNode * executable,
 						const AString & arguments,
 						const AString & workingDir,
@@ -33,9 +33,12 @@ public:
 private:
 	virtual BuildResult DoBuild( Job * job );
 
+	void GetFullArgs(AString & fullArgs) const;
+	void GetInputFiles(AString & fullArgs, const AString & pre, const AString & post) const;
+
 	void EmitCompilationMessage( const AString & args ) const;
 
-	FileNode * m_SourceFile;
+	Dependencies m_InputFiles;
 	FileNode * m_Executable;
 	AString		m_Arguments;
 	AString		m_WorkingDir;

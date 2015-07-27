@@ -555,7 +555,7 @@ CopyDirNode * NodeGraph::CreateCopyDirNode( const AString & nodeName,
 // CreateCopyNode
 //------------------------------------------------------------------------------
 ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName, 
-									  FileNode * sourceFile, 
+									  const Dependencies & inputFiles, 
 									  FileNode * executable, 
 									  const AString & arguments,									  
 									  const AString & workingDir,
@@ -567,7 +567,7 @@ ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName,
 	AStackString< 512 > fullPath;
 	CleanPath( dstFileName, fullPath );
 
-	ExecNode * node = FNEW( ExecNode( fullPath, sourceFile, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies ) );
+	ExecNode * node = FNEW( ExecNode( fullPath, inputFiles, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies ) );
 	AddNode( node );
 	return node;
 }
