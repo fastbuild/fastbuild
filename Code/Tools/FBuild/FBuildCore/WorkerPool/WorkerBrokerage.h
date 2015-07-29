@@ -7,6 +7,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Strings/AString.h"
+#include "Core/Time/Timer.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -27,6 +28,9 @@ public:
 private:
 	AString				m_BrokerageRoot;
 	bool				m_Availability;
+    AString             m_HostName;
+    AString             m_BrokerageFilePath;
+    Timer               m_TimerLastUpdate;      // Throttle network access
 };
 
 //------------------------------------------------------------------------------

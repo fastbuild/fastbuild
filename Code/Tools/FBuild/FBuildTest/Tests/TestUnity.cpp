@@ -33,6 +33,7 @@ private:
 	void TestCompile() const;
 	void TestCompile_NoRebuild() const;
 	void TestGenerateFromExplicitList() const;
+	void TestExcludedFiles() const;
 };
 
 // Register Tests
@@ -43,6 +44,7 @@ REGISTER_TESTS_BEGIN( TestUnity )
 	REGISTER_TEST( TestCompile )			// compile a library using unity inputs
 	REGISTER_TEST( TestCompile_NoRebuild )	// check nothing rebuilds
 	REGISTER_TEST( TestGenerateFromExplicitList ) // create a unity with manually provided files
+	REGISTER_TEST( TestExcludedFiles )		// Ensure files are correctly excluded
 REGISTER_TESTS_END
 
 // BuildGenerate
@@ -195,6 +197,35 @@ void TestUnity::TestGenerateFromExplicitList() const
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::UNITY_NODE );
 	CheckStatsTotal( 4,		4 );
+}
+
+// TestExcludedFiles
+//------------------------------------------------------------------------------
+void TestUnity::TestExcludedFiles() const
+{
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestUnity/Exclusions/fbuild.bff";
+
+	{
+		FBuild fBuild( options );
+		TEST_ASSERT( fBuild.Initialize() );
+
+		TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFileName" ) ) );
+	}
+
+	{
+		FBuild fBuild( options );
+		TEST_ASSERT( fBuild.Initialize() );
+
+		TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePath" ) ) );
+	}
+
+	{
+		FBuild fBuild( options );
+		TEST_ASSERT( fBuild.Initialize() );
+
+		TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePathRelative" ) ) );
+	}
 }
 
 //------------------------------------------------------------------------------

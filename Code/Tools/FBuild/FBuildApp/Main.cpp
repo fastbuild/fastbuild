@@ -106,6 +106,7 @@ int Main(int argc, char * argv[])
 	bool report = false;
 	bool fixupErrorPaths = false;
 	bool waitMode = false;
+	bool noStopOnError = false;
 	int32_t numWorkers = -1;
 	WrapperMode wrapperMode( WRAPPER_MODE_NONE );
 	AStackString<> args;
@@ -182,7 +183,11 @@ int Main(int argc, char * argv[])
 			else if ( thisArg.BeginsWith( "-j" ) &&
 					  sscanf( thisArg.Get(), "-j%i", &numWorkers ) == 1 )
 			{
-				continue; // 'numWorkers' will contain value now
+                // only accept within sensible range
+				if ( ( numWorkers >= 0 ) && ( numWorkers <= 64 ) )
+				{
+					continue; // 'numWorkers' will contain value now
+				}
 			}
 			else if ( thisArg == "-nooutputbuffering" )
 			{
@@ -193,6 +198,11 @@ int Main(int argc, char * argv[])
 			else if ( thisArg == "-noprogress" )
 			{
 				progressBar = false;
+				continue;
+			}
+			else if ( thisArg == "-nostoponerror")
+			{
+				noStopOnError = true;
 				continue;
 			}
 			else if ( thisArg == "-report" )
@@ -398,7 +408,7 @@ int Main(int argc, char * argv[])
 	options.m_GenerateReport = report;
 	options.m_WrapperChild = ( wrapperMode == WRAPPER_MODE_FINAL_PROCESS );
 	options.m_FixupErrorPaths = fixupErrorPaths;
-	if ( targets.GetSize() > 1 )
+	if ( ( targets.GetSize() > 1 ) || ( noStopOnError ) )
 	{
 		options.m_StopOnFirstError = false; // when building multiple targets, try to build as much as possible
 	}
@@ -465,10 +475,11 @@ void DisplayHelp()
             " -ide           Enable multiple options when building from an IDE.\n"
             "                Enables: -noprogress, -fixuperrorpaths &\n"
 			"                -wrapper (Windows)\n"
-			" -jX            Explicitly set worker thread count X, instead of\n"
-			"                default of NUMBER_OF_PROCESSORS. Set to 0 to build\n"
-			"                everything in the main thread.\n"
+			" -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
+			"                default of hardware thread count.\n"
 			" -noprogress    Don't show the progress bar while building.\n"
+			" -nostoponerror Don't stop building on first error. Try to build as much"
+			"                as possible.\n"
 			" -report        Ouput a detailed report at the end of the build,\n"
 			"                to report.html.  This will lengthen the total build\n"
 			"                time.\n"

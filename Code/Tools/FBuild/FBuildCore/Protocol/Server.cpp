@@ -16,6 +16,7 @@
 
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
 // Defines
@@ -500,13 +501,13 @@ void Server::ThreadFunc()
 {
 	while ( m_ShouldExit == false )
 	{
-		FindNeedyClients();
-
 		FinalizeCompletedJobs();
+
+		FindNeedyClients();
 
 		SendServerStatus();
 
-		Thread::Sleep( 16 );
+		JobQueueRemote::Get().MainThreadWait( 100 );
 	}
 
 	m_Exited = true;
@@ -521,10 +522,17 @@ void Server::FindNeedyClients()
 		return;
 	}
 
+	PROFILE_FUNCTION
+
 	MutexHolder mh( m_ClientListMutex );
 
 	// determine job availability
 	int availableJobs = (int)WorkerThreadRemote::GetNumCPUsToUse();
+	if ( availableJobs == 0 )
+	{
+		return;
+	}
+	++availableJobs; // over request to parallelize building/network transfers
 
 	ClientState ** iter = m_ClientList.Begin();
 	const ClientState * const * end = m_ClientList.End();
@@ -588,6 +596,8 @@ void Server::FindNeedyClients()
 //------------------------------------------------------------------------------
 void Server::FinalizeCompletedJobs()
 {
+	PROFILE_FUNCTION
+
 	JobQueueRemote & jcr = JobQueueRemote::Get();
 	while ( Job * job = jcr.GetCompletedJob() )
 	{
@@ -635,6 +645,8 @@ void Server::FinalizeCompletedJobs()
 //------------------------------------------------------------------------------
 void Server::SendServerStatus()
 {
+	PROFILE_FUNCTION
+
 	MutexHolder mh( m_ClientListMutex );
 
 	const ClientState * const * end = m_ClientList.End();

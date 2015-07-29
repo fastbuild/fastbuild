@@ -61,7 +61,7 @@ public:
 	inline bool IsStruct() const	{ return m_Type == BFFVariable::VAR_STRUCT; }
 	inline bool IsArrayOfStructs() const { return m_Type == BFFVariable::VAR_ARRAY_OF_STRUCTS; }
 
-    BFFVariable * DeepConcat(const AString & dstName, const BFFVariable & other) const;
+    BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other ) const;
 
 private:
 	friend class BFFStackFrame;
@@ -83,6 +83,8 @@ private:
 	void SetValueInt( int i );
 	void SetValueStruct( const Array< const BFFVariable * > & members );
 	void SetValueArrayOfStructs( const Array< const BFFVariable * > & values );
+
+    static const BFFVariable ** GetMemberByName( const AString & name, const Array< const BFFVariable * > & members );
 
 	AString m_Name;
 

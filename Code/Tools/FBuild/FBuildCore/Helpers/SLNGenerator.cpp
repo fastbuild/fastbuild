@@ -42,8 +42,8 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
                                             const Array< SLNSolutionFolder > & folders )
 {
     // preallocate to avoid re-allocations
-    m_Tmp.SetReserved( MEGABYTE );
-    m_Tmp.SetLength( 0 );
+    m_Output.SetReserved( MEGABYTE );
+    m_Output.SetLength( 0 );
 
     // determine folder for project
     const char * lastSlash = solutionFile.FindLast( NATIVE_SLASH );
@@ -83,14 +83,13 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
     WriteProjectListings( solutionBasePath, solutionBuildProject, projects, folders, solutionBuildProjectGuid, projectGuids, solutionProjectsToFolder );
     WriteSolutionFolderListings( folders, solutionFolderPaths );
-    Write( "Global\n" );
+    Write( "Global\r\n" );
     WriteSolutionConfigurationPlatforms( solutionConfigs );
     WriteProjectConfigurationPlatforms( solutionBuildProjectGuid, solutionConfigs, projectGuids );
     WriteNestedProjects( solutionProjectsToFolder, solutionFolderPaths );
     WriteFooter();
 
-    m_OutputSLN = m_Tmp;
-    return m_OutputSLN;
+    return m_Output;
 }
 
 // WriteHeader
@@ -116,10 +115,11 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
     AStackString<> shortVersion( shortVersionStart, shortVersionEnd );
 
     // header
-    Write( "Microsoft Visual Studio Solution File, Format Version 12.00\n" );
-    Write( "# Visual Studio %s\n", shortVersion.Get() );
-    Write( "VisualStudioVersion = %s\n", version );
-    Write( "MinimumVisualStudioVersion = %s\n", minimumVersion );
+	Write( "\r\n" ); // Deliberate blank line
+    Write( "Microsoft Visual Studio Solution File, Format Version 12.00\r\n" );
+    Write( "# Visual Studio %s\r\n", shortVersion.Get() );
+    Write( "VisualStudioVersion = %s\r\n", version );
+    Write( "MinimumVisualStudioVersion = %s\r\n", minimumVersion );
 }
 
 // WriteProjectListings
@@ -151,11 +151,11 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
                                     p2 ? p2 : projectPath.GetEnd() );
 
         // retrieve projectGuid
-        AString projectGuid;
+        AStackString<> projectGuid;
         if ( (*it)->GetProjectGuid().GetLength() == 0 )
         {
             AStackString<> projectNameForGuid( p1 ? p1 : projectName.Get() );
-            VSProjectGenerator::FormatDeterministicProjectGUID( &projectGuid, projectNameForGuid );
+            VSProjectGenerator::FormatDeterministicProjectGUID( projectGuid, projectNameForGuid );
         }
         else
         {
@@ -171,10 +171,10 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
             solutionBuildProjectGuid = projectGuid;
         }
 
-        Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\n",
+        Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\r\n",
                projectName.Get(), projectPath.Get(), projectGuid.Get() );
 
-        Write( "EndProject\n" );
+        Write( "EndProject\r\n" );
 
         projectGuids.Append( projectGuid );
 
@@ -186,13 +186,13 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
             if ( it2->m_ProjectNames.Find( (*it)->GetName() ) )
             {
                 // generate a guid for the solution folder
-                AString solutionFolderGuid;
-                VSProjectGenerator::FormatDeterministicProjectGUID( &solutionFolderGuid, it2->m_Path );
+                AStackString<> solutionFolderGuid;
+                VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, it2->m_Path );
 
                 solutionFolderGuid.ToUpper();
 
                 AStackString<> projectToFolder;
-                projectToFolder.Format( "\t\t%s = %s\n", projectGuid.Get(), solutionFolderGuid.Get() );
+                projectToFolder.Format( "\t\t%s = %s\r\n", projectGuid.Get(), solutionFolderGuid.Get() );
 
                 solutionProjectsToFolder.Append( projectToFolder );
             }
@@ -239,16 +239,16 @@ void SLNGenerator::WriteSolutionFolderListings( const Array< SLNSolutionFolder >
         solutionFolderName = solutionFolderName ? solutionFolderName + 1 : it->Get();
 
         // generate a guid for the solution folder
-        AString solutionFolderGuid;
-        VSProjectGenerator::FormatDeterministicProjectGUID( &solutionFolderGuid, *it );
+        AStackString<> solutionFolderGuid;
+        VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, *it );
 
         // Guid must be uppercase (like visual)
         solutionFolderGuid.ToUpper();
 
-        Write( "Project(\"{2150E333-8FDC-42A3-9474-1A3956D46DE8}\") = \"%s\", \"%s\", \"%s\"\n",
+        Write( "Project(\"{2150E333-8FDC-42A3-9474-1A3956D46DE8}\") = \"%s\", \"%s\", \"%s\"\r\n",
                solutionFolderName, solutionFolderName, solutionFolderGuid.Get() );
 
-        Write( "EndProject\n" );
+        Write( "EndProject\r\n" );
     }
 }
 
@@ -256,18 +256,18 @@ void SLNGenerator::WriteSolutionFolderListings( const Array< SLNSolutionFolder >
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs )
 {
-    Write( "\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\n" );
+    Write( "\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\r\n" );
 
     // Solution Configurations
     const SolutionConfig * const end = solutionConfigs.End();
     for( const SolutionConfig * it = solutionConfigs.Begin() ; it != end ; ++it )
     {
-        Write(  "\t\t%s|%s = %s|%s\n",
+        Write(  "\t\t%s|%s = %s|%s\r\n",
                 it->m_Config.Get(), it->m_SolutionPlatform.Get(),
                 it->m_Config.Get(), it->m_SolutionPlatform.Get() );
     }
 
-    Write( "\tEndGlobalSection\n" );
+    Write( "\tEndGlobalSection\r\n" );
 }
 
 // WriteProjectConfigurationPlatforms
@@ -276,7 +276,7 @@ void SLNGenerator::WriteProjectConfigurationPlatforms(  const AString & solution
                                                         const Array< SolutionConfig > & solutionConfigs,
                                                         const Array< AString > & projectGuids )
 {
-    Write( "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\n" );
+    Write( "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n" );
 
     // Solution Configuration Mappings to Projects
     const AString * const projectGuidsEnd = projectGuids.End();
@@ -288,14 +288,14 @@ void SLNGenerator::WriteProjectConfigurationPlatforms(  const AString & solution
         const SolutionConfig * const solutionConfigsEnd = solutionConfigs.End();
         for( const SolutionConfig * it2 = solutionConfigs.Begin() ; it2 != solutionConfigsEnd ; ++it2 )
         {
-            Write(  "\t\t%s.%s|%s.ActiveCfg = %s|%s\n",
+            Write(  "\t\t%s.%s|%s.ActiveCfg = %s|%s\r\n",
                     it->Get(),
                     it2->m_Config.Get(), it2->m_SolutionPlatform.Get(),
                     it2->m_Config.Get(), it2->m_Platform.Get() );
 
             if ( projectIsActive )
             {
-                Write(  "\t\t%s.%s|%s.Build.0 = %s|%s\n",
+                Write(  "\t\t%s.%s|%s.Build.0 = %s|%s\r\n",
                         it->Get(),
                         it2->m_Config.Get(), it2->m_SolutionPlatform.Get(),
                         it2->m_Config.Get(), it2->m_Platform.Get() );
@@ -303,10 +303,10 @@ void SLNGenerator::WriteProjectConfigurationPlatforms(  const AString & solution
         }
     }
 
-    Write( "\tEndGlobalSection\n" );
-    Write( "\tGlobalSection(SolutionProperties) = preSolution\n" );
-    Write( "\t\tHideSolutionNode = FALSE\n" );
-    Write( "\tEndGlobalSection\n" );
+    Write( "\tEndGlobalSection\r\n" );
+    Write( "\tGlobalSection(SolutionProperties) = preSolution\r\n" );
+    Write( "\t\tHideSolutionNode = FALSE\r\n" );
+    Write( "\tEndGlobalSection\r\n" );
 }
 
 // WriteNestedProjects
@@ -320,7 +320,7 @@ void SLNGenerator::WriteNestedProjects( const Array< AString > & solutionProject
         return; // skip global section
     }
 
-    Write( "\tGlobalSection(NestedProjects) = preSolution\n" );
+    Write( "\tGlobalSection(NestedProjects) = preSolution\r\n" );
 
     // Write every project to solution folder relationships
     const AString * const solutionProjectsToFolderEnd = solutionProjectsToFolder.End();
@@ -339,24 +339,24 @@ void SLNGenerator::WriteNestedProjects( const Array< AString > & solutionProject
         if ( lastSlash )
         {
             AStackString<> solutionFolderParentPath( it->Get(), lastSlash );
-            VSProjectGenerator::FormatDeterministicProjectGUID( &solutionFolderParentGuid, solutionFolderParentPath );
+            VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderParentGuid, solutionFolderParentPath );
         }
 
         if ( solutionFolderParentGuid.GetLength() > 0 )
         {
             // generate a guid for the solution folder
-            AString solutionFolderGuid;
-            VSProjectGenerator::FormatDeterministicProjectGUID( &solutionFolderGuid, *it );
+            AStackString<> solutionFolderGuid;
+            VSProjectGenerator::FormatDeterministicProjectGUID( solutionFolderGuid, *it );
 
             solutionFolderGuid.ToUpper();
             solutionFolderParentGuid.ToUpper();
 
             // write parent solution folder relationship
-            Write( "\t\t%s = %s\n", solutionFolderGuid.Get(), solutionFolderParentGuid.Get() );
+            Write( "\t\t%s = %s\r\n", solutionFolderGuid.Get(), solutionFolderParentGuid.Get() );
         }
     }
 
-    Write( "\tEndGlobalSection\n" );
+    Write( "\tEndGlobalSection\r\n" );
 }
 
 // WriteFooter
@@ -364,7 +364,7 @@ void SLNGenerator::WriteNestedProjects( const Array< AString > & solutionProject
 void SLNGenerator::WriteFooter()
 {
     // footer
-    Write( "EndGlobal\n" );
+    Write( "EndGlobal\r\n" );
 }
 
 // Write
@@ -379,12 +379,12 @@ void SLNGenerator::Write( const char * fmtString, ... )
     va_end( args );
 
     // resize output buffer in large chunks to prevent re-sizing
-    if ( m_Tmp.GetLength() + tmp.GetLength() > m_Tmp.GetReserved() )
+    if ( m_Output.GetLength() + tmp.GetLength() > m_Output.GetReserved() )
     {
-        m_Tmp.SetReserved( m_Tmp.GetReserved() + MEGABYTE );
+        m_Output.SetReserved( m_Output.GetReserved() + MEGABYTE );
     }
 
-    m_Tmp += tmp;
+    m_Output += tmp;
 }
 
 

@@ -291,6 +291,9 @@ Compiler( 'Compiler-x64-OSX' )
 							+ ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
                             + ' -Wno-incompatible-ms-struct'    // ms_struct may not produce MSVC-compatible layouts for classes with base classes or virtual functions [-Wincompatible-ms-struct]
 
+							// Extra warnings
+							+ ' -Wshadow'
+
 							+ ' -fno-exceptions'
 							+ ' -fno-rtti'
 
@@ -463,8 +466,8 @@ Compiler( 'Compiler-x64-OSX' )
 //------------------------------------------------------------------------------
 .ProjectCommon = 
 [
-	.ProjectBuildCommand		= 'cd ^$(SolutionDir)\..\..\ &amp; fbuild -vs -dist -cache ^$(ProjectName)-^$(Configuration)'
-	.ProjectRebuildCommand		= 'cd ^$(SolutionDir)\..\..\ &amp; fbuild -vs -dist -cache -clean ^$(ProjectName)-^$(Configuration)'
+	.ProjectBuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -cache ^$(ProjectName)-^$(Configuration)'
+	.ProjectRebuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -cache -clean ^$(ProjectName)-^$(Configuration)'
 	.OutputDirectory			= '^$(SolutionDir)\..\tmp2'
 	.IntermediateDirectory		= '^$(SolutionDir)\..\tmp2'
 	.Platform = 'Win32' // unused
@@ -489,11 +492,38 @@ Compiler( 'Compiler-x64-OSX' )
 					.ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
 					.ProjectX86ClangDebug }
 
+// Project to compile everything
 VCXProject( 'All-proj' )
 {
-	.ProjectOutput				= '.\All.vcxproj'
+	.ProjectOutput				= '../tmp/VisualStudio/Projects/All.vcxproj'
 	.ProjectFiles			= { '.\fbuild.bff' }
 	.ProjectBasePath			= '.\'
+}
+
+// Project to regenerate projects/solutions
+VCXProject( 'UpdateSolution-proj' )
+{
+	.ProjectOutput				= '../tmp/VisualStudio/Projects/UpdateSolution.vcxproj'
+	.ProjectFiles			= { '.\fbuild.bff' }
+	.ProjectBasePath			= '.\'
+
+    .GenerateProjectsCommands =
+    [
+	    .ProjectBuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution'
+	    .ProjectRebuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -clean'
+    ]
+
+    .ProjectX86Debug		= [ Using( .ProjectX86Debug )	    Using( .GenerateProjectsCommands ) ]
+    .ProjectX86Profile		= [ Using( .ProjectX86Profile )	    Using( .GenerateProjectsCommands ) ]
+    .ProjectX86Release		= [ Using( .ProjectX86Release )	    Using( .GenerateProjectsCommands ) ]
+    .ProjectX64Debug		= [ Using( .ProjectX64Debug )	    Using( .GenerateProjectsCommands ) ]
+    .ProjectX64Profile		= [ Using( .ProjectX64Profile )	    Using( .GenerateProjectsCommands ) ]
+    .ProjectX64Release		= [ Using( .ProjectX64Release )	    Using( .GenerateProjectsCommands ) ]
+    .ProjectX86ClangDebug	= [ Using( .ProjectX86ClangDebug )  Using( .GenerateProjectsCommands ) ]
+
+    .ProjectConfigs = { .ProjectX86Debug, .ProjectX86Profile, .ProjectX86Release,
+					    .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+					    .ProjectX86ClangDebug }
 }
 
 // Configurations
@@ -630,20 +660,46 @@ Alias( 'All+Tests' )
 	.Targets		= { 'All', 'Tests' }
 }
 
-// Aliases : proj (all projects)
+// Visual Studio Solution
 //------------------------------------------------------------------------------
-Alias( 'proj' )
+VSSolution( 'solution' )
 {
-	.Targets		= { 'All-proj',
-						'Core-proj',
-						'CoreTest-proj',
-						'FBuildApp-proj' 					
-						'FBuildCore-proj',
-						'FBuildTest-proj',
-						'FBuildWorker-proj',
-						'LZ4-proj',
-						'TestFramework-proj'
-					  }
+    .SolutionOutput		= '../tmp/VisualStudio/FASTBuild.sln'
+    .SolutionProjects	= { 'All-proj',
+							'Core-proj',
+							'CoreTest-proj',
+							'FBuildApp-proj' 					
+							'FBuildCore-proj',
+							'FBuildTest-proj',
+							'FBuildWorker-proj',
+							'LZ4-proj',
+							'TestFramework-proj',
+                            'UpdateSolution-proj',
+						  }
+    .SolutionBuildProject = 'All-proj'
+	.SolutionConfigs	= .ProjectConfigs
+
+    .Folder_0_External =
+	[ 
+		.Path			= '0. External'
+        .Projects		= { 'LZ4-proj' }
+    ]
+    .Folder_1_Test =
+	[ 
+		.Path			= '1. Test'
+        .Projects		= { 'CoreTest-proj', 'FBuildTest-proj', 'TestFramework-proj' }
+    ]
+    .Folder_2_Libs =
+	[ 
+		.Path			= '2. Libs'
+        .Projects		= { 'Core-proj', 'FBuildCore-proj' }
+    ]
+    .Folder_3_Apps =
+	[ 
+		.Path			= '3. Apps'
+        .Projects		= { 'FBuildApp-proj', 'FBuildWorker-proj' }
+    ]
+    .SolutionFolders	= { .Folder_0_External, .Folder_1_Test, .Folder_2_Libs, .Folder_3_Apps }
 }
 
 //------------------------------------------------------------------------------

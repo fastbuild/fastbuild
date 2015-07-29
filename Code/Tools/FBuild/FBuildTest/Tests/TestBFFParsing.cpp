@@ -30,6 +30,7 @@ private:
 	void IncludeDirective() const;
 	void OnceDirective() const;
 	void Structs() const;
+	void Struct_Concatenation() const;
 	void Struct_Unterminated() const;
 	void IncludeScope() const;
 	void IfDirective() const;
@@ -52,6 +53,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
 	REGISTER_TEST( IncludeDirective )
 	REGISTER_TEST( OnceDirective )
 	REGISTER_TEST( Structs )
+	REGISTER_TEST( Struct_Concatenation )
 	REGISTER_TEST( Struct_Unterminated )
 	REGISTER_TEST( IncludeScope )
 	REGISTER_TEST( IfDirective )
@@ -145,6 +147,13 @@ void TestBFFParsing::OnceDirective() const
 void TestBFFParsing::Structs() const
 {
 	Parse( "Data/TestBFFParsing/structs.bff" );
+}
+
+// Struct_Concatenation
+//------------------------------------------------------------------------------
+void TestBFFParsing::Struct_Concatenation() const
+{
+	Parse( "Data/TestBFFParsing/struct_concatenation.bff" );
 }
 
 // Struct_Unterminated

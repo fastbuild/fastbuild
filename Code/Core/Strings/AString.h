@@ -120,8 +120,8 @@ public:
 	static int32_t StrNCmpI( const char * a, const char * b, size_t num );
 
 protected:
-	enum { MEM_MUST_BE_FREED_FLAG	= 0x00000001 };
-	enum { RESERVED_MASK			= 0xFFFFFFFE };
+	enum : uint32_t { MEM_MUST_BE_FREED_FLAG	= 0x00000001 };
+	enum : uint32_t { RESERVED_MASK				= 0xFFFFFFFE };
 
 	inline void SetReserved( uint32_t reserved, bool mustFreeMemory )
 	{ 

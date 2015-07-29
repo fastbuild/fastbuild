@@ -1,0 +1,22 @@
+// Test MSVC -P option
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // Activate standard settings
+
+// MSVC /P (-P) option
+//------------------------------------------------------------------------------
+ObjectList( 'MSVC-P' )
+{
+	// MSVC option to write preprocessed output to file
+	.CompilerOptions		+ ' /P'
+
+	.CompilerInputFiles		= { 'Data/TestIncludeParser/MSVC-P/test.cpp' }
+	.CompilerOutputPath		= "../../../../ftmp/Test/IncludeParser/MSVC-P/"
+
+	// USe the /Fi option to make sure the Compiler and FASTBuild agree on the output location
+	.CompilerOptions		+ ' /Fi"%2"'
+	.CompilerOutputExtension= '.i'
+}
+
+//------------------------------------------------------------------------------

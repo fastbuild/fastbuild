@@ -182,6 +182,10 @@ void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
 		MemTracker::Reset();
 	#endif
 	m_Timer.Start();
+
+    #ifdef PROFILING_ENABLED
+		ProfileManager::Start( testName );
+	#endif
 }
 
 // TestEnd
@@ -189,6 +193,8 @@ void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
 void UnitTestManager::TestEnd()
 {
     #ifdef PROFILING_ENABLED
+		ProfileManager::Stop();
+
         // flush the profiling buffers, but don't profile the sync itself
         // (because it leaves an outstanding memory alloc, it looks like a leak)
         ProfileManager::SynchronizeNoTag();

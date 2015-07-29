@@ -7,7 +7,7 @@
 // Enabled in DEBUG only
 //------------------------------------------------------------------------------
 #ifdef DEBUG
-	#if !defined( __APPLE__ ) // TODO:MAC Fix MemTracker
+	#if !defined( __APPLE__ ) && !defined( __LINUX__ )// TODO:MAC TODO:LINUX Fix MemTracker
 		#define MEMTRACKER_ENABLED
 	#endif
 #endif
@@ -63,7 +63,7 @@
 
 		static uint32_t			s_Id;
 		static bool				s_Enabled;
-		static bool				s_Initialized;
+		static volatile bool	s_Initialized;
 		static uint32_t			s_AllocationCount;
 		static Allocation *		s_LastAllocation;
 		static uint64_t			s_Mutex[ sizeof( Mutex ) / sizeof( uint64_t ) ];

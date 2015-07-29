@@ -6,6 +6,7 @@
 #include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
 
 #include "BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Mem/Mem.h"
 
@@ -24,7 +25,7 @@
 	"ArrayOfStructs"
 };
 
-// CONSTRUCTOR (default value)
+// CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, VarType type )
 : m_Name( name )
@@ -267,22 +268,24 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
 	m_ArrayOfStructs.Swap( newVars );
 }
 
-// Concatenate recursively each members of the variables
+// GetMemberByName
 //------------------------------------------------------------------------------
-static const BFFVariable ** GetMemberByName_( const AString & name, const Array< const BFFVariable * > & members )
+/*static*/ const BFFVariable ** BFFVariable::GetMemberByName( const AString & name, const Array< const BFFVariable * > & members )
 {
-    ASSERT(!name.IsEmpty());
+    ASSERT( !name.IsEmpty() );
 
-    for (const BFFVariable ** it = members.Begin(); it != members.End(); ++it)
+    for ( const BFFVariable ** it = members.Begin(); it != members.End(); ++it )
     {
-        if ((*it)->GetName() == name)
+        if ( (*it)->GetName() == name )
             return it;
     }
 
     return nullptr;
 }
 
-BFFVariable * BFFVariable::DeepConcat(const AString & dstName, const BFFVariable & other) const
+// ConcatVarsRecurse
+//------------------------------------------------------------------------------
+BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFFVariable & other ) const
 {
     const BFFVariable *varDst = this;
     const BFFVariable *varSrc = &other;
@@ -292,18 +295,18 @@ BFFVariable * BFFVariable::DeepConcat(const AString & dstName, const BFFVariable
     
     // handle supported types
 
-    if (srcType != dstType)
+    if ( srcType != dstType )
     {
         // Mismatched - is there a supported conversion?
 
         // String to ArrayOfStrings
-        if ((dstType == BFFVariable::VAR_ARRAY_OF_STRINGS) &&
-            (srcType == BFFVariable::VAR_STRING))
+        if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) &&
+             ( srcType == BFFVariable::VAR_STRING) )
         {
             uint32_t num = (uint32_t)(1 + other.GetArrayOfStrings().GetSize());
             Array< AString > values(num, false);
-            values.Append(varDst->GetArrayOfStrings());
-            values.Append(varSrc->GetString());
+            values.Append( varDst->GetArrayOfStrings() );
+            values.Append( varSrc->GetString() );
 
             BFFVariable *result = FNEW(BFFVariable(dstName, values));
             FLOG_INFO("Concatenated <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num);
@@ -311,16 +314,16 @@ BFFVariable * BFFVariable::DeepConcat(const AString & dstName, const BFFVariable
         }
 
         // Struct to ArrayOfStructs
-        if ((dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS) &&
-            (srcType == BFFVariable::VAR_STRUCT))
+        if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) &&
+             ( srcType == BFFVariable::VAR_STRUCT ) )
         {
-            uint32_t num = (uint32_t)(1 + varDst->GetArrayOfStructs().GetSize());
-            Array< const BFFVariable * > values(num, false);
-            values.Append(varDst->GetArrayOfStructs());
-            values.Append(varSrc);
+            uint32_t num = (uint32_t)( 1 + varDst->GetArrayOfStructs().GetSize() );
+            Array< const BFFVariable * > values( num, false );
+            values.Append( varDst->GetArrayOfStructs() );
+            values.Append( varSrc );
 
-            BFFVariable *result = FNEW(BFFVariable(dstName, values));
-            FLOG_INFO("Concatenated <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), num);
+            BFFVariable *result = FNEW( BFFVariable( dstName, values ) );
+            FLOG_INFO( "Concatenated <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), num );
             return result;
         }
 
@@ -329,100 +332,97 @@ BFFVariable * BFFVariable::DeepConcat(const AString & dstName, const BFFVariable
     {
         // Matching Src and Dst
 
-        if (srcType == BFFVariable::VAR_STRING)
+        if ( srcType == BFFVariable::VAR_STRING )
         {
             AStackString< 2048 > finalValue;
             finalValue = varDst->GetString();
             finalValue += varSrc->GetString();
 
-            BFFVariable *result = FNEW(BFFVariable(dstName, finalValue));
-            FLOG_INFO("Concatenated <string> variable '%s' with value '%s'", dstName.Get(), finalValue.Get());
+            BFFVariable *result = FNEW( BFFVariable( dstName, finalValue ) );
+            FLOG_INFO( "Concatenated <string> variable '%s' with value '%s'", dstName.Get(), finalValue.Get() );
             return result;
         }
 
-        if (srcType == BFFVariable::VAR_ARRAY_OF_STRINGS)
+        if ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS )
         {
-            const unsigned int num = (unsigned int)(varSrc->GetArrayOfStrings().GetSize() + varDst->GetArrayOfStrings().GetSize());
+            const unsigned int num = (unsigned int)( varSrc->GetArrayOfStrings().GetSize() + varDst->GetArrayOfStrings().GetSize() );
             Array< AString > values(num, false);
-            values.Append(varDst->GetArrayOfStrings());
-            values.Append(varSrc->GetArrayOfStrings());
+            values.Append( varDst->GetArrayOfStrings() );
+            values.Append( varSrc->GetArrayOfStrings() );
 
-            BFFVariable *result = FNEW(BFFVariable(dstName, values));
-            FLOG_INFO("Concatenated <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num);
+            BFFVariable *result = FNEW( BFFVariable( dstName, values ) );
+            FLOG_INFO( "Concatenated <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num );
             return result;
         }
 
-        if (srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS)
+        if ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
         {
-            const unsigned int num = (unsigned int)(varSrc->GetArrayOfStructs().GetSize() + varDst->GetArrayOfStructs().GetSize());
-            Array< const BFFVariable * > values(num, false);
-            values.Append(varDst->GetArrayOfStructs());
-            values.Append(varSrc->GetArrayOfStructs());
+            const unsigned int num = (unsigned int)( varSrc->GetArrayOfStructs().GetSize() + varDst->GetArrayOfStructs().GetSize() );
+            Array< const BFFVariable * > values( num, false );
+            values.Append( varDst->GetArrayOfStructs() );
+            values.Append( varSrc->GetArrayOfStructs() );
 
             BFFVariable *result = FNEW(BFFVariable(dstName, values));
             FLOG_INFO("Concatenated <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), num);
             return result;
         }
 
-        if (srcType == BFFVariable::VAR_INT)
+        if ( srcType == BFFVariable::VAR_INT )
         {
-            int newVal(varSrc->GetInt());
+            int newVal( varSrc->GetInt() );
             newVal += varDst->GetInt();
 
-            BFFVariable *result = FNEW(BFFVariable(dstName, newVal));
-            FLOG_INFO("Concatenated <int> variable '%s' with value %d", dstName.Get(), newVal);
+            BFFVariable * result = FNEW( BFFVariable( dstName, newVal ) );
+            FLOG_INFO( "Concatenated <int> variable '%s' with value %d", dstName.Get(), newVal );
             return result;
         }
 
-        if (srcType == BFFVariable::VAR_BOOL)
+        if ( srcType == BFFVariable::VAR_BOOL )
         {
             // Assume + <=> OR
-            bool newVal(varSrc->GetBool());
+            bool newVal( varSrc->GetBool() );
             newVal |= varDst->GetBool();
 
-            BFFVariable *result = FNEW(BFFVariable(dstName, newVal));
+            BFFVariable * result = FNEW( BFFVariable( dstName, newVal ) );
             FLOG_INFO("Concatenated <bool> variable '%s' with value %d", dstName.Get(), newVal);
             return result;
         }
 
-        if (srcType == BFFVariable::VAR_STRUCT)
+        if ( srcType == BFFVariable::VAR_STRUCT )
         {
             const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
             // set all the variable in 
-            ASSERT(varDst); // have checked this earlier
             const Array< const BFFVariable * > & dstMembers = varDst->GetStructMembers();
 
-            BFFVariable *const result = FNEW(BFFVariable(dstName, BFFVariable::VAR_STRUCT));
-            result->m_StructMembers.SetCapacity(srcMembers.GetSize() + dstMembers.GetSize());
+            BFFVariable * const result = FNEW( BFFVariable( dstName, BFFVariable::VAR_STRUCT ) );
+            result->m_StructMembers.SetCapacity( srcMembers.GetSize() + dstMembers.GetSize() );
             Array< BFFVariable * > & allMembers = result->m_StructMembers;
 
             // keep original (dst) members where the name doesn't clash
             // or concatenate recursively values where the name clash
-            for (const BFFVariable ** it = dstMembers.Begin(); it != dstMembers.End(); ++it)
+            for ( const BFFVariable ** it = dstMembers.Begin(); it != dstMembers.End(); ++it )
             {
-                const BFFVariable ** it2 = GetMemberByName_((*it)->GetName(), srcMembers);
+                const BFFVariable ** it2 = GetMemberByName( (*it)->GetName(), srcMembers );
 
-                BFFVariable *const newVar = (it2)
-                    ? (*it2)->DeepConcat((*it2)->GetName(), **it)
-                    : FNEW(BFFVariable(**it));
-                
-                ASSERT(newVar);
+                BFFVariable * const newVar = (it2)
+                    ? (*it2)->ConcatVarsRecurse( (*it2)->GetName(), **it )
+                    : FNEW( BFFVariable( **it ) );
 
-                allMembers.Append(newVar);
+                allMembers.Append( newVar );
             }
 
             // and keep original (src) members where the name doesn't clash
-            for (const BFFVariable ** it = srcMembers.Begin(); it != srcMembers.End(); ++it)
+            for ( const BFFVariable ** it = srcMembers.Begin(); it != srcMembers.End(); ++it )
             {
-                const BFFVariable ** it2 = GetMemberByName_((*it)->GetName(), result->GetStructMembers());
-                if (nullptr == it2)
+                const BFFVariable ** it2 = GetMemberByName( (*it)->GetName(), result->GetStructMembers() );
+                if ( nullptr == it2 )
                 {
-                    BFFVariable *const newVar = FNEW(BFFVariable(**it));
-                    allMembers.Append(newVar);
+                    BFFVariable *const newVar = FNEW( BFFVariable( **it ) );
+                    allMembers.Append( newVar );
                 }
             }
 
-            FLOG_INFO("Concatenated <struct> variable '%s' with %u members", dstName.Get(), allMembers.GetSize());
+            FLOG_INFO( "Concatenated <struct> variable '%s' with %u members", dstName.Get(), allMembers.GetSize() );
             return result;
         }
     }

@@ -15,6 +15,7 @@ function generateHeaderParent()
 function generateHeaderinternal( path )
 {
 	write("<div style='height:15px;color:#D5EBFF;'></div>");
+	write("<div style='margin:auto;width:980px;box-shadow: 0px 0px 1px 0px #888888;'>");
 	write("<div>");
 	write(" <div style='width:980px;height:80px;margin:auto;background-color:white;'>");
 	write("  <a href='" + path + "home.html'><img src='" + path + "img/logo.png' style='position:relative;'/></a>");
@@ -44,6 +45,7 @@ function generateFooter()
 {
 	write("</div>");
 	write("<div class='footer'>&copy; 2012-2015 Franta Fulin</div>");
+	write("</div>");
 	write("</div>");
 }
 

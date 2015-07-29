@@ -30,7 +30,9 @@ MemPoolBlock::MemPoolBlock( size_t blockSize, size_t blockAlignment )
 MemPoolBlock::~MemPoolBlock()
 {
 	// Ensure no memory leaks
-	ASSERT( m_NumAllocations == 0 );
+	#ifdef DEBUG
+		ASSERT( m_NumAllocations == 0 );
+	#endif
 
 	// free pages
 	void ** end = m_Pages.End();
@@ -54,7 +56,9 @@ void * MemPoolBlock::Alloc( size_t size )
 		ASSERT( m_FreeBlockChain );
 	}
 
-	m_NumAllocations++;
+	#ifdef DEBUG
+		m_NumAllocations++;
+	#endif
 
 	// Take first block from free chain
 	FreeBlock * block = m_FreeBlockChain;
@@ -66,14 +70,18 @@ void * MemPoolBlock::Alloc( size_t size )
 //------------------------------------------------------------------------------
 void MemPoolBlock::Free( void * ptr )
 {
-	ASSERT( m_NumAllocations > 0 );
+	#ifdef DEBUG
+		ASSERT( m_NumAllocations > 0 );
+	#endif
 
 	// Insert free block into head of chain
 	FreeBlock * freeBlock = reinterpret_cast< FreeBlock * >( ptr );
 	freeBlock->m_Next = m_FreeBlockChain;
 	m_FreeBlockChain = freeBlock;
 
-	--m_NumAllocations;
+	#ifdef DEBUG
+		--m_NumAllocations;
+	#endif
 }
 
 // AlocPage

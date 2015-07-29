@@ -273,9 +273,14 @@ void Report::CreateOverview( const FBuildStats & stats )
 	Write( "<tr><th width=150>Item</th><th>Details</th></tr>\n" );
 
 	// Full command line
-	const char * commandLine = Env::GetCmdLine();
-	const char * exeExtension = strstr( commandLine, ".exe\"" );
-	commandLine = exeExtension ? ( exeExtension + 5 ) : commandLine; // skip .exe + closing quote
+    AStackString<> commandLineBuffer;
+    Env::GetCmdLine( commandLineBuffer );
+    #if defined( __WINDOWS__ )
+        const char * exeExtension = strstr( commandLineBuffer.Get(), ".exe\"" );
+        const char * commandLine = exeExtension ? ( exeExtension + 5 ) : commandLineBuffer.Get(); // skip .exe + closing quote
+    #else
+        const char * commandLine = commandLineBuffer.Get();
+    #endif
 	Write( "<tr><td width=80>Cmd Line Options</td><td>%s</td></tr>", commandLine );
 
 	// Target
@@ -412,6 +417,10 @@ void Report::DoCacheStats( const FBuildStats & stats )
 
 			// out of date items
 			const uint32_t	outOfDateItems		= ls.objectCount_OutOfDate;
+			if ( outOfDateItems == 0 )
+			{
+				continue; // skip library if nothing was done
+			}
 			const float		outOfDateItemsPerc	= ( (float)outOfDateItems / (float)items ) * 100.0f;
 
 			// cacheable
@@ -428,12 +437,6 @@ void Report::DoCacheStats( const FBuildStats & stats )
 
 			// stores
 			const uint32_t	cStores		= ls.objectCount_CacheStores;
-
-			// skip library if nothing was done
-			if ( outOfDateItems == 0 )
-			{
-				continue;
-			}
 
 			// start collapsable section
 			if ( numOutput == 10 )

@@ -1,31 +1,12 @@
 //
-// Build an external cache plugin
+// Use the previously built cache plugin
 //
 //------------------------------------------------------------------------------
-
-
-// Toolchain Root
-//------------------------------------------------------------------------------
-.VSBasePath			= '../../../../External/SDK/VS12.0'
-
-// General Setting
-//------------------------------------------------------------------------------
-Settings		
-{ 
-	.Environment	= { 'PATH=$VSBasePath$/Common7/IDE/;$VSBasePath$/VC/bin/',
-						'TMP=C:\Windows\Temp',
-						'SystemRoot=C:\Windows' }
-	.CachePluginDLL = '../../../../ftmp/Test/CachePlugin/CachePlugin.dll'
-	.CachePath		= 'X:\' // passed to cache plugin
-}
-
-// Toolchain
-//------------------------------------------------------------------------------
-.Compiler			= '$VSBasePath$\VC\bin\x86_amd64\cl.exe'
-
-// Toolchain Options
-//------------------------------------------------------------------------------
-.CompilerOptions	= '"%1" /Fo"%2" /c /Z7 /WX /nologo /I"./" /MT'
+#include "..\testcommon.bff"
+Using( .StandardEnvironment )
+.CachePluginDLL = '../../../../ftmp/Test/CachePlugin/CachePlugin.dll'
+.CachePath		= 'X:\' // passed to cache plugin
+Settings {} // Activate standard settings
 
 // Base compilation output
 //------------------------------------------------------------------------------

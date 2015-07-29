@@ -111,21 +111,21 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
 
 		// validates the windows path
 		bool validated = ( includeStart < includeEnd );
-		for ( ; validated && ch < includeEnd ; ++ch )
+		for ( ; validated && ( ch < includeEnd ); ++ch )
 		{
 			switch ( *ch )
 			{
-			// https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
-			case '<':
-			case '>':
-			case '"':
-			case '|':
-			case '?':
-			case '*':
-				validated = false;
-				break;
-			default:
-				break;
+    			// https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
+    			case '<':
+    			case '>':
+    			case '"':
+    			case '|':
+    			case '?':
+    			case '*':
+    				validated = false;
+    				break;
+    			default:
+    				break;
 			}
 		}
 

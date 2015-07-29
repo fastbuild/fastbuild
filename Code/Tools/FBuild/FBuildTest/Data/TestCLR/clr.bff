@@ -2,25 +2,14 @@
 ; Test the compilation of Managed C (/clr) code
 ;
 #include "..\testcommon.bff"
-
-Settings		
-{ 
-	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
-						"TMP=C:\Windows\Temp",
-						"SystemRoot=C:\Windows" }
-	.CachePath		= "C:\.fbuild.cache"
-}
-
-.Librarian			= "$VisualStudioPath$\VC\bin\lib.exe"
-.Compiler			= "$VisualStudioPath$\VC\bin\cl.exe"
-.CompilerOptions	= '/WX /nologo %1 /Fo%2 /c /Z7 /I"./" /clr'
-.LibrarianOptions	= "/NODEFAULTLIB /WX /NOLOGO /OUT:%2 %1"
-.Linker				= "$VisualStudioPath$\VC\bin\link.exe"
+Using( .StandardEnvironment )
+Settings {} // Activate standard settings
 
 .Out 				= "..\..\..\..\ftmp"
 
 Library( "CLR-Target" )
 {
+	.CompilerOptions	+ ' /clr'
 	.CompilerInputFiles	= "Data/TestCLR/a.cpp"
 	.CompilerOutputPath	= "$Out$/Test/CLR/"
 	.LibrarianOutput	= "$Out$/Test/CLR/clr.lib"
@@ -28,6 +17,7 @@ Library( "CLR-Target" )
 
 Library( "CLR-Parallel-Target" )
 {
+	.CompilerOptions	+ ' /clr'
 	.CompilerInputPath	= "Data/TestCLR/"
 	.CompilerOutputPath	= "$Out$/Test/CLR/"
 	.LibrarianOutput	= "$Out$/Test/CLR/clrmulti.lib"
@@ -38,16 +28,14 @@ Library( "CLR-Parallel-Target" )
 //
 Library( 'BrigeTest-CLR' )
 {
+	.CompilerOptions	+ ' /clr'
 	.CompilerInputFiles	= { 'Data/TestCLR/a.cpp',
 							'Data/TestCLR/b.cpp' }
 	.CompilerOutputPath	= '$Out$/Test/CLR/Bridge/'
 	.LibrarianOutput	= '$Out$/Test/CLR/Bridge/clr.lib'
 }
-Library( 'BridgeTest-CPP' )
+ObjectList( 'BridgeTest-CPP' )
 {
-	// regular C++
-	.CompilerOptions	= '/WX /nologo %1 /Fo%2 /c /Z7 /I"./"'
-
 	.CompilerInputFiles	= 'Data/TestCLR/exe.cxx'
 	.CompilerOutputPath	= '$Out$/Test/CLR/Bridge/'
 	.LibrarianOutput	= '$Out$/Test/CLR/Bridge/exe.lib'
@@ -55,11 +43,12 @@ Library( 'BridgeTest-CPP' )
 
 Executable( 'BridgeTest-Exe' )
 {
-	.LinkerOptions		= "/NOLOGO /OUT:%2 %1 /MACHINE:X86"
-						+ " /IGNORE:4001" ; don't complain about linking libs only
-						+ " /SUBSYSTEM:CONSOLE"
+	.LinkerOptions		+ ' /SUBSYSTEM:CONSOLE'
 						+ ' /ENTRY:ExeMain'
-						+ ' MSVCRT.lib'
+						+ ' kernel32.lib'
+						+ ' MSCOREE.lib'
+						+ ' msvcmrt.lib'
+						+ ' msvcrt.LIB'
 						+ ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x86"'
 						+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
 

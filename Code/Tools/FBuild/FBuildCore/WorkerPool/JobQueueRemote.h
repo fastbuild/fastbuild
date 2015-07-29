@@ -11,6 +11,7 @@
 
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Core/Process/Mutex.h"
+#include "Core/Process/Semaphore.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -37,6 +38,12 @@ public:
 
 	inline size_t GetNumWorkers() const { return m_Workers.GetSize(); }
 	void		  GetWorkerStatus( size_t index, AString & hostName, AString & status, bool & isIdle ) const;
+
+	void MainThreadWait( uint32_t timeoutMS );
+	void WakeMainThread();
+
+	void WorkerThreadWait( uint32_t timeoutMS );
+	void WakeWorkers();
 private:
 	// worker threads call these
 	friend class WorkerThread;
@@ -55,6 +62,9 @@ private:
 	Mutex				m_CompletedJobsMutex;
 	Array< Job * >		m_CompletedJobs;
 	Array< Job * >		m_CompletedJobsFailed;
+
+	Semaphore			m_MainThreadSemaphore;
+	Semaphore			m_WorkerThreadSemaphore;
 
 	Array< WorkerThread * > m_Workers;
 };

@@ -32,7 +32,8 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ReflectionInfo::ReflectionInfo()
-	: m_Properties( 0, true )
+	: m_TypeNameCRC( 0 )
+	, m_Properties( 0, true )
 	, m_SuperClass( nullptr )
 	, m_Next( nullptr )
 	, m_TypeName( nullptr )

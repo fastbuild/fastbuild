@@ -8,11 +8,11 @@
 	//--------------------------------------------------------------------------
 	VCXProject( '$ProjectName$-proj' )
 	{
-		.ProjectOutput				= '$ProjectPath$\$ProjectName$.vcxproj'
+		.ProjectOutput				= '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
 		.ProjectInputPaths			= '$ProjectPath$\'
 		.ProjectBasePath			= '$ProjectPath$\'
 
-		.LocalDebuggerCommand		= '^$(SolutionDir)..\..\..\tmp\^$(Configuration)\Core\CoreTest\CoreTest.exe'
+		.LocalDebuggerCommand		= '^$(SolutionDir)..\^$(Configuration)\Core\CoreTest\CoreTest.exe'
 	}
 
 	// Unity

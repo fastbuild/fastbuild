@@ -8,11 +8,12 @@
 	//--------------------------------------------------------------------------
 	VCXProject( '$ProjectName$-proj' )
 	{
-		.ProjectOutput				= '$ProjectPath$\$ProjectName$.vcxproj'
+		.ProjectOutput				= '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
 		.ProjectInputPaths			= '$ProjectPath$\'
 		.ProjectBasePath			= '$ProjectPath$\'
 
-		.LocalDebuggerCommand		= '^$(SolutionDir)..\..\..\tmp\^$(Configuration)\Tools\FBuild\FBuildTest\FBuildTest.exe'
+		.LocalDebuggerCommand		= '^$(SolutionDir)..\^$(Configuration)\Tools\FBuild\FBuildTest\FBuildTest.exe'
+		.LocalDebuggerWorkingDirectory = '^$(SolutionDir)..\..\Code\Tools\FBuild\FBuildTest'
 	}
 
 	// Unity

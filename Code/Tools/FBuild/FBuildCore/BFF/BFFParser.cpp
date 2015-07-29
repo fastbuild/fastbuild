@@ -636,7 +636,7 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
 		return false;
 	}
 
-	// unescape and subsitute embedded variables
+	// unescape and substitute variables
 	AStackString<> include;
 	if ( PerformVariableSubstitutions( stringStart, iter, include ) == false )
 	{

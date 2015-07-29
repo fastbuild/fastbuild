@@ -117,7 +117,7 @@ protected:
 	uint32_t m_Offset:16; // validated by MAX_OFFSET
 	uint32_t m_Type:8;
 	uint32_t m_IsArray:1;
-	uint32_t m_Unused:7;
+	//uint32_t m_Unused:7;
 
 	#if defined( REFLECTION_KEEP_STRING_NAMES )
 		const char * m_Name;

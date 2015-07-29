@@ -160,16 +160,6 @@ void TestTestTCPConnectionPool::TestConnectionCount() const
 //------------------------------------------------------------------------------
 void TestTestTCPConnectionPool::TestDataTransfer() const
 {
-	const uint16_t testPort( TEST_PORT );
-
-	// a big piece of data, initialized to some known pattern
-	#define maxDataSize size_t( 1024 * 1024 * 10 )
-	AutoPtr< char > data( (char *)ALLOC( maxDataSize ) );
-	for ( size_t i=0; i< maxDataSize; ++i )
-	{
-		data.Get()[ i ] = (char)i;
-	}
-
 	// a special server which will assert that it receives some expected data
 	class TestServer : public TCPConnectionPool
 	{
@@ -186,6 +176,17 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
 		bool m_ReceivedOK;
 		size_t m_DataSize;
 	};
+
+	const uint16_t testPort( TEST_PORT );
+
+	// a big piece of data, initialized to some known pattern
+	#define maxDataSize size_t( 1024 * 1024 * 10 )
+	AutoPtr< char > data( (char *)ALLOC( maxDataSize ) );
+	for ( size_t i=0; i< maxDataSize; ++i )
+	{
+		data.Get()[ i ] = (char)i;
+	}
+
 	TestServer server;
 	TEST_ASSERT( server.Listen( testPort ) );
 

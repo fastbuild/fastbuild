@@ -140,14 +140,6 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
 
     FLOG_BUILD( "SLN: %s\n", fileName.Get() );
 
-    // ensure path exists (normally handled by framework, but SLN
-    // is not a "file" node)
-    if ( EnsurePathExistsForFile( fileName ) == false )
-    {
-        FLOG_ERROR( "SLN - Invalid path for '%s' (error: %u)", fileName.Get(), Env::GetLastErr() );
-        return false;
-    }
-
     // actually write
     FileStream f;
     if ( !f.Open( fileName.Get(), FileStream::WRITE_ONLY ) )

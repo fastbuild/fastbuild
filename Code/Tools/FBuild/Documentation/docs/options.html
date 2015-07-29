@@ -51,12 +51,16 @@
     <td>Enable multiple options for IDE integration.</td>
   </tr>
   <tr>
-    <td><a href="#jx">-jX</a></td>
-    <td>Explicitly set worker thread count.</td>
+    <td><a href="#jx">-j[x]</a></td>
+    <td>Explicitly set local worker thread count.</td>
   </tr>
   <tr>
     <td><a href="#noprogress">-noprogress</a></td>
     <td>Don't show the progress bar while building.</td>
+  </tr>
+  <tr>
+    <td><a href="#nostoponerror">-nostoponerror</a></td>
+    <td>Don't stop building on first error.</td>
   </tr>
   <tr>
     <td><a href="#report">-report</a></td>
@@ -166,18 +170,35 @@ The following options are enabled:
 </div>
 
 
-    <div class='newsitemheader' id="jx">-jX</div>
+    <div class='newsitemheader' id="jx">-j[x]</div>
     <div class='newsitembody'>
-<p>Overrides the number of tasks which can be built in parallel, which by default is controlled by the standard NUMBER_OF_PROCESSORS windows environment variable.</p>
-<p>A value of 0 for X indicates that no additional threads should be spawned, and build graph processing and compilation should occur on the same thread.  This can be useful for buid process debugging, especially when combined with the '-verbose' option.</p>
-<p>Positive values can be used to exactly set the number of tasks which can be performed in parallel.  This can be used to limit CPU usage on a machine that needs to perform other work while compilation is in progress.  Values greater than the number of physical processors are accepted, but will almost certainly result in degraded performance.</p>
-<p><b>Generally, this option should be omitted for optimal compilation performance, but it's possible that on some systems, tweaking this might yield improved performance.</b></p>
+<p><b>Generally, the default behaviour will give best performance, and this option should
+only be used in very specific situations.</b></p>
+<p>The -j[x] option allows you to artificially control local parallelism by modifying the local thread pool size.</p>
+<p>FASTBuild will normally determine the optimal number of local threads to use by detecting the number of hardware
+cores present on the host. The -j option allows you to override this.</p>
+<p>Positive values for x can be used to set the number of tasks which can be performed locally in parallel. This can be used
+to limit CPU usage on a machine that needs to perform other work while compilation is in progress.  Values greater than the 
+number of physical processors are also accepted, but will almost always result in degraded performance.</p>
+<p>A value of 0 for x indicates that no additional threads should be spawned, and build graph processing and compilation 
+should occur on the same thread.  This can be useful for build process debugging, especially when combined with the 
+'-verbose' option.</p>
+<p>This option has no direct bearing on distributed compilation, but modifying local parallelism will reduce the ability
+of FASTBuild to distribute work efficiently.</p>
 </div>
 
     <div class='newsitemheader' id="noprogress">-noprogress</div>
     <div class='newsitembody'>
 <p>Suppresses the progress bar that is normally shown while compiling.</p>
 <p>This should be used when targetting compilation from within Visual Studio or another IDE. (or use -vs)</p>
+</div>
+
+    <div class='newsitemheader' id="nostoponerror">-nostoponerror</div>
+    <div class='newsitembody'>
+<p>When encountering build errors, FASTBuild will normally stop as quickly as possible.</p>
+<p>-nostoponerror instructs FASTBuild to instead build as much as possible before stopping when failures occur. This is
+useful if you want to see as many errors as possible in your compilation output.</p>
+<p>NOTE: When specifying multiple targets to compile on the command line, -nostoponerror is implied.</p>
 </div>
 
     <div class='newsitemheader' id="report">-report</div>

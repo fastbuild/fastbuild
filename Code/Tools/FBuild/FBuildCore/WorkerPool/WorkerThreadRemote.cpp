@@ -69,9 +69,6 @@ WorkerThreadRemote::~WorkerThreadRemote()
 			// loop again to get another job
 			continue;
 		}
-
-		// no work to do right now
-		Thread::Sleep( 16 ); // wait and try again later
 	}
 
 	m_Exited = true;

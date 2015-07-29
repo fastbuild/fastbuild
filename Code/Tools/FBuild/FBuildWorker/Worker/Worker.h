@@ -36,6 +36,7 @@ private:
 	void UpdateAvailability();
 	void UpdateUI();
 	void CheckForExeUpdate();
+    bool HasEnoughDiskSpace();
 
 	static void ShowMessageBox( const char * fmtString, ... );
 
@@ -52,6 +53,10 @@ private:
 	bool				m_RestartNeeded;
 	Timer				m_UIUpdateTimer;
 	FileStream			m_TargetIncludeFolderLock;
+    #if defined( __WINDOWS__ )
+        Timer               m_TimerLastDiskSpaceCheck;
+        int32_t             m_LastDiskSpaceResult;      // -1 : No check done yet. 0=Not enough space right now. 1=OK for now.
+    #endif
 };
 
 //------------------------------------------------------------------------------

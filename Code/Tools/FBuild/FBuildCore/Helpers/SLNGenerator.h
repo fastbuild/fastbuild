@@ -84,10 +84,7 @@ private:
     void Write( const char * fmtString, ... );
 
     // working buffer
-    AString m_Tmp;
-
-    // final output
-    AString m_OutputSLN;
+    AString m_Output;
 };
 
 //------------------------------------------------------------------------------

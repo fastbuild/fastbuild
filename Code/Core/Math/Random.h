@@ -19,7 +19,7 @@ public:
 	Random();
 
 	// seed with a specific value
-	inline Random( uint32_t seed ) : m_Seed( seed ) {}
+	explicit inline Random( uint32_t seed ) : m_Seed( seed ) {}
 
 	// random number from 0 to RAND_MAX
     uint32_t GetRand();

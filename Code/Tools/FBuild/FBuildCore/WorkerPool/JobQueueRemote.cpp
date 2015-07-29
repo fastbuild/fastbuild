@@ -93,14 +93,47 @@ void JobQueueRemote::GetWorkerStatus( size_t index, AString & hostName, AString 
 	( (WorkerThreadRemote *)m_Workers[ index ] )->GetStatus( hostName, status, isIdle );
 }
 
+// MainThreadWait
+//------------------------------------------------------------------------------
+void JobQueueRemote::MainThreadWait( uint32_t timeoutMS )
+{
+	PROFILE_SECTION( "MainThreadWait" )
+	m_MainThreadSemaphore.Wait( timeoutMS );
+}
+
+// WakeMainThread
+//------------------------------------------------------------------------------
+void JobQueueRemote::WakeMainThread()
+{
+	m_MainThreadSemaphore.Signal();
+}
+
+// WorkerThreadWait
+//------------------------------------------------------------------------------
+void JobQueueRemote::WorkerThreadWait( uint32_t timeoutMS )
+{
+	PROFILE_SECTION( "WorkerThreadWait" )
+	m_WorkerThreadSemaphore.Wait( timeoutMS );
+}
+
+// WakeWorkers
+//------------------------------------------------------------------------------
+void JobQueueRemote::WakeWorkers()
+{
+	m_WorkerThreadSemaphore.Signal();
+}
+
 // QueueJob (Main Thread)
 //------------------------------------------------------------------------------
 void JobQueueRemote::QueueJob( Job * job )
 {
-	MutexHolder m( m_PendingJobsMutex );
-	m_PendingJobs.Append( job );
-}
+	{
+		MutexHolder m( m_PendingJobsMutex );
+		m_PendingJobs.Append( job );
+	}
 
+	WakeWorkers();
+}
 
 // GetCompletedJob
 //------------------------------------------------------------------------------
@@ -184,6 +217,8 @@ void JobQueueRemote::CancelJobsWithUserData( void * userData )
 //------------------------------------------------------------------------------
 Job * JobQueueRemote::GetJobToProcess()
 {
+	WorkerThreadWait( 100 );
+
 	MutexHolder m( m_PendingJobsMutex );
 	if ( m_PendingJobs.IsEmpty() )
 	{
@@ -222,15 +257,19 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 	}
 
 	// push to appropriate completion queue
-	MutexHolder m( m_CompletedJobsMutex );
-	if ( success )
 	{
-		m_CompletedJobs.Append( job );
+		MutexHolder m( m_CompletedJobsMutex );
+		if ( success )
+		{
+			m_CompletedJobs.Append( job );
+		}
+		else
+		{
+			m_CompletedJobsFailed.Append( job );
+		}
 	}
-	else
-	{
-		m_CompletedJobsFailed.Append( job );
-	}
+
+	WakeMainThread();
 }
 
 // DoBuild

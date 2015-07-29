@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h"
@@ -17,13 +17,14 @@
 
 // TestIncludeParser
 //------------------------------------------------------------------------------
-class TestIncludeParser : public UnitTest
+class TestIncludeParser : public FBuildTest
 {
 private:
 	DECLARE_TESTS
 
 	void TestMSVCPreprocessedOutput() const;
 	void TestMSVCShowIncludesOutput() const;
+	void TestMSVC_P() const;
 	void TestGCCPreprocessedOutput() const;
 	void TestClangPreprocessedOutput() const;
 	void TestClangMSExtensionsPreprocessedOutput() const;
@@ -36,6 +37,7 @@ REGISTER_TESTS_BEGIN( TestIncludeParser )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( TestMSVCPreprocessedOutput );
         REGISTER_TEST( TestMSVCShowIncludesOutput );
+		REGISTER_TEST( TestMSVC_P );
     #endif
 	REGISTER_TEST( TestGCCPreprocessedOutput );
 	REGISTER_TEST( TestClangPreprocessedOutput );
@@ -103,6 +105,37 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
 
 	float time = t.GetElapsed();
 	OUTPUT( "MSVC /showincludes   : %2.3fs (%2.1f MiB/sec)\n", time, ( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+}
+
+// TestMSVC_P
+//------------------------------------------------------------------------------
+void TestIncludeParser::TestMSVC_P() const
+{
+	FBuildOptions options;
+	options.m_ShowSummary = true; // required to generate stats for node count checks
+	options.m_ConfigFile = "Data/TestIncludeParser/MSVC-P/fbuild.bff";
+
+	FBuild fBuild( options );
+	fBuild.Initialize();
+
+	const AStackString<> file( "../../../../ftmp/Test/IncludeParser/MSVC-P/test.i" );
+
+	// clean up anything left over from previous runs
+	EnsureFileDoesNotExist( file );
+
+	// Build
+	TEST_ASSERT( fBuild.Build( AStackString<>( "MSVC-P" ) ) );
+
+	// make sure all output files are as expected
+	EnsureFileExists( file );
+
+	// Check stats
+	//				 Seen,	Built,	Type
+	CheckStatsNode ( 1,		1,		Node::OBJECT_LIST_NODE );
+	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
+	CheckStatsNode ( 1,		1,		Node::COMPILER_NODE );
+	CheckStatsNode ( 1,		1,		Node::OBJECT_NODE );
+	CheckStatsTotal( 4,		4 );
 }
 
 // TestGCCPreprocessedOutput

@@ -178,12 +178,12 @@ BFFStackFrame::~BFFStackFrame()
 	}
 }
 
-// ConcatStructs
+// ConcatVars
 //------------------------------------------------------------------------------
-BFFVariable * BFFStackFrame::ConcatVars(const AString & name,
-                                        const BFFVariable * lhs,
-                                        const BFFVariable * rhs,
-                                        BFFStackFrame * frame )
+BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
+                                         const BFFVariable * lhs,
+                                         const BFFVariable * rhs,
+                                         BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
 
@@ -191,8 +191,8 @@ BFFVariable * BFFStackFrame::ConcatVars(const AString & name,
 	ASSERT( lhs );
     ASSERT( rhs );
 
-    BFFVariable *const newVar = lhs->DeepConcat(name, *rhs);
-    frame->CreateOrReplaceVarMutableNoRecurse(newVar);
+    BFFVariable *const newVar = lhs->ConcatVarsRecurse( name, *rhs );
+    frame->CreateOrReplaceVarMutableNoRecurse( newVar );
 
     return newVar;
 }
@@ -308,7 +308,7 @@ BFFVariable * BFFStackFrame::GetVarMutableNoRecurse( const AString & name )
 	return nullptr;
 }
 
-// GetVarMutableNoRecurse
+// CreateOrReplaceVarMutableNoRecurse
 //------------------------------------------------------------------------------
 void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable *var )
 {
@@ -328,7 +328,7 @@ void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable *var )
 		}
 	}
 
-    m_Variables.Append(var);
+    m_Variables.Append( var );
 }
 
 //------------------------------------------------------------------------------

@@ -22,7 +22,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionSLN::FunctionSLN()
-: Function( "SLN" )
+: Function( "VSSolution" )
 {
 }
 

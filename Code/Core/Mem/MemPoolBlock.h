@@ -31,7 +31,9 @@ private:
 	FreeBlock * m_FreeBlockChain;
 
 	// total number of active allocations
-	uint32_t m_NumAllocations;
+	#ifdef DEBUG
+		uint32_t m_NumAllocations;
+	#endif
 
 	// internal control params
 	size_t		m_BlockSize;

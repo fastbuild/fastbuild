@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - VSSolution</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>VSSolution</h1>
+
+    <div class='newsitembody'>
+  	  <p><font color='red'>NOTE:</font> Solution generation syntax may be refined slightly in future versions as the capabilities are extended.</p>
+    </div>
+
+    <div id='unity' class='newsitemheader'>
+      Summary
+    </div>
+    <div class='newsitembody'>
+      <p>
+Generates a Solution file for use with Visual Studio, allowing integration of FASTBuild into Visual Studio.
+      </p>
+<div class='code'>VSSolution( 'alias' )                 // (optional) Alias
+{
+  // Basic options
+  .SolutionOutput                     // Path to Solution file to be generated
+  .SolutionProjects                   // Project(s) to include in Solution
+  .SolutionConfigs                    // (optional) Solution configurations (see below)
+  .SolutionBuildProject               // (optional) Project set to build when "Build Solution" is selected
+  
+  // Folders
+  .SolutionFolders                    // (optional) Folders to organize projects (see below)
+  
+  // Version Info  
+  .SolutionVisualStudioVersion        // (optional) Version of Solution (default "14.0.22823.1" VS2015 RC)
+  .SolutionMinimumVisualStudioVersion // (optional) Min version of Solution (default "10.0.40219.1" VS2010 Express)
+}
+
+// SolutionConfigs - structs in the following format
+//---------------------------------------------------
+[
+  .Platform                           // Platform(s) (default "Win32", "x64")
+  .Config                             // Config(s) (default "Debug", "Release")
+]
+
+// SolutionFolders - structs in the following format
+//---------------------------------------------------
+[
+  .Path                               // Folder path in Solution
+  .Projects                           // Project(s) to store in this folder
+]
+</div>
+    </div>
+
+    <div id='unity' class='newsitemheader'>
+      Details
+    </div>
+    <div class='newsitembody'>
+      <p>
+        VSSolution generates a Visual Studio solution, referencing projects generated with <a href='vcxproject.html'>VCXProject</a>. It supports
+        organizing the Solution with in folders. Solutions are compatible with VS 2010 and later.
+      </p>
+    </div>
+
+    <div id='unity' class='newsitemheader'>
+      Basic Options
+    </div>
+    <div class='newsitembody'>
+      
+      <p><b>.SolutionOutput</b> - String - (Required)</p>
+      <p>The output location of the .sln file.</p>
+      Example:
+      <div class='code'>.SolutionOutput = 'tmp/VisualStudio/MySolution.sln'</div>
+      <hr>
+      
+      <p><b>.SolutionProjects</b> - String or ArrayOfStrings - (Required)</p>
+      <p>The previously defined <a href='vcxproject.html'>VCXProject</a> item(s) to include in the solution.</p>
+      Example:
+      <div class='code'>.SolutionProjects =
+{
+  'LibraryA-proj' // Previously defined with VCXProject
+  'LibraryB-proj' // Previously defined with VCXProject
+  'Exe-proj'      // Previously defined with VCXProject
+}</div>
+      <hr>
+      
+      <p><b>.SolutionConfigs</b> - Array of SolutionConfig Structure(s) - (Optional)</p>
+      <p>The platform/configuration pairs you wish to appear in Visual Studio can be controlled here. They need
+         to match those specified in your generated projects.</p>
+      Example:
+      <div class='code'>.Solution_Config_Debug =
+[
+  .Platform = 'Win32'
+  .Config   = 'Debug'
+]
+.Solution_Config_Release =
+[
+  .Platform = 'Win32'
+  .Config   = 'Release'
+]
+.SolutionConfigs = { .Solution_Config_Debug, .Solution_Config_Release }</div>
+      <p>If not specified, a default matrix of Win32|Debug, Win32|Release, x64|Debug and x64|Release configurations is used.</p>
+      <hr>
+      
+      <p><b>.SolutionBuildProject</b> - String - (Optional)</p>
+      <p>The root project which will be compiled when a Solution Build is performed.</p>
+      <div class='code'>.SolutionBuildProject = 'Exe-proj'</div> 
+      <p>If not specified, no project will be active in a Solution Build.</p>
+         
+      </p>
+    </div>
+
+
+    <div id='unity' class='newsitemheader'>
+      Folders
+    </div>
+    <div class='newsitembody'>
+      
+      <p><b>.SolutionFolders</b> - Array of SolutionFolder Structure(s) - (Optional)</p>
+      <p>Projects within a Solution can be organized into folders.</p>
+      Example:
+      <div class='code'>.FolderA =
+[
+  .Path      = 'Libraries'
+  .Projects  = { 'LibraryA-proj', 'LibraryB-proj' }
+]
+.FolderB = 
+[
+  .Path      = 'Executables'
+  .Projects  = { 'Exe-proj' }
+]
+.SolutionFolders = { .FolderA, .FolderB }</div>
+      <p>If not specified, all Project files will appear as a flat list in the Solution.</p>
+
+      </p>
+    </div>
+
+
+    <div id='unity' class='newsitemheader'>
+      Version Info
+    </div>
+    <div class='newsitembody'>
+        
+      <p><b>.SolutionVisualStudioVersion</b> - String - (Optional)</p>
+      <p>Specify the VisualStudio version that you would like to appear as the generator of this Solution file.</p>
+      Example:
+      <div class='code'>.SolutionVisualStudioVersion = "14.0.22823.1"</div>
+      <p>If not specified, "14.0.22823.1" will be used (VS2015 RC).</p>
+      <hr>
+  
+      <p><b>.SolutionMinimumVisualStudioVersion</b> - String - (Optional)</p>
+      <p>Specify the minimum VisualStudio version necessary toopen this Solution file.</p>
+      Example:
+      <p>If not specified, "10.0.40219.1" will be used (VS2010 Express).</p>
+      <div class='code'>.SolutionMinimumVisualStudioVersion = "10.0.40219.1"</div>
+        
+      </p>
+    </div>
+    
+  <script>generateFooter()</script>
+</body>
+</html>

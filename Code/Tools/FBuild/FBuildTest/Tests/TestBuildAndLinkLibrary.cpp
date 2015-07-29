@@ -60,9 +60,15 @@ void TestBuildAndLinkLibrary::TestBuildLib() const
 	fBuild.Initialize();
 
 	const AStackString<> lib( "../../../../ftmp/Test/BuildAndLinkLibrary/test.lib" );
-	const AStackString<> obj1( "../../../../ftmp/Test/BuildAndLinkLibrary/a.obj" );
-	const AStackString<> obj2( "../../../../ftmp/Test/BuildAndLinkLibrary/b.obj" );
-	const AStackString<> obj3( "../../../../ftmp/Test/BuildAndLinkLibrary/c.obj" );
+	#if defined( __WINDOWS__ )
+		const AStackString<> obj1( "../../../../ftmp/Test/BuildAndLinkLibrary/a.obj" );
+		const AStackString<> obj2( "../../../../ftmp/Test/BuildAndLinkLibrary/b.obj" );
+		const AStackString<> obj3( "../../../../ftmp/Test/BuildAndLinkLibrary/c.obj" );
+	#else
+		const AStackString<> obj1( "../../../../ftmp/Test/BuildAndLinkLibrary/a.o" );
+		const AStackString<> obj2( "../../../../ftmp/Test/BuildAndLinkLibrary/b.o" );
+		const AStackString<> obj3( "../../../../ftmp/Test/BuildAndLinkLibrary/c.o" );
+	#endif
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( lib );
