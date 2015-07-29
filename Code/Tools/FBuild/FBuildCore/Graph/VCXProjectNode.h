@@ -47,6 +47,7 @@ public:
 
 	static Node * Load( IOStream & stream );
 	virtual void Save( IOStream & stream ) const;
+
 private:
 	virtual BuildResult DoBuild( Job * job );
 
