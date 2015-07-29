@@ -11,6 +11,7 @@
 .VisualStudioToolChain = 
 [
 	.Compiler			= '$VisualStudioPath$\VC\bin\cl.exe'
+	.CompilerX64		= '$VisualStudioPath$\VC\bin\x86_amd64\cl.exe'
 	.Librarian			= '$VisualStudioPath$\VC\bin\lib.exe'
 	.Linker				= '$VisualStudioPath$\VC\bin\link.exe'
 
@@ -29,7 +30,7 @@
 [
 	.Defines			= ' /DDEBUG /D_DEBUG'
 ]
-.VisualStudionIncludePaths = ' /I"$VisualStudioPath$\VC\include"'
+.VisualStudioIncludePaths = ' /I"$VisualStudioPath$\VC\include"'
 
 //==============================================================================
 // WindowsSDK

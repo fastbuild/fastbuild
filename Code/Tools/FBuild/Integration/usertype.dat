@@ -1,5 +1,6 @@
 endif
 if
+import
 in
 include
 once
@@ -21,6 +22,7 @@ Test
 Unity
 Using
 VCXProject
+VSSolution
 
 AdditionalOptions
 ApplicationEnvironment
@@ -102,6 +104,13 @@ ProjectFileTypes
 ProjectReferences
 ProjectProjectReferences
 RootNamespace
+SolutionBuildProject
+SolutionConfigs
+SolutionFolders
+SolutionOutput
+SolutionProjects
+SolutionVisualStudioVersion
+SolutionMinimumVisualStudioVersion
 Source
 SourceExcludePaths
 SourcePaths

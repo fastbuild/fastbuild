@@ -26,6 +26,7 @@
 #include "LibraryNode.h"
 #include "ObjectListNode.h"
 #include "ObjectNode.h"
+#include "SLNNode.h"
 #include "TestNode.h"
 #include "UnityNode.h"
 #include "VCXProjectNode.h"
@@ -234,6 +235,46 @@ bool NodeGraph::Load( IOStream & stream, bool & needReparsing )
 			FBuild::Get().SetEnvironmentString( envString.Get(), envStringSize, libEnvVar );
 		}
 
+		// imported environment variables
+		uint32_t importedEnvironmentsVarsSize = 0;
+		if ( stream.Read( importedEnvironmentsVarsSize ) == false )
+		{
+			return false;
+		}
+		if ( importedEnvironmentsVarsSize > 0 )
+		{
+			AStackString<> varName;
+			AStackString<> varValue;
+			uint32_t savedVarHash = 0;
+			uint32_t importedVarHash = 0;
+
+			for ( uint32_t i = 0; i < importedEnvironmentsVarsSize; ++i )
+			{
+				if ( stream.Read( varName ) == false )
+				{
+					return false;
+				}
+				if ( stream.Read( savedVarHash ) == false )
+				{
+					return false;
+				}
+				if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), varValue, importedVarHash ) == false )
+				{
+					// make sure the user knows why some things might re-build
+					FLOG_WARN( "'%s' Environment variable was not found - BFF will be re-parsed\n", varName.Get() );
+					needReparsing = true;
+					return true;
+				}
+				if ( importedVarHash != savedVarHash )
+				{
+					// make sure the user knows why some things might re-build
+					FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", varName.Get() );
+					needReparsing = true;
+					return true;
+				}
+			}
+		}
+
 		// check if 'LIB' env variable has changed
 		uint32_t libEnvVarHashInDB( 0 );
 		if ( stream.Read( libEnvVarHashInDB ) == false )
@@ -366,6 +407,18 @@ void NodeGraph::Save( IOStream & stream ) const
 			AStackString<> libEnvVar;
 			FBuild::Get().GetLibEnvVar( libEnvVar );
 			stream.Write( libEnvVar );
+		}
+
+		// imported environment variables
+		const Array< FBuild::EnvironmentVarAndHash > & importedEnvironmentsVars = FBuild::Get().GetImportedEnvironmentVars();
+		const uint32_t importedEnvironmentsVarsSize = static_cast<uint32_t>( importedEnvironmentsVars.GetSize() );
+		ASSERT( importedEnvironmentsVarsSize == importedEnvironmentsVars.GetSize() );
+		stream.Write( importedEnvironmentsVarsSize );
+		for ( uint32_t i = 0; i < importedEnvironmentsVarsSize; ++i )
+		{
+			const FBuild::EnvironmentVarAndHash & varAndHash = importedEnvironmentsVars[i];
+			stream.Write( varAndHash.GetName() );
+			stream.Write( varAndHash.GetHash() );
 		}
 
 		// 'LIB' env var hash
@@ -852,6 +905,33 @@ VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
 	AddNode( node );
 	return node;
 }
+
+// CreateSLNNode
+//------------------------------------------------------------------------------
+SLNNode * NodeGraph::CreateSLNNode(	const AString & solutionOutput,
+									const AString & solutionBuildProject,
+									const AString & solutionVisualStudioVersion,
+                        			const AString & solutionMinimumVisualStudioVersion,
+									const Array< VSProjectConfig > & configs,
+									const Array< VCXProjectNode * > & projects,
+									const Array< SLNSolutionFolder > & folders )
+{
+	ASSERT( Thread::IsMainThread() );
+
+	AStackString< 1024 > fullPath;
+	CleanPath( solutionOutput, fullPath );
+
+	SLNNode * node = FNEW( SLNNode( fullPath,
+									solutionBuildProject,
+									solutionVisualStudioVersion,
+									solutionMinimumVisualStudioVersion,
+									configs,
+									projects,
+									folders ) );
+	AddNode( node );
+	return node;
+}
+
 
 // CreateObjectListNode
 //------------------------------------------------------------------------------

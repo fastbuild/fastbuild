@@ -82,6 +82,13 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files, bool filterBy
 	}
 }
 
+// GetDeterministicProjectGUID
+//------------------------------------------------------------------------------
+/*static*/ void VSProjectGenerator::FormatDeterministicProjectGUID( AString & guid, const AString & projectName )
+{
+	guid.Format( "{%08x-6c94-4f93-bc2a-7f5284b7d434}", CRC32::Calc( projectName ) );
+}
+
 // GenerateVCXProj
 //------------------------------------------------------------------------------
 const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile,
@@ -186,7 +193,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 	AStackString<> guid;
 	if ( m_ProjectGuid.IsEmpty() )
 	{
-		guid.Format( "{%08x-6c94-4f93-bc2a-7f5284b7d434}", CRC32::Calc( m_ProjectName ) );
+		FormatDeterministicProjectGUID( guid, m_ProjectName );
 	}
 	else
 	{

@@ -731,6 +731,7 @@ const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, ui
 Client::ServerState::ServerState() 
 	: m_Connection( nullptr )
 	, m_CurrentMessage( nullptr ) 
+	, m_NumJobsAvailable( 0 )
 	, m_Jobs( 16, true )
 	, m_Blacklisted( false )
 { 

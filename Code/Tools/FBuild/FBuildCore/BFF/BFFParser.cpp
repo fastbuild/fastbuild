@@ -598,6 +598,10 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 	{
 		return ParseEndIfDirective( directiveStartIter );
 	}
+	else if ( directive == "import" )
+	{
+		return ParseImportDirective( directiveStart, iter );
+	}
 
 	// unknown
 	Error::Error_1030_UnknownDirective( directiveStartIter, directive );
@@ -632,7 +636,13 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
 		return false;
 	}
 
-	AStackString<> include( stringStart.GetCurrent(), iter.GetCurrent() );
+	// unescape and substitute variables
+	AStackString<> include;
+	if ( PerformVariableSubstitutions( stringStart, iter, include ) == false )
+	{
+		return false;
+	}
+
 	iter++; // skip closing quote before returning
 
 	FLOG_INFO( "Including: %s\n", include.Get() );
@@ -805,6 +815,65 @@ bool BFFParser::CheckIfCondition( const BFFIterator & conditionStart, const BFFI
 	// We found an expression we don't understand
 	Error::Error_1036_UnknownTokenInIfDirective( conditionStart );
 	return false;
+}
+
+// ParseImportDirective
+//------------------------------------------------------------------------------
+bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+{
+	iter.SkipWhiteSpace();
+
+	// make sure we haven't hit the end of the file
+	if ( iter.IsAtEnd() )
+	{
+		Error::Error_1012_UnexpectedEndOfFile( directiveStart );
+		return false;
+	}
+
+	// make sure this is a variable name
+	if ( iter.IsAtValidVariableNameCharacter() == false )
+	{
+		Error::Error_1013_UnexpectedCharInVariableName( iter, nullptr );
+		return false;
+	}
+
+	// find the end of the variable name
+	const BFFIterator varNameStart( iter );
+	iter.SkipVariableName();
+	if ( iter.IsAtEnd() )
+	{
+		Error::Error_1012_UnexpectedEndOfFile( iter );
+		return false;
+	}
+	const BFFIterator varNameEnd( iter );
+
+	// sanity check it is a sensible length
+	size_t varNameLen = varNameStart.GetDistTo( varNameEnd );
+	if ( varNameLen > MAX_VARIABLE_NAME_LENGTH )
+	{
+		Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)varNameLen, (uint32_t)MAX_VARIABLE_NAME_LENGTH );
+		return false;
+	}
+	AStackString<> varName( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
+
+	// look for varName in system environment
+	AStackString<> varValue;
+	uint32_t varHash = 0;
+	if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), varValue, varHash ) == false )
+	{
+		Error::Error_1009_UnknownVariable( varNameStart, nullptr );
+		return false;
+	}
+
+	// add the dot to variable name
+	varName = ".";
+	varName.Append( varNameStart.GetCurrent(), varNameLen );
+
+	// import variable in current scope
+	BFFStackFrame::SetVarString( varName, varValue );
+	FLOG_INFO( "Imported <string> variable '%s' with value '%s' from system environment", varName.Get(), varValue.Get() );
+
+	return true;
 }
 
 // StoreVariableString
@@ -1295,37 +1364,8 @@ bool BFFParser::StoreVariableToVariable( const char * varNameDstStart, const cha
 			const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
 			if ( concat )
 			{
-				// set all the variable in 
-				ASSERT( varDst ); // have checked this earlier
-				const Array< const BFFVariable * > & dstMembers = varDst->GetStructMembers();
-
-				// we'll take all the src members
-				Array< const BFFVariable * > allMembers( srcMembers.GetSize() + dstMembers.GetSize(), false );
-				allMembers = srcMembers;
-
-				// and keep original (dst) members where the name doesn't clash
-				for ( const BFFVariable ** it = dstMembers.Begin(); it != dstMembers.End(); ++it )
-				{
-					// if the existing members with conflicting names
-					bool exists = false;
-					for ( const BFFVariable ** it2 = srcMembers.Begin(); it2 != srcMembers.End(); ++it2 )
-					{
-						if ( ( *it2 )->GetName() == ( *it )->GetName() )
-						{
-							// already exists in src data, which will override existing in dst
-							exists = true;
-							break;
-						}
-					}
-					if ( exists == false )
-					{
-						// keep existing dst since there is no src override
-						allMembers.Append( *it );
-					}
-				}
-
-				BFFStackFrame::SetVarStruct( dstName, allMembers );
-				FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), allMembers.GetSize() );
+				BFFVariable *const newVar = BFFStackFrame::ConcatVars( dstName, varSrc, varDst );
+				FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), newVar->GetStructMembers().GetSize() );
 			}
 			else
 			{

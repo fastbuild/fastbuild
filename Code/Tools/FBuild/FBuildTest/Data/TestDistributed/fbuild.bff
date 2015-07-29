@@ -79,7 +79,7 @@ Library( "forceinclude" )
 // Make sure we link to check that debug info is correctly retained
 ObjectList( 'remoteZiLib' )
 {
-	.CompilerOptions		= "%1 /Fo%2 /c /Zi /Od /nologo"
+	.CompilerOptions		= "%1 /Fo%2 /c /Zi /Od /nologo /Fd$Out$\Test\Distributed\Zi\RemoteZi_Lib.pdb"
 	.CompilerInputPath		= "Data\TestDistributed\Zi"	
 	.CompilerOutputPath		= "$Out$\Test\Distributed\Zi\"
 }
@@ -88,5 +88,7 @@ DLL( 'remoteZi' )
 	.Libraries				= 'remoteZiLib'
 	.LinkerOptions			+ ' /DLL'
 							+ ' /ENTRY:DllMain'
+							+ ' /DEBUG'
+							+ ' /PDB:$Out$\Test\Distributed\Zi\RemoteZi.pdb'
 	.LinkerOutput			= '$Out$\Test\Distributed\Zi\RemoteZi.dll'
 }

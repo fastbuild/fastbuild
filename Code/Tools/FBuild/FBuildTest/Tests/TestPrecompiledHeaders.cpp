@@ -73,7 +73,11 @@ void TestPrecompiledHeaders::TestPCH() const
 	options.m_UseCacheWrite = true;
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
-	AStackString<> obj( "../../../../ftmp/Test/PrecompiledHeaders/PCHUser.obj" );
+	#if defined( __WINDOWS__ )
+		AStackString<> obj( "../../../../ftmp/Test/PrecompiledHeaders/PCHUser.obj" );
+	#else
+		AStackString<> obj( "../../../../ftmp/Test/PrecompiledHeaders/PCHUser.o" );
+	#endif
 	AStackString<> pch( "../../../../ftmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
 	AStackString<> lib( "../../../../ftmp/Test/PrecompiledHeaders/TestPCH.lib" );
 	EnsureFileDoesNotExist( obj );
@@ -128,7 +132,11 @@ void TestPrecompiledHeaders::TestPCHWithCache() const
 	options.m_UseCacheRead = true;
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
-	AStackString<> obj( "../../../../ftmp/Test/PrecompiledHeaders/PCHUser.obj" );
+	#if defined( __WINDOWS__ )
+		AStackString<> obj( "../../../../ftmp/Test/PrecompiledHeaders/PCHUser.obj" );
+	#else
+		AStackString<> obj( "../../../../ftmp/Test/PrecompiledHeaders/PCHUser.o" );
+	#endif
 	AStackString<> pch( "../../../../ftmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
 	AStackString<> lib( "../../../../ftmp/Test/PrecompiledHeaders/TestPCH.lib" );
 	EnsureFileDoesNotExist( obj );
@@ -184,7 +192,11 @@ void TestPrecompiledHeaders::TestPCHClang() const
 	options.m_UseCacheWrite = true;
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
-	AStackString<> obj( "../../../../ftmp/Test/PrecompiledHeaders/Clang/PCHUser.obj" );
+	#if defined( __WINDOWS__ )
+		AStackString<> obj( "../../../../ftmp/Test/PrecompiledHeaders/Clang/PCHUser.obj" );
+	#else
+		AStackString<> obj( "../../../../ftmp/Test/PrecompiledHeaders/Clang/PCHUser.o" );
+	#endif
 	AStackString<> pch( "../../../../ftmp/Test/PrecompiledHeaders/Clang/PrecompiledHeader.pch" );
 	EnsureFileDoesNotExist( obj );
 	EnsureFileDoesNotExist( pch );

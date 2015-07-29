@@ -12,7 +12,7 @@
 
 // CacheInit
 //------------------------------------------------------------------------------
-bool CacheInit( const char * settings )
+bool __stdcall CacheInit( const char * settings )
 {
 	printf( "Init : %s\n", settings );
 	return true;
@@ -20,14 +20,14 @@ bool CacheInit( const char * settings )
 
 // CacheShutdown
 //------------------------------------------------------------------------------
-void CacheShutdown()
+void __stdcall CacheShutdown()
 {
 	printf( "Shutdown\n" );
 }
 
 // CachePublish
 //------------------------------------------------------------------------------
-bool CachePublish( const char * cacheId, const void * data, unsigned long long dataSize )
+bool __stdcall CachePublish( const char * cacheId, const void * data, unsigned long long dataSize )
 {
 	printf( "Publish : %s, %p, %llu\n", cacheId, data, dataSize );
 	return true;
@@ -35,7 +35,7 @@ bool CachePublish( const char * cacheId, const void * data, unsigned long long d
 
 // CacheRetrieve
 //------------------------------------------------------------------------------
-bool CacheRetrieve( const char * cacheId, void * & data, unsigned long long & dataSize )
+bool __stdcall CacheRetrieve( const char * cacheId, void * & data, unsigned long long & dataSize )
 {
 	(void)data;
 	(void)dataSize;
@@ -45,7 +45,7 @@ bool CacheRetrieve( const char * cacheId, void * & data, unsigned long long & da
 
 // CacheFreeMemory
 //------------------------------------------------------------------------------
-void CacheFreeMemory( void * data, unsigned long long dataSize )
+void __stdcall CacheFreeMemory( void * data, unsigned long long dataSize )
 {
 	printf( "FreeMemory : %p, %llu\n", data, dataSize );
 }

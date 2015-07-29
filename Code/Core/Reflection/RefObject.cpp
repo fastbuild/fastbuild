@@ -35,7 +35,7 @@ void RefObject_ReflectionInfo_Bind()
 		}
 		src = src->GetSuperClass();
 	}
-	return nullptr;
+	return false;
 }
 
 //------------------------------------------------------------------------------

@@ -487,7 +487,11 @@ const char * ObjectListNode::GetObjExtension() const
 {
 	if ( m_ObjExtensionOverride.IsEmpty() )
 	{
-		return ".obj";
+		#if defined( __WINDOWS__ )
+			return ".obj";
+		#else
+			return ".o";
+		#endif
 	}
 	return m_ObjExtensionOverride.Get();
 }

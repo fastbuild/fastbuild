@@ -1,24 +1,15 @@
-
+// DLL
+//------------------------------------------------------------------------------
 #include "..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // Activate standard settings
 
-Settings		
-{
-	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
-						"TMP=C:\Windows\Temp",
-						"SystemRoot=C:\Windows" }
-}
-
-.Compiler	= "$VisualStudioPath$\VC\bin\cl.exe"
-.Librarian	= "$VisualStudioPath$\VC\bin\lib.exe"
-.Linker		= "$VisualStudioPath$\VC\bin\link.exe"
-.CompilerOptions	= "%1 /Fo%2 /nologo /c /DLL"
-.LibrarianOptions	= "/NOLOGO /OUT:%2 %1"
-.LinkerOptions		= "/NOLOGO /DLL /OUT:%2 %1 /MACHINE:X86 /WX"
-					+ " /IGNORE:4001" ; don't complain about linking libs only
-					+ ' /NODEFAULTLIB'
+// DLL Settings
+.CompilerOptions	+ ' /DLL'
+.LinkerOptions		+ ' /DLL'
 					+ ' /ENTRY:DllMain'
 
-.Out		= "..\..\..\..\ftmp"
+.Out				= "..\..\..\..\ftmp"
 .CompilerOutputPath	= "$Out$\Test\DLL\"
 
 // One DLL
@@ -69,7 +60,7 @@ Library( "DLLPCHTest" )
 {
 	.PCHInputFile		= "Data\TestDLL\PrecompiledHeader.cpp"
 	.PCHOutputFile		= "$Out$\Test\DLL\PrecompiledHeader.pch"
-	.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+	.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Z7 /Fp"%2" /nologo /c'
 
 	.LibrarianOutput	= "$Out$\Test\DLL\contentsPCH.lib"
 	.CompilerInputFiles	= "Data\TestDLL\a.cpp"

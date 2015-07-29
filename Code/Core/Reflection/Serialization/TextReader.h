@@ -38,7 +38,6 @@ private:
 	bool ReadChildren();
 	bool ReadProperty( PropertyType propertyType );
 
-	inline bool IsAtEnd() const { return ( m_Pos == m_End ); }
 	void SkipWhitespace( bool stopAtLineEnd = false );
 	bool GetToken( AString & token );
 	bool GetString( AString & string );

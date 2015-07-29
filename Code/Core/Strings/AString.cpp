@@ -513,6 +513,24 @@ void AString::ToLower()
 	}
 }
 
+// ToUpper
+//------------------------------------------------------------------------------
+void AString::ToUpper()
+{
+	char * pos = m_Contents;
+	char * end = m_Contents + m_Length;
+	while ( pos < end )
+	{
+		char c = *pos;
+		if ( ( c >= 'a' ) && ( c <= 'z' ) )
+		{
+			c = 'A' + ( c - 'a' );
+			*pos = c;
+		}
+		pos++;
+	}
+}
+
 // Replace ( char *, char * )
 //------------------------------------------------------------------------------
 uint32_t AString::Replace( const char * from, const char * to, uint32_t maxReplaces )

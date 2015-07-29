@@ -31,6 +31,7 @@ int main(int , char * [])
 	REGISTER_TESTGROUP( TestGraph )
 	REGISTER_TESTGROUP( TestIncludeParser )
     #if defined( __WINDOWS__ )
+    	REGISTER_TESTGROUP( TestObjectList ) // TODO:LINUX TODO:MAC Enable
         REGISTER_TESTGROUP( TestPrecompiledHeaders ) // TODO:LINUX TODO:MAC Enable
     #endif
 	REGISTER_TESTGROUP( TestProjectGeneration )

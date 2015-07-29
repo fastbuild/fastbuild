@@ -30,6 +30,7 @@ Details of the FASTBuild configuration file syntax can be grouped into 4 categor
 <b>Directives</b>
 <ul>
   <li><a href='#if'>#if / #endif</a></li>
+  <li><a href='#import'>#import</a></li>
   <li><a href='#include'>#include</a></li>
   <li><a href='#once'>#once</a></li>
 </ul>
@@ -119,6 +120,21 @@ Examples:
 #endif
 </div>
  </div>
+ 
+     <div class='newsitemheader' id='import'>
+      #import
+    </div>
+    <div class='newsitembody'>
+<p>
+The #import directive allows a bff configuration file to import an Environment Variable. A variable with the same name as the Environment
+Variable will be created at the scope of the #import, as if it was locally declared by a normal variable assignment.
+</p>
+Examples:
+<div class='code'>#import VS120COMNTOOLS
+.VisualStudio2012Compiler = '$VS120COMNTOOLS$\..\..\VC\bin\cl.exe'
+</div>
+ </div>
+
  
     <div class='newsitemheader' id='include'>
       #include

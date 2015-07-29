@@ -28,6 +28,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
+#include "Core/Math/Murmur3.h"
 #include "Core/Process/SystemMutex.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
@@ -48,7 +49,9 @@
 // CONSTRUCTOR - FBuild
 //------------------------------------------------------------------------------
 FBuild::FBuild( const FBuildOptions & options )
-	: m_Client( nullptr )
+	: m_DependencyGraph( nullptr )
+	, m_JobQueue( nullptr )
+	, m_Client( nullptr )
 	, m_Cache( nullptr )
 	, m_LastProgressOutputTime( 0.0f )
 	, m_LastProgressCalcTime( 0.0f )
@@ -57,6 +60,7 @@ FBuild::FBuild( const FBuildOptions & options )
 	, m_WorkerList( 0, true )
 	, m_EnvironmentString( nullptr )
 	, m_EnvironmentStringSize( 0 )
+	, m_ImportedEnvironmentVars( 0, true )
 {
 	#ifdef DEBUG_CRT_MEMORY_USAGE
 		_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | 
@@ -416,6 +420,48 @@ void FBuild::SetEnvironmentString( const char * envString, uint32_t size, const 
 	m_EnvironmentStringSize = size;
 	AString::Copy( envString, m_EnvironmentString, size );
 	m_LibEnvVar = libEnvVar;
+}
+
+// ImportEnvironmentVar
+//------------------------------------------------------------------------------
+bool FBuild::ImportEnvironmentVar( const char * name, AString & value, uint32_t & hash )
+{
+	// check if system environment contains the variable
+	if ( Env::GetEnvVariable( name, value ) == false )
+	{
+		FLOG_ERROR( "Could not import environment variable '%s'", name );
+		return false;
+	}
+
+	// compute hash value for actual value
+	hash = Murmur3::Calc32( value );
+
+	// check if the environment var was already imported
+	const EnvironmentVarAndHash * it = m_ImportedEnvironmentVars.Begin();
+	const EnvironmentVarAndHash * const end = m_ImportedEnvironmentVars.End();
+	while ( it < end )
+	{
+		if ( it->GetName() == name )
+		{
+			// check if imported environment changed since last import
+			if ( it->GetHash() != hash )
+			{
+				FLOG_ERROR( "Overwriting imported environment variable '%s' with a different value = '%s'",
+							name, value.Get() );
+				return false;
+			}
+
+			// skip registration when already imported with same hash value
+			return true;
+		}
+		it++;
+	}
+
+	// import new variable name with its hash value
+	const EnvironmentVarAndHash var( name, hash );
+	m_ImportedEnvironmentVars.Append( var );
+
+	return true;
 }
 
 // GetLibEnvVar

@@ -67,18 +67,6 @@ UnityNode::UnityNode()
 //------------------------------------------------------------------------------
 bool UnityNode::Initialize( const BFFIterator & iter, const Function * function )
 {
-	if ( m_PrecompiledHeader.IsEmpty() == false )
-	{
-		// automatically exclude the associated CPP file for a PCH (if there is one)
-		if ( m_PrecompiledHeader.EndsWithI( ".h" ) )
-		{
-			AStackString<> pchCPP( m_PrecompiledHeader.Get(), 
-								   m_PrecompiledHeader.Get() + m_PrecompiledHeader.GetLength() - 2 );
-			pchCPP += ".cpp";
-			m_FilesToExclude.Append( pchCPP );
-		}
-	}
-
 	Dependencies dirNodes( m_InputPaths.GetSize() );
 	if ( !function->GetDirectoryListNodeList( iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_InputPathRecurse, m_InputPattern, "UnityInputPath", dirNodes ) )
 	{
@@ -366,6 +354,17 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 {
     bool ok = true;
 
+	// automatically exclude the associated CPP file for a PCH (if there is one)
+	AStackString<> pchCPP;
+	if ( m_PrecompiledHeader.IsEmpty() == false )
+	{
+		if ( m_PrecompiledHeader.EndsWithI( ".h" ) )
+		{
+			pchCPP.Assign( m_PrecompiledHeader.Get(), m_PrecompiledHeader.GetEnd() - 1 );
+			pchCPP += "cpp";
+		}
+	}
+
 	const Dependency * const sEnd = m_StaticDependencies.End();
 	for ( const Dependency * sIt = m_StaticDependencies.Begin(); sIt != sEnd; ++sIt )
 	{
@@ -392,6 +391,14 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 					    break;
 				    }
 			    }
+
+				if ( keep && ( pchCPP.IsEmpty() == false ) )
+				{
+					if ( PathUtils::PathEndsWithFile( filesIt->m_Name, pchCPP ) )
+					{
+						keep = false;
+					}
+				}
 
 			    if ( keep )
 			    {

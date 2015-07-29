@@ -17,8 +17,21 @@
 
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <errno.h>
+    #include <stdio.h>
     #include <stdlib.h>
     #include <unistd.h>
+#endif
+
+#if defined( __LINUX__ )
+    #include <linux/limits.h>
+#endif
+
+#if defined( __APPLE__ )
+    extern "C"
+    {
+        int *_NSGetArgc(void);
+        char ***_NSGetArgv(void);
+    };
 #endif
 
 // GetNumProcessors
@@ -96,18 +109,42 @@
 
 // GetCmdLine
 //------------------------------------------------------------------------------
-/*static*/ const char * Env::GetCmdLine()
+/*static*/ void Env::GetCmdLine( AString & cmdLine )
 {
 	#if defined( __WINDOWS__ )
-		return ::GetCommandLine();
+        cmdLine = ::GetCommandLine();
 	#elif defined( __APPLE__ )
-		ASSERT( false ); // TODO:MAC Implement GetCmdLine
-		return nullptr;
-	#elif defined( __LINUX__ )
-		ASSERT( false ); // TODO:LINUX Implement GetCmdLine
-		return nullptr;
+        int argc = *_NSGetArgc();
+        const char ** argv = const_cast< const char ** >( *_NSGetArgv() ); 
+        for ( int i=0; i<argc; ++i )
+        {
+            if ( i > 0 )
+            {
+                cmdLine += ' ';
+            }            
+            cmdLine += argv[i];
+        }
 	#else
-        #error Unknown platform
+        FILE* f = fopen( "/proc/self/cmdline", "rb" );
+        VERIFY( f != 0 );
+        char buffer[ 4096 ];
+        for (;;)
+        {
+            int size = fread( buffer, 1, 4096, f );
+            if ( size == 0 )
+            {
+                break;
+            }
+        
+            // Append
+            for ( int i=0; i<size; ++i )
+            {
+                const char c = buffer[ i ];
+                cmdLine += ( c ? c : ' ' ); // convert nulls in between args back into spaces
+            }
+        }
+        VERIFY( fclose( f ) == 0 );
+
 	#endif
 }
 
@@ -121,11 +158,12 @@ void Env::GetExePath( AString & output )
 		GetModuleFileNameA( hModule, path, MAX_PATH );
 		output = path;
 	#elif defined( __APPLE__ )
-		ASSERT( false ); // TODO:MAC Implement GetExePath
-	#elif defined( __LINUX__ )
-		ASSERT( false ); // TODO:LINUX Implement GetExePath
-	#else
-        #error Unknown platform
+        const char ** argv = const_cast< const char ** >( *_NSGetArgv() ); 
+        output = argv[0];
+    #else
+        char path[ PATH_MAX ];
+        VERIFY( readlink( "/proc/self/exe", path, PATH_MAX ) != -1 );
+        output = path;
 	#endif
 }
 

@@ -111,9 +111,10 @@ FunctionLibrary::FunctionLibrary()
         // check /c or -c
         if ( objFlags & ObjectNode::FLAG_MSVC )
         {
-            if ( args.Find( "/c" ) == nullptr )
+            if ( args.Find( "/c" ) == nullptr &&
+                args.Find( "-c" ) == nullptr)
             {
-		        Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "/c" );
+		        Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "/c or -c" );
 			    return false;
 		    }
         }

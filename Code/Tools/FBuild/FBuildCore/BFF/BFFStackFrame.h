@@ -44,6 +44,12 @@ public:
 	// set from an existing variable
 	static void SetVar( const BFFVariable * var, BFFStackFrame * frame = nullptr );
 
+    // set from two existing variable
+    static BFFVariable * ConcatVars( const AString & name,
+                                     const BFFVariable * lhs,
+                                     const BFFVariable * rhs,
+                                     BFFStackFrame * frame = nullptr );
+
 	// get a variable (caller passes complete name indicating type (user vs system))
 	static const BFFVariable * GetVar( const char * name );
 	static const BFFVariable * GetVar( const AString & name );
@@ -65,6 +71,8 @@ private:
 	const BFFVariable * GetVariableRecurse( const AString & nameOnly, 
 									  BFFVariable::VarType type ) const;
 	BFFVariable * GetVarMutableNoRecurse( const AString & name );
+
+    void CreateOrReplaceVarMutableNoRecurse( BFFVariable * var );
 
 	// variables at current scope
 	Array< BFFVariable * > m_Variables;

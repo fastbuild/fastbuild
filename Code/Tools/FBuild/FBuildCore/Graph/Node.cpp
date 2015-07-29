@@ -25,6 +25,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
@@ -64,7 +65,8 @@
 	"DLL",
 	"VCXProj",
 	"ObjectList",
-	"CopyDirNode"
+	"CopyDirNode",
+	"SLN",
 };
 
 // Custom MetaData
@@ -418,6 +420,7 @@ void Node::SaveNode( IOStream & fileStream, const Node * node ) const
 		case Node::VCXPROJECT_NODE:		n = VCXProjectNode::Load( stream );		break;
 		case Node::OBJECT_LIST_NODE:	n = ObjectListNode::Load( stream );		break;
 		case Node::COPY_DIR_NODE:		n = CopyDirNode::Load( stream );		break;
+		case Node::SLN_NODE:			n = SLNNode::Load( stream );			break;
 		case Node::NUM_NODE_TYPES:		ASSERT( false );						break;
 	}
 
@@ -464,14 +467,8 @@ void Node::SaveNode( IOStream & fileStream, const Node * node ) const
 	}
 
 	// read contents
-	Node * n = nullptr;
-	switch ( (Node::Type)nodeType )
-	{
-		case Node::OBJECT_NODE:			n = ObjectNode::LoadRemote( stream );	break;
-		default:						ASSERT( false );						break;
-	}
-
-	return n;
+	ASSERT( (Node::Type)nodeType == Node::OBJECT_NODE );
+	return ObjectNode::LoadRemote( stream );
 }
 
 // SaveRemote

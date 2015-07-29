@@ -14,6 +14,52 @@
 <h1>Changelog</h1>
 
 
+
+<div class='newsitemheader'>
+    v0.84&nbsp;<font color='#bbbbbb'>(28-Jul-2015)</font>
+</div>
+<div class='newsitembody'>
+    Note
+    <ul>
+	  	<li>DB version has changed : clean build will occur</li>
+      <li>Behaviour of operator + on structs has changed</li>
+    </ul>
+    New
+    <ul>
+      <li>#import directive allows importation of environment variables (Thanks to Poppolopoppo)</li>
+      <li>Workers will self-deactivate when low on disk space (Thanks to Jean-Sebastien Pelletier)</li>
+      <li>Visual Studio Solution generation (thanks to Poppolopoppo)</li>
+      <li>Add "-nostoponerror" option: Try to build as much as possible instead of stopping on the first error</li>      
+    </ul>
+    Fixes
+    <ul>
+      <li>Includes are correctly tracked when using /showIncludes with non-English MSVC compiler (Thanks to Poppolopoppo)</li>
+      <li>.StructA + .StructB results in members being recursively concatenated instead of replaced (Thanks to Poppolopoppo)</li>
+      <li>Recognize -c as well as /c when checking for required compiler options with MSVC</li>
+      <li>[OSX/Linux] Fix crash using -report</li>
+      <li>Automatically strip /Gm compiler option with MSVC compiler (incompatible with FASTBuild)</li>
+      <li>Compiled object extension defaults to .o on Linux/OS X</li>
+      <li>Fix formatting of ToolManifest errors so they appear in VS Error Window (Thanks to Josh Green)</li>
+      <li>Warn about invalid values passed to -j[x] option (local thread count) (values &lt;0 or &gt;64 are invalid)</li>
+      <li>Prevent UnityNode excluded file list containing duplicates if using Precompiled Headers</li>
+      <li>Ensure path exists /IMPLIB option if different from normal output to prevent linker option (Thanks to Josh Green)</li>
+      <li>Fix crash when using /Fi or /P command line option with MSVC compiler (Thanks to Poppolopoppo)</li>  
+    </ul>
+    Improvements
+    <ul>
+      <li>Print() can now output any variable, array or structure with new Print( .Var ) syntax</li>
+      <li>Optimizations</li>
+  		<ul>
+        <li>Reduce latency starting a new jobs on a remote worker</li>
+        <li>Reduce latency returning completed remote jobs</li>
+        <li>Workers request 1 more job than available CPUs to overlap network transfer and compilation</li>
+        <li>Reduce remote worker thread context switches</li>
+      </ul>
+      <li>#include now supports variable substitutions (e.g. #include "Compilers/$VSVersion$.h") (Thanks to Poppolopoppo)</li>
+      <li>Excluded files support relative paths (starting with ../ or ..\)  (Unity, ObjectList, Library and CSAssembly)</li>
+    </ul>
+</div>
+
 <div class='newsitemheader'>
     v0.83&nbsp;<font color='#bbbbbb'>(18-Jun-2015)</font>
 </div>

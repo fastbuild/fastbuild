@@ -8,7 +8,7 @@
 	//--------------------------------------------------------------------------
 	VCXProject( '$ProjectName$-proj' )
 	{
-		.ProjectOutput				= '$ProjectPath$\$ProjectName$.vcxproj'
+		.ProjectOutput				= '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
 		.ProjectInputPaths			= '$ProjectPath$\'
 		.ProjectBasePath			= '$ProjectPath$\'
 	}

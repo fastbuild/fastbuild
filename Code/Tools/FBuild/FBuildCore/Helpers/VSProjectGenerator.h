@@ -90,6 +90,8 @@ public:
 									 const Array< VSProjectFileType > & fileTypes );
 	const AString & GenerateVCXProjFilters( const AString & projectFile );
 
+	static void FormatDeterministicProjectGUID( AString & guid, const AString & projectName );
+
 private:
 	// Helper to format some text
 	void Write( const char * fmtString, ... );

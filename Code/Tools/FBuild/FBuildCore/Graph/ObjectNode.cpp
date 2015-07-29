@@ -244,8 +244,24 @@ ObjectNode::~ObjectNode()
 		return NODE_RESULT_FAILED; // SpawnCompiler has logged error
 	}
 
+	const char *output = nullptr;
+	uint32_t outputSize = 0;
+
+	// MSVC will write /ShowIncludes output on stderr sometimes (ex: /Fi)
+	if ( GetFlag( FLAG_INCLUDES_IN_STDERR ) == true )
+	{
+		output = ch.GetErr().Get();
+		outputSize = ch.GetErrSize();
+	}
+	else
+	{
+    	// but most of the time it will be on stdout
+		output = ch.GetOut().Get();
+		outputSize = ch.GetOutSize();
+	}
+
 	// compiled ok, try to extract includes
-	if ( ProcessIncludesMSCL( ch.GetOut().Get(), ch.GetOutSize() ) == false )
+	if ( ProcessIncludesMSCL( output, outputSize ) == false )
 	{
 		return NODE_RESULT_FAILED; // ProcessIncludesMSCL will have emitted an error
 	}
@@ -441,10 +457,10 @@ bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
 	Timer t;
 
 	{
-		ASSERT( output && outputSize );
-
 		CIncludeParser parser;
-		bool result = parser.ParseMSCL_Output( output, outputSize );
+		bool result = ( output && outputSize ) ? parser.ParseMSCL_Output( output, outputSize )
+											   : false;
+
 		if ( result == false )
 		{
 			FLOG_ERROR( "Failed to process includes for '%s'", GetName().Get() );
@@ -620,6 +636,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 	{
 		bool usingCLR = false;
 		bool usingWinRT = false;
+		bool usingPreprocessorOnly = false;
 
 		Array< AString > tokens;
 		args.Tokenize( tokens );
@@ -649,13 +666,19 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 			{
 				flags |= ObjectNode::FLAG_CREATING_PCH;
 			}
+			else if ( ( token == "/P" ) || ( token == "-P" ) )
+			{
+				usingPreprocessorOnly = true;
+				flags |= ObjectNode::FLAG_INCLUDES_IN_STDERR;
+			}
 		}
 
 		// 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
 		// statements are truncated
 		// 2) code consuming the windows runtime cannot be cached due to preprocessing weirdness
 		// 3) pch files are machine specific
-		if ( !usingWinRT && !usingCLR && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
+		// 4) user only wants preprocessor step executed
+		if ( !usingWinRT && !usingCLR && !usingPreprocessorOnly && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
 		{
 			if ( isDistributableCompiler )
 			{
@@ -787,7 +810,11 @@ const char * ObjectNode::GetObjExtension() const
 {
 	if ( m_ObjExtensionOverride.IsEmpty() )
 	{
-		return ".obj";
+		#if defined( __WINDOWS__ )
+			return ".obj";
+		#else
+			return ".o";
+		#endif
 	}
 	return m_ObjExtensionOverride.Get();
 }
@@ -1150,6 +1177,12 @@ void ObjectNode::BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, 
 			{
 				continue;
 			}
+
+			// "Minimal Rebuild" is not compatible with FASTBuild
+			if ( StripToken( "/Gm", token ) )
+			{
+				continue;
+			}
 		}
 
 		// remove includes for second pass
@@ -1343,20 +1376,6 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpFileName ) const
 
 	FileStream tmpFile;
 	AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
-
-	// TODO:B This code doesn't seem to do anything.  Looks like the extension
-    // logic was broken, but GCC support is still working, so perhaps this
-	// can be removed
-	if ( GetFlag( FLAG_GCC ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) )
-	{
-		// GCC requires preprocessed output to be named a certain way
-		// SNC & MSVC like the extension left alone
-		// C code (.c) -> .i (NOTE: lower case only)
-		// C++ code (.C, .cc, .cp, .cpp, .cxx) -> .ii
-		const char * tmpFileExt = fileName.FindLast( '.' ); 
-		tmpFileExt = tmpFileExt ? ( tmpFileExt + 1 ) : fileName.Get();
-		tmpFileExt = ( strcmp( tmpFileExt, "c" ) == 0 ) ? "i" : "ii";
-	}
 
 	void const * dataToWrite = job->GetData();
 	size_t dataToWriteSize = job->GetDataSize();

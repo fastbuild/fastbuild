@@ -40,7 +40,10 @@ public:
 							 const Array< AString > & projectReferences );
 	virtual ~VCXProjectNode();
 
-	static inline Node::Type GetType() { return Node::VCXPROJECT_NODE; }
+	static inline Node::Type GetTypeS() { return Node::VCXPROJECT_NODE; }
+
+	const AString & GetProjectGuid() const { return m_ProjectGuid; }
+	const Array< VSProjectConfig > & GetConfigs() const { return m_Configs; }
 
 	static Node * Load( IOStream & stream );
 	virtual void Save( IOStream & stream ) const;

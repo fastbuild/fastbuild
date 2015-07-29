@@ -24,6 +24,9 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
+// system
+#include <stdio.h>
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Worker::Worker( void * hInstance, const AString & args )
@@ -33,6 +36,9 @@ Worker::Worker( void * hInstance, const AString & args )
 	, m_BaseArgs( args )
 	, m_LastWriteTime( 0 )
 	, m_RestartNeeded( false )
+    #if defined( __WINDOWS__ )
+        , m_LastDiskSpaceResult( -1 )
+    #endif
 {
 	m_WorkerSettings = FNEW( WorkerSettings );
 	m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
@@ -129,10 +135,85 @@ int Worker::Work()
 	return 0;
 }
 
+// HasEnoughDiskSpace
+//------------------------------------------------------------------------------
+bool Worker::HasEnoughDiskSpace()
+{
+    #if defined( __WINDOWS__ )
+        // Only check disk space every few seconds
+        float elapsedTime = m_TimerLastDiskSpaceCheck.GetElapsedMS();
+        if ( ( elapsedTime < 15000.0f ) && ( m_LastDiskSpaceResult != -1 ) )
+        {
+            return ( m_LastDiskSpaceResult != 0 );
+        }
+        m_TimerLastDiskSpaceCheck.Start();
+         
+        static const uint64_t MIN_DISK_SPACE = 1024 * 1024 * 1024; // 1 GiB 
+         
+        DWORD logicalDrives = GetLogicalDrives();
+        DWORD driveMask = 1;
+        char driveLetter = 'a';
+        char drivePath[32];
+        int validDriveCount = 0;    // This is to insure we find at least one drive...
+         
+        // Enumerate all drive letters.
+        for ( uint32_t i = 0; i < 26; ++i, ++driveLetter, driveMask *= 2 )
+        {
+            if ( (logicalDrives & driveMask) != 0 )
+            {
+                // This letter is used.
+                sprintf_s( drivePath, sizeof(drivePath), "%c:\\", driveLetter );
+         
+                UINT driveType = GetDriveType( drivePath );
+                if ( driveType == DRIVE_FIXED )
+                {
+                    // This is a fixed frive.
+                    unsigned __int64 freeBytesAvailable = 0;
+                    unsigned __int64 totalNumberOfBytes = 0;
+                    unsigned __int64 totalNumberOfFreeBytes = 0;
+         
+                    // Check available disk space
+                    BOOL result = GetDiskFreeSpaceExA( drivePath, (PULARGE_INTEGER)&freeBytesAvailable, (PULARGE_INTEGER)&totalNumberOfBytes, (PULARGE_INTEGER)&totalNumberOfFreeBytes );
+                    if ( result )
+                    {
+                        if ( freeBytesAvailable < MIN_DISK_SPACE )
+                        {
+                            // The drive doesn't have enough free space. Exclude this machine from workers.
+                            // It is simpler to exclude the machine from the build when any of its drive has not enough space
+                            // than trying to figure out which drives are really used by Fastbuild especially in the context of symlinks, hardlinks, etc...
+                            m_LastDiskSpaceResult = 0;
+                            return false;
+                        }
+         
+                        // At least one drive found.
+                        ++validDriveCount;
+                    }
+                    else
+                    {
+                        // There is something wrong with the drives...
+                        m_LastDiskSpaceResult = 0;
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        // return true if we've found at least one disk drive. 
+        // This is paranoid but I like being paranoid. If we reach this line it is pretty much impossible for validDriveCount to be 0.    
+        m_LastDiskSpaceResult = validDriveCount > 0;
+        return m_LastDiskSpaceResult != 0;
+    #else
+        return true; // TODO:MAC TODO:LINUX Implement disk space checks
+    #endif
+}
+
 // UpdateAvailability
 //------------------------------------------------------------------------------
 void Worker::UpdateAvailability()
 {
+    // Check disk space
+    bool hasEnoughDiskSpace = HasEnoughDiskSpace();
+
 	m_IdleDetection.Update();
 
 	WorkerSettings & ws = WorkerSettings::Get();
@@ -166,7 +247,7 @@ void Worker::UpdateAvailability()
 
 	WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
 
-	m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0 );
+	m_WorkerBrokerage.SetAvailability( ( numCPUsToUse > 0 ) && hasEnoughDiskSpace );
 }
 
 // UpdateUI

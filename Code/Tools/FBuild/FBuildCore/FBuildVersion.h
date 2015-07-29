@@ -6,7 +6,7 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define FBUILD_VERSION_STRING "v0.83"
+#define FBUILD_VERSION_STRING "v0.84"
 #if defined( __WINDOWS__ )
 	#ifdef WIN64
 		#define FBUILD_VERSION_PLATFORM "x64"

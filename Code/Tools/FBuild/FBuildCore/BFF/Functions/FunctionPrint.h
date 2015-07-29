@@ -26,6 +26,8 @@ protected:
 								const BFFIterator * functionBodyStopToken,
 								const BFFIterator * functionHeaderStartToken,
 								const BFFIterator * functionHeaderStopToken ) const;
+
+	static void PrintVarRecurse( const BFFVariable & var, uint32_t indent );
 };
 
 //------------------------------------------------------------------------------

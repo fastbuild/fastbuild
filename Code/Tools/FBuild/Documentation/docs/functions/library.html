@@ -24,7 +24,7 @@ Builds a statically linked library.
   .Compiler                 ; Compiler to use
   .CompilerOptions          ; Options for compiler
   .CompilerOutputPath       ; Path to store intermediate objects
-  .CompilerOutputExtension  ; (optional) Specify the file extension for generated objects (default .obj)
+  .CompilerOutputExtension  ; (optional) Specify the file extension for generated objects (default .obj or .o)
   .CompilerOutputPrefix     ; (optional) Specify a prefix for generated objects (default none)
 
   ; Options for librarian
@@ -38,7 +38,7 @@ Builds a statically linked library.
   .CompilerInputPattern     ; (optional) Pattern to use when finding files (default *.cpp)
   .CompilerInputPathRecurse ; (optional) Recurse into dirs when finding files (default true)
   .CompilerInputExcludePath ; (optional) Path(s) to exclude from compilation
-  .CompilerInputExcludedFiles;(optional) File(s) to exclude from compilation
+  .CompilerInputExcludedFiles;(optional) File(s) to exclude from compilation (partial, root-relative of full path)
   .CompilerInputFiles       ; (optional) Explicit array of files to build
   .CompilerInputUnity       ; (optional) Unity to build (or Unities)
 

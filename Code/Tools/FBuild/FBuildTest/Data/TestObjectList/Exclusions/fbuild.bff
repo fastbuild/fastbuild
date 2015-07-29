@@ -1,0 +1,39 @@
+//
+// ObjectList - Exclusions
+//
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Common settings
+.Out						= "../../../../ftmp"
+.CompilerInputPath			= "Data/TestObjectList/Exclusions/"
+.UnityOutputPath			= '$Out$/Test/ObjectList/Exclusions/'
+.CompilerOutputPath			= '$Out$/Test/ObjectList/Exclusions/'
+
+//
+// Exclude by file name
+//------------------------------------------------------------------------------
+ObjectList( 'ExcludeFileName' )
+{
+	.CompilerInputExcludedFiles	= 'ignore.cpp'
+	.CompilerOutputPath			+ 'ExcludeFileName/'
+}
+
+//
+// Exclude by file path
+//------------------------------------------------------------------------------
+ObjectList( 'ExcludeFilePath' )
+{
+	.CompilerInputExcludedFiles	= 'Exclusions/ignore.cpp'
+	.CompilerOutputPath			+ 'ExcludeFilePath/'
+}
+
+//
+// Exclude by file path (relative)
+//------------------------------------------------------------------------------
+ObjectList( 'ExcludeFilePathRelative' )
+{
+	.CompilerInputExcludedFiles	= "../FBuildTest/Data/TestObjectList/Exclusions/ignore.cpp"
+	.CompilerOutputPath			+ 'ExcludeFilePathRelative/'
+}

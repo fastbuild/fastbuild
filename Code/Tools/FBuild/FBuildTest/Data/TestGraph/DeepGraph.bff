@@ -23,11 +23,11 @@ Using( .VisualStudioOptionsDebug )
 .CompilerOptions	+ ' /I"../../.."'
 					+ .Defines
 					+ .WindowsIncludePaths
-					+ .VisualStudionIncludePaths
+					+ .VisualStudioIncludePaths
 
 // Common options
 //------------------------------------------------------------------------------
-.CompilerOutputPath	= '../ftmp/Test/TestGraph/DeepGraph'
+.CompilerOutputPath	= '../../../../ftmp/Test/TestGraph/DeepGraph'
 .PreBuildDependencies = {}
 
 // Create a node which depends on all the other nodes before it

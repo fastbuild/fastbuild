@@ -178,6 +178,25 @@ BFFStackFrame::~BFFStackFrame()
 	}
 }
 
+// ConcatVars
+//------------------------------------------------------------------------------
+BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
+                                         const BFFVariable * lhs,
+                                         const BFFVariable * rhs,
+                                         BFFStackFrame * frame )
+{
+    frame = frame ? frame : s_StackHead;
+
+    ASSERT( frame );
+	ASSERT( lhs );
+    ASSERT( rhs );
+
+    BFFVariable *const newVar = lhs->ConcatVarsRecurse( name, *rhs );
+    frame->CreateOrReplaceVarMutableNoRecurse( newVar );
+
+    return newVar;
+}
+
 // GetVar
 //------------------------------------------------------------------------------
 /*static*/ const BFFVariable * BFFStackFrame::GetVar( const char * name )
@@ -287,6 +306,29 @@ BFFVariable * BFFStackFrame::GetVarMutableNoRecurse( const AString & name )
 	}
 
 	return nullptr;
+}
+
+// CreateOrReplaceVarMutableNoRecurse
+//------------------------------------------------------------------------------
+void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable *var )
+{
+    ASSERT( s_StackHead ); // we shouldn't be calling this if there aren't any stack frames
+    ASSERT( var );
+
+    // look at this scope level
+	Array< BFFVariable * >::Iter i = m_Variables.Begin();
+	Array< BFFVariable * >::Iter end = m_Variables.End();
+	for( ; i < end ; ++i )
+	{
+		if ( ( *i )->GetName() == var->GetName() )
+		{
+            FDELETE *i;
+            *i = var;
+			return;
+		}
+	}
+
+    m_Variables.Append( var );
 }
 
 //------------------------------------------------------------------------------

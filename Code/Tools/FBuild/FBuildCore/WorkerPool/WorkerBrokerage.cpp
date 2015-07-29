@@ -38,12 +38,20 @@ WorkerBrokerage::WorkerBrokerage()
             m_BrokerageRoot.Format( "%s/main/%u/", root.Get(), protocolVersion );
         #endif
     }
+
+    Network::GetHostName(m_HostName);
+
+    AStackString<> filePath;
+    m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoot.Get(), m_HostName.Get() );
+    m_TimerLastUpdate.Start();
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 WorkerBrokerage::~WorkerBrokerage()
 {
+    // Ensure the file disapears when closing
+    FileIO::FileDelete( m_BrokerageFilePath.Get() );
 }
 
 // FindWorkers
@@ -72,10 +80,6 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 		workerList.SetCapacity( workerList.GetSize() + results.GetSize() );
 	}
 
-	// we'll filter our own host if found
-	AStackString<> hostName;
-	Network::GetHostName( hostName );
-
 	// convert worker strings
 	const AString * const end = results.End();
 	for ( AString * it = results.Begin(); it != end; ++it )
@@ -83,7 +87,7 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 		const AString & fileName = *it;
 		const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
 		AStackString<> workerName( lastSlash + 1 );
-		if ( workerName.CompareI( hostName ) != 0 )
+        if ( workerName.CompareI( m_HostName ) != 0 )
 		{
 			workerList.Append( workerName );
 		}
@@ -92,41 +96,45 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 
 // SetAvailability
 //------------------------------------------------------------------------------
-void WorkerBrokerage::SetAvailability( bool available )
+void WorkerBrokerage::SetAvailability(bool available)
 {
-	// ignore if brokerage not configured
-	if ( m_BrokerageRoot.IsEmpty() )
-	{
-		return;
-	}
-
-	if ( m_Availability == available )
-	{
-		return; // avoid doing network IO when nothing has changed
-	}
-	m_Availability = available;
-
-	FileIO::EnsurePathExists( m_BrokerageRoot );
-
-	// Host Name - TODO:C Would it be better to use the IP here?
-	AStackString<> hostName;
-	Network::GetHostName( hostName );
-
-	// construct filename : "ip.username.fastbuild"
-	AStackString<> filePath;
-	filePath.Format( "%s\\%s", m_BrokerageRoot.Get(), hostName.Get() );
+    // ignore if brokerage not configured
+    if ( m_BrokerageRoot.IsEmpty() )
+    {
+        return;
+    }
 
 	if ( available )
 	{
-		// create file to signify availability
-		FileStream fs;
-		fs.Open( filePath.Get(), FileStream::WRITE_ONLY );
+        // Check the last update time to avoid too much File IO.
+        float elapsedTime = m_TimerLastUpdate.GetElapsedMS();
+        if ( elapsedTime >= 10000.0f )
+        {
+            //
+            // Ensure that the file will be recreated if cleanup is done on the brokerage path.
+            // 
+            if ( !FileIO::FileExists( m_BrokerageFilePath.Get() ) )
+            {
+        	    FileIO::EnsurePathExists( m_BrokerageRoot );
+
+                // create file to signify availability
+                FileStream fs;
+                fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
+
+                // Restart the timer
+                m_TimerLastUpdate.Start();
+            }
+        }
 	}
-	else
-	{
-		// remove file to redact availability
-		FileIO::FileDelete( filePath.Get() );
+	else if ( m_Availability != available )
+	{        
+		// remove file to remove availability
+        FileIO::FileDelete( m_BrokerageFilePath.Get() );
+
+        // Restart the timer
+        m_TimerLastUpdate.Start();
 	}
+    m_Availability = available;
 }
 
 //------------------------------------------------------------------------------

@@ -33,7 +33,7 @@ public:
 	static uint32_t GetNumProcessors();
 
 	static bool GetEnvVariable( const char * envVarName, AString & envVarValue );
-	static const char * GetCmdLine();
+	static void GetCmdLine( AString & cmdLine );
 	static void GetExePath( AString & path );
 
 	static uint32_t GetLastErr();

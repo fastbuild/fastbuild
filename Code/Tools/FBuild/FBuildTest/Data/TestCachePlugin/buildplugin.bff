@@ -2,32 +2,13 @@
 // Build an external cache plugin
 //
 //------------------------------------------------------------------------------
-
-
-// Toolchain Root
-//------------------------------------------------------------------------------
-.VSBasePath			= '../../../../External/SDK/VS12.0'
-.WindowsSDKBasePath = '../../../../External/SDK/Windows8.1'
-
-// General Setting
-//------------------------------------------------------------------------------
-Settings		
-{ 
-	.Environment	= { "PATH=$VSBasePath$/Common7/IDE/;$VSBasePath$/VC/bin/",
-						"TMP=C:\Windows\Temp",
-						"SystemRoot=C:\Windows" }
-}
+#include "..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // Activate standard settings
 
 // Toolchain
 //------------------------------------------------------------------------------
-.Compiler			= "$VSBasePath$\VC\bin\x86_amd64\cl.exe"
-.Linker				= "$VSBasePath$\VC\bin\x86_amd64\link.exe"
-
-// Toolchain Options
-//------------------------------------------------------------------------------
-.CompilerOptions	= '"%1" /Fo"%2" /c /Z7 /WX /nologo /I"./" /MT /Od'
-					+ ' /I"$VSBasePath$/VC/include"'
-.LinkerOptions		= '/OUT:"%2" "%1" /NOLOGO /WX /NODEFAULTLIB /DEBUG /PDB:"%2.pdb"'
+.Compiler			= .CompilerX64 // Build for X64 so we can load the DLL
 
 // Base compilation output
 //------------------------------------------------------------------------------
@@ -37,6 +18,7 @@ Settings
 //------------------------------------------------------------------------------
 ObjectList( "CachePlugin-Lib" )
 {
+	.CompilerOptions	+ .VisualStudioIncludePaths
 	.CompilerInputFiles	= "Data/TestCachePlugin/Plugin.cpp"
 	.CompilerOutputPath	= "$Out$/"
 }
@@ -49,8 +31,8 @@ DLL( 'Plugin-DLL' )
 						+ ' LIBCMT.lib'
 						+ ' OLDNAMES.LIB'
 						+ ' kernel32.lib'
-						+ ' /LIBPATH:"$VSBasePath$\VC\lib\amd64"'
-						+ ' /LIBPATH:"$WindowsSDKBasePath$\Lib\winv6.3\um\x64"'
+						+ ' /LIBPATH:"$VisualStudioPath$\VC\lib\amd64"'
+						+ ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x64"'
 
 	.LinkerOutput		= '$Out$/CachePlugin.dll'
 	.Libraries			= { 'CachePlugin-Lib' }

@@ -19,6 +19,7 @@
 #include "FunctionObjectList.h"
 #include "FunctionPrint.h"
 #include "FunctionSettings.h"
+#include "FunctionSLN.h"
 #include "FunctionTest.h"
 #include "FunctionUnity.h"
 #include "FunctionUsing.h"
@@ -115,6 +116,7 @@ Function::~Function()
 	FNEW( FunctionLibrary );
 	FNEW( FunctionPrint );
 	FNEW( FunctionSettings );
+	FNEW( FunctionSLN );
 	FNEW( FunctionTest );
 	FNEW( FunctionUnity );
 	FNEW( FunctionUsing );
@@ -461,6 +463,25 @@ bool Function::GetDirectoryListNodeList( const BFFIterator & iter,
 {
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
+	// Handle special case of excluded files beginning with ../
+	// Since they can be used seinsibly by matching just the end
+	// of a path, assume they are relative to the working dir.
+	// TODO:C Move this during bff parsing when everything is using reflection
+	Array< AString > filesToExcludeCleaned( filesToExclude.GetSize(), true );
+	for ( const AString& file : filesToExclude )
+	{
+		if ( file.BeginsWith( ".." ) )
+		{
+			AStackString<> fullPath;
+			NodeGraph::CleanPath( file, fullPath );
+			filesToExcludeCleaned.Append( fullPath );
+		}
+		else
+		{
+			filesToExcludeCleaned.Append( file );
+		}
+	}
+
 	const AString * const  end = paths.End();
 	for ( const AString * it = paths.Begin(); it != end; ++it )
 	{
@@ -468,7 +489,7 @@ bool Function::GetDirectoryListNodeList( const BFFIterator & iter,
 
 		// get node for the dir we depend on
 		AStackString<> name;
-		DirectoryListNode::FormatName( path, pattern, recurse, excludePaths, filesToExclude, name );
+		DirectoryListNode::FormatName( path, pattern, recurse, excludePaths, filesToExcludeCleaned, name );
 		Node * node = ng.FindNode( name );
 		if ( node == nullptr )
 		{
@@ -477,7 +498,7 @@ bool Function::GetDirectoryListNodeList( const BFFIterator & iter,
 											   pattern,
 											   recurse,
 											   excludePaths, 
-                                               filesToExclude );
+                                               filesToExcludeCleaned );
 		}
 		else if ( node->GetType() != Node::DIRECTORY_LIST_NODE )
 		{
@@ -920,7 +941,7 @@ bool Function::PopulateProperties( const BFFIterator & iter, Node * node ) const
 			default:
 			{
 				ASSERT( false ); // Unsupported type
-				break;
+				return false;
 			}
 		}
 	}
