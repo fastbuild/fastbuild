@@ -238,7 +238,7 @@ struct VCXProjectNodeComp
                 const AString * const end2 = newFolder.m_ProjectNames.End();
                 for ( const AString * it2 = newFolder.m_ProjectNames.Begin() ; it2 != end2 ; ++it2 )
                 {
-                    if ( solutionProjects.Find( *it2 ) == false )
+                    if ( solutionProjects.Find( *it2 ) == nullptr )
                     {
                         // TODO:B custom error
                         Error::Error_1104_TargetNotDefined( funcStartIter, this, ".Projects", *it2 );
@@ -348,7 +348,7 @@ struct VCXProjectNodeComp
                     return false;
                 }
 
-                if ( projects.Find( project ) == false )
+                if ( projects.Find( project ) == nullptr )
                 {
                     // project referenced in a solution folder is not referenced in .SolutionProjects
                     Error::Error_1104_TargetNotDefined( funcStartIter, this, ".SolutionProjects", project->GetName() );
@@ -380,7 +380,7 @@ struct VCXProjectNodeComp
             return false;
         }
 
-        if ( projects.Find( project ) == false )
+        if ( projects.Find( project ) == nullptr )
         {
             // project referenced in .SolutionBuildProject is not referenced in .SolutionProjects
             Error::Error_1104_TargetNotDefined( funcStartIter, this, ".SolutionBuildProject", project->GetName() );

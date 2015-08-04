@@ -8,7 +8,6 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
-#include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h" // TODO:C remove when USE_NODE_REFLECTION is removed
 
 #include "Core/Containers/Array.h"
@@ -54,7 +53,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 62 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 63 };
 
 	bool IsValid() const
 	{

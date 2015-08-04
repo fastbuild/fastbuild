@@ -190,7 +190,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 	}
 
 	// GUID : use user provided one if available, otherwise generate one deterministically
-	AString guid;
+	AStackString<> guid;
 	if ( m_ProjectGuid.IsEmpty() )
 	{
 		FormatDeterministicProjectGUID( guid, m_ProjectName );
