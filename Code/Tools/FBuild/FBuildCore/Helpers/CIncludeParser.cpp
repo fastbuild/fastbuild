@@ -111,6 +111,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
 
 		// validates the windows path
 		bool validated = ( includeStart < includeEnd );
+		size_t colonCount( 0 );
 		for ( ; validated && ( ch < includeEnd ); ++ch )
 		{
 			switch ( *ch )
@@ -122,8 +123,20 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
     			case '|':
     			case '?':
     			case '*':
+				{
     				validated = false;
     				break;
+				}
+				case ':':
+				{
+					// This logic handles warnings with might otherwise appear as valid paths
+					++colonCount;
+					if ( colonCount > 1 )
+					{
+	    				validated = false;
+					}
+					break;
+				}
     			default:
     				break;
 			}

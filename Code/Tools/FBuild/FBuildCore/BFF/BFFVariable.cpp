@@ -10,8 +10,6 @@
 
 #include "Core/Mem/Mem.h"
 
-#include "Tools/FBuild/FBuildCore/FLog.h"
-
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ const char * BFFVariable::s_TypeNames[] =

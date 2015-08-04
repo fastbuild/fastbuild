@@ -14,6 +14,24 @@
 <h1>Changelog</h1>
 
 
+<div class='newsitemheader'>
+    v0.85&nbsp;<font color='#bbbbbb'>(3-Aug-2015)</font>
+</div>
+<div class='newsitembody'>
+    Note
+    <ul>
+	  	<li>DB version has changed : clean build will occur</li>
+    </ul>
+    Fixes
+    <ul>
+      <li>Fix bug causing unnecessary rebuilds with MSVC compiler in some situations</li>
+	  <ul>
+		<li>if a warning was generated, and /WX was not enabled, an invalid path could enter the dependency database</li>
+		<li>bug introduced in v0.84</li>
+	  </ul>
+    </ul>
+</div>
+
 
 <div class='newsitemheader'>
     v0.84&nbsp;<font color='#bbbbbb'>(28-Jul-2015)</font>

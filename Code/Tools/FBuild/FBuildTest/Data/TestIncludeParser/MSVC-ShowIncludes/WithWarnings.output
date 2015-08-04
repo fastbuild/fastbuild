@@ -1,0 +1,2 @@
+badfile.cpp
+C:\Test\Code\badfile.cpp(7) : warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)

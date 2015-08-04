@@ -209,7 +209,7 @@ void SLNGenerator::WriteSolutionFolderListings( const Array< SLNSolutionFolder >
     const SLNSolutionFolder * const foldersEnd = folders.End();
     for( const SLNSolutionFolder * it = folders.Begin() ; it != foldersEnd ; ++it )
     {
-        if ( solutionFolderPaths.Find( it->m_Path ) == false )
+        if ( solutionFolderPaths.Find( it->m_Path ) == nullptr )
         {
             solutionFolderPaths.Append( it->m_Path );
         }
@@ -218,7 +218,7 @@ void SLNGenerator::WriteSolutionFolderListings( const Array< SLNSolutionFolder >
         while ( pathEnd )
         {
             AStackString<> solutionFolderPath( it->m_Path.Get(), pathEnd );
-            if ( solutionFolderPaths.Find( solutionFolderPath ) == false )
+            if ( solutionFolderPaths.Find( solutionFolderPath ) == nullptr )
             {
                 solutionFolderPaths.Append( solutionFolderPath );
             }
