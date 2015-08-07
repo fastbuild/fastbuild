@@ -129,7 +129,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
 				}
 				case ':':
 				{
-					// This logic handles warnings with might otherwise appear as valid paths
+					// This logic handles warnings which might otherwise appear as valid paths
 					++colonCount;
 					if ( colonCount > 1 )
 					{
@@ -144,7 +144,13 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
 
 		if ( validated )
 		{
-			AddInclude( includeStart, includeEnd );
+			const char c1 = includeStart[ 0 ];
+			const bool driveLetter = ( ( ( c1 >= 'A' ) && ( c1 <= 'Z' ) ) || ( ( c1 >= 'a' ) && ( c1 <= 'z' ) ) );
+			const bool validPath = driveLetter && ( includeStart[ 1 ] == ':' );
+			if ( validPath )
+			{
+				AddInclude( includeStart, includeEnd );
+			}
 		}
 	}
 

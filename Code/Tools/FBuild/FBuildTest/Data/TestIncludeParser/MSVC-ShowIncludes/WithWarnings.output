@@ -1,2 +1,8 @@
 badfile.cpp
 C:\Test\Code\badfile.cpp(7) : warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+
+\\localhost\Test\fake 2.h(4): warning C4005: 'B': macro redefinition
+  \\localhost\Test\fake 2.h(3): note: see previous definition of 'B'
+
+c:\users\franta\documents\visual studio 2015\projects\showincludes\showincludes.cpp(6): warning C4005: 'X': macro redefinition
+  c:\users\franta\documents\visual studio 2015\projects\showincludes\showincludes.cpp(5): note: see previous definition of 'X'
