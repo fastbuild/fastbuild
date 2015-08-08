@@ -1,0 +1,152 @@
+
+#include "..\testcommon.bff"
+
+// A simple exe
+// Exec.exe takes filename arguments on the command line
+// it will open and close those files writing "T" to them.
+// It will also output "Touched: <filename>" to stdout.
+//--------------------
+.OutPath			  = "..\..\..\..\ftmp\Test\Exec\"
+.HelperExecutableName = "$OutPath$exec.exe"
+{
+	Settings		
+	{
+		.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
+							"TMP=C:\Windows\Temp",
+							"SystemRoot=C:\Windows" }
+	}
+
+	.Compiler	= "$VisualStudioPath$\VC\bin\cl.exe"
+	.Librarian	= "$VisualStudioPath$\VC\bin\lib.exe"
+	.Linker		= "$VisualStudioPath$\VC\bin\link.exe"
+
+	.CompilerOutputPath	= .OutPath
+	.LinkerOutputFile = .HelperExecutableName
+
+	ObjectList( "Exec-Lib" )
+	{
+		Using(.VisualStudioToolChain)
+
+		.LibrarianOptions	= "/NODEFAULTLIB /WX /NOLOGO /OUT:%2 %1"
+		.LibrarianOutput	= "$OutPath$exec.lib"
+		.CompilerInputFiles	= "Data\TestExec\exec.cpp"
+		.CompilerOptions	= "/WX /nologo %1 /Fo%2 /c /Z7 $VisualStudionIncludePaths$ /FS /MDd /EHsc"
+							+ ' /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_LIB" /D "_UNICODE" /D "UNICODE"'
+	}
+
+	Executable( "HelperExe" )
+	{
+		.LinkerOutput		= .LinkerOutputFile
+		.LinkerOptions		= '/WX /NOLOGO /OUT:%2 %1 /MACHINE:X86'
+							+ ' /SUBSYSTEM:CONSOLE'
+							+ ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x86"'
+							+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+							+ ' /DEBUG'
+		.Libraries			= { "Exec-Lib" }
+	}
+}
+
+//--------------------
+// Test with a dummy input file.
+// In this case:
+//  - The command is expected to always execute
+//    (because there is no input to detect changes on)
+//  - The helper file is going to generate a file called 
+//    "dummy_file_does_not_exist.txt.out" because that string is passed
+//    into the helper.
+//  - Return code will be 1 because 1 argument is passed in
+Exec( "ExecCommandTest_NoInputs" )
+{
+	.ExecExecutable = .HelperExecutableName
+	.ExecInput = '$OutPath$\dummy_file_does_not_exist'
+	.ExecOutput = '$OutPath$\dummy_file_does_not_exist.txt.out' // No output files expected
+	.ExecArguments = 'dummy_file_does_not_exist.txt'
+	.ExecWorkingDir = .OutPath
+	.ExecReturnCode = 1
+	.ExecUseStdOutAsOutput = false
+}
+
+//--------------------
+// Test with a single input file
+// In this case:
+// - The command is only expected to execute when 
+//   the input changes.
+// - The command will generate "OneInput.txt.out"
+// - Return code will be 1 because 1 argument is passed in
+Exec( "ExecCommandTest_OneInput" )
+{
+	.ExecExecutable = .HelperExecutableName
+	.ExecInput = '$OutPath$\OneInput.txt' 
+	.ExecOutput = '$OutPath$\OneInput.txt.out' // Output files expected
+	.ExecArguments = '%1'
+	.ExecWorkingDir = .OutPath
+	.ExecReturnCode = 1
+	.ExecUseStdOutAsOutput = false
+}
+
+//--------------------
+// Test with a single input file and using stdOut as output
+// In this case:
+// - The command is only expected to execute when 
+//   the input changes.
+// - The command will generate "OneInput.txt.out"
+// - Return code will be 1 because 1 argument is passed in
+Exec( "ExecCommandTest_OneInput_StdOut" )
+{
+	.ExecExecutable = .HelperExecutableName
+	.ExecInput = '$OutPath$\OneInput_StdOut.txt'
+	.ExecOutput = '$OutPath$\OneInput_StdOut.txt.stdout' // Output files expected
+	.ExecArguments = '%1'
+	.ExecWorkingDir = .OutPath
+	.ExecReturnCode = 1
+	.ExecUseStdOutAsOutput = true
+}
+
+//--------------------
+Alias( "ExecCommandTest_ExpectedSuccesses" )
+{
+	.Targets = {
+		'ExecCommandTest_NoInputs',
+		'ExecCommandTest_OneInput',
+		'ExecCommandTest_OneInput_StdOut'
+	}
+}
+
+//--------------------
+// Test the return code checking (expect a failure)
+// In this case:
+// - The command is only expected to execute when 
+//   the input changes.
+// - The command will generate "OneInput.txt.out"
+// - Return code will be 1 because 1 argument is passed in
+// - The execution will fail because the return code is not correct
+Exec( "ExecCommandTest_OneInput_ReturnCode_ExpectFail" )
+{
+	.ExecExecutable = .HelperExecutableName
+	.ExecInput = '$OutPath$\OneInput_ReturnCode.txt' 
+	.ExecOutput = '$OutPath$\OneInput_ReturnCode.txt.out' // Output files expected
+	.ExecArguments = '%1'
+	.ExecWorkingDir = .OutPath
+	.ExecReturnCode = 0
+	.ExecUseStdOutAsOutput = false
+}
+
+//--------------------
+// Test the output file checking (expect a failure)
+// In this case:
+// - The command is only expected to execute when 
+//   the input changes.
+// - The command will generate "OneInput.txt.out"
+// - Return code will be 1 because 1 argument is passed in
+// - The execution will fail because the expected output file is not correct
+Exec( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" )
+{
+	.ExecExecutable = .HelperExecutableName
+	.ExecInput = '$OutPath$\OneInput_WrongOutput.txt' 
+	.ExecOutput = '$OutPath$\OneInput_WrongOutput_isWrong.txt.out' // Output files expected
+	.ExecArguments = '%1 %1'
+	.ExecWorkingDir = .OutPath
+	.ExecReturnCode = 0
+	.ExecUseStdOutAsOutput = false
+}
+
