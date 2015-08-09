@@ -199,6 +199,7 @@ FunctionExecutable::FunctionExecutable()
 							  linkerOptions->GetString(),
 							  flags,
 							  assemblyResources,
+							  importLibName,
 							  linkerStampExe,
 							  linkerStampExeArgs );
 	}

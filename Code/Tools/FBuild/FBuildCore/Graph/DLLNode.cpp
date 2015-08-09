@@ -25,8 +25,7 @@ DLLNode::DLLNode( const AString & linkerOutputName,
 				  const AString & importLibName,
 				  Node * linkerStampExe,
 				  const AString & linkerStampExeArgs )
-: LinkerNode( linkerOutputName, inputLibraries, otherLibraries, linker, linkerArgs, flags, assemblyResources, linkerStampExe, linkerStampExeArgs )
-, m_ImportLibName( importLibName )
+: LinkerNode( linkerOutputName, inputLibraries, otherLibraries, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs )
 {
 	m_Type = DLL_NODE;
 }
@@ -35,26 +34,6 @@ DLLNode::DLLNode( const AString & linkerOutputName,
 //------------------------------------------------------------------------------
 DLLNode::~DLLNode()
 {
-}
-
-// DoBuild
-//------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult DLLNode::DoBuild( Job * job )
-{
-	// Make sure the implib output directory exists
-	if ( m_ImportLibName.IsEmpty() == false)
-	{
-		AStackString<> cleanPath;
-		NodeGraph::CleanPath( m_ImportLibName, cleanPath );
-
-		if ( EnsurePathExistsForFile( cleanPath ) == false )
-		{
-			// EnsurePathExistsForFile will have emitted error
-			return NODE_RESULT_FAILED; 
-		}
-	}
-
-	return LinkerNode::DoBuild( job );
 }
 
 // GetImportLibName
@@ -97,26 +76,13 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
 	NODE_LOAD( uint32_t,		flags );
 	NODE_LOAD_DEPS( 0,  		assemblyResources );
 	NODE_LOAD_DEPS( 0,			otherLibs );
+	NODE_LOAD( AStackString<>,	importLibName );
     NODE_LOAD_NODE( Node,		linkerStampExe );
     NODE_LOAD( AStackString<>,  linkerStampExeArgs );
-
-    // DLL specific
-	NODE_LOAD( AStackString<>,	importLibName );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	DLLNode * dn = ng.CreateDLLNode( name, inputLibs, otherLibs, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs );
 	return dn;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void DLLNode::Save( IOStream & stream ) const
-{
-	// base class properties
-	LinkerNode::Save( stream );
-
-	// our additional properties
-	NODE_SAVE( m_ImportLibName );
 }
 
 //------------------------------------------------------------------------------
