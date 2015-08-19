@@ -52,6 +52,8 @@ ExecArguments
 ExecExecutable
 ExecInput
 ExecOutput
+ExecReturnCode
+ExecUseStdOutAsOutput
 Executable
 ExecWorkingDir
 ExtraFiles

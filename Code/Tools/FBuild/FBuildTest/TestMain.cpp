@@ -27,6 +27,7 @@ int main(int , char * [])
         REGISTER_TESTGROUP( TestDistributed ) // TODO:LINUX TODO:MAC Enable
         REGISTER_TESTGROUP( TestDLL ) // TODO:LINUX TODO:MAC Enable
         REGISTER_TESTGROUP( TestExe ) // TODO:LINUX TODO:MAC Enable
+        REGISTER_TESTGROUP( TestExec ) // TODO:LINUX TODO:MAC Enable
     #endif
 	REGISTER_TESTGROUP( TestGraph )
 	REGISTER_TESTGROUP( TestIncludeParser )

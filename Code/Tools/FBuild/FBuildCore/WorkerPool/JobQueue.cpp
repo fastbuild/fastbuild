@@ -587,8 +587,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 			ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_OK_CACHE ) );
 
 			// (don't check existence of input files)
-			if ( node->GetType() != Node::FILE_NODE &&
-				node->GetType() != Node::EXEC_NODE)
+			if ( node->GetType() != Node::FILE_NODE )
 			{
 				// ... ensure file exists (to detect builder logic problems)
 				if ( !FileIO::FileExists( node->GetName().Get() ) )

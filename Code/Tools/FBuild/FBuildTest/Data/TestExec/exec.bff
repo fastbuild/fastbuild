@@ -1,47 +1,32 @@
-
+// Exec
+//------------------------------------------------------------------------------
 #include "..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // Activate standard settings
 
 // A simple exe
 // Exec.exe takes filename arguments on the command line
 // it will open and close those files writing "T" to them.
 // It will also output "Touched: <filename>" to stdout.
 //--------------------
-.OutPath			  = "..\..\..\..\ftmp\Test\Exec\"
+.OutPath			  = "../../../../ftmp/Test/Exec/"
 .HelperExecutableName = "$OutPath$exec.exe"
 {
-	Settings		
-	{
-		.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
-							"TMP=C:\Windows\Temp",
-							"SystemRoot=C:\Windows" }
-	}
-
-	.Compiler	= "$VisualStudioPath$\VC\bin\cl.exe"
-	.Librarian	= "$VisualStudioPath$\VC\bin\lib.exe"
-	.Linker		= "$VisualStudioPath$\VC\bin\link.exe"
-
 	.CompilerOutputPath	= .OutPath
 	.LinkerOutputFile = .HelperExecutableName
 
 	ObjectList( "Exec-Lib" )
 	{
-		Using(.VisualStudioToolChain)
-
-		.LibrarianOptions	= "/NODEFAULTLIB /WX /NOLOGO /OUT:%2 %1"
-		.LibrarianOutput	= "$OutPath$exec.lib"
-		.CompilerInputFiles	= "Data\TestExec\exec.cpp"
-		.CompilerOptions	= "/WX /nologo %1 /Fo%2 /c /Z7 $VisualStudionIncludePaths$ /FS /MDd /EHsc"
-							+ ' /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_LIB" /D "_UNICODE" /D "UNICODE"'
+		.CompilerInputFiles	= "Data/TestExec/exec.cpp"
+		.CompilerOptions	+ ' $VisualStudioIncludePaths$ /EHsc'
 	}
 
 	Executable( "HelperExe" )
 	{
 		.LinkerOutput		= .LinkerOutputFile
 		.LinkerOptions		= '/WX /NOLOGO /OUT:%2 %1 /MACHINE:X86'
-							+ ' /SUBSYSTEM:CONSOLE'
 							+ ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x86"'
 							+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
-							+ ' /DEBUG'
 		.Libraries			= { "Exec-Lib" }
 	}
 }
