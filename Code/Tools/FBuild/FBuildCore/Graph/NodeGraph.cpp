@@ -560,14 +560,15 @@ ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName,
 									  const AString & arguments,									  
 									  const AString & workingDir,
 									  int32_t expectedReturnCode,
-									  const Dependencies & preBuildDependencies )
+									  const Dependencies & preBuildDependencies,
+									  bool useStdOutAsOutput )
 {
 	ASSERT( Thread::IsMainThread() );
 
 	AStackString< 512 > fullPath;
 	CleanPath( dstFileName, fullPath );
 
-	ExecNode * node = FNEW( ExecNode( fullPath, sourceFile, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies ) );
+	ExecNode * node = FNEW( ExecNode( fullPath, sourceFile, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies, useStdOutAsOutput ) );
 	AddNode( node );
 	return node;
 }

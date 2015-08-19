@@ -25,13 +25,15 @@ ExecNode::ExecNode( const AString & dstFileName,
 						const AString & arguments,
 						const AString & workingDir,
 						int32_t expectedReturnCode,
-						const Dependencies & preBuildDependencies )
+						const Dependencies & preBuildDependencies,
+						bool useStdOutAsOutput )
 : FileNode( dstFileName, Node::FLAG_NONE )
 , m_SourceFile( sourceFile )
 , m_Executable( executable )
 , m_Arguments( arguments )
 , m_WorkingDir( workingDir )
 , m_ExpectedReturnCode( expectedReturnCode )
+, m_UseStdOutAsOutput( useStdOutAsOutput )
 {
 	ASSERT( sourceFile );
 	ASSERT( executable );
@@ -97,6 +99,18 @@ ExecNode::~ExecNode()
 		return NODE_RESULT_FAILED;
 	}
 
+	if ( m_UseStdOutAsOutput == true )
+	{
+		FileStream f;
+		f.Open( m_Name.Get(), FileStream::WRITE_ONLY );
+		if (memOut.Get())
+		{
+			f.WriteBuffer(memOut.Get(), memOutSize);
+		}
+		
+		f.Close();
+	}
+
 	// update the file's "last modified" time
 	m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
 	return NODE_RESULT_OK;
@@ -113,6 +127,7 @@ ExecNode::~ExecNode()
 	NODE_LOAD( AStackString<>,	workingDir );
 	NODE_LOAD( int32_t,			expectedReturnCode );
 	NODE_LOAD_DEPS( 0,			preBuildDependencies );
+	NODE_LOAD( bool,			useStdOutAsOutput);
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	Node * srcNode = ng.FindNode( sourceFile );
@@ -127,7 +142,8 @@ ExecNode::~ExecNode()
 								  arguments,
 								  workingDir,
 								  expectedReturnCode,
-								  preBuildDependencies );
+								  preBuildDependencies,
+								  useStdOutAsOutput );
 	ASSERT( n );
 
 	return n;
@@ -144,6 +160,7 @@ ExecNode::~ExecNode()
 	NODE_SAVE( m_WorkingDir );
 	NODE_SAVE( m_ExpectedReturnCode );
 	NODE_SAVE_DEPS( m_PreBuildDependencies );
+	NODE_SAVE( m_UseStdOutAsOutput );
 }
 
 // EmitCompilationMessage
