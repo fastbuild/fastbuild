@@ -10,6 +10,7 @@
 #include "Core/Math/Conversions.h"
 
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +19,86 @@
 //------------------------------------------------------------------------------
 /*static*/ const char * const AString::s_EmptyString( "" );
 /*static*/ const AString AString::s_EmptyAString;
+
+// CharEqual<>
+//------------------------------------------------------------------------------
+template < bool _CaseSentitive >
+struct CharEqual
+{
+	bool operator ()( char lhs, char rhs ) const
+	{
+		return lhs == rhs;
+	}
+};
+
+template <>
+struct CharEqual< false >
+{
+	bool operator ()( char lhs, char rhs ) const
+	{
+		lhs = ( ( lhs >= 'A' ) && ( lhs <= 'Z' ) ) ? 'a' + ( lhs - 'A' ) : lhs;
+		rhs = ( ( rhs >= 'A' ) && ( rhs <= 'Z' ) ) ? 'a' + ( rhs - 'A' ) : rhs;
+		return lhs == rhs;
+	}
+};
+
+// Levenshtein distance
+// https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C
+//------------------------------------------------------------------------------
+template < size_t _Capacity, bool _CaseSentitive >
+static uint32_t LevenshteinDistance( const char * str1, uint32_t len1,
+									 const char * str2, uint32_t len2 )
+{
+	if ( str1 == nullptr || str2 == nullptr )
+		return 0;
+
+	if ( 0 == len1 ) return len2;
+	if ( 0 == len2 ) return len1;
+
+	// swap str1 and str2 if str2 is shorter
+	if ( len2 < len1 )
+	{
+		const char * strTmp = str1;
+		const uint32_t lenTmp = len1;
+		str1 = str2;
+		len1 = len2;
+		str2 = strTmp;
+		len2 = lenTmp;
+	}
+
+	if ( len1 >= _Capacity )
+	{
+		ASSERT( false );
+		return len2;
+	}
+
+	ASSERT( len1 < UINT16_MAX );
+	ASSERT( len2 < UINT16_MAX );
+	uint16_t column[_Capacity] = { 0 };
+
+	const CharEqual< _CaseSentitive > equals;
+
+    for ( uint32_t y = 1 ; y <= len1; y++ )
+        column[y] = (uint16_t)y;
+
+    for ( uint32_t x = 1 ; x <= len2; x++ )
+    {
+        column[0] = (uint16_t)x;
+        for ( uint32_t y = 1, lastdiag = x - 1 ; y <= len1 ; y++ )
+        {
+            const uint32_t olddiag = column[y];
+
+            const uint32_t a = column[y] + 1;
+            const uint32_t b = column[y - 1] + 1;
+            const uint32_t c = lastdiag + ( equals( str1[y - 1], str2[x - 1] ) ? 0 : 1 );
+            column[y] = (uint16_t)( ( a < b ) ? ( a < c ? a : c ) : ( b < c ? b : c ) );
+
+            lastdiag = olddiag;
+        }
+    }
+
+    return column[ len1 ];
+}
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -156,6 +237,30 @@ int32_t AString::CompareI( const AString & other ) const
     #else
         #error Unknown platform
     #endif
+}
+
+// EditDistance
+//------------------------------------------------------------------------------
+uint32_t AString::EditDistance( const char * other ) const
+{
+	return ::LevenshteinDistance< 1024, true >( m_Contents, m_Length, other, (uint32_t)StrLen( other ) );
+}
+
+uint32_t AString::EditDistance( const AString & other ) const
+{
+	return ::LevenshteinDistance< 1024, true >( m_Contents, m_Length, other.m_Contents, other.m_Length );
+}
+
+// EditDistanceI
+//------------------------------------------------------------------------------
+uint32_t AString::EditDistanceI( const char * other ) const
+{
+	return ::LevenshteinDistance< 1024, false >( m_Contents, m_Length, other, (uint32_t)StrLen( other ) );
+}
+
+uint32_t AString::EditDistanceI( const AString & other ) const
+{
+	return ::LevenshteinDistance< 1024, false >( m_Contents, m_Length, other.m_Contents, other.m_Length );
 }
 
 // Format

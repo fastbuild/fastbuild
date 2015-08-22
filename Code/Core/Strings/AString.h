@@ -75,6 +75,12 @@ public:
 	int32_t CompareI( const AString & other ) const;
 	inline bool operator < ( const AString & other ) const { return ( CompareI( other ) < 0 ); }
 
+	uint32_t EditDistance( const char * other ) const;
+	uint32_t EditDistance( const AString & other ) const;
+
+	uint32_t EditDistanceI( const char * other ) const;
+	uint32_t EditDistanceI( const AString & other ) const;
+
 	inline bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
 
 	void Format( const char * fmtString, ... );
