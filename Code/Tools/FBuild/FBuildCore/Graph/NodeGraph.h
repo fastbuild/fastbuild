@@ -53,7 +53,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 65 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 66 };
 
 	bool IsValid() const
 	{
@@ -94,7 +94,7 @@ public:
 									 const AString & destPath,
 									 const Dependencies & preBuildDependencies );
 	ExecNode * CreateExecNode( const AString & dstFileName, 
-							   FileNode * sourceFile, 
+							   const Dependencies & inputFiles, 
 							   FileNode * executable, 
 							   const AString & arguments, 
 							   const AString & workingDir,
