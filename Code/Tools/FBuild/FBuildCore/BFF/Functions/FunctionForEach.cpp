@@ -63,10 +63,12 @@ FunctionForEach::FunctionForEach()
 
 		const BFFIterator arrayVarNameBegin = pos;
 		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > localName;
-		if ( BFFParser::ParseVariableName( pos, localName ) == false )
+		bool localParentScope = false; // always false thanks to the previous test
+		if ( BFFParser::ParseVariableName( pos, localName, localParentScope ) == false )
 		{
 			return false;
 		}
+		ASSERT( false == localParentScope );
 
 		localNames.Append( localName );
 
@@ -90,19 +92,32 @@ FunctionForEach::FunctionForEach()
 		pos++;
 		pos.SkipWhiteSpace();
 
-		if ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL )
+		if ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL &&
+			 *pos != BFFParser::BFF_DECLARE_VAR_PARENT /* tolerant with parent vars */ )
 		{
 			Error::Error_1202_ExpectedVarFollowingIn( pos, this );
 			return false;
 		}
 
+		const BFFIterator arrayNameStart( pos );
 		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > arrayVarName;
-		if ( BFFParser::ParseVariableName( pos, arrayVarName ) == false )
+		bool arrayParentScope = false;
+		if ( BFFParser::ParseVariableName( pos, arrayVarName, arrayParentScope ) == false )
 		{
 			return false;
 		}
 
-		const BFFVariable * var = BFFStackFrame::GetVar( arrayVarName );
+		BFFStackFrame * const arrayFrame = ( arrayParentScope )
+			? BFFStackFrame::GetParentDeclaration( arrayVarName, BFFStackFrame::GetCurrent()->GetParent() )
+			: nullptr;
+
+		if ( arrayParentScope && nullptr == arrayFrame )
+	    {
+	    	Error::Error_1009_UnknownVariable( arrayNameStart, this );
+	    	return false;
+	    }
+
+		const BFFVariable * var = BFFStackFrame::GetVar( arrayVarName, arrayFrame );
 		if ( var == nullptr )
 		{
 			Error::Error_1009_UnknownVariable( arrayVarNameBegin, this );
