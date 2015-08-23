@@ -1436,6 +1436,77 @@ Node * NodeGraph::FindNodeInternal( const AString & fullPath ) const
 	return nullptr;
 }
 
+// FindNearestNodesInternal
+//------------------------------------------------------------------------------
+size_t NodeGraph::FindNearestNodesInternal( const AString & fullPath, const Node **nodes, uint32_t capacity ) const
+{
+	ASSERT( Thread::IsMainThread() );
+	ASSERT( nodes );
+	ASSERT( capacity );
+
+	if ( fullPath.IsEmpty() )
+		return 0;
+
+	const uint32_t maxDistance = 5;
+	uint32_t worstMinDistance = fullPath.GetLength() + 1;
+
+	ASSERT( capacity <= 8 );
+	uint32_t nodesDistance[8] = {0};
+
+	size_t count = 0;
+	for ( size_t i = 0 ; i < NODEMAP_TABLE_SIZE ; i++ )
+	{
+		if ( nullptr == m_NodeMap[i] )
+			continue;
+
+		Node * const n = m_NodeMap[i];
+		const uint32_t d = fullPath.EditDistanceI( n->GetName() );
+
+		if ( d > maxDistance )
+			continue;
+
+		if ( d <= worstMinDistance )
+		{
+			ASSERT( count <= capacity );
+
+			size_t pos = count;
+			for ( ; ( pos > 0 ) && ( ( nodesDistance[pos - 1] > d ) ||
+				( nodesDistance[pos - 1] == d && n->GetName() < nodes[pos - 1]->GetName() ) ) ; pos-- )
+			{
+				if ( pos < capacity )
+				{
+					nodes[pos] = nodes[pos - 1];
+					nodesDistance[pos] = nodesDistance[pos - 1];
+				}
+			}
+
+			nodes[pos] = n;
+			nodesDistance[pos] = d;
+
+			if ( count < capacity )
+				count++;
+
+			if ( count < 1 )
+			{
+				ASSERT( false );
+			}
+			else
+			{
+				worstMinDistance = nodesDistance[count - 1];
+			}
+		}
+		else if ( count < capacity )
+		{
+			nodes[count] = n;
+			nodesDistance[count] = d;
+			worstMinDistance = d;
+			count++;
+		}
+	}
+
+	return count;
+}
+
 // UpdateBuildStatus
 //------------------------------------------------------------------------------
 /*static*/ void NodeGraph::UpdateBuildStatus( const Node * node, 

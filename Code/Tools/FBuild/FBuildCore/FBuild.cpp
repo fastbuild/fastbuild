@@ -231,6 +231,18 @@ bool FBuild::Build( const Array< AString > & targets )
 		if ( node == nullptr )
 		{
 			FLOG_ERROR( "Unknown build target '%s'", target.Get() );
+
+			const Node * nearestNodes[5];
+			const size_t nearestCount = m_DependencyGraph->FindNearestNodesInternal(
+				target, nearestNodes, sizeof(nearestNodes)/sizeof(nearestNodes[0]) );
+
+			if ( nearestCount > 0 )
+			{
+				FLOG_WARN( "Did you mean '%s' ?", nearestNodes[0]->GetName().Get() );
+				for ( size_t j = 1 ; j < nearestCount ; ++j )
+					FLOG_WARN( "        - or '%s' ?", nearestNodes[j]->GetName().Get() );
+			}
+
 			return false;
 		}
 		nodes.Append( Dependency( node ) );
