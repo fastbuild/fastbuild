@@ -171,11 +171,11 @@ FunctionForEach::FunctionForEach()
 		{
 			if ( arrayVars[ j ]->GetType() == BFFVariable::VAR_ARRAY_OF_STRINGS )
 			{
-				loopStackFrame.SetVarString( localNames[ j ], arrayVars[ j ]->GetArrayOfStrings()[ i ] );
+				BFFStackFrame::SetVarString( localNames[ j ], arrayVars[ j ]->GetArrayOfStrings()[ i ], &loopStackFrame );
 			}
 			else if ( arrayVars[ j ]->GetType() == BFFVariable::VAR_ARRAY_OF_STRUCTS )
 			{
-				loopStackFrame.SetVarStruct( localNames[ j ], arrayVars[ j ]->GetArrayOfStructs()[ i ]->GetStructMembers() );
+				BFFStackFrame::SetVarStruct( localNames[ j ], arrayVars[ j ]->GetArrayOfStructs()[ i ]->GetStructMembers(), &loopStackFrame );
 			}
 			else
 			{
