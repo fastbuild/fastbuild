@@ -36,6 +36,7 @@
 //------------------------------------------------------------------------------
 BFFParser::BFFParser()
 : m_SeenAVariable( false )
+, m_LastVarFrame( nullptr )
 {
 	++s_Depth;
 }
@@ -99,6 +100,7 @@ bool BFFParser::Parse( BFFIterator & iter )
 		switch ( c )
 		{
 			case BFF_DECLARE_VAR_INTERNAL:
+			case BFF_DECLARE_VAR_PARENT:
 			{
 				if ( ParseNamedVariableDeclaration( iter ) == false )
 				{
@@ -160,10 +162,14 @@ bool BFFParser::Parse( BFFIterator & iter )
 
 // ParseNamedVariableName
 //------------------------------------------------------------------------------
-/*static*/ bool BFFParser::ParseVariableName( BFFIterator & iter, AString & name )
+/*static*/ bool BFFParser::ParseVariableName( BFFIterator & iter, AString & name, bool & parentScope )
 {
 	// skip over the declaration symbol
-	ASSERT( *iter == BFF_DECLARE_VAR_INTERNAL );
+	ASSERT( *iter == BFF_DECLARE_VAR_INTERNAL ||
+			*iter == BFF_DECLARE_VAR_PARENT );
+
+	parentScope = ( *iter == BFF_DECLARE_VAR_PARENT );
+
 	const BFFIterator varNameStart = iter; // include type token in var name
 	iter++;
 
@@ -196,6 +202,13 @@ bool BFFParser::Parse( BFFIterator & iter )
 	// store variable name
 	name.Assign( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
 
+	if ( parentScope )
+	{
+		// exchange '^' with '.'
+		ASSERT( BFF_DECLARE_VAR_PARENT == name[0] );
+		name[0] = BFF_DECLARE_VAR_INTERNAL;
+	}
+
 	return true;
 }
 
@@ -212,14 +225,17 @@ bool BFFParser::ParseUnnamedVariableConcatenation( BFFIterator & iter )
 		return false;
 	}
 
-	return ParseVariableDeclaration( iter, m_LastVarName );
+	return ParseVariableDeclaration( iter, m_LastVarName, m_LastVarFrame );
 }
 
 // ParseNamedVariableDeclaration
 //------------------------------------------------------------------------------
 bool BFFParser::ParseNamedVariableDeclaration( BFFIterator & iter )
 {
-	if ( ParseVariableName( iter, m_LastVarName ) == false )
+	const BFFIterator varNameStart( iter );
+
+	bool parentScope = false;
+	if ( ParseVariableName( iter, m_LastVarName, parentScope ) == false )
 	{
 		return false; // ParseVariableName() would have display an error
 	}
@@ -232,12 +248,23 @@ bool BFFParser::ParseNamedVariableDeclaration( BFFIterator & iter )
 		return false;
 	}
 
-	return ParseVariableDeclaration( iter, m_LastVarName );
+	// check if points to a previous declaration in a parent scope
+	m_LastVarFrame = ( parentScope )
+		? BFFStackFrame::GetParentDeclaration( m_LastVarName, nullptr )
+		: nullptr;
+
+	if ( parentScope && nullptr == m_LastVarFrame )
+    {
+    	Error::Error_1009_UnknownVariable( varNameStart, nullptr );
+    	return false;
+    }
+
+	return ParseVariableDeclaration( iter, m_LastVarName, m_LastVarFrame );
 }
 
 // ParseVariableDeclaration
 //------------------------------------------------------------------------------
-bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & varName )
+bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & varName, BFFStackFrame * frame )
 {
 	m_SeenAVariable = true;
 
@@ -316,7 +343,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 			Error::Error_1018_IntegerValueCouldNotBeParsed( startIntValue );
 			return false;
 		}
-		return StoreVariableInt( varName, i );
+		return StoreVariableInt( varName, i, frame );
 	}
 	else if ( ( *iter == 't' ) || ( *iter == 'f' ) )
 	{
@@ -335,7 +362,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 						Error::Error_1027_CannotConcatenate( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
 						return false;
 					}
-					return StoreVariableBool( varName, true );
+					return StoreVariableBool( varName, true, frame );
 				}
 				else if ( value == "false" )
 				{
@@ -344,16 +371,17 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 						Error::Error_1027_CannotConcatenate( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
 						return false;
 					}
-					return StoreVariableBool( varName, false );
+					return StoreVariableBool( varName, false, frame );
 				}
 			}
 		}
 
 		// not a valid bool value
 	}
-	else if ( *iter == BFF_DECLARE_VAR_INTERNAL )
+	else if ( *iter == BFF_DECLARE_VAR_INTERNAL ||
+			  *iter == BFF_DECLARE_VAR_PARENT )
 	{
-		return StoreVariableToVariable( varName, iter, operatorIter );
+		return StoreVariableToVariable( varName, iter, operatorIter, frame );
 	}
 
 	if ( !ok )
@@ -372,7 +400,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 	{
 		if ( iter.ParseToMatchingBrace( openToken, closeToken ) )
 		{
-			result = StoreVariableArray( varName, openTokenPos, iter, operatorIter );
+			result = StoreVariableArray( varName, openTokenPos, iter, operatorIter, frame );
 		}
 		else
 		{
@@ -383,7 +411,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 	{
 		if ( iter.ParseToMatchingBrace( openToken, closeToken ) )
 		{
-			result = StoreVariableStruct( varName, openTokenPos, iter, operatorIter );
+			result = StoreVariableStruct( varName, openTokenPos, iter, operatorIter, frame );
 		}
 		else
 		{
@@ -396,7 +424,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 		iter.SkipString( closeToken );
 		if ( *iter == closeToken )
 		{
-			result = StoreVariableString( varName, openTokenPos, iter, operatorIter );
+			result = StoreVariableString( varName, openTokenPos, iter, operatorIter, frame );
 		}
 		else		
 		{
@@ -944,7 +972,7 @@ bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIte
 	varName.Append( varNameStart.GetCurrent(), varNameLen );
 
 	// import variable in current scope
-	BFFStackFrame::SetVarString( varName, varValue );
+	BFFStackFrame::SetVarString( varName, varValue, nullptr );
 	FLOG_INFO( "Imported <string> variable '%s' with value '%s' from system environment", varName.Get(), varValue.Get() );
 
 	return true;
@@ -954,7 +982,8 @@ bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIte
 //------------------------------------------------------------------------------
 bool BFFParser::StoreVariableString( const AString & name,
 									 const BFFIterator & valueStart, const BFFIterator & valueEnd,
-									 const BFFIterator & operatorIter )
+									 const BFFIterator & operatorIter,
+									 BFFStackFrame * frame )
 {
 	// unescape and subsitute embedded variables
 	AStackString< 2048 > value;
@@ -968,7 +997,7 @@ bool BFFParser::StoreVariableString( const AString & name,
 	if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
 	{
 		// find existing
-		varToConcat = BFFStackFrame::GetVar( name );
+		varToConcat = BFFStackFrame::GetVar( name, frame );
 		if ( varToConcat == nullptr )
 		{
 			Error::Error_1026_VariableNotFoundForConcatenation( operatorIter, name );
@@ -982,7 +1011,7 @@ bool BFFParser::StoreVariableString( const AString & name,
 			AStackString< 1024 > finalValue( varToConcat->GetString() );
 			finalValue += value;
 
-			BFFStackFrame::SetVarString( name, finalValue );
+			BFFStackFrame::SetVarString( name, finalValue, frame );
 			FLOG_INFO( "Appended '%s' to <String> variable '%s' with result '%s'", value.Get(), name.Get(), finalValue.Get() );
 			return true;
 		}
@@ -993,7 +1022,7 @@ bool BFFParser::StoreVariableString( const AString & name,
 			finalValues = varToConcat->GetArrayOfStrings();
 			finalValues.Append( value );
 
-			BFFStackFrame::SetVarArrayOfStrings( name, finalValues );
+			BFFStackFrame::SetVarArrayOfStrings( name, finalValues, frame );
 			FLOG_INFO( "Appended '%s' to <ArrayOfStrings> variable '%s' with result of %i items", value.Get(), name.Get(), finalValues.GetSize() );
 			return true;
 		}
@@ -1005,7 +1034,7 @@ bool BFFParser::StoreVariableString( const AString & name,
 	}
 
 	// handle regular assignment of string
-	BFFStackFrame::SetVarString( name, value );
+	BFFStackFrame::SetVarString( name, value, frame );
 	FLOG_INFO( "Registered <string> variable '%s' with value '%s'", name.Get(), value.Get() );
 	return true;
 }
@@ -1014,7 +1043,8 @@ bool BFFParser::StoreVariableString( const AString & name,
 //------------------------------------------------------------------------------
 bool BFFParser::StoreVariableArray( const AString & name,
 									const BFFIterator & valueStart, const BFFIterator & valueEnd,
-									const BFFIterator & operatorIter )
+									const BFFIterator & operatorIter,
+									BFFStackFrame * frame )
 {
 	Array< AString > values( 32, true );
 	Array< const BFFVariable * > structValues( 32, true );
@@ -1023,7 +1053,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
 	if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
 	{
 		// find existing
-		const BFFVariable * var = BFFStackFrame::GetVar( name );
+		const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
 		if ( var == nullptr )
 		{
 			Error::Error_1026_VariableNotFoundForConcatenation( operatorIter, name );
@@ -1094,19 +1124,21 @@ bool BFFParser::StoreVariableArray( const AString & name,
 
 			iter++; // pass closing quote
 		}
-		else if ( c == BFF_DECLARE_VAR_INTERNAL )
+		else if ( c == BFF_DECLARE_VAR_INTERNAL ||
+				  c == BFF_DECLARE_VAR_PARENT )
 		{
 			const BFFIterator elementStartValue = iter;
 
 			// a variable
 			AStackString< MAX_VARIABLE_NAME_LENGTH > varName;
-			if ( ParseVariableName( iter, varName ) == false )
+			bool parentScope = false; // ignored, the behavior is the same
+			if ( ParseVariableName( iter, varName, parentScope ) == false )
 			{
 				return false;
 			}
 
 			// get the variable
-			const BFFVariable * var = BFFStackFrame::GetVar( varName );
+			const BFFVariable * var = BFFStackFrame::GetVar( varName, frame );
 			if ( var == nullptr )
 			{
 				Error::Error_1026_VariableNotFoundForConcatenation( operatorIter, varName );
@@ -1188,13 +1220,13 @@ bool BFFParser::StoreVariableArray( const AString & name,
 	if ( structValues.IsEmpty() == false )
 	{
 		// structs
-		BFFStackFrame::SetVarArrayOfStructs( name, structValues );
+		BFFStackFrame::SetVarArrayOfStructs( name, structValues, frame );
 		FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", name.Get(), structValues.GetSize() );
 	}
 	else
 	{
 		// strings (or unknown, so default to strings)
-		BFFStackFrame::SetVarArrayOfStrings( name, values );
+		BFFStackFrame::SetVarArrayOfStrings( name, values, frame );
 		FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", name.Get(), values.GetSize() );
 	}
 
@@ -1205,7 +1237,8 @@ bool BFFParser::StoreVariableArray( const AString & name,
 //------------------------------------------------------------------------------
 bool BFFParser::StoreVariableStruct( const AString & name,
 									 const BFFIterator & valueStart, const BFFIterator & valueEnd,
-									 const BFFIterator & operatorIter )
+									 const BFFIterator & operatorIter,
+									 BFFStackFrame * frame )
 {
 	// are we concatenating?
 	if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
@@ -1231,7 +1264,7 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 	const Array< const BFFVariable * > & structMembers = stackFrame.GetLocalVariables();
 
 	// Register this variable
-	BFFStackFrame::SetVarStruct( name, structMembers, stackFrame.GetParent() );
+	BFFStackFrame::SetVarStruct( name, structMembers, frame ? frame : stackFrame.GetParent() );
 	FLOG_INFO( "Registered <struct> variable '%s' with %u members", name.Get(), structMembers.GetSize() );
 
 	return true;
@@ -1240,10 +1273,10 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 
 // StoreVariableBool
 //------------------------------------------------------------------------------
-bool BFFParser::StoreVariableBool( const AString & name, bool value )
+bool BFFParser::StoreVariableBool( const AString & name, bool value, BFFStackFrame * frame )
 {
 	// Register this variable
-	BFFStackFrame::SetVarBool( name, value );
+	BFFStackFrame::SetVarBool( name, value, frame );
 
 	FLOG_INFO( "Registered <bool> variable '%s' with value '%s'", name.Get(), value ? "true" : "false" );
 
@@ -1252,28 +1285,40 @@ bool BFFParser::StoreVariableBool( const AString & name, bool value )
 
 // StoreVariableInt
 //------------------------------------------------------------------------------
-bool BFFParser::StoreVariableInt( const AString & name, int value )
+bool BFFParser::StoreVariableInt( const AString & name, int value, BFFStackFrame * frame )
 {
-	BFFStackFrame::SetVarInt( name, value );
+	BFFStackFrame::SetVarInt( name, value, frame );
 
 	FLOG_INFO( "Registered <int> variable '%s' with value '%i'", name.Get(), value );
 
 	return true;
 }
 
-// 
+// StoreVariableToVariable
 //------------------------------------------------------------------------------
-bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & varNameSrcStart, const BFFIterator & operatorIter )
+bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & varNameSrcStart, const BFFIterator & operatorIter, BFFStackFrame * dstFrame )
 {
 	AStackString< MAX_VARIABLE_NAME_LENGTH > srcName;
-	if ( ParseVariableName( varNameSrcStart, srcName ) == false )
+
+	bool srcParentScope = false;
+	if ( ParseVariableName( varNameSrcStart, srcName, srcParentScope ) == false )
 	{
 		return false;
 	}
 
+	BFFStackFrame * const srcFrame = ( srcParentScope )
+		? BFFStackFrame::GetParentDeclaration( srcName, nullptr )
+		: nullptr;
+
+	if ( srcParentScope && nullptr == srcFrame )
+    {
+    	Error::Error_1009_UnknownVariable( varNameSrcStart, nullptr );
+    	return false;
+    }
+
 	// find vars
-	const BFFVariable * varDst = BFFStackFrame::GetVar( dstName );
-	const BFFVariable * varSrc = BFFStackFrame::GetVar( srcName );
+	const BFFVariable * varDst = BFFStackFrame::GetVar( dstName, dstFrame );
+	const BFFVariable * varSrc = BFFStackFrame::GetVar( srcName, srcFrame );
 
 	// src var unknown?
 	if ( varSrc == nullptr )
@@ -1326,7 +1371,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			}
 			values.Append( varSrc->GetString() );
 
-			BFFStackFrame::SetVarArrayOfStrings( dstName, values );
+			BFFStackFrame::SetVarArrayOfStrings( dstName, values, dstFrame );
 			FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num );
 			return true;
 		}
@@ -1343,7 +1388,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			}
 			values.Append( varSrc );
 
-			BFFStackFrame::SetVarArrayOfStructs( dstName, values );
+			BFFStackFrame::SetVarArrayOfStructs( dstName, values, dstFrame );
 			FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), num );
 			return true;
 		}
@@ -1362,7 +1407,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			}
 			finalValue += varSrc->GetString();
 
-			BFFStackFrame::SetVarString( dstName, finalValue );
+			BFFStackFrame::SetVarString( dstName, finalValue, dstFrame );
 			FLOG_INFO( "Registered <string> variable '%s' with value '%s'", dstName.Get(), finalValue.Get() );
 			return true;
 		}
@@ -1375,12 +1420,12 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 				Array< AString > values( num, false );
 				values.Append( varDst->GetArrayOfStrings() );
 				values.Append( varSrc->GetArrayOfStrings() );
-				BFFStackFrame::SetVarArrayOfStrings( dstName, values );
+				BFFStackFrame::SetVarArrayOfStrings( dstName, values, dstFrame );
 				FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num );
 			}
 			else
 			{
-				BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetArrayOfStrings() );
+				BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetArrayOfStrings(), dstFrame );
 				FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), (unsigned int)varSrc->GetArrayOfStrings().GetSize() );
 			}
 			return true;
@@ -1394,12 +1439,12 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 				Array< const BFFVariable * > values( num, false );
 				values.Append( varDst->GetArrayOfStructs() );
 				values.Append( varSrc->GetArrayOfStructs() );
-				BFFStackFrame::SetVarArrayOfStructs( dstName, values );
+				BFFStackFrame::SetVarArrayOfStructs( dstName, values, dstFrame );
 				FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), num );
 			}
 			else
 			{
-				BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetArrayOfStructs() );
+				BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetArrayOfStructs(), dstFrame );
 				FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), (unsigned int)varSrc->GetArrayOfStructs().GetSize() );
 			}
 			return true;
@@ -1412,7 +1457,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			{
 				newVal += varDst->GetInt();
 			}
-			return StoreVariableInt( dstName, newVal );
+			return StoreVariableInt( dstName, newVal, dstFrame );
 		}
 
 		if ( srcType == BFFVariable::VAR_BOOL )
@@ -1420,7 +1465,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			// only assignment is supported
 			if ( concat == false )
 			{
-				return StoreVariableBool( dstName, varSrc->GetBool() );
+				return StoreVariableBool( dstName, varSrc->GetBool(), dstFrame );
 			}
 		}
 
@@ -1429,13 +1474,13 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
 			if ( concat )
 			{
-				BFFVariable *const newVar = BFFStackFrame::ConcatVars( dstName, varSrc, varDst );
+				BFFVariable *const newVar = BFFStackFrame::ConcatVars( dstName, varSrc, varDst, dstFrame );
 				FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), newVar->GetStructMembers().GetSize() );
 			}
 			else
 			{
 				// Register this variable
-				BFFStackFrame::SetVarStruct( dstName, srcMembers );
+				BFFStackFrame::SetVarStruct( dstName, srcMembers, dstFrame );
 				FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), srcMembers.GetSize() );
 			}
 			return true;
