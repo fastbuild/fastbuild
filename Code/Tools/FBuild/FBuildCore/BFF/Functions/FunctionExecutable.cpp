@@ -170,7 +170,7 @@ FunctionExecutable::FunctionExecutable()
 
 	// check for Import Library override
 	AStackString<> importLibName;
-	if ( isADLL && ( ( flags & LinkerNode::LINK_FLAG_MSVC ) != 0 )  )
+	if ( ( flags & LinkerNode::LINK_FLAG_MSVC ) != 0 )
 	{
 		GetImportLibName( linkerOptions->GetString(), importLibName );
 	}
@@ -199,6 +199,7 @@ FunctionExecutable::FunctionExecutable()
 							  linkerOptions->GetString(),
 							  flags,
 							  assemblyResources,
+							  importLibName,
 							  linkerStampExe,
 							  linkerStampExeArgs );
 	}

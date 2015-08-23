@@ -51,6 +51,7 @@ void TestExe::CreateNode() const
 											AString::GetEmpty(), // args
 											0, // flags
 											Dependencies(),
+											AStackString<>(),
 											nullptr,
 											AString::GetEmpty() ); // assembly resources
 

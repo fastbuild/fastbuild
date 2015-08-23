@@ -162,6 +162,7 @@ public:
 								   const AString & linkerArgs,
 								   uint32_t flags,
 								   const Dependencies & assemblyResources,
+								   const AString & importLibName,
 								   Node * linkerStampExe,
 								   const AString & linkerStampExeArgs );
 	UnityNode *	CreateUnityNode( const AString & unityName );
