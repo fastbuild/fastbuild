@@ -97,6 +97,8 @@ void TestVariableStack::TestStackFramesOverride() const
 //------------------------------------------------------------------------------
 void TestVariableStack::TestStackFramesParent() const
 {
+	const BFFVariable *v = nullptr;
+
 	// a stack frame with a variable
 	BFFStackFrame sf1;
 	BFFStackFrame::SetVarString( AStackString<>( "myVar" ), AStackString<>( "originalValue" ), nullptr );
@@ -105,8 +107,8 @@ void TestVariableStack::TestStackFramesParent() const
 	TEST_ASSERT( BFFStackFrame::GetVar( "myVar", &sf1 )->GetString() == "originalValue" );
 
 	// there is no previous declaration
-	TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", nullptr ) == nullptr );
-	TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", &sf1 ) == nullptr );
+	TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", nullptr, v ) == nullptr );
+	TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", &sf1, v ) == nullptr );
 
 	// another stack frame
 	{
@@ -126,17 +128,17 @@ void TestVariableStack::TestStackFramesParent() const
 		TEST_ASSERT( BFFStackFrame::GetVar( "myVar", &sf2 )->GetString() == "replacedValue" );
 
 		// but there is a previous declaration
-		TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", nullptr ) == &sf1 );
-		TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", &sf2 ) == &sf1 );
+		TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", nullptr, v ) == &sf1 );
+		TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", &sf2, v ) == &sf1 );
 
 		// another stack frame
 		{
 			BFFStackFrame sf3;
 
 			// but there is still a previous declaration
-			TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", nullptr ) == &sf2 );
-			TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", &sf3 ) == &sf2 );
-			TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", &sf2 ) == &sf1 );
+			TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", nullptr, v ) == &sf2 );
+			TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", &sf3, v ) == &sf2 );
+			TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", &sf2, v ) == &sf1 );
 
 			// we should bet the original value
 			TEST_ASSERT( BFFStackFrame::GetVar( "myVar", &sf1 ) );
@@ -153,8 +155,8 @@ void TestVariableStack::TestStackFramesParent() const
 	TEST_ASSERT( BFFStackFrame::GetVar( "myVar", nullptr )->GetString() == "originalValue" );
 
 	// there is still no previous declaration
-	TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", nullptr ) == nullptr );
-	TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", &sf1 ) == nullptr );
+	TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", nullptr, v ) == nullptr );
+	TEST_ASSERT( BFFStackFrame::GetParentDeclaration( "myVar", &sf1, v ) == nullptr );
 }
 
 //------------------------------------------------------------------------------

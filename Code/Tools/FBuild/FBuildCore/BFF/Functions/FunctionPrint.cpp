@@ -93,23 +93,21 @@ FunctionPrint::FunctionPrint()
 
 			ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
 
+			const BFFVariable * var = nullptr;
 			BFFStackFrame * const varFrame = ( parentScope )
-				? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent() )
+				? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
 				: nullptr;
 
-			if ( parentScope && nullptr == varFrame )
+			if ( false == parentScope )
+			{
+				var = BFFStackFrame::GetVar( varName, nullptr );
+			}
+
+			if ( ( parentScope && ( nullptr == varFrame ) ) || ( nullptr == var ) )
 		    {
 		    	Error::Error_1009_UnknownVariable( start, this );
 		    	return false;
 		    }
-
-			// get the var
-			const BFFVariable * var = BFFStackFrame::GetVar( varName, varFrame );
-			if ( !var )
-			{
-				Error::Error_1009_UnknownVariable( start, this );
-				return false;
-			}
 
 			// dump the contents
 			PrintVarRecurse( *var, 0 );

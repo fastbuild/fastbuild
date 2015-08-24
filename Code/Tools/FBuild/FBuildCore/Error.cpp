@@ -395,6 +395,13 @@
 									  rangeMin, rangeMax );
 }
 
+// Error_1060_CantModifyFrozenVar
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1060_CantModifyFrozenVar( const BFFIterator & iter, const Function * function, const BFFVariable * var )
+{
+	FormatError( iter, 1060u, function, "Can't modify frozen variable '%s'", var->GetName().Get() );
+}
+
 // Error_1100_AlreadyDefined
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1100_AlreadyDefined( const BFFIterator & iter,

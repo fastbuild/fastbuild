@@ -249,14 +249,28 @@ bool BFFParser::ParseNamedVariableDeclaration( BFFIterator & iter )
 	}
 
 	// check if points to a previous declaration in a parent scope
+	const BFFVariable * parentVar = nullptr;
 	m_LastVarFrame = ( parentScope )
-		? BFFStackFrame::GetParentDeclaration( m_LastVarName, nullptr )
+		? BFFStackFrame::GetParentDeclaration( m_LastVarName, nullptr, parentVar )
 		: nullptr;
 
-	if ( parentScope && nullptr == m_LastVarFrame )
+    if ( parentScope )
     {
-    	Error::Error_1009_UnknownVariable( varNameStart, nullptr );
-    	return false;
+    	// check if a parent definition exists
+    	if ( nullptr == m_LastVarFrame )
+	    {
+	    	Error::Error_1009_UnknownVariable( varNameStart, nullptr );
+	    	return false;
+	    }
+
+	    ASSERT( nullptr != parentVar );
+
+	    // check if the parent definition is frozen
+    	if ( parentVar->Frozen() )
+    	{
+    		Error::Error_1060_CantModifyFrozenVar( varNameStart, nullptr, parentVar );
+	    	return false;
+    	}
     }
 
 	return ParseVariableDeclaration( iter, m_LastVarName, m_LastVarFrame );
@@ -1306,26 +1320,25 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 		return false;
 	}
 
+	// find src var
+	const BFFVariable * varSrc = nullptr;
 	BFFStackFrame * const srcFrame = ( srcParentScope )
-		? BFFStackFrame::GetParentDeclaration( srcName, nullptr )
+		? BFFStackFrame::GetParentDeclaration( srcName, nullptr, varSrc )
 		: nullptr;
 
-	if ( srcParentScope && nullptr == srcFrame )
+	if ( !srcParentScope )
+	{
+		varSrc = BFFStackFrame::GetVar( srcName, nullptr );
+	}
+
+	if ( ( srcParentScope && nullptr == srcFrame ) || ( nullptr == varSrc ) )
     {
     	Error::Error_1009_UnknownVariable( varNameSrcStart, nullptr );
     	return false;
     }
 
-	// find vars
+	// find dst var
 	const BFFVariable * varDst = BFFStackFrame::GetVar( dstName, dstFrame );
-	const BFFVariable * varSrc = BFFStackFrame::GetVar( srcName, srcFrame );
-
-	// src var unknown?
-	if ( varSrc == nullptr )
-	{
-		Error::Error_1009_UnknownVariable( varNameSrcStart, nullptr );
-		return false;
-	}
 
 	const bool concat = ( *operatorIter == BFF_VARIABLE_CONCATENATION );
 

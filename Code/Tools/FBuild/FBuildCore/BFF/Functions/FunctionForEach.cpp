@@ -107,22 +107,21 @@ FunctionForEach::FunctionForEach()
 			return false;
 		}
 
+		const BFFVariable * var = nullptr;
 		BFFStackFrame * const arrayFrame = ( arrayParentScope )
-			? BFFStackFrame::GetParentDeclaration( arrayVarName, BFFStackFrame::GetCurrent()->GetParent() )
+			? BFFStackFrame::GetParentDeclaration( arrayVarName, BFFStackFrame::GetCurrent()->GetParent(), var )
 			: nullptr;
 
-		if ( arrayParentScope && nullptr == arrayFrame )
+		if ( false == arrayParentScope )
+		{
+			var = BFFStackFrame::GetVar( arrayVarName, nullptr );
+		}
+
+		if ( ( arrayParentScope && ( nullptr == arrayFrame ) ) || ( var == nullptr ) )
 	    {
 	    	Error::Error_1009_UnknownVariable( arrayNameStart, this );
 	    	return false;
 	    }
-
-		const BFFVariable * var = BFFStackFrame::GetVar( arrayVarName, arrayFrame );
-		if ( var == nullptr )
-		{
-			Error::Error_1009_UnknownVariable( arrayVarNameBegin, this );
-			return false;
-		}
 
 		// it can be of any supported type
 		if ( ( var->IsArrayOfStrings() == false ) && ( var->IsArrayOfStructs() == false ) )

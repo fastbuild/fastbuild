@@ -82,23 +82,23 @@ FunctionUsing::FunctionUsing()
 
 		ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
 
+		// find variable
+		const BFFVariable * v = nullptr;
 		BFFStackFrame * const varFrame = ( parentScope )
-			? BFFStackFrame::GetParentDeclaration( varName, frame )
+			? BFFStackFrame::GetParentDeclaration( varName, frame, v )
 			: nullptr;
 
-		if ( parentScope && nullptr == varFrame )
+		if ( false == parentScope )
+		{
+			v = BFFStackFrame::GetVar( varName, nullptr );
+		}
+
+		if ( ( parentScope && ( nullptr == varFrame ) ) || ( nullptr == v ) )
 	    {
 	    	Error::Error_1009_UnknownVariable( start, this );
 	    	return false;
 	    }
 
-		// find variable
-		const BFFVariable * v = BFFStackFrame::GetVar( varName, varFrame );
-		if ( v == nullptr )
-		{
-			Error::Error_1009_UnknownVariable( start, this );
-			return false;
-		}
 		if ( v->IsStruct() == false )
 		{
 			Error::Error_1008_VariableOfWrongType( start, this,

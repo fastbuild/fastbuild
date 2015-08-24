@@ -259,30 +259,33 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 
 // GetParentDeclaration
 //------------------------------------------------------------------------------
-/*static*/ BFFStackFrame * BFFStackFrame::GetParentDeclaration( const char * name, BFFStackFrame * frame )
+/*static*/ BFFStackFrame * BFFStackFrame::GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable )
 {
 	AStackString<> strName( name );
-	return GetParentDeclaration( strName, frame );
+	return GetParentDeclaration( strName, frame, variable );
 }
 
 // GetParentDeclaration
 //------------------------------------------------------------------------------
-/*static*/ BFFStackFrame * BFFStackFrame::GetParentDeclaration( const AString & name, BFFStackFrame * frame )
+/*static*/ BFFStackFrame * BFFStackFrame::GetParentDeclaration( const AString & name, BFFStackFrame * frame, const BFFVariable *& variable )
 {
 	// we shouldn't be calling this if there aren't any stack frames
 	ASSERT( s_StackHead );
+
+	variable = nullptr;
 
 	BFFStackFrame * parentFrame = frame ? frame->GetParent() : GetCurrent()->GetParent();
 
 	// look for the scope containing the original variable
     for ( ; parentFrame; parentFrame = parentFrame->GetParent() )
     {
-        if ( parentFrame->GetLocalVar( name ) != nullptr )
+        if ( ( variable = parentFrame->GetLocalVar( name ) ) != nullptr )
         {
             return parentFrame;
         }
     }
 
+    ASSERT( nullptr == variable );
     return nullptr;
 }
 

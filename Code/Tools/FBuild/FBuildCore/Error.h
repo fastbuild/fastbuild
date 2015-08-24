@@ -116,6 +116,9 @@ public:
 											const char * propertyName,
 											int rangeMin,
 											int rangeMax );
+	static void Error_1060_CantModifyFrozenVar( const BFFIterator & iter,
+												const Function * function,
+												const BFFVariable * var );
 
 	//
 	// 1100 - 1199 : General function definition errors

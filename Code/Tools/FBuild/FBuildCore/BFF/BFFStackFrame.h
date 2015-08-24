@@ -65,8 +65,8 @@ public:
 
 	static BFFStackFrame * GetCurrent() { return s_StackHead; }
 
-	static BFFStackFrame * GetParentDeclaration( const char * name, BFFStackFrame * frame );
-	static BFFStackFrame * GetParentDeclaration( const AString & name, BFFStackFrame * frame );
+	static BFFStackFrame * GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable );
+	static BFFStackFrame * GetParentDeclaration( const AString & name, BFFStackFrame * frame, const BFFVariable *& variable );
 
 	BFFStackFrame * GetParent() const { return m_Next; }
 
