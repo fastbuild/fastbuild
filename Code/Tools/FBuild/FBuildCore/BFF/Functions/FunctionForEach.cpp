@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Strings/AStackString.h"
 
@@ -177,6 +178,16 @@ FunctionForEach::FunctionForEach()
 		return true;
 	}
 
+	// freeze the variable to avoid modifications while looping
+	for ( uint32_t j=0; j<arrayVars.GetSize(); ++j )
+	{
+		arrayVars[ j ]->Freeze();
+		FLOG_INFO( "Freezing loop array '%s' of type <%s>",
+				   arrayVars[j]->GetName().Get(), BFFVariable::GetTypeName( arrayVars[j]->GetType() ) );
+	}
+
+	bool succeed = true;
+
 	for ( uint32_t i=0; i<(uint32_t)loopLen; ++i )
 	{
 		// create local loop variables
@@ -204,17 +215,27 @@ FunctionForEach::FunctionForEach()
 		subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
 		if ( subParser.Parse( subIter ) == false )
 		{
-			return false;
+			succeed = false;
+			break;
 		}
 
 		// complete the function
 		if ( Commit( functionNameStart ) == false )
 		{
-			return false;
+			succeed = false;
+			break;
 		}
 	}
 
-	return true;
+	// unfreeze all array variables
+	for ( uint32_t j=0; j<arrayVars.GetSize(); ++j )
+	{
+		arrayVars[ j ]->Unfreeze();
+		FLOG_INFO( "Unfreezing loop array '%s' of type <%s>",
+				   arrayVars[j]->GetName().Get(), BFFVariable::GetTypeName( arrayVars[j]->GetType() ) );
+	}
+
+	return succeed;
 }
 
 //------------------------------------------------------------------------------
