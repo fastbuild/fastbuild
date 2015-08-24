@@ -88,12 +88,32 @@ Exec( "ExecCommandTest_OneInput_StdOut" )
 }
 
 //--------------------
+// Test with multiple input files
+// In this case:
+// - The command is only expected to execute when 
+//   one of the inputs change.
+// - The command will generate "MultiInputA.txt.out" and "MultiInputB.txt.out"
+// - Note: currently only one of these outputs can be referenced by the command
+// - Return code will be 2 because 2 arguments are passed in
+Exec( "ExecCommandTest_MultipleInput" )
+{
+	.ExecExecutable = .HelperExecutableName
+	.ExecInput = {'$OutPath$\MultiInputA.txt', '$OutPath$\MultiInputB.txt'}
+	.ExecOutput = '$OutPath$\MultiInputA.txt.out' // Output files expected
+	.ExecArguments = '%1'
+	.ExecWorkingDir = .OutPath
+	.ExecReturnCode = 2
+	.ExecUseStdOutAsOutput = false
+}
+
+//--------------------
 Alias( "ExecCommandTest_ExpectedSuccesses" )
 {
 	.Targets = {
 		'ExecCommandTest_NoInputs',
 		'ExecCommandTest_OneInput',
-		'ExecCommandTest_OneInput_StdOut'
+		'ExecCommandTest_OneInput_StdOut',
+		'ExecCommandTest_MultipleInput'
 	}
 }
 
