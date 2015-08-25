@@ -40,6 +40,7 @@ private:
 	void Build_ExecCommand_ExpectedSuccesses() const;
 	void Build_ExecCommand_NoRebuild() const;
 	void Build_ExecCommand_SingleInputChange() const;
+	void Build_ExecCommand_MultipleInputChange() const;
 	void Build_ExecCommand_UseStdOut() const;
 	void Build_ExecCommand_ExpectedFailures() const;
 };
@@ -51,6 +52,7 @@ REGISTER_TESTS_BEGIN( TestExec )
 	REGISTER_TEST(Build_ExecCommand_ExpectedSuccesses)
 	REGISTER_TEST(Build_ExecCommand_NoRebuild)
 	REGISTER_TEST(Build_ExecCommand_SingleInputChange)
+	REGISTER_TEST(Build_ExecCommand_MultipleInputChange)
 	REGISTER_TEST(Build_ExecCommand_UseStdOut)
 	REGISTER_TEST(Build_ExecCommand_ExpectedFailures)
 REGISTER_TESTS_END
@@ -131,21 +133,29 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
 	const AStackString<> inFile_dummy("..\\..\\..\\..\\ftmp\\Test\\Exec\\dummy_file_does_not_exist.txt");
 	const AStackString<> inFile_oneInput("..\\..\\..\\..\\ftmp\\Test\\Exec\\OneInput.txt");
 	const AStackString<> inFile_stdout("..\\..\\..\\..\\ftmp\\Test\\Exec\\OneInput_StdOut.txt");
+	const AStackString<> inFile_multiInputA("..\\..\\..\\..\\ftmp\\Test\\Exec\\MultiInputA.txt");
+	const AStackString<> inFile_multiInputB("..\\..\\..\\..\\ftmp\\Test\\Exec\\MultiInputB.txt");
 	
 	// First file commented out because it is supposed to not exist
 	//CreateInputFile( inFile_dummy );
 	CreateInputFile( inFile_oneInput );
 	CreateInputFile( inFile_stdout );
+	CreateInputFile(inFile_multiInputA);
+	CreateInputFile(inFile_multiInputB);
 
 	// make sure all output is where it is expected
 	const AStackString<> outFile_dummy("..\\..\\..\\..\\ftmp\\Test\\Exec\\dummy_file_does_not_exist.txt.out");
 	const AStackString<> outFile_oneInput("..\\..\\..\\..\\ftmp\\Test\\Exec\\OneInput.txt.out");
 	const AStackString<> outFile_stdout("..\\..\\..\\..\\ftmp\\Test\\Exec\\OneInput_StdOut.txt.stdout");
+	const AStackString<> outFile_multiInputA("..\\..\\..\\..\\ftmp\\Test\\Exec\\MultiInputA.txt.out");
+	const AStackString<> outFile_multiInputB("..\\..\\..\\..\\ftmp\\Test\\Exec\\MultiInputB.txt.out");
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist(outFile_dummy);
 	EnsureFileDoesNotExist(outFile_oneInput);
 	EnsureFileDoesNotExist(outFile_stdout);
+	EnsureFileDoesNotExist(outFile_multiInputA);
+	EnsureFileDoesNotExist(outFile_multiInputB);
 
 	// build (via alias)
 	TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_ExpectedSuccesses")));
@@ -154,6 +164,8 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
 	EnsureFileExists(outFile_dummy);
 	EnsureFileExists(outFile_oneInput);
 	EnsureFileExists(outFile_stdout);
+	EnsureFileExists(outFile_multiInputA);
+	EnsureFileExists(outFile_multiInputB);
 
 	// Check stats
 	//				 Seen,	Built,	Type
@@ -161,7 +173,7 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
 	CheckStatsNode ( 1,		1,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( 1,		1,		Node::EXE_NODE );
-	CheckStatsNode ( 3,		3,		Node::EXEC_NODE );
+	CheckStatsNode ( 4,		4,		Node::EXEC_NODE );
 }
 
 //------------------------------------------------------------------------------
@@ -189,7 +201,7 @@ void TestExec::Build_ExecCommand_NoRebuild() const
 	CheckStatsNode ( 1,		0,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( 1,		0,		Node::EXE_NODE );
-	CheckStatsNode ( 3,		1,		Node::EXEC_NODE );
+	CheckStatsNode ( 4,		1,		Node::EXEC_NODE );
 }
 
 //------------------------------------------------------------------------------
@@ -221,6 +233,55 @@ void TestExec::Build_ExecCommand_SingleInputChange() const
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsNode ( 1,		0,		Node::EXE_NODE );
 	CheckStatsNode ( 1,		1,		Node::EXEC_NODE );
+}
+
+//------------------------------------------------------------------------------
+void TestExec::Build_ExecCommand_MultipleInputChange() const
+{
+	// Rebuild one of the commands after a file has changed
+	// - 1 execs should run this time (only asking one directly to run)
+
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestExec/exec.bff";
+	options.m_ForceCleanBuild = false;
+	options.m_ShowSummary = true; // required to generate stats for node count checks
+
+	FBuild fBuild(options);
+	fBuild.Initialize("..\\..\\..\\..\\ftmp\\Test\\Exec\\exec.fdb");
+
+	const AStackString<> inFile_multiInputA("..\\..\\..\\..\\ftmp\\Test\\Exec\\MultiInputA.txt");
+	CreateInputFile(inFile_multiInputA);
+	
+	TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_MultipleInput")));
+
+	// We expect only one command to run a second time (the one that always runs)
+
+	// Check stats
+	//				 Seen,	Built,	Type
+	// NOTE: Don't test file nodes since test used windows.h
+	CheckStatsNode(1, 0, Node::OBJECT_NODE);
+	CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
+	CheckStatsNode(1, 1, Node::ALIAS_NODE);
+	CheckStatsNode(1, 0, Node::EXE_NODE);
+	CheckStatsNode(1, 1, Node::EXEC_NODE);
+
+	// ------- Now try the other file
+
+	const AStackString<> inFile_multiInputB("..\\..\\..\\..\\ftmp\\Test\\Exec\\MultiInputB.txt");
+	CreateInputFile(inFile_multiInputB);
+
+	TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_MultipleInput")));
+
+	// We expect only one command to run a second time (the one that always runs)
+
+	// Check stats
+	//				 Seen,	Built,	Type
+	// NOTE: Don't test file nodes since test used windows.h
+	CheckStatsNode(1, 0, Node::OBJECT_NODE);
+	CheckStatsNode(1, 0, Node::OBJECT_LIST_NODE);
+	CheckStatsNode(1, 1, Node::ALIAS_NODE);
+	CheckStatsNode(1, 0, Node::EXE_NODE);
+	CheckStatsNode(1, 1, Node::EXEC_NODE);
 }
 
 //------------------------------------------------------------------------------
