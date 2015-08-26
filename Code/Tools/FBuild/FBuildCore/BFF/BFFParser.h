@@ -54,7 +54,7 @@ public:
 	enum { BFF_STRUCT_CLOSE = ']' };
 	enum { BFF_PREPROCESSOR_START = '#' };
 
-	enum { MAX_VARIABLE_NAME_LENGTH = 64 };
+	enum { MAX_VARIABLE_NAME_LENGTH = 256 };
 	enum { MAX_FUNCTION_NAME_LENGTH = 64 };
 	enum { MAX_DIRECTIVE_NAME_LENGTH = 64 };
 
