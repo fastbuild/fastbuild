@@ -183,11 +183,6 @@ bool BFFParser::Parse( BFFIterator & iter )
 
 	// find the end of the variable name
 	iter.SkipVariableName();
-	if ( iter.IsAtEnd() )
-	{
-		Error::Error_1012_UnexpectedEndOfFile( iter );
-		return false;
-	}
 	const BFFIterator varNameEnd = iter;
 
 	// sanity check it is a sensible length
