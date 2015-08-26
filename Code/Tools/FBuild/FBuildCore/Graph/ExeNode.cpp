@@ -42,7 +42,7 @@ ExeNode::~ExeNode()
 {
     // common Linker properties
 	NODE_LOAD( AStackString<>,	name );
-	NODE_LOAD( AStackString<>,  linkerType );
+	NODE_LOAD( AStackString<>,	linkerType );
 	NODE_LOAD( AStackString<>,	linker );
 	NODE_LOAD( AStackString<>,	linkerArgs );
 	NODE_LOAD_DEPS( 0,			inputLibs);
