@@ -421,8 +421,8 @@ void LinkerNode::GetAssemblyResourceFiles( AString & fullArgs, const AString & p
 /*static*/ uint32_t LinkerNode::DetermineLinkerTypeFlags(const AString & linkerType, const AString & linkerName)
 {
 	uint32_t flags = 0;
-
-	if ( linkerType == "auto" || linkerType.IsEmpty() )
+	
+	if ( linkerType.IsEmpty() || linkerType.CompareI(AStackString<>("auto")) == 0 )
 	{
 		// Detect based upon linker executable name
 		if ( (linkerName.EndsWithI("link.exe") ) ||
@@ -458,27 +458,27 @@ void LinkerNode::GetAssemblyResourceFiles( AString & fullArgs, const AString & p
 	}
 	else
 	{
-		if ( linkerType == "msvc" )
+		if ( linkerType.CompareI(AStackString<>("msvc")) == 0 )
 		{
 			flags |= LinkerNode::LINK_FLAG_MSVC;
 		}
-		else if ( linkerType == "gcc" )
+		else if ( linkerType.CompareI(AStackString<>("gcc")) == 0 )
 		{
 			flags |= LinkerNode::LINK_FLAG_GCC;
 		}
-		else if ( linkerType == "snc-ps3" )
+		else if ( linkerType.CompareI(AStackString<>("snc-ps3")) == 0 )
 		{
 			flags |= LinkerNode::LINK_FLAG_SNC;
 		}
-		else if ( linkerType == "clang-orbis" )
+		else if ( linkerType.CompareI(AStackString<>("clang-orbis")) == 0 )
 		{
 			flags |= LinkerNode::LINK_FLAG_ORBIS_LD;
 		}
-		else if ( linkerType == "greenhills-exlr" )
+		else if ( linkerType.CompareI(AStackString<>("greenhills-exlr")) == 0 )
 		{
 			flags |= LinkerNode::LINK_FLAG_GREENHILLS_ELXR;
 		}
-		else if ( linkerType == "codewarrior-ld" )
+		else if ( linkerType.CompareI(AStackString<>("codewarrior-ld")) == 0 )
 		{
 			flags |= LinkerNode::LINK_FLAG_CODEWARRIOR_LD;
 		}
