@@ -1,0 +1,123 @@
+
+; parent scope assignation
+
+.varA = 'foo'
+.varB = 'bar'
+.varC = .varA
+{
+    .varB = 'test'
+    ^varC = 'foobar'
+
+    .varC = ^varB
+    .varA = ^varC
+    .varB = .varC
+
+    .varB + .varA
+    .varA + ^varA
+    ^varC + .varA
+    ^varB + ^varC
+}
+
+; parent scope priority
+
+.var = 'first definition'
+{
+    ^var = 'parent'
+    .var = 'child'
+}
+
+; parent scope recursive search
+
+.var = 'first definition'
+{
+    {{{{ ^var = 'parent' }}}}
+}
+
+; parent scope concatenation
+
+.array = { 'a', 'b', 'c' }
+{
+    ^array + 'd'
+}
+
+; parent scope unnamed concatenation
+
+.array = { 'a', 'b', 'c' }
+{
+    ^array + 'd'
+           + 'e'
+           + 'f'
+}
+
+; array of parent scope
+
+.array = {}
+.a = 'a'
+.b = 'b'
+.c = 'c'
+{
+    .array = { ^a }
+    .array = { ^a, ^b, ^c }
+    ^array = { ^a, ^b, ^c }
+    ^array = {^a,^b,^c}
+    ^array =
+        {
+        ^a
+        ,
+        ^b
+        ,
+        ^c
+        }
+}
+
+; struct with parent scope
+
+.var = 12
+.struct =
+[
+    .value = ^var
+    ^var = 'test'
+]
+
+; using struct with parent scope
+
+.struct =
+[
+    .value = 42
+]
+{
+    Using( ^struct )
+}
+
+; foreach with parent scope
+
+.string = ''
+.array = { 'a', 'b', 'c' }
+ForEach( .item in .array )
+{
+    ^string + .item
+}
+
+; foreach with parent scope array
+
+.string = ''
+.array = { 'a', 'b', 'c' }
+{
+    ForEach( .item in ^array )
+    {
+        ^string + .item
+    }
+}
+
+; print with parent scope
+
+.var = 'test'
+{
+    Print( ^var )
+}
+
+; assignation at then end of the file
+
+.varA = 'foo'
+.varB = 'bar'
+.varC = .varA
