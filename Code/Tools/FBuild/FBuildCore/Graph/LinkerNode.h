@@ -20,6 +20,7 @@ public:
 	explicit LinkerNode( const AString & linkerOutputName,
 						 const Dependencies & inputLibraries,
 						 const Dependencies & otherLibraries,
+						 const AString & linkerType,
 						 const AString & linker,
 						 const AString & linkerArgs,
 						 uint32_t flags,
@@ -45,7 +46,8 @@ public:
 
 	virtual void Save( IOStream & stream ) const;
 
-	static uint32_t DetermineFlags( const AString & linkerName, const AString & args );
+	static uint32_t DetermineLinkerTypeFlags( const AString & linkerType, const AString & linkerName );
+	static uint32_t DetermineFlags( const AString & linkerType, const AString & linkerName, const AString & args );
 protected:
 	virtual BuildResult DoBuild( Job * job );
 
@@ -62,6 +64,7 @@ protected:
 
 	inline const char * GetDLLOrExe() const { return GetFlag( LINK_FLAG_DLL ) ? "DLL" : "Exe"; }
 
+	AString m_LinkerType;
 	AString m_Linker;
 	AString m_LinkerArgs;
 	uint32_t m_Flags;

@@ -18,6 +18,7 @@
 DLLNode::DLLNode( const AString & linkerOutputName,
 				  const Dependencies & inputLibraries,
 				  const Dependencies & otherLibraries,
+				  const AString & linkerType,
 				  const AString & linker,
 				  const AString & linkerArgs,
 				  uint32_t flags,
@@ -25,7 +26,7 @@ DLLNode::DLLNode( const AString & linkerOutputName,
 				  const AString & importLibName,
 				  Node * linkerStampExe,
 				  const AString & linkerStampExeArgs )
-: LinkerNode( linkerOutputName, inputLibraries, otherLibraries, linker, linkerArgs, flags, assemblyResources, linkerStampExe, linkerStampExeArgs )
+: LinkerNode( linkerOutputName, inputLibraries, otherLibraries, linkerType, linker, linkerArgs, flags, assemblyResources, linkerStampExe, linkerStampExeArgs )
 , m_ImportLibName( importLibName )
 {
 	m_Type = DLL_NODE;
@@ -91,6 +92,7 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
 {
     // common Linker properties
 	NODE_LOAD( AStackString<>,	name );
+	NODE_LOAD( AStackString<>,  linkerType );
 	NODE_LOAD( AStackString<>,	linker );
 	NODE_LOAD( AStackString<>,	linkerArgs );
 	NODE_LOAD_DEPS( 0,			inputLibs);
@@ -104,7 +106,7 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
 	NODE_LOAD( AStackString<>,	importLibName );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	DLLNode * dn = ng.CreateDLLNode( name, inputLibs, otherLibs, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs );
+	DLLNode * dn = ng.CreateDLLNode( name, inputLibs, otherLibs, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs );
 	return dn;
 }
 

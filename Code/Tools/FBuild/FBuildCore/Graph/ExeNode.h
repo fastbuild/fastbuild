@@ -19,6 +19,7 @@ public:
 	explicit ExeNode( const AString & linkerOutputName,
 					  const Dependencies & inputLibraries,
 					  const Dependencies & otherLibraries,
+					  const AString & linkerType,
 					  const AString & linker,
 					  const AString & linkerArgs,
 					  uint32_t flags,
