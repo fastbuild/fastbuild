@@ -98,6 +98,8 @@ ForEach( .item in .array )
     ^string + .item
 }
 
+.array = 'no more frozen'
+
 ; foreach with parent scope array
 
 .string = ''

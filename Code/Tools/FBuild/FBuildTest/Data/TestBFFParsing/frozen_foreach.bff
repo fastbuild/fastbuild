@@ -1,0 +1,8 @@
+
+; loop variables are frozen
+
+.array = { 'a', 'b', 'c' }
+ForEach( .item in .array )
+{
+    ^array + 'd'
+}
