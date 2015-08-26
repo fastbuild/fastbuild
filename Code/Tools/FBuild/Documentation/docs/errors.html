@@ -676,6 +676,24 @@ Unity( "name" )
 </div>
 </div>
 
+<!--------------- 1060 --------------->
+    <div class='newsitemheader'>1060 - Can't modify frozen variable '%s'.</div>
+    <div class='newsitembody'>
+An attempt was made to assign a value to a frozen variable.
+<h4>Example Config:</h4>
+<div class='code'>.Array = { 'a', 'b', 'c' }
+ForEach( .Item in .Array )
+{
+  ^Array + 'loop variables are frozen'
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\Test\fbuild.bff(4,3): FASTBuild Error #1060 - Can't modify frozen variable '.Array'
+  ^Array + 'loop variables are frozen'
+  ^
+  \--here
+</div>
+</div>
 
 
 <h2 id='1100'>1100 - 1199 : Function Parameter Errors</h2>
