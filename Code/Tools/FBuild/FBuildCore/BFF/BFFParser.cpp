@@ -766,6 +766,19 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
 		return false;
 	}
 
+	bool negate = false;
+	if ( *iter == '!' )
+	{
+		negate = true; // the condition will be inverted
+		iter++; // skip '!'
+		iter.SkipWhiteSpace(); // allow whitepace after '!'
+		if ( iter.IsAtEnd() )
+		{
+			Error::Error_1012_UnexpectedEndOfFile( iter );
+			return false;
+		}
+	}
+
 	// parse out condition
 	const BFFIterator conditionStart( iter );
 	iter.SkipVariableName();
@@ -782,6 +795,10 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
 	{
 		return false; // CheckIfCondition will have emitted an error
 	}
+
+	// #ifndef ?
+	if ( negate )
+		result = !( result );
 
 	if ( result )
 	{
