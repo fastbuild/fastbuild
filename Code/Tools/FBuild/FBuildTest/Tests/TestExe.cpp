@@ -47,6 +47,7 @@ void TestExe::CreateNode() const
 	ExeNode * exeNode = ng.CreateExeNode( AStackString<>( "exe.exe" ), 
 											inputLibraries,
 											Dependencies(),
+											AString::GetEmpty(),
 											AStackString<>( "linker.exe" ),
 											AString::GetEmpty(), // args
 											0, // flags
