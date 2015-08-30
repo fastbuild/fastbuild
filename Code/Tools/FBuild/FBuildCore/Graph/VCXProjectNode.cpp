@@ -77,10 +77,12 @@ VCXProjectNode::~VCXProjectNode()
 	pg.SetBasePaths( m_ProjectBasePaths );
 	pg.SetAllowedFileExtensions( m_AllowedFileExtensions );
 
-	// get project file name only
+	// get project name from file name
 	const char * p1 = m_Name.FindLast( NATIVE_SLASH );
-	p1 = p1 ? p1 : m_Name.Get();
-	AStackString<> projectName( p1 );
+	const char * p2 = m_Name.FindLast( '.' );
+	AStackString<> projectName( p1 ? p1 + 1 : m_Name.Get(),
+								p2 ? p2 : m_Name.GetEnd() );
+
 	pg.SetProjectName( projectName );
 
 	// Globals

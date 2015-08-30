@@ -154,8 +154,7 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
         AStackString<> projectGuid;
         if ( (*it)->GetProjectGuid().GetLength() == 0 )
         {
-            AStackString<> projectNameForGuid( p1 ? p1 : projectName.Get() );
-            VSProjectGenerator::FormatDeterministicProjectGUID( projectGuid, projectNameForGuid );
+            VSProjectGenerator::FormatDeterministicProjectGUID( projectGuid, projectName );
         }
         else
         {
