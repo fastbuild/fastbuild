@@ -86,7 +86,10 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files, bool filterBy
 //------------------------------------------------------------------------------
 /*static*/ void VSProjectGenerator::FormatDeterministicProjectGUID( AString & guid, const AString & projectName )
 {
-	guid.Format( "{%08x-6c94-4f93-bc2a-7f5284b7d434}", CRC32::Calc( projectName ) );
+	// Replace native slash with Windows-style slash for GUID generation to keep GUIDs consistent across platforms
+	AStackString<> projectNameNormalized( projectName );
+	projectNameNormalized.Replace( NATIVE_SLASH, BACK_SLASH );
+	guid.Format( "{%08x-6c94-4f93-bc2a-7f5284b7d434}", CRC32::Calc( projectNameNormalized ) );
 }
 
 // GenerateVCXProj
