@@ -137,8 +137,10 @@ void TestProjectGeneration::Test() const
 void TestProjectGeneration::TestFunction() const
 {
 	AStackString<> project( "../../../../ftmp/Test/ProjectGeneration/testproj.vcxproj" );
+	AStackString<> solution( "../../../../ftmp/Test/ProjectGeneration/testsln.sln" );
 	AStackString<> filters( "../../../../ftmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
 	EnsureFileDoesNotExist( project );
+	EnsureFileDoesNotExist( solution );
 	EnsureFileDoesNotExist( filters );
 
 	FBuildOptions options;
@@ -149,17 +151,20 @@ void TestProjectGeneration::TestFunction() const
 	TEST_ASSERT( fBuild.Initialize() );
 
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestProj" ) ) );
+	TEST_ASSERT( fBuild.Build( AStackString<>( "TestSln" ) ) );
 	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/ProjectGeneration/fbuild.fdb" ) );
 
 	EnsureFileExists( project );
+	EnsureFileExists( solution );
 	EnsureFileExists( filters );
 
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::DIRECTORY_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::VCXPROJECT_NODE );
-	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
-	CheckStatsTotal( 3,		3 );
+	CheckStatsNode ( 1,		1,		Node::SLN_NODE );
+	CheckStatsNode ( 2,		2,		Node::ALIAS_NODE );
+	CheckStatsTotal( 8,		8 );
 }
 
 // TestFunction_NoRebuild

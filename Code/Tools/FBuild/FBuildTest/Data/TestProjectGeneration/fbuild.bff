@@ -23,13 +23,13 @@
 ]
 .DebugPS3 =
 [
-	.Platform						= 'X64'
+	.Platform						= 'x64'
 	.Config							= 'Debug'
 	.LocalDebuggerCommand			= 'output/Executable_d64.exe'
 ]
 .ReleasePS3 =
 [
-	.Platform						= 'X64'
+	.Platform						= 'x64'
 	.Config							= 'Release'
 	.LocalDebuggerCommand			= 'output/Executable64.exe'
 ]
@@ -52,3 +52,11 @@ VCXProject( 'TestProj' )
 	// configuration/specific options
 	.ProjectConfigs				= { .DebugX86, .ReleaseX86, .DebugPS3, .ReleasePS3 }
 }
+
+VSSolution( 'TestSln' )
+{
+	.SolutionProjects				= { 'TestProj' }
+	.SolutionBuildProject 			= 'TestProj'
+	.SolutionOutput					= "$Out$\Test\ProjectGeneration\testsln.sln"
+}
+
