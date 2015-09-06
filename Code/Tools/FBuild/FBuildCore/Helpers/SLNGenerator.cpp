@@ -140,27 +140,29 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
         // check if this project is the master project
         const bool projectIsActive = ( solutionBuildProject.CompareI( (*it)->GetName() ) == 0 );
 
-        // project relative path
         AStackString<> projectPath( (*it)->GetName() );
-        projectPath.Replace( solutionBasePath.Get(), "" );
 
         // get project base name only
-        const char * p1 = projectPath.FindLast( NATIVE_SLASH );
-        const char * p2 = projectPath.FindLast( '.' );
-        AStackString<> projectName( p1 ? p1 + 1 : projectPath.Get(),
-                                    p2 ? p2 : projectPath.GetEnd() );
+        const char * lastSlash  = projectPath.FindLast( NATIVE_SLASH );
+        const char * lastPeriod = projectPath.FindLast( '.' );
+        AStackString<> projectName( lastSlash  ? lastSlash + 1  : projectPath.Get(),
+									lastPeriod ? lastPeriod		: projectPath.GetEnd() );
 
         // retrieve projectGuid
         AStackString<> projectGuid;
         if ( (*it)->GetProjectGuid().GetLength() == 0 )
         {
-            AStackString<> projectNameForGuid( p1 ? p1 : projectName.Get() );
+			// For backward compatibility, keep the preceding slash and .vcxproj extension for GUID generation
+            AStackString<> projectNameForGuid( lastSlash ? lastSlash : projectPath.Get() );
             VSProjectGenerator::FormatDeterministicProjectGUID( projectGuid, projectNameForGuid );
         }
         else
         {
             projectGuid = (*it)->GetProjectGuid();
         }
+
+		// make project path relative
+		projectPath.Replace(solutionBasePath.Get(), "");
 
         // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
         projectGuid.ToUpper();
