@@ -323,10 +323,10 @@
 
 // Error_1036_UnknownTokenInIfDirective
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1036_UnknownTokenInIfDirective( const BFFIterator & iter )
-{
-	FormatError( iter, 1036u, nullptr, "Unknown token in #if directive." );
-}
+///*static*/ void Error::Error_1036_UnknownTokenInIfDirective( const BFFIterator & iter )
+//{
+//	FormatError( iter, 1036u, nullptr, "Unknown token in #if directive." );
+//}
 
 // Error_1037_EndIfWithoutIf
 //------------------------------------------------------------------------------
@@ -339,7 +339,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1038_OverwritingTokenInDefine( const BFFIterator & iter )
 {
-	FormatError( iter, 1038u, nullptr, "Overwriting alread defined token in #define directive." );
+	FormatError( iter, 1038u, nullptr, "Overwriting already defined token in #define directive." );
 }
 
 // Error_1039_UnknownTokenInUndef
@@ -347,6 +347,13 @@
 /*static*/ void Error::Error_1039_UnknownTokenInUndef( const BFFIterator & iter )
 {
 	FormatError( iter, 1039u, nullptr, "Unknown token in #undef directive." );
+}
+
+// Error_1040_UndefOfBuiltInTokenNotAllowed
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1040_UndefOfBuiltInTokenNotAllowed( const BFFIterator & iter )
+{
+	FormatError( iter, 1040u, nullptr, "#undef of built-in token not allowed." );
 }
 
 // Error_1050_PropertyMustBeString

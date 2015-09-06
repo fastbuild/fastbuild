@@ -432,7 +432,7 @@ While parsing a Function body, the closing '}' token could not be found.
     <div class='newsitembody'>
 An attempt was made to concatenate to a variable that was not previously defined.
 <h4>Example Config:</h4>
-<div class='code'>.Nonexistant + "string"</div>
+<div class='code'>.DoesNotExist + "string"</div>
 <h4>Example Output:</h4>
 <div class='output'>c:\Test\fbuild.bff(1):(15) FASTBuild Error #1026 - Variable '.DoesNotExist' not found for concatention.
 .DoesNotExist + "string"
@@ -579,6 +579,61 @@ Check for resursive includes or simplify config.
          ^
          \--here
 </div>
+</div>
+
+<!--------------- 1037 --------------->
+    <div class='newsitemheader'>1037 - #endif without matching #if.</div>
+    <div class='newsitembody'>
+Every #endif directive must be preceeded by an accompanying #if directive.
+<h4>Example Config:</h4>
+<div class='code'>#if __WINDOWS__
+#endif
+#endif</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\Test\fbuild.bff(3,2): FASTBuild Error #1037 - #endif without matching #if.
+#endif
+ ^
+ \--here</div>
+</div>
+
+<!--------------- 1038 --------------->
+    <div class='newsitemheader'>1038 - Overwriting already defined token in #define directive.</div>
+    <div class='newsitembody'>
+A token can only be defined once.  If re-definition is required, the token must first be undefined using #undef.
+<h4>Example Config:</h4>
+<div class='code'>#define THING
+#define THING</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\Test\fbuild.bff(2,9): FASTBuild Error #1038 - Overwriting already defined token in #define directive.
+#define THING
+        ^
+        \--here</div>
+</div>
+
+<!--------------- 1039 --------------->
+    <div class='newsitemheader'>1039 - Unknown token in #undef directive.</div>
+    <div class='newsitembody'>
+A token can only be undefined if it was previously defined.
+<h4>Example Config:</h4>
+<div class='code'>#undef THING_WHICH_WAS_NOT_DEFINED</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\Test\fbuild.bff(1,8): FASTBuild Error #1039 - Unknown token in #undef directive.
+#undef THING_WHICH_WAS_NOT_DEFINED
+       ^
+       \--here</div>
+</div>
+
+<!--------------- 1040 --------------->
+    <div class='newsitemheader'>1040 - #undef of built-in token not allowed.</div>
+    <div class='newsitembody'>
+A token can only be undefined if it was previously defined.
+<h4>Example Config:</h4>
+<div class='code'>#undef __WINDOWS__</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\Test\fbuild.bff(1,8): FASTBuild Error #1040 - #undef of built-in token not allowed.
+#undef __WINDOWS__
+       ^
+       \--here</div>
 </div>
 
 <!--------------- 1050 --------------->

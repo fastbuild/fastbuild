@@ -1,0 +1,5 @@
+//
+// Bad Undefine
+//
+#undef THING_THAT_WAS_NEVER_DEFINED
+

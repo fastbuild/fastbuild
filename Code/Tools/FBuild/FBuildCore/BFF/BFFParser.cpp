@@ -593,11 +593,11 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 	}
 	else if ( directive == "define" )
 	{
-		return ParseDefineDirective( directiveStart, iter );
+		return ParseDefineDirective( iter );
 	}
 	else if ( directive == "undef" )
 	{
-		return ParseUndefDirective( directiveStart, iter );
+		return ParseUndefDirective( iter );
 	}
 	else if ( directive == "if" )
 	{
@@ -698,7 +698,7 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
 
 // ParseDefineDirective
 //------------------------------------------------------------------------------
-bool BFFParser::ParseDefineDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+bool BFFParser::ParseDefineDirective( BFFIterator & iter )
 {
 	if ( iter.IsAtEnd() )
 	{
@@ -720,7 +720,7 @@ bool BFFParser::ParseDefineDirective( const BFFIterator & directiveStart, BFFIte
 
 	if ( BFFMacros::Get().Define( token ) == false )
 	{
-		Error::Error_1038_OverwritingTokenInDefine( directiveStart );
+		Error::Error_1038_OverwritingTokenInDefine( tokenStart );
 		return false;
 	}
 
@@ -731,7 +731,7 @@ bool BFFParser::ParseDefineDirective( const BFFIterator & directiveStart, BFFIte
 
 // ParseUndefDirective
 //------------------------------------------------------------------------------
-bool BFFParser::ParseUndefDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+bool BFFParser::ParseUndefDirective( BFFIterator & iter )
 {
 	if ( iter.IsAtEnd() )
 	{
@@ -753,7 +753,14 @@ bool BFFParser::ParseUndefDirective( const BFFIterator & directiveStart, BFFIter
 
 	if ( BFFMacros::Get().Undefine( token ) == false )
 	{
-		Error::Error_1039_UnknownTokenInUndef( directiveStart );
+		if ( token.BeginsWith( "__" ) )
+		{
+			Error::Error_1040_UndefOfBuiltInTokenNotAllowed( tokenStart );			
+		}
+		else
+		{
+			Error::Error_1039_UnknownTokenInUndef( tokenStart );
+		}
 		return false;
 	}
 
@@ -804,7 +811,9 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
 
 	// #ifndef ?
 	if ( negate )
+    {
 		result = !( result );
+    }
 
 	if ( result )
 	{

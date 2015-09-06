@@ -34,6 +34,10 @@ private:
 	void Struct_Unterminated() const;
 	void IncludeScope() const;
 	void IfDirective() const;
+	void DefineUndefineDirectives() const;
+	void BadDefineDirective() const;
+	void BadUndefDirective() const;
+	void BadUndefBuiltInDirective() const;
 
 	void Parse( const char * fileName, bool expectFailure = false ) const;
 };
@@ -57,6 +61,10 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
 	REGISTER_TEST( Struct_Unterminated )
 	REGISTER_TEST( IncludeScope )
 	REGISTER_TEST( IfDirective )
+	REGISTER_TEST( DefineUndefineDirectives )
+	REGISTER_TEST( BadDefineDirective )
+	REGISTER_TEST( BadUndefDirective )
+	REGISTER_TEST( BadUndefBuiltInDirective )
 REGISTER_TESTS_END
 
 // Empty
@@ -199,6 +207,34 @@ void TestBFFParsing::IncludeScope() const
 void TestBFFParsing::IfDirective() const
 {
 	Parse( "Data/TestBFFParsing/if_directive.bff" );
+}
+
+// DefineUndefineDirectives
+//------------------------------------------------------------------------------
+void TestBFFParsing::DefineUndefineDirectives() const
+{
+	Parse( "Data/TestBFFParsing/define_undef_directives.bff" );
+}
+
+// BadDefineDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::BadDefineDirective() const
+{
+	Parse( "Data/TestBFFParsing/bad_define.bff", true ); // expect failure
+}
+
+// BadUndefDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::BadUndefDirective() const
+{
+	Parse( "Data/TestBFFParsing/bad_undef.bff", true ); // expect failure
+}
+
+// BadUndefBuiltInDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::BadUndefBuiltInDirective() const
+{
+	Parse( "Data/TestBFFParsing/bad_undef_builtin.bff", true ); // expect failure
 }
 
 //------------------------------------------------------------------------------
