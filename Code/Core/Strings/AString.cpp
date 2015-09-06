@@ -19,6 +19,93 @@
 /*static*/ const char * const AString::s_EmptyString( "" );
 /*static*/ const AString AString::s_EmptyAString;
 
+// CharEqual<>
+//------------------------------------------------------------------------------
+template < bool _CaseSentitive >
+struct CharEqual
+{
+	bool operator ()( char lhs, char rhs ) const
+	{
+		return lhs == rhs;
+	}
+};
+
+template <>
+struct CharEqual< false >
+{
+	bool operator ()( char lhs, char rhs ) const
+	{
+		lhs = ( ( lhs >= 'A' ) && ( lhs <= 'Z' ) ) ? 'a' + ( lhs - 'A' ) : lhs;
+		rhs = ( ( rhs >= 'A' ) && ( rhs <= 'Z' ) ) ? 'a' + ( rhs - 'A' ) : rhs;
+		return lhs == rhs;
+	}
+};
+
+// WildMatch
+// NOTE: This code is based on that in the C/C++ Users Journal (Mike Cornelison)
+//------------------------------------------------------------------------------
+template < bool _CaseSentitive >
+static bool WildMatch( const char *pat, const char *end, const char *str )
+{
+	const CharEqual< _CaseSentitive > equalto;
+
+	bool star;
+
+new_segment:
+	star = false;
+	if ( *pat == '*' )
+	{
+		star = true;
+		do { pat++; } while ( *pat == '*' );
+	}
+
+test_match:
+	int i;
+	for ( i = 0; pat + i != end && ( pat[i] != '*' ); i++ )
+	{
+		if ( equalto( str[i], pat[i] ) == false )
+		{
+			if ( !str[i] ) return false;
+			if ( ( pat[i] == '?' ) && ( str[i] != '.' ) ) continue;
+			if ( !star ) return false;
+			str++;
+			goto test_match;
+		}
+	}
+	if ( pat[i] == '*' )
+	{
+		str += i;
+		pat += i;
+		goto new_segment;
+	}
+	if ( !str[i] ) return true;
+	if ( i && pat[i - 1] == '*' ) return true;
+	if ( !star ) return false;
+	str++;
+	goto test_match;
+}
+
+// WildMatchMany
+// Supports multiple patterns (ex: "*.h|*.cpp")
+//------------------------------------------------------------------------------
+template < bool _CaseSentitive >
+static bool WildMatchMany( const char *pat, const char *str )
+{
+	const char * end = pat;
+	for ( ; *end; ++end )
+	{
+		if ( *end == '|' )
+		{
+			if ( WildMatch< _CaseSentitive >( pat, end, str ) )
+				return true;
+			pat = end + 1;
+		}
+	}
+	return ( pat != end )
+		? WildMatch< _CaseSentitive >( pat, end, str )
+		: false;
+}
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 AString::AString()
@@ -776,89 +863,17 @@ bool AString::BeginsWithI( const AString & string ) const
 }
 
 // Match
-// NOTE: This code is based on that in the C/C++ Users Journal (Mike Cornelison)
 //------------------------------------------------------------------------------
 /*static*/ bool AString::Match( const char * pat, const char * str )
 {
-	bool star;
-
-new_segment:
-	star = false;
-	if ( *pat == '*' )
-	{
-		star = true;
-		do { pat++; } while ( *pat == '*' );
-	}
-
-test_match:
-	int i;
-	for ( i = 0; pat[i] && (pat[i] != '*'); i++ )
-	{
-		char a = str[i];
-		char b = pat[i];
-		if ( a != b )
-		{
-			if ( !str[i] ) return false;
-			if ( ( pat[i] == '?' ) && ( str[i] != '.' ) ) continue;
-			if ( !star ) return false;
-			str++;
-			goto test_match;
-		}
-	}
-	if ( pat[i] == '*' )
-	{
-		str += i;
-		pat += i;
-		goto new_segment;
-	}
-	if ( !str[i] ) return true;
-	if ( i && pat[i - 1] == '*' ) return true;
-	if ( !star ) return false;
-	str++;
-	goto test_match;
+	return WildMatchMany< true >( pat, str );
 }
 
 // MatchI
-// NOTE: This code is based on that in the C/C++ Users Journal (Mike Cornelison)
 //------------------------------------------------------------------------------
 /*static*/ bool AString::MatchI( const char * pat, const char * str )
 {
-	bool star;
-
-new_segment:
-	star = false;
-	if ( *pat == '*' )
-	{
-		star = true;
-		do { pat++; } while ( *pat == '*' );
-	}
-
-test_match:
-	int i;
-	for ( i = 0; pat[i] && (pat[i] != '*'); i++ )
-	{
-		char a = str[i]; a = ( ( a >= 'A' ) && ( a <= 'Z' ) ) ? 'a' + ( a - 'A' ) : a;
-		char b = pat[i]; b = ( ( b >= 'A' ) && ( b <= 'Z' ) ) ? 'a' + ( b - 'A' ) : b;
-		if ( a != b )
-		{
-			if ( !str[i] ) return false;
-			if ( ( pat[i] == '?' ) && ( str[i] != '.' ) ) continue;
-			if ( !star ) return false;
-			str++;
-			goto test_match;
-		}
-	}
-	if ( pat[i] == '*' )
-	{
-		str += i;
-		pat += i;
-		goto new_segment;
-	}
-	if ( !str[i] ) return true;
-	if ( i && pat[i - 1] == '*' ) return true;
-	if ( !star ) return false;
-	str++;
-	goto test_match;
+	return WildMatchMany< false >( pat, str );
 }
 
 // Copy
