@@ -7,6 +7,7 @@
 
 #include "BFFParser.h"
 #include "BFFIterator.h"
+#include "BFFMacros.h"
 #include "BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -590,6 +591,14 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 		FBuild::Get().GetDependencyGraph().SetCurrentFileAsOneUse();
 		return true;
 	}
+	else if ( directive == "define" )
+	{
+		return ParseDefineDirective( directiveStart, iter );
+	}
+	else if ( directive == "undef" )
+	{
+		return ParseUndefDirective( directiveStart, iter );
+	}
 	else if ( directive == "if" )
 	{
 		return ParseIfDirective( directiveStart, iter );
@@ -687,17 +696,102 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
 	return parser.Parse( mem.Get(), fileSize, includeToUseClean.Get(), includeTimeStamp, pushStackFrame ); 
 }
 
+// ParseDefineDirective
+//------------------------------------------------------------------------------
+bool BFFParser::ParseDefineDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+{
+	if ( iter.IsAtEnd() )
+	{
+		Error::Error_1012_UnexpectedEndOfFile( iter );
+		return false;
+	}
+
+	// parse out token
+	const BFFIterator tokenStart( iter );
+	iter.SkipVariableName();
+	if ( tokenStart.GetCurrent() == iter.GetCurrent() )
+	{
+		Error::Error_1007_ExpectedVariable( iter, nullptr );
+		return false;
+	}
+	const BFFIterator tokenEnd( iter );
+
+	AStackString<> token( tokenStart.GetCurrent(), tokenEnd.GetCurrent() );
+
+	if ( BFFMacros::Get().Define( token ) == false )
+	{
+		Error::Error_1038_OverwritingTokenInDefine( directiveStart );
+		return false;
+	}
+
+	FLOG_INFO( "Define macro <%s>", token.Get() );
+
+	return true;
+}
+
+// ParseUndefDirective
+//------------------------------------------------------------------------------
+bool BFFParser::ParseUndefDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+{
+	if ( iter.IsAtEnd() )
+	{
+		Error::Error_1012_UnexpectedEndOfFile( iter );
+		return false;
+	}
+
+	// parse out token
+	const BFFIterator tokenStart( iter );
+	iter.SkipVariableName();
+	if ( tokenStart.GetCurrent() == iter.GetCurrent() )
+	{
+		Error::Error_1007_ExpectedVariable( iter, nullptr );
+		return false;
+	}
+	const BFFIterator tokenEnd( iter );
+
+	AStackString<> token( tokenStart.GetCurrent(), tokenEnd.GetCurrent() );
+
+	if ( BFFMacros::Get().Undefine( token ) == false )
+	{
+		Error::Error_1039_UnknownTokenInUndef( directiveStart );
+		return false;
+	}
+
+	FLOG_INFO( "Undefine macro <%s>", token.Get() );
+
+	return true;
+}
+
 // ParseIfDirective
 //------------------------------------------------------------------------------
 bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter )
 {
+	if ( iter.IsAtEnd() )
+	{
+		Error::Error_1012_UnexpectedEndOfFile( iter );
+		return false;
+	}
+
+	bool negate = false;
+	if ( *iter == '!' )
+	{
+		negate = true; // the condition will be inverted
+		iter++; // skip '!'
+		iter.SkipWhiteSpace(); // allow whitepace after '!'
+		if ( iter.IsAtEnd() )
+		{
+			Error::Error_1012_UnexpectedEndOfFile( iter );
+			return false;
+		}
+	}
+
 	// parse out condition
 	const BFFIterator conditionStart( iter );
-	while ( ( iter.IsAtEnd() == false ) &&
-			( *iter != '\r' ) &&
-			( *iter != '\n' ) )
+	iter.SkipVariableName();
+	if ( conditionStart.GetCurrent() == iter.GetCurrent() )
 	{
-		iter++;
+		Error::Error_1007_ExpectedVariable( directiveStart, nullptr );
+		return false;
 	}
 	const BFFIterator conditionEnd( iter );
 
@@ -707,6 +801,10 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
 	{
 		return false; // CheckIfCondition will have emitted an error
 	}
+
+	// #ifndef ?
+	if ( negate )
+		result = !( result );
 
 	if ( result )
 	{
@@ -784,37 +882,10 @@ bool BFFParser::CheckIfCondition( const BFFIterator & conditionStart, const BFFI
 {
 	// trim condition
 	AStackString<> condition( conditionStart.GetCurrent(), conditionEnd.GetCurrent() );
-	condition.Replace( '\t', ' ' );
-	condition.Replace( " ", "" );
 
-	result = false;
+	result = BFFMacros::Get().IsDefined( condition );
 
-	// For now we only support trivial pre-defined expressions - TODO:B Support more complex expressions
-	if ( condition == "__WINDOWS__" )
-	{
-		#if defined( __WINDOWS__ )
-			result = true;
-		#endif
-		return true;
-	}
-	if ( condition == "__LINUX__" )
-	{
-		#if defined( __LINUX__ )
-			result = true;
-		#endif
-		return true;
-	}
-	if ( condition == "__OSX__" )
-	{
-		#if defined( __OSX__ )
-			result = true;
-		#endif
-		return true;
-	}
-
-	// We found an expression we don't understand
-	Error::Error_1036_UnknownTokenInIfDirective( conditionStart );
-	return false;
+	return true;
 }
 
 // ParseImportDirective

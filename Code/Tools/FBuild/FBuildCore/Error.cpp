@@ -335,6 +335,20 @@
 	FormatError( iter, 1037u, nullptr, "#endif without matching #if." );
 }
 
+// Error_1038_OverwritingTokenInDefine
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1038_OverwritingTokenInDefine( const BFFIterator & iter )
+{
+	FormatError( iter, 1038u, nullptr, "Overwriting alread defined token in #define directive." );
+}
+
+// Error_1039_UnknownTokenInUndef
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1039_UnknownTokenInUndef( const BFFIterator & iter )
+{
+	FormatError( iter, 1039u, nullptr, "Unknown token in #undef directive." );
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFIterator & iter,
