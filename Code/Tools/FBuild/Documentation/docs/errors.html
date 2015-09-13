@@ -679,7 +679,8 @@ Unity( "name" )
 <!--------------- 1060 --------------->
     <div class='newsitemheader'>1060 - Can't modify frozen variable '%s'.</div>
     <div class='newsitembody'>
-An attempt was made to assign a value to a frozen variable.
+An attempt was made to assign a value to a frozen variable. Variables are frozen when
+they are being iterated with ForEach.
 <h4>Example Config:</h4>
 <div class='code'>.Array = { 'a', 'b', 'c' }
 ForEach( .Item in .Array )

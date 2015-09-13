@@ -1,5 +1,5 @@
 
-; parent scope assignation
+; parent scope assignment
 
 .varA = 'foo'
 .varB = 'bar'
@@ -118,7 +118,7 @@ ForEach( .item in .array )
     Print( ^var )
 }
 
-; assignation at then end of the file
+; assignment at the end of the file
 
 .varA = 'foo'
 .varB = 'bar'
