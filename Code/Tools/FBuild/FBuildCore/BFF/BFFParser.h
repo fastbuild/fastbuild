@@ -9,12 +9,14 @@
 #include "BFFIterator.h"
 
 #include "Core/Env/Assert.h"
-#include "Core/Strings/AString.h"
 #include "Core/Env/Types.h"
+#include "Core/Strings/AStackString.h"
+#include "Core/Strings/AString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
 class FileStream;
+class BFFStackFrame;
 
 // BFFParser
 //------------------------------------------------------------------------------
@@ -37,6 +39,7 @@ public:
 	enum { BFF_COMMENT_SEMICOLON = ';' };
 	enum { BFF_COMMENT_SLASH = '/' };
 	enum { BFF_DECLARE_VAR_INTERNAL = '.' };
+	enum { BFF_DECLARE_VAR_PARENT = '^' };
 	enum { BFF_VARIABLE_ASSIGNMENT = '=' };
 	enum { BFF_VARIABLE_CONCATENATION = '+' };
 	enum { BFF_START_ARRAY = '{' };
@@ -54,12 +57,12 @@ public:
 	enum { MAX_DIRECTIVE_NAME_LENGTH = 64 };
 
 	static bool PerformVariableSubstitutions( const BFFIterator & startIter, const BFFIterator & endIter, AString & value );
+	static bool ParseVariableName( BFFIterator & iter, AString & name, bool & parentScope );
 
 private:
 	bool ParseUnnamedVariableConcatenation( BFFIterator & iter );
 	bool ParseNamedVariableDeclaration( BFFIterator & parseIndex );
-	bool ParseVariableDeclaration( BFFIterator & iter, const BFFIterator & varNameStart,
-													   const BFFIterator & varNameEnd );
+	bool ParseVariableDeclaration( BFFIterator & iter, const AString & varName, BFFStackFrame * frame );
 	bool ParseFunction( BFFIterator & parseIndex );
 	bool ParseUnnamedScope( BFFIterator & iter );
 	bool ParsePreprocessorDirective( BFFIterator & iter );
@@ -71,18 +74,16 @@ private:
 	bool CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result );
 	bool ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter );
 
-	bool StoreVariableString( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
-	bool StoreVariableArray( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
-	bool StoreVariableStruct( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
-	bool StoreVariableBool( const char * varNameStart, const char * varNameEnd, bool value );
-	bool StoreVariableInt( const char * varNameStart, const char * varNameEnd, int value );
-	bool StoreVariableToVariable( const char * varNameDstStart, const char * varNameDstEnd,
-						  		  const BFFIterator & varNameSrcStart, const BFFIterator & varNameSrcEnd,
-								  const BFFIterator & operatorIter );
+	bool StoreVariableString( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, BFFStackFrame * frame );
+	bool StoreVariableArray( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, BFFStackFrame * frame );
+	bool StoreVariableStruct( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, BFFStackFrame * frame );
+	bool StoreVariableBool( const AString & name, bool value, BFFStackFrame * frame );
+	bool StoreVariableInt( const AString & name, int value, BFFStackFrame * frame );
+	bool StoreVariableToVariable( const AString & dstName, BFFIterator & varNameSrcStart, const BFFIterator & operatorIter, BFFStackFrame * dstFrame );
 	// store the last seen variable
 	bool m_SeenAVariable;
-	BFFIterator m_LastVarNameStart;
-	BFFIterator m_LastVarNameEnd;
+	AStackString< MAX_VARIABLE_NAME_LENGTH > m_LastVarName;
+	BFFStackFrame * m_LastVarFrame;
 
 	// track recursion depth to detect recursion or excessive complexity
 	static uint32_t s_Depth;

@@ -38,6 +38,9 @@ private:
 	void BadDefineDirective() const;
 	void BadUndefDirective() const;
 	void BadUndefBuiltInDirective() const;
+	void ParentScope() const;
+	void ParentScopeUnknown() const;
+	void FrozenVariable() const;
 
 	void Parse( const char * fileName, bool expectFailure = false ) const;
 };
@@ -65,6 +68,9 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
 	REGISTER_TEST( BadDefineDirective )
 	REGISTER_TEST( BadUndefDirective )
 	REGISTER_TEST( BadUndefBuiltInDirective )
+	REGISTER_TEST( ParentScope )
+	REGISTER_TEST( ParentScopeUnknown )
+	REGISTER_TEST( FrozenVariable )
 REGISTER_TESTS_END
 
 // Empty
@@ -235,6 +241,27 @@ void TestBFFParsing::BadUndefDirective() const
 void TestBFFParsing::BadUndefBuiltInDirective() const
 {
 	Parse( "Data/TestBFFParsing/bad_undef_builtin.bff", true ); // expect failure
+}
+
+// ParentScope
+//------------------------------------------------------------------------------
+void TestBFFParsing::ParentScope() const
+{
+	Parse( "Data/TestBFFParsing/parent_scope.bff" );
+}
+
+// ParentScopeUnknown
+//------------------------------------------------------------------------------
+void TestBFFParsing::ParentScopeUnknown() const
+{
+	Parse( "Data/TestBFFParsing/parent_scope_unknown.bff", true ); // expect failure
+}
+
+// FrozenVariable
+//------------------------------------------------------------------------------
+void TestBFFParsing::FrozenVariable() const
+{
+	Parse( "Data/TestBFFParsing/frozen_foreach.bff", true ); // expect failure
 }
 
 //------------------------------------------------------------------------------
