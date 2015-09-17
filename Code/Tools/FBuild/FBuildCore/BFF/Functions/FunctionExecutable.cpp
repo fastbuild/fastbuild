@@ -322,7 +322,7 @@ void FunctionExecutable::GetImportLibName( const AString & args, AString & impor
 	const AString * const end = tokens.End();
 	for ( const AString * it = tokens.Begin(); it != end; ++it )
 	{
-		if ( it->BeginsWith( "/IMPLIB:") )
+		if ( it->BeginsWithI( "/IMPLIB:") )
 		{
 			const char * impStart = it->Get() + 8;
 			const char * impEnd = it->GetEnd();
