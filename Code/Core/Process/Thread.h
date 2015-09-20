@@ -24,13 +24,9 @@ public:
 
 		#define INVALID_THREAD_HANDLE ( nullptr )
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        // TODO:MAC Implement Thread
-        // TODO:Linux Implement Thread
         typedef pthread_t ThreadId;
         typedef void * ThreadHandle;
         typedef uint32_t (*ThreadEntryFunction)( void * param );
-        // TODO:MAC check INVALID_THREAD_HANDLE
-        // TODO:LINUX check INVALID_THREAD_HANDLE
         #define INVALID_THREAD_HANDLE ( nullptr )
     #else
         #error Unknown platform
