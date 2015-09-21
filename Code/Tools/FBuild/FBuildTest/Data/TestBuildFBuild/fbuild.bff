@@ -188,7 +188,7 @@ ForEach( .Config			in .Configs,
 			.LinkerOptions		+ " /PDB:^"$OutputBase$\Core\CoreTest\CoreTest.pdb^""
 		#endif
         #if __LINUX__
-            .LinkerOptions      + " -pthread"
+            .LinkerOptions      + " -pthread -ldl"
         #endif
         .LinkerOptions      + .ExtraLinkerOptions
 		.Libraries			= { "CoreTest-$Config$",
@@ -204,7 +204,7 @@ ForEach( .Config			in .Configs,
 			.LinkerOptions		+ " /PDB:^"$OutputBase$\Tools\FBuild\FBuildApp\FBuild.pdb^""            
 		#endif
         #if __LINUX__
-            .LinkerOptions      + " -pthread"
+            .LinkerOptions      + " -pthread -ldl"
         #endif
         .LinkerOptions      + .ExtraLinkerOptions
 		.Libraries			= { "FBuildApp-$Config$",
@@ -220,7 +220,7 @@ ForEach( .Config			in .Configs,
 			.LinkerOptions		+ " /PDB:^"$OutputBase$\Tools\FBuild\FBuildTest\FBuildTest.pdb^""
 		#endif
         #if __LINUX__
-            .LinkerOptions      + " -pthread"
+            .LinkerOptions      + " -pthread -ldl"
         #endif
         .LinkerOptions      + .ExtraLinkerOptions
 		.Libraries			= { 

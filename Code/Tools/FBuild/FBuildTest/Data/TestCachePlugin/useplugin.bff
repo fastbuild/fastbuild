@@ -4,7 +4,15 @@
 //------------------------------------------------------------------------------
 #include "..\testcommon.bff"
 Using( .StandardEnvironment )
+
+#if __WINDOWS__
 .CachePluginDLL = '../../../../ftmp/Test/CachePlugin/CachePlugin.dll'
+#endif
+
+#if __LINUX__
+.CachePluginDLL = '../../../../ftmp/Test/CachePlugin/CachePlugin.so'
+#endif
+
 .CachePath		= 'X:\' // passed to cache plugin
 Settings {} // Activate standard settings
 
