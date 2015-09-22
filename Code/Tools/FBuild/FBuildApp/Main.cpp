@@ -107,6 +107,7 @@ int Main(int argc, char * argv[])
 	bool fixupErrorPaths = false;
 	bool waitMode = false;
 	bool noStopOnError = false;
+	bool isolateAllFiles = false;
 	int32_t numWorkers = -1;
 	WrapperMode wrapperMode( WRAPPER_MODE_NONE );
 	AStackString<> args;
@@ -203,6 +204,11 @@ int Main(int argc, char * argv[])
 			else if ( thisArg == "-nostoponerror")
 			{
 				noStopOnError = true;
+				continue;
+			}
+			else if ( thisArg == "-isolateallfiles" )
+			{
+				isolateAllFiles = true;
 				continue;
 			}
 			else if ( thisArg == "-report" )
@@ -412,6 +418,7 @@ int Main(int argc, char * argv[])
 	{
 		options.m_StopOnFirstError = false; // when building multiple targets, try to build as much as possible
 	}
+	options.m_IsolateAllFiles = isolateAllFiles;
 	FBuild fBuild( options );
 
 	if ( targets.IsEmpty() )
@@ -475,6 +482,7 @@ void DisplayHelp()
             " -ide           Enable multiple options when building from an IDE.\n"
             "                Enables: -noprogress, -fixuperrorpaths &\n"
 			"                -wrapper (Windows)\n"
+			" -isolateallfiles       Build all files individualy.\n"
 			" -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
 			"                default of hardware thread count.\n"
 			" -noprogress    Don't show the progress bar while building.\n"
