@@ -502,6 +502,14 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     Args fullArgs;
     AStackString<> tmpDirectoryName;
     AStackString<> tmpFileName;
+
+    if ( job->IsLocal() && FBuild::Get().GetOptions().m_DebugPreprocessor )
+    {
+        // When the debug preprocessor mode is active we want to force
+        // the utilisation of the preprocessor.
+        usePreProcessedOutput = true;
+    }
+
     if ( usePreProcessedOutput )
     {
         if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
@@ -536,6 +544,14 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     }
 
     bool result = BuildFinalOutput( job, fullArgs );
+
+    if (result == false && job->IsLocal() && FBuild::Get().GetOptions().m_DebugPreprocessor)
+    {
+        // When the debug preprocessor mode is active we want to avoid
+        // deleting the temporary files in case of error.
+        // By clearing the tmp filename we are able to achieve that.
+        tmpFileName.Clear();
+    }
 
     // cleanup temp file
     if ( tmpFileName.IsEmpty() == false )

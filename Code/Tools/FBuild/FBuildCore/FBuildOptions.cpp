@@ -146,6 +146,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                     continue;
                 }
             #endif
+            else if ( thisArg == "-debugpreprocessor" )
+            {
+                m_DebugPreprocessor = true;
+                continue;
+            }
             else if ( thisArg == "-dist" )
             {
                 m_AllowDistributed = true;
@@ -320,6 +325,12 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         }
     }
 
+    // Disable local races when debugging the preprocessor.
+    if ( m_DebugPreprocessor )
+    {
+        m_AllowLocalRace = false;
+    }
+
     if ( progressOptionSpecified == false )
     {
         // By default show progress bar only if stdout goes to the terminal
@@ -474,7 +485,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
 #ifdef DEBUG
     OUTPUT( " -debug         Break at startup, to attach debugger.\n" );
 #endif
-    OUTPUT( " -dist          Allow distributed compilation.\n"
+    OUTPUT( " -debugpreprocessor Debug preprocessed file build errors. This will avoid deleting the preprocessed file in case of error.\n"
+            " -dist          Allow distributed compilation.\n"
             " -distverbose   Print detailed info for distributed compilation.\n"
             " -fastcancel    [Experimental] Fast cancellation behavior on buidl failure.\n"
             " -fixuperrorpaths Reformat error paths to be Visual Studio friendly.\n"

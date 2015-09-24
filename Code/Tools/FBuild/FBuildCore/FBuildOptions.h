@@ -85,6 +85,9 @@ public:
     bool        m_SaveDBOnCompletion                = false;
     bool        m_FixupErrorPaths                   = false;
 
+    // Debug helpers
+    bool        m_DebugPreprocessor                 = false;
+
     uint32_t    m_NumWorkerThreads                  = 0; // True default detected in constructor
     AString     m_ConfigFile;
 
