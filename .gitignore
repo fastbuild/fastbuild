@@ -14,6 +14,9 @@ tmp/
 ftmp/
 bin/
 
+# Temp files
+*.bak
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db

@@ -240,14 +240,14 @@ void Worker::UpdateAvailability()
 	}
 
 	// don't accept any new work while waiting for a restart
-	if ( m_RestartNeeded )
+	if ( m_RestartNeeded || ( hasEnoughDiskSpace == false ) )
 	{
 		numCPUsToUse = 0;
 	}
 
 	WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
 
-	m_WorkerBrokerage.SetAvailability( ( numCPUsToUse > 0 ) && hasEnoughDiskSpace );
+	m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
 }
 
 // UpdateUI
@@ -268,6 +268,12 @@ void Worker::UpdateUI()
 	{
 		status += " (Restart Pending)";
 	}
+	#if defined( __WINDOWS__ )
+		if ( m_LastDiskSpaceResult == 0 )
+		{
+			status += " (Low Disk Space)";
+		}
+	#endif
 	m_MainWindow->SetStatus( status.Get() );
 
 	// thread output

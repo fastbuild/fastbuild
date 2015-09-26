@@ -39,6 +39,7 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
                                             const AString & solutionMinimumVisualStudioVersion,
                                             const Array< VSProjectConfig > & configs,
                                             const Array< VCXProjectNode * > & projects,
+											const Array< SLNDependency > & slnDeps,
                                             const Array< SLNSolutionFolder > & folders )
 {
     // preallocate to avoid re-allocations
@@ -81,7 +82,7 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
 
     // construct sln file
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
-    WriteProjectListings( solutionBasePath, solutionBuildProject, projects, folders, solutionBuildProjectGuid, projectGuids, solutionProjectsToFolder );
+    WriteProjectListings( solutionBasePath, solutionBuildProject, projects, folders, slnDeps, solutionBuildProjectGuid, projectGuids, solutionProjectsToFolder );
     WriteSolutionFolderListings( folders, solutionFolderPaths );
     Write( "Global\r\n" );
     WriteSolutionConfigurationPlatforms( solutionConfigs );
@@ -128,6 +129,7 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
                                             const AString& solutionBuildProject,
                                             const Array< VCXProjectNode * > & projects,
                                             const Array< SLNSolutionFolder > & folders,
+											const Array< SLNDependency > & slnDeps,
                                             AString & solutionBuildProjectGuid,
                                             Array< AString > & projectGuids,
                                             Array< AString > & solutionProjectsToFolder )
@@ -162,7 +164,7 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
         }
 
 		// make project path relative
-		projectPath.Replace(solutionBasePath.Get(), "");
+		projectPath.Replace( solutionBasePath.Get(), "" );
 
         // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
         projectGuid.ToUpper();
@@ -175,6 +177,37 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
 
         Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\r\n",
                projectName.Get(), projectPath.Get(), projectGuid.Get() );
+
+		// Manage dependencies
+		Array< AString > dependencyGUIDs( 64, true );
+		const AString & fullProjectPath = (*it)->GetName();
+		for ( const SLNDependency & deps : slnDeps )
+		{
+			// is the set of deps relevant to this project?
+			if ( deps.m_Projects.Find( fullProjectPath ) )
+			{
+				// get all the projects this project depends on
+				for ( const AString & dependency : deps.m_Dependencies )
+				{
+					// For backward compatibility, keep the preceding slash and .vcxproj extension for GUID generation
+			        const char * projNameFromSlash = dependency.FindLast( NATIVE_SLASH );
+		            AStackString<> projectNameForGuid( projNameFromSlash ? projNameFromSlash : dependency.Get() );
+
+					AStackString<> newGUID;
+		            VSProjectGenerator::FormatDeterministicProjectGUID( newGUID, projectNameForGuid );
+					dependencyGUIDs.Append( newGUID );
+				}
+			}
+		}
+		if ( !dependencyGUIDs.IsEmpty() )
+		{
+			Write( "\tProjectSection(ProjectDependencies) = postProject\r\n" );
+			for ( const AString & guid : dependencyGUIDs )
+			{
+				Write( "\t\t%s = %s\r\n", guid.Get(), guid.Get() );
+			}
+			Write( "\tEndProjectSection\r\n" );
+		}
 
         Write( "EndProject\r\n" );
 
@@ -425,6 +458,39 @@ void SLNGenerator::Write( const char * fmtString, ... )
         if ( stream.Read( sln.m_ProjectNames ) == false ) { return false; }
     }
     return true;
+}
+
+// Load (SLNDependency)
+//------------------------------------------------------------------------------
+/*static*/ bool SLNDependency::Load( IOStream & stream, Array< SLNDependency > & slnDeps )
+{
+    ASSERT( slnDeps.IsEmpty() );
+
+    uint32_t num( 0 );
+    if ( !stream.Read( num ) )
+    {
+        return false;
+    }
+    slnDeps.SetSize( num );
+	for ( SLNDependency & deps : slnDeps )
+    {
+        if ( stream.Read( deps.m_Projects ) == false ) { return false; }
+        if ( stream.Read( deps.m_Dependencies ) == false ) { return false; }
+    }
+    return true;
+}
+
+// Save (SLNDependency)
+//------------------------------------------------------------------------------
+/*static*/ void SLNDependency::Save( IOStream & stream, const Array< SLNDependency > & slnDeps )
+{
+    const uint32_t num = (uint32_t)slnDeps.GetSize();
+    stream.Write( num );
+	for ( const SLNDependency & deps : slnDeps )
+    {
+        stream.Write( deps.m_Projects );
+        stream.Write( deps.m_Dependencies );
+    }
 }
 
 //------------------------------------------------------------------------------

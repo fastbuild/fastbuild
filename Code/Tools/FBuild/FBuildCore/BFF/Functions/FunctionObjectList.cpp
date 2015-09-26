@@ -412,13 +412,15 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 	if ( inputPath )
 	{
 		// get the optional pattern and recurse options related to InputPath
-		const BFFVariable * patternVar = nullptr;
-		if ( !GetString( iter, patternVar, ".CompilerInputPattern", false ) )
+		Array< AString > patterns;
+		if ( !GetStrings( iter, patterns, ".CompilerInputPattern", false ) )
 		{
 			return false; // GetString will have emitted an error
 		}
-		AStackString<> defaultWildCard( "*.cpp" );
-		const AString & pattern = patternVar ? patternVar->GetString() : defaultWildCard;
+		if ( patterns.IsEmpty() )
+		{
+			patterns.Append( AStackString<>( "*.cpp" ) );
+		}
 
 		// recursive?  default to true
 		bool recurse = true;
@@ -449,7 +451,7 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 		}
 
 		Dependencies dirNodes( inputPaths.GetSize() );
-		if ( !GetDirectoryListNodeList( iter, inputPaths, excludePaths, filesToExclude, recurse, pattern, "CompilerInputPath", dirNodes ) )
+		if ( !GetDirectoryListNodeList( iter, inputPaths, excludePaths, filesToExclude, recurse, &patterns, "CompilerInputPath", dirNodes ) )
 		{
 			return false; // GetDirectoryListNodeList will have emitted an error
 		}

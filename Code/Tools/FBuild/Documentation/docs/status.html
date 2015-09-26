@@ -11,199 +11,176 @@
   <script>generateHeader()</script>
 
 
-<h1>Feature Status @ v0.86</h1>
+<h1>Feature Status @ v0.87</h1>
 
-    <div class='newsitemheader'>Overview</div>
-    <div class='newsitembody'>
+<div class='newsitemheader'>Compiler Support</div>
+<div class='newsitembody'>
+	<table style='width:420px;' align=center>
+	  <tr><th style='width:120px'></th>
+		<th width=100>Local</th>
+		<th width=100>Cached</th>
+		<th width=100>Distributed</th>
+	  </td>
+	  <tr><td>Microsoft MSVC</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+	  </tr>
+	  <tr><td>GCC</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+	  </tr>
+	  <tr><td>Clang</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+	  </tr>
+	  <tr><td>SNC</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+	  </tr>
+	  <tr><td>Intel</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+	  </tr>
+	  <tr><td>GreenHills</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+	  </tr>
+	  <tr><td>CodeWarrior</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+	  </tr>
+	  <tr><td>CUDA NVCC</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="no">No</td>
+	  </tr>
+	</table>
+	<ul>
+	<li><b>NOTE:</b> Compilers other than those listed can be used, but dependencies may not be correctly tracked.</li>
+	</ul>
+</div>
 	
-<table style='width:900px;' align=center>
-  <tr><th style='width:150px'>Feature/Compiler</th>
-    <th width=100>MSVC</th>
-    <th width=100>GCC</th>
-    <th width=100>SNC</th>
-    <th width=100>Clang</th>
-    <th width=100>CodeWarrior</th>
-    <th width=100>GreenHills</th>
-    <th width=100>CUDA NVCC</th>
-  </tr>
-  <tr><td>Parallel Builds</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-  </tr>
-  <tr><td>Caching</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-  </tr>
-  <tr><td>Network Distribution</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="no">No</td>
-  </tr>
-  <tr><td>Precompiled Headers</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="na">n/a</td>
-  </tr>
-  <tr><td>Unity/Blobs</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="na">n/a</td>
-  </tr>
-  <tr><td>VS Project Gen</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-  </tr>  
-  <tr><td>Unit Test Integration</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="na">n/a</td>
-    <td class="complete">Complete</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-    <td class="complete">Complete</td>
-  </tr>
-  <tr><td>DLL Support</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-  </tr>
-  <tr><td>Managed C Support</td>
-    <td class="complete">Complete</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-  </tr>
-  <tr><td>C# Support</td>
-    <td class="complete">Complete</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-    <td class="na">n/a</td>
-  </tr>
-</table>
-
-<br>
-
-<table style='width:850px;' align=center>
-  <tr><th style='width:150px'>Platform/Target</th>
-    <th width=80>Windows</th>
-    <th width=80>PS3</th>
-    <th width=80>PS4</th>
-    <th width=80>Xbox360</th>
-    <th width=80>XboxOne</th>
-    <th width=80>Wii</th>
-    <th width=80>WiiU</th>
-  </tr>
-  <tr><td>Windows</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-    <td class="complete">Complete</td>
-  </tr>
-
-  <tr><td>&nbsp;</td></tr>
-
-  <tr><th style='width:150px'>Platform/Target</th>
-    <th width=80>OS X</th>
-    <th width=80>IOS</th>
-  </tr>
-  <tr><td>OS X</td>
-    <td class="testing">Testing</td>
-    <td class="testing">Testing</td>
-  </tr>
-
-  <tr><td>&nbsp;</td></tr>
-
-  <tr><th style='width:150px'>Platform/Target</th>
-    <th width=80>Linux</th>
-  </tr>
-  <tr><td>Linux</td>
-    <td class="testing">Testing</td>
-  </tr>
-</table>
-
-<br><br>
-
-<table width=550 align=center colspacing=5>
-  <tr>
-    <td class="complete">Complete</td>
-    <td> &nbsp; </td>
-    <td>Complete and tested. No known major issues.</td>
-  </tr>
-  <tr>
-    <td class="testing">Testing</td>
-    <td></td>
-    <td>Working, but needs further testing or improvement.</td>
-  </tr>
-  <tr>
-    <td class="inprogress">In Progress</td>
-    <td></td>
-    <td>Actively being developed or investigated.</td>
-  </tr>
-  <tr>
-    <td class="planned">Planned</td>
-    <td></td>
-    <td>Planned for future development.</td>
-  </tr>
-  <tr>
-    <td class="no">No</td>
-    <td></td>
-    <td>No plans to support.</td>
-  </tr>
-</table>
+<div class='newsitemheader'>Host Platform Support</div>
+<div class='newsitembody'>
+	<table style='width:420px;' align=center>
+	  <tr><th style='width:120px'></th>
+		<th width=100>Local</th>
+		<th width=100>Cached</th>
+		<th width=100>Distributed</th>
+	  </td>
+	  <tr><td>Windows</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+	  </tr>
+	  <tr><td>OS X</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="inprogress">In Progress</td>
+	  </tr>
+	  <tr><td>Linux</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="inprogress">In Progress</td>
+	  </tr>
+	</table>
 </div>
 
-    <div class='newsitemheader'>Known Issues</div>
-    <div class='newsitembody'>
-<ul>
-<li>Compilers other than those listed can be used, but dependencies will not be correctly tracked.</li>
-</ul>
-    </div>
+<div class='newsitemheader'>Language Support</div>
+<div class='newsitembody'>
+	<table style='width:420px;' align=center>
+	  <tr><th style='width:120px'></th>
+		<th width=100>Local</th>
+		<th width=100>Cached</th>
+		<th width=100>Distributed</th>
+	  </td>
+	  <tr><td>C / C++</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+	  </tr>
+	  <tr><td>Objective C</td>
+		<td class="complete">Yes</td>
+		<td class="complete">Yes</td>
+		<td class="inprogress">In Progress</td>
+	  </tr>
+	  <tr><td>Managed C</td>
+		<td class="complete">Yes</td>
+		<td class="no">No</td>
+		<td class="no">No</td>
+	  </tr>
+	  <tr><td>C#</td>
+		<td class="complete">Yes</td>
+		<td class="no">No</td>
+		<td class="no">No</td>
+	  </tr>
+	</table>
+	<ul>
+	<li><b>NOTE:</b> Objective C distribution reliant on OS X distributed compilation support.</li>
+	</ul>	
+</div>
 
-    <div class='newsitemheader'>Notes</div>
-    <div class='newsitembody'>
-<ul>
-<li>None.</li>
-</ul>
+
+<div class='newsitemheader'>Target Platform Support</div>
+<div class='newsitembody'>
+	<table style='width:850px;' align=center>
+	  <tr><th style='width:150px'>Host/Target</th>
+		<th width=80>Windows</th>
+		<th width=80>PS3</th>
+		<th width=80>PS4</th>
+		<th width=80>Xbox360</th>
+		<th width=80>XboxOne</th>
+		<th width=80>Wii</th>
+		<th width=80>WiiU</th>
+		<th width=80>Android</th>
+	  </tr>
+	  <tr><td>Windows</td>
+		<td class="complete">OK</td>
+		<td class="complete">OK</td>
+		<td class="complete">OK</td>
+		<td class="complete">OK</td>
+		<td class="complete">OK</td>
+		<td class="complete">OK</td>
+		<td class="complete">OK</td>
+		<td class="testing">OK</td>
+	  </tr>
+
+	  <tr><td>&nbsp;</td></tr>
+
+	  <tr><th style='width:150px'>Platform/Target</th>
+		<th width=80>OS X</th>
+		<th width=80>IOS</th>
+		<th width=80>Android</th>
+	  </tr>
+	  <tr><td>OS X</td>
+		<td class="complete">OK</td>
+		<td class="testing">OK</td>
+		<td class="testing">OK</td>
+	  </tr>
+
+	  <tr><td>&nbsp;</td></tr>
+
+	  <tr><th style='width:150px'>Platform/Target</th>
+		<th width=80>Linux</th>
+		<th width=80>Android</th>
+	  </tr>
+	  <tr><td>Linux</td>
+		<td class="complete">OK</td>
+		<td class="testing">OK</td>
+	  </tr>
+	</table>
+	<ul>
+	<li><b>NOTE:</b> Android and IOS are supported, but not extensively tested.</li>
+	</ul>
+</div>
+
 </div>
 
   <script>generateFooter()</script>

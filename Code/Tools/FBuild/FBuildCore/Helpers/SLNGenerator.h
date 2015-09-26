@@ -44,6 +44,18 @@ struct SolutionConfig
     }
 };
 
+// SLNDependency
+//------------------------------------------------------------------------------
+class SLNDependency
+{
+public:
+  Array< AString > m_Projects;
+  Array< AString > m_Dependencies;
+
+  static bool Load( IOStream & stream, Array< SLNDependency > & slnDeps );
+  static void Save( IOStream & stream, const Array< SLNDependency > & slnDeps );
+};
+
 // SLNGenerator
 //------------------------------------------------------------------------------
 class SLNGenerator
@@ -58,6 +70,7 @@ public:
                                  const AString & solutionMinimumVisualStudioVersion,
                                  const Array< VSProjectConfig > & configs,
                                  const Array< VCXProjectNode * > & projects,
+								 const Array< SLNDependency > & slnDeps,
                                  const Array< SLNSolutionFolder > & folders );
 
 private:
@@ -67,6 +80,7 @@ private:
                                 const AString & solutionBuildProject,
                                 const Array< VCXProjectNode * > & projects,
                                 const Array< SLNSolutionFolder > & folders,
+								const Array< SLNDependency > & slnDeps,
                                 AString & solutionBuildProjectGuid,
                                 Array< AString > & projectGuids,
                                 Array< AString > & solutionProjectsToFolder );

@@ -98,8 +98,8 @@ Exec( "ExecCommandTest_OneInput_StdOut" )
 Exec( "ExecCommandTest_MultipleInput" )
 {
 	.ExecExecutable = .HelperExecutableName
-	.ExecInput = {'$OutPath$\MultiInputA.txt', '$OutPath$\MultiInputB.txt'}
-	.ExecOutput = '$OutPath$\MultiInputA.txt.out' // Output files expected
+	.ExecInput = {'$OutPath$/MultiInputA.txt', '$OutPath$/MultiInputB.txt'}
+	.ExecOutput = '$OutPath$/MultiInputA.txt.out' // Output files expected
 	.ExecArguments = '%1'
 	.ExecWorkingDir = .OutPath
 	.ExecReturnCode = 2

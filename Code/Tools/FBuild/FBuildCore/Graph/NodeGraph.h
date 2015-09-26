@@ -53,7 +53,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 66 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 69 };
 
 	bool IsValid() const
 	{
@@ -104,7 +104,7 @@ public:
 	FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
 	DirectoryListNode * CreateDirectoryListNode( const AString & name,
 												 const AString & path,
-												 const AString & wildCard,
+												 const Array< AString > * patterns,
 												 bool recursive,
                                                  const Array< AString > & excludePaths,
                                                  const Array< AString > & filesToExclude
@@ -203,6 +203,7 @@ public:
                         		const AString & solutionMinimumVisualStudioVersion,
 								const Array< VSProjectConfig > & configs,
 								const Array< VCXProjectNode * > & projects,
+								const Array< SLNDependency > & slnDeps,
 								const Array< SLNSolutionFolder > & folders );
 	ObjectListNode * CreateObjectListNode( const AString & listName,
 							 const Dependencies & inputNodes,

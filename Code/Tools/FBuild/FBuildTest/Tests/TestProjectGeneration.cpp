@@ -150,7 +150,6 @@ void TestProjectGeneration::TestFunction() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	TEST_ASSERT( fBuild.Build( AStackString<>( "TestProj" ) ) );
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestSln" ) ) );
 	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/ProjectGeneration/fbuild.fdb" ) );
 
@@ -163,8 +162,8 @@ void TestProjectGeneration::TestFunction() const
 	CheckStatsNode ( 1,		1,		Node::DIRECTORY_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::VCXPROJECT_NODE );
 	CheckStatsNode ( 1,		1,		Node::SLN_NODE );
-	CheckStatsNode ( 2,		2,		Node::ALIAS_NODE );
-	CheckStatsTotal( 8,		8 );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 4,		4 );
 }
 
 // TestFunction_NoRebuild

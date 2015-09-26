@@ -72,6 +72,7 @@ public:
 private:
 	// worker threads call these
 	friend class WorkerThread;
+    void        WorkerThreadWait( uint32_t maxWaitMS );
 	Job *		GetJobToProcess();
 	Job *		GetDistributableJobToRace();
 	static Node::BuildResult DoBuild( Job * job );
@@ -84,6 +85,9 @@ private:
 	Job *		GetDistributableJobToProcess( bool remote );
 	Job	*		OnReturnRemoteJob( uint32_t jobId, bool & cancelled );
 	void		ReturnUnfinishedDistributableJob( Job * job, bool systemError = false );
+
+    // Semaphore to manage work
+    Semaphore           m_WorkerThreadSemaphore;
 
 	// Jobs available for local processing
     Array< Node * >     m_LocalJobs_Staging;

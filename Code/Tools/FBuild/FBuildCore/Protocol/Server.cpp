@@ -28,7 +28,6 @@
 Server::Server()
 	: m_ShouldExit( false )
 	, m_Exited( false )
-	, m_RequestJobs( true )
 	, m_ClientList( 32, true )
 {
 	m_Thread = Thread::CreateThread( ThreadFuncStatic,
@@ -517,7 +516,7 @@ void Server::ThreadFunc()
 //------------------------------------------------------------------------------
 void Server::FindNeedyClients()
 {
-	if ( m_RequestJobs == false )
+	if ( m_ShouldExit )
 	{
 		return;
 	}

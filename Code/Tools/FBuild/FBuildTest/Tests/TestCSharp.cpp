@@ -161,21 +161,23 @@ void TestCSharp::TestMultipleAssemblies() const
 	// delete files from previous runs
 	EnsureFileDoesNotExist( "../../../../ftmp/Test/CSharp/csharpassemblya.dll" );
 	EnsureFileDoesNotExist( "../../../../ftmp/Test/CSharp/csharpassemblyb.dll" );
+	EnsureFileDoesNotExist( "../../../../ftmp/Test/CSharp/csharpassemblyc.dll" );
 	
 	// Build it
-	TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyB" ) ) );
+	TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyC" ) ) );
 	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 
 	// Test output files
 	EnsureFileExists( "../../../../ftmp/Test/CSharp/csharpassemblya.dll" );
 	EnsureFileExists( "../../../../ftmp/Test/CSharp/csharpassemblyb.dll" );
+	EnsureFileExists( "../../../../ftmp/Test/CSharp/csharpassemblyc.dll" );
 
 	// Check stats
 	//				 Seen,	Built,	Type
-	CheckStatsNode ( 2,		2,		Node::FILE_NODE );	// 2x cs
-	CheckStatsNode ( 2,		2,		Node::CS_NODE );
+	CheckStatsNode ( 3,		3,		Node::FILE_NODE );	// 2x cs
+	CheckStatsNode ( 3,		3,		Node::CS_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
-	CheckStatsTotal( 5,		5 );
+	CheckStatsTotal( 7,		7 );
 }
 
 
@@ -191,14 +193,14 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild() const
 	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 	
 	// Build it
-	TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyB" ) ) );
+	TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyC" ) ) );
 
 	// Check stats
 	//				 Seen,	Built,	Type
-	CheckStatsNode ( 2,		2,		Node::FILE_NODE );	// 2x cs
-	CheckStatsNode ( 2,		0,		Node::CS_NODE );
+	CheckStatsNode ( 3,		3,		Node::FILE_NODE );	// 2x cs
+	CheckStatsNode ( 3,		0,		Node::CS_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
-	CheckStatsTotal( 5,		3 );
+	CheckStatsTotal( 7,		4 );
 }
 
 

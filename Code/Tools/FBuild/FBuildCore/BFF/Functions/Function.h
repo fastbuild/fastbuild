@@ -68,7 +68,7 @@ public:
 								   const Array< AString > & excludePaths,
                                    const Array< AString > & filesToExclude,
 								   bool recurse,
-								   const AString & pattern,
+								   const Array< AString > * patterns,
 								   const char * inputVarName,
 								   Dependencies & nodes ) const;
     bool GetFileNodes( const BFFIterator & iter,

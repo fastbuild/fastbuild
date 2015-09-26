@@ -106,6 +106,8 @@ void TestGraph::TestNodeTypes() const
 		TEST_ASSERT( AStackString<>( "Copy" ) == n->GetTypeName() );
 	}
 
+	Array< AString > patterns;
+	patterns.Append( AStackString<>( "*.cpp" ) );
     #if defined( __WINDOWS__ )
         DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path\\|*.cpp|false|" ),
                                                             AStackString<>( "path\\" ),
@@ -113,7 +115,7 @@ void TestGraph::TestNodeTypes() const
         DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path/|*.cpp|false|" ),
                                                             AStackString<>( "path/" ),
     #endif
-                                                            AStackString<>( "*.cpp"),
+                                                            &patterns,
                                                             false,
                                                             Array< AString >(),
                                                             Array< AString >() );
@@ -302,6 +304,9 @@ void TestGraph::TestDirectoryListNode() const
         const AStackString<> testFolder( "Data/TestGraph/" );
     #endif
 
+	Array< AString > patterns;
+	patterns.Append( AStackString<>( "library.*" ) );
+
 	// create the node, and make sure we can access it by name
     #if defined( __WINDOWS__ )
         const AStackString<> name( "Data\\TestGraph\\|library.*|true|" );
@@ -310,7 +315,7 @@ void TestGraph::TestDirectoryListNode() const
     #endif
 	DirectoryListNode * node = ng.CreateDirectoryListNode( name,
 														   testFolder,
-														   AStackString<>( "library.*" ),
+														   &patterns,
 														   true,
 														   Array< AString >(),
 														   Array< AString >() );

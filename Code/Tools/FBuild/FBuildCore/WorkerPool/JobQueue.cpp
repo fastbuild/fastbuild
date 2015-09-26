@@ -171,6 +171,10 @@ void JobQueue::SignalStopWorkers()
 	{
 		m_Workers[ i ]->Stop();
 	}
+	if ( numWorkerThreads > 0 )
+	{
+	    m_WorkerThreadSemaphore.Signal( (uint32_t)numWorkerThreads );
+	}
 }
 
 // HaveWorkersStopped
@@ -252,6 +256,7 @@ void JobQueue::FlushJobBatch()
     }
 
     m_LocalJobs_Available.QueueJobs( m_LocalJobs_Staging );
+    m_WorkerThreadSemaphore.Signal( (uint32_t)m_LocalJobs_Staging.GetSize() );
     m_LocalJobs_Staging.Clear();
 }
 
@@ -271,6 +276,8 @@ void JobQueue::QueueJob2( Job * job )
 
 	ASSERT( m_NumLocalJobsActive > 0 );
 	AtomicDecU32( &m_NumLocalJobsActive ); // job converts from active to pending remote
+
+    m_WorkerThreadSemaphore.Signal();
 }
 
 // GetDistributableJobToProcess
@@ -389,6 +396,8 @@ void JobQueue::ReturnUnfinishedDistributableJob( Job * job, bool systemError )
 
 		// track size of distributable jobs
 		m_DistributableJobsMemoryUsage += job->GetDataSize();
+
+	    m_WorkerThreadSemaphore.Signal();
 	}
 }
 
@@ -443,6 +452,15 @@ void JobQueue::MainThreadWait( uint32_t maxWaitMS )
 {
 	PROFILE_SECTION( "MainThreadWait" )
 	m_MainThreadSemaphore.Wait( maxWaitMS );
+}
+
+// WorkerThreadWait
+//------------------------------------------------------------------------------
+void JobQueue::WorkerThreadWait( uint32_t maxWaitMS )
+{
+    ASSERT( Thread::IsMainThread() == false );    
+    ASSERT( FBuild::Get().GetOptions().m_NumWorkerThreads > 0 );
+    m_WorkerThreadSemaphore.Wait( maxWaitMS );
 }
 
 // GetJobToProcess (Worker Thread)

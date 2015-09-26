@@ -54,13 +54,15 @@ FunctionCSAssembly::FunctionCSAssembly()
 	if ( inputPath )
 	{
 		// get the optional pattern and recurse options related to InputPath
-		const BFFVariable * patternVar = nullptr;
-		if ( !GetString( funcStartIter, patternVar, ".CompilerInputPattern", false ) )
+		Array< AString > patterns;
+		if ( !GetStrings( funcStartIter, patterns, ".CompilerInputPattern", false ) )
 		{
 			return false; // GetString will have emitted an error
 		}
-		AStackString<> defaultWildCard( "*.cs" );
-		const AString & pattern = patternVar ? patternVar->GetString() : defaultWildCard;
+		if ( patterns.IsEmpty() )
+		{
+			patterns.Append( AStackString<>( "*.cs" ) );
+		}
 
 		// recursive?  default to true
 		bool recurse = true;
@@ -91,7 +93,7 @@ FunctionCSAssembly::FunctionCSAssembly()
 		}
 
 		Dependencies dirNodes( inputPaths.GetSize() );
-		if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, filesToExclude, recurse, pattern, "CompilerInputPath", dirNodes ) )
+		if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, filesToExclude, recurse, &patterns, "CompilerInputPath", dirNodes ) )
 		{
 			return false; // GetDirectoryListNodeList will have emitted an error
 		}

@@ -666,18 +666,17 @@ VSSolution( 'solution' )
 {
     .SolutionOutput		= '../tmp/VisualStudio/FASTBuild.sln'
     .SolutionProjects	= { 'All-proj',
-							'Core-proj',
-							'CoreTest-proj',
-							'FBuildApp-proj' 					
-							'FBuildCore-proj',
-							'FBuildTest-proj',
-							'FBuildWorker-proj',
-							'LZ4-proj',
-							'TestFramework-proj',
                             'UpdateSolution-proj',
 						  }
     .SolutionBuildProject = 'All-proj'
 	.SolutionConfigs	= .ProjectConfigs
+
+    // Work around for Visual Studio F5 behaviour up-to-date check
+	.Deps				= [
+							.Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuildApp-proj', 'FBuildWorker-proj' }
+							.Dependencies = { 'All-proj' }
+						  ]
+	.SolutionDependencies = { .Deps }
 
     .Folder_0_External =
 	[ 

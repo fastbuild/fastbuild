@@ -262,6 +262,15 @@ Variables are valid for the scope they are declared in, and all sub-scopes. Modi
 }
 ; Mystring contains 'hello' again
 </div>
+<p>Variables can be pushed to the parent last used parent scope using the ^ prefix:</p>
+<div class='code'>.CompilerOptions     = '/c "%1" -o "%2"'
+
+.IncPaths            = { 'libA/inc/', 'libB/inc/' }
+ForEach( .IncPath in .IncPaths )
+{
+  ^CompilerOptions   + ' /I"$IncPath$"'
+}
+</div>
 </div>
 
     <div class='newsitemheader' id='structs'>

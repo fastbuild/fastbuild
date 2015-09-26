@@ -22,7 +22,8 @@ public:
 	Semaphore();
 	~Semaphore();
 
-    void Signal();
+    void Signal();					// Signal once
+	void Signal( uint32_t num );	// Signal multiple times
     void Wait( uint32_t timeoutMS = 0 ); // Infinite timeout by default
 
 private:

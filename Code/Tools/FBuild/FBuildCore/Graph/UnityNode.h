@@ -64,7 +64,7 @@ private:
 	// Exposed properties
 	Array< AString > m_InputPaths;
 	bool m_InputPathRecurse;
-	AString m_InputPattern;
+	Array< AString > m_InputPattern;
 	Array< AString > m_Files;
     Array< AString > m_ObjectLists;
 	AString m_OutputPath;

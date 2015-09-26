@@ -25,7 +25,7 @@ Copies one or more directories.
   .Dest                     // Destination path
 
   // Filtering options
-  .SourcePathsPattern       // (optional) Wilcard pattern to filter source files (default: "*")
+  .SourcePathsPattern       // (optional) Wilcard pattern(s) to filter source files (default: "*")
   .SourcePathsRecurse       // (optional) Recurse into source sub-directories? (default: true)
   .SourceExcludePaths       // (optional) Source directories to ignore when recursing
   
@@ -103,10 +103,13 @@ Or:
       Filtering Options
     </div>	
     <div class='newsitembody'>
-      <p><b>.SourcePathsPattern</b> - String - (Optional)</p>
-	  <p>A wildcard pattern can be specified to filter the files to be copied. The default pattern is '*'.</p>
+      <p><b>.SourcePathsPattern</b> - String/ArrayOfStrings - (Optional)</p>
+	  <p>One or more wildcard patterns can be specified to filter the files to be copied. The default pattern is '*'.</p>
 	  <p>Example:
 <div class='code'>.SourcePathsPattern = '*.dll' // Copy only dll files</div> 
+      </p>
+	  <p>Example:
+<div class='code'>.SourcePathsPattern = { '*.dll', '*.pdb' } // Copy dll and pdb files</div> 
       </p>
 	  <hr>
 	  <p><b>.SourcePathsRecurse</b> - Bool - (Optional)</p>
