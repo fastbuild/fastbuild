@@ -588,7 +588,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
 	// Compiler Type
 	if ( compiler.EndsWithI( "\\cl.exe" ) ||
-		 compiler.EndsWithI( "\\cl" ) )
+		 compiler.EndsWithI( "\\cl" ) ||
+		 compiler.EndsWithI( "\\icl.exe" ) ||
+		 compiler.EndsWithI( "\\icl" ) )
     {
 		flags |= ObjectNode::FLAG_MSVC;
 	}
@@ -1584,31 +1586,28 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 		// MSVC errors
 		if ( objectNode->IsMSVC() )
 		{
-			// When out of space, MSVC returns this
-			if ( result == ERROR_FILE_NOT_FOUND ) // 2 (0x2)
+			// But we need to determine if it's actually an out of space
+			// (rather than some compile error with missing file(s))
+			// These error code have been observed in the wild
+			if ( stdOut )
 			{
-				// But we need to determine if it's actually an out of space
-				// (rather than some compile error with missing file(s))
-				// These error code have been observed in the wild
-				if ( stdOut )
-				{
-					if ( strstr( stdOut, "C1082" ) ||
-						 strstr( stdOut, "C1088" ) )
-					{
-						job->OnSystemError();
-						return;
-					}
-				}
-
-				// Error messages above also contains this text
-				// (We check for this message additionally to handle other error codes
-				//  that may not have been observed yet)
-				// TODO:C Should we check for localized msg?
-				if ( stdOut && strstr( stdOut, "No space left on device" ) )
+				if ( strstr( stdOut, "C1082" ) ||
+					 strstr( stdOut, "C1085" ) ||
+					 strstr( stdOut, "C1088" ) )
 				{
 					job->OnSystemError();
 					return;
 				}
+			}
+
+			// Error messages above also contains this text
+			// (We check for this message additionally to handle other error codes
+			//  that may not have been observed yet)
+			// TODO:C Should we check for localized msg?
+			if ( stdOut && strstr( stdOut, "No space left on device" ) )
+			{
+				job->OnSystemError();
+				return;
 			}
 		}
 

@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Strings/AStackString.h"
 
@@ -60,24 +61,16 @@ FunctionForEach::FunctionForEach()
 			Error::Error_1200_ExpectedVar( pos, this );
 			return false;
 		}
-		BFFIterator varNameStart( pos );
-		pos++;
-		if ( pos.IsAtValidVariableNameCharacter() == false )
-		{
-			Error::Error_1013_UnexpectedCharInVariableName( pos, this );
-			return false;
-		}
-		pos.SkipVariableName();
-		BFFIterator varNameEnd( pos );
 
-		// sanity check it is a sensible length
-		size_t varNameLen = varNameStart.GetDistTo( varNameEnd );
-		if ( varNameLen > BFFParser::MAX_VARIABLE_NAME_LENGTH )
+		const BFFIterator arrayVarNameBegin = pos;
+		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > localName;
+		bool localParentScope = false; // always false thanks to the previous test
+		if ( BFFParser::ParseVariableName( pos, localName, localParentScope ) == false )
 		{
-			Error::Error_1014_VariableNameIsTooLong( varNameStart, (uint32_t)varNameLen, (uint32_t)BFFParser::MAX_VARIABLE_NAME_LENGTH );
 			return false;
 		}
-		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > localName( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
+		ASSERT( false == localParentScope );
+
 		localNames.Append( localName );
 
 		pos.SkipWhiteSpace();
@@ -100,36 +93,36 @@ FunctionForEach::FunctionForEach()
 		pos++;
 		pos.SkipWhiteSpace();
 
-		BFFIterator arrayVarNameBegin( pos );
-		if ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL )
+		if ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL &&
+			 *pos != BFFParser::BFF_DECLARE_VAR_PARENT /* tolerant with parent vars */ )
 		{
 			Error::Error_1202_ExpectedVarFollowingIn( pos, this );
 			return false;
 		}
-		pos++;
-		if ( pos.IsAtValidVariableNameCharacter() == false )
-		{
-			Error::Error_1013_UnexpectedCharInVariableName( pos, this );
-			return false;
-		}
-		pos.SkipVariableName();
-		BFFIterator arrayVarNameEnd( pos );
 
-		// sanity check it is a sensible length
-		size_t arrayVarNameLen = arrayVarNameBegin.GetDistTo( arrayVarNameEnd );
-		if ( arrayVarNameLen > BFFParser::MAX_VARIABLE_NAME_LENGTH )
+		const BFFIterator arrayNameStart( pos );
+		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > arrayVarName;
+		bool arrayParentScope = false;
+		if ( BFFParser::ParseVariableName( pos, arrayVarName, arrayParentScope ) == false )
 		{
-			Error::Error_1014_VariableNameIsTooLong( arrayVarNameBegin, (uint32_t)arrayVarNameLen, (uint32_t)BFFParser::MAX_VARIABLE_NAME_LENGTH );
 			return false;
 		}
-		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > arrayVarName( arrayVarNameBegin.GetCurrent(), arrayVarNameEnd.GetCurrent() );
 
-		const BFFVariable * var = BFFStackFrame::GetVar( arrayVarName );
-		if ( var == nullptr )
+		const BFFVariable * var = nullptr;
+		BFFStackFrame * const arrayFrame = ( arrayParentScope )
+			? BFFStackFrame::GetParentDeclaration( arrayVarName, BFFStackFrame::GetCurrent()->GetParent(), var )
+			: nullptr;
+
+		if ( false == arrayParentScope )
 		{
-			Error::Error_1009_UnknownVariable( arrayVarNameBegin, this );
-			return false;
+			var = BFFStackFrame::GetVar( arrayVarName, nullptr );
 		}
+
+		if ( ( arrayParentScope && ( nullptr == arrayFrame ) ) || ( var == nullptr ) )
+	    {
+	    	Error::Error_1009_UnknownVariable( arrayNameStart, this );
+	    	return false;
+	    }
 
 		// it can be of any supported type
 		if ( ( var->IsArrayOfStrings() == false ) && ( var->IsArrayOfStructs() == false ) )
@@ -185,6 +178,16 @@ FunctionForEach::FunctionForEach()
 		return true;
 	}
 
+	// freeze the variable to avoid modifications while looping
+	for ( uint32_t j=0; j<arrayVars.GetSize(); ++j )
+	{
+		arrayVars[ j ]->Freeze();
+		FLOG_INFO( "Freezing loop array '%s' of type <%s>",
+				   arrayVars[j]->GetName().Get(), BFFVariable::GetTypeName( arrayVars[j]->GetType() ) );
+	}
+
+	bool succeed = true;
+
 	for ( uint32_t i=0; i<(uint32_t)loopLen; ++i )
 	{
 		// create local loop variables
@@ -193,11 +196,11 @@ FunctionForEach::FunctionForEach()
 		{
 			if ( arrayVars[ j ]->GetType() == BFFVariable::VAR_ARRAY_OF_STRINGS )
 			{
-				loopStackFrame.SetVarString( localNames[ j ], arrayVars[ j ]->GetArrayOfStrings()[ i ] );
+				BFFStackFrame::SetVarString( localNames[ j ], arrayVars[ j ]->GetArrayOfStrings()[ i ], &loopStackFrame );
 			}
 			else if ( arrayVars[ j ]->GetType() == BFFVariable::VAR_ARRAY_OF_STRUCTS )
 			{
-				loopStackFrame.SetVarStruct( localNames[ j ], arrayVars[ j ]->GetArrayOfStructs()[ i ]->GetStructMembers() );
+				BFFStackFrame::SetVarStruct( localNames[ j ], arrayVars[ j ]->GetArrayOfStructs()[ i ]->GetStructMembers(), &loopStackFrame );
 			}
 			else
 			{
@@ -212,17 +215,27 @@ FunctionForEach::FunctionForEach()
 		subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
 		if ( subParser.Parse( subIter ) == false )
 		{
-			return false;
+			succeed = false;
+			break;
 		}
 
 		// complete the function
 		if ( Commit( functionNameStart ) == false )
 		{
-			return false;
+			succeed = false;
+			break;
 		}
 	}
 
-	return true;
+	// unfreeze all array variables
+	for ( uint32_t j=0; j<arrayVars.GetSize(); ++j )
+	{
+		arrayVars[ j ]->Unfreeze();
+		FLOG_INFO( "Unfreezing loop array '%s' of type <%s>",
+				   arrayVars[j]->GetName().Get(), BFFVariable::GetTypeName( arrayVars[j]->GetType() ) );
+	}
+
+	return succeed;
 }
 
 //------------------------------------------------------------------------------

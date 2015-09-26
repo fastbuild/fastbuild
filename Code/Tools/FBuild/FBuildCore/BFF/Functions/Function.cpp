@@ -457,7 +457,7 @@ bool Function::GetDirectoryListNodeList( const BFFIterator & iter,
 										 const Array< AString > & excludePaths,
                                          const Array< AString > & filesToExclude,
 										 bool recurse,
-										 const AString & pattern,
+										 const Array< AString > * patterns,
 										 const char * inputVarName,
 										 Dependencies & nodes ) const
 {
@@ -489,13 +489,13 @@ bool Function::GetDirectoryListNodeList( const BFFIterator & iter,
 
 		// get node for the dir we depend on
 		AStackString<> name;
-		DirectoryListNode::FormatName( path, pattern, recurse, excludePaths, filesToExcludeCleaned, name );
+		DirectoryListNode::FormatName( path, patterns, recurse, excludePaths, filesToExcludeCleaned, name );
 		Node * node = ng.FindNode( name );
 		if ( node == nullptr )
 		{
 			node = ng.CreateDirectoryListNode( name,
 											   path,
-											   pattern,
+											   patterns,
 											   recurse,
 											   excludePaths, 
                                                filesToExcludeCleaned );

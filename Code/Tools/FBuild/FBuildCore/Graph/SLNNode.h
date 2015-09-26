@@ -30,6 +30,7 @@ public:
                         const AString & solutionMinimumVisualStudioVersion,
                         const Array< VSProjectConfig > & configs,
                         const Array< VCXProjectNode * > & projects,
+						const Array< SLNDependency > & slnDeps,
                         const Array< SLNSolutionFolder > & folders );
     virtual ~SLNNode();
 
@@ -47,6 +48,7 @@ private:
     AString m_SolutionMinimumVisualStudioVersion;
 
     Array< VSProjectConfig > m_Configs;
+	Array< SLNDependency > m_SolutionDeps;
     Array< SLNSolutionFolder > m_Folders;
 };
 

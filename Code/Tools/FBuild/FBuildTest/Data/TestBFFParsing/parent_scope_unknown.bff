@@ -1,0 +1,7 @@
+
+; unknown in parent scope
+
+{
+    .var = 'test'
+    ^var = 'undefined'
+}

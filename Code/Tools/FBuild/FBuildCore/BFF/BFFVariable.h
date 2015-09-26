@@ -61,6 +61,10 @@ public:
 	inline bool IsStruct() const	{ return m_Type == BFFVariable::VAR_STRUCT; }
 	inline bool IsArrayOfStructs() const { return m_Type == BFFVariable::VAR_ARRAY_OF_STRUCTS; }
 
+	inline bool Frozen() const { return m_Frozen; }
+	inline void Freeze() const { ASSERT( false == m_Frozen ); m_Frozen = true; }
+	inline void Unfreeze() const { ASSERT( m_Frozen ); m_Frozen = false; }
+
     BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other ) const;
 
 private:
@@ -87,9 +91,11 @@ private:
     static const BFFVariable ** GetMemberByName( const AString & name, const Array< const BFFVariable * > & members );
 
 	AString m_Name;
+	VarType	m_Type;
+
+	mutable bool m_Frozen;
 
 	//
-	VarType				m_Type;
 	AString				m_StringValue;
 	bool				m_BoolValue;
 	Array< AString >	m_ArrayValues;
@@ -102,4 +108,3 @@ private:
 
 //------------------------------------------------------------------------------
 #endif // FBUILD_VARIABLE_H
- 

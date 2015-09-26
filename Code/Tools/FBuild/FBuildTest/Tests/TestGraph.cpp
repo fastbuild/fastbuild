@@ -106,6 +106,8 @@ void TestGraph::TestNodeTypes() const
 		TEST_ASSERT( AStackString<>( "Copy" ) == n->GetTypeName() );
 	}
 
+	Array< AString > patterns;
+	patterns.Append( AStackString<>( "*.cpp" ) );
     #if defined( __WINDOWS__ )
         DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path\\|*.cpp|false|" ),
                                                             AStackString<>( "path\\" ),
@@ -113,7 +115,7 @@ void TestGraph::TestNodeTypes() const
         DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path/|*.cpp|false|" ),
                                                             AStackString<>( "path/" ),
     #endif
-                                                            AStackString<>( "*.cpp"),
+                                                            &patterns,
                                                             false,
                                                             Array< AString >(),
                                                             Array< AString >() );
@@ -123,7 +125,9 @@ void TestGraph::TestNodeTypes() const
 
 	{
 		Dependencies empty;
-		Node * n = ng.CreateExecNode( AStackString<>( "dst" ), fn, fn, AStackString<>( "args" ), AStackString<>( "workingDir" ), 0, empty );
+		Dependencies inputs;
+		inputs.Append( Dependency( fn ) );
+		Node * n = ng.CreateExecNode( AStackString<>( "dst" ), inputs, fn, AStackString<>( "args" ), AStackString<>( "workingDir" ), 0, empty, false );
 		TEST_ASSERT( n->GetType() == Node::EXEC_NODE );
 		TEST_ASSERT( ExecNode::GetTypeS() == Node::EXEC_NODE);
 		TEST_ASSERT( AStackString<>( "Exec" ) == n->GetTypeName() );
@@ -172,7 +176,7 @@ void TestGraph::TestNodeTypes() const
 	{
 		Dependencies libraries( 1, false );
 		libraries.Append( Dependency( fn ) );
-		Node * n = ng.CreateExeNode( AStackString<>( "zz.exe" ), libraries, Dependencies(), AString::GetEmpty(), AString::GetEmpty(), 0, Dependencies(), nullptr, AString::GetEmpty() );
+		Node * n = ng.CreateExeNode( AStackString<>( "zz.exe" ), libraries, Dependencies(), AString::GetEmpty(), AString::GetEmpty(), 0, Dependencies(), AStackString<>(),nullptr, AString::GetEmpty() );
 		TEST_ASSERT( n->GetType() == Node::EXE_NODE );
 		TEST_ASSERT( ExeNode::GetTypeS() == Node::EXE_NODE );
 		TEST_ASSERT( AStackString<>( "Exe" ) == n->GetTypeName() );
@@ -266,7 +270,9 @@ void TestGraph::TestExecNode() const
 	FileNode * srcNode = ng.CreateFileNode( srcFile );
 	FileNode * exe = ng.CreateFileNode( exeName, false ); // false == don't clean the path
 	Dependencies empty;
-	ExecNode * execNode = ng.CreateExecNode( dstFile, srcNode, exe, exeArgs, workingDir, 1, empty );
+	Dependencies inputFiles;
+	inputFiles.Append( Dependency(srcNode) );
+	ExecNode * execNode = ng.CreateExecNode( dstFile, inputFiles, exe, exeArgs, workingDir, 1, empty, false );
 
 	// build and verify
 	TEST_ASSERT( fb.Build( execNode ) );
@@ -298,6 +304,9 @@ void TestGraph::TestDirectoryListNode() const
         const AStackString<> testFolder( "Data/TestGraph/" );
     #endif
 
+	Array< AString > patterns;
+	patterns.Append( AStackString<>( "library.*" ) );
+
 	// create the node, and make sure we can access it by name
     #if defined( __WINDOWS__ )
         const AStackString<> name( "Data\\TestGraph\\|library.*|true|" );
@@ -306,7 +315,7 @@ void TestGraph::TestDirectoryListNode() const
     #endif
 	DirectoryListNode * node = ng.CreateDirectoryListNode( name,
 														   testFolder,
-														   AStackString<>( "library.*" ),
+														   &patterns,
 														   true,
 														   Array< AString >(),
 														   Array< AString >() );

@@ -62,6 +62,21 @@ void Semaphore::Signal()
     #endif
 }
 
+// Signal
+//------------------------------------------------------------------------------
+void Semaphore::Signal( uint32_t num )
+{ 
+	ASSERT( num ); // not valid to call with 0
+    #if defined( __WINDOWS__ )
+        VERIFY( ReleaseSemaphore( m_Semaphore, (DWORD)num, nullptr ) );
+    #else
+		for ( size_t i=0; i<num; ++i )
+		{
+			Signal();
+		}
+    #endif
+}
+
 // Wait
 //------------------------------------------------------------------------------
 void Semaphore::Wait( uint32_t timeoutMS )

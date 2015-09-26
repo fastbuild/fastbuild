@@ -31,3 +31,14 @@ Copy( "TestMultiCopyToDir" )
 				"Data/TestCopy/b.txt" }
 	.Dest = "$Out$/Test/Copy/"
 }
+
+//
+// Copy with SourceBasePath
+//
+Copy( "TestSourceBasePath" )
+{
+	.Source = { "Data/TestCopy/a.txt",
+				"Data/TestCopy/b.txt" }
+	.SourceBasePath = "Data/" // This means we should re-create the hierarchy after this (i.e. the TestCopy dir)
+	.Dest = "$Out$/Test/Copy/SourceBasePath/"
+}

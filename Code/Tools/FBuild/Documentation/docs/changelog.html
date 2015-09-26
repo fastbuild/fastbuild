@@ -15,6 +15,59 @@
 
 
 <div class='newsitemheader'>
+    v0.87&nbsp;<font color='#bbbbbb'>(26-Sep-2015)</font>
+</div>
+<div class='newsitembody'>
+    Note
+    <ul>
+	  	<li>DB version has changed : clean build will occur</li>
+    </ul>
+	New
+	<ul>
+		<li>The Intel Compiler is now a supported compiler (icl.exe)</li>
+		<li>Variable prefix ^ allows access/modification of higher-level scope variables (Thanks to poppolopoppo)</li>
+		<li>#define/#undef directives allow for user defined tokens (thanks to Poppolopoppo)</li>
+	</ul>
+    Fixes
+    <ul>
+		<li>Fix missing dependency in some cases where #include was preceded by whitespace with MSVC compiler</li>
+		<li>Prevent jobs being accepted if disk-space drops below threshold after a build has already started</li>
+		<li>Improve detection of disk space failures with MSVC compiler</li>
+		<li>Support /IMPLIB for Executables with MSVC Linker (Thanks to Josh Green)</li>
+		<li>link.exe is recognized as a valid librarian, since it can be used with /LIB (Thanks to Josh Green)</li>
+		<li>Fix VS Solution generated GUIDs being inconsistent in some situations, causing Solution to always be "dirty" (Thanks to Arttu Peltonen)</li>
+    </ul>
+	Improvements
+	<ul>
+		<li>FBuildWorker UI shows warning in title when disk-space is low</li>
+		<li>Missing documentation for Exec() .ExecReturnCode added (thanks to Josh Green)</li>
+		<li>Exec() has new .UseStdOutAsOutput option, for executables which don't normally generate a file (thanks to Josh Green)</li>
+		<li>Exec() function now supports multiple inputs (Thanks to Josh Green)</li>
+		<li>Support for negating #if directive - i.e. #if !TOKEN (thanks to Poppolopoppo)</li>
+		<li>Add .SourceBasePath to Copy() function - allows duplicating partial source path hierarchies into destination</li>
+		<li>Multiple Wildcard Support:</li>
+		<ul>
+			<li>CompilerInputPattern (CSAssembly, ObjectList and Library) supports multiple wildcards</li>
+			<li>UnityInputPattern (Unity) supports multiple wildcards</li>
+			<li>SourcePathsPattern (CopyDir) supports multiple wildcards</li>
+		</ul>
+		<li>Optimizations:</li>
+		<ul>
+			<li>Latency of local job consumption is reduced by upto 15ms</li>
+			<li>Optimize include discovery with MSVC compiler when using the preprocessor (cached or distributed compilation)</li>
+		</ul>		
+		<li>Visual Studio Solution Generation:</li>
+		<ul>
+			<li>VSSolution Folder structs support String or ArrayOfStrings for .Project list</li>
+			<li>VSSolution .SolutionProjects is now optional to avoid duplication in .SolutionFolders</li>
+			<li>VSSolution supports setting inter-project dependencies; Useful in some situations</li>
+		</ul>
+		</li>
+	</ul>
+</div>
+
+
+<div class='newsitemheader'>
     v0.86&nbsp;<font color='#bbbbbb'>(6-Aug-2015)</font>
 </div>
 <div class='newsitembody'>

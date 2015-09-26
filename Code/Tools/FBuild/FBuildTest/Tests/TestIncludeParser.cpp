@@ -23,6 +23,7 @@ private:
 	DECLARE_TESTS
 
 	void TestMSVCPreprocessedOutput() const;
+	void TestMSVCPreprocessedOutput_Indent() const;
 	void TestMSVCShowIncludesOutput() const;
 	void TestMSVC_P() const;
 	void TestMSVC_ShowIncludesWithWarnings() const;
@@ -37,6 +38,7 @@ private:
 REGISTER_TESTS_BEGIN( TestIncludeParser )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( TestMSVCPreprocessedOutput );
+		REGISTER_TEST( TestMSVCPreprocessedOutput_Indent );
         REGISTER_TEST( TestMSVCShowIncludesOutput );
 		REGISTER_TEST( TestMSVC_P );
 		REGISTER_TEST( TestMSVC_ShowIncludesWithWarnings );
@@ -70,12 +72,36 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
 		const Array< AString > & includes = parser.GetIncludes();
 		TEST_ASSERT( includes.GetSize() == 284 );
 		#ifdef DEBUG
-			TEST_ASSERT( parser.GetNonUniqueCount() == 4701 );
+			TEST_ASSERT( parser.GetNonUniqueCount() == 381 );
 		#endif
 	}
 
 	float time = t.GetElapsed();
 	OUTPUT( "MSVC                 : %2.3fs (%2.1f MiB/sec)\n", time, ( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+}
+
+// TestMSVCPreprocessedOutput_Indent
+//------------------------------------------------------------------------------
+void TestIncludeParser::TestMSVCPreprocessedOutput_Indent() const
+{
+	// Test line starting with various tabs/spaces
+	const char * testData = "#line 1 \"C:\\fileA.cpp\"\r\n"
+							" #line 1 \"C:\\fileB.cpp\"\r\n"
+							"            #line 1 \"C:\\fileC.cpp\"\r\n"
+							"\t#line 1 \"C:\\fileD.cpp\"\r\n"
+							"\t\t\t\t\t#line 1 \"C:\\fileE.cpp\"\r\n"
+							" \t \t \t#line 1 \"C:\\fileF.cpp\"\r\n";
+	const size_t testDataSize = AString::StrLen( testData );
+
+	CIncludeParser parser;
+	TEST_ASSERT( parser.ParseMSCL_Preprocessed( testData, testDataSize ) );
+
+	// check number of includes found to prevent future regressions
+	const Array< AString > & includes = parser.GetIncludes();
+	TEST_ASSERT( includes.GetSize() == 6 );
+	#ifdef DEBUG
+		TEST_ASSERT( parser.GetNonUniqueCount() == 6 );
+	#endif
 }
 
 // TestMSVCShowIncludesOutput
@@ -271,7 +297,7 @@ void TestIncludeParser::TestEdgeCases() const
 
 	// include on last line
 	{
-		AStackString<> data( "#line \"hello\"" );
+		AStackString<> data( "#line 1 \"hello\"" );
 		CIncludeParser parser;
 		TEST_ASSERT( parser.ParseMSCL_Preprocessed( data.Get(), data.GetLength() ) );
 		TEST_ASSERT( parser.GetIncludes().GetSize() == 1 );

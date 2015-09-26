@@ -32,16 +32,16 @@ FunctionExec::FunctionExec()
 	// make sure all required variables are defined
 	const BFFVariable * outputV;
 	const BFFVariable * executableV;
-	const BFFVariable * inputV;
 	const BFFVariable * argsV;
 	const BFFVariable * workingDirV;
 	int32_t expectedReturnCode;
+	bool useStdOutAsOutput;
 	if ( !GetString( funcStartIter, outputV,		".ExecOutput", true ) ||
 		 !GetString( funcStartIter, executableV,	".ExecExecutable", true ) ||
-		 !GetString( funcStartIter, inputV,			".ExecInput", true ) ||
 		 !GetString( funcStartIter, argsV,			".ExecArguments" ) ||
 		 !GetString( funcStartIter, workingDirV,	".ExecWorkingDir" ) ||
-		 !GetInt( funcStartIter, expectedReturnCode, ".ExecReturnCode", 0, false ) )
+		 !GetInt( funcStartIter, expectedReturnCode, ".ExecReturnCode", 0, false ) ||
+		 !GetBool( funcStartIter, useStdOutAsOutput, ".ExecUseStdOutAsOutput", false, false))
 	{
 		return false;
 	}
@@ -74,15 +74,26 @@ FunctionExec::FunctionExec()
 	}
 
 	// source node
-	Node * inputNode = ng.FindNode( inputV->GetString() );
-	if ( inputNode == nullptr )
+	Dependencies inputNodes;
+	if (!GetNodeList(funcStartIter, ".ExecInput", inputNodes, false))
 	{
-		inputNode = ng.CreateFileNode( inputV->GetString() );
+		return false; // GetNodeList will have emitted an error
 	}
-	else if ( inputNode->IsAFile() == false )
+	else
 	{
-		Error::Error_1103_NotAFile( funcStartIter, this, "ExecInput", exeNode->GetName(), exeNode->GetType() );
-		return false;
+		// Make sure all nodes are files
+		const Dependency * const end = inputNodes.End();
+		for (const Dependency * it = inputNodes.Begin();
+			it != end;
+			++it)
+		{
+			Node * node = it->GetNode();
+			if (node->IsAFile() == false)
+			{
+				Error::Error_1103_NotAFile(funcStartIter, this, "ExecInput", node->GetName(), node->GetType());
+				return false;
+			}
+		}
 	}
 
 	// optional args
@@ -91,12 +102,13 @@ FunctionExec::FunctionExec()
 
 	// create the TestNode
 	Node * outputNode = ng.CreateExecNode( outputV->GetString(), 
-										   (FileNode *)inputNode,
+										   inputNodes,
 										   (FileNode *)exeNode,
 										   arguments,
 										   workingDir, 
 										   expectedReturnCode,
-										   preBuildDependencies );
+										   preBuildDependencies,
+										   useStdOutAsOutput);
 	
 	return ProcessAlias( funcStartIter, outputNode );
 }

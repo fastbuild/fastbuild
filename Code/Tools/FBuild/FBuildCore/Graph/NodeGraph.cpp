@@ -555,19 +555,20 @@ CopyDirNode * NodeGraph::CreateCopyDirNode( const AString & nodeName,
 // CreateCopyNode
 //------------------------------------------------------------------------------
 ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName, 
-									  FileNode * sourceFile, 
+									  const Dependencies & inputFiles, 
 									  FileNode * executable, 
 									  const AString & arguments,									  
 									  const AString & workingDir,
 									  int32_t expectedReturnCode,
-									  const Dependencies & preBuildDependencies )
+									  const Dependencies & preBuildDependencies,
+									  bool useStdOutAsOutput )
 {
 	ASSERT( Thread::IsMainThread() );
 
 	AStackString< 512 > fullPath;
 	CleanPath( dstFileName, fullPath );
 
-	ExecNode * node = FNEW( ExecNode( fullPath, sourceFile, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies ) );
+	ExecNode * node = FNEW( ExecNode( fullPath, inputFiles, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies, useStdOutAsOutput ) );
 	AddNode( node );
 	return node;
 }
@@ -599,7 +600,7 @@ FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
 //------------------------------------------------------------------------------
 DirectoryListNode * NodeGraph::CreateDirectoryListNode( const AString & name,
 													    const AString & path,
-													    const AString & wildCard,
+													    const Array< AString > * patterns,
 													    bool recursive,
 													    const Array< AString > & excludePaths,
                                                         const Array< AString > & filesToExclude )
@@ -609,7 +610,7 @@ DirectoryListNode * NodeGraph::CreateDirectoryListNode( const AString & name,
 	// NOTE: DirectoryListNode assumes valid values from here
 	// and will assert as such (so we don't check here)
 
-	DirectoryListNode * node = FNEW( DirectoryListNode( name, path, wildCard, recursive, excludePaths, filesToExclude ) );
+	DirectoryListNode * node = FNEW( DirectoryListNode( name, path, patterns, recursive, excludePaths, filesToExclude ) );
 	AddNode( node );
 	return node;
 }
@@ -756,6 +757,7 @@ ExeNode * NodeGraph::CreateExeNode( const AString & linkerOutputName,
 									const AString & linkerArgs,
 									uint32_t flags,
 									const Dependencies & assemblyResources,
+									const AString & importLibName,
 									Node * linkerStampExe,
 									const AString & linkerStampExeArgs )
 {
@@ -771,6 +773,7 @@ ExeNode * NodeGraph::CreateExeNode( const AString & linkerOutputName,
 								  linkerArgs,
 								  flags,
 								  assemblyResources,
+								  importLibName,
 								  linkerStampExe,
 								  linkerStampExeArgs ) );
 	AddNode( node );
@@ -914,6 +917,7 @@ SLNNode * NodeGraph::CreateSLNNode(	const AString & solutionOutput,
                         			const AString & solutionMinimumVisualStudioVersion,
 									const Array< VSProjectConfig > & configs,
 									const Array< VCXProjectNode * > & projects,
+									const Array< SLNDependency > & slnDeps,
 									const Array< SLNSolutionFolder > & folders )
 {
 	ASSERT( Thread::IsMainThread() );
@@ -927,6 +931,7 @@ SLNNode * NodeGraph::CreateSLNNode(	const AString & solutionOutput,
 									solutionMinimumVisualStudioVersion,
 									configs,
 									projects,
+									slnDeps,
 									folders ) );
 	AddNode( node );
 	return node;

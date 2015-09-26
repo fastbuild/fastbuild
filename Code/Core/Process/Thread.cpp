@@ -93,10 +93,8 @@ public:
 {
 	#if defined( __WINDOWS__ )
 		return (Thread::ThreadId) ::GetCurrentThreadId();
-    #elif defined( __APPLE__ )
-        return 0; // TODO:MAC Implement 
-    #elif defined( __LINUX__ )
-        return 0; // TODO:LINUX Implement 
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        return pthread_self();
     #else
         #error Unknown platform GetCurrentThreadId
 	#endif

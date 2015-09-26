@@ -40,23 +40,19 @@ FunctionCopyDir::FunctionCopyDir()
 	}
 
 	// get the optional params
-	AStackString<> pattern;
+	Array< AString > patterns;
 	bool recurse = true;
 	Array< AString > excludePaths;
-	if ( !GetString( funcStartIter, pattern, ".SourcePathsPattern" ) ||
+	if ( !GetStrings( funcStartIter, patterns, ".SourcePathsPattern" ) ||
 		 !GetBool( funcStartIter, recurse, ".SourcePathsRecurse", true ) || // recursive by default
 		 !GetStrings( funcStartIter, excludePaths, ".SourceExcludePaths" ) )
 	{
 		return false; // Get* will have emitted error
 	}
-	if ( pattern.IsEmpty() )
-	{
-		pattern = "*";
-	}
 
 	// convert input paths to DirectoryListNodes
 	Dependencies staticDeps( inputPaths.GetSize() );
-	if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, pattern, ".SourcePaths", staticDeps ) )
+	if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, patterns.IsEmpty() ? nullptr : &patterns, ".SourcePaths", staticDeps ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}

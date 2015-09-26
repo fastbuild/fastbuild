@@ -18,11 +18,17 @@
       <p>
 Defines global FASTBuild settings.
       </p>
-<div class='code'>Environment()
+<div class='code'>Settings
 {
-  .CachePath           ; (optional) Path to cache location
-  .CachePluginDLL      ; (optional) User plugin to manage cache back-end
-  .Environment         ; (optional) Array of environment variables to use
+  // General
+  .Environment         // (optional) Array of environment variables to use
+  
+  // Caching
+  .CachePath           // (optional) Path to cache location
+  .CachePluginDLL      // (optional) User plugin to manage cache back-end
+  
+  // Distribution
+  .Workers             // (optional) Fixed list of workers if not using automatic discovery
 }
 </div>
     </div>

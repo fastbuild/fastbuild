@@ -28,7 +28,7 @@ REFLECT_BEGIN( UnityNode, Node, MetaNone() )
 	REFLECT_ARRAY( m_InputPaths,		"UnityInputPath",						MetaOptional() + MetaPath() )
 	REFLECT_ARRAY( m_PathsToExclude,	"UnityInputExcludePath",				MetaOptional() + MetaPath() )
 	REFLECT( m_InputPathRecurse,		"UnityInputPathRecurse",				MetaOptional() )
-	REFLECT( m_InputPattern,			"UnityInputPattern",					MetaOptional() )
+	REFLECT_ARRAY( m_InputPattern,		"UnityInputPattern",					MetaOptional() )
 	REFLECT_ARRAY( m_Files,				"UnityInputFiles",						MetaOptional() + MetaFile() )
 	REFLECT_ARRAY( m_FilesToExclude,	"UnityInputExcludedFiles",				MetaOptional() + MetaFile( true ) ) // relative
 	REFLECT_ARRAY( m_ExcludePatterns,	"UnityInputExcludePattern",				MetaOptional() + MetaFile( true ) ) // relative
@@ -46,7 +46,7 @@ REFLECT_END( UnityNode )
 UnityNode::UnityNode()
 : Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_NONE )
 , m_InputPathRecurse( true )
-, m_InputPattern( "*.cpp" )
+, m_InputPattern( 1, true )
 , m_Files( 0, true )
 , m_OutputPath()
 , m_OutputPattern( "Unity*.cpp" )
@@ -60,6 +60,7 @@ UnityNode::UnityNode()
 , m_IsolatedFiles( 0, true )
 , m_UnityFileNames( 0, true )
 {
+	m_InputPattern.Append( AStackString<>( "*.cpp" ) );
 	m_LastBuildTimeMs = 100; // higher default than a file node
 }
 
@@ -68,7 +69,7 @@ UnityNode::UnityNode()
 bool UnityNode::Initialize( const BFFIterator & iter, const Function * function )
 {
 	Dependencies dirNodes( m_InputPaths.GetSize() );
-	if ( !function->GetDirectoryListNodeList( iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_InputPathRecurse, m_InputPattern, "UnityInputPath", dirNodes ) )
+	if ( !function->GetDirectoryListNodeList( iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}

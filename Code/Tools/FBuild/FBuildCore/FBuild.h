@@ -18,6 +18,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class BFFMacros;
 class Client;
 class FileStream;
 class ICache;
@@ -106,6 +107,8 @@ private:
 	void UpdateBuildStatus( const Node * node );
 
 	static bool s_StopBuild;
+
+	BFFMacros * m_Macros;
 
 	NodeGraph * m_DependencyGraph;
 	JobQueue * m_JobQueue;

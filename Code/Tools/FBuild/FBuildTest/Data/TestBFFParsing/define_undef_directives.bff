@@ -1,0 +1,21 @@
+//
+// Define/Undefine
+//
+
+// Ensure things can be defined
+#define THING
+#if THING
+	// Ok
+#endif
+#if !THING
+	Should never get here
+#endif
+
+// Ensure we can undefine things
+#undef THING
+#if THING
+	Should never get here
+#endif
+#if !THING
+	// Ok
+#endif

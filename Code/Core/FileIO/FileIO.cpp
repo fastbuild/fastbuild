@@ -213,7 +213,7 @@
 // GetFilesEx
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetFilesEx( const AString & path,
-								  const AString & wildCard,
+								  const Array< AString > * patterns,
 								  bool recurse,
 								  Array< FileInfo > * results )
 {
@@ -225,11 +225,11 @@
 		// make a copy of the path as it will be modified during recursion
 		AStackString< 256 > pathCopy( path );
 		PathUtils::EnsureTrailingSlash( pathCopy );
-		GetFilesRecurseEx( pathCopy, wildCard, results );
+		GetFilesRecurseEx( pathCopy, patterns, results );
 	}
 	else
 	{
-		GetFilesNoRecurseEx( path.Get(), wildCard.Get(), results );
+		GetFilesNoRecurseEx( path.Get(), patterns, results );
 	}
 
 	return ( results->GetSize() != oldSize );
@@ -883,7 +883,7 @@
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurseEx( AString & pathCopy, 
-										 const AString & wildCard,
+										 const Array< AString > * patterns,
 										 Array< FileInfo > * results )
 {
     const uint32_t baseLength = pathCopy.GetLength();
@@ -915,7 +915,7 @@
                 pathCopy.SetLength( baseLength );
                 pathCopy += findData.cFileName;
                 pathCopy += NATIVE_SLASH;
-                GetFilesRecurseEx( pathCopy, wildCard, results );
+                GetFilesRecurseEx( pathCopy, patterns, results );
             }
         }
         while ( FindNextFile( hFind, &findData ) != 0 );
@@ -937,7 +937,7 @@
                 continue;
             }
 
-			if ( PathUtils::IsWildcardMatch( wildCard.Get(), findData.cFileName ) )
+			if ( IsMatch( patterns, findData.cFileName ) )
 			{
 				pathCopy.SetLength( baseLength );
 				pathCopy += findData.cFileName;
@@ -988,12 +988,12 @@
                 pathCopy.SetLength( baseLength );
                 pathCopy += entry->d_name;
                 pathCopy += NATIVE_SLASH;
-                GetFilesRecurseEx( pathCopy, wildCard, results ); 
+                GetFilesRecurseEx( pathCopy, patterns, results ); 
                 continue;
             }
             
             // file - does it match wildcard?
-			if ( PathUtils::IsWildcardMatch( wildCard.Get(), entry->d_name ) )
+			if ( IsMatch( patterns, entry->d_name ) )
             {
                 pathCopy.SetLength( baseLength );
                 pathCopy += entry->d_name;
@@ -1027,7 +1027,7 @@
 // GetFilesNoRecurseEx
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesNoRecurseEx( const char * path, 
-										   const char * wildCard,
+											 const Array< AString > * patterns,
 										   Array< FileInfo > * results )
 {
     AStackString< 256 > pathCopy( path );
@@ -1051,7 +1051,7 @@
                 continue;
             }
 
-			if ( PathUtils::IsWildcardMatch( wildCard, findData.cFileName ) )
+			if ( IsMatch( patterns, findData.cFileName ) )
 			{
 				pathCopy.SetLength( baseLength );
 				pathCopy += findData.cFileName;
@@ -1094,7 +1094,7 @@
             }
             
             // file - does it match wildcard?
-			if ( PathUtils::IsWildcardMatch( wildCard, entry->d_name ) )
+			if ( IsMatch( patterns, entry->d_name ) )
             {
                 pathCopy.SetLength( baseLength );
                 pathCopy += entry->d_name;
@@ -1168,6 +1168,29 @@ bool FileIO::FileInfo::IsReadOnly() const
 	#else
         #error Unknown platform
 	#endif
+}
+
+// IsMatch
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::IsMatch( const Array< AString > * patterns, const char * fileName )
+{
+	// no wildcards means match all files (equivalent to *)
+	if ( ( patterns == nullptr ) || ( patterns->IsEmpty() ) )
+	{
+		return true;
+	}
+
+	// Check each provided pattern
+	for ( const AString & pattern : *patterns )
+	{
+		// Let PathUtils manage platform specific case-sensitivity etc
+		if ( PathUtils::IsWildcardMatch( pattern.Get(), fileName ) )
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 //------------------------------------------------------------------------------

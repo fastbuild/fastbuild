@@ -168,22 +168,40 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 
 	const char * pos = compilerOutput;
 
-	// special case for include on first line
-	// (out of loop to keep loop logic simple)
-	if ( strncmp( pos, "#line ", 6 ) == 0 )
-	{
-		pos += 6;
-		goto foundInclude;
-	}
-
 	for (;;)
 	{
-		pos = strstr( pos, "\n#line " );
+		pos = strstr( pos, "#line 1 " );
 		if ( !pos )
 		{
 			break;
 		}
-		pos += 7;
+
+		const char * lineStart = pos;
+		pos += 8;
+
+        // search backwards for start of line
+    searchForLineStart:
+        // special case for first line (prevent buffer underread)
+		if ( lineStart == compilerOutput )
+		{
+			goto foundInclude;
+		}
+
+        // skip whitespace
+		--lineStart;
+		if ( ( *lineStart == ' ' ) || ( *lineStart == '\t' ) )
+		{
+			goto searchForLineStart;
+		}
+
+        // wrapped to previous line?
+		if ( *lineStart == '\n' )
+		{
+			goto foundInclude;
+		}
+
+        // hit some non-whitespace before the #line
+		continue; // look for another #line
 
 	foundInclude:
 
@@ -195,7 +213,7 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 		}
 		pos++;
 
-		const char * lineStart = pos;
+		const char * incStart = pos;
 
 		// find end of line
 		pos = strchr( pos, '"' );
@@ -204,9 +222,9 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 			return false;
 		}
 
-		const char * lineEnd = pos;
+		const char * incEnd = pos;
 
-		AddInclude( lineStart, lineEnd );
+		AddInclude( incStart, incEnd );
 	}
 
 	return true;

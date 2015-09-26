@@ -35,7 +35,6 @@ public:
 	static void GetHostForJob( const Job * job, AString & hostName );
 
 	bool IsSynchingTool( AString & statusStr ) const;
-	void StopRequestingJobs() { m_RequestJobs = false; }
 
 private:
 	// TCPConnection interface
@@ -84,7 +83,6 @@ private:
 
 	volatile bool			m_ShouldExit;	// signal from main thread
 	volatile bool			m_Exited;		// flagged on exit
-	bool					m_RequestJobs;  // set to false when pending shutdown
 	Thread::ThreadHandle	m_Thread;		// the thread to manage workload
 	Mutex					m_ClientListMutex;
 	Array< ClientState * >	m_ClientList;

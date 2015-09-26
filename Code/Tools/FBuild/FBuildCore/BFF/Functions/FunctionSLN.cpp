@@ -69,6 +69,30 @@ static VCXProjectNode * ResolveVCXProjectRecurse( Node * node )
     return node->CastTo< VCXProjectNode >();
 }
 
+// ResolveVCXProject
+//------------------------------------------------------------------------------
+VCXProjectNode * FunctionSLN::ResolveVCXProject( const BFFIterator & iter, const AString & projectName ) const
+{
+	// Find the Node
+    NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+    Node * node = ng.FindNode( projectName );
+    if ( node == nullptr )
+    {
+        Error::Error_1104_TargetNotDefined( iter, this, ".Projects", projectName );
+        return nullptr;
+    }
+	
+    VCXProjectNode * project = ResolveVCXProjectRecurse( node );
+    if ( project )
+	{
+		return project;
+	}
+
+    // don't know how to handle this type of node
+    Error::Error_1005_UnsupportedNodeType( iter, this, ".Projects", node->GetName(), node->GetType() );
+	return nullptr;
+}
+
 // VSProjectConfigComp
 //------------------------------------------------------------------------------
 struct VSProjectConfigComp
@@ -96,11 +120,10 @@ struct VCXProjectNodeComp
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionSLN::Commit( const BFFIterator & funcStartIter ) const
 {
-    // required
     AStackString<> solutionOutput;
     Array< AString > solutionProjects( 8, true );
     if ( !GetString( funcStartIter, solutionOutput,     ".SolutionOutput", true ) ||
-         !GetStrings( funcStartIter, solutionProjects,  ".SolutionProjects", true ) )
+         !GetStrings( funcStartIter, solutionProjects,  ".SolutionProjects", false ) )
     {
         return false;
     }
@@ -227,23 +250,17 @@ struct VCXProjectNodeComp
             }
 
             // .Projects must be provided
-            if ( !GetArrayOfStringsFromStruct( s, ".Projects", newFolder.m_ProjectNames ) )
+            if ( !GetStringOrArrayOfStringsFromStruct( funcStartIter, s, ".Projects", newFolder.m_ProjectNames ) )
             {
-                // TODO:B custom error
-                Error::Error_1101_MissingProperty( funcStartIter, this, AStackString<>( ".Projects" ) );
-                return false;
+                return false; // GetStringOrArrayOfStringsFromStruct has emitted an error
             }
+
             // check if this project is included in the solution
+            for ( const AString & projectName : newFolder.m_ProjectNames )
             {
-                const AString * const end2 = newFolder.m_ProjectNames.End();
-                for ( const AString * it2 = newFolder.m_ProjectNames.Begin() ; it2 != end2 ; ++it2 )
+                if ( solutionProjects.Find( projectName ) == nullptr )
                 {
-                    if ( solutionProjects.Find( *it2 ) == nullptr )
-                    {
-                        // TODO:B custom error
-                        Error::Error_1104_TargetNotDefined( funcStartIter, this, ".Projects", *it2 );
-                        return false;
-                    }
+					solutionProjects.Append( projectName );
                 }
             }
 
@@ -266,21 +283,10 @@ struct VCXProjectNodeComp
         const AString * const end = solutionProjects.End();
         for ( const AString * it = solutionProjects.Begin(); it != end; ++it )
         {
-            Node * const node = ng.FindNode( *it );
-
-            if ( node == nullptr )
-            {
-                Error::Error_1104_TargetNotDefined( funcStartIter, this, ".SolutionProjects", *it );
-                return false;
-            }
-
-            VCXProjectNode * const project = ResolveVCXProjectRecurse( node );
-
+            VCXProjectNode * project = ResolveVCXProject( funcStartIter, *it );
             if ( project == nullptr )
             {
-                // don't know how to handle this type of node
-                Error::Error_1005_UnsupportedNodeType( funcStartIter, this, ".SolutionProjects", node->GetName(), node->GetType() );
-                return false;
+                return false; // ResolveVCXProject will have emitted error
             }
 
             // check that this project contains all .SolutionConfigs
@@ -331,30 +337,16 @@ struct VCXProjectNodeComp
             AString * const end2 = it->m_ProjectNames.End();
             for ( AString * it2 = it->m_ProjectNames.Begin(); it2 != end2; ++it2 )
             {
-                Node * const node = ng.FindNode( *it2 );
+				// Get associate project file
+				VCXProjectNode * project = ResolveVCXProject( funcStartIter, *it2 );
+				if ( project == nullptr )
+				{
+					return false; // ResolveVCXProjectRecurse will have emitted error
+				}
 
-                if ( node == nullptr )
-                {
-                    Error::Error_1104_TargetNotDefined( funcStartIter, this, ".Projects", *it2 );
-                    return false;
-                }
+                ASSERT( projects.Find( project ) ); // Sanity check in global list
 
-                VCXProjectNode * const project = ResolveVCXProjectRecurse( node );
-
-                if ( project == nullptr )
-                {
-                    // don't know how to handle this type of node
-                    Error::Error_1005_UnsupportedNodeType( funcStartIter, this, ".Projects", node->GetName(), node->GetType() );
-                    return false;
-                }
-
-                if ( projects.Find( project ) == nullptr )
-                {
-                    // project referenced in a solution folder is not referenced in .SolutionProjects
-                    Error::Error_1104_TargetNotDefined( funcStartIter, this, ".SolutionProjects", project->GetName() );
-                    return false;
-                }
-
+				// fixup name to be to final project
                 *it2 = project->GetName();
             }
         }
@@ -363,22 +355,12 @@ struct VCXProjectNodeComp
     // resolves VCXProject node referenced by solutionBuildProject
     if ( solutionBuildProject.GetLength() > 0 )
     {
-        Node * const node = ng.FindNode( solutionBuildProject );
-
-        if ( node == nullptr )
-        {
-            Error::Error_1104_TargetNotDefined( funcStartIter, this, ".SolutionBuildProject", solutionBuildProject );
-            return false;
-        }
-
-        VCXProjectNode * const project = ResolveVCXProjectRecurse( node );
-
-        if ( project == nullptr )
-        {
-            // don't know how to handle this type of node
-            Error::Error_1005_UnsupportedNodeType( funcStartIter, this, ".SolutionBuildProject", node->GetName(), node->GetType() );
-            return false;
-        }
+		// Get associate project file
+		const VCXProjectNode * project = ResolveVCXProject( funcStartIter, solutionBuildProject );
+		if ( project == nullptr )
+		{
+			return false; // ResolveVCXProject will have emitted error
+		}
 
         if ( projects.Find( project ) == nullptr )
         {
@@ -390,12 +372,62 @@ struct VCXProjectNodeComp
         solutionBuildProject = project->GetName();
     }
 
+    // Project Dependencies
+    Array< SLNDependency > slnDeps( 0, true );
+    const BFFVariable * projectDepsVar = BFFStackFrame::GetVar( ".SolutionDependencies" );
+    if ( projectDepsVar )
+    {
+        if ( projectDepsVar->IsArrayOfStructs() == false )
+        {
+            Error::Error_1050_PropertyMustBeOfType( funcStartIter, this, ".SolutionDependencies", projectDepsVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRUCTS );
+            return false;
+        }
+	
+		slnDeps.SetCapacity( projectDepsVar->GetArrayOfStructs().GetSize() );
+		for ( const BFFVariable * s : projectDepsVar->GetArrayOfStructs() )
+		{
+            // .Projects must be provided
+            // .Dependencies must be provided
+			SLNDependency deps;
+            if ( !GetStringOrArrayOfStringsFromStruct( funcStartIter, s, ".Projects", deps.m_Projects ) ||
+				 !GetStringOrArrayOfStringsFromStruct( funcStartIter, s, ".Dependencies", deps.m_Dependencies ) )
+            {
+                return false; // GetStringOrArrayOfStringsFromStruct has emitted an error
+            }
+
+			// fixup
+			for ( AString & projectName : deps.m_Projects )
+			{
+				// Get associated project file
+				const VCXProjectNode * project = ResolveVCXProject( funcStartIter, projectName );
+				if ( project == nullptr )
+				{
+					return false; // ResolveVCXProject will have emitted error
+				}
+				projectName = project->GetName();
+			}
+			for ( AString & projectName : deps.m_Dependencies )
+			{
+				// Get associated project file
+				const VCXProjectNode * project = ResolveVCXProject( funcStartIter, projectName );
+				if ( project == nullptr )
+				{
+					return false; // ResolveVCXProject will have emitted error
+				}
+				projectName = project->GetName();
+			}
+
+			slnDeps.Append( deps );
+		}
+	}
+
     SLNNode * sln = ng.CreateSLNNode(   solutionOutput,
                                         solutionBuildProject,
                                         solutionVisualStudioVersion,
                                         solutionMinimumVisualStudioVersion,
                                         configs,
                                         projects,
+										slnDeps,
                                         folders );
 
     ASSERT( sln );
@@ -425,26 +457,35 @@ bool FunctionSLN::GetStringFromStruct( const BFFVariable * s, const char * name,
     return false; // not found - caller decides if this is an error
 }
 
-// GetArrayOfStringsFromStruct
+// GetStringOrArrayOfStringsFromStruct
 //------------------------------------------------------------------------------
-bool FunctionSLN::GetArrayOfStringsFromStruct( const BFFVariable * s, const char * name, Array< AString > & result ) const
+bool FunctionSLN::GetStringOrArrayOfStringsFromStruct( const BFFIterator & iter, const BFFVariable * s, const char * name, Array< AString > & result ) const
 {
-    const Array< const BFFVariable * > & members = s->GetStructMembers();
-    const BFFVariable * const * end = members.End();
-    for ( const BFFVariable ** it = members.Begin(); it != end; ++it )
+    for ( const BFFVariable * v : s->GetStructMembers() )
     {
-        const BFFVariable * v = *it;
-        if ( v->IsArrayOfStrings() == false )
-        {
-            continue; // ignore non-strings
-        }
         if ( v->GetName() == name )
         {
-            result = v->GetArrayOfStrings();
-            return true; // found
-        }
+			if ( ( v->IsArrayOfStrings() == false ) && ( v->IsString() == false ) )
+			{
+				Error::Error_1050_PropertyMustBeOfType( iter, this, name, v->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
+				return false;
+			}
+
+			if ( v->IsArrayOfStrings() )
+			{
+				result = v->GetArrayOfStrings();
+			}
+			else
+			{
+				result.Append( v->GetString() );
+			}
+			return true; // found
+		}
     }
-    return false; // not found - caller decides if this is an error
+
+    // TODO:B custom error
+    Error::Error_1101_MissingProperty( iter, this, AStackString<>( name ) );
+    return false;
 }
 
 //------------------------------------------------------------------------------

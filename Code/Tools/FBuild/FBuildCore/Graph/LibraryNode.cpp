@@ -248,7 +248,9 @@ void LibraryNode::GetFullArgs( AString & fullArgs ) const
 {
 	uint32_t flags = 0;
 	if ( librarianName.EndsWithI("lib.exe") ||
-		 librarianName.EndsWithI("lib") )
+		librarianName.EndsWithI("lib") ||
+		librarianName.EndsWithI("link.exe") ||
+		librarianName.EndsWithI("link"))
 	{
 		flags |= LIB_FLAG_LIB;
 	}

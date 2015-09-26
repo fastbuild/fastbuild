@@ -27,12 +27,15 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
 {
   // Basic options
   .SolutionOutput                     // Path to Solution file to be generated
-  .SolutionProjects                   // Project(s) to include in Solution
+  .SolutionProjects                   // (optional) Project(s) to include in Solution
   .SolutionConfigs                    // (optional) Solution configurations (see below)
   .SolutionBuildProject               // (optional) Project set to build when "Build Solution" is selected
   
   // Folders
   .SolutionFolders                    // (optional) Folders to organize projects (see below)
+
+  // Advanced options
+  .SolutionDependencies               // (optional) Project dependency information (see below)
   
   // Version Info  
   .SolutionVisualStudioVersion        // (optional) Version of Solution (default "14.0.22823.1" VS2015 RC)
@@ -51,6 +54,13 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
 [
   .Path                               // Folder path in Solution
   .Projects                           // Project(s) to store in this folder
+]
+
+// SolutionDependencies - structs in the following format
+//-------------------------------------------------------
+[
+  .Projects                           // Project(s) to specify dependencies for
+  .Dependencies                       // Project(s) the above projects depend on
 ]
 </div>
     </div>
@@ -76,8 +86,11 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
       <div class='code'>.SolutionOutput = 'tmp/VisualStudio/MySolution.sln'</div>
       <hr>
       
-      <p><b>.SolutionProjects</b> - String or ArrayOfStrings - (Required)</p>
-      <p>The previously defined <a href='vcxproject.html'>VCXProject</a> item(s) to include in the solution.</p>
+      <p><b>.SolutionProjects</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>The previously defined <a href='vcxproject.html'>VCXProject</a> item(s) to include in the solution. Projects 
+      will be placed at the root of the Solution, unless a .Folders entry specifies otherwise (see below). Projects
+      which are placed in Solution Folders do not need to be listed in .SolutionProjects.
+      </p>
       Example:
       <div class='code'>.SolutionProjects =
 {
@@ -133,11 +146,37 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
   .Projects  = { 'Exe-proj' }
 ]
 .SolutionFolders = { .FolderA, .FolderB }</div>
-      <p>If not specified, all Project files will appear as a flat list in the Solution.</p>
+      <p>Projects not associated with folders will appear at the root of the the Solution.</p>
 
       </p>
     </div>
 
+
+    <div id='unity' class='newsitemheader'>
+      Advanced
+    </div>
+    <div class='newsitembody'>
+      
+      <p><b>.SolutionDependencies</b> - Array of SolutionDependency Structure(s) - (Optional)</p>
+      <p>Projects within a Solution can be specified as depending on other projects within the Solution.</p>
+  	  <p><font color=red>For simple solutions, this option is typically not necessary.</font></p>
+      <p>For more complex Solutions, specifying artificial SolutionDependencies may be useful (depending on the desired F5 behaviour).
+      For example, in Solutions with multiple executables, only one of the executables should be listed
+      as a .SolutionBuildProject (to prevent mutliple concurrent invocations of FASTBuild).  However, (because of what is 
+      arguably a bug in Visual Studio) only when this project (the "primary" project) is the active project, will F5 trigger 
+      an up-to-date build check on the target automatically before running. If you want this automatic check on other targets
+      (rather than having to manually build the Project or Solution), you have to artifically make any "non-primary" projects 
+      depend on the "primary" executable.</p>
+      Example:
+      <div class='code'>.Deps =
+[
+  .Projects      = { 'Exe1-proj', 
+                     'Exe2-proj' } // F5 with either as the active project will perform a Solution Build (via "All")
+  .Dependencies  = { 'All-proj' }
+]
+.SolutionDependencies = { .Deps }</div>
+      </p>
+    </div>
 
     <div id='unity' class='newsitemheader'>
       Version Info

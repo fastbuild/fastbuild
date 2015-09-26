@@ -29,6 +29,8 @@ private:
 	void TestCopyFunction_FileToDir_NoRebuild() const;
 	void TestCopyFunction_MultiFileToDir() const;
 	void TestCopyFunction_MultiFileToDir_NoRebuild() const;
+	void TestCopyFunction_SourceBasePath() const;
+	void TestCopyFunction_SourceBasePath_NoRebuild() const;
 };
 
 // Register Tests
@@ -42,6 +44,8 @@ REGISTER_TESTS_BEGIN( TestCopy )
 	REGISTER_TEST( TestCopyFunction_FileToDir_NoRebuild )
 	REGISTER_TEST( TestCopyFunction_MultiFileToDir )
 	REGISTER_TEST( TestCopyFunction_MultiFileToDir_NoRebuild )
+	REGISTER_TEST( TestCopyFunction_SourceBasePath )
+	REGISTER_TEST( TestCopyFunction_SourceBasePath_NoRebuild )
 REGISTER_TESTS_END
 
 // SingleCopyNode
@@ -302,6 +306,59 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
+
+	// Check stats
+	//				 Seen,	Built,	Type
+	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
+	CheckStatsNode ( 2,		0,		Node::COPY_NODE );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 5,		3 );
+}
+
+// TestCopyFunction_SourceBasePath
+//------------------------------------------------------------------------------
+void TestCopy::TestCopyFunction_SourceBasePath() const
+{
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestCopy/copy.bff";
+	options.m_ShowSummary = true; // required to generate stats for node count checks
+	FBuild fBuild( options );
+	TEST_ASSERT( fBuild.Initialize() );
+
+	const AStackString<> dst1( "../../../../ftmp/Test/Copy/SourceBasePath/TestCopy/a.txt" );
+	const AStackString<> dst2( "../../../../ftmp/Test/Copy/SourceBasePath/TestCopy/b.txt" );
+
+	// clean up anything left over from previous runs
+	EnsureFileDoesNotExist( dst1 );
+	EnsureFileDoesNotExist( dst2 );
+
+	// build (via alias)
+	TEST_ASSERT( fBuild.Build( AStackString<>( "TestSourceBasePath" ) ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
+
+	EnsureFileExists( dst1 );
+	EnsureFileExists( dst2 );
+
+	// Check stats
+	//				 Seen,	Built,	Type
+	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
+	CheckStatsNode ( 2,		2,		Node::COPY_NODE );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 5,		5 );
+}
+
+// TestCopyFunction_SourceBasePath_NoRebuild
+//------------------------------------------------------------------------------
+void TestCopy::TestCopyFunction_SourceBasePath_NoRebuild() const
+{
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestCopy/copy.bff";
+	options.m_ShowSummary = true; // required to generate stats for node count checks
+	FBuild fBuild( options );
+	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
+
+	// build (via alias)
+	TEST_ASSERT( fBuild.Build( AStackString<>( "TestSourceBasePath" ) ) );
 
 	// Check stats
 	//				 Seen,	Built,	Type

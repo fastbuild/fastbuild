@@ -28,6 +28,7 @@
 BFFVariable::BFFVariable( const AString & name, VarType type )
 : m_Name( name )
 , m_Type( type )
+, m_Frozen( false )
 //, m_StringValue() // default construct this
 , m_BoolValue( false )
 , m_ArrayValues( 0, true )
@@ -42,6 +43,7 @@ BFFVariable::BFFVariable( const AString & name, VarType type )
 BFFVariable::BFFVariable( const BFFVariable & other )
 : m_Name( other.m_Name )
 , m_Type( other.m_Type )
+, m_Frozen( false )
 //, m_StringValue() // default construct this
 , m_BoolValue( false )
 , m_ArrayValues( 0, true )
@@ -67,6 +69,7 @@ BFFVariable::BFFVariable( const BFFVariable & other )
 BFFVariable::BFFVariable( const AString & name, const AString & value )
 : m_Name( name )
 , m_Type( VAR_STRING )
+, m_Frozen( false )
 , m_StringValue( value )
 , m_BoolValue( false )
 , m_ArrayValues( 0, false )
@@ -81,6 +84,7 @@ BFFVariable::BFFVariable( const AString & name, const AString & value )
 BFFVariable::BFFVariable( const AString & name, bool value )
 : m_Name( name )
 , m_Type( VAR_BOOL )
+, m_Frozen( false )
 //, m_StringValue() // default construct this
 , m_BoolValue( value )
 , m_ArrayValues( 0, false )
@@ -95,6 +99,7 @@ BFFVariable::BFFVariable( const AString & name, bool value )
 BFFVariable::BFFVariable( const AString & name, const Array< AString > & values )
 : m_Name( name )
 , m_Type( VAR_ARRAY_OF_STRINGS )
+, m_Frozen( false )
 //, m_StringValue() // default construct this
 , m_BoolValue( false )
 , m_ArrayValues( 0, true )
@@ -110,6 +115,7 @@ BFFVariable::BFFVariable( const AString & name, const Array< AString > & values 
 BFFVariable::BFFVariable( const AString & name, int i )
 : m_Name( name )
 , m_Type( VAR_INT )
+, m_Frozen( false )
 //, m_StringValue() // default construct this
 , m_BoolValue( false )
 , m_ArrayValues( 0, true )
@@ -124,6 +130,7 @@ BFFVariable::BFFVariable( const AString & name, int i )
 BFFVariable::BFFVariable( const AString & name, const Array< const BFFVariable * > & values )
 : m_Name( name )
 , m_Type( VAR_STRUCT )
+, m_Frozen( false )
 //, m_StringValue() // default construct this
 , m_BoolValue( false )
 , m_ArrayValues( 0, false )
@@ -141,6 +148,7 @@ BFFVariable::BFFVariable( const AString & name,
 						  VarType type ) // type for disambiguation
 : m_Name( name )
 , m_Type( VAR_ARRAY_OF_STRUCTS )
+, m_Frozen( false )
 //, m_StringValue() // default construct this
 , m_BoolValue( false )
 , m_ArrayValues( 0, false )
@@ -179,6 +187,7 @@ BFFVariable::~BFFVariable()
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueString( const AString & value )
 {
+    ASSERT( false == m_Frozen );
 	m_Type = VAR_STRING;
 	m_StringValue = value;
 }
@@ -187,6 +196,7 @@ void BFFVariable::SetValueString( const AString & value )
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueBool( bool value )
 {
+    ASSERT( false == m_Frozen );
 	m_Type = VAR_BOOL;
 	m_BoolValue = value;
 }
@@ -195,6 +205,7 @@ void BFFVariable::SetValueBool( bool value )
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueArrayOfStrings( const Array< AString > & values )
 {
+    ASSERT( false == m_Frozen );
 	m_Type = VAR_ARRAY_OF_STRINGS;
 	m_ArrayValues = values;
 }
@@ -203,6 +214,7 @@ void BFFVariable::SetValueArrayOfStrings( const Array< AString > & values )
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueInt( int i )
 {
+    ASSERT( false == m_Frozen );
 	m_Type = VAR_INT;
 	m_IntValue = i;
 }
@@ -211,6 +223,8 @@ void BFFVariable::SetValueInt( int i )
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueStruct( const Array< const BFFVariable * > & values )
 {
+    ASSERT( false == m_Frozen );
+
 	// build list of new members, but don't touch old ones yet to gracefully
 	// handle self-assignment
 	Array< BFFVariable * > newVars( values.GetSize(), false );
@@ -241,6 +255,8 @@ void BFFVariable::SetValueStruct( const Array< const BFFVariable * > & values )
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & values )
 {
+    ASSERT( false == m_Frozen );
+
 	// build list of new members, but don't touch old ones yet to gracefully
 	// handle self-assignment
 	Array< BFFVariable * > newVars( values.GetSize(), false );
@@ -290,7 +306,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
 
     const VarType dstType = m_Type;
     const VarType srcType = other.m_Type;
-    
+
     // handle supported types
 
     if ( srcType != dstType )

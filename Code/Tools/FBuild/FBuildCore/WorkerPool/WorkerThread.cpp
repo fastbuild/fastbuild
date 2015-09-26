@@ -115,16 +115,17 @@ void WorkerThread::WaitForStop()
 {
     PROFILE_SECTION( "WorkerThread" )
 
-	while ( ( m_ShouldExit == false ) && ( FBuild::GetStopBuild() == false ) )
+    for (;;)
 	{
-		bool didSomeWork = Update();
-		if ( didSomeWork )
-		{
-			continue; // try to build some more
-		}
+        // Wait for work to become available (or quit signal)
+        JobQueue::Get().WorkerThreadWait( 500 );
 
-		// no work to do right now
-		Thread::Sleep( 1 ); // wait and try again later
+    	if ( m_ShouldExit || FBuild::GetStopBuild() )
+        {
+            break;
+        }
+
+		Update();
 	}
 
 	m_Exited = true;

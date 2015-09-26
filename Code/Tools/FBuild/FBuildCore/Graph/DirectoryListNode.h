@@ -18,7 +18,7 @@ class DirectoryListNode : public Node
 public:
 	explicit DirectoryListNode( const AString & name,
 								const AString & path,
-								const AString & wildcard,
+								const Array< AString > * patterns,
 								bool recursive,
 								const Array< AString > & excludePaths,
                                 const Array< AString > & filesToExclude );
@@ -32,7 +32,7 @@ public:
 	virtual bool IsAFile() const { return false; }
 
 	static void FormatName( const AString & path,
-							const AString & pattern,
+							const Array< AString > * patterns,
 							bool recursive,
 							const Array< AString > & excludePaths,
                             const Array< AString > & excludeFiles,
@@ -45,7 +45,7 @@ private:
 	virtual BuildResult DoBuild( Job * job );
 
 	AString m_Path;
-	AString m_WildCard;
+	Array< AString > m_Patterns;
 	Array< AString > m_ExcludePaths;
     Array< AString > m_FilesToExclude;
 	bool m_Recursive;

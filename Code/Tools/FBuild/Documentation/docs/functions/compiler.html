@@ -45,7 +45,7 @@ Compiler( 'Test' )
 <div class='code'>// Clang for Windows
 Compiler( 'Compiler-x86Clang' )
 {
-  .Executable  = '$ClangForWindowsBasePth$\clang++.exe'
+  .Executable = '$ClangForWindowsBasePath$\clang++.exe'
 }
 
 Library( 'MyLibrary' )
@@ -59,7 +59,7 @@ Library( 'MyLibrary' )
 <div class='code'>// VisualStudio 2013 x86 Compiler
 Compiler( 'Compiler-x86' )
 {
-  .Executable	= '$VSBasePath$\VC\bin\cl.exe'
+  .Executable = '$VSBasePath$\VC\bin\cl.exe'
   .ExtraFiles = { '$VSBasePath$\VC\bin\c1.dll'
                   '$VSBasePath$\VC\bin\c1ast.dll',
                   '$VSBasePath$\VC\bin\c1xx.dll',
@@ -83,7 +83,48 @@ Library( 'MyLibrary' )
   // other options as per normal
 }
 </div>
+<b>Intel</b>
+<div class='code'>// Intel 2015 Update 4 x64 Compiler
+Compiler( 'Compiler-x64Intel' )
+{
+  .Executable = '$IntelBasePath$\bin\intel64\icl.exe'
+  .ExtraFiles = {
+                  // DLLs required by icl.exe
+                  '$IntelBasePath$\bin\intel64\FNP_Act_Installer.dll'
+                  '$IntelBasePath$\bin\intel64\IntelRemoteMon.dll'
 
+                  // EXEs used by icl.exe
+                  '$IntelBasePath$\bin\intel64\mcpcom.exe'
+
+                  // License file
+                  'C:\Program Files (x86)\Common Files\Intel\Licenses\XXXXXXXXXX.lic' // NOTE: Your license file
+
+                  // Intel compiler depends on the Microsoft compiler
+                  '$VSBasePath$\VC\bin\amd64\cl.exe'
+                  '$VSBasePath$\VC\bin\amd64\c1.dll'
+                  '$VSBasePath$\VC\bin\amd64\c1ast.dll',
+                  '$VSBasePath$\VC\bin\amd64\c1xx.dll',
+                  '$VSBasePath$\VC\bin\amd64\c1xxast.dll',
+                  '$VSBasePath$\VC\bin\amd64\c2.dll',
+                  '$VSBasePath$\VC\bin\amd64\msobj120.dll'
+                  '$VSBasePath$\VC\bin\amd64\mspdb120.dll'
+                  '$VSBasePath$\VC\bin\amd64\mspdbsrv.exe'
+                  '$VSBasePath$\VC\bin\amd64\mspdbcore.dll'
+                  '$VSBasePath$\VC\bin\amd64\mspft120.dll'
+                  '$VSBasePath$\VC\bin\amd64\1033\clui.dll'
+                  '$VSBasePath$\VC\redist\x64\Microsoft.VC120.CRT\msvcp120.dll'
+                  '$VSBasePath$\VC\redist\x64\Microsoft.VC120.CRT\msvcr120.dll'
+                  '$VSBasePath$\VC\redist\x64\Microsoft.VC120.CRT\vccorlib120.dll'
+                }
+}
+
+Library( 'MyLibrary' )
+{
+  .Compiler = 'Compiler-x64Intel'
+
+  // other options as per normal
+}
+</div>
 </div>
 
   <script>generateFooter()</script>

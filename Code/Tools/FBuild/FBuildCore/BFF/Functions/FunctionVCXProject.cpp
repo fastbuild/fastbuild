@@ -270,9 +270,8 @@ FunctionVCXProject::FunctionVCXProject()
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
 	// create all of the DirectoryListNodes we need
-	AStackString<> inputPattern( "*" );
 	Dependencies dirNodes( inputPaths.GetSize() );
-	if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, Array< AString >(), Array< AString >(), true, inputPattern, "ProjectInputPaths", dirNodes ) )
+	if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, Array< AString >(), Array< AString >(), true, nullptr, "ProjectInputPaths", dirNodes ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}
@@ -288,7 +287,7 @@ FunctionVCXProject::FunctionVCXProject()
 												   basePaths,
 												   dirNodes,
 												   inputPathsExclude, // TODO:B Remove this (handled by DirectoryListNode now)
-												   allowedFileExtensions,
+												   allowedFileExtensions, // TODO:B Remove this (handled by DirectoryListNode now)
 												   files,
 												   filesToExclude,
 												   rootNamespace,

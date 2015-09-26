@@ -44,6 +44,22 @@ FunctionCopy::FunctionCopy()
 		return false; // GetString will have emitted errors
 	}
 
+	// Optional
+	AStackString<> sourceBasePath;
+	if ( !GetString( funcStartIter, sourceBasePath, ".SourceBasePath", false ) )
+	{
+		return false; // GetString will have emitted errors
+	}
+
+	// Canonicalize the SourceBasePath
+	if ( !sourceBasePath.IsEmpty() )
+	{
+		AStackString<> cleanValue;
+		NodeGraph::CleanPath( sourceBasePath, cleanValue );
+		PathUtils::EnsureTrailingSlash( cleanValue );
+		sourceBasePath = cleanValue;
+	}
+
 	// check sources are not paths
 	{
 		const AString * const end = sources.End();
@@ -112,9 +128,20 @@ FunctionCopy::FunctionCopy()
 		{
 			// find filename part of source
 			const AString & srcName = ( *it )->GetName();
-			const char * lastSlash = srcName.FindLast( NATIVE_SLASH );
-			dst += lastSlash ? ( lastSlash + 1 )	// append filename part if found
-								 : srcName.Get();	// otherwise append whole thing
+
+			// If the sourceBasePath is specified (and valid) use the name relative to that
+			if ( !sourceBasePath.IsEmpty() && PathUtils::PathBeginsWith( srcName, sourceBasePath ) )
+			{
+				// Use everything relative to the SourceBasePath
+				dst += srcName.Get() + sourceBasePath.GetLength();
+			}
+			else
+			{
+				// Use just the file name
+				const char * lastSlash = srcName.FindLast( NATIVE_SLASH );
+				dst += lastSlash ? ( lastSlash + 1 )	// append filename part if found
+									 : srcName.Get();	// otherwise append whole thing
+			}
 		}
 
 		// check node doesn't already exist

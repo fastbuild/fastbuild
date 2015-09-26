@@ -39,6 +39,14 @@ CSAssembly( "CSharp-AssemblyB" )
 {
 	.CompilerInputFiles		= "Data/TestCSharp/b.cs"
 	.CompilerOutput			= "$Out$/Test/CSharp/csharpassemblyb.dll"
-	.CompilerOptions		= "/reference:%3 $CompilerOptions$"
+	.CompilerOptions		= '/reference:"%3" $CompilerOptions$'
 	.CompilerReferences		= "CSharp-AssemblyA"
+}
+
+CSAssembly( "CSharp-AssemblyC" )
+{
+	.CompilerInputFiles		= "Data/TestCSharp/c.cs"
+	.CompilerOutput			= "$Out$/Test/CSharp/csharpassemblyc.dll"
+	.CompilerOptions		= '/reference:"%3" $CompilerOptions$'
+	.CompilerReferences		= { "CSharp-AssemblyA", "CSharp-AssemblyB" }
 }
