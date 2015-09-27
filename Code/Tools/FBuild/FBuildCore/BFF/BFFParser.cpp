@@ -108,6 +108,12 @@ bool BFFParser::Parse( BFFIterator & iter )
 				}
 				continue;
 			}
+			case BFF_TEMPLATE_INSTANCIATION:
+				if ( ParseTemplateInstanciation( iter ) == false )
+				{
+					return false;
+				}
+				continue;
 			case BFF_VARIABLE_CONCATENATION:
 			{
 				// concatenation to last used variable
@@ -166,7 +172,8 @@ bool BFFParser::Parse( BFFIterator & iter )
 {
 	// skip over the declaration symbol
 	ASSERT( *iter == BFF_DECLARE_VAR_INTERNAL ||
-			*iter == BFF_DECLARE_VAR_PARENT );
+			*iter == BFF_DECLARE_VAR_PARENT ||
+			*iter == BFF_TEMPLATE_INSTANCIATION);
 
 	parentScope = ( *iter == BFF_DECLARE_VAR_PARENT );
 
@@ -327,6 +334,11 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 		closeToken = BFF_STRUCT_CLOSE;
 		ok = true;
 	}
+	else if ( openToken == BFF_TEMPLATE_OPEN )
+	{
+		closeToken = BFF_TEMPLATE_CLOSE;
+		ok = true;
+	}
 	else if ( ( openToken >= '0' ) && ( openToken <= '9' ) )
 	{
 		if ( concatenation )
@@ -432,6 +444,17 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 			Error::Error_1002_MatchingClosingTokenNotFound( openTokenForError, nullptr, closeToken );
 		}
 	}
+	else if ( openToken == BFF_TEMPLATE_OPEN )
+	{
+		if ( iter.ParseToMatchingBrace( openToken, closeToken ) )
+		{
+			result = StoreVariableTemplate( varName, openTokenPos, iter, operatorIter, frame );
+		}
+		else
+		{
+			Error::Error_1002_MatchingClosingTokenNotFound( openTokenForError, nullptr, closeToken );
+		}
+	}
 	else
 	{
 		ASSERT( ( openToken == '\'' ) || ( openToken == '"' ) );
@@ -440,7 +463,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 		{
 			result = StoreVariableString( varName, openTokenPos, iter, operatorIter, frame );
 		}
-		else		
+		else
 		{
 			Error::Error_1002_MatchingClosingTokenNotFound( openTokenForError, nullptr, closeToken );
 		}
@@ -992,6 +1015,45 @@ bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIte
 	return true;
 }
 
+// ParseTemplateInstanciation
+//------------------------------------------------------------------------------
+bool BFFParser::ParseTemplateInstanciation( BFFIterator & iter )
+{
+	AString tplName;
+	bool isParentScope;
+	if ( !ParseVariableName(iter, tplName, isParentScope) )
+	{
+		return false;
+	}
+
+	tplName[0] = '.';
+	const BFFVariable * var = BFFStackFrame::GetVar( tplName, m_LastVarFrame );
+	if ( var == nullptr )
+	{
+		Error::Error_1041_TemplateNotFound( iter, tplName );
+		return false;
+	}
+
+	if(!var->IsTemplate()) {
+		Error::Error_1042_VariableIsNotATemplate( iter, tplName );
+		return false;
+	}
+
+	BFFStackFrame stackFrame;
+	BFFParser subParser;
+	const BFFTemplate& tpl = var->GetTemplate();
+	BFFIterator subIter( tpl.DefStart() );
+	subIter.SetMax( tpl.DefEnd().GetCurrent() );
+	if ( subParser.Parse( subIter ) == false )
+	{
+		return false;
+	}
+
+	iter++;
+
+	return true;
+}
+
 // StoreVariableString
 //------------------------------------------------------------------------------
 bool BFFParser::StoreVariableString( const AString & name,
@@ -1505,6 +1567,24 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 											 varSrc->GetType(),
 											 operatorIter );
 	return false;
+}
+
+// StoreVariableTemplate
+//------------------------------------------------------------------------------
+bool BFFParser::StoreVariableTemplate( const AString & name, const BFFIterator & templateStart, const BFFIterator & templateEnd, const BFFIterator & operatorIter, BFFStackFrame * frame ) {
+	// are we concatenating?
+	if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
+	{
+		// concatenation of templates not supported
+		Error::Error_1027_CannotConcatenate( operatorIter, name, BFFVariable::VAR_TEMPLATE, BFFVariable::VAR_ANY );
+		return false;
+	}
+
+	BFFTemplate tpl(templateStart, templateEnd);
+	BFFStackFrame::SetVarTemplate( name, tpl, frame);
+	FLOG_INFO( "Registered <template> '%s'", name.Get());
+
+	return true;
 }
 
 // PerformVariableSubstitutions

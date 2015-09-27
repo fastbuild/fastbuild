@@ -51,6 +51,9 @@ public:
 	enum { BFF_STRUCT_OPEN = '[' };
 	enum { BFF_STRUCT_CLOSE = ']' };
 	enum { BFF_PREPROCESSOR_START = '#' };
+	enum { BFF_TEMPLATE_OPEN = '(' };
+	enum { BFF_TEMPLATE_CLOSE = ')' };
+	enum { BFF_TEMPLATE_INSTANCIATION = '$' };
 
 	enum { MAX_VARIABLE_NAME_LENGTH = 64 };
 	enum { MAX_FUNCTION_NAME_LENGTH = 64 };
@@ -73,6 +76,7 @@ private:
 	bool ParseEndIfDirective( const BFFIterator & directiveStart );
 	bool CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result );
 	bool ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter );
+	bool ParseTemplateInstanciation( BFFIterator & iter);
 
 	bool StoreVariableString( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, BFFStackFrame * frame );
 	bool StoreVariableArray( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, BFFStackFrame * frame );
@@ -80,6 +84,7 @@ private:
 	bool StoreVariableBool( const AString & name, bool value, BFFStackFrame * frame );
 	bool StoreVariableInt( const AString & name, int value, BFFStackFrame * frame );
 	bool StoreVariableToVariable( const AString & dstName, BFFIterator & varNameSrcStart, const BFFIterator & operatorIter, BFFStackFrame * dstFrame );
+	bool StoreVariableTemplate( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, BFFStackFrame * frame );
 	// store the last seen variable
 	bool m_SeenAVariable;
 	AStackString< MAX_VARIABLE_NAME_LENGTH > m_LastVarName;

@@ -20,7 +20,8 @@
 	"ArrayOfStrings",
 	"Int",
 	"Struct",
-	"ArrayOfStructs"
+	"ArrayOfStructs",
+	"Template"
 };
 
 // CONSTRUCTOR
@@ -60,6 +61,7 @@ BFFVariable::BFFVariable( const BFFVariable & other )
 		case VAR_INT:				SetValueInt( other.GetInt() ); break;
 		case VAR_STRUCT:			SetValueStruct( other.GetStructMembers() ); break;
 		case VAR_ARRAY_OF_STRUCTS:	SetValueArrayOfStructs( other.GetArrayOfStructs() ); break;
+		case VAR_TEMPLATE		:	SetValueTemplate( other.GetTemplate() ); break;
 		case MAX_VAR_TYPES:	ASSERT( false ); break;
 	}
 }
@@ -160,6 +162,22 @@ BFFVariable::BFFVariable( const AString & name,
 	ASSERT( type == VAR_ARRAY_OF_STRUCTS ); (void)type;
 
 	SetValueArrayOfStructs( structs );
+}
+
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+BFFVariable::BFFVariable( const AString & name, const BFFTemplate& tpl)
+: m_Name( name )
+, m_Type( VAR_TEMPLATE )
+, m_Frozen( false )
+//, m_StringValue() // default construct this
+, m_BoolValue( false )
+, m_ArrayValues( 0, false )
+, m_IntValue( 0 )
+, m_StructMembers( 0, false )
+, m_ArrayOfStructs( 0, false )
+, m_TemplateValue(tpl)
+{
 }
 
 // DESTRUCTOR
@@ -280,6 +298,15 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
 	}
 
 	m_ArrayOfStructs.Swap( newVars );
+}
+
+// SetValueTemplate
+//------------------------------------------------------------------------------
+void BFFVariable::SetValueTemplate( const BFFTemplate& tpl)
+{
+    ASSERT( false == m_Frozen );
+	m_Type = VAR_TEMPLATE;
+	m_TemplateValue = tpl;
 }
 
 // GetMemberByName

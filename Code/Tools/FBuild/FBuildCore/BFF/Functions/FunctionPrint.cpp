@@ -188,6 +188,11 @@ FunctionPrint::FunctionPrint()
 			FLOG_BUILD( "%s}\n", indentStr.Get() );
 			break;
 		}
+		case BFFVariable::VAR_TEMPLATE:
+		{
+			FLOG_BUILD( "%s (template)\n", var.GetName().Get());
+			break;
+		}
 		case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); break; // Something is terribly wrong
 	}
 }
