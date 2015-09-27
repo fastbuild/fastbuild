@@ -156,6 +156,27 @@ BFFStackFrame::~BFFStackFrame()
 	frame->m_Variables.Append( v );
 }
 
+// SetVarTemplate
+//------------------------------------------------------------------------------
+/*static*/ void BFFStackFrame::SetVarTemplate( const AString & name,
+											   const BFFTemplate & tpl,
+											   BFFStackFrame * frame )
+{
+	frame = frame ? frame : s_StackHead;
+
+	BFFVariable * var = frame->GetVarMutableNoRecurse( name );
+
+	if ( var )
+	{
+		var->SetValueTemplate( tpl );
+		return;
+	}
+
+	// variable not found at this level, so create it
+	BFFVariable * v = FNEW( BFFVariable( name, tpl) );
+	frame->m_Variables.Append( v );
+}
+
 
 // SetVar
 //------------------------------------------------------------------------------
@@ -166,7 +187,7 @@ BFFStackFrame::~BFFStackFrame()
 	ASSERT( var );
 
 	switch ( var->GetType() )
-	{		
+	{
 		case BFFVariable::VAR_ANY:				ASSERT( false ); break;
 		case BFFVariable::VAR_STRING:			SetVarString( var->GetName(), var->GetString(), frame ); break;
 		case BFFVariable::VAR_BOOL:				SetVarBool( var->GetName(), var->GetBool(), frame ); break;
@@ -174,6 +195,7 @@ BFFStackFrame::~BFFStackFrame()
 		case BFFVariable::VAR_INT:				SetVarInt( var->GetName(), var->GetInt(), frame ); break;
 		case BFFVariable::VAR_STRUCT:			SetVarStruct( var->GetName(), var->GetStructMembers(), frame ); break;
 		case BFFVariable::VAR_ARRAY_OF_STRUCTS:	SetVarArrayOfStructs( var->GetName(), var->GetArrayOfStructs(), frame ); break;
+		case BFFVariable::VAR_TEMPLATE:			SetVarTemplate( var->GetName(), var->GetTemplate(), frame ); break;
 		case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); break;
 	}
 }

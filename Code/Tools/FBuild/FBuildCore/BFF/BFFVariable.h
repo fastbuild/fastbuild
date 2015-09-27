@@ -8,9 +8,11 @@
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFTemplate.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class BFFTemplate;
 
 // Helpers
 //------------------------------------------------------------------------------
@@ -38,6 +40,7 @@ public:
 	bool GetBool() const { return m_BoolValue; }
 	const Array< const BFFVariable * > & GetStructMembers() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_StructMembers ); }
 	const Array< const BFFVariable * > & GetArrayOfStructs() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_ArrayOfStructs ); }
+	const BFFTemplate& GetTemplate() const { return m_TemplateValue; }
 
 	enum VarType
 	{
@@ -48,6 +51,7 @@ public:
 		VAR_INT		= 4,
 		VAR_STRUCT	= 5,
 		VAR_ARRAY_OF_STRUCTS = 6,
+		VAR_TEMPLATE = 7,
 		MAX_VAR_TYPES	 // NOTE: Be sure to update s_TypeNames when adding to here
 	};
 
@@ -60,6 +64,7 @@ public:
 	inline bool IsInt() const		{ return m_Type == BFFVariable::VAR_INT; }
 	inline bool IsStruct() const	{ return m_Type == BFFVariable::VAR_STRUCT; }
 	inline bool IsArrayOfStructs() const { return m_Type == BFFVariable::VAR_ARRAY_OF_STRUCTS; }
+	inline bool IsTemplate() const { return m_Type == BFFVariable::VAR_TEMPLATE; }
 
 	inline bool Frozen() const { return m_Frozen; }
 	inline void Freeze() const { ASSERT( false == m_Frozen ); m_Frozen = true; }
@@ -79,6 +84,7 @@ private:
 	explicit BFFVariable( const AString & name, int i );
 	explicit BFFVariable( const AString & name, const Array< const BFFVariable * > & values );
 	explicit BFFVariable( const AString & name, const Array< const BFFVariable * > & structs, VarType type ); // type for disambiguation
+	explicit BFFVariable( const AString & name, const BFFTemplate& tpl);
 	~BFFVariable();
 
 	void SetValueString( const AString & value );
@@ -87,6 +93,7 @@ private:
 	void SetValueInt( int i );
 	void SetValueStruct( const Array< const BFFVariable * > & members );
 	void SetValueArrayOfStructs( const Array< const BFFVariable * > & values );
+	void SetValueTemplate( const BFFTemplate& tpl);
 
     static const BFFVariable ** GetMemberByName( const AString & name, const Array< const BFFVariable * > & members );
 
@@ -102,6 +109,7 @@ private:
 	int					m_IntValue;
 	Array< BFFVariable * > m_StructMembers;
 	Array< BFFVariable * > m_ArrayOfStructs;
+	BFFTemplate         m_TemplateValue;
 
 	static const char * s_TypeNames[ MAX_VAR_TYPES ];
 };

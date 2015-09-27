@@ -41,6 +41,10 @@ public:
 									  const Array< const BFFVariable * > & structs,
 									  BFFStackFrame * frame );
 
+	static void SetVarTemplate( const AString & name,
+								const BFFTemplate & tpl,
+								BFFStackFrame * frame );
+
 	// set from an existing variable
 	static void SetVar( const BFFVariable * var, BFFStackFrame * frame );
 
@@ -84,6 +88,9 @@ private:
 
 	// variables at current scope
 	Array< BFFVariable * > m_Variables;
+
+	// Template being instanciated
+	BFFTemplate* m_Template;;
 
 	// pointer to parent scope
 	BFFStackFrame * m_Next;

@@ -102,6 +102,8 @@ public:
 	static void Error_1038_OverwritingTokenInDefine( const BFFIterator & iter );
 	static void Error_1039_UnknownTokenInUndef( const BFFIterator & iter );
 	static void Error_1040_UndefOfBuiltInTokenNotAllowed( const BFFIterator & iter );
+	static void Error_1041_TemplateNotFound( const BFFIterator & iter, const AString& variableName);
+	static void Error_1042_VariableIsNotATemplate( const BFFIterator & iter, const AString& variableName);
 
 	// 1050 - 1099 : Variable type errors
 	//------------------------------------------------------------------------------

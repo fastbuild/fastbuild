@@ -356,6 +356,21 @@
 	FormatError( iter, 1040u, nullptr, "#undef of built-in token not allowed." );
 }
 
+// Error_1041_TemplateNotFound
+//------------------------------------------------------------------------------
+void Error::Error_1041_TemplateNotFound( const BFFIterator & iter, const AString& variableName)
+{
+
+	FormatError( iter, 1040u, nullptr, "Template %s was not declared.", variableName.Get());
+}
+
+// Error_1042_VariableIsNotATemplate
+//------------------------------------------------------------------------------
+void Error::Error_1042_VariableIsNotATemplate( const BFFIterator & iter, const AString& variableName)
+{
+	FormatError( iter, 1040u, nullptr, "%s is not a template", variableName.Get());
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFIterator & iter,
