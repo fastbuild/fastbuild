@@ -40,23 +40,23 @@ FunctionRemoveDir::FunctionRemoveDir()
     }
 
     // get the optional params
-    AStackString<> pattern;
+    Array< AString > patterns;
     bool recurse = true;
     Array< AString > excludePaths;
-    if ( !GetString( funcStartIter, pattern, ".PathsPattern" ) ||
+    if ( !GetStrings( funcStartIter, patterns, ".PathsPattern" ) ||
          !GetBool( funcStartIter, recurse, ".PathsRecurse", true ) || // recursive by default
          !GetStrings( funcStartIter, excludePaths, ".ExcludePaths" ) )
     {
         return false; // Get* will have emitted error
     }
-    if ( pattern.IsEmpty() )
+    if ( patterns.IsEmpty() )
     {
-        pattern = "*";
+        patterns.Append( AStackString<>( "*" ) );
     }
 
     // convert input paths to DirectoryListNodes
     Dependencies staticDeps( inputPaths.GetSize() );
-    if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, pattern, ".Paths", staticDeps ) )
+    if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, patterns.IsEmpty() ? nullptr : &patterns, ".Paths", staticDeps ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }
