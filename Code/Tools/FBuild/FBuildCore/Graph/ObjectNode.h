@@ -101,6 +101,8 @@ private:
 	bool RetrieveFromCache( Job * job );
 	void WriteToCache( Job * job );
 
+	bool ContainsWarningsMSCL(const char * data, uint32_t dataSize) const;
+
 	static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
 
 	void EmitCompilationMessage( const AString & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false ) const;
