@@ -235,9 +235,9 @@ public:
 {
 	#if defined( __WINDOWS__ )
 		::CloseHandle( h );
-  #elif defined( __APPLE__ ) || defined(__LINUX__)
-    // Nothing to do
-  #else
+    #elif defined( __APPLE__ ) || defined(__LINUX__)
+        // Nothing to do
+    #else
         #error Unknown platform
 	#endif
 }
@@ -268,10 +268,10 @@ public:
 			{
 				(void)0;
 			}
-    #elif defined(__LINUX__) || defined(__APPLE__)
-      pthread_setname_np((pthread_t)GetCurrentThreadId(), name);
-    #else
-        #error Unknown platform
+        #elif defined(__LINUX__) || defined(__APPLE__)
+            pthread_setname_np( (pthread_t)GetCurrentThreadId(), name );
+        #else
+            #error Unknown platform
 		#endif
 	}
 #endif

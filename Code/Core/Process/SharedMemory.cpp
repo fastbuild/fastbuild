@@ -21,12 +21,12 @@
 #if defined(__LINUX__) || defined(__APPLE__)
 namespace
 {
-void PosixMapMemory(const char* name,
-                    size_t length,
-                    bool create,
-                    int * mapFile,
-                    void ** memory,
-                    AString &portableName)
+void PosixMapMemory( const char* name,
+                     size_t length,
+                     bool create,
+                     int * mapFile,
+                     void ** memory,
+                     AString & portableName )
 {
 		ASSERT(*mapFile == -1);
 		ASSERT(*memory == nullptr);
@@ -38,21 +38,21 @@ void PosixMapMemory(const char* name,
 		// followed by one or more characters, none of which are slashes.
 		portableName = "/";
  		portableName += name;
-		ASSERT(portableName.FindLast('/') == portableName.Get());
-		ASSERT(portableName.GetLength() <= 255);
+		ASSERT( portableName.FindLast('/') == portableName.Get() );
+		ASSERT( portableName.GetLength() <= 255 );
 
-		*mapFile = shm_open(portableName.Get(),
-		                    O_RDWR | (create ? O_CREAT : 0),
-		                    S_IWUSR | S_IRUSR);
-		ASSERT(*mapFile != -1);
+		*mapFile = shm_open( portableName.Get(),
+		                     O_RDWR | (create ? O_CREAT : 0),
+		                     S_IWUSR | S_IRUSR );
+		ASSERT( *mapFile != -1 );
 
-		if(create)
+		if( create )
 		{
-			VERIFY(ftruncate(*mapFile, length) == 0);
+			VERIFY( ftruncate( *mapFile, length ) == 0 );
 		}
 
-		*memory = mmap(nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, *mapFile, 0);
-		ASSERT(memory != MAP_FAILED);
+		*memory = mmap( nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, *mapFile, 0 );
+		ASSERT( memory != MAP_FAILED );
 }
 }
 #endif
@@ -63,8 +63,8 @@ SharedMemory::SharedMemory()
 	#if defined( __WINDOWS__ )
 		, m_MapFile( nullptr )
 	#elif defined(__LINUX__) || defined(__APPLE__)
-		, m_MapFile(-1)
-		, m_Length(0)
+		, m_MapFile( -1 )
+		, m_Length( 0 )
 	#else
 		#error Unknown Platform
 	#endif
@@ -85,15 +85,15 @@ SharedMemory::~SharedMemory()
 			CloseHandle( m_MapFile );
 		}
 	#elif defined( __LINUX__ ) || defined( __APPLE__ )
-		if( m_Memory)
+		if( m_Memory )
 		{
-			ASSERT(m_Length > 0);
-			munmap(m_Memory, m_Length);
+			ASSERT( m_Length > 0 );
+			munmap( m_Memory, m_Length );
 		}
-		if(m_MapFile != -1)
+		if( m_MapFile != -1 )
 		{
-			close(m_MapFile);
-			shm_unlink(m_Name.Get());
+			close( m_MapFile );
+			shm_unlink( m_Name.Get() );
 		}
 	#else
 		#error Unknown Platform

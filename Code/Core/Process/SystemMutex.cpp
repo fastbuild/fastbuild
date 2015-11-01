@@ -67,7 +67,7 @@ bool SystemMutex::TryLock()
             {
                 return false; // locked by another process
             }
-            ASSERT(false);
+            ASSERT( false ); // Unexpected problem!
         }
         return true; // we own it now
     #else

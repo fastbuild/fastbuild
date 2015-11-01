@@ -27,13 +27,9 @@ public:
 	virtual bool Retrieve( const AString & cacheId, void * & data, size_t & dataSize );
 	virtual void FreeMemory( void * data, size_t dataSize );
 private:
-	void * GetFunction( const char * friendlyName, const char* mangledName = nullptr) const;
+	void * GetFunction( const char * friendlyName, const char * mangledName = nullptr ) const;
 
-	#if defined( __WINDOWS__ ) || defined(__LINUX__) || defined(__APPLE__)
-		void *				m_DLL;
-	#else
-		#error Invalid platform
-	#endif
+    void *				m_DLL;
 	CacheInitFunc		m_InitFunc;
 	CacheShutdownFunc	m_ShutdownFunc;
 	CachePublishFunc	m_PublishFunc;

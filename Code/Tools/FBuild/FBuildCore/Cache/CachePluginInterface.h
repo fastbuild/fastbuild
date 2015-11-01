@@ -5,8 +5,8 @@
 #define FBUILD_CACHEPLUGININTERFACE_H
 
 #if __WINDOWS__
-	#define STDCALL STDCALL
-#elif defined(__LINUX__) || defined(__MACOS__)
+	#define STDCALL __stdcall
+#elif defined(__LINUX__) || defined(__OSX__)
 	#define STDCALL
 #else
 	#error Unknown Platform
@@ -21,6 +21,7 @@
 #if !defined(__WINDOWS__) //TODO:Windows : Use unmangled name on windows.
 extern "C" {
 #endif
+
 // CacheInit 
 //------------------------------------------------------------------------------
 // Setup access to cache at start of build.

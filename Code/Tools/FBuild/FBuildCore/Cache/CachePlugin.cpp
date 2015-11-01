@@ -28,11 +28,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 /*explicit*/ CachePlugin::CachePlugin( const AString & dllName ) :
-	#if defined( __WINDOWS__ ) || defined(__LINUX__) || defined(__APPLE__)
 		m_DLL( nullptr ),
-	#else
-		#error Unknown platform
-	#endif
 		m_InitFunc( nullptr ),
 		m_ShutdownFunc( nullptr ),
 		m_PublishFunc( nullptr ),
@@ -46,6 +42,7 @@
             FLOG_WARN( "Cache plugin '%s' load failed (0x%x).", dllName.Get(), ::GetLastError() );
             return;
         }
+
         m_InitFunc		= (CacheInitFunc)		GetFunction( "CacheInit",		"?CacheInit@@YA_NPEBD@Z" );
         m_ShutdownFunc	= (CacheShutdownFunc)	GetFunction( "CacheShutdown",	"?CacheShutdown@@YAXXZ"  );
         m_PublishFunc	= (CachePublishFunc)	GetFunction( "CachePublish",	"?CachePublish@@YA_NPEBDPEBX_K@Z" );
@@ -59,16 +56,14 @@
             FLOG_WARN( "Cache plugin '%s' load failed (0x%x).", dllName.Get(), dlerror() );
             return;
         }
-        dlerror();
-        m_InitFunc		 = (CacheInitFunc)       GetFunction( "CacheInit");
-        m_ShutdownFunc	 = (CacheShutdownFunc)   GetFunction( "CacheShutdown");
-        m_PublishFunc	 = (CachePublishFunc)    GetFunction( "CachePublish");
-        m_RetrieveFunc	 = (CacheRetrieveFunc)   GetFunction( "CacheRetrieve");
-        m_FreeMemoryFunc = (CacheFreeMemoryFunc) GetFunction( "CacheFreeMemory");
+        m_InitFunc		 = (CacheInitFunc)       GetFunction( "CacheInit" );
+        m_ShutdownFunc	 = (CacheShutdownFunc)   GetFunction( "CacheShutdown" );
+        m_PublishFunc	 = (CachePublishFunc)    GetFunction( "CachePublish" );
+        m_RetrieveFunc	 = (CacheRetrieveFunc)   GetFunction( "CacheRetrieve" );
+        m_FreeMemoryFunc = (CacheFreeMemoryFunc) GetFunction( "CacheFreeMemory" );
     #else
         #error Unknown platform
     #endif
-
 }
 
 // DESTRUCTOR
@@ -79,18 +74,18 @@
 
 // GetFunction
 //------------------------------------------------------------------------------
-void * CachePlugin::GetFunction( const char * friendlyName, const char* mangledName) const
+void * CachePlugin::GetFunction( const char * friendlyName, const char * mangledName ) const
 {
     #if defined( __WINDOWS__ )
         ASSERT( m_DLL );
-        void * func = ::GetProcAddress( (HMODULE)m_DLL, name );
+        void * func = ::GetProcAddress( (HMODULE)m_DLL, mangledName );
         if ( !func )
         {
             FLOG_WARN( "Missing CachePluginDLL function '%s' (Mangled: %s)", friendlyName, mangledName );
         }
         return func;
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return dlsym(m_DLL, friendlyName);
+        return dlsym( m_DLL, friendlyName );
     #else
         #error Unknown platform
     #endif
@@ -111,9 +106,9 @@ void * CachePlugin::GetFunction( const char * friendlyName, const char* mangledN
             ::FreeLibrary( (HMODULE)m_DLL );
         }
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        if (m_DLL)
+        if ( m_DLL )
         {
-            dlclose(m_DLL);
+            dlclose( m_DLL );
         }
     #else
         #error Unknown platform
