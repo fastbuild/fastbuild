@@ -105,6 +105,10 @@ ProjectBasePath
 ProjectFileTypes
 ProjectReferences
 ProjectProjectReferences
+RemoveExcludePaths
+RemovePaths
+RemovePathsRecurse
+RemovePatterns
 RootNamespace
 SolutionBuildProject
 SolutionConfigs

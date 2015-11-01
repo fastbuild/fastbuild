@@ -18,7 +18,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 RemoveDirNode::RemoveDirNode( const AString & name,
-                              Dependencies & staticDeps,
+                              const Dependencies & staticDeps,
                               const Dependencies & preBuildDeps )
 : Node( name, Node::REMOVE_DIR_NODE, Node::FLAG_NONE )
 {

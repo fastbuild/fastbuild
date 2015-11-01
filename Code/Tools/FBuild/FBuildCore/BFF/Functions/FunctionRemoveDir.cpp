@@ -34,7 +34,7 @@ FunctionRemoveDir::FunctionRemoveDir()
 {
     // Get input paths
     Array< AString > inputPaths;
-    if ( !GetFolderPaths( funcStartIter, inputPaths, ".Paths", true ) )
+    if ( !GetFolderPaths( funcStartIter, inputPaths, ".RemovePaths", true ) )
     {
         return false; // GetFolderPaths will have emitted an error
     }
@@ -43,9 +43,9 @@ FunctionRemoveDir::FunctionRemoveDir()
     Array< AString > patterns;
     bool recurse = true;
     Array< AString > excludePaths;
-    if ( !GetStrings( funcStartIter, patterns, ".PathsPattern" ) ||
-         !GetBool( funcStartIter, recurse, ".PathsRecurse", true ) || // recursive by default
-         !GetStrings( funcStartIter, excludePaths, ".ExcludePaths" ) )
+    if ( !GetStrings( funcStartIter, patterns, ".RemovePatterns" ) ||
+         !GetBool( funcStartIter, recurse, ".RemovePathsRecurse", true ) || // recursive by default
+         !GetStrings( funcStartIter, excludePaths, ".RemoveExcludePaths" ) )
     {
         return false; // Get* will have emitted error
     }
@@ -56,7 +56,7 @@ FunctionRemoveDir::FunctionRemoveDir()
 
     // convert input paths to DirectoryListNodes
     Dependencies staticDeps( inputPaths.GetSize() );
-    if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, patterns.IsEmpty() ? nullptr : &patterns, ".Paths", staticDeps ) )
+    if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, patterns.IsEmpty() ? nullptr : &patterns, ".RemovePaths", staticDeps ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }

@@ -8,9 +8,6 @@
 //------------------------------------------------------------------------------
 #include "Function.h"
 
-// Core
-//#include "Core/Containers/Array.h"
-
 // FunctionRemoveDir
 //------------------------------------------------------------------------------
 class FunctionRemoveDir : public Function
@@ -20,8 +17,8 @@ public:
     inline virtual ~FunctionRemoveDir() {}
 
 protected:
-    virtual bool AcceptsHeader() const;
-    virtual bool Commit( const BFFIterator & funcStartIter ) const;
+    virtual bool AcceptsHeader() const override;
+    virtual bool Commit( const BFFIterator & funcStartIter ) const override;
 };
 
 //------------------------------------------------------------------------------
