@@ -54,7 +54,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 69 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 72 };
 
 	bool IsValid() const
 	{
@@ -152,6 +152,7 @@ public:
 	DLLNode *		CreateDLLNode( const AString & linkerOutputName,
 								   const Dependencies & inputLibraries,
 								   const Dependencies & otherLibraries,
+								   const AString & linkerType,
 								   const AString & linker,
 								   const AString & linkerArgs,
 								   uint32_t flags,
@@ -162,6 +163,7 @@ public:
 	ExeNode *		CreateExeNode( const AString & linkerOutputName,
 								   const Dependencies & inputLibraries,
 								   const Dependencies & otherLibraries,
+								   const AString & linkerType,
 								   const AString & linker,
 								   const AString & linkerArgs,
 								   uint32_t flags,
