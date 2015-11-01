@@ -73,7 +73,9 @@ public:
 		VCXPROJECT_NODE		= 14,
 		OBJECT_LIST_NODE	= 15,
 		COPY_DIR_NODE		= 16,
-		SLN_NODE 			= 17,
+		REMOVE_DIR_NODE		= 17,
+		SLN_NODE 		= 18,
+
 		// Make sure you update 's_NodeTypeNames' in the cpp
 		NUM_NODE_TYPES		// leave this last
 	};
