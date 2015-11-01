@@ -186,12 +186,18 @@ void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
     #ifdef PROFILING_ENABLED
 		ProfileManager::Start( testName );
 	#endif
+
+	testGroup->PreTest();
 }
 
 // TestEnd
 //------------------------------------------------------------------------------
 void UnitTestManager::TestEnd()
 {
+    TestInfo& info = s_TestInfos[ s_NumTests - 1 ];
+
+	info.m_TestGroup->PostTest();
+
     #ifdef PROFILING_ENABLED
 		ProfileManager::Stop();
 
@@ -202,7 +208,6 @@ void UnitTestManager::TestEnd()
 
 	float timeTaken = m_Timer.GetElapsed();
 
-    TestInfo& info = s_TestInfos[ s_NumTests - 1 ];
     info.m_TimeTaken = timeTaken;
 
 	#ifdef MEMTRACKER_ENABLED

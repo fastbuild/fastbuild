@@ -23,8 +23,8 @@ int main(int , char * [])
         REGISTER_TESTGROUP( TestCSharp )
         REGISTER_TESTGROUP( TestCUDA )
     #endif
+    REGISTER_TESTGROUP( TestDistributed )
     #if defined( __WINDOWS__ )
-        REGISTER_TESTGROUP( TestDistributed ) // TODO:LINUX TODO:MAC Enable
         REGISTER_TESTGROUP( TestDLL ) // TODO:LINUX TODO:MAC Enable
         REGISTER_TESTGROUP( TestExe ) // TODO:LINUX TODO:MAC Enable
         REGISTER_TESTGROUP( TestExec ) // TODO:LINUX TODO:MAC Enable

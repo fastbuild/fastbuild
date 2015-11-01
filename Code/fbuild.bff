@@ -448,7 +448,7 @@ Compiler( 'Compiler-x64-OSX' )
 [
 	.Compiler					= '$WindowsSDKBasePath$\Bin\x86\RC.exe'
 	.CompilerOutputExtension	= '.res'
-	.CompilerOptions			= '/nologo /fo"%2" %1'
+	.CompilerOptions			= '/nologo /fo"%2" "%1"'
 ]
 
 //------------------------------------------------------------------------------

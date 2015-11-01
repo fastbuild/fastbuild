@@ -226,29 +226,37 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
 	AStackString<> paths;
 	paths.Format( "PATH=%s", basePath.Get() );
 
-	// TMP=
-	AStackString<> normalTmp;
-	Env::GetEnvVariable( "TMP", normalTmp );
-	AStackString<> tmp;
-	tmp.Format( "TMP=%s", normalTmp.Get() );
+	#if defined( __WINDOWS__ )
+		// TMP=
+		AStackString<> normalTmp;
+		Env::GetEnvVariable( "TMP", normalTmp );
+		AStackString<> tmp;
+		tmp.Format( "TMP=%s", normalTmp.Get() );
 
-	// SystemRoot=
-	AStackString<> sysRoot( "SystemRoot=C:\\Windows" );
+		// SystemRoot=
+		AStackString<> sysRoot( "SystemRoot=C:\\Windows" );
+	#endif
 
-	char * mem = (char *)ALLOC( paths.GetLength() + 1 +
-								  tmp.GetLength() + 1 +
-								  sysRoot.GetLength() + 1 +
-								  1 );
+    size_t len( paths.GetLength() + 1 );
+    #if defined( __WINDOWS__ )
+        len += ( tmp.GetLength() + 1 );
+        len += ( sysRoot.GetLength() + 1 );
+    #endif
+    len += 1; // for double null
+
+	char * mem = (char *)ALLOC( len );
 	m_RemoteEnvironmentString = mem;
 
 	AString::Copy( paths.Get(), mem, paths.GetLength() + 1 ); // including null
 	mem += ( paths.GetLength() + 1 ); // including null
 
-	AString::Copy( tmp.Get(), mem, tmp.GetLength() + 1 ); // including null
-	mem += ( tmp.GetLength() + 1 ); // including null
+	#if defined( __WINDOWS__ )
+		AString::Copy( tmp.Get(), mem, tmp.GetLength() + 1 ); // including null
+		mem += ( tmp.GetLength() + 1 ); // including null
 
-	AString::Copy( sysRoot.Get(), mem, sysRoot.GetLength() + 1 ); // including null
-	mem += ( sysRoot.GetLength() + 1 ); // including null
+		AString::Copy( sysRoot.Get(), mem, sysRoot.GetLength() + 1 ); // including null
+		mem += ( sysRoot.GetLength() + 1 ); // including null
+	#endif
 
 	*mem = 0; ++mem; // double null
 
@@ -367,6 +375,11 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
 		return false; // FAILED
 	}
 	fs.Close();
+	
+	// mark executable
+	#if defined( __LINUX__ ) || defined( __OSX__ )
+		FileIO::SetExecutable( fileName.Get() );
+	#endif
 
 	// open read-only 
 	AutoPtr< FileStream > fileStream( FNEW( FileStream ) );

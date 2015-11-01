@@ -20,10 +20,6 @@ public:
 		READ_ONLY		= 0x1,
 		WRITE_ONLY		= 0x2,
 		TEMP			= 0x4,
-		DELETE_ON_CLOSE	= 0x8,
-		SHARE_READ		= 0x10,
-		SHARE_WRITE		= 0x20,
-		SHARE_DELETE	= 0x40,
 		NO_RETRY_ON_SHARING_VIOLATION = 0x80,
 	};
 

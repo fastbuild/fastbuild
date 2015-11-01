@@ -19,13 +19,15 @@
 
 // FBuildWorkerOptions (CONSTRUCTOR)
 //------------------------------------------------------------------------------
-FBuildWorkerOptions::FBuildWorkerOptions()
-	: m_IsSubprocess( false )
-	, m_UseSubprocess( true )
-	, m_OverrideCPUAllocation( false )
-	, m_CPUAllocation( 0 )
-	, m_OverrideWorkMode( false )
-	, m_WorkMode( WorkerSettings::WHEN_IDLE )
+FBuildWorkerOptions::FBuildWorkerOptions() :
+#if defined( __WINDOWS__ )
+	m_IsSubprocess( false ),
+	m_UseSubprocess( true ),
+#endif
+	m_OverrideCPUAllocation( false ),
+	m_CPUAllocation( 0 ),
+	m_OverrideWorkMode( false ),
+	m_WorkMode( WorkerSettings::WHEN_IDLE )
 {
 }
 
@@ -89,16 +91,18 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 			m_OverrideWorkMode = true;
 			continue;
 		}
-		else if ( token == "-nosubprocess" )
-		{
-			m_UseSubprocess = false;
-			continue;
-		}
-		else if ( token == "-subprocess" ) // Internal option only!
-		{
-			m_IsSubprocess = true;
-			continue;
-		}
+		#if defined( __WINDOWS__ )
+			else if ( token == "-nosubprocess" )
+			{
+				m_UseSubprocess = false;
+				continue;
+			}
+			else if ( token == "-subprocess" ) // Internal option only!
+			{
+				m_IsSubprocess = true;
+				continue;
+			}
+		#endif
 
 		ShowUsageError();
 		return false;
@@ -125,11 +129,16 @@ void FBuildWorkerOptions::ShowUsageError()
 					   "                idle : Accept work when PC is idle.\n"
 					   "                dedicated : Accept work always.\n"
 					   "\n"
+					   #if defined( __WINDOWS__ )
 					   "-nosubprocess : Don't spawn a sub-process worker copy.\n";
+					   #else
+					   ;
+					   #endif
 
 	#if defined( __WINDOWS__ )
 		::MessageBox( nullptr, msg, "FBuildWorker - Bad Command Line", MB_ICONERROR | MB_OK );
 	#else		
+		printf( "%s", msg );
 		(void)msg; // TODO:MAC Fix missing MessageBox
 		(void)msg; // TODO:LINUX Fix missing MessageBox
 	#endif

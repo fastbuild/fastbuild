@@ -67,8 +67,8 @@
 	"VCXProj",
 	"ObjectList",
 	"CopyDirNode",
-	"RemoveDirNode",
 	"SLN",
+	"RemoveDirNode",
 };
 
 // Custom MetaData
@@ -174,11 +174,6 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 		}
 
 		// ignore unity nodes - the derived node should extract what it needs in DoDynamicDependencies
-		if ( n->GetType() == Node::UNITY_NODE )
-		{
-			continue;
-		}
-
 		if ( n->GetType() == Node::UNITY_NODE )
 		{
 			continue;
@@ -422,8 +417,8 @@ void Node::SaveNode( IOStream & fileStream, const Node * node ) const
 		case Node::VCXPROJECT_NODE:		n = VCXProjectNode::Load( stream );		break;
 		case Node::OBJECT_LIST_NODE:	n = ObjectListNode::Load( stream );		break;
 		case Node::COPY_DIR_NODE:		n = CopyDirNode::Load( stream );		break;
-		case Node::REMOVE_DIR_NODE:		n = RemoveDirNode::Load( stream );		break;
 		case Node::SLN_NODE:			n = SLNNode::Load( stream );			break;
+		case Node::REMOVE_DIR_NODE:		n = RemoveDirNode::Load( stream );		break;
 		case Node::NUM_NODE_TYPES:		ASSERT( false );						break;
 	}
 

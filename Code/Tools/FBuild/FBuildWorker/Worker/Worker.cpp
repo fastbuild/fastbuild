@@ -12,6 +12,7 @@
 #include "WorkerSettings.h"
 
 // FBuild
+#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
@@ -23,6 +24,7 @@
 #include "Core/Process/Process.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Tracing/Tracing.h"
 
 // system
 #include <stdio.h>
@@ -43,7 +45,9 @@ Worker::Worker( void * hInstance, const AString & args )
 	m_WorkerSettings = FNEW( WorkerSettings );
 	m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
 	m_JobQueueRemote = FNEW( JobQueueRemote( Env::GetNumProcessors() ) );
-	m_MainWindow = FNEW( WorkerWindow( hInstance ) );
+	#if defined( __WINDOWS__ )
+		m_MainWindow = FNEW( WorkerWindow( hInstance ) );
+	#endif
 	m_ConnectionPool = FNEW( Server );
 
 	Env::GetExePath( m_BaseExeName );
@@ -52,6 +56,8 @@ Worker::Worker( void * hInstance, const AString & args )
 		m_BaseExeName.Clear(); // not running from copy, disable restart detection
 	}
 	m_BaseArgs.Replace( "-subprocess", "" );
+	
+	StatusMessage( "FBuildWorker %s (%s)", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
 }
 
 // DESTRUCTOR
@@ -80,9 +86,10 @@ Worker::~Worker()
 int Worker::Work()
 {
 	// start listening
+	StatusMessage( "Listening on port %u\n", Protocol::PROTOCOL_PORT );
 	if ( m_ConnectionPool->Listen( Protocol::PROTOCOL_PORT ) == false )
 	{
-		ShowMessageBox( "Failed to listen on port %u.  Check port is not in use.", Protocol::PROTOCOL_PORT );
+		ErrorMessage( "Failed to listen on port %u.  Check port is not in use.", Protocol::PROTOCOL_PORT );
 		return -1;
 	}
 
@@ -98,7 +105,7 @@ int Worker::Work()
         #endif
 		if ( !FileIO::EnsurePathExists( tmpPath ) )
 		{
-			ShowMessageBox( "Failed to initialize tmp folder.  Error: 0x%x", Env::GetLastErr() );
+			ErrorMessage( "Failed to initialize tmp folder.  Error: 0x%x", Env::GetLastErr() );
 			return -2;
 		}
         #if defined( __WINDOWS__ )
@@ -108,13 +115,25 @@ int Worker::Work()
         #endif
 		if ( !m_TargetIncludeFolderLock.Open( tmpPath.Get(), FileStream::WRITE_ONLY ) )
 		{
-			ShowMessageBox( "Failed to lock tmp folder.  Error: 0x%x", Env::GetLastErr() );
+			ErrorMessage( "Failed to lock tmp folder.  Error: 0x%x", Env::GetLastErr() );
 			return -2;
 		}
 	}
 
-	while ( WorkerWindow::Get().WantToQuit() == false )
+    for(;;)
 	{
+        if ( InConsoleMode() )
+        {
+            // TODO: Handle Ctrl+C gracefully to remove worker token etc
+        }
+        else
+        {
+            if ( WorkerWindow::Get().WantToQuit() )
+            {
+                break;
+            }
+        }
+        
 		UpdateAvailability();
 
 		UpdateUI();
@@ -273,33 +292,45 @@ void Worker::UpdateUI()
 		{
 			status += " (Low Disk Space)";
 		}
-	#endif
-	m_MainWindow->SetStatus( status.Get() );
-
-	// thread output
-	JobQueueRemote & jqr = JobQueueRemote::Get();
-	const size_t numWorkers = jqr.GetNumWorkers();
-	for ( size_t i=0; i<numWorkers; ++i )
+	#endif	
+	if ( InConsoleMode() )
 	{
-		// get status of worker
-		AStackString<> workerStatus;
-		AStackString<> hostName;
-		bool isIdle;
-		jqr.GetWorkerStatus( i, hostName, workerStatus, isIdle );
+        status += '\n';
+        StatusMessage( status.Get() );      
+	}
+	else
+	{
+        m_MainWindow->SetStatus( status.Get() );
+	}
 
-		// are we syncing tools?
-		if ( isIdle )
+
+	if ( InConsoleMode() == false )
+	{
+		// thread output
+		JobQueueRemote & jqr = JobQueueRemote::Get();
+		const size_t numWorkers = jqr.GetNumWorkers();
+		for ( size_t i=0; i<numWorkers; ++i )
 		{
-			AStackString<> statusStr;
-			if ( m_ConnectionPool->IsSynchingTool( statusStr ) )
+			// get status of worker
+			AStackString<> workerStatus;
+			AStackString<> hostName;
+			bool isIdle;
+			jqr.GetWorkerStatus( i, hostName, workerStatus, isIdle );
+	
+			// are we syncing tools?
+			if ( isIdle )
 			{
-				// show status of synchronization
-				workerStatus = statusStr;
+				AStackString<> statusStr;
+				if ( m_ConnectionPool->IsSynchingTool( statusStr ) )
+				{
+					// show status of synchronization
+					workerStatus = statusStr;
+				}
 			}
+	
+			// reflect in UI
+			m_MainWindow->SetWorkerState( i, hostName, workerStatus );
 		}
-
-		// reflect in UI
-		m_MainWindow->SetWorkerState( i, hostName, workerStatus );
 	}
 
 	m_UIUpdateTimer.Start();
@@ -344,9 +375,41 @@ void Worker::CheckForExeUpdate()
 	}
 }
 
-// ShowMessageBox
+// StatusMessage
 //------------------------------------------------------------------------------
-/*static*/ void Worker::ShowMessageBox( const char * fmtString, ... )
+void Worker::StatusMessage( const char * fmtString, ... ) const
+{
+	// Status Messages are only shown in console mode
+	if ( InConsoleMode() == false )
+	{
+		return;
+	}
+	
+	AStackString<> buffer;
+
+	va_list args;
+	va_start(args, fmtString);
+	buffer.VFormat( fmtString, args );
+	va_end( args );
+	
+	if ( buffer.EndsWith( '\n' ) == false )
+	{
+		buffer += '\n';
+	}
+	
+	// don't spam when the status has not changed
+	if ( m_LastStatusMessage == buffer )
+    {
+        return;
+    }
+    m_LastStatusMessage = buffer;
+	
+	OUTPUT( "%s", buffer.Get() );
+}
+
+// ErrorMessage
+//------------------------------------------------------------------------------
+void Worker::ErrorMessage( const char * fmtString, ... ) const
 {
 	AStackString<> buffer;
 
@@ -355,12 +418,20 @@ void Worker::CheckForExeUpdate()
 	buffer.VFormat( fmtString, args );
 	va_end( args );
 
+	if ( InConsoleMode() )
+	{
+		// Forward to console
+		StatusMessage( "%s", buffer.Get() );	
+		return;
+	}
+
+	// Display interactive Message Box	
 	#if defined( __WINDOWS__ )
 		::MessageBox( nullptr, buffer.Get(), "FBuild Worker", MB_OK );
 	#elif defined( __APPLE__ )
-		// TODO:MAC Implement ShowMessageBox
+		// TODO:MAC Implement ErrorMessage for non-console mode
 	#elif defined( __LINUX__ )
-		// TODO:LINUX Implement ShowMessageBox
+		// TODO:LINUX Implement ErrorMessage for non-console mode
 	#else
 		#error Unknown Platform
 	#endif

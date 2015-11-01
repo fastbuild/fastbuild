@@ -58,6 +58,9 @@ public:
 	static bool		SetReadOnly( const char * fileName, bool readOnly );
     static bool     GetReadOnly( const char * fileName );
 	static inline bool GetReadOnly( const AString & fileName ) { return GetReadOnly( fileName.Get() ); }
+	#if defined( __LINUX__ ) || defined( __APPLE__ )
+		static bool	SetExecutable( const char * fileName );
+	#endif
 
     #if defined( __WINDOWS__ )
         static void		WorkAroundForWindowsFilePermissionProblem( const AString & fileName );
