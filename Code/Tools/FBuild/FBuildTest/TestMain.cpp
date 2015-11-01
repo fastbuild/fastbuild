@@ -13,8 +13,8 @@ int main(int , char * [])
 	REGISTER_TESTGROUP( TestBFFParsing )
 	REGISTER_TESTGROUP( TestBuildAndLinkLibrary )
 	REGISTER_TESTGROUP( TestBuildFBuild )
+	REGISTER_TESTGROUP( TestCachePlugin )
     #if defined( __WINDOWS__ )
-    	REGISTER_TESTGROUP( TestCachePlugin ) // TODO:LINUX TODO:MAC Enable
         REGISTER_TESTGROUP( TestCLR )
     #endif
 	REGISTER_TESTGROUP( TestCompressor )

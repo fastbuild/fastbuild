@@ -7,12 +7,21 @@
 
 // The FASTBuild DLL Interface
 //------------------------------------------------------------------------------
+#if defined(__WINDOWS__)
 #define CACHEPLUGIN_DLL_EXPORT __declspec(dllexport)
+#elif defined(__LINUX__) || defined(__APPLE__)
+#define CACHEPLUGIN_DLL_EXPORT
+#endif
+
 #include "../../../FBuildCore/Cache/CachePluginInterface.h"
 
 // CacheInit
 //------------------------------------------------------------------------------
-bool __stdcall CacheInit( const char * settings )
+#if !defined(__WINDOWS__) // TODO:Windows : Use unmangled names on windows
+extern "C" {
+#endif
+
+bool STDCALL CacheInit( const char * settings )
 {
 	printf( "Init : %s\n", settings );
 	return true;
@@ -20,14 +29,14 @@ bool __stdcall CacheInit( const char * settings )
 
 // CacheShutdown
 //------------------------------------------------------------------------------
-void __stdcall CacheShutdown()
+void STDCALL CacheShutdown()
 {
 	printf( "Shutdown\n" );
 }
 
 // CachePublish
 //------------------------------------------------------------------------------
-bool __stdcall CachePublish( const char * cacheId, const void * data, unsigned long long dataSize )
+bool STDCALL CachePublish( const char * cacheId, const void * data, unsigned long long dataSize )
 {
 	printf( "Publish : %s, %p, %llu\n", cacheId, data, dataSize );
 	return true;
@@ -35,7 +44,7 @@ bool __stdcall CachePublish( const char * cacheId, const void * data, unsigned l
 
 // CacheRetrieve
 //------------------------------------------------------------------------------
-bool __stdcall CacheRetrieve( const char * cacheId, void * & data, unsigned long long & dataSize )
+bool STDCALL CacheRetrieve( const char * cacheId, void * & data, unsigned long long & dataSize )
 {
 	(void)data;
 	(void)dataSize;
@@ -45,9 +54,13 @@ bool __stdcall CacheRetrieve( const char * cacheId, void * & data, unsigned long
 
 // CacheFreeMemory
 //------------------------------------------------------------------------------
-void __stdcall CacheFreeMemory( void * data, unsigned long long dataSize )
+void STDCALL CacheFreeMemory( void * data, unsigned long long dataSize )
 {
 	printf( "FreeMemory : %p, %llu\n", data, dataSize );
 }
 
 //------------------------------------------------------------------------------
+
+#if !defined(__WINDOWS__)//TODO:Windows : Use unmangled name on windows.
+}// extern "C"
+#endif
