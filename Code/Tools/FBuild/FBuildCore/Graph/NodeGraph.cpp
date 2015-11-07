@@ -1484,14 +1484,8 @@ size_t NodeGraph::FindNearestNodesInternal( const AString & fullPath, const Node
     			if ( count < capacity )
     				count++;
 
-    			if ( count < 1 )
-    			{
-    				ASSERT( false );
-    			}
-    			else
-    			{
-    				worstMinDistance = nodesDistance[count - 1];
-    			}
+                ASSERT( count >= 1 );
+    			worstMinDistance = nodesDistance[count - 1];
     		}
     		else if ( count < capacity )
     		{
