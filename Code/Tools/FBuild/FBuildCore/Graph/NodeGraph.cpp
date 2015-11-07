@@ -1456,52 +1456,51 @@ size_t NodeGraph::FindNearestNodesInternal( const AString & fullPath, const Node
 	size_t count = 0;
 	for ( size_t i = 0 ; i < NODEMAP_TABLE_SIZE ; i++ )
 	{
-		if ( nullptr == m_NodeMap[i] )
-			continue;
-
-		Node * const n = m_NodeMap[i];
-		const uint32_t d = fullPath.EditDistanceI( n->GetName() );
-
-		if ( d > maxDistance )
-			continue;
-
-		if ( d <= worstMinDistance )
+        for ( Node * n = m_NodeMap[i] ; nullptr != n ; n = n->m_Next )
 		{
-			ASSERT( count <= capacity );
+    		const uint32_t d = fullPath.EditDistanceI( n->GetName() );
 
-			size_t pos = count;
-			for ( ; ( pos > 0 ) && ( ( nodesDistance[pos - 1] > d ) ||
-				( nodesDistance[pos - 1] == d && n->GetName() < nodes[pos - 1]->GetName() ) ) ; pos-- )
-			{
-				if ( pos < capacity )
-				{
-					nodes[pos] = nodes[pos - 1];
-					nodesDistance[pos] = nodesDistance[pos - 1];
-				}
-			}
+    		if ( d > maxDistance )
+    			continue;
 
-			nodes[pos] = n;
-			nodesDistance[pos] = d;
+    		if ( d <= worstMinDistance )
+    		{
+    			ASSERT( count <= capacity );
 
-			if ( count < capacity )
-				count++;
+    			size_t pos = count;
+    			for ( ; ( pos > 0 ) && ( ( nodesDistance[pos - 1] > d ) ||
+    				( nodesDistance[pos - 1] == d && n->GetName() < nodes[pos - 1]->GetName() ) ) ; pos-- )
+    			{
+    				if ( pos < capacity )
+    				{
+    					nodes[pos] = nodes[pos - 1];
+    					nodesDistance[pos] = nodesDistance[pos - 1];
+    				}
+    			}
 
-			if ( count < 1 )
-			{
-				ASSERT( false );
-			}
-			else
-			{
-				worstMinDistance = nodesDistance[count - 1];
-			}
-		}
-		else if ( count < capacity )
-		{
-			nodes[count] = n;
-			nodesDistance[count] = d;
-			worstMinDistance = d;
-			count++;
-		}
+    			nodes[pos] = n;
+    			nodesDistance[pos] = d;
+
+    			if ( count < capacity )
+    				count++;
+
+    			if ( count < 1 )
+    			{
+    				ASSERT( false );
+    			}
+    			else
+    			{
+    				worstMinDistance = nodesDistance[count - 1];
+    			}
+    		}
+    		else if ( count < capacity )
+    		{
+    			nodes[count] = n;
+    			nodesDistance[count] = d;
+    			worstMinDistance = d;
+    			count++;
+    		}
+        }
 	}
 
 	return count;
