@@ -45,11 +45,11 @@ template < size_t _Capacity, bool _CaseSentitive >
 static uint32_t LevenshteinDistanceImpl(const char * str1, uint32_t len1,
                                         const char * str2, uint32_t len2 )
 {
-    if ( str1 == nullptr || str2 == nullptr )
-        return 0;
+    ASSERT( 0 == len1 || nullptr != str1 );
+    ASSERT( 0 == len2 || nullptr != str2 );
 
-    if ( 0 == len1 ) return len2;
-    if ( 0 == len2 ) return len1;
+    if ( 0 == len1 || nullptr == str1 ) return len2;
+    if ( 0 == len2 || nullptr == str2 ) return len1;
 
     // swap str1 and str2 if str2 is shorter
     if ( len2 < len1 )
@@ -98,8 +98,8 @@ static uint32_t LevenshteinDistanceImpl(const char * str1, uint32_t len1,
 //------------------------------------------------------------------------------
 /*static*/ uint32_t LevenshteinDistance::Distance( const char * lhs, const char * rhs )
 {
-    const uint32_t lhsLen = ( uint32_t ) AString::StrLen( lhs );
-    const uint32_t rhsLen = ( uint32_t ) AString::StrLen( rhs );
+    const uint32_t lhsLen = ( nullptr == lhs ) ? 0 : ( uint32_t ) AString::StrLen( lhs );
+    const uint32_t rhsLen = ( nullptr == rhs ) ? 0 : ( uint32_t ) AString::StrLen( rhs );
     return ::LevenshteinDistanceImpl< 1024, true >( lhs, lhsLen, rhs, rhsLen );
 }
 
@@ -114,8 +114,8 @@ static uint32_t LevenshteinDistanceImpl(const char * str1, uint32_t len1,
 //------------------------------------------------------------------------------
 /*static*/ uint32_t LevenshteinDistance::DistanceI( const char * lhs, const char * rhs )
 {
-    const uint32_t lhsLen = ( uint32_t ) AString::StrLen( lhs );
-    const uint32_t rhsLen = ( uint32_t ) AString::StrLen( rhs );
+    const uint32_t lhsLen = ( nullptr == lhs ) ? 0 : ( uint32_t ) AString::StrLen( lhs );
+    const uint32_t rhsLen = ( nullptr == rhs ) ? 0 : ( uint32_t ) AString::StrLen( rhs );
     return ::LevenshteinDistanceImpl< 1024, false >( lhs, lhsLen, rhs, rhsLen );
 }
 
