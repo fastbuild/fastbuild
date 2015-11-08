@@ -1438,66 +1438,69 @@ Node * NodeGraph::FindNodeInternal( const AString & fullPath ) const
 
 // FindNearestNodesInternal
 //------------------------------------------------------------------------------
-size_t NodeGraph::FindNearestNodesInternal( const AString & fullPath, const Node **nodes, uint32_t capacity ) const
+void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance ) const
 {
 	ASSERT( Thread::IsMainThread() );
-	ASSERT( nodes );
-	ASSERT( capacity );
+	ASSERT( nodes.IsEmpty() );
+    ASSERT( false == nodes.IsAtCapacity() );
 
 	if ( fullPath.IsEmpty() )
-		return 0;
+		return;
 
-	const uint32_t maxDistance = 5;
 	uint32_t worstMinDistance = fullPath.GetLength() + 1;
 
-	ASSERT( capacity <= 8 );
-	uint32_t nodesDistance[8] = {0};
-
-	size_t count = 0;
 	for ( size_t i = 0 ; i < NODEMAP_TABLE_SIZE ; i++ )
 	{
-        for ( Node * n = m_NodeMap[i] ; nullptr != n ; n = n->m_Next )
+        for ( Node * node = m_NodeMap[i] ; nullptr != node ; node = node->m_Next )
 		{
-    		const uint32_t d = fullPath.EditDistanceI( n->GetName() );
+    		const uint32_t d = fullPath.EditDistanceI( node->GetName() );
 
     		if ( d > maxDistance )
     			continue;
 
-    		if ( d <= worstMinDistance )
+            if ( nodes.IsEmpty() )
+            {
+                nodes.Append(NodeWithDistance{ node, d });
+                worstMinDistance = nodes.Top().m_Distance;
+            }
+            else if ( d >= worstMinDistance )
+            {
+                ASSERT( nodes.IsEmpty() || nodes.Top().m_Distance == worstMinDistance );
+                if ( false == nodes.IsAtCapacity() )
+                {
+                    nodes.Append(NodeWithDistance{ node, d });
+                    worstMinDistance = d;
+                }
+            }
+    		else if ( d < worstMinDistance )
     		{
-    			ASSERT( count <= capacity );
+                ASSERT( nodes.Top().m_Distance > d );
+                const size_t count = nodes.GetSize();
+
+                if ( false == nodes.IsAtCapacity() )
+                {
+                    nodes.Append(NodeWithDistance{});
+                }
 
     			size_t pos = count;
-    			for ( ; ( pos > 0 ) && ( ( nodesDistance[pos - 1] > d ) ||
-    				( nodesDistance[pos - 1] == d && n->GetName() < nodes[pos - 1]->GetName() ) ) ; pos-- )
-    			{
-    				if ( pos < capacity )
-    				{
-    					nodes[pos] = nodes[pos - 1];
-    					nodesDistance[pos] = nodesDistance[pos - 1];
-    				}
-    			}
+                for ( ; pos > 0 ; pos-- )
+                {
+                    if ( nodes[pos - 1].m_Distance <= d )
+                    {
+                        break;
+                    }
+                    else if (pos < nodes.GetSize() )
+                    {
+                        nodes[pos] = nodes[pos - 1];
+                    }
+                }
 
-    			nodes[pos] = n;
-    			nodesDistance[pos] = d;
-
-    			if ( count < capacity )
-    				count++;
-
-                ASSERT( count >= 1 );
-    			worstMinDistance = nodesDistance[count - 1];
-    		}
-    		else if ( count < capacity )
-    		{
-    			nodes[count] = n;
-    			nodesDistance[count] = d;
-    			worstMinDistance = d;
-    			count++;
+                ASSERT( pos < count );
+                nodes[pos] = NodeWithDistance{ node, d };
+    			worstMinDistance = nodes.Top().m_Distance;
     		}
         }
 	}
-
-	return count;
 }
 
 // UpdateBuildStatus

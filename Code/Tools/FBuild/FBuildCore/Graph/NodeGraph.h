@@ -252,7 +252,13 @@ private:
 										  uint32_t & totalNodeTime );
 
 	Node * FindNodeInternal( const AString & fullPath ) const;
-	size_t FindNearestNodesInternal( const AString & fullPath, const Node **nodes, uint32_t capacity ) const;
+
+	struct NodeWithDistance
+	{
+		Node * 		m_Node;
+		uint32_t 	m_Distance;
+	};
+	void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance = 5 ) const;
 
 	struct UsedFile;
 	bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, Array< UsedFile > & files, bool & compatibleDB ) const;
