@@ -45,6 +45,7 @@
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/LevenshteinDistance.h"
 #include "Core/Tracing/Tracing.h"
 
 #include <string.h>
@@ -1453,7 +1454,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
 	{
         for ( Node * node = m_NodeMap[i] ; nullptr != node ; node = node->m_Next )
 		{
-    		const uint32_t d = fullPath.EditDistanceI( node->GetName() );
+            const uint32_t d = LevenshteinDistance::DistanceI( fullPath, node->GetName() );
 
     		if ( d > maxDistance )
     			continue;
