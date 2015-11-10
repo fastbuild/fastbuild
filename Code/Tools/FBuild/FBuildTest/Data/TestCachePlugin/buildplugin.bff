@@ -47,6 +47,10 @@ DLL( 'Plugin-DLL' )
 	.LinkerOptions		+ ' -shared'
 	.LinkerOutput		= '$Out$/CachePlugin.so'
 #endif
+#if __OSX__
+	.LinkerOptions		+ ' -shared'
+	.LinkerOutput		= '$Out$/CachePlugin.so'
+#endif
 
 	.Libraries			= { 'CachePlugin-Lib' }
 }

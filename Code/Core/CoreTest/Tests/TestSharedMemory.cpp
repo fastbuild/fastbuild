@@ -14,7 +14,7 @@
 
 #if defined(__LINUX__) || defined(__APPLE__)
 	#include <sys/types.h>
-	#include <wait.h>
+	#include <sys/wait.h>
 	#include <unistd.h>
 #endif
 

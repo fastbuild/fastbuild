@@ -268,8 +268,10 @@ public:
 			{
 				(void)0;
 			}
-        #elif defined(__LINUX__) || defined(__APPLE__)
+        #elif defined( __LINUX__ )
             pthread_setname_np( (pthread_t)GetCurrentThreadId(), name );
+        #elif defined( __APPLE__ )
+            pthread_setname_np( name );            
         #else
             #error Unknown platform
 		#endif

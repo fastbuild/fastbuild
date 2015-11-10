@@ -13,6 +13,10 @@ Using( .StandardEnvironment )
 .CachePluginDLL = '../../../../ftmp/Test/CachePlugin/CachePlugin.so'
 #endif
 
+#if __OSX__
+.CachePluginDLL = '../../../../ftmp/Test/CachePlugin/CachePlugin.so'
+#endif
+
 .CachePath		= 'X:\' // passed to cache plugin
 Settings {} // Activate standard settings
 
