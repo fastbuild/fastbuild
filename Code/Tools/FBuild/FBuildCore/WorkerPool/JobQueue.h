@@ -25,7 +25,7 @@ class WorkerThread;
 class JobSubQueue
 {
 public:
-	explicit JobSubQueue();
+	JobSubQueue();
 	~JobSubQueue();
 
 	inline uint32_t GetCount() const { return m_Count; }
@@ -46,7 +46,7 @@ private:
 class JobQueue : public Singleton< JobQueue >
 {
 public:
-	JobQueue( uint32_t numWorkerThreads );
+	explicit JobQueue( uint32_t numWorkerThreads );
 	~JobQueue();
 
 	// main thread calls these

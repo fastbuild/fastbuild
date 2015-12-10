@@ -14,6 +14,7 @@
 // Core
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
+#include "Core/Network/Network.h"
 #include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
 
@@ -25,10 +26,6 @@
 // system
 #if defined( __WINDOWS__ )
     #include <commctrl.h>
-    #include <Winsock2.h>
-#endif
-#if defined( __LINUX__ ) || defined( __APPLE__ )
-    #include <unistd.h> // for gethostname - TODO: move functionality to Network
 #endif
 
 // Defines
@@ -173,12 +170,7 @@ WorkerWindow::WorkerWindow( void * hInstance )
 	#endif
 {
 	// obtain host name
-	m_HostName = "Unknown Host";
-	char buffer[ 512 ];
-	if ( ::gethostname( buffer, 512 ) == 0 )
-	{
-		m_HostName = buffer;
-	}
+	Network::GetHostName(m_HostName);
 
 	// spawn UI thread - this creates the window, which must be done
 	// on the same thread as we intend to process messages on 

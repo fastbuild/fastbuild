@@ -29,6 +29,9 @@ private:
 	void TestFunction() const;
 	void TestFunction_NoRebuild() const;
 	void TestFunction_Speed() const;
+	
+	// XCode
+	void XCode() const;
 };
 
 // Register Tests
@@ -38,6 +41,7 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
 	REGISTER_TEST( TestFunction )
 	REGISTER_TEST( TestFunction_NoRebuild )
 	REGISTER_TEST( TestFunction_Speed )
+	REGISTER_TEST( XCode )
 REGISTER_TESTS_END
 
 // Test
@@ -175,14 +179,18 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
 	EnsureFileExists( project );
 	EnsureFileExists( filters );
 
-	// Unity must be "built" every time, but it only writes files when they change
+	// Projects and Solutions must be "built" every time, but only write files when they change
 	// so record the time before and after
 	uint64_t dateTime1 = FileIO::GetFileLastWriteTime( project );
 	uint64_t dateTime2 = FileIO::GetFileLastWriteTime( filters );
 
-	// NTFS file resolution is 100ns, so sleep long enough to ensure
-	// an invalid write would modify the time
-	Thread::Sleep( 1 ); // 1ms
+	// NTFS file resolution is 100ns and HFS is 1 second, 
+    // so sleep long enough to ensure an invalid write would modify the time
+    #if defined( __WINDOWS__ )
+    	Thread::Sleep( 1 ); // 1ms
+    #else
+    	Thread::Sleep( 1000 ); // 1 second
+    #endif
 
 	// do build
 	FBuildOptions options;
@@ -257,6 +265,30 @@ void TestProjectGeneration::TestFunction_Speed() const
 		float time = t.GetElapsed();
 		OUTPUT( "Gen vcxproj.filters: %2.3fs\n", time );
 	}
+}
+
+// XCode
+//------------------------------------------------------------------------------
+void TestProjectGeneration::XCode() const
+{
+	AStackString<> project( "../../../../ftmp/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj" );
+	EnsureFileDoesNotExist( project );
+
+	// do build
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestProjectGeneration/xcodeproject.bff";
+	options.m_ShowSummary = true; // required to generate stats for node count checks
+	FBuild fBuild( options );
+	TEST_ASSERT( fBuild.Initialize() );
+
+	TEST_ASSERT( fBuild.Build( AStackString<>( "XCodeProj" ) ) );
+
+	// Check stats
+	//				 Seen,	Built,	Type
+	CheckStatsNode ( 0,		0,		Node::DIRECTORY_LIST_NODE );
+	CheckStatsNode ( 1,		1,		Node::XCODEPROJECT_NODE );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 2,		2 );
 }
 
 //------------------------------------------------------------------------------

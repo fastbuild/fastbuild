@@ -12,7 +12,7 @@
 
 // Core
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Math/Murmur3.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -344,7 +344,7 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
 	#endif
 
 	// quick check
-	uint32_t crc1 = Murmur3::Calc32( begin, end - begin );
+	uint32_t crc1 = xxHash::Calc32( begin, end - begin );
 	if ( crc1 == m_LastCRC1 )
 	{
 		return;
@@ -364,10 +364,10 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
 		// Windows and OSX are case-insensitive
 		AStackString<> lowerCopy( cleanInclude );
 		lowerCopy.ToLower();
-		uint32_t crc2 = Murmur3::Calc32( lowerCopy );
+		uint32_t crc2 = xxHash::Calc32( lowerCopy );
 	#else
 		// Linux is case-sensitive
-		uint32_t crc2 = Murmur3::Calc32( cleanInclude );
+		uint32_t crc2 = xxHash::Calc32( cleanInclude );
 	#endif
 	if ( crc2 == m_LastCRC2 )
 	{

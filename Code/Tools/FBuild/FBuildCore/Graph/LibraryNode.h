@@ -11,6 +11,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class Args;
 class CompilerNode;
 class DirectoryListNode;
 class ObjectNode;
@@ -35,6 +36,8 @@ public:
 						  const Dependencies & additionalInputs,
 						  bool deoptimizeWritableFiles,
 						  bool deoptimizeWritableFilesWithToken,
+						  bool allowDistribution,
+						  bool allowCaching,
                           CompilerNode * preprocessor,
                           const AString & preprocessorArgs );
 	virtual ~LibraryNode();
@@ -61,10 +64,12 @@ private:
 	virtual BuildResult DoBuild( Job * job ) override;
 
 	// internal helpers
-	void GetFullArgs( AString & fullArgs ) const;
-	void EmitCompilationMessage( const AString & fullArgs ) const;
+	bool BuildArgs( Args & fullArgs ) const;
+	void EmitCompilationMessage( const Args & fullArgs ) const;
 
 	inline bool GetFlag( Flag flag ) const { return ( ( m_Flags & (uint32_t)flag ) != 0 ); }
+
+	bool CanUseResponseFile() const;
 
 	AString m_LibrarianPath;
 	AString m_LibrarianArgs;

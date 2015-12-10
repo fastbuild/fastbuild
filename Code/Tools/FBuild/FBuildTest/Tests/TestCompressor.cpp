@@ -165,7 +165,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 	{
 		Compressor c;
 		c.Compress( data.Get(), dataSize );
-		compressedSize = c.GetResultSize();
+		TEST_ASSERT( c.GetResultSize() == compressedSize );
 	}
 	float compressTimeTaken = t.GetElapsed();
 	double compressThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)NUM_REPEATS ) / compressTimeTaken ) / 1024.0;

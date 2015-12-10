@@ -139,6 +139,7 @@ public:
 	size_t		GetArraySize( const void * object ) const;
 	void		ResizeArrayOfStruct( void * object, size_t newSize ) const;
 	Struct *	GetStructInArray( void * object, size_t index ) const;
+	const Struct *	GetStructInArray( const void * object, size_t index ) const;
 
 	inline const ReflectionInfo * GetStructReflectionInfo() const { return m_StructReflectionInfo; }
 private:

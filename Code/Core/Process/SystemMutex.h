@@ -13,7 +13,7 @@
 class SystemMutex
 {
 public:
-	SystemMutex( const char * );
+	explicit SystemMutex( const char * name );
 	~SystemMutex();
 
 	bool TryLock();

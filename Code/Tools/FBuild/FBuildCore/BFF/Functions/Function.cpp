@@ -25,6 +25,7 @@
 #include "FunctionUnity.h"
 #include "FunctionUsing.h"
 #include "FunctionVCXProject.h"
+#include "FunctionXCodeProject.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
@@ -124,6 +125,7 @@ Function::~Function()
 	FNEW( FunctionUsing );
 	FNEW( FunctionVCXProject );
 	FNEW( FunctionObjectList );
+	FNEW( FunctionXCodeProject );
 }
 
 // Destroy
@@ -845,6 +847,11 @@ bool Function::GetNameForNode( const BFFIterator & iter, const ReflectionInfo * 
 
 	// Find the value for this property from the BFF
 	const BFFVariable * variable = BFFStackFrame::GetVar( propertyName );
+    if ( variable == nullptr )
+    {
+        Error::Error_1101_MissingProperty( iter, this, propertyName );
+        return false;        
+    }
 	if ( variable->IsString() )
 	{
 		// Handle empty strings
@@ -900,64 +907,70 @@ bool Function::PopulateProperties( const BFFIterator & iter, Node * node ) const
 		// Find the value for this property from the BFF
 		const BFFVariable * v = BFFStackFrame::GetVar( propertyName );
 
-		// Handle missing but required
-		if ( v == nullptr )
+		if ( !PopulateProperty( iter, node, property, v ) )
 		{
-			const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
-			if ( required )
-			{
-				Error::Error_1101_MissingProperty( iter, this, propertyName );
-				return false;
-			}
-
-			continue; // missing but not required
-		}
-
-		const PropertyType pt = property.GetType();
-		switch ( pt )
-		{
-			case PT_ASTRING:
-			{
-				if ( property.IsArray() )
-				{
-					if ( !PopulateArrayOfStrings( iter, node, property, v ) )
-					{
-						return false;
-					}
-				}
-				else
-				{
-					if ( !PopulateString( iter, node, property, v ) )
-					{
-						return false;
-					}
-				}
-				break;
-			}
-			case PT_BOOL:
-			{
-				if ( !PopulateBool( iter, node, property, v ) )
-				{
-					return false;
-				}
-				break;
-			}
-			case PT_UINT32:
-			{
-				if ( !PopulateUInt32( iter, node, property, v ) )
-				{
-					return false;
-				}
-				break;
-			}
-			default:
-			{
-				ASSERT( false ); // Unsupported type
-				return false;
-			}
+			return false; // PopulateProperty will have emitted an error
 		}
 	}
 	return true;
+}
+
+// PopulateProperty
+//------------------------------------------------------------------------------
+bool Function::PopulateProperty( const BFFIterator & iter,
+								 void * base,
+								 const ReflectedProperty & property,
+								 const BFFVariable * variable ) const
+{
+	// Handle missing but required
+	if ( variable == nullptr )
+	{
+		const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
+		if ( required )
+		{
+			Error::Error_1101_MissingProperty( iter, this, AStackString<>( property.GetName() ) );
+			return false;
+		}
+
+		return true; // missing but not required
+	}
+
+	const PropertyType pt = property.GetType();
+	switch ( pt )
+	{
+		case PT_ASTRING:
+		{
+			if ( property.IsArray() )
+			{
+				return PopulateArrayOfStrings( iter, base, property, variable );
+			}
+			else
+			{
+				return PopulateString( iter, base, property, variable );
+			}
+		}
+		case PT_BOOL:
+		{
+			return PopulateBool( iter, base, property, variable );
+		}
+		case PT_UINT32:
+		{
+			return PopulateUInt32( iter, base, property, variable );
+		}
+		case PT_STRUCT:
+		{
+			if ( property.IsArray() )
+			{
+				return PopulateArrayOfStructs( iter, base, property, variable );
+			}
+		}
+		default:
+		{
+            break;
+		}
+	}
+	ASSERT( false ); // Unsupported type
+	return false;
 }
 
 // PopulatePathAndFileHelper
@@ -1013,7 +1026,7 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 
 // PopulateArrayOfStrings
 //------------------------------------------------------------------------------
-bool Function::PopulateArrayOfStrings( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
+bool Function::PopulateArrayOfStrings( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
 	// Array to Array
 	if ( variable->IsArrayOfStrings() )
@@ -1039,7 +1052,7 @@ bool Function::PopulateArrayOfStrings( const BFFIterator & iter, Node * node, co
 			}
 		}
 
-		property.SetProperty( node, strings );
+		property.SetProperty( base, strings );
 		return true;
 	}
 
@@ -1068,7 +1081,7 @@ bool Function::PopulateArrayOfStrings( const BFFIterator & iter, Node * node, co
 		// Make array with 1 string
 		Array< AString > strings( 1, false );
 		strings.Append( string );
-		property.SetProperty( node, strings );
+		property.SetProperty( base, strings );
 		return true;
 	}
 
@@ -1078,7 +1091,7 @@ bool Function::PopulateArrayOfStrings( const BFFIterator & iter, Node * node, co
 
 // PopulateString
 //------------------------------------------------------------------------------
-bool Function::PopulateString( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
+bool Function::PopulateString( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
 	if ( variable->IsString() )
 	{
@@ -1103,7 +1116,7 @@ bool Function::PopulateString( const BFFIterator & iter, Node * node, const Refl
 		}
 
 		// String to String
-		property.SetProperty( node, string );
+		property.SetProperty( base, string );
 		return true;
 	}
 
@@ -1113,12 +1126,12 @@ bool Function::PopulateString( const BFFIterator & iter, Node * node, const Refl
 
 // PopulateBool
 //------------------------------------------------------------------------------
-bool Function::PopulateBool( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
+bool Function::PopulateBool( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
 	if ( variable->IsBool() )
 	{
 		// Bool to Bool
-		property.SetProperty( node, variable->GetBool() );
+		property.SetProperty( base, variable->GetBool() );
 		return true;
 	}
 
@@ -1128,7 +1141,7 @@ bool Function::PopulateBool( const BFFIterator & iter, Node * node, const Reflec
 
 // PopulateUInt32
 //------------------------------------------------------------------------------
-bool Function::PopulateUInt32( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const
+bool Function::PopulateUInt32( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
 	if ( variable->IsInt() )
 	{
@@ -1146,11 +1159,85 @@ bool Function::PopulateUInt32( const BFFIterator & iter, Node * node, const Refl
 		}
 
 		// Int32 to UInt32
-		property.SetProperty( node, (uint32_t)value );
+		property.SetProperty( base, (uint32_t)value );
 		return true;
 	}
 
 	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_INT );
+	return false;
+}
+
+// PopulateArrayOfStructs
+//------------------------------------------------------------------------------
+bool Function::PopulateArrayOfStructs( const BFFIterator & iter, 
+									   void * base,
+									   const ReflectedProperty & property, 
+									   const BFFVariable * variable ) const
+{
+	// Get the destionation
+	const ReflectedPropertyStruct & dstStructs = static_cast< const ReflectedPropertyStruct & >( property );
+	ASSERT( dstStructs.IsArray() );
+	const ReflectionInfo * ri = dstStructs.GetStructReflectionInfo();
+
+	// Array to Array
+	if ( variable->IsArrayOfStructs() )
+	{
+		// pre-size the destination
+		const auto & srcStructs = variable->GetArrayOfStructs();
+		dstStructs.ResizeArrayOfStruct( base, srcStructs.GetSize() );
+		
+		// Set the properties of each struct
+		size_t index( 0 );
+		for ( const auto * s : srcStructs )
+		{
+			// Calculate the base for this struct in the array
+			void * structBase = dstStructs.GetStructInArray( base, index );
+
+			// Try to populate all the properties for this struct
+			for ( auto it = ri->Begin(); it != ri->End(); ++it )
+			{
+				AStackString<> propertyName( "." ); // TODO:C Eliminate copy
+				propertyName += (*it).GetName();
+				
+				// Try to find property in BFF
+				const BFFVariable ** found = BFFVariable::GetMemberByName( propertyName, s->GetStructMembers() );
+				const BFFVariable * var = found ? *found : nullptr;
+				if ( !PopulateProperty( iter, structBase, *it, var ) )
+				{
+					return false; // PopulateProperty will have emitted an error
+				}
+			}
+			++index;
+		}
+		return true;
+	}
+
+	if ( variable->IsStruct() )
+	{
+		// pre-size the destination
+		dstStructs.ResizeArrayOfStruct( base, 1 );
+
+		// Calculate the base for this struct in the array
+		void * structBase = dstStructs.GetStructInArray( base, 0 );
+
+		// Try to populate all the properties for this struct
+		for ( auto it = ri->Begin(); it != ri->End(); ++it )
+		{
+			AStackString<> propertyName( "." ); // TODO:C Eliminate copy
+			propertyName += (*it).GetName();
+				
+			// Try to find property in BFF
+			const BFFVariable ** found = BFFVariable::GetMemberByName( propertyName, variable->GetStructMembers() );
+			const BFFVariable * var = found ? *found : nullptr;
+			if ( !PopulateProperty( iter, structBase, *it, var ) )
+			{
+				return false; // PopulateProperty will have emitted an error
+			}
+		}
+		return true;
+	}
+
+	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRUCT, BFFVariable::VAR_ARRAY_OF_STRUCTS );
 	return false;
 }
 

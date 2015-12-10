@@ -62,6 +62,7 @@ public:
 		uint32_t m_NumCacheStores;
 
 		uint32_t m_ProcessingTimeMS;
+		uint32_t m_NumFailed;
 	};
 
 	void FormatTime( float timeInSeconds , AString & buffer  ) const;

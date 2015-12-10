@@ -174,9 +174,18 @@ FunctionObjectList::FunctionObjectList()
 		return false;
 	}
 
+	// cache & distribution control
+	bool allowDistribution( true );
+	bool allowCaching( true );
+	if ( !GetBool( funcStartIter, allowDistribution, ".AllowDistribution", true ) ||
+		 !GetBool( funcStartIter, allowCaching, ".AllowCaching", true ) )
+	{
+		return false; // GetBool will have emitted error
+	}
+
 	// Precompiled Header support
 	ObjectNode * precompiledHeaderNode = nullptr;
-	if ( !GetPrecompiledHeaderNode( funcStartIter, compilerNode, objFlags, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken ) )
+	if ( !GetPrecompiledHeaderNode( funcStartIter, compilerNode, objFlags, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching ) )
 	{
 		return false; // GetPrecompiledHeaderNode will have emitted error
 	}
@@ -215,6 +224,8 @@ FunctionObjectList::FunctionObjectList()
 												  preBuildDependencies,
 												  deoptimizeWritableFiles,
 												  deoptimizeWritableFilesWithToken,
+												  allowDistribution,
+												  allowCaching,
                                                   preprocessorNode,
                                                   preprocessorOptions ? preprocessorOptions->GetString() : AString::GetEmpty() );
 	if ( compilerOutputExtension )
@@ -251,13 +262,10 @@ bool FunctionObjectList::GetCompilerNode( const BFFIterator & iter, const AStrin
 	{
 		// create a compiler node - don't allow distribution
 		// (only explicitly defined compiler nodes can be distributed)
-#ifdef USE_NODE_REFLECTION
-		compilerNode = ng.CreateCompilerNode( compiler );
+		AStackString<> compilerClean;
+		NodeGraph::CleanPath( compiler, compilerClean );
+		compilerNode = ng.CreateCompilerNode( compilerClean );
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
-#else
-		const bool allowDistribution = false;
-		compilerNode = ng.CreateCompilerNode( compiler, Dependencies( 0, false ), allowDistribution );
-#endif
 	}
 
 	return true;
@@ -272,7 +280,9 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( const BFFIterator & iter,
 												   const Dependencies & compilerForceUsing,
 												   ObjectNode * & precompiledHeaderNode,
 												   bool deoptimizeWritableFiles,
-												   bool deoptimizeWritableFilesWithToken ) const
+												   bool deoptimizeWritableFilesWithToken,
+												   bool allowDistribution,
+												   bool allowCaching ) const
 {
 	const BFFVariable * pchInputFile = nullptr;
 	const BFFVariable * pchOutputFile = nullptr;
@@ -373,6 +383,8 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( const BFFIterator & iter,
 													 compilerForceUsing,
 													 deoptimizeWritableFiles,
 													 deoptimizeWritableFilesWithToken,
+												     allowDistribution,
+													 allowCaching,
                                                      nullptr, AString::GetEmpty(), 0 ); // preprocessor args not supported
 	}
 

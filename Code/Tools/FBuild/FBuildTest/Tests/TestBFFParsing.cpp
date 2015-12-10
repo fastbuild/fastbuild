@@ -39,8 +39,10 @@ private:
 	void BadUndefDirective() const;
 	void BadUndefBuiltInDirective() const;
 	void ParentScope() const;
+	void ParentScopeBug() const;
 	void ParentScopeUnknown() const;
 	void FrozenVariable() const;
+	void DynamicVarNameConstruction() const;
 
 	void Parse( const char * fileName, bool expectFailure = false ) const;
 };
@@ -69,8 +71,10 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
 	REGISTER_TEST( BadUndefDirective )
 	REGISTER_TEST( BadUndefBuiltInDirective )
 	REGISTER_TEST( ParentScope )
+	REGISTER_TEST( ParentScopeBug )
 	REGISTER_TEST( ParentScopeUnknown )
 	REGISTER_TEST( FrozenVariable )
+	REGISTER_TEST( DynamicVarNameConstruction )
 REGISTER_TESTS_END
 
 // Empty
@@ -250,6 +254,13 @@ void TestBFFParsing::ParentScope() const
 	Parse( "Data/TestBFFParsing/parent_scope.bff" );
 }
 
+// ParentScopeBug
+//------------------------------------------------------------------------------
+void TestBFFParsing::ParentScopeBug() const
+{
+	Parse( "Data/TestBFFParsing/parent_scope_bug.bff" );
+}
+
 // ParentScopeUnknown
 //------------------------------------------------------------------------------
 void TestBFFParsing::ParentScopeUnknown() const
@@ -262,6 +273,13 @@ void TestBFFParsing::ParentScopeUnknown() const
 void TestBFFParsing::FrozenVariable() const
 {
 	Parse( "Data/TestBFFParsing/frozen_foreach.bff", true ); // expect failure
+}
+
+// DynamicVarNameConstruction
+//------------------------------------------------------------------------------
+void TestBFFParsing::DynamicVarNameConstruction() const
+{
+	Parse( "Data/TestBFFParsing/dynamic_var_name_construction.bff" );
 }
 
 //------------------------------------------------------------------------------

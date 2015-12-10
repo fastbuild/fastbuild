@@ -53,6 +53,7 @@ FBuildStats::Stats::Stats()
 	, m_NumCacheMisses( 0 )
 	, m_NumCacheStores( 0 )
 	, m_ProcessingTimeMS( 0 )
+	, m_NumFailed( 0 )
 {}
 
 // OnBuildStop
@@ -240,6 +241,10 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
 		if ( node->GetStatFlag( Node::STATS_BUILT ) )
 		{
 			stats.m_NumBuilt++;
+		}
+		if ( node->GetStatFlag( Node::STATS_FAILED ) )
+		{
+			stats.m_NumFailed++;
 		}
 		if ( node->GetStatFlag( Node::STATS_CACHE_HIT ) )
 		{

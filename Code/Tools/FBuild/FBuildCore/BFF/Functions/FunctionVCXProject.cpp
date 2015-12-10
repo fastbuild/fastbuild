@@ -13,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 
 // Core
 #include "Core/Strings/AStackString.h"
@@ -77,25 +78,18 @@ FunctionVCXProject::FunctionVCXProject()
 	}
 
 	// permitted file extensions
-	Array< AString > allowedFileExtensions( 8, true );
+	Array< AString > allowedFileExtensions( 0, true );
 	if ( !GetStrings( funcStartIter, allowedFileExtensions, ".ProjectAllowedFileExtensions", false ) )
 	{
 		return true;
 	}
 	if ( allowedFileExtensions.IsEmpty() )
 	{
-		const char * extensions[] = { ".cpp", ".hpp", ".cxx",".hxx",".c",".h",".cc",".hh",
-									  ".cp",".hp",".cs",".inl",".bff",".rc",".resx",".m",".mm",
-									  ".cu",
-									  nullptr };
-		AStackString<> tmp;
-		const char ** item = extensions;
-		while ( *item )
-		{
-			tmp.Assign( *item );
-			allowedFileExtensions.Append( tmp );
-			++item;
-		}
+		ProjectGeneratorBase::GetDefaultAllowedFileExtensions( allowedFileExtensions );
+	}
+	else
+	{
+		ProjectGeneratorBase::FixupAllowedFileExtensions( allowedFileExtensions );
 	}
 
 	// files and filesToExclude
@@ -271,7 +265,7 @@ FunctionVCXProject::FunctionVCXProject()
 
 	// create all of the DirectoryListNodes we need
 	Dependencies dirNodes( inputPaths.GetSize() );
-	if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, Array< AString >(), Array< AString >(), true, nullptr, "ProjectInputPaths", dirNodes ) )
+	if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, Array< AString >(), Array< AString >(), true, &allowedFileExtensions, "ProjectInputPaths", dirNodes ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}
@@ -287,7 +281,6 @@ FunctionVCXProject::FunctionVCXProject()
 												   basePaths,
 												   dirNodes,
 												   inputPathsExclude, // TODO:B Remove this (handled by DirectoryListNode now)
-												   allowedFileExtensions, // TODO:B Remove this (handled by DirectoryListNode now)
 												   files,
 												   filesToExclude,
 												   rootNamespace,

@@ -18,7 +18,7 @@ class Job;
 class WorkerThreadRemote : public WorkerThread
 {
 public:
-	WorkerThreadRemote( uint32_t threadIndex );
+	explicit WorkerThreadRemote( uint32_t threadIndex );
 	virtual ~WorkerThreadRemote();
 
 	void GetStatus( AString & hostName, AString & status, bool & isIdle ) const;

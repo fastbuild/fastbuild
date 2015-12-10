@@ -46,7 +46,7 @@ Process::Process()
 #endif
 {
     #if defined( __WINDOWS__ )
-        CTASSERT( sizeof( m_ProcessInfo ) == sizeof( PROCESS_INFORMATION ) );
+        static_assert( sizeof( m_ProcessInfo ) == sizeof( PROCESS_INFORMATION ), "Unexpected sizeof(PROCESS_INFORMATION)" );
     #endif
 }
 

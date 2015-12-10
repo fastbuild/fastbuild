@@ -15,7 +15,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Math/Murmur3.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
@@ -114,12 +114,10 @@ bool ToolManifest::Generate( const Node * mainExecutable, const Dependencies & d
 		// file name & sub-path (relative to remote folder)
 		AStackString<> relativePath;
 		GetRemoteFilePath( (uint32_t)i, relativePath, false ); // false = don't use full path
-		*pos = Murmur3::Calc32( relativePath );
+		*pos = xxHash::Calc32( relativePath );
 		++pos;
 	}
-	uint64_t hashA, hashB;
-	hashA = Murmur3::Calc128( mem, memSize, hashB );
-	m_ToolId = hashA ^ hashB; // xor merge
+	m_ToolId = xxHash::Calc64( mem, memSize );
 	FREE( mem );
 
 	// update time stamp (most recent file in manifest)
@@ -206,7 +204,7 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
 		{
 			continue; // problem reading file
 		}
-		if( Murmur3::Calc32( mem.Get(), (size_t)f.GetFileSize() ) != m_Files[ i ].m_Hash )
+		if( xxHash::Calc32( mem.Get(), (size_t)f.GetFileSize() ) != m_Files[ i ].m_Hash )
 		{
 			continue; // file contents unexpected
 		}
@@ -408,6 +406,26 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
 	return true; // file stored ok
 }
 
+// GetRelativePath
+//------------------------------------------------------------------------------
+/*static*/ void ToolManifest::GetRelativePath( const AString & mainExe, const AString & otherFile, AString & otherFileRelativePath )
+{
+	// determine primary root
+	AStackString<> primaryPath( mainExe.Get(), mainExe.FindLast( NATIVE_SLASH ) + 1 ); // include backslash
+
+	if ( otherFile.BeginsWithI( primaryPath ) )
+	{
+		// file is in sub dir on master machine, so store with same relative location
+		otherFileRelativePath += ( otherFile.Get() + primaryPath.GetLength() );
+	}
+	else
+	{
+		// file is in some completely other directory, so put in same place as exe
+		const char * lastSlash = otherFile.FindLast( NATIVE_SLASH );
+		otherFileRelativePath += ( lastSlash ? lastSlash + 1 : otherFile.Get() );
+	}
+}
+
 // GetRemoteFilePath
 //------------------------------------------------------------------------------
 void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & exe, bool fullPath ) const
@@ -424,21 +442,9 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & exe, bool fullP
 
 	// determine primary root
 	const File & primaryFile = m_Files[ 0 ];
-	AStackString<> primaryPath( primaryFile.m_Name.Get(), primaryFile.m_Name.FindLast( NATIVE_SLASH ) + 1 ); // include backslash
-
 	const File & f = m_Files[ fileId ];
-	if ( f.m_Name.BeginsWithI( primaryPath ) )
-	{
-		// file is in sub dir on master machine, so store with same relative location
-		exe += ( f.m_Name.Get() + primaryPath.GetLength() );
-	}
-	else
-	{
-		// file is in some completely other directory, so put in same place as exe
-		const char * lastSlash = f.m_Name.FindLast( NATIVE_SLASH );
-		lastSlash = lastSlash ? lastSlash + 1 : f.m_Name.Get();
-		exe += AStackString<>( lastSlash, f.m_Name.GetEnd() );
-	}
+
+	GetRelativePath( primaryFile.m_Name, f.m_Name, exe );
 }
 
 // GetRemotePath
@@ -471,7 +477,7 @@ bool ToolManifest::AddFile( const Node * node )
 	// create the file entry
 	const AString & name = node->GetName();
 	const uint64_t timeStamp = node->GetStamp();
-	const uint32_t hash = Murmur3::Calc32( content, contentSize );
+	const uint32_t hash = xxHash::Calc32( content, contentSize );
 	m_Files.Append( File(name, timeStamp, hash, node, contentSize ) );
 
 	// store file content (take ownership of file data)

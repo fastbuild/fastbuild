@@ -73,10 +73,9 @@ public:
 
 	void SetProjectName( const AString & name ) { m_ProjectName = name; }
 	void SetBasePaths( const Array< AString > & paths );
-	void SetAllowedFileExtensions( Array< AString > & extensions ) { m_AllowedFileExtensions = extensions; }
 
-	void AddFile( const AString & file, bool filterByExtension = true );
-	void AddFiles( const Array< AString > & files, bool filterByExtension = true );
+	void AddFile( const AString & file );
+	void AddFiles( const Array< AString > & files );
 
 	void SetRootNamespace( const AString & s )			{ m_RootNamespace = s; }
 	void SetProjectGuid( const AString & s )			{ m_ProjectGuid = s; }
@@ -104,7 +103,6 @@ private:
 	// project details
 	AString m_ProjectName;
 	Array< AString > m_BasePaths;
-	Array< AString > m_AllowedFileExtensions;
 
 	// Globals
 	AString m_RootNamespace;

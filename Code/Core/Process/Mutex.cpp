@@ -22,7 +22,7 @@
 Mutex::Mutex()
 { 
     #if defined( __WINDOWS__ )
-        CTASSERT( sizeof( m_CriticalSection ) == sizeof( CRITICAL_SECTION ) );
+        static_assert( sizeof( m_CriticalSection ) == sizeof( CRITICAL_SECTION ), "Unexpected sizeof(CRITICAL_SECTION)" );
 
         VERIFY( InitializeCriticalSectionAndSpinCount( (CRITICAL_SECTION *)&m_CriticalSection, 100 ) );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )

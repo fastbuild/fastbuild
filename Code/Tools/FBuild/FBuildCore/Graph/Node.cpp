@@ -30,6 +30,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
@@ -69,6 +70,7 @@
 	"CopyDirNode",
 	"SLN",
 	"RemoveDirNode",
+	"XCodeProj",
 };
 
 // Custom MetaData
@@ -102,7 +104,7 @@ Node::Node( const AString & name, Type type, uint32_t controlFlags )
 	SetName( name );
 
 	// Compile time check to ensure name vector is in sync
-	CTASSERT( sizeof( s_NodeTypeNames ) / sizeof(const char *) == NUM_NODE_TYPES );
+	static_assert( sizeof( s_NodeTypeNames ) / sizeof(const char *) == NUM_NODE_TYPES, "s_NodeTypeNames item count doesn't match NUM_NODE_TYPES" );
 }
 
 // DESTRUCTOR
@@ -419,6 +421,7 @@ void Node::SaveNode( IOStream & fileStream, const Node * node ) const
 		case Node::COPY_DIR_NODE:		n = CopyDirNode::Load( stream );		break;
 		case Node::SLN_NODE:			n = SLNNode::Load( stream );			break;
 		case Node::REMOVE_DIR_NODE:		n = RemoveDirNode::Load( stream );		break;
+		case Node::XCODEPROJECT_NODE:	n = XCodeProjectNode::Load( stream );	break;
 		case Node::NUM_NODE_TYPES:		ASSERT( false );						break;
 	}
 
@@ -507,51 +510,83 @@ void Node::Serialize( IOStream & stream ) const
 
 	// Properties
 	const ReflectionInfo * const ri = GetReflectionInfoV();
-	const ReflectionIter end = ri->End();
-	for ( ReflectionIter it = ri->Begin(); it != end; ++it )
+	Serialize( stream, this, *ri );
+}
+
+// Serialize
+//------------------------------------------------------------------------------
+/*static*/ void Node::Serialize( IOStream & stream, const void * base, const ReflectionInfo & ri )
+{
+	const ReflectionIter end = ri.End();
+	for ( ReflectionIter it = ri.Begin(); it != end; ++it )
 	{
 		const ReflectedProperty & property = *it;
+		Serialize( stream, base, property );
+	}
+}
 
-		const PropertyType pt = property.GetType();
-		switch ( pt )
+// Serialize
+//------------------------------------------------------------------------------
+/*static*/ void Node::Serialize( IOStream & stream, const void * base, const ReflectedProperty & property )
+{
+	const PropertyType pt = property.GetType();
+	switch ( pt )
+	{
+		case PT_ASTRING:
 		{
-			case PT_ASTRING:
+			if ( property.IsArray() )
 			{
-				if ( property.IsArray() )
+				const Array< AString > * arrayOfStrings( nullptr );
+				property.GetProperty( base, arrayOfStrings );
+				VERIFY( stream.Write( *arrayOfStrings ) );
+			}
+			else
+			{
+				AString string; // TODO:C remove this copy
+				property.GetProperty( base, &string );
+				VERIFY( stream.Write( string ) );
+			}
+			return;
+		}
+		case PT_BOOL:
+		{
+			bool b( false );
+			property.GetProperty( base, &b );
+			VERIFY( stream.Write( b ) );
+			return;
+		}
+		case PT_UINT32:
+		{
+			uint32_t u32( 0 );
+			property.GetProperty( base, &u32 );
+			VERIFY( stream.Write( u32 ) );
+			return;
+		}
+		case PT_STRUCT:
+		{	
+			if ( property.IsArray() )
+			{
+				// Write number of elements
+				const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+				const uint32_t numElements = (uint32_t)propertyS.GetArraySize( base );
+				VERIFY( stream.Write( numElements ) );
+				
+				// Write each element
+				for ( uint32_t i=0; i<numElements; ++i )
 				{
-					const Array< AString > * arrayOfStrings( nullptr );
-					property.GetProperty( this, arrayOfStrings );
-					VERIFY( stream.Write( *arrayOfStrings ) );
+					const void * structBase = propertyS.GetStructInArray( base, (size_t)i );
+					Serialize( stream, structBase, *propertyS.GetStructReflectionInfo() );
 				}
-				else
-				{
-					AString string; // TODO:C remove this copy
-					property.GetProperty( this, &string );
-					VERIFY( stream.Write( string ) );
-				}
-				break;
+				return;
 			}
-			case PT_BOOL:
-			{
-				bool b( false );
-				property.GetProperty( this, &b );
-				VERIFY( stream.Write( b ) );
-				break;
-			}
-			case PT_UINT32:
-			{
-				uint32_t u32( 0 );
-				property.GetProperty( this, &u32 );
-				VERIFY( stream.Write( u32 ) );
-				break;
-			}
-			default:
-			{
-				ASSERT( false ); // Unsupported type
-				break;
-			}
+			break; // Fall through to error
+		}
+		default:
+		{
+			break; // Fall through to error
 		}
 	}
+	ASSERT( false ); // Unsupported type
 }
 
 // Deserialize
@@ -571,65 +606,108 @@ bool Node::Deserialize( IOStream & stream )
 
 	// Properties
 	const ReflectionInfo * const ri = GetReflectionInfoV();
-	const ReflectionIter end = ri->End();
-	for ( ReflectionIter it = ri->Begin(); it != end; ++it )
+	return Deserialize( stream, this, *ri );
+}
+
+// Deserialize
+//------------------------------------------------------------------------------
+/*static*/ bool Node::Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri )
+{
+	const ReflectionIter end = ri.End();
+	for ( ReflectionIter it = ri.Begin(); it != end; ++it )
 	{
 		const ReflectedProperty & property = *it;
-
-		const PropertyType pt = property.GetType();
-		switch ( pt )
+		if ( !Deserialize( stream, base, property ) )
 		{
-			case PT_ASTRING:
+			return false;
+		}
+	}
+	return true;
+}
+
+// Deserialize
+//------------------------------------------------------------------------------
+/*static*/ bool Node::Deserialize( IOStream & stream, void * base, const ReflectedProperty & property )
+{
+	const PropertyType pt = property.GetType();
+	switch ( pt )
+	{
+		case PT_ASTRING:
+		{
+			if ( property.IsArray() )
 			{
-				if ( property.IsArray() )
-				{
-					Array< AString > arrayOfStrings; // TODO:C Eliminate this copy
-					if ( stream.Read( arrayOfStrings ) == false )
-					{
-						return false;
-					}
-					property.SetProperty( this, arrayOfStrings );
-				}
-				else
-				{
-					AStackString<> string; // TODO:C remove this copy
-					if ( stream.Read( string ) == false )
-					{
-						return false;
-					}
-					property.SetProperty( this, string );
-				}
-				break;
-			}
-			case PT_BOOL:
-			{
-				bool b( false );
-				if ( stream.Read( b ) == false )
+				Array< AString > arrayOfStrings; // TODO:C Eliminate this copy
+				if ( stream.Read( arrayOfStrings ) == false )
 				{
 					return false;
 				}
-				property.SetProperty( this, b );
-				break;
+				property.SetProperty( base, arrayOfStrings );
 			}
-			case PT_UINT32:
+			else
 			{
-				uint32_t u32( 0 );
-				if ( stream.Read( u32 ) == false )
+				AStackString<> string; // TODO:C remove this copy
+				if ( stream.Read( string ) == false )
 				{
 					return false;
 				}
-				property.SetProperty( this, u32 );
-				break;
+				property.SetProperty( base, string );
 			}
-			default:
+			return true;
+		}
+		case PT_BOOL:
+		{
+			bool b( false );
+			if ( stream.Read( b ) == false )
 			{
-				ASSERT( false ); // Unsupported type
-				break;
+				return false;
 			}
+			property.SetProperty( base, b );
+			return true;
+		}
+		case PT_UINT32:
+		{
+			uint32_t u32( 0 );
+			if ( stream.Read( u32 ) == false )
+			{
+				return false;
+			}
+			property.SetProperty( base, u32 );
+			return true;
+		}
+		case PT_STRUCT:
+		{
+			if ( property.IsArray() )
+			{
+				// Read number of elements
+				uint32_t numElements( 0 );
+				if ( stream.Read( numElements ) == false )
+				{
+					return false;
+				}
+				const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+				propertyS.ResizeArrayOfStruct( base, numElements );
+				
+				// Read each element
+				for ( uint32_t i=0; i<numElements; ++i )
+				{
+					void * structBase = propertyS.GetStructInArray( base, (size_t)i );
+					if ( Deserialize( stream, structBase, *propertyS.GetStructReflectionInfo() ) == false )
+					{
+						return false;
+					}
+				}
+				return true;
+			}
+			break; // Fall through to error
+		}
+		default:
+		{
+			break; // Fall through to error
 		}
 	}
 
-	return true;
+	ASSERT( false ); // Unsupported type
+	return false;
 }
 
 // SetName

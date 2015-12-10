@@ -14,6 +14,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class Args;
 class NodeProxy;
 
 // ObjectNode
@@ -31,6 +32,8 @@ public:
 						 const Dependencies & compilerForceUsing,
 						 bool deoptimizeWritableFiles,
 						 bool deoptimizeWritableFilesWithToken,
+						 bool allowDistribution,
+						 bool allowCaching,
                          Node * preprocessorNode,
                          const AString & preprocessorArgs,
                          uint32_t preprocessorFlags);
@@ -62,6 +65,7 @@ public:
 		GREENHILLS_WIIU			=	0x4000,
 		FLAG_CUDA_NVCC			=   0x10000,
 		FLAG_INCLUDES_IN_STDERR =   0x20000,
+		FLAG_QT_RCC				=   0x40000,
 	};
 	static uint32_t DetermineFlags( const Node * compilerNode, const AString & args );
 
@@ -85,6 +89,7 @@ public:
 
 	const char * GetObjExtension() const;
 private:
+	virtual bool DoDynamicDependencies( bool forceClean ) override;
 	virtual BuildResult DoBuild( Job * job ) override;
 	virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
 	virtual bool Finalize() override;
@@ -92,6 +97,7 @@ private:
 	BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
 	BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache );
 	BuildResult DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob );
+	BuildResult DoBuild_QtRCC( Job * job );
 	BuildResult DoBuildOther( Job * job, bool useDeoptimization );
 
 	bool ProcessIncludesMSCL( const char * output, uint32_t outputSize );
@@ -103,7 +109,7 @@ private:
 
 	static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
 
-	void EmitCompilationMessage( const AString & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false ) const;
+	void EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false, bool isRemote = false ) const;
 
 	enum Pass
 	{
@@ -113,12 +119,13 @@ private:
 	};
 	static bool StripTokenWithArg( const char * tokenToCheckFor, const AString & token, size_t & index );
 	static bool StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
-	void BuildFullArgs( const Job * job, AString & fullArgs, Pass pass, bool useDeoptimization ) const;
+	bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
-	void ExpandTokenList( const Dependencies & nodes, AString & fullArgs, const AString & pre, const AString & post ) const;
-	bool BuildPreprocessedOutput( const AString & fullArgs, Job * job, bool useDeoptimization ) const;
+	void ExpandTokenList( const Dependencies & nodes, Args & fullArgs, const AString & pre, const AString & post ) const;
+	bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
+	void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
 	bool WriteTmpFile( Job * job, AString & tmpFileName ) const;
-	bool BuildFinalOutput( Job * job, const AString & fullArgs ) const;
+	bool BuildFinalOutput( Job * job, const Args & fullArgs ) const;
 
 	inline bool GetFlag( uint32_t flag ) const { return ( ( m_Flags & flag ) != 0 ); }
 	inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
@@ -127,15 +134,16 @@ private:
 	bool ShouldUseDeoptimization() const;
 	friend class Client;
 	bool ShouldUseCache() const;
+	bool CanUseResponseFile() const;
 
 	class CompileHelper
 	{
 	public:
-		CompileHelper( bool handleOutput = true );
+		explicit CompileHelper( bool handleOutput = true );
 		~CompileHelper();
 
 		// start compilation
-		bool SpawnCompiler( Job * job, const AString & name, const AString & compiler, const AString & fullArgs, bool useResponseFile, const char * workingDir = nullptr );
+		bool SpawnCompiler( Job * job, const AString & name, const AString & compiler, const Args & fullArgs, const char * workingDir = nullptr );
 
 		// determine overall result
 		inline int						GetResult() const { return m_Result; }
@@ -164,6 +172,8 @@ private:
 	Dependencies m_CompilerForceUsing;
 	bool m_DeoptimizeWritableFiles;
 	bool m_DeoptimizeWritableFilesWithToken;
+	bool m_AllowDistribution;
+	bool m_AllowCaching;
 	bool m_Remote;
     Node* m_PCHNode;
     Node* m_PreprocessorNode;

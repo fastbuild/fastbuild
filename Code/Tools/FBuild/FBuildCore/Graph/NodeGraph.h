@@ -39,6 +39,7 @@ class SLNNode;
 class TestNode;
 class UnityNode;
 class VCXProjectNode;
+class XCodeProjectNode;
 
 // NodeGraphHeader
 //------------------------------------------------------------------------------
@@ -54,7 +55,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 72 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 75 };
 
 	bool IsValid() const
 	{
@@ -128,6 +129,8 @@ public:
 									   const Dependencies & additionalInputs,
 									   bool deoptimizeWritableFiles,
 									   bool deoptimizeWritableFilesWithToken,
+									   bool allowDistribution,
+									   bool allowCaching,
                                        CompilerNode * preprocessor,
                                        const AString & preprocessorArgs );
 	ObjectNode *	CreateObjectNode( const AString & objectName,
@@ -140,6 +143,8 @@ public:
 									  const Dependencies & compilerForceUsing,
 									  bool deoptimizeWritableFiles,
 									  bool deoptimizeWritableFilesWithToken,
+									  bool allowDistribution,
+									  bool allowCaching,
                                       Node * preprocessorNode,
                                       const AString & preprocessorArgs,
                                       uint32_t preprocessorFlags );
@@ -181,18 +186,11 @@ public:
 							   FileNode * testExecutable,
 							   const AString & arguments,
 							   const AString & workingDir );
-#ifdef USE_NODE_REFLECTION
 	CompilerNode * CreateCompilerNode( const AString & executable );
-#else
-	CompilerNode * CreateCompilerNode( const AString & executable,
-									   const Dependencies & extraFiles,
-									   bool allowDistribution );
-#endif
 	VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
 										   const Array< AString > & projectBasePaths,
 										   const Dependencies & paths,
 										   const Array< AString > & pathsToExclude,
-										   const Array< AString > & allowedFileExtensions,
 										   const Array< AString > & files,
 										   const Array< AString > & filesToExclude,
 										   const AString & rootNamespace,
@@ -222,8 +220,11 @@ public:
 							 const Dependencies & preBuildDependencies,
 							 bool deoptimizeWritableFiles,
 							 bool deoptimizeWritableFilesWithToken,
+							 bool allowDistribution,
+							 bool allowCaching,
                              CompilerNode * preprocessor,
                              const AString & preprocessorArgs );
+	XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
 
 	void DoBuildPass( Node * nodeToBuild );
 
@@ -261,6 +262,10 @@ private:
 	static void SaveRecurse( IOStream & stream, Node * node, Array< bool > & savedNodeFlags );
 	static void SaveRecurse( IOStream & stream, const Dependencies & dependencies, Array< bool > & savedNodeFlags );
 	bool LoadNode( IOStream & stream );
+
+	#if defined( ASSERTS_ENABLED )
+		static bool IsCleanPath( const AString & path );
+	#endif
 
 	enum { NODEMAP_TABLE_SIZE = 65536 };
 	Node *			m_NodeMap[ NODEMAP_TABLE_SIZE ];

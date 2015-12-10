@@ -113,10 +113,12 @@ protected:
 	// Reflection based property population
 	bool GetNameForNode( const BFFIterator & iter, const ReflectionInfo * ri, AString & name ) const;
 	bool PopulateProperties( const BFFIterator & iter, Node * node ) const;
-	bool PopulateArrayOfStrings( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
-	bool PopulateString( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
-	bool PopulateBool( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
-	bool PopulateUInt32( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateProperty( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateArrayOfStrings( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateString( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateBool( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateUInt32( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateArrayOfStructs( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
 
 	bool PopulatePathAndFileHelper( const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const AString & variableName, const AString & originalValue, AString & valueToFix ) const;
 private:

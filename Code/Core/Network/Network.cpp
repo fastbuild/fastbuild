@@ -31,6 +31,8 @@
 //------------------------------------------------------------------------------
 /*static*/ void Network::GetHostName( AString & hostName )
 {
+	PROFILE_FUNCTION
+
     NetworkStartupHelper nsh; // ensure network is up if not already
 
     char buffer[ 64 ];
@@ -49,6 +51,8 @@
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Network::GetHostIPFromName( const AString & hostName, uint32_t timeoutMS )
 {
+	PROFILE_FUNCTION
+
     // see if string it already in ip4 format
     uint32_t ip = inet_addr( hostName.Get() );
     if ( ip != INADDR_NONE )
@@ -117,11 +121,14 @@
         // ::gethostbyname (and the ret value) is not thread safe, so make it so
         MutexHolder mh( s_GetHostByNameMutex );
 
-        hostent * host = ::gethostbyname( hostName.Get() );
-        if ( host )
-        {
-            ip = *( ( unsigned int * )host->h_addr );
-        }
+		{
+			PROFILE_SECTION("::gethostbyname")
+			hostent * host = ::gethostbyname( hostName.Get() );
+			if ( host )
+			{
+				ip = *( ( unsigned int * )host->h_addr );
+			}
+		}
     }
     return ip;
 }

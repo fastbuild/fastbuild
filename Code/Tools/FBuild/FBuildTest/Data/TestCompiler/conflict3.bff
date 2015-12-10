@@ -1,0 +1,11 @@
+//
+// Compiler - Conflicting files
+//
+Compiler( 'Compiler' )
+{
+	.Executable     = 'Folder/A'
+
+	// These would both end up in the root, so that should fail
+    .ExtraFiles     = { 'OtherFolder1/B',
+						'OtherFolders/B' }
+}

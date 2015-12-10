@@ -1,0 +1,9 @@
+//
+// Compiler - Conflicting files
+//
+Compiler( 'Compiler' )
+{
+	// Main exe listed twice - this should fail
+	.Executable     = 'Folder/A'
+    .ExtraFiles     = { 'Folder/A' }					
+}

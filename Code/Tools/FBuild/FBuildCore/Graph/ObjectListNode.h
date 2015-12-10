@@ -11,6 +11,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class Args;
 class DirectoryListNode;
 class CompilerNode;
 class ObjectNode;
@@ -31,6 +32,8 @@ public:
 							 const Dependencies & preBuildDependencies,
 							 bool deoptimizeWritableFiles,
 							 bool deoptimizeWritableFilesWithToken,
+							 bool allowDistribution,
+							 bool allowCaching,
                              CompilerNode * preprocessor,
                              const AString & preprocessorArgs );
 	virtual ~ObjectListNode();
@@ -44,7 +47,7 @@ public:
 
 	const char * GetObjExtension() const;
 
-	void GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const;
+	void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
 	void GetInputFiles( Array< AString > & files ) const;
 protected:
 	friend class FunctionObjectList;
@@ -66,6 +69,8 @@ protected:
     AString         m_CompilerOutputPrefix;
 	bool			m_DeoptimizeWritableFiles;
 	bool			m_DeoptimizeWritableFilesWithToken;
+	bool			m_AllowDistribution;
+	bool			m_AllowCaching;
 	CompilerNode *	m_Preprocessor;
 	AString			m_PreprocessorArgs;
 };

@@ -509,8 +509,8 @@ VCXProject( 'UpdateSolution-proj' )
 
     .GenerateProjectsCommands =
     [
-	    .ProjectBuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution'
-	    .ProjectRebuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -clean'
+	    .ProjectBuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
+	    .ProjectRebuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
     ]
 
     .ProjectX86Debug		= [ Using( .ProjectX86Debug )	    Using( .GenerateProjectsCommands ) ]

@@ -209,9 +209,9 @@ bool Worker::HasEnoughDiskSpace()
                     }
                     else
                     {
-                        // There is something wrong with the drives...
-                        m_LastDiskSpaceResult = 0;
-                        return false;
+						// Cannot access drive. (Possibly due to permissions)
+						// We'll assume that we won't use this drive during compilation and
+						// can just ignore it.
                     }
                 }
             }

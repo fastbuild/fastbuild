@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
 #include "Core/FileIO/FileIO.h"
@@ -113,8 +114,11 @@ CSNode::~CSNode()
 /*virtual*/ Node::BuildResult CSNode::DoBuild( Job * job )
 {
 	// Format compiler args string
-	AStackString< 4 * KILOBYTE > fullArgs;
-	GetFullArgs( fullArgs );
+	Args fullArgs;
+	if ( !BuildArgs( fullArgs ) )
+	{
+		return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+	}
 
 	// use the exe launch dir as the working dir
 	const char * workingDir = nullptr;
@@ -123,24 +127,9 @@ CSNode::~CSNode()
 
 	EmitCompilationMessage( fullArgs );
 
-	// write args to response file
-	ResponseFile rf;
-	AStackString<> responseFileArgs;
-	if ( !rf.Create( fullArgs ) )
-	{
-		return NODE_RESULT_FAILED; // Create will have emitted error
-	}
-
-    const bool useResponseFile = ( fullArgs.GetLength() > 32767 );
-    if ( useResponseFile )
-    {
-	    // override args to use response file
-	    responseFileArgs.Format( "@\"%s\"", rf.GetResponseFilePath().Get() );
-    }
-
 	// spawn the process
 	Process p;
-	if ( p.Spawn( m_CompilerPath.Get(), useResponseFile ? responseFileArgs.Get() : fullArgs.Get(),
+	if ( p.Spawn( m_CompilerPath.Get(), fullArgs.GetFinalArgs().Get(),
 				  workingDir, environment ) == false )
 	{
 		FLOG_ERROR( "Failed to spawn process to build '%s'", GetName().Get() );
@@ -224,7 +213,7 @@ failed:
 
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
-void CSNode::EmitCompilationMessage( const AString & fullArgs ) const
+void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
 	// print basic or detailed output, depending on options
 	// we combine everything into one string to ensure it is contiguous in
@@ -237,15 +226,15 @@ void CSNode::EmitCompilationMessage( const AString & fullArgs ) const
 	{
 		output += m_CompilerPath;
 		output += ' ';
-		output += fullArgs;
+		output += fullArgs.GetRawArgs();
 		output += '\n';
 	}
     FLOG_BUILD_DIRECT( output.Get() );
 }
 
-// GetFullArgs
+// BuildArgs
 //------------------------------------------------------------------------------
-void CSNode::GetFullArgs( AString & fullArgs ) const
+bool CSNode::BuildArgs( Args & fullArgs ) const
 {
 	// split into tokens
 	Array< AString > tokens( 1024, true );
@@ -317,13 +306,22 @@ void CSNode::GetFullArgs( AString & fullArgs ) const
 			fullArgs += token;
 		}
 
-		fullArgs += ' ';
+		fullArgs.AddDelimiter();
 	}
+
+	// Handle all the special needs of args
+	const bool canUseResponseFile( true );
+	if ( fullArgs.Finalize( m_CompilerPath, GetName(), canUseResponseFile ) == false )
+	{
+		return false; // Finalize will have emitted an error
+	}
+
+	return true;
 }
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void CSNode::GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const
+void CSNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const
 {
 	bool first = true;
 	const Dependency * const end = m_DynamicDependencies.End();
@@ -333,7 +331,7 @@ void CSNode::GetInputFiles( AString & fullArgs, const AString & pre, const AStri
 	{
 		if ( !first )
 		{
-			fullArgs += ' ';
+			fullArgs.AddDelimiter();
 		}
 		fullArgs += pre;
 		fullArgs += it->GetNode()->GetName();
@@ -344,7 +342,7 @@ void CSNode::GetInputFiles( AString & fullArgs, const AString & pre, const AStri
 
 // GetExtraRefs
 //------------------------------------------------------------------------------
-void CSNode::GetExtraRefs( AString & fullArgs, const AString & pre, const AString & post ) const
+void CSNode::GetExtraRefs( Args & fullArgs, const AString & pre, const AString & post ) const
 {
 	bool first = true;
 	const Dependency * const end = m_ExtraRefs.End();

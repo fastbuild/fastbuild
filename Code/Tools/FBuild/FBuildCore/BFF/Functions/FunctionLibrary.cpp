@@ -199,9 +199,18 @@ FunctionLibrary::FunctionLibrary()
 		return false;
 	}
 
+	// cache & distribution control
+	bool allowDistribution( true );
+	bool allowCaching( true );
+	if ( !GetBool( funcStartIter, allowDistribution, ".AllowDistribution", true ) ||
+		 !GetBool( funcStartIter, allowCaching, ".AllowCaching", true ) )
+	{
+		return false; // GetBool will have emitted error
+	}
+
 	// Precompiled Header support
 	ObjectNode * precompiledHeaderNode = nullptr;
-	if ( !GetPrecompiledHeaderNode( funcStartIter, compilerNode, objFlags, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken ) )
+	if ( !GetPrecompiledHeaderNode( funcStartIter, compilerNode, objFlags, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching ) )
 	{
 		return false; // GetPrecompiledHeaderNode will have emitted error
 	}
@@ -248,6 +257,8 @@ FunctionLibrary::FunctionLibrary()
 						  additionalInputs,
 						  deoptimizeWritableFiles,
 						  deoptimizeWritableFilesWithToken,
+						  allowDistribution,
+						  allowCaching,
                           preprocessorNode,
                           preprocessorOptions ? preprocessorOptions->GetString() : AString::GetEmpty() );
 	if ( compilerOutputExtension )

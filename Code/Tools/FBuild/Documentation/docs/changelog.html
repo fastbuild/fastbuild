@@ -14,6 +14,54 @@
 <h1>Changelog</h1>
 
 
+
+<div class='newsitemheader'>
+    v0.88&nbsp;<font color='#bbbbbb'>(9-Dec-2015)</font>
+</div>
+<div class='newsitembody'>
+    Note
+    <ul>
+	  	<li>DB version has changed : clean build will occur</li>
+		<li>Cache version changed : existing cached items will be ignored.</li>
+    </ul>
+	New
+	<ul>
+		<li>Support dependency tracking for Qt resource files (.qrc)</li>
+		<li>RemoveDir can be used to create cleanup build steps (Thanks to Poppolopoppo)</li>
+		<li>Optional .LinkerType on DLL & Executable allows explicit specification of linker type (Thanks to Josh Green)</li>
+		<li>Caching and Distribution can be disabled for an ObjectList or Library using</li>
+		<li>Variable names can by dynamically constructed, such as: .Var = ."MyThing_$Config$" (Thanks to Poppolopoppo)</li>		
+	</ul>
+    Fixes
+    <ul>
+		<li>Config (.bff) #include works when a full path is specified</li>
+		<li>Prevent Compiler() node from unnecessarily re-hashing files in some cases</li>
+		<li>Fix Compiler() node not re-hashing in some cases</li>
+		<li>.Environment in Settings() is now respected on Linux and OS X</li>
+		<li>Fix stale dependency when a file in an ObjectList() fed into Unity() is deleted or moved</li>
+		<li>Both command lines are shown when doing two-stage compilation and -verbose or -showcmds is used</li>
+		<li>Ensure command line length limit is correctly respected in all cases</li>
+		<li>Automatically handle response file line length limit with MS tools (avoid LNK1170)</li>
+		<li>Fix caching when output object is *.cpp.obj (e.g. Unreal Build Tool)</li>
+		<li>Don't let inaccessible drives trigger low-space disabling of FBuildWorker</li>
+		<li>Parent scoping ^ now works correctly with ^X = { .Y } syntax</li>
+		<li>A parse-time error will be emitted for conflicting files listed in Compiler()</li>
+		<li>Fix crash caching of objects with preprocessed source > 2GiB (replace MurmurHash3a with xxHash)</li>
+		<li>Treat remote failure with 0xC0000142 (Windows) as system error and retry (occurs during "force shutdown screen") (Thanks to Jean-Sebastien Pelletier)</li>
+		<li>-nostoponerror no longer skips some parts of hierarchy when errors occur (Thanks to Jean-Sebastien Pelletier)</li>
+    </ul>
+	Improvements
+	<ul>
+		<li>Report an error when command line is too long and response files can't be used</li>
+		<li>Cache plugin now supported for OS X and Linux (Thanks to gdaow)</li>
+		<li>Cache lookup using faster hashing algorithm (replace MurmurHash3a with xxHash)</li>
+		<li>Add work-around for VS2012 Compiler enum pre-processing bug (Thanks to Jean-Sebastien Pelletier)</li>
+		<li>VCXProject supports wildcards for file extensions</li>
+		<li>Work towards feature parity on OS X and Linux</li>
+	</ul>
+</div>
+
+
 <div class='newsitemheader'>
     v0.87&nbsp;<font color='#bbbbbb'>(26-Sep-2015)</font>
 </div>

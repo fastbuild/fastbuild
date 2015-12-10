@@ -501,3 +501,21 @@ Struct * ReflectedPropertyStruct::GetStructInArray( void * object, size_t index 
 }
 
 //------------------------------------------------------------------------------
+const Struct * ReflectedPropertyStruct::GetStructInArray( const void * object, size_t index ) const
+{
+	// sanity checks
+	ASSERT( IsArray() );
+	ASSERT( GetType() == PT_STRUCT );
+	ASSERT( index < GetArraySize( object ) );
+
+	// get the array
+	const size_t elementSize = GetPropertySize();
+	const void * arrayBase = (const void *)( (size_t)object + m_Offset );
+	const Array< char > * array = static_cast< const Array< char > * >( arrayBase );
+
+	// calculate the element offset
+	const size_t offset = ( index * elementSize );
+	return reinterpret_cast< Struct * >( array->Begin() + offset );
+}
+
+//------------------------------------------------------------------------------

@@ -31,7 +31,7 @@ class ToolManifest;
 class Client : public TCPConnectionPool
 {
 public:
-	Client( const Array< AString > & workerList );
+	explicit Client( const Array< AString > & workerList );
 	~Client();
 
 private:

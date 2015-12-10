@@ -41,8 +41,10 @@ private:
 REGISTER_TESTS_BEGIN( TestUnity )
 	REGISTER_TEST( TestGenerate )			// clean build of unity files
 	REGISTER_TEST( TestGenerate_NoRebuild )	// check nothing rebuilds
-	REGISTER_TEST( TestCompile )			// compile a library using unity inputs
-	REGISTER_TEST( TestCompile_NoRebuild )	// check nothing rebuilds
+	#if defined( __WINDOWS__ ) // TODO:MAC TODO:LINUX Enable tests
+		REGISTER_TEST( TestCompile )			// compile a library using unity inputs
+		REGISTER_TEST( TestCompile_NoRebuild )	// check nothing rebuilds
+	#endif
 	REGISTER_TEST( TestGenerateFromExplicitList ) // create a unity with manually provided files
 	REGISTER_TEST( TestExcludedFiles )		// Ensure files are correctly excluded
 REGISTER_TESTS_END

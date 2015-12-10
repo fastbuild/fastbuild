@@ -4,14 +4,15 @@
 #ifndef FBUILD_HELPERS_RESPONSEFILE_H
 #define FBUILD_HELPERS_RESPONSEFILE_H
 
-// Forward Declarations
-//------------------------------------------------------------------------------
-class AString;
-
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
+
+// Forward Declarations
+//------------------------------------------------------------------------------
+class Args;
+class AString;
 
 // ResponseFile
 //------------------------------------------------------------------------------
@@ -21,6 +22,7 @@ public:
 	explicit ResponseFile();
 	~ResponseFile();
 
+	bool Create( const Args & args );
 	bool Create( const AString & contents );
 	const AString & GetResponseFilePath() const { return m_ResponseFilePath; }
 

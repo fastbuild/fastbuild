@@ -39,53 +39,6 @@ FunctionCompiler::FunctionCompiler()
 
 // Commit
 //------------------------------------------------------------------------------
-#ifndef USE_NODE_REFLECTION
-/*virtual*/ bool FunctionCompiler::Commit( const BFFIterator & funcStartIter ) const
-{
-	const BFFVariable * executableV;
-	if ( !GetString( funcStartIter, executableV, ".Executable", true ) )
-	{
-		return false; // GetString will have emitted error
-	}
-
-	// path cleanup
-	AStackString<> exe;
-	NodeGraph::CleanPath( executableV->GetString(), exe );
-
-	// exe must be a file, not a path
-	if ( PathUtils::IsFolderPath( exe ) )
-	{
-		Error::Error_1105_PathNotAllowed( funcStartIter, this, ".Executable", exe );
-		return false;
-	}
-
-	//
-	Dependencies extraFiles( 32, true );
-	if ( !GetNodeList( funcStartIter, ".ExtraFiles", extraFiles, false ) ) // optional
-	{
-		return false; // GetNodeList will have emitted an error
-	}
-
-	// get executable node
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	if ( ng.FindNode( exe ) )
-	{
-		Error::Error_1100_AlreadyDefined( funcStartIter, this, exe );
-		return false;
-	}
-
-	// create our node
-	const bool allowDistribution = true;
-	Node * compilerNode = ng.CreateCompilerNode( exe, extraFiles, allowDistribution );
-
-	// handle alias creation
-	return ProcessAlias( funcStartIter, compilerNode );
-}
-#endif
-
-// Commit
-//------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 /*virtual*/ bool FunctionCompiler::Commit( const BFFIterator & funcStartIter ) const
 {
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
@@ -116,6 +69,5 @@ FunctionCompiler::FunctionCompiler()
 	// handle alias creation
 	return ProcessAlias( funcStartIter, compilerNode );
 }
-#endif
 
 //------------------------------------------------------------------------------

@@ -47,6 +47,7 @@ uint32_t g_ReportNodeColors[Node::NUM_NODE_TYPES] = {
 								  0x000000, // COPY_DIR_NODE (never seen)
 								  0xFF3030, // REMOVE_DIR_NODE
 								  0x77DDAA, // SLN_NODE
+								  0x77DDAA, // XCODEPROJECT_NODE
 								};
 
 // CONSTRUCTOR
@@ -56,7 +57,7 @@ Report::Report()
 	, m_NumPieCharts( 0 )
 {
 	// Compile time check to ensure color vector is in sync
-	CTASSERT( sizeof( g_ReportNodeColors ) / sizeof (uint32_t) == Node::NUM_NODE_TYPES );
+	static_assert( sizeof( g_ReportNodeColors ) / sizeof (uint32_t) == Node::NUM_NODE_TYPES, "g_ReportNodeColors item count doesn't match NUM_NODE_TYPES" );
 }
 
 // DESTRUCTOR
@@ -959,7 +960,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
 		currentLib->objectCount_CacheStores = 0;
 
 		// count time for library/dll itself
-		if ( node->GetStatFlag( Node::STATS_BUILT ) )
+		if ( node->GetStatFlag( Node::STATS_BUILT ) || node->GetStatFlag( Node::STATS_FAILED ) )
 		{
 			currentLib->cpuTimeMS += node->GetProcessingTime();
 		}

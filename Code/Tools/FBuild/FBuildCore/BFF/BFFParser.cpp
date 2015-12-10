@@ -194,7 +194,7 @@ bool BFFParser::Parse( BFFIterator & iter )
 		stringStart++;
 
 		// unescape and subsitute embedded variables
-		AStackString< 2048 > value;
+		AStackString< 256 > value;
 		if ( PerformVariableSubstitutions( stringStart, iter, value ) == false )
 		{
 			return false;
@@ -744,10 +744,14 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
 	// open include
 
 	// 1) Try current directory
-	const char * lastSlash = iter.GetFileName().FindLast( NATIVE_SLASH );
-	lastSlash = lastSlash ? lastSlash : iter.GetFileName().FindLast( OTHER_SLASH );
-	lastSlash = lastSlash ? ( lastSlash + 1 ): iter.GetFileName().Get(); // file only, truncate to empty
-	AStackString<> includeToUse( iter.GetFileName().Get(), lastSlash );
+	AStackString<> includeToUse;
+	if (PathUtils::IsFullPath(include) == false)
+	{
+		const char * lastSlash = iter.GetFileName().FindLast( NATIVE_SLASH );
+		lastSlash = lastSlash ? lastSlash : iter.GetFileName().FindLast( OTHER_SLASH );
+		lastSlash = lastSlash ? ( lastSlash + 1 ): iter.GetFileName().Get(); // file only, truncate to empty
+		includeToUse.Assign( iter.GetFileName().Get(), lastSlash );
+	}
 	includeToUse += include;
 	AStackString<> includeToUseClean;
 	NodeGraph::CleanPath( includeToUse, includeToUseClean );
@@ -1200,8 +1204,15 @@ bool BFFParser::StoreVariableArray( const AString & name,
 				return false;
 			}
 
+			// Determine stack frame to use for Src var
+			BFFStackFrame * srcFrame = BFFStackFrame::GetCurrent();			
+			if ( c == BFF_DECLARE_VAR_PARENT )
+			{
+				srcFrame = BFFStackFrame::GetCurrent()->GetParent();
+			}
+
 			// get the variable
-			const BFFVariable * var = BFFStackFrame::GetVar( varName, frame );
+			const BFFVariable * var = srcFrame->GetVariableRecurse( varName );
 			if ( var == nullptr )
 			{
 				Error::Error_1026_VariableNotFoundForConcatenation( operatorIter, varName );

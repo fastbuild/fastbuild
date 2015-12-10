@@ -31,6 +31,7 @@
 #include "TestNode.h"
 #include "UnityNode.h"
 #include "VCXProjectNode.h"
+#include "XCodeProjectNode.h"
 
 // Core
 #include "Core/Containers/AutoPtr.h"
@@ -40,7 +41,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/CRC32.h"
-#include "Core/Math/Murmur3.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
@@ -646,6 +647,8 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
 											const Dependencies & additionalInputs,
 											bool deoptimizeWritableFiles,
 											bool deoptimizeWritableFilesWithToken,
+											bool allowDistribution,
+											bool allowCaching,
                                             CompilerNode * preprocessor,
                                             const AString & preprocessorArgs )
 {
@@ -669,6 +672,8 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
 										  additionalInputs, 
 										  deoptimizeWritableFiles,
 										  deoptimizeWritableFilesWithToken,
+										  allowDistribution,
+										  allowCaching,
                                           preprocessor,
                                           preprocessorArgs ) );
 	AddNode( node );
@@ -687,6 +692,8 @@ ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName,
 										  const Dependencies & compilerForceUsing,
 										  bool deoptimizeWritableFiles,
 										  bool deoptimizeWritableFilesWithToken,
+										  bool allowDistribution,
+										  bool allowCaching,
                                           Node * preprocessorNode,
                                           const AString & preprocessorArgs,
                                           uint32_t preprocessorFlags )
@@ -696,7 +703,7 @@ ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName,
 	AStackString< 512 > fullPath;
 	CleanPath( objectName, fullPath );
 
-	ObjectNode * node = FNEW( ObjectNode( fullPath, inputNode, compilerNode, compilerArgs, compilerArgsDeoptimized, precompiledHeader, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, preprocessorNode, preprocessorArgs, preprocessorFlags ) );
+	ObjectNode * node = FNEW( ObjectNode( fullPath, inputNode, compilerNode, compilerArgs, compilerArgsDeoptimized, precompiledHeader, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching, preprocessorNode, preprocessorArgs, preprocessorFlags ) );
 	AddNode( node );
 	return node;
 }
@@ -707,6 +714,7 @@ ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName,
 AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName )
 {
 	ASSERT( Thread::IsMainThread() );
+	ASSERT( IsCleanPath( aliasName ) );
 
 	AliasNode * node = FNEW( AliasNode() );
 	node->SetName( aliasName );
@@ -855,35 +863,16 @@ TestNode * NodeGraph::CreateTestNode( const AString & testOutput,
 
 // CreateCompilerNode
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 CompilerNode * NodeGraph::CreateCompilerNode( const AString & executable )
 {
 	ASSERT( Thread::IsMainThread() );
+	ASSERT( IsCleanPath( executable ) );
 
 	CompilerNode * node = FNEW( CompilerNode() );
 	node->SetName( executable );
 	AddNode( node );
 	return node;
 }
-#endif
-
-// CreateCompilerNode
-//------------------------------------------------------------------------------
-#ifndef USE_NODE_REFLECTION
-CompilerNode * NodeGraph::CreateCompilerNode( const AString & executable,
-											  const Dependencies & extraFiles,
-											  bool allowDistribution )
-{
-	ASSERT( Thread::IsMainThread() );
-
-	AStackString< 1024 > fullPath;
-	CleanPath( executable, fullPath );
-
-	CompilerNode * node = FNEW( CompilerNode( fullPath, extraFiles, allowDistribution ) );
-	AddNode( node );
-	return node;
-}
-#endif
 
 // CreateVCXProjectNode
 //------------------------------------------------------------------------------
@@ -891,7 +880,6 @@ VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
 												  const Array< AString > & projectBasePaths,
 												  const Dependencies & paths,
 												  const Array< AString > & pathsToExclude,
-												  const Array< AString > & allowedFileExtensions,
 												  const Array< AString > & files,
 												  const Array< AString > & filesToExclude,
 												  const AString & rootNamespace,
@@ -912,7 +900,6 @@ VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
 												projectBasePaths,
 												paths,
 												pathsToExclude,
-												allowedFileExtensions,
 												files,
 												filesToExclude,
 												rootNamespace,
@@ -969,6 +956,8 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
 												  const Dependencies & preBuildDependencies,
 												  bool deoptimizeWritableFiles,
 												  bool deoptimizeWritableFilesWithToken,
+												  bool allowDistribution,
+												  bool allowCaching,
                                                   CompilerNode * preprocessor,
                                                   const AString & preprocessorArgs )
 {
@@ -985,11 +974,26 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
 												preBuildDependencies,
 												deoptimizeWritableFiles,
 												deoptimizeWritableFilesWithToken,
+												allowDistribution,
+												allowCaching,
                                                 preprocessor,
                                                 preprocessorArgs ) );
 	AddNode( node );
 	return node;
 
+}
+
+// CreateXCodeProjectNode
+//------------------------------------------------------------------------------
+XCodeProjectNode * NodeGraph::CreateXCodeProjectNode( const AString & name )
+{
+	ASSERT( Thread::IsMainThread() );
+	ASSERT( IsCleanPath( name ) );
+
+	XCodeProjectNode * node = FNEW( XCodeProjectNode() );
+	node->SetName( name );
+	AddNode( node );
+	return node;
 }
 
 // AddNode
@@ -1178,6 +1182,9 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 	const uint32_t passTag = s_BuildPassTag;
 
 	bool allDependenciesUpToDate = true;
+	uint32_t numberNodesUpToDate = 0;
+	uint32_t numberNodesFailed = 0;
+    const bool stopOnFirstError = FBuild::Get().GetOptions().m_StopOnFirstError;
 
 	Dependencies::Iter i = dependencies.Begin();
 	Dependencies::Iter end = dependencies.End();
@@ -1204,6 +1211,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 		state = n->GetState();
 		if ( state == Node::UP_TO_DATE )
 		{
+			++numberNodesUpToDate;
 			continue;
 		}
 
@@ -1221,12 +1229,27 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 		// dependency failed?
 		if ( state == Node::FAILED )
 		{
-			// propogate failure state to this node
-			nodeToBuild->SetState( Node::FAILED );
-			break;
+			++numberNodesFailed;
+			if ( stopOnFirstError )
+			{
+				// propogate failure state to this node
+				nodeToBuild->SetState( Node::FAILED );
+				break;
+			}
 		}
 
 		// keep trying to progress other nodes...
+	}
+
+	if ( !stopOnFirstError )
+	{
+		if ( numberNodesFailed + numberNodesUpToDate == dependencies.GetSize() )
+		{
+			if ( numberNodesFailed > 0 )
+			{
+				nodeToBuild->SetState( Node::FAILED );
+			}
+		}
 	}
 
 	return allDependenciesUpToDate;
@@ -1570,7 +1593,18 @@ uint32_t NodeGraph::GetLibEnvVarHash() const
 		return 0; // return 0 (rather than hash of empty string)
 	}
 
-	return Murmur3::Calc32( libVar );
+	return xxHash::Calc32( libVar );
 }
+
+// IsCleanPath
+//------------------------------------------------------------------------------
+#if defined( ASSERTS_ENABLED )
+	/*static*/ bool NodeGraph::IsCleanPath( const AString & path )
+	{
+		AStackString< 1024 > clean;
+		CleanPath( path, clean );
+		return ( path == clean );
+	}
+#endif
 
 //------------------------------------------------------------------------------

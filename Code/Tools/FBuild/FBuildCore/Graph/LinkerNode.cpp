@@ -16,6 +16,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
 #include "Core/FileIO/FileIO.h"
@@ -97,8 +98,11 @@ LinkerNode::~LinkerNode()
 	}
 
 	// Format compiler args string
-	AStackString< 4 * KILOBYTE > fullArgs;
-	GetFullArgs( fullArgs );
+	Args fullArgs;
+	if ( !BuildArgs( fullArgs ) )
+	{
+		return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+	}
 
 	// use the exe launch dir as the working dir
 	const char * workingDir = nullptr;
@@ -106,28 +110,6 @@ LinkerNode::~LinkerNode()
 	const char * environment = FBuild::Get().GetEnvironmentString();
 
 	EmitCompilationMessage( fullArgs );
-
-	// handle response file
-	ResponseFile rf;
-	AStackString<> responseFileArgs;
-    const bool useResponseFile = ( fullArgs.GetLength() > 32767 ) && ( GetFlag( LINK_FLAG_MSVC ) || GetFlag( LINK_FLAG_GCC ) || GetFlag( LINK_FLAG_SNC ) || GetFlag( LINK_FLAG_ORBIS_LD ) || GetFlag( LINK_FLAG_GREENHILLS_ELXR ) || GetFlag( LINK_FLAG_CODEWARRIOR_LD ) );
-	if ( useResponseFile )
-	{
-		// orbis-ld.exe requires escaped slashes inside response file
-		if ( GetFlag( LINK_FLAG_ORBIS_LD ) )
-		{
-			rf.SetEscapeSlashes();
-		}
-
-		// write args to response file
-		if ( !rf.Create( fullArgs ) )
-		{
-			return NODE_RESULT_FAILED; // Create will have emitted error
-		}
-
-		// override args to use response file
-		responseFileArgs.Format( "@\"%s\"", rf.GetResponseFilePath().Get() );
-	}
 
 	// we retry if linker crashes
 	uint32_t attempt( 0 );
@@ -139,7 +121,7 @@ LinkerNode::~LinkerNode()
 		// spawn the process
 		Process p;
 		bool spawnOK = p.Spawn( m_Linker.Get(),
-								useResponseFile ? responseFileArgs.Get() : fullArgs.Get(),
+								fullArgs.GetFinalArgs().Get(),
 								workingDir,
 								environment );
 
@@ -272,9 +254,9 @@ void LinkerNode::DoPreLinkCleanup() const
 	}
 }
 
-// GetFullArgs
+// BuildArgs
 //------------------------------------------------------------------------------
-void LinkerNode::GetFullArgs( AString & fullArgs ) const
+bool LinkerNode::BuildArgs( Args & fullArgs ) const
 {
 	// split into tokens
 	Array< AString > tokens( 1024, true );
@@ -292,7 +274,7 @@ void LinkerNode::GetFullArgs( AString & fullArgs ) const
 			AStackString<> pre( token.Get(), found );
 			AStackString<> post( found + 2, token.GetEnd() );
 			GetInputFiles( fullArgs, pre, post );
-			fullArgs += ' ';
+			fullArgs.AddDelimiter();
 			continue;
 		}
 
@@ -303,7 +285,7 @@ void LinkerNode::GetFullArgs( AString & fullArgs ) const
 			fullArgs += AStackString<>( token.Get(), found );
 			fullArgs += m_Name;
 			fullArgs += AStackString<>( found + 2, token.GetEnd() );
-			fullArgs += ' ';
+			fullArgs.AddDelimiter();
 			continue;
 		}
 
@@ -316,20 +298,34 @@ void LinkerNode::GetFullArgs( AString & fullArgs ) const
 				AStackString<> pre( token.Get(), found );
 				AStackString<> post( found + 2, token.GetEnd() );
 				GetAssemblyResourceFiles( fullArgs, pre, post );
-				fullArgs += ' ';
+				fullArgs.AddDelimiter();
 				continue;
 			}
 		}
 
 		// untouched token
 		fullArgs += token;
-		fullArgs += ' ';
+		fullArgs.AddDelimiter();
 	}
+
+	// orbis-ld.exe requires escaped slashes inside response file
+	if ( GetFlag( LINK_FLAG_ORBIS_LD ) )
+	{
+		fullArgs.SetEscapeSlashesInResponseFile();
+	}
+
+	// Handle all the special needs of args
+	if ( fullArgs.Finalize( m_Linker, GetName(), CanUseResponseFile() ) == false )
+	{
+		return false; // Finalize will have emitted an error
+	}
+
+	return true;
 }
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void LinkerNode::GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const
+void LinkerNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const
 {
 	// (exlude assembly resources from inputs)
 	const Dependency * end = m_StaticDependencies.End() - ( m_AssemblyResources.GetSize() + m_OtherLibraries.GetSize() );
@@ -348,7 +344,7 @@ void LinkerNode::GetInputFiles( AString & fullArgs, const AString & pre, const A
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void LinkerNode::GetInputFiles( Node * n, AString & fullArgs, const AString & pre, const AString & post ) const
+void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, const AString & post ) const
 {
 	if ( n->GetType() == Node::LIBRARY_NODE )
 	{
@@ -396,12 +392,12 @@ void LinkerNode::GetInputFiles( Node * n, AString & fullArgs, const AString & pr
 		fullArgs += post;
 	}
 
-	fullArgs += ' ';
+	fullArgs.AddDelimiter();
 }
 
 // GetAssemblyResourceFiles
 //------------------------------------------------------------------------------
-void LinkerNode::GetAssemblyResourceFiles( AString & fullArgs, const AString & pre, const AString & post ) const
+void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre, const AString & post ) const
 {
 	const Dependency * const end = m_AssemblyResources.End();
 	for ( Dependencies::Iter i = m_AssemblyResources.Begin();
@@ -427,7 +423,7 @@ void LinkerNode::GetAssemblyResourceFiles( AString & fullArgs, const AString & p
 		fullArgs += pre;
 		fullArgs += n->GetName();
 		fullArgs += post;
-		fullArgs += ' ';
+		fullArgs.AddDelimiter();
 	}
 }
 
@@ -618,7 +614,7 @@ void LinkerNode::GetAssemblyResourceFiles( AString & fullArgs, const AString & p
 
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
-void LinkerNode::EmitCompilationMessage( const AString & fullArgs ) const
+void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
 	AStackString<> output;
 	output += GetDLLOrExe();
@@ -629,7 +625,7 @@ void LinkerNode::EmitCompilationMessage( const AString & fullArgs ) const
 	{
 		output += m_Linker;
 		output += ' ';
-		output += fullArgs;
+		output += fullArgs.GetRawArgs();
 		output += '\n';
 	}
     FLOG_BUILD_DIRECT( output.Get() );
@@ -678,6 +674,17 @@ void LinkerNode::EmitStampMessage() const
 	NODE_SAVE( m_ImportLibName );
     NODE_SAVE_NODE( m_LinkerStampExe );
     NODE_SAVE( m_LinkerStampExeArgs );
+}
+
+// CanUseResponseFile
+//------------------------------------------------------------------------------
+bool LinkerNode::CanUseResponseFile() const
+{
+	#if defined( __WINDOWS__ )
+		return ( GetFlag( LINK_FLAG_MSVC ) || GetFlag( LINK_FLAG_GCC ) || GetFlag( LINK_FLAG_SNC ) || GetFlag( LINK_FLAG_ORBIS_LD ) || GetFlag( LINK_FLAG_GREENHILLS_ELXR ) || GetFlag( LINK_FLAG_CODEWARRIOR_LD ) );
+	#else
+		return false;
+	#endif
 }
 
 //------------------------------------------------------------------------------

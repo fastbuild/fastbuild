@@ -33,7 +33,7 @@ private:
 template < int RESERVED >
 AStackString< RESERVED >::AStackString()
 {
-	CTASSERT( ( RESERVED % 2 ) == 0 );
+	static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
 	m_Contents = m_Storage;
 	SetReserved( RESERVED, false );
 	m_Storage[ 0 ] = '\0';
@@ -44,7 +44,7 @@ AStackString< RESERVED >::AStackString()
 template < int RESERVED >
 AStackString< RESERVED >::AStackString( const AString & string )
 {
-	CTASSERT( ( RESERVED % 2 ) == 0 );
+	static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
 	m_Contents = m_Storage;
 	SetReserved( RESERVED, false );
 	Assign( string );
@@ -55,7 +55,7 @@ AStackString< RESERVED >::AStackString( const AString & string )
 template < int RESERVED >
 AStackString< RESERVED >::AStackString( const AStackString & string )
 {
-	CTASSERT( ( RESERVED % 2 ) == 0 );
+	static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
 	m_Contents = m_Storage;
 	SetReserved( RESERVED, false );
 	Assign( string );
@@ -66,7 +66,7 @@ AStackString< RESERVED >::AStackString( const AStackString & string )
 template < int RESERVED >
 AStackString< RESERVED >::AStackString( const char * string )
 {
-	CTASSERT( ( RESERVED % 2 ) == 0 );
+	static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
 	m_Contents = m_Storage;
 	SetReserved( RESERVED, false );
 	Assign( string );
@@ -77,7 +77,7 @@ AStackString< RESERVED >::AStackString( const char * string )
 template < int RESERVED >
 AStackString< RESERVED >::AStackString( const char * start, const char * end )
 {
-	CTASSERT( ( RESERVED % 2 ) == 0 );
+	static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
 	m_Contents = m_Storage;
 	SetReserved( RESERVED, false );
 	Assign( start, end );

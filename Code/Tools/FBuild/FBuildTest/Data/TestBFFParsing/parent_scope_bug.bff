@@ -1,0 +1,54 @@
+
+//
+// Test for regression of a bug
+//
+.Array = {}
+{
+	.String		= 'Test'
+	^Array		+ { .String }
+}
+Print( .Array ) // Array should now contain String
+
+//
+// An alternate form of the above that should also work
+//
+.String2 = 'Test'
+.Array2 = {}
+{
+	^Array2		+ { .String2 }
+}
+Print( .Array2 ) // Array should now contain String
+
+//
+// An alternate form of the above that should also work
+//
+.String2 = 'Test'
+.Array2 = {}
+{
+	^Array2		+ { ^String2 }
+}
+Print( .Array2 ) // Array should now contain String
+
+//
+// An alternate form of the above that should also work
+//
+.String3 = 'Test'
+{
+	.Array3 = {}
+	{
+		^Array3		+ { .String3 }
+	}
+	Print( .Array3 ) // Array should now contain String
+}
+
+//
+// An alternate form of the above that should also work
+//
+.String3 = 'Test'
+{
+	.Array3 = {}
+	{
+		^Array3		+ { ^String3 }
+	}
+	Print( .Array3 ) // Array should now contain String
+}

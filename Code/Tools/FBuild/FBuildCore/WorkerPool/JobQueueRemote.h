@@ -24,7 +24,7 @@ class WorkerThread;
 class JobQueueRemote : public Singleton< JobQueueRemote >
 {
 public:
-	JobQueueRemote( uint32_t numWorkerThreads );
+	explicit JobQueueRemote( uint32_t numWorkerThreads );
 	~JobQueueRemote();
 
 	// main thread calls these

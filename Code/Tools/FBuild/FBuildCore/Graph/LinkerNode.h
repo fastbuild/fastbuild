@@ -11,6 +11,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class Args;
 
 // LinkerNode
 //------------------------------------------------------------------------------
@@ -54,16 +55,18 @@ protected:
 
 	void DoPreLinkCleanup() const;
 
-	void GetFullArgs( AString & fullArgs ) const;
-	void GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const;
-	void GetInputFiles( Node * n, AString & fullArgs, const AString & pre, const AString & post ) const;
-	void GetAssemblyResourceFiles( AString & fullArgs, const AString & pre, const AString & post ) const;
-	void EmitCompilationMessage( const AString & fullArgs ) const;
+	bool BuildArgs( Args & fullArgs ) const;
+	void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
+	void GetInputFiles( Node * n, Args & fullArgs, const AString & pre, const AString & post ) const;
+	void GetAssemblyResourceFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
+	void EmitCompilationMessage( const Args & fullArgs ) const;
 	void EmitStampMessage() const;
 
 	inline bool GetFlag( Flag flag ) const { return ( ( m_Flags & (uint32_t)flag ) != 0 ); }
 
 	inline const char * GetDLLOrExe() const { return GetFlag( LINK_FLAG_DLL ) ? "DLL" : "Exe"; }
+
+	bool CanUseResponseFile() const;
 
 	AString m_LinkerType;
 	AString m_Linker;

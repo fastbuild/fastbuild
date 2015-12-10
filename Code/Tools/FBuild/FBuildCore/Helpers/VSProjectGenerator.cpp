@@ -20,7 +20,6 @@
 //------------------------------------------------------------------------------
 VSProjectGenerator::VSProjectGenerator()
 	: m_BasePaths( 0, true )
-	, m_AllowedFileExtensions( 0, true )
 	, m_References( 0, true )
 	, m_ProjectReferences( 0, true )
 	, m_Files( 1024, true )
@@ -42,30 +41,11 @@ void VSProjectGenerator::SetBasePaths( const Array< AString > & paths )
 
 // AddFile
 //------------------------------------------------------------------------------
-void VSProjectGenerator::AddFile( const AString & file, bool filterByExtension )
+void VSProjectGenerator::AddFile( const AString & file )
 {
 	// ensure slash consistency which we rely on later
 	AStackString<> fileCopy( file );
 	fileCopy.Replace( FORWARD_SLASH, BACK_SLASH );
-
-	// filtering by extension?
-	size_t numAllowedFileExtensions = m_AllowedFileExtensions.GetSize();
-	if ( filterByExtension && numAllowedFileExtensions )
-	{
-		bool keep = false;
-		for ( size_t i=0; i<numAllowedFileExtensions; ++i )
-		{
-			if ( file.EndsWithI( m_AllowedFileExtensions[ i ] ) )
-			{
-				keep = true;
-				break;
-			}
-		}
-		if ( !keep )
-		{
-			return;
-		}
-	}
 
 	ASSERT( !m_Files.Find( fileCopy ) );
 	m_Files.Append( fileCopy );
@@ -73,12 +53,12 @@ void VSProjectGenerator::AddFile( const AString & file, bool filterByExtension )
 
 // AddFiles
 //------------------------------------------------------------------------------
-void VSProjectGenerator::AddFiles( const Array< AString > & files, bool filterByExtension )
+void VSProjectGenerator::AddFiles( const Array< AString > & files )
 {
 	const AString * const fEnd = files.End();
 	for ( const AString * fIt = files.Begin(); fIt!=fEnd; ++fIt )
 	{
-		AddFile( *fIt, filterByExtension );
+		AddFile( *fIt );
 	}
 }
 

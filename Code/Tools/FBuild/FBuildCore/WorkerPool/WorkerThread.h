@@ -19,7 +19,7 @@ class FileStream;
 class WorkerThread
 {
 public:
-	WorkerThread( uint32_t threadIndex );
+	explicit WorkerThread( uint32_t threadIndex );
 	void Init();
 	virtual ~WorkerThread();
 
