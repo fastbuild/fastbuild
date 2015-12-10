@@ -39,12 +39,16 @@ private:
 REGISTER_TESTS_BEGIN( TestDistributed )
 	REGISTER_TEST( TestWith1RemoteWorkerThread )
 	REGISTER_TEST( TestWith4RemoteWorkerThreads )
-	REGISTER_TEST( WithPCH )
+	#if defined( __WINDOWS__ )
+		REGISTER_TEST( WithPCH ) // TODO:MAC TODO:LINUX Fix and enable test
+	#endif
 	REGISTER_TEST( RegressionTest_RemoteCrashOnErrorFormatting )
 	REGISTER_TEST( TestLocalRace )
-	REGISTER_TEST( TestForceInclude )
-	REGISTER_TEST( TestZiDebugFormat )
-	REGISTER_TEST( TestZiDebugFormat_Local )
+	#if defined( __WINDOWS__ )
+		REGISTER_TEST( TestForceInclude )
+		REGISTER_TEST( TestZiDebugFormat )
+		REGISTER_TEST( TestZiDebugFormat_Local )
+	#endif
 REGISTER_TESTS_END
 
 // Test
@@ -72,7 +76,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
 
 	// clean up anything left over from previous runs
 	Array< AString > files;
-	FileIO::GetFiles( AStackString<>( "..\\..\\..\\..\\ftmp\\Test\\Distributed" ), AStackString<>( "*.*" ), true, &files );
+	FileIO::GetFiles( AStackString<>( "../../../../ftmp/Test/Distributed" ), AStackString<>( "*.*" ), true, &files );
 	const AString * iter = files.Begin();
 	const AString * const end = files.End();
 	for ( ; iter != end; ++iter )
@@ -102,7 +106,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
 //------------------------------------------------------------------------------
 void TestDistributed::TestWith1RemoteWorkerThread() const
 {
-	const char * target( "..\\..\\..\\..\\ftmp\\Test\\Distributed\\dist.lib" );
+	const char * target( "../../../../ftmp/Test/Distributed/dist.lib" );
 	TestHelper( target, 1 );
 }
 
@@ -110,7 +114,7 @@ void TestDistributed::TestWith1RemoteWorkerThread() const
 //------------------------------------------------------------------------------
 void TestDistributed::TestWith4RemoteWorkerThreads() const
 {
-	const char * target( "..\\..\\..\\..\\ftmp\\Test\\Distributed\\dist.lib" );
+	const char * target( "../../../../ftmp/Test/Distributed/dist.lib" );
 	TestHelper( target, 4 );
 }
 
@@ -118,7 +122,7 @@ void TestDistributed::TestWith4RemoteWorkerThreads() const
 //------------------------------------------------------------------------------
 void TestDistributed::WithPCH() const
 {
-	const char * target( "..\\..\\..\\..\\ftmp\\Test\\Distributed\\distpch.lib" );
+	const char * target( "../../../../ftmp/Test/Distributed/distpch.lib" );
 	TestHelper( target, 4 );
 }
 
@@ -134,17 +138,19 @@ void TestDistributed::RegressionTest_RemoteCrashOnErrorFormatting()
 void TestDistributed::TestLocalRace()
 {
 	{
-		const char * target( "..\\..\\..\\..\\ftmp\\Test\\Distributed\\dist.lib" );
+		const char * target( "../../../../ftmp/Test/Distributed/dist.lib" );
 		TestHelper( target, 1, false, true ); // allow race
 	}
 	{
-		const char * target( "..\\..\\..\\..\\ftmp\\Test\\Distributed\\dist.lib" );
+		const char * target( "../../../../ftmp/Test/Distributed/dist.lib" );
 		TestHelper( target, 4, false, true ); // allow race
 	}
+	#if defined( __WINDOWS__ ) // TODO:MAC TODO:LINUX Fix and enable TestLocalRace+PCH
 	{
-		const char * target( "..\\..\\..\\..\\ftmp\\Test\\Distributed\\distpch.lib" );
+		const char * target( "../../../../ftmp/Test/Distributed/distpch.lib" );
 		TestHelper( target, 4, false, true ); // allow race
 	}
+	#endif
 	{
 		const char * target( "badcode" );
 		TestHelper( target, 4, true, true ); // compilation should fail, allow race
@@ -155,7 +161,7 @@ void TestDistributed::TestLocalRace()
 //------------------------------------------------------------------------------
 void TestDistributed::TestForceInclude() const
 {
-	const char * target( "..\\..\\..\\..\\ftmp\\Test\\Distributed\\ForceInclude\\ForceInclude.lib" );
+	const char * target( "../../../../ftmp/Test/Distributed/ForceInclude/ForceInclude.lib" );
 	TestHelper( target, 4 );
 }
 

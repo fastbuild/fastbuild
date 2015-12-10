@@ -36,7 +36,7 @@
 			"File",
 			"ServerStatus"
 		};
-		CTASSERT( ( sizeof( msgNames ) / sizeof(const char *) ) == Protocol::NUM_MESSAGES );
+		static_assert( ( sizeof( msgNames ) / sizeof(const char *) ) == Protocol::NUM_MESSAGES, "msgNames item count doesn't match NUM_MESSAGES" );
 
 		return msgNames[ msgType ];
 	}

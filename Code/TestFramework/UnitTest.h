@@ -17,6 +17,10 @@ protected:
 	virtual void RunTests() = 0;
 	virtual const char * GetName() const = 0;
 
+	// Run before and after each test
+	virtual void PreTest() const {}
+	virtual void PostTest() const {}
+
 private:
 	friend class UnitTestManager;
 	UnitTest * m_NextTestGroup;

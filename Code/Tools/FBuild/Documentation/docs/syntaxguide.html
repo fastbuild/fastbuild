@@ -41,6 +41,7 @@ Details of the FASTBuild configuration file syntax can be grouped into 4 categor
   <li><a href='#modification'>Modification</a></li>
   <li><a href='#scoping'>Scoping</a></li>
   <li><a href='#structs'>Structs</a></li>
+  <li><a href='#dynamic_construction'>Dynamic Construction</a></li>
 </ul>
 <b>Functions</b>
 <ul>
@@ -325,6 +326,16 @@ ForEach( .Config in .Configs )
 </div>
 
 
+<div class='newsitemheader' id='dynamic_construction'>Dynamic Construction</div>
+    <div class='newsitembody'>
+<p>
+Variable names can be dynamically constructed at parse time as follows:
+</p>
+<div class='code'>.Config   = 'Debug'
+.Platform = 'X64'
+.Options  = ."CompilerOptions_$Config$_$Platform$" // expands to .CompilerOptions_Debug_X64
+</div>
+</div>
 
 <h2>Functions</h2>
 <p>NOTE: See the <a href='functions.html'>Function Reference</a> for a detailed list of all available functions and their Arguments and Properties.</p>

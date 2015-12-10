@@ -62,6 +62,7 @@ public:
 		uint32_t m_NumCacheStores;
 
 		uint32_t m_ProcessingTimeMS;
+		uint32_t m_NumFailed;
 	};
 
 	void FormatTime( float timeInSeconds , AString & buffer  ) const;
@@ -69,6 +70,7 @@ public:
 	const Node * GetRootNode() const { return m_RootNode; }
 	const Array< const Node * > & GetNodesByTime() const { return m_NodesByTime; }
 
+	static inline void SetIgnoreCompilerNodeDeps( bool b ) { s_IgnoreCompilerNodeDeps = b; }
 private:
 	void GatherPostBuildStatisticsRecurse( Node * node );
 	void GatherPostBuildStatisticsRecurse( const Dependencies & dependencies );
@@ -78,6 +80,8 @@ private:
 
 	Stats m_PerTypeStats[ Node::NUM_NODE_TYPES ];
 	Stats m_Totals;
+
+	static bool s_IgnoreCompilerNodeDeps;
 };
 
 //------------------------------------------------------------------------------

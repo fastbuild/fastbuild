@@ -266,7 +266,7 @@ void TextWriter::Write( const char * format, ... )
 	// work out indent
 	const size_t MAX_INDENT( 16 );
 	static const char tabBuffer[] = { "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t" };
-	CTASSERT( sizeof( tabBuffer ) == MAX_INDENT + 1 ); // MAX_INDENT + 0 terminator
+	static_assert( sizeof( tabBuffer ) == MAX_INDENT + 1, "Unexpected sizeof(tabBuffer)" ); // MAX_INDENT + 0 terminator
 	size_t indent = m_Indent > MAX_INDENT ? MAX_INDENT : m_Indent;
 	const char * tabs = &tabBuffer[ MAX_INDENT - indent ];
 

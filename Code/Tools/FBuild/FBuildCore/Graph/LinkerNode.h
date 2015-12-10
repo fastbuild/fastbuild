@@ -11,6 +11,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class Args;
 
 // LinkerNode
 //------------------------------------------------------------------------------
@@ -20,6 +21,7 @@ public:
 	explicit LinkerNode( const AString & linkerOutputName,
 						 const Dependencies & inputLibraries,
 						 const Dependencies & otherLibraries,
+						 const AString & linkerType,
 						 const AString & linker,
 						 const AString & linkerArgs,
 						 uint32_t flags,
@@ -46,23 +48,27 @@ public:
 
 	virtual void Save( IOStream & stream ) const;
 
-	static uint32_t DetermineFlags( const AString & linkerName, const AString & args );
+	static uint32_t DetermineLinkerTypeFlags( const AString & linkerType, const AString & linkerName );
+	static uint32_t DetermineFlags( const AString & linkerType, const AString & linkerName, const AString & args );
 protected:
 	virtual BuildResult DoBuild( Job * job );
 
 	void DoPreLinkCleanup() const;
 
-	void GetFullArgs( AString & fullArgs ) const;
-	void GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const;
-	void GetInputFiles( Node * n, AString & fullArgs, const AString & pre, const AString & post ) const;
-	void GetAssemblyResourceFiles( AString & fullArgs, const AString & pre, const AString & post ) const;
-	void EmitCompilationMessage( const AString & fullArgs ) const;
+	bool BuildArgs( Args & fullArgs ) const;
+	void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
+	void GetInputFiles( Node * n, Args & fullArgs, const AString & pre, const AString & post ) const;
+	void GetAssemblyResourceFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
+	void EmitCompilationMessage( const Args & fullArgs ) const;
 	void EmitStampMessage() const;
 
 	inline bool GetFlag( Flag flag ) const { return ( ( m_Flags & (uint32_t)flag ) != 0 ); }
 
 	inline const char * GetDLLOrExe() const { return GetFlag( LINK_FLAG_DLL ) ? "DLL" : "Exe"; }
 
+	bool CanUseResponseFile() const;
+
+	AString m_LinkerType;
 	AString m_Linker;
 	AString m_LinkerArgs;
 	uint32_t m_Flags;

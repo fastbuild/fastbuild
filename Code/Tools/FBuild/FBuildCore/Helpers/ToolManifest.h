@@ -83,6 +83,8 @@ public:
 	void			GetRemotePath( AString & path ) const;
 	void			GetRemoteFilePath( uint32_t fileId, AString & exe, bool fullPath = true ) const;
 	const char *	GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
+
+	static void		GetRelativePath( const AString & mainExe, const AString & otherFile, AString & otherFileRelativePath );
 private:
 	bool			AddFile( const Node * node );
 	bool			LoadFile( const AString & fileName, void * & content, uint32_t & contentSize ) const;

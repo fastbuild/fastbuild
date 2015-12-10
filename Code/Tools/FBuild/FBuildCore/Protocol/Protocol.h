@@ -93,7 +93,7 @@ namespace Protocol
 	class MsgConnection : public IMessage
 	{
 	public:
-		MsgConnection( uint32_t numJobsAvailable );
+		explicit MsgConnection( uint32_t numJobsAvailable );
 
 		inline uint32_t GetProtocolVersion() const { return m_ProtocolVersion; }
 		inline uint32_t GetNumJobsAvailable() const { return m_NumJobsAvailable; }
@@ -109,7 +109,7 @@ namespace Protocol
 	class MsgStatus : public IMessage
 	{
 	public:
-		MsgStatus( uint32_t numJobsAvailable );
+		explicit MsgStatus( uint32_t numJobsAvailable );
 
 		inline uint32_t GetNumJobsAvailable() const { return m_NumJobsAvailable; }
 	private:
@@ -137,7 +137,7 @@ namespace Protocol
 	class MsgJob : public IMessage
 	{
 	public:
-		MsgJob( uint64_t toolId );
+		explicit MsgJob( uint64_t toolId );
 
 		inline uint64_t GetToolId() const { return m_ToolId; }
 	private:

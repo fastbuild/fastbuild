@@ -240,7 +240,7 @@
 	//------------------------------------------------------------------------------
 	/*static*/ void MemTracker::Init()
 	{
-        CTASSERT( sizeof( MemTracker::s_Mutex ) == sizeof( Mutex ) );
+        static_assert( sizeof( MemTracker::s_Mutex ) == sizeof( Mutex ), "Unexpected sizeof(Mutex)" );
 
 		ASSERT( g_MemTrackerDisabledOnThisThread );
 

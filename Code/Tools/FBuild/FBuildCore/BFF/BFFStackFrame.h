@@ -70,10 +70,9 @@ public:
 
 	BFFStackFrame * GetParent() const { return m_Next; }
 
-private:
-	// internal helper
 	const BFFVariable * GetVariableRecurse( const AString & name ) const;
 
+private:
 	const BFFVariable * GetVariableRecurse( const AString & nameOnly, 
 									  BFFVariable::VarType type ) const;
 

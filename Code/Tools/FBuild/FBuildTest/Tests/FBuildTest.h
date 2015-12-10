@@ -19,6 +19,9 @@ struct FBuildStats;
 class FBuildTest : public UnitTest
 {
 protected:
+	virtual void PreTest() const override;
+	virtual void PostTest() const override;
+
 	// helpers to clear and check for generated files
 	void EnsureFileDoesNotExist( const char * fileName ) const;
 	void EnsureFileDoesNotExist( const AString & fileName ) const { EnsureFileDoesNotExist( fileName.Get() ); }

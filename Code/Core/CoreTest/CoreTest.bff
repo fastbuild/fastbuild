@@ -134,7 +134,7 @@
             									'LZ4-Lib-$Platform$-$Config$'
                                               }
             .LinkerOutput                   = '$OutputBase$\Core\CoreTest\coretest'
-            .LinkerOptions                  + ' -pthread'
+            .LinkerOptions                  + ' -pthread -lrt'
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
     

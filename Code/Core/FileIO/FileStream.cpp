@@ -87,24 +87,6 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
 	{
 		flags |= FILE_ATTRIBUTE_TEMPORARY; // don't flush to disk if possible
 	}
-	if ( ( fileMode & DELETE_ON_CLOSE ) != 0 )
-	{
-		flags |= FILE_FLAG_DELETE_ON_CLOSE; // delete when closed
-	}
-
-	// sharing flags
-	if ( ( fileMode & SHARE_READ ) != 0 )
-	{
-		shareMode |= FILE_SHARE_READ; // allow other readers
-	}
-	if ( ( fileMode & SHARE_WRITE ) != 0 )
-	{
-		shareMode |= FILE_SHARE_WRITE; // allow other writers
-	}
-	if ( ( fileMode & SHARE_DELETE ) != 0 )
-	{
-		shareMode |= FILE_SHARE_DELETE; // allow other deleters
-	}
 
 	// for sharing violations, we'll retry a few times as per http://support.microsoft.com/kb/316609
 	size_t retryCount = 0;
@@ -166,28 +148,6 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
     {
         // hint flag - unsupported
     }
-    if ( ( fileMode & DELETE_ON_CLOSE ) != 0 )
-    {
-        // TODO:MAC DELETE_ON_CLOSE unsupported 
-        ASSERT( false ); // TODO:LINUX DELETE_ON_CLOSE unsupported 
-    }
-
-    // sharing flags
-    if ( ( fileMode & SHARE_READ ) != 0 )
-    {
-        // TODO:MAC SHARE_READ unsupported 
-        ASSERT( false ); // TODO:LINUX SHARE_READ unsupported 
-    }
-    if ( ( fileMode & SHARE_WRITE ) != 0 )
-    {
-        // TODO:MAC SHARE_WRITE unsupported 
-        ASSERT( false ); // TODO:LINUX SHARE_WRITE unsupported 
-    }
-    if ( ( fileMode & SHARE_DELETE ) != 0 )
-    {
-        // TODO:MAC SHARE_DELETE unsupported 
-        ASSERT( false ); // TODO:SHARE_DELETE DELETE_ON_CLOSE unsupported 
-    }    
 
     m_Handle = fopen( fileName, modeStr.Get() );
     if ( m_Handle != INVALID_HANDLE_VALUE )

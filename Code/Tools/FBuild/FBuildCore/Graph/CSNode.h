@@ -11,6 +11,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class Args;
 
 // CSNode
 //------------------------------------------------------------------------------
@@ -32,11 +33,11 @@ private:
 	virtual bool DoDynamicDependencies( bool forceClean );
 	virtual BuildResult DoBuild( Job * job );
 
-	void EmitCompilationMessage( const AString & fullArgs ) const;
+	void EmitCompilationMessage( const Args & fullArgs ) const;
 
-	void GetFullArgs( AString & fullArgs ) const;
-	void GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const;
-	void GetExtraRefs( AString & fullArgs, const AString & pre, const AString & post ) const;
+	bool BuildArgs( Args & fullArgs ) const;
+	void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
+	void GetExtraRefs( Args & fullArgs, const AString & pre, const AString & post ) const;
 
 	AString m_CompilerPath;
 	AString m_CompilerArgs;

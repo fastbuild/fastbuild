@@ -1,9 +1,11 @@
+define
 endif
 if
 import
 in
 include
 once
+undef
 
 Alias
 Compiler
@@ -17,14 +19,18 @@ ForEach
 Library
 ObjectList
 Print
+RemoveDir
 Settings
 Test
 Unity
 Using
 VCXProject
 VSSolution
+XCodeProject
 
 AdditionalOptions
+AllowCaching
+AllowDistribution
 ApplicationEnvironment
 AssemblySearchPath
 AumidOverride
@@ -91,6 +97,8 @@ PreBuildDependencies
 Preprocessor
 PreprocessorDefinitions
 PreprocessorOptions
+ProjectAllowedFileExtensions
+ProjectBasePath
 ProjectBuildCommand
 ProjectRebuildCommand
 ProjectCleanCommand
@@ -105,6 +113,10 @@ ProjectBasePath
 ProjectFileTypes
 ProjectReferences
 ProjectProjectReferences
+RemoveExcludePaths
+RemovePaths
+RemovePathsRecurse
+RemovePatterns
 RootNamespace
 SolutionBuildProject
 SolutionConfigs
@@ -138,3 +150,7 @@ UnityOutputPattern
 UnityPCH
 Workers
 X360DebuggerCommand
+XCodeBuildToolPath
+XCodeBuildToolArgs
+XCodeBuildWorkingDir
+XCodeOrganizationName

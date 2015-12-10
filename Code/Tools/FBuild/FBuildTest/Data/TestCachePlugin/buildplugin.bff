@@ -8,7 +8,9 @@ Settings {} // Activate standard settings
 
 // Toolchain
 //------------------------------------------------------------------------------
+#if __WINDOWS__
 .Compiler			= .CompilerX64 // Build for X64 so we can load the DLL
+#endif
 
 // Base compilation output
 //------------------------------------------------------------------------------
@@ -18,7 +20,12 @@ Settings {} // Activate standard settings
 //------------------------------------------------------------------------------
 ObjectList( "CachePlugin-Lib" )
 {
+#if __WINDOWS__
 	.CompilerOptions	+ .VisualStudioIncludePaths
+#endif
+#if __LINUX__
+	.CompilerOptions	+ ' -fPIC'
+#endif
 	.CompilerInputFiles	= "Data/TestCachePlugin/Plugin.cpp"
 	.CompilerOutputPath	= "$Out$/"
 }
@@ -27,13 +34,23 @@ ObjectList( "CachePlugin-Lib" )
 //------------------------------------------------------------------------------
 DLL( 'Plugin-DLL' )
 {
+#if __WINDOWS__
 	.LinkerOptions		+ ' /DLL'
 						+ ' LIBCMT.lib'
 						+ ' OLDNAMES.LIB'
 						+ ' kernel32.lib'
 						+ ' /LIBPATH:"$VisualStudioPath$\VC\lib\amd64"'
 						+ ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x64"'
-
 	.LinkerOutput		= '$Out$/CachePlugin.dll'
+#endif
+#if __LINUX__
+	.LinkerOptions		+ ' -shared'
+	.LinkerOutput		= '$Out$/CachePlugin.so'
+#endif
+#if __OSX__
+	.LinkerOptions		+ ' -shared'
+	.LinkerOutput		= '$Out$/CachePlugin.so'
+#endif
+
 	.Libraries			= { 'CachePlugin-Lib' }
 }

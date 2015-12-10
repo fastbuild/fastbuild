@@ -29,7 +29,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
-#include "Core/Math/Murmur3.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Process/SystemMutex.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
@@ -439,7 +439,7 @@ bool FBuild::ImportEnvironmentVar( const char * name, AString & value, uint32_t 
 	}
 
 	// compute hash value for actual value
-	hash = Murmur3::Calc32( value );
+	hash = xxHash::Calc32( value );
 
 	// check if the environment var was already imported
 	const EnvironmentVarAndHash * it = m_ImportedEnvironmentVars.Begin();
@@ -581,7 +581,7 @@ void FBuild::SetCachePath( const AString & path )
 void FBuild::GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, AString & path ) const
 {
 	// cache version - bump if cache format is changed
-	static const int cacheVersion( 5 );
+	static const int cacheVersion( 6 );
 
 	// format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC.4
 	path.Format( "%016llX_%08X_%016llX.%u", keyA, keyB, keyC, cacheVersion );

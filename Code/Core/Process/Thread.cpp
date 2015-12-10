@@ -235,10 +235,8 @@ public:
 {
 	#if defined( __WINDOWS__ )
 		::CloseHandle( h );
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement CloseHandle
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement CloseHandle
+    #elif defined( __APPLE__ ) || defined(__LINUX__)
+        // Nothing to do
     #else
         #error Unknown platform
 	#endif
@@ -270,8 +268,12 @@ public:
 			{
 				(void)0;
 			}
-		#else
-			// TODO:MAC TODO:LINUX Implement SetThreadName
+        #elif defined( __LINUX__ )
+            pthread_setname_np( (pthread_t)GetCurrentThreadId(), name );
+        #elif defined( __APPLE__ )
+            pthread_setname_np( name );            
+        #else
+            #error Unknown platform
 		#endif
 	}
 #endif

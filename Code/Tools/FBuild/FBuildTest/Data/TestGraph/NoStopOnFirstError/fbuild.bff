@@ -1,0 +1,39 @@
+//
+// NoStopOnFirstError
+//
+// Ensure a graph with errors will correcly build all targets when 
+// -nostoponerror option is used
+//
+
+#include "../../testcommon.bff"
+
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+.Out		= "../../../../ftmp/"
+
+.CompilerOutputPath = "$Out$/Test/Graph/NoStopOnFirstError"
+
+Library( 'libA' )
+{
+	.CompilerInputFiles	= {
+							"Data/TestGraph/NoStopOnFirstError/a.cpp"
+							"Data/TestGraph/NoStopOnFirstError/b.cpp"
+						  }
+	.LibrarianOutput	= "$Out$/Test/Graph/NoStopOnFirstError/libA.lib"
+}
+
+Library( 'libB' )
+{
+	.CompilerInputFiles	= {
+							"Data/TestGraph/NoStopOnFirstError/c.cpp"
+							"Data/TestGraph/NoStopOnFirstError/d.cpp"
+						  }
+	.LibrarianOutput	= "$Out$/Test/Graph/NoStopOnFirstError/libB.lib"
+}
+
+Alias( 'all' )
+{
+	.Targets			= { 'libA', 'libB' }
+}

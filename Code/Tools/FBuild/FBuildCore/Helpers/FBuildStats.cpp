@@ -16,6 +16,11 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
+// Static
+//------------------------------------------------------------------------------
+// For unit test count check stability we want to exclude "ExtraFiles" on CompilerNodes
+/*static*/ bool FBuildStats::s_IgnoreCompilerNodeDeps( false );
+
 // NodeCostSorter
 //------------------------------------------------------------------------------
 class NodeCostSorter
@@ -48,6 +53,7 @@ FBuildStats::Stats::Stats()
 	, m_NumCacheMisses( 0 )
 	, m_NumCacheStores( 0 )
 	, m_ProcessingTimeMS( 0 )
+	, m_NumFailed( 0 )
 {}
 
 // OnBuildStop
@@ -111,7 +117,7 @@ void FBuildStats::OutputSummary() const
 {
     PROFILE_FUNCTION
 
-    AStackString< 2048 > output;
+    AStackString< 4096 > output;
 
 	// Top 10 cost items
 	if ( m_NodesByTime.IsEmpty() == false )
@@ -236,6 +242,10 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
 		{
 			stats.m_NumBuilt++;
 		}
+		if ( node->GetStatFlag( Node::STATS_FAILED ) )
+		{
+			stats.m_NumFailed++;
+		}
 		if ( node->GetStatFlag( Node::STATS_CACHE_HIT ) )
 		{
 			stats.m_NumCacheHits++;
@@ -252,6 +262,12 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
 
 	// mark this node as processed to prevent multiple recursion
 	node->SetStatFlag( Node::STATS_STATS_PROCESSED );
+
+	// For unit test count check stability we want to exclude "ExtraFiles" on CompilerNodes
+	if ( s_IgnoreCompilerNodeDeps && ( node->GetType() == Node::COMPILER_NODE ) )
+	{
+		return;
+	}
 
 	// handle deps
 	GatherPostBuildStatisticsRecurse( node->GetPreBuildDependencies() );

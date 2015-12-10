@@ -132,6 +132,10 @@ void Client::ThreadFunc()
 		}
 
 		Thread::Sleep( 1 );
+		if ( m_ShouldExit )
+		{
+			break;
+		}
 	}
 
 	m_Exited = true;
@@ -141,6 +145,8 @@ void Client::ThreadFunc()
 //------------------------------------------------------------------------------
 void Client::LookForWorkers()
 {
+	PROFILE_FUNCTION
+
 	MutexHolder mh( m_ServerListMutex );
 
 	const size_t numWorkers( m_ServerList.GetSize() );
@@ -229,6 +235,8 @@ void Client::LookForWorkers()
 //------------------------------------------------------------------------------
 void Client::CommunicateJobAvailability()
 {
+	PROFILE_FUNCTION
+
 	// too soon since last status update?
 	if ( m_StatusUpdateTimer.GetElapsed() < CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS )
 	{
@@ -276,6 +284,8 @@ void Client::CommunicateJobAvailability()
 //------------------------------------------------------------------------------
 void Client::CheckForTimeouts()
 {
+	PROFILE_FUNCTION
+
 	MutexHolder mh( m_ServerListMutex );
 
 	// update each server to know how many jobs we have now
@@ -563,10 +573,16 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 					objectNode->WriteToCache( job );
 				}
 			}
+			else
+			{
+				((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
+			}
 		}
 	}
 	else
 	{
+		((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
+
 		// failed - build list of errors
 		const AString & nodeName = job->GetNode()->GetName();
 		AStackString< 8192 > failureOutput;

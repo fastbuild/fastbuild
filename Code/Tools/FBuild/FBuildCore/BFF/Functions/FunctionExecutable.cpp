@@ -95,6 +95,14 @@ FunctionExecutable::FunctionExecutable()
 		return false; // GetString will have emitted an error
 	}
 
+	// Optional linker type
+	AStackString<> linkerType;
+	if ( !GetString( funcStartIter, linkerType, ".LinkerType" ) )
+	{
+		return false; // GetString will have emitted error
+	}
+    linkerType.ToLower();
+
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
 	// we'll build a list of libraries to link
@@ -144,7 +152,7 @@ FunctionExecutable::FunctionExecutable()
 	}
 
 	// Determine flags
-	uint32_t flags = LinkerNode::DetermineFlags( linker->GetString(), linkerOptions->GetString() );
+	uint32_t flags = LinkerNode::DetermineFlags( linkerType, linker->GetString(), linkerOptions->GetString() );
 	bool isADLL = ( ( flags & LinkerNode::LINK_FLAG_DLL ) != 0 );
 
 	bool linkObjects = isADLL ? true : false;
@@ -182,6 +190,7 @@ FunctionExecutable::FunctionExecutable()
 		n = ng.CreateDLLNode( linkerOutput,
 							  libraryNodes,
 							  otherLibraryNodes,
+							  linkerType,
 							  linker->GetString(),
 							  linkerOptions->GetString(),
 							  flags,
@@ -195,6 +204,7 @@ FunctionExecutable::FunctionExecutable()
 		n = ng.CreateExeNode( linkerOutput,
 							  libraryNodes,
 							  otherLibraryNodes,
+							  linkerType,
 							  linker->GetString(),
 							  linkerOptions->GetString(),
 							  flags,

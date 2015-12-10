@@ -573,6 +573,11 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 		FLOG_INFO( "-Build: %u ms\t%s", timeTakenMS, node->GetName().Get() );
 	}
 
+	if ( result == Node::NODE_RESULT_FAILED )
+	{
+		node->SetStatFlag( Node::STATS_FAILED );
+	}
+
 	if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
 	{
 		// nothing to check

@@ -46,7 +46,7 @@ Process::Process()
 #endif
 {
     #if defined( __WINDOWS__ )
-        CTASSERT( sizeof( m_ProcessInfo ) == sizeof( PROCESS_INFORMATION ) );
+        static_assert( sizeof( m_ProcessInfo ) == sizeof( PROCESS_INFORMATION ), "Unexpected sizeof(PROCESS_INFORMATION)" );
     #endif
 }
 
@@ -184,6 +184,25 @@ bool Process::Spawn( const char * executable,
             if ( workingDir )
             {
                 FileIO::SetCurrentDir( AStackString<>( workingDir ) );
+            }
+            
+            if ( environment )
+            {
+                #if !defined( __APPLE__ )
+                    VERIFY( clearenv() == 0 ); // TODO:MAC Fix missing clearenv()
+                #endif
+                
+                // Iterate double-null terminated string vector
+                while( *environment != 0 )
+                {
+                    const char * equals = strchr( environment, '=' );
+                    ASSERT(equals);
+                    AStackString<> name( environment, equals );
+                    AStackString<> value( equals + 1 );
+                    environment = equals + 1; // skip name and equals
+                    environment += value.GetLength() + 1; // skip null terminator for sting
+                    VERIFY( setenv(name.Get(), value.Get(), 1) == 0 );
+                }
             }
 
             // split args

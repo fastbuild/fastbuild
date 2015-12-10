@@ -339,6 +339,8 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 
 	if ( result == Node::NODE_RESULT_FAILED )
 	{
+		node->SetStatFlag( Node::STATS_FAILED );
+
 		// build of file failed - if there is a file....
 		if ( FileIO::FileExists( node->GetName().Get() ) )
 		{

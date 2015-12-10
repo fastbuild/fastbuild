@@ -1,0 +1,23 @@
+//
+//
+//
+
+.Out		= '../../../../ftmp'
+
+.DebugConfig = 
+[
+	.Config	= 'Debug'
+	.Target = 'Main-x64OSX-Debug'
+]
+.ReleaseConfig = 
+[
+	.Config	= 'Release'
+	.Target = 'Main-x64OSX-Release'
+]
+
+XCodeProject( 'XCodeProj' )
+{
+	.ProjectOutput		= '$Out$/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj'
+	
+	.ProjectConfigs		= { .DebugConfig, .ReleaseConfig }
+}

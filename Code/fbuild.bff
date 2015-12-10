@@ -448,7 +448,7 @@ Compiler( 'Compiler-x64-OSX' )
 [
 	.Compiler					= '$WindowsSDKBasePath$\Bin\x86\RC.exe'
 	.CompilerOutputExtension	= '.res'
-	.CompilerOptions			= '/nologo /fo"%2" %1'
+	.CompilerOptions			= '/nologo /fo"%2" "%1"'
 ]
 
 //------------------------------------------------------------------------------
@@ -509,8 +509,8 @@ VCXProject( 'UpdateSolution-proj' )
 
     .GenerateProjectsCommands =
     [
-	    .ProjectBuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution'
-	    .ProjectRebuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -clean'
+	    .ProjectBuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
+	    .ProjectRebuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
     ]
 
     .ProjectX86Debug		= [ Using( .ProjectX86Debug )	    Using( .GenerateProjectsCommands ) ]

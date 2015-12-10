@@ -81,7 +81,7 @@ public:
                              Dependencies & nodes ) const;
 
 	bool GetNodeList( const BFFIterator & iter, const char * name, Dependencies & nodes, bool required = false,
-					  bool allowCopyDirNodes = false, bool allowUnityNodes = false ) const;
+					  bool allowCopyDirNodes = false, bool allowUnityNodes = false, bool allowRemoveDirNodes = false ) const;
 
 private:
 	Function *	m_NextFunction;
@@ -113,15 +113,17 @@ protected:
 	// Reflection based property population
 	bool GetNameForNode( const BFFIterator & iter, const ReflectionInfo * ri, AString & name ) const;
 	bool PopulateProperties( const BFFIterator & iter, Node * node ) const;
-	bool PopulateArrayOfStrings( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
-	bool PopulateString( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
-	bool PopulateBool( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
-	bool PopulateUInt32( const BFFIterator & iter, Node * node, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateProperty( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateArrayOfStrings( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateString( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateBool( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateUInt32( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+	bool PopulateArrayOfStructs( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
 
 	bool PopulatePathAndFileHelper( const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const AString & variableName, const AString & originalValue, AString & valueToFix ) const;
 private:
 	bool GetNodeListRecurse( const BFFIterator & iter, const char * name, Dependencies & nodes, const AString & nodeName,
-							 bool allowCopyDirNodes, bool allowUnityNodes ) const;
+							 bool allowCopyDirNodes, bool allowUnityNodes, bool allowRemoveDirNodes ) const;
 };
 
 //------------------------------------------------------------------------------

@@ -14,6 +14,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 
 // Core
 #include "Core/FileIO/IOStream.h"
@@ -33,12 +34,16 @@ ObjectListNode::ObjectListNode( const AString & listName,
 						  const Dependencies & preBuildDependencies,
 						  bool deoptimizeWritableFiles,
 						  bool deoptimizeWritableFilesWithToken,
+						  bool allowDistribution,
+						  bool allowCaching,
                           CompilerNode * preprocessor,
                           const AString &preprocessorArgs )
 : Node( listName, Node::OBJECT_LIST_NODE, Node::FLAG_NONE )
 , m_CompilerForceUsing( compilerForceUsing )
 , m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
 , m_DeoptimizeWritableFilesWithToken( deoptimizeWritableFilesWithToken )
+, m_AllowDistribution(allowDistribution)
+, m_AllowCaching(allowCaching)
 {
 	m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved
 
@@ -255,7 +260,7 @@ ObjectListNode::~ObjectListNode()
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void ObjectListNode::GetInputFiles( AString & fullArgs, const AString & pre, const AString & post ) const
+void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const
 {
 	for ( Dependencies::Iter i = m_DynamicDependencies.Begin();
 		  i != m_DynamicDependencies.End();
@@ -276,7 +281,7 @@ void ObjectListNode::GetInputFiles( AString & fullArgs, const AString & pre, con
 					fullArgs += on->GetName();
 					fullArgs += on->GetObjExtension();
 					fullArgs += post;
-					fullArgs += ' ';
+					fullArgs.AddDelimiter();
 					continue;
 				}
 				else
@@ -302,7 +307,7 @@ void ObjectListNode::GetInputFiles( AString & fullArgs, const AString & pre, con
 		fullArgs += pre;
 		fullArgs += n->GetName();
 		fullArgs += post;
-		fullArgs += ' ';
+		fullArgs.AddDelimiter();
 	}
 }
 
@@ -380,7 +385,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 			preprocessorFlags = ObjectNode::DetermineFlags( m_Preprocessor, m_PreprocessorArgs );
         }
 
-		on = ng.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerArgs, m_CompilerArgsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken, m_Preprocessor, m_PreprocessorArgs, preprocessorFlags );
+		on = ng.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerArgs, m_CompilerArgsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken, m_AllowDistribution, m_AllowCaching, m_Preprocessor, m_PreprocessorArgs, preprocessorFlags );
 	}
 	else if ( on->GetType() != Node::OBJECT_NODE )
 	{
@@ -423,6 +428,8 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	NODE_LOAD_DEPS( 0,			preBuildDependencies );
 	NODE_LOAD( bool,			deoptimizeWritableFiles );
 	NODE_LOAD( bool,			deoptimizeWritableFilesWithToken );
+	NODE_LOAD( bool,			allowDistribution );
+	NODE_LOAD( bool,			allowCaching );
 	NODE_LOAD_NODE( CompilerNode, preprocessorNode );
 	NODE_LOAD( AStackString<>,	preprocessorArgs );
 
@@ -438,6 +445,8 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 								preBuildDependencies,
 								deoptimizeWritableFiles,
 								deoptimizeWritableFilesWithToken,
+								allowDistribution, 
+								allowCaching,
 								preprocessorNode,
 								preprocessorArgs );
 	n->m_ObjExtensionOverride = objExtensionOverride;
@@ -471,6 +480,8 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	NODE_SAVE_DEPS( m_PreBuildDependencies );
 	NODE_SAVE( m_DeoptimizeWritableFiles );
 	NODE_SAVE( m_DeoptimizeWritableFilesWithToken );
+	NODE_SAVE( m_AllowDistribution );
+	NODE_SAVE( m_AllowCaching );
 	NODE_SAVE_NODE( m_Preprocessor );
 	NODE_SAVE( m_PreprocessorArgs );
 

@@ -207,6 +207,8 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_
 //------------------------------------------------------------------------------
 const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t port, uint32_t timeout )
 {
+	PROFILE_FUNCTION
+
     // create a socket
     TCPSocket sockfd = socket( AF_INET, SOCK_STREAM, 0 );
 

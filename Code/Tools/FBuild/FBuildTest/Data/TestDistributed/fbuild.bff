@@ -1,40 +1,11 @@
 
 #include "..\testcommon.bff"
-
+Using( .StandardEnvironment )
 Settings		
 {
-	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
-						"TMP=C:\Windows\Temp",
-						"SystemRoot=C:\Windows" }
 	.Workers		= { "127.0.0.999", ; deliberate failure address
 						"127.0.0.1" } 
 }
-
-Compiler( 'Compiler-x86' )
-{
-	.Root		= '$VisualStudioPath$\VC\bin'
-	.Executable	= '$Root$\cl.exe'
-	.ExtraFiles = { '$Root$\c1.dll'
-					'$Root$\c1xx.dll',
-					'$Root$\c2.dll',
-					'$Root$\mspft110.dll'
-					'$Root$\pgodb110.dll'
-					'$Root$\1033\clui.dll'
-					'$VisualStudioPath$\Common7\IDE\mspdb110.dll'
-					'$VisualStudioPath$\Common7\IDE\msobj110.dll'					
-					'$VisualStudioPath$\Common7\IDE\mspdbcore.dll'
-					'$VisualStudioPath$\Common7\IDE\mspdbsrv.exe'
-					'$VisualStudioPath$\Common7\IDE\msvcr110.dll'
-					'$VisualStudioPath$\Common7\IDE\msvcp110.dll'
-				  }
-}
-
-.Compiler = 'Compiler-x86'
-.Librarian	= "$VisualStudioPath$\VC\bin\lib.exe"
-.CompilerOptions = "%1 /Fo%2 /c /Z7 /Od /Zc:wchar_t /nologo /DWIN32 /DDEBUG /I'./'"
-.LibrarianOptions	= "/NOLOGO /NODEFAULTLIB /OUT:%2 %1"
-.Linker = '$VisualStudioPath$\VC\bin\link.exe'
-.LinkerOptions = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
 
 .Out		= "..\..\..\..\ftmp"
 
@@ -56,7 +27,7 @@ Library( "DistTestPCH" )
 	.CompilerInputPath	= "Data\TestDistributed\"
 	.CompilerInputPattern = "*_pch.cpp"
 	.CompilerOutputPath	= "$Out$\Test\Distributed\"
-	.CompilerOptions	+ ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+	.CompilerOptions	+ ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$" /I"."'
 }
 
 // RegressionTest - Formatting errors with % in them caused a crash
@@ -67,28 +38,32 @@ ObjectList( "badcode" )
 }
 
 // ForceInclude - Ensure this is handled correctly
-Library( "forceinclude" )
-{
-	.CompilerOptions		+ ' /FI"a.h"'
-	.CompilerInputPath		= "Data\TestDistributed\ForceInclude"
-	.CompilerOutputPath		= "$Out$\Test\Distributed\ForceInclude\"
-	.LibrarianOutput		= "$Out$\Test\Distributed\ForceInclude\ForceInclude.lib"
-}
+#if __WINDOWS__
+	Library( "forceinclude" )
+	{
+		.CompilerOptions		+ ' /FI"a.h"'
+		.CompilerInputPath		= "Data\TestDistributed\ForceInclude"
+		.CompilerOutputPath		= "$Out$\Test\Distributed\ForceInclude\"
+		.LibrarianOutput		= "$Out$\Test\Distributed\ForceInclude\ForceInclude.lib"
+	}
+#endif
 
 // Check handling of Zi debug format
 // Make sure we link to check that debug info is correctly retained
-ObjectList( 'remoteZiLib' )
-{
-	.CompilerOptions		= "%1 /Fo%2 /c /Zi /Od /nologo /Fd$Out$\Test\Distributed\Zi\RemoteZi_Lib.pdb"
-	.CompilerInputPath		= "Data\TestDistributed\Zi"	
-	.CompilerOutputPath		= "$Out$\Test\Distributed\Zi\"
-}
-DLL( 'remoteZi' )
-{
-	.Libraries				= 'remoteZiLib'
-	.LinkerOptions			+ ' /DLL'
-							+ ' /ENTRY:DllMain'
-							+ ' /DEBUG'
-							+ ' /PDB:$Out$\Test\Distributed\Zi\RemoteZi.pdb'
-	.LinkerOutput			= '$Out$\Test\Distributed\Zi\RemoteZi.dll'
-}
+#if __WINDOWS__
+	ObjectList( 'remoteZiLib' )
+	{
+		.CompilerOptions		= "%1 /Fo%2 /c /Zi /Od /nologo /Fd$Out$\Test\Distributed\Zi\RemoteZi_Lib.pdb"
+		.CompilerInputPath		= "Data\TestDistributed\Zi"	
+		.CompilerOutputPath		= "$Out$\Test\Distributed\Zi\"
+	}
+	DLL( 'remoteZi' )
+	{
+		.Libraries				= 'remoteZiLib'
+		.LinkerOptions			+ ' /DLL'
+								+ ' /ENTRY:DllMain'
+								+ ' /DEBUG'
+								+ ' /PDB:$Out$\Test\Distributed\Zi\RemoteZi.pdb'
+		.LinkerOutput			= '$Out$\Test\Distributed\Zi\RemoteZi.dll'
+	}
+#endif

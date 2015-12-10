@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - RemoveDir</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>RemoveDir</h1>
+    <div id='copy' class='newsitemheader'>
+      Summary
+    </div>
+    <div class='newsitembody'>
+      <p>
+Deletes the contents of one or more directories.
+      </p>
+<div class='code'>RemoveDir( 'name' ) // Name (required)
+{
+  // Basic options
+  .RemovePaths              // Directories to delete contents of
+  .RemovePathsRecurse       // (optional) Recurse into sub-directories? (default: true)
+
+  // Filtering options
+  .RemovePatterns           // (optional) Wildcards of contents to delete (default: *)
+  .RemoveExcludePaths       // (optional) Directories to ignore if recursing
+  
+  // Additional options
+  .PreBuildDependencies     // (optional) Force targets to be built before this RemoveDir
+}
+</div>
+    </div>
+	
+    <div id='copy' class='newsitemheader'>
+      Details
+    </div>
+    <div class='newsitembody'>
+      <p>
+RemoveDir() can be used to delete the contents of a directory. By default, the sub-driectories are
+recursed and all files are deleted.  Recursion can be disabled (.PathsRecurse), individual sub-directories
+can be ignored (.ExcludePaths) and files to be deleted can be filtered (.PathsPattern).
+      </p>
+    </div>
+
+<!-- 
+	Basic Options
+-->
+<div id='copy' class='newsitemheader'>Basic Options</div>
+<div class='newsitembody'>
+  <p><b>.RemovePaths</b> - String/ArrayOfStrings - (Required)</p>
+  <p>One or more paths can be provided, either as a string or an array of strings.  Each path will be
+	 traversed and files within it deleted (subject to other settings).</p>
+  Example:
+<div class='code'>.RemovePaths = 'folder\'</div> 	  
+  Or:
+<div class='code'>.RemovePaths = { 'folderA\', 'folderB\' }</div> 	  
+  
+  <p><hr></p>
+  
+  <p><b>.RemovePathsRecurse</b> - Bool - (Optional)</p>
+  <p>Directories are scanned recursively by default. Recursion can be disabled.</p>
+  Example:
+<div class='code'>.RemovePathsRecurse = false</div> 	  	  
+</div>
+	
+<!-- 
+	Filtering Options
+-->
+<div id='copy' class='newsitemheader'>Filtering Options</div>
+<div class='newsitembody'>
+  <b>.RemovePatterns</b> - String/ArrayOfStrings - (Optional)</p>
+  <p>All discovered files will be deleted by default. Deletion can be restricted to certain
+     files or sub-directories by specifying .RemovePatterns wildcards.</p>
+  Example:
+<div class='code'>.RemovePatterns = '*.obj' // Delete all *.obj files</div>
+  Example:
+<div class='code'>.RemovePatterns = { 'subdir/*.exe',  // Delete *.exe files in "subdir"
+                    'subdir/*.pdb' } // Delete *.pdb files in "subdir"</div>
+	
+  <p><hr></p>
+
+  <b>.RemoveExcludePaths</b> - String/ArrayOfStrings - (Optional)</p>
+  <p>Specific sub-directories can be ignored during recursion.</p>
+  Example:
+<div class='code'>.RemoveExcludePaths = 'folderA/' // Ignore contents of folder</div>
+  Example:
+<div class='code'>.RemoveExcludePaths = { 'folderA/',  // Ignore contents of "folderA"
+                        'FolderB/' } // and "folderB"</div>
+</div>
+	
+<!-- 
+	Other Options
+-->
+<div id='copy' class='newsitemheader'>Other Options</div>
+<div class='newsitembody'>
+  <p><b>.PreBuildDependencies</b> - String/ArrayOfStrings - (Optional)</p>
+  <p>One or more nodes which must be built before this node is built.</p>
+  <p>The .PreBuildDependencies option ensures the specified targets are up-to-date before the 
+	 RemoveDir() is executed.</p>
+  Example:
+<div class='code'>.PreBuildDependencies = 'DoStuff' // A previously defined target</div>
+</div>	
+	
+  <script>generateFooter()</script>
+</body>
+</html>

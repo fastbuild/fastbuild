@@ -416,15 +416,17 @@ AString & AString::operator += ( char c )
 AString & AString::operator += ( const char * string )
 {
 	uint32_t suffixLen = (uint32_t)StrLen( string );
-	uint32_t newLen = m_Length + suffixLen;
-	if ( newLen > GetReserved() )
+	if ( suffixLen )
 	{
-		Grow( newLen );
+		uint32_t newLen = m_Length + suffixLen;
+		if ( newLen > GetReserved() )
+		{
+			Grow( newLen );
+		}
+
+		Copy( string, m_Contents + m_Length, suffixLen ); // handles terminator
+		m_Length += suffixLen;
 	}
-
-	Copy( string, m_Contents + m_Length, suffixLen ); // handles terminator
-	m_Length += suffixLen;
-
 	return *this;
 }
 
@@ -433,15 +435,17 @@ AString & AString::operator += ( const char * string )
 AString & AString::operator += ( const AString & string )
 {
 	uint32_t suffixLen = string.GetLength();
-	uint32_t newLen = m_Length + suffixLen;
-	if ( newLen > GetReserved() )
+	if ( suffixLen )
 	{
-		Grow( newLen );
+		uint32_t newLen = m_Length + suffixLen;
+		if ( newLen > GetReserved() )
+		{
+			Grow( newLen );
+		}
+
+		Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator
+		m_Length += suffixLen;
 	}
-
-	Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator
-	m_Length += suffixLen;
-
 	return *this;
 }
 
@@ -449,14 +453,17 @@ AString & AString::operator += ( const AString & string )
 //------------------------------------------------------------------------------
 void AString::Append( const char * string, size_t len )
 {
-	uint32_t newLen = m_Length + (uint32_t)len;
-	if ( newLen > GetReserved() )
+	if ( len )
 	{
-		Grow( newLen );
-	}
+		uint32_t newLen = m_Length + (uint32_t)len;
+		if ( newLen > GetReserved() )
+		{
+			Grow( newLen );
+		}
 
-	Copy( string, m_Contents + m_Length, len ); // handles terminator
-	m_Length = newLen;
+		Copy( string, m_Contents + m_Length, len ); // handles terminator
+		m_Length = newLen;
+	}
 }
 
 // AppendFormat

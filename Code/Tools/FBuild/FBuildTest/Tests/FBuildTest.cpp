@@ -10,6 +10,19 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
 
+// PreTest
+//------------------------------------------------------------------------------
+/*virtual*/ void FBuildTest::PreTest() const
+{
+	FBuildStats::SetIgnoreCompilerNodeDeps( true );
+}
+
+// PostTest
+//------------------------------------------------------------------------------
+/*virtual*/ void FBuildTest::PostTest() const
+{
+	FBuildStats::SetIgnoreCompilerNodeDeps( false );
+}
 
 // EnsureFileDoesNotExist
 //------------------------------------------------------------------------------

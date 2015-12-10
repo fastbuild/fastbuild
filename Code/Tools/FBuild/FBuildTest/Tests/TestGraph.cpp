@@ -47,6 +47,7 @@ private:
 	void TestDirectoryListNode() const;
 	void TestSerialization() const;
 	void TestDeepGraph() const;
+	void TestNoStopOnFirstError() const;
 };
 
 // Register Tests
@@ -65,6 +66,7 @@ REGISTER_TESTS_BEGIN( TestGraph )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( TestDeepGraph ) // TODO:MAC TODO:LINUX Enable this test
     #endif
+	REGISTER_TEST( TestNoStopOnFirstError )
 REGISTER_TESTS_END
 
 // EmptyGraph
@@ -89,11 +91,11 @@ void TestGraph::TestNodeTypes() const
 	CompilerNode * cn( nullptr );
 	{
 		Dependencies extraFiles( 0, false );
-#ifdef USE_NODE_REFLECTION
-		cn = ng.CreateCompilerNode( AStackString<>( "cl.exe" ) );
-#else
-		cn = ng.CreateCompilerNode( AStackString<>( "cl.exe" ), extraFiles, false );
-#endif
+		#if defined( __WINDOWS__ )
+			cn = ng.CreateCompilerNode( AStackString<>( "c:\\cl.exe" ) );
+		#else
+			cn = ng.CreateCompilerNode( AStackString<>( "/usr/bin/gcc" ) );
+		#endif
 		TEST_ASSERT( cn->GetType() == Node::COMPILER_NODE );
 		TEST_ASSERT( AStackString<>( "Compiler" ) == cn->GetTypeName() );
 	}
@@ -142,14 +144,14 @@ void TestGraph::TestNodeTypes() const
 										 Dependencies(),
 										 Dependencies(),
 										 Dependencies(),
-										 false, false,
+										 false, false, false, false,
                                          nullptr, AString::GetEmpty() );
 		TEST_ASSERT( n->GetType() == Node::LIBRARY_NODE );
 		TEST_ASSERT( LibraryNode::GetTypeS() == Node::LIBRARY_NODE );
 		TEST_ASSERT( AStackString<>( "Library" ) == n->GetTypeName() );
 	}
 	{
-        Node * n = ng.CreateObjectNode(AStackString<>("obj"), fn, cn, AString::GetEmpty(), AString::GetEmpty(), nullptr, 0, Dependencies(), false, false, nullptr, AString::GetEmpty(), 0 );
+        Node * n = ng.CreateObjectNode(AStackString<>("obj"), fn, cn, AString::GetEmpty(), AString::GetEmpty(), nullptr, 0, Dependencies(), false, false, false, false, nullptr, AString::GetEmpty(), 0 );
 		TEST_ASSERT( n->GetType() == Node::OBJECT_NODE );
 		TEST_ASSERT( ObjectNode::GetTypeS() == Node::OBJECT_NODE );
 		TEST_ASSERT( AStackString<>( "Object" ) == n->GetTypeName() );
@@ -168,7 +170,7 @@ void TestGraph::TestNodeTypes() const
 	{
 		Dependencies libraries( 1, false );
 		libraries.Append( Dependency( fn ) );
-		Node * n = ng.CreateDLLNode( AStackString<>( "zz.dll" ), libraries, Dependencies(), AString::GetEmpty(), AString::GetEmpty(), 0, Dependencies(), AStackString<>(), nullptr, AString::GetEmpty() );
+		Node * n = ng.CreateDLLNode( AStackString<>( "zz.dll" ), libraries, Dependencies(), AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), 0, Dependencies(), AStackString<>(), nullptr, AString::GetEmpty() );
 		TEST_ASSERT( n->GetType() == Node::DLL_NODE );
 		TEST_ASSERT( DLLNode::GetTypeS() == Node::DLL_NODE );
 		TEST_ASSERT( AStackString<>( "DLL" ) == n->GetTypeName() );
@@ -176,7 +178,7 @@ void TestGraph::TestNodeTypes() const
 	{
 		Dependencies libraries( 1, false );
 		libraries.Append( Dependency( fn ) );
-		Node * n = ng.CreateExeNode( AStackString<>( "zz.exe" ), libraries, Dependencies(), AString::GetEmpty(), AString::GetEmpty(), 0, Dependencies(), AStackString<>(),nullptr, AString::GetEmpty() );
+		Node * n = ng.CreateExeNode( AStackString<>( "zz.exe" ), libraries, Dependencies(), AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), 0, Dependencies(), AStackString<>(),nullptr, AString::GetEmpty() );
 		TEST_ASSERT( n->GetType() == Node::EXE_NODE );
 		TEST_ASSERT( ExeNode::GetTypeS() == Node::EXE_NODE );
 		TEST_ASSERT( AStackString<>( "Exe" ) == n->GetTypeName() );
@@ -533,6 +535,51 @@ void TestGraph::TestDeepGraph() const
 		// make sure walking the graph wasn't slow (should be a good deal less 
 		// than 100ms, but allow for a lot of slack on the test machine)
 		TEST_ASSERT( t.GetElapsed() < 2.0f );
+	}
+}
+
+// TestNoStopOnFirstError
+//------------------------------------------------------------------------------
+void TestGraph::TestNoStopOnFirstError() const
+{
+	FBuildOptions options;
+	options.m_ShowSummary = true;	// required to generate stats for node count checks
+	options.m_NumWorkerThreads = 0; // ensure test behaves deterministically
+	options.m_ConfigFile = "Data/TestGraph/NoStopOnFirstError/fbuild.bff";
+
+	// "Stop On First Error" build (default behaviour)
+	{
+		FBuild fBuild( options );
+		TEST_ASSERT( fBuild.Initialize() );
+		TEST_ASSERT( fBuild.Build( AStackString<>( "all" ) ) == false ); // Expect build to fail
+
+		// Check stats
+		//				 Seen,	Built,	Type
+		CheckStatsNode ( 4,		0,		Node::OBJECT_NODE );
+		CheckStatsNode ( 2,		0,		Node::LIBRARY_NODE );
+		CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
+
+		// One node should have failed
+		const FBuildStats::Stats & nodeStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+		TEST_ASSERT( nodeStats.m_NumFailed == 1 );
+	}
+
+	// "No Stop On First Error" build
+	options.m_StopOnFirstError = false;
+	{
+		FBuild fBuild( options );
+		TEST_ASSERT( fBuild.Initialize() );
+		TEST_ASSERT( fBuild.Build( AStackString<>( "all" ) ) == false ); // Expect build to fail
+
+		// Check stats
+		//				 Seen,	Built,	Type
+		CheckStatsNode ( 4,		0,		Node::OBJECT_NODE );
+		CheckStatsNode ( 2,		0,		Node::LIBRARY_NODE );
+		CheckStatsNode ( 1,		0,		Node::ALIAS_NODE );
+
+		// Add 4 nodes should have failed
+		const FBuildStats::Stats & nodeStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+		TEST_ASSERT( nodeStats.m_NumFailed == 4 );
 	}
 }
 

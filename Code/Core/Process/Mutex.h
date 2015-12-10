@@ -41,7 +41,7 @@ private:
 class MutexHolder
 {
 public:
-	MutexHolder( Mutex & mutex ) : m_Mutex( mutex )	
+	explicit MutexHolder( Mutex & mutex ) : m_Mutex( mutex )	
 	{ 
 		mutex.Lock();
 	}

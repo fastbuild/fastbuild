@@ -58,15 +58,16 @@ bool SystemMutex::TryLock()
 		return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         AStackString<> tempFileName;
-        tempFileName.Format( "/var/run/%s.lock", m_Name.Get() );
+        tempFileName.Format( "/tmp/%s.lock", m_Name.Get());
         m_Handle = open( tempFileName.Get(), O_CREAT | O_RDWR, 0666 );
         int rc = flock( m_Handle, LOCK_EX | LOCK_NB );
         if ( rc )
         {
-            if ( errno == EWOULDBLOCK )
+            if ( errno == EWOULDBLOCK || errno == EAGAIN )
             {
                 return false; // locked by another process
             }
+            ASSERT( false ); // Unexpected problem!
         }
         return true; // we own it now
     #else

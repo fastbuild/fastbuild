@@ -12,31 +12,110 @@
 
 <h1>Compiler</h1>
     <div id='compiler' class='newsitemheader'>
-      Compiler
+      Summary
     </div>
     <div class='newsitembody'>
       <p>
 Specifies compiler and related files for network distribution.
       </p>
-<div class='code'>Compiler( name )            ; (optional) Alias
+<div class='code'>Compiler( 'name' )          // (optional) Alias
 {
-  .Executable               ; Primary compiler executable
-  .ExtraFiles               ; (optional) Additional files (usually dlls) required by the compiler.
+  .Executable               // Primary compiler executable
+  .ExtraFiles               // (optional) Additional files (usually dlls) required by the compiler.
+  
+  // Additional Options
+  .VS2012EnumBugFix         // (optional) Enable work-around for bug in VS2012 compiler (default: false)
 }
 </div>
-<p>
-The relative location of the source files controls how they will be mirrored on the remote machine.  Files in 'ExtraFiles' in the same directory or in sub-directories under the primary 'Executable' will be placed in the same relative location on the remote machine.  'ExtraFiles' in other folders will be placed at the same level as the executable.
+    </div>
 
-<div class='code'>// Path behaviour example
+<!-- 
+	Details
+-->		
+<div id='alias' class='newsitemheader'>Details</div>
+<div class='newsitembody'>
+	<p>
+	FASTBuild needs to know the location of your compiler executable. The filename of the executable
+	is used to make determinations at runtime about how FASTBuild interacts with the compiler.
+	</p>
+	<p>
+	For distributed compilation, FASTBuild additionally needs to know the list of additional files that
+	need to be synchronized to the remote machine.
+	</p>
+	<p>
+	A compiler can be declared as follows:
+	<div class='code'>Compiler( 'Compiler-Clang-Windows' )
+{
+  .Executable = '$ClangForWindowsBasePath$\clang++.exe'
+}</div>
+	A declared compiler can then be referenced by an ObjectList or Library:
+	<div class='code'>Library( 'libA' )
+{
+  .Compiler = 'Compiler-Clang-Windows'
+  
+  // Other options as normal...</div>
+	</p>
+</div>
+
+<!-- 
+	Basic Options
+-->	
+<div id='alias' class='newsitemheader'>Basic Options</div>
+<div class='newsitembody'>
+	<p><b>.Executable</b> - String - (Required)</p>
+	<p>The primary compiler executable that will be invoked by FASTBuild when this Compiler() is used.</p>
+
+	<p><hr></p>
+
+	<p><b>.ExtraFiles</b> - String/ArrayOfStrings - (Optional)</p>
+	<p>For distributed compilation, the specified files will also be synchronized to the remote machine.
+	The relative location of the source files controls how they will be mirrored on the remote machine.  Files in 'ExtraFiles' in the same directory or in sub-directories under the primary 'Executable' will be placed in the same relative location on the remote machine.  
+	'ExtraFiles' in other folders will be placed at the same level as the executable.
+	<p>
+	<div class='code'>// Path behaviour example
 Compiler( 'Test' )
 {
   .Executable	= 'C:\compiler\compiler.exe'       // dest: compiler.exe
   .ExtraFiles = { 'C:\compiler\subdir\helper.dll'  // dest: subdir/helper.exe
                   'C:\cruntime\mvscrt.dll'         // dest: msvcrt.dll
-}
+}</div>
+	</p>
 </div>
-</p>
-    </div>
+
+<!-- 
+	Additional Options
+-->	
+<div id='alias' class='newsitemheader'>Additional Options</div>
+<div class='newsitembody'>
+	<p><b>.VS2012EnumBugFix</b> - Bool - (Optional)</p>
+	<p><font color=red>NOTE:</font> This option incurs a minor build time cost that impacts compile times.</p>
+	<p>A bug exists in the Visual Studio 2012 compiler whereby enums in preprocessed code are sometimes incorrectly 
+	processed when they lie on specific buffer alignment boundaries. This bug is fixed in Visual Studio 2013 
+	and later.<p>
+	<p>If a manual work around (described below) is impractical or undesireable, the .VS2012EnumBugFix
+	option can be enabled to work around the problem at build time.<p>
+	<p>When the bug occurs, the following code:
+	<div class='code'>enum dateorder
+{
+    no_order, dmy, mdy, ymd, ydm
+};</div>
+May be incorrectly pre-processed as:
+	<div class='code'>enummdateorder
+{
+    no_order, dmy, mdy, ymd, ydm
+};</div>
+This results in very unintuitive compile errors.</p>
+	<p>This bug can be avoided by inserting additional whitespace into the enum declaration
+	as follows:
+	<div class='code'>enum  dateorder
+{
+    no_order, dmy, mdy, ymd, ydm
+};</div>
+	This work-around may be impractical if a large number of enums are affected, or if the enum(s) originate in system headers or
+	external code. In those cases the .VS2012EnumBugFix option can be enabled to insert the
+	additional whitespace at build-time.</p>
+</div>
+
 
 <div id='compiler' class='newsitemheader'>Examples</div>
     <div class='newsitembody'>
@@ -46,15 +125,7 @@ Compiler( 'Test' )
 Compiler( 'Compiler-x86Clang' )
 {
   .Executable = '$ClangForWindowsBasePath$\clang++.exe'
-}
-
-Library( 'MyLibrary' )
-{
-  .Compiler = 'Compiler-x86Clang'
-
-  // other options as per normal
-}
-</div>
+}</div>
 <b>MSVC</b>
 <div class='code'>// VisualStudio 2013 x86 Compiler
 Compiler( 'Compiler-x86' )
@@ -74,15 +145,7 @@ Compiler( 'Compiler-x86' )
                   '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll'
                   '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\vccorlib120.dll'
                 }
-}
-
-Library( 'MyLibrary' )
-{
-  .Compiler = 'Compiler-x86'
-
-  // other options as per normal
-}
-</div>
+}</div>
 <b>Intel</b>
 <div class='code'>// Intel 2015 Update 4 x64 Compiler
 Compiler( 'Compiler-x64Intel' )
@@ -116,15 +179,7 @@ Compiler( 'Compiler-x64Intel' )
                   '$VSBasePath$\VC\redist\x64\Microsoft.VC120.CRT\msvcr120.dll'
                   '$VSBasePath$\VC\redist\x64\Microsoft.VC120.CRT\vccorlib120.dll'
                 }
-}
-
-Library( 'MyLibrary' )
-{
-  .Compiler = 'Compiler-x64Intel'
-
-  // other options as per normal
-}
-</div>
+}</div>
 </div>
 
   <script>generateFooter()</script>

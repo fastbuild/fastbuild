@@ -688,6 +688,23 @@
     #endif
 }
 
+// SetExecutable
+//------------------------------------------------------------------------------
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+	/*static*/ bool	FileIO::SetExecutable( const char * fileName )
+    {
+        // rwxr-x--x (751) TODO:LINUX TODO:MAC Is this correct?
+        mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | 
+                      S_IRGRP |           S_IXGRP |
+                                          S_IXOTH;
+        if ( chmod( fileName, mode ) == 0 )
+        {
+            return true;
+        }
+        return false; // failed to chmod
+    }
+#endif
+
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurse( AString & pathCopy, 

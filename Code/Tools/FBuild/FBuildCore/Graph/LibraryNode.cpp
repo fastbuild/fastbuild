@@ -15,6 +15,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
 // Core
@@ -41,6 +42,8 @@ LibraryNode::LibraryNode( const AString & libraryName,
 						  const Dependencies & additionalInputs,
 						  bool deoptimizeWritableFiles,
 						  bool deoptimizeWritableFilesWithToken,
+						  bool allowDistribution,
+						  bool allowCaching,
                           CompilerNode * preprocessor,
                           const AString &preprocessorArgs )
 : ObjectListNode( libraryName,
@@ -54,6 +57,8 @@ LibraryNode::LibraryNode( const AString & libraryName,
                   preBuildDependencies,
                   deoptimizeWritableFiles,
                   deoptimizeWritableFilesWithToken,
+			      allowDistribution,
+				  allowCaching,
                   preprocessor,
                   preprocessorArgs )
 , m_AdditionalInputs( additionalInputs )
@@ -104,8 +109,11 @@ LibraryNode::~LibraryNode()
 	}
 
 	// Format compiler args string
-	AStackString< 4 * KILOBYTE > fullArgs;
-	GetFullArgs( fullArgs );
+	Args fullArgs;
+	if ( !BuildArgs( fullArgs ) )
+	{
+		return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+	}
 
 	// use the exe launch dir as the working dir
 	const char * workingDir = nullptr;
@@ -114,36 +122,10 @@ LibraryNode::~LibraryNode()
 
 	EmitCompilationMessage( fullArgs );
 
-	// use response file?
-	ResponseFile rf;
-	AStackString<> responseFileArgs;
-    #if defined( __APPLE__ ) || defined( __LINUX__ )
-        const bool useResponseFile = false; // OSX/Linux ar doesn't support response files
-    #else
-        const bool useResponseFile = ( fullArgs.GetLength() > 32767 ) && ( GetFlag( LIB_FLAG_LIB ) || GetFlag( LIB_FLAG_AR ) || GetFlag( LIB_FLAG_ORBIS_AR ) || GetFlag( LIB_FLAG_GREENHILLS_AX ) );
-    #endif
-	if ( useResponseFile )
-	{
-		// orbis-ar.exe requires escaped slashes inside response file
-		if ( GetFlag( LIB_FLAG_ORBIS_AR ) )
-		{
-			rf.SetEscapeSlashes();
-		}
-
-		// write args to response file
-		if ( !rf.Create( fullArgs ) )
-		{
-			return NODE_RESULT_FAILED; // Create will have emitted error
-		}
-
-		// override args to use response file
-		responseFileArgs.Format( "@\"%s\"", rf.GetResponseFilePath().Get() );
-	}
-
 	// spawn the process
 	Process p;
 	bool spawnOK = p.Spawn( m_LibrarianPath.Get(),
-							useResponseFile ? responseFileArgs.Get() : fullArgs.Get(),
+							fullArgs.GetFinalArgs().Get(),
 							workingDir,
 							environment );
 
@@ -184,9 +166,9 @@ LibraryNode::~LibraryNode()
 	return NODE_RESULT_OK;
 }
 
-// GetFullArgs
+// BuildArgs
 //------------------------------------------------------------------------------
-void LibraryNode::GetFullArgs( AString & fullArgs ) const
+bool LibraryNode::BuildArgs( Args & fullArgs ) const
 {
 	Array< AString > tokens( 1024, true );
 	m_LibrarianArgs.Tokenize( tokens );
@@ -238,8 +220,22 @@ void LibraryNode::GetFullArgs( AString & fullArgs ) const
 			fullArgs += token;
 		}
 
-		fullArgs += ' ';
+		fullArgs.AddDelimiter();
 	}
+
+	// orbis-ar.exe requires escaped slashes inside response file
+	if ( GetFlag( LIB_FLAG_ORBIS_AR ) )
+	{
+		fullArgs.SetEscapeSlashesInResponseFile();
+	}
+
+	// Handle all the special needs of args
+	if ( fullArgs.Finalize( m_LibrarianPath, GetName(), CanUseResponseFile() ) == false )
+	{
+		return false; // Finalize will have emitted an error
+	}
+
+	return true;
 }
 
 // DetermineFlags
@@ -276,7 +272,7 @@ void LibraryNode::GetFullArgs( AString & fullArgs ) const
 
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
-void LibraryNode::EmitCompilationMessage( const AString & fullArgs ) const
+void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
 	AStackString<> output;
 	output += "Lib: ";
@@ -286,7 +282,7 @@ void LibraryNode::EmitCompilationMessage( const AString & fullArgs ) const
 	{
 		output += m_LibrarianPath;
 		output += ' ';
-		output += fullArgs;
+		output += fullArgs.GetRawArgs();
 		output += '\n';
 	}
     FLOG_BUILD_DIRECT( output.Get() );
@@ -309,6 +305,8 @@ void LibraryNode::EmitCompilationMessage( const AString & fullArgs ) const
 	NODE_LOAD_DEPS( 0,			preBuildDependencies );
 	NODE_LOAD( bool,			deoptimizeWritableFiles );
 	NODE_LOAD( bool,			deoptimizeWritableFilesWithToken );
+	NODE_LOAD( bool,			allowDistribution );
+	NODE_LOAD( bool,			allowCaching );
 	NODE_LOAD_NODE( CompilerNode, preprocessorNode );
 	NODE_LOAD( AStackString<>,	preprocessorArgs );
 
@@ -333,6 +331,8 @@ void LibraryNode::EmitCompilationMessage( const AString & fullArgs ) const
 								 additionalInputs,
 								 deoptimizeWritableFiles,
 								 deoptimizeWritableFilesWithToken,
+								 allowDistribution,
+								 allowCaching,
 								 preprocessorNode,
 								 preprocessorArgs );
 	n->m_ObjExtensionOverride = objExtensionOverride;
@@ -359,6 +359,18 @@ void LibraryNode::EmitCompilationMessage( const AString & fullArgs ) const
 	NODE_SAVE( m_LibrarianArgs );
 	NODE_SAVE( m_Flags );
 	NODE_SAVE_DEPS( m_AdditionalInputs );
+}
+
+// CanUseResponseFile
+//------------------------------------------------------------------------------
+bool LibraryNode::CanUseResponseFile() const
+{
+	#if defined( __WINDOWS__ )
+		// Generally only windows applications support response files (to overcome Windows command line limits)
+		return ( GetFlag( LIB_FLAG_LIB ) || GetFlag( LIB_FLAG_AR ) || GetFlag( LIB_FLAG_ORBIS_AR ) || GetFlag( LIB_FLAG_GREENHILLS_AX ) );
+	#else
+		return false;
+	#endif
 }
 
 //------------------------------------------------------------------------------

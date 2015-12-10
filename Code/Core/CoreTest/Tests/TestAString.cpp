@@ -23,6 +23,7 @@ private:
 	void AStackStringConstructors() const;
 	void AStackStringOverflow() const;
 	void BigString() const;
+	void Concatenation() const;
 	void EndsWithI() const;
 	void Find() const;
 	void Tokenize() const;
@@ -38,6 +39,7 @@ REGISTER_TESTS_BEGIN( TestAString )
 	REGISTER_TEST( AStackStringConstructors )
 	REGISTER_TEST( AStackStringOverflow )
 	REGISTER_TEST( BigString )
+	REGISTER_TEST( Concatenation )
 	REGISTER_TEST( EndsWithI )
 	REGISTER_TEST( Find )
 	REGISTER_TEST( Tokenize )
@@ -217,6 +219,33 @@ void TestAString::BigString() const
 	string += mem.Get();
 	TEST_ASSERT( string.GetLength() == 10 * MEGABYTE );
 	TEST_ASSERT( string.GetLength() == AString::StrLen( string.Get() ) );
+}
+
+// Concatenation
+//------------------------------------------------------------------------------
+void TestAString::Concatenation() const
+{
+	// Ensure empty strings are correctly handled
+    // Because an empty AString is a special case pointer to a global empty
+    // buffer, it's read-only
+	{
+		AString a, b;
+		a += b;
+	}
+	{
+		AString a;
+		const char * b = "";
+		a += b;
+	}
+	{
+		AString a, b;
+		a.Append( b );
+	}
+	{
+		AString a;
+		const char * b = "";
+		a.Append( b, 0 );
+	}
 }
 
 // EndsWithI

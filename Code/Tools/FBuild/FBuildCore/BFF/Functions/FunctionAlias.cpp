@@ -41,7 +41,8 @@ FunctionAlias::FunctionAlias()
 	const bool required = true;
 	const bool allowCopyDirNodes = true;
 	const bool allowUnityNodes = true;
-	if ( !GetNodeList( funcStartIter, ".Targets", targetNodes, required, allowCopyDirNodes, allowUnityNodes ) )
+	const bool allowRemoveDirNodes = true;
+	if ( !GetNodeList( funcStartIter, ".Targets", targetNodes, required, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
 	{
 		return false; // GetNodeList will have emitted an error
 	}

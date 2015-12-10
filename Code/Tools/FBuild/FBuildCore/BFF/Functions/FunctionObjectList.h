@@ -37,7 +37,9 @@ protected:
 									  const Dependencies & compilerForceUsing,
 									  ObjectNode * & precompiledHeaderNode,
 									  bool deoptimizeWritableFiles,
-									  bool deoptimizeWritableFilesWithToken ) const;
+									  bool deoptimizeWritableFilesWithToken,
+									  bool allowDistribution,
+									  bool allowCaching ) const;
 	bool 	GetInputs( const BFFIterator & iter, Dependencies & inputs ) const;
 };
 

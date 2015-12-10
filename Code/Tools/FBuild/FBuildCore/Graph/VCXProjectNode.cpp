@@ -30,7 +30,6 @@ VCXProjectNode::VCXProjectNode( const AString & projectOutput,
 								const Array< AString > & projectBasePaths,
 								const Dependencies & paths,
 								const Array< AString > & pathsToExclude,
-								const Array< AString > & allowedFileExtensions,
 								const Array< AString > & files,
 								const Array< AString > & filesToExclude,
 								const AString & rootNamespace,
@@ -44,7 +43,6 @@ VCXProjectNode::VCXProjectNode( const AString & projectOutput,
 : FileNode( projectOutput, Node::FLAG_NONE )
 , m_ProjectBasePaths( projectBasePaths )
 , m_PathsToExclude( pathsToExclude )
-, m_AllowedFileExtensions( allowedFileExtensions )
 , m_Files( files )
 , m_FilesToExclude( filesToExclude )
 , m_RootNamespace( rootNamespace )
@@ -75,7 +73,6 @@ VCXProjectNode::~VCXProjectNode()
 {
 	VSProjectGenerator pg;
 	pg.SetBasePaths( m_ProjectBasePaths );
-	pg.SetAllowedFileExtensions( m_AllowedFileExtensions );
 
 	// get project file name only
 	const char * p1 = m_Name.FindLast( NATIVE_SLASH );
@@ -106,7 +103,7 @@ VCXProjectNode::~VCXProjectNode()
 	for ( const AString * it=m_Files.Begin(); it!=m_Files.End(); ++it )
 	{
 		const AString & fileName = ( *it );
-		pg.AddFile( fileName, false ); // don't filter by extension
+		pg.AddFile( fileName );
 	}	
 
 	// .vcxproj
@@ -141,7 +138,7 @@ void VCXProjectNode::AddFile( VSProjectGenerator & pg, const AString & fileName 
 		}
 	}
 
-	pg.AddFile( fileName, true );
+	pg.AddFile( fileName );
 }
 
 // Save
@@ -229,7 +226,6 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
 	NODE_LOAD( Array< AString >, projectBasePaths );
 	NODE_LOAD_DEPS( 1,			staticDeps );
 	NODE_LOAD( Array< AString >, pathsToExclude );
-	NODE_LOAD( Array< AString >, allowedFileExtensions );
 	NODE_LOAD( Array< AString >, files );
 	NODE_LOAD( Array< AString >, filesToExclude );
 	NODE_LOAD( AStackString<>, rootNamespace );
@@ -250,7 +246,6 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
 								 projectBasePaths,
 								 staticDeps, // all static deps are DirectoryListNode
 								 pathsToExclude,
-								 allowedFileExtensions,
 								 files,
 								 filesToExclude,
 								 rootNamespace,
@@ -272,7 +267,6 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
 	NODE_SAVE( m_ProjectBasePaths );
 	NODE_SAVE_DEPS( m_StaticDependencies );
 	NODE_SAVE( m_PathsToExclude );
-	NODE_SAVE( m_AllowedFileExtensions );
 	NODE_SAVE( m_Files );
 	NODE_SAVE( m_FilesToExclude );
 	NODE_SAVE( m_RootNamespace );

@@ -60,12 +60,6 @@ bool IsDebuggerAttached();
 	// assert result of code, but still execute code when asserts are disabled
 	#define VERIFY( code ) ASSERT( code )
 
-	// compile time assertion
-    #define CTASSERT( expression ) static_assert( expression,                   \
-        "\n================ COMPILE TIME ASSERTION FAILURE ================\n"  \
-                                   "Expression: " #expression                   \
-        "\n================================================================\n" )
-
 	class AssertHandler
 	{
 	public:
@@ -100,13 +94,6 @@ bool IsDebuggerAttached();
         PRAGMA_DISABLE_PUSH_MSVC(4127)		\
 		} while ( false );					\
         PRAGMA_DISABLE_POP_MSVC
-
-	#define CTASSERT( expression )			\
-		do {								\
-        PRAGMA_DISABLE_PUSH_MSVC(4127)		\
-		} while ( false );					\
-        PRAGMA_DISABLE_POP_MSVC
-
 #else
 	#error neither DEBUG nor RELEASE were defined
 #endif

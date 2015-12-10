@@ -74,6 +74,8 @@ public:
 		OBJECT_LIST_NODE	= 15,
 		COPY_DIR_NODE		= 16,
 		SLN_NODE 			= 17,
+		REMOVE_DIR_NODE		= 18,
+		XCODEPROJECT_NODE   = 19,
 		// Make sure you update 's_NodeTypeNames' in the cpp
 		NUM_NODE_TYPES		// leave this last
 	};
@@ -93,6 +95,7 @@ public:
 		STATS_CACHE_MISS	= 0x08, // needed building, was cacheable, but wasn't in cache
 		STATS_CACHE_STORE	= 0x10, // needed building, was cacheable & was stored to the cache
 		STATS_BUILT_REMOTE  = 0x20, // node was built remotely
+		STATS_FAILED		= 0x40, // node needed building, but failed
 		STATS_REPORT_PROCESSED	= 0x4000, // seen during report processing
 		STATS_STATS_PROCESSED	= 0x8000 // mark during stats gathering (leave this last)
 	};
@@ -209,6 +212,11 @@ protected:
 	static void FixupPathForVSIntegration( AString & line );
 	static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
 	static void FixupPathForVSIntegration_SNC( AString & line, const char * tag );
+
+	static void Serialize( IOStream & stream, const void * base, const ReflectionInfo & ri );
+	static void Serialize( IOStream & stream, const void * base, const ReflectedProperty & property );
+	static bool Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri );
+	static bool Deserialize( IOStream & stream, void * base, const ReflectedProperty & property );
 
 	State m_State;
 	mutable uint32_t m_BuildPassTag; // prevent multiple recursions into the same node

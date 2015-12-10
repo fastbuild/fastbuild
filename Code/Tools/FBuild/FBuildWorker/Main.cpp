@@ -27,7 +27,9 @@ SystemMutex g_OneProcessMutex( "Global\\FBuildWorker" );
 // Functions
 //------------------------------------------------------------------------------
 int MainCommon( const AString & args, void * hInstance );
-int LaunchSubProcess( const AString & args );
+#if defined( __WINDOWS__ )
+	int LaunchSubProcess( const AString & args );
+#endif
 
 //------------------------------------------------------------------------------
 void ShowMsgBox( const char * msg )
@@ -58,8 +60,8 @@ void ShowMsgBox( const char * msg )
 #else
     int main( int argc, char** argv )
     {
-	AStackString<> args;
-        for ( int i=0; i<argc; ++argc )
+		AStackString<> args;
+        for ( int i=1; i<argc; ++i ) // NOTE: Skip argv[0] exe name
         {
             if ( i > 0 )
             {
@@ -71,10 +73,16 @@ void ShowMsgBox( const char * msg )
     }
 #endif
 
+#include <stdio.h>
+
 // MainCommon
 //------------------------------------------------------------------------------
 int MainCommon( const AString & args, void * hInstance )
-{
+{	
+	// don't buffer output
+	VERIFY( setvbuf(stdout, nullptr, _IONBF, 0) == 0 );
+	VERIFY( setvbuf(stderr, nullptr, _IONBF, 0) == 0 );
+
 	// process cmd line args
 	FBuildWorkerOptions options;
 	if ( options.ProcessCommandLine( args ) == false )
@@ -95,10 +103,12 @@ int MainCommon( const AString & args, void * hInstance )
 		Thread::Sleep(100);
 	}
 
-	if ( options.m_UseSubprocess && !options.m_IsSubprocess )
-	{
-		return LaunchSubProcess( args );
-	}
+	#if defined( __WINDOWS__ )
+		if ( options.m_UseSubprocess && !options.m_IsSubprocess )
+		{
+			return LaunchSubProcess( args );
+		}
+	#endif
 
 	// prevent popups when launching tools with missing dlls
 	#if defined( __WINDOWS__ )
@@ -137,40 +147,42 @@ int MainCommon( const AString & args, void * hInstance )
 
 // LaunchSubProcess
 //------------------------------------------------------------------------------
-int LaunchSubProcess( const AString & args )
-{
-	// try to make a copy of our exe
-	AStackString<> exeName;
-	Env::GetExePath( exeName );
-	AStackString<> exeNameCopy( exeName );
-	exeNameCopy += ".copy";
-	Timer t;
-	while ( FileIO::FileCopy( exeName.Get(), exeNameCopy.Get() ) == false )
+#if defined( __WINDOWS__ )
+	int LaunchSubProcess( const AString & args )
 	{
-		if ( t.GetElapsed() > 5.0f )
+		// try to make a copy of our exe
+		AStackString<> exeName;
+		Env::GetExePath( exeName );
+		AStackString<> exeNameCopy( exeName );
+		exeNameCopy += ".copy";
+		Timer t;
+		while ( FileIO::FileCopy( exeName.Get(), exeNameCopy.Get() ) == false )
 		{
-			AStackString<> msg;
-			msg.Format( "Failed to make sub-process copy - error: %u (0x%x)\n\nSrc: %s\nDst: %s\n", Env::GetLastErr(), Env::GetLastErr(), exeName.Get(), exeNameCopy.Get() );
-			ShowMsgBox( msg.Get() );
-			return -2;
+			if ( t.GetElapsed() > 5.0f )
+			{
+				AStackString<> msg;
+				msg.Format( "Failed to make sub-process copy - error: %u (0x%x)\n\nSrc: %s\nDst: %s\n", Env::GetLastErr(), Env::GetLastErr(), exeName.Get(), exeNameCopy.Get() );
+				ShowMsgBox( msg.Get() );
+				return -2;
+			}
+			Thread::Sleep( 100 );
 		}
-		Thread::Sleep( 100 );
+	
+		AStackString<> argsCopy( args );
+		argsCopy += " -subprocess";
+	
+		// allow subprocess to access the mutex
+		g_OneProcessMutex.Unlock();
+	
+		Process p;
+	    #if defined( __WINDOWS__ )
+	        p.DisableHandleRedirection(); // TODO:MAC TODO:LINUX is this needed?
+	    #endif
+		p.Spawn( exeNameCopy.Get(), argsCopy.Get(), nullptr, nullptr );
+		p.Detach();
+	
+		return 0;
 	}
-
-	AStackString<> argsCopy( args );
-	argsCopy += " -subprocess";
-
-	// allow subprocess to access the mutex
-	g_OneProcessMutex.Unlock();
-
-	Process p;
-    #if defined( __WINDOWS__ )
-        p.DisableHandleRedirection(); // TODO:MAC TODO:LINUX is this needed?
-    #endif
-	p.Spawn( exeNameCopy.Get(), argsCopy.Get(), nullptr, nullptr );
-	p.Detach();
-
-	return 0;
-}
+#endif
 
 //------------------------------------------------------------------------------

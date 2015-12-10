@@ -10,10 +10,29 @@
 
 .VisualStudioToolChain = 
 [
-	.Compiler			= '$VisualStudioPath$\VC\bin\cl.exe'
-	.CompilerX64		= '$VisualStudioPath$\VC\bin\x86_amd64\cl.exe'
-	.Librarian			= '$VisualStudioPath$\VC\bin\lib.exe'
-	.Linker				= '$VisualStudioPath$\VC\bin\link.exe'
+    .Root               = '$VisualStudioPath$\VC\bin'
+    Compiler( 'Compiler-x86-Dist' )
+    {
+    	.Root		    = '$VisualStudioPath$\VC\bin'
+        .Executable     = '$Root$\cl.exe'
+        .ExtraFiles     = { '$Root$\c1.dll'
+        					'$Root$\c1xx.dll',
+        					'$Root$\c2.dll',
+        					'$Root$\mspft110.dll'
+        					'$Root$\pgodb110.dll'
+        					'$Root$\1033\clui.dll'
+        					'$VisualStudioPath$\Common7\IDE\mspdb110.dll'
+        					'$VisualStudioPath$\Common7\IDE\msobj110.dll'					
+        					'$VisualStudioPath$\Common7\IDE\mspdbcore.dll'
+        					'$VisualStudioPath$\Common7\IDE\mspdbsrv.exe'
+        					'$VisualStudioPath$\Common7\IDE\msvcr110.dll'
+        					'$VisualStudioPath$\Common7\IDE\msvcp110.dll'
+        				  }
+    }
+    .Compiler           = 'Compiler-x86-Dist'
+	.CompilerX64		= '$Root$\x86_amd64\cl.exe'
+	.Librarian			= '$Root$\lib.exe'
+	.Linker				= '$Root$\link.exe'
 
 	.BaseCompilerOptions= '"%1" /Fo"%2" /c /Z7 /WX /nologo'
 						+ ' /D"WIN32_LEAN_AND_MEAN" /D_WIN32 /DWIN32 /D__WINDOWS__'
@@ -40,6 +59,7 @@
 
 .WindowsIncludePaths	= ' /I"$WindowsSDK$/include/um"'
 						+ ' /I"$WindowsSDK$/include/shared"'
+.WindowsLibPaths		= ' /LIBPATH:"$WindowsSDK$/lib/winv6.3/um/x86"'
 
 //==============================================================================
 // Clang
@@ -53,6 +73,15 @@
 .LinuxGCCToolChain =
 [
     .Compiler           = '/usr/bin/gcc'
+    Compiler( 'Compiler-GCC-Dist' )
+    {
+        .Executable     = '/usr/bin/gcc'
+        .ExtraFiles     = {
+                            '/usr/bin/as'
+                            '/usr/lib/gcc/x86_64-linux-gnu/4.9/cc1plus'
+                          }
+    }
+    .CompilerDist       = 'Compiler-GCC-Dist'
     .Librarian          = '/usr/bin/ar'
     .Linker             = '/usr/bin/g++'
     
@@ -78,6 +107,11 @@
 .OSXClangToolChain =
 [
     .Compiler           = '/usr/bin/g++'
+    Compiler( 'Compiler-Clang-Dist' )
+    {
+        .Executable     = '/usr/bin/g++'
+    }
+    .CompilerDist       = 'Compiler-Clang-Dist'
     .Librarian          = '/usr/bin/ar'
     .Linker             = '/usr/bin/g++'
 

@@ -23,6 +23,7 @@ int main(int , char * [])
 	REGISTER_TESTGROUP( TestPathUtils )
 	REGISTER_TESTGROUP( TestReflection )
 	REGISTER_TESTGROUP( TestSemaphore )
+	REGISTER_TESTGROUP( TestSharedMemory )
 	REGISTER_TESTGROUP( TestTestTCPConnectionPool )
 	REGISTER_TESTGROUP( TestTimer )
 

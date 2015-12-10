@@ -10,6 +10,7 @@
 // FBuild
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -30,6 +31,13 @@ ResponseFile::~ResponseFile()
 	{
 		FileIO::FileDelete( m_ResponseFilePath.Get() );
 	}
+}
+
+// Create
+//------------------------------------------------------------------------------
+bool ResponseFile::Create( const Args & args )
+{
+	return Create( args.GetFinalArgs() );
 }
 
 // Create

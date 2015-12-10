@@ -180,28 +180,77 @@ bool BFFParser::Parse( BFFIterator & iter )
 		return false;
 	}
 
-	// make sure immediately after the symbol starts a variable name
-	if ( iter.IsAtValidVariableNameCharacter() == false )
+	if ( *iter == '\'' || *iter == '"' )
 	{
-		Error::Error_1013_UnexpectedCharInVariableName( iter, nullptr );
-		return false;
+		// parse the string
+		const BFFIterator openToken = iter;
+		iter.SkipString( *openToken );
+		if ( *iter != *openToken )
+		{
+			Error::Error_1002_MatchingClosingTokenNotFound( openToken, nullptr, *openToken );
+			return false;
+		}
+		BFFIterator stringStart = openToken;
+		stringStart++;
+
+		// unescape and subsitute embedded variables
+		AStackString< 256 > value;
+		if ( PerformVariableSubstitutions( stringStart, iter, value ) == false )
+		{
+			return false;
+		}
+		iter++; // skip close token
+
+		BFFIterator varNameIter( value.Get(), value.GetLength(), iter.GetFileName().Get(), iter.GetFileTimeStamp() );
+
+		// sanity check it is a sensible length
+		if ( value.GetLength() + 1/* '.' will be added */  > MAX_VARIABLE_NAME_LENGTH )
+		{
+			Error::Error_1014_VariableNameIsTooLong( varNameIter, (uint32_t)value.GetLength(), (uint32_t)MAX_VARIABLE_NAME_LENGTH );
+			return false;
+		}
+
+		// sanity check it is a valid variable name
+		while ( varNameIter.IsAtEnd() == false )
+		{
+			if ( varNameIter.IsAtValidVariableNameCharacter() == false )
+			{
+				Error::Error_1013_UnexpectedCharInVariableName( varNameIter, nullptr );
+				return false;
+			}
+			varNameIter++;
+		}
+
+		// append '.' to variable name
+		name = ".";
+		name.Append( value );
+	}
+	else
+	{
+		// make sure immediately after the symbol starts a variable name
+		if ( iter.IsAtValidVariableNameCharacter() == false )
+		{
+			Error::Error_1013_UnexpectedCharInVariableName( iter, nullptr );
+			return false;
+		}
+
+		// find the end of the variable name
+		iter.SkipVariableName();
+		const BFFIterator varNameEnd = iter;
+
+		// sanity check it is a sensible length
+		size_t varNameLen = varNameStart.GetDistTo( varNameEnd );
+		if ( varNameLen > MAX_VARIABLE_NAME_LENGTH )
+		{
+			Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)varNameLen, (uint32_t)MAX_VARIABLE_NAME_LENGTH );
+			return false;
+		}
+
+		// store variable name
+		name.Assign( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
 	}
 
-	// find the end of the variable name
-	iter.SkipVariableName();
-	const BFFIterator varNameEnd = iter;
-
-	// sanity check it is a sensible length
-	size_t varNameLen = varNameStart.GetDistTo( varNameEnd );
-	if ( varNameLen > MAX_VARIABLE_NAME_LENGTH )
-	{
-		Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)varNameLen, (uint32_t)MAX_VARIABLE_NAME_LENGTH );
-		return false;
-	}
-
-	// store variable name
-	name.Assign( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
-
+	ASSERT( name.GetLength() > 0 );
 	if ( parentScope )
 	{
 		// exchange '^' with '.'
@@ -695,10 +744,14 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
 	// open include
 
 	// 1) Try current directory
-	const char * lastSlash = iter.GetFileName().FindLast( NATIVE_SLASH );
-	lastSlash = lastSlash ? lastSlash : iter.GetFileName().FindLast( OTHER_SLASH );
-	lastSlash = lastSlash ? ( lastSlash + 1 ): iter.GetFileName().Get(); // file only, truncate to empty
-	AStackString<> includeToUse( iter.GetFileName().Get(), lastSlash );
+	AStackString<> includeToUse;
+	if (PathUtils::IsFullPath(include) == false)
+	{
+		const char * lastSlash = iter.GetFileName().FindLast( NATIVE_SLASH );
+		lastSlash = lastSlash ? lastSlash : iter.GetFileName().FindLast( OTHER_SLASH );
+		lastSlash = lastSlash ? ( lastSlash + 1 ): iter.GetFileName().Get(); // file only, truncate to empty
+		includeToUse.Assign( iter.GetFileName().Get(), lastSlash );
+	}
 	includeToUse += include;
 	AStackString<> includeToUseClean;
 	NodeGraph::CleanPath( includeToUse, includeToUseClean );
@@ -1151,8 +1204,15 @@ bool BFFParser::StoreVariableArray( const AString & name,
 				return false;
 			}
 
+			// Determine stack frame to use for Src var
+			BFFStackFrame * srcFrame = BFFStackFrame::GetCurrent();			
+			if ( c == BFF_DECLARE_VAR_PARENT )
+			{
+				srcFrame = BFFStackFrame::GetCurrent()->GetParent();
+			}
+
 			// get the variable
-			const BFFVariable * var = BFFStackFrame::GetVar( varName, frame );
+			const BFFVariable * var = srcFrame->GetVariableRecurse( varName );
 			if ( var == nullptr )
 			{
 				Error::Error_1026_VariableNotFoundForConcatenation( operatorIter, varName );

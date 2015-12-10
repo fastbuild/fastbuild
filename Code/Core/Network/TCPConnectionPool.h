@@ -29,7 +29,7 @@ class TCPConnectionPool;
 class ConnectionInfo
 {
 public:
-	ConnectionInfo( TCPConnectionPool * ownerPool );
+	explicit ConnectionInfo( TCPConnectionPool * ownerPool );
 
 	// users can store connection associate information
 	void SetUserData( void * userData ) const { m_UserData = userData; }

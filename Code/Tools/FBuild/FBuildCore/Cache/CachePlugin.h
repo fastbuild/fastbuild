@@ -27,11 +27,9 @@ public:
 	virtual bool Retrieve( const AString & cacheId, void * & data, size_t & dataSize );
 	virtual void FreeMemory( void * data, size_t dataSize );
 private:
-	void * GetFunction( const char * friendlyName, const char * mangledName ) const;
+	void * GetFunction( const char * friendlyName, const char * mangledName = nullptr ) const;
 
-	#if defined( __WINDOWS__ )
-		void *				m_DLL;
-	#endif
+    void *				m_DLL;
 	CacheInitFunc		m_InitFunc;
 	CacheShutdownFunc	m_ShutdownFunc;
 	CachePublishFunc	m_PublishFunc;

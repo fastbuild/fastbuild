@@ -67,6 +67,8 @@ public:
 
     BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other ) const;
 
+    static const BFFVariable ** GetMemberByName( const AString & name, const Array< const BFFVariable * > & members );
+	
 private:
 	friend class BFFStackFrame;
 
@@ -87,8 +89,6 @@ private:
 	void SetValueInt( int i );
 	void SetValueStruct( const Array< const BFFVariable * > & members );
 	void SetValueArrayOfStructs( const Array< const BFFVariable * > & values );
-
-    static const BFFVariable ** GetMemberByName( const AString & name, const Array< const BFFVariable * > & members );
 
 	AString m_Name;
 	VarType	m_Type;

@@ -12,46 +12,30 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/FileIO/IOStream.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
 
 // Reflection
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 REFLECT_BEGIN( CompilerNode, Node, MetaName( "Executable" ) + MetaFile() )
 	REFLECT_ARRAY( m_ExtraFiles,	"ExtraFiles",			MetaOptional() + MetaFile() )
     REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
+	REFLECT( m_VS2012EnumBugFix,	"VS2012EnumBugFix",		MetaOptional() )
 REFLECT_END( CompilerNode )
-#endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 CompilerNode::CompilerNode()
 	: FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL )
     , m_AllowDistribution( true )
+	, m_VS2012EnumBugFix( false )
 {
 	m_Type = Node::COMPILER_NODE;
 }
-#endif
-
-// CONSTRUCTOR
-//------------------------------------------------------------------------------
-#ifndef USE_NODE_REFLECTION
-CompilerNode::CompilerNode( const AString & exe,
-						    const Dependencies & extraFiles,
-							bool allowDistribution )
-	: FileNode( exe, Node::FLAG_NO_DELETE_ON_FAIL )
-{
-	m_StaticDependencies = extraFiles;
-	m_Type = Node::COMPILER_NODE;
-	m_AllowDistribution = allowDistribution;
-}
-#endif
 
 // Initialize
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 bool CompilerNode::Initialize( const BFFIterator & iter, const Function * function )
 {
 	// TODO:B make this use m_ExtraFiles
@@ -61,16 +45,80 @@ bool CompilerNode::Initialize( const BFFIterator & iter, const Function * functi
 		return false; // GetNodeList will have emitted an error
 	}
 
+	// Check for conflicting files
+	AStackString<> relPathExe;
+	ToolManifest::GetRelativePath( m_Name, m_Name, relPathExe );
+
+	const size_t numExtraFiles = extraFiles.GetSize();
+	for ( size_t i=0; i<numExtraFiles; ++i )
+	{
+		AStackString<> relPathA;
+		ToolManifest::GetRelativePath( m_Name, extraFiles[ i ].GetNode()->GetName(), relPathA );
+
+		// Conflicts with Exe?
+		if ( PathUtils::ArePathsEqual( relPathA, relPathExe ) )
+		{
+			Error::Error_1100_AlreadyDefined( iter, function, relPathA );
+			return false;
+		}
+
+		// Conflicts with another file?
+		for ( size_t j=(i+1); j<numExtraFiles; ++j )
+		{
+			AStackString<> relPathB;
+			ToolManifest::GetRelativePath( m_Name, extraFiles[ j ].GetNode()->GetName(), relPathB );
+
+			if ( PathUtils::ArePathsEqual( relPathA, relPathB ) )
+			{
+				Error::Error_1100_AlreadyDefined( iter, function, relPathA );
+				return false;
+			}
+		}
+	}
+
 	m_StaticDependencies = extraFiles;
 
 	return true;
 }
-#endif
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 CompilerNode::~CompilerNode()
 {
+}
+
+// DetermineNeedToBuild
+//------------------------------------------------------------------------------
+bool CompilerNode::DetermineNeedToBuild( bool forceClean ) const
+{
+	if ( forceClean )
+	{
+		return true;
+	}
+
+	// Building for the first time?
+	if ( m_Stamp == 0 )
+	{
+		return true;
+	}
+
+	// check primary file
+	const uint64_t fileTime = FileIO::GetFileLastWriteTime( m_Name );
+	if ( fileTime > m_Stamp )
+	{
+		return true;
+	}
+
+	// check additional files
+	for ( const auto & dep : m_StaticDependencies )
+	{
+		if ( dep.GetNode()->GetStamp() > m_Stamp )
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 // DoBuild
@@ -85,7 +133,7 @@ CompilerNode::~CompilerNode()
 		return Node::NODE_RESULT_FAILED; // Generate will have emitted error
 	}
 
-	m_Stamp = m_Manifest.GetTimeStamp();
+	m_Stamp = Math::Max( m_Stamp, m_Manifest.GetTimeStamp() );
 	return Node::NODE_RESULT_OK;
 }
 
@@ -93,7 +141,6 @@ CompilerNode::~CompilerNode()
 //------------------------------------------------------------------------------
 /*static*/ Node * CompilerNode::Load( IOStream & stream )
 {
-#ifdef USE_NODE_REFLECTION
 	NODE_LOAD( AStackString<>, name );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
@@ -105,32 +152,15 @@ CompilerNode::~CompilerNode()
 	}
 	cn->m_Manifest.Deserialize( stream, false ); // false == not remote
 	return cn;
-#else
-	NODE_LOAD( AStackString<>, exeName );
-	NODE_LOAD_DEPS( 16,		   staticDeps );
-	NODE_LOAD( bool,		   allowDistribution );
-
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	CompilerNode * n = ng.CreateCompilerNode( exeName, staticDeps, allowDistribution );
-	n->m_Manifest.Deserialize( stream, false ); // false == not remote
-	return n;
-#endif
 }
 
 // Save
 //------------------------------------------------------------------------------
 /*virtual*/ void CompilerNode::Save( IOStream & stream ) const
 {
-#ifdef USE_NODE_REFLECTION
 	NODE_SAVE( m_Name );
 	Node::Serialize( stream );
 	m_Manifest.Serialize( stream );
-#else
-	NODE_SAVE( m_Name );
-	NODE_SAVE_DEPS( m_StaticDependencies );
-	NODE_SAVE( m_AllowDistribution );
-	m_Manifest.Serialize( stream );
-#endif
 }
 
 //------------------------------------------------------------------------------
