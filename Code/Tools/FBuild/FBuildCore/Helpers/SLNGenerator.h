@@ -34,6 +34,7 @@ struct SolutionConfig
     AString m_Config;
     AString m_Platform;
     AString m_SolutionPlatform;
+	AString m_SolutionConfig;
 
     bool operator < ( const SolutionConfig& other ) const
     {

@@ -452,6 +452,9 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
 	{
 		const VSProjectConfig & cfg = configs[ i ];
 
+		stream.Write( cfg.m_SolutionPlatform );
+		stream.Write( cfg.m_SolutionConfig );
+
 		stream.Write( cfg.m_Platform );
 		stream.Write( cfg.m_Config );
 
@@ -500,6 +503,9 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
 	{
 		VSProjectConfig & cfg = configs[ i ];
 
+		if ( stream.Read( cfg.m_SolutionPlatform ) == false ) { return false; }
+		if ( stream.Read( cfg.m_SolutionConfig ) == false ) { return false;  }
+		
 		if ( stream.Read( cfg.m_Platform ) == false ) { return false; }
 		if ( stream.Read( cfg.m_Config ) == false ) { return false; }
 

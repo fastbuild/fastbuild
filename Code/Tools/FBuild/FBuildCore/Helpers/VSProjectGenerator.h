@@ -18,6 +18,8 @@ class IOStream;
 class VSProjectConfig
 {
 public:
+	AString m_SolutionPlatform;
+	AString m_SolutionConfig;
 	AString m_Platform;
 	AString m_Config;
 
