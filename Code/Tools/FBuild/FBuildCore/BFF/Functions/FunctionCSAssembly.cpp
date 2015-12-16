@@ -121,6 +121,13 @@ FunctionCSAssembly::FunctionCSAssembly()
 		return false;
 	}
 
+    // Pre-build dependencies
+	Dependencies preBuildDependencies;
+	if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
+	{
+		return false; // GetNodeList will have emitted an error
+	}
+
 	// Create library node which depends on the single file or list
 	if ( ng.FindNode( compilerOutput->GetString() ) )
 	{
@@ -131,7 +138,8 @@ FunctionCSAssembly::FunctionCSAssembly()
 									 staticDeps,
 									 compiler->GetString(),
 									 compilerOptions->GetString(),
-									 extraRefs );
+									 extraRefs,
+                                     preBuildDependencies );
 
 	// should we create an alias?
 	return ProcessAlias( funcStartIter, csNode );

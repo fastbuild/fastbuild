@@ -27,7 +27,8 @@ CSNode::CSNode( const AString & compilerOutput,
 				const Dependencies & inputNodes,
 				const AString & compiler,
 				const AString & compilerArgs,
-				const Dependencies & extraRefs )
+				const Dependencies & extraRefs,
+                const Dependencies & preBuildDependencies )
 : FileNode( compilerOutput, Node::FLAG_NONE )
 , m_ExtraRefs( extraRefs )
 {
@@ -43,6 +44,8 @@ CSNode::CSNode( const AString & compilerOutput,
 
 	m_Type = CS_NODE;
 	m_LastBuildTimeMs = 5000; // higher default than a file node
+
+    m_PreBuildDependencies = preBuildDependencies;
 }
 
 // DESTRUCTOR
@@ -182,11 +185,12 @@ failed:
 	NODE_LOAD( AStackString<>,	compilerPath );
 	NODE_LOAD( AStackString<>,	compilerArgs );
 	NODE_LOAD_DEPS( 0,			extraRefs );
+    NODE_LOAD_DEPS( 0,			preBuildDependencies );
 
 	ASSERT( staticDeps.GetSize() >= 1 );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * on = ng.CreateCSNode( name, staticDeps, compilerPath, compilerArgs, extraRefs );
+	Node * on = ng.CreateCSNode( name, staticDeps, compilerPath, compilerArgs, extraRefs, preBuildDependencies );
 	CSNode * csNode = on->CastTo< CSNode >();
 	return csNode;
 }
@@ -209,6 +213,7 @@ failed:
 	NODE_SAVE( m_CompilerPath );
 	NODE_SAVE( m_CompilerArgs );
 	NODE_SAVE_DEPS( m_ExtraRefs );
+    NODE_SAVE_DEPS( m_PreBuildDependencies );
 }
 
 // EmitCompilationMessage

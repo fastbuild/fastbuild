@@ -189019,7 +189019,8 @@ CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 								  const Array< Node * > & inputNodes,
 								  const AString & compiler,
 								  const AString & compilerOptions,
-								  const Array< Node * > & extraRefs )
+								  const Array< Node * > & extraRefs,
+								  const Dependencies & preBuildDependencies )
 {
 	do { __pragma(warning(push)) __pragma(warning(disable:4127)) } while ( false ); __pragma(warning(pop));
 	do { __pragma(warning(push)) __pragma(warning(disable:4127)) } while ( false ); __pragma(warning(pop));
@@ -189031,7 +189032,8 @@ CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 								inputNodes,
 								compiler,
 								compilerOptions,
-								extraRefs );
+								extraRefs,
+								preBuildDependencies );
 	AddNode( node );
 	return node;
 }

@@ -846,7 +846,8 @@ CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 								  const Dependencies & inputNodes,
 								  const AString & compiler,
 								  const AString & compilerOptions,
-								  const Dependencies & extraRefs )
+								  const Dependencies & extraRefs,
+                                  const Dependencies & preBuildDependencies )
 {
 	ASSERT( Thread::IsMainThread() );
 	ASSERT( inputNodes.IsEmpty() == false );
@@ -858,7 +859,8 @@ CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 								inputNodes,
 								compiler,
 								compilerOptions,
-								extraRefs ) );
+								extraRefs,
+                                preBuildDependencies ) );
 	AddNode( node );
 	return node;
 }

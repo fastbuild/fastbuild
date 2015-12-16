@@ -178,7 +178,8 @@ public:
 						   const Dependencies & inputNodes,
 						   const AString & compiler,
 						   const AString & compilerOptions,
-						   const Dependencies & extraRefs );
+						   const Dependencies & extraRefs,
+						   const Dependencies & preBuildDependencies );
 	TestNode * CreateTestNode( const AString & testOutput );
 	CompilerNode * CreateCompilerNode( const AString & executable );
 	VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
