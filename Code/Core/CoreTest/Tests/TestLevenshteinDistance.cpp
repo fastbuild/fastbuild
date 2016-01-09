@@ -9,8 +9,6 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/LevenshteinDistance.h"
 
-#include <cstdio>
-
 // TestLevenshteinDistance
 //------------------------------------------------------------------------------
 class TestLevenshteinDistance : public UnitTest

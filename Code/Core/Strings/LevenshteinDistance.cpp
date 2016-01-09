@@ -11,8 +11,6 @@
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
 
-#include <cstdint>
-
 // CharEqual<>
 //------------------------------------------------------------------------------
 namespace
@@ -68,8 +66,6 @@ static uint32_t LevenshteinDistanceImpl(const char * str1, uint32_t len1,
         return len2;
     }
 
-    ASSERT( len1 < UINT32_MAX );
-    ASSERT( len2 < UINT32_MAX );
     uint32_t column[_Capacity] = { 0 };
 
     for ( uint32_t y = 1 ; y <= len1; y++ )

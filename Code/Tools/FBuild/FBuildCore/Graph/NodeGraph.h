@@ -256,6 +256,8 @@ private:
 
 	struct NodeWithDistance
 	{
+		inline NodeWithDistance() {}
+		NodeWithDistance( Node * n, uint32_t dist ) : m_Node( n ), m_Distance( dist ) {}
 		Node * 		m_Node;
 		uint32_t 	m_Distance;
 	};

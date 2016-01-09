@@ -1469,7 +1469,9 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
     ASSERT( false == nodes.IsAtCapacity() );
 
     if ( fullPath.IsEmpty() )
+    {
         return;
+    }
 
     uint32_t worstMinDistance = fullPath.GetLength() + 1;
 
@@ -1480,23 +1482,29 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
             const uint32_t d = LevenshteinDistance::DistanceI( fullPath, node->GetName() );
 
             if ( d > maxDistance )
+            {
                 continue;
+            }
 
             // skips nodes which don't share any character with fullpath
             if ( fullPath.GetLength() < node->GetName().GetLength() )
             {
                 if ( d > node->GetName().GetLength() - fullPath.GetLength() )
+                {
                     continue; // completly different <=> d deletions
+                }
             }
             else
             {
                 if ( d > fullPath.GetLength() - node->GetName().GetLength() )
+                {
                     continue; // completly different <=> d deletions
+                }
             }
 
             if ( nodes.IsEmpty() )
             {
-                nodes.Append(NodeWithDistance{ node, d });
+                nodes.Append( NodeWithDistance( node, d ) );
                 worstMinDistance = nodes.Top().m_Distance;
             }
             else if ( d >= worstMinDistance )
@@ -1504,7 +1512,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
                 ASSERT( nodes.IsEmpty() || nodes.Top().m_Distance == worstMinDistance );
                 if ( false == nodes.IsAtCapacity() )
                 {
-                    nodes.Append(NodeWithDistance{ node, d });
+                    nodes.Append( NodeWithDistance( node, d ) );
                     worstMinDistance = d;
                 }
             }
@@ -1515,7 +1523,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
 
                 if ( false == nodes.IsAtCapacity() )
                 {
-                    nodes.Append(NodeWithDistance{});
+                    nodes.Append(NodeWithDistance());
                 }
 
                 size_t pos = count;
@@ -1532,7 +1540,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
                 }
 
                 ASSERT( pos < count );
-                nodes[pos] = NodeWithDistance{ node, d };
+                nodes[pos] = NodeWithDistance( node, d );
                 worstMinDistance = nodes.Top().m_Distance;
             }
         }
