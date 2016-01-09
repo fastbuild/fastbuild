@@ -254,6 +254,13 @@ private:
 
 	Node * FindNodeInternal( const AString & fullPath ) const;
 
+	struct NodeWithDistance
+	{
+		Node * 		m_Node;
+		uint32_t 	m_Distance;
+	};
+	void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance = 5 ) const;
+
 	struct UsedFile;
 	bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, Array< UsedFile > & files, bool & compatibleDB ) const;
 	uint32_t GetLibEnvVarHash() const;
