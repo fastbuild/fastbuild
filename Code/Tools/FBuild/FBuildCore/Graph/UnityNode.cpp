@@ -162,6 +162,13 @@ UnityNode::~UnityNode()
 			output += "\"\r\n\r\n";
 		}
 
+		// need to isolate all files?
+		bool isolateAllFiles = false;
+		if ( FBuild::Get().GetOptions().m_IsolateAllFiles )
+		{
+			isolateAllFiles = true;
+		}
+	
 		// make sure any remaining files are added to the last unity to account
 		// for floating point imprecision
 
@@ -184,8 +191,8 @@ UnityNode::~UnityNode()
 			// files which are modified (writable) can optionally be excluded from the unity
 			if ( m_IsolateWritableFiles )
 			{
-				// is the file writable?
-				if ( files[ index ].IsReadOnly() == false )
+				// is the file writable? need to isolate all files?
+				if ( files[ index ].IsReadOnly() == false || isolateAllFiles )
 				{
 					numIsolated++;
 				}
@@ -214,8 +221,8 @@ UnityNode::~UnityNode()
 			// files which are modified (writable) can optionally be excluded from the unity
 			if ( m_IsolateWritableFiles && ( ( m_MaxIsolatedFiles == 0 ) || ( numIsolated <= m_MaxIsolatedFiles ) ) )
 			{
-				// is the file writable?
-				if ( file->IsReadOnly() == false )
+				// is the file writable? need to isolate all files?
+				if ( file->IsReadOnly() == false || isolateAllFiles )
 				{
 					// disable compilation of this file (comment it out)
 					output += "//";

@@ -35,6 +35,7 @@ public:
 	bool m_WrapperChild;
 	bool m_FixupErrorPaths;
 	bool m_StopOnFirstError;
+	bool m_IsolateAllFiles;
 	uint32_t m_NumWorkerThreads;
 	AString m_ConfigFile;
 

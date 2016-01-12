@@ -37,6 +37,7 @@ FBuildOptions::FBuildOptions()
 , m_WrapperChild( false )
 , m_FixupErrorPaths( false )
 , m_StopOnFirstError( true )
+, m_IsolateAllFiles( false )
 , m_WorkingDirHash( 0 )
 {
 #ifdef DEBUG
