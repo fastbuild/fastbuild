@@ -6,6 +6,8 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Env/Env.h"
@@ -40,6 +42,7 @@ enum ReturnCodes
 //------------------------------------------------------------------------------
 void DisplayHelp();
 void DisplayVersion();
+void DisplayTargetsList( const NodeGraph & dependencyGraph );
 #if defined( __WINDOWS__ )
     BOOL CtrlHandler( DWORD fdwCtrlType ); // Handle Ctrl+C etc
 #else
@@ -107,6 +110,7 @@ int Main(int argc, char * argv[])
 	bool fixupErrorPaths = false;
 	bool waitMode = false;
 	bool noStopOnError = false;
+	bool showTargetList = false;
 	int32_t numWorkers = -1;
 	WrapperMode wrapperMode( WRAPPER_MODE_NONE );
 	AStackString<> args;
@@ -179,6 +183,11 @@ int Main(int argc, char * argv[])
 			{
 				DisplayHelp();
 				return FBUILD_OK; // exit app
+			}
+			else if ( thisArg == "-targets" )
+			{
+			  showTargetList = true;
+			  continue;
 			}
 			else if ( thisArg.BeginsWith( "-j" ) &&
 					  sscanf( thisArg.Get(), "-j%i", &numWorkers ) == 1 )
@@ -430,6 +439,12 @@ int Main(int argc, char * argv[])
 		return FBUILD_ERROR_LOADING_BFF;
 	}
 
+	if ( showTargetList )
+	{
+	  DisplayTargetsList(fBuild.GetDependencyGraph());
+	  return FBUILD_OK;
+	}
+	
 	bool result = fBuild.Build( targets );
 
 	if ( sharedData )
@@ -475,6 +490,7 @@ void DisplayHelp()
             " -ide           Enable multiple options when building from an IDE.\n"
             "                Enables: -noprogress, -fixuperrorpaths &\n"
 			"                -wrapper (Windows)\n"
+			" -targets       Display list of available build targets.\n"
 			" -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
 			"                default of hardware thread count.\n"
 			" -noprogress    Don't show the progress bar while building.\n"
@@ -604,3 +620,20 @@ int WrapperIntermediateProcess( const AString & args, const FBuildOptions & opti
 }
 
 //------------------------------------------------------------------------------
+// DisplayTargetsList
+void DisplayTargetsList( const NodeGraph & dependencyGraph )
+{
+    OUTPUT("FBuild: List of available targets\n");
+    uint32_t totalNodes = dependencyGraph.GetNodeCount();
+    for (uint32_t i = 0; i < totalNodes; ++i)
+    {
+	     Node * node = dependencyGraph.GetNodeByIndex(i);
+		 if ( node && node->GetType() == Node::ALIAS_NODE )
+		 {
+		     OUTPUT("\t%s\n", node->GetName().Get());
+		 }
+    }
+}
+
+//------------------------------------------------------------------------------
+

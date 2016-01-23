@@ -524,6 +524,13 @@ Node * NodeGraph::GetNodeByIndex( uint32_t index ) const
 	return n;
 }
 
+//GetNodeCount
+//-----------------------------------------------------------------------------
+uint32_t NodeGraph::GetNodeCount() const
+{
+    return m_AllNodes.GetSize();
+}
+
 // CreateCopyNode
 //------------------------------------------------------------------------------
 CopyNode * NodeGraph::CreateCopyNode( const AString & dstFileName, 
