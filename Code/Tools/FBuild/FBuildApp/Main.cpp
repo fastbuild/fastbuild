@@ -6,6 +6,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFMacros.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Env/Env.h"
@@ -95,6 +96,7 @@ int Main(int argc, char * argv[])
 
 	// handle cmd line args
 	Array< AString > targets( 8, true );
+	Array< AString > defines( 8, true );
 	bool cleanBuild = false;
 	bool verbose = false;
 	bool progressBar = true;
@@ -265,6 +267,26 @@ int Main(int argc, char * argv[])
                 #endif
 				continue;
 			}
+			else if ( thisArg == "-define")
+			{
+				int pathIndex = ( i + 1 );
+				if ( pathIndex >= argc )
+				{
+					OUTPUT( "FBuild: Error: Missing <name> for '-define' argument\n" );
+					OUTPUT( "Try \"FBuild.exe -help\"\n" );
+					return FBUILD_BAD_ARGS;
+				}
+				const char * defineName = argv[ pathIndex ];
+				i++; // skip extra arg we've consumed
+
+				defines.Append( AStackString<>( defineName ) );
+
+				// add to args we might pass to subprocess
+				args += defineName;
+				args += ' ';
+
+				continue;
+			}
 
 			// can't use FLOG_ERROR as FLog is not initialized
 			OUTPUT( "FBuild: Error: Unknown argument '%s'\n", thisArg.Get() );
@@ -414,6 +436,11 @@ int Main(int argc, char * argv[])
 	}
 	FBuild fBuild( options );
 
+	for ( auto it = defines.Begin() ; it != defines.End(); ++it )
+	{
+		BFFMacros::Get().Define(*it);
+	}
+
 	if ( targets.IsEmpty() )
 	{
 		FLOG_INFO( "No target specified, defaulting to target 'all'" );
@@ -494,6 +521,7 @@ void DisplayHelp()
 			"                (Slower than building both targets in one invocation).\n"
 			" -wrapper       (Windows only) Spawn a sub-process to gracefully handle\n"
             "                termination from Visual Studio.\n"
+			" -define [name] add a #define for name to the bff parsing\n"
 			"----------------------------------------------------------------------\n" );
 }
 

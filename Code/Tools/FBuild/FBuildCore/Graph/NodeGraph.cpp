@@ -9,6 +9,7 @@
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionSettings.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFMacros.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
@@ -277,6 +278,43 @@ bool NodeGraph::Load( IOStream & stream, bool & needReparsing )
 			}
 		}
 
+		// strings defiend in command line
+		uint32_t definesSize = 0;
+		if ( stream.Read( definesSize ) == false )
+		{
+			return false;
+		}
+		Array< AString > definesRead;
+		AStackString<> defStr;
+			// check if defines present in the db, were also given now
+		for ( uint32_t i = 0; i < definesSize; ++i )
+		{
+			if ( stream.Read( defStr ) == false )
+			{
+				return false;
+			}
+
+			if ( BFFMacros::Get().IsDefined(defStr) == false )
+			{
+				FLOG_WARN( "'%s' define from previous build was not found - BFF will be re-parsed\n", defStr.Get() );
+				needReparsing = true;
+				return true;
+			}
+			definesRead.Append(defStr);
+		}
+			// check if all defines given now, were also in the db
+		const Array< AString > & definesNow = BFFMacros::Get().Tokens();
+		for( uint32_t i = 0; i < definesNow.GetSize(); ++i)
+		{
+			const AString & checkStr = definesNow[i];
+			if ( definesRead.Find(checkStr) == nullptr )
+			{
+				FLOG_WARN( "'%s' defined now and was not defined in previous build - BFF will be re-parsed\n", checkStr.Get() );
+				needReparsing = true;
+				return true;
+			}
+		}
+
 		// check if 'LIB' env variable has changed
 		uint32_t libEnvVarHashInDB( 0 );
 		if ( stream.Read( libEnvVarHashInDB ) == false )
@@ -422,6 +460,18 @@ void NodeGraph::Save( IOStream & stream ) const
 			stream.Write( varAndHash.GetName() );
 			stream.Write( varAndHash.GetHash() );
 		}
+
+		// externally defined variables
+		const Array< AString > & definedStrings = BFFMacros::Get().Tokens();
+		const uint32_t definedStringsSize = static_cast<uint32_t>( definedStrings.GetSize() );
+		ASSERT( definedStringsSize == definedStrings.GetSize() );
+		stream.Write( definedStringsSize );
+		for ( uint32_t i = 0; i < definedStringsSize; ++i )
+		{
+			const AString & def = definedStrings[i];
+			stream.Write(def);
+		}
+
 
 		// 'LIB' env var hash
 		const uint32_t libEnvVarHash = GetLibEnvVarHash();
