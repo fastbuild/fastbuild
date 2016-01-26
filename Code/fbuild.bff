@@ -263,7 +263,7 @@ Settings
 VCXProject( 'All-proj' )
 {
     .ProjectOutput              = '../tmp/VisualStudio/Projects/All.vcxproj'
-    .ProjectFiles           = { '.\fbuild.bff' }
+    .ProjectFiles           = { '.\fbuild.bff', '.\Tools\FBuild\Integration\fbuild.natvis' }
     .ProjectBasePath            = '.\'
 }
 

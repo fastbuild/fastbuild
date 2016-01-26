@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+<!--
+References on how to write visualisers:
+http://code.msdn.microsoft.com/Writing-type-visualizers-2eae77a2
+
+Some notes:
+1. We only need to specify the base classes as the derived class are automatically handled
+
+
+How to debug:
+Set this registry key when modifying the rules to enable diagnostic unless you want to shoot yourself! 
+Remove it when you're done!
+
+[HKEY_CURRENT_USER\Software\Microsoft\VisualStudio\11.0_Config\Debugger]
+
+"EnableNatvisDiagnostics"=dword:00000001
+-->
+
+
+<Type Name="Array&lt;*&gt;">
+  <DisplayString>Size = {m_End - m_Begin}</DisplayString> 
+  <Expand> 
+    <Item Name="size">m_End - m_Begin</Item> 
+    <Item Name="capacity">m_MaxEnd - m_Begin</Item> 
+    <ArrayItems> 
+      <Size>m_End - m_Begin</Size> 
+      <ValuePointer>($T1*)m_Begin</ValuePointer> 
+    </ArrayItems> 
+  </Expand> 
+</Type>
+
+<Type Name="AString">
+    <DisplayString Condition="m_Length != 0">{m_Contents,s}</DisplayString>
+    <DisplayString Condition="m_Length == 0">Empty String</DisplayString>
+    <StringView Condition="m_Length != 0">m_Contents,s</StringView>
+    <Expand>
+        <Item Name="Reserved">m_ReservedAndFlags&amp;0xFFFFFFFE</Item>
+        <Item Name="Static">(bool)((m_ReservedAndFlags&amp;0x1)!=0)</Item>
+    </Expand>
+</Type>
+
+</AutoVisualizer>
