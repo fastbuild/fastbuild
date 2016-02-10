@@ -27,7 +27,7 @@ ExecNode::ExecNode( const AString & dstFileName,
 						int32_t expectedReturnCode,
 						const Dependencies & preBuildDependencies,
 						bool useStdOutAsOutput )
-: FileNode( dstFileName, Node::FLAG_NONE )
+: FileNode( dstFileName, nullptr, Node::FLAG_NONE )
 , m_InputFiles( inputFiles )
 , m_Executable( executable )
 , m_Arguments( arguments )

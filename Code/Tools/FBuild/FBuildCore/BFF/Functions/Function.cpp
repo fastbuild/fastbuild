@@ -391,7 +391,7 @@ bool Function::GetInt( const BFFIterator & iter, int32_t & var, const char * nam
 
 // GetNodeList
 //------------------------------------------------------------------------------
-bool Function::GetNodeList( const BFFIterator & iter, const char * name, Dependencies & nodes, bool required,
+bool Function::GetNodeList( const BFFIterator & iter, const char * name, Dependencies & nodes, bool required, const char * baseDirectory,
 							bool allowCopyDirNodes, bool allowUnityNodes, bool allowRemoveDirNodes ) const
 {
 	ASSERT( name );
@@ -423,7 +423,7 @@ bool Function::GetNodeList( const BFFIterator & iter, const char * name, Depende
 				return false;
 			}
 
-			if ( !GetNodeListRecurse( iter, name, nodes, *it, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+			if ( !GetNodeListRecurse( iter, name, nodes, *it, baseDirectory, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
 			{
 				// child func will have emitted error
 				return false;
@@ -438,7 +438,7 @@ bool Function::GetNodeList( const BFFIterator & iter, const char * name, Depende
 			return false;
 		}
 
-		if ( !GetNodeListRecurse( iter, name, nodes, var->GetString(), allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+		if ( !GetNodeListRecurse( iter, name, nodes, var->GetString(), baseDirectory, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
 		{
 			// child func will have emitted error
 			return false;
@@ -580,7 +580,7 @@ bool Function::GetObjectListNodes( const BFFIterator & iter,
 
 // GetNodeListRecurse
 //------------------------------------------------------------------------------
-bool Function::GetNodeListRecurse( const BFFIterator & iter, const char * name, Dependencies & nodes, const AString & nodeName,
+bool Function::GetNodeListRecurse( const BFFIterator & iter, const char * name, Dependencies & nodes, const AString & nodeName, const char * baseDirectory,
 								   bool allowCopyDirNodes, bool allowUnityNodes, bool allowRemoveDirNodes ) const
 {
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
@@ -590,7 +590,7 @@ bool Function::GetNodeListRecurse( const BFFIterator & iter, const char * name, 
 	if ( n == nullptr )
 	{
 		// not found - create a new file node
-		n = ng.CreateFileNode( nodeName );
+		n = ng.CreateFileNode( nodeName, baseDirectory );
 		nodes.Append( Dependency( n ) );
 		return true;
 	}
@@ -653,7 +653,7 @@ bool Function::GetNodeListRecurse( const BFFIterator & iter, const char * name, 
 			// TODO:C by passing as string we'll be looking up again for no reason
 			const AString & subName = it->GetNode()->GetName();
 
-			if ( !GetNodeListRecurse( iter, name, nodes, subName, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+			if ( !GetNodeListRecurse( iter, name, nodes, subName, baseDirectory, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
 			{
 				return false;
 			}

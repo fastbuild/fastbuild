@@ -13,9 +13,10 @@
 class FileNode : public Node
 {
 public:
-	explicit FileNode( const AString & fileName, uint32_t controlFlags = Node::FLAG_TRIVIAL_BUILD );
+	explicit FileNode( const AString & fileName, const char * baseDirectory = nullptr, uint32_t controlFlags = Node::FLAG_TRIVIAL_BUILD );
 	virtual ~FileNode();
 
+	const AString & GetBaseDirectory() const { return m_baseDirectory; }
 	static inline Node::Type GetTypeS() { return Node::FILE_NODE; }
 
 	virtual bool IsAFile() const { return true; }
@@ -26,6 +27,8 @@ protected:
 	virtual BuildResult DoBuild( Job * job );
 
 	friend class Client;
+
+	AString m_baseDirectory;
 };
 
 //------------------------------------------------------------------------------

@@ -107,7 +107,7 @@ public:
 							   int32_t expectedReturnCode,
 							   const Dependencies & preBuildDependencies,
 							   bool useStdOutAsOutput );
-	FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
+	FileNode * CreateFileNode( const AString & fileName, const char * baseDirectory = nullptr, bool cleanPath = true );
 	DirectoryListNode * CreateDirectoryListNode( const AString & name,
 												 const AString & path,
 												 const Array< AString > * patterns,

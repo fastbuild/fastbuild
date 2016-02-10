@@ -35,7 +35,7 @@ SLNNode::SLNNode(   const AString & solutionOuput,
                     const Array< VCXProjectNode * > & projects,
 					const Array< SLNDependency > & slnDeps,
                     const Array< SLNSolutionFolder > & folders )
-: FileNode( solutionOuput, Node::FLAG_NONE )
+: FileNode( solutionOuput, nullptr, Node::FLAG_NONE )
 , m_SolutionBuildProject( solutionBuildProject )
 , m_SolutionVisualStudioVersion( solutionVisualStudioVersion )
 , m_SolutionMinimumVisualStudioVersion( solutionMinimumVisualStudioVersion )

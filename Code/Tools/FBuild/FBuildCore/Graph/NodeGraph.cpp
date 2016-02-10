@@ -598,7 +598,7 @@ ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName,
 
 // CreateFileNode
 //------------------------------------------------------------------------------
-FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
+FileNode * NodeGraph::CreateFileNode( const AString & fileName, const char * baseDirectory, bool cleanPath )
 {
 	ASSERT( Thread::IsMainThread() );
 
@@ -608,11 +608,11 @@ FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
 	{
 		AStackString< 512 > fullPath;
 		CleanPath( fileName, fullPath );
-		node = FNEW( FileNode( fullPath ) );
+		node = FNEW( FileNode( fullPath, baseDirectory ) );
 	}
 	else
 	{
-		node = FNEW( FileNode( fileName ) );
+		node = FNEW( FileNode( fileName, baseDirectory ) );
 	}
 
 	AddNode( node );

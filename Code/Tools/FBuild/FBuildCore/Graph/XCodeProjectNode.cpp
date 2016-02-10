@@ -43,7 +43,7 @@ REFLECT_END( XCodeProjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 XCodeProjectNode::XCodeProjectNode()
-	: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+	: FileNode( AString::GetEmpty(), nullptr, Node::FLAG_NONE )
 	, m_XCodeOrganizationName( "Organization" )
 	, m_XCodeBuildToolPath( "./FBuild" )
 	, m_XCodeBuildToolArgs( "-ide $(FASTBUILD_TARGET)" )

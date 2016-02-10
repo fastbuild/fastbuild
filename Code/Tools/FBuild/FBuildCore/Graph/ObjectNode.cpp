@@ -58,7 +58,7 @@ ObjectNode::ObjectNode( const AString & objectName,
                         Node * preprocessorNode,
                         const AString & preprocessorArgs,
                         uint32_t preprocessorFlags )
-: FileNode( objectName, Node::FLAG_NONE )
+: FileNode( objectName, nullptr, Node::FLAG_NONE )
 , m_Includes( 0, true )
 , m_Flags( flags )
 , m_CompilerArgs( compilerArgs )
@@ -103,7 +103,7 @@ ObjectNode::ObjectNode( const AString & objectName,
 						NodeProxy * srcFile,
 						const AString & compilerArgs,
 						uint32_t flags )
-: FileNode( objectName, Node::FLAG_NONE )
+: FileNode( objectName, nullptr, Node::FLAG_NONE )
 , m_Includes( 0, true )
 , m_Flags( flags )
 , m_CompilerArgs( compilerArgs )

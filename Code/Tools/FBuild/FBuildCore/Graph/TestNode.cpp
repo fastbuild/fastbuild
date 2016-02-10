@@ -23,7 +23,7 @@ TestNode::TestNode( const AString & testOutput,
 					FileNode * testExecutable,
 					const AString & arguments,
 					const AString & workingDir )
-	: FileNode( testOutput, Node::FLAG_NO_DELETE_ON_FAIL ) // keep output on test fail
+	: FileNode( testOutput, nullptr, Node::FLAG_NO_DELETE_ON_FAIL ) // keep output on test fail
 	, m_Executable( testExecutable )
 	, m_Arguments( arguments )
 	, m_WorkingDir( workingDir )
