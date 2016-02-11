@@ -66,7 +66,10 @@ ObjectListNode::ObjectListNode( const AString & listName,
 
 	m_PreBuildDependencies = preBuildDependencies;
 
-	m_BaseDirectory = baseDirectory;
+	if (baseDirectory != nullptr)
+	{
+		m_BaseDirectory = baseDirectory;
+	}
 }
 
 // DESTRUCTOR
