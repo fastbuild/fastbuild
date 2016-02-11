@@ -212,6 +212,8 @@ FunctionObjectList::FunctionObjectList()
 		return false;
 	}
 
+	const char * baseDirectory = GetBaseDirectory( funcStartIter );
+
 	// Create library node which depends on the single file or list
 	ObjectListNode * o = ng.CreateObjectListNode( m_AliasForFunction,
 												  staticDeps,
@@ -227,7 +229,8 @@ FunctionObjectList::FunctionObjectList()
 												  allowDistribution,
 												  allowCaching,
                                                   preprocessorNode,
-                                                  preprocessorOptions ? preprocessorOptions->GetString() : AString::GetEmpty() );
+                                                  preprocessorOptions ? preprocessorOptions->GetString() : AString::GetEmpty(),
+												  baseDirectory );
 	if ( compilerOutputExtension )
 	{
 		o->m_ObjExtensionOverride = compilerOutputExtension->GetString();
@@ -479,5 +482,28 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 
 	return true;
 }
+
+
+// GetBaseDirectory
+//------------------------------------------------------------------------------
+const char * FunctionObjectList::GetBaseDirectory( const BFFIterator & iter ) const
+{
+	const char * baseDirectory = nullptr;
+	const BFFVariable * compilerInputFilesRoot = nullptr;
+	if ( !GetString( iter, compilerInputFilesRoot, ".CompilerInputFilesRoot", true ) )
+	{
+		return nullptr;
+	}
+	else
+	{
+		if ( compilerInputFilesRoot != nullptr )
+		{
+			return compilerInputFilesRoot->GetString().Get();
+		}
+	}
+
+	return "";
+}
+
 
 //------------------------------------------------------------------------------

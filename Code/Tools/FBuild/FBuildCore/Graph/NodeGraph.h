@@ -133,7 +133,10 @@ public:
 									   bool allowDistribution,
 									   bool allowCaching,
                                        CompilerNode * preprocessor,
-                                       const AString & preprocessorArgs );
+                                       const AString & preprocessorArgs,
+									   const char * baseDirectory );
+
+
 	ObjectNode *	CreateObjectNode( const AString & objectName,
 									  Node * inputNode,
 									  Node * compilerNode,
@@ -223,8 +226,9 @@ public:
 							 bool deoptimizeWritableFilesWithToken,
 							 bool allowDistribution,
 							 bool allowCaching,
-                             CompilerNode * preprocessor,
-                             const AString & preprocessorArgs );
+							 CompilerNode * preprocessor,
+							 const AString & preprocessorArgs,
+							 const char * baseDirectory );
 	XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
 
 	void DoBuildPass( Node * nodeToBuild );

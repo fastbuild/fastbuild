@@ -34,8 +34,9 @@ public:
 							 bool deoptimizeWritableFilesWithToken,
 							 bool allowDistribution,
 							 bool allowCaching,
-                             CompilerNode * preprocessor,
-                             const AString & preprocessorArgs );
+							 CompilerNode * preprocessor,
+							 const AString & preprocessorArgs,
+							 const char * baseDirectory );
 	virtual ~ObjectListNode();
 
 	static inline Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
@@ -49,6 +50,7 @@ public:
 
 	void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
 	void GetInputFiles( Array< AString > & files ) const;
+
 protected:
 	friend class FunctionObjectList;
 
@@ -73,6 +75,7 @@ protected:
 	bool			m_AllowCaching;
 	CompilerNode *	m_Preprocessor;
 	AString			m_PreprocessorArgs;
+	AString			m_BaseDirectory;
 };
 
 //------------------------------------------------------------------------------

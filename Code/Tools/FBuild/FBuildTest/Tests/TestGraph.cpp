@@ -145,7 +145,7 @@ void TestGraph::TestNodeTypes() const
 										 Dependencies(),
 										 Dependencies(),
 										 false, false, false, false,
-                                         nullptr, AString::GetEmpty() );
+                                         nullptr, AString::GetEmpty(), nullptr );
 		TEST_ASSERT( n->GetType() == Node::LIBRARY_NODE );
 		TEST_ASSERT( LibraryNode::GetTypeS() == Node::LIBRARY_NODE );
 		TEST_ASSERT( AStackString<>( "Library" ) == n->GetTypeName() );

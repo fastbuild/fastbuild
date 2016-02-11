@@ -45,7 +45,8 @@ LibraryNode::LibraryNode( const AString & libraryName,
 						  bool allowDistribution,
 						  bool allowCaching,
                           CompilerNode * preprocessor,
-                          const AString &preprocessorArgs )
+                          const AString &preprocessorArgs,
+						  const char * baseDirectory )
 : ObjectListNode( libraryName,
                   inputNodes,
                   compiler,
@@ -60,7 +61,8 @@ LibraryNode::LibraryNode( const AString & libraryName,
 			      allowDistribution,
 				  allowCaching,
                   preprocessor,
-                  preprocessorArgs )
+                  preprocessorArgs,
+				  baseDirectory )
 , m_AdditionalInputs( additionalInputs )
 {
 	m_Type = LIBRARY_NODE;
@@ -308,7 +310,8 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 	NODE_LOAD( bool,			allowDistribution );
 	NODE_LOAD( bool,			allowCaching );
 	NODE_LOAD_NODE( CompilerNode, preprocessorNode );
-	NODE_LOAD( AStackString<>,	preprocessorArgs );
+	NODE_LOAD( AStackString<>, preprocessorArgs );
+	NODE_LOAD( AStackString<>, baseDirectory );
 
 	NODE_LOAD( AStackString<>,	librarianPath );
 	NODE_LOAD( AStackString<>,	librarianArgs );
@@ -334,7 +337,8 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 								 allowDistribution,
 								 allowCaching,
 								 preprocessorNode,
-								 preprocessorArgs );
+								 preprocessorArgs,
+								 baseDirectory.Get() );
 	n->m_ObjExtensionOverride = objExtensionOverride;
     n->m_CompilerOutputPrefix = compilerOutputPrefix;
 
@@ -372,5 +376,6 @@ bool LibraryNode::CanUseResponseFile() const
 		return false;
 	#endif
 }
+
 
 //------------------------------------------------------------------------------
