@@ -40,7 +40,7 @@ VCXProjectNode::VCXProjectNode( const AString & projectOutput,
 								const Array< VSProjectFileType > & fileTypes,
 							    const Array< AString > & references,
 								const Array< AString > & projectReferences )
-: FileNode( projectOutput, nullptr, Node::FLAG_NONE )
+: FileNode( projectOutput, Node::FLAG_NONE )
 , m_ProjectBasePaths( projectBasePaths )
 , m_PathsToExclude( pathsToExclude )
 , m_Files( files )

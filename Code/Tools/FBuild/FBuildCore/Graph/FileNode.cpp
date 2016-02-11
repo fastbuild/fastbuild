@@ -13,22 +13,15 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
-#include "Core/FileIO/PathUtils.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-FileNode::FileNode( const AString & fileName, const char * baseDirectory, uint32_t controlFlags )
+FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
 : Node( fileName, Node::FILE_NODE, controlFlags )
 {
 	ASSERT( fileName.EndsWith( "\\" ) == false );
 	ASSERT( ( fileName.FindLast( ':' ) == nullptr ) ||
 			( fileName.FindLast( ':' ) == ( fileName.Get() + 1 ) ) );
-
-	if ( baseDirectory != nullptr )
-	{
-		m_baseDirectory = baseDirectory;
-		ASSERT( PathUtils::PathBeginsWith( fileName, m_baseDirectory ) );
-	}
 
 	m_LastBuildTimeMs = 1; // very little work required
 }
@@ -51,11 +44,10 @@ FileNode::~FileNode()
 //------------------------------------------------------------------------------
 /*static*/ Node * FileNode::Load( IOStream & stream )
 {
-	NODE_LOAD( AStackString<>, fileName );
-	NODE_LOAD( AStackString<>, baseDirectory );
+	NODE_LOAD( AStackString<>,	fileName );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * n = ng.CreateFileNode( fileName, baseDirectory.Get() );
+	Node * n = ng.CreateFileNode( fileName );
 	ASSERT( n );
 	return n;
 }
@@ -65,7 +57,6 @@ FileNode::~FileNode()
 /*virtual*/ void FileNode::Save( IOStream & stream ) const
 {
 	NODE_SAVE( m_Name );
-	NODE_SAVE( m_baseDirectory );
 }
 
 //------------------------------------------------------------------------------

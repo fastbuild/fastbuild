@@ -27,7 +27,7 @@ REFLECT_END( CompilerNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CompilerNode::CompilerNode()
-	: FileNode( AString::GetEmpty(), nullptr, Node::FLAG_NO_DELETE_ON_FAIL )
+	: FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL )
     , m_AllowDistribution( true )
 	, m_VS2012EnumBugFix( false )
 {

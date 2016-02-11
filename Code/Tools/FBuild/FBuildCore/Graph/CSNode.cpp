@@ -28,7 +28,7 @@ CSNode::CSNode( const AString & compilerOutput,
 				const AString & compiler,
 				const AString & compilerArgs,
 				const Dependencies & extraRefs )
-: FileNode( compilerOutput, nullptr, Node::FLAG_NONE )
+: FileNode( compilerOutput, Node::FLAG_NONE )
 , m_ExtraRefs( extraRefs )
 {
 	ASSERT( !inputNodes.IsEmpty() );

@@ -353,20 +353,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
             // ... use everything after that
             subPath.Assign(fileName.Get() + baseDir.GetLength(), lastSlash ); // includes last slash
         }
-	}
-	else
-	{
-		// if source comes from a specific list of files, use path relative to file base directory
-		if ( inputFile->GetType() == Node::FILE_NODE )
-		{
-			FileNode * fileNode = inputFile->CastTo< FileNode >();
-			const AString & baseDir = fileNode->GetBaseDirectory();
-			if (baseDir.GetLength() > 0)
-			{
-				subPath.Assign( fileName.Get() + baseDir.GetLength(), lastSlash ); // includes last slash
-			}
-		}
-	}
+    }
 
 	AStackString<> fileNameOnly( lastSlash, lastDot );
 	AStackString<> objFile( m_CompilerOutputPath );

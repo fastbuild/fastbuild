@@ -66,7 +66,7 @@ FunctionRemoveDir::FunctionRemoveDir()
     bool allowCopyDirNodes = true;
     bool allowUnityNodes = false;
     bool allowRemoveDirNodes = true;
-    if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDeps, false, nullptr, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+    if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDeps, false, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
     {
         return false; // GetNodeList will have emitted an error
     }

@@ -37,7 +37,7 @@ LinkerNode::LinkerNode( const AString & linkerOutputName,
 						 const AString & importLibName,
 						 Node * linkerStampExe, 
 						 const AString & linkerStampExeArgs )
-: FileNode( linkerOutputName, nullptr, Node::FLAG_NONE )
+: FileNode( linkerOutputName, Node::FLAG_NONE )
 , m_Flags( flags )
 , m_AssemblyResources( assemblyResources )
 , m_OtherLibraries( otherLibraries )

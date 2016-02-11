@@ -470,15 +470,8 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 		inputs.Append( dirNodes );
 	}
 
-	const char * rootDirectory = nullptr;
-	const BFFVariable * compilerInputFilesRoot = nullptr;
-	if ( GetString( iter, compilerInputFilesRoot, ".CompilerInputFilesRoot", true ) )
-	{
-		rootDirectory = compilerInputFilesRoot->GetString().Get();
-	}
-
 	// do we want to build a specific list of files?
-	if ( !GetNodeList( iter, ".CompilerInputFiles", inputs, false, rootDirectory ) )
+	if ( !GetNodeList( iter, ".CompilerInputFiles", inputs, false ) )
 	{
 		// helper will emit error
 		return false;

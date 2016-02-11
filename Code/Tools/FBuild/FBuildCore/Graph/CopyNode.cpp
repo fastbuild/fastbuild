@@ -21,7 +21,7 @@
 CopyNode::CopyNode( const AString & dstFileName,
 					FileNode * sourceFile,
 					const Dependencies & preBuildDependencies )
-: FileNode( dstFileName, nullptr, Node::FLAG_NONE )
+: FileNode( dstFileName, Node::FLAG_NONE )
 , m_SourceFile( sourceFile )
 {
 	ASSERT( sourceFile );
