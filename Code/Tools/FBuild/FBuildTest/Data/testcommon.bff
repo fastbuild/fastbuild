@@ -85,7 +85,7 @@
     .Librarian          = '/usr/bin/ar'
     .Linker             = '/usr/bin/g++'
     
-    .BaseCompilerOptions= '-o "%2" "%1" -c -g'
+    .BaseCompilerOptions= ' -o "%2" "%1" -c -g'
                         + ' -I./'
                         + ' -D__LINUX__'
                         + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
@@ -93,7 +93,11 @@
                         
     .CompilerOptionsC   = .BaseCompilerOptions
     .CompilerOptions    = .BaseCompilerOptions
-                        + ' -std=gnu++11'                   // allow C++11 features
+                        + ' -std=c++11'                     // allow C++11 features
+                        + ' -Wno-invalid-offsetof'          // allow offset of members in non-POD types
+    .PCHOptions         = '-x c++-header'
+                        + .BaseCompilerOptions
+                        + ' -std=c++11'                     // allow C++11 features
                         + ' -Wno-invalid-offsetof'          // allow offset of members in non-POD types
                         
     .LinkerOptions      = '"%1" -o "%2"'
@@ -115,16 +119,21 @@
     .Librarian          = '/usr/bin/ar'
     .Linker             = '/usr/bin/g++'
 
-    .BaseCompilerOptions= '-x c++ -o "%2" "%1" -c -g'
+    .BaseCompilerOptions= ' -o "%2" "%1" -c -g'
                         + ' -I./'
                         + ' -D__APPLE__'
                         + ' -D__OSX__'
                         + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
-                        + ' -std=c++11'                     // allow C++11 features
                         + ' -Wno-#pragma-messages'
 
-    .CompilerOptionsC   = .BaseCompilerOptions
-    .CompilerOptions    = .BaseCompilerOptions
+    .CompilerOptionsC   = ' -x c'
+                        + .BaseCompilerOptions
+    .CompilerOptions    = ' -x c++'
+                        + .BaseCompilerOptions
+                        + ' -std=c++11'                     // allow C++11 features
+    .PCHOptions         = ' -x c++-header'
+                        + .BaseCompilerOptions
+                        + ' -std=c++11'
 
     .LinkerOptions      = '"%1" -o "%2"'
 
@@ -151,4 +160,7 @@
         .CachePath			= '/tmp/.fbuild.cache'
         Using( .OSXClangToolChain )
     #endif
+
+	// Default location for tmp files
+	.Out		= "../../../../tmp"
 ]

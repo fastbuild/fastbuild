@@ -1,9 +1,9 @@
 
 // This cpp file uses the precompiled header
 
-#include "PrecompiledHeader.h"
+#include <PrecompiledHeader.h>
 
-bool __stdcall DllMain( void * hinstDLL, unsigned int fdwReason, void * lpvReserved )
+int main(int argc, char * argv[])
 {
-	return true;
+	return 0;
 }

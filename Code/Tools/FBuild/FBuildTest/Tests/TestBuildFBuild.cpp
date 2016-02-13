@@ -15,7 +15,7 @@
 
 // Globals
 //------------------------------------------------------------------------------
-const char * dbFile = "../ftmp/Test/TestFBuild.db";
+const char * dbFile = "../tmp/Test/BuildFBuild/TestFBuild.db";
 
 // TestBuildFBuild
 //------------------------------------------------------------------------------
@@ -61,22 +61,22 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildOptions options, bool useDB ) 
 	TEST_ASSERT( fBuild.Initialize( useDB ? dbFile : nullptr ) );
 
     #if defined( __WINDOWS__ )
-        const AStackString<> lib( "../ftmp/Win32/Debug/Core/core.lib" );
-        const AStackString<> lib2( "../ftmp/Win32/Debug/FBuildCore/fbuildcore.lib" );
-        const AStackString<> lib3( "../ftmp/Win32/Release/FBuildApp/fbuildapp.lib" );
-        const AStackString<> exe( "../ftmp/Win32/Release/Tools/FBuild/FBuildApp/fbuild.exe" );
+        const AStackString<> lib( "../tmp/Test/BuildFBuild/Win32/Debug/Core/core.lib" );
+        const AStackString<> lib2( "../tmp/Test/BuildFBuild/Win32/Debug/FBuildCore/fbuildcore.lib" );
+        const AStackString<> lib3( "../tmp/Test/BuildFBuild/Win32/Release/FBuildApp/fbuildapp.lib" );
+        const AStackString<> exe( "../tmp/Test/BuildFBuild/Win32/Release/Tools/FBuild/FBuildApp/fbuild.exe" );
     #endif
     #if defined( __OSX__ )
-        const AStackString<> lib( "../ftmp/OSX/Debug/Core/core.lib" );
-        const AStackString<> lib2( "../ftmp/OSX/Debug/FBuildCore/fbuildcore.lib" );
-        const AStackString<> lib3( "../ftmp/OSX/Release/FBuildApp/fbuildapp.lib" );
-        const AStackString<> exe( "../ftmp/OSX/Release/Tools/FBuild/FBuildApp/fbuild.exe" );
+        const AStackString<> lib( "../tmp/Test/BuildFBuild/OSX/Debug/Core/core.lib" );
+        const AStackString<> lib2( "../tmp/Test/BuildFBuild/OSX/Debug/FBuildCore/fbuildcore.lib" );
+        const AStackString<> lib3( "../tmp/Test/BuildFBuild/OSX/Release/FBuildApp/fbuildapp.lib" );
+        const AStackString<> exe( "../tmp/Test/BuildFBuild/OSX/Release/Tools/FBuild/FBuildApp/fbuild.exe" );
     #endif
     #if defined( __LINUX__ )
-        const AStackString<> lib( "../ftmp/Linux/Debug/Core/Core.lib" );
-        const AStackString<> lib2( "../ftmp/Linux/Debug/FBuildCore/FBuildCore.lib" );
-        const AStackString<> lib3( "../ftmp/Linux/Release/FBuildApp/FBuildApp.lib" );
-        const AStackString<> exe( "../ftmp/Linux/Release/Tools/FBuild/FBuildApp/FBuild.exe" );
+        const AStackString<> lib( "../tmp/Test/BuildFBuild/Linux/Debug/Core/Core.lib" );
+        const AStackString<> lib2( "../tmp/Test/BuildFBuild/Linux/Debug/FBuildCore/FBuildCore.lib" );
+        const AStackString<> lib3( "../tmp/Test/BuildFBuild/Linux/Release/FBuildApp/FBuildApp.lib" );
+        const AStackString<> exe( "../tmp/Test/BuildFBuild/Linux/Release/Tools/FBuild/FBuildApp/FBuild.exe" );
     #endif
 	const AStackString<> target( "fbuild" );
 
@@ -101,7 +101,7 @@ void TestBuildFBuild::BuildClean() const
 {
 	// delete files from previous runs
 	Array< AString > files( 1024, true );
-	FileIO::GetFiles( AStackString<>( "../ftmp/" ), AStackString<>( "*" ), true, &files );
+	FileIO::GetFiles( AStackString<>( "../tmp/Test/BuildFBuild" ), AStackString<>( "*" ), true, &files );
 	for ( Array< AString >::Iter it = files.Begin();
 		  it != files.End();
 		  it++ )

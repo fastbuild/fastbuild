@@ -1,6 +1,7 @@
 
-.Out		= '..\..\..\..\ftmp'
-
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
 
 //
 // Per-Config options

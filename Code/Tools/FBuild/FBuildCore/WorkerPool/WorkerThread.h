@@ -7,6 +7,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Env/Types.h"
+#include "Core/Process/Semaphore.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 
@@ -50,6 +51,7 @@ protected:
 	volatile bool m_ShouldExit;
 	volatile bool m_Exited;
 	uint32_t	  m_ThreadIndex;
+	Semaphore	  m_MainThreadWaitForExit; // Used by main thread to wait for exit of worker
 
 	static AStackString<> s_TmpRoot;
 };

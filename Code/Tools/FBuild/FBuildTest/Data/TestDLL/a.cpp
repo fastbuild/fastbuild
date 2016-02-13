@@ -1,16 +1,17 @@
 //
 // Some exported functions
 //
-#include "PrecompiledHeader.h"
+#include <PrecompiledHeader.h>
 #include "a.h"
 
-
-bool __stdcall DllMain( void * hinstDLL, unsigned int fdwReason, void * lpvReserved )
-{
-	return true;
-}
+#if defined( __WINDOWS__ )
+    bool __stdcall DllMain( void * hinstDLL, unsigned int fdwReason, void * lpvReserved )
+    {
+        return true;
+    }
+#endif
 
 int FunctionA()
 {
-	return 12345678; // Checked for in unit test
+	return 99; // Checked for in unit test
 }

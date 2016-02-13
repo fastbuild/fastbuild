@@ -61,14 +61,14 @@ void TestTest::Build() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	const AStackString<> testExe( "../../../../ftmp/Test/Test/test.exe" );
+	const AStackString<> testExe( "../../../../tmp/Test/Test/test.exe" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( testExe );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/Test/test.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Test/test.fdb" ) );
 
 	// make sure all output is where it is expected
 	EnsureFileExists( testExe );
@@ -78,7 +78,7 @@ void TestTest::Build() const
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE ); // cpp 
 	CheckStatsNode ( 1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( 1,		1,		Node::OBJECT_NODE );
-	CheckStatsNode ( 1,		1,		Node::LIBRARY_NODE );
+	CheckStatsNode ( 1,		1,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::EXE_NODE );
 	CheckStatsNode ( 1,		1,		Node::TEST_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
@@ -93,7 +93,7 @@ void TestTest::Build_NoRebuild() const
 	options.m_ConfigFile = "Data/TestCopy/copy.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/Test/test.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Test/test.fdb" ) );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) );
@@ -103,7 +103,7 @@ void TestTest::Build_NoRebuild() const
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE ); // cpp
 	CheckStatsNode ( 1,		0,		Node::COMPILER_NODE );
 	CheckStatsNode ( 1,		0,		Node::OBJECT_NODE );
-	CheckStatsNode ( 1,		0,		Node::LIBRARY_NODE );
+	CheckStatsNode ( 1,		0,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		0,		Node::EXE_NODE );
 	CheckStatsNode ( 1,		0,		Node::TEST_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );

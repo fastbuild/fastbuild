@@ -206,7 +206,7 @@ bool Process::Spawn( const char * executable,
             }
 
             // split args
-            AString fullArgs( args );
+            AString fullArgs( args ? args : "" );
             Array< AString > splitArgs( 64, true );
             fullArgs.Tokenize( splitArgs );
 
@@ -289,7 +289,7 @@ bool Process::IsRunning() const
         
         // store wait result: can't call again if we just cleaned up process
         ASSERT( result == m_ChildPID );
-        m_ReturnStatus = status;
+        m_ReturnStatus = WEXITSTATUS(status);
         m_HasAlreadyWaitTerminated = true;
         return false; // no longer running
     #else
@@ -330,7 +330,22 @@ int Process::WaitForExit()
         VERIFY( close( m_StdErrRead ) == 0 );
         if ( m_HasAlreadyWaitTerminated == false )
         {
-            VERIFY( waitpid( m_ChildPID, &m_ReturnStatus, 0 ) == m_ChildPID );
+            int status;
+            for( ;; )
+            {
+                pid_t ret = waitpid( m_ChildPID, &status, 0 );
+                if ( ret == -1 )
+                {
+                    if ( errno == EINTR )
+                    {
+                        continue; // Try again
+                    }
+                    ASSERT( false ); // Usage error
+                }
+                ASSERT( ret == m_ChildPID );
+                m_ReturnStatus = WEXITSTATUS(status);
+                break;
+            }
         }
         return m_ReturnStatus;
     #else

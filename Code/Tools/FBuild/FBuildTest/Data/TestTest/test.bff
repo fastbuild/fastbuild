@@ -1,44 +1,38 @@
+//
+// Test 
+//
+// Build and run a Test
+//
+//------------------------------------------------------------------------------
 
-#include "..\testcommon.bff"
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
 
-Settings		
+// Compile an executable to run
+//------------------------------------------------------------------------------
+ObjectList( "Exe-Lib" )
 {
-	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
-						"TMP=C:\Windows\Temp",
-						"SystemRoot=C:\Windows" }
-}
-
-.Compiler	= "$VisualStudioPath$\VC\bin\cl.exe"
-.Librarian	= "$VisualStudioPath$\VC\bin\lib.exe"
-.Linker		= "$VisualStudioPath$\VC\bin\link.exe"
-
-.Out		= "..\..\..\..\ftmp"
-.CompilerOutputPath	= "$Out$\Test\Test\"
-
-// A simple exe
-//--------------------
-Library( "Exe-Lib" )
-{
-	.LibrarianOptions	= "/NOLOGO /OUT:%2 %1"
-	.LibrarianOutput	= "$Out$\Test\Test\exe.lib"
-	.CompilerInputFiles	= "Data\TestTest\test.cpp"
-	.CompilerOutputPath	= "$Out$\Test\Test\"
-	.CompilerOptions	= "%1 /Fo%2 /nologo /c"
+	.CompilerInputFiles	= 'Data/TestTest/test.cpp'
+	.CompilerOutputPath	= '$Out$/Test/Test/'
 }
 
 Executable( "Exe" )
 {
-	.LinkerOptions		= "/NOLOGO /OUT:%2 %1 /MACHINE:X86"
-						+ " /SUBSYSTEM:CONSOLE"
-						+ ' /NODEFAULTLIB'
-						+ ' /ENTRY:ExeMain'
-	.LinkerOutput		= "$Out$\Test\Test\test.exe"
-	.Libraries			= { "Exe-Lib" }
+	#if __WINDOWS__
+		.LinkerOptions		+ ' /SUBSYSTEM:CONSOLE'
+							+ ' /ENTRY:main'
+	#endif
+	.LinkerOutput		= '$Out$/Test/Test/test.exe'
+	.Libraries			= { 'Exe-Lib' }
 }
 
-// A test
+// Run the executable we compiled
+//------------------------------------------------------------------------------
 Test( "Test" )
 {
-	.TestExecutable		= "Exe"
-	.TestOutput			= "$Out$\Test\Test\testoutput.txt"
+	.TestExecutable		= 'Exe'
+	.TestOutput			= '$Out$/Test/Test/testoutput.txt'
 }

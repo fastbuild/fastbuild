@@ -32,7 +32,6 @@ protected:
 	bool	GetCompilerNode( const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode ) const;
 	bool	GetPrecompiledHeaderNode( const BFFIterator & iter,
 									  CompilerNode * compilerNode,
-									  uint32_t objFlags,
 									  const BFFVariable * compilerOptions,
 									  const Dependencies & compilerForceUsing,
 									  ObjectNode * & precompiledHeaderNode,

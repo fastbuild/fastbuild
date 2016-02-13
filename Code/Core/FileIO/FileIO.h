@@ -50,8 +50,6 @@ public:
 	static bool DirectoryExists( const AString & path );
 	static bool EnsurePathExists( const AString & path );
 
-	static bool CreateTempPath( const char * tempPrefix, AString & path );
-
 	static uint64_t GetFileLastWriteTime( const AString & fileName );
 	static bool		SetFileLastWriteTime( const AString & fileName, uint64_t fileTime );
 

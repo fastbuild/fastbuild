@@ -1,6 +1,6 @@
 // LZ4
 //------------------------------------------------------------------------------
-.LZ4BasePath		= '../External/LZ4/lz4-r127'
+.LZ4BasePath		= '../External/LZ4/lz4-r131'
 .LZ4_Windows_MSVC	= [ .LZ4IncludePaths	= ' /I"$LZ4BasePath$"'
 						.LZ4CompilerOptions	= ' /wd6262'	// Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
 											+ ' /wd28251'	// warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
@@ -23,13 +23,29 @@
 	//--------------------------------------------------------------------------
 	VCXProject( '$ProjectName$-proj' )
 	{
-		.ProjectOutput				= '$ProjectPath$\$ProjectName$.vcxproj'
+		.ProjectOutput				= '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
 		.ProjectInputPaths			= '$ProjectPath$\'
         .ProjectFiles               = '../External/LZ4/LZ4.bff'
 		.ProjectBasePath			= '$ProjectPath$\'
 	}
+	
+	// XCode Project Generation
+	//--------------------------------------------------------------------------
+	XCodeProject( '$ProjectName$-xcodeproj' )
+	{
+		.ProjectOutput 				= '../tmp/XCode/Projects/0_External/$ProjectName$.xcodeproj/project.pbxproj'
+		.ProjectInputPaths			= '$ProjectPath$/'
+		.ProjectBasePath			= '$ProjectPath$/'
 
-	// Only 1 file to build
+		.XCodeBuildWorkingDir		= '../../../../Code/'
+		
+		.ProjectOSXDebug 		= [ .Config = 'Debug' 	.Target = '$ProjectName$-x64OSX-Debug' ]
+		.ProjectOSXProfile 		= [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
+		.ProjectOSXRelease 		= [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]		
+		.ProjectConfigs 		= { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }	
+	}	
+
+	// Only build specific files
 	.CompilerInputFiles				= { '$LZ4BasePath$\lz4.c'
                                         '$LZ4BasePath$\xxhash.c'
     }

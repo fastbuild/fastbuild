@@ -16,6 +16,34 @@
 
 
 <div class='newsitemheader'>
+    v0.89&nbsp;<font color='#bbbbbb'>(13-Feb-2016)</font>
+</div>
+<div class='newsitembody'>
+	New
+	<ul>
+        <li>Operator '-' can be used to remove substrings from strings</li>
+        <li>-showtargets cmdline option displays primary build targets (Thanks to Cyberkm)</li>
+	</ul>
+    Fixes
+    <ul>
+        <li>Precompiled headers used with GCC now work correctly (acceleration is not longer prevented)</li>
+        <li>-include option is correctly handled with GCC and Clang</li> 
+        <li>Exec() works with non-zero return codes on Linux and OS X</li>
+        <li>Fix race condition in shutdown of fbuild that could cause an extremely rare hang</li>
+        <li>Correct position of arrow for error 1009 and 1034 in some situations</li>
+        <li>FBuildWorker only checks free space of drive containing temp directory</li>
+    </ul>
+	Improvements
+	<ul>
+        <li>Small optimization (0-10%) to cache storage and retrieval (updated LZ4 from r127 to r131)</li>
+        <li>When specifying an invalid target on the cmdline, similar targets are suggested (Thanks to poppolopoppo)</li>
+        <li>Avoid local hostname lookup when not running in distributed compilation mode for small speedup</li>
+	</ul>
+</div>
+
+
+
+<div class='newsitemheader'>
     v0.88&nbsp;<font color='#bbbbbb'>(9-Dec-2015)</font>
 </div>
 <div class='newsitembody'>

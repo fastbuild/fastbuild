@@ -21,9 +21,7 @@
 // system
 #include <stdarg.h> // for va_args
 #include <string.h>
-#if defined( __WINDOWS__ )
-    #include <windows.h> // for ::GetTimeFormat
-#endif
+#include <time.h>
 
 // Globals
 //------------------------------------------------------------------------------
@@ -328,40 +326,16 @@ void Report::CreateOverview( const FBuildStats & stats )
 	Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
 
 	// report time
+	time_t rawtime;
+	struct tm * timeinfo;
+	time( &rawtime );
+	timeinfo = localtime( &rawtime );
 	char timeBuffer[ 256 ];
-	#if defined( __WINDOWS__ )
-		VERIFY( ::GetTimeFormat( LOCALE_NAME_USER_DEFAULT,		// LCID Locale
-								 TIME_FORCE24HOURFORMAT,		// DWORD dwFlags
-								 nullptr,						// SYSTEMTIME *lpTime
-								 nullptr,						// LPCTSTR lpFormat,
-								 timeBuffer,					// LPTSTR lpTimeStr,
-								 256 ) );						// int cchTime
-	#elif defined( __APPLE__ )
-		timeBuffer[ 0 ] = '\000'; // TODO:MAC Implement GetTimeFormat in Report
-	#elif defined( __LINUX__ )
-		timeBuffer[ 0 ] = '\000'; // TODO:LINUX Implement GetTimeFormat in Report
-	#else
-		#error Unknown platform
-	#endif
-
-	char dateBuffer[ 256 ];
-	#if defined( __WINDOWS__ )
-		VERIFY( ::GetDateFormat( LOCALE_NAME_USER_DEFAULT,		// LCID Locale
-								 DATE_LONGDATE,					// DWORD dwFlags
-								 nullptr,						// SYSTEMTIME *lpTime
-								 nullptr,						// LPCTSTR lpFormat,
-								 dateBuffer,					// LPTSTR lpTimeStr,
-								 256 ) );						// int cchTime
-	#elif defined( __APPLE__ )
-		dateBuffer[ 0 ] = '\000'; // TODO:MAC Implement GetDateFormat in Report
-	#elif defined( __LINUX__ )
-		dateBuffer[ 0 ] = '\000'; // TODO:LINUX Implement GetDateFormat in Report
-	#else
-		#error Unknown platform
-	#endif
+	// Mon 1-Jan-2000 - 18:01:15
+	VERIFY( strftime( timeBuffer, 256, "%a %d-%b-%Y - %H:%M:%S", timeinfo ) > 0 );
 
 	// NOTE: leave space to patch in time taken later "^^^^                          "
-	Write( "<tr><td>Report Generated</td><td>^^^^                         - %s %s</td></tr>\n", dateBuffer, timeBuffer );
+	Write( "<tr><td>Report Generated</td><td>^^^^                         - %s</td></tr>\n", timeBuffer );
 
 	DoTableStop();
 }

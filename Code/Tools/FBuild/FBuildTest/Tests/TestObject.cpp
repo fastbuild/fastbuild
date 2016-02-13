@@ -38,10 +38,10 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestObject::TestStaleDynamicDeps() const
 {
-	const char* fileA = "../../../../ftmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileA.h";
-	const char* fileB = "../../../../ftmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileB.h";
-	const char* fileC = "../../../../ftmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileC.h";
-	const char* database = "../../../../ftmp/Test/Object/StaleDynamicDeps/fbuild.fdb";
+	const char* fileA = "../../../../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileA.h";
+	const char* fileB = "../../../../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileB.h";
+	const char* fileC = "../../../../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileC.h";
+	const char* database = "../../../../tmp/Test/Object/StaleDynamicDeps/fbuild.fdb";
 
 	// Generate some header files
 	{

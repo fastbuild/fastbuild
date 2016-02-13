@@ -43,14 +43,14 @@ void TestCUDA::Build() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	const AStackString<> obj( "..\\..\\..\\..\\ftmp\\Test\\CUDA\\test.obj" );
+	const AStackString<> obj( "../../../../tmp/Test/CUDA/test.obj" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( obj );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "CUDA-Obj" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "..\\..\\..\\..\\ftmp\\Test\\CUDA\\cuda.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/CUDA/cuda.fdb" ) );
 
 	// make sure all output is where it is expected
 	EnsureFileExists( obj );
@@ -76,9 +76,9 @@ void TestCUDA::Build_NoRebuild() const
 	options.m_ConfigFile = "Data/TestCUDA/cuda.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "..\\..\\..\\..\\ftmp\\Test\\CUDA\\cuda.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/CUDA/cuda.fdb" ) );
 
-	const AStackString<> obj( "..\\..\\..\\..\\ftmp\\Test\\CUDA\\test.obj" );
+	const AStackString<> obj( "../../../../tmp/Test/CUDA/test.obj" );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "CUDA-Obj" ) ) );
@@ -104,9 +104,9 @@ void TestCUDA::Build_CacheHit() const
 	options.m_UseCacheRead = true;
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "..\\..\\..\\..\\ftmp\\Test\\CUDA\\cuda.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/CUDA/cuda.fdb" ) );
 
-	const AStackString<> obj( "..\\..\\..\\..\\ftmp\\Test\\CUDA\\test.obj" );
+	const AStackString<> obj( "../../../../tmp/Test/CUDA/test.obj" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( obj );

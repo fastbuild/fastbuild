@@ -52,19 +52,20 @@ Using( .StandardEnvironment )
 
 // External Libs
 //------------------------------------------------------------------------------
-.LZ4BasePath				= '../External/LZ4/lz4-r127'
+.LZ4BasePath				= '../External/LZ4/lz4-r131'
 .LZ4IncludePath				= '$LZ4BasePath$'
 
 //
 // Configs
 //------------------------------------------------------------------------------
+.OutputBase = '../tmp/Test/BuildFBuild/'
 #if __WINDOWS__
 	.Configs				= { "Debug",							"Release" }
 	.CompilerExtraOptions	= { "/DDEBUG /Od /RTC1 /GS /Oy- /MTd",	"/DRELEASE /Ox /Oy /Oi /GS- /MT /GF /GL /Gy" }
 	.LibrarianExtraOptions	= { "",									"/LTCG" }
 	.LinkerExtraOptions		= { "^"user32.lib^"",					"/LTCG /OPT:REF,ICF /NXCOMPAT /DYNAMICBASE" }
 
-	.OutputBase				= '../ftmp/Win32/'
+	.OutputBase				+ 'Win32/'
 #endif
 #if __OSX__
     .Configs				= { "Debug",							"Release" }
@@ -72,7 +73,7 @@ Using( .StandardEnvironment )
     .LibrarianExtraOptions	= { "",									"" }
     .LinkerExtraOptions		= { "",                                 "" }
 
-    .OutputBase				= '../ftmp/OSX/'
+    .OutputBase				+ 'OSX/'
 #endif
 #if __LINUX__
     .Configs				= { "Debug",							"Release" }
@@ -80,7 +81,7 @@ Using( .StandardEnvironment )
     .LibrarianExtraOptions	= { "",									"" }
     .LinkerExtraOptions		= { "",                                 "" }
 
-    .OutputBase				= '../ftmp/Linux/'
+    .OutputBase				+ 'Linux/'
 #endif
 
 // Libraries

@@ -109,9 +109,10 @@ bool BFFParser::Parse( BFFIterator & iter )
 				continue;
 			}
 			case BFF_VARIABLE_CONCATENATION:
+			case BFF_VARIABLE_SUBTRACTION:
 			{
 				// concatenation to last used variable
-				if ( ParseUnnamedVariableConcatenation( iter ) == false )
+				if ( ParseUnnamedVariableModification( iter ) == false )
 				{
 					return false;
 				}
@@ -261,16 +262,17 @@ bool BFFParser::Parse( BFFIterator & iter )
 	return true;
 }
 
-// ParseUnnamedVariableConcatenation
+// ParseUnnamedVariableModification
 //------------------------------------------------------------------------------
-bool BFFParser::ParseUnnamedVariableConcatenation( BFFIterator & iter )
+bool BFFParser::ParseUnnamedVariableModification( BFFIterator & iter )
 {
-	ASSERT( *iter == BFF_VARIABLE_CONCATENATION );
+	ASSERT( ( *iter == BFF_VARIABLE_CONCATENATION ) || 
+			( *iter == BFF_VARIABLE_SUBTRACTION ) );
 
 	// have we assigned a variable before?
 	if ( m_SeenAVariable == false )
 	{
-		Error::Error_1011_UnnamedConcatMustFollowAssignment( iter );
+		Error::Error_1011_UnnamedModifcationMustFollowAssignment( iter );
 		return false;
 	}
 
@@ -333,15 +335,16 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 
 	// look for an appropriate operator
 	BFFIterator operatorIter( iter );
-	bool concatenation = false;
+	bool modification = false;
 	if ( *iter == BFF_VARIABLE_ASSIGNMENT )
 	{
 		// assignment
 	}
-	else if ( *iter == BFF_VARIABLE_CONCATENATION )
+	else if ( ( *iter == BFF_VARIABLE_CONCATENATION ) ||
+			  ( *iter == BFF_VARIABLE_SUBTRACTION ) )
 	{
 		// concatenation
-		concatenation = true;
+		modification = true;
 	}
 	else
 	{
@@ -378,9 +381,9 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 	}
 	else if ( ( openToken >= '0' ) && ( openToken <= '9' ) )
 	{
-		if ( concatenation )
+		if ( modification )
 		{
-			Error::Error_1027_CannotConcatenate( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_INT );
+			Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_INT );
 			return false;
 		}
 
@@ -420,18 +423,18 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 				AStackString<8> value( startBoolValue.GetCurrent(), iter.GetCurrent() );
 				if ( value == "true" )
 				{
-					if ( concatenation )
+					if ( modification )
 					{
-						Error::Error_1027_CannotConcatenate( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
+						Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
 						return false;
 					}
 					return StoreVariableBool( varName, true, frame );
 				}
 				else if ( value == "false" )
 				{
-					if ( concatenation )
+					if ( modification )
 					{
-						Error::Error_1027_CannotConcatenate( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
+						Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
 						return false;
 					}
 					return StoreVariableBool( varName, false, frame );
@@ -1061,13 +1064,14 @@ bool BFFParser::StoreVariableString( const AString & name,
 
 	// are we concatenating?
 	const BFFVariable * varToConcat = nullptr;
-	if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
+	if ( ( *operatorIter == BFF_VARIABLE_CONCATENATION ) || 
+		 ( *operatorIter == BFF_VARIABLE_SUBTRACTION ) )
 	{
 		// find existing
 		varToConcat = BFFStackFrame::GetVar( name, frame );
 		if ( varToConcat == nullptr )
 		{
-			Error::Error_1026_VariableNotFoundForConcatenation( operatorIter, name );
+			Error::Error_1026_VariableNotFoundForModification( operatorIter, name );
 			return false;
 		}
 
@@ -1076,26 +1080,57 @@ bool BFFParser::StoreVariableString( const AString & name,
 		{
 			// OK - can concat String to String
 			AStackString< 1024 > finalValue( varToConcat->GetString() );
-			finalValue += value;
+			if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
+			{
+				finalValue += value;
+			}
+			else
+			{
+				finalValue.Replace( value.Get(), "" );
+			}
 
 			BFFStackFrame::SetVarString( name, finalValue, frame );
-			FLOG_INFO( "Appended '%s' to <String> variable '%s' with result '%s'", value.Get(), name.Get(), finalValue.Get() );
+			FLOG_INFO( "%s '%s' %s <String> variable '%s' with result '%s'", 
+						( *operatorIter == BFF_VARIABLE_CONCATENATION ) ? "Appending" : "Removing",
+						value.Get(), 
+						( *operatorIter == BFF_VARIABLE_CONCATENATION ) ? "to" : "from",
+						name.Get(), 
+						finalValue.Get() );
 			return true;
 		}
 		else if ( varToConcat->IsArrayOfStrings() )
 		{
 			// OK - can concat String to ArrayOfStrings
 			Array< AString > finalValues( varToConcat->GetArrayOfStrings().GetSize() + 1, false );
-			finalValues = varToConcat->GetArrayOfStrings();
-			finalValues.Append( value );
+			if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
+			{
+				finalValues = varToConcat->GetArrayOfStrings();
+				finalValues.Append( value );
+			}
+			else
+			{
+				auto end = varToConcat->GetArrayOfStrings().End();
+				for ( auto it=varToConcat->GetArrayOfStrings().Begin(); it!=end; ++it )
+				{
+					if ( *it != value ) // remove equal strings
+					{
+						finalValues.Append( *it );
+					}
+				}
+			}
 
 			BFFStackFrame::SetVarArrayOfStrings( name, finalValues, frame );
-			FLOG_INFO( "Appended '%s' to <ArrayOfStrings> variable '%s' with result of %i items", value.Get(), name.Get(), finalValues.GetSize() );
+			FLOG_INFO( "%s '%s' %s <ArrayOfStrings> variable '%s' with result of %i items", 
+						( *operatorIter == BFF_VARIABLE_CONCATENATION ) ? "Appending" : "Removing",
+						value.Get(), 
+						( *operatorIter == BFF_VARIABLE_CONCATENATION ) ? "to" : "from",
+						name.Get(), 
+						finalValues.GetSize() );
 			return true;
 		}
 		else
 		{
-			Error::Error_1027_CannotConcatenate( operatorIter, name, varToConcat->GetType(), BFFVariable::VAR_STRING );
+			Error::Error_1027_CannotModify( operatorIter, name, varToConcat->GetType(), BFFVariable::VAR_STRING );
 			return false;
 		}
 	}
@@ -1117,13 +1152,14 @@ bool BFFParser::StoreVariableArray( const AString & name,
 	Array< const BFFVariable * > structValues( 32, true );
 
 	// are we concatenating?
-	if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
+	if ( ( *operatorIter == BFF_VARIABLE_CONCATENATION ) ||
+		 ( *operatorIter == BFF_VARIABLE_SUBTRACTION ) )
 	{
 		// find existing
 		const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
 		if ( var == nullptr )
 		{
-			Error::Error_1026_VariableNotFoundForConcatenation( operatorIter, name );
+			Error::Error_1026_VariableNotFoundForModification( operatorIter, name );
 			return false;
 		}
 
@@ -1141,7 +1177,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
 		else
 		{
 			// TODO:B Improve this error to handle ArrayOfStructs case
-			Error::Error_1027_CannotConcatenate( operatorIter, name, var->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
+			Error::Error_1027_CannotModify( operatorIter, name, var->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
 			return false;
 		}
 	}
@@ -1171,6 +1207,13 @@ bool BFFParser::StoreVariableArray( const AString & name,
 														 BFFVariable::VAR_ARRAY_OF_STRUCTS,
 														 BFFVariable::VAR_STRING,
 														 operatorIter );
+				return false;
+			}
+
+			// subtraction not supported on arrays
+			if ( *operatorIter == BFF_VARIABLE_SUBTRACTION )
+			{
+				Error::Error_1034_OperationNotSupported( iter, BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING, operatorIter );
 				return false;
 			}
 
@@ -1215,9 +1258,18 @@ bool BFFParser::StoreVariableArray( const AString & name,
 			const BFFVariable * var = srcFrame->GetVariableRecurse( varName );
 			if ( var == nullptr )
 			{
-				Error::Error_1026_VariableNotFoundForConcatenation( operatorIter, varName );
+				Error::Error_1026_VariableNotFoundForModification( operatorIter, varName );
 				return false;
 			}
+
+			// subtraction not supported on arrays
+			if ( *operatorIter == BFF_VARIABLE_SUBTRACTION )
+			{
+				const BFFVariable::VarType dstType = structValues.IsEmpty() ? BFFVariable::VAR_ARRAY_OF_STRINGS : BFFVariable::VAR_ARRAY_OF_STRUCTS;
+				const BFFVariable::VarType srcType = var->GetType();
+				Error::Error_1034_OperationNotSupported( elementStartValue, dstType, srcType, operatorIter );
+				return false;
+    		}
 
 			if ( var->IsString() || var->IsArrayOfStrings() )
 			{
@@ -1318,7 +1370,7 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 	if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
 	{
 		// concatenation of structs not supported
-		Error::Error_1027_CannotConcatenate( operatorIter, name, BFFVariable::VAR_STRUCT, BFFVariable::VAR_ANY );
+		Error::Error_1027_CannotModify( operatorIter, name, BFFVariable::VAR_STRUCT, BFFVariable::VAR_ANY );
 		return false;
 	}
 
@@ -1370,12 +1422,13 @@ bool BFFParser::StoreVariableInt( const AString & name, int value, BFFStackFrame
 
 // StoreVariableToVariable
 //------------------------------------------------------------------------------
-bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & varNameSrcStart, const BFFIterator & operatorIter, BFFStackFrame * dstFrame )
+bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & iter, const BFFIterator & operatorIter, BFFStackFrame * dstFrame )
 {
 	AStackString< MAX_VARIABLE_NAME_LENGTH > srcName;
 
 	bool srcParentScope = false;
-	if ( ParseVariableName( varNameSrcStart, srcName, srcParentScope ) == false )
+	const BFFIterator varNameSrcStart( iter ); // Take note of start of var
+	if ( ParseVariableName( iter, srcName, srcParentScope ) == false )
 	{
 		return false;
 	}
@@ -1408,7 +1461,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 		// can only concatenate to existing vars
 		if ( varDst == nullptr )
 		{
-			Error::Error_1026_VariableNotFoundForConcatenation( operatorIter, dstName );
+			Error::Error_1026_VariableNotFoundForModification( operatorIter, dstName );
 			return false;
 		}
 	}

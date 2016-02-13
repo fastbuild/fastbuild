@@ -95,13 +95,13 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
 		TEST_ASSERT( !cachePluginDLL.IsEmpty() );
 
 		// save the db to disk
-		TEST_ASSERT( f.SaveDependencyGraph( "../../../../ftmp/Test/CachePlugin/CachePlugin.fdb" ) );
+		TEST_ASSERT( f.SaveDependencyGraph( "../../../../tmp/Test/CachePlugin/CachePlugin.fdb" ) );
 	}
 
 	{
 		// reload from the db
 		FBuild f( options );
-		TEST_ASSERT( f.Initialize( "../../../../ftmp/Test/CachePlugin/CachePlugin.fdb" ) );
+		TEST_ASSERT( f.Initialize( "../../../../tmp/Test/CachePlugin/CachePlugin.fdb" ) );
 
 		// check that the cache params were persisted
 		TEST_ASSERT( cachePath == f.GetCachePath() );

@@ -33,6 +33,7 @@ public:
 	#endif
 
 	static ThreadId GetCurrentThreadId();
+	static ThreadId GetMainThreadId() { return s_MainThreadId; }
 	static bool IsThread( ThreadId threadId ) { return ( GetCurrentThreadId() == threadId ); }
 	static bool IsMainThread() { return GetCurrentThreadId() == s_MainThreadId; }
     

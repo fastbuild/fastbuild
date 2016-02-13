@@ -1,118 +1,159 @@
 // DLL
+//
+// Compile a DLL
+//
 //------------------------------------------------------------------------------
-#include "..\testcommon.bff"
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
 Using( .StandardEnvironment )
-Settings {} // Activate standard settings
+Settings {}
 
-// DLL Settings
-.CompilerOptions	+ ' /DLL'
-.LinkerOptions		+ ' /DLL'
-					+ ' /ENTRY:DllMain'
+.CompilerOutputPath	= "$Out$/Test/DLL/"
 
-.Out				= "..\..\..\..\ftmp"
-.CompilerOutputPath	= "$Out$\Test\DLL\"
+.DLLOptions =
+[
+	#if __WINDOWS__
+		.CompilerOptions	+ ' /DLL'
+		.LinkerOptions		+ ' /DLL /ENTRY:DllMain'
+	#endif
+    #if __LINUX__
+        .LinkerOptions      + ' -shared'
+    #endif
+    #if __OSX__
+        .LinkerOptions      + ' -shared'
+    #endif
+]
 
 // One DLL
 //--------------------
-Library( "DLLTest" )
+ObjectList( 'DLLTest' )
 {
-	.LibrarianOutput	= "$Out$\Test\DLL\contents.lib"
-	.CompilerInputFiles	= "Data\TestDLL\a.cpp"
-	.CompilerOutputPath	= "$Out$\Test\DLL\"
+	Using( .DLLOptions )
+	.CompilerInputFiles	= 'Data/TestDLL/a.cpp'
+    .CompilerOptions    + ' "-IData/TestDLL"'
 }
 
 DLL
 {
-	.LinkerOutput		= "$Out$\Test\DLL\dll.dll"
-	.Libraries			= "DLLTest"
+	Using( .DLLOptions )
+	.LinkerOutput		= '$Out$/Test/DLL/dll.dll'
+	.Libraries			= 'DLLTest'
 }
 
 // Two DLLs
 //--------------------
-Library( "DLLTestA" )
+ObjectList( "DLLTestA" )
 {
-	.LibrarianOutput	= "$Out$\Test\DLL\contentsA.lib"
-	.CompilerInputFiles	= "Data\TestDLL\a.cpp"
+	Using( .DLLOptions )
+	.CompilerInputFiles	= 'Data/TestDLL/a.cpp'
+    .CompilerOptions    + ' "-IData/TestDLL"'
 }
-Library( "DLLTestB" )
+ObjectList( 'DLLTestB' )
 {
-	.LibrarianOutput	= "$Out$\Test\DLL\contentsB.lib"
-	.CompilerInputFiles	= "Data\TestDLL\b.cpp"
-}
-
-DLL( "DllA" )
-{
-	.LinkerOutput		= "$Out$\Test\DLL\dllA.dll"
-	.Libraries			= "DLLTestA"
-	.LinkerOptions		+ ' /IMPLIB:$Out$\Test\DLL\dll_different_implib.lib'
+	Using( .DLLOptions )
+	.CompilerInputFiles	= 'Data/TestDLL/b.cpp'
 }
 
-DLL( "DllB" )
+DLL( 'DllA' )
 {
-	.LinkerOutput		= "$Out$\Test\DLL\dllB.dll"
-	.Libraries			= { "dllA",
-							"DLLTestB" }
+	Using( .DLLOptions )
+	.LinkerOutput		= '$Out$/Test/DLL/dllA.dll'
+	.Libraries			= 'DLLTestA'
+	#if __WINDOWS__
+		.LinkerOptions		+ ' /IMPLIB:$Out$\Test\DLL\dll_different_implib.lib'
+	#endif
+}
+
+DLL( 'DllB' )
+{
+	Using( .DLLOptions )
+	.LinkerOutput		= '$Out$/Test/DLL/dllB.dll'
+	.Libraries			= { 'dllA',
+							'DLLTestB' }
 }
 
 // DLL With PCH
 //--------------------
-Library( "DLLPCHTest" )
+ObjectList( "DLLPCHTest" )
 {
-	.PCHInputFile		= "Data\TestDLL\PrecompiledHeader.cpp"
-	.PCHOutputFile		= "$Out$\Test\DLL\PrecompiledHeader.pch"
-	.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Z7 /Fp"%2" /nologo /c'
+	Using( .DLLOptions )
+	#if __WINDOWS__
+		.PCHInputFile		= 'Data/TestDLL/PrecompiledHeader.cpp'
+		.PCHOutputFile		= '$Out$/Test/DLL/PrecompiledHeader.pch'
+		.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Z7 /Fp"%2" /nologo /c'
+	#endif
+    #if __LINUX__
+        .PCHInputFile       = "Data/TestDLL/PrecompiledHeader.h"
+        .PCHOutputFile      = "$Out$/Test/DLL/PrecompiledHeader.h.gch"
+        .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux
+    #endif
+    #if __OSX__
+        .PCHInputFile       = "Data/TestDLL/PrecompiledHeader.h"
+        .PCHOutputFile      = "$Out$/Test/DLL/PrecompiledHeader.pch"
+        .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on OS X
+    #endif
 
-	.LibrarianOutput	= "$Out$\Test\DLL\contentsPCH.lib"
-	.CompilerInputFiles	= "Data\TestDLL\a.cpp"
-	.CompilerOptions	+ ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
-						+ ' /I"Data\TestDLL"'
+	.CompilerInputFiles	= 'Data/TestDLL/a.cpp'
+	#if __WINDOWS__
+        .CompilerOptions        + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+                                + ' /I"Data/TestDLL"'
+    #endif
+    #if __LINUX__
+        .CompilerOptions        + ' -Winvalid-pch -H'
+                                + ' "-I$Out$/Test/PrecompiledHeaders"'
+                                + ' "-IData/TestDLL"'
+    #endif
+    #if __OSX__
+        .CompilerOptions        + ' -include-pch "$PCHOutputFile$" -H'
+                                + ' "-IData/TestDLL"'
+    #endif
 }
 
 DLL( "DllPCH" )
 {
-	.LinkerOutput		= "$Out$\Test\DLL\dllPCH.dll"
+	Using( .DLLOptions )
+	.LinkerOutput		= "$Out$/Test/DLL/dllPCH.dll"
 	.Libraries			= { "DLLPCHTest" }
 }
 
 // DLL linked into EXE
 //--------------------
-Library( "Exe-Lib" )
+ObjectList( 'Exe-Lib' )
 {
-	.LibrarianOutput	= "$Out$\Test\DLL\exe.lib"
-	.CompilerInputFiles	= "Data\TestDLL\exe.cpp"
-	.CompilerOutputPath	= "$Out$\Test\DLL\"
+	.CompilerInputFiles	= 'Data/TestDLL/exe.cpp'
 }
 
-Executable( "Exe" )
+Executable( 'Exe' )
 {
-	.LinkerOptions		= "/NOLOGO /OUT:%2 %1 /MACHINE:X86"
-						+ " /IGNORE:4001" ; don't complain about linking libs only
-						+ " /SUBSYSTEM:CONSOLE"
-						+ ' /NODEFAULTLIB'
-						+ ' /ENTRY:ExeMain'
-	.LinkerOutput		= "$Out$\Test\DLL\exe.exe"
-	.Libraries			= { "DllA",
-							"Exe-Lib" }
+	.LinkerOutput		= '$Out$/Test/DLL/exe.exe'
+	.Libraries			= { 'Exe-Lib'
+                            'DllA' }
+	#if __WINDOWS__
+		.LinkerOptions		+ ' /ENTRY:main'
+	#endif
 }
 
 // DLL link via copy
 //------------------
 // Copy
-Copy( "DllACopy" )
+Copy( 'DllACopy' )
 {
-	.Source = "DllA"
-	.Dest	= "$Out$\Test\DLL\Copy\dllACopy.dll"
+	.Source = 'DllA'
+	.Dest	= '$Out$/Test/DLL/Copy/dllACopy.dll'
 }
 // Copy of Copy
-Copy( "DllACopy2" )
+Copy( 'DllACopy2' )
 {
-	.Source = "DllACopy"
-	.Dest	= "$Out$\Test\DLL\Copy\dllACopy2.dll"
+	.Source = 'DllACopy'
+	.Dest	= '$Out$/Test/DLL/Copy/dllACopy2.dll'
 }
 // Link to copy of copy
-DLL( "DllBUsingCopy" )
+DLL( 'DllBUsingCopy' )
 {
-	.LinkerOutput		= "$Out$\Test\DLL\Copy\dllB.dll"
-	.Libraries			= { "dllACopy2",
-							"DLLTestB" }
+	Using( .DLLOptions )
+	.LinkerOutput		= '$Out$/Test/DLL/Copy/dllB.dll'
+	.Libraries			= { 'dllACopy2',
+							'DLLTestB' }
 }

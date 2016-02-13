@@ -1,32 +1,45 @@
 // Exec
+//
+// Run an arbitrary executable
+//
 //------------------------------------------------------------------------------
-#include "..\testcommon.bff"
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
 Using( .StandardEnvironment )
-Settings {} // Activate standard settings
+Settings {}
 
 // A simple exe
 // Exec.exe takes filename arguments on the command line
 // it will open and close those files writing "T" to them.
 // It will also output "Touched: <filename>" to stdout.
 //--------------------
-.OutPath			  = "../../../../ftmp/Test/Exec/"
+.OutPath			  = "$Out$/Test/Exec/"
 .HelperExecutableName = "$OutPath$exec.exe"
 {
-	.CompilerOutputPath	= .OutPath
 	.LinkerOutputFile = .HelperExecutableName
 
 	ObjectList( "Exec-Lib" )
 	{
-		.CompilerInputFiles	= "Data/TestExec/exec.cpp"
-		.CompilerOptions	+ ' $VisualStudioIncludePaths$ /EHsc'
+		.CompilerInputFiles	= 'Data/TestExec/exec.cpp'
+		.CompilerOutputPath	= '$OutPath$/'
+		#if __WINDOWS__
+			.CompilerOptions	+ ' $VisualStudioIncludePaths$ /EHsc'
+		#endif
 	}
 
 	Executable( "HelperExe" )
 	{
 		.LinkerOutput		= .LinkerOutputFile
-		.LinkerOptions		= '/WX /NOLOGO /OUT:%2 %1 /MACHINE:X86'
-							+ ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x86"'
-							+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+		#if __WINDOWS__
+			.LinkerOptions		= '/WX /NODEFAULTLIB /NOLOGO /OUT:%2 %1 /MACHINE:X86'
+								+ .WindowsLibPaths
+								+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+								+ ' kernel32.lib'
+								+ ' libcmt.lib'
+								+ ' libcpmt.lib'
+		#endif
 		.Libraries			= { "Exec-Lib" }
 	}
 }

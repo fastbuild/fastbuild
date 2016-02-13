@@ -6,7 +6,6 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.Out						= "../../../../ftmp"
 .UnityInputPath				= "Data/TestUnity/Exclusions/"
 .UnityOutputPath			= '$Out$/Test/Unity/Exclusions/'
 .CompilerOutputPath			= '$Out$/Test/Unity/Exclusions/'

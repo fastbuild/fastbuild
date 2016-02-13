@@ -98,6 +98,8 @@
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Network::NameResolutionThreadFunc( void * userData )
 {
+	PROFILE_SET_THREAD_NAME( "DNSResolution" )
+
     uint32_t ip( 0 );
     {
         PROFILE_FUNCTION

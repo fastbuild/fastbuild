@@ -2,10 +2,14 @@
 ; Test the compilation of C# code
 ;
 
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
 .Compiler			= "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe"
 .CompilerOptions	= '/out:"%2" /target:library "%1"'
-
-.Out				= "../../../../ftmp"
 
 ;
 ; A single c# file

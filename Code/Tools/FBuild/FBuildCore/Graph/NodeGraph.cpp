@@ -517,7 +517,7 @@ Node * NodeGraph::FindNode( const AString & nodeName ) const
 
 // GetNodeByIndex
 //------------------------------------------------------------------------------
-Node * NodeGraph::GetNodeByIndex( uint32_t index ) const
+Node * NodeGraph::GetNodeByIndex( size_t index ) const
 {
 	Node * n = m_AllNodes[ index ];
 	ASSERT( n );
@@ -526,7 +526,7 @@ Node * NodeGraph::GetNodeByIndex( uint32_t index ) const
 
 //GetNodeCount
 //-----------------------------------------------------------------------------
-uint32_t NodeGraph::GetNodeCount() const
+size_t NodeGraph::GetNodeCount() const
 {
     return m_AllNodes.GetSize();
 }

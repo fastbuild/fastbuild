@@ -67,7 +67,10 @@ public:
 		FLAG_INCLUDES_IN_STDERR =   0x20000,
 		FLAG_QT_RCC				=   0x40000,
 	};
-	static uint32_t DetermineFlags( const Node * compilerNode, const AString & args );
+	static uint32_t DetermineFlags( const Node * compilerNode,
+									const AString & args,
+									bool creatingPCH,
+									bool usingPCH );
 
 	inline bool IsCreatingPCH() const { return GetFlag( FLAG_CREATING_PCH ); }
     inline bool IsUsingPCH() const { return GetFlag( FLAG_USING_PCH ); }
@@ -83,7 +86,9 @@ public:
 	inline Node * GetCompiler() const { return m_StaticDependencies[ 0 ].GetNode(); }
 	inline Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
     inline Node * GetDedicatedPreprocessor() const { return m_PreprocessorNode; }
-	inline Node * GetPrecompiledHeaderCPPFile() const { ASSERT( GetFlag( FLAG_CREATING_PCH ) ); return m_StaticDependencies[ 1 ].GetNode(); }
+    #if defined( __WINDOWS__ )
+        inline Node * GetPrecompiledHeaderCPPFile() const { ASSERT( GetFlag( FLAG_CREATING_PCH ) ); return m_StaticDependencies[ 1 ].GetNode(); }
+    #endif
 
 	void GetPDBName( AString & pdbName ) const;
 

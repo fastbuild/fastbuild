@@ -550,6 +550,9 @@ VCXProject( 'UpdateSolution-proj' )
 #include "Core\Core.bff"
 #include "Core\CoreTest\CoreTest.bff"
 
+// OSUI
+#include "OSUI/OSUI.bff"
+
 // FBuild
 #include "Tools\FBuild\FBuildCore\FBuildCore.bff"
 #include "Tools\FBuild\FBuildApp\FBuildApp.bff"
@@ -691,7 +694,7 @@ VSSolution( 'solution' )
     .Folder_2_Libs =
 	[ 
 		.Path			= '2. Libs'
-        .Projects		= { 'Core-proj', 'FBuildCore-proj' }
+        .Projects		= { 'Core-proj', 'FBuildCore-proj', 'OSUI-proj' }
     ]
     .Folder_3_Apps =
 	[ 
@@ -699,6 +702,30 @@ VSSolution( 'solution' )
         .Projects		= { 'FBuildApp-proj', 'FBuildWorker-proj' }
     ]
     .SolutionFolders	= { .Folder_0_External, .Folder_1_Test, .Folder_2_Libs, .Folder_3_Apps }
+}
+
+//------------------------------------------------------------------------------
+// XCode Project Generation
+//------------------------------------------------------------------------------
+XCodeProject( 'xcode' )
+{
+	.ProjectOutput 				= '../tmp/XCode/FASTBuild.xcodeproj/project.pbxproj'
+	.ProjectBasePath			= '../tmp/XCode/Projects/'
+
+	.XCodeBuildWorkingDir		= '../../../Code/'
+
+	.ProjectFiles				= { 'Core-xcodeproj'
+									'CoreTest-xcodeproj'
+									'FBuildApp-xcodeproj'
+									'FBuildCore-xcodeproj'
+									'FBuildTest-xcodeproj'
+									'FBuildWorker-xcodeproj'
+									'LZ4-xcodeproj'	}
+
+	.ProjectOSXDebug 		= [ .Config = 'Debug' 	.Target = 'all-x64OSX-Debug' ]
+	.ProjectOSXProfile 		= [ .Config = 'Profile' .Target = 'all-x64OSX-Profile' ]
+	.ProjectOSXRelease 		= [ .Config = 'Release' .Target = 'all-x64OSX-Release' ]		
+	.ProjectConfigs 		= { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }	
 }
 
 //------------------------------------------------------------------------------

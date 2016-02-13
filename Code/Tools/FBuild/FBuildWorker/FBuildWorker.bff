@@ -14,6 +14,20 @@
 
 		.LocalDebuggerCommand		= '^$(SolutionDir)..\^$(Configuration)\Tools\FBuild\FBuildWorker\FBuildWorker.exe'
 	}
+	
+	XCodeProject( '$ProjectName$-xcodeproj' )
+	{
+		.ProjectOutput 				= '../tmp/XCode/Projects/3_Apps/$ProjectName$.xcodeproj/project.pbxproj'
+		.ProjectInputPaths			= '$ProjectPath$/'
+		.ProjectBasePath			= '$ProjectPath$/'
+		
+		.XCodeBuildWorkingDir		= '../../../../Code/'		
+		
+		.ProjectOSXDebug 		= [ .Config = 'Debug' 	.Target = '$ProjectName$-x64OSX-Debug' ]
+		.ProjectOSXProfile 		= [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
+		.ProjectOSXRelease 		= [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]		
+		.ProjectConfigs 		= { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }
+	} 	
 
     // Unity
     //--------------------------------------------------------------------------
@@ -72,7 +86,9 @@
 											'FBuildCore-Lib-$Platform$-$Config$',
 											'FBuildWorker-Lib-$Platform$-$Config$',
 											'FBuildWorker-Res',
-											'LZ4-Lib-$Platform$-$Config$' }
+											'OSUI-Lib-$Platform$-$Config$'
+											'LZ4-Lib-$Platform$-$Config$'
+										  }
 			.LinkerOutput				= '$OutputBase$\Tools\FBuild\FBuildWorker\FBuildWorker.exe'
 			.LinkerOptions				+ ' /SUBSYSTEM:WINDOWS'
 										+ ' kernel32.lib'
@@ -130,6 +146,7 @@
             .Libraries                  = { 
                                             'FBuildWorker-Lib-$Platform$-$Config$',
                                             'FBuildCore-Lib-$Platform$-$Config$',
+											'OSUI-Lib-$Platform$-$Config$'
                                             'Core-Lib-$Platform$-$Config$',
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }
@@ -163,6 +180,7 @@
             .Libraries                  = {
                                             'FBuildWorker-Lib-$Platform$-$Config$',
                                             'FBuildCore-Lib-$Platform$-$Config$',
+											'OSUI-Lib-$Platform$-$Config$',
                                             'Core-Lib-$Platform$-$Config$',
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }

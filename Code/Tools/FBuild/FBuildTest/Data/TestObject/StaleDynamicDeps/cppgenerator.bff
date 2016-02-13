@@ -6,7 +6,6 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.Out						= "../../../../ftmp/"
 .UnityOutputPath			= '$Out$/Test/Object/StaleDynamicDeps/'
 .CompilerOutputPath			= '$Out$/Test/Object/StaleDynamicDeps/'
 

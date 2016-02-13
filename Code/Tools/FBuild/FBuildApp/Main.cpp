@@ -42,7 +42,7 @@ enum ReturnCodes
 //------------------------------------------------------------------------------
 void DisplayHelp();
 void DisplayVersion();
-void DisplayTargetsList( const NodeGraph & dependencyGraph );
+void DisplayTargetList( const NodeGraph & dependencyGraph );
 #if defined( __WINDOWS__ )
     BOOL CtrlHandler( DWORD fdwCtrlType ); // Handle Ctrl+C etc
 #else
@@ -110,7 +110,7 @@ int Main(int argc, char * argv[])
 	bool fixupErrorPaths = false;
 	bool waitMode = false;
 	bool noStopOnError = false;
-	bool showTargetList = false;
+	bool displayTargetList = false;
 	int32_t numWorkers = -1;
 	WrapperMode wrapperMode( WRAPPER_MODE_NONE );
 	AStackString<> args;
@@ -184,11 +184,6 @@ int Main(int argc, char * argv[])
 				DisplayHelp();
 				return FBUILD_OK; // exit app
 			}
-			else if ( thisArg == "-targets" )
-			{
-			  showTargetList = true;
-			  continue;
-			}
 			else if ( thisArg.BeginsWith( "-j" ) &&
 					  sscanf( thisArg.Get(), "-j%i", &numWorkers ) == 1 )
 			{
@@ -223,6 +218,11 @@ int Main(int argc, char * argv[])
 			{
 				showCommands = true;
 				continue;
+			}
+			else if ( thisArg == "-showtargets" )
+			{
+                displayTargetList = true;
+                continue;
 			}
 			else if ( thisArg == "-summary" )
 			{
@@ -439,12 +439,12 @@ int Main(int argc, char * argv[])
 		return FBUILD_ERROR_LOADING_BFF;
 	}
 
-	if ( showTargetList )
+	if ( displayTargetList )
 	{
-	  DisplayTargetsList(fBuild.GetDependencyGraph());
-	  return FBUILD_OK;
+        DisplayTargetList( fBuild.GetDependencyGraph() );
+        return FBUILD_OK;
 	}
-	
+
 	bool result = fBuild.Build( targets );
 
 	if ( sharedData )
@@ -490,7 +490,6 @@ void DisplayHelp()
             " -ide           Enable multiple options when building from an IDE.\n"
             "                Enables: -noprogress, -fixuperrorpaths &\n"
 			"                -wrapper (Windows)\n"
-			" -targets       Display list of available build targets.\n"
 			" -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
 			"                default of hardware thread count.\n"
 			" -noprogress    Don't show the progress bar while building.\n"
@@ -500,6 +499,7 @@ void DisplayHelp()
 			"                to report.html.  This will lengthen the total build\n"
 			"                time.\n"
 			" -showcmds      Show command lines used to launch external processes.\n"
+			" -showtargets   Display list of primary build targets.\n"
 			" -summary       Show a summary at the end of the build.\n"
 			" -verbose       Show detailed diagnostic information. This will slow\n"
 			"                down building.\n"
@@ -523,7 +523,7 @@ void DisplayVersion()
 		#define VERSION_CONFIG " "
 	#endif
 	OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " FBUILD_VERSION_PLATFORM VERSION_CONFIG " - "
-			"Copyright 2012-2015 Franta Fulin - http://www.fastbuild.org\n" );
+			"Copyright 2012-2016 Franta Fulin - http://www.fastbuild.org\n" );
 	#undef VERSION_CONFIG
 }
 
@@ -619,21 +619,20 @@ int WrapperIntermediateProcess( const AString & args, const FBuildOptions & opti
 	return FBUILD_OK;
 }
 
+// DisplayTargetList
 //------------------------------------------------------------------------------
-// DisplayTargetsList
-void DisplayTargetsList( const NodeGraph & dependencyGraph )
+void DisplayTargetList( const NodeGraph & dependencyGraph )
 {
-    OUTPUT("FBuild: List of available targets\n");
-    uint32_t totalNodes = dependencyGraph.GetNodeCount();
-    for (uint32_t i = 0; i < totalNodes; ++i)
+    OUTPUT( "FBuild: List of available targets\n" );
+    const size_t totalNodes = dependencyGraph.GetNodeCount();
+    for ( size_t i = 0; i < totalNodes; ++i )
     {
-	     Node * node = dependencyGraph.GetNodeByIndex(i);
+	     Node * node = dependencyGraph.GetNodeByIndex( i );
 		 if ( node && node->GetType() == Node::ALIAS_NODE )
 		 {
-		     OUTPUT("\t%s\n", node->GetName().Get());
+		     OUTPUT( "\t%s\n", node->GetName().Get() );
 		 }
     }
 }
 
 //------------------------------------------------------------------------------
-

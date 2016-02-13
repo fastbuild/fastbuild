@@ -21,7 +21,7 @@ private:
 
 	// Helpers
 	FBuildStats Build( FBuildOptions options, bool useDB, const char * target ) const;
-	const char * GetTestDBFileName() const { return "../../../../ftmp/Test/CLR/test.fdb"; }
+	const char * GetTestDBFileName() const { return "../../../../tmp/Test/CLR/test.fdb"; }
 
 	// Tests
 	void Test() const;
@@ -73,11 +73,11 @@ void TestCLR::Test() const
 	options.m_UseCacheWrite = true;
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/CLR/clr.lib" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/CLR/clr.lib" );
 
 	FBuildStats stats = Build( options, false, "CLR-Target" ); // dont' use DB
 
-	EnsureFileExists( "../../../../ftmp/Test/CLR/clr.lib" );
+	EnsureFileExists( "../../../../tmp/Test/CLR/clr.lib" );
 
 	// Check stats
 	//				 Seen,	Built,	Type
@@ -118,11 +118,11 @@ void TestCLR::TestCache() const
 	options.m_UseCacheRead = true;
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/CLR/clr.lib" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/CLR/clr.lib" );
 
 	FBuildStats stats = Build( options, false, "CLR-Target" ); // dont' use DB
 
-	EnsureFileExists( "../../../../ftmp/Test/CLR/clr.lib" );
+	EnsureFileExists( "../../../../tmp/Test/CLR/clr.lib" );
 
 	// Check stats
 	//				 Seen,	Built,	Type
@@ -144,11 +144,11 @@ void TestCLR::TestParallelBuild() const
 	options.m_ForceCleanBuild = true;
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/CLR/clrmulti.lib" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/CLR/clrmulti.lib" );
 
 	FBuildStats stats = Build( options, false, "CLR-Parallel-Target" ); // dont' use DB
 
-	EnsureFileExists( "../../../../ftmp/Test/CLR/clrmulti.lib" );
+	EnsureFileExists( "../../../../tmp/Test/CLR/clrmulti.lib" );
 
 	// Check stats
 	//				 Seen,	Built,	Type
@@ -192,7 +192,7 @@ void TestCLR::TestCLRToCPPBridge() const
 	FBuildStats stats = Build( options, true, "BridgeTest-Exe" );
 
 	Process p;
-	p.Spawn( "..\\..\\..\\..\\ftmp\\Test\\CLR\\Bridge\\Bridge.exe", nullptr, nullptr, nullptr );
+	p.Spawn( "../../../../tmp/Test/CLR/Bridge/Bridge.exe", nullptr, nullptr, nullptr );
 	int ret = p.WaitForExit();
 	TEST_ASSERT( ret == 15613223 ); // verify expected ret code
 }

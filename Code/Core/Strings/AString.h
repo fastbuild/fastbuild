@@ -72,8 +72,9 @@ public:
 	bool operator == ( const AString & other ) const;
 	inline bool operator != ( const char * other ) const { return !(*this == other ); }
 	inline bool operator != ( const AString & other ) const { return !(*this == other ); }
+	int32_t Compare( const AString & other ) const;
 	int32_t CompareI( const AString & other ) const;
-	inline bool operator < ( const AString & other ) const { return ( CompareI( other ) < 0 ); }
+	inline bool operator < ( const AString & other ) const { return ( Compare( other ) < 0 ); }
 
 	inline bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
 

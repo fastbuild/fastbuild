@@ -13,6 +13,22 @@
 		.ProjectInputPaths			= '$ProjectPath$\'
 		.ProjectBasePath			= '$ProjectPath$\'
 	}
+	
+	// XCode Project Generation
+	//--------------------------------------------------------------------------
+	XCodeProject( '$ProjectName$-xcodeproj' )
+	{
+		.ProjectOutput 				= '../tmp/XCode/Projects/2_Libs/$ProjectName$.xcodeproj/project.pbxproj'
+		.ProjectInputPaths			= '$ProjectPath$/'
+		.ProjectBasePath			= '$ProjectPath$/'
+		
+		.XCodeBuildWorkingDir		= '../../../../Code/'
+		
+		.ProjectOSXDebug 		= [ .Config = 'Debug' 	.Target = '$ProjectName$-x64OSX-Debug' ]
+		.ProjectOSXProfile 		= [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
+		.ProjectOSXRelease 		= [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]		
+		.ProjectConfigs 		= { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }		
+	}	
 
 	// Unity
 	//--------------------------------------------------------------------------

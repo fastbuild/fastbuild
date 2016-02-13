@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Hello World (Windows)</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+
+    <h1>Hello World (Windows)</h1>
+
+    <div class='newsitemheader'>
+      Overview
+    </div>
+    <div class='newsitembody'>
+<p>A minimal configuration is shown for compiling a simple "Hello World" application on Windows.</p>
+<p>This examples illustrates:
+<ul>
+  <li>Compiling a directory of cpp files</li>
+  <li>Linking those object files into an Executable</li>
+  <li>Linking against the standard libraries</li>
+</ul>
+To make the sample easier to understand, it is more verbose than is required.
+</p>
+</div>
+
+    <div class='newsitemheader'>Code (main.cpp)</div>
+    <div class='newsitembody'>
+<div class='code'>#include "stdio.h"
+
+int main(int, char[])
+{
+    printf( "Hello!\n" );
+    return 0;
+}</div>
+</div>
+
+    <div class='newsitemheader'>Configuration (fbuild.bff)</div>
+    <div class='newsitembody'>
+<div class='code'>// HelloWorld
+//------------------------------------------------------------------------------
+
+// Windows Platform (VS 2103 Compiler, Windows 7.1A SDK)
+//------------------------------------------------------------------------------
+.VSBasePath         = 'C:\Program Files (x86)\Microsoft Visual Studio 12.0'
+.WindowsSDKBasePath = 'C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A'
+
+// Settings
+//------------------------------------------------------------------------------
+Settings
+{
+    .Environment    = { "PATH=$VSBasePath$\Common7\IDE\;$VSBasePath$\VC\bin\",
+                        "TMP=C:\Windows\Temp",
+                        "SystemRoot=C:\Windows" }
+}
+
+// X86 ToolChain
+//------------------------------------------------------------------------------
+.Compiler           = '$VSBasePath$\VC\bin\cl.exe'
+.CompilerOptions    = '"%1"'           // Input
+                    + ' /Fo"%2"'       // Output
+                    + ' /Z7'           // Debug format (in .obj)
+                    + ' /c'            // Compile only
+                    + ' /nologo'       // No compiler spam
+                    + ' /W4'           // Warning level 4
+                    + ' /WX'           // Warnings as errors
+.Linker             = '$VSBasePath$\VC\bin\link.exe'
+.LinkerOptions      = ' /OUT:"%2"'     // Output
+                    + ' "%1"'          // Input
+                    + ' /WX'           // Warnings as errors
+                    + ' /NOLOGO'       // No linker spam
+                    + ' /DEBUG'        // Keep debug info when linking
+                    + ' /NODEFAULTLIB' // We'll specify the libs explicitly
+
+// Include paths
+//------------------------------------------------------------------------------
+.BaseIncludePaths   = ' /I"./"'
+                    + ' /I"$VSBasePath$/VC/include/"'
+.CompilerOptions    + .BaseIncludePaths
+
+// Library paths
+//------------------------------------------------------------------------------
+.LibPaths           = ' /LIBPATH:"$WindowsSDKBasePath$\Lib"'
+                    + ' /LIBPATH:"$VSBasePath$\VC\lib"'
+.LinkerOptions      + .LibPaths
+
+// HelloWorld
+//------------------------------------------------------------------------------
+ObjectList( 'HelloWorld-Lib' )
+{
+    .CompilerInputPath  = '\'
+    .CompilerOutputPath = 'Out\'
+}
+
+Executable( 'HelloWorld' )
+{
+    .Libraries          = { "HelloWorld-Lib" }
+    .LinkerOutput       = 'Out\HelloWorld.exe'
+    .LinkerOptions      + ' libcmt.lib'     // Std Lib (Multi-Threaded, Static, Release)
+                        + ' kernel32.lib'   // Kernel functions
+}
+
+// All
+//------------------------------------------------------------------------------
+Alias( 'all' ) { .Targets = { 'HelloWorld' } }
+</div>
+</div>
+
+  <script>generateFooter()</script>
+</body>
+</html>

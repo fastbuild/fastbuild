@@ -72,14 +72,14 @@ void TestExe::Build() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	const AStackString<> exe( "..\\..\\..\\..\\ftmp\\Test\\Exe\\exe.exe" );
+	const AStackString<> exe( "../../../../tmp/Test/Exe/exe.exe" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( exe );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "Exe" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "..\\..\\..\\..\\ftmp\\Test\\Exe\\exe.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Exe/exe.fdb" ) );
 
 	// make sure all output is where it is expected
 	EnsureFileExists( exe );
@@ -89,7 +89,7 @@ void TestExe::Build() const
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE ); // cpp
 	CheckStatsNode ( 1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( 1,		1,		Node::OBJECT_NODE );
-	CheckStatsNode ( 1,		1,		Node::LIBRARY_NODE );
+	CheckStatsNode ( 1,		1,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::EXE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 6,		6 );
@@ -100,9 +100,9 @@ void TestExe::Build() const
 void TestExe::CheckValidExe() const
 {
 	Process p;
-	p.Spawn( "..\\..\\..\\..\\ftmp\\Test\\Exe\\exe.exe", nullptr, nullptr, nullptr );
+	p.Spawn( "../../../../tmp/Test/Exe/exe.exe", nullptr, nullptr, nullptr );
 	int ret = p.WaitForExit();
-	TEST_ASSERT( ret == 10203040 ); // verify expected ret code
+	TEST_ASSERT( ret == 99 ); // verify expected ret code
 }
 
 // Build_NoRebuild
@@ -113,7 +113,7 @@ void TestExe::Build_NoRebuild() const
 	options.m_ConfigFile = "Data/TestExe/exe.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "..\\..\\..\\..\\ftmp\\Test\\Exe\\exe.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Exe/exe.fdb" ) );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "Exe" ) ) );
@@ -123,7 +123,7 @@ void TestExe::Build_NoRebuild() const
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE ); // cpp
 	CheckStatsNode ( 1,		0,		Node::COMPILER_NODE );
 	CheckStatsNode ( 1,		0,		Node::OBJECT_NODE );
-	CheckStatsNode ( 1,		0,		Node::LIBRARY_NODE );
+	CheckStatsNode ( 1,		0,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		0,		Node::EXE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 6,		2 );

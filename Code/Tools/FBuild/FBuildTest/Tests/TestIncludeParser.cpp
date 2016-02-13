@@ -146,7 +146,7 @@ void TestIncludeParser::TestMSVC_P() const
 	FBuild fBuild( options );
 	fBuild.Initialize();
 
-	const AStackString<> file( "../../../../ftmp/Test/IncludeParser/MSVC-P/test.i" );
+	const AStackString<> file( "../../../../tmp/Test/IncludeParser/MSVC-P/test.i" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( file );

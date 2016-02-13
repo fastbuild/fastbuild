@@ -11,8 +11,6 @@
 Using( .StandardEnvironment )
 Settings {} // use Standard Environment
 
-.Out		= "../../../../ftmp/"
-
 .CompilerOutputPath = "$Out$/Test/Graph/NoStopOnFirstError"
 
 Library( 'libA' )

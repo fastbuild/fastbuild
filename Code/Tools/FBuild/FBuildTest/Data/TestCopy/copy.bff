@@ -1,8 +1,11 @@
 //
 // Test the Copy Function/Node
 //
-
-.Out				= "../../../../ftmp"
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
 
 //
 // Copying a single file

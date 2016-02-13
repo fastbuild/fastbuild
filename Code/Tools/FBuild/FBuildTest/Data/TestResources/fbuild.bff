@@ -1,14 +1,10 @@
 //
 // Build resources
 //
-#include "..\testcommon.bff"
 
-Settings		
-{ 
-	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
-						"TMP=C:\Windows\Temp",
-						"SystemRoot=C:\Windows" }
-}
+#include "..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // Activate standard settings
 
 // paths needed for resource compilation
 .WindowsSDKBasePath		= '$WindowsSDK$'
@@ -18,15 +14,13 @@ Settings
 
 // Tools
 .ResourceCompiler	= '$WindowsSDKBasePath$\bin\x86\RC.exe'
-.ResourceConverter	= '$VSBasePath$\bin\cvtres.exe'
-.Compiler			= '$VSBasePath$\bin\cl.exe'
-.Librarian			= '$VSBasePath$\bin\lib.exe'
-.Linker				= "$VSBasePath$\bin\link.exe"
+//.ResourceConverter	= '$VSBasePath$\bin\cvtres.exe'
+//.Compiler			= '$VSBasePath$\bin\cl.exe'
+//.Librarian			= '$VSBasePath$\bin\lib.exe'
+//.Linker				= "$VSBasePath$\bin\link.exe"
 
 // Test output
-.Out				= '..\..\..\..\ftmp'
-
-.CompilerOutputPath		= '$Out$\Test\Resources\'
+.CompilerOutputPath		= '../../../../tmp/Test/Resources/'
 
 // Resources
 //------------------------------------------------------------------------------

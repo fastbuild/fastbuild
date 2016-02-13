@@ -53,7 +53,7 @@ REGISTER_TESTS_END
 void TestCopy::SingleCopyNode() const
 {
 	const AStackString<> testFileName( "Data/TestGraph/library.cpp" );
-	const AStackString<> testFileNameCopy( "../../../../ftmp/Test/Graph/library.copynode.cpp" );
+	const AStackString<> testFileNameCopy( "../../../../tmp/Test/Graph/library.copynode.cpp" );
 
 	// check files are in expected states
 	EnsureFileExists( testFileName );
@@ -75,7 +75,7 @@ void TestCopy::SingleCopyNode() const
 		Node * dstNode = ng.CreateCopyNode( testFileNameCopy, srcNode, empty );
 
 		TEST_ASSERT( fb.Build( dstNode ) );
-		TEST_ASSERT( fb.SaveDependencyGraph( "..\\..\\..\\..\\ftmp\\Test\\Graph\\singlecopynode.fdb" ) );
+		TEST_ASSERT( fb.SaveDependencyGraph( "../../../../tmp/Test/Graph/singlecopynode.fdb" ) );
 
 		EnsureFileExists( testFileNameCopy );
 
@@ -89,7 +89,7 @@ void TestCopy::SingleCopyNode() const
 	// check no rebuild
 	{
 		FBuild fb( options );
-		fb.Initialize( "..\\..\\..\\..\\ftmp\\Test\\Graph\\singlecopynode.fdb" );
+		fb.Initialize( "../../../../tmp/Test/Graph/singlecopynode.fdb" );
 
 		TEST_ASSERT( fb.Build( testFileNameCopy ) );
 
@@ -106,9 +106,9 @@ void TestCopy::SingleCopyNode() const
 void TestCopy::MultipleCopyNodes() const
 {
 	const AStackString<> srcFile( "Data/TestGraph/library.cpp" );
-	const AStackString<> dstFileA( "../../../../ftmp/Test/Graph/library.multiplecopynodes1.cpp" );
-	const AStackString<> dstFileB( "../../../../ftmp/Test/Graph/library.multiplecopynodes2.cpp" );
-	const AStackString<> dstFileC( "../../../../ftmp/Test/Graph/library.multiplecopynodes3.cpp" );
+	const AStackString<> dstFileA( "../../../../tmp/Test/Graph/library.multiplecopynodes1.cpp" );
+	const AStackString<> dstFileB( "../../../../tmp/Test/Graph/library.multiplecopynodes2.cpp" );
+	const AStackString<> dstFileC( "../../../../tmp/Test/Graph/library.multiplecopynodes3.cpp" );
 
 	// check files are as expected before starting test
 	EnsureFileDoesNotExist( dstFileA );
@@ -133,7 +133,7 @@ void TestCopy::MultipleCopyNodes() const
 		Node * copyC = ng.CreateCopyNode( dstFileC, (FileNode *)copyB, empty );
 
 		TEST_ASSERT( fb.Build( copyC ) );
-		TEST_ASSERT( fb.SaveDependencyGraph( "..\\..\\..\\..\\ftmp\\Test\\Graph\\multiplecopynode.fdb" ) );
+		TEST_ASSERT( fb.SaveDependencyGraph( "../../../../tmp/Test/Graph/multiplecopynode.fdb" ) );
 
 		EnsureFileExists( dstFileA );
 		EnsureFileExists( dstFileB );
@@ -149,7 +149,7 @@ void TestCopy::MultipleCopyNodes() const
 	// check no rebuild
 	{
 		FBuild fb( options );
-		fb.Initialize( "..\\..\\..\\..\\ftmp\\Test\\Graph\\multiplecopynode.fdb" );
+		fb.Initialize( "../../../../tmp/Test/Graph/multiplecopynode.fdb" );
 
 		TEST_ASSERT( fb.Build( dstFileC ) );
 
@@ -171,14 +171,14 @@ void TestCopy::TestCopyFunction_FileToFile() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	AStackString<> dst( "../../../../ftmp/Test/Copy/copy.bff.copy" );
+	AStackString<> dst( "../../../../tmp/Test/Copy/copy.bff.copy" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( dst );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToFile" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/Copy/filetofile.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Copy/filetofile.fdb" ) );
 
 	// make sure all output is where it is expected
 	EnsureFileExists( dst );
@@ -199,7 +199,7 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild() const
 	options.m_ConfigFile = "Data/TestCopy/copy.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/Copy/filetofile.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Copy/filetofile.fdb" ) );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToFile" ) ) );
@@ -222,14 +222,14 @@ void TestCopy::TestCopyFunction_FileToDir() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	const AStackString<> dst( "../../../../ftmp/Test/Copy/copy.bff" );
+	const AStackString<> dst( "../../../../tmp/Test/Copy/copy.bff" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( dst );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToDir" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/Copy/filetodir.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Copy/filetodir.fdb" ) );
 
 	EnsureFileExists( dst );
 
@@ -249,7 +249,7 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild() const
 	options.m_ConfigFile = "Data/TestCopy/copy.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/Copy/filetodir.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Copy/filetodir.fdb" ) );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToDir" ) ) );
@@ -272,8 +272,8 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	const AStackString<> dst1( "../../../../ftmp/Test/Copy/a.txt" );
-	const AStackString<> dst2( "../../../../ftmp/Test/Copy/b.txt" );
+	const AStackString<> dst1( "../../../../tmp/Test/Copy/a.txt" );
+	const AStackString<> dst2( "../../../../tmp/Test/Copy/b.txt" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( dst1 );
@@ -281,7 +281,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/Copy/multifiletodir.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Copy/multifiletodir.fdb" ) );
 
 	EnsureFileExists( dst1 );
 	EnsureFileExists( dst2 );
@@ -302,7 +302,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
 	options.m_ConfigFile = "Data/TestCopy/copy.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/Copy/multifiletodir.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Copy/multifiletodir.fdb" ) );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
@@ -325,8 +325,8 @@ void TestCopy::TestCopyFunction_SourceBasePath() const
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize() );
 
-	const AStackString<> dst1( "../../../../ftmp/Test/Copy/SourceBasePath/TestCopy/a.txt" );
-	const AStackString<> dst2( "../../../../ftmp/Test/Copy/SourceBasePath/TestCopy/b.txt" );
+	const AStackString<> dst1( "../../../../tmp/Test/Copy/SourceBasePath/TestCopy/a.txt" );
+	const AStackString<> dst2( "../../../../tmp/Test/Copy/SourceBasePath/TestCopy/b.txt" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( dst1 );
@@ -334,7 +334,7 @@ void TestCopy::TestCopyFunction_SourceBasePath() const
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestSourceBasePath" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
 
 	EnsureFileExists( dst1 );
 	EnsureFileExists( dst2 );
@@ -355,7 +355,7 @@ void TestCopy::TestCopyFunction_SourceBasePath_NoRebuild() const
 	options.m_ConfigFile = "Data/TestCopy/copy.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
 
 	// build (via alias)
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestSourceBasePath" ) ) );

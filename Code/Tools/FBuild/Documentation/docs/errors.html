@@ -197,17 +197,17 @@ but instead an unknown construct was encountered.
 </div>
 
 <!--------------- 1011 --------------->
-    <div class='newsitemheader'>1011 - Unnamed concatenation must follow a variable assignment in the same scope.</div>
+    <div class='newsitemheader'>1011 - Unnamed modification must follow a variable assignment in the same scope.</div>
     <div class='newsitembody'>
-The variable concatenation operator was used without specifying the variable to append to. This is supported, provided the
-destination variable was previously referenced
+A variable modification operator was used without specifying the variable to append to. This is supported, provided the
+destination variable was previously referenced.
 <h4>Example Config:</h4>
-<div class='code'>      + "String" ; No variable to assign to
+<div class='code'>       + "String" ; No variable to assign to
 
 .MyVar = "hello"
        + "String" ; The destination variable can be inferred</div>
 <h4>Example Output:</h4>
-<div class='output'>c:\Test\fbuild.bff(1):(7) FASTBuild Error #1011 - Unnamed concatenation must follow a variable
+<div class='output'>c:\Test\fbuild.bff(1):(7) FASTBuild Error #1011 - Unnamed modification must follow a variable
 assignment in the same scope.
       + "String"
       ^
@@ -428,13 +428,13 @@ While parsing a Function body, the closing '}' token could not be found.
 </div>
 
 <!--------------- 1026 --------------->
-    <div class='newsitemheader'>1026 - Variable '%s' not found for concatention.</div>
+    <div class='newsitemheader'>1026 - Variable '%s' not found for modification.</div>
     <div class='newsitembody'>
-An attempt was made to concatenate to a variable that was not previously defined.
+An attempt was made to modify a variable that was not previously defined.
 <h4>Example Config:</h4>
 <div class='code'>.DoesNotExist + "string"</div>
 <h4>Example Output:</h4>
-<div class='output'>c:\Test\fbuild.bff(1):(15) FASTBuild Error #1026 - Variable '.DoesNotExist' not found for concatention.
+<div class='output'>c:\Test\fbuild.bff(1):(15) FASTBuild Error #1026 - Variable '.DoesNotExist' not found for modification.
 .DoesNotExist + "string"
               ^
               \--here
@@ -442,15 +442,15 @@ An attempt was made to concatenate to a variable that was not previously defined
 </div>
 
 <!--------------- 1027 --------------->
-    <div class='newsitemheader'>1027 - Cannot concatenate &lt;%s&gt; to &lt;%s&gt; for Variable '%s'.</div>
+    <div class='newsitemheader'>1027 - Cannot use &lt;%s&gt; to modify &lt;%s&gt; for Variable '%s'.</div>
     <div class='newsitembody'>
-An attempt was made to concatenate two variables of differing types, where such an operation is not supported.
+An attempt was made to modify a variable with a differing type, where such an operation is not supported.
 <h4>Example Config:</h4>
 <div class='code'>.MyVar = "string";
 .MyVar + 7
 </div>
 <h4>Example Output:</h4>
-<div class='output'>c:\Test\fbuild.bff(2):(8) FASTBuild Error #1027 - Cannot concatenate &lt;Int&gt; to &lt;Any&gt; for Variable '.MyVar'.
+<div class='output'>c:\Test\fbuild.bff(2):(8) FASTBuild Error #1027 - Cannot use &lt;Int&gt; to modify &lt;Any&gt; for Variable '.MyVar'.
 .MyVar + 7
        ^
        \--here

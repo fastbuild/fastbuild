@@ -49,7 +49,7 @@ public:
 	static void Error_1009_UnknownVariable( const BFFIterator & iter,
 										 const Function * function );
 	static void Error_1010_UnknownConstruct( const BFFIterator & iter ); 
-	static void Error_1011_UnnamedConcatMustFollowAssignment( const BFFIterator & iter );
+	static void Error_1011_UnnamedModifcationMustFollowAssignment( const BFFIterator & iter );
 	static void Error_1012_UnexpectedEndOfFile( const BFFIterator & iter );
 	static void Error_1013_UnexpectedCharInVariableName( const BFFIterator & iter,
 													   const Function * function );
@@ -72,9 +72,9 @@ public:
 												const Function * function );
 	static void Error_1025_MissingScopeCloseToken( const BFFIterator & iter,
 												   const Function * function );
-	static void Error_1026_VariableNotFoundForConcatenation( const BFFIterator & iter,
+	static void Error_1026_VariableNotFoundForModification( const BFFIterator & iter,
 														   const AString & variableName );
-	static void Error_1027_CannotConcatenate( const BFFIterator & iter,
+	static void Error_1027_CannotModify( const BFFIterator & iter,
 											const AString & variableName,
 											BFFVariable::VarType dstType,
 											BFFVariable::VarType srcType );

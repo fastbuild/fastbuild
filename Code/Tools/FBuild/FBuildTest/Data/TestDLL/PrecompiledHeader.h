@@ -1,4 +1,6 @@
 //
 // Some exported functions
 //
-__declspec(dllexport) void FunctionInPCH();
+#if defined( __WINDOWS__ )
+    __declspec(dllexport) void FunctionInPCH();
+#endif

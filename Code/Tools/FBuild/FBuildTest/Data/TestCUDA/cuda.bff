@@ -13,7 +13,7 @@ Settings
 
 .Compiler	= '$ExternalPath$\SDK\CUDA_6.5.14\CUDAToolkit\bin\nvcc.exe'
 
-.Out		= "..\..\..\..\ftmp"
+.Out		= "..\..\..\..\tmp"
 .CompilerOutputPath	= "$Out$\Test\CUDA\"
 
 ObjectList( "Cuda-Obj" )

@@ -85,8 +85,8 @@ public:
 
 	// access existing nodes
 	Node * FindNode( const AString & nodeName ) const;
-	Node * GetNodeByIndex( uint32_t index ) const;
-	uint32_t GetNodeCount() const;
+	Node * GetNodeByIndex( size_t index ) const;
+	size_t GetNodeCount() const;
 
 	// create new nodes
 	CopyNode * CreateCopyNode( const AString & dstFileName, 

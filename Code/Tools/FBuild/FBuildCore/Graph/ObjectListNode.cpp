@@ -89,12 +89,15 @@ ObjectListNode::~ObjectListNode()
 
 	//Timer t;
 
-	Node * pchCPP = nullptr;
-	if ( m_PrecompiledHeader )
-	{
-		ASSERT( m_PrecompiledHeader->GetType() == Node::OBJECT_NODE );
-		pchCPP = m_PrecompiledHeader->GetPrecompiledHeaderCPPFile();
-	}
+    #if defined( __WINDOWS__ )
+		// On Windows, with MSVC we compile a cpp file to generate the PCH
+		// Filter here to ensure that doesn't get compiled twice
+        Node * pchCPP = nullptr;
+        if ( m_PrecompiledHeader && m_PrecompiledHeader->IsMSVC() )
+        {
+            pchCPP = m_PrecompiledHeader->GetPrecompiledHeaderCPPFile();
+        }
+    #endif
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
@@ -128,10 +131,12 @@ ObjectListNode::~ObjectListNode()
 
 				// ignore the precompiled header as a convenience for the user
 				// so they don't have to exclude it explicitly
-				if ( pchCPP && ( n == pchCPP ) )
-				{
-					continue;
-				}
+                #if defined( __WINDOWS__ )
+                    if ( n == pchCPP )
+                    {
+                        continue;
+                    }
+                #endif
 
 				// create the object that will compile the above file
 				if ( CreateDynamicObjectNode( n, dln ) == false )
@@ -369,7 +374,8 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	if ( on == nullptr )
 	{
 		// determine flags - TODO:B Move DetermineFlags call out of build-time
-		uint32_t flags = ObjectNode::DetermineFlags( m_Compiler, m_CompilerArgs );
+		const bool usingPCH = ( m_PrecompiledHeader != nullptr );
+		uint32_t flags = ObjectNode::DetermineFlags( m_Compiler, m_CompilerArgs, false, usingPCH );
 		if ( isUnityNode )
 		{
 			flags |= ObjectNode::FLAG_UNITY;
@@ -382,7 +388,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 		if ( m_Preprocessor )
 		{
 			// determine flags - TODO:B Move DetermineFlags call out of build-time
-			preprocessorFlags = ObjectNode::DetermineFlags( m_Preprocessor, m_PreprocessorArgs );
+			preprocessorFlags = ObjectNode::DetermineFlags( m_Preprocessor, m_PreprocessorArgs, false, usingPCH );
         }
 
 		on = ng.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerArgs, m_CompilerArgsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken, m_AllowDistribution, m_AllowCaching, m_Preprocessor, m_PreprocessorArgs, preprocessorFlags );

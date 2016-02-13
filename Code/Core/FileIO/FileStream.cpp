@@ -331,48 +331,40 @@ bool FileStream::IsOpen() const
 
 	ASSERT( IsOpen() );
 
-	// record current pos to restore
-	uint64_t originalPos = Tell();
+	#if defined( __WINDOWS__ )
+		// seek to end
+		DWORD fileSizeHigh;
+		DWORD fileSizeLow = ::GetFileSize( (HANDLE)m_Handle, &fileSizeHigh );
+		return ( ( uint64_t( fileSizeHigh ) << 32 ) | uint64_t( fileSizeLow ) );
+	#else
+		// record current pos to restore
+		uint64_t originalPos = Tell();
 
-#if defined( __WINDOWS__ )
-	// seek to end
-	LARGE_INTEGER zeroPos, newPos;
-	zeroPos.QuadPart = 0;
-	VERIFY( SetFilePointerEx( (HANDLE)m_Handle, zeroPos, &newPos, FILE_END ) );
-    
-	uint64_t size = newPos.QuadPart;
-#elif defined( __APPLE__ ) || defined( __LINUX__ )
-    fseek( (FILE *)m_Handle, 0, SEEK_END );
-    uint64_t size = ftell( (FILE*)m_Handle );
-#else
-    #error Unknown platform
-#endif
-	// seek back to the original pos
-	VERIFY( Seek( originalPos ) );
+		// seek to end
+		fseek( (FILE *)m_Handle, 0, SEEK_END );
+		uint64_t size = ftell( (FILE*)m_Handle );
 
-	return size;
+		// seek back to the original pos
+		VERIFY( Seek( originalPos ) );
+
+		return size;
+	#endif
 }
 
 // SetLastWriteTime
 //------------------------------------------------------------------------------
-bool FileStream::SetLastWriteTime( uint64_t lastWriteTime )
-{
 #if defined( __WINDOWS__ )
-	FILETIME ftWrite;
-	ftWrite.dwLowDateTime = (uint32_t)( lastWriteTime & 0x00000000FFFFFFFF );
-	ftWrite.dwHighDateTime = (uint32_t)( ( lastWriteTime & 0xFFFFFFFF00000000 ) >> 32 );
-	if ( !SetFileTime( (HANDLE)m_Handle, nullptr, nullptr, &ftWrite ) ) // create, access, write
+	bool FileStream::SetLastWriteTime( uint64_t lastWriteTime )
 	{
-		return false;
+		FILETIME ftWrite;
+		ftWrite.dwLowDateTime = (uint32_t)( lastWriteTime & 0x00000000FFFFFFFF );
+		ftWrite.dwHighDateTime = (uint32_t)( ( lastWriteTime & 0xFFFFFFFF00000000 ) >> 32 );
+		if ( !SetFileTime( (HANDLE)m_Handle, nullptr, nullptr, &ftWrite ) ) // create, access, write
+		{
+			return false;
+		}
+		return true;
 	}
-	return true;
-#elif defined( __APPLE__ ) || defined( __LINUX__ )
-    // TODO:LINUX Implement FileStream::SetLastWriteTime
-    ASSERT( false ); // TODO:MAC Implement FileStream::SetLastWriteTime
-    return false;
-#else
-    #error Unknown platform
 #endif
-}
 
 //------------------------------------------------------------------------------

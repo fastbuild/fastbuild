@@ -26,8 +26,11 @@ public:
 	// server interface
 	void SetAvailability( bool available );
 private:
+	void Init();
+
 	AString				m_BrokerageRoot;
 	bool				m_Availability;
+	bool				m_Initialized;
     AString             m_HostName;
     AString             m_BrokerageFilePath;
     Timer               m_TimerLastUpdate;      // Throttle network access

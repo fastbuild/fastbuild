@@ -2,10 +2,7 @@
 // An simple executable to run as a test
 //
 
-extern "C"
+int main(int, char **)
 {
-	int ExeMain(void)
-	{
-		return 0;
-	}
+	return 0; // test will check this
 }

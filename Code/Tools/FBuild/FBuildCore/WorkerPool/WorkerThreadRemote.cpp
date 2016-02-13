@@ -32,6 +32,7 @@ WorkerThreadRemote::WorkerThreadRemote( uint32_t threadIndex )
 //------------------------------------------------------------------------------
 WorkerThreadRemote::~WorkerThreadRemote()
 {
+	ASSERT( m_Exited );
 }
 
 // Main
@@ -72,6 +73,8 @@ WorkerThreadRemote::~WorkerThreadRemote()
 	}
 
 	m_Exited = true;
+
+	m_MainThreadWaitForExit.Signal();
 }
 
 // GetStatus

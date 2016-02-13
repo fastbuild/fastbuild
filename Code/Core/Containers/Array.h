@@ -423,6 +423,8 @@ void Array< T >::Erase( T * const iter )
 template < class T >
 Array< T > & Array< T >::operator = ( const Array< T > & other )
 {
+	ASSERT( &other != this ); // Invalid to assign to self
+
 	Clear();
 
 	// need to reallocate?

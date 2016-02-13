@@ -18,12 +18,29 @@
 #include "Core/Network/Network.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Process/Thread.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 WorkerBrokerage::WorkerBrokerage()
 	: m_Availability( false )
+	, m_Initialized( false )
 {
+}
+
+// Init
+//------------------------------------------------------------------------------
+void WorkerBrokerage::Init()
+{
+	PROFILE_FUNCTION
+
+	ASSERT( Thread::IsMainThread() );
+
+	if ( m_Initialized )
+	{
+		return;
+	}
+
 	// brokerage path includes version to reduce unnecssary comms attempts
 	uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
 
@@ -44,6 +61,8 @@ WorkerBrokerage::WorkerBrokerage()
     AStackString<> filePath;
     m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoot.Get(), m_HostName.Get() );
     m_TimerLastUpdate.Start();
+
+	m_Initialized = true;
 }
 
 // DESTRUCTOR
@@ -59,6 +78,8 @@ WorkerBrokerage::~WorkerBrokerage()
 void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 {
     PROFILE_FUNCTION
+
+	Init();
 
 	if ( m_BrokerageRoot.IsEmpty() )
 	{
@@ -98,6 +119,8 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 //------------------------------------------------------------------------------
 void WorkerBrokerage::SetAvailability(bool available)
 {
+	Init();
+
     // ignore if brokerage not configured
     if ( m_BrokerageRoot.IsEmpty() )
     {

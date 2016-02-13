@@ -5,10 +5,7 @@
 // Include for the DLL
 #include "a.h"
 
-extern "C"
+int main(int argc, char** argv)
 {
-	int ExeMain(void)
-	{
-		return FunctionA();
-	}
+	return FunctionA();
 }

@@ -119,20 +119,20 @@ void TestProjectGeneration::Test() const
 
 	FBuild fBuild; // needed for NodeGraph::CleanPath
 
-	AStackString<> projectFile( "..\\..\\..\\..\\ftmp\\Test\\ProjectGeneration\\Core.vcxproj" );
+	AStackString<> projectFile( "../../../../tmp/Test/ProjectGeneration/Core.vcxproj" );
 	AStackString<> projectFileClean;
 	NodeGraph::CleanPath( projectFile, projectFileClean );
 
 	const AString & vcxproj = pg.GenerateVCXProj( projectFileClean, configs, fileTypes );
 	const AString & filters = pg.GenerateVCXProjFilters( projectFileClean );
 
-	TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "..\\..\\..\\..\\ftmp\\Test\\ProjectGeneration\\" ) ) );
+	TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../../../../tmp/Test/ProjectGeneration/" ) ) );
 
 	FileStream f;
 	TEST_ASSERT( f.Open( projectFileClean.Get(), FileStream::WRITE_ONLY ) );
 	TEST_ASSERT( f.Write( vcxproj.Get(), vcxproj.GetLength() ) == vcxproj.GetLength() );
 	f.Close();
-	TEST_ASSERT( f.Open( "..\\..\\..\\..\\ftmp\\Test\\ProjectGeneration\\Core.vcxproj.filters", FileStream::WRITE_ONLY ) );
+	TEST_ASSERT( f.Open( "../../../../tmp/Test/ProjectGeneration/Core.vcxproj.filters", FileStream::WRITE_ONLY ) );
 	TEST_ASSERT( f.Write( filters.Get(), filters.GetLength() ) == filters.GetLength() );
 }
 
@@ -140,9 +140,9 @@ void TestProjectGeneration::Test() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::TestFunction() const
 {
-	AStackString<> project( "../../../../ftmp/Test/ProjectGeneration/testproj.vcxproj" );
-	AStackString<> solution( "../../../../ftmp/Test/ProjectGeneration/testsln.sln" );
-	AStackString<> filters( "../../../../ftmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
+	AStackString<> project( "../../../../tmp/Test/ProjectGeneration/testproj.vcxproj" );
+	AStackString<> solution( "../../../../tmp/Test/ProjectGeneration/testsln.sln" );
+	AStackString<> filters( "../../../../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
 	EnsureFileDoesNotExist( project );
 	EnsureFileDoesNotExist( solution );
 	EnsureFileDoesNotExist( filters );
@@ -155,7 +155,7 @@ void TestProjectGeneration::TestFunction() const
 	TEST_ASSERT( fBuild.Initialize() );
 
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestSln" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/ProjectGeneration/fbuild.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/ProjectGeneration/fbuild.fdb" ) );
 
 	EnsureFileExists( project );
 	EnsureFileExists( solution );
@@ -174,8 +174,8 @@ void TestProjectGeneration::TestFunction() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::TestFunction_NoRebuild() const
 {
-	AStackString<> project( "../../../../ftmp/Test/ProjectGeneration/testproj.vcxproj" );
-	AStackString<> filters( "../../../../ftmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
+	AStackString<> project( "../../../../tmp/Test/ProjectGeneration/testproj.vcxproj" );
+	AStackString<> filters( "../../../../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
 	EnsureFileExists( project );
 	EnsureFileExists( filters );
 
@@ -197,7 +197,7 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
 	options.m_ConfigFile = "Data/TestProjectGeneration/fbuild.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/ProjectGeneration/fbuild.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/ProjectGeneration/fbuild.fdb" ) );
 
 	TEST_ASSERT( fBuild.Build( AStackString<>( "TestProj" ) ) );
 
@@ -271,7 +271,7 @@ void TestProjectGeneration::TestFunction_Speed() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::XCode() const
 {
-	AStackString<> project( "../../../../ftmp/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj" );
+	AStackString<> project( "../../../../tmp/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj" );
 	EnsureFileDoesNotExist( project );
 
 	// do build

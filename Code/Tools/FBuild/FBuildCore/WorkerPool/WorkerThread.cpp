@@ -52,6 +52,7 @@ void WorkerThread::Init()
 //------------------------------------------------------------------------------
 WorkerThread::~WorkerThread()
 {
+    ASSERT( m_Exited );
 }
 
 // InitTmpDir
@@ -82,11 +83,7 @@ WorkerThread::~WorkerThread()
 void WorkerThread::WaitForStop()
 {
     PROFILE_FUNCTION
-
-	while ( m_Exited == false )
-	{
-		Thread::Sleep( 1 );
-	}
+	m_MainThreadWaitForExit.Wait();
 }
 
 // GetThreadIndex
@@ -102,6 +99,12 @@ void WorkerThread::WaitForStop()
 {
 	WorkerThread * wt = reinterpret_cast< WorkerThread * >( param );
 	s_WorkerThreadThreadIndex = wt->m_ThreadIndex;
+
+	#if defined( PROFILING_ENABLED )
+		AStackString<> threadName;
+		threadName.Format( "%s_%u", s_WorkerThreadThreadIndex > 1000 ? "RemoteWorkerThread" : "WorkerThread", s_WorkerThreadThreadIndex );
+		PROFILE_SET_THREAD_NAME( threadName.Get() );
+	#endif
 
 	CreateThreadLocalTmpDir();
 
@@ -135,6 +138,8 @@ void WorkerThread::WaitForStop()
     {
         JobQueue::Get().WakeMainThread();
     }
+
+	m_MainThreadWaitForExit.Signal();
 }
 
 // Update

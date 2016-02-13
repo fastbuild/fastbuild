@@ -3,10 +3,12 @@
 //
 #include "b.h"
 
-bool __stdcall DllMain( void * hinstDLL, unsigned int fdwReason, void * lpvReserved )
-{
-	return true;
-}
+#if defined( __WINDOWS__ )
+    bool __stdcall DllMain( void * hinstDLL, unsigned int fdwReason, void * lpvReserved )
+    {
+        return true;
+    }
+#endif
 
 void FunctionB()
 {
