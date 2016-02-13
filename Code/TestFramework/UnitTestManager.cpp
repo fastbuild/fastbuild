@@ -137,6 +137,7 @@ bool UnitTestManager::RunTests( const char * testGroup )
 	OUTPUT( "------------------------------------------------------------\n" );
 	OUTPUT( "Summary For All Tests\n" );
     uint32_t numPassed = 0;
+	float totalTime = 0.0f;
     UnitTest * lastGroup = nullptr;
     for ( size_t i=0; i<s_NumTests; ++i )
 	{
@@ -144,7 +145,7 @@ bool UnitTestManager::RunTests( const char * testGroup )
         if ( info.m_TestGroup != lastGroup )
         {
         	OUTPUT( "------------------------------------------------------------\n" );
-            OUTPUT( "                :        : %s\n", info.m_TestGroup->GetName() );
+            OUTPUT( "             : %s\n", info.m_TestGroup->GetName() );
             lastGroup = info.m_TestGroup;
         }
 
@@ -155,13 +156,14 @@ bool UnitTestManager::RunTests( const char * testGroup )
         }
         else 
         {
-            status = ( info.m_MemoryLeaks ) ? "FAILED (LEAKS)" : "FAILED";
+            status = ( info.m_MemoryLeaks ) ? "FAIL (LEAKS)" : "FAIL";
         }
 
-        OUTPUT( "%15s : %5.1fs : %30s\n", status, info.m_TimeTaken, info.m_TestName );
+        OUTPUT( "%12s : %5.1fs : %s\n", status, info.m_TimeTaken, info.m_TestName );
+		totalTime += info.m_TimeTaken;
     }
 	OUTPUT( "------------------------------------------------------------\n" );
-	OUTPUT( " - Passed: %u / %u (%u failures)\n", numPassed, s_NumTests, ( s_NumTests - numPassed ) );
+	OUTPUT( "Passed: %u / %u (%u failures) in %2.1fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), totalTime );
 	OUTPUT( "------------------------------------------------------------\n" );
 
 	return ( s_NumTests == numPassed );

@@ -12,7 +12,7 @@ ObjectList( 'MSVC-P' )
 	.CompilerOptions		+ ' /P'
 
 	.CompilerInputFiles		= { 'Data/TestIncludeParser/MSVC-P/test.cpp' }
-	.CompilerOutputPath		= "../../../../ftmp/Test/IncludeParser/MSVC-P/"
+	.CompilerOutputPath		= "$Out$/Test/IncludeParser/MSVC-P/"
 
 	// USe the /Fi option to make sure the Compiler and FASTBuild agree on the output location
 	.CompilerOptions		+ ' /Fi"%2"'

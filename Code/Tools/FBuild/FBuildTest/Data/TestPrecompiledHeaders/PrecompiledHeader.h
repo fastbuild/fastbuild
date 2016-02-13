@@ -3,14 +3,6 @@
 
 // This .h will be pre-compiled
 
-// include some stuff
-class A
-{
-public:
-	A() { a = 9; b=100; }
-	int a;
-	int b;
-};
-
+#include "Slow.h"
 
 #endif // PCH_INCLUDED

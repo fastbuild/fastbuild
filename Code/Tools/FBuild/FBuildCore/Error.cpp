@@ -111,11 +111,11 @@
 	FormatError( iter, 1010u, nullptr, "Unknown construct." );
 }
 
-// Error_1011_UnnamedConcatMustFollowAssignment
+// Error_1011_UnnamedModifcationMustFollowAssignment
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1011_UnnamedConcatMustFollowAssignment( const BFFIterator & iter )
+/*static*/ void Error::Error_1011_UnnamedModifcationMustFollowAssignment( const BFFIterator & iter )
 {
-	FormatError( iter, 1011u, nullptr, "Unnamed concatenation must follow a variable assignment in the same scope." );
+	FormatError( iter, 1011u, nullptr, "Unnamed modification must follow a variable assignment in the same scope." );
 }
 
 // Error_1012_UnexpectedEndOfFile
@@ -213,22 +213,22 @@
 	FormatError( iter, 1025u, function, "Missing scope close token '%c'.", BFFParser::BFF_SCOPE_CLOSE );
 }
 
-// Error_1026_VariableNotFoundForConcatenation
+// Error_1026_VariableNotFoundForModification
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1026_VariableNotFoundForConcatenation( const BFFIterator & iter,
+/*static*/ void Error::Error_1026_VariableNotFoundForModification( const BFFIterator & iter,
 																  const AString & variableName )
 {
-	FormatError( iter, 1026u, nullptr, "Variable '%s' not found for concatention.", variableName.Get() );
+	FormatError( iter, 1026u, nullptr, "Variable '%s' not found for modification.", variableName.Get() );
 }
 
-// Error_1027_CannotConcatenate
+// Error_1027_CannotModify
 //------------------------------------------------------------------------------
-/*static*/ void Error::Error_1027_CannotConcatenate( const BFFIterator & iter,
+/*static*/ void Error::Error_1027_CannotModify( const BFFIterator & iter,
 												   const AString & variableName,
 												   BFFVariable::VarType dstType,
 												   BFFVariable::VarType srcType )
 {
-	FormatError( iter, 1027u, nullptr, "Cannot concatenate <%s> to <%s> for Variable '%s'.",
+	FormatError( iter, 1027u, nullptr, "Cannot use <%s> to modify <%s> for Variable '%s'.",
 									 BFFVariable::GetTypeName( srcType ), 
 									 BFFVariable::GetTypeName( dstType ),
 									 variableName.Get() );
@@ -305,6 +305,7 @@
 	{
 		case BFFParser::BFF_VARIABLE_ASSIGNMENT:	operation = "="; break;
 		case BFFParser::BFF_VARIABLE_CONCATENATION: operation = "+"; break;
+		case BFFParser::BFF_VARIABLE_SUBTRACTION:	operation = "-"; break;
 		default:									ASSERT( false ); break;
 	}
 

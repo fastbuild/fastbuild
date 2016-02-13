@@ -6,6 +6,11 @@
 
 // Includes
 //------------------------------------------------------------------------------
+// OSUI
+#include "OSUI/OSTrayIcon.h"
+#include "OSUI/OSWindow.h"
+
+// Core
 #include "Core/Containers/Singleton.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AString.h"
@@ -18,10 +23,16 @@
 
 // Forward Declaration
 //------------------------------------------------------------------------------
+class OSDropDown;
+class OSFont;
+class OSLabel;
+class OSListView;
+class OSTrayIcon;
+class OSWindow;
 
 // WorkerWindow
 //------------------------------------------------------------------------------
-class WorkerWindow : public Singleton< WorkerWindow >
+class WorkerWindow : public OSWindow, public Singleton< WorkerWindow >
 {
 public:
 	explicit WorkerWindow( void * hInstance );
@@ -31,7 +42,6 @@ public:
 	void SetWorkerState( size_t index, const AString & hostName, const AString & status );
 
 	#if defined( __WINDOWS__ )
-		HWND GetWindowHandle() const { return m_WindowHandle; }
 		HMENU GetMenu() const { return m_Menu; }
 	#endif
 
@@ -39,15 +49,21 @@ public:
 	void SetWantToQuit() { m_UIState = WANT_TO_QUIT; }
 	void SetAllowQuit() { m_UIState = ALLOWED_TO_QUIT; }
 
-	#if defined( __WINDOWS__ )
-		inline HWND GetModeComboBoxHandle() const { return m_ModeComboBox; } // TODO:C make this private
-	#endif
-
 	void ShowBalloonTip( const char * msg );
 
 private:
 	static uint32_t UIUpdateThreadWrapper( void * );
 	void UIUpdateThread();
+	
+	// OSWindow events
+	virtual bool OnClose() override;
+	virtual bool OnMinimize() override;
+	virtual bool OnTrayIconLeftClick() override;
+	virtual bool OnTrayIconRightClick() override;
+	virtual void OnDropDownSelectionChanged( OSDropDown * dropDown ) override;
+
+	// Internal Helpers
+	void ToggleMinimized();
 
 	// UI created/updated in another thread to ensure responsiveness at all times
 	enum UIThreadState
@@ -58,27 +74,26 @@ private:
 		ALLOWED_TO_QUIT	// main thread has authorized UI shut down
 	};
 	volatile UIThreadState	m_UIState;
-	//volatile bool			m_UIThreadQuitNotification;	// does UI want to exit (app closed etc)
-	//volatile bool			m_UIThreadExitAllowed;		// main thread acknowledged exit and it's safe to shutdown thread
 	Thread::ThreadHandle	m_UIThreadHandle;
+
+	// Window Elements
+	OSTrayIcon *		m_TrayIcon;
+	OSFont *			m_Font;
+	OSLabel *			m_ModeLabel;
+	OSLabel *			m_ResourcesLabel;
+	OSListView *		m_ThreadList;
+	OSDropDown *		m_ModeDropDown;
+	OSDropDown *		m_ResourcesDropDown;
 
 	// properties of the window
 	#if defined( __WINDOWS__ )
-		HWND			m_WindowHandle;		// the main window
 		HMENU			m_Menu;				// right-click context menu
-		NOTIFYICONDATA	m_NotifyIconData;	// tray icon
 		HINSTANCE		m_HInstance;		// main application instance to tie window to
 	#endif
 
 	// sub items of the window
 	#if defined( __WINDOWS__ )
-		HWND			m_ThreadListView;	// list showing worker thread status
-		HWND			m_ModeComboBox;		// drop down showing operation mode
-		HWND			m_ModeComboLabel;	// label for drop down
-		HWND			m_ResourcesComboBox;// drop down showing CPU usage limits
-		HWND			m_ResourcesComboLabel; // label for drop down
 		HWND			m_Splitter;
-		HFONT			m_Font;
 	#endif
 
 	AString			m_HostName;

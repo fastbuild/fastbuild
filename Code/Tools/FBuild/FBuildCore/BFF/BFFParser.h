@@ -42,6 +42,7 @@ public:
 	enum { BFF_DECLARE_VAR_PARENT = '^' };
 	enum { BFF_VARIABLE_ASSIGNMENT = '=' };
 	enum { BFF_VARIABLE_CONCATENATION = '+' };
+	enum { BFF_VARIABLE_SUBTRACTION = '-' };
 	enum { BFF_START_ARRAY = '{' };
 	enum { BFF_END_ARRAY = '}' };
 	enum { BFF_FUNCTION_ARGS_OPEN = '(' };
@@ -60,7 +61,7 @@ public:
 	static bool ParseVariableName( BFFIterator & iter, AString & name, bool & parentScope );
 
 private:
-	bool ParseUnnamedVariableConcatenation( BFFIterator & iter );
+	bool ParseUnnamedVariableModification( BFFIterator & iter );
 	bool ParseNamedVariableDeclaration( BFFIterator & parseIndex );
 	bool ParseVariableDeclaration( BFFIterator & iter, const AString & varName, BFFStackFrame * frame );
 	bool ParseFunction( BFFIterator & parseIndex );
@@ -79,7 +80,7 @@ private:
 	bool StoreVariableStruct( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, BFFStackFrame * frame );
 	bool StoreVariableBool( const AString & name, bool value, BFFStackFrame * frame );
 	bool StoreVariableInt( const AString & name, int value, BFFStackFrame * frame );
-	bool StoreVariableToVariable( const AString & dstName, BFFIterator & varNameSrcStart, const BFFIterator & operatorIter, BFFStackFrame * dstFrame );
+	bool StoreVariableToVariable( const AString & dstName, BFFIterator & iter, const BFFIterator & operatorIter, BFFStackFrame * dstFrame );
 	// store the last seen variable
 	bool m_SeenAVariable;
 	AStackString< MAX_VARIABLE_NAME_LENGTH > m_LastVarName;

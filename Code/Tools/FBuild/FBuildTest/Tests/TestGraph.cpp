@@ -43,7 +43,6 @@ private:
 	void TestCleanPath() const;
 	void SingleFileNode() const;
 	void SingleFileNodeMissing() const;
-	void TestExecNode() const;
 	void TestDirectoryListNode() const;
 	void TestSerialization() const;
 	void TestDeepGraph() const;
@@ -58,14 +57,9 @@ REGISTER_TESTS_BEGIN( TestGraph )
 	REGISTER_TEST( TestCleanPath )
 	REGISTER_TEST( SingleFileNode )
 	REGISTER_TEST( SingleFileNodeMissing )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( TestExecNode ) // TODO:MAC TODO:LINUX Enable this test
-    #endif
 	REGISTER_TEST( TestDirectoryListNode )
 	REGISTER_TEST( TestSerialization )
-    #if defined( __WINDOWS__ )
-        REGISTER_TEST( TestDeepGraph ) // TODO:MAC TODO:LINUX Enable this test
-    #endif
+    REGISTER_TEST( TestDeepGraph )
 	REGISTER_TEST( TestNoStopOnFirstError )
 REGISTER_TESTS_END
 
@@ -244,54 +238,6 @@ void TestGraph::SingleFileNodeMissing() const
 	TEST_ASSERT( fb.Build( node ) == true );
 }
 
-// TestExecNode
-//------------------------------------------------------------------------------
-void TestGraph::TestExecNode() const
-{
-	FBuild fb;
-	NodeGraph & ng = fb.GetDependencyGraph();
-
-	const AString & workingDir( AString::GetEmpty() ); // empty = use the "current" dir
-
-	// just do a file copy
-	const AStackString<> exeName( "c:\\Windows\\System32\\robocopy.exe" ); // file copy
-	const AStackString<> srcFile( "Data/TestGraph/library.cpp" );
-	const AStackString<> dstFile( "..\\..\\..\\..\\ftmp\\Test\\Graph\\TestExecNode\\library.cpp" );
-	AStackString<> exeArgs;
-	exeArgs.Format( "Data\\TestGraph ..\\..\\..\\..\\ftmp\\Test\\Graph\\TestExecNode library.cpp /COPY:D" );
-
-	// make sure everything on disc is as we need/expect
-	if ( FileIO::FileExists( dstFile.Get() ) )
-	{
-		TEST_ASSERT( FileIO::SetReadOnly( dstFile.Get(), false ) );
-		TEST_ASSERT( FileIO::FileDelete( dstFile.Get() ) );
-	}
-	TEST_ASSERT( FileIO::FileExists( dstFile.Get() ) == false );
-
-	// setup graph
-	FileNode * srcNode = ng.CreateFileNode( srcFile );
-	FileNode * exe = ng.CreateFileNode( exeName, false ); // false == don't clean the path
-	Dependencies empty;
-	Dependencies inputFiles;
-	inputFiles.Append( Dependency(srcNode) );
-	ExecNode * execNode = ng.CreateExecNode( dstFile, inputFiles, exe, exeArgs, workingDir, 1, empty, false );
-
-	// build and verify
-	TEST_ASSERT( fb.Build( execNode ) );
-
-	// check file was actually copied
-	TEST_ASSERT( FileIO::FileExists( dstFile.Get() ) );
-	FileStream f;
-	f.Open( srcFile.Get() );
-	uint64_t srcSize = f.GetFileSize();
-	f.Close();
-	f.Open( dstFile.Get() );
-	uint64_t dstSize = f.GetFileSize();
-	f.Close();
-
-	TEST_ASSERT( srcSize == dstSize );
-}
-
 // TestDirectoryListNode
 //------------------------------------------------------------------------------
 void TestGraph::TestDirectoryListNode() const
@@ -354,8 +300,8 @@ void TestGraph::TestSerialization() const
 	AStackString<> codeDir;
 	GetCodeDir( codeDir );
 
-	const char * dbFile1	= "../ftmp/Test/Graph/fbuild.db";
-	const char * dbFile2	= "../ftmp/Test/Graph/fbuild.db.2"; 
+	const char * dbFile1	= "../tmp/Test/Graph/fbuild.db";
+	const char * dbFile2	= "../tmp/Test/Graph/fbuild.db.2"; 
 
 	// clean up anything left over from previous runs
 	FileIO::FileDelete( dbFile1 );
@@ -493,8 +439,9 @@ void TestGraph::TestCleanPath() const
     //while ( b ) {}
     
 	// edge cases/regressions
-    #if defined( __WINDOWS__ ) // TODO:MAC TODO:LINUX fix this test failure
-        CHECK( "\\folder\\file",        "C:\\Windows\\System32\\folder\\file",      "/tmp/subDir/folder/file" )
+    #if defined( __WINDOWS__ )
+        // - There was a bug with folders beginning with a slash on Windows
+        CHECK( "\\folder\\file",        "C:\\Windows\\System32\\folder\\file",      "" )
     #endif
 
 	#undef CHECK
@@ -509,7 +456,7 @@ void TestGraph::TestDeepGraph() const
 	options.m_UseCacheRead = true;
 	options.m_UseCacheWrite = true;
 
-	const char * dbFile1 = "../../../../ftmp/Test/Graph/DeepGraph.fdb";
+	const char * dbFile1 = "../../../../tmp/Test/Graph/DeepGraph.fdb";
 
 	{
 		// do a clean build

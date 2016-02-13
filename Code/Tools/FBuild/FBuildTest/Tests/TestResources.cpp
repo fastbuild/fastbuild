@@ -41,20 +41,20 @@ void TestResources::BuildResource() const
 	FBuild fBuild( options );
 	fBuild.Initialize();
 
-	const AStackString<> binRes( "../../../../ftmp/Test/Resources/resource.res" );
+	const AStackString<> binRes( "../../../../tmp/Test/Resources/resource.res" );
 
 	// clean up anything left over from previous runs
 	EnsureFileDoesNotExist( "binRes" );
 
 	TEST_ASSERT( fBuild.Build( AStackString<>( "exe" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "..\\..\\..\\..\\ftmp\\Test\\Resources\\resource.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Resources/resource.fdb" ) );
 
 	// make sure all output files are as expected
 	EnsureFileExists( binRes );
 
 	// spawn exe which does a runtime check that the resource is availble
 	Process p;
-	p.Spawn( "..\\..\\..\\..\\ftmp\\Test\\Resources\\exe.exe", nullptr, nullptr, nullptr );
+	p.Spawn( "../../../../tmp/Test/Resources/exe.exe", nullptr, nullptr, nullptr );
 	int ret = p.WaitForExit();
 	TEST_ASSERT( ret == 1 ); // verify expected ret code
 
@@ -78,7 +78,7 @@ void TestResources::BuildResource_NoRebuild() const
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
 	FBuild fBuild( options );
-	fBuild.Initialize( "..\\..\\..\\..\\ftmp\\Test\\Resources\\resource.fdb" );
+	fBuild.Initialize( "../../../../tmp/Test/Resources/resource.fdb" );
 
 	TEST_ASSERT( fBuild.Build( AStackString<>( "exe" ) ) );
 

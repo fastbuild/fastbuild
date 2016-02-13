@@ -85,7 +85,8 @@ public:
 
 	// access existing nodes
 	Node * FindNode( const AString & nodeName ) const;
-	Node * GetNodeByIndex( uint32_t index ) const;
+	Node * GetNodeByIndex( size_t index ) const;
+	size_t GetNodeCount() const;
 
 	// create new nodes
 	CopyNode * CreateCopyNode( const AString & dstFileName, 
@@ -253,6 +254,15 @@ private:
 										  uint32_t & totalNodeTime );
 
 	Node * FindNodeInternal( const AString & fullPath ) const;
+
+	struct NodeWithDistance
+	{
+		inline NodeWithDistance() {}
+		NodeWithDistance( Node * n, uint32_t dist ) : m_Node( n ), m_Distance( dist ) {}
+		Node * 		m_Node;
+		uint32_t 	m_Distance;
+	};
+	void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance = 5 ) const;
 
 	struct UsedFile;
 	bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, Array< UsedFile > & files, bool & compatibleDB ) const;

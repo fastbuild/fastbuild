@@ -22,8 +22,8 @@ Print( "Platform = $Platform$" )
 		should never get here
 	#endif
 #endif
-#if __WINDOWS__
-	#if __LINUX__
+#if __LINUX__
+	#if __WINDOWS__
 		should never get here
 	#endif
 #endif

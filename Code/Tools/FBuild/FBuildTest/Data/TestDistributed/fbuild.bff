@@ -7,8 +7,6 @@ Settings
 						"127.0.0.1" } 
 }
 
-.Out		= "..\..\..\..\ftmp"
-
 Library( "DistTest" )
 {
 	.LibrarianOutput	= "$Out$\Test\Distributed\dist.lib"
@@ -19,15 +17,38 @@ Library( "DistTest" )
 
 Library( "DistTestPCH" )
 {
-	.PCHInputFile		= "Data\TestDistributed\PrecompiledHeader.cpp"
-	.PCHOutputFile		= "$Out$\Test\TestDistributed\PrecompiledHeader.pch"
-	.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+	#if __WINDOWS__
+		.PCHInputFile		= "Data/TestDistributed/PrecompiledHeader.cpp"
+		.PCHOutputFile		= "$Out$/Test/Distributed/PrecompiledHeader.pch"
+		.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+	#endif
+	#if __LINUX__
+		.PCHInputFile		= "Data/TestDistributed/PrecompiledHeader.h"
+		.PCHOutputFile		= "$Out$/Test/Distributed/PrecompiledHeader.h.gch"
+        .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux
+	#endif
+    #if __OSX__
+        .PCHInputFile       = "Data/TestDistributed/PrecompiledHeader.h"
+        .PCHOutputFile      = "$Out$/Test/Distributed/PrecompiledHeader.pch"
+        .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on OS X
+    #endif
 
 	.LibrarianOutput	= "$Out$\Test\Distributed\distpch.lib"
 	.CompilerInputPath	= "Data\TestDistributed\"
 	.CompilerInputPattern = "*_pch.cpp"
 	.CompilerOutputPath	= "$Out$\Test\Distributed\"
-	.CompilerOptions	+ ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$" /I"."'
+	#if __WINDOWS__
+		.CompilerOptions	+ ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$" /I"."'
+	#endif
+	#if __LINUX__
+	    .CompilerOptions    + ' -Winvalid-pch -H'
+                            + ' "-I$Out$/Test/Distributed"'
+                            + ' "-IData/TestDistributed"'
+	#endif
+    #if __OSX__
+        .CompilerOptions    + ' -include-pch "$PCHOutputFile$" -H'
+                            + ' "-IData/TestDistributed"'
+    #endif
 }
 
 // RegressionTest - Formatting errors with % in them caused a crash

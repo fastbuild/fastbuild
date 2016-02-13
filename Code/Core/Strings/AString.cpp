@@ -145,6 +145,13 @@ bool AString::operator == ( const AString & other ) const
 	return ( *this == other.Get() );
 }
 
+// Compare
+//------------------------------------------------------------------------------
+int32_t AString::Compare( const AString & other ) const
+{
+	return strcmp( m_Contents, other.Get() );
+}
+
 // CompareI
 //------------------------------------------------------------------------------
 int32_t AString::CompareI( const AString & other ) const

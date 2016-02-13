@@ -11,10 +11,13 @@
 // Defines
 //------------------------------------------------------------------------------
 #ifndef PROFILING_ENABLED
+	#define PROFILE_SET_THREAD_NAME( threadName )
 	#define PROFILE_FUNCTION
 	#define PROFILE_SECTION( sectionName )
 	#define PROFILE_SYNCHRONIZE
 #else
+	#define PROFILE_SET_THREAD_NAME( threadName ) ProfileManager::SetThreadName( threadName );
+
 	#define PASTE_HELPER( a, b ) a ## b
 	#define PASTE( a, b ) PASTE_HELPER( a, b )
 

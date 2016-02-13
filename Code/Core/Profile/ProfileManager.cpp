@@ -10,6 +10,7 @@
 #ifdef PROFILING_ENABLED
 
 #include "Core/FileIO/FileStream.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Thread.h"
@@ -41,6 +42,7 @@ struct ProfileEventBuffer
 {
 	inline void Start( const char * profileId );
 	inline void Stop();
+	inline void SetThreadName( const char * threadName );
 
 	NO_INLINE ProfileEvent * AllocateEventStorage();
 
@@ -51,7 +53,8 @@ struct ProfileEventBuffer
 	ProfileEvent *	m_Current;
 	ProfileEvent *	m_MaxEnd;
 
-	bool m_Registered;
+	enum { MAX_THREAD_NAME_LEN = 31 };
+	char				m_ThreadName[ MAX_THREAD_NAME_LEN + 1 ];
 
 	// when allocating memory to track events, do it in blocks
 	enum{ NUM_EVENTS_PER_BLOCK = 512 };
@@ -101,7 +104,7 @@ void ProfileEventBuffer::Stop()
 	if ( --currentDepth == 0 )
 	{
 		ProfileEvent * events = m_Begin;
-		ProfileManager::PushThreadEvents( events, m_Current-events );
+		ProfileManager::PushThreadEvents( events, m_Current-events, m_ThreadName );
 		m_Begin = nullptr;
 		m_Current = nullptr;
 		m_MaxEnd = nullptr;
@@ -113,19 +116,12 @@ void ProfileEventBuffer::Stop()
 //------------------------------------------------------------------------------
 ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 {
-	// first time registration
-	if ( !m_Registered )
-	{
-		ProfileManager::RegisterThread();
-		m_Registered = true;
-	}
-
 	// do we have any events accumulated
 	ProfileEvent * events = m_Begin;
 	if ( events )
 	{
 		// ProfileManager now owns the memory
-		ProfileManager::PushThreadEvents( events, m_Current-events );
+		ProfileManager::PushThreadEvents( events, m_Current-events, m_ThreadName );
 	}
 
 	// allocate a fresh block
@@ -153,16 +149,18 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 	buffer.Stop();
 }
 
-// RegisterThread
+// SetThreadName
 //------------------------------------------------------------------------------
-/*static*/ void ProfileManager::RegisterThread()
+/*static*/ void ProfileManager::SetThreadName( const char * threadName )
 {
-	MutexHolder mh( g_ProfileManagerMutex );
-	// TODO: Take note of the thread id/name
+	ProfileEventBuffer & buffer = tls_ProfileEventBuffer;
+
+	// Take a copy of the name
+	AString::Copy( threadName, buffer.m_ThreadName, Math::Min< size_t >( AString::StrLen( threadName ), ProfileEventBuffer::MAX_THREAD_NAME_LEN ) );
 }
 
 //------------------------------------------------------------------------------
-/*static*/ void ProfileManager::PushThreadEvents( const ProfileEvent * events, size_t num )
+/*static*/ void ProfileManager::PushThreadEvents( const ProfileEvent * events, size_t num, const char * threadName )
 {
 	MutexHolder mh( g_ProfileManagerMutex );
 
@@ -173,6 +171,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 
 	ProfileEventInfo pfi;
 	pfi.m_ThreadId = Thread::GetCurrentThreadId();
+	pfi.m_ThreadName = threadName;
 	pfi.m_Events = events;
 	pfi.m_NumEvents = num;
 	s_ProfileEventInfo.Append( pfi );
@@ -213,6 +212,24 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 		const ProfileEventInfo & info = *it;
 		if ( g_ProfileEventLog.IsOpen() )
 		{
+			uint32_t threadId = info.m_ThreadId;
+
+			// Thread Name
+			if ( ( info.m_ThreadName.IsEmpty() == false ) || ( info.m_ThreadId == Thread::GetMainThreadId() ) )
+			{
+				if ( info.m_ThreadName.IsEmpty() == false )
+				{
+					threadId = xxHash::Calc32( info.m_ThreadName );
+				}
+
+				// SetThreadName event
+				// {"name": "thread_name", "ph": "M", "pid": 0, "tid": 164, "args": { "name" : "ThreadName" }},
+				buffer.Format( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":0,\"tid\":%u,\"args\":{\"name\":\"%s\"}},\n",
+						threadId,
+						info.m_ThreadName.IsEmpty() ? "_MainThread" : info.m_ThreadName.Get() );
+                g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+			}
+
             const size_t numEvents( info.m_NumEvents );
             for ( size_t i=0; i<numEvents; ++i )
             {
@@ -222,7 +239,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
                 buffer.Format( "{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":0,\"tid\":%u,\"ts\":%llu},\n",
                         e.m_Id ? e.m_Id : "", 
                         e.m_Id ? 'B' : 'E', 
-                        info.m_ThreadId, 
+                        threadId, 
                         (uint64_t)( (double)e.m_TimeStamp * (double)Timer::GetFrequencyInvFloatMS() * 1000.0f ) );
 
                 g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );

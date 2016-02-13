@@ -489,6 +489,8 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Server::ThreadFuncStatic( void * param )
 {
+	PROFILE_SET_THREAD_NAME( "ServerThread" )
+
 	Server * s = (Server *)param;
 	s->ThreadFunc();
 	return 0;

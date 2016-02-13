@@ -46,6 +46,7 @@
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Strings/LevenshteinDistance.h"
 #include "Core/Tracing/Tracing.h"
 
 #include <string.h>
@@ -516,11 +517,18 @@ Node * NodeGraph::FindNode( const AString & nodeName ) const
 
 // GetNodeByIndex
 //------------------------------------------------------------------------------
-Node * NodeGraph::GetNodeByIndex( uint32_t index ) const
+Node * NodeGraph::GetNodeByIndex( size_t index ) const
 {
 	Node * n = m_AllNodes[ index ];
 	ASSERT( n );
 	return n;
+}
+
+//GetNodeCount
+//-----------------------------------------------------------------------------
+size_t NodeGraph::GetNodeCount() const
+{
+    return m_AllNodes.GetSize();
 }
 
 // CreateCopyNode
@@ -1457,6 +1465,93 @@ Node * NodeGraph::FindNodeInternal( const AString & fullPath ) const
 		n = n->m_Next;
 	}
 	return nullptr;
+}
+
+// FindNearestNodesInternal
+//------------------------------------------------------------------------------
+void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance ) const
+{
+    ASSERT( Thread::IsMainThread() );
+    ASSERT( nodes.IsEmpty() );
+    ASSERT( false == nodes.IsAtCapacity() );
+
+    if ( fullPath.IsEmpty() )
+    {
+        return;
+    }
+
+    uint32_t worstMinDistance = fullPath.GetLength() + 1;
+
+    for ( size_t i = 0 ; i < NODEMAP_TABLE_SIZE ; i++ )
+    {
+        for ( Node * node = m_NodeMap[i] ; nullptr != node ; node = node->m_Next )
+        {
+            const uint32_t d = LevenshteinDistance::DistanceI( fullPath, node->GetName() );
+
+            if ( d > maxDistance )
+            {
+                continue;
+            }
+
+            // skips nodes which don't share any character with fullpath
+            if ( fullPath.GetLength() < node->GetName().GetLength() )
+            {
+                if ( d > node->GetName().GetLength() - fullPath.GetLength() )
+                {
+                    continue; // completly different <=> d deletions
+                }
+            }
+            else
+            {
+                if ( d > fullPath.GetLength() - node->GetName().GetLength() )
+                {
+                    continue; // completly different <=> d deletions
+                }
+            }
+
+            if ( nodes.IsEmpty() )
+            {
+                nodes.Append( NodeWithDistance( node, d ) );
+                worstMinDistance = nodes.Top().m_Distance;
+            }
+            else if ( d >= worstMinDistance )
+            {
+                ASSERT( nodes.IsEmpty() || nodes.Top().m_Distance == worstMinDistance );
+                if ( false == nodes.IsAtCapacity() )
+                {
+                    nodes.Append( NodeWithDistance( node, d ) );
+                    worstMinDistance = d;
+                }
+            }
+            else if ( d < worstMinDistance )
+            {
+                ASSERT( nodes.Top().m_Distance > d );
+                const size_t count = nodes.GetSize();
+
+                if ( false == nodes.IsAtCapacity() )
+                {
+                    nodes.Append(NodeWithDistance());
+                }
+
+                size_t pos = count;
+                for ( ; pos > 0 ; pos-- )
+                {
+                    if ( nodes[pos - 1].m_Distance <= d )
+                    {
+                        break;
+                    }
+                    else if (pos < nodes.GetSize() )
+                    {
+                        nodes[pos] = nodes[pos - 1];
+                    }
+                }
+
+                ASSERT( pos < count );
+                nodes[pos] = NodeWithDistance( node, d );
+                worstMinDistance = nodes.Top().m_Distance;
+            }
+        }
+    }
 }
 
 // UpdateBuildStatus

@@ -13,6 +13,7 @@
 #include "Core/Containers/Array.h"
 #include "Core/Env/Types.h"
 #include "Core/Process/Thread.h"
+#include "Core/Strings/AStackString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -32,18 +33,19 @@ public:
 	// NOTE: id must be valid for lifetime of application!
 	static void Start( const char * id );
 	static void Stop();
-private:
-	// the first time an event is recorded, the thread will register itself
-	static void RegisterThread();
 
+	// Assign human readable name to current thread
+	static void SetThreadName( const char * threadName );
+private:
 	// when a thread is finished with an event buffer (full or forced syncrhonization)
 	// it's passed to the ProfileManager to
 	friend struct ProfileEventBuffer;
-	static void PushThreadEvents( const ProfileEvent * events, size_t num );
+	static void PushThreadEvents( const ProfileEvent * events, size_t num, const char * threadName );
 
 	struct ProfileEventInfo
 	{
 		Thread::ThreadId		m_ThreadId;
+		AStackString< 32 >		m_ThreadName;
 		const ProfileEvent  *	m_Events;
 		size_t					m_NumEvents;
 	};

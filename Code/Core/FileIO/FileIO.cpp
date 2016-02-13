@@ -482,41 +482,6 @@
 	return true;
 }
 
-// CreateTempPath
-//------------------------------------------------------------------------------
-/*static*/ bool FileIO::CreateTempPath( const char * tempPrefix, AString & path )
-{
-    #if defined( __WINDOWS__ )
-        // get the system temp path
-        char tempPath[ MAX_PATH ];
-        DWORD len = GetTempPath( MAX_PATH, tempPath );
-        if ( len == 0 )
-        {
-            return false;
-        }	
-
-        // create a temp file in the temp folder
-        char tempFile[ MAX_PATH ];
-        UINT uniqueVal = GetTempFileName( tempPath,		// LPCTSTR lpPathName
-                                          tempPrefix,	// LPCTSTR lpPrefixString
-                                          0,			// UINT uUnique,
-                                          tempFile );	// LPTSTR lpTempFileName
-        if ( uniqueVal == 0 )
-        {
-            return false;
-        }
-
-        path = tempFile;
-        return true;
-    #elif defined( __APPLE__ )
-        return false; // TODO:MAC Implement CreateTempDir
-	#elif defined( __LINUX__ )
-        return false; // TODO:LINUX Implement CreateTempDir
-    #else
-        #error Unknown platform
-    #endif
-}
-
 // GetFileLastWriteTime
 //------------------------------------------------------------------------------
 /*static*/ uint64_t FileIO::GetFileLastWriteTime( const AString & fileName )

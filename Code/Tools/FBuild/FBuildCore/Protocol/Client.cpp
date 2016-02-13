@@ -97,6 +97,8 @@ Client::~Client()
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Client::ThreadFuncStatic( void * param )
 {
+	PROFILE_SET_THREAD_NAME( "ClientThread" )
+
 	Client * c = (Client *)param;
 	c->ThreadFunc();
 	return 0;

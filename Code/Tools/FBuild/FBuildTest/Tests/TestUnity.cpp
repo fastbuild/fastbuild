@@ -23,9 +23,9 @@ private:
 
 	// Helpers
 	FBuildStats BuildGenerate( FBuildOptions options = FBuildOptions(), bool useDB = true ) const;
-	const char * GetTestGenerateDBFileName() const { return "../../../../ftmp/Test/Unity/generate.fdb"; } 
+	const char * GetTestGenerateDBFileName() const { return "../../../../tmp/Test/Unity/generate.fdb"; } 
 	FBuildStats BuildCompile( FBuildOptions options = FBuildOptions(), bool useDB = true ) const;
-	const char * GetTestCompileDBFileName() const { return "../../../../ftmp/Test/Unity/compile.fdb"; } 
+	const char * GetTestCompileDBFileName() const { return "../../../../tmp/Test/Unity/compile.fdb"; } 
 
 	// Tests
 	void TestGenerate() const;
@@ -41,10 +41,8 @@ private:
 REGISTER_TESTS_BEGIN( TestUnity )
 	REGISTER_TEST( TestGenerate )			// clean build of unity files
 	REGISTER_TEST( TestGenerate_NoRebuild )	// check nothing rebuilds
-	#if defined( __WINDOWS__ ) // TODO:MAC TODO:LINUX Enable tests
-		REGISTER_TEST( TestCompile )			// compile a library using unity inputs
-		REGISTER_TEST( TestCompile_NoRebuild )	// check nothing rebuilds
-	#endif
+	REGISTER_TEST( TestCompile )			// compile a library using unity inputs
+	REGISTER_TEST( TestCompile_NoRebuild )	// check nothing rebuilds
 	REGISTER_TEST( TestGenerateFromExplicitList ) // create a unity with manually provided files
 	REGISTER_TEST( TestExcludedFiles )		// Ensure files are correctly excluded
 REGISTER_TESTS_END
@@ -74,13 +72,13 @@ void TestUnity::TestGenerate() const
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	options.m_ForceCleanBuild = true;
 
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/Unity/Unity1.cpp" );
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/Unity/Unity2.cpp" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/Unity/Unity1.cpp" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/Unity/Unity2.cpp" );
 
 	FBuildStats stats = BuildGenerate( options, false ); // don't use DB
 
-	EnsureFileExists( "../../../../ftmp/Test/Unity/Unity1.cpp" );
-	EnsureFileExists( "../../../../ftmp/Test/Unity/Unity2.cpp" );
+	EnsureFileExists( "../../../../tmp/Test/Unity/Unity1.cpp" );
+	EnsureFileExists( "../../../../tmp/Test/Unity/Unity2.cpp" );
 
 	// Check stats
 	//						Seen,	Built,	Type
@@ -93,8 +91,8 @@ void TestUnity::TestGenerate() const
 //------------------------------------------------------------------------------
 void TestUnity::TestGenerate_NoRebuild() const
 {
-	AStackString<> unity1( "../../../../ftmp/Test/Unity/Unity1.cpp" );
-	AStackString<> unity2( "../../../../ftmp/Test/Unity/Unity2.cpp" );
+	AStackString<> unity1( "../../../../tmp/Test/Unity/Unity1.cpp" );
+	AStackString<> unity2( "../../../../tmp/Test/Unity/Unity2.cpp" );
 
 	EnsureFileExists( unity1 );
 	EnsureFileExists( unity2 );
@@ -146,22 +144,26 @@ void TestUnity::TestCompile() const
 	options.m_ForceCleanBuild = true;
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/Unity/Unity.lib" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/Unity/Unity.lib" );
 
 	FBuildStats stats = BuildCompile( options, false ); // don't use DB
 
-	EnsureFileExists( "../../../../ftmp/Test/Unity/Unity.lib" );
+	EnsureFileExists( "../../../../tmp/Test/Unity/Unity.lib" );
 
 	// Check stats
 	//						Seen,	Built,	Type
+    uint32_t numF = 9; // pch + 2x generated unity files + 6 source cpp files
+    #if defined( __WINDOWS__ )
+        numF++; // pch.cpp
+    #endif    
 	CheckStatsNode ( stats,	1,		1,		Node::DIRECTORY_LIST_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::UNITY_NODE );
-	CheckStatsNode ( stats,	10,		3,		Node::FILE_NODE ); // pch + 2x generated unity files
+	CheckStatsNode ( stats,	numF,	3,		Node::FILE_NODE ); // pch + 2x generated unity files built
 	CheckStatsNode ( stats,	1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( stats,	3,		3,		Node::OBJECT_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::LIBRARY_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
-	CheckStatsTotal( stats,	18,		11 );
+	CheckStatsTotal( stats,	8+numF,	11 );
 }
 
 // TestCompile_NoRebuild
@@ -172,14 +174,18 @@ void TestUnity::TestCompile_NoRebuild() const
 
 	// Check stats
 	//						Seen,	Built,	Type
+    uint32_t numF = 9; // pch + 2x generated unity files + 6 source cpp files
+    #if defined( __WINDOWS__ )
+        numF++; // pch.cpp
+    #endif    
 	CheckStatsNode ( stats,	1,		1,		Node::DIRECTORY_LIST_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::UNITY_NODE );
-	CheckStatsNode ( stats,	10,		10,		Node::FILE_NODE ); // pch + 2x generated unity files + 6 source cpp files
+	CheckStatsNode ( stats,	numF,	numF,	Node::FILE_NODE );
 	CheckStatsNode ( stats,	1,		0,		Node::COMPILER_NODE );
 	CheckStatsNode ( stats,	3,		0,		Node::OBJECT_NODE );
 	CheckStatsNode ( stats,	1,		0,		Node::LIBRARY_NODE );
 	CheckStatsNode ( stats,	1,		1,		Node::ALIAS_NODE );
-	CheckStatsTotal( stats,	18,		13 );
+	CheckStatsTotal( stats,	8+numF,	3+numF );
 }
 
 // TestGenerateFromExplicitList

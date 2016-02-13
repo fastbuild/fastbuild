@@ -6,6 +6,8 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Env/Env.h"
@@ -40,6 +42,7 @@ enum ReturnCodes
 //------------------------------------------------------------------------------
 void DisplayHelp();
 void DisplayVersion();
+void DisplayTargetList( const NodeGraph & dependencyGraph );
 #if defined( __WINDOWS__ )
     BOOL CtrlHandler( DWORD fdwCtrlType ); // Handle Ctrl+C etc
 #else
@@ -107,6 +110,7 @@ int Main(int argc, char * argv[])
 	bool fixupErrorPaths = false;
 	bool waitMode = false;
 	bool noStopOnError = false;
+	bool displayTargetList = false;
 	int32_t numWorkers = -1;
 	WrapperMode wrapperMode( WRAPPER_MODE_NONE );
 	AStackString<> args;
@@ -214,6 +218,11 @@ int Main(int argc, char * argv[])
 			{
 				showCommands = true;
 				continue;
+			}
+			else if ( thisArg == "-showtargets" )
+			{
+                displayTargetList = true;
+                continue;
 			}
 			else if ( thisArg == "-summary" )
 			{
@@ -430,6 +439,12 @@ int Main(int argc, char * argv[])
 		return FBUILD_ERROR_LOADING_BFF;
 	}
 
+	if ( displayTargetList )
+	{
+        DisplayTargetList( fBuild.GetDependencyGraph() );
+        return FBUILD_OK;
+	}
+
 	bool result = fBuild.Build( targets );
 
 	if ( sharedData )
@@ -484,6 +499,7 @@ void DisplayHelp()
 			"                to report.html.  This will lengthen the total build\n"
 			"                time.\n"
 			" -showcmds      Show command lines used to launch external processes.\n"
+			" -showtargets   Display list of primary build targets.\n"
 			" -summary       Show a summary at the end of the build.\n"
 			" -verbose       Show detailed diagnostic information. This will slow\n"
 			"                down building.\n"
@@ -507,7 +523,7 @@ void DisplayVersion()
 		#define VERSION_CONFIG " "
 	#endif
 	OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " FBUILD_VERSION_PLATFORM VERSION_CONFIG " - "
-			"Copyright 2012-2015 Franta Fulin - http://www.fastbuild.org\n" );
+			"Copyright 2012-2016 Franta Fulin - http://www.fastbuild.org\n" );
 	#undef VERSION_CONFIG
 }
 
@@ -601,6 +617,22 @@ int WrapperIntermediateProcess( const AString & args, const FBuildOptions & opti
 	// don't wait for the final process (the main process will do that)
 	p.Detach();
 	return FBUILD_OK;
+}
+
+// DisplayTargetList
+//------------------------------------------------------------------------------
+void DisplayTargetList( const NodeGraph & dependencyGraph )
+{
+    OUTPUT( "FBuild: List of available targets\n" );
+    const size_t totalNodes = dependencyGraph.GetNodeCount();
+    for ( size_t i = 0; i < totalNodes; ++i )
+    {
+	     Node * node = dependencyGraph.GetNodeByIndex( i );
+		 if ( node && node->GetType() == Node::ALIAS_NODE )
+		 {
+		     OUTPUT( "\t%s\n", node->GetName().Get() );
+		 }
+    }
 }
 
 //------------------------------------------------------------------------------

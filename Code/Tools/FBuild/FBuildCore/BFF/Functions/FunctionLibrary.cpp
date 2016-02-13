@@ -82,9 +82,50 @@ FunctionLibrary::FunctionLibrary()
 	{
 		return false; // GetCompilerNode will have emitted error
 	}
+	
+	// Compiler Force Using
+	Dependencies compilerForceUsing;
+	if ( !GetNodeList( funcStartIter, ".CompilerForceUsing", compilerForceUsing, false ) )
+	{
+		return false; // GetNodeList will have emitted an error
+	}	
+	
+	// de-optimization setting
+	bool deoptimizeWritableFiles = false;
+	bool deoptimizeWritableFilesWithToken = false;
+	if ( !GetBool( funcStartIter, deoptimizeWritableFiles, ".DeoptimizeWritableFiles", false, false ) )
+	{
+		return false; // GetBool will have emitted error
+	}
+	if ( !GetBool( funcStartIter, deoptimizeWritableFilesWithToken, ".DeoptimizeWritableFilesWithToken", false, false ) )
+	{
+		return false; // GetBool will have emitted error
+	}
+	if ( ( deoptimizeWritableFiles || deoptimizeWritableFilesWithToken ) && compilerOptionsDeoptimized.IsEmpty() )
+	{
+		Error::Error_1101_MissingProperty( funcStartIter, this, AStackString<>( ".CompilerOptionsDeoptimized" ) );
+		return false;
+	}
+
+	// cache & distribution control
+	bool allowDistribution( true );
+	bool allowCaching( true );
+	if ( !GetBool( funcStartIter, allowDistribution, ".AllowDistribution", true ) ||
+		 !GetBool( funcStartIter, allowCaching, ".AllowCaching", true ) )
+	{
+		return false; // GetBool will have emitted error
+	}
+
+	// Precompiled Header support
+	ObjectNode * precompiledHeaderNode = nullptr;
+	if ( !GetPrecompiledHeaderNode( funcStartIter, compilerNode, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching ) )
+	{
+		return false; // GetPrecompiledHeaderNode will have emitted error
+	}	
 
 	// Sanity check compile flags
-	uint32_t objFlags = ObjectNode::DetermineFlags( compilerNode, compilerOptions->GetString() );
+	const bool usingPCH = ( precompiledHeaderNode != nullptr );
+	uint32_t objFlags = ObjectNode::DetermineFlags( compilerNode, compilerOptions->GetString(), false, usingPCH );
 	if ( ( objFlags & ObjectNode::FLAG_MSVC ) && ( objFlags & ObjectNode::FLAG_CREATING_PCH ) )
 	{
 		// must not specify use of precompiled header (must use the PCH specific options)
@@ -145,13 +186,6 @@ FunctionLibrary::FunctionLibrary()
 		}
 	}
 
-	// Compiler Force Using
-	Dependencies compilerForceUsing;
-	if ( !GetNodeList( funcStartIter, ".CompilerForceUsing", compilerForceUsing, false ) )
-	{
-		return false; // GetNodeList will have emitted an error
-	}
-
 	// Get the (optional) Preprocessor & PreprocessorOptions
 	const BFFVariable * preprocessor = nullptr;
 	const BFFVariable * preprocessorOptions = nullptr;
@@ -180,39 +214,6 @@ FunctionLibrary::FunctionLibrary()
 	if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
 	{
 		return false; // GetNodeList will have emitted an error
-	}
-
-	// de-optimization setting
-	bool deoptimizeWritableFiles = false;
-	bool deoptimizeWritableFilesWithToken = false;
-	if ( !GetBool( funcStartIter, deoptimizeWritableFiles, ".DeoptimizeWritableFiles", false, false ) )
-	{
-		return false; // GetBool will have emitted error
-	}
-	if ( !GetBool( funcStartIter, deoptimizeWritableFilesWithToken, ".DeoptimizeWritableFilesWithToken", false, false ) )
-	{
-		return false; // GetBool will have emitted error
-	}
-	if ( ( deoptimizeWritableFiles || deoptimizeWritableFilesWithToken ) && compilerOptionsDeoptimized.IsEmpty() )
-	{
-		Error::Error_1101_MissingProperty( funcStartIter, this, AStackString<>( ".CompilerOptionsDeoptimized" ) );
-		return false;
-	}
-
-	// cache & distribution control
-	bool allowDistribution( true );
-	bool allowCaching( true );
-	if ( !GetBool( funcStartIter, allowDistribution, ".AllowDistribution", true ) ||
-		 !GetBool( funcStartIter, allowCaching, ".AllowCaching", true ) )
-	{
-		return false; // GetBool will have emitted error
-	}
-
-	// Precompiled Header support
-	ObjectNode * precompiledHeaderNode = nullptr;
-	if ( !GetPrecompiledHeaderNode( funcStartIter, compilerNode, objFlags, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching ) )
-	{
-		return false; // GetPrecompiledHeaderNode will have emitted error
 	}
 
 	Dependencies staticDeps( 32, true );

@@ -1,8 +1,9 @@
 //
 //
 //
-
-.Out		= '../../../../ftmp'
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
 
 .DebugConfig = 
 [

@@ -481,13 +481,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 //------------------------------------------------------------------------------
 Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
 {
-	Args fullArgs;
-
 	// spawn the process to gather dependencies
 	{
 		// Format compiler args string
 		const bool useDeoptimization( false );
 		const bool showIncludes( false );
+		Args fullArgs;
 		if ( !BuildArgs( job, fullArgs, PASS_PREPROCESSOR_ONLY, useDeoptimization, showIncludes ) )
 		{
 			return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
@@ -530,6 +529,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
 		// Format compiler args string
 		const bool useDeoptimization( false );
 		const bool showIncludes( false );
+		Args fullArgs;
 		if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes ) )
 		{
 			return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
@@ -705,9 +705,16 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
 // DetermineFlags
 //------------------------------------------------------------------------------
-/*static*/ uint32_t ObjectNode::DetermineFlags( const Node * compilerNode, const AString & args )
+/*static*/ uint32_t ObjectNode::DetermineFlags( const Node * compilerNode, 
+												const AString & args,
+												bool creatingPCH,
+												bool usingPCH )
 {
 	uint32_t flags = 0;
+	
+	// set flags known from the context the args will be used in
+	flags |= ( creatingPCH 	? ObjectNode::FLAG_CREATING_PCH : 0 );
+	flags |= ( usingPCH		? ObjectNode::FLAG_USING_PCH : 0 );
 
 	const AString & compiler = compilerNode->GetName();
 	const bool isDistributableCompiler = ( compilerNode->GetType() == Node::COMPILER_NODE ) && 
@@ -792,14 +799,6 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 			{
 				usingWinRT = true;
 			}
-			else if ( token.BeginsWith( "/Yu" ) )
-			{
-				flags |= ObjectNode::FLAG_USING_PCH;
-			}
-			else if ( token.BeginsWith( "/Yc" ) )
-			{
-				flags |= ObjectNode::FLAG_CREATING_PCH;
-			}
 			else if ( ( token == "/P" ) || ( token == "-P" ) )
 			{
 				usingPreprocessorOnly = true;
@@ -823,37 +822,6 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 			if ( ( flags & ObjectNode::FLAG_USING_PDB ) == 0 )
 			{
 				flags |= ObjectNode::FLAG_CAN_BE_CACHED;
-			}
-		}
-	}
-
-	// Check Clang compiler options
-	if ( flags & ObjectNode::FLAG_CLANG )
-	{
-		Array< AString > tokens;
-		args.Tokenize( tokens );
-		const AString * const end = tokens.End();
-		for ( const AString * it = tokens.Begin(); it != end; ++it )
-		{
-			const AString & token = *it;
-			if ( token == "-emit-pch" )
-			{
-				flags |= ObjectNode::FLAG_CREATING_PCH;
-			}
-			if ( token == "-x" )
-			{
-				++it;
-				if ( it != tokens.End() )
-				{
-					if ( ( *it == "c++-header" ) || ( *it == "c-header" ) )
-					{
-						flags |= ObjectNode::FLAG_CREATING_PCH;
-					}
-				}
-			}
-			else if ( token == "-include-pch" )
-			{
-				flags |= ObjectNode::FLAG_USING_PCH;
 			}
 		}
 	}
@@ -1274,7 +1242,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 			}
 		}
 
-		if ( isClang )
+		if ( isClang || isGCC ) // Also check when invoked via gcc sym link
 		{
 			// The pch can only be utilized when doing a direct compilation
 			//  - Can't be used to generate the preprocessed output
@@ -1341,6 +1309,14 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 					continue; // skip this token in both cases
 				}
 			}
+			if ( isGCC || isClang )
+            {
+                // Remove forced includes so they aren't forced twice
+                if ( StripTokenWithArg( "-include", token, i ) )
+                {
+                    continue; // skip this token in both cases
+                }
+            }
 			if ( isMSVC )
 			{
 				// NOTE: Leave /I includes for compatibility with Recode

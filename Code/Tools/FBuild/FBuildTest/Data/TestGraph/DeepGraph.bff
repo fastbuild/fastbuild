@@ -6,28 +6,31 @@
 // for each dependency graph traversal.
 // After optimization, wosrt case traversal is sub 10ms.
 //
+//------------------------------------------------------------------------------
 
 // Use the standard test environment
 //------------------------------------------------------------------------------
-#include "..\testcommon.bff"
-Settings
-{
-	Using( .StandardEnvironment )
-}
-Using( .VisualStudioToolChain )
-Using( .VisualStudioOptionsDebug )
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+#if __WINDOWS__
+	Using( .VisualStudioToolChain )
+#endif
 
 // Compile a real file to create a non-trivial amount of per-object dependencies
 //------------------------------------------------------------------------------
 .CompilerInputFiles	= '../../../Core/FileIO/FileIO.cpp'
-.CompilerOptions	+ ' /I"../../.."'
-					+ .Defines
+.CompilerOptions	+ ' "-I../../.."'
+					+ ' -DDEBUG -D_DEBUG'
+#if __WINDOWS__
 					+ .WindowsIncludePaths
 					+ .VisualStudioIncludePaths
+#endif
 
 // Common options
 //------------------------------------------------------------------------------
-.CompilerOutputPath	= '../../../../ftmp/Test/TestGraph/DeepGraph'
+.CompilerOutputPath	= '$Out$/Test/Graph/DeepGraph'
 .PreBuildDependencies = {}
 
 // Create a node which depends on all the other nodes before it

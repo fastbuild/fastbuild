@@ -1,12 +1,17 @@
 //
 // ObjectList - Exclusions
 //
+// Check various ways of specifying file(s) to exclude from an ObjectList.
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
 #include "../../testcommon.bff"
 Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.Out						= "../../../../ftmp"
 .CompilerInputPath			= "Data/TestObjectList/Exclusions/"
 .UnityOutputPath			= '$Out$/Test/ObjectList/Exclusions/'
 .CompilerOutputPath			= '$Out$/Test/ObjectList/Exclusions/'

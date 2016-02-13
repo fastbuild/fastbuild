@@ -43,6 +43,7 @@ private:
 	void ParentScopeUnknown() const;
 	void FrozenVariable() const;
 	void DynamicVarNameConstruction() const;
+	void OperatorMinus() const;
 
 	void Parse( const char * fileName, bool expectFailure = false ) const;
 };
@@ -75,6 +76,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
 	REGISTER_TEST( ParentScopeUnknown )
 	REGISTER_TEST( FrozenVariable )
 	REGISTER_TEST( DynamicVarNameConstruction )
+	REGISTER_TEST( OperatorMinus )
 REGISTER_TESTS_END
 
 // Empty
@@ -280,6 +282,13 @@ void TestBFFParsing::FrozenVariable() const
 void TestBFFParsing::DynamicVarNameConstruction() const
 {
 	Parse( "Data/TestBFFParsing/dynamic_var_name_construction.bff" );
+}
+
+// OperatorMinus
+//------------------------------------------------------------------------------
+void TestBFFParsing::OperatorMinus() const
+{
+	Parse( "Data/TestBFFParsing/operator_minus.bff" );
 }
 
 //------------------------------------------------------------------------------

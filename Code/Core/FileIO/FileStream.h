@@ -39,7 +39,10 @@ public:
 	virtual uint64_t GetFileSize() const;
 
 	// file specific
-	bool SetLastWriteTime( uint64_t lastWriteTime );
+	#if defined( __WINDOWS__ )
+		// Set on already open file via handle (Windows only)
+		bool SetLastWriteTime( uint64_t lastWriteTime );
+	#endif
 
 	// Access to handle
 	inline void * GetHandle() const { return m_Handle; }

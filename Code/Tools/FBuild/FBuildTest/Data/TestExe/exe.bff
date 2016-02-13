@@ -1,38 +1,30 @@
+//
+// Exe
+//
+// Build and link an executable.
+//
+//------------------------------------------------------------------------------
 
-#include "..\testcommon.bff"
-
-Settings		
-{
-	.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
-						"TMP=C:\Windows\Temp",
-						"SystemRoot=C:\Windows" }
-}
-
-.Compiler	= "$VisualStudioPath$\VC\bin\cl.exe"
-.Librarian	= "$VisualStudioPath$\VC\bin\lib.exe"
-.Linker		= "$VisualStudioPath$\VC\bin\link.exe"
-
-.Out		= "..\..\..\..\ftmp"
-.CompilerOutputPath	= "$Out$\Test\Exe\"
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
 
 // A simple exe
 //--------------------
-Library( "Exe-Lib" )
+ObjectList( "Exe-Lib" )
 {
-	.LibrarianOptions	= "/NOLOGO /OUT:%2 %1"
-	.LibrarianOutput	= "$Out$\Test\Exe\exe.lib"
-	.CompilerInputFiles	= "Data\TestExe\exe.cpp"
-	.CompilerOutputPath	= "$Out$\Test\Exe\"
-	.CompilerOptions	= "%1 /Fo%2 /nologo /c"
+	.CompilerInputFiles	= "Data/TestExe/exe.cpp"
+	.CompilerOutputPath	= "$Out$/Test/Exe/"
 }
 
 Executable( "Exe" )
 {
-	.LinkerOptions		= "/NOLOGO /OUT:%2 %1 /MACHINE:X86"
-						+ " /IGNORE:4001" ; don't complain about linking libs only
-						+ " /SUBSYSTEM:CONSOLE"
-						+ ' /NODEFAULTLIB'
-						+ ' /ENTRY:ExeMain'
-	.LinkerOutput		= "$Out$\Test\Exe\exe.exe"
+	#if __WINDOWS__
+		.LinkerOptions		+ ' /SUBSYSTEM:CONSOLE'
+							+ ' /ENTRY:main'
+	#endif
+	.LinkerOutput		= '$Out$/Test/Exe/exe.exe'
 	.Libraries			= { "Exe-Lib" }
 }

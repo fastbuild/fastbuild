@@ -53,14 +53,14 @@ void TestCSharp::TestSingleFile() const
 	TEST_ASSERT( fBuild.Initialize() );
 
 	// delete files from previous runs
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/CSharp/csharpsingle.dll" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/CSharp/csharpsingle.dll" );
 	
 	// Build it
 	TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Single-Target" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/CSharp/csharpsingle.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/CSharp/csharpsingle.fdb" ) );
 
-	// Test output files
-	EnsureFileExists( "../../../../ftmp/Test/CSharp/csharpsingle.dll" );
+	// Test output file
+	EnsureFileExists( "../../../../tmp/Test/CSharp/csharpsingle.dll" );
 
 	// Check stats
 	//				 Seen,	Built,	Type
@@ -79,7 +79,7 @@ void TestCSharp::TestSingleFile_NoRebuild() const
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/CSharp/csharpsingle.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/CSharp/csharpsingle.fdb" ) );
 	
 	// Build it
 	TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Single-Target" ) ) );
@@ -105,14 +105,14 @@ void TestCSharp::TestMultipleFiles() const
 	TEST_ASSERT( fBuild.Initialize() );
 
 	// delete files from previous runs
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/CSharp/csharpmulti.dll" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/CSharp/csharpmulti.dll" );
 	
 	// Build it
 	TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Multi-Target" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/CSharp/csharpmulti.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/CSharp/csharpmulti.fdb" ) );
 
 	// Test output files
-	EnsureFileExists( "../../../../ftmp/Test/CSharp/csharpmulti.dll" );
+	EnsureFileExists( "../../../../tmp/Test/CSharp/csharpmulti.dll" );
 
 	// Check stats
 	//				 Seen,	Built,	Type
@@ -132,7 +132,7 @@ void TestCSharp::TestMultipleFiles_NoRebuild() const
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/CSharp/csharpmulti.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/CSharp/csharpmulti.fdb" ) );
 	
 	// Build it
 	TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Multi-Target" ) ) );
@@ -159,18 +159,18 @@ void TestCSharp::TestMultipleAssemblies() const
 	TEST_ASSERT( fBuild.Initialize() );
 
 	// delete files from previous runs
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/CSharp/csharpassemblya.dll" );
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/CSharp/csharpassemblyb.dll" );
-	EnsureFileDoesNotExist( "../../../../ftmp/Test/CSharp/csharpassemblyc.dll" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/CSharp/csharpassemblya.dll" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/CSharp/csharpassemblyb.dll" );
+	EnsureFileDoesNotExist( "../../../../tmp/Test/CSharp/csharpassemblyc.dll" );
 	
 	// Build it
 	TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyC" ) ) );
-	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../ftmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 
 	// Test output files
-	EnsureFileExists( "../../../../ftmp/Test/CSharp/csharpassemblya.dll" );
-	EnsureFileExists( "../../../../ftmp/Test/CSharp/csharpassemblyb.dll" );
-	EnsureFileExists( "../../../../ftmp/Test/CSharp/csharpassemblyc.dll" );
+	EnsureFileExists( "../../../../tmp/Test/CSharp/csharpassemblya.dll" );
+	EnsureFileExists( "../../../../tmp/Test/CSharp/csharpassemblyb.dll" );
+	EnsureFileExists( "../../../../tmp/Test/CSharp/csharpassemblyc.dll" );
 
 	// Check stats
 	//				 Seen,	Built,	Type
@@ -190,7 +190,7 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild() const
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( "../../../../ftmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 	
 	// Build it
 	TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyC" ) ) );
