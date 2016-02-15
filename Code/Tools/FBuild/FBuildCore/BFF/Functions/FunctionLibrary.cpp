@@ -243,7 +243,11 @@ FunctionLibrary::FunctionLibrary()
 		return false;
 	}
 
-	const char * baseDirectory = GetBaseDirectory( funcStartIter );
+	AStackString<> baseDirectory;
+	if ( !GetBaseDirectory( funcStartIter, baseDirectory ) )
+	{
+		return false; // GetBaseDirectory will have emitted error
+	}
 
 	LibraryNode * libNode = ng.CreateLibraryNode( outputLib->GetString(),
 						  staticDeps,

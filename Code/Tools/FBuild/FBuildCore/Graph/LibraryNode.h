@@ -40,7 +40,7 @@ public:
 						  bool allowCaching,
                           CompilerNode * preprocessor,
                           const AString & preprocessorArgs,
-						  const char * baseDirectory );
+						  const AString & baseDirectory );
 	virtual ~LibraryNode();
 
 	static inline Node::Type GetTypeS() { return Node::LIBRARY_NODE; }

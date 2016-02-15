@@ -212,7 +212,11 @@ FunctionObjectList::FunctionObjectList()
 		return false;
 	}
 
-	const char * baseDirectory = GetBaseDirectory( funcStartIter );
+	AStackString<> baseDirectory;
+	if ( !GetBaseDirectory( funcStartIter, baseDirectory ) )
+	{
+		return false; // GetBaseDirectory will have emitted error
+	}
 
 	// Create library node which depends on the single file or list
 	ObjectListNode * o = ng.CreateObjectListNode( m_AliasForFunction,
@@ -486,23 +490,23 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 
 // GetBaseDirectory
 //------------------------------------------------------------------------------
-const char * FunctionObjectList::GetBaseDirectory( const BFFIterator & iter ) const
+bool FunctionObjectList::GetBaseDirectory( const BFFIterator & iter, AStackString<> & baseDirectory) const
 {
-	const char * baseDirectory = nullptr;
-	const BFFVariable * compilerInputFilesRoot = nullptr;
-	if ( !GetString( iter, compilerInputFilesRoot, ".CompilerInputFilesRoot", true ) )
+	AStackString<> baseDir;
+	if ( !GetString( iter, baseDir, ".CompilerInputFilesRoot", false ) ) // false = optional
 	{
-		return nullptr;
+		return false; // GetString will have emitted error
+	}
+	if ( !baseDir.IsEmpty() )
+	{
+		NodeGraph::CleanPath( baseDir, baseDirectory );
 	}
 	else
 	{
-		if ( compilerInputFilesRoot != nullptr )
-		{
-			return compilerInputFilesRoot->GetString().Get();
-		}
+		baseDirectory.Clear();
 	}
 
-	return "";
+	return true;
 }
 
 

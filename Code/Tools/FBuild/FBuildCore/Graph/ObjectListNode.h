@@ -36,7 +36,7 @@ public:
 							 bool allowCaching,
 							 CompilerNode * preprocessor,
 							 const AString & preprocessorArgs,
-							 const char * baseDirectory );
+							 const AString & baseDirectory );
 	virtual ~ObjectListNode();
 
 	static inline Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }

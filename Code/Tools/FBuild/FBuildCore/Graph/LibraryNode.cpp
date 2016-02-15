@@ -46,7 +46,7 @@ LibraryNode::LibraryNode( const AString & libraryName,
 						  bool allowCaching,
                           CompilerNode * preprocessor,
                           const AString &preprocessorArgs,
-						  const char * baseDirectory )
+						  const AString & baseDirectory )
 : ObjectListNode( libraryName,
                   inputNodes,
                   compiler,
@@ -338,7 +338,7 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 								 allowCaching,
 								 preprocessorNode,
 								 preprocessorArgs,
-								 baseDirectory.Get() );
+								 baseDirectory );
 	n->m_ObjExtensionOverride = objExtensionOverride;
     n->m_CompilerOutputPrefix = compilerOutputPrefix;
 

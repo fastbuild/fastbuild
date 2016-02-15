@@ -659,7 +659,7 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
 											bool allowCaching,
                                             CompilerNode * preprocessor,
                                             const AString & preprocessorArgs,
-											const char * baseDirectory )
+											const AString & baseDirectory )
 {
 	ASSERT( Thread::IsMainThread() );
 
@@ -970,7 +970,7 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
 												  bool allowCaching,
                                                   CompilerNode * preprocessor,
                                                   const AString & preprocessorArgs,
-												  const char * baseDirectory )
+												  const AString & baseDirectory )
 {
 	ASSERT( Thread::IsMainThread() );
 

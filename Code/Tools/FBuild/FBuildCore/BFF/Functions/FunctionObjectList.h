@@ -22,7 +22,7 @@ public:
 	explicit		FunctionObjectList();
 	inline virtual ~FunctionObjectList() {}
 
-	const char * GetBaseDirectory( const BFFIterator & iter ) const;
+	bool GetBaseDirectory( const BFFIterator & iter, AStackString<> & baseDirectory ) const;
 
 protected:
 	virtual bool AcceptsHeader() const;

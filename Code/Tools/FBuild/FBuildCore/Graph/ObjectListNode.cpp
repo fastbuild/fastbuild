@@ -39,7 +39,7 @@ ObjectListNode::ObjectListNode( const AString & listName,
 						  bool allowCaching,
                           CompilerNode * preprocessor,
                           const AString &preprocessorArgs,
-						  const char * baseDirectory )
+						  const AString & baseDirectory )
 : Node( listName, Node::OBJECT_LIST_NODE, Node::FLAG_NONE )
 , m_CompilerForceUsing( compilerForceUsing )
 , m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
@@ -66,10 +66,7 @@ ObjectListNode::ObjectListNode( const AString & listName,
 
 	m_PreBuildDependencies = preBuildDependencies;
 
-	if (baseDirectory != nullptr)
-	{
-		m_BaseDirectory = baseDirectory;
-	}
+	m_BaseDirectory = baseDirectory;
 }
 
 // DESTRUCTOR
@@ -363,7 +360,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	}
 	else
 	{
-		if ( !m_BaseDirectory.IsEmpty() && fileName.BeginsWith( m_BaseDirectory ) )
+		if ( !m_BaseDirectory.IsEmpty() && PathUtils::PathBeginsWith( fileName, m_BaseDirectory ) )
 		{
 			// ... use everything after that
 			subPath.Assign( fileName.Get() + m_BaseDirectory.GetLength(), lastSlash ); // includes last slash
@@ -466,7 +463,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 								allowCaching,
 								preprocessorNode,
 								preprocessorArgs,
-								baseDirectory.Get() );
+								baseDirectory );
 	n->m_ObjExtensionOverride = objExtensionOverride;
     n->m_CompilerOutputPrefix = compilerOutputPrefix;
 

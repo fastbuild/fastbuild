@@ -134,7 +134,7 @@ public:
 									   bool allowCaching,
                                        CompilerNode * preprocessor,
                                        const AString & preprocessorArgs,
-									   const char * baseDirectory );
+									   const AString & baseDirectory );
 
 
 	ObjectNode *	CreateObjectNode( const AString & objectName,
@@ -228,7 +228,7 @@ public:
 							 bool allowCaching,
 							 CompilerNode * preprocessor,
 							 const AString & preprocessorArgs,
-							 const char * baseDirectory );
+							 const AString & baseDirectory );
 	XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
 
 	void DoBuildPass( Node * nodeToBuild );
