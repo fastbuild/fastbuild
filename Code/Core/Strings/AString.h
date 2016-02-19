@@ -94,6 +94,7 @@ public:
 	const char *	Find( const char * subString ) const;
 	char *			Find( const char * subString ) { return const_cast< char *>( ((const AString *)this)->Find( subString ) ); }
 	const char *	FindI( const char * subString ) const;
+	const char *	FindFirst( char c ) const;
 	const char *	FindLast( char c ) const;
 	char *			FindLast( char c ) { return const_cast< char *>( ((const AString *)this)->FindLast( c ) ); }
 	bool			EndsWith( char c ) const;
