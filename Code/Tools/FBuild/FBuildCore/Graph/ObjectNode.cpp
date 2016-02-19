@@ -418,9 +418,10 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 
 	Args fullArgs;
 	AStackString<> tmpFileName;
+	Array< AString > tmpNewDirs;
 	if ( usePreProcessedOutput )
 	{
-		if ( WriteTmpFile( job, tmpFileName ) == false )
+		if ( WriteTmpFile( job, tmpFileName, tmpNewDirs ) == false )
 		{
 			return NODE_RESULT_FAILED; // WriteTmpFile will have emitted an error
 		}
@@ -455,6 +456,17 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 	if ( tmpFileName.IsEmpty() == false )
 	{
 		FileIO::FileDelete( tmpFileName.Get() );
+	}
+
+	// cleanup temp directories
+	if ( tmpNewDirs.IsEmpty() == false )
+	{
+		const size_t numDirs = tmpNewDirs.GetSize();
+		for ( size_t i = 0; i < numDirs; i++ )
+		{
+			// remove directories in reverse order
+			FileIO::DirectoryDelete( tmpNewDirs[numDirs - i - 1] );
+		}
 	}
 
 	if ( result == false )
@@ -1649,14 +1661,9 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
 
 // WriteTmpFile
 //------------------------------------------------------------------------------
-bool ObjectNode::WriteTmpFile( Job * job, AString & tmpFileName ) const
+bool ObjectNode::WriteTmpFile( Job * job, AString & tmpFileName, Array< AString > & tmpNewDirs ) const
 {
 	ASSERT( job->GetData() && job->GetDataSize() );
-
-	Node * sourceFile = GetSourceFile();
-
-	FileStream tmpFile;
-	AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
 
 	void const * dataToWrite = job->GetData();
 	size_t dataToWriteSize = job->GetDataSize();
@@ -1670,7 +1677,35 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpFileName ) const
 		dataToWriteSize = c.GetResultSize();
 	}
 
-	WorkerThread::CreateTempFilePath( fileName.Get(), tmpFileName );
+	Node * sourceFile = GetSourceFile();
+	const AString & sourceFileName = sourceFile->GetName();
+
+	const char * lastSlash = sourceFileName.FindLast( NATIVE_SLASH );
+	lastSlash = lastSlash ? (lastSlash + 1) : sourceFileName.Get();
+
+	const char * firstSlash = sourceFileName.FindFirst( NATIVE_SLASH );
+	firstSlash = firstSlash ? (firstSlash + 1) : sourceFileName.Get();
+
+	AStackString<> fileName( lastSlash );
+	AStackString<> tempSubPath( firstSlash, lastSlash ); // includes last slash
+
+	WorkerThread::GetTempFileDirectory( tmpFileName );
+	tmpFileName += tempSubPath;
+	tmpFileName += fileName;
+
+	// create directory relative to source file path inside temp directory
+	if ( !tempSubPath.IsEmpty() )
+	{
+		AStackString<> tempDirectory( tmpFileName.Get(), tmpFileName.FindLast( NATIVE_SLASH ) + 1 );
+		if ( FileIO::EnsurePathExists( tempDirectory, &tmpNewDirs ) == false )
+		{
+			job->Error( "Failed to create directory for temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr );
+			job->OnSystemError();
+			return NODE_RESULT_FAILED;
+		}
+	}
+
+	FileStream tmpFile;
 	if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false ) 
 	{
 		job->Error( "Failed to create temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr );

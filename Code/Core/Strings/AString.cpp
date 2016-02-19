@@ -646,6 +646,25 @@ const char * AString::FindI( const char * subString ) const
 	return nullptr;
 }
 
+
+// FindFirst
+//------------------------------------------------------------------------------
+const char * AString::FindFirst( char c ) const
+{
+	const char * pos = m_Contents;
+	const char * end = pos + m_Length - 1;
+	while ( pos <= end )
+	{
+		if ( *pos == c )
+		{
+			return pos;
+		}
+		pos++;
+	}
+	return nullptr;
+}
+
+
 // FindLast
 //------------------------------------------------------------------------------
 const char * AString::FindLast( char c ) const
