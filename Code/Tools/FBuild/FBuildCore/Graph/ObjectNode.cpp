@@ -283,6 +283,12 @@ ObjectNode::~ObjectNode()
 		return NODE_RESULT_FAILED; // SpawnCompiler has logged error
 	}
 
+	// output any warnings
+	if( ContainsWarningsMSCL( ch.GetOut().Get(), ch.GetOutSize() ) )
+	{
+		DumpOutput( job, ch.GetOut().Get(), ch.GetOutSize(), GetName() );
+	}
+
 	const char *output = nullptr;
 	uint32_t outputSize = 0;
 
@@ -921,6 +927,44 @@ const char * ObjectNode::GetObjExtension() const
 		#endif
 	}
 	return m_ObjExtensionOverride.Get();
+}
+
+// ContainsWarningsMSCL
+//------------------------------------------------------------------------------
+bool ObjectNode::ContainsWarningsMSCL(const char * data, uint32_t dataSize) const
+{
+	ASSERT( IsMSVC() );
+	bool containsWarnings = false;
+	static const char warningString[] = "warning";
+
+	if( ( data == nullptr ) || ( dataSize == 0 ) )
+	{
+		return containsWarnings;
+	}
+
+	const char * end = data + dataSize;
+	while( data < end )
+	{
+		// find the limits of the current line
+		const char * lineStart = data;
+		const char * lineEnd = lineStart;
+		while( lineEnd < end )
+		{
+			if( ( *lineEnd == '\r' ) || ( *lineEnd == '\n' ) )
+			{
+				break;
+			}
+			lineEnd++;
+		}
+
+		if( ( lineEnd - lineStart ) >= sizeof( warningString ) - 1 )
+		{
+			containsWarnings = containsWarnings || ( strstr( lineStart, warningString ) != nullptr );
+		}
+		data = (lineEnd + 1);
+	}
+
+	return containsWarnings;
 }
 
 // DumpOutput
@@ -1704,6 +1748,14 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 		}
 
 		return false; // compile has logged error
+	}
+	else
+	{
+		// output any warnings
+		if( IsMSVC() && ch.GetResult() == 0 && ContainsWarningsMSCL( ch.GetOut().Get(), ch.GetOutSize() ) )
+		{
+			DumpOutput( job, ch.GetOut().Get(), ch.GetOutSize(), GetName() );
+		}
 	}
 
 	return true;
