@@ -76,7 +76,7 @@ void TestCompiler::Parse( const char * fileName, bool expectFailure ) const
 
 	FBuild fBuild;
 	BFFParser p;
-	bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0 );
+	bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
 	if ( expectFailure )
 	{
 		TEST_ASSERT( parseResult == false ); // Make sure it failed as expected
