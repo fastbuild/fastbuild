@@ -163,6 +163,9 @@ struct VCXProjectNodeComp
             // start with the base configuration
             VSProjectConfig newConfig( baseConfig );
 
+			GetStringFromStruct( s, ".SolutionPlatform", newConfig.m_SolutionPlatform );
+			GetStringFromStruct( s, ".SolutionConfig", newConfig.m_SolutionConfig );
+
             // .Platform must be provided
             if ( !GetStringFromStruct( s, ".Platform",  newConfig.m_Platform ) )
             {

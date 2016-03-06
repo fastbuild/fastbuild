@@ -67,14 +67,18 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
         solutionConfig.m_Config = projectConfig.m_Config;
         solutionConfig.m_Platform = projectConfig.m_Platform;
 
-        if ( projectConfig.m_Platform.MatchesI( "Win32" ) )
-        {
-            solutionConfig.m_SolutionPlatform = "x86";
-        }
-        else
-        {
-            solutionConfig.m_SolutionPlatform = projectConfig.m_Platform;
-        }
+		solutionConfig.m_SolutionPlatform = !projectConfig.m_SolutionPlatform.IsEmpty()
+			? projectConfig.m_SolutionPlatform
+			: projectConfig.m_Platform;
+
+		solutionConfig.m_SolutionConfig = !projectConfig.m_SolutionConfig.IsEmpty()
+			? projectConfig.m_SolutionConfig
+			: projectConfig.m_Config;
+
+		if (solutionConfig.m_SolutionPlatform.MatchesI("Win32"))
+		{
+			solutionConfig.m_SolutionPlatform = "x86";
+		}
     }
 
     // Sort again with substituted solution platforms
@@ -298,8 +302,8 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
     for( const SolutionConfig * it = solutionConfigs.Begin() ; it != end ; ++it )
     {
         Write(  "\t\t%s|%s = %s|%s\r\n",
-                it->m_Config.Get(), it->m_SolutionPlatform.Get(),
-                it->m_Config.Get(), it->m_SolutionPlatform.Get() );
+                it->m_SolutionConfig.Get(), it->m_SolutionPlatform.Get(),
+                it->m_SolutionConfig.Get(), it->m_SolutionPlatform.Get() );
     }
 
     Write( "\tEndGlobalSection\r\n" );
@@ -325,14 +329,14 @@ void SLNGenerator::WriteProjectConfigurationPlatforms(  const AString & solution
         {
             Write(  "\t\t%s.%s|%s.ActiveCfg = %s|%s\r\n",
                     it->Get(),
-                    it2->m_Config.Get(), it2->m_SolutionPlatform.Get(),
+                    it2->m_SolutionConfig.Get(), it2->m_SolutionPlatform.Get(),
                     it2->m_Config.Get(), it2->m_Platform.Get() );
 
             if ( projectIsActive )
             {
                 Write(  "\t\t%s.%s|%s.Build.0 = %s|%s\r\n",
                         it->Get(),
-                        it2->m_Config.Get(), it2->m_SolutionPlatform.Get(),
+                        it2->m_SolutionConfig.Get(), it2->m_SolutionPlatform.Get(),
                         it2->m_Config.Get(), it2->m_Platform.Get() );
             }
         }
