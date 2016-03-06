@@ -62,7 +62,6 @@
 #endif
 }
 
-
 // Delete directory
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::DirectoryDelete( const AString & path )
@@ -76,15 +75,14 @@
 	return true; // delete ok
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
 	int result = rmdir( path.Get() );
-	if (result != 0)
+	if ( result != 0 )
 	{
 		return false; // failed to delete
 	}
 	return true; // delete ok
 #else
-#error Unknown platform
+	#error Unknown platform
 #endif
-
 }
 
 // Delete
@@ -452,7 +450,7 @@
 }
 
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::EnsurePathExists( const AString & path, Array< AString > * newDirs )
+/*static*/ bool FileIO::EnsurePathExists( const AString & path )
 {
 	// if the entire path already exists, nothing is to be done
 	if( DirectoryExists( path ) )
@@ -498,11 +496,6 @@
 			if ( DirectoryCreate( pathCopy ) == false )
 			{
 				return false; // something went wrong
-			}
-
-			if ( newDirs != nullptr )
-			{
-				newDirs->Append( pathCopy ); // add a directory to the list of created dirs
 			}
 		}
 		*slash = NATIVE_SLASH; // put back the slash

@@ -49,7 +49,7 @@ public:
 	static bool GetTempDir( AString & output );
 	static bool DirectoryCreate( const AString & path );
 	static bool DirectoryExists( const AString & path );
-	static bool EnsurePathExists( const AString & path, Array< AString > * newDirs = nullptr );
+	static bool EnsurePathExists( const AString & path );
 
 	static bool CreateTempPath( const char * tempPrefix, AString & path );
 

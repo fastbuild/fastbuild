@@ -417,11 +417,11 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 	}
 
 	Args fullArgs;
+	AStackString<> tmpDirectoryName;
 	AStackString<> tmpFileName;
-	Array< AString > tmpNewDirs;
 	if ( usePreProcessedOutput )
 	{
-		if ( WriteTmpFile( job, tmpFileName, tmpNewDirs ) == false )
+		if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
 		{
 			return NODE_RESULT_FAILED; // WriteTmpFile will have emitted an error
 		}
@@ -458,15 +458,10 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 		FileIO::FileDelete( tmpFileName.Get() );
 	}
 
-	// cleanup temp directories
-	if ( tmpNewDirs.IsEmpty() == false )
+	// cleanup temp directory
+	if ( tmpDirectoryName.IsEmpty() == false )
 	{
-		const size_t numDirs = tmpNewDirs.GetSize();
-		for ( size_t i = 0; i < numDirs; i++ )
-		{
-			// remove directories in reverse order
-			FileIO::DirectoryDelete( tmpNewDirs[numDirs - i - 1] );
-		}
+		FileIO::DirectoryDelete( tmpDirectoryName );
 	}
 
 	if ( result == false )
@@ -1661,9 +1656,15 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
 
 // WriteTmpFile
 //------------------------------------------------------------------------------
-bool ObjectNode::WriteTmpFile( Job * job, AString & tmpFileName, Array< AString > & tmpNewDirs ) const
+bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const
 {
 	ASSERT( job->GetData() && job->GetDataSize() );
+
+	Node * sourceFile = GetSourceFile();
+	uint32_t sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+
+	FileStream tmpFile;
+	AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
 
 	void const * dataToWrite = job->GetData();
 	size_t dataToWriteSize = job->GetDataSize();
@@ -1677,35 +1678,16 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpFileName, Array< AString 
 		dataToWriteSize = c.GetResultSize();
 	}
 
-	Node * sourceFile = GetSourceFile();
-	const AString & sourceFileName = sourceFile->GetName();
-
-	const char * lastSlash = sourceFileName.FindLast( NATIVE_SLASH );
-	lastSlash = lastSlash ? (lastSlash + 1) : sourceFileName.Get();
-
-	const char * firstSlash = sourceFileName.FindFirst( NATIVE_SLASH );
-	firstSlash = firstSlash ? (firstSlash + 1) : sourceFileName.Get();
-
-	AStackString<> fileName( lastSlash );
-	AStackString<> tempSubPath( firstSlash, lastSlash ); // includes last slash
-
-	WorkerThread::GetTempFileDirectory( tmpFileName );
-	tmpFileName += tempSubPath;
-	tmpFileName += fileName;
-
-	// create directory relative to source file path inside temp directory
-	if ( !tempSubPath.IsEmpty() )
+	WorkerThread::GetTempFileDirectory( tmpDirectory );
+	tmpDirectory.AppendFormat( "%08X%c", sourceNameHash, NATIVE_SLASH );
+	if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
 	{
-		AStackString<> tempDirectory( tmpFileName.Get(), tmpFileName.FindLast( NATIVE_SLASH ) + 1 );
-		if ( FileIO::EnsurePathExists( tempDirectory, &tmpNewDirs ) == false )
-		{
-			job->Error( "Failed to create directory for temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr );
-			job->OnSystemError();
-			return NODE_RESULT_FAILED;
-		}
+		job->Error( "Failed to create temp directory '%s' to build '%s' (error %u)", tmpDirectory.Get(), GetName().Get(), Env::GetLastErr );
+		job->OnSystemError();
+		return NODE_RESULT_FAILED;
 	}
-
-	FileStream tmpFile;
+	tmpFileName = tmpDirectory;
+	tmpFileName += fileName;
 	if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false ) 
 	{
 		job->Error( "Failed to create temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr );
