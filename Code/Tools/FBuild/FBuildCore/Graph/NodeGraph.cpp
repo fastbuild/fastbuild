@@ -209,8 +209,8 @@ bool NodeGraph::Load( IOStream & stream, bool & needReparsing )
 		const uint64_t dataHash = xxHash::Calc64( mem.Get(), size );
 		if ( dataHash == m_UsedFiles[ i ].m_DataHash )
 		{
-			// set file modification time to the one saved in the DB to save time on the next run
-			FileIO::SetFileLastWriteTime( fileName, timeStamp );
+			// file didn't change, update stored timestamp to save time on the next run
+			m_UsedFiles[ i ].m_TimeStamp = timeStamp;
 			continue;
 		}
 
