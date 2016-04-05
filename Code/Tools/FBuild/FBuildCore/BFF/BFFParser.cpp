@@ -1739,12 +1739,25 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 					Error::Error_1009_UnknownVariable( startName, nullptr );
 					return false; 
 				}
-				if ( var->IsString() == false )
+				if ( var->IsBool() == true )
+				{
+					output += ( ( var->GetBool() ) ? "true" : "false" );
+				}
+				else if ( var->IsInt() == true )
+				{
+					AStackString<> str;
+					str.Format( "%i", var->GetInt() );
+					output += str;
+				}
+				else if ( var->IsString() == true )
+				{
+					output += var->GetString();
+				}
+				else
 				{
 					Error::Error_1029_VariableForSubstitutionIsNotAString( startName, varName, var->GetType() );
-					return false; 
+					return false;
 				}
-				output += var->GetString();
 				break;
 			}
 			default:
