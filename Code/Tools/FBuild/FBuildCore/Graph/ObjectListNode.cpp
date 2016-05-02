@@ -28,6 +28,7 @@ ObjectListNode::ObjectListNode( const AString & listName,
 						  CompilerNode * compiler,
 						  const AString & compilerArgs,
 						  const AString & compilerArgsDeoptimized,
+						  const AString & compilerInputPath,
 						  const AString & compilerOutputPath,
 						  ObjectNode * precompiledHeader,
 						  const Dependencies & compilerForceUsing,
@@ -57,6 +58,7 @@ ObjectListNode::ObjectListNode( const AString & listName,
 	m_Compiler = compiler;
 	m_CompilerArgs = compilerArgs;
 	m_CompilerArgsDeoptimized = compilerArgsDeoptimized;
+	m_CompilerInputPath = compilerInputPath;
 	m_CompilerOutputPath = compilerOutputPath;
 
     m_Preprocessor     = preprocessor;
@@ -139,7 +141,7 @@ ObjectListNode::~ObjectListNode()
                 #endif
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, dln ) == false )
+				if ( CreateDynamicObjectNode( n, dln->GetPath() ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -168,7 +170,7 @@ ObjectListNode::~ObjectListNode()
 				}
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, nullptr, true ) == false )
+				if ( CreateDynamicObjectNode( n, AString::GetEmpty(), true ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -192,7 +194,7 @@ ObjectListNode::~ObjectListNode()
 				}
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, it->GetDirListOrigin(), false, true ) == false )
+				if ( CreateDynamicObjectNode( n, it->GetDirListOrigin()->GetPath(), false, true ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -201,7 +203,7 @@ ObjectListNode::~ObjectListNode()
         else if ( i->GetNode()->IsAFile() )
 		{
 			// a single file, create the object that will compile it
-			if ( CreateDynamicObjectNode( i->GetNode(), nullptr ) == false )
+			if ( CreateDynamicObjectNode( i->GetNode(), m_CompilerInputPath ) == false )
 			{
 				return false; // CreateDynamicObjectNode will have emitted error
 			}
@@ -335,7 +337,7 @@ void ObjectListNode::GetInputFiles( Array< AString > & files ) const
 
 // CreateDynamicObjectNode
 //------------------------------------------------------------------------------
-bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryListNode * dirNode, bool isUnityNode, bool isIsolatedFromUnityNode )
+bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & baseDir, bool isUnityNode, bool isIsolatedFromUnityNode )
 {
 	const AString & fileName = inputFile->GetName();
 
@@ -349,14 +351,14 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
     // if source comes from a directory listing, use path relative to dirlist base
     // to replicate the folder hierearchy in the output
     AStackString<> subPath;
-    if ( dirNode )
+    if ( baseDir.GetLength() > 0 )
     {
-        const AString & baseDir = dirNode->GetPath();
-        ASSERT( PathUtils::PathBeginsWith( fileName, baseDir ) );
-        if ( PathUtils::PathBeginsWith( fileName, baseDir ) )
+		AString fullBaseDir;
+		NodeGraph::CleanPath(baseDir, fullBaseDir);
+		if (PathUtils::PathBeginsWith( fileName, fullBaseDir ))
         {
             // ... use everything after that
-            subPath.Assign(fileName.Get() + baseDir.GetLength(), lastSlash ); // includes last slash
+			subPath.Assign(fileName.Get() + fullBaseDir.GetLength(), lastSlash); // includes last slash
         }
     }
 
@@ -425,6 +427,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	NODE_LOAD_NODE( CompilerNode,	compilerNode );
 	NODE_LOAD( AStackString<>,	compilerArgs );
 	NODE_LOAD( AStackString<>,	compilerArgsDeoptimized );
+	NODE_LOAD( AStackString<>,	compilerInputPath );
 	NODE_LOAD( AStackString<>,	compilerOutputPath );
 	NODE_LOAD_DEPS( 16,			staticDeps );
 	NODE_LOAD_NODE( Node,		precompiledHeader );
@@ -445,6 +448,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 								compilerNode, 
 								compilerArgs,
 								compilerArgsDeoptimized,
+								compilerInputPath,
 								compilerOutputPath, 
 								precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr,
 								compilerForceUsing,
@@ -477,6 +481,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	NODE_SAVE_NODE( m_Compiler );
 	NODE_SAVE( m_CompilerArgs );
 	NODE_SAVE( m_CompilerArgsDeoptimized );
+	NODE_SAVE( m_CompilerInputPath );
 	NODE_SAVE( m_CompilerOutputPath );
 	NODE_SAVE_DEPS( m_StaticDependencies );
 	NODE_SAVE_NODE( m_PrecompiledHeader );
