@@ -141,14 +141,14 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 
 	const char * bffFile = m_Options.m_ConfigFile.IsEmpty() ? GetDefaultBFFFileName()
 														    : m_Options.m_ConfigFile.Get();
-    if ( nodeGraphDBFile != nullptr )
-    {
-        m_DependencyGraphFile = nodeGraphDBFile;
-    }
-    else
-    {
-        m_DependencyGraphFile.Format("%s.fdb", bffFile);
-    }
+	if ( nodeGraphDBFile != nullptr )
+	{
+		m_DependencyGraphFile = nodeGraphDBFile;
+	}
+	else
+	{
+		m_DependencyGraphFile.Format("%s.fdb", bffFile);
+	}
 
 	if ( m_DependencyGraph->Initialize( bffFile, m_DependencyGraphFile.Get() ) == false )
 	{
@@ -279,9 +279,9 @@ bool FBuild::Build( const Array< AString > & targets )
 //------------------------------------------------------------------------------
 bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 {
-    ASSERT( nodeGraphDBFile != nullptr );
+	ASSERT( nodeGraphDBFile != nullptr );
 
-    PROFILE_FUNCTION
+	PROFILE_FUNCTION
 
 	FLOG_INFO( "Saving DepGraph '%s'", nodeGraphDBFile );
 

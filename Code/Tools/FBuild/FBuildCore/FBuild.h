@@ -113,7 +113,7 @@ private:
 	JobQueue * m_JobQueue;
 	Client * m_Client; // manage connections to worker servers
 
-    AString m_DependencyGraphFile;
+	AString m_DependencyGraphFile;
 	AString m_CachePluginDLL;
 	AString m_CachePath;
 	ICache * m_Cache;
@@ -133,7 +133,7 @@ private:
 	Array< AString > m_WorkerList;
 
 	AString m_OldWorkingDir;
-    
+
 	// a double-null terminated string
 	char *		m_EnvironmentString;
 	uint32_t	m_EnvironmentStringSize; // size excluding last null
