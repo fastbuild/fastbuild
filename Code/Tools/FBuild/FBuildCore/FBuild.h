@@ -44,14 +44,13 @@ public:
 	bool Build( Node * nodeToBuild );
 
 	// after a build we can store progress/parsed rules for next time
-	bool SaveDependencyGraph( const char * nodeGraphDBFile = nullptr ) const;
+	bool SaveDependencyGraph( const char * nodeGraphDBFile ) const;
 
 	const FBuildOptions & GetOptions() const { return m_Options; }
 	NodeGraph & GetDependencyGraph() const { return *m_DependencyGraph; }
 	
 	const AString & GetWorkingDir() const { return m_Options.GetWorkingDir(); }
 
-	static const char * GetDependencyGraphFileName();
 	static const char * GetDefaultBFFFileName();
 
 	const AString & GetCachePath() const { return m_CachePath; }
@@ -114,6 +113,7 @@ private:
 	JobQueue * m_JobQueue;
 	Client * m_Client; // manage connections to worker servers
 
+    AString m_DependencyGraphFile;
 	AString m_CachePluginDLL;
 	AString m_CachePath;
 	ICache * m_Cache;
@@ -133,7 +133,7 @@ private:
 	Array< AString > m_WorkerList;
 
 	AString m_OldWorkingDir;
-
+    
 	// a double-null terminated string
 	char *		m_EnvironmentString;
 	uint32_t	m_EnvironmentStringSize; // size excluding last null

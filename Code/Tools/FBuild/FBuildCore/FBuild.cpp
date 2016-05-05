@@ -141,7 +141,16 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 
 	const char * bffFile = m_Options.m_ConfigFile.IsEmpty() ? GetDefaultBFFFileName()
 														    : m_Options.m_ConfigFile.Get();
-	if ( m_DependencyGraph->Initialize( bffFile, nodeGraphDBFile ) == false )
+    if ( nodeGraphDBFile != nullptr )
+    {
+        m_DependencyGraphFile = nodeGraphDBFile;
+    }
+    else
+    {
+        m_DependencyGraphFile.Format("%s.fdb", bffFile);
+    }
+
+	if ( m_DependencyGraph->Initialize( bffFile, m_DependencyGraphFile.Get() ) == false )
 	{
 		return false;
 	}
@@ -270,9 +279,9 @@ bool FBuild::Build( const Array< AString > & targets )
 //------------------------------------------------------------------------------
 bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 {
-    PROFILE_FUNCTION
+    ASSERT( nodeGraphDBFile != nullptr );
 
-	nodeGraphDBFile = nodeGraphDBFile ? nodeGraphDBFile : GetDependencyGraphFileName();
+    PROFILE_FUNCTION
 
 	FLOG_INFO( "Saving DepGraph '%s'", nodeGraphDBFile );
 
@@ -417,7 +426,7 @@ bool FBuild::Build( Node * nodeToBuild )
 	// - it will record the items that did build, so they won't build again
 	if ( m_Options.m_SaveDBOnCompletion )
 	{
-		SaveDependencyGraph();
+		SaveDependencyGraph(m_DependencyGraphFile.Get());
 	}
 
 	// TODO:C Move this into BuildStats
@@ -566,13 +575,6 @@ void FBuild::UpdateBuildStatus( const Node * node )
 
 	FLog::OutputProgress( timeNow, m_SmoothedProgressCurrent, numJobs, numJobsActive, numJobsDist, numJobsDistActive );
 	m_LastProgressOutputTime = timeNow;
-}
-
-// GetDependencyGraphFileName
-//------------------------------------------------------------------------------
-/*static*/ const char * FBuild::GetDependencyGraphFileName()
-{
-	return "fbuild.fdb";
 }
 
 // GetDefaultBFFFileName
