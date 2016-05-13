@@ -243,20 +243,6 @@ struct VCXProjectNodeComp
 				newFolder.m_Path.SetLength(newFolder.m_Path.GetLength() - 1); // Remove trailing slash
 			}
 
-            // check if this path was already defined
-            {
-                const SLNSolutionFolder * const end2 = folders.End();
-                for ( const SLNSolutionFolder * it2 = folders.Begin() ; it2 != end2 ; ++it2 )
-                {
-                    if ( it2->m_Path == newFolder.m_Path  )
-                    {
-                        // TODO:B custom error
-                        Error::Error_1100_AlreadyDefined( funcStartIter, this, it2->m_Path );
-                        return false;
-                    }
-                }
-            }
-
             // .Projects must be provided
             if ( !GetStringOrArrayOfStringsFromStruct( funcStartIter, s, ".Projects", newFolder.m_ProjectNames ) )
             {
@@ -272,7 +258,32 @@ struct VCXProjectNodeComp
                 }
             }
 
-            folders.Append( newFolder );
+            // check if this path was already defined
+            SLNSolutionFolder * it2 = folders.Begin();
+            const SLNSolutionFolder * const end2 = folders.End();
+            for ( ; it2 != end2 ; ++it2 )
+            {
+                if ( it2->m_Path == newFolder.m_Path  )
+                {
+                    break;
+                }
+            }
+
+            if ( it2 == end2 )
+            {
+                // folders with an empty are considered as root and won't be added
+                // (but the projects declared inside are still added in the solution)
+                if ( false == newFolder.m_Path.IsEmpty() )
+                {
+                    // append the newly declared project :
+                    folders.Append( newFolder );
+                }
+            }
+            else
+            {
+                // merge this declaration with the already existing one :
+                it2->m_ProjectNames.Append( newFolder.m_ProjectNames );
+            }
         }
     }
 
