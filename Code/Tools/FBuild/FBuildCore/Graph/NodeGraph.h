@@ -194,6 +194,7 @@ public:
 										   const Array< AString > & pathsToExclude,
 										   const Array< AString > & files,
 										   const Array< AString > & filesToExclude,
+										   const Array< AString > & patternToExclude,
 										   const AString & rootNamespace,
 										   const AString & projectGuid,
 										   const AString & defaultLanguage,

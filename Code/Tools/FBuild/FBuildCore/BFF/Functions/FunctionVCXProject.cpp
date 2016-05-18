@@ -95,8 +95,10 @@ FunctionVCXProject::FunctionVCXProject()
 	// files and filesToExclude
 	Array< AString > files( 8, true );
 	Array< AString > filesToExclude( 8, true );	
+	Array< AString > patternToExclude(8, true);
 	if ( !GetStrings( funcStartIter, files,				".ProjectFiles", false ) ||
- 		 !GetStrings( funcStartIter, filesToExclude,	".ProjectFilesToExclude", false ) )
+ 		 !GetStrings( funcStartIter, filesToExclude,	".ProjectFilesToExclude", false ) ||
+		 !GetStrings( funcStartIter, patternToExclude,  ".ProjectPatternToExclude", false) )
 	{
 		return false;
 	}
@@ -144,6 +146,7 @@ FunctionVCXProject::FunctionVCXProject()
 	CleanFolderPaths( inputPaths );			// input paths
 	CleanFolderPaths( inputPathsExclude );	// exclude paths
 	CleanFilePaths( files );				// explicit files
+	CleanFilePaths( patternToExclude );		// explicit files
 
 	// per-config options
 	VSProjectConfig baseConfig;
@@ -281,6 +284,7 @@ FunctionVCXProject::FunctionVCXProject()
 												   basePaths,
 												   dirNodes,
 												   inputPathsExclude, // TODO:B Remove this (handled by DirectoryListNode now)
+												patternToExclude,
 												   files,
 												   filesToExclude,
 												   rootNamespace,
