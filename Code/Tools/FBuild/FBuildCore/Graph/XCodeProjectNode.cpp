@@ -131,13 +131,19 @@ XCodeProjectNode::~XCodeProjectNode()
 				//filter the file by pattern
 				const AString * pit = m_PatternToExclude.Begin();
 				const AString * const pend = m_PatternToExclude.End();
+                bool keep = true;
 				for (; pit != pend; ++pit)
 				{
-					if (!PathUtils::IsWildcardMatch(pit->Get(), file.m_Name.Get()))
+					if (PathUtils::IsWildcardMatch(pit->Get(), file.m_Name.Get()))
 					{
-						g.AddFile(file.m_Name);
+                        keep = false;
+                        break;
 					}
 				}
+                if (keep)
+                {
+                    g.AddFile(file.m_Name);
+                }
 			}
 		}
 		else if ( n->IsAFile() )
