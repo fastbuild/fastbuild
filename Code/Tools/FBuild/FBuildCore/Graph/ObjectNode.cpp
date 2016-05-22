@@ -1658,7 +1658,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 	tmpDirectory.AppendFormat( "%08X%c", sourceNameHash, NATIVE_SLASH );
 	if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
 	{
-		job->Error( "Failed to create temp directory '%s' to build '%s' (error %u)", tmpDirectory.Get(), GetName().Get(), Env::GetLastErr );
+		job->Error( "Failed to create temp directory '%s' to build '%s' (error %u)", tmpDirectory.Get(), GetName().Get(), Env::GetLastErr() );
 		job->OnSystemError();
 		return NODE_RESULT_FAILED;
 	}
