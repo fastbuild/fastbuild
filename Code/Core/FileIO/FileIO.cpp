@@ -62,6 +62,29 @@
 #endif
 }
 
+// Delete directory
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::DirectoryDelete( const AString & path )
+{
+#if defined( __WINDOWS__ )
+	BOOL result = RemoveDirectory( path.Get() );
+	if ( result == FALSE )
+	{
+		return false; // failed to delete
+	}
+	return true; // delete ok
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+	int result = rmdir( path.Get() );
+	if ( result != 0 )
+	{
+		return false; // failed to delete
+	}
+	return true; // delete ok
+#else
+	#error Unknown platform
+#endif
+}
+
 // Delete
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::FileDelete( const char * fileName )

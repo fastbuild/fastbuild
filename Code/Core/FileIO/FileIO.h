@@ -22,6 +22,7 @@ public:
 	static bool FileDelete( const char * fileName );
 	static bool FileCopy( const char * srcFileName, const char * dstFileName, bool allowOverwrite = true );
 	static bool FileMove( const AString & srcFileName, const AString & dstFileName );
+	static bool DirectoryDelete( const AString & path );
 
 	// directory listing
 	static bool GetFiles( const AString & path,

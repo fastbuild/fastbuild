@@ -417,10 +417,11 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 	}
 
 	Args fullArgs;
+	AStackString<> tmpDirectoryName;
 	AStackString<> tmpFileName;
 	if ( usePreProcessedOutput )
 	{
-		if ( WriteTmpFile( job, tmpFileName ) == false )
+		if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
 		{
 			return NODE_RESULT_FAILED; // WriteTmpFile will have emitted an error
 		}
@@ -455,6 +456,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 	if ( tmpFileName.IsEmpty() == false )
 	{
 		FileIO::FileDelete( tmpFileName.Get() );
+	}
+
+	// cleanup temp directory
+	if ( tmpDirectoryName.IsEmpty() == false )
+	{
+		FileIO::DirectoryDelete( tmpDirectoryName );
 	}
 
 	if ( result == false )
@@ -1625,11 +1632,12 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
 
 // WriteTmpFile
 //------------------------------------------------------------------------------
-bool ObjectNode::WriteTmpFile( Job * job, AString & tmpFileName ) const
+bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const
 {
 	ASSERT( job->GetData() && job->GetDataSize() );
 
 	Node * sourceFile = GetSourceFile();
+	uint32_t sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
 
 	FileStream tmpFile;
 	AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
@@ -1646,7 +1654,16 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpFileName ) const
 		dataToWriteSize = c.GetResultSize();
 	}
 
-	WorkerThread::CreateTempFilePath( fileName.Get(), tmpFileName );
+	WorkerThread::GetTempFileDirectory( tmpDirectory );
+	tmpDirectory.AppendFormat( "%08X%c", sourceNameHash, NATIVE_SLASH );
+	if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
+	{
+		job->Error( "Failed to create temp directory '%s' to build '%s' (error %u)", tmpDirectory.Get(), GetName().Get(), Env::GetLastErr );
+		job->OnSystemError();
+		return NODE_RESULT_FAILED;
+	}
+	tmpFileName = tmpDirectory;
+	tmpFileName += fileName;
 	if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false ) 
 	{
 		job->Error( "Failed to create temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr );

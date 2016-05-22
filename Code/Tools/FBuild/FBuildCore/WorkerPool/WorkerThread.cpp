@@ -216,19 +216,30 @@ void WorkerThread::WaitForStop()
 	return false; // no work to do
 }
 
-// CreateTempFile
+
+// GetTempFileDirectory
 //------------------------------------------------------------------------------
-/*static*/ void WorkerThread::CreateTempFilePath( const char * fileName,
-												  AString & tmpFileName )
+/*static*/ void WorkerThread::GetTempFileDirectory( AString & tmpFileDirectory )
 {
-	ASSERT( fileName );
 	ASSERT( !s_TmpRoot.IsEmpty() );
 
 	// get the index for the worker thread
 	// (for the main thread, this will be 0 which is OK)
 	const uint32_t threadIndex = WorkerThread::GetThreadIndex();
 
-	tmpFileName.Format( "%score_%u%c%s", s_TmpRoot.Get(), threadIndex, NATIVE_SLASH, fileName );
+	tmpFileDirectory.Format( "%score_%u%c", s_TmpRoot.Get(), threadIndex, NATIVE_SLASH );
+
+}
+
+// CreateTempFile
+//------------------------------------------------------------------------------
+/*static*/ void WorkerThread::CreateTempFilePath( const char * fileName,
+												  AString & tmpFileName )
+{
+	ASSERT( fileName );
+	
+	GetTempFileDirectory( tmpFileName );
+	tmpFileName += fileName;
 }
 
 // CreateTempFile

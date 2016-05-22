@@ -129,7 +129,7 @@ private:
 	void ExpandTokenList( const Dependencies & nodes, Args & fullArgs, const AString & pre, const AString & post ) const;
 	bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
 	void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
-	bool WriteTmpFile( Job * job, AString & tmpFileName ) const;
+	bool WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
 	bool BuildFinalOutput( Job * job, const Args & fullArgs ) const;
 
 	inline bool GetFlag( uint32_t flag ) const { return ( ( m_Flags & flag ) != 0 ); }
