@@ -15,6 +15,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 
 // Core
 #include "Core/FileIO/IOStream.h"
@@ -37,7 +38,8 @@ ObjectListNode::ObjectListNode( const AString & listName,
 						  bool allowDistribution,
 						  bool allowCaching,
                           CompilerNode * preprocessor,
-                          const AString &preprocessorArgs )
+                          const AString &preprocessorArgs,
+						  const AString & baseDirectory )
 : Node( listName, Node::OBJECT_LIST_NODE, Node::FLAG_NONE )
 , m_CompilerForceUsing( compilerForceUsing )
 , m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
@@ -63,6 +65,8 @@ ObjectListNode::ObjectListNode( const AString & listName,
     m_PreprocessorArgs = preprocessorArgs;
 
 	m_PreBuildDependencies = preBuildDependencies;
+
+	m_BaseDirectory = baseDirectory;
 }
 
 // DESTRUCTOR
@@ -358,7 +362,15 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
             // ... use everything after that
             subPath.Assign(fileName.Get() + baseDir.GetLength(), lastSlash ); // includes last slash
         }
-    }
+	}
+	else
+	{
+		if ( !m_BaseDirectory.IsEmpty() && PathUtils::PathBeginsWith( fileName, m_BaseDirectory ) )
+		{
+			// ... use everything after that
+			subPath.Assign( fileName.Get() + m_BaseDirectory.GetLength(), lastSlash ); // includes last slash
+		}
+	}
 
 	AStackString<> fileNameOnly( lastSlash, lastDot );
 	AStackString<> objFile( m_CompilerOutputPath );
@@ -438,6 +450,8 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	NODE_LOAD( bool,			allowCaching );
 	NODE_LOAD_NODE( CompilerNode, preprocessorNode );
 	NODE_LOAD( AStackString<>,	preprocessorArgs );
+	NODE_LOAD( AStackString<>, baseDirectory );
+	
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	ObjectListNode * n = ng.CreateObjectListNode( name, 
@@ -454,7 +468,8 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 								allowDistribution, 
 								allowCaching,
 								preprocessorNode,
-								preprocessorArgs );
+								preprocessorArgs,
+								baseDirectory );
 	n->m_ObjExtensionOverride = objExtensionOverride;
     n->m_CompilerOutputPrefix = compilerOutputPrefix;
 
@@ -490,6 +505,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	NODE_SAVE( m_AllowCaching );
 	NODE_SAVE_NODE( m_Preprocessor );
 	NODE_SAVE( m_PreprocessorArgs );
+	NODE_SAVE( m_BaseDirectory );
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
 	// but we can't right now because we rely on the nodes we depend on 
@@ -512,5 +528,6 @@ const char * ObjectListNode::GetObjExtension() const
 	}
 	return m_ObjExtensionOverride.Get();
 }
+
 
 //------------------------------------------------------------------------------

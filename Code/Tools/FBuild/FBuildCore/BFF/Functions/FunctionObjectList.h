@@ -22,6 +22,8 @@ public:
 	explicit		FunctionObjectList();
 	inline virtual ~FunctionObjectList() {}
 
+	bool GetBaseDirectory( const BFFIterator & iter, AStackString<> & baseDirectory ) const;
+
 protected:
 	virtual bool AcceptsHeader() const;
 	virtual bool NeedsHeader() const;

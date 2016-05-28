@@ -658,7 +658,8 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
 											bool allowDistribution,
 											bool allowCaching,
                                             CompilerNode * preprocessor,
-                                            const AString & preprocessorArgs )
+                                            const AString & preprocessorArgs,
+											const AString & baseDirectory )
 {
 	ASSERT( Thread::IsMainThread() );
 
@@ -683,7 +684,8 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
 										  allowDistribution,
 										  allowCaching,
                                           preprocessor,
-                                          preprocessorArgs ) );
+                                          preprocessorArgs,
+										  baseDirectory ) );
 	AddNode( node );
 	return node;
 }
@@ -967,7 +969,8 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
 												  bool allowDistribution,
 												  bool allowCaching,
                                                   CompilerNode * preprocessor,
-                                                  const AString & preprocessorArgs )
+                                                  const AString & preprocessorArgs,
+												  const AString & baseDirectory )
 {
 	ASSERT( Thread::IsMainThread() );
 
@@ -985,7 +988,8 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
 												allowDistribution,
 												allowCaching,
                                                 preprocessor,
-                                                preprocessorArgs ) );
+                                                preprocessorArgs,
+												baseDirectory ) );
 	AddNode( node );
 	return node;
 

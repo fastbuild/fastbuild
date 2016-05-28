@@ -243,6 +243,13 @@ FunctionLibrary::FunctionLibrary()
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, outputLib->GetString() );
 		return false;
 	}
+
+	AStackString<> baseDirectory;
+	if ( !GetBaseDirectory( funcStartIter, baseDirectory ) )
+	{
+		return false; // GetBaseDirectory will have emitted error
+	}
+
 	LibraryNode * libNode = ng.CreateLibraryNode( outputLib->GetString(),
 						  staticDeps,
 						  compilerNode,
@@ -261,7 +268,8 @@ FunctionLibrary::FunctionLibrary()
 						  allowDistribution,
 						  allowCaching,
                           preprocessorNode,
-                          preprocessorOptions ? preprocessorOptions->GetString() : AString::GetEmpty() );
+                          preprocessorOptions ? preprocessorOptions->GetString() : AString::GetEmpty(),
+						  baseDirectory );
 	if ( compilerOutputExtension )
 	{
 		libNode->m_ObjExtensionOverride = compilerOutputExtension->GetString();
