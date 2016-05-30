@@ -21,6 +21,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
@@ -55,6 +56,7 @@ bool BFFParser::Parse( const char * dataWithSentinel,
 					   uint32_t sizeExcludingSentinel, 
 					   const char * fileName,
 					   uint64_t fileTimeStamp,
+					   uint64_t fileDataHash,
 					   bool pushStackFrame )
 {
 	// data should be 1 bytes larger than size, with a sentinel
@@ -65,7 +67,7 @@ bool BFFParser::Parse( const char * dataWithSentinel,
 		// NOTE: filename may or may not be clean already - ok to do twice
 		AStackString<> fileNameClean;
 		NodeGraph::CleanPath( AStackString<>( fileName ), fileNameClean );
-		FBuild::Get().GetDependencyGraph().AddUsedFile( fileNameClean, fileTimeStamp );
+		FBuild::Get().GetDependencyGraph().AddUsedFile( fileNameClean, fileTimeStamp, fileDataHash );
 	}
 
 	// parse it
@@ -782,10 +784,11 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
 		Error::Error_1033_ErrorReadingInclude( stringStart, include, Env::GetLastErr() );
 		return false;
 	}
+	const uint64_t includeDataHash = xxHash::Calc64( mem.Get(), fileSize );
 	mem.Get()[ fileSize ] = '\000'; // sentinel
 	BFFParser parser;
 	const bool pushStackFrame = false; // include is treated as if injected at this point
-	return parser.Parse( mem.Get(), fileSize, includeToUseClean.Get(), includeTimeStamp, pushStackFrame ); 
+	return parser.Parse( mem.Get(), fileSize, includeToUseClean.Get(), includeTimeStamp, includeDataHash, pushStackFrame );
 }
 
 // ParseDefineDirective

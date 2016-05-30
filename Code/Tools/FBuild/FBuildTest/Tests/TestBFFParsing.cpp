@@ -86,7 +86,7 @@ void TestBFFParsing::Empty() const
 	// an empty file should pass without problem
 	char buffer[ 1 ] = { '\000' }; // post data sentinel
 	BFFParser p;
-	TEST_ASSERT( p.Parse( buffer, 0, "empty.bff", 0 ) );
+	TEST_ASSERT( p.Parse( buffer, 0, "empty.bff", 0, 0 ) );
 }
 
 // AlmostEmpty
@@ -96,7 +96,7 @@ void TestBFFParsing::AlmostEmpty() const
 	// an empty file should pass without problem
 	const char * buffer = "\r\n\000"; // empty line + post data sentinel
 	BFFParser p;
-	TEST_ASSERT( p.Parse( buffer, 2, "empty.bff", 0 ) );
+	TEST_ASSERT( p.Parse( buffer, 2, "empty.bff", 0, 0 ) );
 }
 
 // Comments
@@ -196,7 +196,7 @@ void TestBFFParsing::Parse( const char * fileName, bool expectFailure ) const
 
 	FBuild fBuild;
 	BFFParser p;
-	bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0 );
+	bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
 	if ( expectFailure )
 	{
 		TEST_ASSERT( parseResult == false ); // Make sure it failed as expected

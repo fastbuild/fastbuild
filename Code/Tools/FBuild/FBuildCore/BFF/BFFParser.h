@@ -33,6 +33,7 @@ public:
 			    uint32_t sizeExcludingSentinel,
 				const char * fileName,
 				uint64_t fileTimeStamp,
+				uint64_t fileDataHash,
 				bool pushStackFrame = true );
 	bool Parse( BFFIterator & iterator );
 
