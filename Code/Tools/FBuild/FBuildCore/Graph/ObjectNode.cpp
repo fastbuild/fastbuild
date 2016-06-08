@@ -815,18 +815,18 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
 		// 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
 		// statements are truncated
-		// 2) code consuming the windows runtime cannot be cached due to preprocessing weirdness
+		// 2) code consuming the windows runtime cannot be distributed due to preprocessing weirdness
 		// 3) pch files are machine specific
 		// 4) user only wants preprocessor step executed
-		if ( !usingWinRT && !usingCLR && !usingPreprocessorOnly && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
+		if (!usingCLR && !usingPreprocessorOnly && !(flags & ObjectNode::FLAG_CREATING_PCH))
 		{
-			if ( isDistributableCompiler )
+			if (isDistributableCompiler && !usingWinRT)
 			{
 				flags |= ObjectNode::FLAG_CAN_BE_DISTRIBUTED;
 			}
 
 			// TODO:A Support caching of 7i format
-			if ( ( flags & ObjectNode::FLAG_USING_PDB ) == 0 )
+			if ((flags & ObjectNode::FLAG_USING_PDB) == 0)
 			{
 				flags |= ObjectNode::FLAG_CAN_BE_CACHED;
 			}
@@ -1334,6 +1334,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 				{
 					continue; // skip this token in both cases
 				}
+			}
+		}
+
+		if (pass == PASS_PREPROCESSOR_ONLY)
+		{
+			//Strip /ZW
+			if (StripToken("/ZW", token))
+			{
+				fullArgs += "/D__cplusplus_winrt ";
+				continue;
 			}
 		}
 
