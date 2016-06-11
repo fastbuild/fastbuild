@@ -430,7 +430,7 @@ int Main(int argc, char * argv[])
 	}
 
 	// load the dependency graph if available
-	if ( !fBuild.Initialize() )
+	if ( !fBuild.Initialize( FBuild::GetDependencyGraphFileName() ) )
 	{
 		if ( sharedData )
 		{
