@@ -141,7 +141,22 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 
 	const char * bffFile = m_Options.m_ConfigFile.IsEmpty() ? GetDefaultBFFFileName()
 														    : m_Options.m_ConfigFile.Get();
-	if ( m_DependencyGraph->Initialize( bffFile, nodeGraphDBFile ) == false )
+
+	if ( nodeGraphDBFile != nullptr )
+	{
+		m_DependencyGraphFile = nodeGraphDBFile;
+	}
+	else
+	{
+		m_DependencyGraphFile = bffFile;
+		if ( m_DependencyGraphFile.EndsWithI( ".bff" ) )
+		{
+			m_DependencyGraphFile.SetLength( m_DependencyGraphFile.GetLength() - 4 );
+		}
+		m_DependencyGraphFile += ".fdb";
+	}
+
+	if ( m_DependencyGraph->Initialize( bffFile, m_DependencyGraphFile.Get() ) == false )
 	{
 		return false;
 	}
@@ -270,9 +285,9 @@ bool FBuild::Build( const Array< AString > & targets )
 //------------------------------------------------------------------------------
 bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 {
-    PROFILE_FUNCTION
+	ASSERT( nodeGraphDBFile != nullptr );
 
-	nodeGraphDBFile = nodeGraphDBFile ? nodeGraphDBFile : GetDependencyGraphFileName();
+	PROFILE_FUNCTION
 
 	FLOG_INFO( "Saving DepGraph '%s'", nodeGraphDBFile );
 
@@ -285,6 +300,19 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 	// We'll save to a tmp file first
 	AStackString<> tmpFileName( nodeGraphDBFile );
 	tmpFileName += ".tmp";
+
+	// Ensure output dir exists where we'll save the DB
+	const char * lastSlash = tmpFileName.FindLast( '/' );
+	lastSlash = lastSlash ? lastSlash : tmpFileName.FindLast( '\\' );
+	if ( lastSlash )
+	{
+		AStackString<> pathOnly( tmpFileName.Get(), lastSlash );
+		if ( FileIO::EnsurePathExists( pathOnly ) == false )
+		{
+			FLOG_ERROR( "Failed to create directory for DepGraph saving '%s'", pathOnly.Get() );
+			return false;
+		}
+	}
 
 	// try to open the file
 	FileStream fileStream;
@@ -417,7 +445,7 @@ bool FBuild::Build( Node * nodeToBuild )
 	// - it will record the items that did build, so they won't build again
 	if ( m_Options.m_SaveDBOnCompletion )
 	{
-		SaveDependencyGraph();
+		SaveDependencyGraph( m_DependencyGraphFile.Get() );
 	}
 
 	// TODO:C Move this into BuildStats
@@ -566,13 +594,6 @@ void FBuild::UpdateBuildStatus( const Node * node )
 
 	FLog::OutputProgress( timeNow, m_SmoothedProgressCurrent, numJobs, numJobsActive, numJobsDist, numJobsDistActive );
 	m_LastProgressOutputTime = timeNow;
-}
-
-// GetDependencyGraphFileName
-//------------------------------------------------------------------------------
-/*static*/ const char * FBuild::GetDependencyGraphFileName()
-{
-	return "fbuild.fdb";
 }
 
 // GetDefaultBFFFileName

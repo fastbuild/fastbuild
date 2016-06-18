@@ -88,6 +88,7 @@ bool NodeGraph::Initialize( const char * bffFile,
     PROFILE_FUNCTION
 
 	ASSERT( bffFile ); // must be supplied (or left as default)
+	ASSERT( nodeGraphDBFile ); // must be supplied (or left as default)
 
 	ASSERT( m_UsedFiles.IsEmpty() ); // NodeGraph cannot be recycled
 

@@ -315,7 +315,7 @@ void TestGraph::TestSerialization() const
 		options.m_ConfigFile = "fbuild.bff";
 		options.SetWorkingDir( codeDir );
 		FBuild fBuild( options );
-		TEST_ASSERT( fBuild.Initialize() );
+		TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
 		TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
 		TEST_ASSERT( FileIO::FileExists( dbFile1 ) );
 	}
