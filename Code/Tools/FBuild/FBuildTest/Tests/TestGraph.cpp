@@ -132,7 +132,7 @@ void TestGraph::TestNodeTypes() const
 		Dependencies nodes( 1, false );
 		nodes.Append( Dependency( fn ) );
 		Node * n = ng.CreateLibraryNode( AStackString<>( "lib" ), nodes, cn,
-										 AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(),
+										 AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(),
 										 AString::GetEmpty(), AString::GetEmpty(), 0,
 										 nullptr, 
 										 Dependencies(),

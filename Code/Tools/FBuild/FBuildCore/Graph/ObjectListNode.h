@@ -26,6 +26,7 @@ public:
 							 CompilerNode * compiler,
 							 const AString & compilerArgs,
 							 const AString & compilerArgsDeoptimized,
+							 const AString & compilerInputPath,
 							 const AString & compilerOutputPath,
 							 ObjectNode * precompiledHeader,
 							 const Dependencies & compilerForceUsing,
@@ -59,11 +60,12 @@ protected:
 	virtual BuildResult DoBuild( Job * job ) override;
 
 	// internal helpers
-	bool CreateDynamicObjectNode( Node * inputFile, const DirectoryListNode * dirNode, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
+	bool CreateDynamicObjectNode( Node * inputFile, const AString & baseDir, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
 
 	CompilerNode *	m_Compiler;
 	AString			m_CompilerArgs;
 	AString			m_CompilerArgsDeoptimized;
+	AString			m_CompilerInputPath;
 	AString			m_CompilerOutputPath;
 	Dependencies	m_CompilerForceUsing;
 	ObjectNode *	m_PrecompiledHeader;

@@ -26,6 +26,7 @@ public:
 						  CompilerNode * compiler,
 						  const AString & compilerArgs,
 						  const AString & compilerArgsDeoptimized,
+						  const AString & compilerInputPath,
 						  const AString & compilerOutputPath,
 						  const AString & librarian,
 						  const AString & librarianArgs,

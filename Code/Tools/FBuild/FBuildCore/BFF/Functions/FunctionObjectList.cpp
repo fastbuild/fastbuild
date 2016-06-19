@@ -51,12 +51,14 @@ FunctionObjectList::FunctionObjectList()
 	const BFFVariable * compiler;
 	const BFFVariable * compilerOptions;
 	AStackString<> compilerOptionsDeoptimized;
+	AStackString<> compilerInputPath;
 	AStackString<> compilerOutputPath;
     AStackString<> compilerOutputPrefix;
 	const BFFVariable * compilerOutputExtension;
 	if ( !GetString( funcStartIter, compiler, ".Compiler", true ) ||
 		 !GetString( funcStartIter, compilerOptions, ".CompilerOptions", true ) ||
 		 !GetString( funcStartIter, compilerOptionsDeoptimized, ".CompilerOptionsDeoptimized", false ) ||
+		 !GetString( funcStartIter, compilerInputPath, ".CompilerInputPath", false ) ||
 		 !GetString( funcStartIter, compilerOutputPath, ".CompilerOutputPath", true ) ||
 		 !GetString( funcStartIter, compilerOutputPrefix, ".CompilerOutputPrefix", false ) ||
 		 !GetString( funcStartIter, compilerOutputExtension, ".CompilerOutputExtension", false ) )
@@ -64,7 +66,8 @@ FunctionObjectList::FunctionObjectList()
 		return false;
 	}
 
-    PathUtils::FixupFolderPath( compilerOutputPath );
+	PathUtils::FixupFolderPath( compilerInputPath );
+	PathUtils::FixupFolderPath( compilerOutputPath );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
@@ -225,6 +228,7 @@ FunctionObjectList::FunctionObjectList()
 												  compilerNode,
 												  compilerOptions->GetString(),
 												  compilerOptionsDeoptimized,
+												  compilerInputPath,
 												  compilerOutputPath,
 												  precompiledHeaderNode,
 												  compilerForceUsing,

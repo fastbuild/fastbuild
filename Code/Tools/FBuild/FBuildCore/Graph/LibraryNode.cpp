@@ -32,6 +32,7 @@ LibraryNode::LibraryNode( const AString & libraryName,
 						  CompilerNode * compiler,
 						  const AString & compilerArgs,
 						  const AString & compilerArgsDeoptimized,
+						  const AString & compilerInputPath,
 						  const AString & compilerOutputPath,
 						  const AString & librarian,
 						  const AString & librarianArgs,
@@ -52,6 +53,7 @@ LibraryNode::LibraryNode( const AString & libraryName,
                   compiler,
                   compilerArgs,
                   compilerArgsDeoptimized,
+				  compilerInputPath,
                   compilerOutputPath,
                   precompiledHeader,
                   compilerForceUsing,
@@ -298,6 +300,7 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 	NODE_LOAD_NODE( CompilerNode,	compilerNode );
 	NODE_LOAD( AStackString<>,	compilerArgs );
 	NODE_LOAD( AStackString<>,	compilerArgsDeoptimized );
+	NODE_LOAD( AStackString<>,	compilerInputPath );
 	NODE_LOAD( AStackString<>,	compilerOutputPath );
 	NODE_LOAD_DEPS( 16,			staticDeps );
 	NODE_LOAD_NODE( Node,		precompiledHeader );
@@ -324,7 +327,8 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 								 compilerNode, 
 								 compilerArgs,
 								 compilerArgsDeoptimized,
-								 compilerOutputPath, 
+								 compilerInputPath,
+								 compilerOutputPath,
 								 librarianPath, 
 								 librarianArgs,
 								 flags,

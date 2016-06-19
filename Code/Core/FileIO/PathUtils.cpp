@@ -26,6 +26,27 @@
 	return false;
 }
 
+// GetDirPart
+//------------------------------------------------------------------------------
+/*static*/ void PathUtils::GetDirPart( const AString & path, AString & result )
+{
+	result.Assign(path);
+
+	if (!PathUtils::IsFolderPath(result))
+	{
+		PathUtils::FixupFilePath(result);
+
+		char * lastSep = result.FindLast(NATIVE_SLASH);
+		// + 1 to keep the separator
+		size_t truncatedLength = lastSep - result.Get() + 1;
+		result.SetLength(static_cast<uint32_t>(truncatedLength));
+	}
+	else
+	{
+		PathUtils::FixupFolderPath(result);
+	}
+}
+
 // IsfullPath
 //------------------------------------------------------------------------------
 /*static*/ bool PathUtils::IsFullPath( const AString & path )

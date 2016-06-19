@@ -40,6 +40,7 @@ public:
 	static bool IsWildcardMatch( const char * pattern, const char * path );
     static bool PathBeginsWith( const AString & cleanPath, const AString & cleanSubPath );
     static bool PathEndsWithFile( const AString & cleanPath, const AString & fileName );
+	static void GetDirPart( const AString & path, AString & result );
 
 	// Cleanup Helpers
 	//----------------

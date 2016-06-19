@@ -1414,7 +1414,64 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 continue;
             }
         }
-				
+
+		// Make sure debug and asm output has a dir or cl.exe will cry.
+		if (isMSVC)
+		{
+			if (pass == PASS_COMPILE)
+			{
+				// Remote compilation writes to a temp pdb
+				if (job->IsLocal() == true)
+				{
+					if (token.BeginsWith("/Fd"))
+					{
+						AString pdbPath;
+						if (token.GetLength() > 3)
+						{
+							pdbPath.Assign(static_cast<const char *>(token.Get() + 3));
+							pdbPath.Replace("\"", "");   // Strip any quotes.
+						}
+						else if (i + 1 < numTokens && !tokens[i + 1].BeginsWith("/"))
+						{
+							pdbPath.Assign(tokens[i + 1]);
+						}
+
+						if (!pdbPath.IsEmpty())
+						{
+							AStackString< 512 > fullPath;
+							AString pdbDir;
+							PathUtils::GetDirPart(pdbPath, pdbDir);
+							NodeGraph::CleanPath(pdbDir, fullPath);
+							FileIO::EnsurePathExists(fullPath);
+						}
+					}
+
+					if (token.BeginsWith("/Fa"))
+					{
+						AString asmPath;
+						if (token.GetLength() > 3)
+						{
+							asmPath.Assign(static_cast<const char *>(token.Get() + 3));
+							asmPath.Replace("\"", "");   // Strip any quotes.
+						}
+						else if (i + 1 < numTokens && !tokens[i + 1].BeginsWith("/"))
+						{
+							asmPath.Assign(tokens[i + 1]);
+						}
+
+						if (!asmPath.IsEmpty())
+						{
+							AStackString< 512 > fullPath;
+							AString asmDir;
+							PathUtils::GetDirPart(asmPath, asmDir);
+							NodeGraph::CleanPath(asmDir, fullPath);
+							FileIO::EnsurePathExists(fullPath);
+						}
+					}
+				}
+			}
+		}
+
 		// untouched token
 		fullArgs += token;
 		fullArgs.AddDelimiter();
