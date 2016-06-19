@@ -55,7 +55,6 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 76 };
 
 	bool IsValid() const
 	{
@@ -235,7 +234,11 @@ public:
 
 	void DoBuildPass( Node * nodeToBuild );
 
+	static void CleanPath( AString & name );
 	static void CleanPath( const AString & name, AString & fullPath );
+	#if defined( ASSERTS_ENABLED )
+		static bool IsCleanPath( const AString & path );
+	#endif
 
 	// as BFF files are encountered during parsing, we track them
 	void AddUsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash );
@@ -278,10 +281,6 @@ private:
 	static void SaveRecurse( IOStream & stream, Node * node, Array< bool > & savedNodeFlags );
 	static void SaveRecurse( IOStream & stream, const Dependencies & dependencies, Array< bool > & savedNodeFlags );
 	bool LoadNode( IOStream & stream );
-
-	#if defined( ASSERTS_ENABLED )
-		static bool IsCleanPath( const AString & path );
-	#endif
 
 	enum { NODEMAP_TABLE_SIZE = 65536 };
 	Node *			m_NodeMap[ NODEMAP_TABLE_SIZE ];

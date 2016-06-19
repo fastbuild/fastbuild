@@ -39,7 +39,7 @@ ObjectListNode::ObjectListNode( const AString & listName,
 						  bool allowDistribution,
 						  bool allowCaching,
                           CompilerNode * preprocessor,
-                          const AString &preprocessorArgs,
+                          const AString & preprocessorArgs,
 						  const AString & baseDirectory )
 : Node( listName, Node::OBJECT_LIST_NODE, Node::FLAG_NONE )
 , m_CompilerForceUsing( compilerForceUsing )
@@ -249,6 +249,24 @@ ObjectListNode::~ObjectListNode()
 		return false;
 	}
 
+	if ( m_ExtraASMPath.IsEmpty() == false )
+	{
+		if ( !FileIO::EnsurePathExists( m_ExtraASMPath ) )
+		{
+			FLOG_ERROR( "Failed to create folder for .asm file '%s'", m_ExtraASMPath.Get() );
+			return false;
+		}
+	}
+
+	if ( m_ExtraPDBPath.IsEmpty() == false )
+	{
+		if ( !FileIO::EnsurePathExists( m_ExtraPDBPath ) )
+		{
+			FLOG_ERROR( "Failed to create folder for .pdb file '%s'", m_ExtraPDBPath.Get() );
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -355,14 +373,13 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
     // if source comes from a directory listing, use path relative to dirlist base
     // to replicate the folder hierearchy in the output
     AStackString<> subPath;
-    if ( baseDir.GetLength() > 0 )
+    if ( baseDir.IsEmpty() == false )
     {
-		AString fullBaseDir;
-		NodeGraph::CleanPath(baseDir, fullBaseDir);
-		if (PathUtils::PathBeginsWith( fileName, fullBaseDir ))
+		ASSERT( NodeGraph::IsCleanPath( baseDir ) );
+		if ( PathUtils::PathBeginsWith( fileName, baseDir ) )
         {
             // ... use everything after that
-			subPath.Assign(fileName.Get() + fullBaseDir.GetLength(), lastSlash); // includes last slash
+			subPath.Assign( fileName.Get() + baseDir.GetLength(), lastSlash ); // includes last slash
         }
 	}
 	else
@@ -453,8 +470,9 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
 	NODE_LOAD( bool,			allowCaching );
 	NODE_LOAD_NODE( CompilerNode, preprocessorNode );
 	NODE_LOAD( AStackString<>,	preprocessorArgs );
-	NODE_LOAD( AStackString<>, baseDirectory );
-	
+	NODE_LOAD( AStackString<>,  baseDirectory );
+	NODE_LOAD( AStackString<>,	extraPDBPath );
+	NODE_LOAD( AStackString<>,  extraASMPath );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	ObjectListNode * n = ng.CreateObjectListNode( name, 
@@ -476,6 +494,8 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
 								baseDirectory );
 	n->m_ObjExtensionOverride = objExtensionOverride;
     n->m_CompilerOutputPrefix = compilerOutputPrefix;
+    n->m_ExtraPDBPath = extraPDBPath;
+    n->m_ExtraASMPath = extraASMPath;
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
 	// but we can't right now because we rely on the nodes we depend on 
@@ -511,6 +531,8 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
 	NODE_SAVE_NODE( m_Preprocessor );
 	NODE_SAVE( m_PreprocessorArgs );
 	NODE_SAVE( m_BaseDirectory );
+	NODE_SAVE( m_ExtraPDBPath );
+	NODE_SAVE( m_ExtraASMPath );
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
 	// but we can't right now because we rely on the nodes we depend on 
@@ -533,6 +555,5 @@ const char * ObjectListNode::GetObjExtension() const
 	}
 	return m_ObjExtensionOverride.Get();
 }
-
 
 //------------------------------------------------------------------------------

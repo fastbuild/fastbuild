@@ -74,8 +74,13 @@ FunctionLibrary::FunctionLibrary()
 		return false;
 	}
 
-	PathUtils::FixupFolderPath( compilerInputPath );
-	PathUtils::FixupFolderPath( compilerOutputPath );
+	if ( !compilerInputPath.IsEmpty() )
+	{
+		AStackString<> tmp;
+		NodeGraph::CleanPath( compilerInputPath, tmp );
+		compilerInputPath = tmp;
+	}
+    PathUtils::FixupFolderPath( compilerOutputPath );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
@@ -253,6 +258,9 @@ FunctionLibrary::FunctionLibrary()
 		return false; // GetBaseDirectory will have emitted error
 	}
 
+	AStackString<> extraPDBPath, extraASMPath;
+	GetExtraOutputPaths( compilerOptions->GetString(), extraPDBPath, extraASMPath );
+
 	LibraryNode * libNode = ng.CreateLibraryNode( outputLib->GetString(),
 						  staticDeps,
 						  compilerNode,
@@ -279,6 +287,8 @@ FunctionLibrary::FunctionLibrary()
 		libNode->m_ObjExtensionOverride = compilerOutputExtension->GetString();
 	}
     libNode->m_CompilerOutputPrefix = compilerOutputPrefix;
+	libNode->m_ExtraPDBPath = extraPDBPath;
+	libNode->m_ExtraASMPath = extraASMPath;
 
 	return ProcessAlias( funcStartIter, libNode );
 }

@@ -78,6 +78,8 @@ protected:
 	CompilerNode *	m_Preprocessor;
 	AString			m_PreprocessorArgs;
 	AString			m_BaseDirectory;
+	AString			m_ExtraPDBPath;
+	AString			m_ExtraASMPath;
 };
 
 //------------------------------------------------------------------------------

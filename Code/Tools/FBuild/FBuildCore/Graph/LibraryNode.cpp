@@ -46,7 +46,7 @@ LibraryNode::LibraryNode( const AString & libraryName,
 						  bool allowDistribution,
 						  bool allowCaching,
                           CompilerNode * preprocessor,
-                          const AString &preprocessorArgs,
+                          const AString & preprocessorArgs,
 						  const AString & baseDirectory )
 : ObjectListNode( libraryName,
                   inputNodes,
@@ -313,8 +313,10 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 	NODE_LOAD( bool,			allowDistribution );
 	NODE_LOAD( bool,			allowCaching );
 	NODE_LOAD_NODE( CompilerNode, preprocessorNode );
-	NODE_LOAD( AStackString<>, preprocessorArgs );
-	NODE_LOAD( AStackString<>, baseDirectory );
+	NODE_LOAD( AStackString<>,	preprocessorArgs );
+	NODE_LOAD( AStackString<>,  baseDirectory );
+	NODE_LOAD( AStackString<>,	extraPDBPath );
+	NODE_LOAD( AStackString<>,  extraASMPath );
 
 	NODE_LOAD( AStackString<>,	librarianPath );
 	NODE_LOAD( AStackString<>,	librarianArgs );
@@ -345,6 +347,8 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 								 baseDirectory );
 	n->m_ObjExtensionOverride = objExtensionOverride;
     n->m_CompilerOutputPrefix = compilerOutputPrefix;
+    n->m_ExtraPDBPath = extraPDBPath;
+    n->m_ExtraASMPath = extraASMPath;
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
 	// but we can't right now because we rely on the nodes we depend on 
@@ -380,6 +384,5 @@ bool LibraryNode::CanUseResponseFile() const
 		return false;
 	#endif
 }
-
 
 //------------------------------------------------------------------------------

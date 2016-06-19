@@ -18,6 +18,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 
 // Core
 #include "Core/FileIO/PathUtils.h"
@@ -66,8 +67,13 @@ FunctionObjectList::FunctionObjectList()
 		return false;
 	}
 
-	PathUtils::FixupFolderPath( compilerInputPath );
-	PathUtils::FixupFolderPath( compilerOutputPath );
+	if ( !compilerInputPath.IsEmpty() )
+	{
+		AStackString<> tmp;
+		NodeGraph::CleanPath( compilerInputPath, tmp );
+		compilerInputPath = tmp;
+	}
+    PathUtils::FixupFolderPath( compilerOutputPath );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
@@ -222,6 +228,9 @@ FunctionObjectList::FunctionObjectList()
 		return false; // GetBaseDirectory will have emitted error
 	}
 
+	AStackString<> extraPDBPath, extraASMPath;
+	GetExtraOutputPaths( compilerOptions->GetString(), extraPDBPath, extraASMPath );
+
 	// Create library node which depends on the single file or list
 	ObjectListNode * o = ng.CreateObjectListNode( m_AliasForFunction,
 												  staticDeps,
@@ -245,6 +254,8 @@ FunctionObjectList::FunctionObjectList()
 		o->m_ObjExtensionOverride = compilerOutputExtension->GetString();
 	}
     o->m_CompilerOutputPrefix = compilerOutputPrefix;
+	o->m_ExtraPDBPath = extraPDBPath;
+	o->m_ExtraASMPath = extraASMPath;
 
 	return true;
 }
@@ -491,7 +502,6 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 	return true;
 }
 
-
 // GetBaseDirectory
 //------------------------------------------------------------------------------
 bool FunctionObjectList::GetBaseDirectory( const BFFIterator & iter, AStackString<> & baseDirectory) const
@@ -513,5 +523,64 @@ bool FunctionObjectList::GetBaseDirectory( const BFFIterator & iter, AStackStrin
 	return true;
 }
 
+// GetExtraOutputPaths
+//------------------------------------------------------------------------------
+void FunctionObjectList::GetExtraOutputPaths( const AString & args, AString & pdbPath, AString & asmPath ) const
+{
+	// split to individual tokens
+	Array< AString > tokens;
+	args.Tokenize( tokens );
+
+	const AString * const end = tokens.End();
+	for ( const AString * it = tokens.Begin(); it != end; ++it )
+	{
+		if ( it->BeginsWithI( "/Fd" ) )
+		{
+			GetExtraOutputPath( it, end, "/Fd", pdbPath );
+			continue;
+		}
+
+		if ( it->BeginsWithI( "/Fa" ) )
+		{
+			GetExtraOutputPath( it, end, "/Fa", asmPath );
+			continue;
+		}
+	}
+}
+
+// GetExtraOutputPath
+//------------------------------------------------------------------------------
+void FunctionObjectList::GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path ) const
+{
+	const char * bodyStart = it->Get() + strlen( option );
+	const char * bodyEnd = it->GetEnd();
+
+	// if token is exactly /Fd then value is next token
+	if ( bodyStart == bodyEnd )
+	{
+		++it;
+		// handle missing next value
+		if ( it == end )
+		{
+			return; // we just pretend it doesn't exist and let the compiler complain
+		}
+
+		bodyStart = it->Get();
+		bodyEnd = it->GetEnd();
+	}
+
+	// Strip quotes
+	Args::StripQuotes( bodyStart, bodyEnd, path );
+
+	// If it's not already a path (i.e. includes filename.ext) then
+	// truncate to just the path
+	const char * lastSlash = path.FindLast( '\\' );
+	lastSlash = lastSlash ? lastSlash : path.FindLast( '/' );
+	lastSlash  = lastSlash ? lastSlash : path.Get(); // no slash, means it's just a filename
+	if ( lastSlash != ( path.GetEnd() - 1 ) )
+	{
+		path.SetLength( uint32_t(lastSlash - path.Get()) );
+	}
+}
 
 //------------------------------------------------------------------------------

@@ -27,6 +27,10 @@ protected:
 	void EnsureFileDoesNotExist( const AString & fileName ) const { EnsureFileDoesNotExist( fileName.Get() ); }
 	void EnsureFileExists( const char * fileName ) const;
 	void EnsureFileExists( const AString & fileName ) const { EnsureFileExists( fileName.Get() ); }
+	void EnsureDirDoesNotExist( const char * dirPath ) const;
+	void EnsureDirDoesNotExist( const AString & dirPath ) const { EnsureDirDoesNotExist( dirPath.Get() ); }
+	void EnsureDirExists( const char * dirPath ) const;
+	void EnsureDirExists( const AString & dirPath ) const { EnsureDirExists( dirPath.Get() ); }
 
 	// Helpers to check build results
 	void CheckStatsNode( const FBuildStats & stats, size_t numSeen, size_t numBuilt, Node::Type nodeType ) const;

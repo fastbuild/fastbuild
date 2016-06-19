@@ -1300,6 +1300,14 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 
 // CleanPath
 //------------------------------------------------------------------------------
+/*static*/ void NodeGraph::CleanPath( AString & name )
+{
+	AStackString<> nameCopy( name );
+	CleanPath( nameCopy, name );
+}
+
+// CleanPath
+//------------------------------------------------------------------------------
 /*static*/ void NodeGraph::CleanPath( const AString & name, AString & fullPath )
 {
 	ASSERT( &name != &fullPath );
