@@ -31,6 +31,7 @@ REFLECT_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() 
 	REFLECT_ARRAY( m_ProjectInputPathsExclude,		"ProjectInputPathsExclude", 	MetaOptional() + MetaPath() )
 	REFLECT_ARRAY( m_ProjectFiles,					"ProjectFiles",					MetaOptional() + MetaFile() )
 	REFLECT_ARRAY( m_ProjectFilesToExclude,			"ProjectFilesToExclude",		MetaOptional() + MetaFile() )
+	REFLECT_ARRAY( m_PatternToExclude,				"ProjectPatternToExclude",		MetaOptional() + MetaFile())
 	REFLECT_ARRAY( m_ProjectBasePath, 				"ProjectBasePath", 				MetaOptional() + MetaPath() )
 	REFLECT_ARRAY( m_ProjectAllowedFileExtensions, 	"ProjectAllowedFileExtensions", MetaOptional() )
 	REFLECT_ARRAY_OF_STRUCT( m_ProjectConfigs,		"ProjectConfigs",	XCodeProjectConfig,		MetaNone() )
@@ -127,7 +128,22 @@ XCodeProjectNode::~XCodeProjectNode()
 			const auto & files = dln->GetFiles();
 			for ( const auto & file : files )
 			{
-				g.AddFile( file.m_Name );
+				//filter the file by pattern
+				const AString * pit = m_PatternToExclude.Begin();
+				const AString * const pend = m_PatternToExclude.End();
+                bool keep = true;
+				for (; pit != pend; ++pit)
+				{
+					if (PathUtils::IsWildcardMatch(pit->Get(), file.m_Name.Get()))
+					{
+                        keep = false;
+                        break;
+					}
+				}
+                if (keep)
+                {
+                    g.AddFile(file.m_Name);
+                }
 			}
 		}
 		else if ( n->IsAFile() )

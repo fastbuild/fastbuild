@@ -27,6 +27,7 @@ public:
 							 const Array< AString > & projectBasePaths,
 							 const Dependencies & paths,
 							 const Array< AString > & pathsToExclude,
+							 const Array< AString > & patternToExclude,
 							 const Array< AString > & files,
 							 const Array< AString > & filesToExclude,
 							 const AString & rootNamespace,
@@ -58,6 +59,7 @@ private:
 
 	Array< AString >	m_ProjectBasePaths;
 	Array< AString >	m_PathsToExclude;
+	Array< AString >	m_PatternToExclude;
 	Array< AString >	m_Files;
 	Array< AString >	m_FilesToExclude;
 	AString				m_RootNamespace;
