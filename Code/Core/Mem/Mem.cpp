@@ -112,4 +112,21 @@ void Free( void * ptr )
 	#endif
 }
 
+// Operators
+//------------------------------------------------------------------------------
+#if defined( __OSX__ )
+	// TODO: resolve issue with Clang and inline new/delete
+#else
+	#if defined( MEMTRACKER_ENABLED )
+		void * operator new( size_t size, const char * file, int line ) { return AllocFileLine( size, file, line ); }
+		void * operator new[]( size_t size, const char * file, int line ) { return AllocFileLine( size, file, line ); }
+		void operator delete( void * ptr, const char *, int ) { return Free( ptr ); }
+		void operator delete[]( void * ptr, const char *, int ) { return Free( ptr ); }
+	#endif
+	void * operator new( size_t size ) { return Alloc( size ); }
+	void * operator new[]( size_t size ) { return Alloc( size ); }
+	void operator delete( void * ptr ) { Free( ptr ); }
+	void operator delete[]( void * ptr ) { Free( ptr ); }
+#endif
+
 //------------------------------------------------------------------------------

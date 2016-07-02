@@ -46,6 +46,7 @@ private:
 	Array< AString >	m_ProjectInputPathsExclude;
 	Array< AString >	m_ProjectFiles;
 	Array< AString >	m_ProjectFilesToExclude;
+	Array< AString >	m_PatternToExclude;
 	Array< AString >	m_ProjectBasePath;
 	Array< AString > 	m_ProjectAllowedFileExtensions;
 	Array< XCodeProjectConfig > m_ProjectConfigs;

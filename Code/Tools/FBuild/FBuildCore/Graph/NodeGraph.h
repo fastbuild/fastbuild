@@ -8,7 +8,6 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
-#include "Tools/FBuild/FBuildCore/Graph/Node.h" // TODO:C remove when USE_NODE_REFLECTION is removed
 
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
@@ -55,7 +54,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 75 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 82 };
 
 	bool IsValid() const
 	{
@@ -133,7 +132,9 @@ public:
 									   bool allowDistribution,
 									   bool allowCaching,
                                        CompilerNode * preprocessor,
-                                       const AString & preprocessorArgs );
+                                       const AString & preprocessorArgs,
+									   const AString & baseDirectory );
+
 	ObjectNode *	CreateObjectNode( const AString & objectName,
 									  Node * inputNode,
 									  Node * compilerNode,
@@ -149,12 +150,7 @@ public:
                                       Node * preprocessorNode,
                                       const AString & preprocessorArgs,
                                       uint32_t preprocessorFlags );
-#ifdef USE_NODE_REFLECTION
 	AliasNode *		CreateAliasNode( const AString & aliasName );
-#else
-	AliasNode *		CreateAliasNode( const AString & aliasName,
-									 const Dependencies & targets );
-#endif
 	DLLNode *		CreateDLLNode( const AString & linkerOutputName,
 								   const Dependencies & inputLibraries,
 								   const Dependencies & otherLibraries,
@@ -183,10 +179,7 @@ public:
 						   const AString & compiler,
 						   const AString & compilerOptions,
 						   const Dependencies & extraRefs );
-	TestNode * CreateTestNode( const AString & testOutput,
-							   FileNode * testExecutable,
-							   const AString & arguments,
-							   const AString & workingDir );
+	TestNode * CreateTestNode( const AString & testOutput );
 	CompilerNode * CreateCompilerNode( const AString & executable );
 	VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
 										   const Array< AString > & projectBasePaths,
@@ -194,6 +187,7 @@ public:
 										   const Array< AString > & pathsToExclude,
 										   const Array< AString > & files,
 										   const Array< AString > & filesToExclude,
+										   const Array< AString > & patternToExclude,
 										   const AString & rootNamespace,
 										   const AString & projectGuid,
 										   const AString & defaultLanguage,
@@ -223,16 +217,21 @@ public:
 							 bool deoptimizeWritableFilesWithToken,
 							 bool allowDistribution,
 							 bool allowCaching,
-                             CompilerNode * preprocessor,
-                             const AString & preprocessorArgs );
+							 CompilerNode * preprocessor,
+							 const AString & preprocessorArgs,
+							 const AString & baseDirectory );
 	XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
 
 	void DoBuildPass( Node * nodeToBuild );
 
+	static void CleanPath( AString & name );
 	static void CleanPath( const AString & name, AString & fullPath );
+	#if defined( ASSERTS_ENABLED )
+		static bool IsCleanPath( const AString & path );
+	#endif
 
 	// as BFF files are encountered during parsing, we track them
-	void AddUsedFile( const AString & fileName, uint64_t timeStamp );
+	void AddUsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash );
 	bool IsOneUseFile( const AString & fileName ) const;
 	void SetCurrentFileAsOneUse();
 
@@ -273,10 +272,6 @@ private:
 	static void SaveRecurse( IOStream & stream, const Dependencies & dependencies, Array< bool > & savedNodeFlags );
 	bool LoadNode( IOStream & stream );
 
-	#if defined( ASSERTS_ENABLED )
-		static bool IsCleanPath( const AString & path );
-	#endif
-
 	enum { NODEMAP_TABLE_SIZE = 65536 };
 	Node *			m_NodeMap[ NODEMAP_TABLE_SIZE ];
 	Array< Node * > m_AllNodes;
@@ -287,9 +282,10 @@ private:
 	// each file used in the generation of the node graph is tracked
 	struct UsedFile
 	{
-		explicit UsedFile( const AString & fileName, uint64_t timeStamp ) : m_FileName( fileName ), m_TimeStamp( timeStamp ), m_Once( false ) {}
+		explicit UsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash ) : m_FileName( fileName ), m_TimeStamp( timeStamp ), m_DataHash( dataHash ) , m_Once( false ) {}
 		AString		m_FileName;
 		uint64_t	m_TimeStamp;
+		uint64_t	m_DataHash;
 		bool		m_Once;
 	};
 	Array< UsedFile > m_UsedFiles;

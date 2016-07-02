@@ -10,6 +10,7 @@
 int main(int , char * [])
 {
 	// tests to run
+	REGISTER_TESTGROUP( TestAlias )
 	REGISTER_TESTGROUP( TestBFFParsing )
 	REGISTER_TESTGROUP( TestBuildAndLinkLibrary )
 	REGISTER_TESTGROUP( TestBuildFBuild )
@@ -30,6 +31,7 @@ int main(int , char * [])
     REGISTER_TESTGROUP( TestTest )
     REGISTER_TESTGROUP( TestUnity )
 	REGISTER_TESTGROUP( TestVariableStack )
+	REGISTER_TESTGROUP( TestWarnings )
 
 	// Windows-specific tests
     #if defined( __WINDOWS__ )
@@ -37,6 +39,7 @@ int main(int , char * [])
         REGISTER_TESTGROUP( TestCSharp )
         REGISTER_TESTGROUP( TestCUDA )
         REGISTER_TESTGROUP( TestResources )
+        REGISTER_TESTGROUP( TestZW )
     #endif
 
 	UnitTestManager utm;

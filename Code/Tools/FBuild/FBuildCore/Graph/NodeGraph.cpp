@@ -88,6 +88,7 @@ bool NodeGraph::Initialize( const char * bffFile,
     PROFILE_FUNCTION
 
 	ASSERT( bffFile ); // must be supplied (or left as default)
+	ASSERT( nodeGraphDBFile ); // must be supplied (or left as default)
 
 	ASSERT( m_UsedFiles.IsEmpty() ); // NodeGraph cannot be recycled
 
@@ -124,11 +125,12 @@ bool NodeGraph::Initialize( const char * bffFile,
 			FLOG_ERROR( "Error reading BFF '%s'", bffFile );
 			return false;
 		}
+		const uint64_t rootBFFDataHash = xxHash::Calc64( data.Get(), size );
 
 		// re-parse the BFF from scratch, clean build will result
 		BFFParser bffParser;
 		data.Get()[ size ] = '\0'; // data passed to parser must be NULL terminated
-		return bffParser.Parse( data.Get(), size, bffFile, rootBFFTimeStamp ); // pass size excluding sentinel
+		return bffParser.Parse( data.Get(), size, bffFile, rootBFFTimeStamp, rootBFFDataHash ); // pass size excluding sentinel
 	}
 
 	return true;
@@ -187,12 +189,37 @@ bool NodeGraph::Load( IOStream & stream, bool & needReparsing )
 	{
 		const AString & fileName = m_UsedFiles[ i ].m_FileName;
 		const uint64_t timeStamp = FileIO::GetFileLastWriteTime( fileName );
-		if ( timeStamp != m_UsedFiles[ i ].m_TimeStamp )
+		if ( timeStamp == m_UsedFiles[ i ].m_TimeStamp )
 		{
-			FLOG_WARN( "BFF file '%s' has changed (reparsing will occur).", fileName.Get() );
-			needReparsing = true;
-			return true;
+			continue; // timestamps match, no need to check hashes
 		}
+
+		FileStream fs;
+		if ( fs.Open( fileName.Get(), FileStream::READ_ONLY ) == false )	
+		{
+			FLOG_INFO( "BFF file '%s' missing or unopenable (clean build will result).", fileName.Get() );
+			needReparsing = true;
+			return true; // not opening the file is not an error, it could be not needed anymore
+		}
+
+		const size_t size = (size_t)fs.GetFileSize();
+		AutoPtr< void > mem( ALLOC( size ) );
+		if ( fs.Read( mem.Get(), size ) != size )
+		{
+			return false; // error reading
+		}
+
+		const uint64_t dataHash = xxHash::Calc64( mem.Get(), size );
+		if ( dataHash == m_UsedFiles[ i ].m_DataHash )
+		{
+			// file didn't change, update stored timestamp to save time on the next run
+			m_UsedFiles[ i ].m_TimeStamp = timeStamp;
+			continue;
+		}
+
+		FLOG_WARN( "BFF file '%s' has changed (reparsing will occur).", fileName.Get() );
+		needReparsing = true;
+		return true;
 	}
 
 	// TODO:C The serialization of these settings doesn't really belong here (not part of node graph)
@@ -391,6 +418,8 @@ void NodeGraph::Save( IOStream & stream ) const
 		stream.Write( fileName.Get(), fileNameLen );
 		uint64_t timeStamp( m_UsedFiles[ i ].m_TimeStamp );
 		stream.Write( timeStamp );
+		uint64_t dataHash( m_UsedFiles[ i ].m_DataHash );
+		stream.Write( dataHash );
 	}
 
 	// TODO:C The serialization of these settings doesn't really belong here (not part of node graph)
@@ -658,7 +687,8 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
 											bool allowDistribution,
 											bool allowCaching,
                                             CompilerNode * preprocessor,
-                                            const AString & preprocessorArgs )
+                                            const AString & preprocessorArgs,
+											const AString & baseDirectory )
 {
 	ASSERT( Thread::IsMainThread() );
 
@@ -683,7 +713,8 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
 										  allowDistribution,
 										  allowCaching,
                                           preprocessor,
-                                          preprocessorArgs ) );
+                                          preprocessorArgs,
+										  baseDirectory ) );
 	AddNode( node );
 	return node;
 }
@@ -718,32 +749,15 @@ ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName,
 
 // CreateAliasNode
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName )
 {
 	ASSERT( Thread::IsMainThread() );
-	ASSERT( IsCleanPath( aliasName ) );
 
 	AliasNode * node = FNEW( AliasNode() );
 	node->SetName( aliasName );
 	AddNode( node );
 	return node;
 }
-#endif
-
-// CreateAliasNode
-//------------------------------------------------------------------------------
-#ifndef USE_NODE_REFLECTION
-AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName,
-										const Dependencies & targets )
-{
-	ASSERT( Thread::IsMainThread() );
-
-	AliasNode * node = FNEW( AliasNode( aliasName, targets ) );
-	AddNode( node );
-	return node;
-}
-#endif
 
 // CreateDLLNode
 //------------------------------------------------------------------------------
@@ -851,20 +865,13 @@ CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 
 // CreateTestNode
 //------------------------------------------------------------------------------
-TestNode * NodeGraph::CreateTestNode( const AString & testOutput,
-									  FileNode * testExecutable,
-									  const AString & arguments,
-									  const AString & workingDir )
+TestNode * NodeGraph::CreateTestNode( const AString & testOutput )
 {
 	ASSERT( Thread::IsMainThread() );
+	ASSERT( IsCleanPath( testOutput ) );
 
-	AStackString< 1024 > fullPath;
-	CleanPath( testOutput, fullPath );
-
-	TestNode * node = FNEW( TestNode( fullPath,
-									testExecutable,
-									arguments,
-									workingDir ) );
+	TestNode * node = FNEW( TestNode() );
+	node->SetName( testOutput );
 	AddNode( node );
 	return node;
 }
@@ -888,6 +895,7 @@ VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
 												  const Array< AString > & projectBasePaths,
 												  const Dependencies & paths,
 												  const Array< AString > & pathsToExclude,
+												  const Array< AString > & patternToExclude,
 												  const Array< AString > & files,
 												  const Array< AString > & filesToExclude,
 												  const AString & rootNamespace,
@@ -908,6 +916,7 @@ VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
 												projectBasePaths,
 												paths,
 												pathsToExclude,
+												patternToExclude,
 												files,
 												filesToExclude,
 												rootNamespace,
@@ -967,7 +976,8 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
 												  bool allowDistribution,
 												  bool allowCaching,
                                                   CompilerNode * preprocessor,
-                                                  const AString & preprocessorArgs )
+                                                  const AString & preprocessorArgs,
+												  const AString & baseDirectory )
 {
 	ASSERT( Thread::IsMainThread() );
 
@@ -985,7 +995,8 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
 												allowDistribution,
 												allowCaching,
                                                 preprocessor,
-                                                preprocessorArgs ) );
+                                                preprocessorArgs,
+												baseDirectory ) );
 	AddNode( node );
 	return node;
 
@@ -1265,6 +1276,14 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 
 // CleanPath
 //------------------------------------------------------------------------------
+/*static*/ void NodeGraph::CleanPath( AString & name )
+{
+	AStackString<> nameCopy( name );
+	CleanPath( nameCopy, name );
+}
+
+// CleanPath
+//------------------------------------------------------------------------------
 /*static*/ void NodeGraph::CleanPath( const AString & name, AString & fullPath )
 {
 	ASSERT( &name != &fullPath );
@@ -1402,7 +1421,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 
 // AddUsedFile
 //------------------------------------------------------------------------------
-void NodeGraph::AddUsedFile( const AString & fileName, uint64_t timeStamp )
+void NodeGraph::AddUsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash )
 {
 	const size_t numFiles = m_UsedFiles.GetSize();
 	for ( size_t i=0 ;i<numFiles; ++i )
@@ -1413,7 +1432,7 @@ void NodeGraph::AddUsedFile( const AString & fileName, uint64_t timeStamp )
 			return;
 		}
 	}
-	m_UsedFiles.Append( UsedFile( fileName, timeStamp ) );
+	m_UsedFiles.Append( UsedFile( fileName, timeStamp, dataHash ) );
 }
 
 // IsOneUseFile
@@ -1669,8 +1688,13 @@ bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, Array< UsedF
 		{
 			return false;
 		}
+		uint64_t dataHash;
+		if ( !nodeGraphStream.Read( dataHash ) )
+		{
+			return false;
+		}
 
-		files.Append( UsedFile( fileName, timeStamp ) );
+		files.Append( UsedFile( fileName, timeStamp, dataHash ) );
 	}
 
 	return true;

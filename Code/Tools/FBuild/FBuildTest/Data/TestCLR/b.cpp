@@ -10,4 +10,5 @@ void FunctionsAsCLR_B()
 {
 	// use garbage collected new
 	B^ b = gcnew B;
+	(void)b;
 }

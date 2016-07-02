@@ -20,7 +20,7 @@ Library( "DistTestPCH" )
 	#if __WINDOWS__
 		.PCHInputFile		= "Data/TestDistributed/PrecompiledHeader.cpp"
 		.PCHOutputFile		= "$Out$/Test/Distributed/PrecompiledHeader.pch"
-		.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+		.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Fp"%2" /WX /W4 /nologo /c'
 	#endif
 	#if __LINUX__
 		.PCHInputFile		= "Data/TestDistributed/PrecompiledHeader.h"
@@ -56,6 +56,14 @@ ObjectList( "badcode" )
 {
 	.CompilerInputFiles	= "Data\TestDistributed\BadCode\ErrorWithPercent.cpp"
 	.CompilerOutputPath	= "$Out$\Test\Distributed\"
+}
+
+// AnonymousNamespaces
+Library( "AnonymousNamespaces" )
+{
+	.CompilerInputPath	= 'Data/TestDistributed/AnonymousNamespaces/'
+	.CompilerOutputPath	= '$Out$/Test/Distributed/AnonymousNamespaces/'
+	.LibrarianOutput	= '$Out$/Test/Distributed/AnonymousNamespaces/AnonymousNamespaces.lib'
 }
 
 // ForceInclude - Ensure this is handled correctly

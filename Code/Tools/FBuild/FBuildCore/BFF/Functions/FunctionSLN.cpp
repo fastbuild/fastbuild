@@ -163,6 +163,9 @@ struct VCXProjectNodeComp
             // start with the base configuration
             VSProjectConfig newConfig( baseConfig );
 
+			GetStringFromStruct( s, ".SolutionPlatform", newConfig.m_SolutionPlatform );
+			GetStringFromStruct( s, ".SolutionConfig", newConfig.m_SolutionConfig );
+
             // .Platform must be provided
             if ( !GetStringFromStruct( s, ".Platform",  newConfig.m_Platform ) )
             {
@@ -233,7 +236,12 @@ struct VCXProjectNodeComp
                 return false;
             }
 
+			// Clean slashes
             newFolder.m_Path.Replace( OTHER_SLASH, NATIVE_SLASH );
+			if (newFolder.m_Path.EndsWith(NATIVE_SLASH))
+			{
+				newFolder.m_Path.SetLength(newFolder.m_Path.GetLength() - 1); // Remove trailing slash
+			}
 
             // check if this path was already defined
             {

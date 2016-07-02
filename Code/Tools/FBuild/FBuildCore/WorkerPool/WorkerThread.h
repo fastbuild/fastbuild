@@ -32,6 +32,7 @@ public:
 
 	static uint32_t GetThreadIndex();
 
+	static void GetTempFileDirectory( AString & tmpFileDirectory );
 
 	static void CreateTempFilePath( const char * fileName,
 									AString & tmpFileName );

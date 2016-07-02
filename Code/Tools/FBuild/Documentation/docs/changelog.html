@@ -14,6 +14,54 @@
 <h1>Changelog</h1>
 
 
+<div class='newsitemheader'>
+    v0.90&nbsp;<font color='#bbbbbb'>(2-Jul-2016)</font>
+</div>
+<div class='newsitembody'>
+    Notes
+	<ul>
+        <li>DB Version Changed : clean build will occur</li>
+		<li>Behaviour Change: code compiled with /ZW can now be cached</li>
+    </ul>
+	New
+	<ul>
+        <li>VCXProject can automatically derive intellisense settings if new Target property is set</li>
+        <li><a href='functions/vssolution.html#solutionconfigs'>.SolutionPlatform</a> and <a href='functions/vssolution.html#solutionconfigs'>.SolutionConfig</a> added to Visual Studio sln generation (Thanks to Agga)</li>
+        <li>.CompilerInputFilesRoot allows root path setting for .obj path generation for explicitly listed files (Thanks to Sergey Makeev)</li>
+        <li>Test() supports an optional .TestTimeOut, after which it will be terminated with failure</li>
+	</ul>
+    Fixes
+    <ul>
+        <li>Warnings shown when using Microsoft compiler, even if "warnings as errors" (/WX) is not enabled (Thanks to matlec)</li>
+        <li>Avoid anonymous namespace conflicts with distributed compilation with MS Compiler (Thanks to Sergey Makeev)</li>
+        <li>[OSX][Linux] Fix occasional hang in process spawning</li>
+        <li>[OSX] Overridden environment is correctly set for spawned processes</li>
+        <li>Fix corrupt solution generation when Folder path is specified with a trailing slash</li>
+        <li>Prevent exit being delayed when some workers are incommunicado (cuts as much as 2s off some no-op builds)</li>
+        <li>BFFs changes are correctly detected when switching between .bff files using -config option (Thanks to Jalal El Mansouri)</li>
+        <li>Fix cmdline usage info for FBuildWorker (should read -mode=dedicated not -mode=always)</li>
+		<li>Create directory for .pdb and .asm files if different from .obj file (Thanks to Tengato)</li>
+		<li>[OSX][Linux] -ide was reformatting errors on OSX/Linux, preventing IDEs (like XCode) parsing them</li>
+    </ul>
+	Improvements
+	<ul>
+        <li>Optimizations:</li>
+        <ul>
+            <li>Reduce time to hand out and accept distributed compilation</li>
+            <li>Optimize large command line processing, reducing overhead spawning processes with > 4KiB of cmd line</li>
+            <li>[Windows] Reduce process spawning overhead by ~8ms on average</li>
+            <li>Speed up worker discovery when some workers are incommunicado (improves distributed compilation performance)</li>
+            <li>Hostname to IP resolution of valid workers no longer stalled by incommunicado worker timeout</li>
+        </ul>
+        <li>Config files hash is used during parsing to reduce rebuilds on edit/revert (Thanks to dummyunit)</li>
+        <li>Rebuilding is minimized when manually switching between .bff files using -config option (Thanks to Jalal El Mansouri)</li>
+        <li>.natvis fils are included in project generation by default for enhanced debugging support in VS</li>
+		<li>.ProjectPatternToExclude can be used to exclude files from project generation (Thanks to Keith Gunning)</li>
+		<li>Add support for caching /ZW (Windows Runtime) object files (Thanks to ClxS)</li>
+        <li>Continued work on distributed compilation for OSX and Linux</li>
+	</ul>
+</div>
+
 
 <div class='newsitemheader'>
     v0.89&nbsp;<font color='#bbbbbb'>(13-Feb-2016)</font>
@@ -26,7 +74,7 @@
 	</ul>
     Fixes
     <ul>
-        <li>Precompiled headers used with GCC now work correctly (acceleration is not longer prevented)</li>
+        <li>Precompiled headers used with GCC now work correctly (acceleration is no longer prevented)</li>
         <li>-include option is correctly handled with GCC and Clang</li> 
         <li>Exec() works with non-zero return codes on Linux and OS X</li>
         <li>Fix race condition in shutdown of fbuild that could cause an extremely rare hang</li>

@@ -139,7 +139,7 @@ void TestGraph::TestNodeTypes() const
 										 Dependencies(),
 										 Dependencies(),
 										 false, false, false, false,
-                                         nullptr, AString::GetEmpty() );
+										 nullptr, AString::GetEmpty(), AString::GetEmpty() );
 		TEST_ASSERT( n->GetType() == Node::LIBRARY_NODE );
 		TEST_ASSERT( LibraryNode::GetTypeS() == Node::LIBRARY_NODE );
 		TEST_ASSERT( AStackString<>( "Library" ) == n->GetTypeName() );
@@ -152,11 +152,7 @@ void TestGraph::TestNodeTypes() const
 	}
 	{
 		Dependencies targets( 0, false );
-#ifdef USE_NODE_REFLECTION
 		Node * n = ng.CreateAliasNode( AStackString<>( "alias" ) );
-#else
-		Node * n = ng.CreateAliasNode( AStackString<>( "alias" ), targets );
-#endif
 		TEST_ASSERT( n->GetType() == Node::ALIAS_NODE );
 		TEST_ASSERT( AliasNode::GetTypeS() == Node::ALIAS_NODE );
 		TEST_ASSERT( AStackString<>( "Alias" ) == n->GetTypeName() );
@@ -315,7 +311,7 @@ void TestGraph::TestSerialization() const
 		options.m_ConfigFile = "fbuild.bff";
 		options.SetWorkingDir( codeDir );
 		FBuild fBuild( options );
-		TEST_ASSERT( fBuild.Initialize() );
+		TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
 		TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
 		TEST_ASSERT( FileIO::FileExists( dbFile1 ) );
 	}

@@ -23,6 +23,8 @@ public:
 	inline virtual ~FunctionObjectList() {}
 
 protected:
+	bool GetBaseDirectory( const BFFIterator & iter, AStackString<> & baseDirectory ) const;
+
 	virtual bool AcceptsHeader() const;
 	virtual bool NeedsHeader() const;
 
@@ -40,6 +42,8 @@ protected:
 									  bool allowDistribution,
 									  bool allowCaching ) const;
 	bool 	GetInputs( const BFFIterator & iter, Dependencies & inputs ) const;
+	void	GetExtraOutputPaths( const AString & args, AString & pdbPath, AString & asmPath ) const;
+	void	GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path ) const;
 };
 
 //------------------------------------------------------------------------------

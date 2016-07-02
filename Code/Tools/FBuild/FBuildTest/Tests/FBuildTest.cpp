@@ -39,6 +39,21 @@ void FBuildTest::EnsureFileExists( const char * fileName ) const
 	TEST_ASSERT( FileIO::FileExists( fileName ) );
 }
 
+// EnsureDirDoesNotExist
+//------------------------------------------------------------------------------
+void FBuildTest::EnsureDirDoesNotExist( const char * dirPath ) const
+{
+	FileIO::DirectoryDelete( AStackString<>( dirPath ) );
+	TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( dirPath ) ) == false );
+}
+
+// EnsureDirExists
+//------------------------------------------------------------------------------
+void FBuildTest::EnsureDirExists( const char * dirPath ) const
+{
+	TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( dirPath ) ) );
+}
+
 // CheckStatsNode
 //------------------------------------------------------------------------------
 void FBuildTest::CheckStatsNode( const FBuildStats & stats, size_t numSeen, size_t numBuilt, Node::Type nodeType ) const

@@ -7,34 +7,37 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "ExecNode.h"
-#include "Core/Containers/Array.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class BFFIterator;
+class Function;
 
 // TestNode
 //------------------------------------------------------------------------------
 class TestNode : public FileNode
 {
+	REFLECT_DECLARE( TestNode )
 public:
-	explicit TestNode( const AString & testOutput,
-					   FileNode * testExecutable,
-					   const AString & m_Arguments,
-					   const AString & m_WorkingDir );
+	TestNode();
+	bool Initialize( const BFFIterator & iter, const Function * function );
 	virtual ~TestNode();
 
 	static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
 
-	virtual void Save( IOStream & stream ) const;
+	virtual void Save( IOStream & stream ) const override;
 	static Node * Load( IOStream & stream );
+
+	inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
 private:
-	virtual BuildResult DoBuild( Job * job );
+	virtual BuildResult DoBuild( Job * job ) override;
 
 	void EmitCompilationMessage( const char * workingDir ) const;
 
-	FileNode * m_Executable;
-	AString		m_Arguments;
-	AString		m_WorkingDir;
+	AString		m_TestExecutable;
+	AString		m_TestArguments;
+	AString		m_TestWorkingDir;
+	uint32_t	m_TestTimeOut;
 };
 
 //------------------------------------------------------------------------------

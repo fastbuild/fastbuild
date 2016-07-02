@@ -20,14 +20,19 @@ class NetworkStartupHelper
 public:
     // ensure the network is up around the scope of this object
 	NetworkStartupHelper();
-    ~NetworkStartupHelper();
+    ~NetworkStartupHelper() { Stop(); }
+
+	void Stop();
+
+	static inline bool IsStarted() { return (s_RefCount > 0); }
 
 private:
+	bool m_Stopped;
 #if defined( __WINDOWS__ )
 	static WSADATA s_WSAData;
 #endif
 	static Mutex s_Mutex;
-    static uint32_t s_RefCount;
+    static volatile uint32_t s_RefCount;
 };
 
 //------------------------------------------------------------------------------

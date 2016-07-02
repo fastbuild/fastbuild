@@ -6,7 +6,7 @@ Using( .StandardEnvironment )
 
 // TODO:B It is a shame this can't come from testcommon due to relative path differences
 #if __WINDOWS__
-	.VisualStudioPath		= '..\External\SDK\VS11.0'
+	.VisualStudioPath		= '..\External\SDK\VS13.4'
 	.WindowsSDK				= '..\External\SDK\Windows8.1'
 	.Compiler				= "$VisualStudioPath$\VC\bin\cl.exe"
 	.Librarian				= "$VisualStudioPath$\VC\bin\lib.exe"

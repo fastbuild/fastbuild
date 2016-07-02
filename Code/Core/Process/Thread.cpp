@@ -250,24 +250,28 @@ public:
 		ASSERT( name );
 
 		#if defined( __WINDOWS__ )
-			const DWORD MS_VC_EXCEPTION=0x406D1388;
+			#if defined(__clang__)
+				// Clang for windows (3.7.1) crashes trying to compile this
+			#else
+				const DWORD MS_VC_EXCEPTION=0x406D1388;
 
-			THREADNAME_INFO info;
-			info.dwType = 0x1000;
-			info.szName = name;
-			info.dwThreadID = GetCurrentThreadId();
-			info.dwFlags = 0;
+				THREADNAME_INFO info;
+				info.dwType = 0x1000;
+				info.szName = name;
+				info.dwThreadID = GetCurrentThreadId();
+				info.dwFlags = 0;
 
-			__try
-			{
-				RaiseException( MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info );
-			}
-			PRAGMA_DISABLE_PUSH_MSVC( 6320 ) // Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER
-			__except( EXCEPTION_EXECUTE_HANDLER )
-			PRAGMA_DISABLE_POP_MSVC
-			{
-				(void)0;
-			}
+				__try
+				{
+					RaiseException( MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info );
+				}
+				PRAGMA_DISABLE_PUSH_MSVC( 6320 ) // Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER
+				__except( EXCEPTION_EXECUTE_HANDLER )
+				PRAGMA_DISABLE_POP_MSVC
+				{
+					(void)0;
+				}
+			#endif
         #elif defined( __LINUX__ )
             pthread_setname_np( (pthread_t)GetCurrentThreadId(), name );
         #elif defined( __APPLE__ )

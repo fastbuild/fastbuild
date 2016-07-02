@@ -29,6 +29,7 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Process/Process.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Process/Thread.h"
 #include "Core/Tracing/Tracing.h"
 #include "Core/Strings/AStackString.h"
@@ -283,6 +284,12 @@ ObjectNode::~ObjectNode()
 		return NODE_RESULT_FAILED; // SpawnCompiler has logged error
 	}
 
+	// Handle MSCL warnings if not already a failure
+    if ( ch.GetResult() == 0 )
+    {
+	   HandleWarningsMSCL( job, ch.GetOut().Get(), ch.GetOutSize() );
+    }
+
 	const char *output = nullptr;
 	uint32_t outputSize = 0;
 
@@ -417,10 +424,11 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 	}
 
 	Args fullArgs;
+	AStackString<> tmpDirectoryName;
 	AStackString<> tmpFileName;
 	if ( usePreProcessedOutput )
 	{
-		if ( WriteTmpFile( job, tmpFileName ) == false )
+		if ( WriteTmpFile( job, tmpDirectoryName, tmpFileName ) == false )
 		{
 			return NODE_RESULT_FAILED; // WriteTmpFile will have emitted an error
 		}
@@ -455,6 +463,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 	if ( tmpFileName.IsEmpty() == false )
 	{
 		FileIO::FileDelete( tmpFileName.Get() );
+	}
+
+	// cleanup temp directory
+	if ( tmpDirectoryName.IsEmpty() == false )
+	{
+		FileIO::DirectoryDelete( tmpDirectoryName );
 	}
 
 	if ( result == false )
@@ -804,16 +818,20 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 				usingPreprocessorOnly = true;
 				flags |= ObjectNode::FLAG_INCLUDES_IN_STDERR;
 			}
+			else if ( token == "/WX" )
+			{
+				flags |= ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC;
+			}
 		}
 
 		// 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
 		// statements are truncated
-		// 2) code consuming the windows runtime cannot be cached due to preprocessing weirdness
+		// 2) code consuming the windows runtime cannot be distributed due to preprocessing weirdness
 		// 3) pch files are machine specific
 		// 4) user only wants preprocessor step executed
-		if ( !usingWinRT && !usingCLR && !usingPreprocessorOnly && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
+		if ( !usingCLR && !usingPreprocessorOnly && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
 		{
-			if ( isDistributableCompiler )
+			if ( isDistributableCompiler && !usingWinRT )
 			{
 				flags |= ObjectNode::FLAG_CAN_BE_DISTRIBUTED;
 			}
@@ -921,6 +939,30 @@ const char * ObjectNode::GetObjExtension() const
 		#endif
 	}
 	return m_ObjExtensionOverride.Get();
+}
+
+// HandleWarningsMSCL
+//------------------------------------------------------------------------------
+void ObjectNode::HandleWarningsMSCL( Job* job, const char * data, uint32_t dataSize ) const
+{
+	// If "warnings as errors" is enabled (/WX) we don't need to check
+	// (since compilation will fail anyway, and the output will be shown)
+	if ( GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
+	{
+		return;
+	}
+
+	if ( ( data == nullptr ) || ( dataSize == 0 ) )
+	{
+		return;
+	}
+
+	// Are there any warnings? (string is ok even in non-English)
+	if ( strstr( data, ": warning " ) )
+	{
+		const bool treatAsWarnings = true;
+		DumpOutput( job, data, dataSize, GetName(), treatAsWarnings );
+	}
 }
 
 // DumpOutput
@@ -1183,6 +1225,8 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
 //------------------------------------------------------------------------------
 bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, const AString & overrideSrcFile ) const
 {
+	PROFILE_FUNCTION
+
 	Array< AString > tokens( 1024, true );
 
 	const bool useDedicatedPreprocessor = ( ( pass == PASS_PREPROCESSOR_ONLY ) && GetDedicatedPreprocessor() );
@@ -1327,6 +1371,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 				{
 					continue; // skip this token in both cases
 				}
+			}
+		}
+
+		if ( pass == PASS_PREPROCESSOR_ONLY )
+		{
+			//Strip /ZW
+			if ( StripToken( "/ZW", token ) )
+			{
+				fullArgs += "/D__cplusplus_winrt ";
+				continue;
 			}
 		}
 
@@ -1625,11 +1679,12 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
 
 // WriteTmpFile
 //------------------------------------------------------------------------------
-bool ObjectNode::WriteTmpFile( Job * job, AString & tmpFileName ) const
+bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const
 {
 	ASSERT( job->GetData() && job->GetDataSize() );
 
 	Node * sourceFile = GetSourceFile();
+	uint32_t sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
 
 	FileStream tmpFile;
 	AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
@@ -1646,7 +1701,16 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpFileName ) const
 		dataToWriteSize = c.GetResultSize();
 	}
 
-	WorkerThread::CreateTempFilePath( fileName.Get(), tmpFileName );
+	WorkerThread::GetTempFileDirectory( tmpDirectory );
+	tmpDirectory.AppendFormat( "%08X%c", sourceNameHash, NATIVE_SLASH );
+	if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
+	{
+		job->Error( "Failed to create temp directory '%s' to build '%s' (error %u)", tmpDirectory.Get(), GetName().Get(), Env::GetLastErr() );
+		job->OnSystemError();
+		return NODE_RESULT_FAILED;
+	}
+	tmpFileName = tmpDirectory;
+	tmpFileName += fileName;
 	if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false ) 
 	{
 		job->Error( "Failed to create temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr );
@@ -1704,6 +1768,14 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 		}
 
 		return false; // compile has logged error
+	}
+	else
+	{
+    	// Handle MSCL warnings if not already a failure
+		if ( IsMSVC() && ( ch.GetResult() == 0 ) )
+		{
+			HandleWarningsMSCL( job, ch.GetOut().Get(), ch.GetOutSize() );
+		}
 	}
 
 	return true;

@@ -19,6 +19,8 @@
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
 
+#include <inttypes.h>
+
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ Array< ProfileManager::ProfileEventInfo > ProfileManager::s_ProfileEventInfo( 0, true );
@@ -125,7 +127,11 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 	}
 
 	// allocate a fresh block
-	events = FNEW_ARRAY( ProfileEvent[ NUM_EVENTS_PER_BLOCK ] );
+	MEMTRACKER_DISABLE_THREAD
+	{
+		events = FNEW_ARRAY( ProfileEvent[ NUM_EVENTS_PER_BLOCK ] );
+	}
+	MEMTRACKER_ENABLE_THREAD
 	m_Begin = events;
 	m_Current = events;
 	m_MaxEnd = events + NUM_EVENTS_PER_BLOCK;
@@ -162,19 +168,23 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 //------------------------------------------------------------------------------
 /*static*/ void ProfileManager::PushThreadEvents( const ProfileEvent * events, size_t num, const char * threadName )
 {
-	MutexHolder mh( g_ProfileManagerMutex );
-
-	if ( s_ProfileEventInfo.GetCapacity() == 0 )
+	MEMTRACKER_DISABLE_THREAD
 	{
-		s_ProfileEventInfo.SetCapacity( 64 );
+		MutexHolder mh( g_ProfileManagerMutex );
+	
+		if ( s_ProfileEventInfo.GetCapacity() == 0 )
+		{
+			s_ProfileEventInfo.SetCapacity( 64 );
+		}
+	
+		ProfileEventInfo pfi;
+		pfi.m_ThreadId = Thread::GetCurrentThreadId();
+		pfi.m_ThreadName = threadName;
+		pfi.m_Events = events;
+		pfi.m_NumEvents = num;
+		s_ProfileEventInfo.Append( pfi );
 	}
-
-	ProfileEventInfo pfi;
-	pfi.m_ThreadId = Thread::GetCurrentThreadId();
-	pfi.m_ThreadName = threadName;
-	pfi.m_Events = events;
-	pfi.m_NumEvents = num;
-	s_ProfileEventInfo.Append( pfi );
+	MEMTRACKER_ENABLE_THREAD
 }
 
 // Synchronize
@@ -212,7 +222,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 		const ProfileEventInfo & info = *it;
 		if ( g_ProfileEventLog.IsOpen() )
 		{
-			uint32_t threadId = info.m_ThreadId;
+			uint64_t threadId = (uint64_t)info.m_ThreadId;
 
 			// Thread Name
 			if ( ( info.m_ThreadName.IsEmpty() == false ) || ( info.m_ThreadId == Thread::GetMainThreadId() ) )
@@ -224,7 +234,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 
 				// SetThreadName event
 				// {"name": "thread_name", "ph": "M", "pid": 0, "tid": 164, "args": { "name" : "ThreadName" }},
-				buffer.Format( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":0,\"tid\":%u,\"args\":{\"name\":\"%s\"}},\n",
+				buffer.Format( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":0,\"tid\":%llu,\"args\":{\"name\":\"%s\"}},\n",
 						threadId,
 						info.m_ThreadName.IsEmpty() ? "_MainThread" : info.m_ThreadName.Get() );
                 g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
@@ -236,7 +246,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
                 const ProfileEvent& e = info.m_Events[i];
 
                 // {"name": "Asub", "ph": "B", "pid": 22630, "tid": 22630, "ts": 829},
-                buffer.Format( "{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":0,\"tid\":%u,\"ts\":%llu},\n",
+                buffer.Format( "{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":0,\"tid\":%llu,\"ts\":%llu},\n",
                         e.m_Id ? e.m_Id : "", 
                         e.m_Id ? 'B' : 'E', 
                         threadId, 

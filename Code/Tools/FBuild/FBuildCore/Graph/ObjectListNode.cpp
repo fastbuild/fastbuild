@@ -15,6 +15,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 
 // Core
 #include "Core/FileIO/IOStream.h"
@@ -37,7 +38,8 @@ ObjectListNode::ObjectListNode( const AString & listName,
 						  bool allowDistribution,
 						  bool allowCaching,
                           CompilerNode * preprocessor,
-                          const AString &preprocessorArgs )
+                          const AString & preprocessorArgs,
+						  const AString & baseDirectory )
 : Node( listName, Node::OBJECT_LIST_NODE, Node::FLAG_NONE )
 , m_CompilerForceUsing( compilerForceUsing )
 , m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
@@ -63,6 +65,8 @@ ObjectListNode::ObjectListNode( const AString & listName,
     m_PreprocessorArgs = preprocessorArgs;
 
 	m_PreBuildDependencies = preBuildDependencies;
+
+	m_BaseDirectory = baseDirectory;
 }
 
 // DESTRUCTOR
@@ -139,7 +143,7 @@ ObjectListNode::~ObjectListNode()
                 #endif
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, dln ) == false )
+				if ( CreateDynamicObjectNode( n, dln->GetPath() ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -168,7 +172,7 @@ ObjectListNode::~ObjectListNode()
 				}
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, nullptr, true ) == false )
+				if ( CreateDynamicObjectNode( n, AString::GetEmpty(), true ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -192,7 +196,7 @@ ObjectListNode::~ObjectListNode()
 				}
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, it->GetDirListOrigin(), false, true ) == false )
+				if ( CreateDynamicObjectNode( n, it->GetDirListOrigin()->GetPath(), false, true ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -201,7 +205,7 @@ ObjectListNode::~ObjectListNode()
         else if ( i->GetNode()->IsAFile() )
 		{
 			// a single file, create the object that will compile it
-			if ( CreateDynamicObjectNode( i->GetNode(), nullptr ) == false )
+			if ( CreateDynamicObjectNode( i->GetNode(), AString::GetEmpty() ) == false )
 			{
 				return false; // CreateDynamicObjectNode will have emitted error
 			}
@@ -241,6 +245,24 @@ ObjectListNode::~ObjectListNode()
 	{
 		FLOG_ERROR( "No files found to build '%s'", GetName().Get() );
 		return false;
+	}
+
+	if ( m_ExtraASMPath.IsEmpty() == false )
+	{
+		if ( !FileIO::EnsurePathExists( m_ExtraASMPath ) )
+		{
+			FLOG_ERROR( "Failed to create folder for .asm file '%s'", m_ExtraASMPath.Get() );
+			return false;
+		}
+	}
+
+	if ( m_ExtraPDBPath.IsEmpty() == false )
+	{
+		if ( !FileIO::EnsurePathExists( m_ExtraPDBPath ) )
+		{
+			FLOG_ERROR( "Failed to create folder for .pdb file '%s'", m_ExtraPDBPath.Get() );
+			return false;
+		}
 	}
 
 	return true;
@@ -335,7 +357,7 @@ void ObjectListNode::GetInputFiles( Array< AString > & files ) const
 
 // CreateDynamicObjectNode
 //------------------------------------------------------------------------------
-bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryListNode * dirNode, bool isUnityNode, bool isIsolatedFromUnityNode )
+bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & baseDir, bool isUnityNode, bool isIsolatedFromUnityNode )
 {
 	const AString & fileName = inputFile->GetName();
 
@@ -349,16 +371,23 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
     // if source comes from a directory listing, use path relative to dirlist base
     // to replicate the folder hierearchy in the output
     AStackString<> subPath;
-    if ( dirNode )
+    if ( baseDir.IsEmpty() == false )
     {
-        const AString & baseDir = dirNode->GetPath();
-        ASSERT( PathUtils::PathBeginsWith( fileName, baseDir ) );
-        if ( PathUtils::PathBeginsWith( fileName, baseDir ) )
+		ASSERT( NodeGraph::IsCleanPath( baseDir ) );
+		if ( PathUtils::PathBeginsWith( fileName, baseDir ) )
         {
             // ... use everything after that
-            subPath.Assign(fileName.Get() + baseDir.GetLength(), lastSlash ); // includes last slash
+			subPath.Assign( fileName.Get() + baseDir.GetLength(), lastSlash ); // includes last slash
         }
-    }
+	}
+	else
+	{
+		if ( !m_BaseDirectory.IsEmpty() && PathUtils::PathBeginsWith( fileName, m_BaseDirectory ) )
+		{
+			// ... use everything after that
+			subPath.Assign( fileName.Get() + m_BaseDirectory.GetLength(), lastSlash ); // includes last slash
+		}
+	}
 
 	AStackString<> fileNameOnly( lastSlash, lastDot );
 	AStackString<> objFile( m_CompilerOutputPath );
@@ -438,6 +467,9 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	NODE_LOAD( bool,			allowCaching );
 	NODE_LOAD_NODE( CompilerNode, preprocessorNode );
 	NODE_LOAD( AStackString<>,	preprocessorArgs );
+	NODE_LOAD( AStackString<>,  baseDirectory );
+	NODE_LOAD( AStackString<>,	extraPDBPath );
+	NODE_LOAD( AStackString<>,  extraASMPath );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	ObjectListNode * n = ng.CreateObjectListNode( name, 
@@ -454,9 +486,12 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 								allowDistribution, 
 								allowCaching,
 								preprocessorNode,
-								preprocessorArgs );
+								preprocessorArgs,
+								baseDirectory );
 	n->m_ObjExtensionOverride = objExtensionOverride;
     n->m_CompilerOutputPrefix = compilerOutputPrefix;
+    n->m_ExtraPDBPath = extraPDBPath;
+    n->m_ExtraASMPath = extraASMPath;
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
 	// but we can't right now because we rely on the nodes we depend on 
@@ -490,6 +525,9 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const DirectoryL
 	NODE_SAVE( m_AllowCaching );
 	NODE_SAVE_NODE( m_Preprocessor );
 	NODE_SAVE( m_PreprocessorArgs );
+	NODE_SAVE( m_BaseDirectory );
+	NODE_SAVE( m_ExtraPDBPath );
+	NODE_SAVE( m_ExtraASMPath );
 
 	// TODO:B Need to save the dynamic deps, for better progress estimates
 	// but we can't right now because we rely on the nodes we depend on 

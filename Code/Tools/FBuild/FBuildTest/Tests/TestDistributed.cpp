@@ -25,6 +25,7 @@ private:
 	void WithPCH() const;
 	void RegressionTest_RemoteCrashOnErrorFormatting();
 	void TestLocalRace();
+	void AnonymousNamespaces();
 	void TestForceInclude() const;
 	void TestZiDebugFormat() const;
 	void TestZiDebugFormat_Local() const;
@@ -42,6 +43,7 @@ REGISTER_TESTS_BEGIN( TestDistributed )
 	REGISTER_TEST( WithPCH )
 	REGISTER_TEST( RegressionTest_RemoteCrashOnErrorFormatting )
 	REGISTER_TEST( TestLocalRace )
+	REGISTER_TEST( AnonymousNamespaces )
 	#if defined( __WINDOWS__ )
 		REGISTER_TEST( TestForceInclude )
 		REGISTER_TEST( TestZiDebugFormat )
@@ -56,7 +58,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
 	FBuildOptions options;
 	options.m_ConfigFile = "Data/TestDistributed/fbuild.bff";
 	options.m_AllowDistributed = true;
-	options.m_NumWorkerThreads = 0;
+	options.m_NumWorkerThreads = 1;
 	options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
 	options.m_AllowLocalRace = allowRace;
 	//options.m_ShowProgress = true;
@@ -153,6 +155,18 @@ void TestDistributed::TestLocalRace()
 	}
 }
 
+// AnonymousNamespaces
+//------------------------------------------------------------------------------
+void TestDistributed::AnonymousNamespaces()
+{
+	// Check that compiling multiple objects with identically named symbols
+	// in anonymouse namespaces don't cause link errors.  This is because
+	// the MS compiler uses the path to the cpp file being compiled to
+	// generate the symbol name (it doesn't respect the #line directives)
+	const char * target( "../../../../tmp/Test/Distributed/AnonymousNamespaces/AnonymousNamespaces.lib" );
+	TestHelper( target, 1 );
+}
+
 // TestForceInclude
 //------------------------------------------------------------------------------
 void TestDistributed::TestForceInclude() const
@@ -168,7 +182,7 @@ void TestDistributed::TestZiDebugFormat() const
 	FBuildOptions options;
 	options.m_ConfigFile = "Data/TestDistributed/fbuild.bff";
 	options.m_AllowDistributed = true;
-	options.m_NumWorkerThreads = 0;
+	options.m_NumWorkerThreads = 1;
 	options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
 	options.m_AllowLocalRace = false;
 	options.m_ForceCleanBuild = true;

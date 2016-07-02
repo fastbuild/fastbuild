@@ -966,7 +966,8 @@ test_match:
 void AString::Grow( uint32_t newLength )
 {
 	// allocate space, rounded up to multiple of 2
-	uint32_t reserve = Math::RoundUp( newLength, (uint32_t)2 );
+	const uint32_t amortizedReserve = ( GetReserved() * 2 );
+	const uint32_t reserve = Math::RoundUp( Math::Max( amortizedReserve, newLength ),(uint32_t)2 );
 	char * newMem = (char *)ALLOC( reserve + 1 ); // also allocate for \0 terminator
 
 	// transfer existing string data

@@ -233,7 +233,8 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const AString & targ
 	static const char * defaultExtensions[] =	{ 
 										"*.cpp", "*.hpp", "*.cxx", "*.hxx", "*.c",   "*.h",  "*.cc",   "*.hh",
 										"*.cp",  "*.hp",  "*.cs",  "*.inl", "*.bff", "*.rc", "*.resx", "*.m",  "*.mm",
-										"*.cu" };
+										"*.cu",
+										"*.natvis" };
 	extensions.SetCapacity( sizeof( defaultExtensions ) / sizeof( char * ) );
 	for ( auto & ext : defaultExtensions )
 	{

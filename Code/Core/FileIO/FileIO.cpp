@@ -11,6 +11,7 @@
 // Core
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 
@@ -39,6 +40,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::FileExists( const char * fileName )
 {
+	PROFILE_FUNCTION
 #if defined( __WINDOWS__ )
 	// see if we can get attributes
 	DWORD attributes = GetFileAttributes( fileName );
@@ -62,10 +64,34 @@
 #endif
 }
 
+// Delete directory
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::DirectoryDelete( const AString & path )
+{
+#if defined( __WINDOWS__ )
+	BOOL result = RemoveDirectory( path.Get() );
+	if ( result == FALSE )
+	{
+		return false; // failed to delete
+	}
+	return true; // delete ok
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+	int result = rmdir( path.Get() );
+	if ( result != 0 )
+	{
+		return false; // failed to delete
+	}
+	return true; // delete ok
+#else
+	#error Unknown platform
+#endif
+}
+
 // Delete
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::FileDelete( const char * fileName )
 {
+	PROFILE_FUNCTION
 #if defined( __WINDOWS__ )
 	BOOL result = DeleteFile( fileName );
 	if ( result == FALSE )

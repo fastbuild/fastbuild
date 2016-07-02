@@ -8,9 +8,8 @@
 // Core
 #include <Core/Env/Assert.h>
 #include <Core/Process/SharedMemory.h>
-#include <Core/Process/SystemMutex.h>
 #include <Core/Process/Thread.h>
-
+#include <Core/Time/Timer.h>
 
 #if defined(__LINUX__) || defined(__APPLE__)
 	#include <sys/types.h>
@@ -42,19 +41,13 @@ void TestSharedMemory::CreateAccessDestroy() const
 #if defined(__WINDOWS__)
 	// TODO:WINDOWS Test SharedMemory (without fork, so).
 #elif defined(__LINUX__) || defined(__APPLE__)
-	SystemMutex mutex("fbuild_shared_memory_test");
-	bool locked = mutex.TryLock();
-
-	TEST_ASSERT(locked);
-
 	int pid = fork();
+	
+	Timer t;
+	t.Start();
 
 	if(pid == 0)
 	{
-		while(!mutex.TryLock())
-		{
-			Thread::Sleep(10);
-		}
 		SharedMemory shm;
 		shm.Open("fbuild_test_shared_memory", sizeof(unsigned int));
 		unsigned int* magic = static_cast<unsigned int*>(shm.GetPtr());
@@ -62,7 +55,15 @@ void TestSharedMemory::CreateAccessDestroy() const
 		// Asserts raise an exception when running unit tests : forked process
 		// will not exit cleanly and it will be ASSERTed in the parent process.
 		TEST_ASSERT(magic != nullptr);
-		TEST_ASSERT(*magic == 0xBEEFBEEF);
+		
+		// Wait for parent to write magic
+		while ( *magic != 0xBEEFBEEF )
+		{
+			Thread::Sleep( 1 );
+			TEST_ASSERT( t.GetElapsed() < 1.0f ); // Sanity check timeout
+		}
+		
+		// Write reponse magic
 		*magic = 0xB0AFB0AF;
 		_exit(0);
 	}
@@ -71,16 +72,19 @@ void TestSharedMemory::CreateAccessDestroy() const
 		SharedMemory shm;
 		shm.Create("fbuild_test_shared_memory", sizeof(unsigned int));
 		unsigned int* magic = static_cast<unsigned int*>(shm.GetPtr());
-
-		if(magic != nullptr)
+		TEST_ASSERT( magic );
+		
+		// Signal child
+		*magic = 0xBEEFBEEF;
+		
+		// Wait for response from child
+		while ( *magic != 0xB0AFB0AF )
 		{
-			*magic = 0xBEEFBEEF;
+			Thread::Sleep( 1 );
+			TEST_ASSERT( t.GetElapsed() < 1.0f ); // Sanity check timeout
 		}
 
-		mutex.Unlock();
-
 		int status;
-
 		TEST_ASSERT(-1 != wait(&status));
 		TEST_ASSERT(WIFEXITED(status) && WEXITSTATUS(status) == 0);
 		TEST_ASSERT(magic != nullptr);

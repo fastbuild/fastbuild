@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -17,20 +18,38 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Process/Process.h"
 
+// Reflection
+//------------------------------------------------------------------------------
+REFLECT_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
+	REFLECT( m_TestExecutable,		"TestExecutable",		MetaFile() )
+	REFLECT( m_TestArguments,		"TestArguments",		MetaOptional() )
+	REFLECT( m_TestWorkingDir,		"TestWorkingDir",		MetaOptional() + MetaPath() )
+	REFLECT( m_TestTimeOut,			"TestTimeOut",			MetaOptional() + MetaRange( 0, 4 * 60 * 60 * 1000 ) ) // 4hrs
+REFLECT_END( TestNode )
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-TestNode::TestNode( const AString & testOutput,
-					FileNode * testExecutable,
-					const AString & arguments,
-					const AString & workingDir )
-	: FileNode( testOutput, Node::FLAG_NO_DELETE_ON_FAIL ) // keep output on test fail
-	, m_Executable( testExecutable )
-	, m_Arguments( arguments )
-	, m_WorkingDir( workingDir )
+TestNode::TestNode()
+	: FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL ) // keep output on test fail
+	, m_TestExecutable()
+	, m_TestArguments()
+	, m_TestWorkingDir()
+	, m_TestTimeOut( 0 )
 {
-	ASSERT( testExecutable );
-	m_StaticDependencies.Append( Dependency( testExecutable ) );
-	m_Type = TEST_NODE;
+	m_Type = Node::TEST_NODE;
+}
+
+// Initialize
+//------------------------------------------------------------------------------
+bool TestNode::Initialize( const BFFIterator & iter, const Function * function )
+{
+	// Get node for Executable
+	if ( !function->GetFileNode( iter, m_TestExecutable, "TestExecutable", m_StaticDependencies ) )
+	{
+		return false; // GetFileNode will have emitted an error
+	}
+
+	return true;
 }
 
 // DESTRUCTOR
@@ -44,14 +63,14 @@ TestNode::~TestNode()
 /*virtual*/ Node::BuildResult TestNode::DoBuild( Job * job )
 {
 	// If the workingDir is empty, use the current dir for the process
-	const char * workingDir = m_WorkingDir.IsEmpty() ? nullptr : m_WorkingDir.Get();
+	const char * workingDir = m_TestWorkingDir.IsEmpty() ? nullptr : m_TestWorkingDir.Get();
 
 	EmitCompilationMessage( workingDir );
 
 	// spawn the process
 	Process p;
-	bool spawnOK = p.Spawn( m_Executable->GetName().Get(),
-							m_Arguments.Get(),
+	bool spawnOK = p.Spawn( GetTestExecutable()->GetName().Get(),
+							m_TestArguments.Get(),
 							workingDir,
 							FBuild::Get().GetEnvironmentString() );
 
@@ -66,7 +85,12 @@ TestNode::~TestNode()
 	AutoPtr< char > memErr;
 	uint32_t memOutSize = 0;
 	uint32_t memErrSize = 0;
-	p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+	bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut );
+	if ( timedOut )
+	{
+		FLOG_ERROR( "Test timed out after %u ms (%s)", m_TestTimeOut, m_TestExecutable.Get() );
+		return NODE_RESULT_FAILED;
+	}
 
 	ASSERT( !p.IsRunning() );
 	// Get result
@@ -116,9 +140,9 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
 	output += '\n';
 	if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
 	{
-		output += m_Executable->GetName();
+		output += GetTestExecutable()->GetName();
 		output += ' ';
-		output += m_Arguments;
+		output += m_TestArguments;
 		output += '\n';
 		if ( workingDir )
 		{
@@ -135,32 +159,23 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
 /*virtual*/ void TestNode::Save( IOStream & stream ) const
 {
 	NODE_SAVE( m_Name );
-	NODE_SAVE( m_Executable->GetName() );
-	NODE_SAVE( m_Arguments );
-	NODE_SAVE( m_WorkingDir );
+	Node::Serialize( stream );
 }
 
 // Load
 //------------------------------------------------------------------------------
 /*static*/ Node * TestNode::Load( IOStream & stream )
 {
-	NODE_LOAD( AStackString<>,	fileName );
-	NODE_LOAD( AStackString<>,	executable );
-	NODE_LOAD( AStackString<>,	arguments );
-	NODE_LOAD( AStackString<>,	workingDir );
+	NODE_LOAD( AStackString<>, name );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+	TestNode * node = ng.CreateTestNode( name );
 
-	Node * execNode = ng.FindNode( executable );
-	ASSERT( execNode ); // load/save logic should ensure the src was saved first
-	ASSERT( execNode->IsAFile() );
-
-	TestNode * n = ng.CreateTestNode( fileName, 
-									  (FileNode *)execNode,
-									  arguments,
-									  workingDir );
-	ASSERT( n );
-	return n;
+	if ( node->Deserialize( stream ) == false )
+	{
+		return nullptr;
+	}
+	return node;
 }
 
 //------------------------------------------------------------------------------

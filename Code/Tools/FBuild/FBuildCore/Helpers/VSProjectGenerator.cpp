@@ -7,6 +7,14 @@
 
 #include "VSProjectGenerator.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
+
 // Core
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -15,6 +23,19 @@
 
 // system
 #include <stdarg.h> // for va_args
+
+// CONSTRUCTOR (VSProjectConfig)
+//------------------------------------------------------------------------------
+VSProjectConfig::VSProjectConfig()
+	: m_Target( nullptr )
+{
+}
+
+// DESTRUCTOR (VSProjectConfig)
+//------------------------------------------------------------------------------
+VSProjectConfig::~VSProjectConfig()
+{
+}
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -245,8 +266,44 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 			WritePGItem( "NMakeReBuildCommandLine",			cIt->m_RebuildCommand );
 			WritePGItem( "NMakeCleanCommandLine",			cIt->m_CleanCommand );
 			WritePGItem( "NMakeOutput",						cIt->m_Output );
-			WritePGItem( "NMakePreprocessorDefinitions",	cIt->m_PreprocessorDefinitions );
-			WritePGItem( "NMakeIncludeSearchPath",			cIt->m_IncludeSearchPath );
+			if ( cIt->m_PreprocessorDefinitions.IsEmpty() == false )
+			{
+				WritePGItem( "NMakePreprocessorDefinitions",	cIt->m_PreprocessorDefinitions );
+			}
+			else
+			{
+				const ObjectListNode * oln = FindTargetForIntellisenseInfo( cIt->m_Target );
+				if ( oln )
+				{
+					Array< AString > defines;
+					ExtractIntellisenseOptions( oln->GetCompilerArgs(), "/D", "-D", defines );
+					AStackString<> definesStr;
+					ConcatIntellisenseOptions( defines, definesStr );
+					WritePGItem( "NMakePreprocessorDefinitions", definesStr );					
+				}
+			}
+			if ( cIt->m_IncludeSearchPath.IsEmpty() == false )
+			{
+				WritePGItem( "NMakeIncludeSearchPath",			cIt->m_IncludeSearchPath );
+			}
+			else
+			{
+				const ObjectListNode * oln = FindTargetForIntellisenseInfo( cIt->m_Target );
+				if ( oln )
+				{
+					Array< AString > includePaths;
+					ExtractIntellisenseOptions( oln->GetCompilerArgs(), "/I", "-I", includePaths );
+					for ( AString & include : includePaths )
+					{
+						AStackString<> fullIncludePath;
+						NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path - TODO:C would be better to be project relative
+						include = fullIncludePath;
+					}
+					AStackString<> includePathsStr;
+					ConcatIntellisenseOptions( includePaths, includePathsStr );
+					WritePGItem( "NMakeIncludeSearchPath", includePathsStr );					
+				}
+			}
 			WritePGItem( "NMakeForcedIncludes",				cIt->m_ForcedIncludes );
 			WritePGItem( "NMakeAssemblySearchPath",			cIt->m_AssemblySearchPath );
 			WritePGItem( "NMakeForcedUsingAssemblies",		cIt->m_ForcedUsingAssemblies );
@@ -452,8 +509,13 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
 	{
 		const VSProjectConfig & cfg = configs[ i ];
 
+		stream.Write( cfg.m_SolutionPlatform );
+		stream.Write( cfg.m_SolutionConfig );
+
 		stream.Write( cfg.m_Platform );
 		stream.Write( cfg.m_Config );
+
+		Node::SaveNode( stream, cfg.m_Target );
 
 		stream.Write( cfg.m_BuildCommand );
 		stream.Write( cfg.m_RebuildCommand );
@@ -500,8 +562,13 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
 	{
 		VSProjectConfig & cfg = configs[ i ];
 
+		if ( stream.Read( cfg.m_SolutionPlatform ) == false ) { return false; }
+		if ( stream.Read( cfg.m_SolutionConfig ) == false ) { return false;  }
+		
 		if ( stream.Read( cfg.m_Platform ) == false ) { return false; }
 		if ( stream.Read( cfg.m_Config ) == false ) { return false; }
+
+		if ( !Node::LoadNode( stream, cfg.m_Target ) ) { return false; }
 
 		if ( stream.Read( cfg.m_BuildCommand ) == false ) { return false; }
 		if ( stream.Read( cfg.m_RebuildCommand ) == false ) { return false; }
@@ -568,6 +635,127 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
 		if ( stream.Read( ft.m_Pattern ) == false ) { return false; }
 	}
 	return true;
+}
+
+// FindTargetForIntellisenseInfo
+//------------------------------------------------------------------------------
+/*static*/ const ObjectListNode * VSProjectGenerator::FindTargetForIntellisenseInfo( const Node * node )
+{
+	if ( node )
+	{
+		switch ( node->GetType() )
+		{
+			case Node::OBJECT_LIST_NODE: return node->CastTo< ObjectListNode >();
+			case Node::LIBRARY_NODE: return node->CastTo< LibraryNode >();
+			case Node::EXE_NODE:
+			{
+				// For Exe use first library
+				const Dependencies & deps = node->GetStaticDependencies();
+				if ( deps.IsEmpty() == false )
+				{
+					return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+				}
+				break; // Nothing found
+			}
+			case Node::DLL_NODE:
+			{
+				// For DLL use first library
+				const Dependencies & deps = node->GetStaticDependencies();
+				if ( deps.IsEmpty() == false )
+				{
+					return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+				}
+				break; // Nothing found
+			}
+			case Node::TEST_NODE:
+			{
+				// For test search in executable
+				const Node * testExe = node->CastTo< TestNode >()->GetTestExecutable();
+				if ( testExe )
+				{
+					return FindTargetForIntellisenseInfo( testExe );
+				}
+				break; // Nothing found
+			}
+			case Node::ALIAS_NODE:
+			{
+				const Dependencies & deps = node->CastTo< AliasNode >()->GetAliasedNodes();
+				if ( deps.IsEmpty() == false )
+				{
+					return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+				}
+				break; // Nothing aliased - ignore
+			}				
+			default: break; // Unsupported type - ignore
+		}
+	}
+	return nullptr;
+}
+
+// ExtractIntellisenseOptions
+//------------------------------------------------------------------------------
+/*static*/ void VSProjectGenerator::ExtractIntellisenseOptions( const AString & compilerArgs, 
+																const char * option, 
+																const char * alternateOption, 
+																Array< AString > & outOptions )
+{
+	ASSERT( option );
+	Array< AString > tokens;
+	compilerArgs.Tokenize( tokens );
+
+    const size_t optionLen = AString::StrLen( option );
+    const size_t alternateOptionLen = alternateOption ? AString::StrLen( alternateOption ) : 0;
+
+	for ( AString & token : tokens )
+	{
+		// strip quotes around token, e.g:    "-IFolder/Folder"
+		if ( token.BeginsWith( '"' ) && token.EndsWith( '"' ) )
+		{
+			token = AStackString<>( token.Get() + 1, token.GetEnd() - 1 );
+		}
+
+		// check for either option at start of token
+		if ( token.BeginsWith( option ) )
+		{
+			// quoted?
+			AStackString<> tmp;
+			if ( ( token[optionLen] == '"' ) && token.EndsWith( '"' ) )
+			{
+				// use everything after token minus the quotes
+				tmp.Assign( token.Get() + ( optionLen + 1 ), token.GetEnd() - 1 );
+			}
+			else
+			{
+				// use everything after token
+				tmp.Assign( token.Get() + optionLen );
+			}
+			outOptions.Append( tmp );
+		}
+		else if ( alternateOption && token.BeginsWith( alternateOption ) )
+		{
+			AStackString<> tmp;
+			if ( ( token[alternateOptionLen] == '"' ) && token.EndsWith( '"' ) )
+			{
+				tmp.Assign( token.Get() + ( alternateOptionLen + 1 ), token.GetEnd() - 1 );
+			}
+			else
+			{
+				tmp.Assign( token.Get() + alternateOptionLen );
+			}
+			outOptions.Append( tmp );
+		}
+	}
+}
+
+// ConcatIntellisenseOptions
+//------------------------------------------------------------------------------
+/*static*/ void VSProjectGenerator::ConcatIntellisenseOptions( const Array< AString > & tokens, AString & outTokenString )
+{
+	for ( const AString & token : tokens )
+	{
+		outTokenString += token;
+		outTokenString += ';';
+	}
 }
 
 //------------------------------------------------------------------------------

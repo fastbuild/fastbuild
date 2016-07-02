@@ -130,6 +130,7 @@ private:
 	bool						m_ShuttingDown;
 
 	// object to manage network subsystem lifetime
+protected:
     NetworkStartupHelper m_EnsureNetworkStarted;
 };
 

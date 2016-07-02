@@ -95,8 +95,10 @@ FunctionVCXProject::FunctionVCXProject()
 	// files and filesToExclude
 	Array< AString > files( 8, true );
 	Array< AString > filesToExclude( 8, true );	
+	Array< AString > patternToExclude(8, true);
 	if ( !GetStrings( funcStartIter, files,				".ProjectFiles", false ) ||
- 		 !GetStrings( funcStartIter, filesToExclude,	".ProjectFilesToExclude", false ) )
+ 		 !GetStrings( funcStartIter, filesToExclude,	".ProjectFilesToExclude", false ) ||
+		 !GetStrings( funcStartIter, patternToExclude,  ".ProjectPatternToExclude", false) )
 	{
 		return false;
 	}
@@ -144,6 +146,7 @@ FunctionVCXProject::FunctionVCXProject()
 	CleanFolderPaths( inputPaths );			// input paths
 	CleanFolderPaths( inputPathsExclude );	// exclude paths
 	CleanFilePaths( files );				// explicit files
+	CleanFilePaths( patternToExclude );		// explicit files
 
 	// per-config options
 	VSProjectConfig baseConfig;
@@ -214,6 +217,21 @@ FunctionVCXProject::FunctionVCXProject()
 				return false;
 			}
 
+			// .Target is optional
+			AStackString<> target;
+			if ( GetStringFromStruct( s, ".Target", target ) )
+			{
+				if ( target.IsEmpty() == false )
+				{
+					newConfig.m_Target = FBuild::Get().GetDependencyGraph().FindNode( target );
+					if ( !newConfig.m_Target )
+					{
+						Error::Error_1104_TargetNotDefined( funcStartIter, this, ".Target", target );
+						return false;
+					}
+				}
+			}
+
 			GetStringFromStruct( s, ".ProjectBuildCommand",		newConfig.m_BuildCommand );
 			GetStringFromStruct( s, ".ProjectRebuildCommand",	newConfig.m_RebuildCommand );
 			GetStringFromStruct( s, ".ProjectCleanCommand",		newConfig.m_CleanCommand );
@@ -281,6 +299,7 @@ FunctionVCXProject::FunctionVCXProject()
 												   basePaths,
 												   dirNodes,
 												   inputPathsExclude, // TODO:B Remove this (handled by DirectoryListNode now)
+												   patternToExclude,
 												   files,
 												   filesToExclude,
 												   rootNamespace,

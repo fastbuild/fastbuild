@@ -31,7 +31,6 @@ private:
 		AStackString<>	hostName;
 		bool			safeToFree;
 	};
-	static Mutex s_GetHostByNameMutex;
 };
 
 //------------------------------------------------------------------------------

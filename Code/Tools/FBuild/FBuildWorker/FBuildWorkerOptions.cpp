@@ -124,7 +124,7 @@ void FBuildWorkerOptions::ShowUsageError()
 					   "                -n : NUMBER_OF_PROCESSORS-n.\n"
 					   "                n% : % of NUMBER_OF_PROCESSORS.\n"
 					   "\n"
-					   "-mode=[disabled|idle|always] : Set work mode.\n"
+					   "-mode=[disabled|idle|dedicated] : Set work mode.\n"
 					   "                disabled : Don't accept any work.\n"
 					   "                idle : Accept work when PC is idle.\n"
 					   "                dedicated : Accept work always.\n"

@@ -47,21 +47,19 @@ void Free( void * ptr );
 
 // global new/delete
 //------------------------------------------------------------------------------
-#if defined( __clang__ ) && defined( __WINDOWS__ )
-	// TODO: resolve issue with Clang and inline new/delete
-#elif defined( __OSX__ )
+#if defined( __OSX__ )
 	// TODO: resolve issue with Clang and inline new/delete
 #else
 	#if defined( MEMTRACKER_ENABLED )
-		inline void * operator new( size_t size, const char * file, int line ) { return AllocFileLine( size, file, line ); }
-		inline void * operator new[]( size_t size, const char * file, int line ) { return AllocFileLine( size, file, line ); }
-		inline void operator delete( void * ptr, const char *, int ) { return Free( ptr ); }
-		inline void operator delete[]( void * ptr, const char *, int ) { return Free( ptr ); }
+		void * operator new( size_t size, const char * file, int line );
+		void * operator new[]( size_t size, const char * file, int line );
+		void operator delete( void * ptr, const char *, int );
+		void operator delete[]( void * ptr, const char *, int );
 	#endif
-	inline void * operator new( size_t size ) { return Alloc( size ); }
-	inline void * operator new[]( size_t size ) { return Alloc( size ); }
-	inline void operator delete( void * ptr ) { Free( ptr ); }
-	inline void operator delete[]( void * ptr ) { Free( ptr ); }
+	void * operator new( size_t size );
+	void * operator new[]( size_t size );
+	void operator delete( void * ptr );
+	void operator delete[]( void * ptr );
 #endif
 
 //------------------------------------------------------------------------------

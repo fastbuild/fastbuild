@@ -66,6 +66,7 @@ public:
 		FLAG_CUDA_NVCC			=   0x10000,
 		FLAG_INCLUDES_IN_STDERR =   0x20000,
 		FLAG_QT_RCC				=   0x40000,
+		FLAG_WARNINGS_AS_ERRORS_MSVC	= 0x80000,
 	};
 	static uint32_t DetermineFlags( const Node * compilerNode,
 									const AString & args,
@@ -112,6 +113,8 @@ private:
 	bool RetrieveFromCache( Job * job );
 	void WriteToCache( Job * job );
 
+	void HandleWarningsMSCL( Job* job, const char * data, uint32_t dataSize ) const;
+
 	static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
 
 	void EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false, bool isRemote = false ) const;
@@ -129,7 +132,7 @@ private:
 	void ExpandTokenList( const Dependencies & nodes, Args & fullArgs, const AString & pre, const AString & post ) const;
 	bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
 	void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
-	bool WriteTmpFile( Job * job, AString & tmpFileName ) const;
+	bool WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
 	bool BuildFinalOutput( Job * job, const Args & fullArgs ) const;
 
 	inline bool GetFlag( uint32_t flag ) const { return ( ( m_Flags & flag ) != 0 ); }

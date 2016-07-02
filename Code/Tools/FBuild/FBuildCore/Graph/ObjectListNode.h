@@ -34,8 +34,9 @@ public:
 							 bool deoptimizeWritableFilesWithToken,
 							 bool allowDistribution,
 							 bool allowCaching,
-                             CompilerNode * preprocessor,
-                             const AString & preprocessorArgs );
+							 CompilerNode * preprocessor,
+							 const AString & preprocessorArgs,
+							 const AString & baseDirectory );
 	virtual ~ObjectListNode();
 
 	static inline Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
@@ -49,6 +50,8 @@ public:
 
 	void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
 	void GetInputFiles( Array< AString > & files ) const;
+
+	inline const AString & GetCompilerArgs() const { return m_CompilerArgs; }
 protected:
 	friend class FunctionObjectList;
 
@@ -57,7 +60,7 @@ protected:
 	virtual BuildResult DoBuild( Job * job ) override;
 
 	// internal helpers
-	bool CreateDynamicObjectNode( Node * inputFile, const DirectoryListNode * dirNode, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
+	bool CreateDynamicObjectNode( Node * inputFile, const AString & baseDir, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
 
 	CompilerNode *	m_Compiler;
 	AString			m_CompilerArgs;
@@ -73,6 +76,9 @@ protected:
 	bool			m_AllowCaching;
 	CompilerNode *	m_Preprocessor;
 	AString			m_PreprocessorArgs;
+	AString			m_BaseDirectory;
+	AString			m_ExtraPDBPath;
+	AString			m_ExtraASMPath;
 };
 
 //------------------------------------------------------------------------------

@@ -31,6 +31,7 @@
   // Input Options
   .ProjectInputPaths             // (optional) Path(s) containing files to include in project 
   .ProjectInputPathsExclude      // (optional) Path(s) to exclude from project
+  .ProjectPatternToExclude       // (optional) Pattern(s) for diles to exclude from project
   .ProjectFiles                  // (optional) File(s) to include in project
   .ProjectFilesToExclude         // (optional) File(s) to exclude from project
   .ProjectBasePath               // (optional) Base path(s) to use to build folder hierarchy in project
@@ -108,7 +109,7 @@
       <hr>
       
       <p><b>.ProjectInputPathsExclude</b> - String or ArrayOfStrings - (Optional)</p>
-      <p>One or move directories can be specified to ignore during directory traversal.
+      <p>One or more directories can be specified to ignore during directory traversal.
       </p>
       Example:
       <div class='code'>.ProjectInputPathsExclude = 'Code/Lib/FolderToExclude/'</div>
@@ -118,6 +119,18 @@
                               'Code/Lib/FolderToExclude2/'
                             }</div>
       <hr>
+      
+      <p><b>.ProjectPatternToExclude</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>One or more patterns can be specified to ignore during directory traversal.
+      </p>
+      Example:
+      <div class='code'>.ProjectPatternToExclude = '*/OSX/*'</div>
+	  Or:
+      <div class='code'>.ProjectPatternToExclude = {
+                              '*/Windows/*'
+                              '*/Linux/*'
+                           }</div>
+      <hr>      
       
       <p><b>.ProjectFiles</b> - String or ArrayOfStrings - (Optional)</p>
       <p>One or more files can be explicitly listed for inclusion in the project.</p>
