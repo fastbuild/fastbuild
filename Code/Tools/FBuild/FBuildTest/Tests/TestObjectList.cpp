@@ -61,6 +61,8 @@ void TestObjectList::TestExcludedFiles() const
 	}
 }
 
+#if defined( __WINDOWS__ )
+
 // ExtraOutputFolders
 //------------------------------------------------------------------------------
 void TestObjectList::ExtraOutputFolders() const
@@ -107,5 +109,7 @@ void TestObjectList::ExtraOutputFolders() const
 	EnsureFileExists( libraryASMFile );
 	EnsureFileExists( libraryPDBFile );
 }
+
+#endif
 
 //------------------------------------------------------------------------------
