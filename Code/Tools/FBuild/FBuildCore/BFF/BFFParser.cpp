@@ -1274,7 +1274,15 @@ bool BFFParser::StoreVariableArray( const AString & name,
 				return false;
     		}
 
-			if ( var->IsString() || var->IsArrayOfStrings() )
+			if ( var->IsArrayOfStrings() && var->GetArrayOfStrings().IsEmpty() )
+			{
+				// appending empty array, nothing to do
+			}
+			else if ( var->IsArrayOfStructs() && var->GetArrayOfStructs().IsEmpty() )
+			{
+				// appending empty array, nothing to do
+			}
+			else if ( var->IsString() || var->IsArrayOfStrings() )
 			{
 				// dest is consistent?
 				if ( structValues.IsEmpty() == false )
@@ -1486,15 +1494,22 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
 	if ( srcType != dstType )
 	{
+		const bool dstIsEmpty =
+			( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && varDst->GetArrayOfStrings().IsEmpty() ) ||
+			( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && varDst->GetArrayOfStructs().IsEmpty() );
+		const bool srcIsEmpty =
+			( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS && varSrc->GetArrayOfStrings().IsEmpty() ) ||
+			( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && varSrc->GetArrayOfStructs().IsEmpty() );
+
 		// Mismatched - is there a supported conversion?
 
-		// String to ArrayOfStrings
-		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) && 
+		// String to ArrayOfStrings or empty array
+		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS || dstIsEmpty ) &&
 			 ( srcType == BFFVariable::VAR_STRING ) )
 		{
-			uint32_t num = (uint32_t)( 1 + ( concat ? varDst->GetArrayOfStrings().GetSize() : 0 ) );
+			uint32_t num = (uint32_t)( 1 + ( ( concat && !dstIsEmpty ) ? varDst->GetArrayOfStrings().GetSize() : 0 ) );
 			Array< AString > values( num, false );
-			if ( concat )
+			if ( concat && !dstIsEmpty )
 			{
 				values.Append( varDst->GetArrayOfStrings() );
 			}
@@ -1505,13 +1520,13 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		// Struct to ArrayOfStructs
-		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) && 
+		// Struct to ArrayOfStructs or empty array
+		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS || dstIsEmpty ) &&
 			 ( srcType == BFFVariable::VAR_STRUCT ) )
 		{
-			uint32_t num = (uint32_t)( 1 + ( concat ? varDst->GetArrayOfStructs().GetSize() : 0 ) );
+			uint32_t num = (uint32_t)( 1 + ( ( concat && !dstIsEmpty ) ? varDst->GetArrayOfStructs().GetSize() : 0 ) );
 			Array< const BFFVariable * > values( num, false );
-			if ( concat )
+			if ( concat && !dstIsEmpty )
 			{
 				values.Append( varDst->GetArrayOfStructs() );
 			}
@@ -1522,6 +1537,53 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
+		// Empty array to ArrayOfStrings
+		if ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && srcIsEmpty )
+		{
+			if ( concat )
+			{
+				BFFStackFrame::SetVarArrayOfStrings( dstName, varDst->GetArrayOfStrings(), dstFrame );
+				FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), (unsigned int)varDst->GetArrayOfStrings().GetSize() );
+			}
+			else
+			{
+				BFFStackFrame::SetVarArrayOfStrings( dstName, Array< AString >(), dstFrame );
+				FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with 0 elements", dstName.Get() );
+			}
+			return true;
+		}
+
+		// Empty array to ArrayOfStructs
+		if ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && srcIsEmpty )
+		{
+			if ( concat )
+			{
+				BFFStackFrame::SetVarArrayOfStructs( dstName, varDst->GetArrayOfStructs(), dstFrame );
+				FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), (unsigned int)varDst->GetArrayOfStructs().GetSize() );
+			}
+			else
+			{
+				BFFStackFrame::SetVarArrayOfStructs(dstName, Array< const BFFVariable * >(), dstFrame);
+				FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with 0 elements", dstName.Get() );
+			}
+			return true;
+		}
+
+		// ArrayOfStrings to empty array
+		if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRINGS )
+		{
+			BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetArrayOfStrings(), dstFrame );
+			FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), (unsigned int)varSrc->GetArrayOfStrings().GetSize() );
+			return true;
+		}
+
+		// ArrayOfStructs to empty array
+		if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
+		{
+			BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetArrayOfStructs(), dstFrame );
+			FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), (unsigned int)varSrc->GetArrayOfStructs().GetSize() );
+			return true;
+		}
 	}
 	else
 	{
