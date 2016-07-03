@@ -1065,24 +1065,25 @@ bool BFFParser::StoreVariableString( const AString & name,
 		return false;
 	}
 
+	// find existing
+	const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
+
 	// are we concatenating?
-	const BFFVariable * varToConcat = nullptr;
 	if ( ( *operatorIter == BFF_VARIABLE_CONCATENATION ) || 
 		 ( *operatorIter == BFF_VARIABLE_SUBTRACTION ) )
 	{
-		// find existing
-		varToConcat = BFFStackFrame::GetVar( name, frame );
-		if ( varToConcat == nullptr )
+		// variable must exist
+		if ( var == nullptr )
 		{
 			Error::Error_1026_VariableNotFoundForModification( operatorIter, name );
 			return false;
 		}
 
 		// make sure types are compatible
-		if ( varToConcat->IsString() )
+		if ( var->IsString() )
 		{
 			// OK - can concat String to String
-			AStackString< 1024 > finalValue( varToConcat->GetString() );
+			AStackString< 1024 > finalValue( var->GetString() );
 			if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
 			{
 				finalValue += value;
@@ -1101,19 +1102,19 @@ bool BFFParser::StoreVariableString( const AString & name,
 						finalValue.Get() );
 			return true;
 		}
-		else if ( varToConcat->IsArrayOfStrings() )
+		else if ( var->IsArrayOfStrings() )
 		{
 			// OK - can concat String to ArrayOfStrings
-			Array< AString > finalValues( varToConcat->GetArrayOfStrings().GetSize() + 1, false );
+			Array< AString > finalValues( var->GetArrayOfStrings().GetSize() + 1, false );
 			if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
 			{
-				finalValues = varToConcat->GetArrayOfStrings();
+				finalValues = var->GetArrayOfStrings();
 				finalValues.Append( value );
 			}
 			else
 			{
-				auto end = varToConcat->GetArrayOfStrings().End();
-				for ( auto it=varToConcat->GetArrayOfStrings().Begin(); it!=end; ++it )
+				auto end = var->GetArrayOfStrings().End();
+				for ( auto it=var->GetArrayOfStrings().Begin(); it!=end; ++it )
 				{
 					if ( *it != value ) // remove equal strings
 					{
@@ -1133,15 +1134,38 @@ bool BFFParser::StoreVariableString( const AString & name,
 		}
 		else
 		{
-			Error::Error_1027_CannotModify( operatorIter, name, varToConcat->GetType(), BFFVariable::VAR_STRING );
+			Error::Error_1027_CannotModify( operatorIter, name, var->GetType(), BFFVariable::VAR_STRING );
 			return false;
 		}
 	}
-
-	// handle regular assignment of string
-	BFFStackFrame::SetVarString( name, value, frame );
-	FLOG_INFO( "Registered <string> variable '%s' with value '%s'", name.Get(), value.Get() );
-	return true;
+	else
+	{
+		// make sure types are compatible
+		if ( var == nullptr || var->IsString() )
+		{
+			// OK - asigning to a new variable or to a string
+			BFFStackFrame::SetVarString( name, value, frame );
+			FLOG_INFO( "Registered <string> variable '%s' with value '%s'", name.Get(), value.Get() );
+			return true;
+		}
+		else if ( var->IsArrayOfStrings() )
+		{
+			// OK - store new string as the single element of array
+			Array< AString > values( 1, false );
+			values.Append( value );
+			BFFStackFrame::SetVarArrayOfStrings( name, values, frame );
+			FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with 1 element: '%s'", name.Get(), value.Get() );
+			return true;
+		}
+		else
+		{
+			auto errorIter = valueStart;
+			errorIter--;
+			Error::Error_1034_OperationNotSupported( errorIter, var->GetType(), BFFVariable::VAR_STRING, operatorIter );
+			return false;
+		}
+	}
+	return false;
 }
 
 // StoreVariableArray
