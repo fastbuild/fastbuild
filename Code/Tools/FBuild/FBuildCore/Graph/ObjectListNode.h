@@ -26,7 +26,6 @@ public:
 							 CompilerNode * compiler,
 							 const AString & compilerArgs,
 							 const AString & compilerArgsDeoptimized,
-							 const AString & compilerInputPath,
 							 const AString & compilerOutputPath,
 							 ObjectNode * precompiledHeader,
 							 const Dependencies & compilerForceUsing,
@@ -66,7 +65,6 @@ protected:
 	CompilerNode *	m_Compiler;
 	AString			m_CompilerArgs;
 	AString			m_CompilerArgsDeoptimized;
-	AString			m_CompilerInputPath;
 	AString			m_CompilerOutputPath;
 	Dependencies	m_CompilerForceUsing;
 	ObjectNode *	m_PrecompiledHeader;

@@ -29,7 +29,6 @@ ObjectListNode::ObjectListNode( const AString & listName,
 						  CompilerNode * compiler,
 						  const AString & compilerArgs,
 						  const AString & compilerArgsDeoptimized,
-						  const AString & compilerInputPath,
 						  const AString & compilerOutputPath,
 						  ObjectNode * precompiledHeader,
 						  const Dependencies & compilerForceUsing,
@@ -60,7 +59,6 @@ ObjectListNode::ObjectListNode( const AString & listName,
 	m_Compiler = compiler;
 	m_CompilerArgs = compilerArgs;
 	m_CompilerArgsDeoptimized = compilerArgsDeoptimized;
-	m_CompilerInputPath = compilerInputPath;
 	m_CompilerOutputPath = compilerOutputPath;
 
     m_Preprocessor     = preprocessor;
@@ -456,7 +454,6 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
 	NODE_LOAD_NODE( CompilerNode,	compilerNode );
 	NODE_LOAD( AStackString<>,	compilerArgs );
 	NODE_LOAD( AStackString<>,	compilerArgsDeoptimized );
-	NODE_LOAD( AStackString<>,	compilerInputPath );
 	NODE_LOAD( AStackString<>,	compilerOutputPath );
 	NODE_LOAD_DEPS( 16,			staticDeps );
 	NODE_LOAD_NODE( Node,		precompiledHeader );
@@ -480,7 +477,6 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
 								compilerNode, 
 								compilerArgs,
 								compilerArgsDeoptimized,
-								compilerInputPath,
 								compilerOutputPath, 
 								precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr,
 								compilerForceUsing,
@@ -516,7 +512,6 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
 	NODE_SAVE_NODE( m_Compiler );
 	NODE_SAVE( m_CompilerArgs );
 	NODE_SAVE( m_CompilerArgsDeoptimized );
-	NODE_SAVE( m_CompilerInputPath );
 	NODE_SAVE( m_CompilerOutputPath );
 	NODE_SAVE_DEPS( m_StaticDependencies );
 	NODE_SAVE_NODE( m_PrecompiledHeader );

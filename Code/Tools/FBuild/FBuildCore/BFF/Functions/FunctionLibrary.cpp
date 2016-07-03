@@ -54,7 +54,6 @@ FunctionLibrary::FunctionLibrary()
 	const BFFVariable * compiler;
 	const BFFVariable * compilerOptions;
 	AStackString<> compilerOptionsDeoptimized;
-	AStackString<> compilerInputPath;
 	AStackString<> compilerOutputPath;
     AStackString<> compilerOutputPrefix;
 	const BFFVariable * compilerOutputExtension;
@@ -64,7 +63,6 @@ FunctionLibrary::FunctionLibrary()
 		 !GetString( funcStartIter, compiler, ".Compiler", true ) ||
 		 !GetString( funcStartIter, compilerOptions, ".CompilerOptions", true ) ||
 		 !GetString( funcStartIter, compilerOptionsDeoptimized, ".CompilerOptionsDeoptimized", false ) ||
-		 !GetString( funcStartIter, compilerInputPath, ".CompilerInputPath", false ) ||
 		 !GetString( funcStartIter, compilerOutputPath, ".CompilerOutputPath", true ) ||
 		 !GetString( funcStartIter, compilerOutputPrefix, ".CompilerOutputPrefix", false ) ||
 		 !GetString( funcStartIter, compilerOutputExtension, ".CompilerOutputExtension", false ) ||
@@ -74,12 +72,6 @@ FunctionLibrary::FunctionLibrary()
 		return false;
 	}
 
-	if ( !compilerInputPath.IsEmpty() )
-	{
-		AStackString<> tmp;
-		NodeGraph::CleanPath( compilerInputPath, tmp );
-		compilerInputPath = tmp;
-	}
     PathUtils::FixupFolderPath( compilerOutputPath );
 
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
@@ -266,7 +258,6 @@ FunctionLibrary::FunctionLibrary()
 						  compilerNode,
 						  compilerOptions->GetString(),
 						  compilerOptionsDeoptimized,
-						  compilerInputPath,
 						  compilerOutputPath,
 						  librarian->GetString(),
 						  librarianOptions->GetString(),

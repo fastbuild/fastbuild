@@ -837,7 +837,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 			}
 
 			// TODO:A Support caching of 7i format
-			if ((flags & ObjectNode::FLAG_USING_PDB) == 0)
+			if ( ( flags & ObjectNode::FLAG_USING_PDB ) == 0 )
 			{
 				flags |= ObjectNode::FLAG_CAN_BE_CACHED;
 			}
