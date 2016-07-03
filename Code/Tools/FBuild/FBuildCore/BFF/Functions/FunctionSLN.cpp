@@ -236,7 +236,12 @@ struct VCXProjectNodeComp
                 return false;
             }
 
+			// Clean slashes
             newFolder.m_Path.Replace( OTHER_SLASH, NATIVE_SLASH );
+			if (newFolder.m_Path.EndsWith(NATIVE_SLASH))
+			{
+				newFolder.m_Path.SetLength(newFolder.m_Path.GetLength() - 1); // Remove trailing slash
+			}
 
             // check if this path was already defined
             {

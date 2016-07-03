@@ -82,7 +82,7 @@ ObjectList( "DLLPCHTest" )
 	#if __WINDOWS__
 		.PCHInputFile		= 'Data/TestDLL/PrecompiledHeader.cpp'
 		.PCHOutputFile		= '$Out$/Test/DLL/PrecompiledHeader.pch'
-		.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Z7 /Fp"%2" /nologo /c'
+		.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /W4 /WX /Z7 /Fp"%2" /nologo /c'
 	#endif
     #if __LINUX__
         .PCHInputFile       = "Data/TestDLL/PrecompiledHeader.h"

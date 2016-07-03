@@ -555,7 +555,7 @@ void FunctionObjectList::GetExtraOutputPath( const AString * it, const AString *
 	const char * bodyStart = it->Get() + strlen( option );
 	const char * bodyEnd = it->GetEnd();
 
-	// if token is exactly /Fd then value is next token
+	// if token is exactly matched then value is next token
 	if ( bodyStart == bodyEnd )
 	{
 		++it;

@@ -26,7 +26,7 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS ( 1.0f )
+#define CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS ( 0.1f )
 #define CONNECTION_LIMIT ( 15 )
 #define CONNECTION_REATTEMPT_DELAY_TIME ( 10.0f )
 #define SYSTEM_ERROR_ATTEMPT_COUNT ( 3 )
@@ -53,6 +53,7 @@ Client::Client( const Array< AString > & workerList )
 Client::~Client()
 {
 	SetShuttingDown();
+	m_EnsureNetworkStarted.Stop();
 
 	m_ShouldExit = true;
 	while ( m_Exited == false )
@@ -111,7 +112,7 @@ void Client::ThreadFunc()
     PROFILE_FUNCTION
 
 	// ensure first status update will be sent more rapidly
-	m_StatusUpdateTimer.Start( CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS * 0.5f );
+	m_StatusUpdateTimer.Start();
 
 	for ( ;; )
 	{
@@ -208,7 +209,7 @@ void Client::LookForWorkers()
 			continue;
 		}
 
-		const ConnectionInfo * ci = Connect( m_WorkerList[ i ], Protocol::PROTOCOL_PORT );
+		const ConnectionInfo * ci = Connect( m_WorkerList[ i ], Protocol::PROTOCOL_PORT, 500 ); // 500ms connection timeout
 		if ( ci == nullptr )
 		{
 			ss.m_DelayTimer.Start(); // reset connection attempt delay

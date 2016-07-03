@@ -7,7 +7,7 @@
 // Enabled in DEBUG only
 //------------------------------------------------------------------------------
 #ifdef DEBUG
-	#if !defined( __APPLE__ ) && !defined( __LINUX__ )// TODO:MAC TODO:LINUX Fix MemTracker
+	#if !defined( __APPLE__ ) // TODO:MAC Fix MemTracker
 		#define MEMTRACKER_ENABLED
 	#endif
 #endif
@@ -18,6 +18,8 @@
 	#define MEMTRACKER_ALLOC( ptr, size, file, line )
 	#define MEMTRACKER_FREE( ptr )
 	#define MEMTRACKER_DUMP_ALLOCATIONS
+	#define MEMTRACKER_DISABLE_THREAD
+	#define MEMTRACKER_ENABLE_THREAD
 #else
 	// Includes
 	//------------------------------------------------------------------------------
@@ -33,6 +35,8 @@
 	#define MEMTRACKER_ALLOC( ptr, size, file, line )	MemTracker::Alloc( ptr, size, file, line );
 	#define MEMTRACKER_FREE( ptr )						MemTracker::Free( ptr );
 	#define MEMTRACKER_DUMP_ALLOCATIONS					MemTracker::DumpAllocations();
+	#define MEMTRACKER_DISABLE_THREAD					MemTracker::DisableOnThread();
+	#define MEMTRACKER_ENABLE_THREAD					MemTracker::EnableOnThread();
 
 	// MemTracker
 	//------------------------------------------------------------------------------
@@ -41,6 +45,9 @@
 	public:
 		static void Alloc( void * ptr, size_t size, const char * file, int line );
 		static void Free( void * ptr );
+		
+		static void DisableOnThread();
+		static void EnableOnThread();
 
 		static void Reset();
 		static void DumpAllocations();

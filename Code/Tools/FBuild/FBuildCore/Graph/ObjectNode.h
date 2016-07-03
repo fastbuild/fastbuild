@@ -66,6 +66,7 @@ public:
 		FLAG_CUDA_NVCC			=   0x10000,
 		FLAG_INCLUDES_IN_STDERR =   0x20000,
 		FLAG_QT_RCC				=   0x40000,
+		FLAG_WARNINGS_AS_ERRORS_MSVC	= 0x80000,
 	};
 	static uint32_t DetermineFlags( const Node * compilerNode,
 									const AString & args,
@@ -111,6 +112,8 @@ private:
 	const AString & GetCacheName( Job * job ) const;
 	bool RetrieveFromCache( Job * job );
 	void WriteToCache( Job * job );
+
+	void HandleWarningsMSCL( Job* job, const char * data, uint32_t dataSize ) const;
 
 	static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
 

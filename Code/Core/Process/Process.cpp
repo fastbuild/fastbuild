@@ -11,6 +11,8 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Math/Conversions.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
+#include "Core/Time/Timer.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 
@@ -21,6 +23,7 @@
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <errno.h>
     #include <fcntl.h>
+    #include <signal.h>
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
@@ -68,6 +71,8 @@ bool Process::Spawn( const char * executable,
 					 const char * environment,
 					 bool shareHandles )
 {
+	PROFILE_FUNCTION
+
 	ASSERT( !m_Started );
 	ASSERT( executable );
 
@@ -155,7 +160,46 @@ bool Process::Spawn( const char * executable,
         int stdErrPipeFDs[ 2 ];
         VERIFY( pipe( stdOutPipeFDs ) == 0 );
         VERIFY( pipe( stdErrPipeFDs ) == 0 );     
-            
+
+        // prepare args
+        Array< AString > splitArgs( 64, true );
+        Array< const char * > argVector( 64, true );
+        argVector.Append( executable ); // first arg is exe name
+        if ( args )
+        {
+            // Tokenize
+            AStackString<> argCopy( args );
+            argCopy.Tokenize( splitArgs );
+
+            // Build Vector
+            for ( auto & arg : splitArgs )
+            {
+                if ( arg.BeginsWith( '"' ) && arg.EndsWith( '"' ) )
+                {
+                    // strip quotes
+                    arg.SetLength( arg.GetLength() - 1 ); // trim end quote
+                    argVector.Append( arg.Get() + 1 ); // skip start quote
+                    continue;
+                }
+                argVector.Append( arg.Get() ); // leave arg as-is
+            }
+        }
+        argVector.Append( nullptr ); // argv must have be nullptr terminated
+        
+        // prepare environment
+        Array< const char* > envVector( 8, true );
+        if ( environment )
+        {            
+            // Iterate double-null terminated string vector
+            while( *environment != 0 )
+            {
+                envVector.Append( environment );
+                environment += strlen( environment );
+                environment += 1; // skip null terminator for string
+            }            
+        }    
+        envVector.Append( nullptr ); // env must be terminated with a nullptr
+
         // fork the process
         const pid_t childProcessPid = fork();
         if ( childProcessPid == -1 )
@@ -183,53 +227,20 @@ bool Process::Spawn( const char * executable,
 
             if ( workingDir )
             {
-                FileIO::SetCurrentDir( AStackString<>( workingDir ) );
-            }
-            
+                VERIFY( chdir( workingDir ) == 0 );
+            }                 
+                        
+            // transfer execution to new executable
+            char * const * argV = (char * const *)argVector.Begin();
             if ( environment )
             {
-                #if !defined( __APPLE__ )
-                    VERIFY( clearenv() == 0 ); // TODO:MAC Fix missing clearenv()
-                #endif
-                
-                // Iterate double-null terminated string vector
-                while( *environment != 0 )
-                {
-                    const char * equals = strchr( environment, '=' );
-                    ASSERT(equals);
-                    AStackString<> name( environment, equals );
-                    AStackString<> value( equals + 1 );
-                    environment = equals + 1; // skip name and equals
-                    environment += value.GetLength() + 1; // skip null terminator for sting
-                    VERIFY( setenv(name.Get(), value.Get(), 1) == 0 );
-                }
+                char * const * envV = (char * const *)envVector.Begin();       
+                execve( executable, argV, envV );
             }
-
-            // split args
-            AString fullArgs( args ? args : "" );
-            Array< AString > splitArgs( 64, true );
-            fullArgs.Tokenize( splitArgs );
-
-            // prepare args
-            const size_t numArgs = splitArgs.GetSize();
-            char ** argv = FNEW( char *[ numArgs + 2 ] );
-            argv[ 0 ] = const_cast< char * >( executable );
-            for ( size_t i=0; i<numArgs; ++i )
+            else
             {
-                AString & thisArg = splitArgs[ i ];
-				if ( thisArg.BeginsWith( '"' ) && thisArg.EndsWith( '"' ) )
-				{
-					// strip quotes
-					thisArg.SetLength( thisArg.GetLength() - 1 ); // trim end quote
-	                argv[ i + 1 ] = thisArg.Get() + 1; // skip start quote
-					continue;
-				}
-                argv[ i + 1 ] = thisArg.Get(); // leave arg as-is
+                execv( executable, argV );
             }
-            argv[ numArgs + 1 ] = nullptr;                      
-                                    
-            // transfer execution to new executable
-            execv( executable, argv );
             
             exit( -1 ); // only get here if execv fails
         }
@@ -383,14 +394,17 @@ void Process::Detach()
 
 // ReadAllData
 //------------------------------------------------------------------------------
-void Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
-						   AutoPtr< char > & errMem, uint32_t * errMemSize )
+bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
+						   AutoPtr< char > & errMem, uint32_t * errMemSize,
+						   uint32_t timeOutMS )
 {
     // we'll capture into these growing buffers
     uint32_t outSize = 0;
     uint32_t errSize = 0;
     uint32_t outBufferSize = 0;
     uint32_t errBufferSize = 0;
+
+	Timer t;
 
     bool processExited = false;
     for ( ;; )
@@ -407,14 +421,44 @@ void Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
         }
 
         // nothing to read right now
-        if ( IsRunning() )
-        {
-            // no data available, but process is still going, so wait
-            // TODO:C Replace this sleep with event-based wait
-            // (tricky to do on Windows since unnamed pipes are not waitable :(
-            Thread::Sleep( 15 );
-            continue;
-        }
+		#if defined( __WINDOWS__ )
+			if ( processExited == false )
+			{
+				PROFILE_SECTION( "Wait" )
+				DWORD result = WaitForSingleObject( GetProcessInfo().hProcess, 15 );
+				if ( result == WAIT_TIMEOUT )
+				{
+					// Check if timeout is hit
+					if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= timeOutMS ) )
+					{
+						Terminate();
+						return false; // Timed out
+					}
+
+                    continue; // still running - try to read
+				}
+				else
+				{
+                    // exited - will do one more read
+					ASSERT( result == WAIT_OBJECT_0 );
+				}
+			}
+		#else
+			if ( IsRunning() )
+			{
+				// Check if timeout is hit
+				if ( ( timeOutMS > 0 ) && ( t.GetElapsedMS() >= timeOutMS ) )
+				{
+					Terminate();
+					return false; // Timed out
+				}
+
+				// no data available, but process is still going, so wait
+				// TODO:C Replace this sleep with event-based wait
+				Thread::Sleep( 15 );
+				continue;
+			}
+		#endif
 
         // process exited - is this the first time to this point?
         if ( processExited == false )
@@ -429,6 +473,7 @@ void Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     // if owner asks for pointers, they now own the mem
     if ( outMemSize ) { *outMemSize = outSize; }
     if ( errMemSize ) { *errMemSize = errSize; }
+	return true;
 }
 
 // Read
@@ -648,6 +693,17 @@ void Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
 		return 0; // TODO: Implement GetCurrentId()
 	#elif defined( __OSX__ )
 		return 0; // TODO: Implement GetCurrentId()
+	#endif
+}
+
+// Terminate
+//------------------------------------------------------------------------------
+void Process::Terminate()
+{
+	#if defined( __WINDOWS__ )
+		VERIFY( ::TerminateProcess( GetProcessInfo().hProcess, 1 ) );
+	#else
+	    kill( m_ChildPID, SIGKILL );
 	#endif
 }
 

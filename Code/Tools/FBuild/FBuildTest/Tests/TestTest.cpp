@@ -21,6 +21,7 @@ private:
 	void CreateNode() const;
 	void Build() const;
 	void Build_NoRebuild() const;
+	void TimeOut() const;
 };
 
 // Register Tests
@@ -29,6 +30,7 @@ REGISTER_TESTS_BEGIN( TestTest )
 	REGISTER_TEST( CreateNode )
 	REGISTER_TEST( Build )
 	REGISTER_TEST( Build_NoRebuild )
+	REGISTER_TEST( TimeOut )
 REGISTER_TESTS_END
 
 // CreateNode
@@ -38,12 +40,9 @@ void TestTest::CreateNode() const
 	FBuild fb;
 	NodeGraph & ng = fb.GetDependencyGraph();
 
-	FileNode * fileNode = ng.CreateFileNode( AStackString<>( "test.exe" ) );
-
-	TestNode * testNode = ng.CreateTestNode( AStackString<>( "output.txt" ), 
-											 fileNode, 
-											 AString::GetEmpty(), 
-											 AString::GetEmpty() );
+	AStackString<> outputPath;
+	NodeGraph::CleanPath( AStackString<>( "output.txt" ), outputPath );
+	TestNode * testNode = ng.CreateTestNode( outputPath );
 
 	TEST_ASSERT( testNode->GetType() == Node::TEST_NODE );
 	TEST_ASSERT( TestNode::GetTypeS() == Node::TEST_NODE );
@@ -90,7 +89,7 @@ void TestTest::Build() const
 void TestTest::Build_NoRebuild() const
 {
 	FBuildOptions options;
-	options.m_ConfigFile = "Data/TestCopy/copy.bff";
+	options.m_ConfigFile = "Data/TestTest/test.bff";
 	options.m_ShowSummary = true; // required to generate stats for node count checks
 	FBuild fBuild( options );
 	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Test/test.fdb" ) );
@@ -109,6 +108,19 @@ void TestTest::Build_NoRebuild() const
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 7,		2 );
 
+}
+
+// TimeOut
+//------------------------------------------------------------------------------
+void TestTest::TimeOut() const
+{
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestTest/test_timeout.bff";
+	FBuild fBuild( options );
+	TEST_ASSERT( fBuild.Initialize() );
+
+	// build (via alias)
+	TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) == false );
 }
 
 //------------------------------------------------------------------------------

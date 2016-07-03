@@ -190,7 +190,9 @@ bool NodeGraph::Load( IOStream & stream, bool & needReparsing )
 		const AString & fileName = m_UsedFiles[ i ].m_FileName;
 		const uint64_t timeStamp = FileIO::GetFileLastWriteTime( fileName );
 		if ( timeStamp == m_UsedFiles[ i ].m_TimeStamp )
+		{
 			continue; // timestamps match, no need to check hashes
+		}
 
 		FileStream fs;
 		if ( fs.Open( fileName.Get(), FileStream::READ_ONLY ) == false )	
@@ -749,32 +751,15 @@ ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName,
 
 // CreateAliasNode
 //------------------------------------------------------------------------------
-#ifdef USE_NODE_REFLECTION
 AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName )
 {
 	ASSERT( Thread::IsMainThread() );
-	ASSERT( IsCleanPath( aliasName ) );
 
 	AliasNode * node = FNEW( AliasNode() );
 	node->SetName( aliasName );
 	AddNode( node );
 	return node;
 }
-#endif
-
-// CreateAliasNode
-//------------------------------------------------------------------------------
-#ifndef USE_NODE_REFLECTION
-AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName,
-										const Dependencies & targets )
-{
-	ASSERT( Thread::IsMainThread() );
-
-	AliasNode * node = FNEW( AliasNode( aliasName, targets ) );
-	AddNode( node );
-	return node;
-}
-#endif
 
 // CreateDLLNode
 //------------------------------------------------------------------------------
@@ -882,20 +867,13 @@ CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 
 // CreateTestNode
 //------------------------------------------------------------------------------
-TestNode * NodeGraph::CreateTestNode( const AString & testOutput,
-									  FileNode * testExecutable,
-									  const AString & arguments,
-									  const AString & workingDir )
+TestNode * NodeGraph::CreateTestNode( const AString & testOutput )
 {
 	ASSERT( Thread::IsMainThread() );
+	ASSERT( IsCleanPath( testOutput ) );
 
-	AStackString< 1024 > fullPath;
-	CleanPath( testOutput, fullPath );
-
-	TestNode * node = FNEW( TestNode( fullPath,
-									testExecutable,
-									arguments,
-									workingDir ) );
+	TestNode * node = FNEW( TestNode() );
+	node->SetName( testOutput );
 	AddNode( node );
 	return node;
 }

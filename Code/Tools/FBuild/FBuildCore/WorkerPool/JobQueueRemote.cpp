@@ -69,6 +69,7 @@ void JobQueueRemote::SignalStopWorkers()
 	{
 		m_Workers[ i ]->Stop();
 	}
+	WakeWorkers();
 }
 
 // HaveWorkersStopped

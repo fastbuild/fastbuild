@@ -16,16 +16,13 @@
 // system
 #if defined( __WINDOWS__ )
     #include <Winsock2.h>
+	#include <ws2tcpip.h>
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <arpa/inet.h>
     #include <netdb.h>
     #include <unistd.h>
 #endif
-
-// Static
-//------------------------------------------------------------------------------
-/*static*/ Mutex Network::s_GetHostByNameMutex;
 
 // GetHostName
 //------------------------------------------------------------------------------
@@ -75,7 +72,34 @@
 
     // wait for name resolution with timeout
     bool timedOut( false );
-    int returnCode = Thread::WaitForThread( handle, timeoutMS, timedOut );
+	int returnCode( 0 );
+	uint32_t remainingTimeMS( timeoutMS );
+	const uint32_t sleepInterval( 100 ); // Check exit condition periodically - TODO:C would be better to use an event
+	for (;;)
+	{
+	    returnCode = Thread::WaitForThread( handle, sleepInterval, timedOut );
+
+		// Are we shutting down?
+		if ( NetworkStartupHelper::IsStarted() == false )
+		{
+			returnCode = 0; // ignore whatever we may have gotten back
+			break;
+		}
+
+		// Manage timeout
+		if ( timedOut )
+		{
+			if ( remainingTimeMS < sleepInterval ) 
+			{
+				break; // timeout hit
+			}
+
+			remainingTimeMS -= sleepInterval;
+			continue; // keep waiting
+		}
+
+		break; // success!
+	}
     Thread::CloseHandle( handle );
 
     // handle race where timeout occurred before thread marked data as
@@ -116,20 +140,28 @@
             data->safeToFree = true;
         }
 
-        NetworkStartupHelper nsh; // ensure network is up if not already
+		ASSERT( NetworkStartupHelper::IsStarted() ); // ensure network is up
 
         // perform lookup
-
-        // ::gethostbyname (and the ret value) is not thread safe, so make it so
-        MutexHolder mh( s_GetHostByNameMutex );
-
 		{
-			PROFILE_SECTION("::gethostbyname")
-			hostent * host = ::gethostbyname( hostName.Get() );
-			if ( host )
+			PROFILE_SECTION( "::getaddrinfo" )
+
+			// We want IPv4
+			struct addrinfo hints;
+			memset( &hints, 0, sizeof(hints) );
+			hints.ai_family = AF_INET;
+
+			// Try to resolve
+			struct addrinfo * result( nullptr );
+			if ( ::getaddrinfo( hostName.Get(), nullptr, &hints, &result ) == 0 )
 			{
-				ip = *( ( unsigned int * )host->h_addr );
+				if ( result )
+				{
+					const sockaddr_in * sockaddr_ipv4 = (sockaddr_in *)result->ai_addr;
+					ip = sockaddr_ipv4->sin_addr.s_addr;
+				}
 			}
+			::freeaddrinfo( result );
 		}
     }
     return ip;

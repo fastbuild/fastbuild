@@ -6,7 +6,7 @@
 ;-------------------------------------------------------------------------------
 .VSBasePath			= '../External/SDK/VS13.4'
 .WindowsSDKBasePath	= '../External/SDK/Windows8.1'
-.ClangBasePath		= '../External/SDK/ClangForWindows/3.6'
+.ClangBasePath		= '../External/SDK/ClangForWindows/3.7.1'
 
 ;-------------------------------------------------------------------------------
 ; Settings
@@ -246,7 +246,7 @@ Compiler( 'Compiler-x64-OSX' )
 
 // X86 Clang
 //------------------------------------------------------------------------------
-.X86ClangConfig = 
+.X86ClangBaseConfig = 
 [
 	.ToolsBasePath			= '$ClangBasePath$'
 	.Compiler				= 'Compiler-x86Clang'
@@ -269,9 +269,6 @@ Compiler( 'Compiler-x64-OSX' )
 							+ ' -DWIN32'
                             + ' -D_CRT_SECURE_NO_WARNINGS'
 
-                            // release
-							+ ' -DRELEASE'
-
                             // x86
                             + ' -m32'
 							+ ' -D"_X86_=1" -D_M_IX86'
@@ -280,7 +277,7 @@ Compiler( 'Compiler-x64-OSX' )
 							// MS compatibility
 							+ ' -fms-compatibility'
 							+ ' -fms-extensions'
-							+ ' -fmsc-version=1700'
+							+ ' -fmsc-version=1900' // VS2015 equivalent
 
                             // as of v3.6, these warnings fire inside system headers
 							+ ' -Wno-#pragma-messages'      // warning : %s [-W#pragma-messages]
@@ -291,10 +288,12 @@ Compiler( 'Compiler-x64-OSX' )
 							+ ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
                             + ' -Wno-incompatible-ms-struct'    // ms_struct may not produce MSVC-compatible layouts for classes with base classes or virtual functions [-Wincompatible-ms-struct]
 
+							// Fires on our new/delete operator (Clang bug?)
+							+ ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
+
 							// Extra warnings
 							+ ' -Wshadow'
 
-							+ ' -fno-exceptions'
 							+ ' -fno-rtti'
 
     .CompilerOptionsC       = '-x c '
@@ -313,6 +312,51 @@ Compiler( 'Compiler-x64-OSX' )
 	.Config					= 'Debug'
 
 	.UseExceptions			= ' -fexceptions'
+
+	// Optimizations
+	.CompilerDebugOptimizations		= ' -O0'
+	.CompilerReleaseOptimizations	= ' -O2'
+	.LibrarianDebugOptimizations	= ''
+	.LibrarianReleaseOptimizations  = ''
+	.LinkerDebugOptimizations		= ''
+	.LinkerReleaseOptimizations		= ''
+]
+.X86ClangDebugConfig =
+[
+	Using( .X86ClangBaseConfig )
+	.Config					= 'Debug'
+	.CompilerOptions		+ ' -DDEBUG -DPROFILING_ENABLED'
+							+ .CompilerDebugOptimizations							
+	.PCHOptions				+ ' -DDEBUG -DPROFILING_ENABLED'
+							+ .CompilerDebugOptimizations							
+	.LibrarianOptions		+ .LibrarianDebugOptimizations
+	.LinkerOptions			+ .LinkerDebugOptimizations
+]
+.X86ClangReleaseConfig =
+[
+	Using( .X86ClangBaseConfig )
+	.Config					= 'Release'
+	.CompilerOptions		+ ' -DRELEASE'
+	.PCHOptions				+ ' -DRELEASE'
+
+    // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
+    .DeoptimizeWritableFilesWithToken   = true
+	.CompilerOptionsDeoptimized		= '$CompilerOptions$ /Od'
+	.PCHOptionsDeoptimized			= '$PCHOptions$ /Od'
+
+	.CompilerOptions        + .CompilerReleaseOptimizations							
+	.PCHOptions             + .CompilerReleaseOptimizations							
+	.LibrarianOptions		+ .LibrarianReleaseOptimizations
+	.LinkerOptions			+ .LinkerReleaseOptimizations
+]
+.X86ClangProfileConfig =
+[
+	Using( .X86ClangReleaseConfig ) // Note: based on Release config
+	.Config					= 'Profile'
+	.CompilerOptions		+ ' -DPROFILING_ENABLED'
+	.PCHOptions				+ ' -DPROFILING_ENABLED'
+
+    .DeoptimizeWritableFilesWithToken = false
 ]
 
 // Linux
@@ -472,25 +516,21 @@ Compiler( 'Compiler-x64-OSX' )
 	.IntermediateDirectory		= '^$(SolutionDir)\..\tmp2'
 	.Platform = 'Win32' // unused
 	.PlatformToolset = 'v120'
-	.IncludeSearchPath			= '^$(SolutionDir)..\..;.\'
-	.X86Defines					= 'WIN32_LEAN_AND_MEAN;_WIN32;__WINDOWS__;WIN32;'
-	.X64Defines					= 'WIN32_LEAN_AND_MEAN;_WIN32;__WINDOWS__;WIN64;'
-	.DebugDefines				= 'DEBUG;PROFILING_ENABLED'
-	.ProfileDefines				= 'RELEASE;PROFILING_ENABLED'
-	.ReleaseDefines				= 'RELEASE'
 ]
 
-.ProjectX86Debug		= [ Using( .ProjectCommon )	.Config = 'x86-Debug'	.PreprocessorDefinitions = .X86Defines + .DebugDefines ]
-.ProjectX86Profile		= [ Using( .ProjectCommon )	.Config = 'x86-Profile' .PreprocessorDefinitions = .X86Defines + .ProfileDefines ]
-.ProjectX86Release		= [ Using( .ProjectCommon )	.Config = 'x86-Release' .PreprocessorDefinitions = .X86Defines + .ReleaseDefines ]
-.ProjectX64Debug		= [ Using( .ProjectCommon )	.Config = 'x64-Debug'	.PreprocessorDefinitions = .X64Defines + .DebugDefines ]
-.ProjectX64Profile		= [ Using( .ProjectCommon )	.Config = 'x64-Profile' .PreprocessorDefinitions = .X64Defines + .ProfileDefines ]
-.ProjectX64Release		= [ Using( .ProjectCommon )	.Config = 'x64-Release' .PreprocessorDefinitions = .X64Defines + .ReleaseDefines ]
+.ProjectX86Debug		= [ Using( .ProjectCommon )	.Config = 'x86-Debug' ]
+.ProjectX86Profile		= [ Using( .ProjectCommon )	.Config = 'x86-Profile' ]
+.ProjectX86Release		= [ Using( .ProjectCommon )	.Config = 'x86-Release' ]
+.ProjectX64Debug		= [ Using( .ProjectCommon )	.Config = 'x64-Debug' ]
+.ProjectX64Profile		= [ Using( .ProjectCommon )	.Config = 'x64-Profile' ]
+.ProjectX64Release		= [ Using( .ProjectCommon )	.Config = 'x64-Release' ]
 .ProjectX86ClangDebug	= [ Using( .ProjectCommon )	.Config = 'x86Clang-Debug' ]
+.ProjectX86ClangProfile	= [ Using( .ProjectCommon )	.Config = 'x86Clang-Profile' ]
+.ProjectX86ClangRelease	= [ Using( .ProjectCommon )	.Config = 'x86Clang-Release' ]
 
 .ProjectConfigs = { .ProjectX86Debug, .ProjectX86Profile, .ProjectX86Release,
 					.ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-					.ProjectX86ClangDebug }
+					.ProjectX86ClangDebug, .ProjectX86ClangProfile, .ProjectX86ClangRelease }
 
 // Project to compile everything
 VCXProject( 'All-proj' )
@@ -523,20 +563,20 @@ VCXProject( 'UpdateSolution-proj' )
 
     .ProjectConfigs = { .ProjectX86Debug, .ProjectX86Profile, .ProjectX86Release,
 					    .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-					    .ProjectX86ClangDebug }
+						.ProjectX86ClangDebug, .ProjectX86ClangProfile, .ProjectX86ClangRelease }
 }
 
 // Configurations
 //------------------------------------------------------------------------------
 .Configs = { .X86DebugConfig, .X86ProfileConfig, .X86ReleaseConfig,
 			 .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig,
-			 .X86ClangConfig,
+			 .X86ClangDebugConfig, .X86ClangProfileConfig, .X86ClangReleaseConfig,
 			 .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
              .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
 .Configs_Windows_MSVC	= { .X86DebugConfig, .X86ProfileConfig, .X86ReleaseConfig,
 							.X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig }
-.Configs_Windows_Clang	= { .X86ClangConfig }
+.Configs_Windows_Clang	= { .X86ClangDebugConfig, .X86ClangProfileConfig, .X86ClangReleaseConfig }
 .Configs_Linux_GCC      = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux }
 .Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
@@ -584,7 +624,7 @@ ForEach( .Config in .Configs )
 
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
-.Platforms = { 'x86', 'x64', 'x64Linux', 'x64OSX' }
+.Platforms = { 'x86', 'x64', 'x86Clang', 'x64Linux', 'x64OSX' }
 ForEach( .Platform in .Platforms )
 {
 	Alias( 'All-$Platform$' )
@@ -594,10 +634,6 @@ ForEach( .Platform in .Platforms )
 							'All-$Platform$-Release'
 						  }
 	}
-}
-Alias( 'All-x86Clang' )
-{
-	.Targets			= { 'All-x86Clang-Debug' }
 }
 
 // Aliases : All

@@ -28,8 +28,9 @@ public:
 
 	// Read all data from the process until it exits
 	// NOTE: Owner must free the returned memory!
-	void ReadAllData( AutoPtr< char > & memOut, uint32_t * memOutSize,
-					  AutoPtr< char > & errOut, uint32_t * errOutSize );
+	bool ReadAllData( AutoPtr< char > & memOut, uint32_t * memOutSize,
+					  AutoPtr< char > & errOut, uint32_t * errOutSize,
+					  uint32_t timeOutMS = 0 );
 
     #if defined( __WINDOWS__ )
         // Read all available data
@@ -54,6 +55,8 @@ private:
     #else
         void Read( int handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
     #endif
+
+	void Terminate();
         
     #if defined( __WINDOWS__ )
         // This messyness is to avoid including windows.h in this file

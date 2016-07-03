@@ -18,34 +18,25 @@ class Function;
 //------------------------------------------------------------------------------
 class AliasNode : public Node
 {
-#ifdef USE_NODE_REFLECTION
     REFLECT_DECLARE( AliasNode )
-#endif
 public:
-#ifdef USE_NODE_REFLECTION
 	explicit AliasNode();
 	bool Initialize( const BFFIterator & iter, const Function * function );
-#else
-	explicit AliasNode( const AString & groupName,
-						const Dependencies & targets );
-#endif
 	virtual ~AliasNode();
 
 	static inline Node::Type GetTypeS() { return Node::ALIAS_NODE; }
 
-	virtual bool IsAFile() const { return false; }
+	virtual bool IsAFile() const override { return false; }
 
 	inline const Dependencies & GetAliasedNodes() const { return m_StaticDependencies; }
 
 	static Node * Load( IOStream & stream );
-	virtual void Save( IOStream & stream ) const;
+	virtual void Save( IOStream & stream ) const override;
 private:
-	virtual bool DetermineNeedToBuild( bool forceClean ) const;
-	virtual BuildResult DoBuild( Job * job );
+	virtual bool DetermineNeedToBuild( bool forceClean ) const override;
+	virtual BuildResult DoBuild( Job * job ) override;
 
-#ifdef USE_NODE_REFLECTION
     Array< AString > m_Targets;
-#endif
 };
 
 //------------------------------------------------------------------------------

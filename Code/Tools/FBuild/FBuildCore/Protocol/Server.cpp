@@ -42,6 +42,7 @@ Server::Server()
 Server::~Server()
 {
 	m_ShouldExit = true;
+	JobQueueRemote::Get().WakeMainThread();
 	while ( m_Exited == false )
 	{
 		Thread::Sleep( 1 );
@@ -307,6 +308,9 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgStat
 	// take note of latest status of client
 	ClientState * cs = (ClientState *)connection->GetUserData();
 	cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
+
+	// Wake main thread to request jobs
+	JobQueueRemote::Get().WakeMainThread();
 }
 
 // Process( MsgNoJobAvailable )

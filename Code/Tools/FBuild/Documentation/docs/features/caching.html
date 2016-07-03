@@ -46,8 +46,7 @@ The caching feature of FASTBuild allows compilation results from one build to be
 <b>MSVC</b>
 <ul>
   <li>Z7 Debug format must be used. (Debug information embedded within obj, written to pdb at link time.)</li>
-  <li>/ZW (Consume Windows Runtime) cannot be used.</li>
-  <li>Precompiled Headers cannot be cached.  They are machine-specific. (Object using PCH can be cached.)</li>
+  <li>Precompiled Headers cannot be cached.  They are machine-specific. (Objects using PCH can be cached.)</li>
   <li>/clr (Managed C) cannot be used.</li>
 </ul>
 </p>
@@ -96,9 +95,6 @@ To work around this limitation in the MSVC toolchain, FASTBuild will automatical
 This can add a significant overhead, which requires many cache hits to offset.
 If the cache is in read-only mode however, the object will be compiled using the PCH after a cache miss.  In this way, it's possible to isolate this overhead only to some machines.  For example, a continuous integration dashboard may pay the overhead of the cache in write mode, allowing users to benefit in read mode, without close to no overhead.</p>
 </div>
-
-    </div>
-
 
 
   <script>generateFooter()</script>

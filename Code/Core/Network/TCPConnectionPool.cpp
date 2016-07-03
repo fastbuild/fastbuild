@@ -436,12 +436,19 @@ bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * da
 
 	bool sendOK = true;
 
+	// Avoid SIGPIPE signals - we handle broken pipe errors here
+	#if defined( __LINUX__ )
+		const uint32_t sendFlags = MSG_NOSIGNAL;
+	#else
+		const uint32_t sendFlags = 0;
+	#endif
+
     // send size of subsequent data
 	uint32_t sizeData = (uint32_t)size;
 	uint32_t bytesToSend = 4;
 	while ( bytesToSend > 0 )
 	{
-		int sent = (int)send( connection->m_Socket, ( (const char *)&sizeData ) + 4 - bytesToSend, bytesToSend, 0 );
+		int sent = (int)send( connection->m_Socket, ( (const char *)&sizeData ) + 4 - bytesToSend, bytesToSend, sendFlags );
         if ( sent <= 0 )
         {
             if ( WouldBlock() )
@@ -479,7 +486,7 @@ bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * da
 		const char * dataAsChar = (const char *)data;
 		while ( bytesRemaining > 0 )
 		{
-			int sent = (int)send( connection->m_Socket, dataAsChar, (uint32_t)bytesRemaining, 0 );
+			int sent = (int)send( connection->m_Socket, dataAsChar, (uint32_t)bytesRemaining, sendFlags );
 			if ( sent <= 0 )
 			{
 				if ( WouldBlock() )

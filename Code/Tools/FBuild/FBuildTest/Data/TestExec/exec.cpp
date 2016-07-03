@@ -5,7 +5,7 @@
 #include <fstream>
 #include <string>
 
-int main(int argc, char *argv[], char *envp[])
+int main(int argc, char *argv[], char *[])
 {
 	// Touch each file listed
 	for (int i = 1; i < argc; ++i)

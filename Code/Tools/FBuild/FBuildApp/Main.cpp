@@ -242,8 +242,8 @@ int Main(int argc, char * argv[])
 			else if ( ( thisArg == "-ide" ) || ( thisArg == "-vs" ) )
 			{
 				progressBar = false;
-				fixupErrorPaths = true;
                 #if defined( __WINDOWS__ )
+					fixupErrorPaths = true;
                     wrapperMode = WRAPPER_MODE_MAIN_PROCESS;
                 #endif
 				continue;

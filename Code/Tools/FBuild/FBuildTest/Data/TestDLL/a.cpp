@@ -5,7 +5,7 @@
 #include "a.h"
 
 #if defined( __WINDOWS__ )
-    bool __stdcall DllMain( void * hinstDLL, unsigned int fdwReason, void * lpvReserved )
+    bool __stdcall DllMain( void *, unsigned int, void * )
     {
         return true;
     }

@@ -75,9 +75,9 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
 			? projectConfig.m_SolutionConfig
 			: projectConfig.m_Config;
 
-		if (solutionConfig.m_SolutionPlatform.MatchesI("Win32"))
+		if ( solutionConfig.m_SolutionPlatform.MatchesI( "Win32" ) )
 		{
-			solutionConfig.m_SolutionPlatform = "x86";
+			 solutionConfig.m_SolutionPlatform = "x86";
 		}
     }
 

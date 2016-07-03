@@ -22,6 +22,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Process/Process.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
 // CONSTRUCTOR
@@ -258,6 +259,8 @@ void LinkerNode::DoPreLinkCleanup() const
 //------------------------------------------------------------------------------
 bool LinkerNode::BuildArgs( Args & fullArgs ) const
 {
+	PROFILE_FUNCTION
+
 	// split into tokens
 	Array< AString > tokens( 1024, true );
 	m_LinkerArgs.Tokenize( tokens );

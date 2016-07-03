@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AString.h"
 
 // system
@@ -142,7 +143,10 @@ bool Args::Finalize( const AString & exe, const AString & nodeNameForError, bool
 			#endif
 
 			// Write args to response file
-			m_ResponseFile.Create( *this );
+			{
+				PROFILE_SECTION( "CreateResponseFile" )
+				m_ResponseFile.Create( *this );
+			}
 
 			// Create new args referencing response file
 			m_ResponseFileArgs = "@\"";

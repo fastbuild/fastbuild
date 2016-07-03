@@ -270,7 +270,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 
 // SaveNode
 //------------------------------------------------------------------------------
-void Node::SaveNode( IOStream & fileStream, const Node * node ) const
+/*static*/ void Node::SaveNode( IOStream & fileStream, const Node * node )
 {
 	// for null pointer, write an empty string
 	if ( node == nullptr )

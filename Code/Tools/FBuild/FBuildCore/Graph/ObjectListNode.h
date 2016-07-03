@@ -52,6 +52,7 @@ public:
 	void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
 	void GetInputFiles( Array< AString > & files ) const;
 
+	inline const AString & GetCompilerArgs() const { return m_CompilerArgs; }
 protected:
 	friend class FunctionObjectList;
 

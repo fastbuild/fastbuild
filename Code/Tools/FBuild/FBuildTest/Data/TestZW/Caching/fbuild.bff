@@ -1,0 +1,29 @@
+//
+// TestZW - Caching
+//
+// Ensure an object compiled with /ZW can be cached
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+//
+// Caching
+//------------------------------------------------------------------------------
+ObjectList( 'Caching' )
+{
+	.CompilerOptions			+ ' /ZW'
+								+ ' /EHsc'
+								+ .VisualStudioIncludePaths
+								+ ' /AI"$VisualStudioPath$/VC/vcpackages"'
+								+ ' /AI"$WindowsSDK$/References/CommonConfiguration/Neutral"'
+
+	.CompilerInputPath			= 'Data/TestZW/Caching/'
+	.CompilerOutputPath			= '$Out$/Test/ZW/Caching/'
+}
+
+//------------------------------------------------------------------------------

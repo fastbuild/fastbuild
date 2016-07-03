@@ -12,37 +12,40 @@
 
 <h1>VCXProject</h1>
 
-    <div id='unity' class='newsitemheader'>
-      VCXProject
-    </div>
-    <div class='newsitembody'>
-      <p>
+<div class='newsitemheader'>Summary</div>
+<div class='newsitembody'>
+    <p>
 Generates a project file for use with Visual Studio, allowing integration of FASTBuild into Visual Studio solutions.
-      </p>
-<div class='code'>VCXProject( alias )              ; (optional) Alias
+    </p>
+<div class='code'>VCXProject( alias )               // (optional) Alias
 {
-  .ProjectOutput                  ; Filename of project file.
+  // Output Options
+  .ProjectOutput                  // Filename of project file
 
-  .ProjectInputPaths              ; (optional) Paths to include in project
-  .ProjectInputPathsExclude       ; (optional) Paths to exclude from project
-  .ProjectAllowedFileExtensions   ; (optional) Extensions to allow in path searches
-  .ProjectFiles                   ; (optional) List of files to include in project
-  .ProjectFilesToExclude          ; (optional) List of files to exclude from project
-  .ProjectBasePath                ; (optional) Base path(s) for root folder(s) in project
+  // Input Options
+  .ProjectInputPaths              // (optional) Paths to include in project
+  .ProjectInputPathsExclude       // (optional) Paths to exclude from project
+  .ProjectPatternToExclude        // (optional) Pattern(s) for files to exclude from project
+  .ProjectAllowedFileExtensions   // (optional) Extensions to allow in path searches
+  .ProjectFiles                   // (optional) List of files to include in project
+  .ProjectFilesToExclude          // (optional) List of files to exclude from project
+  .ProjectBasePath                // (optional) Base path(s) for root folder(s) in project
+  .ProjectFileTypes               // (optional) List of filters to overide base file types (see below)
 
-  .ProjectFileTypes               ; (optional) List of filters to overide base file types (see below)
+  // Build Config Options
+  .ProjectConfigs                 // (optional) List of project configurations, see below for details.
+                                  // (default: Debug Win32, Release Win32, Debug X64, Release X64)
 
-  .RootNamespace                  ; (optional) Set RootNamespace for project
-  .ProjectGuid                    ; (optional) Override default generated ProjectGuid
-  .DefaultLanguage                ; (optional) Default Language Property (for XboxOne)
-  .ApplicationEnvironment         ; (optional) Application Environment (for XboxOne)
-
-  .ProjectReferences              ; (optional) References to assemblies (e.g "System.Core")
-  .ProjectProjectReferences       ; (optional) References to projects (e.g. "myproj.csproj|{guid}")
-
-  .ProjectConfigs                 ; (optional) List of project configurations, see below for details.
-                                  ; (default: Debug Win32, Release Win32, Debug X64, Release X64)
+  // Reference Options
+  .ProjectReferences              // (optional) References to assemblies (e.g "System.Core")
+  .ProjectProjectReferences       // (optional) References to projects (e.g. "myproj.csproj|{guid}")
 								  
+  // Other Options
+  .RootNamespace                  // (optional) Set RootNamespace for project
+  .ProjectGuid                    // (optional) Override default generated ProjectGuid
+  .DefaultLanguage                // (optional) Default Language Property (for XboxOne/WinRT)
+  .ApplicationEnvironment         // (optional) Application Environment (for XboxOne/WinRT)
+
   // Additional configuration options - see below
 }
 
@@ -50,57 +53,407 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
 //---------------------------------------------------
 .ProjectFileType =
 [
-  .FileType                       ; FileType to use (e.g. "CppForm")
-  .Pattern                        ; Pattern of files to apply to (e.g. "*\\Forms\\*.h")
+  .FileType                       // FileType to use (e.g. "CppForm")
+  .Pattern                        // Pattern of files to apply to (e.g. "*\\Forms\\*.h")
 ]
 
 // ProjectConfigs - structs in the following format
 //-------------------------------------------------
 .ProjectConfig =
 [
-  .Platform                       ; Platform (e.g. Win32, X64, PS3 etc.)
-  .Config                         ; Config (e.g. Debug, Release etc.)
+  .Platform                       // Platform (e.g. Win32, X64, PS3 etc.)
+  .Config                         // Config (e.g. Debug, Release etc.)
+  .Target                         // (optional) Previously defined Build Target
   
   // Additional configuration options - see below
 ]
 
 // Additional Configuration options
 //---------------------------------
-; Compilation (optional)
-.ProjectBuildCommand            ; (optional) Command to launch when "build project" is selected.
-.ProjectRebuildCommand          ; (optional) Command to launch when "rebuild project" is selected.
-.ProjectCleanCommand            ; (optional) Command to launch when "clean project" is selected.
+// Compilation (optional)
+.ProjectBuildCommand            // (optional) Command to launch when "build project" is selected.
+.ProjectRebuildCommand          // (optional) Command to launch when "rebuild project" is selected.
+.ProjectCleanCommand            // (optional) Command to launch when "clean project" is selected.
 
-; Compilation Input/Output (optional)
-.Output                         ; (optional) Output generated by compilation.
-.OutputDirectory                ; (optional) Output directory for Visual Studio.
-.IntermediateDirectory          ; (optional) Intermediate directory for Visual Studio.
-.LayoutDir                      ; (optional) Directory to prepare Layout (for XboxOne).
-.LayoutExtensionFilter          ; (optional) Files to filter from Layout (for XboxOne).
+// Compilation Input/Output (optional)
+.Output                         // (optional) Output generated by compilation.
+.OutputDirectory                // (optional) Output directory for Visual Studio.
+.IntermediateDirectory          // (optional) Intermediate directory for Visual Studio.
+.LayoutDir                      // (optional) Directory to prepare Layout (for XboxOne).
+.LayoutExtensionFilter          // (optional) Files to filter from Layout (for XboxOne).
 
-; Intellisense Options (optional)
-.PreprocessorDefinitions        ; (optional) Preprocessor definitions.
-.IncludeSearchPath              ; (optional) Include search paths.
-.ForcedIncludes                 ; (optional) Force included files.
-.AssemblySearchPath             ; (optional) Assembly search paths.
-.ForcedUsingAssemblies          ; (optional) Forced Using assemblies.
-.AdditionalOptions              ; (optional) Additional compiler options.
+// Intellisense Options (optional)
+.PreprocessorDefinitions        // (optional) Preprocessor definitions.
+.IncludeSearchPath              // (optional) Include search paths.
+.ForcedIncludes                 // (optional) Force included files.
+.AssemblySearchPath             // (optional) Assembly search paths.
+.ForcedUsingAssemblies          // (optional) Forced Using assemblies.
+.AdditionalOptions              // (optional) Additional compiler options.
 
-; Debugging Options (optional)  
-.LocalDebuggerCommand           ; (optional) Executable to launch when debugging.
-.LocalDebuggerCommandArguments  ; (optional) Args passed to executable when debugging.
-.LocalDebuggerWorkingDirectory  ; (optional) Working Dir for executable when debugging.
-.LocalDebuggerEnvironment       ; (optional) Environment variables when debugging.
-.Xbox360DebuggerCommand         ; (optional) Debugger command for Xbox360 only.
-.DebuggerFlavor                 ; (optional) Debugger flavor.
-.AumidOverride                  ; (optional) Aumid override (for XboxOne).
+// Debugging Options (optional)  
+.LocalDebuggerCommand           // (optional) Executable to launch when debugging.
+.LocalDebuggerCommandArguments  // (optional) Args passed to executable when debugging.
+.LocalDebuggerWorkingDirectory  // (optional) Working Dir for executable when debugging.
+.LocalDebuggerEnvironment       // (optional) Environment variables when debugging.
+.Xbox360DebuggerCommand         // (optional) Debugger command for Xbox360 only.
+.DebuggerFlavor                 // (optional) Debugger flavor.
+.AumidOverride                  // (optional) Aumid override (for XboxOne).
 
-; Misc
-.PlatformToolset                ; (optional) Specify PlatformToolset.
-.DeploymentType                 ; (optional) Specify deployment type for Xbox360.
-.DeploymentFiles                ; (optional) Specify files to add to deployment for Xbox360.
+// Misc
+.PlatformToolset                // (optional) Specify PlatformToolset.
+.DeploymentType                 // (optional) Specify deployment type for Xbox360.
+.DeploymentFiles                // (optional) Specify files to add to deployment for Xbox360.
 </div>
-    </div>
+</div>
+
+<div class='newsitemheader'>Details</div>
+<div class='newsitembody'>
+    <p>
+    VCXProject generates a Visual Studio project file for use with <a href='vssolution.html'>VSSolution</a>. 
+    Generated projects are compatible with VS 2010 and later.
+    </p>
+</div>    
+
+
+<div class='newsitemheader'>Output Options</div>
+<div class='newsitembody'>
+      <p><b>.ProjectOutput</b> - String - (Required)</p>
+      <p>The output location of the .vcxproj file.</p>
+      Example:
+      <div class='code'>.ProjectOutput = 'tmp/VisualStudio/Library/Library.vcxproj'</div>
+</div>    
+
+
+<div class='newsitemheader'>Input Options</div>
+<div class='newsitembody'>
+    <p>Files which will be included in the generated project can be specified in several ways. Files
+    included in/excluded from the project do not impact compilation (which is still entirely controlled
+    by the rules configured within the BFF file).
+    </p>
+      <p><b>.ProjectInputPaths</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Paths(s) to search for files to include in the project.</p>
+      Example:
+<div class='code'>.ProjectInputPaths  = 'Code/Library/'</div>
+      Example:
+<div class='code'>.ProjectInputPaths  = [
+                        'Code/Library/Folder1/'
+                        'Code/Library/Folder2/'
+                      ]</div>
+      <hr>    
+
+      <p><b>.ProjectInputPathsExclude</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Path(s) to exclude when searching for files to include in the project.</p>
+      Example:
+<div class='code'>.ProjectInputPathsExclude   = 'Code/Library/SubDir/'</div>
+      Example:
+<div class='code'>.ProjectInputPathsExclude   = [
+                                'Code/Library/SubDir1/'
+                                'Code/Library/SubDir2/'
+                              ]</div>
+      <hr>    
+
+      
+      <p><b>.ProjectPatternToExclude</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Pattern(s) for files to exclude from project.</p>
+      Example:
+<div class='code'>.ProjectPatternToExclude   = '*/OSX/*'</div>
+      Example:
+<div class='code'>.ProjectPatternToExclude   = [
+                                '*/OSX/*'
+                                '*/Linux/*'
+                              ]</div>
+      <hr>    
+        
+        
+      <p><b>.ProjectAllowedFileExtensions</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Filter for file type(s) to include in the project.</p>
+      Example:
+<div class='code'>.ProjectAllowedFileExtensions   = [ '*.cpp', '*.h' ]</div>
+      If not specified, the following filters will be used:
+<div class='code'>.ProjectAllowedFileExtensions   = [
+                                    '*.cpp', '*.hpp', '*.cxx', '*.hxx', '*.c',   '*.h',  '*.cc',   '*.hh',
+                                    '*.cp',  '*.hp',  '*.cs',  '*.inl', '*.bff', '*.rc', '*.resx', '*.m",  '*.mm',
+                                    '*.cu''
+                              ]</div>
+      <hr>       
+
+      <p><b>.ProjectFiles</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>File(s) to explicitly include in the project.</p>
+      Example:
+<div class='code'>.ProjectFiles   = [
+                    'Code/Library/SubDir/FileA.cpp'
+                    'Code/Library/SubDir/FileA.h'
+                  ]</div>
+      <hr> 
+
+      <p><b>.ProjectFilesToExclude</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Files to exclude from the project (filtered from files discovered via ProjectInputPaths).</p>
+      Example:
+<div class='code'>.ProjectFilesToExclude  = [
+                            'Code/Library/SubDir/FileB.cpp'
+                            'Code/Library/SubDir/FileB.h'
+                          ]</div>
+      <hr> 
+
+
+      <p><b>.ProjectBasePath</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Path(s) to use as base for generation of folder hierarchy within project.</p>
+      Example:
+<div class='code'>.ProjectBasePath  = 'Code/Library/'</div>
+      <hr> 
+
+
+      <p><b>.ProjectFileTypes</b> - String or ProjectFileType Structure - (Optional)</p>
+      <p>File types can be specified if needed, for example for WinForms header files.</p>
+      Example:
+      <div class='code'>
+.ProjectFileType = [
+  .FileType   = 'CppForm'
+  .Pattern    = '*\\Forms\\*.h'
+]</div>
+</div>    
+
+
+<div class='newsitemheader'>Build Config Options</div>
+<div class='newsitembody'>
+    <p>Multiple project configurations can be specified.  This allows for per-config settings
+    to be a configured.</p>
+    <p><b>.ProjectConfigs</b> - Array of ProjectConfig Structure(s) - (Optional)</p>
+    <p>A list of project configuration structures in the following format:</p>
+<div class='code'>.ProjectConfig =
+[
+  // Basic Options
+  .Platform                       // Platform (e.g. Win32, X64, PS3 etc.)
+  .Config                         // Config (e.g. Debug, Release etc.)  
+  .Target                         // (optional) Previously defined Build Target
+  
+  // Additional configuration options - see ProjectConfig section below
+]
+</div>
+    Example:
+<div class='code'>.DebugConfig      = [ .Platform = 'Win32' .Config = 'Debug' ]
+.ReleaseConfig    = [ .Platform = 'Win32' .Config = 'Release' ]
+.ProjectConfigs   = [ .DebugConfig, .ReleaseConfig ]
+</div>
+If no configurations are specified, the following defaults will be used:
+<div class='code'>.X86DebugConfig   = [ .Platform = 'Win32' .Config = 'Debug' ]
+.X86ReleaseConfig = [ .Platform = 'Win32' .Config = 'Release' ]
+.X64DebugConfig   = [ .Platform = 'X64'   .Config = 'Debug' ]
+.X64ReleaseConfig = [ .Platform = 'X64'   .Config = 'Release' ]
+.ProjectConfigs   = {
+                        .X86DebugConfig, .X86ReleaseConfig, .X64DebugConfig, .X64ReleaseConfig 
+                    }
+</div>
+<p>The optional .Target option can be used to specify the associated compilation target. This will be
+used to automatically populate the Intellisense options for Intellisense.</p>
+Example:
+<div class='code'>.Target = 'MyProject-X64-Debug'</div>
+</div>
+
+<div class='newsitemheader'>Reference Options</div>
+<div class='newsitembody'>
+
+      <p><b>.ProjectReferences</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>References to assemblies can be specified.  This may be necessary if mixing C#, Mangaged C++ and C++ projects.</p>
+      Example:
+<div class='code'>.ProjectReferences = 'System.Core'</div>
+      Example:
+<div class='code'>.ProjectReferences = {
+                       'System.Core'
+                       'System.Text'
+                     }</div>
+      <hr> 
+
+      <p><b>.ProjectProjectReferences</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Add explicit references to projects not generated by FASTBuild.  If your Visual Studio Solution mixes generated and manually created project files, you can set explicit references to them.</p>
+      Example:
+<div class='code'>.ProjectProjectReferences = 'myproj1.csproj|{7cf4dd72-ddb6-4e8d-bc26-ffceb8c415a5}'</div>
+      Example:
+<div class='code'>.ProjectProjectReferences = {
+                              'myproj1.csproj|{7cf4dd72-ddb6-4e8d-bc26-ffceb8c415a5}'
+                              'myproj2.csproj|{ffceb8c4-bc26-4932-ddb6-ff7cf4dd72a5}'
+                            }</div>
+</div>
+
+<div class='newsitemheader'>Other Options</div>
+<div class='newsitembody'>
+      <p><b>.RootNamespace</b> - String - (Optional)</p>
+      <p>Set the RootNamespace for a project.</p>
+      Example:
+<div class='code'>.RootNamespace = 'MyProject'</div>
+      <hr> 
+
+      
+      <p><b>.ProjectGuid</b> - String - (Optional)</p>
+      <p>Override default generated ProjectGuid.</p>
+      <p>By default, a Guid for a project will be generated automatically.  If necessary, a 
+      Guid can be explicitly specified instead.<p>
+      Example:
+<div class='code'>.ProjectGuid = '{7cf4dd72-ddb6-4e8d-bc26-ffceb8c415a5}'</div>
+      <hr> 
+
+      <p><b>.DefaultLanguage</b> - String - (Optional)</p>
+      <p>Set the default language property.  This may be necessary for XboxOne and WinRT applications.</p>
+      Example:
+<div class='code'>.DefaultLanguage = 'en-US'</div>
+      <hr> 
+
+      <p><b>.ApplicationEnvironment</b> - String - (Optional)</p>
+      <p>Set the application environment property.  This may be necessary for XboxOne and WinRT applications.</p>
+      Example:
+<div class='code'>.ApplicationEnvironment = 'title'</div>
+      
+</div>
+								  
+
+<div class='newsitemheader'>Additional Configuration Options</div>
+<div class='newsitembody'>
+    <p>Various options can be specified to control how each configuration is controlled.  If the option is defined at the VCXProject level it will be applied to all configurations. If defined at the .ProjectConfig level, it will be used for the given project configuration.  Options can be specified at both levels, allowing for individual ProjectConfigs to override as needed.</p>
+      <hr> 
+
+
+      <p><b>ProjectBuildCommand</b> - String - (Optional)</p>
+      <p>Command to launch when "build project" is selected.</p>
+      Example:
+<div class='code'>.ProjectBuildCommand = 'fbuild -ide -dist -cache MyProject-X64-Debug'</div>
+      <p>It can be convenient to take advantage of Visual Studio's runtime macro substitution to avoid    having to manually specify this for every configuration.</p>
+      Example:
+<div class='code'>.ProjectBuildCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -ide -dist -cache ^$(ProjectName)-^$(Configuration)'</div>
+<hr>
+
+      <p><b>ProjectRebuildCommand</b> - String - (Optional)</p>
+      <p>Command to launch when "rebuild project" is selected.</p>
+      Example:
+<div class='code'>.ProjectRebuildCommand = 'fbuild -ide -clean -dist -cache MyProject-X64-Debug'</div>
+      <p>It can be convenient to take advantage of Visual Studio's runtime macro substitution to avoid    having to manually specify this for every configuration.</p>
+      Example:
+<div class='code'>.ProjectRebuildCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -ide -clean -dist -cache ^$(ProjectName)-^$(Configuration)'</div>
+<hr>
+
+      <p><b>ProjectCleanCommand</b> - String - (Optional)</p>
+      <p>Command to launch when "clean project" is selected.</p>
+      Example:
+<div class='code'>.ProjectCleanCommand = 'fbuild -ide Clean-MyProject-X64-Debug'</div>
+      <p>It can be convenient to take advantage of Visual Studio's runtime macro substitution to avoid    having to manually specify this for every configuration.</p>
+      Example:
+<div class='code'>.ProjectCleanCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -ide Clean-$(ProjectName)-^$(Configuration)'</div>
+<hr>
+
+      <p><b>Output</b> - String - (Optional)</p>
+      <p>Output generated by compilation.</p>
+      Example:
+<div class='code'>.Output = 'tmp/Debug/bin/'MyExe.exe</div>
+<hr>
+
+      <p><b>OutputDirectory</b> - String - (Optional)</p>
+      <p>Output directory for Visual Studio</p>
+      Example:
+<div class='code'>.OutputDirectory  = 'tmp/Debug/bin/</div>
+<hr>
+
+      <p><b>IntermediateDirectory</b> - String - (Optional)</p>
+      <p>Intermediate directory for Visual Studio.</p>
+      Example:
+<div class='code'>.IntermediateDirectory = 'tmp/'</div>
+<hr>
+
+      <p><b>LayoutDir</b> - String - (Optional)</p>
+      <p>Directory to prepare Layout (for XboxOne)</p>
+      Example:
+<div class='code'>.LayoutDir = 'tmp/Layout/'</div>
+<hr>
+
+      <p><b>LayoutExtensionFilter</b> - String - (Optional)</p>
+      <p>Files to filter from Layout (for XboxOne).</p>
+      Example:
+<div class='code'>.LayoutExtensionFilter = '.pdb;.map;'</div>
+<hr>
+
+      <p><b>PreprocessorDefinitions</b> - String - (Optional)</p>
+      <p>Preprocessor definitions for Intellisense can be manually specified. If the .Target for a configuration is specified, this will be populated automatically by detecting use of /D or -D
+      in the compiler command line. Manual specification will override the automated detection.</p>
+      Example:
+<div class='code'>.PreprocessorDefinitions = 'DEBUG;MY_LIB_DEFINE;__WINDOWS__;'</div>
+<hr>
+      <p><b>IncludeSearchPath</b> - String - (Optional)</p>
+      <p>Include search paths for Intellisense can be manually specified. If the .Target for a configuration is specified, this will be populated automatically by detecting use of /I or -I
+      in the compiler command line. Manual specification will override the automated detection.</p>
+      Example:
+<div class='code'>.IncludeSearchPath = 'Code/Core/;Code/Engine/;'</div>
+<hr>
+      <p><b>ForcedIncludes</b> - String - (Optional)</p>
+      <p>Force included files for Intellisense can be manually specified.</p>
+      Example:
+<div class='code'>.ForcedIncludes = 'forced.h'</div>
+<hr>
+      <p><b>AssemblySearchPath</b> - String - (Optional)</p>
+      <p>Assembly search paths for Intellisense can be manually specified.</p>
+      Example:
+<div class='code'>.AssemblySearchPath = '$WindowsSDK$/References/CommonConfiguration/Neutral'</div>
+<hr>
+      <p><b>ForcedUsingAssemblies</b> - String - (Optional)</p>
+      <p>Forced using assemblies for Intellisense can be manually specified.</p>
+      Example:
+<div class='code'>.ForcedUsingAssemblies = 'AssemblyName'</div>
+<hr>
+      <p><b>AdditionalOptions</b> - String - (Optional)</p>
+      <p>Additional compiler options for Intellisense can be manually specified.</p>
+      Example:
+<div class='code'>.AdditionalOptions = '/Zm100'</div>
+<hr>
+
+      <p><b>LocalDebuggerCommand</b> - String - (Optional)</p>
+      <p>Executable to launch when debugging.</p>
+      Example:
+<div class='code'>.LocalDebuggerCommand  = 'tmp/bin/MyExe.exe'</div>
+<hr>
+
+      <p><b>LocalDebuggerCommandArguments</b> - String - (Optional)</p>
+      <p>Args passed to executable when debugging.</p>
+      Example:
+<div class='code'>.LocalDebuggerCommandArguments = '-runFromVS'</div>
+<hr>
+
+      <p><b>LocalDebuggerWorkingDirectory</b> - String - (Optional)</p>
+      <p>Working Dir for executable when debugging.</p>
+      Example:
+<div class='code'>.LocalDebuggerWorkingDirectory = '/tmp/bin/'</div>
+<hr>
+
+      <p><b>LocalDebuggerEnvironment</b> - String - (Optional)</p>
+      <p>Environment variables when debugging.</p>
+      Example:
+<div class='code'>.LocalDebuggerEnvironment = '_NO_DEBUG_HEAP=1' // Disable debug heap</div>
+<hr>
+
+      <p><b>Xbox360DebuggerCommand</b> - String - (Optional)</p>
+      <p>Debugger command for Xbox360 only.</p>
+<hr>
+
+      <p><b>DebuggerFlavor</b> - String - (Optional)</p>
+      <p>Debugger flavor.</p>
+      Example:
+<div class='code'>.DebuggerFlavor = 'WindowsLocalDebugger'</div>
+<hr>
+
+      <p><b>AumidOverride</b> - String - (Optional)</p>
+      <p>Aumid override (for XboxOne).</p>
+<hr>
+
+      <p><b>PlatformToolset</b> - String - (Optional)</p>
+      <p>Specify PlatformToolset.</p>
+      Example:
+<div class='code'>.PlatformToolset = 'v120'</div>
+<hr>
+
+      <p><b>DeploymentType</b> - String - (Optional)</p>
+      <p>Specify deployment type for Xbox360.</p>
+<hr>
+
+      <p><b>DeploymentFiles</b> - String - (Optional)</p>
+      <p>Specify files to add to deployment for Xbox360.</p>
+
+</div>
 
   <script>generateFooter()</script>
 </body>

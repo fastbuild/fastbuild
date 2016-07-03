@@ -12,16 +12,22 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class IOStream;
+class Node;
+class ObjectListNode;
 
 // VSProjectConfig
 //-----------------------------------------------------------------------------
 class VSProjectConfig
 {
 public:
+	VSProjectConfig();
+	~VSProjectConfig();
+
 	AString m_SolutionPlatform;
 	AString m_SolutionConfig;
 	AString m_Platform;
 	AString m_Config;
+	Node * m_Target;
 
 	AString m_BuildCommand;
 	AString m_RebuildCommand;
@@ -101,6 +107,14 @@ private:
 	void WritePGItem( const char * xmlTag, const AString & value );
 
 	void GetFolderPath( const AString & fileName, AString & folder ) const;
+
+	static const ObjectListNode * FindTargetForIntellisenseInfo( const Node * node );
+	static void ExtractIntellisenseOptions( const AString & compilerArgs,
+											const char * option,
+											const char * alternateOption,
+											Array< AString > & outOptions );
+	static void ConcatIntellisenseOptions( const Array< AString > & tokens, 
+										   AString & outTokenString );
 
 	// project details
 	AString m_ProjectName;

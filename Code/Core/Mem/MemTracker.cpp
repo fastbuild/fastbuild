@@ -136,6 +136,20 @@
 		}
 	}
 
+	// DisableOnThread
+	//------------------------------------------------------------------------------
+	/*static*/ void MemTracker::DisableOnThread()
+	{
+		++g_MemTrackerDisabledOnThisThread;
+	}
+
+	// EnableOnThread
+	//------------------------------------------------------------------------------
+	/*static*/ void MemTracker::EnableOnThread()
+	{
+		--g_MemTrackerDisabledOnThisThread;
+	}
+
 	// DumpAllocations
 	//------------------------------------------------------------------------------
 	/*static*/ void MemTracker::DumpAllocations()

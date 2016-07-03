@@ -329,7 +329,6 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 								 compilerNode, 
 								 compilerArgs,
 								 compilerArgsDeoptimized,
-								 compilerInputPath,
 								 compilerOutputPath,
 								 librarianPath, 
 								 librarianArgs,

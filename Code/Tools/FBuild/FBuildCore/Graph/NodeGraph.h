@@ -8,7 +8,6 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
-#include "Tools/FBuild/FBuildCore/Graph/Node.h" // TODO:C remove when USE_NODE_REFLECTION is removed
 
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
@@ -55,7 +54,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 77 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 82 };
 
 	bool IsValid() const
 	{
@@ -137,7 +136,6 @@ public:
                                        const AString & preprocessorArgs,
 									   const AString & baseDirectory );
 
-
 	ObjectNode *	CreateObjectNode( const AString & objectName,
 									  Node * inputNode,
 									  Node * compilerNode,
@@ -153,12 +151,7 @@ public:
                                       Node * preprocessorNode,
                                       const AString & preprocessorArgs,
                                       uint32_t preprocessorFlags );
-#ifdef USE_NODE_REFLECTION
 	AliasNode *		CreateAliasNode( const AString & aliasName );
-#else
-	AliasNode *		CreateAliasNode( const AString & aliasName,
-									 const Dependencies & targets );
-#endif
 	DLLNode *		CreateDLLNode( const AString & linkerOutputName,
 								   const Dependencies & inputLibraries,
 								   const Dependencies & otherLibraries,
@@ -187,10 +180,7 @@ public:
 						   const AString & compiler,
 						   const AString & compilerOptions,
 						   const Dependencies & extraRefs );
-	TestNode * CreateTestNode( const AString & testOutput,
-							   FileNode * testExecutable,
-							   const AString & arguments,
-							   const AString & workingDir );
+	TestNode * CreateTestNode( const AString & testOutput );
 	CompilerNode * CreateCompilerNode( const AString & executable );
 	VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
 										   const Array< AString > & projectBasePaths,
@@ -294,7 +284,7 @@ private:
 	// each file used in the generation of the node graph is tracked
 	struct UsedFile
 	{
-		explicit UsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash ) : m_FileName( fileName ), m_TimeStamp( timeStamp ), m_DataHash(dataHash) , m_Once( false ) {}
+		explicit UsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash ) : m_FileName( fileName ), m_TimeStamp( timeStamp ), m_DataHash( dataHash ) , m_Once( false ) {}
 		AString		m_FileName;
 		uint64_t	m_TimeStamp;
 		uint64_t	m_DataHash;

@@ -1,0 +1,15 @@
+Alias( 'Exes' )
+{
+	.Targets = { 'testA.exe', 'testB.exe' }
+}
+
+Alias( 'ExesAlias' )
+{
+	.Targets = 'Exes'
+}
+
+Test( 'Test' )
+{
+	.TestExecutable	= 'ExesAlias'	// Expects one exe, not two. Should fail.
+	.TestOutput		= 'output.txt'
+}

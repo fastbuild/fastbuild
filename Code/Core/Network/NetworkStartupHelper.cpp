@@ -16,11 +16,12 @@
     /*static*/ WSADATA NetworkStartupHelper::s_WSAData;
 #endif
 /*static*/ Mutex NetworkStartupHelper::s_Mutex;
-/*static*/ uint32_t NetworkStartupHelper::s_RefCount( 0 );
+/*static*/ volatile uint32_t NetworkStartupHelper::s_RefCount( 0 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 NetworkStartupHelper::NetworkStartupHelper()
+	: m_Stopped( false )
 {
 	MutexHolder mh( s_Mutex );
 
@@ -36,10 +37,17 @@ NetworkStartupHelper::NetworkStartupHelper()
     #endif
 }
 
-// DESTRUCTOR
+// Stop
 //------------------------------------------------------------------------------
-NetworkStartupHelper::~NetworkStartupHelper()
+void NetworkStartupHelper::Stop()
 {
+	// Already manually stopped?
+	if ( m_Stopped == true )
+	{
+		return;
+	}
+	m_Stopped = true;
+
 	MutexHolder mh( s_Mutex );
 
     ASSERT( s_RefCount > 0 );

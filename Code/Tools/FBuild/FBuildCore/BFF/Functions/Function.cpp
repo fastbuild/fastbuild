@@ -515,6 +515,31 @@ bool Function::GetDirectoryListNodeList( const BFFIterator & iter,
 	return true;
 }
 
+// GetFileNode
+//------------------------------------------------------------------------------
+bool Function::GetFileNode( const BFFIterator & iter,
+                            const AString & file,
+                            const char * inputVarName,
+                            Dependencies & nodes ) const
+{
+    NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+
+	// get node for the dir we depend on
+	Node * node = ng.FindNode( file );
+	if ( node == nullptr )
+	{
+		node = ng.CreateFileNode( file );
+    }
+	else if ( node->IsAFile() == false )
+	{
+		Error::Error_1005_UnsupportedNodeType( iter, this, inputVarName, node->GetName(), node->GetType() );
+		return false;
+	}
+
+	nodes.Append( Dependency( node ) );
+	return true;
+}
+
 // GetFileNodes
 //------------------------------------------------------------------------------
 bool Function::GetFileNodes( const BFFIterator & iter,
@@ -522,26 +547,14 @@ bool Function::GetFileNodes( const BFFIterator & iter,
                              const char * inputVarName,
                              Dependencies & nodes ) const
 {
-    NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-
 	const AString * const  end = files.End();
 	for ( const AString * it = files.Begin(); it != end; ++it )
 	{
 		const AString & file = *it;
-
-		// get node for the dir we depend on
-		Node * node = ng.FindNode( file );
-		if ( node == nullptr )
+		if (!GetFileNode( iter, file, inputVarName, nodes ))
 		{
-			node = ng.CreateFileNode( file );
-        }
-		else if ( node->IsAFile() == false )
-		{
-			Error::Error_1005_UnsupportedNodeType( iter, this, inputVarName, node->GetName(), node->GetType() );
-			return false;
+			return false; // GetFileNode will have emitted an error
 		}
-
-		nodes.Append( Dependency( node ) );
 	}
 	return true;
 }
@@ -820,12 +833,8 @@ bool Function::ProcessAlias( const BFFIterator & iter, Dependencies & nodesToAli
 	}
 
 	// create an alias against the node
-#ifdef USE_NODE_REFLECTION
     AliasNode * an = ng.CreateAliasNode( m_AliasForFunction );
     an->m_StaticDependencies = nodesToAlias; // TODO: make this use m_Targets & Initialize()
-#else
-	VERIFY( ng.CreateAliasNode( m_AliasForFunction, nodesToAlias ) );
-#endif
 
 	// clear the string so it can't be used again
 	m_AliasForFunction.Clear();
@@ -854,35 +863,34 @@ bool Function::GetNameForNode( const BFFIterator & iter, const ReflectionInfo * 
     }
 	if ( variable->IsString() )
 	{
+		Array< AString > strings;
+		if ( !PopulateStringHelper( iter, nullptr, ri->HasMetaData< Meta_File >(), variable, strings ) )
+		{
+			return false; // PopulateStringHelper will have emitted an error
+		}
+
 		// Handle empty strings
-		if ( variable->GetString().IsEmpty() )
+		if ( strings.IsEmpty() || strings[0].IsEmpty() )
 		{
 			Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
 			return false;
 		}
 
-		AStackString<> string( variable->GetString() );
-
-		// Path/File fixup needed?
-		if ( !PopulatePathAndFileHelper( iter,
-										 ri->HasMetaData< Meta_Path >(), 
-										 ri->HasMetaData< Meta_File >(), 
-										 variable->GetName(),
-										 variable->GetString(),
-										 string ) )
+		if ( strings.GetSize() != 1 )
 		{
+			Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
 			return false;
 		}
 
 		// Check that name isn't already used
 		NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-		if ( ng.FindNode( string ) )
+		if ( ng.FindNode( strings[0] ) )
 		{
-			Error::Error_1100_AlreadyDefined( iter, this, string );
+			Error::Error_1100_AlreadyDefined( iter, this, strings[0] );
 			return false;
 		}
 
-		name = string;
+		name = strings[0];
 		return true;
 	}
 
@@ -973,13 +981,75 @@ bool Function::PopulateProperty( const BFFIterator & iter,
 	return false;
 }
 
+// PopulateStringHelper
+//------------------------------------------------------------------------------
+bool Function::PopulateStringHelper( const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const BFFVariable * variable, Array< AString > & outStrings ) const
+{
+	if ( variable->IsArrayOfStrings() )
+	{
+		for ( const AString & string : variable->GetArrayOfStrings() )
+		{
+			if ( !PopulateStringHelper( iter, pathMD, fileMD, variable, string, outStrings ) )
+			{
+				return false; // PopulateStringHelper will have emitted an error
+			}
+		}
+		return true;
+	}
+
+	if ( variable->IsString() )
+	{
+		if ( !PopulateStringHelper( iter, pathMD, fileMD, variable, variable->GetString(), outStrings ) )
+		{
+			return false; // PopulateStringHelper will have emitted an error
+		}
+		return true;
+	}
+
+	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRING, BFFVariable::VAR_ARRAY_OF_STRINGS );
+	return false;
+}
+
+// PopulateStringHelper
+//------------------------------------------------------------------------------
+bool Function::PopulateStringHelper( const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const BFFVariable * variable, const AString & string, Array< AString > & outStrings ) const
+{
+	// Full paths to files can support aliases
+	if ( fileMD && ( !fileMD->IsRelative() ) )
+	{
+		// Is it an Alias?
+		Node * node = FBuild::Get().GetDependencyGraph().FindNode( string );
+		if ( node && ( node->GetType() == Node::ALIAS_NODE ) )
+		{
+			AliasNode * aliasNode = node->CastTo< AliasNode >();
+			for ( const auto& aliasedNode : aliasNode->GetAliasedNodes() )
+			{
+				if ( !PopulateStringHelper( iter, pathMD, fileMD, variable, aliasedNode.GetNode()->GetName(), outStrings ) )
+				{
+					return false; // PopulateStringHelper will have emitted an error
+				}
+			}
+			return true;
+		}
+
+		// Not an alias - fall through to normal handling
+	}
+
+	AStackString<> stringToFix( string );
+	if ( !PopulatePathAndFileHelper( iter, pathMD, fileMD, variable->GetName(), stringToFix ) )
+	{
+		return false; // PopulatePathAndFileHelper will have emitted an error
+	}
+	outStrings.Append( stringToFix );
+	return true;
+}
+
 // PopulatePathAndFileHelper
 //------------------------------------------------------------------------------
 bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 										  const Meta_Path * pathMD,
 										  const Meta_File * fileMD,
 										  const AString & variableName,
-										  const AString & originalValue, 
 										  AString & valueToFix ) const
 {
 	// Only one is allowed (having neither is ok too)
@@ -994,7 +1064,7 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 		else
 		{
 			// Make absolute, clean slashes and canonicalize
-			NodeGraph::CleanPath( originalValue, valueToFix );
+			NodeGraph::CleanPath( valueToFix );
 
 			// Ensure slash termination
 			PathUtils::EnsureTrailingSlash( valueToFix );
@@ -1010,7 +1080,7 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 		else
 		{
 			// Make absolute, clean slashes and canonicalize
-			NodeGraph::CleanPath( originalValue, valueToFix );
+			NodeGraph::CleanPath( valueToFix );
 		}
 
 		// check that a path hasn't been given when we expect a file
@@ -1028,95 +1098,43 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 //------------------------------------------------------------------------------
 bool Function::PopulateArrayOfStrings( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
-	// Array to Array
-	if ( variable->IsArrayOfStrings() )
+	Array< AString > strings;
+	if ( !PopulateStringHelper( iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), variable, strings ) )
 	{
-		Array< AString > strings( variable->GetArrayOfStrings() );
-
-		Array< AString >::Iter end = strings.End();
-		for ( Array< AString >::Iter it = strings.Begin();
-				it != end;
-				++it )
-		{
-			AString & string = *it;
-
-			// Path/File fixup needed?
-			if ( !PopulatePathAndFileHelper( iter,
-											 property.HasMetaData< Meta_Path >(), 
-											 property.HasMetaData< Meta_File >(), 
-											 variable->GetName(),
-											 variable->GetArrayOfStrings()[ it - strings.Begin() ],
-											 string ) )
-			{
-				return false;
-			}
-		}
-
-		property.SetProperty( base, strings );
-		return true;
+		return false; // PopulateStringHelper will have emitted an error
 	}
 
-	if ( variable->IsString() )
-	{
-		// Handle empty strings
-		if ( variable->GetString().IsEmpty() )
-		{
-			Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
-			return false;
-		}
-
-		AStackString<> string( variable->GetString() );
-
-		// Path/File fixup needed?
-		if ( !PopulatePathAndFileHelper( iter, 
-										 property.HasMetaData< Meta_Path >(), 
-										 property.HasMetaData< Meta_File >(), 
-										 variable->GetName(),
-										 variable->GetString(),
-										 string ) )
-		{
-			return false;
-		}
-
-		// Make array with 1 string
-		Array< AString > strings( 1, false );
-		strings.Append( string );
-		property.SetProperty( base, strings );
-		return true;
-	}
-
-	Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRING, BFFVariable::VAR_ARRAY_OF_STRINGS );
-	return false;
+	property.SetProperty( base, strings );
+	return true;
 }
 
 // PopulateString
 //------------------------------------------------------------------------------
 bool Function::PopulateString( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
+	Array< AString > strings;
+	if ( !PopulateStringHelper( iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), variable, strings ) )
+	{
+		return false; // PopulateStringHelper will have emitted an error
+	}
+
 	if ( variable->IsString() )
 	{
 		// Handle empty strings
-		if ( variable->GetString().IsEmpty() )
+		if ( strings.IsEmpty() || strings[0].IsEmpty() )
 		{
 			Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
 			return false;
 		}
 
-		AStackString<> string( variable->GetString() );
-
-		// Path/File fixup needed?
-		if ( !PopulatePathAndFileHelper( iter,
-											property.HasMetaData< Meta_Path >(), 
-											property.HasMetaData< Meta_File >(), 
-											variable->GetName(),
-											variable->GetString(),
-											string ) )
+		if ( strings.GetSize() != 1 )
 		{
+			Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
 			return false;
 		}
 
 		// String to String
-		property.SetProperty( base, string );
+		property.SetProperty( base, strings[0] );
 		return true;
 	}
 

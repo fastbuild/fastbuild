@@ -43,6 +43,8 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
 [
   .Platform                           // Platform(s) (default "Win32", "x64")
   .Config                             // Config(s) (default "Debug", "Release")
+  .SolutionConfig                     // (optional) Solution Config
+  .SolutionPlatform                   // (optional) Solution Platform
 ]
 
 // SolutionFolders - structs in the following format
@@ -96,7 +98,7 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
 }</div>
       <hr>
       
-      <p><b>.SolutionConfigs</b> - Array of SolutionConfig Structure(s) - (Optional)</p>
+      <p id='solutionconfigs'><b>.SolutionConfigs</b> - Array of SolutionConfig Structure(s) - (Optional)</p>
       <p>The platform/configuration pairs you wish to appear in Visual Studio can be controlled here. They need
          to match those specified in your generated projects.</p>
       Example:
@@ -112,6 +114,23 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
 ]
 .SolutionConfigs = { .Solution_Config_Debug, .Solution_Config_Release }</div>
       <p>If not specified, a default matrix of Win32|Debug, Win32|Release, x64|Debug and x64|Release configurations is used.</p>
+      <p>The optional .SolutionConfig and .SolutionPlatform allow custom solution level Configs and Platforms to be defined. This can be
+      useful when the Config/Platform from the Solution and Project don't have a 1:1 relationship.</p>
+      Example:
+      <div class='code'>.DebugDirectX =
+[
+  .Config           = 'Debug-DirectX'
+  .Platform         = 'Win32'
+  .SolutionConfig   = 'Debug'
+  .SolutionPlatform = 'Win32-DirectX'
+]
+.DebugOpenGL =
+[
+  .Config           = 'Debug-OpenGL'
+  .Platform         = 'Win32'
+  .SolutionConfig   = 'Debug'
+  .SolutionPlatform = 'Win32-OpenGL'
+]</div>
       <hr>
       
       <p><b>.SolutionBuildProject</b> - String - (Optional)</p>
@@ -189,8 +208,8 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
       <p><b>.SolutionMinimumVisualStudioVersion</b> - String - (Optional)</p>
       <p>Specify the minimum VisualStudio version necessary toopen this Solution file.</p>
       Example:
-      <p>If not specified, "10.0.40219.1" will be used (VS2010 Express).</p>
       <div class='code'>.SolutionMinimumVisualStudioVersion = "10.0.40219.1"</div>
+      <p>If not specified, "10.0.40219.1" will be used (VS2010 Express).</p>
         
       </p>
     </div>

@@ -71,6 +71,10 @@ public:
 								   const Array< AString > * patterns,
 								   const char * inputVarName,
 								   Dependencies & nodes ) const;
+	bool GetFileNode( const BFFIterator & iter,
+                      const AString & file,
+                      const char * inputVarName,
+                      Dependencies & nodes ) const;
     bool GetFileNodes( const BFFIterator & iter,
                        const Array< AString > & files,
                        const char * inputVarName,
@@ -120,7 +124,9 @@ protected:
 	bool PopulateUInt32( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
 	bool PopulateArrayOfStructs( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
 
-	bool PopulatePathAndFileHelper( const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const AString & variableName, const AString & originalValue, AString & valueToFix ) const;
+	bool PopulateStringHelper( const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const BFFVariable * variable, Array< AString > & outStrings ) const;
+	bool PopulateStringHelper( const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const BFFVariable * variable, const AString & string, Array< AString > & outStrings ) const;
+	bool PopulatePathAndFileHelper( const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const AString & variableName, AString & valueToFix ) const;
 private:
 	bool GetNodeListRecurse( const BFFIterator & iter, const char * name, Dependencies & nodes, const AString & nodeName,
 							 bool allowCopyDirNodes, bool allowUnityNodes, bool allowRemoveDirNodes ) const;

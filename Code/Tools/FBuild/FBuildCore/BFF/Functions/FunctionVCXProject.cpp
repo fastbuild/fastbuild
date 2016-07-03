@@ -217,6 +217,21 @@ FunctionVCXProject::FunctionVCXProject()
 				return false;
 			}
 
+			// .Target is optional
+			AStackString<> target;
+			if ( GetStringFromStruct( s, ".Target", target ) )
+			{
+				if ( target.IsEmpty() == false )
+				{
+					newConfig.m_Target = FBuild::Get().GetDependencyGraph().FindNode( target );
+					if ( !newConfig.m_Target )
+					{
+						Error::Error_1104_TargetNotDefined( funcStartIter, this, ".Target", target );
+						return false;
+					}
+				}
+			}
+
 			GetStringFromStruct( s, ".ProjectBuildCommand",		newConfig.m_BuildCommand );
 			GetStringFromStruct( s, ".ProjectRebuildCommand",	newConfig.m_RebuildCommand );
 			GetStringFromStruct( s, ".ProjectCleanCommand",		newConfig.m_CleanCommand );
@@ -284,7 +299,7 @@ FunctionVCXProject::FunctionVCXProject()
 												   basePaths,
 												   dirNodes,
 												   inputPathsExclude, // TODO:B Remove this (handled by DirectoryListNode now)
-												patternToExclude,
+												   patternToExclude,
 												   files,
 												   filesToExclude,
 												   rootNamespace,

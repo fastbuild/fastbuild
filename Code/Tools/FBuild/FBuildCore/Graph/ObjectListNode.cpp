@@ -207,7 +207,7 @@ ObjectListNode::~ObjectListNode()
         else if ( i->GetNode()->IsAFile() )
 		{
 			// a single file, create the object that will compile it
-			if ( CreateDynamicObjectNode( i->GetNode(), m_CompilerInputPath ) == false )
+			if ( CreateDynamicObjectNode( i->GetNode(), AString::GetEmpty() ) == false )
 			{
 				return false; // CreateDynamicObjectNode will have emitted error
 			}

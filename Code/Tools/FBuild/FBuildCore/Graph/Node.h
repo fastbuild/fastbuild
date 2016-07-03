@@ -40,10 +40,6 @@ class Job;
 	type * node = nullptr; \
 	if ( Node::LoadNode( stream, node ) == false ) { return nullptr; }
 
-// Enable reflection system refactor work in progress
-//------------------------------------------------------------------------------
-//#define USE_NODE_REFLECTION
-
 // Custom MetaData
 //------------------------------------------------------------------------------
 IMetaData & MetaName( const char * name );
@@ -175,6 +171,8 @@ protected:
 	friend class JobQueueRemote;
 	friend class NodeGraph;
 	friend class Report;
+	friend class VSProjectConfig; // TODO:C Remove this
+	friend class VSProjectGenerator; // TODO:C Remove this
 	friend class WorkerThread;
 
 	inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
@@ -204,7 +202,7 @@ protected:
 	inline void		SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
 	inline void		AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }
 
-	void SaveNode( IOStream & stream, const Node * node ) const;
+	static void SaveNode( IOStream & stream, const Node * node );
 	static bool LoadNode( IOStream & stream, Node * & node );
 	static bool LoadNode( IOStream & stream, CompilerNode * & compilerNode );
 	static bool LoadNode( IOStream & stream, FileNode * & node );

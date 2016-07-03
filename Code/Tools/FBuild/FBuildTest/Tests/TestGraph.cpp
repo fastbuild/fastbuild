@@ -152,11 +152,7 @@ void TestGraph::TestNodeTypes() const
 	}
 	{
 		Dependencies targets( 0, false );
-#ifdef USE_NODE_REFLECTION
 		Node * n = ng.CreateAliasNode( AStackString<>( "alias" ) );
-#else
-		Node * n = ng.CreateAliasNode( AStackString<>( "alias" ), targets );
-#endif
 		TEST_ASSERT( n->GetType() == Node::ALIAS_NODE );
 		TEST_ASSERT( AliasNode::GetTypeS() == Node::ALIAS_NODE );
 		TEST_ASSERT( AStackString<>( "Alias" ) == n->GetTypeName() );

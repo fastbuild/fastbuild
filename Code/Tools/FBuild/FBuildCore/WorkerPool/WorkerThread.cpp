@@ -228,7 +228,6 @@ void WorkerThread::WaitForStop()
 	const uint32_t threadIndex = WorkerThread::GetThreadIndex();
 
 	tmpFileDirectory.Format( "%score_%u%c", s_TmpRoot.Get(), threadIndex, NATIVE_SLASH );
-
 }
 
 // CreateTempFile

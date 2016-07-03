@@ -228,7 +228,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
 	NODE_LOAD( Array< AString >, projectBasePaths );
 	NODE_LOAD_DEPS( 1,			staticDeps );
 	NODE_LOAD( Array< AString >, pathsToExclude );
-	NODE_LOAD(Array< AString >, patternToExclude);
+	NODE_LOAD( Array< AString >, patternToExclude );
 	NODE_LOAD( Array< AString >, files );
 	NODE_LOAD( Array< AString >, filesToExclude );
 	NODE_LOAD( AStackString<>, rootNamespace );
@@ -271,7 +271,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
 	NODE_SAVE( m_ProjectBasePaths );
 	NODE_SAVE_DEPS( m_StaticDependencies );
 	NODE_SAVE( m_PathsToExclude );
-	NODE_SAVE(m_PatternToExclude);
+	NODE_SAVE( m_PatternToExclude );
 	NODE_SAVE( m_Files );
 	NODE_SAVE( m_FilesToExclude );
 	NODE_SAVE( m_RootNamespace );
@@ -328,13 +328,13 @@ void VCXProjectNode::GetFiles( Array< FileIO::FileInfo * > & files ) const
 			}
 
 			// filter excluded pattern
-			if (keep)
+			if ( keep )
 			{
 				const AString * pit = m_PatternToExclude.Begin();
 				const AString * const pend = m_PatternToExclude.End();
-				for (; pit != pend; ++pit)
+				for ( ; pit != pend; ++pit )
 				{
-					if (PathUtils::IsWildcardMatch(pit->Get(), filesIt->m_Name.Get()))
+					if ( PathUtils::IsWildcardMatch( pit->Get(), filesIt->m_Name.Get() ) )
 					{
 						keep = false;
 						break;

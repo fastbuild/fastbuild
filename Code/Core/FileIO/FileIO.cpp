@@ -11,6 +11,7 @@
 // Core
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 
@@ -39,6 +40,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::FileExists( const char * fileName )
 {
+	PROFILE_FUNCTION
 #if defined( __WINDOWS__ )
 	// see if we can get attributes
 	DWORD attributes = GetFileAttributes( fileName );
@@ -89,6 +91,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::FileDelete( const char * fileName )
 {
+	PROFILE_FUNCTION
 #if defined( __WINDOWS__ )
 	BOOL result = DeleteFile( fileName );
 	if ( result == FALSE )

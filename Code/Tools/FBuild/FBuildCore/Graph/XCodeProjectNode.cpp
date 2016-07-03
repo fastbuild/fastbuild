@@ -132,17 +132,17 @@ XCodeProjectNode::~XCodeProjectNode()
 				const AString * pit = m_PatternToExclude.Begin();
 				const AString * const pend = m_PatternToExclude.End();
                 bool keep = true;
-				for (; pit != pend; ++pit)
+				for ( ; pit != pend; ++pit )
 				{
-					if (PathUtils::IsWildcardMatch(pit->Get(), file.m_Name.Get()))
+					if ( PathUtils::IsWildcardMatch( pit->Get(), file.m_Name.Get() ) )
 					{
                         keep = false;
                         break;
 					}
 				}
-                if (keep)
+                if ( keep )
                 {
-                    g.AddFile(file.m_Name);
+                    g.AddFile( file.m_Name );
                 }
 			}
 		}
