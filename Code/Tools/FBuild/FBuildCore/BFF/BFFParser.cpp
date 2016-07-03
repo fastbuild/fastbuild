@@ -1440,7 +1440,8 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 									 BFFStackFrame * frame )
 {
 	// are we concatenating?
-	if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
+	if ( ( *operatorIter == BFF_VARIABLE_CONCATENATION ) ||
+		 ( *operatorIter == BFF_VARIABLE_SUBTRACTION ) )
 	{
 		// concatenation of structs not supported
 		Error::Error_1027_CannotModify( operatorIter, name, BFFVariable::VAR_STRUCT, BFFVariable::VAR_ANY );
