@@ -1655,7 +1655,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 	{
 		// Matching Src and Dst
 
-		if ( srcType == BFFVariable::VAR_STRING && !subtract )
+		if ( srcType == BFFVariable::VAR_STRING )
 		{
 			if ( concat )
 			{
@@ -1663,6 +1663,17 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 				finalValue += varSrc->GetString();
 				BFFStackFrame::SetVarString( dstName, finalValue, dstFrame );
 				FLOG_INFO( "Appending '%s' (value of %s) to <String> variable '%s' with result '%s'",
+							varSrc->GetString().Get(),
+							srcName.Get(),
+							dstName.Get(),
+							finalValue.Get() );
+			}
+			else if ( subtract )
+			{
+				AStackString< 2048 > finalValue(varDst->GetString());
+				finalValue.Replace( varSrc->GetString().Get(), "" );
+				BFFStackFrame::SetVarString( dstName, finalValue, dstFrame );
+				FLOG_INFO( "Removing '%s' (value of %s) from <String> variable '%s' with result '%s'",
 							varSrc->GetString().Get(),
 							srcName.Get(),
 							dstName.Get(),
