@@ -1455,6 +1455,9 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 									 const BFFIterator & operatorIter,
 									 BFFStackFrame * frame )
 {
+	// find existing
+	const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
+
 	// are we concatenating?
 	if ( ( *operatorIter == BFF_VARIABLE_CONCATENATION ) ||
 		 ( *operatorIter == BFF_VARIABLE_SUBTRACTION ) )
@@ -1462,6 +1465,15 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 		// concatenation of structs not supported
 		Error::Error_1027_CannotModify( operatorIter, name, BFFVariable::VAR_STRUCT, BFFVariable::VAR_ANY );
 		return false;
+	}
+	else
+	{
+		// variable must be new or a struct
+		if (! ( var == nullptr || var->IsStruct() ) )
+		{
+			Error::Error_1034_OperationNotSupported( valueStart, var->GetType(), BFFVariable::VAR_STRUCT, operatorIter );
+			return false;
+		}
 	}
 
 	// create stack frame to capture variables
