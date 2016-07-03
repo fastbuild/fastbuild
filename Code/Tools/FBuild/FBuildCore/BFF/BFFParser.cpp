@@ -1528,9 +1528,10 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 	const BFFVariable * varDst = BFFStackFrame::GetVar( dstName, dstFrame );
 
 	const bool concat = ( *operatorIter == BFF_VARIABLE_CONCATENATION );
+	const bool subtract = ( *operatorIter == BFF_VARIABLE_SUBTRACTION );
 
 	// concatenation?
-	if ( concat )
+	if ( concat || subtract )
 	{
 		// can only concatenate to existing vars
 		if ( varDst == nullptr )
@@ -1557,7 +1558,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
 	if ( srcType != dstType )
 	{
-		const bool dstIsEmpty =
+		const bool dstIsEmpty = ( varDst == nullptr ) ||
 			( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && varDst->GetArrayOfStrings().IsEmpty() ) ||
 			( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && varDst->GetArrayOfStructs().IsEmpty() );
 		const bool srcIsEmpty =
@@ -1566,9 +1567,10 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
 		// Mismatched - is there a supported conversion?
 
-		// String to ArrayOfStrings or empty array
+		// String to ArrayOfStrings or empty array, assignment or concatenation
 		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS || dstIsEmpty ) &&
-			 ( srcType == BFFVariable::VAR_STRING ) )
+			 ( srcType == BFFVariable::VAR_STRING ) &&
+			 !subtract )
 		{
 			uint32_t num = (uint32_t)( 1 + ( ( concat && !dstIsEmpty ) ? varDst->GetArrayOfStrings().GetSize() : 0 ) );
 			Array< AString > values( num, false );
@@ -1583,9 +1585,10 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		// Struct to ArrayOfStructs or empty array
+		// Struct to ArrayOfStructs or empty array, assignment or concatenation
 		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS || dstIsEmpty ) &&
-			 ( srcType == BFFVariable::VAR_STRUCT ) )
+			 ( srcType == BFFVariable::VAR_STRUCT ) &&
+			 !subtract )
 		{
 			uint32_t num = (uint32_t)( 1 + ( ( concat && !dstIsEmpty ) ? varDst->GetArrayOfStructs().GetSize() : 0 ) );
 			Array< const BFFVariable * > values( num, false );
@@ -1600,8 +1603,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		// Empty array to ArrayOfStrings
-		if ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && srcIsEmpty )
+		// Empty array to ArrayOfStrings, assignment or concatenation
+		if ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && srcIsEmpty && !subtract )
 		{
 			if ( concat )
 			{
@@ -1616,8 +1619,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		// Empty array to ArrayOfStructs
-		if ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && srcIsEmpty )
+		// Empty array to ArrayOfStructs, assignment or concatenation
+		if ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && srcIsEmpty && !subtract )
 		{
 			if ( concat )
 			{
@@ -1632,16 +1635,16 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		// ArrayOfStrings to empty array
-		if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRINGS )
+		// ArrayOfStrings to empty array, assignment or concatenation
+		if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRINGS && !subtract )
 		{
 			BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetArrayOfStrings(), dstFrame );
 			FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), (unsigned int)varSrc->GetArrayOfStrings().GetSize() );
 			return true;
 		}
 
-		// ArrayOfStructs to empty array
-		if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
+		// ArrayOfStructs to empty array, assignment or concatenation
+		if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && !subtract )
 		{
 			BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetArrayOfStructs(), dstFrame );
 			FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), (unsigned int)varSrc->GetArrayOfStructs().GetSize() );
@@ -1652,21 +1655,28 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 	{
 		// Matching Src and Dst
 
-		if ( srcType == BFFVariable::VAR_STRING )
+		if ( srcType == BFFVariable::VAR_STRING && !subtract )
 		{
-			AStackString< 2048 > finalValue;
 			if ( concat )
 			{
-				finalValue = varDst->GetString();
+				AStackString< 2048 > finalValue(varDst->GetString());
+				finalValue += varSrc->GetString();
+				BFFStackFrame::SetVarString( dstName, finalValue, dstFrame );
+				FLOG_INFO( "Appending '%s' (value of %s) to <String> variable '%s' with result '%s'",
+							varSrc->GetString().Get(),
+							srcName.Get(),
+							dstName.Get(),
+							finalValue.Get() );
 			}
-			finalValue += varSrc->GetString();
-
-			BFFStackFrame::SetVarString( dstName, finalValue, dstFrame );
-			FLOG_INFO( "Registered <string> variable '%s' with value '%s'", dstName.Get(), finalValue.Get() );
+			else
+			{
+				BFFStackFrame::SetVarString( dstName, varSrc->GetString(), dstFrame );
+				FLOG_INFO( "Registered <string> variable '%s' with value '%s'", dstName.Get(), varSrc->GetString().Get() );
+			}
 			return true;
 		}
 	
-		if ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS )
+		if ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS && !subtract )
 		{
 			if ( concat )
 			{
@@ -1685,7 +1695,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		if ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
+		if ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && !subtract)
 		{
 			if ( concat )
 			{
@@ -1704,26 +1714,26 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		if ( srcType == BFFVariable::VAR_INT )
+		if ( srcType == BFFVariable::VAR_INT && !subtract )
 		{
-			int newVal( varSrc->GetInt() );
+			int newVal;
 			if ( concat )
 			{
-				newVal += varDst->GetInt();
+				newVal = varDst->GetInt() + varSrc->GetInt();
+			}
+			else
+			{
+				newVal = varSrc->GetInt();
 			}
 			return StoreVariableInt( dstName, newVal, dstFrame );
 		}
 
-		if ( srcType == BFFVariable::VAR_BOOL )
+		if ( srcType == BFFVariable::VAR_BOOL && !concat && !subtract )
 		{
-			// only assignment is supported
-			if ( concat == false )
-			{
-				return StoreVariableBool( dstName, varSrc->GetBool(), dstFrame );
-			}
+			return StoreVariableBool( dstName, varSrc->GetBool(), dstFrame );
 		}
 
-		if ( srcType == BFFVariable::VAR_STRUCT )
+		if ( srcType == BFFVariable::VAR_STRUCT && !subtract )
 		{
 			const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
 			if ( concat )
