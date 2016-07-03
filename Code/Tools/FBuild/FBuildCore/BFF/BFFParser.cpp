@@ -337,18 +337,9 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 
 	// look for an appropriate operator
 	BFFIterator operatorIter( iter );
-	bool modification = false;
-	if ( *iter == BFF_VARIABLE_ASSIGNMENT )
-	{
-		// assignment
-	}
-	else if ( ( *iter == BFF_VARIABLE_CONCATENATION ) ||
-			  ( *iter == BFF_VARIABLE_SUBTRACTION ) )
-	{
-		// concatenation
-		modification = true;
-	}
-	else
+	const bool concat = ( *operatorIter == BFF_VARIABLE_CONCATENATION );
+	const bool subtract = ( *operatorIter == BFF_VARIABLE_SUBTRACTION );
+	if ( *iter != BFF_VARIABLE_ASSIGNMENT && !concat && !subtract )
 	{
 		Error::Error_1016_UnexepectedCharFollowingVariableName( iter );
 		return false;
@@ -383,12 +374,6 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 	}
 	else if ( ( openToken >= '0' ) && ( openToken <= '9' ) )
 	{
-		if ( modification )
-		{
-			Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_INT );
-			return false;
-		}
-
 		// integer value?
 		BFFIterator startIntValue( iter );
 		while ( iter.IsAtEnd() == false )
@@ -411,7 +396,38 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 			Error::Error_1018_IntegerValueCouldNotBeParsed( startIntValue );
 			return false;
 		}
-		return StoreVariableInt( varName, i, frame );
+
+		// find existing
+		const BFFVariable * var = BFFStackFrame::GetVar( varName, frame );
+
+		// variable type must match
+		if ( var != nullptr && !var->IsInt() )
+		{
+			Error::Error_1034_OperationNotSupported( startIntValue, var->GetType(), BFFVariable::VAR_INT, operatorIter );
+			return false;
+		}
+
+		// variable must exist, if we are going to modify it
+		if ( ( concat || subtract ) && var == nullptr )
+		{
+			Error::Error_1026_VariableNotFoundForModification( operatorIter, varName );
+			return false;
+		}
+
+		int newVal;
+		if ( concat )
+		{
+			newVal = var->GetInt() + i;
+		}
+		else if ( subtract )
+		{
+			newVal = var->GetInt() - i;
+		}
+		else
+		{
+			newVal = i;
+		}
+		return StoreVariableInt( varName, newVal, frame );
 	}
 	else if ( ( *iter == 't' ) || ( *iter == 'f' ) )
 	{
@@ -425,7 +441,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 				AStackString<8> value( startBoolValue.GetCurrent(), iter.GetCurrent() );
 				if ( value == "true" )
 				{
-					if ( modification )
+					if ( concat || subtract )
 					{
 						Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
 						return false;
@@ -434,7 +450,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 				}
 				else if ( value == "false" )
 				{
-					if ( modification )
+					if ( concat || subtract )
 					{
 						Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
 						return false;
@@ -1725,12 +1741,16 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		if ( srcType == BFFVariable::VAR_INT && !subtract )
+		if ( srcType == BFFVariable::VAR_INT )
 		{
 			int newVal;
 			if ( concat )
 			{
 				newVal = varDst->GetInt() + varSrc->GetInt();
+			}
+			else if ( subtract )
+			{
+				newVal = varDst->GetInt() - varSrc->GetInt();
 			}
 			else
 			{
