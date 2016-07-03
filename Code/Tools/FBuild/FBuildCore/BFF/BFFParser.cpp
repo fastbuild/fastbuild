@@ -431,36 +431,46 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 	}
 	else if ( ( *iter == 't' ) || ( *iter == 'f' ) )
 	{
-		// might be 'true' or 'false'
+		// bool value?
 		BFFIterator startBoolValue( iter );
-		if ( iter.ParseToNext( 'e' ) == true )
+
+		bool value = false; // just to silence C4701 from MSVC
+		ok = false;
+		if ( iter.ParseExactString( "true" ) )
 		{
-			iter++;
-			if ( ( startBoolValue.GetDistTo( iter ) <= 5 ) )
-			{
-				AStackString<8> value( startBoolValue.GetCurrent(), iter.GetCurrent() );
-				if ( value == "true" )
-				{
-					if ( concat || subtract )
-					{
-						Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
-						return false;
-					}
-					return StoreVariableBool( varName, true, frame );
-				}
-				else if ( value == "false" )
-				{
-					if ( concat || subtract )
-					{
-						Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
-						return false;
-					}
-					return StoreVariableBool( varName, false, frame );
-				}
-			}
+			value = true;
+			ok = true;
+		}
+		else if ( iter.ParseExactString( "false" ) )
+		{
+			value = false;
+			ok = true;
 		}
 
-		// not a valid bool value
+		if ( ok )
+		{
+			// find existing
+			const BFFVariable * var = BFFStackFrame::GetVar( varName, frame );
+
+			// are we concatenating?
+			if ( concat || subtract )
+			{
+				// concatenation of bools not supported
+				Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_BOOL, BFFVariable::VAR_ANY );
+				return false;
+			}
+			else
+			{
+				// variable must be new or a bool
+				if (! ( var == nullptr || var->IsBool() ) )
+				{
+					Error::Error_1034_OperationNotSupported( startBoolValue, var->GetType(), BFFVariable::VAR_BOOL, operatorIter );
+					return false;
+				}
+			}
+
+			return StoreVariableBool( varName, value, frame );
+		}
 	}
 	else if ( *iter == BFF_DECLARE_VAR_INTERNAL ||
 			  *iter == BFF_DECLARE_VAR_PARENT )

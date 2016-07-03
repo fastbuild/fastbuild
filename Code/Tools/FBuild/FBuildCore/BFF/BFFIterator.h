@@ -48,6 +48,7 @@ public:
 	void SkipDirectiveName();
 	bool ParseToNext( char c );
 	bool ParseToMatchingBrace( char openBrace, char closeBrace );
+	bool ParseExactString( const char * string );
 
 	inline size_t GetDistTo( const BFFIterator & other ) const { ASSERT( other.m_Pos >= m_Pos ); return (size_t)( other.m_Pos - m_Pos ); }
 
