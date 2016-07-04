@@ -16,7 +16,7 @@
 #include "AliasNode.h"
 #include "CompilerNode.h"
 #include "CopyDirNode.h"
-#include "CopyNode.h"
+#include "CopyFileNode.h"
 #include "CSNode.h"
 #include "DirectoryListNode.h"
 #include "DLLNode.h"

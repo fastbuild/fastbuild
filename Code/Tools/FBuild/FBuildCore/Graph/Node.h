@@ -53,7 +53,7 @@ public:
 	enum Type
 	{
 		PROXY_NODE			= 0,
-		COPY_NODE			= 1,
+		COPY_FILE_NODE		= 1,
 		DIRECTORY_LIST_NODE	= 2,
 		EXEC_NODE			= 3,
 		FILE_NODE			= 4,

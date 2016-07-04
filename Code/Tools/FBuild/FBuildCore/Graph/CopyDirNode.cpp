@@ -9,7 +9,7 @@
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/Graph/CopyNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
@@ -96,7 +96,7 @@ CopyDirNode::~CopyDirNode()
 			{
 				n = ng.CreateCopyNode( dstFile, srcFileNode, m_PreBuildDependencies ); // inherit PreBuildDependencies
 			}
-			else if ( n->GetType() != Node::COPY_NODE )
+			else if ( n->GetType() != Node::COPY_FILE_NODE )
 			{
 				FLOG_ERROR( "Node '%s' is not a CopyNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
 				return false;

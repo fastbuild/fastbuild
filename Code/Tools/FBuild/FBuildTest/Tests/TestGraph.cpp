@@ -7,7 +7,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/CopyNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CSNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DLLNode.h"
@@ -97,8 +97,8 @@ void TestGraph::TestNodeTypes() const
 	{
 		Dependencies empty;
 		Node * n = ng.CreateCopyNode( AStackString<>( "aaa" ), fn, empty );
-		TEST_ASSERT( n->GetType() == Node::COPY_NODE );
-		TEST_ASSERT( CopyNode::GetTypeS() == Node::COPY_NODE );
+		TEST_ASSERT( n->GetType() == Node::COPY_FILE_NODE );
+		TEST_ASSERT( CopyNode::GetTypeS() == Node::COPY_FILE_NODE );
 		TEST_ASSERT( AStackString<>( "Copy" ) == n->GetTypeName() );
 	}
 

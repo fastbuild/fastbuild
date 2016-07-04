@@ -372,7 +372,7 @@ void TestDLL::TestLinkWithCopy() const
 
 	// Check stats
 	//				 Seen,	Built,	Type
-	CheckStatsNode ( 2,		2,		Node::COPY_NODE );
+	CheckStatsNode ( 2,		2,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 5,		2,		Node::FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( 2,		2,		Node::OBJECT_NODE );

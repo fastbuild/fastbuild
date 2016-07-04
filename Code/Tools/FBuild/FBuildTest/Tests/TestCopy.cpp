@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/Graph/CopyNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/FileIO/FileIO.h"
@@ -82,7 +82,7 @@ void TestCopy::SingleCopyNode() const
 		// Check stats
 		//				 Seen,	Built,	Type
 		CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-		CheckStatsNode ( 1,		1,		Node::COPY_NODE );
+		CheckStatsNode ( 1,		1,		Node::COPY_FILE_NODE );
 		CheckStatsTotal( 2,		2 );
 	}
 
@@ -96,7 +96,7 @@ void TestCopy::SingleCopyNode() const
 		// Check stats
 		//				 Seen,	Built,	Type
 		CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-		CheckStatsNode ( 1,		0,		Node::COPY_NODE );
+		CheckStatsNode ( 1,		0,		Node::COPY_FILE_NODE );
 		CheckStatsTotal( 2,		1 );
 	}
 }
@@ -142,7 +142,7 @@ void TestCopy::MultipleCopyNodes() const
 		// Check stats
 		//				 Seen,	Built,	Type
 		CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-		CheckStatsNode ( 3,		3,		Node::COPY_NODE );
+		CheckStatsNode ( 3,		3,		Node::COPY_FILE_NODE );
 		CheckStatsTotal( 4,		4 );
 	}
 
@@ -156,7 +156,7 @@ void TestCopy::MultipleCopyNodes() const
 		// Check stats
 		//				 Seen,	Built,	Type
 		CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-		CheckStatsNode ( 3,		0,		Node::COPY_NODE );
+		CheckStatsNode ( 3,		0,		Node::COPY_FILE_NODE );
 		CheckStatsTotal( 4,		1 );
 	}
 }
@@ -186,7 +186,7 @@ void TestCopy::TestCopyFunction_FileToFile() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-	CheckStatsNode ( 1,		1,		Node::COPY_NODE );
+	CheckStatsNode ( 1,		1,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 3,		3 );
 }
@@ -207,7 +207,7 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-	CheckStatsNode ( 1,		0,		Node::COPY_NODE );
+	CheckStatsNode ( 1,		0,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 3,		2 );
 }
@@ -236,7 +236,7 @@ void TestCopy::TestCopyFunction_FileToDir() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-	CheckStatsNode ( 1,		1,		Node::COPY_NODE );
+	CheckStatsNode ( 1,		1,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 3,		3 );
 }
@@ -257,7 +257,7 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-	CheckStatsNode ( 1,		0,		Node::COPY_NODE );
+	CheckStatsNode ( 1,		0,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 3,		2 );
 }
@@ -289,7 +289,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
-	CheckStatsNode ( 2,		2,		Node::COPY_NODE );
+	CheckStatsNode ( 2,		2,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 5,		5 );
 }
@@ -310,7 +310,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
-	CheckStatsNode ( 2,		0,		Node::COPY_NODE );
+	CheckStatsNode ( 2,		0,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 5,		3 );
 }
@@ -342,7 +342,7 @@ void TestCopy::TestCopyFunction_SourceBasePath() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
-	CheckStatsNode ( 2,		2,		Node::COPY_NODE );
+	CheckStatsNode ( 2,		2,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 5,		5 );
 }
@@ -363,7 +363,7 @@ void TestCopy::TestCopyFunction_SourceBasePath_NoRebuild() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
-	CheckStatsNode ( 2,		0,		Node::COPY_NODE );
+	CheckStatsNode ( 2,		0,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 5,		3 );
 }

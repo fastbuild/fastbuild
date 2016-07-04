@@ -9,7 +9,7 @@
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/Graph/CopyNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DLLNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
@@ -381,7 +381,7 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
 		fullArgs += importLibName;
 		fullArgs += post;
 	}
-	else if ( n->GetType() == Node::COPY_NODE )
+	else if ( n->GetType() == Node::COPY_FILE_NODE )
 	{
 		CopyNode * copyNode = n->CastTo< CopyNode >();
 		Node * srcNode = copyNode->GetSourceNode();

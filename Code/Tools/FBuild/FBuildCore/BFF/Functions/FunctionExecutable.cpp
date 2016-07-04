@@ -283,7 +283,7 @@ bool FunctionExecutable::DependOnNode( const BFFIterator & iter, Node * node, De
 	}
 
 	// a file copy?
-	if ( node->GetType() == Node::COPY_NODE )
+	if ( node->GetType() == Node::COPY_FILE_NODE )
 	{
 		// depend on copy - will use input at build time
 		nodes.Append( Dependency( node ) );

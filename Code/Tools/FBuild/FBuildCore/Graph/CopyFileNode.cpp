@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
 
-#include "CopyNode.h"
+#include "CopyFileNode.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
@@ -27,7 +27,7 @@ CopyNode::CopyNode( const AString & dstFileName,
 	ASSERT( sourceFile );
 	ASSERT( sourceFile->IsAFile() );
 	m_StaticDependencies.Append( Dependency( m_SourceFile ) );
-	m_Type = Node::COPY_NODE;
+	m_Type = Node::COPY_FILE_NODE;
 
 	m_PreBuildDependencies = preBuildDependencies;
 }
