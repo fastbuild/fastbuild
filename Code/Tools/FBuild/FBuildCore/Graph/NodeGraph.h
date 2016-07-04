@@ -19,7 +19,7 @@ class AliasNode;
 class AString;
 class CompilerNode;
 class CopyDirNode;
-class CopyNode;
+class CopyFileNode;
 class CSNode;
 class Dependencies;
 class DirectoryListNode;
@@ -88,9 +88,9 @@ public:
 	size_t GetNodeCount() const;
 
 	// create new nodes
-	CopyNode * CreateCopyNode( const AString & dstFileName, 
-							   Node * sourceFile,
-							   const Dependencies & preBuildDependencies );
+	CopyFileNode * CreateCopyFileNode( const AString & dstFileName, 
+									   Node * sourceFile,
+									   const Dependencies & preBuildDependencies );
 	CopyDirNode * CreateCopyDirNode( const AString & nodeName, 
 									 Dependencies & staticDeps,
 									 const AString & destPath,

@@ -383,7 +383,7 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
 	}
 	else if ( n->GetType() == Node::COPY_FILE_NODE )
 	{
-		CopyNode * copyNode = n->CastTo< CopyNode >();
+		CopyFileNode * copyNode = n->CastTo< CopyFileNode >();
 		Node * srcNode = copyNode->GetSourceNode();
 		GetInputFiles( srcNode, fullArgs, pre, post );
 	}

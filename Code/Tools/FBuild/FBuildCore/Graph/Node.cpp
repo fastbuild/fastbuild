@@ -403,7 +403,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 	switch ( (Node::Type)nodeType )
 	{
 		case Node::PROXY_NODE:			ASSERT( false );						break;
-		case Node::COPY_FILE_NODE:		n = CopyNode::Load( stream );			break;
+		case Node::COPY_FILE_NODE:		n = CopyFileNode::Load( stream );		break;
 		case Node::DIRECTORY_LIST_NODE: n = DirectoryListNode::Load( stream );	break;
 		case Node::EXEC_NODE:			n = ExecNode::Load( stream );			break;
 		case Node::FILE_NODE:			n = FileNode::Load( stream );			break;

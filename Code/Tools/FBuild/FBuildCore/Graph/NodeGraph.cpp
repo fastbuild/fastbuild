@@ -560,11 +560,11 @@ size_t NodeGraph::GetNodeCount() const
     return m_AllNodes.GetSize();
 }
 
-// CreateCopyNode
+// CreateCopyFileNode
 //------------------------------------------------------------------------------
-CopyNode * NodeGraph::CreateCopyNode( const AString & dstFileName, 
-									  Node * sourceFile,
-									  const Dependencies & preBuildDependencies )
+CopyFileNode * NodeGraph::CreateCopyFileNode( const AString & dstFileName, 
+											  Node * sourceFile,
+											  const Dependencies & preBuildDependencies )
 {
 	ASSERT( Thread::IsMainThread() );
 	ASSERT( sourceFile->IsAFile() );
@@ -572,7 +572,7 @@ CopyNode * NodeGraph::CreateCopyNode( const AString & dstFileName,
 	AStackString< 1024 > fullPathDst;
 	CleanPath( dstFileName, fullPathDst );
 
-	CopyNode * node = FNEW( CopyNode( fullPathDst, (FileNode *)sourceFile, preBuildDependencies ) );
+	CopyFileNode * node = FNEW( CopyFileNode( fullPathDst, (FileNode *)sourceFile, preBuildDependencies ) );
 	AddNode( node );
 	return node;
 }
@@ -604,7 +604,7 @@ RemoveDirNode * NodeGraph::CreateRemoveDirNode( const AString & nodeName,
 	return node;
 }
 
-// CreateCopyNode
+// CreateExecNode
 //------------------------------------------------------------------------------
 ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName, 
 									  const Dependencies & inputFiles, 

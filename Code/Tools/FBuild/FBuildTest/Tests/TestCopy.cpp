@@ -18,9 +18,9 @@ class TestCopy : public FBuildTest
 private:
 	DECLARE_TESTS
 
-	// make sure the CopyNode works
-	void SingleCopyNode() const;
-	void MultipleCopyNodes() const;
+	// make sure the CopyFileNode works
+	void SingleCopyFileNode() const;
+	void MultipleCopyFileNodes() const;
 
 	// make sure the FunctionCopy works
 	void TestCopyFunction_FileToFile() const;
@@ -36,8 +36,8 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestCopy )
-	REGISTER_TEST( SingleCopyNode )
-	REGISTER_TEST( MultipleCopyNodes )
+	REGISTER_TEST( SingleCopyFileNode )
+	REGISTER_TEST( MultipleCopyFileNodes )
 	REGISTER_TEST( TestCopyFunction_FileToFile )
 	REGISTER_TEST( TestCopyFunction_FileToFile_NoRebuild )
 	REGISTER_TEST( TestCopyFunction_FileToDir )
@@ -48,9 +48,9 @@ REGISTER_TESTS_BEGIN( TestCopy )
 	REGISTER_TEST( TestCopyFunction_SourceBasePath_NoRebuild )
 REGISTER_TESTS_END
 
-// SingleCopyNode
+// SingleCopyFileNode
 //------------------------------------------------------------------------------
-void TestCopy::SingleCopyNode() const
+void TestCopy::SingleCopyFileNode() const
 {
 	const AStackString<> testFileName( "Data/TestGraph/library.cpp" );
 	const AStackString<> testFileNameCopy( "../../../../tmp/Test/Graph/library.copynode.cpp" );
@@ -72,7 +72,7 @@ void TestCopy::SingleCopyNode() const
 
 		// and an ObjectNode for the output
 		Dependencies empty;
-		Node * dstNode = ng.CreateCopyNode( testFileNameCopy, srcNode, empty );
+		Node * dstNode = ng.CreateCopyFileNode( testFileNameCopy, srcNode, empty );
 
 		TEST_ASSERT( fb.Build( dstNode ) );
 		TEST_ASSERT( fb.SaveDependencyGraph( "../../../../tmp/Test/Graph/singlecopynode.fdb" ) );
@@ -101,9 +101,9 @@ void TestCopy::SingleCopyNode() const
 	}
 }
 
-// MultipleCopyNodes
+// MultipleCopyFileNodes
 //------------------------------------------------------------------------------
-void TestCopy::MultipleCopyNodes() const
+void TestCopy::MultipleCopyFileNodes() const
 {
 	const AStackString<> srcFile( "Data/TestGraph/library.cpp" );
 	const AStackString<> dstFileA( "../../../../tmp/Test/Graph/library.multiplecopynodes1.cpp" );
@@ -128,9 +128,9 @@ void TestCopy::MultipleCopyNodes() const
 		FileNode * srcNode = ng.CreateFileNode( srcFile );
 
 		Dependencies empty;
-		Node * copyA = ng.CreateCopyNode( dstFileA, srcNode, empty );
-		Node * copyB = ng.CreateCopyNode( dstFileB, (FileNode *)copyA, empty );
-		Node * copyC = ng.CreateCopyNode( dstFileC, (FileNode *)copyB, empty );
+		Node * copyA = ng.CreateCopyFileNode( dstFileA, srcNode, empty );
+		Node * copyB = ng.CreateCopyFileNode( dstFileB, (FileNode *)copyA, empty );
+		Node * copyC = ng.CreateCopyFileNode( dstFileC, (FileNode *)copyB, empty );
 
 		TEST_ASSERT( fb.Build( copyC ) );
 		TEST_ASSERT( fb.SaveDependencyGraph( "../../../../tmp/Test/Graph/multiplecopynode.fdb" ) );

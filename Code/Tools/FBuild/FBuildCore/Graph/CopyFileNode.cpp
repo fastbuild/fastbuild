@@ -1,4 +1,4 @@
-// FileNode.cpp
+// CopyFileNode.cpp
 //------------------------------------------------------------------------------
 
 // Includes
@@ -18,9 +18,9 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-CopyNode::CopyNode( const AString & dstFileName,
-					FileNode * sourceFile,
-					const Dependencies & preBuildDependencies )
+CopyFileNode::CopyFileNode( const AString & dstFileName,
+							FileNode * sourceFile,
+							const Dependencies & preBuildDependencies )
 : FileNode( dstFileName, Node::FLAG_NONE )
 , m_SourceFile( sourceFile )
 {
@@ -34,13 +34,13 @@ CopyNode::CopyNode( const AString & dstFileName,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-CopyNode::~CopyNode()
+CopyFileNode::~CopyFileNode()
 {
 }
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult CopyNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult CopyFileNode::DoBuild( Job * UNUSED( job ) )
 {
 	EmitCopyMessage();
 
@@ -76,7 +76,7 @@ CopyNode::~CopyNode()
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * CopyNode::Load( IOStream & stream )
+/*static*/ Node * CopyFileNode::Load( IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	fileName);
 	NODE_LOAD( AStackString<>,	sourceFile );
@@ -86,14 +86,14 @@ CopyNode::~CopyNode()
 	Node * srcNode = ng.FindNode( sourceFile );
 	ASSERT( srcNode ); // load/save logic should ensure the src was saved first
 	ASSERT( srcNode->IsAFile() );
-	CopyNode * n = ng.CreateCopyNode( fileName, (FileNode *)srcNode, preBuildDependencies );
+	CopyFileNode * n = ng.CreateCopyFileNode( fileName, (FileNode *)srcNode, preBuildDependencies );
 	ASSERT( n );
 	return n;
 }
 
 // Save
 //------------------------------------------------------------------------------
-/*virtual*/ void CopyNode::Save( IOStream & stream ) const
+/*virtual*/ void CopyFileNode::Save( IOStream & stream ) const
 {
 	NODE_SAVE( m_Name );
 	NODE_SAVE( m_SourceFile->GetName() );
@@ -102,7 +102,7 @@ CopyNode::~CopyNode()
 
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
-void CopyNode::EmitCopyMessage() const
+void CopyFileNode::EmitCopyMessage() const
 {
 	// we combine everything into one string to ensure it is contiguous in
 	// the output

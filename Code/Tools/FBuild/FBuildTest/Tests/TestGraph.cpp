@@ -96,9 +96,9 @@ void TestGraph::TestNodeTypes() const
 
 	{
 		Dependencies empty;
-		Node * n = ng.CreateCopyNode( AStackString<>( "aaa" ), fn, empty );
+		Node * n = ng.CreateCopyFileNode( AStackString<>( "aaa" ), fn, empty );
 		TEST_ASSERT( n->GetType() == Node::COPY_FILE_NODE );
-		TEST_ASSERT( CopyNode::GetTypeS() == Node::COPY_FILE_NODE );
+		TEST_ASSERT( CopyFileNode::GetTypeS() == Node::COPY_FILE_NODE );
 		TEST_ASSERT( AStackString<>( "Copy" ) == n->GetTypeName() );
 	}
 

@@ -66,7 +66,7 @@ CopyDirNode::~CopyDirNode()
 			  fIt != fEnd;
 			  ++fIt )
 		{
-			// Create a CopyNode for each dynamically discovered file
+			// Create a CopyFileNode for each dynamically discovered file
 
 			// source file (full path)
 			const AString & srcFile = fIt->m_Name;
@@ -94,16 +94,16 @@ CopyDirNode::~CopyDirNode()
 			Node * n = ng.FindNode( dstFile );
 			if ( n == nullptr )
 			{
-				n = ng.CreateCopyNode( dstFile, srcFileNode, m_PreBuildDependencies ); // inherit PreBuildDependencies
+				n = ng.CreateCopyFileNode( dstFile, srcFileNode, m_PreBuildDependencies ); // inherit PreBuildDependencies
 			}
 			else if ( n->GetType() != Node::COPY_FILE_NODE )
 			{
-				FLOG_ERROR( "Node '%s' is not a CopyNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
+				FLOG_ERROR( "Node '%s' is not a CopyFileNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
 				return false;
 			}
 			else
 			{
-				CopyNode * cn = n->CastTo< CopyNode >();
+				CopyFileNode * cn = n->CastTo< CopyFileNode >();
 				if ( srcFileNode != cn->GetSourceNode() )
 				{
 					FLOG_ERROR( "Conflicting objects found during CopyDir:\n"
@@ -132,7 +132,7 @@ CopyDirNode::~CopyDirNode()
 	const Dependency * const end = m_DynamicDependencies.End();
 	for ( const Dependency * it = m_DynamicDependencies.Begin(); it != end; ++it )
 	{
-		CopyNode * cn = it->GetNode()->CastTo< CopyNode >();
+		CopyFileNode * cn = it->GetNode()->CastTo< CopyFileNode >();
 		timeStamp = Math::Max< uint64_t >( timeStamp, cn->GetStamp() );
 	}
 	m_Stamp = timeStamp;

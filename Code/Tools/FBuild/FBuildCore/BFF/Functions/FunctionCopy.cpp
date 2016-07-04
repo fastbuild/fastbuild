@@ -154,7 +154,7 @@ FunctionCopy::FunctionCopy()
 		}
 
 		// create our node
-		Node * copyNode = ng.CreateCopyNode( dst, *it, preBuildDependencies );
+		Node * copyNode = ng.CreateCopyFileNode( dst, *it, preBuildDependencies );
 		copyNodes.Append( Dependency( copyNode ) );
 	}
 

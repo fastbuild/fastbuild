@@ -1,8 +1,6 @@
-// CopyNode.h - a node that copies a single object
+// CopyFileNode.h - a node that copies a single object
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_COPYNODE_H
-#define FBUILD_GRAPH_COPYNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -11,15 +9,15 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 
-// CopyNode
+// CopyFileNode
 //------------------------------------------------------------------------------
-class CopyNode : public FileNode
+class CopyFileNode : public FileNode
 {
 public:
-	explicit CopyNode( const AString & dstFileName,
+	explicit CopyFileNode( const AString & dstFileName,
 					    FileNode * sourceFile,
 						const Dependencies & preBuildDependencies );
-	virtual ~CopyNode();
+	virtual ~CopyFileNode();
 
 	static inline Node::Type GetTypeS() { return Node::COPY_FILE_NODE; }
 
@@ -37,4 +35,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_COPYNODE_H
