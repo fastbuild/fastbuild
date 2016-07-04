@@ -1605,21 +1605,37 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
 		// Mismatched - is there a supported conversion?
 
-		// String to ArrayOfStrings or empty array, assignment or concatenation
+		// String to ArrayOfStrings or empty array
 		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS || dstIsEmpty ) &&
-			 ( srcType == BFFVariable::VAR_STRING ) &&
-			 !subtract )
+			 ( srcType == BFFVariable::VAR_STRING ) )
 		{
-			uint32_t num = (uint32_t)( 1 + ( ( concat && !dstIsEmpty ) ? varDst->GetArrayOfStrings().GetSize() : 0 ) );
-			Array< AString > values( num, false );
-			if ( concat && !dstIsEmpty )
+			Array< AString > values( varDst->GetArrayOfStrings().GetSize() + 1, false );
+			if ( concat )
+			{
+				if ( !dstIsEmpty )
+				{
+					values.Append( varDst->GetArrayOfStrings() );
+				}
+				values.Append( varSrc->GetString() );
+			}
+			else if ( subtract && !dstIsEmpty )
+			{
+				auto end = varDst->GetArrayOfStrings().End();
+				for ( auto it=varDst->GetArrayOfStrings().Begin(); it!=end; ++it )
+				{
+					if ( *it != varSrc->GetString() ) // remove equal strings
+					{
+						values.Append( *it );
+					}
+				}
+			}
+			else
 			{
 				values.Append( varDst->GetArrayOfStrings() );
 			}
-			values.Append( varSrc->GetString() );
 
 			BFFStackFrame::SetVarArrayOfStrings( dstName, values, dstFrame );
-			FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num );
+			FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), values.GetSize() );
 			return true;
 		}
 
