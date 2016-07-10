@@ -1094,6 +1094,10 @@ bool BFFParser::StoreVariableString( const AString & name,
 	// find existing
 	const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
 
+	const bool dstIsEmpty = ( var == nullptr ) ||
+		( var->IsArrayOfStrings() && var->GetArrayOfStrings().IsEmpty() ) ||
+		( var->IsArrayOfStructs() && var->GetArrayOfStructs().IsEmpty() );
+
 	// are we concatenating?
 	if ( ( *operatorIter == BFF_VARIABLE_CONCATENATION ) || 
 		 ( *operatorIter == BFF_VARIABLE_SUBTRACTION ) )
@@ -1128,16 +1132,19 @@ bool BFFParser::StoreVariableString( const AString & name,
 						finalValue.Get() );
 			return true;
 		}
-		else if ( var->IsArrayOfStrings() )
+		else if ( var->IsArrayOfStrings() || dstIsEmpty )
 		{
-			// OK - can concat String to ArrayOfStrings
+			// OK - can concat String to ArrayOfStrings or to empty array
 			Array< AString > finalValues( var->GetArrayOfStrings().GetSize() + 1, false );
 			if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
 			{
-				finalValues = var->GetArrayOfStrings();
+				if ( !dstIsEmpty )
+				{
+					finalValues = var->GetArrayOfStrings();
+				}
 				finalValues.Append( value );
 			}
-			else
+			else if ( !dstIsEmpty )
 			{
 				auto end = var->GetArrayOfStrings().End();
 				for ( auto it=var->GetArrayOfStrings().Begin(); it!=end; ++it )
@@ -1174,7 +1181,7 @@ bool BFFParser::StoreVariableString( const AString & name,
 			FLOG_INFO( "Registered <string> variable '%s' with value '%s'", name.Get(), value.Get() );
 			return true;
 		}
-		else if ( var->IsArrayOfStrings() )
+		else if ( var->IsArrayOfStrings() || dstIsEmpty )
 		{
 			// OK - store new string as the single element of array
 			Array< AString > values( 1, false );
