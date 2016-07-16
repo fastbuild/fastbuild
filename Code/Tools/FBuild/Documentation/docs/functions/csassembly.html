@@ -28,6 +28,10 @@ Builds one or more files (typically .cs files) into an assembly (a dll or execut
   .CompilerInputExcludePath     ; (optional) Path(s) to exclude from compilation
   .CompilerInputExcludedFiles   ; (optional) File(s) to exclude from compilation (partial, root-relative of full path)
   .CompilerReferences           ; (optional) References for the assembly
+
+  ; Additional options
+  .PreBuildDependencies         ; (optional) Force targets to be built before this assembly (Rarely needed,
+                                ; but useful when an assembly relies on generated code).
 }</div>
       </p>
 <p><b>Build-Time Substitutions</b>

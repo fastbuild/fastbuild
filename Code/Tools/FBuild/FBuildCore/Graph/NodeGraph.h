@@ -54,7 +54,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 82 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 83 };
 
 	bool IsValid() const
 	{
@@ -178,7 +178,8 @@ public:
 						   const Dependencies & inputNodes,
 						   const AString & compiler,
 						   const AString & compilerOptions,
-						   const Dependencies & extraRefs );
+						   const Dependencies & extraRefs,
+						   const Dependencies & preBuildDependencies );
 	TestNode * CreateTestNode( const AString & testOutput );
 	CompilerNode * CreateCompilerNode( const AString & executable );
 	VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,

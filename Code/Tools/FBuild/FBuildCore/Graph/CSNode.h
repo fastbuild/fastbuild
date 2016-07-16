@@ -22,7 +22,8 @@ public:
 					 const Dependencies & inputNodes,
 					 const AString & compiler,
 					 const AString & compilerArgs,
-					 const Dependencies & extraRefs );
+					 const Dependencies & extraRefs,
+                     const Dependencies & preBuildDependencies );
 	virtual ~CSNode();
 
 	static inline Node::Type GetTypeS() { return Node::CS_NODE; }

@@ -184,11 +184,12 @@ void TestGraph::TestNodeTypes() const
 	{
 		Dependencies files( 1, false );
 		files.Append( Dependency( fn ) );
-		Node * n = ng.CreateCSNode( AStackString<>( "a.cs" ), 
+		Node * n = ng.CreateCSNode( AStackString<>( "a.cs" ),
 									files,
 									AString::GetEmpty(),
 									AString::GetEmpty(),
-									Dependencies() );
+									Dependencies(),
+                                    Dependencies() );
 		TEST_ASSERT( n->GetType() == Node::CS_NODE);
 		TEST_ASSERT( CSNode::GetTypeS() == Node::CS_NODE );
 		TEST_ASSERT( AStackString<>( "C#" ) == n->GetTypeName() );
