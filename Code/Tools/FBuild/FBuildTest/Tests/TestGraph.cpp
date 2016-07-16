@@ -76,7 +76,7 @@ void TestGraph::EmptyGraph() const
 void TestGraph::TestNodeTypes() const
 {
 	FBuild fb;
-	NodeGraph & ng = fb.GetDependencyGraph();
+	NodeGraph ng;
 
 	FileNode * fn = ng.CreateFileNode( AStackString<>( "file" ) );
 	TEST_ASSERT( fn->GetType() == Node::FILE_NODE);
@@ -96,7 +96,11 @@ void TestGraph::TestNodeTypes() const
 
 	{
 		Dependencies empty;
-		Node * n = ng.CreateCopyFileNode( AStackString<>( "aaa" ), fn, empty );
+		#if defined( __WINDOWS__ )
+			Node * n = ng.CreateCopyFileNode( AStackString<>( "c:\\dummy" ) );
+		#else
+			Node * n = ng.CreateCopyFileNode( AStackString<>( "/dummy/dummy" ) );
+		#endif
 		TEST_ASSERT( n->GetType() == Node::COPY_FILE_NODE );
 		TEST_ASSERT( CopyFileNode::GetTypeS() == Node::COPY_FILE_NODE );
 		TEST_ASSERT( AStackString<>( "Copy" ) == n->GetTypeName() );
@@ -184,12 +188,12 @@ void TestGraph::TestNodeTypes() const
 	{
 		Dependencies files( 1, false );
 		files.Append( Dependency( fn ) );
-		Node * n = ng.CreateCSNode( AStackString<>( "a.cs" ),
+		Node * n = ng.CreateCSNode( AStackString<>( "a.cs" ), 
 									files,
 									AString::GetEmpty(),
 									AString::GetEmpty(),
 									Dependencies(),
-                                    Dependencies() );
+									Dependencies() );
 		TEST_ASSERT( n->GetType() == Node::CS_NODE);
 		TEST_ASSERT( CSNode::GetTypeS() == Node::CS_NODE );
 		TEST_ASSERT( AStackString<>( "C#" ) == n->GetTypeName() );
@@ -201,7 +205,7 @@ void TestGraph::TestNodeTypes() const
 void TestGraph::SingleFileNode() const
 {
 	FBuild fb;
-	NodeGraph & ng = fb.GetDependencyGraph();
+	NodeGraph ng;
 
 	// make sure a node of the name we are going to use doesn't exist
 	const AStackString<> testFileName( "SimpleLibrary/library.cpp" );
@@ -223,7 +227,7 @@ void TestGraph::SingleFileNodeMissing() const
 	options.m_ShowErrors = false;
 
 	FBuild fb( options );
-	NodeGraph & ng = fb.GetDependencyGraph();
+	NodeGraph ng;
 
 	// make a node for a file that does not exist
 	const AStackString<> testFileName( "ThisFileDoesNotExist.cpp" );
@@ -240,7 +244,7 @@ void TestGraph::SingleFileNodeMissing() const
 void TestGraph::TestDirectoryListNode() const
 {
 	FBuild fb;
-	NodeGraph & ng = fb.GetDependencyGraph();
+	NodeGraph ng;
 
 	// make sure a node of the name we are going to use doesn't exist
     #if defined( __WINDOWS__ )

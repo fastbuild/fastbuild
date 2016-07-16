@@ -71,11 +71,10 @@ static VCXProjectNode * ResolveVCXProjectRecurse( Node * node )
 
 // ResolveVCXProject
 //------------------------------------------------------------------------------
-VCXProjectNode * FunctionSLN::ResolveVCXProject( const BFFIterator & iter, const AString & projectName ) const
+VCXProjectNode * FunctionSLN::ResolveVCXProject( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & projectName ) const
 {
 	// Find the Node
-    NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-    Node * node = ng.FindNode( projectName );
+    Node * node = nodeGraph.FindNode( projectName );
     if ( node == nullptr )
     {
         Error::Error_1104_TargetNotDefined( iter, this, ".Projects", projectName );
@@ -118,7 +117,7 @@ struct VCXProjectNodeComp
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionSLN::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionSLN::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
     AStackString<> solutionOutput;
     Array< AString > solutionProjects( 8, true );
@@ -276,10 +275,8 @@ struct VCXProjectNodeComp
         }
     }
 
-    NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-
     // Check for existing node
-    if ( ng.FindNode( solutionOutput ) )
+    if ( nodeGraph.FindNode( solutionOutput ) )
     {
         Error::Error_1100_AlreadyDefined( funcStartIter, this, solutionOutput );
         return false;
@@ -291,7 +288,7 @@ struct VCXProjectNodeComp
         const AString * const end = solutionProjects.End();
         for ( const AString * it = solutionProjects.Begin(); it != end; ++it )
         {
-            VCXProjectNode * project = ResolveVCXProject( funcStartIter, *it );
+            VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, *it );
             if ( project == nullptr )
             {
                 return false; // ResolveVCXProject will have emitted error
@@ -346,7 +343,7 @@ struct VCXProjectNodeComp
             for ( AString * it2 = it->m_ProjectNames.Begin(); it2 != end2; ++it2 )
             {
 				// Get associate project file
-				VCXProjectNode * project = ResolveVCXProject( funcStartIter, *it2 );
+				VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, *it2 );
 				if ( project == nullptr )
 				{
 					return false; // ResolveVCXProjectRecurse will have emitted error
@@ -364,7 +361,7 @@ struct VCXProjectNodeComp
     if ( solutionBuildProject.GetLength() > 0 )
     {
 		// Get associate project file
-		const VCXProjectNode * project = ResolveVCXProject( funcStartIter, solutionBuildProject );
+		const VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, solutionBuildProject );
 		if ( project == nullptr )
 		{
 			return false; // ResolveVCXProject will have emitted error
@@ -407,7 +404,7 @@ struct VCXProjectNodeComp
 			for ( AString & projectName : deps.m_Projects )
 			{
 				// Get associated project file
-				const VCXProjectNode * project = ResolveVCXProject( funcStartIter, projectName );
+				const VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, projectName );
 				if ( project == nullptr )
 				{
 					return false; // ResolveVCXProject will have emitted error
@@ -417,7 +414,7 @@ struct VCXProjectNodeComp
 			for ( AString & projectName : deps.m_Dependencies )
 			{
 				// Get associated project file
-				const VCXProjectNode * project = ResolveVCXProject( funcStartIter, projectName );
+				const VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, projectName );
 				if ( project == nullptr )
 				{
 					return false; // ResolveVCXProject will have emitted error
@@ -429,7 +426,7 @@ struct VCXProjectNodeComp
 		}
 	}
 
-    SLNNode * sln = ng.CreateSLNNode(   solutionOutput,
+    SLNNode * sln = nodeGraph.CreateSLNNode( solutionOutput,
                                         solutionBuildProject,
                                         solutionVisualStudioVersion,
                                         solutionMinimumVisualStudioVersion,
@@ -440,7 +437,7 @@ struct VCXProjectNodeComp
 
     ASSERT( sln );
 
-    return ProcessAlias( funcStartIter, sln );
+    return ProcessAlias( nodeGraph, funcStartIter, sln );
 }
 
 // GetStringFromStruct

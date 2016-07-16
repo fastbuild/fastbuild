@@ -170,7 +170,7 @@ void TestBuildFBuild::DBSavePerformance() const
 	Timer t;
 	for ( size_t i=0; i<100; ++i )
 	{
-		fBuild.GetDependencyGraph().Save( ms );
+		fBuild.SaveDependencyGraph( ms );
 	}
 
 	const float time = ( t.GetElapsed() * 1000.0f ) / 100.0f;

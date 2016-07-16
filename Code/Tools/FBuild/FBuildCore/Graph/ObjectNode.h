@@ -79,7 +79,7 @@ public:
 	inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
 
 	virtual void Save( IOStream & stream ) const override;
-	static Node * Load( IOStream & stream );
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 
 	virtual void SaveRemote( IOStream & stream ) const override;
 	static Node * LoadRemote( IOStream & stream );
@@ -95,10 +95,10 @@ public:
 
 	const char * GetObjExtension() const;
 private:
-	virtual bool DoDynamicDependencies( bool forceClean ) override;
+	virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
 	virtual BuildResult DoBuild( Job * job ) override;
 	virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
-	virtual bool Finalize() override;
+	virtual bool Finalize( NodeGraph & nodeGraph ) override;
 
 	BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
 	BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache );

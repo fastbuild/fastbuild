@@ -30,7 +30,7 @@ AliasNode::AliasNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool AliasNode::Initialize( const BFFIterator & iter, const Function * function )
+bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
 	// TODO:B make this use m_Targets
 	Dependencies targets( 32, true );
@@ -38,7 +38,7 @@ bool AliasNode::Initialize( const BFFIterator & iter, const Function * function 
 	const bool allowCopyDirNodes = true;
 	const bool allowUnityNodes = true;
 	const bool allowRemoveDirNodes = true;
-	if ( !function->GetNodeList( iter, ".Targets", targets, required, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+	if ( !function->GetNodeList( nodeGraph, iter, ".Targets", targets, required, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
 	{
 		return false; // GetNodeList will have emitted an error
 	}
@@ -89,14 +89,13 @@ AliasNode::~AliasNode()
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * AliasNode::Load( IOStream & stream )
+/*static*/ Node * AliasNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>, name );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	AliasNode * an = ng.CreateAliasNode( name );
+	AliasNode * an = nodeGraph.CreateAliasNode( name );
 
-	if ( an->Deserialize( stream ) == false )
+	if ( an->Deserialize( nodeGraph, stream ) == false )
     {
 		return nullptr;
 	}

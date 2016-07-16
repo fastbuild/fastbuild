@@ -7,6 +7,7 @@
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileStream.h"
@@ -85,7 +86,8 @@ void TestBFFParsing::Empty() const
 {
 	// an empty file should pass without problem
 	char buffer[ 1 ] = { '\000' }; // post data sentinel
-	BFFParser p;
+	NodeGraph ng;
+	BFFParser p( ng );
 	TEST_ASSERT( p.Parse( buffer, 0, "empty.bff", 0, 0 ) );
 }
 
@@ -95,7 +97,8 @@ void TestBFFParsing::AlmostEmpty() const
 {
 	// an empty file should pass without problem
 	const char * buffer = "\r\n\000"; // empty line + post data sentinel
-	BFFParser p;
+	NodeGraph ng;
+	BFFParser p( ng );
 	TEST_ASSERT( p.Parse( buffer, 2, "empty.bff", 0, 0 ) );
 }
 
@@ -195,7 +198,8 @@ void TestBFFParsing::Parse( const char * fileName, bool expectFailure ) const
 	TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
 
 	FBuild fBuild;
-	BFFParser p;
+	NodeGraph ng;
+	BFFParser p( ng );
 	bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
 	if ( expectFailure )
 	{

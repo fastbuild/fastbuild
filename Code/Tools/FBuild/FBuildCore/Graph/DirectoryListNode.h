@@ -29,7 +29,7 @@ public:
 
 	static inline Node::Type GetTypeS() { return Node::DIRECTORY_LIST_NODE; }
 
-	virtual bool IsAFile() const { return false; }
+	virtual bool IsAFile() const override { return false; }
 
 	static void FormatName( const AString & path,
 							const Array< AString > * patterns,
@@ -38,11 +38,11 @@ public:
                             const Array< AString > & excludeFiles,
 							AString & result );
 
-	static Node * Load( IOStream & stream );
-	virtual void Save( IOStream & stream ) const;
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
+	virtual void Save( IOStream & stream ) const override;
 
 private:
-	virtual BuildResult DoBuild( Job * job );
+	virtual BuildResult DoBuild( Job * job ) override;
 
 	AString m_Path;
 	Array< AString > m_Patterns;

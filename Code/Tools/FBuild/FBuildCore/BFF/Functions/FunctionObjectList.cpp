@@ -46,7 +46,7 @@ FunctionObjectList::FunctionObjectList()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionObjectList::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionObjectList::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
 	// make sure all required variables are defined
 	const BFFVariable * compiler;
@@ -67,18 +67,16 @@ FunctionObjectList::FunctionObjectList()
 
     PathUtils::FixupFolderPath( compilerOutputPath );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-
 	// find or create the compiler node
 	CompilerNode * compilerNode = nullptr;
-	if ( !FunctionObjectList::GetCompilerNode( funcStartIter, compiler->GetString(), compilerNode ) )
+	if ( !FunctionObjectList::GetCompilerNode( nodeGraph, funcStartIter, compiler->GetString(), compilerNode ) )
 	{
 		return false; // GetCompilerNode will have emitted error
 	}
 
 	// Compiler Force Using
 	Dependencies compilerForceUsing;
-	if ( !GetNodeList( funcStartIter, ".CompilerForceUsing", compilerForceUsing, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".CompilerForceUsing", compilerForceUsing, false ) )
 	{
 		return false; // GetNodeList will have emitted an error
 	}	
@@ -111,7 +109,7 @@ FunctionObjectList::FunctionObjectList()
 
 	// Precompiled Header support
 	ObjectNode * precompiledHeaderNode = nullptr;
-	if ( !GetPrecompiledHeaderNode( funcStartIter, compilerNode, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching ) )
+	if ( !GetPrecompiledHeaderNode( nodeGraph, funcStartIter, compilerNode, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching ) )
 	{
 		return false; // GetPrecompiledHeaderNode will have emitted error
 	}	
@@ -173,7 +171,7 @@ FunctionObjectList::FunctionObjectList()
 	if ( preprocessor )
     {
 		// get the preprocessor executable
-        if ( !FunctionObjectList::GetCompilerNode( funcStartIter, preprocessor->GetString(), preprocessorNode ) )
+        if ( !FunctionObjectList::GetCompilerNode( nodeGraph, funcStartIter, preprocessor->GetString(), preprocessorNode ) )
         {
             return false; // GetCompilerNode will have emitted an error
         }
@@ -187,13 +185,13 @@ FunctionObjectList::FunctionObjectList()
 
 	// Pre-build dependencies
 	Dependencies preBuildDependencies;
-	if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
 	{
 		return false; // GetNodeList will have emitted an error
 	}
 
 	Dependencies staticDeps( 32, true );
-	if ( !GetInputs( funcStartIter, staticDeps ) )
+	if ( !GetInputs( nodeGraph, funcStartIter, staticDeps ) )
 	{
 		return false; // GetStaticDeps will gave emitted error
 	}
@@ -208,7 +206,7 @@ FunctionObjectList::FunctionObjectList()
 	ASSERT( m_AliasForFunction.IsEmpty() == false );
 
 	// Check for existing node
-	if ( ng.FindNode( m_AliasForFunction ) )
+	if ( nodeGraph.FindNode( m_AliasForFunction ) )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
 		return false;
@@ -224,7 +222,7 @@ FunctionObjectList::FunctionObjectList()
 	GetExtraOutputPaths( compilerOptions->GetString(), extraPDBPath, extraASMPath );
 
 	// Create library node which depends on the single file or list
-	ObjectListNode * o = ng.CreateObjectListNode( m_AliasForFunction,
+	ObjectListNode * o = nodeGraph.CreateObjectListNode( m_AliasForFunction,
 												  staticDeps,
 												  compilerNode,
 												  compilerOptions->GetString(),
@@ -253,10 +251,9 @@ FunctionObjectList::FunctionObjectList()
 
 // GetCompilerNode
 //------------------------------------------------------------------------------
-bool FunctionObjectList::GetCompilerNode( const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode ) const
+bool FunctionObjectList::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode ) const
 {
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * cn = ng.FindNode( compiler );
+	Node * cn = nodeGraph.FindNode( compiler );
 	compilerNode = nullptr;
 	if ( cn != nullptr )
 	{
@@ -278,7 +275,7 @@ bool FunctionObjectList::GetCompilerNode( const BFFIterator & iter, const AStrin
 		// (only explicitly defined compiler nodes can be distributed)
 		AStackString<> compilerClean;
 		NodeGraph::CleanPath( compiler, compilerClean );
-		compilerNode = ng.CreateCompilerNode( compilerClean );
+		compilerNode = nodeGraph.CreateCompilerNode( compilerClean );
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
 	}
 
@@ -287,7 +284,8 @@ bool FunctionObjectList::GetCompilerNode( const BFFIterator & iter, const AStrin
 
 // GetPrecompiledHeaderNode
 //------------------------------------------------------------------------------
-bool FunctionObjectList::GetPrecompiledHeaderNode( const BFFIterator & iter,
+bool FunctionObjectList::GetPrecompiledHeaderNode( NodeGraph & nodeGraph,
+												   const BFFIterator & iter,
 												   CompilerNode * compilerNode,
 												   const BFFVariable * compilerOptions,
 												   const Dependencies & compilerForceUsing,
@@ -323,8 +321,7 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( const BFFIterator & iter,
 			return false;
 		}
 
-		NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-		Node * pchInputNode = ng.FindNode( pchInputFile->GetString() );
+		Node * pchInputNode = nodeGraph.FindNode( pchInputFile->GetString() );
 		if ( pchInputNode )
 		{
 			// is it a file?
@@ -337,10 +334,10 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( const BFFIterator & iter,
 		else
 		{
 			// Create input node
-			pchInputNode = ng.CreateFileNode( pchInputFile->GetString() );
+			pchInputNode = nodeGraph.CreateFileNode( pchInputFile->GetString() );
 		}
 
-		if ( ng.FindNode( pchOutputFile->GetString() ) )
+		if ( nodeGraph.FindNode( pchOutputFile->GetString() ) )
 		{
 			Error::Error_1301_AlreadyDefinedPCH( iter, this, pchOutputFile->GetString().Get() );
 			return false;
@@ -386,7 +383,7 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( const BFFIterator & iter,
 
 		// TODO:B Check PCHOptionsDeoptimized
 
-		precompiledHeaderNode = ng.CreateObjectNode( pchOutputFile->GetString(),
+		precompiledHeaderNode = nodeGraph.CreateObjectNode( pchOutputFile->GetString(),
 													 pchInputNode,
 													 compilerNode,
 													 pchOptions->GetString(),
@@ -406,10 +403,8 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( const BFFIterator & iter,
 
 // GetInputs
 //------------------------------------------------------------------------------
-bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inputs ) const
+bool FunctionObjectList::GetInputs( NodeGraph & nodeGraph, const BFFIterator & iter, Dependencies & inputs ) const
 {
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-
 	// do we want to build files via a unity blob?
     Array< AString > inputUnities;
     if ( !GetStrings( iter, inputUnities, ".CompilerInputUnity", false ) ) // not required
@@ -418,7 +413,7 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 	}
     for ( const auto& unity : inputUnities )
     {
-        Node * n = ng.FindNode( unity );
+        Node * n = nodeGraph.FindNode( unity );
 		if ( n == nullptr )
 		{
 			Error::Error_1104_TargetNotDefined( iter, this, "CompilerInputUnity", unity );
@@ -476,7 +471,7 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 		}
 
 		Dependencies dirNodes( inputPaths.GetSize() );
-		if ( !GetDirectoryListNodeList( iter, inputPaths, excludePaths, filesToExclude, recurse, &patterns, "CompilerInputPath", dirNodes ) )
+		if ( !GetDirectoryListNodeList( nodeGraph, iter, inputPaths, excludePaths, filesToExclude, recurse, &patterns, "CompilerInputPath", dirNodes ) )
 		{
 			return false; // GetDirectoryListNodeList will have emitted an error
 		}
@@ -484,7 +479,7 @@ bool FunctionObjectList::GetInputs( const BFFIterator & iter, Dependencies & inp
 	}
 
 	// do we want to build a specific list of files?
-	if ( !GetNodeList( iter, ".CompilerInputFiles", inputs, false ) )
+	if ( !GetNodeList( nodeGraph, iter, ".CompilerInputFiles", inputs, false ) )
 	{
 		// helper will emit error
 		return false;

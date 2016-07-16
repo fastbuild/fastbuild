@@ -73,8 +73,6 @@ FBuild::FBuild( const FBuildOptions & options )
 
 	m_Macros = FNEW( BFFMacros() );
 
-	m_DependencyGraph = FNEW( NodeGraph() );
-
 	// store all user provided options
 	m_Options = options;
 
@@ -156,7 +154,8 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 		m_DependencyGraphFile += ".fdb";
 	}
 
-	if ( m_DependencyGraph->Initialize( bffFile, m_DependencyGraphFile.Get() ) == false )
+	m_DependencyGraph = NodeGraph::Initialize( bffFile, m_DependencyGraphFile.Get() );
+	if ( m_DependencyGraph == nullptr )
 	{
 		return false;
 	}
@@ -342,6 +341,13 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 	return true;
 }
 
+// SaveDependencyGraph
+//------------------------------------------------------------------------------
+void FBuild::SaveDependencyGraph( IOStream & stream ) const
+{
+	m_DependencyGraph->Save( stream );
+}
+
 // Build
 //------------------------------------------------------------------------------
 bool FBuild::Build( Node * nodeToBuild )
@@ -372,7 +378,7 @@ bool FBuild::Build( Node * nodeToBuild )
 	for ( ;; )
 	{
         // process completed jobs
-        m_JobQueue->FinalizeCompletedJobs();
+        m_JobQueue->FinalizeCompletedJobs( *m_DependencyGraph );
 
 		if ( !stopping )
 		{
@@ -432,7 +438,7 @@ bool FBuild::Build( Node * nodeToBuild )
 	}
 
     // wrap up/free any jobs that come from the last build pass
-    m_JobQueue->FinalizeCompletedJobs();
+    m_JobQueue->FinalizeCompletedJobs( *m_DependencyGraph );
 
 	FDELETE m_JobQueue;
 	m_JobQueue = nullptr;
@@ -619,6 +625,22 @@ void FBuild::GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, AStr
 
 	// format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC.4
 	path.Format( "%016llX_%08X_%016llX.%u", keyA, keyB, keyC, cacheVersion );
+}
+
+// DisplayTargetList
+//------------------------------------------------------------------------------
+void FBuild::DisplayTargetList() const
+{
+	OUTPUT( "FBuild: List of available targets\n" );
+	const size_t totalNodes = m_DependencyGraph->GetNodeCount();
+	for ( size_t i = 0; i < totalNodes; ++i )
+	{
+		Node * node = m_DependencyGraph->GetNodeByIndex( i );
+		if ( node && node->GetType() == Node::ALIAS_NODE )
+		{
+			OUTPUT( "\t%s\n", node->GetName().Get() );
+		}
+	}
 }
 
 //------------------------------------------------------------------------------

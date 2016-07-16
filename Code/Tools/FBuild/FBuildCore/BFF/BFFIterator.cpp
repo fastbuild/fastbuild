@@ -216,10 +216,12 @@ bool BFFIterator::ParseExactString( const char * string )
 	const char * const originalPos = m_Pos;
 
 	const char * stringPos = string; // stores pointer to the next character to be checked for presence in our sequence
-	while ( !IsAtEnd() && *stringPos != '\000' )
+	while ( !IsAtEnd() && ( *stringPos != '\000' ) )
 	{
 		if ( *m_Pos != *stringPos )
+		{
 			break;
+	}
 		m_Pos++;
 		stringPos++;
 	}

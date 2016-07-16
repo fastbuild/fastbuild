@@ -37,7 +37,7 @@ FunctionExecutable::FunctionExecutable()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionExecutable::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionExecutable::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
 	// make sure all required variables are defined
 	const BFFVariable * linker = BFFStackFrame::GetVar( ".Linker" );
@@ -89,7 +89,7 @@ FunctionExecutable::FunctionExecutable()
 	// Optional linker stamping
 	Node * linkerStampExe( nullptr );
 	AStackString<> linkerStampExeArgs;
-	if ( !GetFileNode( funcStartIter, linkerStampExe, ".LinkerStampExe" ) ||
+	if ( !GetFileNode( nodeGraph, funcStartIter, linkerStampExe, ".LinkerStampExe" ) ||
 		 !GetString( funcStartIter, linkerStampExeArgs, ".LinkerStampExeArgs" ) )
 	{
 		return false; // GetString will have emitted an error
@@ -103,8 +103,6 @@ FunctionExecutable::FunctionExecutable()
 	}
     linkerType.ToLower();
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-
 	// we'll build a list of libraries to link
 	Dependencies libraryNodes( 64, true );
 
@@ -117,7 +115,7 @@ FunctionExecutable::FunctionExecutable()
 			  it != libraryNames.End();
 			  it++ )
 		{
-			if ( DependOnNode( funcStartIter, *it, libraryNodes ) == false )
+			if ( DependOnNode( nodeGraph, funcStartIter, *it, libraryNodes ) == false )
 			{
 				return false; // DependOnNode will have emitted an error
 			}
@@ -126,7 +124,7 @@ FunctionExecutable::FunctionExecutable()
 	else if ( libraries->IsString() )
 	{
 		// handle this one node
-		if ( DependOnNode( funcStartIter, libraries->GetString(), libraryNodes ) == false )
+		if ( DependOnNode( nodeGraph, funcStartIter, libraries->GetString(), libraryNodes ) == false )
 		{
 			return false; // DependOnNode will have emitted an error
 		}
@@ -138,7 +136,7 @@ FunctionExecutable::FunctionExecutable()
 	}
 
 	// Check for existing node
-	if ( ng.FindNode( linkerOutput ) )
+	if ( nodeGraph.FindNode( linkerOutput ) )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, linkerOutput );
 		return false;
@@ -146,7 +144,7 @@ FunctionExecutable::FunctionExecutable()
 
 	// Assembly Resources
 	Dependencies assemblyResources;
-	if ( !GetNodeList( funcStartIter, ".LinkerAssemblyResources", assemblyResources, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".LinkerAssemblyResources", assemblyResources, false ) )
 	{
 		return false; // GetNodeList will have emitted error
 	}
@@ -170,7 +168,7 @@ FunctionExecutable::FunctionExecutable()
 	if ( ( flags & ( LinkerNode::LINK_FLAG_MSVC | LinkerNode::LINK_FLAG_GCC | LinkerNode::LINK_FLAG_SNC | LinkerNode::LINK_FLAG_ORBIS_LD | LinkerNode::LINK_FLAG_GREENHILLS_ELXR | LinkerNode::LINK_FLAG_CODEWARRIOR_LD ) ) != 0 )
 	{
 		const bool msvcStyle = ( ( flags & LinkerNode::LINK_FLAG_MSVC ) == LinkerNode::LINK_FLAG_MSVC );
-		if ( !GetOtherLibraries( funcStartIter, linkerOptions->GetString(), otherLibraryNodes, msvcStyle ) )
+		if ( !GetOtherLibraries( nodeGraph, funcStartIter, linkerOptions->GetString(), otherLibraryNodes, msvcStyle ) )
 		{
 			return false; // will have emitted error
 		}
@@ -187,7 +185,7 @@ FunctionExecutable::FunctionExecutable()
 	Node * n( nullptr );
 	if ( isADLL )
 	{
-		n = ng.CreateDLLNode( linkerOutput,
+		n = nodeGraph.CreateDLLNode( linkerOutput,
 							  libraryNodes,
 							  otherLibraryNodes,
 							  linkerType,
@@ -201,7 +199,7 @@ FunctionExecutable::FunctionExecutable()
 	}
 	else
 	{
-		n = ng.CreateExeNode( linkerOutput,
+		n = nodeGraph.CreateExeNode( linkerOutput,
 							  libraryNodes,
 							  otherLibraryNodes,
 							  linkerType,
@@ -214,12 +212,15 @@ FunctionExecutable::FunctionExecutable()
 							  linkerStampExeArgs );
 	}
 
-	return ProcessAlias( funcStartIter, n );
+	return ProcessAlias( nodeGraph, funcStartIter, n );
 }
 
 // DependOnNode
 //------------------------------------------------------------------------------
-bool FunctionExecutable::DependOnNode( const BFFIterator & iter, const AString & nodeName, Dependencies & nodes ) const
+bool FunctionExecutable::DependOnNode( NodeGraph & nodeGraph,
+									   const BFFIterator & iter,
+									   const AString & nodeName,
+									   Dependencies & nodes ) const
 {
 	// silently ignore empty nodes
 	if ( nodeName.IsEmpty() )
@@ -227,8 +228,7 @@ bool FunctionExecutable::DependOnNode( const BFFIterator & iter, const AString &
 		return true;
 	}
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * node = ng.FindNode( nodeName );
+	Node * node = nodeGraph.FindNode( nodeName );
 
 	// does it exist?
 	if ( node != nullptr )
@@ -239,7 +239,7 @@ bool FunctionExecutable::DependOnNode( const BFFIterator & iter, const AString &
 
 	// node not found - create a new FileNode, assuming we are
 	// linking against an externally built library
-	node = ng.CreateFileNode( nodeName );
+	node = nodeGraph.CreateFileNode( nodeName );
 	nodes.Append( Dependency( node ) );
 	return true;
 }
@@ -359,7 +359,8 @@ void FunctionExecutable::GetImportLibName( const AString & args, AString & impor
 
 // GetOtherLibraries
 //------------------------------------------------------------------------------
-bool FunctionExecutable::GetOtherLibraries( const BFFIterator & iter, 
+bool FunctionExecutable::GetOtherLibraries( NodeGraph & nodeGraph,
+											const BFFIterator & iter, 
 											const AString & args, 
 											Dependencies & otherLibraries,
 											bool msvc ) const
@@ -525,7 +526,7 @@ bool FunctionExecutable::GetOtherLibraries( const BFFIterator & iter,
 		if ( ( itL->GetLength() > 2 ) && ( (*itL)[ 1 ] == ':' ) )
 		{
 			// check file exists in current location
-			if ( !GetOtherLibrary( iter, otherLibraries, AString::GetEmpty(), *itL, found ) )
+			if ( !GetOtherLibrary( nodeGraph, iter, otherLibraries, AString::GetEmpty(), *itL, found ) )
 			{
 				return false; // GetOtherLibrary will have emitted error
 			}
@@ -536,7 +537,7 @@ bool FunctionExecutable::GetOtherLibraries( const BFFIterator & iter,
 			const AString * const endP = libPaths.End();
 			for ( const AString * itP = libPaths.Begin(); itP != endP; ++itP )
 			{
-				if ( !GetOtherLibrary( iter, otherLibraries, *itP, *itL, found ) )
+				if ( !GetOtherLibrary( nodeGraph, iter, otherLibraries, *itP, *itL, found ) )
 				{
 					return false; // GetOtherLibrary will have emitted error
 				}
@@ -563,7 +564,12 @@ bool FunctionExecutable::GetOtherLibraries( const BFFIterator & iter,
 
 // GetOtherLibrary
 //------------------------------------------------------------------------------
-bool FunctionExecutable::GetOtherLibrary( const BFFIterator & iter, Dependencies & libs, const AString & path, const AString & lib, bool & found ) const
+bool FunctionExecutable::GetOtherLibrary( NodeGraph & nodeGraph,
+										  const BFFIterator & iter,
+										  Dependencies & libs,
+										  const AString & path,
+										  const AString & lib,
+										  bool & found ) const
 {
 	found = false;
 
@@ -577,8 +583,7 @@ bool FunctionExecutable::GetOtherLibrary( const BFFIterator & iter, Dependencies
 	NodeGraph::CleanPath( potentialNodeName, potentialNodeNameClean );
 
 	// see if a node already exists
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * node = ng.FindNode( potentialNodeNameClean );
+	Node * node = nodeGraph.FindNode( potentialNodeNameClean );
 	if ( node )
 	{
 		// aliases not supported - must point to something that provides a file
@@ -597,7 +602,7 @@ bool FunctionExecutable::GetOtherLibrary( const BFFIterator & iter, Dependencies
 	// see if the file exists on disk at this location
 	if ( FileIO::FileExists( potentialNodeNameClean.Get() ) )
 	{
-		node = ng.CreateFileNode( potentialNodeNameClean );
+		node = nodeGraph.CreateFileNode( potentialNodeNameClean );
 		libs.Append( Dependency( node ) );
 		found = true;
 		FLOG_INFO( "Additional library '%s' assumed to be '%s'\n", lib.Get(), potentialNodeNameClean.Get() );

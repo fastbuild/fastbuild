@@ -9,6 +9,7 @@
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -44,13 +45,17 @@ CopyDirNode::~CopyDirNode()
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool CopyDirNode::DoDynamicDependencies( bool forceClean )
+/*virtual*/ bool CopyDirNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
 {
 	(void)forceClean; // dynamic deps are always re-added here, so this is meaningless
 
 	ASSERT( !m_StaticDependencies.IsEmpty() );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
+	Array< AString > preBuildDependencyNames( m_PreBuildDependencies.GetSize(), false );
+	for ( const auto & dep : m_PreBuildDependencies )
+	{
+		preBuildDependencyNames.Append( dep.GetNode()->GetName() );
+	}
 
 	// Iterate all the DirectoryListNodes
 	const Dependency * const depEnd = m_StaticDependencies.End();
@@ -75,10 +80,10 @@ CopyDirNode::~CopyDirNode()
 			const AStackString<> srcFileRel( srcFile.Get() + dln->GetPath().GetLength() );
 
 			// source file (as a node)
-			Node * srcFileNode = ng.FindNode( srcFile );
+			Node * srcFileNode = nodeGraph.FindNode( srcFile );
 			if ( srcFileNode == nullptr )
 			{
-				srcFileNode = ng.CreateFileNode( srcFile );
+				srcFileNode = nodeGraph.CreateFileNode( srcFile );
 			}
 			else if ( srcFileNode->IsAFile() == false )
 			{
@@ -91,10 +96,18 @@ CopyDirNode::~CopyDirNode()
 			(AString &)dstFile += (AString &)srcFileRel;
 
 			// make sure dest doesn't already exist
-			Node * n = ng.FindNode( dstFile );
+			Node * n = nodeGraph.FindNode( dstFile );
 			if ( n == nullptr )
 			{
-				n = ng.CreateCopyFileNode( dstFile, srcFileNode, m_PreBuildDependencies ); // inherit PreBuildDependencies
+				CopyFileNode * copyFileNode = nodeGraph.CreateCopyFileNode( dstFile );
+				copyFileNode->m_Source = srcFileNode->GetName();
+				copyFileNode->m_PreBuildDependencyNames = preBuildDependencyNames; // inherit PreBuildDependencies
+				BFFIterator iter;
+				if ( !copyFileNode->Initialize( nodeGraph, iter, nullptr ) )
+				{
+					return false; // Initialize will have emitted an error
+				}
+				n = copyFileNode;
 			}
 			else if ( n->GetType() != Node::COPY_FILE_NODE )
 			{
@@ -142,15 +155,14 @@ CopyDirNode::~CopyDirNode()
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * CopyDirNode::Load( IOStream & stream )
+/*static*/ Node * CopyDirNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	name);
 	NODE_LOAD_DEPS( 4,			staticDeps );
 	NODE_LOAD( AStackString<>,  destPath );
 	NODE_LOAD_DEPS( 0,			preBuildDeps );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	CopyDirNode * n = ng.CreateCopyDirNode( name, staticDeps, destPath, preBuildDeps );
+	CopyDirNode * n = nodeGraph.CreateCopyDirNode( name, staticDeps, destPath, preBuildDeps );
 	ASSERT( n );
 	return n;
 }

@@ -41,10 +41,10 @@ TestNode::TestNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool TestNode::Initialize( const BFFIterator & iter, const Function * function )
+bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
 	// Get node for Executable
-	if ( !function->GetFileNode( iter, m_TestExecutable, "TestExecutable", m_StaticDependencies ) )
+	if ( !function->GetFileNode( nodeGraph, iter, m_TestExecutable, "TestExecutable", m_StaticDependencies ) )
 	{
 		return false; // GetFileNode will have emitted an error
 	}
@@ -164,14 +164,13 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * TestNode::Load( IOStream & stream )
+/*static*/ Node * TestNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>, name );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	TestNode * node = ng.CreateTestNode( name );
+	TestNode * node = nodeGraph.CreateTestNode( name );
 
-	if ( node->Deserialize( stream ) == false )
+	if ( node->Deserialize( nodeGraph, stream ) == false )
 	{
 		return nullptr;
 	}

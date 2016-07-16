@@ -84,7 +84,7 @@ ObjectListNode::~ObjectListNode()
 
 // GatherDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::GatherDynamicDependencies( bool forceClean )
+/*virtual*/ bool ObjectListNode::GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
 {
 	(void)forceClean; // dynamic deps are always re-added here, so this is meaningless
 
@@ -103,8 +103,6 @@ ObjectListNode::~ObjectListNode()
         }
     #endif
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-
 	// if we depend on any directory lists, we need to use them to get our files
 	for ( Dependencies::Iter i = m_StaticDependencies.Begin();
 		  i != m_StaticDependencies.End();
@@ -122,10 +120,10 @@ ObjectListNode::~ObjectListNode()
 					fIt++ )
 			{
 				// Create the file node (or find an existing one)
-				Node * n = ng.FindNode( fIt->m_Name );
+				Node * n = nodeGraph.FindNode( fIt->m_Name );
 				if ( n == nullptr )
 				{
-					n = ng.CreateFileNode( fIt->m_Name );
+					n = nodeGraph.CreateFileNode( fIt->m_Name );
 				}
 				else if ( n->IsAFile() == false )
 				{
@@ -143,7 +141,7 @@ ObjectListNode::~ObjectListNode()
                 #endif
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, dln->GetPath() ) == false )
+				if ( CreateDynamicObjectNode( nodeGraph, n, dln->GetPath() ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -160,10 +158,10 @@ ObjectListNode::~ObjectListNode()
 				  it != unityFiles.End();
 				  it++ )
 			{
-				Node * n = ng.FindNode( *it );
+				Node * n = nodeGraph.FindNode( *it );
 				if ( n == nullptr )
 				{
-					n = ng.CreateFileNode( *it );
+					n = nodeGraph.CreateFileNode( *it );
 				}
 				else if ( n->IsAFile() == false )
 				{
@@ -172,7 +170,7 @@ ObjectListNode::~ObjectListNode()
 				}
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, AString::GetEmpty(), true ) == false )
+				if ( CreateDynamicObjectNode( nodeGraph, n, AString::GetEmpty(), true ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -184,10 +182,10 @@ ObjectListNode::~ObjectListNode()
 				  it != isolatedFiles.End();
 				  it++ )
 			{
-				Node * n = ng.FindNode( it->GetName() );
+				Node * n = nodeGraph.FindNode( it->GetName() );
 				if ( n == nullptr )
 				{
-					n = ng.CreateFileNode( it->GetName() );
+					n = nodeGraph.CreateFileNode( it->GetName() );
 				}
 				else if ( n->IsAFile() == false )
 				{
@@ -196,7 +194,7 @@ ObjectListNode::~ObjectListNode()
 				}
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( n, it->GetDirListOrigin()->GetPath(), false, true ) == false )
+				if ( CreateDynamicObjectNode( nodeGraph, n, it->GetDirListOrigin()->GetPath(), false, true ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}
@@ -205,7 +203,7 @@ ObjectListNode::~ObjectListNode()
         else if ( i->GetNode()->IsAFile() )
 		{
 			// a single file, create the object that will compile it
-			if ( CreateDynamicObjectNode( i->GetNode(), AString::GetEmpty() ) == false )
+			if ( CreateDynamicObjectNode( nodeGraph, i->GetNode(), AString::GetEmpty() ) == false )
 			{
 				return false; // CreateDynamicObjectNode will have emitted error
 			}
@@ -233,9 +231,9 @@ ObjectListNode::~ObjectListNode()
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::DoDynamicDependencies( bool forceClean )
+/*virtual*/ bool ObjectListNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
 {
-    if ( GatherDynamicDependencies( forceClean ) == false )
+    if ( GatherDynamicDependencies( nodeGraph, forceClean ) == false )
     {
         return false; // GatherDynamicDependencies will have emitted error
     }
@@ -357,7 +355,7 @@ void ObjectListNode::GetInputFiles( Array< AString > & files ) const
 
 // CreateDynamicObjectNode
 //------------------------------------------------------------------------------
-bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & baseDir, bool isUnityNode, bool isIsolatedFromUnityNode )
+bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode, bool isIsolatedFromUnityNode )
 {
 	const AString & fileName = inputFile->GetName();
 
@@ -398,8 +396,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
 
 	// Create an ObjectNode to compile the above file
 	// and depend on that
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * on = ng.FindNode( objFile );
+	Node * on = nodeGraph.FindNode( objFile );
 	if ( on == nullptr )
 	{
 		// determine flags - TODO:B Move DetermineFlags call out of build-time
@@ -420,7 +417,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
 			preprocessorFlags = ObjectNode::DetermineFlags( m_Preprocessor, m_PreprocessorArgs, false, usingPCH );
         }
 
-		on = ng.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerArgs, m_CompilerArgsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken, m_AllowDistribution, m_AllowCaching, m_Preprocessor, m_PreprocessorArgs, preprocessorFlags );
+		on = nodeGraph.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerArgs, m_CompilerArgsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken, m_AllowDistribution, m_AllowCaching, m_Preprocessor, m_PreprocessorArgs, preprocessorFlags );
 	}
 	else if ( on->GetType() != Node::OBJECT_NODE )
 	{
@@ -448,7 +445,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * ObjectListNode::Load( IOStream & stream )
+/*static*/ Node * ObjectListNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	name );
 	NODE_LOAD_NODE( CompilerNode,	compilerNode );
@@ -471,8 +468,7 @@ bool ObjectListNode::CreateDynamicObjectNode( Node * inputFile, const AString & 
 	NODE_LOAD( AStackString<>,	extraPDBPath );
 	NODE_LOAD( AStackString<>,  extraASMPath );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	ObjectListNode * n = ng.CreateObjectListNode( name, 
+	ObjectListNode * n = nodeGraph.CreateObjectListNode( name, 
 								staticDeps, 
 								compilerNode, 
 								compilerArgs,

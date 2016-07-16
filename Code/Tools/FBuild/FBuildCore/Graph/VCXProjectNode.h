@@ -45,10 +45,10 @@ public:
 	const AString & GetProjectGuid() const { return m_ProjectGuid; }
 	const Array< VSProjectConfig > & GetConfigs() const { return m_Configs; }
 
-	static Node * Load( IOStream & stream );
-	virtual void Save( IOStream & stream ) const;
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
+	virtual void Save( IOStream & stream ) const override;
 private:
-	virtual BuildResult DoBuild( Job * job );
+	virtual BuildResult DoBuild( Job * job ) override;
 
 	bool Save( const AString & content, const AString & fileName ) const;
 

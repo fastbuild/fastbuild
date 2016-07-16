@@ -403,7 +403,7 @@ void JobQueue::ReturnUnfinishedDistributableJob( Job * job, bool systemError )
 
 // FinalizeCompletedJobs (Main Thread)
 //------------------------------------------------------------------------------
-void JobQueue::FinalizeCompletedJobs()
+void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
 {
     PROFILE_FUNCTION
 
@@ -421,7 +421,7 @@ void JobQueue::FinalizeCompletedJobs()
 	{
 		Job * job = ( *i );
 		Node * n = job->GetNode();
-		if ( n->Finalize() )
+		if ( n->Finalize( nodeGraph ) )
 		{
 			n->SetState( Node::UP_TO_DATE );
 		}

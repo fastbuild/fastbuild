@@ -222,7 +222,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * VCXProjectNode::Load( IOStream & stream )
+/*static*/ Node * VCXProjectNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	name );
 	NODE_LOAD( Array< AString >, projectBasePaths );
@@ -239,13 +239,12 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
 	NODE_LOAD( Array< AString >, projectReferences );
 
 	Array< VSProjectConfig > configs;
-	VSProjectConfig::Load( stream, configs );
+	VSProjectConfig::Load( nodeGraph, stream, configs );
 
 	Array< VSProjectFileType > fileTypes;
 	VSProjectFileType::Load( stream, fileTypes );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	VCXProjectNode * n = ng.CreateVCXProjectNode( name,
+	VCXProjectNode * n = nodeGraph.CreateVCXProjectNode( name,
 								 projectBasePaths,
 								 staticDeps, // all static deps are DirectoryListNode
 								 pathsToExclude,

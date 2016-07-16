@@ -548,7 +548,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
 
 // VSProjectConfig::Load
 //------------------------------------------------------------------------------
-/*static*/ bool VSProjectConfig::Load( IOStream & stream, Array< VSProjectConfig > & configs )
+/*static*/ bool VSProjectConfig::Load( NodeGraph & nodeGraph, IOStream & stream, Array< VSProjectConfig > & configs )
 {
 	ASSERT( configs.IsEmpty() );
 
@@ -568,7 +568,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
 		if ( stream.Read( cfg.m_Platform ) == false ) { return false; }
 		if ( stream.Read( cfg.m_Config ) == false ) { return false; }
 
-		if ( !Node::LoadNode( stream, cfg.m_Target ) ) { return false; }
+		if ( !Node::LoadNode( nodeGraph, stream, cfg.m_Target ) ) { return false; }
 
 		if ( stream.Read( cfg.m_BuildCommand ) == false ) { return false; }
 		if ( stream.Read( cfg.m_RebuildCommand ) == false ) { return false; }

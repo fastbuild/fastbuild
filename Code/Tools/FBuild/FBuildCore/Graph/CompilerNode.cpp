@@ -36,11 +36,11 @@ CompilerNode::CompilerNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool CompilerNode::Initialize( const BFFIterator & iter, const Function * function )
+bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
 	// TODO:B make this use m_ExtraFiles
 	Dependencies extraFiles( 32, true );
-	if ( !function->GetNodeList( iter, ".ExtraFiles", extraFiles, false ) ) // optional
+	if ( !function->GetNodeList( nodeGraph, iter, ".ExtraFiles", extraFiles, false ) ) // optional
 	{
 		return false; // GetNodeList will have emitted an error
 	}
@@ -139,14 +139,13 @@ bool CompilerNode::DetermineNeedToBuild( bool forceClean ) const
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * CompilerNode::Load( IOStream & stream )
+/*static*/ Node * CompilerNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>, name );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	CompilerNode * cn = ng.CreateCompilerNode( name );
+	CompilerNode * cn = nodeGraph.CreateCompilerNode( name );
 
-	if ( cn->Deserialize( stream ) == false )
+	if ( cn->Deserialize( nodeGraph, stream ) == false )
 	{
 		return nullptr;
 	}

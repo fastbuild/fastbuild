@@ -65,6 +65,7 @@ NodeGraph::NodeGraph()
 , m_NextNodeIndex( 0 )
 , m_UsedFiles( 16, true )
 {
+	m_NodeMap = FNEW_ARRAY( Node *[NODEMAP_TABLE_SIZE] );
 	memset( m_NodeMap, 0, sizeof( Node * ) * NODEMAP_TABLE_SIZE );
 }
 
@@ -78,62 +79,130 @@ NodeGraph::~NodeGraph()
 	{
 		FDELETE ( *i );
 	}
+
+	FDELETE_ARRAY( m_NodeMap );
 }
 
-// Setup
+// Initialize
 //------------------------------------------------------------------------------
-bool NodeGraph::Initialize( const char * bffFile,
-							const char * nodeGraphDBFile )
+/* static*/ NodeGraph * NodeGraph::Initialize( const char * bffFile,
+											   const char * nodeGraphDBFile )
 {
     PROFILE_FUNCTION
 
 	ASSERT( bffFile ); // must be supplied (or left as default)
 	ASSERT( nodeGraphDBFile ); // must be supplied (or left as default)
 
+	// Try to load the old DB
+	NodeGraph * ng = FNEW( NodeGraph );
+	LoadResult res = ng->Load( nodeGraphDBFile );
+
+	// What happened?
+	switch ( res )
+	{
+		case LoadResult::MISSING:
+		{
+			// Create a fresh DB by parsing the BFF
+			if ( ng->ParseFromRoot( bffFile ) == false )
+			{
+				FDELETE( ng );
+				return nullptr; // ParseFromRoot will have emitted an error
+			}
+			return ng;
+		}
+		case LoadResult::LOAD_ERROR:
+		{
+			// Corrupt DB or other fatal problem
+			FDELETE( ng );
+			return nullptr;
+		}
+		case LoadResult::OK_BFF_CHANGED:
+		{
+			// Keep old DB
+			NodeGraph * oldNG = ng;
+
+			// Create a fresh DB by parsing the modified BFF
+			ng = FNEW( NodeGraph );
+			if ( ng->ParseFromRoot( bffFile ) == false )
+			{
+				FDELETE( ng );
+				FDELETE( oldNG );
+				return nullptr;
+			}
+
+			// TODO: Migrate old DB info to new DB
+			FDELETE( oldNG );
+
+			return ng;
+		}
+		case LoadResult::OK:
+		{
+			// Nothing more to do
+			return ng;
+		}
+	}
+
+	ASSERT( false ); // Should not get here
+	return nullptr;
+}
+
+// ParseFromRoot
+//------------------------------------------------------------------------------
+bool NodeGraph::ParseFromRoot( const char * bffFile )
+{
 	ASSERT( m_UsedFiles.IsEmpty() ); // NodeGraph cannot be recycled
 
-	bool needReparsing = false;
-	bool ok = Load( nodeGraphDBFile, needReparsing );
-	if ( !ok )
+	// open the configuration file
+	FLOG_INFO( "Loading BFF '%s'", bffFile );
+	FileStream bffStream;
+	if ( bffStream.Open( bffFile ) == false )
 	{
-		FLOG_ERROR( "Error reading BFF '%s' (corrupt?)", nodeGraphDBFile );
+		// missing bff is a fatal problem
+		FLOG_ERROR( "Failed to open BFF '%s'", bffFile );
 		return false;
 	}
+	const uint64_t rootBFFTimeStamp = FileIO::GetFileLastWriteTime( AStackString<>( bffFile ) );
 
-	// has something changed that requires us to re-parse the BFFs?
-	if ( needReparsing )
+	// read entire config into memory
+	uint32_t size = (uint32_t)bffStream.GetFileSize();
+	AutoPtr< char > data( (char *)ALLOC( size + 1 ) ); // extra byte for null character sentinel
+	if ( bffStream.Read( data.Get(), size ) != size )
 	{
-		// a change in bff means includes may have changed, so we'll build the list from scratch
-		m_UsedFiles.Clear();
+		FLOG_ERROR( "Error reading BFF '%s'", bffFile );
+		return false;
+	}
+	const uint64_t rootBFFDataHash = xxHash::Calc64( data.Get(), size );
 
-		// open the configuration file
-		FLOG_INFO( "Loading BFF '%s'", bffFile );
-		FileStream bffStream;
-		if ( bffStream.Open( bffFile ) == false )
-		{
-			// missing bff is a fatal problem
-			FLOG_ERROR( "Failed to open BFF '%s'", bffFile );
-			return false;
-		}
-		const uint64_t rootBFFTimeStamp = FileIO::GetFileLastWriteTime( AStackString<>( bffFile ) );
+	// re-parse the BFF from scratch, clean build will result
+	BFFParser bffParser( *this );
+	data.Get()[ size ] = '\0'; // data passed to parser must be NULL terminated
+	return bffParser.Parse( data.Get(), size, bffFile, rootBFFTimeStamp, rootBFFDataHash ); // pass size excluding sentinel
+}
 
-		// read entire config into memory
-		uint32_t size = (uint32_t)bffStream.GetFileSize();
-		AutoPtr< char > data( (char *)ALLOC( size + 1 ) ); // extra byte for null character sentinel
-		if ( bffStream.Read( data.Get(), size ) != size )
-		{
-			FLOG_ERROR( "Error reading BFF '%s'", bffFile );
-			return false;
-		}
-		const uint64_t rootBFFDataHash = xxHash::Calc64( data.Get(), size );
-
-		// re-parse the BFF from scratch, clean build will result
-		BFFParser bffParser;
-		data.Get()[ size ] = '\0'; // data passed to parser must be NULL terminated
-		return bffParser.Parse( data.Get(), size, bffFile, rootBFFTimeStamp, rootBFFDataHash ); // pass size excluding sentinel
+// Load
+//------------------------------------------------------------------------------
+NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
+{
+	// Open previously saved DB
+	FileStream fs;
+	if ( fs.Open( nodeGraphDBFile, FileStream::READ_ONLY ) == false )
+	{
+		return LoadResult::MISSING;
 	}
 
-	return true;
+	// Load the Old DB
+	bool needsReparsing( false );
+	if ( !Load( fs, needsReparsing ) )
+	{
+		return LoadResult::LOAD_ERROR;
+	}
+
+	if ( needsReparsing )
+	{
+		return LoadResult::OK_BFF_CHANGED;
+	}
+
+	return LoadResult::OK;
 }
 
 // Load
@@ -143,7 +212,7 @@ bool NodeGraph::Load( const char * nodeGraphDBFile, bool & needReparsing )
 	FileStream fs;
 	if ( fs.Open( nodeGraphDBFile, FileStream::READ_ONLY ) == false )	
 	{
-		FLOG_INFO( "BFF file '%s' missing or unopenable (clean build will result).", nodeGraphDBFile );
+		FLOG_INFO( "DB file '%s' missing or unopenable (clean build will result).", nodeGraphDBFile );
 		needReparsing = true;
 		return true; // not opening the file (could be missing) is not an error
 	}
@@ -377,7 +446,7 @@ bool NodeGraph::LoadNode( IOStream & stream )
 	m_NextNodeIndex = nodeIndex;
 
 	// load specifics (create node)
-	Node * n = Node::Load( stream );
+	Node * n = Node::Load( *this, stream );
 	if ( n == nullptr )
 	{
 		return false;
@@ -562,17 +631,13 @@ size_t NodeGraph::GetNodeCount() const
 
 // CreateCopyFileNode
 //------------------------------------------------------------------------------
-CopyFileNode * NodeGraph::CreateCopyFileNode( const AString & dstFileName, 
-											  Node * sourceFile,
-											  const Dependencies & preBuildDependencies )
+CopyFileNode * NodeGraph::CreateCopyFileNode( const AString & dstFileName )
 {
 	ASSERT( Thread::IsMainThread() );
-	ASSERT( sourceFile->IsAFile() );
+	ASSERT( IsCleanPath( dstFileName ) );
 
-	AStackString< 1024 > fullPathDst;
-	CleanPath( dstFileName, fullPathDst );
-
-	CopyFileNode * node = FNEW( CopyFileNode( fullPathDst, (FileNode *)sourceFile, preBuildDependencies ) );
+	CopyFileNode * node = FNEW( CopyFileNode() );
+	node->SetName( dstFileName );
 	AddNode( node );
 	return node;
 }
@@ -847,7 +912,7 @@ CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 								  const AString & compiler,
 								  const AString & compilerOptions,
 								  const Dependencies & extraRefs,
-                                  const Dependencies & preBuildDependencies )
+								  const Dependencies & preBuildDependencies )
 {
 	ASSERT( Thread::IsMainThread() );
 	ASSERT( inputNodes.IsEmpty() == false );
@@ -860,7 +925,7 @@ CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 								compiler,
 								compilerOptions,
 								extraRefs,
-                                preBuildDependencies ) );
+								preBuildDependencies ) );
 	AddNode( node );
 	return node;
 }
@@ -1111,7 +1176,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 
 // BuildRecurse
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
+void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 {
 	ASSERT( nodeToBuild );
 
@@ -1158,7 +1223,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 	{
 		// static deps ready, update dynamic deps
 		bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
-		if ( nodeToBuild->DoDynamicDependencies( forceClean ) == false )
+		if ( nodeToBuild->DoDynamicDependencies( *this, forceClean ) == false )
 		{
 			nodeToBuild->SetState( Node::FAILED );
 			return;		
@@ -1196,7 +1261,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 
 // CheckDependencies
 //------------------------------------------------------------------------------
-/*static*/ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost )
+bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost )
 {
 	ASSERT( nodeToBuild->GetType() != Node::PROXY_NODE );
 

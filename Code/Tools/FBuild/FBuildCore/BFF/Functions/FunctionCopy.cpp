@@ -33,7 +33,7 @@ FunctionCopy::FunctionCopy()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionCopy::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionCopy::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
 	// make sure all required variables are defined
 	Array< AString > sources( 16, true );
@@ -78,20 +78,24 @@ FunctionCopy::FunctionCopy()
 
 	// Pre-build dependencies
 	Dependencies preBuildDependencies;
-	if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
 	{
 		return false; // GetNodeList will have emitted an error
 	}
+	Array< AString > preBuildDependencyNames( preBuildDependencies.GetSize(), false );
+	for ( const auto & dep : preBuildDependencies )
+	{
+		preBuildDependencyNames.Append( dep.GetNode()->GetName() );
+	}
 
 	// get source node
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	Array< Node * > srcNodes;
 	{
 		const AString * const end = sources.End();
 		for ( const AString * it = sources.Begin(); it != end; ++it )
 		{
 
-			Node * srcNode = ng.FindNode( *it );
+			Node * srcNode = nodeGraph.FindNode( *it );
 			if ( srcNode )
 			{
 				if ( GetSourceNodes( funcStartIter, srcNode, srcNodes ) == false )
@@ -102,7 +106,7 @@ FunctionCopy::FunctionCopy()
 			else
 			{
 				// source file not defined by use - assume an external file
-				srcNodes.Append( ng.CreateFileNode( *it ) );
+				srcNodes.Append( nodeGraph.CreateFileNode( *it ) );
 			}
 		}
 	}
@@ -118,8 +122,7 @@ FunctionCopy::FunctionCopy()
 
 	// make all the nodes for copies
 	Dependencies copyNodes( srcNodes.GetSize(), false );
-	Node * const * end = srcNodes.End();
-	for ( Node ** it = srcNodes.Begin(); it != end; ++it )
+	for ( const Node * srcNode : srcNodes )
 	{
 		AStackString<> dst( dstFile );
 
@@ -127,7 +130,7 @@ FunctionCopy::FunctionCopy()
 		if ( PathUtils::IsFolderPath( dstFile ) )
 		{
 			// find filename part of source
-			const AString & srcName = ( *it )->GetName();
+			const AString & srcName = srcNode->GetName();
 
 			// If the sourceBasePath is specified (and valid) use the name relative to that
 			if ( !sourceBasePath.IsEmpty() && PathUtils::PathBeginsWith( srcName, sourceBasePath ) )
@@ -145,7 +148,7 @@ FunctionCopy::FunctionCopy()
 		}
 
 		// check node doesn't already exist
-		if ( ng.FindNode( dst ) )
+		if ( nodeGraph.FindNode( dst ) )
 		{
 			// TODO:C could have a specific error for multiple sources with only 1 output
 			// to differentiate from two rules creating the same dst target
@@ -154,12 +157,19 @@ FunctionCopy::FunctionCopy()
 		}
 
 		// create our node
-		Node * copyNode = ng.CreateCopyFileNode( dst, *it, preBuildDependencies );
-		copyNodes.Append( Dependency( copyNode ) );
+		CopyFileNode * copyFileNode = nodeGraph.CreateCopyFileNode( dst );
+		copyFileNode->m_Source = srcNode->GetName();
+		copyFileNode->m_PreBuildDependencyNames = preBuildDependencyNames;
+		if ( !copyFileNode->Initialize( nodeGraph, funcStartIter, this ) )
+		{
+			return false; // Initialize will have emitted an error
+		}
+
+		copyNodes.Append( Dependency( copyFileNode ) );
 	}
 
 	// handle alias creation
-	return ProcessAlias( funcStartIter, copyNodes );
+	return ProcessAlias( nodeGraph, funcStartIter, copyNodes );
 }
 
 // GetSourceNodes

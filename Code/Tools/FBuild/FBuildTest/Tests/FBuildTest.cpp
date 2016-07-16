@@ -9,6 +9,7 @@
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Tracing/Tracing.h"
 
 // PreTest
 //------------------------------------------------------------------------------
@@ -61,10 +62,21 @@ void FBuildTest::CheckStatsNode( const FBuildStats & stats, size_t numSeen, size
 	const FBuildStats::Stats & nodeStats = stats.GetStatsFor( nodeType );
 
 	size_t actualNumSeen = nodeStats.m_NumProcessed;
-	TEST_ASSERT( actualNumSeen == numSeen );
-
 	size_t actualNumBuilt = nodeStats.m_NumBuilt;
-	TEST_ASSERT( actualNumBuilt == numBuilt );
+
+	const bool nodeStatsOk = ( actualNumSeen == numSeen ) && ( actualNumBuilt == numBuilt );
+	if ( !nodeStatsOk )
+	{
+		if ( actualNumSeen != numSeen )
+		{
+			OUTPUT( "PROBLEM for %s: Saw %u instead of %u\n", Node::GetTypeName( nodeType ), actualNumSeen, numSeen );
+		}
+		if ( actualNumBuilt != numBuilt )
+		{
+			OUTPUT( "PROBLEM for %s: Built %u instead of %u\n", Node::GetTypeName( nodeType ), actualNumBuilt, numBuilt );
+		}
+		TEST_ASSERT( false );
+	}
 }
 
 // CheckStatsTotal

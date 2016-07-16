@@ -17,13 +17,14 @@
 //------------------------------------------------------------------------------
 class FileStream;
 class BFFStackFrame;
+class NodeGraph;
 
 // BFFParser
 //------------------------------------------------------------------------------
 class BFFParser
 {
 public:
-	explicit BFFParser();
+	explicit BFFParser( NodeGraph & nodeGraph );
 	~BFFParser();
 
 	// Parse BFF data
@@ -86,12 +87,15 @@ private:
 	bool m_SeenAVariable;
 	AStackString< MAX_VARIABLE_NAME_LENGTH > m_LastVarName;
 	BFFStackFrame * m_LastVarFrame;
+	NodeGraph & m_NodeGraph;
 
 	// track recursion depth to detect recursion or excessive complexity
 	static uint32_t s_Depth;
 
 	// track nested preprocessor directives
 	static uint32_t s_IfDepth;
+private:
+	BFFParser & operator = (const BFFParser &) = delete;
 };
 
 //------------------------------------------------------------------------------

@@ -27,7 +27,7 @@ FunctionExec::FunctionExec()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionExec::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionExec::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
 	// make sure all required variables are defined
 	const BFFVariable * outputV;
@@ -47,8 +47,7 @@ FunctionExec::FunctionExec()
 	}
 
 	// check for duplicates
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	if ( ng.FindNode( outputV->GetString() ) != nullptr )
+	if ( nodeGraph.FindNode( outputV->GetString() ) != nullptr )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, outputV->GetString() );
 		return false;
@@ -56,16 +55,16 @@ FunctionExec::FunctionExec()
 
 	// Pre-build dependencies
 	Dependencies preBuildDependencies;
-	if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
 	{
 		return false; // GetNodeList will have emitted an error
 	}
 
 	// get executable node
-	Node * exeNode = ng.FindNode( executableV->GetString() );
+	Node * exeNode = nodeGraph.FindNode( executableV->GetString() );
 	if ( exeNode == nullptr )
 	{
-		exeNode = ng.CreateFileNode( executableV->GetString() );
+		exeNode = nodeGraph.CreateFileNode( executableV->GetString() );
 	}
 	else if ( exeNode->IsAFile() == false )
 	{
@@ -75,7 +74,7 @@ FunctionExec::FunctionExec()
 
 	// source node
 	Dependencies inputNodes;
-	if (!GetNodeList(funcStartIter, ".ExecInput", inputNodes, false))
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".ExecInput", inputNodes, false ) )
 	{
 		return false; // GetNodeList will have emitted an error
 	}
@@ -101,7 +100,7 @@ FunctionExec::FunctionExec()
 	const AString & workingDir( workingDirV ?	workingDirV->GetString(): AString::GetEmpty() );
 
 	// create the TestNode
-	Node * outputNode = ng.CreateExecNode( outputV->GetString(), 
+	Node * outputNode = nodeGraph.CreateExecNode( outputV->GetString(), 
 										   inputNodes,
 										   (FileNode *)exeNode,
 										   arguments,
@@ -110,7 +109,7 @@ FunctionExec::FunctionExec()
 										   preBuildDependencies,
 										   useStdOutAsOutput);
 	
-	return ProcessAlias( funcStartIter, outputNode );
+	return ProcessAlias( nodeGraph, funcStartIter, outputNode );
 }
 
 //------------------------------------------------------------------------------

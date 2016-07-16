@@ -43,7 +43,7 @@ public:
 
 	virtual bool IsAFile() const override;
 
-	static Node * Load( IOStream & stream );
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 	virtual void Save( IOStream & stream ) const override;
 
 	const char * GetObjExtension() const;
@@ -55,12 +55,12 @@ public:
 protected:
 	friend class FunctionObjectList;
 
-    virtual bool GatherDynamicDependencies( bool forceClean );
-	virtual bool DoDynamicDependencies( bool forceClean ) override;
+    virtual bool GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
+	virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
 	virtual BuildResult DoBuild( Job * job ) override;
 
 	// internal helpers
-	bool CreateDynamicObjectNode( Node * inputFile, const AString & baseDir, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
+	bool CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
 
 	CompilerNode *	m_Compiler;
 	AString			m_CompilerArgs;

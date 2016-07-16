@@ -32,12 +32,12 @@ class XCodeProjectNode : public FileNode
 	REFLECT_DECLARE( XCodeProjectNode )
 public:
 	explicit XCodeProjectNode();
-	bool Initialize( const BFFIterator & iter, const Function * function );
+	bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
 	virtual ~XCodeProjectNode();
 
 	static inline Node::Type GetTypeS() { return Node::XCODEPROJECT_NODE; }
 
-	static Node * Load( IOStream & stream );
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 	virtual void Save( IOStream & stream ) const override;
 private:
 	virtual BuildResult DoBuild( Job * job ) override;

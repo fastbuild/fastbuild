@@ -29,10 +29,10 @@ public:
 
 	static inline Node::Type GetTypeS() { return Node::EXEC_NODE; }
 
-	static Node * Load( IOStream & stream );
-	virtual void Save( IOStream & stream ) const;
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
+	virtual void Save( IOStream & stream ) const override;
 private:
-	virtual BuildResult DoBuild( Job * job );
+	virtual BuildResult DoBuild( Job * job ) override;
 
 	void GetFullArgs(AString & fullArgs) const;
 	void GetInputFiles(AString & fullArgs, const AString & pre, const AString & post) const;

@@ -39,7 +39,7 @@ REGISTER_TESTS_END
 void TestExe::CreateNode() const
 {
 	FBuild fb;
-	NodeGraph & ng = fb.GetDependencyGraph();
+	NodeGraph ng;
 
 	Dependencies inputLibraries( 1, false );
 	inputLibraries.Append( Dependency( ng.CreateFileNode( AStackString<>( "dummy.lib" ) ) ) );

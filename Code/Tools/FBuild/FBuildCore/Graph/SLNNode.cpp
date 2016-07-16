@@ -162,7 +162,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * SLNNode::Load( IOStream & stream )
+/*static*/ Node * SLNNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
     NODE_LOAD( AStackString<>,  name );
     NODE_LOAD( AStackString<>,  buildProject );
@@ -171,7 +171,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     NODE_LOAD_DEPS( 1,          staticDeps );
 
     Array< VSProjectConfig > configs;
-    VSProjectConfig::Load( stream, configs );
+    VSProjectConfig::Load( nodeGraph, stream, configs );
 
     Array< SLNSolutionFolder > folders;
     SLNSolutionFolder::Load( stream, folders );
@@ -186,8 +186,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
         projects.Append( it->GetNode()->CastTo< VCXProjectNode >() );
     }
 
-    NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-    SLNNode * n = ng.CreateSLNNode( name,
+    SLNNode * n = nodeGraph.CreateSLNNode( name,
                                     buildProject,
                                     visualStudioVersion,
                                     minimumVisualStudioVersion,

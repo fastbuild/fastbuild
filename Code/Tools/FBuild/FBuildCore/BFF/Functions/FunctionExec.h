@@ -17,8 +17,8 @@ public:
 	inline virtual ~FunctionExec() {}
 
 protected:
-	virtual bool AcceptsHeader() const;
-	virtual bool Commit( const BFFIterator & funcStartIter ) const;
+	virtual bool AcceptsHeader() const override;
+	virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 };
 
 //------------------------------------------------------------------------------

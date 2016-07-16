@@ -35,10 +35,10 @@ class Job;
 #define NODE_LOAD( type, member ) type member; if ( stream.Read( member ) == false ) { return nullptr; }
 #define NODE_LOAD_DEPS( initialCapacity, depsArray ) \
 	Dependencies depsArray( initialCapacity, true ); \
-	if ( depsArray.Load( stream ) == false ) { return nullptr; }
+	if ( depsArray.Load( nodeGraph, stream ) == false ) { return nullptr; }
 #define NODE_LOAD_NODE( type, node ) \
 	type * node = nullptr; \
-	if ( Node::LoadNode( stream, node ) == false ) { return nullptr; }
+	if ( Node::LoadNode( nodeGraph, stream, node ) == false ) { return nullptr; }
 
 // Custom MetaData
 //------------------------------------------------------------------------------
@@ -140,14 +140,14 @@ public:
 	inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
 	inline void		SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
-	static Node *	Load( IOStream & stream );
+	static Node *	Load( NodeGraph & nodeGraph, IOStream & stream );
 	static void		Save( IOStream & stream, const Node * node );
 
 	static Node *	LoadRemote( IOStream & stream );
 	static void		SaveRemote( IOStream & stream, const Node * node );
 
 	void Serialize( IOStream & stream ) const;
-	bool Deserialize( IOStream & stream );
+	bool Deserialize( NodeGraph & nodeGraph, IOStream & stream );
 
 	static bool EnsurePathExistsForFile( const AString & name );
 
@@ -193,19 +193,19 @@ protected:
 	inline void SetIndex( uint32_t index ) { m_Index = index; }
 
 	// each node must implement these core functions
-	virtual bool DoDynamicDependencies( bool forceClean );
+	virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
 	virtual bool DetermineNeedToBuild( bool forceClean ) const;
 	virtual BuildResult DoBuild( Job * job );
 	virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
-	virtual bool Finalize();
+	virtual bool Finalize( NodeGraph & nodeGraph );
 
 	inline void		SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
 	inline void		AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }
 
 	static void SaveNode( IOStream & stream, const Node * node );
-	static bool LoadNode( IOStream & stream, Node * & node );
-	static bool LoadNode( IOStream & stream, CompilerNode * & compilerNode );
-	static bool LoadNode( IOStream & stream, FileNode * & node );
+	static bool LoadNode( NodeGraph & nodeGraph, IOStream & stream, Node * & node );
+	static bool LoadNode( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode );
+	static bool LoadNode( NodeGraph & nodeGraph, IOStream & stream, FileNode * & node );
 
 	static void FixupPathForVSIntegration( AString & line );
 	static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );

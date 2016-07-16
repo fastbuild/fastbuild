@@ -67,7 +67,7 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * DLLNode::Load( IOStream & stream )
+/*static*/ Node * DLLNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
     // common Linker properties
 	NODE_LOAD( AStackString<>,	name );
@@ -82,8 +82,7 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
     NODE_LOAD_NODE( Node,		linkerStampExe );
     NODE_LOAD( AStackString<>,  linkerStampExeArgs );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	DLLNode * dn = ng.CreateDLLNode( name, inputLibs, otherLibs, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs );
+	DLLNode * dn = nodeGraph.CreateDLLNode( name, inputLibs, otherLibs, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs );
 	return dn;
 }
 

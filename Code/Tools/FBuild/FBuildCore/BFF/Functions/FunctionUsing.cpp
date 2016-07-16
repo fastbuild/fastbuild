@@ -40,7 +40,8 @@ FunctionUsing::FunctionUsing()
 }
 
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionUsing::ParseFunction( const BFFIterator & functionNameStart,
+/*virtual*/ bool FunctionUsing::ParseFunction( NodeGraph & /*nodeGraph*/,
+											   const BFFIterator & functionNameStart,
 											   const BFFIterator * functionBodyStartToken, 
 											   const BFFIterator * functionBodyStopToken,
 											   const BFFIterator * functionHeaderStartToken,

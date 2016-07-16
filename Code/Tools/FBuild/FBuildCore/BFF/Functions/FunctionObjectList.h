@@ -25,14 +25,15 @@ public:
 protected:
 	bool GetBaseDirectory( const BFFIterator & iter, AStackString<> & baseDirectory ) const;
 
-	virtual bool AcceptsHeader() const;
-	virtual bool NeedsHeader() const;
+	virtual bool AcceptsHeader() const override;
+	virtual bool NeedsHeader() const override;
 
-	virtual bool Commit( const BFFIterator & funcStartIter ) const;
+	virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 
 	// helpers
-	bool	GetCompilerNode( const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode ) const;
-	bool	GetPrecompiledHeaderNode( const BFFIterator & iter,
+	bool	GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode ) const;
+	bool	GetPrecompiledHeaderNode( NodeGraph & nodeGraph,
+									  const BFFIterator & iter,
 									  CompilerNode * compilerNode,
 									  const BFFVariable * compilerOptions,
 									  const Dependencies & compilerForceUsing,
@@ -41,7 +42,7 @@ protected:
 									  bool deoptimizeWritableFilesWithToken,
 									  bool allowDistribution,
 									  bool allowCaching ) const;
-	bool 	GetInputs( const BFFIterator & iter, Dependencies & inputs ) const;
+	bool 	GetInputs( NodeGraph & nodeGraph, const BFFIterator & iter, Dependencies & inputs ) const;
 	void	GetExtraOutputPaths( const AString & args, AString & pdbPath, AString & asmPath ) const;
 	void	GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path ) const;
 };

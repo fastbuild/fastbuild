@@ -115,7 +115,7 @@ Node::~Node()
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool Node::DoDynamicDependencies( bool )
+/*virtual*/ bool Node::DoDynamicDependencies( NodeGraph &, bool )
 {
 	return true;
 }
@@ -262,7 +262,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 
 // Finalize
 //------------------------------------------------------------------------------
-/*virtual*/ bool Node::Finalize()
+/*virtual*/ bool Node::Finalize( NodeGraph & )
 {
 	// most nodes have nothing to do
 	return true;
@@ -286,7 +286,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 
 // LoadNode
 //------------------------------------------------------------------------------
-/*static*/ bool Node::LoadNode( IOStream & stream, Node * & node )
+/*static*/ bool Node::LoadNode( NodeGraph & nodeGraph, IOStream & stream, Node * & node )
 {
 	// read the name of the node
 	AStackString< 512 > nodeName;
@@ -304,8 +304,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 	}
 
 	// find the node by name - this should never fail
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * n = ng.FindNode( nodeName );
+	Node * n = nodeGraph.FindNode( nodeName );
 	if ( n == nullptr )
 	{
         node = nullptr;
@@ -318,10 +317,10 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 
 // LoadNode (CompilerNode)
 //------------------------------------------------------------------------------
-/*static*/ bool Node::LoadNode( IOStream & stream, CompilerNode * & compilerNode )
+/*static*/ bool Node::LoadNode( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode )
 {
 	Node * node;
-	if ( !LoadNode( stream, node ) )
+	if ( !LoadNode( nodeGraph, stream, node ) )
 	{
 		return false;
 	}
@@ -340,10 +339,10 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 
 // LoadNode (FileNode)
 //------------------------------------------------------------------------------
-/*static*/ bool Node::LoadNode( IOStream & stream, FileNode * & fileNode )
+/*static*/ bool Node::LoadNode( NodeGraph & nodeGraph, IOStream & stream, FileNode * & fileNode )
 {
 	Node * node;
-	if ( !LoadNode( stream, node ) )
+	if ( !LoadNode( nodeGraph, stream, node ) )
 	{
 		return false;
 	}
@@ -377,7 +376,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * Node::Load( IOStream & stream )
+/*static*/ Node * Node::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	// read type
 	uint32_t nodeType;
@@ -402,26 +401,26 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 	Node * n = nullptr;
 	switch ( (Node::Type)nodeType )
 	{
-		case Node::PROXY_NODE:			ASSERT( false );						break;
-		case Node::COPY_FILE_NODE:		n = CopyFileNode::Load( stream );		break;
-		case Node::DIRECTORY_LIST_NODE: n = DirectoryListNode::Load( stream );	break;
-		case Node::EXEC_NODE:			n = ExecNode::Load( stream );			break;
-		case Node::FILE_NODE:			n = FileNode::Load( stream );			break;
-		case Node::LIBRARY_NODE:		n = LibraryNode::Load( stream );		break;
-		case Node::OBJECT_NODE:			n = ObjectNode::Load( stream );			break;
-		case Node::ALIAS_NODE:			n = AliasNode::Load( stream );			break;
-		case Node::EXE_NODE:			n = ExeNode::Load( stream );			break;
-		case Node::CS_NODE:				n = CSNode::Load( stream );				break;
-		case Node::UNITY_NODE:			n = UnityNode::Load( stream );			break;
-		case Node::TEST_NODE:			n = TestNode::Load( stream );			break;
-		case Node::COMPILER_NODE:		n = CompilerNode::Load( stream );		break;
-		case Node::DLL_NODE:			n = DLLNode::Load( stream );			break;
-		case Node::VCXPROJECT_NODE:		n = VCXProjectNode::Load( stream );		break;
-		case Node::OBJECT_LIST_NODE:	n = ObjectListNode::Load( stream );		break;
-		case Node::COPY_DIR_NODE:		n = CopyDirNode::Load( stream );		break;
-		case Node::SLN_NODE:			n = SLNNode::Load( stream );			break;
-		case Node::REMOVE_DIR_NODE:		n = RemoveDirNode::Load( stream );		break;
-		case Node::XCODEPROJECT_NODE:	n = XCodeProjectNode::Load( stream );	break;
+		case Node::PROXY_NODE:			ASSERT( false );									break;
+		case Node::COPY_FILE_NODE:		n = CopyFileNode::Load( nodeGraph, stream );		break;
+		case Node::DIRECTORY_LIST_NODE: n = DirectoryListNode::Load( nodeGraph, stream );	break;
+		case Node::EXEC_NODE:			n = ExecNode::Load( nodeGraph, stream );			break;
+		case Node::FILE_NODE:			n = FileNode::Load( nodeGraph, stream );			break;
+		case Node::LIBRARY_NODE:		n = LibraryNode::Load( nodeGraph, stream );			break;
+		case Node::OBJECT_NODE:			n = ObjectNode::Load( nodeGraph, stream );			break;
+		case Node::ALIAS_NODE:			n = AliasNode::Load( nodeGraph, stream );			break;
+		case Node::EXE_NODE:			n = ExeNode::Load( nodeGraph, stream );				break;
+		case Node::CS_NODE:				n = CSNode::Load( nodeGraph, stream );				break;
+		case Node::UNITY_NODE:			n = UnityNode::Load( nodeGraph, stream );			break;
+		case Node::TEST_NODE:			n = TestNode::Load( nodeGraph, stream );			break;
+		case Node::COMPILER_NODE:		n = CompilerNode::Load( nodeGraph, stream );		break;
+		case Node::DLL_NODE:			n = DLLNode::Load( nodeGraph, stream );				break;
+		case Node::VCXPROJECT_NODE:		n = VCXProjectNode::Load( nodeGraph, stream );		break;
+		case Node::OBJECT_LIST_NODE:	n = ObjectListNode::Load( nodeGraph, stream );		break;
+		case Node::COPY_DIR_NODE:		n = CopyDirNode::Load( nodeGraph, stream );			break;
+		case Node::SLN_NODE:			n = SLNNode::Load( nodeGraph, stream );				break;
+		case Node::REMOVE_DIR_NODE:		n = RemoveDirNode::Load( nodeGraph, stream );		break;
+		case Node::XCODEPROJECT_NODE:	n = XCodeProjectNode::Load( nodeGraph, stream );	break;
 		case Node::NUM_NODE_TYPES:		ASSERT( false );						break;
 	}
 
@@ -591,7 +590,7 @@ void Node::Serialize( IOStream & stream ) const
 
 // Deserialize
 //------------------------------------------------------------------------------
-bool Node::Deserialize( IOStream & stream )
+bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
 {
 	// Deps
 	NODE_LOAD_DEPS( 0,			preBuildDeps );

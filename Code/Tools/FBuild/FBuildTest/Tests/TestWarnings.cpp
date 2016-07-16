@@ -18,12 +18,16 @@ private:
 
 	// Tests
 	void WarningsAreShown() const;
+	void PragmaMessageWarningsAreShown() const;
 };
 
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestWarnings )
 	REGISTER_TEST( WarningsAreShown )
+	#if defined( __WINDOWS__ )
+		REGISTER_TEST( PragmaMessageWarningsAreShown )
+	#endif
 REGISTER_TESTS_END
 
 // WarningsAreShown
@@ -37,6 +41,19 @@ void TestWarnings::WarningsAreShown() const
 	TEST_ASSERT( fBuild.Initialize() );
 
 	TEST_ASSERT( fBuild.Build( AStackString<>( "Warnings" ) ) );
+}
+
+// PragmaMessageWarningsAreShown
+//------------------------------------------------------------------------------
+void TestWarnings::PragmaMessageWarningsAreShown() const
+{
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestWarnings/fbuild.bff";
+
+	FBuild fBuild( options );
+	TEST_ASSERT( fBuild.Initialize() );
+
+	TEST_ASSERT( fBuild.Build( AStackString<>( "PragmaMessage" ) ) );
 }
 
 //------------------------------------------------------------------------------

@@ -47,7 +47,7 @@ FunctionLibrary::FunctionLibrary()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionLibrary::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionLibrary::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
 	// make sure all required variables are defined
 	const BFFVariable * outputLib;
@@ -74,18 +74,16 @@ FunctionLibrary::FunctionLibrary()
 
     PathUtils::FixupFolderPath( compilerOutputPath );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-
 	// find or create the compiler node
 	CompilerNode * compilerNode = nullptr;
-	if ( !FunctionObjectList::GetCompilerNode( funcStartIter, compiler->GetString(), compilerNode ) )
+	if ( !FunctionObjectList::GetCompilerNode( nodeGraph, funcStartIter, compiler->GetString(), compilerNode ) )
 	{
 		return false; // GetCompilerNode will have emitted error
 	}
 	
 	// Compiler Force Using
 	Dependencies compilerForceUsing;
-	if ( !GetNodeList( funcStartIter, ".CompilerForceUsing", compilerForceUsing, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".CompilerForceUsing", compilerForceUsing, false ) )
 	{
 		return false; // GetNodeList will have emitted an error
 	}	
@@ -118,7 +116,7 @@ FunctionLibrary::FunctionLibrary()
 
 	// Precompiled Header support
 	ObjectNode * precompiledHeaderNode = nullptr;
-	if ( !GetPrecompiledHeaderNode( funcStartIter, compilerNode, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching ) )
+	if ( !GetPrecompiledHeaderNode( nodeGraph, funcStartIter, compilerNode, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching ) )
 	{
 		return false; // GetPrecompiledHeaderNode will have emitted error
 	}	
@@ -197,7 +195,7 @@ FunctionLibrary::FunctionLibrary()
 	if ( preprocessor )
     {
 		// get the preprocessor executable
-        if ( !FunctionObjectList::GetCompilerNode( funcStartIter, preprocessor->GetString(), preprocessorNode ) )
+        if ( !FunctionObjectList::GetCompilerNode( nodeGraph, funcStartIter, preprocessor->GetString(), preprocessorNode ) )
         {
             return false; // GetCompilerNode will have emitted an error
         }
@@ -211,20 +209,20 @@ FunctionLibrary::FunctionLibrary()
 
 	// Pre-build dependencies
 	Dependencies preBuildDependencies;
-	if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
 	{
 		return false; // GetNodeList will have emitted an error
 	}
 
 	Dependencies staticDeps( 32, true );
-	if ( !GetInputs( funcStartIter, staticDeps ) )
+	if ( !GetInputs( nodeGraph, funcStartIter, staticDeps ) )
 	{
 		return false; // GetStaticDeps will gave emitted error
 	}
 
 	// are the additional inputs to merge into the libaray?
 	Dependencies additionalInputs;
-	if ( !GetNodeList( funcStartIter, ".LibrarianAdditionalInputs", additionalInputs, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".LibrarianAdditionalInputs", additionalInputs, false ) )
 	{
 		return false;// helper will emit error
 	}
@@ -238,7 +236,7 @@ FunctionLibrary::FunctionLibrary()
 	uint32_t flags = LibraryNode::DetermineFlags( librarian->GetString() );
 
 	// Create library node which depends on the single file or list
-	if ( ng.FindNode( outputLib->GetString() ) )
+	if ( nodeGraph.FindNode( outputLib->GetString() ) )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, outputLib->GetString() );
 		return false;
@@ -253,7 +251,7 @@ FunctionLibrary::FunctionLibrary()
 	AStackString<> extraPDBPath, extraASMPath;
 	GetExtraOutputPaths( compilerOptions->GetString(), extraPDBPath, extraASMPath );
 
-	LibraryNode * libNode = ng.CreateLibraryNode( outputLib->GetString(),
+	LibraryNode * libNode = nodeGraph.CreateLibraryNode( outputLib->GetString(),
 						  staticDeps,
 						  compilerNode,
 						  compilerOptions->GetString(),
@@ -281,7 +279,7 @@ FunctionLibrary::FunctionLibrary()
 	libNode->m_ExtraPDBPath = extraPDBPath;
 	libNode->m_ExtraASMPath = extraASMPath;
 
-	return ProcessAlias( funcStartIter, libNode );
+	return ProcessAlias( nodeGraph, funcStartIter, libNode );
 }
 
 //------------------------------------------------------------------------------

@@ -39,7 +39,7 @@ ExeNode::~ExeNode()
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * ExeNode::Load( IOStream & stream )
+/*static*/ Node * ExeNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
     // common Linker properties
 	NODE_LOAD( AStackString<>,	name );
@@ -54,8 +54,7 @@ ExeNode::~ExeNode()
     NODE_LOAD_NODE( Node,		linkerStampExe );
     NODE_LOAD( AStackString<>,  linkerStampExeArgs );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	ExeNode * en = ng.CreateExeNode( name, inputLibs, otherLibs, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs );
+	ExeNode * en = nodeGraph.CreateExeNode( name, inputLibs, otherLibs, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs );
 	return en;
 }
 

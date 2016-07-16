@@ -139,7 +139,7 @@ ObjectNode::~ObjectNode()
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectNode::DoDynamicDependencies( bool forceClean )
+/*virtual*/ bool ObjectNode::DoDynamicDependencies( NodeGraph & /*nodeGraph*/, bool forceClean )
 {
 	// TODO:A Remove ObjectNode::DoDynamicDependencies
 	// - Dependencies added in Finalize need to be cleared if StaticDependencies
@@ -234,11 +234,9 @@ ObjectNode::~ObjectNode()
 
 // Finalize
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectNode::Finalize()
+/*virtual*/ bool ObjectNode::Finalize( NodeGraph & nodeGraph )
 {
 	ASSERT( Thread::IsMainThread() );
-
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
 	// convert includes to nodes
 	m_DynamicDependencies.Clear();
@@ -247,10 +245,10 @@ ObjectNode::~ObjectNode()
 			it != m_Includes.End();
 			it++ )
 	{
-		Node * fn = FBuild::Get().GetDependencyGraph().FindNode( *it );
+		Node * fn = nodeGraph.FindNode( *it );
 		if ( fn == nullptr )
 		{
-			fn = ng.CreateFileNode( *it );
+			fn = nodeGraph.CreateFileNode( *it );
 		}
 		else if ( fn->IsAFile() == false )
 		{
@@ -662,7 +660,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * ObjectNode::Load( IOStream & stream )
+/*static*/ Node * ObjectNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	name );
 	NODE_LOAD_DEPS( 3,			staticDeps );
@@ -693,8 +691,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 	Node * compiler = staticDeps[ 0 ].GetNode();
 	Node * staticDepNode = staticDeps[ 1 ].GetNode();
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * on = ng.CreateObjectNode( name, staticDepNode, compiler, compilerArgs, compilerArgsDeoptimized, m_PCHNode, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching, preprocessor, preprocessorArgs, preprocessorFlags );
+	Node * on = nodeGraph.CreateObjectNode( name, staticDepNode, compiler, compilerArgs, compilerArgsDeoptimized, m_PCHNode, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching, preprocessor, preprocessorArgs, preprocessorFlags );
 
 	ObjectNode * objNode = on->CastTo< ObjectNode >();
 	objNode->m_DynamicDependencies.Swap( dynamicDeps );

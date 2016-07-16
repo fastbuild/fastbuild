@@ -42,12 +42,11 @@ FileNode::~FileNode()
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * FileNode::Load( IOStream & stream )
+/*static*/ Node * FileNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	fileName );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * n = ng.CreateFileNode( fileName );
+	Node * n = nodeGraph.CreateFileNode( fileName );
 	ASSERT( n );
 	return n;
 }

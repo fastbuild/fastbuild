@@ -54,7 +54,7 @@ void Dependencies::Save( IOStream & stream ) const
 
 // Load
 //------------------------------------------------------------------------------
-bool Dependencies::Load( IOStream & stream )
+bool Dependencies::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	uint32_t numDeps;
 	if ( stream.Read( numDeps ) == false )
@@ -65,7 +65,6 @@ bool Dependencies::Load( IOStream & stream )
 	{
 		SetCapacity( GetSize() + numDeps );
 	}
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	for ( uint32_t i=0; i<numDeps; ++i )
 	{
 		// Read node index
@@ -76,7 +75,7 @@ bool Dependencies::Load( IOStream & stream )
 		}
 
 		// Convert to Node *
-		Node * node = ng.GetNodeByIndex( index );
+		Node * node = nodeGraph.GetNodeByIndex( index );
 		ASSERT( node );
 
 		// Read weak flag

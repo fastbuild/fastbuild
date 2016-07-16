@@ -25,7 +25,7 @@ public:
 	friend class FunctionUnity;
 
 	explicit UnityNode();
-	virtual bool Initialize( const BFFIterator & iter, const Function * function );
+	bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
 	virtual ~UnityNode();
 
 	static inline Node::Type GetTypeS() { return Node::UNITY_NODE; }
@@ -52,7 +52,7 @@ public:
     };
 	inline const Array< FileAndOrigin > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
-	static Node * Load( IOStream & stream );
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 	virtual void Save( IOStream & stream ) const override;
 private:
 	virtual BuildResult DoBuild( Job * job ) override;

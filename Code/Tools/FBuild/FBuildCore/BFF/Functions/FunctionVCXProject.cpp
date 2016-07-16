@@ -34,7 +34,7 @@ FunctionVCXProject::FunctionVCXProject()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionVCXProject::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionVCXProject::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
 	// required
 	AStackString<> projectOutput;
@@ -223,7 +223,7 @@ FunctionVCXProject::FunctionVCXProject()
 			{
 				if ( target.IsEmpty() == false )
 				{
-					newConfig.m_Target = FBuild::Get().GetDependencyGraph().FindNode( target );
+					newConfig.m_Target = nodeGraph.FindNode( target );
 					if ( !newConfig.m_Target )
 					{
 						Error::Error_1104_TargetNotDefined( funcStartIter, this, ".Target", target );
@@ -279,23 +279,21 @@ FunctionVCXProject::FunctionVCXProject()
 		configs.Append( config );
 	}
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-
 	// create all of the DirectoryListNodes we need
 	Dependencies dirNodes( inputPaths.GetSize() );
-	if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, Array< AString >(), Array< AString >(), true, &allowedFileExtensions, "ProjectInputPaths", dirNodes ) )
+	if ( !GetDirectoryListNodeList( nodeGraph, funcStartIter, inputPaths, Array< AString >(), Array< AString >(), true, &allowedFileExtensions, "ProjectInputPaths", dirNodes ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}
 
 	// Check for existing node
-	if ( ng.FindNode( projectOutput ) )
+	if ( nodeGraph.FindNode( projectOutput ) )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, projectOutput );
 		return false;
 	}
 
-	VCXProjectNode * pn = ng.CreateVCXProjectNode( projectOutput,
+	VCXProjectNode * pn = nodeGraph.CreateVCXProjectNode( projectOutput,
 												   basePaths,
 												   dirNodes,
 												   inputPathsExclude, // TODO:B Remove this (handled by DirectoryListNode now)
@@ -313,7 +311,7 @@ FunctionVCXProject::FunctionVCXProject()
 
 	ASSERT( pn );
 
-	return ProcessAlias( funcStartIter, pn );
+	return ProcessAlias( nodeGraph, funcStartIter, pn );
 }
 
 // GetStringFromStruct

@@ -76,7 +76,16 @@ public:
 	explicit NodeGraph();
 	~NodeGraph();
 
-	bool Initialize( const char * bffFile, const char * nodeGraphDBFile );
+	static NodeGraph * Initialize( const char * bffFile, const char * nodeGraphDBFile );
+
+	enum class LoadResult
+	{
+		MISSING,
+		LOAD_ERROR,
+		OK_BFF_CHANGED,
+		OK
+	};
+	NodeGraph::LoadResult Load( const char * nodeGraphDBFile );
 
 	bool Load( const char * nodeGraphDBFile, bool & needReparsing );
 	bool Load( IOStream & stream, bool & needReparsing );
@@ -88,9 +97,7 @@ public:
 	size_t GetNodeCount() const;
 
 	// create new nodes
-	CopyFileNode * CreateCopyFileNode( const AString & dstFileName, 
-									   Node * sourceFile,
-									   const Dependencies & preBuildDependencies );
+	CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
 	CopyDirNode * CreateCopyDirNode( const AString & nodeName, 
 									 Dependencies & staticDeps,
 									 const AString & destPath,
@@ -242,10 +249,12 @@ public:
 private:
 	friend class FBuild;
 
+	bool ParseFromRoot( const char * bffFile );
+
 	void AddNode( Node * node );
 
-	static void BuildRecurse( Node * nodeToBuild, uint32_t cost );
-	static bool CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost );
+	void BuildRecurse( Node * nodeToBuild, uint32_t cost );
+	bool CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost );
 	static void UpdateBuildStatusRecurse( const Node * node, 
 										  uint32_t & nodesBuiltTime, 
 										  uint32_t & totalNodeTime );
@@ -274,7 +283,7 @@ private:
 	bool LoadNode( IOStream & stream );
 
 	enum { NODEMAP_TABLE_SIZE = 65536 };
-	Node *			m_NodeMap[ NODEMAP_TABLE_SIZE ];
+	Node **			m_NodeMap;
 	Array< Node * > m_AllNodes;
 	uint32_t		m_NextNodeIndex;
 

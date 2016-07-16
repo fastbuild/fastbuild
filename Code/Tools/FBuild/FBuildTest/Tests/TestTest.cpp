@@ -38,7 +38,7 @@ REGISTER_TESTS_END
 void TestTest::CreateNode() const
 {
 	FBuild fb;
-	NodeGraph & ng = fb.GetDependencyGraph();
+	NodeGraph ng;
 
 	AStackString<> outputPath;
 	NodeGraph::CleanPath( AStackString<>( "output.txt" ), outputPath );
