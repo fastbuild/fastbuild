@@ -35,6 +35,7 @@ public:
 	void operator = ( const BFFIterator & iter );
 
 	void operator ++ (int) { ASSERT( m_Pos < m_MaxPos ); m_Pos++; }
+	void operator -- (int) { ASSERT( m_Pos > m_MinPos ); m_Pos--; }
 	inline bool operator < ( const BFFIterator & other ) const { return ( m_Pos < other.m_Pos ); }
 	inline bool operator > ( const BFFIterator & other ) const { return ( m_Pos > other.m_Pos ); }
 	char operator *() const { return *m_Pos; }
@@ -47,6 +48,7 @@ public:
 	void SkipDirectiveName();
 	bool ParseToNext( char c );
 	bool ParseToMatchingBrace( char openBrace, char closeBrace );
+	bool ParseExactString( const char * string );
 
 	inline size_t GetDistTo( const BFFIterator & other ) const { ASSERT( other.m_Pos >= m_Pos ); return (size_t)( other.m_Pos - m_Pos ); }
 

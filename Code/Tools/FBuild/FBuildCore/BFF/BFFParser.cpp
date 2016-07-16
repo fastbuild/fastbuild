@@ -337,18 +337,9 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 
 	// look for an appropriate operator
 	BFFIterator operatorIter( iter );
-	bool modification = false;
-	if ( *iter == BFF_VARIABLE_ASSIGNMENT )
-	{
-		// assignment
-	}
-	else if ( ( *iter == BFF_VARIABLE_CONCATENATION ) ||
-			  ( *iter == BFF_VARIABLE_SUBTRACTION ) )
-	{
-		// concatenation
-		modification = true;
-	}
-	else
+	const bool concat = ( *operatorIter == BFF_VARIABLE_CONCATENATION );
+	const bool subtract = ( *operatorIter == BFF_VARIABLE_SUBTRACTION );
+	if ( *iter != BFF_VARIABLE_ASSIGNMENT && !concat && !subtract )
 	{
 		Error::Error_1016_UnexepectedCharFollowingVariableName( iter );
 		return false;
@@ -383,12 +374,6 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 	}
 	else if ( ( openToken >= '0' ) && ( openToken <= '9' ) )
 	{
-		if ( modification )
-		{
-			Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_INT );
-			return false;
-		}
-
 		// integer value?
 		BFFIterator startIntValue( iter );
 		while ( iter.IsAtEnd() == false )
@@ -411,40 +396,81 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 			Error::Error_1018_IntegerValueCouldNotBeParsed( startIntValue );
 			return false;
 		}
-		return StoreVariableInt( varName, i, frame );
+
+		// find existing
+		const BFFVariable * var = BFFStackFrame::GetVar( varName, frame );
+
+		// variable type must match
+		if ( var != nullptr && !var->IsInt() )
+		{
+			Error::Error_1034_OperationNotSupported( startIntValue, var->GetType(), BFFVariable::VAR_INT, operatorIter );
+			return false;
+		}
+
+		// variable must exist, if we are going to modify it
+		if ( ( concat || subtract ) && var == nullptr )
+		{
+			Error::Error_1026_VariableNotFoundForModification( operatorIter, varName );
+			return false;
+		}
+
+		int newVal;
+		if ( concat )
+		{
+			newVal = var->GetInt() + i;
+		}
+		else if ( subtract )
+		{
+			newVal = var->GetInt() - i;
+		}
+		else
+		{
+			newVal = i;
+		}
+		return StoreVariableInt( varName, newVal, frame );
 	}
 	else if ( ( *iter == 't' ) || ( *iter == 'f' ) )
 	{
-		// might be 'true' or 'false'
+		// bool value?
 		BFFIterator startBoolValue( iter );
-		if ( iter.ParseToNext( 'e' ) == true )
+
+		bool value = false; // just to silence C4701 from MSVC
+		ok = false;
+		if ( iter.ParseExactString( "true" ) )
 		{
-			iter++;
-			if ( ( startBoolValue.GetDistTo( iter ) <= 5 ) )
-			{
-				AStackString<8> value( startBoolValue.GetCurrent(), iter.GetCurrent() );
-				if ( value == "true" )
-				{
-					if ( modification )
-					{
-						Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
-						return false;
-					}
-					return StoreVariableBool( varName, true, frame );
-				}
-				else if ( value == "false" )
-				{
-					if ( modification )
-					{
-						Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
-						return false;
-					}
-					return StoreVariableBool( varName, false, frame );
-				}
-			}
+			value = true;
+			ok = true;
+		}
+		else if ( iter.ParseExactString( "false" ) )
+		{
+			value = false;
+			ok = true;
 		}
 
-		// not a valid bool value
+		if ( ok )
+		{
+			// find existing
+			const BFFVariable * var = BFFStackFrame::GetVar( varName, frame );
+
+			// are we concatenating?
+			if ( concat || subtract )
+			{
+				// concatenation of bools not supported
+				Error::Error_1027_CannotModify( operatorIter, varName, BFFVariable::VAR_BOOL, BFFVariable::VAR_ANY );
+				return false;
+			}
+			else
+			{
+				// variable must be new or a bool
+				if (! ( var == nullptr || var->IsBool() ) )
+				{
+					Error::Error_1034_OperationNotSupported( startBoolValue, var->GetType(), BFFVariable::VAR_BOOL, operatorIter );
+					return false;
+				}
+			}
+
+			return StoreVariableBool( varName, value, frame );
+		}
 	}
 	else if ( *iter == BFF_DECLARE_VAR_INTERNAL ||
 			  *iter == BFF_DECLARE_VAR_PARENT )
@@ -1065,24 +1091,29 @@ bool BFFParser::StoreVariableString( const AString & name,
 		return false;
 	}
 
+	// find existing
+	const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
+
+	const bool dstIsEmpty = ( var == nullptr ) ||
+		( var->IsArrayOfStrings() && var->GetArrayOfStrings().IsEmpty() ) ||
+		( var->IsArrayOfStructs() && var->GetArrayOfStructs().IsEmpty() );
+
 	// are we concatenating?
-	const BFFVariable * varToConcat = nullptr;
 	if ( ( *operatorIter == BFF_VARIABLE_CONCATENATION ) || 
 		 ( *operatorIter == BFF_VARIABLE_SUBTRACTION ) )
 	{
-		// find existing
-		varToConcat = BFFStackFrame::GetVar( name, frame );
-		if ( varToConcat == nullptr )
+		// variable must exist
+		if ( var == nullptr )
 		{
 			Error::Error_1026_VariableNotFoundForModification( operatorIter, name );
 			return false;
 		}
 
 		// make sure types are compatible
-		if ( varToConcat->IsString() )
+		if ( var->IsString() )
 		{
 			// OK - can concat String to String
-			AStackString< 1024 > finalValue( varToConcat->GetString() );
+			AStackString< 1024 > finalValue( var->GetString() );
 			if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
 			{
 				finalValue += value;
@@ -1101,19 +1132,22 @@ bool BFFParser::StoreVariableString( const AString & name,
 						finalValue.Get() );
 			return true;
 		}
-		else if ( varToConcat->IsArrayOfStrings() )
+		else if ( var->IsArrayOfStrings() || dstIsEmpty )
 		{
-			// OK - can concat String to ArrayOfStrings
-			Array< AString > finalValues( varToConcat->GetArrayOfStrings().GetSize() + 1, false );
+			// OK - can concat String to ArrayOfStrings or to empty array
+			Array< AString > finalValues( var->GetArrayOfStrings().GetSize() + 1, false );
 			if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
 			{
-				finalValues = varToConcat->GetArrayOfStrings();
+				if ( !dstIsEmpty )
+				{
+					finalValues = var->GetArrayOfStrings();
+				}
 				finalValues.Append( value );
 			}
-			else
+			else if ( !dstIsEmpty )
 			{
-				auto end = varToConcat->GetArrayOfStrings().End();
-				for ( auto it=varToConcat->GetArrayOfStrings().Begin(); it!=end; ++it )
+				auto end = var->GetArrayOfStrings().End();
+				for ( auto it=var->GetArrayOfStrings().Begin(); it!=end; ++it )
 				{
 					if ( *it != value ) // remove equal strings
 					{
@@ -1133,15 +1167,38 @@ bool BFFParser::StoreVariableString( const AString & name,
 		}
 		else
 		{
-			Error::Error_1027_CannotModify( operatorIter, name, varToConcat->GetType(), BFFVariable::VAR_STRING );
+			Error::Error_1027_CannotModify( operatorIter, name, var->GetType(), BFFVariable::VAR_STRING );
 			return false;
 		}
 	}
-
-	// handle regular assignment of string
-	BFFStackFrame::SetVarString( name, value, frame );
-	FLOG_INFO( "Registered <string> variable '%s' with value '%s'", name.Get(), value.Get() );
-	return true;
+	else
+	{
+		// make sure types are compatible
+		if ( var == nullptr || var->IsString() )
+		{
+			// OK - asigning to a new variable or to a string
+			BFFStackFrame::SetVarString( name, value, frame );
+			FLOG_INFO( "Registered <string> variable '%s' with value '%s'", name.Get(), value.Get() );
+			return true;
+		}
+		else if ( var->IsArrayOfStrings() || dstIsEmpty )
+		{
+			// OK - store new string as the single element of array
+			Array< AString > values( 1, false );
+			values.Append( value );
+			BFFStackFrame::SetVarArrayOfStrings( name, values, frame );
+			FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with 1 element: '%s'", name.Get(), value.Get() );
+			return true;
+		}
+		else
+		{
+			auto errorIter = valueStart;
+			errorIter--;
+			Error::Error_1034_OperationNotSupported( errorIter, var->GetType(), BFFVariable::VAR_STRING, operatorIter );
+			return false;
+		}
+	}
+	return false;
 }
 
 // StoreVariableArray
@@ -1154,12 +1211,14 @@ bool BFFParser::StoreVariableArray( const AString & name,
 	Array< AString > values( 32, true );
 	Array< const BFFVariable * > structValues( 32, true );
 
+	// find existing
+	const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
+
 	// are we concatenating?
 	if ( ( *operatorIter == BFF_VARIABLE_CONCATENATION ) ||
 		 ( *operatorIter == BFF_VARIABLE_SUBTRACTION ) )
 	{
-		// find existing
-		const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
+		// variable must exist
 		if ( var == nullptr )
 		{
 			Error::Error_1026_VariableNotFoundForModification( operatorIter, name );
@@ -1184,6 +1243,20 @@ bool BFFParser::StoreVariableArray( const AString & name,
 			return false;
 		}
 	}
+	else
+	{
+		// variable must be new or array of some kind
+		if (! ( var == nullptr || var->IsArrayOfStrings() || var->IsArrayOfStructs() ) )
+		{
+			// TODO:B Improve this error to handle ArrayOfStructs case
+			Error::Error_1034_OperationNotSupported( valueStart, var->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, operatorIter );
+			return false;
+		}
+	}
+
+	const bool dstIsEmpty = ( var == nullptr ) ||
+		( var->IsArrayOfStrings() && var->GetArrayOfStrings().IsEmpty() ) ||
+		( var->IsArrayOfStructs() && var->GetArrayOfStructs().IsEmpty() );
 
 	// Parse array of variables
 	BFFIterator iter( valueStart );
@@ -1202,12 +1275,13 @@ bool BFFParser::StoreVariableArray( const AString & name,
 		{
 			// a quoted string
 
-			// detect mistmatches
-			if ( structValues.IsEmpty() == false )
+			// dest is consistent?
+			// if it started empty it shouldn't contain structs at this point, otherwise it must be ArrayOfStrings
+			if (! ( dstIsEmpty ? structValues.IsEmpty() : var->IsArrayOfStrings() ) )
 			{
 				// Mixed types in vector
 				Error::Error_1034_OperationNotSupported( iter, 
-														 BFFVariable::VAR_ARRAY_OF_STRUCTS,
+														 var->GetType(),
 														 BFFVariable::VAR_STRING,
 														 operatorIter );
 				return false;
@@ -1216,7 +1290,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
 			// subtraction not supported on arrays
 			if ( *operatorIter == BFF_VARIABLE_SUBTRACTION )
 			{
-				Error::Error_1034_OperationNotSupported( iter, BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING, operatorIter );
+				Error::Error_1034_OperationNotSupported( iter, var->GetType(), BFFVariable::VAR_STRING, operatorIter );
 				return false;
 			}
 
@@ -1243,9 +1317,9 @@ bool BFFParser::StoreVariableArray( const AString & name,
 			const BFFIterator elementStartValue = iter;
 
 			// a variable
-			AStackString< MAX_VARIABLE_NAME_LENGTH > varName;
+			AStackString< MAX_VARIABLE_NAME_LENGTH > srcName;
 			bool parentScope = false; // ignored, the behavior is the same
-			if ( ParseVariableName( iter, varName, parentScope ) == false )
+			if ( ParseVariableName( iter, srcName, parentScope ) == false )
 			{
 				return false;
 			}
@@ -1258,78 +1332,78 @@ bool BFFParser::StoreVariableArray( const AString & name,
 			}
 
 			// get the variable
-			const BFFVariable * var = srcFrame->GetVariableRecurse( varName );
-			if ( var == nullptr )
+			const BFFVariable * varSrc = srcFrame->GetVariableRecurse( srcName );
+			if ( varSrc == nullptr )
 			{
-				Error::Error_1026_VariableNotFoundForModification( operatorIter, varName );
+				Error::Error_1026_VariableNotFoundForModification( operatorIter, srcName );
 				return false;
 			}
 
 			// subtraction not supported on arrays
 			if ( *operatorIter == BFF_VARIABLE_SUBTRACTION )
 			{
-				const BFFVariable::VarType dstType = structValues.IsEmpty() ? BFFVariable::VAR_ARRAY_OF_STRINGS : BFFVariable::VAR_ARRAY_OF_STRUCTS;
-				const BFFVariable::VarType srcType = var->GetType();
-				Error::Error_1034_OperationNotSupported( elementStartValue, dstType, srcType, operatorIter );
+				Error::Error_1034_OperationNotSupported( elementStartValue, var->GetType(), varSrc->GetType(), operatorIter );
 				return false;
     		}
 
-			if ( var->IsArrayOfStrings() && var->GetArrayOfStrings().IsEmpty() )
+			if ( varSrc->IsArrayOfStrings() && varSrc->GetArrayOfStrings().IsEmpty() )
 			{
 				// appending empty array, nothing to do
 			}
-			else if ( var->IsArrayOfStructs() && var->GetArrayOfStructs().IsEmpty() )
+			else if ( varSrc->IsArrayOfStructs() && varSrc->GetArrayOfStructs().IsEmpty() )
 			{
 				// appending empty array, nothing to do
 			}
-			else if ( var->IsString() || var->IsArrayOfStrings() )
+			else if ( varSrc->IsString() || varSrc->IsArrayOfStrings() )
 			{
 				// dest is consistent?
-				if ( structValues.IsEmpty() == false )
+				// if it started empty it shouldn't contain structs at this point, otherwise it must be ArrayOfStrings
+				if (! ( dstIsEmpty ? structValues.IsEmpty() : var->IsArrayOfStrings() ) )
 				{
 					// inconsistency
 					Error::Error_1034_OperationNotSupported( elementStartValue, 
-															 BFFVariable::VAR_ARRAY_OF_STRUCTS,
 															 var->GetType(),
+															 varSrc->GetType(),
 															 operatorIter );
 					return false;
 				}
 
-				if ( var->IsString() )
+				if ( varSrc->IsString() )
 				{
-					values.Append( var->GetString() );
+					values.Append( varSrc->GetString() );
 				}
 				else
 				{
-					values.Append( var->GetArrayOfStrings() );
+					values.Append( varSrc->GetArrayOfStrings() );
 				}
 			}
-			else if ( var->IsStruct() || var->IsArrayOfStructs() )
+			else if ( varSrc->IsStruct() || varSrc->IsArrayOfStructs() )
 			{
 				// dest is consistent?
-				if ( values.IsEmpty() == false )
+				// if it started empty it shouldn't contain strings at this point, otherwise it must be ArrayOfStructs
+				if (! ( dstIsEmpty ? values.IsEmpty() : var->IsArrayOfStructs() ) )
 				{
 					// inconsistency
 					Error::Error_1034_OperationNotSupported( elementStartValue, 
-															 BFFVariable::VAR_ARRAY_OF_STRINGS,
 															 var->GetType(),
+															 varSrc->GetType(),
 															 operatorIter );
 					return false;
 				}
 
-				if ( var->IsStruct() )
+				if ( varSrc->IsStruct() )
 				{
-					structValues.Append( var );
+					structValues.Append( varSrc );
 				}
 				else
 				{
-					structValues.Append( var->GetArrayOfStructs() );
+					structValues.Append( varSrc->GetArrayOfStructs() );
 				}
 			}
 			else
 			{
 				Error::Error_1050_PropertyMustBeOfType( iter, nullptr, name.Get(), 
-														var->GetType(),
+														varSrc->GetType(),
 														BFFVariable::VAR_STRING,
 														BFFVariable::VAR_STRUCT );
 				return false;
@@ -1353,16 +1427,37 @@ bool BFFParser::StoreVariableArray( const AString & name,
 	// should only have one populated array
 	ASSERT( values.IsEmpty() || structValues.IsEmpty() );
 
+	// determine type of resulting variable
+	BFFVariable::VarType varType = BFFVariable::VAR_ARRAY_OF_STRINGS; // default (for new empty variables)
+	if ( !dstIsEmpty )
+	{
+		// if variable wasn't empty, use its type
+		varType = var->GetType();
+	}
+	else if ( structValues.IsEmpty() == false )
+	{
+		// using type of value: ArrayOfStructs
+		varType = BFFVariable::VAR_ARRAY_OF_STRUCTS;
+	}
+	else if ( values.IsEmpty() == false )
+	{
+		// using type of value: ArrayOfStrings
+		varType = BFFVariable::VAR_ARRAY_OF_STRINGS;
+	}
+
+	// check if selected type correctly
+	ASSERT ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS || varType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
+
 	// Register this variable
-	if ( structValues.IsEmpty() == false )
+	if ( varType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
 	{
 		// structs
 		BFFStackFrame::SetVarArrayOfStructs( name, structValues, frame );
 		FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", name.Get(), structValues.GetSize() );
 	}
-	else
+	else if ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS )
 	{
-		// strings (or unknown, so default to strings)
+		// strings
 		BFFStackFrame::SetVarArrayOfStrings( name, values, frame );
 		FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", name.Get(), values.GetSize() );
 	}
@@ -1377,12 +1472,25 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 									 const BFFIterator & operatorIter,
 									 BFFStackFrame * frame )
 {
+	// find existing
+	const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
+
 	// are we concatenating?
-	if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
+	if ( ( *operatorIter == BFF_VARIABLE_CONCATENATION ) ||
+		 ( *operatorIter == BFF_VARIABLE_SUBTRACTION ) )
 	{
 		// concatenation of structs not supported
 		Error::Error_1027_CannotModify( operatorIter, name, BFFVariable::VAR_STRUCT, BFFVariable::VAR_ANY );
 		return false;
+	}
+	else
+	{
+		// variable must be new or a struct
+		if (! ( var == nullptr || var->IsStruct() ) )
+		{
+			Error::Error_1034_OperationNotSupported( valueStart, var->GetType(), BFFVariable::VAR_STRUCT, operatorIter );
+			return false;
+		}
 	}
 
 	// create stack frame to capture variables
@@ -1465,9 +1573,10 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 	const BFFVariable * varDst = BFFStackFrame::GetVar( dstName, dstFrame );
 
 	const bool concat = ( *operatorIter == BFF_VARIABLE_CONCATENATION );
+	const bool subtract = ( *operatorIter == BFF_VARIABLE_SUBTRACTION );
 
 	// concatenation?
-	if ( concat )
+	if ( concat || subtract )
 	{
 		// can only concatenate to existing vars
 		if ( varDst == nullptr )
@@ -1494,7 +1603,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
 	if ( srcType != dstType )
 	{
-		const bool dstIsEmpty =
+		const bool dstIsEmpty = ( varDst == nullptr ) ||
 			( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && varDst->GetArrayOfStrings().IsEmpty() ) ||
 			( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && varDst->GetArrayOfStructs().IsEmpty() );
 		const bool srcIsEmpty =
@@ -1507,22 +1616,40 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS || dstIsEmpty ) &&
 			 ( srcType == BFFVariable::VAR_STRING ) )
 		{
-			uint32_t num = (uint32_t)( 1 + ( ( concat && !dstIsEmpty ) ? varDst->GetArrayOfStrings().GetSize() : 0 ) );
-			Array< AString > values( num, false );
-			if ( concat && !dstIsEmpty )
+			Array< AString > values( varDst->GetArrayOfStrings().GetSize() + 1, false );
+			if ( concat )
+			{
+				if ( !dstIsEmpty )
+				{
+					values.Append( varDst->GetArrayOfStrings() );
+				}
+				values.Append( varSrc->GetString() );
+			}
+			else if ( subtract && !dstIsEmpty )
+			{
+				auto end = varDst->GetArrayOfStrings().End();
+				for ( auto it=varDst->GetArrayOfStrings().Begin(); it!=end; ++it )
+				{
+					if ( *it != varSrc->GetString() ) // remove equal strings
+					{
+						values.Append( *it );
+					}
+				}
+			}
+			else
 			{
 				values.Append( varDst->GetArrayOfStrings() );
 			}
-			values.Append( varSrc->GetString() );
 
 			BFFStackFrame::SetVarArrayOfStrings( dstName, values, dstFrame );
-			FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num );
+			FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), values.GetSize() );
 			return true;
 		}
 
-		// Struct to ArrayOfStructs or empty array
+		// Struct to ArrayOfStructs or empty array, assignment or concatenation
 		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS || dstIsEmpty ) &&
-			 ( srcType == BFFVariable::VAR_STRUCT ) )
+			 ( srcType == BFFVariable::VAR_STRUCT ) &&
+			 !subtract )
 		{
 			uint32_t num = (uint32_t)( 1 + ( ( concat && !dstIsEmpty ) ? varDst->GetArrayOfStructs().GetSize() : 0 ) );
 			Array< const BFFVariable * > values( num, false );
@@ -1537,8 +1664,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		// Empty array to ArrayOfStrings
-		if ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && srcIsEmpty )
+		// Empty array to ArrayOfStrings, assignment or concatenation
+		if ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS && srcIsEmpty && !subtract )
 		{
 			if ( concat )
 			{
@@ -1553,8 +1680,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		// Empty array to ArrayOfStructs
-		if ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && srcIsEmpty )
+		// Empty array to ArrayOfStructs, assignment or concatenation
+		if ( dstType == BFFVariable::VAR_ARRAY_OF_STRUCTS && srcIsEmpty && !subtract )
 		{
 			if ( concat )
 			{
@@ -1569,16 +1696,16 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		// ArrayOfStrings to empty array
-		if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRINGS )
+		// ArrayOfStrings to empty array, assignment or concatenation
+		if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRINGS && !subtract )
 		{
 			BFFStackFrame::SetVarArrayOfStrings( dstName, varSrc->GetArrayOfStrings(), dstFrame );
 			FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), (unsigned int)varSrc->GetArrayOfStrings().GetSize() );
 			return true;
 		}
 
-		// ArrayOfStructs to empty array
-		if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
+		// ArrayOfStructs to empty array, assignment or concatenation
+		if ( dstIsEmpty && srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && !subtract )
 		{
 			BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetArrayOfStructs(), dstFrame );
 			FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), (unsigned int)varSrc->GetArrayOfStructs().GetSize() );
@@ -1591,19 +1718,37 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
 		if ( srcType == BFFVariable::VAR_STRING )
 		{
-			AStackString< 2048 > finalValue;
 			if ( concat )
 			{
-				finalValue = varDst->GetString();
+				AStackString< 2048 > finalValue(varDst->GetString());
+				finalValue += varSrc->GetString();
+				BFFStackFrame::SetVarString( dstName, finalValue, dstFrame );
+				FLOG_INFO( "Appending '%s' (value of %s) to <String> variable '%s' with result '%s'",
+							varSrc->GetString().Get(),
+							srcName.Get(),
+							dstName.Get(),
+							finalValue.Get() );
 			}
-			finalValue += varSrc->GetString();
-
-			BFFStackFrame::SetVarString( dstName, finalValue, dstFrame );
-			FLOG_INFO( "Registered <string> variable '%s' with value '%s'", dstName.Get(), finalValue.Get() );
+			else if ( subtract )
+			{
+				AStackString< 2048 > finalValue(varDst->GetString());
+				finalValue.Replace( varSrc->GetString().Get(), "" );
+				BFFStackFrame::SetVarString( dstName, finalValue, dstFrame );
+				FLOG_INFO( "Removing '%s' (value of %s) from <String> variable '%s' with result '%s'",
+							varSrc->GetString().Get(),
+							srcName.Get(),
+							dstName.Get(),
+							finalValue.Get() );
+			}
+			else
+			{
+				BFFStackFrame::SetVarString( dstName, varSrc->GetString(), dstFrame );
+				FLOG_INFO( "Registered <string> variable '%s' with value '%s'", dstName.Get(), varSrc->GetString().Get() );
+			}
 			return true;
 		}
 	
-		if ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS )
+		if ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS && !subtract )
 		{
 			if ( concat )
 			{
@@ -1622,7 +1767,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
-		if ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
+		if ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS && !subtract)
 		{
 			if ( concat )
 			{
@@ -1643,24 +1788,28 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
 		if ( srcType == BFFVariable::VAR_INT )
 		{
-			int newVal( varSrc->GetInt() );
+			int newVal;
 			if ( concat )
 			{
-				newVal += varDst->GetInt();
+				newVal = varDst->GetInt() + varSrc->GetInt();
+			}
+			else if ( subtract )
+			{
+				newVal = varDst->GetInt() - varSrc->GetInt();
+			}
+			else
+			{
+				newVal = varSrc->GetInt();
 			}
 			return StoreVariableInt( dstName, newVal, dstFrame );
 		}
 
-		if ( srcType == BFFVariable::VAR_BOOL )
+		if ( srcType == BFFVariable::VAR_BOOL && !concat && !subtract )
 		{
-			// only assignment is supported
-			if ( concat == false )
-			{
-				return StoreVariableBool( dstName, varSrc->GetBool(), dstFrame );
-			}
+			return StoreVariableBool( dstName, varSrc->GetBool(), dstFrame );
 		}
 
-		if ( srcType == BFFVariable::VAR_STRUCT )
+		if ( srcType == BFFVariable::VAR_STRUCT && !subtract )
 		{
 			const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
 			if ( concat )
