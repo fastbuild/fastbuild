@@ -36,10 +36,11 @@ void PosixMapMemory( const char* name,
 		// name of the form /somename; that is, a null-terminated string of up
 		// to NAME_MAX (i.e., 255) characters consisting  of an initial slash,
 		// followed by one or more characters, none of which are slashes.
+		// For OSX compatibility, name must also be shorter than SHM_NAME_MAX (32)
 		portableName = "/";
  		portableName += name;
 		ASSERT( portableName.FindLast('/') == portableName.Get() );
-		ASSERT( portableName.GetLength() <= 255 );
+		ASSERT( portableName.GetLength() <= 32 ); // from SHM_NAME_MAX on OSX
 
 		*mapFile = shm_open( portableName.Get(),
 		                     O_RDWR | (create ? O_CREAT : 0),

@@ -126,7 +126,7 @@ Compiler( 'Compiler-x86Clang' )
 {
   .Executable = '$ClangForWindowsBasePath$\clang++.exe'
 }</div>
-<b>MSVC</b>
+<b>MSVC - 2013</b>
 <div class='code'>// VisualStudio 2013 x86 Compiler
 Compiler( 'Compiler-x86' )
 {
@@ -145,6 +145,23 @@ Compiler( 'Compiler-x86' )
                   '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll'
                   '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\vccorlib120.dll'
                 }
+}</div>
+<b>MSVC - 2010</b>
+<div class='code'>// VisualStudio 2010 x86 Compiler
+Compiler( "Compiler-x86" )
+{
+  .Executable = '$VSBasePath$\VC\bin\cl.exe'
+  .ExtraFiles = { '$VSBasePath$\VC\bin\c1.dll'
+                  '$VSBasePath$\VC\bin\c1xx.dll'
+                  '$VSBasePath$\VC\bin\c2.dll'
+                  '$VSBasePath$\Common7\IDE\mspdb100.dll'
+                  '$VSBasePath$\Common7\IDE\msobj100.dll'
+                  '$VSBasePath$\Common7\IDE\mspdbsrv.exe'
+                  '$VSBasePath$\Common7\IDE\mspdbcore.dll'
+                  '$VSBasePath$\VC\bin\1033\clui.dll'
+                  '$VSBasePath$\VC\redist\x86\Microsoft.VC100.CRT\msvcp100.dll'
+                  '$VSBasePath$\VC\redist\x86\Microsoft.VC100.CRT\msvcr100.dll'
+    }
 }</div>
 <b>Intel</b>
 <div class='code'>// Intel 2015 Update 4 x64 Compiler

@@ -5,8 +5,9 @@
 
 Settings		
 {
+	#import TMP
 	.Environment	= { "PATH=$VSPath$\Common7\IDE\;$VSPath$\VC\bin\amd64\",
-						"TMP=C:\Windows\Temp",
+						"TMP=$TMP$",
 						"SystemRoot=C:\Windows" }
 	.CachePath = 'c:\.fbuild.cache'
 }

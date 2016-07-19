@@ -9,6 +9,7 @@
 #include <Core/Env/Assert.h>
 #include <Core/Process/SharedMemory.h>
 #include <Core/Process/Thread.h>
+#include <Core/Strings/AStackString.h>
 #include <Core/Time/Timer.h>
 
 #if defined(__LINUX__) || defined(__APPLE__)
@@ -41,6 +42,18 @@ void TestSharedMemory::CreateAccessDestroy() const
 #if defined(__WINDOWS__)
 	// TODO:WINDOWS Test SharedMemory (without fork, so).
 #elif defined(__LINUX__) || defined(__APPLE__)
+	AStackString<> sharedMemoryName( "FBuild_SHM_Test_" );
+	sharedMemoryName += (sizeof(void*) == 8) ? "64_" : "32_";	
+	#if defined( DEBUG )
+		sharedMemoryName += "Debug";
+	#elif defined( RELEASE )
+		#if defined( PROFILING_ENABLED )
+			sharedMemoryName += "Profile";
+		#else
+			sharedMemoryName += "Release";
+		#endif
+	#endif
+
 	int pid = fork();
 	
 	Timer t;
@@ -49,7 +62,7 @@ void TestSharedMemory::CreateAccessDestroy() const
 	if(pid == 0)
 	{
 		SharedMemory shm;
-		shm.Open("fbuild_test_shared_memory", sizeof(unsigned int));
+		shm.Open(sharedMemoryName.Get(), sizeof(unsigned int));
 		unsigned int* magic = static_cast<unsigned int*>(shm.GetPtr());
 
 		// Asserts raise an exception when running unit tests : forked process
@@ -70,7 +83,7 @@ void TestSharedMemory::CreateAccessDestroy() const
 	else
 	{
 		SharedMemory shm;
-		shm.Create("fbuild_test_shared_memory", sizeof(unsigned int));
+		shm.Create(sharedMemoryName.Get(), sizeof(unsigned int));
 		unsigned int* magic = static_cast<unsigned int*>(shm.GetPtr());
 		TEST_ASSERT( magic );
 		

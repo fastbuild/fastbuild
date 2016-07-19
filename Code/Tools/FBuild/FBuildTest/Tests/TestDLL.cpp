@@ -76,12 +76,18 @@ void TestDLL::TestSingleDLL() const
 
 	// Check stats
 	//				 Seen,	Built,	Type
-	CheckStatsNode ( 3,		1,		Node::FILE_NODE );	// cpp 
+    uint32_t numF = 3;
+	uint32_t numB = 1;
+    #if defined( __WINDOWS__ )
+        numF += 2;
+		numB += 2;
+    #endif
+	CheckStatsNode ( numF,	numB,	Node::FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( 1,		1,		Node::OBJECT_NODE );
 	CheckStatsNode ( 1,		1,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::DLL_NODE );
-	CheckStatsTotal( 7,		5 );
+	CheckStatsTotal( numF+4,numB+4 );
 }
 
 // TestSingleDLL_NoRebuild
@@ -100,12 +106,16 @@ void TestDLL::TestSingleDLL_NoRebuild() const
 
 	// Check stats
 	//				 Seen,	Built,	Type
-	CheckStatsNode ( 3,		3,		Node::FILE_NODE );	// cpp + 2 .h
+    uint32_t numF = 3;
+    #if defined( __WINDOWS__ )
+        numF += 2;
+    #endif
+	CheckStatsNode ( numF,	numF,	Node::FILE_NODE );
 	CheckStatsNode ( 1,		0,		Node::COMPILER_NODE );
 	CheckStatsNode ( 1,		0,		Node::OBJECT_NODE );
 	CheckStatsNode ( 1,		0,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		0,		Node::DLL_NODE );
-	CheckStatsTotal( 7,		3 );
+	CheckStatsTotal( numF+4,numF );
 }
 
 // TestTwoDLLs
@@ -135,12 +145,18 @@ void TestDLL::TestTwoDLLs() const
 
 	// Check stats
 	//				 Seen,	Built,	Type
-	CheckStatsNode ( 5,		2,		Node::FILE_NODE );	// 2 cpp files
+    uint32_t numF = 5;
+	uint32_t numB = 2;
+    #if defined( __WINDOWS__ )
+        numF += 2;
+		numB += 2;
+    #endif
+	CheckStatsNode ( numF,	numB,		Node::FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( 2,		2,		Node::OBJECT_NODE );
 	CheckStatsNode ( 2,		2,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 2,		2,		Node::DLL_NODE );
-	CheckStatsTotal( 12,	9 );
+	CheckStatsTotal( numF+7,numB+7 );
 }
 
 // TestTwoDLLs_NoRebuild
@@ -160,12 +176,16 @@ void TestDLL::TestTwoDLLs_NoRebuild() const
 	// Check stats to be sure nothing was built
 	// Check stats
 	//				 Seen,	Built,	Type
-	CheckStatsNode ( 5,		5,		Node::FILE_NODE );	// 2 cpp files + 3 .h
+    uint32_t numF = 5;
+    #if defined( __WINDOWS__ )
+        numF += 2;
+    #endif
+	CheckStatsNode ( numF,	numF,	Node::FILE_NODE );
 	CheckStatsNode ( 1,		0,		Node::COMPILER_NODE );
 	CheckStatsNode ( 2,		0,		Node::OBJECT_NODE );
 	CheckStatsNode ( 2,		0,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 2,		0,		Node::DLL_NODE );
-	CheckStatsTotal( 12,	5 );
+	CheckStatsTotal( numF+7,numF );
 }
 
 // TestTwoDLLs_NoUnnecessaryRelink
@@ -189,12 +209,16 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
 
 		// Check stats to be sure one dll was built
 		//				 Seen,	Built,	Type
-		CheckStatsNode ( 3,		3,		Node::FILE_NODE );	// 1 cpp files + 2 .h
+	    uint32_t numF = 3;
+	    #if defined( __WINDOWS__ )
+	        numF += 2;
+	    #endif
+		CheckStatsNode ( numF,	numF,	Node::FILE_NODE );
 		CheckStatsNode ( 1,		0,		Node::COMPILER_NODE );
 		CheckStatsNode ( 1,		0,		Node::OBJECT_NODE );
 		CheckStatsNode ( 1,		0,		Node::OBJECT_LIST_NODE );
 		CheckStatsNode ( 1,		1,		Node::DLL_NODE );
-		CheckStatsTotal( 7,		4 );
+		CheckStatsTotal( numF+4,numF+1 );
 	}
 
 	// 2) Ensure DLL B does not relink
@@ -211,12 +235,16 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
 
 		// Check stats to be sure nothing was built
 		//				 Seen,	Built,	Type
-		CheckStatsNode ( 5,		5,		Node::FILE_NODE );	// 2 cpp files + 3 .h
+	    uint32_t numF = 5;
+	    #if defined( __WINDOWS__ )
+	        numF += 2;
+	    #endif
+		CheckStatsNode ( numF,	numF,	Node::FILE_NODE );
 		CheckStatsNode ( 1,		0,		Node::COMPILER_NODE );
 		CheckStatsNode ( 2,		0,		Node::OBJECT_NODE );
 		CheckStatsNode ( 2,		0,		Node::OBJECT_LIST_NODE );
 		CheckStatsNode ( 2,		0,		Node::DLL_NODE );
-		CheckStatsTotal( 12,	5 );
+		CheckStatsTotal( numF+7,numF );
 	}
 }
 
@@ -245,15 +273,17 @@ void TestDLL::TestDLLWithPCH() const
 	// Check stats
 	//				 Seen,	Built,	Type
     uint32_t numF = 3; // pch.h + a.cpp + c.h
+	uint32_t numB = 2;
     #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
+        numF += 3; // pch.cpp and libs
+		numB += 2; // libs
     #endif
-	CheckStatsNode ( numF,	2,		Node::FILE_NODE );	// 1 cpp + 1 pch cpp
+	CheckStatsNode ( numF,	numB,	Node::FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( 2,		2,		Node::OBJECT_NODE );// obj + pch obj
 	CheckStatsNode ( 1,		1,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		1,		Node::DLL_NODE );
-	CheckStatsTotal( 5+numF,7 );
+	CheckStatsTotal( numF+5,numB+5 );
 }
 
 // TestDLLWithPCH_NoRebuild
@@ -275,14 +305,14 @@ void TestDLL::TestDLLWithPCH_NoRebuild() const
 	//				 Seen,	Built,	Type
     uint32_t numF = 3; // pch.h + a.cpp + c.h
     #if defined( __WINDOWS__ )
-        numF++; // pch.cpp
+		numF += 3;
     #endif    
 	CheckStatsNode ( numF,	numF,		Node::FILE_NODE );	// 1 cpp + 1 pch cpp + 2 .h
 	CheckStatsNode ( 1,		0,		Node::COMPILER_NODE );
 	CheckStatsNode ( 2,		0,		Node::OBJECT_NODE );// obj + pch obj
 	CheckStatsNode ( 1,		0,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 1,		0,		Node::DLL_NODE );
-	CheckStatsTotal( 5+numF,numF );
+	CheckStatsTotal( numF+5,numF );
 }
 
 // TestExeWithDLL
@@ -309,13 +339,19 @@ void TestDLL::TestExeWithDLL() const
 
 	// Check stats
 	//				 Seen,	Built,	Type
-	CheckStatsNode ( 4,		2,		Node::FILE_NODE );		// 2 cpp
+    uint32_t numF = 4; // pch.h + a.cpp + c.h
+	uint32_t numB = 2;
+    #if defined( __WINDOWS__ )
+		numF += 2;
+		numB += 2;
+    #endif
+	CheckStatsNode ( numF,	numB,	Node::FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( 2,		2,		Node::OBJECT_NODE );	// exe.obj + a.obj
 	CheckStatsNode ( 2,		2,		Node::OBJECT_LIST_NODE );	// exe lib + dll lib
 	CheckStatsNode ( 1,		1,		Node::DLL_NODE );
 	CheckStatsNode ( 1,		1,		Node::EXE_NODE );
-	CheckStatsTotal( 11,	9 );
+	CheckStatsTotal( numF+7,numB+7 );
 }
 
 // TestExeWithDLL_NoRebuild
@@ -335,13 +371,17 @@ void TestDLL::TestExeWithDLL_NoRebuild() const
 
 	// Check stats
 	//				 Seen,	Built,	Type
-	CheckStatsNode ( 4,		4,		Node::FILE_NODE );		// 2 cpp + a.h + precompiledheader.h
+    uint32_t numF = 4; // pch.h + a.cpp + c.h
+    #if defined( __WINDOWS__ )
+		numF += 2;
+    #endif
+	CheckStatsNode ( numF,	numF,	Node::FILE_NODE );
 	CheckStatsNode ( 1,		0,		Node::COMPILER_NODE );
 	CheckStatsNode ( 2,		0,		Node::OBJECT_NODE );	// exe.obj + a.obj
 	CheckStatsNode ( 2,		0,		Node::OBJECT_LIST_NODE );	// exe lib + dll lib
 	CheckStatsNode ( 1,		0,		Node::DLL_NODE );
 	CheckStatsNode ( 1,		0,		Node::EXE_NODE );
-	CheckStatsTotal( 11,	4 );
+	CheckStatsTotal( numF+7,numF );
 }
 
 // TestValidExeWithDLL
@@ -372,14 +412,20 @@ void TestDLL::TestLinkWithCopy() const
 
 	// Check stats
 	//				 Seen,	Built,	Type
+    uint32_t numF = 5; // pch.h + a.cpp + c.h
+    uint32_t numB = 2;
+    #if defined( __WINDOWS__ )
+		numF += 2;
+		numB += 2;
+    #endif
 	CheckStatsNode ( 2,		2,		Node::COPY_FILE_NODE );
-	CheckStatsNode ( 5,		2,		Node::FILE_NODE );
+	CheckStatsNode ( numF,	numB,	Node::FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::COMPILER_NODE );
 	CheckStatsNode ( 2,		2,		Node::OBJECT_NODE );
 	CheckStatsNode ( 2,		2,		Node::OBJECT_LIST_NODE );
 	CheckStatsNode ( 2,		2,		Node::DLL_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
-	CheckStatsTotal( 15,	12 );
+	CheckStatsTotal( numF+10,numB+10 );
 }
 
 //------------------------------------------------------------------------------

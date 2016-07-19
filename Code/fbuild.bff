@@ -14,8 +14,9 @@
 Settings
 {
     #if __WINDOWS__
+		#import TMP
         .Environment	= { "PATH=$VSBasePath$\Common7\IDE\;$VSBasePath$\VC\bin\",
-                            "TMP=C:\Windows\Temp",
+                            "TMP=$TMP$",
                             "SystemRoot=C:\Windows" }
         .CachePath		= "C:\.fbuild.cache"
     #endif
