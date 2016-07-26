@@ -6,15 +6,23 @@
 #include "FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
+// Static Data
+//------------------------------------------------------------------------------
+/*static*/ AString FBuildTest::s_RecordedOutput( 1024 * 1024 );
+
 // PreTest
 //------------------------------------------------------------------------------
 /*virtual*/ void FBuildTest::PreTest() const
 {
+	Tracing::AddCallbackOutput( LoggingCallback );
+	s_RecordedOutput.Clear();
+
 	FBuildStats::SetIgnoreCompilerNodeDeps( true );
 }
 
@@ -23,6 +31,8 @@
 /*virtual*/ void FBuildTest::PostTest() const
 {
 	FBuildStats::SetIgnoreCompilerNodeDeps( false );
+
+	Tracing::RemoveCallbackOutput( LoggingCallback );
 }
 
 // EnsureFileDoesNotExist
@@ -119,6 +129,14 @@ void FBuildTest::GetCodeDir( AString & codeDir ) const
     #endif
 	TEST_ASSERT( codePos );
 	codeDir.SetLength( (uint16_t)( codePos - codeDir.Get() + 6 ) );
+}
+
+// LoggingCallback
+//------------------------------------------------------------------------------
+bool FBuildTest::LoggingCallback( const char * message )
+{
+	s_RecordedOutput.Append( message, AString::StrLen( message ) );
+	return true; // continue logging like normal
 }
 
 //------------------------------------------------------------------------------

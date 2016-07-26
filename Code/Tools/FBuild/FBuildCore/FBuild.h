@@ -46,7 +46,7 @@ public:
 
 	// after a build we can store progress/parsed rules for next time
 	bool SaveDependencyGraph( const char * nodeGraphDBFile ) const;
-	void SaveDependencyGraph( IOStream & memorySteam ) const;
+	void SaveDependencyGraph( IOStream & memorySteam, const char* nodeGraphDBFile ) const;
 
 	const FBuildOptions & GetOptions() const { return m_Options; }
 	

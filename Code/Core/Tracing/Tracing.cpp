@@ -24,8 +24,8 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ Tracing::Callback * Tracing::m_CallbackDebugSpam = nullptr;
-/*static*/ Tracing::Callback * Tracing::m_CallbackOutput = nullptr;
+/*static*/ Array< Tracing::Callback * > Tracing::s_CallbacksDebugSpam( 2, true );
+/*static*/ Array< Tracing::Callback * > Tracing::s_CallbacksOutput( 2, true );
 
 #ifdef DEBUG
 	// DebugSpam
@@ -35,9 +35,9 @@
         PROFILE_FUNCTION
 
 		// pass through callback if there is one
-		if ( m_CallbackDebugSpam )
+		for ( auto cb : s_CallbacksDebugSpam )
 		{
-			if ( (*m_CallbackDebugSpam)( message ) == false )
+			if ( (*cb)( message ) == false )
 			{
 				return; // callback wants msg supressed
 			}
@@ -105,9 +105,9 @@
     PROFILE_FUNCTION
 
 	// pass through callback if there is one
-	if ( m_CallbackOutput )
+	for ( auto cb : s_CallbacksOutput )
 	{
-		if ( (*m_CallbackOutput)( message ) == false )
+		if ( (*cb)( message ) == false )
 		{
 			return; // callback wants msg supressed
 		}
@@ -170,18 +170,38 @@
 	FatalError( buffer.Get() );
 }
 
-// SetCallbackDebugSpam
+// AddCallbackDebugSpam
 //------------------------------------------------------------------------------
-/*static*/ void Tracing::SetCallbackDebugSpam( Callback callback )
+/*static*/ void Tracing::AddCallbackDebugSpam( Callback * callback )
 {
-	m_CallbackDebugSpam = callback;
+	ASSERT( s_CallbacksDebugSpam.Find( callback ) == nullptr );
+	s_CallbacksDebugSpam.Append( callback );
 }
 
 // SetCallbackOutput
 //------------------------------------------------------------------------------
-/*static*/ void Tracing::SetCallbackOutput( Callback callback )
+/*static*/ void Tracing::AddCallbackOutput( Callback * callback )
 {
-	m_CallbackOutput = callback;
+	ASSERT( s_CallbacksOutput.Find( callback ) == nullptr );
+	s_CallbacksOutput.Append( callback );
+}
+
+// RemoveCallbackDebugSpam
+//------------------------------------------------------------------------------
+/*static*/ void Tracing::RemoveCallbackDebugSpam( Callback * callback )
+{
+	auto iter = s_CallbacksDebugSpam.Find( callback );
+	ASSERT( iter );
+	s_CallbacksDebugSpam.Erase( iter );
+}
+
+// RemoveCallbackOutput
+//------------------------------------------------------------------------------
+/*static*/ void Tracing::RemoveCallbackOutput( Callback * callback )
+{
+	auto iter = s_CallbacksOutput.Find( callback );
+	ASSERT( iter );
+	s_CallbacksOutput.Erase( iter );
 }
 
 //------------------------------------------------------------------------------

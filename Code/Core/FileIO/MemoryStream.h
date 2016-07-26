@@ -19,6 +19,7 @@ public:
 
 	// memory stream specific functions
 	inline const void * GetData() const { return (void *)m_Begin; }
+	inline void *		GetDataMutable() { return (void *)m_Begin; }
 	inline size_t		GetSize() const { return ( m_End - m_Begin ); } 
 
 	// raw read/write functions

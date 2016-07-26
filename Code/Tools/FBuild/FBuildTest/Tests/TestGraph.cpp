@@ -22,6 +22,7 @@
 #include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
@@ -47,6 +48,9 @@ private:
 	void TestSerialization() const;
 	void TestDeepGraph() const;
 	void TestNoStopOnFirstError() const;
+	void DBLocationChanged() const;
+	void BFFDirtied() const;
+	void DBVersionChanged() const;
 };
 
 // Register Tests
@@ -61,6 +65,9 @@ REGISTER_TESTS_BEGIN( TestGraph )
 	REGISTER_TEST( TestSerialization )
     REGISTER_TEST( TestDeepGraph )
 	REGISTER_TEST( TestNoStopOnFirstError )
+	REGISTER_TEST( DBLocationChanged )
+	REGISTER_TEST( BFFDirtied )
+	REGISTER_TEST( DBVersionChanged )
 REGISTER_TESTS_END
 
 // EmptyGraph
@@ -301,7 +308,7 @@ void TestGraph::TestSerialization() const
 	AStackString<> codeDir;
 	GetCodeDir( codeDir );
 
-	const char * dbFile1	= "../tmp/Test/Graph/fbuild.db";
+	const char * dbFile1	= "../tmp/Test/Graph/fbuild.db.1";
 	const char * dbFile2	= "../tmp/Test/Graph/fbuild.db.2"; 
 
 	// clean up anything left over from previous runs
@@ -529,6 +536,148 @@ void TestGraph::TestNoStopOnFirstError() const
 		const FBuildStats::Stats & nodeStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
 		TEST_ASSERT( nodeStats.m_NumFailed == 4 );
 	}
+}
+
+// DBLocationChanged
+//------------------------------------------------------------------------------
+void TestGraph::DBLocationChanged() const
+{
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestGraph/DatabaseMoved/fbuild.bff";
+
+	const char* dbFile1 = "../../../../tmp/Test/Graph/DatabaseMoved/1/GraphMoved.fdb";
+	const char* dbFile2 = "../../../../tmp/Test/Graph/DatabaseMoved/2/GraphMoved.fdb";
+
+	EnsureFileDoesNotExist( dbFile1 );
+	EnsureFileDoesNotExist( dbFile2 );
+
+	// Create a DB
+	{
+		FBuild fBuild( options );
+		TEST_ASSERT( fBuild.Initialize() );
+		TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
+	}
+
+	// Copy the DB
+	{
+		AStackString<> dbPath2( dbFile2 );
+		dbPath2.SetLength( (uint32_t)( dbPath2.FindLast( FORWARD_SLASH ) - dbPath2.Get() ) );
+		TEST_ASSERT( FileIO::EnsurePathExists( dbPath2 ) );
+		TEST_ASSERT( FileIO::FileCopy( dbFile1, dbFile2 ) );
+	}
+
+	// Check that the DB in the new location is detected as invalid and the user
+	// is notified appropriately
+	{
+		FBuild fBuild( options );
+		TEST_ASSERT( fBuild.Initialize( dbFile2 ) == false );
+		TEST_ASSERT( GetRecordedOutput().Find( "Database has been moved" ) );
+	}
+}
+
+// BFFDirtied
+//------------------------------------------------------------------------------
+void TestGraph::BFFDirtied() const
+{
+	const char* originalBFF				= "Data/TestGraph/BFFDirtied/fbuild.bff";
+	const char* copyOfBFF			= "../../../../tmp/Test/Graph/BFFDirtied/fbuild.bff";
+	const char* dbFile				= "../../../../tmp/Test/Graph/BFFDirtied/fbuild.fdb";
+
+	EnsureFileDoesNotExist( copyOfBFF );
+	EnsureFileDoesNotExist( dbFile );
+
+	// Ensure test output dir exists
+	{
+		AStackString<> copyOfBFFPath( copyOfBFF );
+		copyOfBFFPath.SetLength( (uint32_t)( copyOfBFFPath.FindLast( FORWARD_SLASH ) - copyOfBFFPath.Get() ) );
+		TEST_ASSERT( FileIO::EnsurePathExists( copyOfBFFPath ) );
+	}
+
+	// Copy main BFF and included BFF
+	{
+		TEST_ASSERT( FileIO::FileCopy( originalBFF, copyOfBFF ) );
+		TEST_ASSERT( FileIO::SetReadOnly( copyOfBFF, false ) );
+	}
+
+	FBuildOptions options;
+	options.m_ConfigFile = copyOfBFF;
+
+	// Load from copy of BFF
+	{
+		FBuild fBuild( options );
+		TEST_ASSERT( fBuild.Initialize() );
+		TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+		// Ensure Settings() are being read in, since tests below
+		// are verifying they don't persist when the BFF changes
+		TEST_ASSERT( fBuild.GetCachePath().IsEmpty() == false );
+		TEST_ASSERT( fBuild.GetEnvironmentStringSize() > 0 );
+		TEST_ASSERT( fBuild.GetWorkerList().IsEmpty() == false );
+	}
+
+	// Modity BFF (make it empty)
+	{
+		FileStream fs;
+		TEST_ASSERT( fs.Open( copyOfBFF, FileStream::WRITE_ONLY ) );
+	}
+
+	// Load from dirtied BFF
+	{
+		FBuild fBuild( options );
+		TEST_ASSERT( fBuild.Initialize() );
+
+		// Ensure user was informed of reparsing trigger
+		TEST_ASSERT( GetRecordedOutput().Find( "has changed (reparsing will occur)" ) );
+
+		// Make sure settings don't "leak" from the original BFF into the new one
+		TEST_ASSERT( fBuild.GetCachePath().IsEmpty() );
+		TEST_ASSERT( fBuild.GetEnvironmentStringSize() == 0 );
+		TEST_ASSERT( fBuild.GetWorkerList().IsEmpty() );
+	}
+}
+
+// DBVersionChanged
+//------------------------------------------------------------------------------
+void TestGraph::DBVersionChanged() const
+{
+	// Generate a fake old version headers
+	NodeGraphHeader header;
+	MemoryStream ms;
+	ms.WriteBuffer( &header, sizeof( header ) );
+
+	// Since we're poking this, we want to know if the layout ever changes somehow
+	TEST_ASSERT( ms.GetFileSize() == 4 );
+	TEST_ASSERT( ( (const char *)ms.GetDataMutable() )[3] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
+
+	( (char *)ms.GetDataMutable() )[3] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
+
+	const char* oldDB		= "../../../../tmp/Test/Graph/DBVersionChanged/fbuild.fdb";
+	const char* emptyBFF	= "../../../../tmp/Test/Graph/DBVersionChanged/fbuild.bff";
+
+	// cleanup & prep
+	{
+		AStackString<> oldDBPath( oldDB );
+		oldDBPath.SetLength( (uint32_t)( oldDBPath.FindLast( FORWARD_SLASH ) - oldDBPath.Get() ) );
+		TEST_ASSERT( FileIO::EnsurePathExists( oldDBPath ) );
+
+		// write old DB to disk
+		FileStream fs;
+		TEST_ASSERT( fs.Open( oldDB, FileStream::WRITE_ONLY ) );
+		TEST_ASSERT( fs.WriteBuffer( ms.GetData(), ms.GetFileSize() ) );
+
+		// create an empty bff
+		FileStream fs2;
+		TEST_ASSERT( fs2.Open( emptyBFF, FileStream::WRITE_ONLY ) );
+	}
+
+	// Init from old DB
+	FBuildOptions options;
+	options.m_ConfigFile = emptyBFF;
+	FBuild fBuild( options );
+	TEST_ASSERT( fBuild.Initialize( oldDB ) );
+
+	// Ensure user was informed about change
+	TEST_ASSERT( GetRecordedOutput().Find( "Database version has changed" ) );
 }
 
 //------------------------------------------------------------------------------

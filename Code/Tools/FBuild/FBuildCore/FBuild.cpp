@@ -294,7 +294,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
 	// serialize into memory first
 	MemoryStream memoryStream( 32 * 1024 * 1024, 8 * 1024 * 1024 );
-	m_DependencyGraph->Save( memoryStream );
+	m_DependencyGraph->Save( memoryStream, nodeGraphDBFile );
 
 	// We'll save to a tmp file first
 	AStackString<> tmpFileName( nodeGraphDBFile );
@@ -343,9 +343,9 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
 // SaveDependencyGraph
 //------------------------------------------------------------------------------
-void FBuild::SaveDependencyGraph( IOStream & stream ) const
+void FBuild::SaveDependencyGraph( IOStream & stream, const char* nodeGraphDBFile ) const
 {
-	m_DependencyGraph->Save( stream );
+	m_DependencyGraph->Save( stream, nodeGraphDBFile );
 }
 
 // Build

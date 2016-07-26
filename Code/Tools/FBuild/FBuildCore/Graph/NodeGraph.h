@@ -54,7 +54,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 83 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 84 };
 
 	bool IsValid() const
 	{
@@ -87,9 +87,8 @@ public:
 	};
 	NodeGraph::LoadResult Load( const char * nodeGraphDBFile );
 
-	bool Load( const char * nodeGraphDBFile, bool & needReparsing );
-	bool Load( IOStream & stream, bool & needReparsing );
-	void Save( IOStream & stream ) const;
+	LoadResult Load( IOStream & stream, const char * nodeGraphDBFile );
+	void Save( IOStream & stream, const char * nodeGraphDBFile ) const;
 
 	// access existing nodes
 	Node * FindNode( const AString & nodeName ) const;
@@ -274,7 +273,7 @@ private:
 	void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance = 5 ) const;
 
 	struct UsedFile;
-	bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, Array< UsedFile > & files, bool & compatibleDB ) const;
+	bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB ) const;
 	uint32_t GetLibEnvVarHash() const;
 
 	// load/save helpers

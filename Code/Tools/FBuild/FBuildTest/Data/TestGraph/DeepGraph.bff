@@ -4,7 +4,7 @@
 // Create a highly recursive graph with many common sub trees.
 // Prior to optimization this worst case could take as long as 30secs
 // for each dependency graph traversal.
-// After optimization, wosrt case traversal is sub 10ms.
+// After optimization, worst case traversal is sub 10ms.
 //
 //------------------------------------------------------------------------------
 
