@@ -1,12 +1,16 @@
 ; FBuild 
 ;-------------------------------------------------------------------------------
 
+#import FASTBUILD_ROOT_DIR // INSIGHTFUL: Use ENVVAR for FastBuild location on system
+
 ;-------------------------------------------------------------------------------
 ; Windows Platform
 ;-------------------------------------------------------------------------------
-.VSBasePath			= '../External/SDK/VS13.4'
-.WindowsSDKBasePath	= '../External/SDK/Windows8.1'
-.ClangBasePath		= '../External/SDK/ClangForWindows/3.7.1'
+.VSBasePath			= '$FASTBUILD_ROOT_DIR$/External/VS14.0'
+.WindowsSDKBasePath	= '$FASTBUILD_ROOT_DIR$/External/Windows8.1'
+.UCRTBaseIncPath	= '$FASTBUILD_ROOT_DIR$/External/Windows10/Include/10.0.10586.0/ucrt'
+.UCRTBaseLibPath	= '$FASTBUILD_ROOT_DIR$/External/Windows10/Lib/10.0.10586.0/ucrt'
+.ClangBasePath		= '$FASTBUILD_ROOT_DIR$/External/LLVM'
 
 ;-------------------------------------------------------------------------------
 ; Settings
@@ -35,19 +39,17 @@ Compiler( 'Compiler-x86' )
 	.Root		= '$VSBasePath$\VC\bin'
 	.Executable	= '$Root$\cl.exe'
 	.ExtraFiles = { '$Root$\c1.dll'
-					'$Root$\c1ast.dll',
 					'$Root$\c1xx.dll',
-					'$Root$\c1xxast.dll',
 					'$Root$\c2.dll',
-					'$Root$\msobj120.dll'
-					'$Root$\mspdb120.dll'
+					'$Root$\msobj140.dll'
+					'$Root$\mspdb140.dll'
 					'$Root$\mspdbsrv.exe'
 					'$Root$\mspdbcore.dll'
-					'$Root$\mspft120.dll'
+					'$Root$\mspft140.dll'
 					'$Root$\1033\clui.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcp120.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\vccorlib120.dll'
+					'$VSBasePath$\VC\redist\x86\Microsoft.VC140.CRT\msvcp140.dll'
+					'$VSBasePath$\VC\redist\x86\Microsoft.VC140.CRT\vcruntime140.dll'
+					'$VSBasePath$\VC\redist\x86\Microsoft.VC140.CRT\vccorlib140.dll'
 				  }
 }
 Compiler( 'Compiler-x64' )
@@ -55,19 +57,17 @@ Compiler( 'Compiler-x64' )
 	.Root		= '$VSBasePath$\VC\bin'
 	.Executable	= '$Root$\x86_amd64\cl.exe'
 	.ExtraFiles = { '$Root$\x86_amd64\c1.dll'
-					'$Root$\x86_amd64\c1ast.dll',
 					'$Root$\x86_amd64\c1xx.dll',
-					'$Root$\x86_amd64\c1xxast.dll',
 					'$Root$\x86_amd64\c2.dll',
 					'$Root$\x86_amd64\1033\clui.dll'
-					'$Root$\msobj120.dll'
-					'$Root$\mspdb120.dll'
+					'$Root$\msobj140.dll'
+					'$Root$\mspdb140.dll'
 					'$Root$\mspdbsrv.exe'
 					'$Root$\mspdbcore.dll'
-					'$Root$\mspft120.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcp120.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\vccorlib120.dll'
+					'$Root$\mspft140.dll'
+					'$VSBasePath$\VC\redist\x64\Microsoft.VC140.CRT\msvcp140.dll'
+					'$VSBasePath$\VC\redist\x64\Microsoft.VC140.CRT\vcruntime140.dll'
+					'$VSBasePath$\VC\redist\x64\Microsoft.VC140.CRT\vccorlib140.dll'
 				  }
 }
 Compiler( 'Compiler-x86Clang' )
@@ -112,8 +112,13 @@ Compiler( 'Compiler-x64-OSX' )
 	.PCHOptions				= .CompilerOptions
 							+ ' /Fp"%2" /Fo"%3"'
 	.CompilerOptions		+ ' /Fo"%2"'
-	.LibrarianOptions		= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
-	.LinkerOptions			= '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+
+// INSIGHTFUL: we want to try without /nodefaultlib
+	.LibrarianOptions		= '/NODEFAULTLIB:libcmtd /WX /NOLOGO /OUT:"%2" "%1"'
+	.LinkerOptions			= '/NODEFAULTLIB:libcmtd /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+
+//	.LibrarianOptions		= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
+//	.LinkerOptions			= '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
 
 	// Optimizations
 	.CompilerDebugOptimizations		= ' /MTd /Od /RTC1 /GS /Oy- /GR- /analyze'
@@ -127,6 +132,8 @@ Compiler( 'Compiler-x64-OSX' )
 							+ ' /I"$VSBasePath$/VC/include/"'
 							+ ' /I"$WindowsSDKBasePath$/include/um"'
 							+ ' /I"$WindowsSDKBasePath$/include/shared"'
+							+ ' /I"$UCRTBaseIncPath$"'
+
 	.CompilerOptions		+ .BaseIncludePaths
 	.PCHOptions				+ .BaseIncludePaths
 
@@ -150,7 +157,7 @@ Compiler( 'Compiler-x64-OSX' )
 							+ ' /DWIN32'
 	.LinkerOptions			+ ' /MACHINE:X86'
 	.Platform				= 'x86'
-	.LinkerOptions			+ ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib"'
+	.LinkerOptions			+ ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib" /LIBPATH:"$UCRTBaseLibPath$/x86"'
 ]
 .X86DebugConfig =
 [
@@ -204,7 +211,7 @@ Compiler( 'Compiler-x64-OSX' )
 	.PCHOptions				+ ' /DWIN64'
 	.LinkerOptions			+ ' /MACHINE:X64'
 	.Platform				= 'x64'
-	.LinkerOptions			+ ' /LIBPATH:"$WindowsLibPaths$/x64" /LIBPATH:"$VSBasePath$/VC/lib/amd64"'
+	.LinkerOptions			+ ' /LIBPATH:"$WindowsLibPaths$/x64" /LIBPATH:"$VSBasePath$/VC/lib/amd64" /LIBPATH:"$UCRTBaseLibPath$/x64"'
 ]
 .X64DebugConfig =
 [
@@ -263,6 +270,7 @@ Compiler( 'Compiler-x64-OSX' )
 							+ ' -I"$VSBasePath$/VC/include/"'
 							+ ' -I"$WindowsSDKBasePath$/include/um"'
 							+ ' -I"$WindowsSDKBasePath$/include/shared"'
+							+ ' -I"$UCRTBaseIncPath$"'
 
                             // defines
 							+ ' -D"WIN32_LEAN_AND_MEAN" -D_WIN32 -D__WINDOWS__'
@@ -271,7 +279,8 @@ Compiler( 'Compiler-x64-OSX' )
 
                             // x86
                             + ' -m32'
-							+ ' -D"_X86_=1" -D_M_IX86'
+// INSIGHTFUL: Removed this define because it's a duplicate with something defined in a header.
+//							+ ' -D"_X86_=1" -D_M_IX86'
 							+ ' -D"_INTEGRAL_MAX_BITS=64"'
 
 							// MS compatibility
@@ -287,6 +296,8 @@ Compiler( 'Compiler-x64-OSX' )
 							+ ' -Wno-unused-value'          // expression result unused [-Wunused-value]
 							+ ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
                             + ' -Wno-incompatible-ms-struct'    // ms_struct may not produce MSVC-compatible layouts for classes with base classes or virtual functions [-Wincompatible-ms-struct]
+							+ ' -Wno-invalid-token-paste' // INSIGHTFUL: winsock invalid nested #define
+							+ ' -Wno-deprecated-declarations' // INSIGHTFUL: use winsock deprecated functions
 
 							// Fires on our new/delete operator (Clang bug?)
 							+ ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
@@ -304,8 +315,10 @@ Compiler( 'Compiler-x64-OSX' )
 	.PCHOptions				= .CompilerOptions // TODO: Configure this properly
 
 	.LibrarianOptions		= 'rc "%2" "%1"' // NOTE: output must come first
-	.LinkerOptions			= '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
-							+ ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib"'
+// INSIGHTFUL: We want to try without /NODEFAULTLIB
+//	.LinkerOptions			= '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+	.LinkerOptions			= '/WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+							+ ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib" /LIBPATH:"$UCRTBaseLibPath$/x86"'
 							+ ' /MACHINE:X86'
 
 	.Platform				= 'x86Clang'
@@ -642,7 +655,7 @@ ForEach( .Platform in .Platforms )
     Alias( 'All' )
     {
         .Targets		= { 'All-x86',
-                            'All-x86Clang',
+//                          'All-x86Clang', // INSIGHTFUL: Turn off LLVM for now.
                             'All-x64'
                           }
     }
