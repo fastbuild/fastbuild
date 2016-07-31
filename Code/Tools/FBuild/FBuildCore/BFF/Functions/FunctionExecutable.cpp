@@ -250,6 +250,15 @@ bool FunctionExecutable::DependOnNode( const BFFIterator & iter, Node * node, De
 {
 	ASSERT( node );
 
+	// !! HACK: INSIGHTFUL CHANGE FOR UE4: an external executable ?
+	if (node->GetType() == Node::EXE_NODE)
+	{
+		// depend on node - will use exe output at build time
+		nodes.Append(Dependency(node));
+		return true;
+	}
+	// !! END HACK: INSIGHTFUL CHANGE FOR UE4: an external executable ?
+	
 	// a previously declared library?
 	if ( node->GetType() == Node::LIBRARY_NODE )
 	{
