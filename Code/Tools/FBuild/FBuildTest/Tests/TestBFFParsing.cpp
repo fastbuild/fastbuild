@@ -35,6 +35,10 @@ private:
 	void Struct_Unterminated() const;
 	void IncludeScope() const;
 	void IfDirective() const;
+	void ElseDirective() const;
+	void ElseDirective_Bad() const;
+	void ElseDirective_Bad2() const;
+	void InvalidDirective() const;
 	void DefineUndefineDirectives() const;
 	void BadDefineDirective() const;
 	void BadUndefDirective() const;
@@ -68,6 +72,10 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
 	REGISTER_TEST( Struct_Unterminated )
 	REGISTER_TEST( IncludeScope )
 	REGISTER_TEST( IfDirective )
+	REGISTER_TEST( ElseDirective )
+	REGISTER_TEST( ElseDirective_Bad )
+	REGISTER_TEST( ElseDirective_Bad2 )
+	REGISTER_TEST( InvalidDirective )
 	REGISTER_TEST( DefineUndefineDirectives )
 	REGISTER_TEST( BadDefineDirective )
 	REGISTER_TEST( BadUndefDirective )
@@ -223,6 +231,34 @@ void TestBFFParsing::IncludeScope() const
 void TestBFFParsing::IfDirective() const
 {
 	Parse( "Data/TestBFFParsing/if_directive.bff" );
+}
+
+// ElseDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective() const
+{
+	Parse( "Data/TestBFFParsing/else_directive.bff" );
+}
+
+// ElseDirective_Bad
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad() const
+{
+	Parse( "Data/TestBFFParsing/else_directive_bad.bff", true ); // Expect failure
+}
+
+// ElseDirective_Bad2
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad2() const
+{
+	Parse( "Data/TestBFFParsing/else_directive_bad2.bff", true ); // Expect failure
+}
+
+// InvalidDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::InvalidDirective() const
+{
+	Parse( "Data/TestBFFParsing/invalid_directive.bff", true ); // Expect failure
 }
 
 // DefineUndefineDirectives

@@ -1,0 +1,10 @@
+//
+// else directive
+//
+
+#define TOGGLE
+
+#if TOGGLE
+#else
+#else
+#endif

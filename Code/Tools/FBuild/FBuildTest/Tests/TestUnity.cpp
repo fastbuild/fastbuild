@@ -34,6 +34,7 @@ private:
 	void TestCompile_NoRebuild() const;
 	void TestGenerateFromExplicitList() const;
 	void TestExcludedFiles() const;
+	void IsolateFromUnity_Regression() const;
 };
 
 // Register Tests
@@ -45,6 +46,7 @@ REGISTER_TESTS_BEGIN( TestUnity )
 	REGISTER_TEST( TestCompile_NoRebuild )	// check nothing rebuilds
 	REGISTER_TEST( TestGenerateFromExplicitList ) // create a unity with manually provided files
 	REGISTER_TEST( TestExcludedFiles )		// Ensure files are correctly excluded
+	REGISTER_TEST( IsolateFromUnity_Regression )
 REGISTER_TESTS_END
 
 // BuildGenerate
@@ -234,6 +236,22 @@ void TestUnity::TestExcludedFiles() const
 
 		TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePathRelative" ) ) );
 	}
+}
+
+// IsolateFromUnity_Regression
+//------------------------------------------------------------------------------
+void TestUnity::IsolateFromUnity_Regression() const
+{
+	// There was a crash when a Unity was:
+	// - Using an explicit list of files
+	// - UnityInputIsolateWritableFiles was enabled
+	// - the files were writable
+
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestUnity/IsolateFromUnity/fbuild.bff";
+	FBuild fBuild( options );
+	TEST_ASSERT( fBuild.Initialize() );
+	TEST_ASSERT( fBuild.Build( AStackString<>( "Compile" ) ) );
 }
 
 //------------------------------------------------------------------------------

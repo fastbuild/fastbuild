@@ -77,6 +77,7 @@ private:
 	uint32_t m_MaxIsolatedFiles;
 	Array< AString > m_ExcludePatterns;
 	Array< FileAndOrigin > m_IsolatedFiles;
+	Array< AString > m_PreBuildDependencyNames;
 
 	// Temporary data
 	Array< AString > m_UnityFileNames;

@@ -39,6 +39,7 @@ REFLECT_BEGIN( UnityNode, Node, MetaNone() )
 	REFLECT( m_MaxIsolatedFiles,		"UnityInputIsolateWritableFilesLimit",	MetaOptional() + MetaRange( 0, 1048576 ) )
 	REFLECT( m_IsolateWritableFiles,	"UnityInputIsolateWritableFiles",		MetaOptional() )
 	REFLECT( m_PrecompiledHeader,		"UnityPCH",								MetaOptional() + MetaFile( true ) ) // relative
+	REFLECT_ARRAY( m_PreBuildDependencyNames,	"PreBuildDependencies",			MetaOptional() + MetaFile() )
 REFLECT_END( UnityNode )
 
 // CONSTRUCTOR
@@ -68,6 +69,19 @@ UnityNode::UnityNode()
 //------------------------------------------------------------------------------
 bool UnityNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
+	// Pre-build dependencies
+	if ( !m_PreBuildDependencyNames.IsEmpty() )
+	{
+		m_PreBuildDependencies.SetCapacity( m_PreBuildDependencyNames.GetSize() );
+		for ( const AString & preDepName : m_PreBuildDependencyNames )
+		{
+			if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preDepName, m_PreBuildDependencies, true, true, true ) )
+			{
+				return false; // GetNodeList will have emitted an error
+			}
+		}
+	}
+
 	Dependencies dirNodes( m_InputPaths.GetSize() );
 	if ( !function->GetDirectoryListNodeList( nodeGraph, iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
 	{

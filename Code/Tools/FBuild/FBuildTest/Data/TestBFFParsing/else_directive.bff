@@ -1,0 +1,36 @@
+//
+// else directive
+//
+
+#define TOGGLE
+
+// Regular
+#if TOGGLE
+	// Ok
+#else
+	#error
+#endif
+
+// Inverted
+#if !TOGGLE
+	#error
+#else
+	// Ok
+#endif
+
+// Nested
+#if TOGGLE
+	#if TOGGLE
+		#if TOGGLE
+			// Ok
+		#else
+			#error
+		#endif
+	#endif
+#endif
+
+// Ignore invalid #elses inside disabled block
+#if !TOGGLE
+#else
+#else
+#endif

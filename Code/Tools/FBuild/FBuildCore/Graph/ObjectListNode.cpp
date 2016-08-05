@@ -194,7 +194,8 @@ ObjectListNode::~ObjectListNode()
 				}
 
 				// create the object that will compile the above file
-				if ( CreateDynamicObjectNode( nodeGraph, n, it->GetDirListOrigin()->GetPath(), false, true ) == false )
+				const AString & baseDir = it->GetDirListOrigin() ? it->GetDirListOrigin()->GetPath() : AString::GetEmpty();
+				if ( CreateDynamicObjectNode( nodeGraph, n, baseDir, false, true ) == false )
 				{
 					return false; // CreateDynamicObjectNode will have emitted error
 				}

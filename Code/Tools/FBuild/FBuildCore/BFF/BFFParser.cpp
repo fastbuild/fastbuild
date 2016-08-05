@@ -40,6 +40,13 @@ BFFParser::BFFParser( NodeGraph & nodeGraph )
 , m_LastVarFrame( nullptr )
 , m_NodeGraph( nodeGraph )
 {
+	// To be able to run multiple tests in the same process, where
+	// some of those tests fail to parse, we need to reset the If Depth
+	if ( s_Depth == 0 )
+	{
+		s_IfDepth = 0;
+	}
+
 	++s_Depth;
 }
 
@@ -722,6 +729,10 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 	{
 		return ParseIfDirective( directiveStart, iter );
 	}
+	else if ( directive == "else" )
+	{
+		return ParseElseDirective( directiveStartIter, iter );
+	}
 	else if ( directive == "endif" )
 	{
 		return ParseEndIfDirective( directiveStartIter );
@@ -945,6 +956,29 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
 		return true; // continue parsing like normal
 	}
 
+	const bool allowElse = true; // also accept else
+	return ParseToEndIf( iter, allowElse );
+}
+
+// ParseElseDirective
+//------------------------------------------------------------------------------
+bool BFFParser::ParseElseDirective( const BFFIterator& directiveStart, BFFIterator & iter )
+{
+	// If we hit an alse but we're not in an if
+	if ( s_IfDepth == 0 )
+	{
+		Error::Error_1041_ElseWithoutIf( directiveStart );
+		return false;
+	}
+
+	const bool allowElse = false; // can't have another else
+	return ParseToEndIf( iter, allowElse );
+}
+
+// ParseToEndIf
+//------------------------------------------------------------------------------
+bool BFFParser::ParseToEndIf( BFFIterator& iter, bool allowElse )
+{
 	// Advance iterator past entire #if block
 	size_t depth = 1; // handle nested ifs
 	while ( depth > 0 )
@@ -952,7 +986,6 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
 		// did we hit the end of the file?
 		if ( iter.IsAtEnd() )
 		{
-			(void)directiveStart; // TODO: Show we're looking for matching endif to this
 			Error::Error_1012_UnexpectedEndOfFile( iter ); // TODO:B better error for this?
 			return false;
 		}
@@ -977,6 +1010,15 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
 			else if ( directiveName == "if" )
 			{
 				++depth;
+			}
+			else if ( ( depth == 1 ) && ( directiveName == "else" ) )
+			{
+				if ( allowElse == false )
+				{
+					Error::Error_1041_ElseWithoutIf( directiveNameStart );
+					return false;
+				}
+				break; // continue processing else portion
 			}
 
 			// continue to skip rest of line....
