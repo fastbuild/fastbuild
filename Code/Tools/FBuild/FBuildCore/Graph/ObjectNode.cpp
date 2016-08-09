@@ -16,6 +16,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Compressor.h"
+#include "Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ToolManifest.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
@@ -64,6 +65,7 @@ ObjectNode::ObjectNode( const AString & objectName,
 , m_Flags( flags )
 , m_CompilerArgs( compilerArgs )
 , m_CompilerArgsDeoptimized( compilerArgsDeoptimized )
+, m_PCHCacheKey( 0 )
 , m_CompilerForceUsing( compilerForceUsing )
 , m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
 , m_DeoptimizeWritableFilesWithToken( deoptimizeWritableFilesWithToken )
@@ -179,16 +181,16 @@ ObjectNode::~ObjectNode()
 	}
 	if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
 	{
-		AStackString<> pchObj( GetName() );
-		pchObj += GetObjExtension();
-		if ( FileIO::FileExists( pchObj.Get() ) )
+		if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
 		{
-			if ( FileIO::FileDelete( pchObj.Get() ) == false )
+			if ( FileIO::FileDelete( m_PCHObjectFileName.Get() ) == false )
 			{
-				FLOG_ERROR( "Failed to delete file before build '%s'", GetName().Get() );
+				FLOG_ERROR( "Failed to delete file before build '%s'", m_PCHObjectFileName.Get() );
 				return NODE_RESULT_FAILED;
 			}
 		}
+
+		m_PCHCacheKey = 0; // Will be set correctly if we end up using the cache
 	}
 
 	// using deoptimization?
@@ -404,11 +406,16 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 
 		if ( GetFlag( FLAG_MSVC ) )
 		{
-			// If building a distributable/cacheable job locally, and
-			// we are not going to write it to the cache, then we should
-			// use the PCH as it will be much faster
-			if ( GetFlag( FLAG_USING_PCH ) &&
-				 ( FBuild::Get().GetOptions().m_UseCacheWrite == false ) )
+			// If using the PCH, we can't use the preprocessed output
+			// as that's incompatible with the PCH
+			if ( GetFlag( FLAG_USING_PCH ) )
+			{
+				usePreProcessedOutput = false;
+			}
+
+			// If creating the PCH, we can't use the preprocessed info
+			// as this would prevent acceleration by users of the PCH
+			if ( GetFlag( FLAG_CREATING_PCH ) )
 			{
 				usePreProcessedOutput = false;
 			}
@@ -678,6 +685,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 	NODE_LOAD_NODE( CompilerNode, preprocessor );
     NODE_LOAD( AStackString<>, 	preprocessorArgs );
     NODE_LOAD( uint32_t, 		preprocessorFlags );
+	NODE_LOAD( AStackString<>,	pchObjectFileName );
+	NODE_LOAD( uint64_t,		pchCacheKey );
 
 	// we are making inferences from the size of the staticDeps
 	// ensure we catch if those asumptions break
@@ -696,6 +705,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 	ObjectNode * objNode = on->CastTo< ObjectNode >();
 	objNode->m_DynamicDependencies.Swap( dynamicDeps );
 	objNode->m_ObjExtensionOverride = objExtensionOverride;
+	objNode->m_PCHObjectFileName = pchObjectFileName;
+	objNode->m_PCHCacheKey = pchCacheKey;
 
 	return objNode;
 }
@@ -824,11 +835,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 		// 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
 		// statements are truncated
 		// 2) code consuming the windows runtime cannot be distributed due to preprocessing weirdness
-		// 3) pch files are machine specific
+		// 3) pch files can't be built from preprocessed output (disabled acceleration), so can't be distributed
 		// 4) user only wants preprocessor step executed
-		if ( !usingCLR && !usingPreprocessorOnly && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
+		if ( !usingCLR && !usingPreprocessorOnly )
 		{
-			if ( isDistributableCompiler && !usingWinRT )
+			if ( isDistributableCompiler && !usingWinRT && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
 			{
 				flags |= ObjectNode::FLAG_CAN_BE_DISTRIBUTED;
 			}
@@ -887,6 +898,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 	NODE_SAVE_NODE( m_PreprocessorNode );
     NODE_SAVE( m_PreprocessorArgs );
     NODE_SAVE( m_PreprocessorFlags );
+	NODE_SAVE( m_PCHObjectFileName );
+	NODE_SAVE( m_PCHCacheKey );
 }
 
 // SaveRemote
@@ -1006,8 +1019,16 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 	// ToolChain hash
 	uint64_t c = GetCompiler()->CastTo< CompilerNode >()->GetManifest().GetToolId();
 
+	// PCH dependency
+	uint64_t d = 0;
+	if ( GetFlag( FLAG_USING_PCH ) && GetFlag( FLAG_MSVC ) )
+	{
+		d = m_PCHNode->CastTo< ObjectNode >()->m_PCHCacheKey;
+		ASSERT( d != 0 ); // Should not be in here if PCH is not cached
+	}
+
 	AStackString<> cacheName;
-	FBuild::Get().GetCacheFileName( a, b, c, cacheName );
+	FBuild::Get().GetCacheFileName( a, b, c, d, cacheName );
 	job->SetCacheName(cacheName);
 
 	FLOG_INFO( "Cache hash: %u ms - %u kb '%s'\n", 
@@ -1049,22 +1070,16 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 			const void * data = c.GetResult();
 			const size_t dataSize = c.GetResultSize();
 
-			FileStream objFile;
-			if ( !objFile.Open( m_Name.Get(), FileStream::WRITE_ONLY ) )
-			{
-				cache->FreeMemory( cacheData, cacheDataSize );
-				FLOG_ERROR( "Failed to open local file during cache retrieval '%s'", m_Name.Get() );
-				return false;
-			}
+			MultiBuffer buffer( data, dataSize );
 
-			if ( objFile.Write( data, dataSize ) != dataSize )
-			{
-				cache->FreeMemory( cacheData, cacheDataSize );
-				FLOG_ERROR( "Failed to write to local file during cache retrieval '%s'", m_Name.Get() );
-				return false;
-			}
+			Array< AString > fileNames( 2, false );
+			fileNames.Append( m_Name );
 
-			cache->FreeMemory( cacheData, cacheDataSize );
+			AStackString<> extraFile;
+			if ( GetExtraCacheFilePath( job, extraFile ) )
+			{
+				fileNames.Append( extraFile );
+			}
 
 			// Get current "system time" and convert to "file time"
 			#if defined( __WINDOWS__ )
@@ -1077,20 +1092,37 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 					return false;
 				}
 				uint64_t fileTimeNow = ( (uint64_t)ft.dwLowDateTime | ( (uint64_t)ft.dwHighDateTime << 32 ) );
-                const bool timeSetOK = objFile.SetLastWriteTime( fileTimeNow );
-			#elif defined( __APPLE__ ) || defined( __LINUX__ )
-                const bool timeSetOK = ( utimes( m_Name.Get(), nullptr ) == 0 );
 			#endif
-	
-			// set the time on the local file
-            if ( timeSetOK == false )
+
+			// Extract the files
+			const size_t numFiles = fileNames.GetSize();
+			for ( size_t i=0; i<numFiles; ++i )
 			{
-				FLOG_ERROR( "Failed to set timestamp on file after cache hit '%s' (%u)", m_Name.Get(), Env::GetLastErr() );
-				return false;
+				if ( !buffer.ExtractFile( i, fileNames[ i ] ) )
+				{
+					cache->FreeMemory( cacheData, cacheDataSize );
+					FLOG_ERROR( "Failed to write local file during cache retrieval '%s'", fileNames[ i ].Get() );
+					return false;
+				}
+
+				// Get current "system time" and convert to "file time"
+				#if defined( __WINDOWS__ )
+					const bool timeSetOK = FileIO::SetFileLastWriteTime( fileNames[ i ], fileTimeNow );
+				#elif defined( __APPLE__ ) || defined( __LINUX__ )
+					const bool timeSetOK = ( utimes( fileNames[ i ].Get(), nullptr ) == 0 );
+				#endif
+
+				// set the time on the local file
+				if ( timeSetOK == false )
+				{
+					cache->FreeMemory( cacheData, cacheDataSize );
+					FLOG_ERROR( "Failed to set timestamp on file after cache hit '%s' (%u)", fileNames[ i ].Get(), Env::GetLastErr() );
+					return false;
+				}
 			}
 
-			objFile.Close();
-
+			cache->FreeMemory( cacheData, cacheDataSize );
+	
 			FileIO::WorkAroundForWindowsFilePermissionProblem( m_Name );
 
 			// the file time we set and local file system might have different 
@@ -1100,6 +1132,13 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 			FLOG_INFO( "Cache hit: %u ms '%s'\n", uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
 			FLOG_BUILD( "Obj: %s <CACHE>\n", GetName().Get() );
 			SetStatFlag( Node::STATS_CACHE_HIT );
+
+			// Dependent objects need to know the PCH key to be able to pull from the cache
+			if ( GetFlag( FLAG_CREATING_PCH ) )
+			{
+				m_PCHCacheKey = xxHash::Calc64( cacheFileName.Get(), cacheFileName.GetLength() );
+			}
+
 			return true;
 		}
 	}
@@ -1127,33 +1166,59 @@ void ObjectNode::WriteToCache( Job * job )
 	ASSERT( cache );
 	if ( cache )
 	{
-		// open the compiled object which we want to store to the cache
-		FileStream objFile;
-		if ( objFile.Open( m_Name.Get(), FileStream::READ_ONLY ) )
-		{
-			// read obj all into memory
-			const size_t objFileSize = (size_t)objFile.GetFileSize();
-			AutoPtr< char > mem( (char *)ALLOC( objFileSize ) );
-			if ( objFile.Read( mem.Get(), objFileSize ) == objFileSize )
-			{
-				// try to compress
-				Compressor c;
-				c.Compress( mem.Get(), objFileSize );
-				const void * data = c.GetResult();
-				const size_t dataSize = c.GetResultSize();
+		Array< AString > fileNames( 2, false );
+		fileNames.Append( m_Name );
 
-				if ( cache->Publish( cacheFileName, data, dataSize ) )
+		AStackString<> extraFile;
+		if ( GetExtraCacheFilePath( job, extraFile ) )
+		{
+			fileNames.Append( extraFile );
+		}
+
+		MultiBuffer buffer;
+		if ( buffer.CreateFromFiles( fileNames ) )
+		{
+			// try to compress
+			Compressor c;
+			c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize() );
+			const void * data = c.GetResult();
+			const size_t dataSize = c.GetResultSize();
+
+			if ( cache->Publish( cacheFileName, data, dataSize ) )
+			{
+				// cache store complete
+				FLOG_INFO( "Cache store: %u ms '%s'\n", uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+				SetStatFlag( Node::STATS_CACHE_STORE );
+
+				// Dependent objects need to know the PCH key to be able to pull from the cache
+				if ( GetFlag( FLAG_CREATING_PCH ) )
 				{
-					// cache store complete
-					FLOG_INFO( "Cache store: %u ms '%s'\n", uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
-					SetStatFlag( Node::STATS_CACHE_STORE );
-					return;
+					m_PCHCacheKey = xxHash::Calc64( cacheFileName.Get(), cacheFileName.GetLength() );
 				}
+				return;
 			}
 		}
 	}
 
 	FLOG_INFO( "Cache store fail: %u ms '%s'\n", uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+}
+
+// GetExtraCacheFilePath
+//------------------------------------------------------------------------------
+bool ObjectNode::GetExtraCacheFilePath( const Job * job, AString & extraFileName ) const
+{
+	const Node * node = job->GetNode();
+	if ( node->GetType() == Node::OBJECT_NODE )
+	{
+		const ObjectNode * objectNode = node->CastTo< ObjectNode >();
+		if ( objectNode->GetFlag( ObjectNode::FLAG_MSVC ) &&
+			 objectNode->GetFlag( ObjectNode::FLAG_CREATING_PCH ) )
+		{
+			extraFileName = m_PCHObjectFileName;
+			return true;
+		}
+	}
+	return false;
 }
 
 // EmitCompilationMessage
@@ -1371,13 +1436,22 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 			}
 		}
 
-		if ( pass == PASS_PREPROCESSOR_ONLY )
+		if ( isMSVC )
 		{
-			//Strip /ZW
-			if ( StripToken( "/ZW", token ) )
+			if ( pass == PASS_PREPROCESSOR_ONLY )
 			{
-				fullArgs += "/D__cplusplus_winrt ";
-				continue;
+				//Strip /ZW
+				if ( StripToken( "/ZW", token ) )
+				{
+					fullArgs += "/D__cplusplus_winrt ";
+					continue;
+				}
+
+				// Strip /Yc (pch creation)
+				if ( StripTokenWithArg( "/Yc", token, i ) )
+				{
+					continue;
+				}
 			}
 		}
 
@@ -1418,8 +1492,8 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 			{
 				// handle /Option:%3 -> /Option:A
 				fullArgs += AStackString<>( token.Get(), found );
-				fullArgs += m_Name;
-				fullArgs += GetObjExtension(); // convert 'PrecompiledHeader.pch' to 'PrecompiledHeader.pch.obj'
+				ASSERT( m_PCHObjectFileName.IsEmpty() == false ); // Should have been populated
+				fullArgs += m_PCHObjectFileName;
 				fullArgs += AStackString<>( found + 2, token.GetEnd() );
 				fullArgs.AddDelimiter();
 				continue;
@@ -2009,6 +2083,15 @@ bool ObjectNode::ShouldUseCache() const
 	{
 		// disable caching for locally modified files (since they will rarely if ever get a hit)
 		useCache = false;
+	}
+	if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_USING_PCH ) )
+	{
+		// If the PCH is not in the cache, then no point looking there
+		// for objects and also no point storing them
+		if ( m_PCHNode->CastTo< ObjectNode >()->m_PCHCacheKey == 0 )
+		{
+			return false;
+		}
 	}
 	return useCache;
 }

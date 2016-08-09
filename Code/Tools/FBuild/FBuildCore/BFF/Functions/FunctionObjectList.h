@@ -41,7 +41,8 @@ protected:
 									  bool deoptimizeWritableFiles,
 									  bool deoptimizeWritableFilesWithToken,
 									  bool allowDistribution,
-									  bool allowCaching ) const;
+									  bool allowCaching,
+									  const AString & compilerOutputExtension ) const;
 	bool 	GetInputs( NodeGraph & nodeGraph, const BFFIterator & iter, Dependencies & inputs ) const;
 	void	GetExtraOutputPaths( const AString & args, AString & pdbPath, AString & asmPath ) const;
 	void	GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path ) const;

@@ -22,6 +22,8 @@ public:
 	inline void *		GetDataMutable() { return (void *)m_Begin; }
 	inline size_t		GetSize() const { return ( m_End - m_Begin ); } 
 
+	uint64_t			WriteBuffer( IOStream & stream, uint64_t bytesToWrite );
+
 	// raw read/write functions
 	virtual uint64_t ReadBuffer( void * buffer, uint64_t bytesToRead );
 	virtual uint64_t WriteBuffer( const void * buffer, uint64_t bytesToWrite );

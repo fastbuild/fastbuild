@@ -60,7 +60,7 @@ public:
 	const AString & GetCachePluginDLL() const { return m_CachePluginDLL; }
 	void SetCachePluginDLL( const AString & plugin ) { m_CachePluginDLL = plugin; }
 
-	void GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC,
+	void GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD,
 						   AString & path ) const;
 
 	void SetWorkerList( const Array< AString > & workers )		{ m_WorkerList = workers; }

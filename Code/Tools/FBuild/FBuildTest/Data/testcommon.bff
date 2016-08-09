@@ -63,6 +63,12 @@
 //==============================================================================
 .ClangPath				= '..\..\..\..\External\SDK\ClangForWindows\3.4'
 //.ClangPath			= 'C:\Program Files (x86)\LLVM'
+.WindowsClangToolChain =
+[
+	.Compiler			= '$ClangPath$\bin\clang++.exe'
+	.CompilerOptions	= '-c -g %1 -o "%2" -integrated-as'
+						+ ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+]
 
 //==============================================================================
 // Linux GCC
@@ -140,6 +146,7 @@
 //==============================================================================
 // Standard Environment
 //==============================================================================
+.StandardOutputBase			= '../../../../tmp'
 .StandardEnvironment =
 [
     #if __WINDOWS__
@@ -160,5 +167,5 @@
     #endif
 
 	// Default location for tmp files
-	.Out		= "../../../../tmp"
+	.Out		= .StandardOutputBase
 ]

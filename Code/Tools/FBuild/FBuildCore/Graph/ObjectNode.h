@@ -112,6 +112,7 @@ private:
 	const AString & GetCacheName( Job * job ) const;
 	bool RetrieveFromCache( Job * job );
 	void WriteToCache( Job * job );
+	bool GetExtraCacheFilePath( const Job * job, AString & extraFileName ) const;
 
 	void HandleWarningsMSCL( Job* job, const char * data, uint32_t dataSize ) const;
 
@@ -143,6 +144,8 @@ private:
 	friend class Client;
 	bool ShouldUseCache() const;
 	bool CanUseResponseFile() const;
+
+	friend class FunctionObjectList;
 
 	class CompileHelper
 	{
@@ -177,6 +180,8 @@ private:
 	AString m_CompilerArgs;
 	AString m_CompilerArgsDeoptimized;
 	AString m_ObjExtensionOverride;
+	AString m_PCHObjectFileName;
+	uint64_t m_PCHCacheKey;
 	Dependencies m_CompilerForceUsing;
 	bool m_DeoptimizeWritableFiles;
 	bool m_DeoptimizeWritableFilesWithToken;

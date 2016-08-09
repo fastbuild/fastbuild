@@ -29,6 +29,7 @@ private:
 	void Tokenize() const;
 	void PatternMatch() const;
 	void PatternMatchI() const;
+	void Trim() const;
 };
 
 // Register Tests
@@ -45,6 +46,7 @@ REGISTER_TESTS_BEGIN( TestAString )
 	REGISTER_TEST( Tokenize )
 	REGISTER_TEST( PatternMatch )
 	REGISTER_TEST( PatternMatchI )
+	REGISTER_TEST( Trim )
 REGISTER_TESTS_END
 
 // AStringConstructors
@@ -462,6 +464,41 @@ void TestAString::PatternMatchI() const
 	CHECK_MATCH( "*.cpp",	"",					false );
 
 	#undef CHECK_MATCH
+}
+
+// Trim
+//------------------------------------------------------------------------------
+void TestAString::Trim() const
+{
+	{
+		// No trim
+		AStackString<> empty;
+		empty.Trim( 0, 0 );
+	}
+
+	{
+		// Left trim
+		AStackString<> test( "zzHello" );
+		test.Trim( 2, 0 );
+		TEST_ASSERT( test.GetLength() == 5 );
+		TEST_ASSERT( test  == "Hello" );
+	}
+
+	{
+		// Right trim
+		AStackString<> test( "Hellozz" );
+		test.Trim( 0, 2 );
+		TEST_ASSERT( test.GetLength() == 5 );
+		TEST_ASSERT( test  == "Hello" );
+	}
+
+	{
+		// Trim left and right
+		AStackString<> test( "zzHellozz" );
+		test.Trim( 2, 2 );
+		TEST_ASSERT( test.GetLength() == 5 );
+		TEST_ASSERT( test  == "Hello" );
+	}
 }
 
 //------------------------------------------------------------------------------

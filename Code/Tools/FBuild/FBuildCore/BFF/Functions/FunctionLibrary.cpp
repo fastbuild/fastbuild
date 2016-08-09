@@ -116,7 +116,8 @@ FunctionLibrary::FunctionLibrary()
 
 	// Precompiled Header support
 	ObjectNode * precompiledHeaderNode = nullptr;
-	if ( !GetPrecompiledHeaderNode( nodeGraph, funcStartIter, compilerNode, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching ) )
+	AStackString<> compilerOutputExtensionStr( compilerOutputExtension ? compilerOutputExtension->GetString().Get() : ".obj" );
+	if ( !GetPrecompiledHeaderNode( nodeGraph, funcStartIter, compilerNode, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching, compilerOutputExtensionStr ) )
 	{
 		return false; // GetPrecompiledHeaderNode will have emitted error
 	}	

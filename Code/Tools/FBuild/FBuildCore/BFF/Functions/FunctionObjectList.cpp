@@ -109,7 +109,8 @@ FunctionObjectList::FunctionObjectList()
 
 	// Precompiled Header support
 	ObjectNode * precompiledHeaderNode = nullptr;
-	if ( !GetPrecompiledHeaderNode( nodeGraph, funcStartIter, compilerNode, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching ) )
+	AStackString<> compilerOutputExtensionStr( compilerOutputExtension ? compilerOutputExtension->GetString().Get() : ".obj" );
+	if ( !GetPrecompiledHeaderNode( nodeGraph, funcStartIter, compilerNode, compilerOptions, compilerForceUsing, precompiledHeaderNode, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching, compilerOutputExtensionStr ) )
 	{
 		return false; // GetPrecompiledHeaderNode will have emitted error
 	}	
@@ -293,7 +294,8 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( NodeGraph & nodeGraph,
 												   bool deoptimizeWritableFiles,
 												   bool deoptimizeWritableFilesWithToken,
 												   bool allowDistribution,
-												   bool allowCaching ) const
+												   bool allowCaching,
+												   const AString& compilerOutputExtension ) const
 {
 	const BFFVariable * pchInputFile = nullptr;
 	const BFFVariable * pchOutputFile = nullptr;
@@ -307,17 +309,13 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( NodeGraph & nodeGraph,
 
 	precompiledHeaderNode = nullptr;
 
+	AStackString<> pchObjectName;
+
 	if ( pchInputFile ) 
 	{
 		if ( !pchOutputFile || !pchOptions )
 		{
 			Error::Error_1300_MissingPCHArgs( iter, this );
-			return false;
-		}
-
-		AStackString<> pchOptionsDeoptimized;
-		if ( !GetString( iter, pchOptionsDeoptimized, ".PCHOptionsDeoptimized", ( deoptimizeWritableFiles || deoptimizeWritableFilesWithToken ) ) )
-		{
 			return false;
 		}
 
@@ -348,6 +346,28 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( NodeGraph & nodeGraph,
 		{
 			// sanity check arguments
 
+			// Find /Fo option to obtain pch object file name
+			Array< AString > tokens;
+			pchOptions->GetString().Tokenize( tokens );
+			for ( const AString & token : tokens )
+			{
+				if ( token.BeginsWithI( "/Fo" ) )
+				{
+					// Extract filename (and remove quotes if found)
+					pchObjectName = token.Get() + 3;
+					pchObjectName.Trim( pchObjectName.BeginsWith( '"' ) ? 1 : 0, pchObjectName.EndsWith( '"' ) ? 1 : 0 );
+
+					// Auto-generate name?
+					if ( pchObjectName == "%3" )
+					{
+						// example 'PrecompiledHeader.pch' to 'PrecompiledHeader.pch.obj'
+						pchObjectName = pchOutputFile->GetString();
+						pchObjectName += compilerOutputExtension;
+					}
+					break;
+				}
+			}
+
 			// PCH must have "Create PCH" (e.g. /Yc"PrecompiledHeader.h")
 			if ( pchOptions->GetString().Find( "/Yc" ) == nullptr )
 			{
@@ -361,7 +381,7 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( NodeGraph & nodeGraph,
 				return false;
 			}
 			// PCH must have object output option (e.g. /Fo"PrecompiledHeader.obj")
-			if ( pchOptions->GetString().Find( "/Fo" ) == nullptr )
+			if ( pchObjectName.IsEmpty() )
 			{
 				Error::Error_1302_MissingPCHCompilerOption( iter, this, "/Fo", "PCHOptions" );
 				return false;
@@ -381,13 +401,11 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( NodeGraph & nodeGraph,
 			}
 		}
 
-		// TODO:B Check PCHOptionsDeoptimized
-
 		precompiledHeaderNode = nodeGraph.CreateObjectNode( pchOutputFile->GetString(),
 													 pchInputNode,
 													 compilerNode,
 													 pchOptions->GetString(),
-													 pchOptionsDeoptimized,
+													 AString::GetEmpty(),
 													 nullptr,
 													 pchFlags,
 													 compilerForceUsing,
@@ -396,6 +414,7 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( NodeGraph & nodeGraph,
 												     allowDistribution,
 													 allowCaching,
                                                      nullptr, AString::GetEmpty(), 0 ); // preprocessor args not supported
+		precompiledHeaderNode->m_PCHObjectFileName = pchObjectName;
 	}
 
 	return true;
