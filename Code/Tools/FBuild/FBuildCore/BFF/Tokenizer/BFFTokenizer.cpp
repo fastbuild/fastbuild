@@ -38,7 +38,7 @@ namespace
     bool IsStringStart( const char c )      { return ( ( c == '\'' ) || ( c == '"') ); }
     bool IsVariableStart( const char c )    { return ( ( c == '.' ) || ( c == '^' ) ); }
     bool IsVariable( const char c )         { return IsUppercaseLetter( c ) || IsLowercaseLetter( c ) || IsNumber( c ) || IsUnderscore( c );  }
-    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) ); }
+    bool IsOperator( const char c )         { return ( ( c == '+' ) || ( c == '-' ) || ( c == '=' ) || ( c == '!' ) || ( c == '<' ) || ( c == '>' ) || (c == '?') ); }
     bool IsComma( const char c )            { return ( c == ',' ); }
     bool IsDirective( const char c )        { return ( c == '#' ); }
     void SkipWhitespace( const char * & pos )
