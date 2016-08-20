@@ -394,18 +394,6 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 		    {
 			    bool keep = true;
 
-			    // filter patterns
-			    const AString * pit = m_ExcludePatterns.Begin();
-			    const AString * const pend = m_ExcludePatterns.End();
-			    for ( ; pit != pend; ++pit )
-			    {
-				    if ( PathUtils::IsWildcardMatch( pit->Get(), filesIt->m_Name.Get() ) )
-				    {
-					    keep = false;
-					    break;
-				    }
-			    }
-
 				if ( keep && ( pchCPP.IsEmpty() == false ) )
 				{
 					if ( PathUtils::PathEndsWithFile( filesIt->m_Name, pchCPP ) )

@@ -39,6 +39,7 @@ Compiler
 CompilerForceUsing
 CompilerInputExcludedFiles
 CompilerInputExcludePath
+CompilerInputExcludePattern
 CompilerInputFiles
 CompilerInputPath
 CompilerInputPathRecurse
