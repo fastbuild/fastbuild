@@ -21,7 +21,8 @@ public:
 								const Array< AString > * patterns,
 								bool recursive,
 								const Array< AString > & excludePaths,
-                                const Array< AString > & filesToExclude );
+                                const Array< AString > & filesToExclude,
+                                const Array< AString > & excludePatterns );
 	virtual ~DirectoryListNode();
 
 	const AString & GetPath() const { return m_Path; }
@@ -36,6 +37,7 @@ public:
 							bool recursive,
 							const Array< AString > & excludePaths,
                             const Array< AString > & excludeFiles,
+                            const Array< AString > & excludePatterns,
 							AString & result );
 
 	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
@@ -48,6 +50,7 @@ private:
 	Array< AString > m_Patterns;
 	Array< AString > m_ExcludePaths;
     Array< AString > m_FilesToExclude;
+	Array< AString > m_ExcludePatterns;
 	bool m_Recursive;
 
 	Array< FileIO::FileInfo > m_Files;

@@ -42,3 +42,12 @@ ObjectList( 'ExcludeFilePathRelative' )
 	.CompilerInputExcludedFiles	= "../FBuildTest/Data/TestObjectList/Exclusions/ignore.cpp"
 	.CompilerOutputPath			+ 'ExcludeFilePathRelative/'
 }
+
+//
+// Exclude by file pattern
+//------------------------------------------------------------------------------
+ObjectList( 'ExcludeFilePattern' )
+{
+	.CompilerInputExcludePattern	= "*nore.cpp"
+	.CompilerOutputPath				+ 'ExcludeFilePattern/'
+}

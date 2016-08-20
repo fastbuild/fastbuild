@@ -125,6 +125,7 @@ void TestGraph::TestNodeTypes() const
                                                             &patterns,
                                                             false,
                                                             Array< AString >(),
+                                                            Array< AString >(),
                                                             Array< AString >() );
 	TEST_ASSERT( dn->GetType() == Node::DIRECTORY_LIST_NODE );
 	TEST_ASSERT( DirectoryListNode::GetTypeS() == Node::DIRECTORY_LIST_NODE );
@@ -273,6 +274,7 @@ void TestGraph::TestDirectoryListNode() const
 														   testFolder,
 														   &patterns,
 														   true,
+														   Array< AString >(),
 														   Array< AString >(),
 														   Array< AString >() );
 	TEST_ASSERT( ng.FindNode( name ) == node );

@@ -281,7 +281,7 @@ FunctionVCXProject::FunctionVCXProject()
 
 	// create all of the DirectoryListNodes we need
 	Dependencies dirNodes( inputPaths.GetSize() );
-	if ( !GetDirectoryListNodeList( nodeGraph, funcStartIter, inputPaths, Array< AString >(), Array< AString >(), true, &allowedFileExtensions, "ProjectInputPaths", dirNodes ) )
+	if ( !GetDirectoryListNodeList( nodeGraph, funcStartIter, inputPaths, Array< AString >(), Array< AString >(), Array< AString >(), true, &allowedFileExtensions, "ProjectInputPaths", dirNodes ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}

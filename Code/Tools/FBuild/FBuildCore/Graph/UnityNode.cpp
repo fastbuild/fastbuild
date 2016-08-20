@@ -83,7 +83,7 @@ bool UnityNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, con
 	}
 
 	Dependencies dirNodes( m_InputPaths.GetSize() );
-	if ( !function->GetDirectoryListNodeList( nodeGraph, iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
+	if ( !function->GetDirectoryListNodeList( nodeGraph, iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_ExcludePatterns, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}

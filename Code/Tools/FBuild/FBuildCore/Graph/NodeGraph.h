@@ -54,7 +54,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 87 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 88 };
 
 	bool IsValid() const
 	{
@@ -118,7 +118,8 @@ public:
 												 const Array< AString > * patterns,
 												 bool recursive,
                                                  const Array< AString > & excludePaths,
-                                                 const Array< AString > & filesToExclude
+                                                 const Array< AString > & filesToExclude,
+                                                 const Array< AString > & excludePatterns
                                                  );
 	LibraryNode *	CreateLibraryNode( const AString & libraryName,
 									   const Dependencies & inputNodes,

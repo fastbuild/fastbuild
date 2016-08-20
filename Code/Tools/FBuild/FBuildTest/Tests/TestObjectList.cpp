@@ -59,6 +59,13 @@ void TestObjectList::TestExcludedFiles() const
 
 		TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePathRelative" ) ) );
 	}
+
+	{
+		FBuild fBuild( options );
+		TEST_ASSERT( fBuild.Initialize() );
+
+		TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePattern" ) ) );
+	}
 }
 
 // ExtraOutputFolders

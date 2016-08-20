@@ -482,6 +482,12 @@ bool FunctionObjectList::GetInputs( NodeGraph & nodeGraph, const BFFIterator & i
         }
 	    CleanFileNames( filesToExclude );
 
+        Array< AString > excludePatterns;
+        if ( !GetStrings( iter, excludePatterns, ".CompilerInputExcludePattern", false ) ) // not required
+        {
+            return false; // GetStrings will have emitted an error
+        }
+
 		// Input paths
 		Array< AString > inputPaths;
 		if ( !GetFolderPaths( iter, inputPaths, ".CompilerInputPath", false ) )
@@ -490,7 +496,7 @@ bool FunctionObjectList::GetInputs( NodeGraph & nodeGraph, const BFFIterator & i
 		}
 
 		Dependencies dirNodes( inputPaths.GetSize() );
-		if ( !GetDirectoryListNodeList( nodeGraph, iter, inputPaths, excludePaths, filesToExclude, recurse, &patterns, "CompilerInputPath", dirNodes ) )
+		if ( !GetDirectoryListNodeList( nodeGraph, iter, inputPaths, excludePaths, filesToExclude, excludePatterns, recurse, &patterns, "CompilerInputPath", dirNodes ) )
 		{
 			return false; // GetDirectoryListNodeList will have emitted an error
 		}
