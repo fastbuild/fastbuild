@@ -18,6 +18,7 @@ private:
 
 	// Tests
 	void WarningsAreShown() const;
+	void ClangMacroExpansion() const;
 	void PragmaMessageWarningsAreShown() const;
 };
 
@@ -27,6 +28,9 @@ REGISTER_TESTS_BEGIN( TestWarnings )
 	REGISTER_TEST( WarningsAreShown )
 	#if defined( __WINDOWS__ )
 		REGISTER_TEST( PragmaMessageWarningsAreShown )
+	#endif
+	#if defined( __WINDOWS__ ) || defined( __OSX__ )
+		REGISTER_TEST( ClangMacroExpansion )
 	#endif
 REGISTER_TESTS_END
 
@@ -54,6 +58,19 @@ void TestWarnings::PragmaMessageWarningsAreShown() const
 	TEST_ASSERT( fBuild.Initialize() );
 
 	TEST_ASSERT( fBuild.Build( AStackString<>( "PragmaMessage" ) ) );
+}
+
+// ClangMacroExpansion
+//------------------------------------------------------------------------------
+void TestWarnings::ClangMacroExpansion() const
+{
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestWarnings/ClangMacroExpansion/fbuild.bff";
+
+	FBuild fBuild( options );
+	TEST_ASSERT( fBuild.Initialize() );
+
+	TEST_ASSERT( fBuild.Build( AStackString<>( "ClangMacroExpansion" ) ) );
 }
 
 //------------------------------------------------------------------------------

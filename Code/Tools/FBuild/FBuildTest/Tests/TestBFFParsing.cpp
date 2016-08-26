@@ -37,7 +37,6 @@ private:
 	void IfDirective() const;
 	void ElseDirective() const;
 	void ElseDirective_Bad() const;
-	void ElseDirective_Bad2() const;
 	void InvalidDirective() const;
 	void DefineUndefineDirectives() const;
 	void BadDefineDirective() const;
@@ -74,7 +73,6 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
 	REGISTER_TEST( IfDirective )
 	REGISTER_TEST( ElseDirective )
 	REGISTER_TEST( ElseDirective_Bad )
-	REGISTER_TEST( ElseDirective_Bad2 )
 	REGISTER_TEST( InvalidDirective )
 	REGISTER_TEST( DefineUndefineDirectives )
 	REGISTER_TEST( BadDefineDirective )
@@ -245,13 +243,11 @@ void TestBFFParsing::ElseDirective() const
 void TestBFFParsing::ElseDirective_Bad() const
 {
 	Parse( "Data/TestBFFParsing/else_directive_bad.bff", true ); // Expect failure
-}
-
-// ElseDirective_Bad2
-//------------------------------------------------------------------------------
-void TestBFFParsing::ElseDirective_Bad2() const
-{
 	Parse( "Data/TestBFFParsing/else_directive_bad2.bff", true ); // Expect failure
+	Parse( "Data/TestBFFParsing/else_directive_bad3.bff", true ); // Expect failure
+	Parse( "Data/TestBFFParsing/else_directive_bad4.bff", true ); // Expect failure
+	Parse( "Data/TestBFFParsing/else_directive_bad5.bff", true ); // Expect failure
+	Parse( "Data/TestBFFParsing/else_directive_bad6.bff", true ); // Expect failure
 }
 
 // InvalidDirective

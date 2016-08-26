@@ -4,6 +4,7 @@
 
 #define TOGGLE
 
+// Invalid else inside enabled block
 #if TOGGLE
 #else
 #else

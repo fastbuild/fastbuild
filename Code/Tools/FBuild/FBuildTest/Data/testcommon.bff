@@ -113,10 +113,10 @@
 //==============================================================================
 .OSXClangToolChain =
 [
-    .Compiler           = '/usr/bin/g++'
+    .Compiler           = '/usr/bin/clang++'
     Compiler( 'Compiler-Clang-Dist' )
     {
-        .Executable     = '/usr/bin/g++'
+        .Executable     = '/usr/bin/clang++'
     }
     .CompilerDist       = 'Compiler-Clang-Dist'
     .Librarian          = '/usr/bin/ar'

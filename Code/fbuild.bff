@@ -82,7 +82,7 @@ Compiler( 'Compiler-x64-Linux' )
 }
 Compiler( 'Compiler-x64-OSX' )
 {
-.Executable = '/usr/bin/g++'
+	.Executable = '/usr/bin/clang++'
 }
 
 //------------------------------------------------------------------------------

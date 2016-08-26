@@ -31,7 +31,6 @@
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ uint32_t BFFParser::s_Depth( 0 );
-/*static*/ uint32_t BFFParser::s_IfDepth( 0 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -40,13 +39,6 @@ BFFParser::BFFParser( NodeGraph & nodeGraph )
 , m_LastVarFrame( nullptr )
 , m_NodeGraph( nodeGraph )
 {
-	// To be able to run multiple tests in the same process, where
-	// some of those tests fail to parse, we need to reset the If Depth
-	if ( s_Depth == 0 )
-	{
-		s_IfDepth = 0;
-	}
-
 	++s_Depth;
 }
 
@@ -731,7 +723,7 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 	}
 	else if ( directive == "else" )
 	{
-		return ParseElseDirective( directiveStartIter, iter );
+		return ParseElseDirective( directiveStartIter );
 	}
 	else if ( directive == "endif" )
 	{
@@ -944,40 +936,81 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
 		return false; // CheckIfCondition will have emitted an error
 	}
 
-	// #ifndef ?
+	// #if !
 	if ( negate )
     {
 		result = !( result );
     }
 
-	if ( result )
+	// Find #endif
+	BFFIterator startIfBlock( iter );
+	BFFIterator endIfBlock( iter );
+	bool hasElseBlock( false );
+	if ( !ParseToEndIf( endIfBlock, iter, true, &hasElseBlock ) ) // Allow else
 	{
-		++s_IfDepth; // Track that we're inside an if block
-		return true; // continue parsing like normal
+		return false; // ParseToEndIf will have emitted an error
+	}
+	if ( hasElseBlock )
+	{
+		// Find end of else block
+		BFFIterator startElseBlock( iter );
+		BFFIterator endElseBlock( iter );
+		if ( !ParseToEndIf( endElseBlock, iter, false, nullptr ) ) // Must be endif
+		{
+			return false; // ParseToEndIf will have emitted an error
+		}
+
+		if ( result == true )
+		{
+			// Parse If -> Else
+			BFFIterator subIter( startIfBlock );
+			subIter.SetMax( endIfBlock.GetCurrent() );
+			if ( Parse( subIter ) == false )
+			{
+				return false; // Parse will have emitted an error
+			}
+		}
+		else
+		{
+			// Parse Else -> EndIf
+			BFFIterator subIter( startElseBlock );
+			subIter.SetMax( endElseBlock.GetCurrent() );
+			if ( Parse( subIter ) == false )
+			{
+				return false; // Parse will have emitted an error
+			}
+		}
+	}
+	else
+	{
+		if ( result == true )
+		{
+			// Parse If -> EndIf
+			BFFIterator subIter( startIfBlock );
+			subIter.SetMax( endIfBlock.GetCurrent() );
+			if ( Parse( subIter ) == false )
+			{
+				return false; // Parse will have emitted an error
+			}
+		}
 	}
 
-	const bool allowElse = true; // also accept else
-	return ParseToEndIf( iter, allowElse );
+	return true;
 }
 
 // ParseElseDirective
 //------------------------------------------------------------------------------
-bool BFFParser::ParseElseDirective( const BFFIterator& directiveStart, BFFIterator & iter )
+bool BFFParser::ParseElseDirective( const BFFIterator& directiveStart )
 {
-	// If we hit an alse but we're not in an if
-	if ( s_IfDepth == 0 )
-	{
-		Error::Error_1041_ElseWithoutIf( directiveStart );
-		return false;
-	}
-
-	const bool allowElse = false; // can't have another else
-	return ParseToEndIf( iter, allowElse );
+	// Finding the else directive is handled by ParseIfDirective, so if we hit one
+	// by itself, that's an error
+	Error::Error_1041_ElseWithoutIf( directiveStart );
+	return false;
 }
 
 // ParseToEndIf
 //------------------------------------------------------------------------------
-bool BFFParser::ParseToEndIf( BFFIterator& iter, bool allowElse )
+bool BFFParser::ParseToEndIf( BFFIterator & directiveIter, BFFIterator & iter, bool allowElse, bool * outIsElse )
 {
 	// Advance iterator past entire #if block
 	size_t depth = 1; // handle nested ifs
@@ -994,6 +1027,9 @@ bool BFFParser::ParseToEndIf( BFFIterator& iter, bool allowElse )
 		iter.SkipWhiteSpace();
 		if ( *iter == BFF_PREPROCESSOR_START )
 		{
+			// Store position of directive for caller
+			directiveIter = iter;
+
 			iter++; // skip #
 			iter.SkipWhiteSpace(); // allow whitespace between # and directive
 			const BFFIterator directiveNameStart( iter );
@@ -1018,7 +1054,11 @@ bool BFFParser::ParseToEndIf( BFFIterator& iter, bool allowElse )
 					Error::Error_1041_ElseWithoutIf( directiveNameStart );
 					return false;
 				}
-				break; // continue processing else portion
+				if ( outIsElse )
+				{
+					*outIsElse = true;
+				}
+				return true;
 			}
 
 			// continue to skip rest of line....
@@ -1033,6 +1073,11 @@ bool BFFParser::ParseToEndIf( BFFIterator& iter, bool allowElse )
 		}
 	}
 
+	if ( outIsElse )
+	{
+		*outIsElse = false;
+	}
+
 	return true;
 }
 
@@ -1040,15 +1085,10 @@ bool BFFParser::ParseToEndIf( BFFIterator& iter, bool allowElse )
 //------------------------------------------------------------------------------
 bool BFFParser::ParseEndIfDirective( const BFFIterator & directiveStart )
 {
-	if ( s_IfDepth == 0 )
-	{
-		// unexpected endif
-		Error::Error_1037_EndIfWithoutIf( directiveStart );
-		return false;
-	}
-
-	s_IfDepth--;
-	return true;
+	// Finding the else directive is handled by ParseIfDirective, so if we hit one
+	// by itself, that's an error
+	Error::Error_1037_EndIfWithoutIf( directiveStart );
+	return false;
 }
 
 // CheckIfCondition

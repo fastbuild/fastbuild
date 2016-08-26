@@ -24,6 +24,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 
@@ -614,6 +615,10 @@ void TestGraph::BFFDirtied() const
 		TEST_ASSERT( fBuild.GetEnvironmentStringSize() > 0 );
 		TEST_ASSERT( fBuild.GetWorkerList().IsEmpty() == false );
 	}
+    
+    #if defined( __OSX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #endif
 
 	// Modity BFF (make it empty)
 	{

@@ -28,9 +28,3 @@
 		#endif
 	#endif
 #endif
-
-// Ignore invalid #elses inside disabled block
-#if !TOGGLE
-#else
-#else
-#endif

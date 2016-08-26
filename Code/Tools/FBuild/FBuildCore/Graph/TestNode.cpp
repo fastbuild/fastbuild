@@ -24,7 +24,7 @@ REFLECT_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
 	REFLECT( m_TestExecutable,		"TestExecutable",		MetaFile() )
 	REFLECT( m_TestArguments,		"TestArguments",		MetaOptional() )
 	REFLECT( m_TestWorkingDir,		"TestWorkingDir",		MetaOptional() + MetaPath() )
-	REFLECT( m_TestTimeOut,			"TestTimeOut",			MetaOptional() + MetaRange( 0, 4 * 60 * 60 * 1000 ) ) // 4hrs
+	REFLECT( m_TestTimeOut,			"TestTimeOut",			MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
 REFLECT_END( TestNode )
 
 // CONSTRUCTOR
@@ -85,10 +85,10 @@ TestNode::~TestNode()
 	AutoPtr< char > memErr;
 	uint32_t memOutSize = 0;
 	uint32_t memErrSize = 0;
-	bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut );
+	bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut * 1000 );
 	if ( timedOut )
 	{
-		FLOG_ERROR( "Test timed out after %u ms (%s)", m_TestTimeOut, m_TestExecutable.Get() );
+		FLOG_ERROR( "Test timed out after %u s (%s)", m_TestTimeOut, m_TestExecutable.Get() );
 		return NODE_RESULT_FAILED;
 	}
 

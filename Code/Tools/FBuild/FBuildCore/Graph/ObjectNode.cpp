@@ -1552,6 +1552,10 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 		{
 			ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA );
 			fullArgs += "-E"; // run pre-processor only
+			if ( isClang )
+			{
+				fullArgs += " -frewrite-includes";
+			}
 		}
 	}
 

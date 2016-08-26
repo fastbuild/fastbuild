@@ -73,8 +73,8 @@ private:
 	bool ParseDefineDirective( BFFIterator & iter );
 	bool ParseUndefDirective( BFFIterator & iter );
 	bool ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter );
-	bool ParseElseDirective( const BFFIterator & directiveStart, BFFIterator & iter );
-	bool ParseToEndIf( BFFIterator & iter, bool allowElse );
+	bool ParseElseDirective( const BFFIterator & directiveStart );
+	bool ParseToEndIf( BFFIterator & directiveIter, BFFIterator & iter, bool allowElse, bool * outIsElse );
 	bool ParseEndIfDirective( const BFFIterator & directiveStart );
 	bool CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result );
 	bool ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter );
@@ -93,9 +93,6 @@ private:
 
 	// track recursion depth to detect recursion or excessive complexity
 	static uint32_t s_Depth;
-
-	// track nested preprocessor directives
-	static uint32_t s_IfDepth;
 private:
 	BFFParser & operator = (const BFFParser &) = delete;
 };
