@@ -23,14 +23,14 @@ public:
 	virtual ~CopyDirNode();
 
 	static inline Node::Type GetTypeS() { return Node::COPY_DIR_NODE; }
-	virtual bool IsAFile() const;
+	virtual bool IsAFile() const override;
 
-	static Node * Load( IOStream & stream );
-	virtual void Save( IOStream & stream ) const;
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
+	virtual void Save( IOStream & stream ) const override;
 
 private:
-	virtual bool DoDynamicDependencies( bool forceClean );
-	virtual BuildResult DoBuild( Job * job );
+	virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+	virtual BuildResult DoBuild( Job * job ) override;
 
 	AString m_DestPath;
 };

@@ -1,0 +1,9 @@
+//
+// else directive bad case 4
+//
+
+// Ignore invalid #elses inside enabled block due to negation
+#if !TOGGLE
+#else
+#else
+#endif

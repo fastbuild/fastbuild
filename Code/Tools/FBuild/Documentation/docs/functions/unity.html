@@ -34,7 +34,9 @@ Builds one or more Unity/Blob files containing includes of other source code fil
   .UnityOutputPath         ; Path to output generated Unity files
   .UnityOutputPattern      ; (optional) Pattern of output Unity file names (default Unity*.cpp)
   .UnityNumFiles           ; (optional) Number of Unity files to generate (default 1)
-  .UnityPCH                : (optional) Precompiled Header file to add to generated Unity files
+  .UnityPCH                ; (optional) Precompiled Header file to add to generated Unity files
+  .PreBuildDependencies    ; (optional) Force targets to be built before this Unity (Rarely needed,
+                           ; but useful when a Unity should contain generated code)
 }
 </div>
     </div>

@@ -52,7 +52,7 @@ public:
 	// main thread calls these
 	void AddJobToBatch( Node * node ); // Add new job to the staging queue
     void FlushJobBatch();              // Sort and flush the staging queue
-	void FinalizeCompletedJobs();
+	void FinalizeCompletedJobs( NodeGraph & nodeGraph );
 	void MainThreadWait( uint32_t maxWaitMS );
 
 	// main thread can be signalled

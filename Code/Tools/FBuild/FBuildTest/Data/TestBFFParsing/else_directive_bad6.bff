@@ -1,0 +1,18 @@
+//
+// else directive
+//
+
+#define TOGGLE
+
+// Valid else before invalid else
+#if TOGGLE
+	// Ok
+#else
+	#error
+#endif
+
+// Followed by invalied else
+#if !TOGGLE
+#else
+#else
+#endif

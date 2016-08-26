@@ -1,0 +1,12 @@
+//
+// Invalid Directive
+//
+
+#define SWITCH
+
+#if SWITCH
+	.Variable = true
+#invalid
+	.Variable = false
+#endif
+

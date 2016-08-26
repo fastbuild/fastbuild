@@ -45,27 +45,26 @@ FunctionUnity::FunctionUnity()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionUnity::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionUnity::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
 	// parsing logic should guarantee we have a string for our name
 	ASSERT( m_AliasForFunction.IsEmpty() == false );
 
 	// Check for existing node
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	if ( ng.FindNode( m_AliasForFunction ) )
+	if ( nodeGraph.FindNode( m_AliasForFunction ) )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
 		return false;
 	}
 
-	UnityNode * un = ng.CreateUnityNode( m_AliasForFunction );
+	UnityNode * un = nodeGraph.CreateUnityNode( m_AliasForFunction );
 
-	if ( !PopulateProperties( funcStartIter, un ) )
+	if ( !PopulateProperties( nodeGraph, funcStartIter, un ) )
 	{
 		return false;
 	}
 
-	return un->Initialize( funcStartIter, this );
+	return un->Initialize( nodeGraph, funcStartIter, this );
 }
 
 //------------------------------------------------------------------------------

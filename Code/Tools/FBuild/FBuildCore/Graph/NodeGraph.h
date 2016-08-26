@@ -19,7 +19,7 @@ class AliasNode;
 class AString;
 class CompilerNode;
 class CopyDirNode;
-class CopyNode;
+class CopyFileNode;
 class CSNode;
 class Dependencies;
 class DirectoryListNode;
@@ -54,7 +54,7 @@ public:
 	}
 	inline ~NodeGraphHeader() {}
 
-	enum { NODE_GRAPH_CURRENT_VERSION = 82 };
+	enum { NODE_GRAPH_CURRENT_VERSION = 87 };
 
 	bool IsValid() const
 	{
@@ -76,11 +76,19 @@ public:
 	explicit NodeGraph();
 	~NodeGraph();
 
-	bool Initialize( const char * bffFile, const char * nodeGraphDBFile );
+	static NodeGraph * Initialize( const char * bffFile, const char * nodeGraphDBFile );
 
-	bool Load( const char * nodeGraphDBFile, bool & needReparsing );
-	bool Load( IOStream & stream, bool & needReparsing );
-	void Save( IOStream & stream ) const;
+	enum class LoadResult
+	{
+		MISSING,
+		LOAD_ERROR,
+		OK_BFF_CHANGED,
+		OK
+	};
+	NodeGraph::LoadResult Load( const char * nodeGraphDBFile );
+
+	LoadResult Load( IOStream & stream, const char * nodeGraphDBFile );
+	void Save( IOStream & stream, const char * nodeGraphDBFile ) const;
 
 	// access existing nodes
 	Node * FindNode( const AString & nodeName ) const;
@@ -88,9 +96,7 @@ public:
 	size_t GetNodeCount() const;
 
 	// create new nodes
-	CopyNode * CreateCopyNode( const AString & dstFileName, 
-							   Node * sourceFile,
-							   const Dependencies & preBuildDependencies );
+	CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
 	CopyDirNode * CreateCopyDirNode( const AString & nodeName, 
 									 Dependencies & staticDeps,
 									 const AString & destPath,
@@ -178,7 +184,8 @@ public:
 						   const Dependencies & inputNodes,
 						   const AString & compiler,
 						   const AString & compilerOptions,
-						   const Dependencies & extraRefs );
+						   const Dependencies & extraRefs,
+						   const Dependencies & preBuildDependencies );
 	TestNode * CreateTestNode( const AString & testOutput );
 	CompilerNode * CreateCompilerNode( const AString & executable );
 	VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
@@ -241,10 +248,12 @@ public:
 private:
 	friend class FBuild;
 
+	bool ParseFromRoot( const char * bffFile );
+
 	void AddNode( Node * node );
 
-	static void BuildRecurse( Node * nodeToBuild, uint32_t cost );
-	static bool CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost );
+	void BuildRecurse( Node * nodeToBuild, uint32_t cost );
+	bool CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost );
 	static void UpdateBuildStatusRecurse( const Node * node, 
 										  uint32_t & nodesBuiltTime, 
 										  uint32_t & totalNodeTime );
@@ -264,7 +273,7 @@ private:
 	void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance = 5 ) const;
 
 	struct UsedFile;
-	bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, Array< UsedFile > & files, bool & compatibleDB ) const;
+	bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB ) const;
 	uint32_t GetLibEnvVarHash() const;
 
 	// load/save helpers
@@ -273,7 +282,7 @@ private:
 	bool LoadNode( IOStream & stream );
 
 	enum { NODEMAP_TABLE_SIZE = 65536 };
-	Node *			m_NodeMap[ NODEMAP_TABLE_SIZE ];
+	Node **			m_NodeMap;
 	Array< Node * > m_AllNodes;
 	uint32_t		m_NextNodeIndex;
 

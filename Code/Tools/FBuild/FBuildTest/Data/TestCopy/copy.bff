@@ -45,3 +45,22 @@ Copy( "TestSourceBasePath" )
 	.SourceBasePath = "Data/" // This means we should re-create the hierarchy after this (i.e. the TestCopy dir)
 	.Dest = "$Out$/Test/Copy/SourceBasePath/"
 }
+
+//
+// Chained copies
+//
+Copy( 'ChainedCopy1' )
+{
+	.Source = 'Data/TestCopy/copy.bff'
+	.Dest	= '$Out$/Test/Copy/ChainedCopy/copy.copy1'
+}
+Copy( 'ChainedCopy2' )
+{
+	.Source = '$Out$/Test/Copy/ChainedCopy/copy.copy1' // by filename
+	.Dest	= '$Out$/Test/Copy/ChainedCopy/copy.copy2'
+}
+Copy( 'ChainedCopy3' )
+{
+	.Source = 'ChainedCopy2' // via Alias
+	.Dest	= '$Out$/Test/Copy/ChainedCopy/copy.copy3'
+}

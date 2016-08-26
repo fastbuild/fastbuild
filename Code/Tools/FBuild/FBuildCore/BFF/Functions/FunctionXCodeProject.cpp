@@ -30,35 +30,34 @@ FunctionXCodeProject::FunctionXCodeProject()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionXCodeProject::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionXCodeProject::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	AStackString<> name;
-	if ( GetNameForNode( funcStartIter, XCodeProjectNode::GetReflectionInfoS(), name ) == false )
+	if ( GetNameForNode( nodeGraph, funcStartIter, XCodeProjectNode::GetReflectionInfoS(), name ) == false )
 	{
 		return false;
 	}
 
-	if ( ng.FindNode( name ) )
+	if ( nodeGraph.FindNode( name ) )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
 		return false;
 	}
 
-	auto * xcodeProjNode = ng.CreateXCodeProjectNode( name );
+	auto * xcodeProjNode = nodeGraph.CreateXCodeProjectNode( name );
 
-	if ( !PopulateProperties( funcStartIter, xcodeProjNode ) )
+	if ( !PopulateProperties( nodeGraph, funcStartIter, xcodeProjNode ) )
 	{
 		return false;
 	}
 
-	if ( !xcodeProjNode->Initialize( funcStartIter, this ) )
+	if ( !xcodeProjNode->Initialize( nodeGraph, funcStartIter, this ) )
     {
         return false;
     }
 
 	// handle alias creation
-	return ProcessAlias( funcStartIter, xcodeProjNode );
+	return ProcessAlias( nodeGraph, funcStartIter, xcodeProjNode );
 }
 
 //------------------------------------------------------------------------------

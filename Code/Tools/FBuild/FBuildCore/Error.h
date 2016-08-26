@@ -102,6 +102,7 @@ public:
 	static void Error_1038_OverwritingTokenInDefine( const BFFIterator & iter );
 	static void Error_1039_UnknownTokenInUndef( const BFFIterator & iter );
 	static void Error_1040_UndefOfBuiltInTokenNotAllowed( const BFFIterator & iter );
+	static void Error_1041_ElseWithoutIf( const BFFIterator & iter );
 
 	// 1050 - 1099 : Variable type errors
 	//------------------------------------------------------------------------------

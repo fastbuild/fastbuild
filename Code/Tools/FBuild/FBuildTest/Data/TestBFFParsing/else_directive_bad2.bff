@@ -1,0 +1,9 @@
+//
+// else directive
+//
+
+// Invalid else inside disabled block
+#if TOGGLE
+#else
+#else
+#endif

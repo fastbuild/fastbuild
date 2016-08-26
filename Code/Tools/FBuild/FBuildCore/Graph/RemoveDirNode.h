@@ -24,7 +24,7 @@ public:
     static inline Node::Type GetTypeS() { return Node::REMOVE_DIR_NODE; }
     virtual bool IsAFile() const override;
 
-    static Node * Load( IOStream & stream );
+    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
     virtual void Save( IOStream & stream ) const override;
 
 private:

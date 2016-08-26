@@ -26,35 +26,34 @@ FunctionTest::FunctionTest()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionTest::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionTest::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	AStackString<> name;
-	if ( GetNameForNode( funcStartIter, TestNode::GetReflectionInfoS(), name ) == false )
+	if ( GetNameForNode( nodeGraph, funcStartIter, TestNode::GetReflectionInfoS(), name ) == false )
 	{
 		return false;
 	}
 
-	if ( ng.FindNode( name ) )
+	if ( nodeGraph.FindNode( name ) )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
 		return false;
 	}
 
-	TestNode * testNode = ng.CreateTestNode( name );
+	TestNode * testNode = nodeGraph.CreateTestNode( name );
 
-	if ( !PopulateProperties( funcStartIter, testNode ) )
+	if ( !PopulateProperties( nodeGraph, funcStartIter, testNode ) )
 	{
 		return false;
 	}
 
-	if ( !testNode->Initialize( funcStartIter, this ) )
+	if ( !testNode->Initialize( nodeGraph, funcStartIter, this ) )
     {
         return false;
     }
 
 	// handle alias creation
-	return ProcessAlias( funcStartIter, testNode );
+	return ProcessAlias( nodeGraph, funcStartIter, testNode );
 }
 
 //------------------------------------------------------------------------------

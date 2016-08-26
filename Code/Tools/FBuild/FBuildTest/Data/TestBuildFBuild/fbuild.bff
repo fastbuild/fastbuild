@@ -17,8 +17,9 @@ Using( .StandardEnvironment )
 #if __WINDOWS__
 	Settings		
 	{ 
+		#import TMP
 		.Environment	= { "PATH=$VisualStudioPath$\Common7\IDE\",
-							"TMP=C:\Windows\Temp",
+                            "TMP=$TMP$",
 							"SystemRoot=C:\Windows" }
 	}
 #endif

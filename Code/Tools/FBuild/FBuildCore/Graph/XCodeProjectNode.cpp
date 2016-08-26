@@ -57,19 +57,19 @@ XCodeProjectNode::XCodeProjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool XCodeProjectNode::Initialize( const BFFIterator & iter, const Function * function )
+bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
 	ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
 	Dependencies dirNodes( m_ProjectInputPaths.GetSize() );
-	if ( !function->GetDirectoryListNodeList( iter, m_ProjectInputPaths, m_ProjectInputPathsExclude, m_ProjectFilesToExclude, true, &m_ProjectAllowedFileExtensions, "ProjectInputPaths", dirNodes ) )
+	if ( !function->GetDirectoryListNodeList( nodeGraph, iter, m_ProjectInputPaths, m_ProjectInputPathsExclude, m_ProjectFilesToExclude, true, &m_ProjectAllowedFileExtensions, "ProjectInputPaths", dirNodes ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}
 
 	// TODO:B use m_ProjectFiles instead of finding it again
 	Dependencies fileNodes( m_ProjectFiles.GetSize() );
-	if ( !function->GetNodeList( iter, ".ProjectFiles", fileNodes ) )
+	if ( !function->GetNodeList( nodeGraph, iter, ".ProjectFiles", fileNodes ) )
 	{
 		return false; // GetNodeList will have emitted an error		
 	}
@@ -188,14 +188,13 @@ XCodeProjectNode::~XCodeProjectNode()
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * XCodeProjectNode::Load( IOStream & stream )
+/*static*/ Node * XCodeProjectNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>, name );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	auto * n = ng.CreateXCodeProjectNode( name );
+	auto * n = nodeGraph.CreateXCodeProjectNode( name );
 
-	if ( n->Deserialize( stream ) == false )
+	if ( n->Deserialize( nodeGraph, stream ) == false )
 	{
 		return nullptr;
 	}

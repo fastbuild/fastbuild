@@ -30,7 +30,7 @@ The caching feature of FASTBuild allows compilation results from one build to be
 	  There are some performance implications of the cache that should be considered for optimal benefit.
 	  <ul>
 	    <li>Performance - GCC/SNC/Clang</li>
-		<li>Performance - MSVC (Important!)</li>
+		<li>Performance - MSVC</li>
 	  </ul>	  
 	  </p>
 </div>
@@ -46,7 +46,6 @@ The caching feature of FASTBuild allows compilation results from one build to be
 <b>MSVC</b>
 <ul>
   <li>Z7 Debug format must be used. (Debug information embedded within obj, written to pdb at link time.)</li>
-  <li>Precompiled Headers cannot be cached.  They are machine-specific. (Objects using PCH can be cached.)</li>
   <li>/clr (Managed C) cannot be used.</li>
 </ul>
 </p>
@@ -60,7 +59,7 @@ The caching feature of FASTBuild allows compilation results from one build to be
   <li>The FASTBUILD_CACHE_PATH Environment Variable</li>
 </ul>
 The Settings option overrides the Environment Variable.</p>
-<p>Windows and UNC format paths are supported.</p>
+<p>On Windows UNC format paths are also supported.</p>
 </div>
 
     <div id='alias' class='newsitemheader'>Activation</div>
@@ -81,19 +80,9 @@ The cache can be activated by the use of:
 There are no adverse impacts on performance using the cache.  The overhead is so low, it can be considered to be free in all situations.
 </p>
 <p><b>MSVC</b><br>
-Microsoft's compiler has several implementation details that make optimal caching more difficult:
-<ul>
-  <li>The preprocessor is slow</li>
-  <li>PCHs are machine-specific, and cannot be shared</li>
-  <li>Objects built with PCH are tied to those machine-specific PCHs</li>
-</ul>
+Using the cache adds some additional overhead which in some cases (such as zero cache hits) can make compile times slightly slower overall. 
+The overhead is generally quite minimal, and as little as a single cache hit can be enough to offset this cost. 
 </p>
-<p>The slow preprocessor (relative to GCC/SNC/Clang) simply means there is an overhead added to a build using the cache.  As little as a single cache hit is usually enough to compensate for this, so this is not seen as a significant problem.</p>
-<p>Precompiled Headers cannot be copied betwen machines, because they contain machine-specific information. (The MSVC compiler does a raw memory-dump of the PCH information, and relies on the specific environment of the original machine for subsequent use.)
-To work around this limitation in the MSVC toolchain, FASTBuild will automatically disable caching on PCH files and build them locally.</p>
-<p>An object file using a PCH has debug information tied to that PCH.  It cannot be safely combined with a PCH on another machine. To work around this limitation in the MSVC toolchain, FASTBuild will disable PCH usage when compiling objects that are to be written to the cache.
-This can add a significant overhead, which requires many cache hits to offset.
-If the cache is in read-only mode however, the object will be compiled using the PCH after a cache miss.  In this way, it's possible to isolate this overhead only to some machines.  For example, a continuous integration dashboard may pay the overhead of the cache in write mode, allowing users to benefit in read mode, without close to no overhead.</p>
 </div>
 
 

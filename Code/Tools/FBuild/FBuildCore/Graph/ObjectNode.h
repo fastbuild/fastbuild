@@ -79,7 +79,7 @@ public:
 	inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
 
 	virtual void Save( IOStream & stream ) const override;
-	static Node * Load( IOStream & stream );
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 
 	virtual void SaveRemote( IOStream & stream ) const override;
 	static Node * LoadRemote( IOStream & stream );
@@ -95,10 +95,10 @@ public:
 
 	const char * GetObjExtension() const;
 private:
-	virtual bool DoDynamicDependencies( bool forceClean ) override;
+	virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
 	virtual BuildResult DoBuild( Job * job ) override;
 	virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
-	virtual bool Finalize() override;
+	virtual bool Finalize( NodeGraph & nodeGraph ) override;
 
 	BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
 	BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache );
@@ -112,6 +112,7 @@ private:
 	const AString & GetCacheName( Job * job ) const;
 	bool RetrieveFromCache( Job * job );
 	void WriteToCache( Job * job );
+	bool GetExtraCacheFilePath( const Job * job, AString & extraFileName ) const;
 
 	void HandleWarningsMSCL( Job* job, const char * data, uint32_t dataSize ) const;
 
@@ -143,6 +144,8 @@ private:
 	friend class Client;
 	bool ShouldUseCache() const;
 	bool CanUseResponseFile() const;
+
+	friend class FunctionObjectList;
 
 	class CompileHelper
 	{
@@ -177,6 +180,8 @@ private:
 	AString m_CompilerArgs;
 	AString m_CompilerArgsDeoptimized;
 	AString m_ObjExtensionOverride;
+	AString m_PCHObjectFileName;
+	uint64_t m_PCHCacheKey;
 	Dependencies m_CompilerForceUsing;
 	bool m_DeoptimizeWritableFiles;
 	bool m_DeoptimizeWritableFilesWithToken;

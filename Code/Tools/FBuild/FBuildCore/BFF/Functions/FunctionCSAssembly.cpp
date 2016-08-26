@@ -32,7 +32,7 @@ FunctionCSAssembly::FunctionCSAssembly()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionCSAssembly::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionCSAssembly::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
 	// make sure all required variables are defined
 	const BFFVariable * compiler;
@@ -44,8 +44,6 @@ FunctionCSAssembly::FunctionCSAssembly()
 	{
 		return false;
 	}
-
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
 	Dependencies staticDeps( 32, true );
 
@@ -93,7 +91,7 @@ FunctionCSAssembly::FunctionCSAssembly()
 		}
 
 		Dependencies dirNodes( inputPaths.GetSize() );
-		if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, filesToExclude, recurse, &patterns, "CompilerInputPath", dirNodes ) )
+		if ( !GetDirectoryListNodeList( nodeGraph, funcStartIter, inputPaths, excludePaths, filesToExclude, recurse, &patterns, "CompilerInputPath", dirNodes ) )
 		{
 			return false; // GetDirectoryListNodeList will have emitted an error
 		}
@@ -101,7 +99,7 @@ FunctionCSAssembly::FunctionCSAssembly()
 	}
 
 	// do we want to build a specific list of files?
-	if ( !GetNodeList( funcStartIter, ".CompilerInputFiles", staticDeps, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".CompilerInputFiles", staticDeps, false ) )
 	{
 		// helper will emit error
 		return false;
@@ -115,26 +113,34 @@ FunctionCSAssembly::FunctionCSAssembly()
 
 	// additional references?
 	Dependencies extraRefs( 0, true );
-	if ( !GetNodeList( funcStartIter, ".CompilerReferences", extraRefs, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".CompilerReferences", extraRefs, false ) )
 	{
 		// helper function will have emitted an error
 		return false;
 	}
 
+    // Pre-build dependencies
+	Dependencies preBuildDependencies;
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
+	{
+		return false; // GetNodeList will have emitted an error
+	}
+
 	// Create library node which depends on the single file or list
-	if ( ng.FindNode( compilerOutput->GetString() ) )
+	if ( nodeGraph.FindNode( compilerOutput->GetString() ) )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, compilerOutput->GetString() );
 		return false;
 	}
-	Node * csNode = ng.CreateCSNode( compilerOutput->GetString(),
+	Node * csNode = nodeGraph.CreateCSNode( compilerOutput->GetString(),
 									 staticDeps,
 									 compiler->GetString(),
 									 compilerOptions->GetString(),
-									 extraRefs );
+									 extraRefs,
+									 preBuildDependencies );
 
 	// should we create an alias?
-	return ProcessAlias( funcStartIter, csNode );
+	return ProcessAlias( nodeGraph, funcStartIter, csNode );
 }
 
 //------------------------------------------------------------------------------

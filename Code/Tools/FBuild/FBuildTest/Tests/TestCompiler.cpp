@@ -7,6 +7,7 @@
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileStream.h"
@@ -75,7 +76,8 @@ void TestCompiler::Parse( const char * fileName, bool expectFailure ) const
 	TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
 
 	FBuild fBuild;
-	BFFParser p;
+	NodeGraph ng;
+	BFFParser p( ng );
 	bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
 	if ( expectFailure )
 	{

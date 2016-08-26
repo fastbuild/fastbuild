@@ -14,6 +14,49 @@
 <h1>Changelog</h1>
 
 
+
+<div class='newsitemheader'>
+    v0.91&nbsp;<font color='#bbbbbb'>(25-Aug-2016)</font>
+</div>
+<div class='newsitembody'>
+    Notes
+	<ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache Version changed : prior version cache items will be ignored</li>
+    </ul>
+    Fixes
+    <ul>
+        <li>Array of Structures behaves consistently with Array of Strings (Thanks to dummyunit)</li>
+        <ul>
+            <li>Empty arrays are now essentially treated as untyped</li>
+        </ul>
+        <li>Edge cases which allowed variables to silently change type are now prevented (Thanks to dummyunit)</li>
+        <li>Integer addition works with explicit values as well as variables (Thanks to dummyunit)</li>
+        <li>Database detects when it is moved or copied, avoiding difficult to diagnose build errors</li>
+        <li>Fix crash when .UnityInputFiles and .UnityInputIsolateWritableFiles were used together</li>
+        <li>Pre-build deletion of MSVC pch object file didn't work in some cases</li>
+        <li>TestTimeOut value is correctly interpretted as being in seconds (not milliseconds)</li>
+    </ul>
+	Improvements
+	<ul>
+        <li>Optimizations:</li>
+        <ul>
+            <li>Precompiled Header with MSVC can be cached</li>
+            <li>Precompiled header acceleration is no longer disabled for MSVC when writing to the cache</li>
+        </ul>
+        <li>Empty arrays can now be treated as arrays of structures (Thanks to dummyunit)</li>
+        <li>Allow for longer variable names in BFF files (256 vs 64) (Thanks to poppolopoppo)</li>
+        <li>Subtraction operator behaviour is handled more consistently (Thanks to dummyunit)</li>
+        <li>Bools and Ints can be formatted into string with $var$ syntax (Thanks to poppolopoppo)</li>
+        <li>CSAssembly supports PreBuildDependencies (Thanks to poppolopoppo)</li>
+        <li>Unity supports PreBuildDependencies</li>
+        <li>BFF syntax now supports #else directive</li>
+        <li>Remove .PCHOptionsDeoptimized option - it's not useful and causes problems</li>
+        <li>Use Clang's -frewrite-includes option to avoid preprocessing inconsistencies (Thanks to Jean-Sebastien Pelletier)</li> 
+	</ul>
+</div>
+
+
 <div class='newsitemheader'>
     v0.90&nbsp;<font color='#bbbbbb'>(2-Jul-2016)</font>
 </div>

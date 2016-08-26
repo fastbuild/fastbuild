@@ -17,13 +17,14 @@
 //------------------------------------------------------------------------------
 class FileStream;
 class BFFStackFrame;
+class NodeGraph;
 
 // BFFParser
 //------------------------------------------------------------------------------
 class BFFParser
 {
 public:
-	explicit BFFParser();
+	explicit BFFParser( NodeGraph & nodeGraph );
 	~BFFParser();
 
 	// Parse BFF data
@@ -54,7 +55,7 @@ public:
 	enum { BFF_STRUCT_CLOSE = ']' };
 	enum { BFF_PREPROCESSOR_START = '#' };
 
-	enum { MAX_VARIABLE_NAME_LENGTH = 64 };
+	enum { MAX_VARIABLE_NAME_LENGTH = 256 };
 	enum { MAX_FUNCTION_NAME_LENGTH = 64 };
 	enum { MAX_DIRECTIVE_NAME_LENGTH = 64 };
 
@@ -72,6 +73,8 @@ private:
 	bool ParseDefineDirective( BFFIterator & iter );
 	bool ParseUndefDirective( BFFIterator & iter );
 	bool ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter );
+	bool ParseElseDirective( const BFFIterator & directiveStart );
+	bool ParseToEndIf( BFFIterator & directiveIter, BFFIterator & iter, bool allowElse, bool * outIsElse );
 	bool ParseEndIfDirective( const BFFIterator & directiveStart );
 	bool CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result );
 	bool ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter );
@@ -86,12 +89,12 @@ private:
 	bool m_SeenAVariable;
 	AStackString< MAX_VARIABLE_NAME_LENGTH > m_LastVarName;
 	BFFStackFrame * m_LastVarFrame;
+	NodeGraph & m_NodeGraph;
 
 	// track recursion depth to detect recursion or excessive complexity
 	static uint32_t s_Depth;
-
-	// track nested preprocessor directives
-	static uint32_t s_IfDepth;
+private:
+	BFFParser & operator = (const BFFParser &) = delete;
 };
 
 //------------------------------------------------------------------------------

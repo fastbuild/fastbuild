@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/Graph/CopyNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/FileIO/FileIO.h"
@@ -18,11 +18,6 @@ class TestCopy : public FBuildTest
 private:
 	DECLARE_TESTS
 
-	// make sure the CopyNode works
-	void SingleCopyNode() const;
-	void MultipleCopyNodes() const;
-
-	// make sure the FunctionCopy works
 	void TestCopyFunction_FileToFile() const;
 	void TestCopyFunction_FileToFile_NoRebuild() const;
 	void TestCopyFunction_FileToDir() const;
@@ -31,13 +26,13 @@ private:
 	void TestCopyFunction_MultiFileToDir_NoRebuild() const;
 	void TestCopyFunction_SourceBasePath() const;
 	void TestCopyFunction_SourceBasePath_NoRebuild() const;
+	void ChainedCopy() const;
+	void ChainedCopy_NoRebuild() const;
 };
 
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestCopy )
-	REGISTER_TEST( SingleCopyNode )
-	REGISTER_TEST( MultipleCopyNodes )
 	REGISTER_TEST( TestCopyFunction_FileToFile )
 	REGISTER_TEST( TestCopyFunction_FileToFile_NoRebuild )
 	REGISTER_TEST( TestCopyFunction_FileToDir )
@@ -46,120 +41,9 @@ REGISTER_TESTS_BEGIN( TestCopy )
 	REGISTER_TEST( TestCopyFunction_MultiFileToDir_NoRebuild )
 	REGISTER_TEST( TestCopyFunction_SourceBasePath )
 	REGISTER_TEST( TestCopyFunction_SourceBasePath_NoRebuild )
+	REGISTER_TEST( ChainedCopy )
+	REGISTER_TEST( ChainedCopy_NoRebuild )
 REGISTER_TESTS_END
-
-// SingleCopyNode
-//------------------------------------------------------------------------------
-void TestCopy::SingleCopyNode() const
-{
-	const AStackString<> testFileName( "Data/TestGraph/library.cpp" );
-	const AStackString<> testFileNameCopy( "../../../../tmp/Test/Graph/library.copynode.cpp" );
-
-	// check files are in expected states
-	EnsureFileExists( testFileName );
-	EnsureFileDoesNotExist( testFileNameCopy );
-
-	FBuildOptions options;
-	options.m_ShowSummary = true; // required to generate stats for node count checks
-
-	// Build
-	{
-		FBuild fb( options );
-		NodeGraph & ng = fb.GetDependencyGraph();
-
-		// make a fileNode for the source
-		FileNode * srcNode = ng.CreateFileNode( testFileName );
-
-		// and an ObjectNode for the output
-		Dependencies empty;
-		Node * dstNode = ng.CreateCopyNode( testFileNameCopy, srcNode, empty );
-
-		TEST_ASSERT( fb.Build( dstNode ) );
-		TEST_ASSERT( fb.SaveDependencyGraph( "../../../../tmp/Test/Graph/singlecopynode.fdb" ) );
-
-		EnsureFileExists( testFileNameCopy );
-
-		// Check stats
-		//				 Seen,	Built,	Type
-		CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-		CheckStatsNode ( 1,		1,		Node::COPY_NODE );
-		CheckStatsTotal( 2,		2 );
-	}
-
-	// check no rebuild
-	{
-		FBuild fb( options );
-		fb.Initialize( "../../../../tmp/Test/Graph/singlecopynode.fdb" );
-
-		TEST_ASSERT( fb.Build( testFileNameCopy ) );
-
-		// Check stats
-		//				 Seen,	Built,	Type
-		CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-		CheckStatsNode ( 1,		0,		Node::COPY_NODE );
-		CheckStatsTotal( 2,		1 );
-	}
-}
-
-// MultipleCopyNodes
-//------------------------------------------------------------------------------
-void TestCopy::MultipleCopyNodes() const
-{
-	const AStackString<> srcFile( "Data/TestGraph/library.cpp" );
-	const AStackString<> dstFileA( "../../../../tmp/Test/Graph/library.multiplecopynodes1.cpp" );
-	const AStackString<> dstFileB( "../../../../tmp/Test/Graph/library.multiplecopynodes2.cpp" );
-	const AStackString<> dstFileC( "../../../../tmp/Test/Graph/library.multiplecopynodes3.cpp" );
-
-	// check files are as expected before starting test
-	EnsureFileDoesNotExist( dstFileA );
-	EnsureFileDoesNotExist( dstFileB );
-	EnsureFileDoesNotExist( dstFileC );
-	EnsureFileExists( srcFile );
-
-	FBuildOptions options;
-	options.m_ShowSummary = true; // required to generate stats for node count checks
-
-	// build
-	{
-		FBuild fb( options );
-		NodeGraph & ng = fb.GetDependencyGraph();
-
-		// make a fileNode for the source
-		FileNode * srcNode = ng.CreateFileNode( srcFile );
-
-		Dependencies empty;
-		Node * copyA = ng.CreateCopyNode( dstFileA, srcNode, empty );
-		Node * copyB = ng.CreateCopyNode( dstFileB, (FileNode *)copyA, empty );
-		Node * copyC = ng.CreateCopyNode( dstFileC, (FileNode *)copyB, empty );
-
-		TEST_ASSERT( fb.Build( copyC ) );
-		TEST_ASSERT( fb.SaveDependencyGraph( "../../../../tmp/Test/Graph/multiplecopynode.fdb" ) );
-
-		EnsureFileExists( dstFileA );
-		EnsureFileExists( dstFileB );
-		EnsureFileExists( dstFileC );
-
-		// Check stats
-		//				 Seen,	Built,	Type
-		CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-		CheckStatsNode ( 3,		3,		Node::COPY_NODE );
-		CheckStatsTotal( 4,		4 );
-	}
-
-	// check no rebuild
-	{
-		FBuild fb( options );
-		fb.Initialize( "../../../../tmp/Test/Graph/multiplecopynode.fdb" );
-
-		TEST_ASSERT( fb.Build( dstFileC ) );
-
-		// Check stats
-		//				 Seen,	Built,	Type
-		CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-		CheckStatsNode ( 3,		0,		Node::COPY_NODE );
-		CheckStatsTotal( 4,		1 );
-	}
-}
 
 // TestCopyFunction_FileToFile
 //------------------------------------------------------------------------------
@@ -186,7 +70,7 @@ void TestCopy::TestCopyFunction_FileToFile() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-	CheckStatsNode ( 1,		1,		Node::COPY_NODE );
+	CheckStatsNode ( 1,		1,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 3,		3 );
 }
@@ -207,7 +91,7 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-	CheckStatsNode ( 1,		0,		Node::COPY_NODE );
+	CheckStatsNode ( 1,		0,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 3,		2 );
 }
@@ -236,7 +120,7 @@ void TestCopy::TestCopyFunction_FileToDir() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-	CheckStatsNode ( 1,		1,		Node::COPY_NODE );
+	CheckStatsNode ( 1,		1,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 3,		3 );
 }
@@ -257,7 +141,7 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
-	CheckStatsNode ( 1,		0,		Node::COPY_NODE );
+	CheckStatsNode ( 1,		0,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 3,		2 );
 }
@@ -289,7 +173,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
-	CheckStatsNode ( 2,		2,		Node::COPY_NODE );
+	CheckStatsNode ( 2,		2,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 5,		5 );
 }
@@ -310,7 +194,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
-	CheckStatsNode ( 2,		0,		Node::COPY_NODE );
+	CheckStatsNode ( 2,		0,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 5,		3 );
 }
@@ -342,7 +226,7 @@ void TestCopy::TestCopyFunction_SourceBasePath() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
-	CheckStatsNode ( 2,		2,		Node::COPY_NODE );
+	CheckStatsNode ( 2,		2,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 5,		5 );
 }
@@ -363,9 +247,60 @@ void TestCopy::TestCopyFunction_SourceBasePath_NoRebuild() const
 	// Check stats
 	//				 Seen,	Built,	Type
 	CheckStatsNode ( 2,		2,		Node::FILE_NODE );
-	CheckStatsNode ( 2,		0,		Node::COPY_NODE );
+	CheckStatsNode ( 2,		0,		Node::COPY_FILE_NODE );
 	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
 	CheckStatsTotal( 5,		3 );
+}
+
+// ChainedCopy
+//------------------------------------------------------------------------------
+void TestCopy::ChainedCopy() const
+{
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestCopy/copy.bff";
+	options.m_ShowSummary = true; // required to generate stats for node count checks
+	FBuild fBuild( options );
+	TEST_ASSERT( fBuild.Initialize() );
+
+	AStackString<> dst( "../../../../tmp/Test/Copy/ChainedCopy/copy.copy3" );
+
+	// clean up anything left over from previous runs
+	EnsureFileDoesNotExist( dst );
+
+	// build (via alias)
+	TEST_ASSERT( fBuild.Build( AStackString<>( "ChainedCopy3" ) ) );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Copy/ChainedCopy/chainedcopy.fdb" ) );
+
+	// make sure all output is where it is expected
+	EnsureFileExists( dst );
+
+	// Check stats
+	//				 Seen,	Built,	Type
+	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
+	CheckStatsNode ( 3,		3,		Node::COPY_FILE_NODE );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 5,		5 );
+}
+
+// ChainedCopy_NoRebuild
+//------------------------------------------------------------------------------
+void TestCopy::ChainedCopy_NoRebuild() const
+{
+	FBuildOptions options;
+	options.m_ConfigFile = "Data/TestCopy/copy.bff";
+	options.m_ShowSummary = true; // required to generate stats for node count checks
+	FBuild fBuild( options );
+	TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Copy/ChainedCopy/chainedcopy.fdb" ) );
+
+	// build (via alias)
+	TEST_ASSERT( fBuild.Build( AStackString<>( "ChainedCopy3" ) ) );
+
+	// Check stats
+	//				 Seen,	Built,	Type
+	CheckStatsNode ( 1,		1,		Node::FILE_NODE );
+	CheckStatsNode ( 3,		0,		Node::COPY_FILE_NODE );
+	CheckStatsNode ( 1,		1,		Node::ALIAS_NODE );
+	CheckStatsTotal( 5,		2 );
 }
 
 //------------------------------------------------------------------------------

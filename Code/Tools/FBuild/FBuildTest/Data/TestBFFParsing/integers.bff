@@ -9,6 +9,18 @@
 4
 .IntE                =                          5
 
+; addition
+.IntF = 2 + 4 ; ==6
+.IntG = .IntA + 6 ; ==7
+.IntH = 5 + .IntC ; ==8
+.IntI = .IntD + .IntE ; ==9
+
+; subtraction
+.IntJ = 1 - 2 ; ==-1
+.IntK = .IntD - 6; ==-2
+.IntL = 4 - .IntG; ==-3
+.IntM = .IntA - .IntE; ==-4
+
 ; big int
 .IntBig = 1234567890
 

@@ -33,7 +33,7 @@ public:
 
 	static inline Node::Type GetTypeS() { return Node::DLL_NODE; }
 
-	static Node * Load( IOStream & stream );
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 private:
 };
 

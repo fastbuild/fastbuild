@@ -1,0 +1,11 @@
+//
+// else directive bad - case 3
+//
+
+#define TOGGLE
+
+// Ignore invalid #elses inside disabled block due to negation
+#if !TOGGLE
+#else
+#else
+#endif

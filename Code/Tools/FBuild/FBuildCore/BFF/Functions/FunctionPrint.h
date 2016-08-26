@@ -17,15 +17,16 @@ public:
 	inline virtual ~FunctionPrint() {}
 
 protected:
-	virtual bool AcceptsHeader() const;
-	virtual bool NeedsHeader() const;
-	virtual bool NeedsBody() const;
+	virtual bool AcceptsHeader() const override;
+	virtual bool NeedsHeader() const override;
+	virtual bool NeedsBody() const override;
 
-	virtual bool ParseFunction( const BFFIterator & functionNameStart,
+	virtual bool ParseFunction( NodeGraph & nodeGraph,
+								const BFFIterator & functionNameStart,
 								const BFFIterator * functionBodyStartToken, 
 								const BFFIterator * functionBodyStopToken,
 								const BFFIterator * functionHeaderStartToken,
-								const BFFIterator * functionHeaderStopToken ) const;
+								const BFFIterator * functionHeaderStopToken ) const override;
 
 	static void PrintVarRecurse( const BFFVariable & var, uint32_t indent );
 };

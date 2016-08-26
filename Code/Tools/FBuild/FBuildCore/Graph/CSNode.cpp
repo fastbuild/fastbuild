@@ -27,7 +27,8 @@ CSNode::CSNode( const AString & compilerOutput,
 				const Dependencies & inputNodes,
 				const AString & compiler,
 				const AString & compilerArgs,
-				const Dependencies & extraRefs )
+				const Dependencies & extraRefs,
+				const Dependencies & preBuildDependencies )
 : FileNode( compilerOutput, Node::FLAG_NONE )
 , m_ExtraRefs( extraRefs )
 {
@@ -43,6 +44,8 @@ CSNode::CSNode( const AString & compilerOutput,
 
 	m_Type = CS_NODE;
 	m_LastBuildTimeMs = 5000; // higher default than a file node
+
+	m_PreBuildDependencies = preBuildDependencies;
 }
 
 // DESTRUCTOR
@@ -53,11 +56,9 @@ CSNode::~CSNode()
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool CSNode::DoDynamicDependencies( bool UNUSED( forceClean ) )
+/*virtual*/ bool CSNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
 {
 	ASSERT( m_DynamicDependencies.GetSize() == 0 );
-
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
 	// preallocate a reasonable amount of space
 	m_DynamicDependencies.SetCapacity( m_StaticDependencies.GetSize() );
@@ -86,10 +87,10 @@ CSNode::~CSNode()
 					fIt++ )
 			{
 				// Create the file node (or find an existing one)
-				Node * sn = ng.FindNode( fIt->m_Name );
+				Node * sn = nodeGraph.FindNode( fIt->m_Name );
 				if ( sn == nullptr )
 				{
-					sn = ng.CreateFileNode( fIt->m_Name );
+					sn = nodeGraph.CreateFileNode( fIt->m_Name );
 				}
 				else if ( sn->IsAFile() == false )
 				{
@@ -175,18 +176,18 @@ failed:
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * CSNode::Load( IOStream & stream )
+/*static*/ Node * CSNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	name );
 	NODE_LOAD_DEPS( 2,			staticDeps );
 	NODE_LOAD( AStackString<>,	compilerPath );
 	NODE_LOAD( AStackString<>,	compilerArgs );
 	NODE_LOAD_DEPS( 0,			extraRefs );
+	NODE_LOAD_DEPS( 0,			preBuildDependencies );
 
 	ASSERT( staticDeps.GetSize() >= 1 );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * on = ng.CreateCSNode( name, staticDeps, compilerPath, compilerArgs, extraRefs );
+	Node * on = nodeGraph.CreateCSNode( name, staticDeps, compilerPath, compilerArgs, extraRefs, preBuildDependencies );
 	CSNode * csNode = on->CastTo< CSNode >();
 	return csNode;
 }
@@ -209,6 +210,7 @@ failed:
 	NODE_SAVE( m_CompilerPath );
 	NODE_SAVE( m_CompilerArgs );
 	NODE_SAVE_DEPS( m_ExtraRefs );
+	NODE_SAVE_DEPS( m_PreBuildDependencies );
 }
 
 // EmitCompilationMessage

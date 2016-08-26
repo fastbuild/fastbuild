@@ -7,6 +7,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Env/Types.h"
+#include "Core/Containers/Array.h"
 
 // Macros
 //------------------------------------------------------------------------------
@@ -39,12 +40,14 @@ public:
 	static void FatalErrorFormat( const char * fmtString, ... );
 
 	typedef bool Callback( const char * mesage );
-	static void SetCallbackDebugSpam( Callback callback );
-	static void SetCallbackOutput( Callback callback );
+	static void AddCallbackDebugSpam( Callback * callback );
+	static void AddCallbackOutput( Callback * callback );
+	static void RemoveCallbackDebugSpam( Callback * callback );
+	static void RemoveCallbackOutput( Callback * callback );
 
 private:
-	static Callback * m_CallbackDebugSpam;
-	static Callback * m_CallbackOutput;
+	static Array< Callback * > s_CallbacksDebugSpam;
+	static Array< Callback * > s_CallbacksOutput;
 };
 
 //------------------------------------------------------------------------------

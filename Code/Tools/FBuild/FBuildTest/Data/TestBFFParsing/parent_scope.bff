@@ -72,7 +72,7 @@
 
 ; struct with parent scope
 
-.var = 12
+.var = 'first definition'
 .struct =
 [
     .value = ^var

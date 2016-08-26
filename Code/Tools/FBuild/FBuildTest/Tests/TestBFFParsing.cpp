@@ -7,6 +7,7 @@
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileStream.h"
@@ -34,6 +35,9 @@ private:
 	void Struct_Unterminated() const;
 	void IncludeScope() const;
 	void IfDirective() const;
+	void ElseDirective() const;
+	void ElseDirective_Bad() const;
+	void InvalidDirective() const;
 	void DefineUndefineDirectives() const;
 	void BadDefineDirective() const;
 	void BadUndefDirective() const;
@@ -67,6 +71,9 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
 	REGISTER_TEST( Struct_Unterminated )
 	REGISTER_TEST( IncludeScope )
 	REGISTER_TEST( IfDirective )
+	REGISTER_TEST( ElseDirective )
+	REGISTER_TEST( ElseDirective_Bad )
+	REGISTER_TEST( InvalidDirective )
 	REGISTER_TEST( DefineUndefineDirectives )
 	REGISTER_TEST( BadDefineDirective )
 	REGISTER_TEST( BadUndefDirective )
@@ -85,7 +92,8 @@ void TestBFFParsing::Empty() const
 {
 	// an empty file should pass without problem
 	char buffer[ 1 ] = { '\000' }; // post data sentinel
-	BFFParser p;
+	NodeGraph ng;
+	BFFParser p( ng );
 	TEST_ASSERT( p.Parse( buffer, 0, "empty.bff", 0, 0 ) );
 }
 
@@ -95,7 +103,8 @@ void TestBFFParsing::AlmostEmpty() const
 {
 	// an empty file should pass without problem
 	const char * buffer = "\r\n\000"; // empty line + post data sentinel
-	BFFParser p;
+	NodeGraph ng;
+	BFFParser p( ng );
 	TEST_ASSERT( p.Parse( buffer, 2, "empty.bff", 0, 0 ) );
 }
 
@@ -195,7 +204,8 @@ void TestBFFParsing::Parse( const char * fileName, bool expectFailure ) const
 	TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
 
 	FBuild fBuild;
-	BFFParser p;
+	NodeGraph ng;
+	BFFParser p( ng );
 	bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
 	if ( expectFailure )
 	{
@@ -219,6 +229,32 @@ void TestBFFParsing::IncludeScope() const
 void TestBFFParsing::IfDirective() const
 {
 	Parse( "Data/TestBFFParsing/if_directive.bff" );
+}
+
+// ElseDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective() const
+{
+	Parse( "Data/TestBFFParsing/else_directive.bff" );
+}
+
+// ElseDirective_Bad
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad() const
+{
+	Parse( "Data/TestBFFParsing/else_directive_bad.bff", true ); // Expect failure
+	Parse( "Data/TestBFFParsing/else_directive_bad2.bff", true ); // Expect failure
+	Parse( "Data/TestBFFParsing/else_directive_bad3.bff", true ); // Expect failure
+	Parse( "Data/TestBFFParsing/else_directive_bad4.bff", true ); // Expect failure
+	Parse( "Data/TestBFFParsing/else_directive_bad5.bff", true ); // Expect failure
+	Parse( "Data/TestBFFParsing/else_directive_bad6.bff", true ); // Expect failure
+}
+
+// InvalidDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::InvalidDirective() const
+{
+	Parse( "Data/TestBFFParsing/invalid_directive.bff", true ); // Expect failure
 }
 
 // DefineUndefineDirectives

@@ -22,8 +22,8 @@ public:
 	static inline const AString & GetCachePath() { return s_CachePath; }
 
 protected:
-	virtual bool IsUnique() const;
-	virtual bool Commit( const BFFIterator & funcStartIter ) const;
+	virtual bool IsUnique() const override;
+	virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 
 private:
 	void ProcessEnvironment( const Array< AString > & envStrings ) const;

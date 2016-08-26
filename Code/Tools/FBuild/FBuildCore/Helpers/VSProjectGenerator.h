@@ -13,6 +13,7 @@
 //------------------------------------------------------------------------------
 class IOStream;
 class Node;
+class NodeGraph;
 class ObjectListNode;
 
 // VSProjectConfig
@@ -55,7 +56,7 @@ public:
 	AString m_LocalDebuggerCommand;
 	AString m_LocalDebuggerEnvironment;
 
-	static bool Load( IOStream & stream, Array< VSProjectConfig > & configs );
+	static bool Load( NodeGraph & nodeGraph, IOStream & stream, Array< VSProjectConfig > & configs );
 	static void Save( IOStream & stream, const Array< VSProjectConfig > & configs );
 };
 

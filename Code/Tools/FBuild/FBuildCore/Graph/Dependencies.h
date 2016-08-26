@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 class IOStream;
 class Node;
+class NodeGraph;
 
 // Dependency
 //------------------------------------------------------------------------------
@@ -50,10 +51,8 @@ public:
 		: Array< Dependency >( begin, end )
 	{}
 
-	//void operator = ( const Array< Node * > & nodes );
-
 	void Save( IOStream & stream ) const;
-	bool Load( IOStream & stream );
+	bool Load( NodeGraph & nodeGraph, IOStream & stream );
 };
 
 //------------------------------------------------------------------------------

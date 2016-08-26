@@ -1,0 +1,30 @@
+//
+// Warnings/ClangMacroExpansion
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Settings {}
+
+// Using Clang
+#if __WINDOWS__
+	Using( .WindowsClangToolChain )
+#endif
+#if __OSX__
+	Using( .OSXClangToolChain )
+#endif
+#if __LINUX__
+	// Not testing on Linux for now
+#endif
+
+// Common settings
+.CompilerOutputPath			= '$StandardOutputBase$/Test/TestWarnings/ClangMacroExpansion/'
+
+// ClangMacroExpansion
+//------------------------------------------------------------------------------
+ObjectList( 'ClangMacroExpansion' )
+{
+	.CompilerInputFiles		= 'Data/TestWarnings/ClangMacroExpansion/clang_macro_expansion.cpp'
+}
