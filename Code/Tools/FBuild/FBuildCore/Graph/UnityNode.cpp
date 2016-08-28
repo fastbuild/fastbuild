@@ -83,7 +83,7 @@ bool UnityNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, con
 	}
 
 	Dependencies dirNodes( m_InputPaths.GetSize() );
-	if ( !function->GetDirectoryListNodeList( nodeGraph, iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
+	if ( !function->GetDirectoryListNodeList( nodeGraph, iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_ExcludePatterns, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}
@@ -393,18 +393,6 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 		    for ( FileIO::FileInfo * filesIt = dirNode->GetFiles().Begin(); filesIt != filesEnd; ++filesIt )
 		    {
 			    bool keep = true;
-
-			    // filter patterns
-			    const AString * pit = m_ExcludePatterns.Begin();
-			    const AString * const pend = m_ExcludePatterns.End();
-			    for ( ; pit != pend; ++pit )
-			    {
-				    if ( PathUtils::IsWildcardMatch( pit->Get(), filesIt->m_Name.Get() ) )
-				    {
-					    keep = false;
-					    break;
-				    }
-			    }
 
 				if ( keep && ( pchCPP.IsEmpty() == false ) )
 				{

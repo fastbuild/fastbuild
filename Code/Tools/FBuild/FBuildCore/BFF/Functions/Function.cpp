@@ -461,6 +461,7 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
 										 const Array< AString > & paths,
 										 const Array< AString > & excludePaths,
 										 const Array< AString > & filesToExclude,
+										 const Array< AString > & excludePatterns,
 										 bool recurse,
 										 const Array< AString > * patterns,
 										 const char * inputVarName,
@@ -492,7 +493,7 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
 
 		// get node for the dir we depend on
 		AStackString<> name;
-		DirectoryListNode::FormatName( path, patterns, recurse, excludePaths, filesToExcludeCleaned, name );
+		DirectoryListNode::FormatName( path, patterns, recurse, excludePaths, filesToExcludeCleaned, excludePatterns, name );
 		Node * node = nodeGraph.FindNode( name );
 		if ( node == nullptr )
 		{
@@ -501,7 +502,8 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
 											   patterns,
 											   recurse,
 											   excludePaths, 
-                                               filesToExcludeCleaned );
+											   filesToExcludeCleaned,
+											   excludePatterns );
 		}
 		else if ( node->GetType() != Node::DIRECTORY_LIST_NODE )
 		{

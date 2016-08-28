@@ -51,3 +51,17 @@ ObjectList( 'ExcludeFilePathRelative' )
 	.CompilerInputUnity			= 'ExcludeFilePathRelative-Unity'
 	.CompilerOutputPath			+ 'ExcludeFilePathRelative/'
 }
+
+//
+// Exclude by file pattern
+//------------------------------------------------------------------------------
+Unity( 'ExcludeFilePattern-Unity' )
+{
+	.UnityInputExcludePattern	= "*nore.cpp"
+	.UnityOutputPath			+ 'ExcludeFilePattern/'
+}
+ObjectList( 'ExcludeFilePattern' )
+{
+	.CompilerInputUnity			= 'ExcludeFilePattern-Unity'
+	.CompilerOutputPath			+ 'ExcludeFilePattern/'
+}

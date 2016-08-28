@@ -69,6 +69,7 @@ public:
 								   const Array< AString > & paths,
 								   const Array< AString > & excludePaths,
 								   const Array< AString > & filesToExclude,
+								   const Array< AString > & excludePatterns,
 								   bool recurse,
 								   const Array< AString > * patterns,
 								   const char * inputVarName,

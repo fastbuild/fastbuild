@@ -52,7 +52,7 @@ FunctionCopyDir::FunctionCopyDir()
 
 	// convert input paths to DirectoryListNodes
 	Dependencies staticDeps( inputPaths.GetSize() );
-	if ( !GetDirectoryListNodeList( nodeGraph, funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, patterns.IsEmpty() ? nullptr : &patterns, ".SourcePaths", staticDeps ) )
+	if ( !GetDirectoryListNodeList( nodeGraph, funcStartIter, inputPaths, excludePaths, Array< AString >(), Array< AString >(), recurse, patterns.IsEmpty() ? nullptr : &patterns, ".SourcePaths", staticDeps ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}

@@ -130,6 +130,7 @@ bool UnitTestManager::RunTests( const char * testGroup )
 		catch (...)
 		{
 			OUTPUT( " - Test '%s' *** FAILED ***\n", s_TestInfos[ s_NumTests - 1 ].m_TestName );
+			s_TestInfos[ s_NumTests - 1 ].m_TestGroup->PostTest();
 		}
 		test = test->m_NextTestGroup;
 	}
