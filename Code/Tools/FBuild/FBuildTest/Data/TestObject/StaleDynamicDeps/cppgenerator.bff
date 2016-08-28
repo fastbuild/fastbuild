@@ -6,31 +6,31 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.UnityOutputPath			= '$Out$/Test/Object/StaleDynamicDeps/'
-.CompilerOutputPath			= '$Out$/Test/Object/StaleDynamicDeps/'
+.UnityOutputPath            = '$Out$/Test/Object/StaleDynamicDeps/'
+.CompilerOutputPath         = '$Out$/Test/Object/StaleDynamicDeps/'
 
 // CPPGenerator
 // - Create an exe which can generate a .cpp file from a .h file
 //------------------------------------------------------------------------------
 ObjectList( 'CPPGeneratorCompile' )
 {
-	#if __WINDOWS__
-		.CompilerOptions	+ ' /MT'
-							+ .VisualStudioIncludePaths
-	#endif
-	.CompilerInputFiles		= 'Data/TestObject/StaleDynamicDeps/CPPGeneratorMain.cpp'
-	.CompilerOuputExtension = '.cpp'
-	.CompilerOutputPath		+ 'CPPGenerator/'
+    #if __WINDOWS__
+        .CompilerOptions    + ' /MT'
+                            + .VisualStudioIncludePaths
+    #endif
+    .CompilerInputFiles     = 'Data/TestObject/StaleDynamicDeps/CPPGeneratorMain.cpp'
+    .CompilerOuputExtension = '.cpp'
+    .CompilerOutputPath     + 'CPPGenerator/'
 }
 Executable( 'CPPGenerator' )
 {
-	.Libraries				= 'CPPGeneratorCompile'
-	.LinkerOutput			= '$Out$/Test/Object/StaleDynamicDeps/CPPGenerator.exe'
-	#if __WINDOWS__
-		.LinkerOptions		+ ' /SUBSYSTEM:CONSOLE'
-							+ ' kernel32.lib'
-							+ ' msvcrt.lib'
-							+ ' /LIBPATH:"$VisualStudioPath$/VC/lib"'
-							+ .WindowsLibPaths
-	#endif
+    .Libraries              = 'CPPGeneratorCompile'
+    .LinkerOutput           = '$Out$/Test/Object/StaleDynamicDeps/CPPGenerator.exe'
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' kernel32.lib'
+                            + ' msvcrt.lib'
+                            + ' /LIBPATH:"$VisualStudioPath$/VC/lib"'
+                            + .WindowsLibPaths
+    #endif
 }

@@ -18,19 +18,19 @@ class AString;
 //------------------------------------------------------------------------------
 class Network
 {
-public:	
-	static void GetHostName( AString & hostName );
+public:
+    static void GetHostName( AString & hostName );
 
-	static uint32_t GetHostIPFromName( const AString & hostName, uint32_t timeoutMS = 1000 );
+    static uint32_t GetHostIPFromName( const AString & hostName, uint32_t timeoutMS = 1000 );
 
 private:
-	static uint32_t NameResolutionThreadFunc( void * userData );
+    static uint32_t NameResolutionThreadFunc( void * userData );
 
-	struct NameResolutionData
-	{
-		AStackString<>	hostName;
-		bool			safeToFree;
-	};
+    struct NameResolutionData
+    {
+        AStackString<>  hostName;
+        bool            safeToFree;
+    };
 };
 
 //------------------------------------------------------------------------------

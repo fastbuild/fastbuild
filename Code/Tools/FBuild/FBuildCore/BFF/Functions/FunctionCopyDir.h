@@ -16,12 +16,12 @@
 class FunctionCopyDir : public Function
 {
 public:
-	explicit		FunctionCopyDir();
-	inline virtual ~FunctionCopyDir() {}
+    explicit        FunctionCopyDir();
+    inline virtual ~FunctionCopyDir() {}
 
 protected:
-	virtual bool AcceptsHeader() const override;
-	virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
+    virtual bool AcceptsHeader() const override;
+    virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 };
 
 //------------------------------------------------------------------------------

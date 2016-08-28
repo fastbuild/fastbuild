@@ -12,11 +12,11 @@
 //------------------------------------------------------------------------------
 class Meta_Name : public IMetaData
 {
-	REFLECT_DECLARE( Meta_Name )
+    REFLECT_DECLARE( Meta_Name )
 public:
     explicit Meta_Name();
-	explicit Meta_Name( const char * name );
-	virtual ~Meta_Name();
+    explicit Meta_Name( const char * name );
+    virtual ~Meta_Name();
 
     inline const AString & GetName() const { return m_Name; }
 

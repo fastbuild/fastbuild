@@ -3,9 +3,9 @@
 class A
 {
 public:
-	A() { value = 0; }
+    A() { value = 0; }
 
-	int value;
+    int value;
 };
 
 // A CLR function (accessible from C++)

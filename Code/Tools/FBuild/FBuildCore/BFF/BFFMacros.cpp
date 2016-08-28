@@ -40,19 +40,19 @@ bool BFFMacros::IsDefined(const AString& token) const
     if ( token == "__WINDOWS__" )
     {
         #if defined( __WINDOWS__ )
-        return true;
+            return true;
         #endif
     }
     if ( token == "__LINUX__" )
     {
         #if defined( __LINUX__ )
-        return true;
+            return true;
         #endif
     }
     if ( token == "__OSX__" )
     {
         #if defined( __OSX__ )
-        return true;
+            return true;
         #endif
     }
 

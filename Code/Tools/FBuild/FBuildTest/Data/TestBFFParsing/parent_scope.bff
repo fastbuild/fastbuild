@@ -61,13 +61,13 @@
     ^array = { ^a, ^b, ^c }
     ^array = {^a,^b,^c}
     ^array =
-        {
-        ^a
-        ,
-        ^b
-        ,
-        ^c
-        }
+            {
+            ^a
+            ,
+            ^b
+            ,
+            ^c
+            }
 }
 
 ; struct with parent scope

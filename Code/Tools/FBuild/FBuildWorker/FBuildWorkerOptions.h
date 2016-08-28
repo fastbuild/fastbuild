@@ -21,24 +21,24 @@ class AString;
 class FBuildWorkerOptions
 {
 public:
-	FBuildWorkerOptions();
+    FBuildWorkerOptions();
 
-	bool ProcessCommandLine( const AString & commandLine );
+    bool ProcessCommandLine( const AString & commandLine );
 
-	// sub-process control
-	#if defined( __WINDOWS__ )
-		bool m_IsSubprocess;	// Process is child? (Internal)
-		bool m_UseSubprocess;	// Should we launch a sub-process?
-	#endif
+    // sub-process control
+    #if defined( __WINDOWS__ )
+        bool m_IsSubprocess;    // Process is child? (Internal)
+        bool m_UseSubprocess;   // Should we launch a sub-process?
+    #endif
 
-	// resource usage
-	bool m_OverrideCPUAllocation;
-	uint32_t m_CPUAllocation;
-	bool m_OverrideWorkMode;
-	WorkerSettings::Mode m_WorkMode;
+    // resource usage
+    bool m_OverrideCPUAllocation;
+    uint32_t m_CPUAllocation;
+    bool m_OverrideWorkMode;
+    WorkerSettings::Mode m_WorkMode;
 
 private:
-	void ShowUsageError();
+    void ShowUsageError();
 };
 
 //------------------------------------------------------------------------------

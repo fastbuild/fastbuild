@@ -16,14 +16,14 @@
 class FunctionCopy : public Function
 {
 public:
-	explicit		FunctionCopy();
-	inline virtual ~FunctionCopy() {}
+    explicit        FunctionCopy();
+    inline virtual ~FunctionCopy() {}
 
 protected:
-	virtual bool AcceptsHeader() const override;
-	virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
+    virtual bool AcceptsHeader() const override;
+    virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 
-	bool GetSourceNodes( const BFFIterator & iter, Node * node, Array< Node * > & nodes ) const;
+    bool GetSourceNodes( const BFFIterator & iter, Node * node, Array< Node * > & nodes ) const;
 };
 
 //------------------------------------------------------------------------------

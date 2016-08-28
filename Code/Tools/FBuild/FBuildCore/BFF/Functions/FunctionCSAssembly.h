@@ -13,13 +13,13 @@
 class FunctionCSAssembly : public Function
 {
 public:
-	explicit		FunctionCSAssembly();
-	inline virtual ~FunctionCSAssembly() {}
+    explicit        FunctionCSAssembly();
+    inline virtual ~FunctionCSAssembly() {}
 
 protected:
-	virtual bool AcceptsHeader() const override;
+    virtual bool AcceptsHeader() const override;
 
-	virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
+    virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 };
 
 //------------------------------------------------------------------------------

@@ -20,7 +20,7 @@ Meta_Name::Meta_Name()
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Meta_Name::Meta_Name( const char * name )
-	: m_Name( name )
+    : m_Name( name )
 {
 }
 

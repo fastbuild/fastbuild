@@ -12,22 +12,22 @@
 //------------------------------------------------------------------------------
 inline float Sqrt( float num )
 {
-	return (float)sqrtf( num );
+    return (float)sqrtf( num );
 }
 
 inline float Cos( float num )
 {
-	return (float)cosf( num );
+    return (float)cosf( num );
 }
 
 inline float Sin( float num )
 {
-	return (float)sinf( num );
+    return (float)sinf( num );
 }
 
 inline float Tan( float num )
 {
-	return (float)tanf( num );
+    return (float)tanf( num );
 }
 
 inline float Pow( float a, float b )

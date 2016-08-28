@@ -10,30 +10,30 @@
 //------------------------------------------------------------------------------
 int main(int , char * [])
 {
-	BindReflection_Core();
+    BindReflection_Core();
 
-	// Tests to run
-	REGISTER_TESTGROUP( TestAtomic )
-	REGISTER_TESTGROUP( TestAString )
-	REGISTER_TESTGROUP( TestEnv )
-	REGISTER_TESTGROUP( TestFileIO )
-	REGISTER_TESTGROUP( TestHash )
-	REGISTER_TESTGROUP( TestLevenshteinDistance )
-	REGISTER_TESTGROUP( TestMemPoolBlock )
-	REGISTER_TESTGROUP( TestMutex )
-	REGISTER_TESTGROUP( TestPathUtils )
-	REGISTER_TESTGROUP( TestReflection )
-	REGISTER_TESTGROUP( TestSemaphore )
-	REGISTER_TESTGROUP( TestSharedMemory )
-	REGISTER_TESTGROUP( TestSystemMutex )
-	REGISTER_TESTGROUP( TestTestTCPConnectionPool )
-	REGISTER_TESTGROUP( TestTimer )
+    // Tests to run
+    REGISTER_TESTGROUP( TestAtomic )
+    REGISTER_TESTGROUP( TestAString )
+    REGISTER_TESTGROUP( TestEnv )
+    REGISTER_TESTGROUP( TestFileIO )
+    REGISTER_TESTGROUP( TestHash )
+    REGISTER_TESTGROUP( TestLevenshteinDistance )
+    REGISTER_TESTGROUP( TestMemPoolBlock )
+    REGISTER_TESTGROUP( TestMutex )
+    REGISTER_TESTGROUP( TestPathUtils )
+    REGISTER_TESTGROUP( TestReflection )
+    REGISTER_TESTGROUP( TestSemaphore )
+    REGISTER_TESTGROUP( TestSharedMemory )
+    REGISTER_TESTGROUP( TestSystemMutex )
+    REGISTER_TESTGROUP( TestTestTCPConnectionPool )
+    REGISTER_TESTGROUP( TestTimer )
 
-	UnitTestManager utm;
+    UnitTestManager utm;
 
-	bool allPassed = utm.RunTests();
+    bool allPassed = utm.RunTests();
 
-	return allPassed ? 0 : -1;
+    return allPassed ? 0 : -1;
 }
 
 //------------------------------------------------------------------------------

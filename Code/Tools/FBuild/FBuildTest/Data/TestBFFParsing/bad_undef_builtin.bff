@@ -2,11 +2,11 @@
 // Bad Undefine
 //
 #if __WINDOWS__
-	#undef __WINDOWS__
+    #undef __WINDOWS__
 #endif
 #if __OSX__
-	#undef __OSX__
+    #undef __OSX__
 #endif
 #if __LINUX__
-	#undef __LINUX__
+    #undef __LINUX__
 #endif

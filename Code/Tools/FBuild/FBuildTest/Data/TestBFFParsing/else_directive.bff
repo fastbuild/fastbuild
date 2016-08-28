@@ -6,25 +6,25 @@
 
 // Regular
 #if TOGGLE
-	// Ok
+    // Ok
 #else
-	#error
+    #error
 #endif
 
 // Inverted
 #if !TOGGLE
-	#error
+    #error
 #else
-	// Ok
+    // Ok
 #endif
 
 // Nested
 #if TOGGLE
-	#if TOGGLE
-		#if TOGGLE
-			// Ok
-		#else
-			#error
-		#endif
-	#endif
+    #if TOGGLE
+        #if TOGGLE
+            // Ok
+        #else
+            #error
+        #endif
+    #endif
 #endif

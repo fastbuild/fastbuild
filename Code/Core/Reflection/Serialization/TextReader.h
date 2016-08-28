@@ -24,56 +24,56 @@ class Struct;
 class TextReader
 {
 public:
-	explicit TextReader( ConstMemoryStream & stream );
+    explicit TextReader( ConstMemoryStream & stream );
 
-	RefObject * Read();
+    RefObject * Read();
 private:
-	bool ReadLines();
-	bool ReadObject();
-	bool ReadStruct();
-	bool ReadRef();
-	bool ReadWeakRef();
-	bool ReadArray();
-	bool ReadArrayOfStruct();
-	bool ReadChildren();
-	bool ReadProperty( PropertyType propertyType );
+    bool ReadLines();
+    bool ReadObject();
+    bool ReadStruct();
+    bool ReadRef();
+    bool ReadWeakRef();
+    bool ReadArray();
+    bool ReadArrayOfStruct();
+    bool ReadChildren();
+    bool ReadProperty( PropertyType propertyType );
 
-	void SkipWhitespace( bool stopAtLineEnd = false );
-	bool GetToken( AString & token );
-	bool GetString( AString & string );
+    void SkipWhitespace( bool stopAtLineEnd = false );
+    bool GetToken( AString & token );
+    bool GetString( AString & string );
 
-	void Error( const char * error ) const;
+    void Error( const char * error ) const;
 
-	void ResolveWeakRefs() const;
+    void ResolveWeakRefs() const;
 
-	const char * m_Pos;
-	const char * m_End;
+    const char * m_Pos;
+    const char * m_End;
 
-	struct StackFrame
-	{
-		void * m_Base; // The pointer to the object/struct/etc being deserialized
-		const ReflectionInfo * m_Reflection; // Reflection representing the data
-		const ReflectedProperty * m_ArrayProperty; // are we processing an array?
+    struct StackFrame
+    {
+        void * m_Base; // The pointer to the object/struct/etc being deserialized
+        const ReflectionInfo * m_Reflection; // Reflection representing the data
+        const ReflectedProperty * m_ArrayProperty; // are we processing an array?
 
-		// Debug helpers
-		#ifdef DEBUG
-			RefObject *	m_RefObject;
-			Struct *	m_Struct;
-		#endif
-	};
+        // Debug helpers
+        #ifdef DEBUG
+            RefObject * m_RefObject;
+            Struct *    m_Struct;
+        #endif
+    };
 
-	struct UnresolvedWeakRef
-	{
-		void * m_Base;
-		const ReflectionInfo * m_Reflection;
-		AString m_WeakRefName;
-		AString m_WeakRefValue;
-	};
+    struct UnresolvedWeakRef
+    {
+        void * m_Base;
+        const ReflectionInfo * m_Reflection;
+        AString m_WeakRefName;
+        AString m_WeakRefValue;
+    };
 
-	RefObject * m_RootObject;
-	Array< StackFrame > m_DeserializationStack;
-	Array< Object * > m_ObjectsToInit;
-	Array< UnresolvedWeakRef > m_UnresolvedWeakRefs;
+    RefObject * m_RootObject;
+    Array< StackFrame > m_DeserializationStack;
+    Array< Object * > m_ObjectsToInit;
+    Array< UnresolvedWeakRef > m_UnresolvedWeakRefs;
 };
 
 //------------------------------------------------------------------------------

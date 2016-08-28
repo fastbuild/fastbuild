@@ -13,37 +13,37 @@
 class Timer
 {
 public:
-	Timer() { Start(); }
-	inline ~Timer() {}
+    Timer() { Start(); }
+    inline ~Timer() {}
 
-	inline void Start() { m_StartTime = GetNow(); }
-	inline void Start( float time ) { m_StartTime = GetNow() - (int64_t)( (double)GetFrequency() * (double)time ); }
+    inline void Start() { m_StartTime = GetNow(); }
+    inline void Start( float time ) { m_StartTime = GetNow() - (int64_t)( (double)GetFrequency() * (double)time ); }
 
-	float GetElapsed() const
-	{
-		int64_t now = GetNow();
-		return ( (float)( now - m_StartTime ) * GetFrequencyInvFloat() );
-	}
+    float GetElapsed() const
+    {
+        int64_t now = GetNow();
+        return ( (float)( now - m_StartTime ) * GetFrequencyInvFloat() );
+    }
 
-	float GetElapsedMS() const
-	{
-		int64_t now = GetNow();
-		return ( (float)( now - m_StartTime ) * GetFrequencyInvFloatMS() );
-	}
+    float GetElapsedMS() const
+    {
+        int64_t now = GetNow();
+        return ( (float)( now - m_StartTime ) * GetFrequencyInvFloatMS() );
+    }
 
-	static int64_t GetNow();
-	static inline int64_t GetFrequency() { return s_Frequency; }
-	static inline float GetFrequencyInvFloat() { return s_FrequencyInvFloat; }
-	static inline float GetFrequencyInvFloatMS() { return s_FrequencyInvFloatMS; }
+    static int64_t GetNow();
+    static inline int64_t GetFrequency() { return s_Frequency; }
+    static inline float GetFrequencyInvFloat() { return s_FrequencyInvFloat; }
+    static inline float GetFrequencyInvFloatMS() { return s_FrequencyInvFloatMS; }
 
 private:
-	int64_t m_StartTime;
+    int64_t m_StartTime;
 
-	// frequency
-	friend class GlobalTimerFrequencyInitializer;
-	static int64_t s_Frequency;
-	static float s_FrequencyInvFloat;
-	static float s_FrequencyInvFloatMS;
+    // frequency
+    friend class GlobalTimerFrequencyInitializer;
+    static int64_t s_Frequency;
+    static float s_FrequencyInvFloat;
+    static float s_FrequencyInvFloatMS;
 };
 
 //------------------------------------------------------------------------------

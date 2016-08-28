@@ -21,9 +21,9 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 NetworkStartupHelper::NetworkStartupHelper()
-	: m_Stopped( false )
+    : m_Stopped( false )
 {
-	MutexHolder mh( s_Mutex );
+    MutexHolder mh( s_Mutex );
 
     s_RefCount++;
     if ( s_RefCount > 1 )
@@ -41,14 +41,14 @@ NetworkStartupHelper::NetworkStartupHelper()
 //------------------------------------------------------------------------------
 void NetworkStartupHelper::Stop()
 {
-	// Already manually stopped?
-	if ( m_Stopped == true )
-	{
-		return;
-	}
-	m_Stopped = true;
+    // Already manually stopped?
+    if ( m_Stopped == true )
+    {
+        return;
+    }
+    m_Stopped = true;
 
-	MutexHolder mh( s_Mutex );
+    MutexHolder mh( s_Mutex );
 
     ASSERT( s_RefCount > 0 );
     s_RefCount--;

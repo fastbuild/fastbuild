@@ -14,30 +14,30 @@ Settings {} // use Standard Environment
 //
 Copy( 'CopyFiles' )
 {
-	.Source		= {
-					'Data/TestUnity/a.cpp'
-					'Data/TestUnity/b.cpp'
-				  }
-	.Dest		= '$OutputPath$/Input/'
+    .Source     = {
+                    'Data/TestUnity/a.cpp'
+                    'Data/TestUnity/b.cpp'
+                  }
+    .Dest       = '$OutputPath$/Input/'
 }
 
 // Isolate Writable Files
 Unity( 'Unity' )
 {
-	.PreBuildDependencies			= 'CopyFiles'
+    .PreBuildDependencies           = 'CopyFiles'
 
-	.UnityInputIsolateWritableFiles	= true
-//	.UnityInputPath					= '$OutputPath$/Input/'
+    .UnityInputIsolateWritableFiles = true
+//  .UnityInputPath                 = '$OutputPath$/Input/'
 
-	.UnityInputFiles				= {
-										'$OutputPath$/Input/a.cpp'
-										'$OutputPath$/Input/b.cpp'
-									  }
-	.UnityOutputPath				= '$OutputPath$/Output/'
+    .UnityInputFiles                = {
+                                        '$OutputPath$/Input/a.cpp'
+                                        '$OutputPath$/Input/b.cpp'
+                                      }
+    .UnityOutputPath                = '$OutputPath$/Output/'
 }
 
 ObjectList( 'Compile' )
 {
-	.CompilerInputUnity				= 'Unity'
-	.CompilerOutputPath				= '$OutputPath$/Output/'
+    .CompilerInputUnity             = 'Unity'
+    .CompilerOutputPath             = '$OutputPath$/Output/'
 }

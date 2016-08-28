@@ -1,12 +1,12 @@
-; FBuild 
+; FBuild
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
 ; Windows Platform
 ;-------------------------------------------------------------------------------
-.VSBasePath			= '../External/SDK/VS13.4'
-.WindowsSDKBasePath	= '../External/SDK/Windows8.1'
-.ClangBasePath		= '../External/SDK/ClangForWindows/3.7.1'
+.VSBasePath         = '../External/SDK/VS13.4'
+.WindowsSDKBasePath = '../External/SDK/Windows8.1'
+.ClangBasePath      = '../External/SDK/ClangForWindows/3.7.1'
 
 ;-------------------------------------------------------------------------------
 ; Settings
@@ -14,17 +14,17 @@
 Settings
 {
     #if __WINDOWS__
-		#import TMP
-        .Environment	= { "PATH=$VSBasePath$\Common7\IDE\;$VSBasePath$\VC\bin\",
+        #import TMP
+        .Environment    = { "PATH=$VSBasePath$\Common7\IDE\;$VSBasePath$\VC\bin\",
                             "TMP=$TMP$",
                             "SystemRoot=C:\Windows" }
-        .CachePath		= "C:\.fbuild.cache"
+        .CachePath      = "C:\.fbuild.cache"
     #endif
     #if __OSX__
-        .CachePath		= "/tmp/.fbuild.cache"
+        .CachePath      = "/tmp/.fbuild.cache"
     #endif
     #if __LINUX__
-        .CachePath		= "/tmp/.fbuild.cache"
+        .CachePath      = "/tmp/.fbuild.cache"
     #endif
 }
 
@@ -33,48 +33,48 @@ Settings
 //------------------------------------------------------------------------------
 Compiler( 'Compiler-x86' )
 {
-	.Root		= '$VSBasePath$\VC\bin'
-	.Executable	= '$Root$\cl.exe'
-	.ExtraFiles = { '$Root$\c1.dll'
-					'$Root$\c1ast.dll',
-					'$Root$\c1xx.dll',
-					'$Root$\c1xxast.dll',
-					'$Root$\c2.dll',
-					'$Root$\msobj120.dll'
-					'$Root$\mspdb120.dll'
-					'$Root$\mspdbsrv.exe'
-					'$Root$\mspdbcore.dll'
-					'$Root$\mspft120.dll'
-					'$Root$\1033\clui.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcp120.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\vccorlib120.dll'
-				  }
+    .Root       = '$VSBasePath$\VC\bin'
+    .Executable = '$Root$\cl.exe'
+    .ExtraFiles = { '$Root$\c1.dll'
+                    '$Root$\c1ast.dll',
+                    '$Root$\c1xx.dll',
+                    '$Root$\c1xxast.dll',
+                    '$Root$\c2.dll',
+                    '$Root$\msobj120.dll'
+                    '$Root$\mspdb120.dll'
+                    '$Root$\mspdbsrv.exe'
+                    '$Root$\mspdbcore.dll'
+                    '$Root$\mspft120.dll'
+                    '$Root$\1033\clui.dll'
+                    '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcp120.dll'
+                    '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll'
+                    '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\vccorlib120.dll'
+                  }
 }
 Compiler( 'Compiler-x64' )
 {
-	.Root		= '$VSBasePath$\VC\bin'
-	.Executable	= '$Root$\x86_amd64\cl.exe'
-	.ExtraFiles = { '$Root$\x86_amd64\c1.dll'
-					'$Root$\x86_amd64\c1ast.dll',
-					'$Root$\x86_amd64\c1xx.dll',
-					'$Root$\x86_amd64\c1xxast.dll',
-					'$Root$\x86_amd64\c2.dll',
-					'$Root$\x86_amd64\1033\clui.dll'
-					'$Root$\msobj120.dll'
-					'$Root$\mspdb120.dll'
-					'$Root$\mspdbsrv.exe'
-					'$Root$\mspdbcore.dll'
-					'$Root$\mspft120.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcp120.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll'
-					'$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\vccorlib120.dll'
-				  }
+    .Root       = '$VSBasePath$\VC\bin'
+    .Executable = '$Root$\x86_amd64\cl.exe'
+    .ExtraFiles = { '$Root$\x86_amd64\c1.dll'
+                    '$Root$\x86_amd64\c1ast.dll',
+                    '$Root$\x86_amd64\c1xx.dll',
+                    '$Root$\x86_amd64\c1xxast.dll',
+                    '$Root$\x86_amd64\c2.dll',
+                    '$Root$\x86_amd64\1033\clui.dll'
+                    '$Root$\msobj120.dll'
+                    '$Root$\mspdb120.dll'
+                    '$Root$\mspdbsrv.exe'
+                    '$Root$\mspdbcore.dll'
+                    '$Root$\mspft120.dll'
+                    '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcp120.dll'
+                    '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll'
+                    '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\vccorlib120.dll'
+                  }
 }
 Compiler( 'Compiler-x86Clang' )
 {
-	.Root		= '$ClangBasePath$'
-	.Executable	= '$Root$\bin\clang++.exe'
+    .Root       = '$ClangBasePath$'
+    .Executable = '$Root$\bin\clang++.exe'
 }
 Compiler( 'Compiler-x64-Linux' )
 {
@@ -82,7 +82,7 @@ Compiler( 'Compiler-x64-Linux' )
 }
 Compiler( 'Compiler-x64-OSX' )
 {
-	.Executable = '/usr/bin/clang++'
+    .Executable = '/usr/bin/clang++'
 }
 
 //------------------------------------------------------------------------------
@@ -90,272 +90,272 @@ Compiler( 'Compiler-x64-OSX' )
 //------------------------------------------------------------------------------
 .MSVCBaseConfig =
 [
-	.AdditionalWarnings		= ' /we4062' // enumerator 'identifier' in a switch of enum 'enumeration' is not handled
-							+ ' /we4263' // 'function' : member function does not override any base class virtual member function
-							+ ' /we4265' // 'class': class has virtual functions, but destructor is not virtual
-							+ ' /we4296' // 'operator': expression is always false
-							+ ' /we4555' // expression has no effect; expected expression with side-effect
-							+ ' /we4619' // #pragma warning : there is no warning number 'number'
-							+ ' /we4640' // 'instance' : construction of local static object is not thread-safe
-							+ ' /we4826' // Conversion from 'type1 ' to 'type_2' is sign-extended. This may cause unexpected runtime behavior.
-							+ ' /we4836' // nonstandard extension used : 'type' : local types or unnamed types cannot be used as template arguments
-							+ ' /we4905' // wide string literal cast to 'LPSTR'
-							+ ' /we4906' // string literal cast to 'LPWSTR'
+    .AdditionalWarnings     = ' /we4062' // enumerator 'identifier' in a switch of enum 'enumeration' is not handled
+                            + ' /we4263' // 'function' : member function does not override any base class virtual member function
+                            + ' /we4265' // 'class': class has virtual functions, but destructor is not virtual
+                            + ' /we4296' // 'operator': expression is always false
+                            + ' /we4555' // expression has no effect; expected expression with side-effect
+                            + ' /we4619' // #pragma warning : there is no warning number 'number'
+                            + ' /we4640' // 'instance' : construction of local static object is not thread-safe
+                            + ' /we4826' // Conversion from 'type1 ' to 'type_2' is sign-extended. This may cause unexpected runtime behavior.
+                            + ' /we4836' // nonstandard extension used : 'type' : local types or unnamed types cannot be used as template arguments
+                            + ' /we4905' // wide string literal cast to 'LPSTR'
+                            + ' /we4906' // string literal cast to 'LPWSTR'
 
-	.CompilerOptions 		= '"%1" /Z7 /nologo /c /W4 /WX'
-							+ ' /Zc:inline'			// Remove unreferenced COMDATs at compile time (VS2013.2+)
-							+ ' /Zc:strictStrings'	// Require const only usage of string literals (VS2013+)
-							+ .AdditionalWarnings
-							+ ' /fp:fast'
-							+ ' /D"WIN32_LEAN_AND_MEAN" /D_WIN32 /D__WINDOWS__'
-							+ ' /D"_CRT_SECURE_NO_WARNINGS"' // don't warn about unsafe functions
+    .CompilerOptions        = '"%1" /Z7 /nologo /c /W4 /WX'
+                            + ' /Zc:inline'         // Remove unreferenced COMDATs at compile time (VS2013.2+)
+                            + ' /Zc:strictStrings'  // Require const only usage of string literals (VS2013+)
+                            + .AdditionalWarnings
+                            + ' /fp:fast'
+                            + ' /D"WIN32_LEAN_AND_MEAN" /D_WIN32 /D__WINDOWS__'
+                            + ' /D"_CRT_SECURE_NO_WARNINGS"' // don't warn about unsafe functions
                             + ' /D"_WINSOCK_DEPRECATED_NO_WARNINGS"' // don't warn about deprecated winsock functions - TODO:C Update API use
-	.PCHOptions				= .CompilerOptions
-							+ ' /Fp"%2" /Fo"%3"'
-	.CompilerOptions		+ ' /Fo"%2"'
-	.LibrarianOptions		= '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
-	.LinkerOptions			= '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+    .PCHOptions             = .CompilerOptions
+                            + ' /Fp"%2" /Fo"%3"'
+    .CompilerOptions        + ' /Fo"%2"'
+    .LibrarianOptions       = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
+    .LinkerOptions          = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
 
-	// Optimizations
-	.CompilerDebugOptimizations		= ' /MTd /Od /RTC1 /GS /Oy- /GR- /analyze'
-	.CompilerReleaseOptimizations	= ' /MT /Ox /Oy /Oi /GS- /GF /GL /Gy /Gw /GR- /analyze'
-	.LibrarianDebugOptimizations	= ''
-	.LibrarianReleaseOptimizations  = ' /LTCG'
-	.LinkerDebugOptimizations		= ''
-	.LinkerReleaseOptimizations		= ' /LTCG /OPT:REF,ICF'
+    // Optimizations
+    .CompilerDebugOptimizations     = ' /MTd /Od /RTC1 /GS /Oy- /GR- /analyze'
+    .CompilerReleaseOptimizations   = ' /MT /Ox /Oy /Oi /GS- /GF /GL /Gy /Gw /GR- /analyze'
+    .LibrarianDebugOptimizations    = ''
+    .LibrarianReleaseOptimizations  = ' /LTCG'
+    .LinkerDebugOptimizations       = ''
+    .LinkerReleaseOptimizations     = ' /LTCG /OPT:REF,ICF'
 
-	.BaseIncludePaths		= ' /I"./"'
-							+ ' /I"$VSBasePath$/VC/include/"'
-							+ ' /I"$WindowsSDKBasePath$/include/um"'
-							+ ' /I"$WindowsSDKBasePath$/include/shared"'
-	.CompilerOptions		+ .BaseIncludePaths
-	.PCHOptions				+ .BaseIncludePaths
+    .BaseIncludePaths       = ' /I"./"'
+                            + ' /I"$VSBasePath$/VC/include/"'
+                            + ' /I"$WindowsSDKBasePath$/include/um"'
+                            + ' /I"$WindowsSDKBasePath$/include/shared"'
+    .CompilerOptions        + .BaseIncludePaths
+    .PCHOptions             + .BaseIncludePaths
 
-	.WindowsLibPaths		= '$WindowsSDKBasePath$/lib/winv6.3/um'
+    .WindowsLibPaths        = '$WindowsSDKBasePath$/lib/winv6.3/um'
 
-	.UseExceptions			= ' /EHsc'
+    .UseExceptions          = ' /EHsc'
 ]
 
 // X86
 //------------------------------------------------------------------------------
-.X86BaseConfig = 
+.X86BaseConfig =
 [
-	Using( .MSVCBaseConfig )
-	.ToolsBasePath			= '$VSBasePath$\VC\bin'
-	.Compiler				= 'Compiler-x86'
-	.Librarian				= '$ToolsBasePath$\lib.exe'
-	.Linker					= '$ToolsBasePath$\link.exe'
-	.CompilerOptions		+ ' /arch:SSE2'
-							+ ' /DWIN32'
-	.PCHOptions				+ ' /arch:SSE2'
-							+ ' /DWIN32'
-	.LinkerOptions			+ ' /MACHINE:X86'
-	.Platform				= 'x86'
-	.LinkerOptions			+ ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib"'
+    Using( .MSVCBaseConfig )
+    .ToolsBasePath          = '$VSBasePath$\VC\bin'
+    .Compiler               = 'Compiler-x86'
+    .Librarian              = '$ToolsBasePath$\lib.exe'
+    .Linker                 = '$ToolsBasePath$\link.exe'
+    .CompilerOptions        + ' /arch:SSE2'
+                            + ' /DWIN32'
+    .PCHOptions             + ' /arch:SSE2'
+                            + ' /DWIN32'
+    .LinkerOptions          + ' /MACHINE:X86'
+    .Platform               = 'x86'
+    .LinkerOptions          + ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib"'
 ]
 .X86DebugConfig =
 [
-	Using( .X86BaseConfig )
-	.Config					= 'Debug'
-	.CompilerOptions		+ ' /DDEBUG /DPROFILING_ENABLED'
-							+ .CompilerDebugOptimizations
-	.PCHOptions				+ ' /DDEBUG /DPROFILING_ENABLED'
-							+ .CompilerDebugOptimizations
-	.LibrarianOptions		+ .LibrarianDebugOptimizations
-	.LinkerOptions			+ .LinkerDebugOptimizations
+    Using( .X86BaseConfig )
+    .Config                 = 'Debug'
+    .CompilerOptions        + ' /DDEBUG /DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
+    .PCHOptions             + ' /DDEBUG /DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
+    .LibrarianOptions       + .LibrarianDebugOptimizations
+    .LinkerOptions          + .LinkerDebugOptimizations
 ]
 .X86ReleaseConfig =
 [
-	Using( .X86BaseConfig )
-	.Config					= 'Release'
-	.CompilerOptions		+ ' /DRELEASE'
-							+ ' /d2Zi+'		// Improve optimized debugging VS2013.3+
-	.PCHOptions				+ ' /DRELEASE'
+    Using( .X86BaseConfig )
+    .Config                 = 'Release'
+    .CompilerOptions        + ' /DRELEASE'
+                            + ' /d2Zi+'     // Improve optimized debugging VS2013.3+
+    .PCHOptions             + ' /DRELEASE'
 
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
     .DeoptimizeWritableFilesWithToken   = true
-	.CompilerOptionsDeoptimized		= '$CompilerOptions$ /Od'
-	.PCHOptionsDeoptimized			= '$PCHOptions$ /Od'
+    .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
+    .PCHOptionsDeoptimized          = '$PCHOptions$ /Od'
 
-	.CompilerOptions        + .CompilerReleaseOptimizations							
-	.PCHOptions             + .CompilerReleaseOptimizations							
-	.LibrarianOptions		+ .LibrarianReleaseOptimizations
-	.LinkerOptions			+ .LinkerReleaseOptimizations
+    .CompilerOptions        + .CompilerReleaseOptimizations
+    .PCHOptions             + .CompilerReleaseOptimizations
+    .LibrarianOptions       + .LibrarianReleaseOptimizations
+    .LinkerOptions          + .LinkerReleaseOptimizations
 ]
 .X86ProfileConfig =
 [
-	Using( .X86ReleaseConfig ) // Note: based on Release config
-	.Config					= 'Profile'
-	.CompilerOptions		+ ' /DPROFILING_ENABLED'
-	.PCHOptions				+ ' /DPROFILING_ENABLED'
+    Using( .X86ReleaseConfig ) // Note: based on Release config
+    .Config                 = 'Profile'
+    .CompilerOptions        + ' /DPROFILING_ENABLED'
+    .PCHOptions             + ' /DPROFILING_ENABLED'
 
     .DeoptimizeWritableFilesWithToken = false
 ]
 
 // X64
 //------------------------------------------------------------------------------
-.X64BaseConfig = 
+.X64BaseConfig =
 [
-	Using( .MSVCBaseConfig )
-	.ToolsBasePath			= '$VSBasePath$\VC\bin\x86_amd64'
-	.Compiler				= 'Compiler-x64'
-	.Librarian				= '$ToolsBasePath$\lib.exe'
-	.Linker					= '$ToolsBasePath$\link.exe'
-	.CompilerOptions		+ ' /DWIN64'
-	.PCHOptions				+ ' /DWIN64'
-	.LinkerOptions			+ ' /MACHINE:X64'
-	.Platform				= 'x64'
-	.LinkerOptions			+ ' /LIBPATH:"$WindowsLibPaths$/x64" /LIBPATH:"$VSBasePath$/VC/lib/amd64"'
+    Using( .MSVCBaseConfig )
+    .ToolsBasePath          = '$VSBasePath$\VC\bin\x86_amd64'
+    .Compiler               = 'Compiler-x64'
+    .Librarian              = '$ToolsBasePath$\lib.exe'
+    .Linker                 = '$ToolsBasePath$\link.exe'
+    .CompilerOptions        + ' /DWIN64'
+    .PCHOptions             + ' /DWIN64'
+    .LinkerOptions          + ' /MACHINE:X64'
+    .Platform               = 'x64'
+    .LinkerOptions          + ' /LIBPATH:"$WindowsLibPaths$/x64" /LIBPATH:"$VSBasePath$/VC/lib/amd64"'
 ]
 .X64DebugConfig =
 [
-	Using( .X64BaseConfig )
-	.Config					= 'Debug'
-	.CompilerOptions		+ ' /DDEBUG /DPROFILING_ENABLED'
-							+ .CompilerDebugOptimizations							
-	.PCHOptions				+ ' /DDEBUG /DPROFILING_ENABLED'
-							+ .CompilerDebugOptimizations							
-	.LibrarianOptions		+ .LibrarianDebugOptimizations
-	.LinkerOptions			+ .LinkerDebugOptimizations
+    Using( .X64BaseConfig )
+    .Config                 = 'Debug'
+    .CompilerOptions        + ' /DDEBUG /DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
+    .PCHOptions             + ' /DDEBUG /DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
+    .LibrarianOptions       + .LibrarianDebugOptimizations
+    .LinkerOptions          + .LinkerDebugOptimizations
 ]
 .X64ReleaseConfig =
 [
-	Using( .X64BaseConfig )
-	.Config					= 'Release'
-	.CompilerOptions		+ ' /DRELEASE'
-	.PCHOptions				+ ' /DRELEASE'
+    Using( .X64BaseConfig )
+    .Config                 = 'Release'
+    .CompilerOptions        + ' /DRELEASE'
+    .PCHOptions             + ' /DRELEASE'
 
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
     .DeoptimizeWritableFilesWithToken   = true
-	.CompilerOptionsDeoptimized		= '$CompilerOptions$ /Od'
-	.PCHOptionsDeoptimized			= '$PCHOptions$ /Od'
+    .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
+    .PCHOptionsDeoptimized          = '$PCHOptions$ /Od'
 
-	.CompilerOptions        + .CompilerReleaseOptimizations							
-	.PCHOptions             + .CompilerReleaseOptimizations							
-	.LibrarianOptions		+ .LibrarianReleaseOptimizations
-	.LinkerOptions			+ .LinkerReleaseOptimizations
+    .CompilerOptions        + .CompilerReleaseOptimizations
+    .PCHOptions             + .CompilerReleaseOptimizations
+    .LibrarianOptions       + .LibrarianReleaseOptimizations
+    .LinkerOptions          + .LinkerReleaseOptimizations
 ]
 .X64ProfileConfig =
 [
-	Using( .X64ReleaseConfig ) // Note: based on Release config
-	.Config					= 'Profile'
-	.CompilerOptions		+ ' /DPROFILING_ENABLED'
-	.PCHOptions				+ ' /DPROFILING_ENABLED'
+    Using( .X64ReleaseConfig ) // Note: based on Release config
+    .Config                 = 'Profile'
+    .CompilerOptions        + ' /DPROFILING_ENABLED'
+    .PCHOptions             + ' /DPROFILING_ENABLED'
 
     .DeoptimizeWritableFilesWithToken = false
 ]
 
 // X86 Clang
 //------------------------------------------------------------------------------
-.X86ClangBaseConfig = 
+.X86ClangBaseConfig =
 [
-	.ToolsBasePath			= '$ClangBasePath$'
-	.Compiler				= 'Compiler-x86Clang'
-	.Librarian				= '$ToolsBasePath$\bin\llvm-ar.exe'
-	.Linker					= '$VSBasePath$\VC\bin\link.exe' //'$ToolsBasePath$\lld.exe'								
+    .ToolsBasePath          = '$ClangBasePath$'
+    .Compiler               = 'Compiler-x86Clang'
+    .Librarian              = '$ToolsBasePath$\bin\llvm-ar.exe'
+    .Linker                 = '$VSBasePath$\VC\bin\link.exe' //'$ToolsBasePath$\lld.exe'
 
-	.WindowsLibPaths		= '$WindowsSDKBasePath$/lib/winv6.3/um'
+    .WindowsLibPaths        = '$WindowsSDKBasePath$/lib/winv6.3/um'
 
-	.BaseCompilerOptions	= '-o"%2" "%1" -c -g'
+    .BaseCompilerOptions    = '-o"%2" "%1" -c -g'
                             + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
 
                             // includes
-							+ ' -I"./"'
-							+ ' -I"$VSBasePath$/VC/include/"'
-							+ ' -I"$WindowsSDKBasePath$/include/um"'
-							+ ' -I"$WindowsSDKBasePath$/include/shared"'
+                            + ' -I"./"'
+                            + ' -I"$VSBasePath$/VC/include/"'
+                            + ' -I"$WindowsSDKBasePath$/include/um"'
+                            + ' -I"$WindowsSDKBasePath$/include/shared"'
 
                             // defines
-							+ ' -D"WIN32_LEAN_AND_MEAN" -D_WIN32 -D__WINDOWS__'
-							+ ' -DWIN32'
+                            + ' -D"WIN32_LEAN_AND_MEAN" -D_WIN32 -D__WINDOWS__'
+                            + ' -DWIN32'
                             + ' -D_CRT_SECURE_NO_WARNINGS'
 
                             // x86
                             + ' -m32'
-							+ ' -D"_X86_=1" -D_M_IX86'
-							+ ' -D"_INTEGRAL_MAX_BITS=64"'
+                            + ' -D"_X86_=1" -D_M_IX86'
+                            + ' -D"_INTEGRAL_MAX_BITS=64"'
 
-							// MS compatibility
-							+ ' -fms-compatibility'
-							+ ' -fms-extensions'
-							+ ' -fmsc-version=1900' // VS2015 equivalent
+                            // MS compatibility
+                            + ' -fms-compatibility'
+                            + ' -fms-extensions'
+                            + ' -fmsc-version=1900' // VS2015 equivalent
 
                             // as of v3.6, these warnings fire inside system headers
-							+ ' -Wno-#pragma-messages'      // warning : %s [-W#pragma-messages]
-                            + ' -Wno-unknown-pragmas'       // unknown pragma ignored [-Wunknown-pragmas]
-                            + ' -Wno-unused-function'       // unused function '%s' [-Wunused-function]
-							+ ' -Wno-microsoft'             // enumerator value is not representable in the underlying type 'int' [-Wmicrosoft]'
-							+ ' -Wno-unused-value'          // expression result unused [-Wunused-value]
-							+ ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
+                            + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
+                            + ' -Wno-unknown-pragmas'           // unknown pragma ignored [-Wunknown-pragmas]
+                            + ' -Wno-unused-function'           // unused function '%s' [-Wunused-function]
+                            + ' -Wno-microsoft'                 // enumerator value is not representable in the underlying type 'int' [-Wmicrosoft]'
+                            + ' -Wno-unused-value'              // expression result unused [-Wunused-value]
+                            + ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
                             + ' -Wno-incompatible-ms-struct'    // ms_struct may not produce MSVC-compatible layouts for classes with base classes or virtual functions [-Wincompatible-ms-struct]
 
-							// Fires on our new/delete operator (Clang bug?)
-							+ ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
+                            // Fires on our new/delete operator (Clang bug?)
+                            + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
 
-							// Extra warnings
-							+ ' -Wshadow'
+                            // Extra warnings
+                            + ' -Wshadow'
 
-							+ ' -fno-rtti'
+                            + ' -fno-rtti'
 
     .CompilerOptionsC       = '-x c '
                             + .BaseCompilerOptions
     .CompilerOptions        = '-std=c++11 '                     // allow C++11 features
                             + .BaseCompilerOptions
 
-	.PCHOptions				= .CompilerOptions // TODO: Configure this properly
+    .PCHOptions             = .CompilerOptions // TODO: Configure this properly
 
-	.LibrarianOptions		= 'rc "%2" "%1"' // NOTE: output must come first
-	.LinkerOptions			= '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
-							+ ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib"'
-							+ ' /MACHINE:X86'
+    .LibrarianOptions       = 'rc "%2" "%1"' // NOTE: output must come first
+    .LinkerOptions          = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+                            + ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib"'
+                            + ' /MACHINE:X86'
 
-	.Platform				= 'x86Clang'
-	.Config					= 'Debug'
+    .Platform               = 'x86Clang'
+    .Config                 = 'Debug'
 
-	.UseExceptions			= ' -fexceptions'
+    .UseExceptions          = ' -fexceptions'
 
-	// Optimizations
-	.CompilerDebugOptimizations		= ' -O0'
-	.CompilerReleaseOptimizations	= ' -O2'
-	.LibrarianDebugOptimizations	= ''
-	.LibrarianReleaseOptimizations  = ''
-	.LinkerDebugOptimizations		= ''
-	.LinkerReleaseOptimizations		= ''
+    // Optimizations
+    .CompilerDebugOptimizations     = ' -O0'
+    .CompilerReleaseOptimizations   = ' -O2'
+    .LibrarianDebugOptimizations    = ''
+    .LibrarianReleaseOptimizations  = ''
+    .LinkerDebugOptimizations       = ''
+    .LinkerReleaseOptimizations     = ''
 ]
 .X86ClangDebugConfig =
 [
-	Using( .X86ClangBaseConfig )
-	.Config					= 'Debug'
-	.CompilerOptions		+ ' -DDEBUG -DPROFILING_ENABLED'
-							+ .CompilerDebugOptimizations							
-	.PCHOptions				+ ' -DDEBUG -DPROFILING_ENABLED'
-							+ .CompilerDebugOptimizations							
-	.LibrarianOptions		+ .LibrarianDebugOptimizations
-	.LinkerOptions			+ .LinkerDebugOptimizations
+    Using( .X86ClangBaseConfig )
+    .Config                 = 'Debug'
+    .CompilerOptions        + ' -DDEBUG -DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
+    .PCHOptions             + ' -DDEBUG -DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
+    .LibrarianOptions       + .LibrarianDebugOptimizations
+    .LinkerOptions          + .LinkerDebugOptimizations
 ]
 .X86ClangReleaseConfig =
 [
-	Using( .X86ClangBaseConfig )
-	.Config					= 'Release'
-	.CompilerOptions		+ ' -DRELEASE'
-	.PCHOptions				+ ' -DRELEASE'
+    Using( .X86ClangBaseConfig )
+    .Config                 = 'Release'
+    .CompilerOptions        + ' -DRELEASE'
+    .PCHOptions             + ' -DRELEASE'
 
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
     .DeoptimizeWritableFilesWithToken   = true
-	.CompilerOptionsDeoptimized		= '$CompilerOptions$ /Od'
-	.PCHOptionsDeoptimized			= '$PCHOptions$ /Od'
+    .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
+    .PCHOptionsDeoptimized          = '$PCHOptions$ /Od'
 
-	.CompilerOptions        + .CompilerReleaseOptimizations							
-	.PCHOptions             + .CompilerReleaseOptimizations							
-	.LibrarianOptions		+ .LibrarianReleaseOptimizations
-	.LinkerOptions			+ .LinkerReleaseOptimizations
+    .CompilerOptions        + .CompilerReleaseOptimizations
+    .PCHOptions             + .CompilerReleaseOptimizations
+    .LibrarianOptions       + .LibrarianReleaseOptimizations
+    .LinkerOptions          + .LinkerReleaseOptimizations
 ]
 .X86ClangProfileConfig =
 [
-	Using( .X86ClangReleaseConfig ) // Note: based on Release config
-	.Config					= 'Profile'
-	.CompilerOptions		+ ' -DPROFILING_ENABLED'
-	.PCHOptions				+ ' -DPROFILING_ENABLED'
+    Using( .X86ClangReleaseConfig ) // Note: based on Release config
+    .Config                 = 'Profile'
+    .CompilerOptions        + ' -DPROFILING_ENABLED'
+    .PCHOptions             + ' -DPROFILING_ENABLED'
 
     .DeoptimizeWritableFilesWithToken = false
 ]
@@ -367,35 +367,35 @@ Compiler( 'Compiler-x64-OSX' )
     .Compiler               = 'Compiler-x64-Linux'
     .Librarian              = '/usr/bin/ar'
     .Linker                 = '/usr/bin/g++'
-    
+
     .BaseCompilerOptions    = '-o "%2" "%1" -c -g'
                             + ' -I./'
                             + ' -D__LINUX__'
-                            + ' -Wall -Werror -Wfatal-errors'                    // warnings as errors
+                            + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
                             + ' -m64'                           // x86-64
-                            
+
     .CompilerOptionsC       = .BaseCompilerOptions
     .CompilerOptions        = .BaseCompilerOptions
                             + ' -std=c++11'                     // allow C++11 features
-                            
+
                             // Disabled warnings
                             + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
-                            
+
     .LinkerOptions          = '"%1" -o "%2"'
-                                
+
     .LibrarianOptions       = 'rcs "%2" "%1"'
-    
+
     // Optimizations
     .CompilerDebugOptimizations     = ' -O0'
     .CompilerReleaseOptimizations   = ' -O3'
     .LibrarianDebugOptimizations    = ''
     .LibrarianReleaseOptimizations  = ''
     .LinkerDebugOptimizations       = ''
-    .LinkerReleaseOptimizations     = ''    
-    
-    .UseExceptions          = ' -fexceptions' 
+    .LinkerReleaseOptimizations     = ''
+
+    .UseExceptions          = ' -fexceptions'
 ]
-.X64BaseConfig_Linux = 
+.X64BaseConfig_Linux =
 [
     Using( .LinuxBaseConfig )
     .Platform               = 'x64Linux'
@@ -405,7 +405,7 @@ Compiler( 'Compiler-x64-OSX' )
     Using( .X64BaseConfig_Linux )
     .Config                 = 'Debug'
     .CompilerOptions        + ' -DDEBUG -DPROFILING_ENABLED'
-                            + .CompilerDebugOptimizations                           
+                            + .CompilerDebugOptimizations
     .LibrarianOptions       + .LibrarianDebugOptimizations
     .LinkerOptions          + .LinkerDebugOptimizations
 ]
@@ -437,11 +437,11 @@ Compiler( 'Compiler-x64-OSX' )
                             + ' -I./'
                             + ' -D__APPLE__'
                             + ' -D__OSX__'
-                            + ' -Wall -Wfatal-errors'                    // warnings as errors
+                            + ' -Wall -Wfatal-errors'       // warnings as errors
                             + ' -Wno-#pragma-messages'
-                            + ' -std=c++11'                     // allow C++11 features
-                            + ' -m64'                           // x86-64
-                            
+                            + ' -std=c++11'                 // allow C++11 features
+                            + ' -m64'                       // x86-64
+
     .CompilerOutputExtension= '.o'
     .LinkerOptions          = '"%1" -o "%2" -g'
 
@@ -491,15 +491,15 @@ Compiler( 'Compiler-x64-OSX' )
 //------------------------------------------------------------------------------
 .ResourceCompiler =
 [
-	.Compiler					= '$WindowsSDKBasePath$\Bin\x86\RC.exe'
-	.CompilerOutputExtension	= '.res'
-	.CompilerOptions			= '/nologo /fo"%2" "%1"'
+    .Compiler                   = '$WindowsSDKBasePath$\Bin\x86\RC.exe'
+    .CompilerOutputExtension    = '.res'
+    .CompilerOptions            = '/nologo /fo"%2" "%1"'
 ]
 
 //------------------------------------------------------------------------------
-// 
+//
 //------------------------------------------------------------------------------
-.OutputBase	= '../tmp'
+.OutputBase = '../tmp'
 
 //------------------------------------------------------------------------------
 // Unity/Blob files (shared across configs)
@@ -509,75 +509,75 @@ Compiler( 'Compiler-x64-OSX' )
 //------------------------------------------------------------------------------
 // VisualStudio Project Generation
 //------------------------------------------------------------------------------
-.ProjectCommon = 
+.ProjectCommon =
 [
-	.ProjectBuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -cache ^$(ProjectName)-^$(Configuration)'
-	.ProjectRebuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -cache -clean ^$(ProjectName)-^$(Configuration)'
-	.OutputDirectory			= '^$(SolutionDir)\..\tmp2'
-	.IntermediateDirectory		= '^$(SolutionDir)\..\tmp2'
-	.Platform = 'Win32' // unused
-	.PlatformToolset = 'v120'
+    .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -cache ^$(ProjectName)-^$(Configuration)'
+    .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -cache -clean ^$(ProjectName)-^$(Configuration)'
+    .OutputDirectory            = '^$(SolutionDir)\..\tmp2'
+    .IntermediateDirectory      = '^$(SolutionDir)\..\tmp2'
+    .Platform = 'Win32' // unused
+    .PlatformToolset = 'v120'
 ]
 
-.ProjectX86Debug		= [ Using( .ProjectCommon )	.Config = 'x86-Debug' ]
-.ProjectX86Profile		= [ Using( .ProjectCommon )	.Config = 'x86-Profile' ]
-.ProjectX86Release		= [ Using( .ProjectCommon )	.Config = 'x86-Release' ]
-.ProjectX64Debug		= [ Using( .ProjectCommon )	.Config = 'x64-Debug' ]
-.ProjectX64Profile		= [ Using( .ProjectCommon )	.Config = 'x64-Profile' ]
-.ProjectX64Release		= [ Using( .ProjectCommon )	.Config = 'x64-Release' ]
-.ProjectX86ClangDebug	= [ Using( .ProjectCommon )	.Config = 'x86Clang-Debug' ]
-.ProjectX86ClangProfile	= [ Using( .ProjectCommon )	.Config = 'x86Clang-Profile' ]
-.ProjectX86ClangRelease	= [ Using( .ProjectCommon )	.Config = 'x86Clang-Release' ]
+.ProjectX86Debug        = [ Using( .ProjectCommon ) .Config = 'x86-Debug' ]
+.ProjectX86Profile      = [ Using( .ProjectCommon ) .Config = 'x86-Profile' ]
+.ProjectX86Release      = [ Using( .ProjectCommon ) .Config = 'x86-Release' ]
+.ProjectX64Debug        = [ Using( .ProjectCommon ) .Config = 'x64-Debug' ]
+.ProjectX64Profile      = [ Using( .ProjectCommon ) .Config = 'x64-Profile' ]
+.ProjectX64Release      = [ Using( .ProjectCommon ) .Config = 'x64-Release' ]
+.ProjectX86ClangDebug   = [ Using( .ProjectCommon ) .Config = 'x86Clang-Debug' ]
+.ProjectX86ClangProfile = [ Using( .ProjectCommon ) .Config = 'x86Clang-Profile' ]
+.ProjectX86ClangRelease = [ Using( .ProjectCommon ) .Config = 'x86Clang-Release' ]
 
 .ProjectConfigs = { .ProjectX86Debug, .ProjectX86Profile, .ProjectX86Release,
-					.ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-					.ProjectX86ClangDebug, .ProjectX86ClangProfile, .ProjectX86ClangRelease }
+                    .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+                    .ProjectX86ClangDebug, .ProjectX86ClangProfile, .ProjectX86ClangRelease }
 
 // Project to compile everything
 VCXProject( 'All-proj' )
 {
-	.ProjectOutput				= '../tmp/VisualStudio/Projects/All.vcxproj'
-	.ProjectFiles			= { '.\fbuild.bff' }
-	.ProjectBasePath			= '.\'
+    .ProjectOutput              = '../tmp/VisualStudio/Projects/All.vcxproj'
+    .ProjectFiles           = { '.\fbuild.bff' }
+    .ProjectBasePath            = '.\'
 }
 
 // Project to regenerate projects/solutions
 VCXProject( 'UpdateSolution-proj' )
 {
-	.ProjectOutput				= '../tmp/VisualStudio/Projects/UpdateSolution.vcxproj'
-	.ProjectFiles			= { '.\fbuild.bff' }
-	.ProjectBasePath			= '.\'
+    .ProjectOutput              = '../tmp/VisualStudio/Projects/UpdateSolution.vcxproj'
+    .ProjectFiles           = { '.\fbuild.bff' }
+    .ProjectBasePath            = '.\'
 
     .GenerateProjectsCommands =
     [
-	    .ProjectBuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
-	    .ProjectRebuildCommand		= 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
+        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
+        .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
     ]
 
-    .ProjectX86Debug		= [ Using( .ProjectX86Debug )	    Using( .GenerateProjectsCommands ) ]
-    .ProjectX86Profile		= [ Using( .ProjectX86Profile )	    Using( .GenerateProjectsCommands ) ]
-    .ProjectX86Release		= [ Using( .ProjectX86Release )	    Using( .GenerateProjectsCommands ) ]
-    .ProjectX64Debug		= [ Using( .ProjectX64Debug )	    Using( .GenerateProjectsCommands ) ]
-    .ProjectX64Profile		= [ Using( .ProjectX64Profile )	    Using( .GenerateProjectsCommands ) ]
-    .ProjectX64Release		= [ Using( .ProjectX64Release )	    Using( .GenerateProjectsCommands ) ]
-    .ProjectX86ClangDebug	= [ Using( .ProjectX86ClangDebug )  Using( .GenerateProjectsCommands ) ]
+    .ProjectX86Debug        = [ Using( .ProjectX86Debug )       Using( .GenerateProjectsCommands ) ]
+    .ProjectX86Profile      = [ Using( .ProjectX86Profile )     Using( .GenerateProjectsCommands ) ]
+    .ProjectX86Release      = [ Using( .ProjectX86Release )     Using( .GenerateProjectsCommands ) ]
+    .ProjectX64Debug        = [ Using( .ProjectX64Debug )       Using( .GenerateProjectsCommands ) ]
+    .ProjectX64Profile      = [ Using( .ProjectX64Profile )     Using( .GenerateProjectsCommands ) ]
+    .ProjectX64Release      = [ Using( .ProjectX64Release )     Using( .GenerateProjectsCommands ) ]
+    .ProjectX86ClangDebug   = [ Using( .ProjectX86ClangDebug )  Using( .GenerateProjectsCommands ) ]
 
     .ProjectConfigs = { .ProjectX86Debug, .ProjectX86Profile, .ProjectX86Release,
-					    .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-						.ProjectX86ClangDebug, .ProjectX86ClangProfile, .ProjectX86ClangRelease }
+                        .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+                        .ProjectX86ClangDebug, .ProjectX86ClangProfile, .ProjectX86ClangRelease }
 }
 
 // Configurations
 //------------------------------------------------------------------------------
 .Configs = { .X86DebugConfig, .X86ProfileConfig, .X86ReleaseConfig,
-			 .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig,
-			 .X86ClangDebugConfig, .X86ClangProfileConfig, .X86ClangReleaseConfig,
-			 .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
-             .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
+             .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig,
+             .X86ClangDebugConfig, .X86ClangProfileConfig, .X86ClangReleaseConfig,
+             .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
+            .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
-.Configs_Windows_MSVC	= { .X86DebugConfig, .X86ProfileConfig, .X86ReleaseConfig,
-							.X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig }
-.Configs_Windows_Clang	= { .X86ClangDebugConfig, .X86ClangProfileConfig, .X86ClangReleaseConfig }
+.Configs_Windows_MSVC   = { .X86DebugConfig, .X86ProfileConfig, .X86ReleaseConfig,
+                            .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig }
+.Configs_Windows_Clang  = { .X86ClangDebugConfig, .X86ClangProfileConfig, .X86ClangReleaseConfig }
 .Configs_Linux_GCC      = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux }
 .Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
@@ -604,23 +604,23 @@ VCXProject( 'UpdateSolution-proj' )
 //------------------------------------------------------------------------------
 ForEach( .Config in .Configs )
 {
-	Using( .Config )
+    Using( .Config )
 
-	Alias( 'All-$Platform$-$Config$' )
-	{
-		.Targets		= { // tests
-							'CoreTest-$Platform$-$Config$',
-							'FBuildTest-$Platform$-$Config$',
-							// executables
-							'FBuildApp-$Platform$-$Config$',
-							'FBuildWorker-$Platform$-$Config$'
+    Alias( 'All-$Platform$-$Config$' )
+    {
+        .Targets        = { // tests
+                            'CoreTest-$Platform$-$Config$',
+                            'FBuildTest-$Platform$-$Config$',
+                            // executables
+                            'FBuildApp-$Platform$-$Config$',
+                            'FBuildWorker-$Platform$-$Config$'
 
-							// Clang doesn't link at the moment, so we need list all the libs manually
-							'Core-$Platform$-$Config$',
-							'TestFramework-$Platform$-$Config$',
-							'FBuildCore-$Platform$-$Config$'
-						  }
-	}
+                            // Clang doesn't link at the moment, so we need list all the libs manually
+                            'Core-$Platform$-$Config$',
+                            'TestFramework-$Platform$-$Config$',
+                            'FBuildCore-$Platform$-$Config$'
+                          }
+    }
 }
 
 // Aliases : All-$Platform$
@@ -628,13 +628,13 @@ ForEach( .Config in .Configs )
 .Platforms = { 'x86', 'x64', 'x86Clang', 'x64Linux', 'x64OSX' }
 ForEach( .Platform in .Platforms )
 {
-	Alias( 'All-$Platform$' )
-	{
-		.Targets		= { 'All-$Platform$-Debug',
-							'All-$Platform$-Profile',
-							'All-$Platform$-Release'
-						  }
-	}
+    Alias( 'All-$Platform$' )
+    {
+        .Targets        = { 'All-$Platform$-Debug',
+                            'All-$Platform$-Profile',
+                            'All-$Platform$-Release'
+                          }
+    }
 }
 
 // Aliases : All
@@ -642,7 +642,7 @@ ForEach( .Platform in .Platforms )
 #if __WINDOWS__
     Alias( 'All' )
     {
-        .Targets		= { 'All-x86',
+        .Targets        = { 'All-x86',
                             'All-x86Clang',
                             'All-x64'
                           }
@@ -651,13 +651,13 @@ ForEach( .Platform in .Platforms )
 #if __OSX__
     Alias( 'All' )
     {
-        .Targets		= { 'All-x64OSX' }
+        .Targets        = { 'All-x64OSX' }
     }
 #endif
 #if __LINUX__
     Alias( 'All' )
     {
-        .Targets		= { 'All-x64Linux' }
+        .Targets        = { 'All-x64Linux' }
     }
 #endif
 
@@ -666,7 +666,7 @@ ForEach( .Platform in .Platforms )
 #if __WINDOWS__
     Alias( 'Tests' )
     {
-        .Targets		= { 'CoreTest-RunTest-x86-Debug',
+        .Targets        = { 'CoreTest-RunTest-x86-Debug',
                             'CoreTest-RunTest-x86-Release',
                             'CoreTest-RunTest-x64-Debug',
                             'CoreTest-RunTest-x64-Release',
@@ -677,7 +677,7 @@ ForEach( .Platform in .Platforms )
 #if __OSX__
     Alias( 'Tests' )
     {
-        .Targets		= { 'CoreTest-RunTest-x64OSX-Debug',
+        .Targets        = { 'CoreTest-RunTest-x64OSX-Debug',
                             'CoreTest-RunTest-x64OSX-Release',
                             'FBuildTest-RunTest-x64OSX-Debug'
                           }
@@ -686,7 +686,7 @@ ForEach( .Platform in .Platforms )
 #if __LINUX__
     Alias( 'Tests' )
     {
-        .Targets		= { 'CoreTest-RunTest-x64Linux-Debug',
+        .Targets        = { 'CoreTest-RunTest-x64Linux-Debug',
                             'CoreTest-RunTest-x64Linux-Release',
                             'FBuildTest-RunTest-x64Linux-Debug'
                           }
@@ -697,48 +697,48 @@ ForEach( .Platform in .Platforms )
 //------------------------------------------------------------------------------
 Alias( 'All+Tests' )
 {
-	.Targets		= { 'All', 'Tests' }
+    .Targets        = { 'All', 'Tests' }
 }
 
 // Visual Studio Solution
 //------------------------------------------------------------------------------
 VSSolution( 'solution' )
 {
-    .SolutionOutput		= '../tmp/VisualStudio/FASTBuild.sln'
-    .SolutionProjects	= { 'All-proj',
+    .SolutionOutput     = '../tmp/VisualStudio/FASTBuild.sln'
+    .SolutionProjects   = { 'All-proj',
                             'UpdateSolution-proj',
-						  }
+                          }
     .SolutionBuildProject = 'All-proj'
-	.SolutionConfigs	= .ProjectConfigs
+    .SolutionConfigs    = .ProjectConfigs
 
     // Work around for Visual Studio F5 behaviour up-to-date check
-	.Deps				= [
-							.Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuildApp-proj', 'FBuildWorker-proj' }
-							.Dependencies = { 'All-proj' }
-						  ]
-	.SolutionDependencies = { .Deps }
+    .Deps               = [
+                            .Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuildApp-proj', 'FBuildWorker-proj' }
+                            .Dependencies = { 'All-proj' }
+                          ]
+    .SolutionDependencies = { .Deps }
 
     .Folder_0_External =
-	[ 
-		.Path			= '0. External'
-        .Projects		= { 'LZ4-proj' }
+    [
+        .Path           = '0. External'
+        .Projects       = { 'LZ4-proj' }
     ]
     .Folder_1_Test =
-	[ 
-		.Path			= '1. Test'
-        .Projects		= { 'CoreTest-proj', 'FBuildTest-proj', 'TestFramework-proj' }
+    [
+        .Path           = '1. Test'
+        .Projects       = { 'CoreTest-proj', 'FBuildTest-proj', 'TestFramework-proj' }
     ]
     .Folder_2_Libs =
-	[ 
-		.Path			= '2. Libs'
-        .Projects		= { 'Core-proj', 'FBuildCore-proj', 'OSUI-proj' }
+    [
+        .Path           = '2. Libs'
+        .Projects       = { 'Core-proj', 'FBuildCore-proj', 'OSUI-proj' }
     ]
     .Folder_3_Apps =
-	[ 
-		.Path			= '3. Apps'
-        .Projects		= { 'FBuildApp-proj', 'FBuildWorker-proj' }
+    [
+        .Path           = '3. Apps'
+        .Projects       = { 'FBuildApp-proj', 'FBuildWorker-proj' }
     ]
-    .SolutionFolders	= { .Folder_0_External, .Folder_1_Test, .Folder_2_Libs, .Folder_3_Apps }
+    .SolutionFolders    = { .Folder_0_External, .Folder_1_Test, .Folder_2_Libs, .Folder_3_Apps }
 }
 
 //------------------------------------------------------------------------------
@@ -746,23 +746,23 @@ VSSolution( 'solution' )
 //------------------------------------------------------------------------------
 XCodeProject( 'xcode' )
 {
-	.ProjectOutput 				= '../tmp/XCode/FASTBuild.xcodeproj/project.pbxproj'
-	.ProjectBasePath			= '../tmp/XCode/Projects/'
+    .ProjectOutput              = '../tmp/XCode/FASTBuild.xcodeproj/project.pbxproj'
+    .ProjectBasePath            = '../tmp/XCode/Projects/'
 
-	.XCodeBuildWorkingDir		= '../../../Code/'
+    .XCodeBuildWorkingDir       = '../../../Code/'
 
-	.ProjectFiles				= { 'Core-xcodeproj'
-									'CoreTest-xcodeproj'
-									'FBuildApp-xcodeproj'
-									'FBuildCore-xcodeproj'
-									'FBuildTest-xcodeproj'
-									'FBuildWorker-xcodeproj'
-									'LZ4-xcodeproj'	}
+    .ProjectFiles               = { 'Core-xcodeproj'
+                                    'CoreTest-xcodeproj'
+                                    'FBuildApp-xcodeproj'
+                                    'FBuildCore-xcodeproj'
+                                    'FBuildTest-xcodeproj'
+                                    'FBuildWorker-xcodeproj'
+                                    'LZ4-xcodeproj' }
 
-	.ProjectOSXDebug 		= [ .Config = 'Debug' 	.Target = 'all-x64OSX-Debug' ]
-	.ProjectOSXProfile 		= [ .Config = 'Profile' .Target = 'all-x64OSX-Profile' ]
-	.ProjectOSXRelease 		= [ .Config = 'Release' .Target = 'all-x64OSX-Release' ]		
-	.ProjectConfigs 		= { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }	
+    .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = 'all-x64OSX-Debug' ]
+    .ProjectOSXProfile      = [ .Config = 'Profile' .Target = 'all-x64OSX-Profile' ]
+    .ProjectOSXRelease      = [ .Config = 'Release' .Target = 'all-x64OSX-Release' ]
+    .ProjectConfigs         = { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }
 }
 
 //------------------------------------------------------------------------------

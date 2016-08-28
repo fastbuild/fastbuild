@@ -12,19 +12,19 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.CompilerInputPath			= "Data/TestObjectList/ExtraOutputPaths/"
-.CompilerOutputPath			= '$Out$/Test/ObjectList/ExtraOutputPaths/'
+.CompilerInputPath          = "Data/TestObjectList/ExtraOutputPaths/"
+.CompilerOutputPath         = '$Out$/Test/ObjectList/ExtraOutputPaths/'
 
 //
 // ObjectList
 //------------------------------------------------------------------------------
 ObjectList( 'ObjectList' )
 {
-	.CompilerOutputPath			+ 'ObjectList/'
-	.CompilerOptions			+ ' /Fa$CompilerOutputPath$/asm/file.asm'
-								+ ' /Fd$CompilerOutputPath$/pdb/file.pdb'
-								- ' /Z7'
-								+ ' /Zi'
+    .CompilerOutputPath         + 'ObjectList/'
+    .CompilerOptions            + ' /Fa$CompilerOutputPath$/asm/file.asm'
+                                + ' /Fd$CompilerOutputPath$/pdb/file.pdb'
+                                - ' /Z7'
+                                + ' /Zi'
 }
 
 //
@@ -32,10 +32,10 @@ ObjectList( 'ObjectList' )
 //------------------------------------------------------------------------------
 Library( 'Library' )
 {
-	.CompilerOutputPath			+ 'Library/'
-	.CompilerOptions			+ ' /Fa$CompilerOutputPath$asm/file.asm'
-								+ ' /Fd$CompilerOutputPath$/pdb/file.pdb'
-								- ' /Z7'
-								+ ' /Zi'
-	.LibrarianOutput			= .CompilerOutputPath + 'library.lib'
+    .CompilerOutputPath         + 'Library/'
+    .CompilerOptions            + ' /Fa$CompilerOutputPath$asm/file.asm'
+                                + ' /Fd$CompilerOutputPath$/pdb/file.pdb'
+                                - ' /Z7'
+                                + ' /Zi'
+    .LibrarianOutput            = .CompilerOutputPath + 'library.lib'
 }

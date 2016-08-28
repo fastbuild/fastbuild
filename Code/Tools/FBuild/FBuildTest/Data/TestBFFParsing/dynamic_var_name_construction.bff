@@ -4,59 +4,59 @@
 
 // Assignment RHS
 {
-	.Var1	= 'Value'
-	.Var2	= 'Var1'
-	.Var3	= .'$Var2$'
-	Print( .Var3 ) // Should print "Value"
+    .Var1   = 'Value'
+    .Var2   = 'Var1'
+    .Var3   = .'$Var2$'
+    Print( .Var3 ) // Should print "Value"
 }
 
 // Assignment LHS
 {
-	.Var1		= 'Value'
-	.Var2		= 'Var1'
-	.'$Var2$'	= 'Value'
-	Print( .Var1 ) // Should print "Value"
+    .Var1       = 'Value'
+    .Var2       = 'Var1'
+    .'$Var2$'   = 'Value'
+    Print( .Var1 ) // Should print "Value"
 }
 
 // Concatenation RHS
 {
-	.Var1		= 'Value'
-	.Var2		= 'Var1'
-	.Var3		= ''
-				+ .'$Var2$'
-	Print( .Var3 ) // Should print "Value"
+    .Var1       = 'Value'
+    .Var2       = 'Var1'
+    .Var3       = ''
+                + .'$Var2$'
+    Print( .Var3 ) // Should print "Value"
 }
 
 // Concatenation LHS
 {
-	.Var1		= ''
-	.Var2		= 'Var1'
-	.'$Var2$'	+ 'Value'
-	Print( .Var1 ) // Should print "Value"
+    .Var1       = ''
+    .Var2       = 'Var1'
+    .'$Var2$'   + 'Value'
+    Print( .Var1 ) // Should print "Value"
 }
 
 // Multiple Substitutions
 {
-	.CompilerOptions_X64_Debug = '/c %1 /Fo"%2" /nologo'
-	.Config				= 'Debug'
-	.Target				= 'X64'
-	.CompilerOptions	= .'CompilerOptions_$Target$_$Config$'
-	Print( .CompilerOptions ) // Should print "/c %1 /Fo"%2" /nologo"
+    .CompilerOptions_X64_Debug = '/c %1 /Fo"%2" /nologo'
+    .Config             = 'Debug'
+    .Target             = 'X64'
+    .CompilerOptions    = .'CompilerOptions_$Target$_$Config$'
+    Print( .CompilerOptions ) // Should print "/c %1 /Fo"%2" /nologo"
 }
 
 // Print
 {
-	.Var1		= 'Value'
-	.Var2		= 'Var1'
-	Print( .'$Var2$' ) // Should print "Value"
+    .Var1       = 'Value'
+    .Var2       = 'Var1'
+    Print( .'$Var2$' ) // Should print "Value"
 }
 
 // ForEach
 {
-	.Items			= { 'Item1', 'Item2' }
-	.ItemArrayName	= 'Items'
-	ForEach( .Item in .'$ItemArrayName$' )
-	{
-		Print( .Item ) // Should print "Item1" and then "Item2"
-	}
+    .Items          = { 'Item1', 'Item2' }
+    .ItemArrayName  = 'Items'
+    ForEach( .Item in .'$ItemArrayName$' )
+    {
+        Print( .Item ) // Should print "Item1" and then "Item2"
+    }
 }

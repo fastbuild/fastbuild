@@ -6,5 +6,5 @@
 
 int FunctionA()
 {
-	return 99; // Checked for in unit test
+    return 99; // Checked for in unit test
 }

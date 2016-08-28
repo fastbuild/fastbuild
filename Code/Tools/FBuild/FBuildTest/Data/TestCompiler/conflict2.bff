@@ -3,9 +3,9 @@
 //
 Compiler( 'Compiler' )
 {
-	.Executable     = 'Folder/A'
+    .Executable     = 'Folder/A'
 
-	// Simple duplication, this should fail
+    // Simple duplication, this should fail
     .ExtraFiles     = { 'Folder/B',
-						'Folder/B' }					
+                        'Folder/B' }
 }

@@ -18,8 +18,8 @@ class VCXProjectNode;
 class FunctionSLN : public Function
 {
 public:
-    explicit        FunctionSLN();
-    inline virtual ~FunctionSLN() {}
+    explicit         FunctionSLN();
+    inline virtual  ~FunctionSLN() {}
 
 protected:
     virtual bool AcceptsHeader() const override;
@@ -29,7 +29,7 @@ protected:
     bool GetStringFromStruct( const BFFVariable * s, const char * name, AString & result ) const;
     bool GetStringOrArrayOfStringsFromStruct( const BFFIterator & iter, const BFFVariable * s, const char * name, Array< AString > & result ) const;
 
-	VCXProjectNode * ResolveVCXProject( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & projectName ) const;
+    VCXProjectNode * ResolveVCXProject( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & projectName ) const;
 };
 
 //------------------------------------------------------------------------------

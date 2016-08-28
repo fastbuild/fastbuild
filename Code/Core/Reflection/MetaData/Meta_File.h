@@ -12,15 +12,15 @@
 //------------------------------------------------------------------------------
 class Meta_File : public IMetaData
 {
-	REFLECT_DECLARE( Meta_File )
+    REFLECT_DECLARE( Meta_File )
 public:
-	explicit Meta_File( bool relative = false );
-	virtual ~Meta_File();
+    explicit Meta_File( bool relative = false );
+    virtual ~Meta_File();
 
-	inline bool IsRelative() const { return m_Relative; }
+    inline bool IsRelative() const { return m_Relative; }
 
 protected:
-	bool m_Relative;
+    bool m_Relative;
 };
 
 //------------------------------------------------------------------------------

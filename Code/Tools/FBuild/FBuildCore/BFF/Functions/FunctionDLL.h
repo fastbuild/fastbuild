@@ -13,8 +13,8 @@
 class FunctionDLL : public FunctionExecutable
 {
 public:
-	explicit		FunctionDLL();
-	inline virtual ~FunctionDLL() {}
+    explicit        FunctionDLL();
+    inline virtual ~FunctionDLL() {}
 };
 
 //------------------------------------------------------------------------------

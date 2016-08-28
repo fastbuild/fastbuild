@@ -9,40 +9,40 @@ Settings {} // use Standard Environment
 
 Unity( "Unity-Test" )
 {
-	.UnityInputPath		= "Data/TestUnity"
-	.UnityInputPattern	= "*.cpp"
-	.UnityInputPathRecurse = false
-	.UnityInputExcludedFiles = "\b.cpp"
-	.UnityOutputPath	= "$Out$/Test/Unity/"
-	.UnityOutputPattern	= "Unity*.cpp"
-	.UnityNumFiles		= 2
-	.UnityPCH			= "PrecompiledHeader.h"
-	.UnityInputExcludedFiles = "wontcompile.cpp"
+    .UnityInputPath     = "Data/TestUnity"
+    .UnityInputPattern  = "*.cpp"
+    .UnityInputPathRecurse = false
+    .UnityInputExcludedFiles = "\b.cpp"
+    .UnityOutputPath    = "$Out$/Test/Unity/"
+    .UnityOutputPattern = "Unity*.cpp"
+    .UnityNumFiles      = 2
+    .UnityPCH           = "PrecompiledHeader.h"
+    .UnityInputExcludedFiles = "wontcompile.cpp"
 }
 
 Library( "Unity-Compiled" )
 {
-	#if __WINDOWS__
-		.PCHInputFile		= "Data/TestUnity/PrecompiledHeader.cpp"
-		.PCHOutputFile		= "$Out$/Test/Unity/PrecompiledHeader.pch"
-		.PCHOptions			= '%1 /Fo%2.obj /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /W4 /WX /c'
-	#endif
+    #if __WINDOWS__
+        .PCHInputFile               = "Data/TestUnity/PrecompiledHeader.cpp"
+        .PCHOutputFile              = "$Out$/Test/Unity/PrecompiledHeader.pch"
+        .PCHOptions                 = '%1 /Fo%2.obj /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /W4 /WX /c'
+    #endif
     #if __LINUX__
-        .PCHInputFile       = "Data/TestUnity/PrecompiledHeader.h"
-        .PCHOutputFile      = "$Out$/Test/TestUnity/PrecompiledHeader.h.gch"
+        .PCHInputFile               = "Data/TestUnity/PrecompiledHeader.h"
+        .PCHOutputFile              = "$Out$/Test/TestUnity/PrecompiledHeader.h.gch"
         .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux
     #endif
     #if __OSX__
-        .PCHInputFile       = "Data/TestUnity/PrecompiledHeader.h"
-        .PCHOutputFile      = "$Out$/Test/TestUnity/PrecompiledHeader.pch"
+        .PCHInputFile               = "Data/TestUnity/PrecompiledHeader.h"
+        .PCHOutputFile              = "$Out$/Test/TestUnity/PrecompiledHeader.pch"
         .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on OS X
     #endif
 
-	.CompilerInputUnity = "Unity-Test"
-	.CompilerOutputPath	= "$Out$/Test/Unity/"
-	.LibrarianOutput	= "$Out$/Test/Unity/Unity.lib"
+    .CompilerInputUnity = "Unity-Test"
+    .CompilerOutputPath = "$Out$/Test/Unity/"
+    .LibrarianOutput    = "$Out$/Test/Unity/Unity.lib"
     #if __WINDOWS__
-        .CompilerOptions	+ ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+        .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
                             + ' /I"Data/TestUnity"'
     #endif
     #if __LINUX__
@@ -59,8 +59,8 @@ Library( "Unity-Compiled" )
 // Explicit list of files
 Unity( 'Unity-Explicit-Files' )
 {
-	.UnityInputFiles = { 'Data/TestUnity/a.cpp',
-						 'Data/TestUnity/b.cpp',
-						 'Data/TestUnity/c.cpp' }
-	.UnityOutputPath	= "$Out$/Test/Unity/Explicit/"
+    .UnityInputFiles = { 'Data/TestUnity/a.cpp',
+                         'Data/TestUnity/b.cpp',
+                         'Data/TestUnity/c.cpp' }
+    .UnityOutputPath    = "$Out$/Test/Unity/Explicit/"
 }

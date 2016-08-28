@@ -13,19 +13,19 @@
 class FileNode : public Node
 {
 public:
-	explicit FileNode( const AString & fileName, uint32_t controlFlags = Node::FLAG_TRIVIAL_BUILD );
-	virtual ~FileNode();
+    explicit FileNode( const AString & fileName, uint32_t controlFlags = Node::FLAG_TRIVIAL_BUILD );
+    virtual ~FileNode();
 
-	static inline Node::Type GetTypeS() { return Node::FILE_NODE; }
+    static inline Node::Type GetTypeS() { return Node::FILE_NODE; }
 
-	virtual bool IsAFile() const override { return true; }
+    virtual bool IsAFile() const override { return true; }
 
-	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-	virtual void Save( IOStream & stream ) const override;
+    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
+    virtual void Save( IOStream & stream ) const override;
 protected:
-	virtual BuildResult DoBuild( Job * job ) override;
+    virtual BuildResult DoBuild( Job * job ) override;
 
-	friend class Client;
+    friend class Client;
 };
 
 //------------------------------------------------------------------------------

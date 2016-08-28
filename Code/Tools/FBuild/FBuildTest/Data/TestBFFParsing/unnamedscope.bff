@@ -7,7 +7,7 @@
 
 // as a local override
 {
-	.String = "Hello Again"
+    .String = "Hello Again"
 }
 
 // empty
@@ -18,12 +18,12 @@
 
 //nested
 {
-	{
-		{
-			{
-			}
-		}
-	}
+    {
+        {
+            {
+            }
+        }
+    }
 }
 
 // nested

@@ -19,41 +19,41 @@ class Function;
 //------------------------------------------------------------------------------
 struct XCodeProjectConfig : public Struct
 {
-	REFLECT_STRUCT_DECLARE( XCodeProjectConfig )
+    REFLECT_STRUCT_DECLARE( XCodeProjectConfig )
 public:
-	AString				m_Config;
-	AString				m_Target;
+    AString             m_Config;
+    AString             m_Target;
 };
 
 // XCodeProjectNode
 //------------------------------------------------------------------------------
 class XCodeProjectNode : public FileNode
 {
-	REFLECT_DECLARE( XCodeProjectNode )
+    REFLECT_DECLARE( XCodeProjectNode )
 public:
-	explicit XCodeProjectNode();
-	bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
-	virtual ~XCodeProjectNode();
+    explicit XCodeProjectNode();
+    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual ~XCodeProjectNode();
 
-	static inline Node::Type GetTypeS() { return Node::XCODEPROJECT_NODE; }
+    static inline Node::Type GetTypeS() { return Node::XCODEPROJECT_NODE; }
 
-	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-	virtual void Save( IOStream & stream ) const override;
+    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
+    virtual void Save( IOStream & stream ) const override;
 private:
-	virtual BuildResult DoBuild( Job * job ) override;
-	
-	Array< AString > 	m_ProjectInputPaths;
-	Array< AString >	m_ProjectInputPathsExclude;
-	Array< AString >	m_ProjectFiles;
-	Array< AString >	m_ProjectFilesToExclude;
-	Array< AString >	m_PatternToExclude;
-	Array< AString >	m_ProjectBasePath;
-	Array< AString > 	m_ProjectAllowedFileExtensions;
-	Array< XCodeProjectConfig > m_ProjectConfigs;
-	AString				m_XCodeOrganizationName;
-	AString 			m_XCodeBuildToolPath;
-	AString				m_XCodeBuildToolArgs;
-	AString				m_XCodeBuildWorkingDir;
+    virtual BuildResult DoBuild( Job * job ) override;
+
+    Array< AString >    m_ProjectInputPaths;
+    Array< AString >    m_ProjectInputPathsExclude;
+    Array< AString >    m_ProjectFiles;
+    Array< AString >    m_ProjectFilesToExclude;
+    Array< AString >    m_PatternToExclude;
+    Array< AString >    m_ProjectBasePath;
+    Array< AString >    m_ProjectAllowedFileExtensions;
+    Array< XCodeProjectConfig > m_ProjectConfigs;
+    AString             m_XCodeOrganizationName;
+    AString             m_XCodeBuildToolPath;
+    AString             m_XCodeBuildToolArgs;
+    AString             m_XCodeBuildWorkingDir;
 };
 
 //------------------------------------------------------------------------------

@@ -13,17 +13,17 @@
 class FunctionForEach : public Function
 {
 public:
-	explicit		FunctionForEach();
-	inline virtual ~FunctionForEach() {}
+    explicit        FunctionForEach();
+    inline virtual ~FunctionForEach() {}
 
-	virtual bool AcceptsHeader() const override;
-	virtual bool NeedsHeader() const override;
-	virtual bool ParseFunction( NodeGraph & nodeGraph,
-								const BFFIterator & functionNameStart,
-								const BFFIterator * functionBodyStartToken, 
-								const BFFIterator * functionBodyStopToken,
-								const BFFIterator * functionHeaderStartToken,
-								const BFFIterator * functionHeaderStopToken ) const override;
+    virtual bool AcceptsHeader() const override;
+    virtual bool NeedsHeader() const override;
+    virtual bool ParseFunction( NodeGraph & nodeGraph,
+                                const BFFIterator & functionNameStart,
+                                const BFFIterator * functionBodyStartToken,
+                                const BFFIterator * functionBodyStopToken,
+                                const BFFIterator * functionHeaderStartToken,
+                                const BFFIterator * functionHeaderStopToken ) const override;
 };
 
 //------------------------------------------------------------------------------

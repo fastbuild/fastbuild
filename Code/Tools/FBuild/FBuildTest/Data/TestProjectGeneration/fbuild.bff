@@ -8,56 +8,56 @@ Settings {}
 //
 .DebugX86 =
 [
-	.Platform						= 'Win32'
-	.Config							= 'Debug'
-	.LocalDebuggerCommand			= 'output/Executable_d.exe'
-	.LocalDebuggerWorkingDirectory  = 'output/'
-	.LocalDebuggerCommandArguments	= '-nosound'
-	.LocalDebuggerEnvironment       = '_NO_DEBUG_HEAP=1'
+    .Platform                       = 'Win32'
+    .Config                         = 'Debug'
+    .LocalDebuggerCommand           = 'output/Executable_d.exe'
+    .LocalDebuggerWorkingDirectory  = 'output/'
+    .LocalDebuggerCommandArguments  = '-nosound'
+    .LocalDebuggerEnvironment       = '_NO_DEBUG_HEAP=1'
 ]
 .ReleaseX86 =
 [
-	.Platform						= 'Win32'
-	.Config							= 'Release'
-	.LocalDebuggerCommand			= 'output/Executable.exe'
-	.LocalDebuggerWorkingDirectory  = 'c:/output/'
+    .Platform                       = 'Win32'
+    .Config                         = 'Release'
+    .LocalDebuggerCommand           = 'output/Executable.exe'
+    .LocalDebuggerWorkingDirectory  = 'c:/output/'
 ]
 .DebugPS3 =
 [
-	.Platform						= 'x64'
-	.Config							= 'Debug'
-	.LocalDebuggerCommand			= 'output/Executable_d64.exe'
+    .Platform                       = 'x64'
+    .Config                         = 'Debug'
+    .LocalDebuggerCommand           = 'output/Executable_d64.exe'
 ]
 .ReleasePS3 =
 [
-	.Platform						= 'x64'
-	.Config							= 'Release'
-	.LocalDebuggerCommand			= 'output/Executable64.exe'
+    .Platform                       = 'x64'
+    .Config                         = 'Release'
+    .LocalDebuggerCommand           = 'output/Executable64.exe'
 ]
 
 VCXProject( 'TestProj' )
 {
-	.ProjectOutput				= '$Out$\Test\ProjectGeneration\testproj.vcxproj'
-	.ProjectBasePath			= '$Out$\..\Code\Core\'
-	.ProjectInputPaths			= '$Out$\..\Code\Core\'
-	.ProjectInputPathsExclude	= '$Out$\..\Code\Core\CoreTest'
-	.ProjectBuildCommand		= 'fbuild -cache ^$(Project)-^$(Config)-^$(Platform)'
-	.ProjectRebuildCommand		= 'fbuild -cache ^$(Project)-^$(Config)-^$(Platform)'
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\testproj.vcxproj'
+    .ProjectBasePath            = '$Out$\..\Code\Core\'
+    .ProjectInputPaths          = '$Out$\..\Code\Core\'
+    .ProjectInputPathsExclude   = '$Out$\..\Code\Core\CoreTest'
+    .ProjectBuildCommand        = 'fbuild -cache ^$(Project)-^$(Config)-^$(Platform)'
+    .ProjectRebuildCommand      = 'fbuild -cache ^$(Project)-^$(Config)-^$(Platform)'
 
-	.ProjectFiles				= { '$Out$\..\Code\Core\FakeFile1.xyz' }
-	.ProjectFilesToExclude		= { '$Out$\..\Code\Core\Containers\Array.h' }
+    .ProjectFiles               = { '$Out$\..\Code\Core\FakeFile1.xyz' }
+    .ProjectFilesToExclude      = { '$Out$\..\Code\Core\Containers\Array.h' }
 
-	.ProjectReferences			= { "System.Core" }
-	.ProjectProjectReferences	= { "MyProject.csproj|{12345678-9304-42b9-911a-bb6d6bac30c0}" }
+    .ProjectReferences          = { "System.Core" }
+    .ProjectProjectReferences   = { "MyProject.csproj|{12345678-9304-42b9-911a-bb6d6bac30c0}" }
 
-	// configuration/specific options
-	.ProjectConfigs				= { .DebugX86, .ReleaseX86, .DebugPS3, .ReleasePS3 }
+    // configuration/specific options
+    .ProjectConfigs             = { .DebugX86, .ReleaseX86, .DebugPS3, .ReleasePS3 }
 }
 
 VSSolution( 'TestSln' )
 {
-	.SolutionProjects				= { 'TestProj' }
-	.SolutionBuildProject 			= 'TestProj'
-	.SolutionOutput					= "$Out$\Test\ProjectGeneration\testsln.sln"
+    .SolutionProjects               = { 'TestProj' }
+    .SolutionBuildProject           = 'TestProj'
+    .SolutionOutput                 = "$Out$\Test\ProjectGeneration\testsln.sln"
 }
 

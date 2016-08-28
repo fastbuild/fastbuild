@@ -17,14 +17,14 @@ class OSFont;
 class OSLabel : public OSWidget
 {
 public:
-	explicit OSLabel( OSWindow * parentWindow );
+    explicit OSLabel( OSWindow * parentWindow );
 
-	void SetFont( OSFont * font );
+    void SetFont( OSFont * font );
 
-	void Init( int32_t x, int32_t y, uint32_t w, uint32_t h, const char * labelText );
+    void Init( int32_t x, int32_t y, uint32_t w, uint32_t h, const char * labelText );
 
 protected:
-	OSFont *	m_Font;
+    OSFont *    m_Font;
 };
 
 //------------------------------------------------------------------------------

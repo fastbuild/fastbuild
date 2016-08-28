@@ -18,25 +18,25 @@ class Job;
 class WorkerThreadRemote : public WorkerThread
 {
 public:
-	explicit WorkerThreadRemote( uint32_t threadIndex );
-	virtual ~WorkerThreadRemote();
+    explicit WorkerThreadRemote( uint32_t threadIndex );
+    virtual ~WorkerThreadRemote();
 
-	void GetStatus( AString & hostName, AString & status, bool & isIdle ) const;
+    void GetStatus( AString & hostName, AString & status, bool & isIdle ) const;
 
-	// control remote CPU usage
-	static void		SetNumCPUsToUse( uint32_t c ) { s_NumCPUsToUse = c; }
-	static uint32_t GetNumCPUsToUse() { return s_NumCPUsToUse; }
+    // control remote CPU usage
+    static void     SetNumCPUsToUse( uint32_t c ) { s_NumCPUsToUse = c; }
+    static uint32_t GetNumCPUsToUse() { return s_NumCPUsToUse; }
 private:
-	virtual void Main();
+    virtual void Main();
 
-	bool IsEnabled() const;
-	
-	mutable Mutex m_CurrentJobMutex;
-	Job * m_CurrentJob;
+    bool IsEnabled() const;
 
-	// static
-	static uint32_t s_NumCPUsToUse;
+    mutable Mutex m_CurrentJobMutex;
+    Job * m_CurrentJob;
+
+    // static
+    static uint32_t s_NumCPUsToUse;
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_WORKERTHREADREMOTE_H 
+#endif // FBUILD_WORKERTHREADREMOTE_H

@@ -17,28 +17,28 @@ class Function;
 //------------------------------------------------------------------------------
 class TestNode : public FileNode
 {
-	REFLECT_DECLARE( TestNode )
+    REFLECT_DECLARE( TestNode )
 public:
-	TestNode();
-	bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
-	virtual ~TestNode();
+    TestNode();
+    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual ~TestNode();
 
-	static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
+    static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
 
-	virtual void Save( IOStream & stream ) const override;
-	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
+    virtual void Save( IOStream & stream ) const override;
+    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 
-	inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
+    inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
 private:
-	virtual BuildResult DoBuild( Job * job ) override;
+    virtual BuildResult DoBuild( Job * job ) override;
 
-	void EmitCompilationMessage( const char * workingDir ) const;
+    void EmitCompilationMessage( const char * workingDir ) const;
 
-	AString		m_TestExecutable;
-	AString		m_TestArguments;
-	AString		m_TestWorkingDir;
-	uint32_t	m_TestTimeOut;
-	bool		m_TestAlwaysShowOutput;
+    AString     m_TestExecutable;
+    AString     m_TestArguments;
+    AString     m_TestWorkingDir;
+    uint32_t    m_TestTimeOut;
+    bool        m_TestAlwaysShowOutput;
 };
 
 //------------------------------------------------------------------------------

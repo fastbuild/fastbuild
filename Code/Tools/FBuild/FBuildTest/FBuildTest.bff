@@ -1,18 +1,18 @@
 // FBuildTest
 //------------------------------------------------------------------------------
 {
-	.ProjectName		= 'FBuildTest'
-	.ProjectPath		= 'Tools\FBuild\FBuildTest'
+    .ProjectName        = 'FBuildTest'
+    .ProjectPath        = 'Tools\FBuild\FBuildTest'
 
-	// Unity
-	//--------------------------------------------------------------------------
+    // Unity
+    //--------------------------------------------------------------------------
     {
         // Common options
         .UnityInputPath             = '$ProjectPath$\'
         .UnityOutputPath            = '$OutputBase$\Unity\$ProjectPath$\'
-        
+
         // Ignore test data (some of which is code)
-        .UnityInputExcludePath      = 'Tools\FBuild\FBuildTest\Data\'        
+        .UnityInputExcludePath      = 'Tools\FBuild\FBuildTest\Data\'
 
         // Windows
         Unity( '$ProjectName$-Unity-Windows' )
@@ -30,72 +30,72 @@
         }
     }
 
-	// Windows (MSVC)
-	//--------------------------------------------------------------------------
-	ForEach( .Config in .Configs_Windows_MSVC )
-	{
-		Using( .Config )
-		.OutputBase + '\$Platform$-$Config$'
+    // Windows (MSVC)
+    //--------------------------------------------------------------------------
+    ForEach( .Config in .Configs_Windows_MSVC )
+    {
+        Using( .Config )
+        .OutputBase + '\$Platform$-$Config$'
 
-		// Objects
-		ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
-		{
-			// Test framework uses exceptions
-			.CompilerOptions			+ .UseExceptions
+        // Objects
+        ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
+        {
+            // Test framework uses exceptions
+            .CompilerOptions            + .UseExceptions
 
-			// Input (Unity)
-			.CompilerInputUnity			= '$ProjectName$-Unity-Windows'
+            // Input (Unity)
+            .CompilerInputUnity         = '$ProjectName$-Unity-Windows'
 
-			// Output
-			.CompilerOutputPath			= '$OutputBase$/$ProjectName$/'
- 			.LibrarianOutput 			= '$OutputBase$/$ProjectName$/$ProjectName$.lib'
-		}
+            // Output
+            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$.lib'
+        }
 
-		// Executable
-		Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
-		{
-			.Libraries					= { 'Core-Lib-$Platform$-$Config$',
-											'FBuildCore-Lib-$Platform$-$Config$',
-											'FBuildTest-Lib-$Platform$-$Config$',
-											'TestFrameWork-Lib-$Platform$-$Config$',
-											'LZ4-Lib-$Platform$-$Config$' }
-			.LinkerOutput				= '$OutputBase$/Tools/FBuild/FBuildTest/FBuildTest.exe'
-			.LinkerOptions				+ ' /SUBSYSTEM:CONSOLE'
-										+ ' kernel32.lib'
-										+ ' Ws2_32.lib'
-										+ ' LIBCMT.LIB'
-										+ ' User32.lib'
-		}
-		Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
-	
-		// Run Test
-		Test( '$ProjectName$-RunTest-$Platform$-$Config$' )
-		{
-			.TestExecutable				= '$ProjectName$-Exe-$Platform$-$Config$'			
-			.TestOutput					= '$OutputBase$/$ProjectPath$/TestOutput.txt'
-			.TestWorkingDir				= 'Tools/FBuild/FBuildTest'
-		}
-	}
+        // Executable
+        Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
+        {
+            .Libraries                  = { 'Core-Lib-$Platform$-$Config$',
+                                            'FBuildCore-Lib-$Platform$-$Config$',
+                                            'FBuildTest-Lib-$Platform$-$Config$',
+                                            'TestFrameWork-Lib-$Platform$-$Config$',
+                                            'LZ4-Lib-$Platform$-$Config$' }
+            .LinkerOutput               = '$OutputBase$/Tools/FBuild/FBuildTest/FBuildTest.exe'
+            .LinkerOptions              + ' /SUBSYSTEM:CONSOLE'
+                                        + ' kernel32.lib'
+                                        + ' Ws2_32.lib'
+                                        + ' LIBCMT.LIB'
+                                        + ' User32.lib'
+        }
+        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
 
-	// Windows (Clang)
-	//--------------------------------------------------------------------------
-	ForEach( .Config in .Configs_Windows_Clang )
-	{
-		Using( .Config )
-		.OutputBase + '\$Platform$-$Config$'
+        // Run Test
+        Test( '$ProjectName$-RunTest-$Platform$-$Config$' )
+        {
+            .TestExecutable             = '$ProjectName$-Exe-$Platform$-$Config$'
+            .TestOutput                 = '$OutputBase$/$ProjectPath$/TestOutput.txt'
+            .TestWorkingDir             = 'Tools/FBuild/FBuildTest'
+        }
+    }
 
-		// Static Library
-		Library( '$ProjectName$-Lib-$Platform$-$Config$' )
-		{
-			// Input (Unity)
-			.CompilerInputUnity			= '$ProjectName$-Unity-Windows'
+    // Windows (Clang)
+    //--------------------------------------------------------------------------
+    ForEach( .Config in .Configs_Windows_Clang )
+    {
+        Using( .Config )
+        .OutputBase + '\$Platform$-$Config$'
 
-			// Output
-			.CompilerOutputPath			= '$OutputBase$/$ProjectName$/'
- 			.LibrarianOutput 			= '$OutputBase$/$ProjectName$/$ProjectName$.lib'
-		}
-		Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-	}
+        // Static Library
+        Library( '$ProjectName$-Lib-$Platform$-$Config$' )
+        {
+            // Input (Unity)
+            .CompilerInputUnity         = '$ProjectName$-Unity-Windows'
+
+            // Output
+            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$.lib'
+        }
+        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
+    }
 
     // Linux (GCC)
     //--------------------------------------------------------------------------
@@ -118,7 +118,7 @@
         // Executable
         Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
         {
-            .Libraries                  = { 
+            .Libraries                  = {
                                             'FBuildTest-Lib-$Platform$-$Config$',
                                             'FBuildCore-Lib-$Platform$-$Config$',
                                             'TestFrameWork-Lib-$Platform$-$Config$',
@@ -129,11 +129,11 @@
             .LinkerOptions              + ' -pthread -ldl -lrt'
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
-    
+
         // Run Test
         Test( '$ProjectName$-RunTest-$Platform$-$Config$' )
         {
-            .TestExecutable             = '$ProjectName$-Exe-$Platform$-$Config$'           
+            .TestExecutable             = '$ProjectName$-Exe-$Platform$-$Config$'
             .TestOutput                 = '$OutputBase$/$ProjectPath$/TestOutput.txt'
             .TestWorkingDir             = 'Tools/FBuild/FBuildTest'
         }
@@ -180,64 +180,64 @@
         }
     }
 
-	// Aliases
-	//--------------------------------------------------------------------------
-	// Per-Config
-	Alias( '$ProjectName$-Debug' )		{ .Targets = { '$ProjectName$-X86-Debug',   '$ProjectName$-X64-Debug', '$ProjectName$-X86Clang-Debug' } }
-	Alias( '$ProjectName$-Profile' )	{ .Targets = { '$ProjectName$-X86-Profile', '$ProjectName$-X64-Profile' } }
-	Alias( '$ProjectName$-Release' )	{ .Targets = { '$ProjectName$-X86-Release', '$ProjectName$-X64-Release' } }
+    // Aliases
+    //--------------------------------------------------------------------------
+    // Per-Config
+    Alias( '$ProjectName$-Debug' )      { .Targets = { '$ProjectName$-X86-Debug',   '$ProjectName$-X64-Debug', '$ProjectName$-X86Clang-Debug' } }
+    Alias( '$ProjectName$-Profile' )    { .Targets = { '$ProjectName$-X86-Profile', '$ProjectName$-X64-Profile' } }
+    Alias( '$ProjectName$-Release' )    { .Targets = { '$ProjectName$-X86-Release', '$ProjectName$-X64-Release' } }
 
-	// Per-Platform
-	Alias( '$ProjectName$-X86' )		{ .Targets = { '$ProjectName$-X86-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X86-Profile' } }
-	Alias( '$ProjectName$-X64' )		{ .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X64-Profile' } }
-	Alias( '$ProjectName$-X86Clang' )	{ .Targets = { '$ProjectName$-X86Clang-Debug' } }
+    // Per-Platform
+    Alias( '$ProjectName$-X86' )        { .Targets = { '$ProjectName$-X86-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X86-Profile' } }
+    Alias( '$ProjectName$-X64' )        { .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X64-Profile' } }
+    Alias( '$ProjectName$-X86Clang' )   { .Targets = { '$ProjectName$-X86Clang-Debug' } }
     Alias( '$ProjectName$-x64Linux' )   { .Targets = { '$ProjectName$-X64Linux-Debug', '$ProjectName$-X64Linux-Release', '$ProjectName$-X64Linux-Profile' } }
     Alias( '$ProjectName$-x64OSX' )     { .Targets = { '$ProjectName$-x64OSX-Debug', '$ProjectName$-x64OSX-Release', '$ProjectName$-x64OSX-Profile' } }
 
-	// All
-	Alias( '$ProjectName$' )
-	{
-		.Targets = { '$ProjectName$-Debug', '$ProjectName$-Profile', '$ProjectName$-Release' }
-	}
+    // All
+    Alias( '$ProjectName$' )
+    {
+        .Targets = { '$ProjectName$-Debug', '$ProjectName$-Profile', '$ProjectName$-Release' }
+    }
 
-	// Visual Studio Project Generation
-	//--------------------------------------------------------------------------
-	VCXProject( '$ProjectName$-proj' )
-	{
-		.ProjectOutput				= '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
-		.ProjectInputPaths			= '$ProjectPath$\'
-		.ProjectBasePath			= '$ProjectPath$\'
+    // Visual Studio Project Generation
+    //--------------------------------------------------------------------------
+    VCXProject( '$ProjectName$-proj' )
+    {
+        .ProjectOutput              = '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
+        .ProjectInputPaths          = '$ProjectPath$\'
+        .ProjectBasePath            = '$ProjectPath$\'
 
-		.LocalDebuggerCommand		= '^$(SolutionDir)..\^$(Configuration)\Tools\FBuild\FBuildTest\FBuildTest.exe'
-		.LocalDebuggerWorkingDirectory = '^$(SolutionDir)..\..\Code\Tools\FBuild\FBuildTest'
+        .LocalDebuggerCommand       = '^$(SolutionDir)..\^$(Configuration)\Tools\FBuild\FBuildTest\FBuildTest.exe'
+        .LocalDebuggerWorkingDirectory = '^$(SolutionDir)..\..\Code\Tools\FBuild\FBuildTest'
 
-		.ProjectX86Debug		= [ Using( .ProjectX86Debug )			.Target = '$ProjectName$-X86-Debug' ]
-		.ProjectX86Profile		= [ Using( .ProjectX86Profile )			.Target = '$ProjectName$-X86-Profile' ]
-		.ProjectX86Release		= [ Using( .ProjectX86Release )			.Target = '$ProjectName$-X86-Release' ]
-		.ProjectX64Debug		= [ Using( .ProjectX64Debug )			.Target = '$ProjectName$-X64-Debug' ]
-		.ProjectX64Profile		= [ Using( .ProjectX64Profile )			.Target = '$ProjectName$-X64-Profile' ]
-		.ProjectX64Release		= [ Using( .ProjectX64Release )			.Target = '$ProjectName$-X64-Release' ]
-		.ProjectX86ClangDebug	= [ Using( .ProjectX86ClangDebug )		.Target = '$ProjectName$-X86Clang-Debug' ]
-		.ProjectX86ClangProfile	= [ Using( .ProjectX86ClangProfile )	.Target = '$ProjectName$-X86Clang-Profile' ]
-		.ProjectX86ClangRelease	= [ Using( .ProjectX86ClangRelease )	.Target = '$ProjectName$-X86Clang-Release' ]
-		.ProjectConfigs			= { .ProjectX86Debug, .ProjectX86Profile, .ProjectX86Release,
-									.ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-									.ProjectX86ClangDebug, .ProjectX86ClangProfile, .ProjectX86ClangRelease }
-	}
-    
-   	// XCode Project Generation
-	//--------------------------------------------------------------------------
-	XCodeProject( '$ProjectName$-xcodeproj' )
-	{
-		.ProjectOutput 				= '../tmp/XCode/Projects/1_Test/$ProjectName$.xcodeproj/project.pbxproj'
-		.ProjectInputPaths			= '$ProjectPath$/'
-		.ProjectBasePath			= '$ProjectPath$/'
-		
-		.XCodeBuildWorkingDir		= '../../../../Code/'		
-		
-		.ProjectOSXDebug 		= [ .Config = 'Debug' 	.Target = '$ProjectName$-x64OSX-Debug' ]
-		.ProjectOSXProfile 		= [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
-		.ProjectOSXRelease 		= [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]		
-		.ProjectConfigs 		= { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }	
-	} 
+        .ProjectX86Debug        = [ Using( .ProjectX86Debug )           .Target = '$ProjectName$-X86-Debug' ]
+        .ProjectX86Profile      = [ Using( .ProjectX86Profile )         .Target = '$ProjectName$-X86-Profile' ]
+        .ProjectX86Release      = [ Using( .ProjectX86Release )         .Target = '$ProjectName$-X86-Release' ]
+        .ProjectX64Debug        = [ Using( .ProjectX64Debug )           .Target = '$ProjectName$-X64-Debug' ]
+        .ProjectX64Profile      = [ Using( .ProjectX64Profile )         .Target = '$ProjectName$-X64-Profile' ]
+        .ProjectX64Release      = [ Using( .ProjectX64Release )         .Target = '$ProjectName$-X64-Release' ]
+        .ProjectX86ClangDebug   = [ Using( .ProjectX86ClangDebug )      .Target = '$ProjectName$-X86Clang-Debug' ]
+        .ProjectX86ClangProfile = [ Using( .ProjectX86ClangProfile )    .Target = '$ProjectName$-X86Clang-Profile' ]
+        .ProjectX86ClangRelease = [ Using( .ProjectX86ClangRelease )    .Target = '$ProjectName$-X86Clang-Release' ]
+        .ProjectConfigs         = { .ProjectX86Debug, .ProjectX86Profile, .ProjectX86Release,
+                                    .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+                                    .ProjectX86ClangDebug, .ProjectX86ClangProfile, .ProjectX86ClangRelease }
+    }
+
+    // XCode Project Generation
+    //--------------------------------------------------------------------------
+    XCodeProject( '$ProjectName$-xcodeproj' )
+    {
+        .ProjectOutput              = '../tmp/XCode/Projects/1_Test/$ProjectName$.xcodeproj/project.pbxproj'
+        .ProjectInputPaths          = '$ProjectPath$/'
+        .ProjectBasePath            = '$ProjectPath$/'
+
+        .XCodeBuildWorkingDir       = '../../../../Code/'
+
+        .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = '$ProjectName$-x64OSX-Debug' ]
+        .ProjectOSXProfile      = [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
+        .ProjectOSXRelease      = [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]
+        .ProjectConfigs         = { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }
+    }
 }

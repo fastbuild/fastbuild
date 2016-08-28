@@ -3,23 +3,23 @@
 .ExternalPath = '..\..\..\..\External'
 .VSPath = '$ExternalPath$\SDK\VS13.2'
 
-Settings		
+Settings
 {
-	#import TMP
-	.Environment	= { "PATH=$VSPath$\Common7\IDE\;$VSPath$\VC\bin\amd64\",
-						"TMP=$TMP$",
-						"SystemRoot=C:\Windows" }
-	.CachePath = 'c:\.fbuild.cache'
+    #import TMP
+    .Environment    = { "PATH=$VSPath$\Common7\IDE\;$VSPath$\VC\bin\amd64\",
+                        "TMP=$TMP$",
+                        "SystemRoot=C:\Windows" }
+    .CachePath = 'c:\.fbuild.cache'
 }
 
-.Compiler	= '$ExternalPath$\SDK\CUDA_6.5.14\CUDAToolkit\bin\nvcc.exe'
+.Compiler   = '$ExternalPath$\SDK\CUDA_6.5.14\CUDAToolkit\bin\nvcc.exe'
 
-.Out		= "..\..\..\..\tmp"
-.CompilerOutputPath	= "$Out$\Test\CUDA\"
+.Out        = "..\..\..\..\tmp"
+.CompilerOutputPath = "$Out$\Test\CUDA\"
 
 ObjectList( "Cuda-Obj" )
 {
-	.CompilerInputFiles	= "Data\TestCUDA\test.cu"
-	.CompilerOutputPath	= "$Out$\Test\CUDA\"
-	.CompilerOptions	= "%1 -o %2 -c"
+    .CompilerInputFiles = "Data\TestCUDA\test.cu"
+    .CompilerOutputPath = "$Out$\Test\CUDA\"
+    .CompilerOptions    = "%1 -o %2 -c"
 }
