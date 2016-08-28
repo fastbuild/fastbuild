@@ -25,6 +25,7 @@ REFLECT_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
 	REFLECT( m_TestArguments,		"TestArguments",		MetaOptional() )
 	REFLECT( m_TestWorkingDir,		"TestWorkingDir",		MetaOptional() + MetaPath() )
 	REFLECT( m_TestTimeOut,			"TestTimeOut",			MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
+	REFLECT( m_TestAlwaysShowOutput,"TestAlwaysShowOutput",	MetaOptional() )
 REFLECT_END( TestNode )
 
 // CONSTRUCTOR
@@ -35,6 +36,7 @@ TestNode::TestNode()
 	, m_TestArguments()
 	, m_TestWorkingDir()
 	, m_TestTimeOut( 0 )
+	, m_TestAlwaysShowOutput( false )
 {
 	m_Type = Node::TEST_NODE;
 }
@@ -95,7 +97,7 @@ TestNode::~TestNode()
 	ASSERT( !p.IsRunning() );
 	// Get result
 	int result = p.WaitForExit();
-	if ( result != 0 )
+	if ( ( result != 0 ) || ( m_TestAlwaysShowOutput == true ) )
 	{
 		// something went wrong, print details
 		Node::DumpOutput( job, memOut.Get(), memOutSize );

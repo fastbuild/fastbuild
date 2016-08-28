@@ -20,11 +20,12 @@ Defines the execution of an executable as a test.</p>
 <div class='code'>Test( alias )      // (optional) Alias
 {
   // Options
-  .TestExecutable  // The executable file to run that will execute the tests
-  .TestOutput      // Output file for captured test output
-  .TestArguments   // (optional) Arguments to pass to test executable
-  .TestWorkingDir  // (optional) Working dir for test execution
-  .TestTimeOut     // (optional) TimeOut (in seconds) for test (default: 0, no timeout)
+  .TestExecutable       // The executable file to run that will execute the tests
+  .TestOutput           // Output file for captured test output
+  .TestArguments        // (optional) Arguments to pass to test executable
+  .TestWorkingDir       // (optional) Working dir for test execution
+  .TestTimeOut          // (optional) TimeOut (in seconds) for test (default: 0, no timeout)
+  .TestAlwaysShowOutput // (optional) Show output of tests even when they don't fail (default: false)
 }
 </div>
     </div>
@@ -56,8 +57,11 @@ Defines the execution of an executable as a test.</p>
       <p>Working dir for test execution.</p>
       <hr>
       <p><b>.TestTimeOut</b> - Integer - (Optional)</p>
-      <p>The amount of milliseconds to wait for a test to finish execution.</p>
+      <p>The amount of time (in seconds) to wait for a test to finish execution.</p>
       <p>The default is 0, which means there is no timeout and FASTBuild will wait until the executable terminates on its own.</p>
+      <hr>
+      <p><b>.TestAlwaysShowOutput</b> - Boolean - (Optional)</p>
+      <p>The output of a test is normally shown only when the test fails. This option specifies that the output should always be shown.</p>
     </div>
 
     <div class='newsitemheader'>

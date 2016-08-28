@@ -262,7 +262,7 @@ struct VCXProjectNodeComp
             const SLNSolutionFolder * const end2 = folders.End();
             for ( ; it2 != end2 ; ++it2 )
             {
-                if ( it2->m_Path == newFolder.m_Path  )
+                if ( it2->m_Path == newFolder.m_Path )
                 {
                     break;
                 }

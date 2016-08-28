@@ -394,7 +394,7 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 		    {
 			    bool keep = true;
 
-				if ( keep && ( pchCPP.IsEmpty() == false ) )
+				if ( pchCPP.IsEmpty() == false )
 				{
 					if ( PathUtils::PathEndsWithFile( filesIt->m_Name, pchCPP ) )
 					{
