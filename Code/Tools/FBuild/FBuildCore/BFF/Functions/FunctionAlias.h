@@ -1,8 +1,6 @@
 // FunctionAlias
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONALIAS_H
-#define FBUILD_FUNCTIONS_FUNCTIONALIAS_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -23,4 +21,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONALIAS_H

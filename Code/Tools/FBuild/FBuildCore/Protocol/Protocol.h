@@ -1,8 +1,6 @@
 // Protocol.h - Defines network communication protocol
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_PROTOCOL_PROTOCOL_H
-#define FBUILD_PROTOCOL_PROTOCOL_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -214,4 +212,3 @@ namespace Protocol
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_PROTOCOL_PROTOCOL_H

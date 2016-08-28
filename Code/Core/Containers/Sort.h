@@ -1,8 +1,6 @@
 // Sort.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_CONTAINERS_SORT_H
-#define CORE_CONTAINERS_SORT_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -68,4 +66,3 @@ void ShellSort( T * begin, T * end, const COMPARE & compare )
 }
 
 //------------------------------------------------------------------------------
-#endif // CORE_CONTAINERS_SORT_H

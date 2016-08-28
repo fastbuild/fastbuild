@@ -1,8 +1,6 @@
 // ReflectionMacros.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_REFLECTIONMACROS_H
-#define CORE_REFLECTION_REFLECTIONMACROS_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -155,4 +153,3 @@ class ReflectionInfo;
     }
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_REFLECTIONMACROS_H

@@ -1,8 +1,6 @@
 // FunctionVCXProject
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONVCXPROJECT_H
-#define FBUILD_FUNCTIONS_FUNCTIONVCXPROJECT_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -29,4 +27,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONVCXPROJECT_H

@@ -1,8 +1,6 @@
 // RefObject.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_REFOBJECT_H
-#define CORE_REFLECTION_REFOBJECT_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -63,4 +61,3 @@ T * DynamicCast( U * object )
 }
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_REFOBJECT_H

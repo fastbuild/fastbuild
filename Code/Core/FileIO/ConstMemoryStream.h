@@ -1,8 +1,6 @@
 // ConstMemoryStream - read only access to data wrapped in an IOStream interface
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_FILEIO_CONSTMEMORYSTREAM_H
-#define CORE_FILEIO_CONSTMEMORYSTREAM_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -38,4 +36,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_FILEIO_CONSTMEMORYSTREAM_H

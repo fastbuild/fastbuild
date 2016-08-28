@@ -1,8 +1,6 @@
 // MemPoolBlock - Block-based memory allocator
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_MEM_MEMPOOLBLOCK_H
-#define CORE_MEM_MEMPOOLBLOCK_H
 
 // Array
 //------------------------------------------------------------------------------
@@ -45,4 +43,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_MEM_MEMPOOLBLOCK_H

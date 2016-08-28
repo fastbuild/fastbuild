@@ -1,8 +1,6 @@
 // ResponseFile
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_HELPERS_RESPONSEFILE_H
-#define FBUILD_HELPERS_RESPONSEFILE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -36,4 +34,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_HELPERS_RESPONSEFILE_H

@@ -1,8 +1,6 @@
 // WorkerThread - object to process and manage jobs on a thread
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_WORKERPOOL_H
-#define FBUILD_WORKERPOOL_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -58,4 +56,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_WORKERPOOL_H

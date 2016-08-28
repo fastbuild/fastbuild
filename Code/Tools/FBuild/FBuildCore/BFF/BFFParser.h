@@ -1,8 +1,6 @@
 // BFFParser - loads BFF files, extracting build rules
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_BFFPARSER_H
-#define FBUILD_BFFPARSER_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -98,4 +96,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_BFFPARSER_H

@@ -1,8 +1,6 @@
 // FunctionCopy
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONCOPY_H
-#define FBUILD_FUNCTIONS_FUNCTIONCOPY_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -27,4 +25,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONCOPY_H

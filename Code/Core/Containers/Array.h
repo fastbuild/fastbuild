@@ -1,8 +1,6 @@
 // Array.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_CONTAINERS_ARRAY_H
-#define CORE_CONTAINERS_ARRAY_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -497,4 +495,3 @@ void Array< T >::Deallocate( T * ptr ) const
 }
 
 //------------------------------------------------------------------------------
-#endif // CORE_CONTAINERS_ARRAY_H

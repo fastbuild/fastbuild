@@ -1,8 +1,6 @@
 // TextWriter.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_SERIALIZATION_TEXTWRITER_H
-#define CORE_REFLECTION_SERIALIZATION_TEXTWRITER_H
 
 #if defined( __WINDOWS__ )
 
@@ -50,4 +48,3 @@ private:
 #endif // __WINDOWS__
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_SERIALIZATION_TEXTWRITER_H

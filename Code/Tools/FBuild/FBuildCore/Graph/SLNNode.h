@@ -1,8 +1,6 @@
 // SLNNode.h - a node that builds a sln file
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_SLNNODE_H
-#define FBUILD_GRAPH_SLNNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -53,4 +51,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_SLNNODE_H

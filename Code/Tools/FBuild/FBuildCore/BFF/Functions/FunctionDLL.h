@@ -1,8 +1,6 @@
 // FunctionDLL
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONDLL_H
-#define FBUILD_FUNCTIONS_FUNCTIONDLL_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -18,4 +16,3 @@ public:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONDLL_H

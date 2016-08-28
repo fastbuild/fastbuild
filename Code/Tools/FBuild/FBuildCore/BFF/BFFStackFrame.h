@@ -1,8 +1,6 @@
 // BFFStackFrame - manages variable scope during BFF parsing
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_STACKFRAME_H
-#define FBUILD_STACKFRAME_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -92,4 +90,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_STACKFRAME_H

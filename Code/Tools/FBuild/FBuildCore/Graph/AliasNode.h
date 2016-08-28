@@ -1,8 +1,6 @@
 // AliasNode.h - a node that groups together several targets under a new target
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_ALIASNODE_H
-#define FBUILD_GRAPH_ALIASNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -40,4 +38,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_GROUPNODE_H

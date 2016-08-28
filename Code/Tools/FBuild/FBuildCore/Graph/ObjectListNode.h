@@ -1,8 +1,6 @@
 // ObjectListNode.h - manages a list of ObjectNodes
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_OBJECTLISTNODE_H
-#define FBUILD_GRAPH_OBJECTLISTNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -82,4 +80,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_OBJECTNODE_H

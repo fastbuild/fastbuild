@@ -2,8 +2,6 @@
 //                  recursively.
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_HELPERS_CINCLUDEPARSER_H
-#define FBUILD_HELPERS_CINCLUDEPARSER_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -47,4 +45,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_HELPERS_CINCLUDEPARSER_H

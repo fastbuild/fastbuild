@@ -1,8 +1,6 @@
 // FunctionCompiler
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONCOMPILER_H
-#define FBUILD_FUNCTIONS_FUNCTIONCOMPILER_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -23,4 +21,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONCOMPILER_H

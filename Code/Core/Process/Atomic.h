@@ -1,8 +1,6 @@
 // Atomic.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_PROCESS_ATOMIC_H
-#define CORE_PROCESS_ATOMIC_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -82,4 +80,3 @@ inline uint64_t AtomicDecU64( volatile uint64_t * i )
 }
 
 //------------------------------------------------------------------------------
-#endif // CORE_PROCESS_ATOMIC_H

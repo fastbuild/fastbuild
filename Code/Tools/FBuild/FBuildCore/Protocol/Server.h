@@ -1,8 +1,6 @@
 // Server.h - Handles Server Side connections
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_PROTOCOL_SERVER_H
-#define FBUILD_PROTOCOL_SERVER_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -92,4 +90,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_PROTOCOL_SERVER_H

@@ -1,8 +1,6 @@
 // Types.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_ENV_TYPES_H
-#define CORE_ENV_TYPES_H
 
 #if defined ( __LINUX__ )
     #include <sys/types.h>
@@ -112,4 +110,3 @@ typedef signed int          int32_t;
     #define PRAGMA_DISABLE_POP_CLANG
 #endif
 //------------------------------------------------------------------------------
-#endif // CORE_ENV_TYPES_H

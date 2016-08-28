@@ -1,8 +1,6 @@
 // ProfileManager.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_PROFILE_PROFILEMANAGER_H
-#define CORE_PROFILE_PROFILEMANAGER_H
 
 // Master Define
 //------------------------------------------------------------------------------
@@ -56,4 +54,3 @@ private:
 #endif // PROFILING_ENBLED
 
 //------------------------------------------------------------------------------
-#endif // CORE_PROFILE_PROFILEMANAGER_H

@@ -1,8 +1,6 @@
 // ReflectedProperty.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_REFLECTEDPROPERTY_H
-#define CORE_REFLECTION_REFLECTEDPROPERTY_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -147,4 +145,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_REFLECTEDPROPERTY_H

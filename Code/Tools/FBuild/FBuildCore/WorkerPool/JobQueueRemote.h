@@ -1,8 +1,6 @@
 // JobQueueRemote - list of pending jobs
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_WORKERPOOL_JOBQUEUEREMOTE_H
-#define FBUILD_WORKERPOOL_JOBQUEUEREMOTE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -70,4 +68,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_WORKERPOOL_JOBQUEUEREMOTE_H

@@ -1,8 +1,6 @@
 // ReflectionIter.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_REFLECTIONITER_H
-#define CORE_REFLECTION_REFLECTIONITER_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -37,4 +35,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_REFLECTIONITER_H

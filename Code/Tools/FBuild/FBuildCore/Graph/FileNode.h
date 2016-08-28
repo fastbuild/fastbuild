@@ -1,8 +1,6 @@
 // FileNode.h - a node that tracks a single file
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_FILENODE_H
-#define FBUILD_GRAPH_FILENODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -29,4 +27,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_FILENODE_H

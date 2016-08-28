@@ -1,7 +1,6 @@
 // BindReflection.h
 //------------------------------------------------------------------------------
-#ifndef CORE_BINDREFLECTION_H
-#define CORE_BINDREFLECTION_H
+#pragma once
 
 // ForwardDeclaration
 //------------------------------------------------------------------------------
@@ -17,4 +16,3 @@
 void BindReflection_Core();
 
 //------------------------------------------------------------------------------
-#endif // CORE_BINDREFLECTION_H

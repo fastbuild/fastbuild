@@ -1,8 +1,6 @@
 // BFFIterator - track position in a BFF during parsing
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_BFF_BFFITERATOR_H
-#define FBUILD_BFF_BFFITERATOR_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -86,5 +84,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_BFF_BFFITERATOR_H
-

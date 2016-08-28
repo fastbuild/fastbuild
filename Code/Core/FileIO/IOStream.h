@@ -1,8 +1,6 @@
 // IOStream - interface for serialization
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_FILEIO_IOSTREAM_H
-#define CORE_FILEIO_IOSTREAM_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -94,4 +92,3 @@ bool IOStream::Write( const Array< T > & a )
 }
 
 //------------------------------------------------------------------------------
-#endif // CORE_FILEIO_IOSTREAM_H

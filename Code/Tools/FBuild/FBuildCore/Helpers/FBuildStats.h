@@ -1,8 +1,6 @@
 // FBuildStats - Repository for build statistics.
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_HELPERS_FBUILDSTATS_H
-#define FBUILD_HELPERS_FBUILDSTATS_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -85,4 +83,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_HELPERS_FBUILDSTATS_H

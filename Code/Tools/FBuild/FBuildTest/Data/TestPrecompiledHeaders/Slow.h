@@ -1,6 +1,4 @@
 #pragma once
-#ifndef PCH_TEST_SLOW
-#define PCH_TEST_SLOW
 
 // A deliberately slow thing to compile, so we can easily see when the
 // precompilation is working.
@@ -21,5 +19,3 @@ template <int T> struct FibSlow_t<T, 2> { enum { value = 1 }; };
 template <int T> struct FibSlow_t<T, 1> { enum { value = 1 }; };
 
 inline int SlowFunc2() { return FibSlow_t<0,18>::value; }
-
-#endif // PCH_TEST_SLOW

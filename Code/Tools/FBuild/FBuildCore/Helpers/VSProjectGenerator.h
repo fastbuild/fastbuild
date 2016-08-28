@@ -1,8 +1,6 @@
 // VSProjectGenerator - Generate a Visual Studio project
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_HELPERS_VSPROJECTGENERATOR_H
-#define FBUILD_HELPERS_VSPROJECTGENERATOR_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -141,4 +139,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_HELPERS_VSPROJECTGENERATOR_H

@@ -1,8 +1,6 @@
 // FunctionCopyDir
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONCOPYDIR_H
-#define FBUILD_FUNCTIONS_FUNCTIONCOPYDIR_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -25,4 +23,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONCOPYDIR_H

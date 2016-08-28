@@ -1,8 +1,6 @@
 // Node.h - base interface for dependency graph nodes
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_NODE_H
-#define FBUILD_GRAPH_NODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -254,4 +252,3 @@ inline FileNode * Node::CastTo< FileNode >() const
 }
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_NODE_H

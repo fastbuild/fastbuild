@@ -1,8 +1,6 @@
 // FunctionUsing
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONUSING_H
-#define FBUILD_FUNCTIONS_FUNCTIONUSING_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -30,4 +28,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONUSING_H

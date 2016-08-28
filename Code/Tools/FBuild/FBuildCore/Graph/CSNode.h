@@ -1,8 +1,6 @@
 // CSNode.h - a node that builds a C# assembly
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_CSNODE_H
-#define FBUILD_GRAPH_CSNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -47,4 +45,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_CSNODE_H

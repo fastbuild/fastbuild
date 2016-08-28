@@ -1,8 +1,6 @@
 // SLNGenerator - Generate a Visual Studio solution
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_HELPERS_SLNGENERATOR_H
-#define FBUILD_HELPERS_SLNGENERATOR_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -102,4 +100,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_HELPERS_SLNGENERATOR_H

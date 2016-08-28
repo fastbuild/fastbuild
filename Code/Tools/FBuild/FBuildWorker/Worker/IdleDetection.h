@@ -1,8 +1,6 @@
 // IdleDetection
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FBUILDWORKER_IDLEDETECTION_H
-#define FBUILD_FBUILDWORKER_IDLEDETECTION_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -58,4 +56,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FBUILDWORKER_IDLEDETECTION_H

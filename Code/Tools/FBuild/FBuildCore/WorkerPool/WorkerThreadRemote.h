@@ -1,8 +1,6 @@
 // WorkerThreadRemote - object to process and manage jobs on a remote thread
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_WORKERTHREADREMOTE_H
-#define FBUILD_WORKERTHREADREMOTE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -39,4 +37,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_WORKERTHREADREMOTE_H

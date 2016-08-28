@@ -1,8 +1,6 @@
 // FunctionTest
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONTEST_H
-#define FBUILD_FUNCTIONS_FUNCTIONTEST_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -22,4 +20,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONTEST_H

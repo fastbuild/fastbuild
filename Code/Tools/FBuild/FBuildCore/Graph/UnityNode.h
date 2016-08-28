@@ -1,8 +1,6 @@
 // UnityNode.h - a node that builds a unity.cpp file
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_UNITYNODE_H
-#define FBUILD_GRAPH_UNITYNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -85,4 +83,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_LIBRARYNODE_H

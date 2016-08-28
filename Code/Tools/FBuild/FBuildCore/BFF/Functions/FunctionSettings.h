@@ -1,8 +1,6 @@
 // FunctionSettings - Manage global settings
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONSETTINGS_H
-#define FBUILD_FUNCTIONS_FUNCTIONSETTINGS_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -32,4 +30,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONSETTINGS_H

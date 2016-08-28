@@ -1,8 +1,6 @@
 // FBuild.cpp - The main FBuild interface class
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FBUILDOPTIONS_H
-#define FBUILD_FBUILDOPTIONS_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -53,4 +51,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FBUILDOPTIONS_H

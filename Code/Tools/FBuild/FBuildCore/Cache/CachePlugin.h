@@ -1,8 +1,6 @@
 // CachePlugin - Wrapper around external cache plugin DLL
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_CACHEPLUGIN_H
-#define FBUILD_CACHEPLUGIN_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -38,4 +36,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_CACHEPLUGIN_H

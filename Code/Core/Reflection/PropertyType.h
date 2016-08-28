@@ -1,8 +1,6 @@
 // PropertyType.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_PROPERTYTYPE_H
-#define CORE_REFLECTION_PROPERTYTYPE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -68,4 +66,3 @@ inline PropertyType GetPropertyType( const WeakRef< T > * ) { return PT_WEAKREF;
 PropertyType GetPropertyTypeFromString( const AString & propertyType );
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_PROPERTYTYPE_H

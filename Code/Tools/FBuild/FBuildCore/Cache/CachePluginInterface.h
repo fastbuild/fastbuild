@@ -1,8 +1,6 @@
 // ICache - Interface for Cache plugins
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_CACHEPLUGININTERFACE_H
-#define FBUILD_CACHEPLUGININTERFACE_H
 
 #if __WINDOWS__
     #define STDCALL __stdcall
@@ -82,4 +80,3 @@ typedef void (*CacheFreeMemoryFunc)( void * data, unsigned long long dataSize );
 #endif
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_CACHEPLUGININTERFACE_H

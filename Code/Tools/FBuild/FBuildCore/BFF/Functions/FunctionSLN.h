@@ -1,8 +1,6 @@
 // FunctionSLN
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONSLN_H
-#define FBUILD_FUNCTIONS_FUNCTIONSLN_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -33,4 +31,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONSLN_H

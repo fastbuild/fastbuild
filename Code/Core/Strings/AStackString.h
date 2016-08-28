@@ -1,8 +1,6 @@
 // AStackString.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_STRINGS_ASTACKSTRING_H
-#define CORE_STRINGS_ASTACKSTRING_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -84,4 +82,3 @@ AStackString< RESERVED >::AStackString( const char * start, const char * end )
 }
 
 //------------------------------------------------------------------------------
-#endif // #define CORE_STRINGS_ASTACKSTRING_H

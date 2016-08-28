@@ -1,8 +1,6 @@
 // FunctionObjectList
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONOBJECTLIST_H
-#define FBUILD_FUNCTIONS_FUNCTIONOBJECTLIST_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -49,4 +47,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONOBJECTLIST_H

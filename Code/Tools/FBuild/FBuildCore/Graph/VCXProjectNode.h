@@ -1,8 +1,6 @@
 // VCXProjectNode.h - a node that builds a vcxproj file
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_VCXPROJECTNODE_H
-#define FBUILD_GRAPH_VCXPROJECTNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -73,4 +71,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_VCXPROJECTNODE_H

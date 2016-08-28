@@ -1,8 +1,6 @@
 // ToolManifest
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_HELPERS_TOOLMANIFEST_H
-#define FBUILD_HELPERS_TOOLMANIFEST_H
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -99,4 +97,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_HELPERS_TOOLMANIFEST_H

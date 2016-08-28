@@ -1,8 +1,6 @@
 // ObjectNode.h - a node that builds a single object from a source file
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_OBJECTNODE_H
-#define FBUILD_GRAPH_OBJECTNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -195,4 +193,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_OBJECTNODE_H

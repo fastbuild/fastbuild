@@ -1,8 +1,6 @@
 // Job - a work item to be processed
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_WORKERPOOL_JOB_H
-#define FBUILD_WORKERPOOL_JOB_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -79,4 +77,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_WORKERPOOL_JOB_H

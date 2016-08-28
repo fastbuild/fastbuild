@@ -1,8 +1,6 @@
 // FunctionPrint
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONPRINT_H
-#define FBUILD_FUNCTIONS_FUNCTIONPRINT_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -32,4 +30,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONPRINT_H

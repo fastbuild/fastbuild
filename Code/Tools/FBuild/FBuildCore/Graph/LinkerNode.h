@@ -1,8 +1,6 @@
 // LinkerNode.h - builds an exe or dll
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_LINKERNODE_H
-#define FBUILD_GRAPH_LINKERNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -80,4 +78,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_LINKERNODE_H

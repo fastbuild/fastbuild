@@ -1,8 +1,6 @@
 // NodeProxy.h - a remote proxy for remote builds
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_NODEPROXY_H
-#define FBUILD_GRAPH_NODEPROXY_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -24,4 +22,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_NODEPROXY_H

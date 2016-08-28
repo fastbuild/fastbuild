@@ -1,8 +1,6 @@
 // Singleton.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_CONTAINERS_SINGLETON_H
-#define CORE_CONTAINERS_SINGLETON_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -60,4 +58,3 @@ PRAGMA_DISABLE_POP_MSVC
 }
 
 //------------------------------------------------------------------------------
-#endif // CORE_CONTAINERS_SINGLETON_H

@@ -1,8 +1,6 @@
 // FunctionExec
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONEXEC_H
-#define FBUILD_FUNCTIONS_FUNCTIONEXEC_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -22,4 +20,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONEXEC_H

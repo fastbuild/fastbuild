@@ -1,8 +1,6 @@
 // FunctionCSAssembly
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONCSASSEMBLY_H
-#define FBUILD_FUNCTIONS_FUNCTIONCSASSEMBLY_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -23,4 +21,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONCSASSEMBLY_H

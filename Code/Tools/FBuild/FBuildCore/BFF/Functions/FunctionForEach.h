@@ -1,8 +1,6 @@
 // FunctionForEach
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONFOREACH_H
-#define FBUILD_FUNCTIONS_FUNCTIONFOREACH_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -27,4 +25,3 @@ public:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONFOREACH_H

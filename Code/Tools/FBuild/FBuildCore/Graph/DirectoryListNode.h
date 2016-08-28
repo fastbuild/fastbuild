@@ -1,8 +1,6 @@
 // DirectoryListNode
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_DIRECTORYLISTNODE_H
-#define FBUILD_GRAPH_DIRECTORYLISTNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -57,4 +55,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_DIRECTORYLISTNODE_H

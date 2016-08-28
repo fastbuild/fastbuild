@@ -1,8 +1,6 @@
 // UnitTestManager
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef TESTFRAMEWORK_UNITTESTMANAGER_H
-#define TESTFRAMEWORK_UNITTESTMANAGER_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -65,4 +63,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // TESTFRAMEWORK_UNITTESTMANAGER_H

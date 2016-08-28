@@ -1,8 +1,6 @@
 // WorkerBrokerage - Manage worker discovery
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_WORKERBROKERAGE_H
-#define FBUILD_WORKERBROKERAGE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -37,4 +35,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_WORKERBROKERAGE_H

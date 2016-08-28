@@ -1,8 +1,6 @@
 // Meta_Optional.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_META_OPTIONAL_H
-#define CORE_REFLECTION_META_OPTIONAL_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -19,4 +17,3 @@ public:
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_META_OPTIONAL_H

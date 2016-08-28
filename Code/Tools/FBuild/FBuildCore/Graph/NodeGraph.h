@@ -1,8 +1,6 @@
 // NodeGraph.h - interface to the dependency graph
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_NODEGRAPH_H
-#define FBUILD_GRAPH_NODEGRAPH_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -304,4 +302,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_NODEGRAPH_H

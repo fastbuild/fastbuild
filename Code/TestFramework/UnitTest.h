@@ -1,8 +1,6 @@
 // UnitTest.h - interface for a unit test
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef TESTFRAMEWORK_UNITTEST_H
-#define TESTFRAMEWORK_UNITTEST_H
 
 #include "UnitTestManager.h"
 
@@ -72,4 +70,3 @@ private:
         testGroupName##Register();
 
 //------------------------------------------------------------------------------
-#endif // TESTFRAMEWORK_UNITTEST_H

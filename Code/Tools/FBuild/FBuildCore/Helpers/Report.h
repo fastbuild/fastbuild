@@ -1,8 +1,6 @@
 // Report - Build Report Generator
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_HELPERS_REPORT_H
-#define FBUILD_HELPERS_REPORT_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -125,4 +123,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_HELPERS_REPORT_H

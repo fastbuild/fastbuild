@@ -1,8 +1,6 @@
 // NetworkStartupHelper
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_NETWORK_NETWORKSTARTUPHELPER_H
-#define CORE_NETWORK_NETWORKSTARTUPHELPER_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -36,4 +34,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_NETWORK_NETWORKSTARTUPHELPER_H

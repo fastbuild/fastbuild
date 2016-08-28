@@ -1,8 +1,6 @@
 // SharedMemory.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_PROCESS_SHAREDMEMORY_H
-#define CORE_PROCESS_SHAREDMEMORY_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -37,4 +35,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_PROCESS_SHAREDMEMORY_H

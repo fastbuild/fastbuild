@@ -1,8 +1,6 @@
 // MemTracker.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_MEM_MEMTRACKER_H
-#define CORE_MEM_MEMTRACKER_H
 
 // Enabled in DEBUG only
 //------------------------------------------------------------------------------
@@ -81,4 +79,3 @@
 #endif // MEMTRACKER_ENABLED
 
 //------------------------------------------------------------------------------
-#endif // CORE_MEM_MEMTRACKER_H

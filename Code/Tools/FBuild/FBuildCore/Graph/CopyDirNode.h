@@ -1,8 +1,6 @@
 // CopyDirNode.h - a node that copies one or more directories
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_COPYDIRNODE_H
-#define FBUILD_GRAPH_COPYDIRNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -36,4 +34,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_COPYDIRNODE_H

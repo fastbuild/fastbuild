@@ -1,8 +1,6 @@
 // FunctionExecutable
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONEXECUTABLE_H
-#define FBUILD_FUNCTIONS_FUNCTIONEXECUTABLE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -45,4 +43,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONEXECUTABLE_H

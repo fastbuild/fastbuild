@@ -1,8 +1,6 @@
 // Client.h - Handles Client Side connections
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_PROTOCOL_CLIENT_H
-#define FBUILD_PROTOCOL_CLIENT_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -82,4 +80,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_PROTOCOL_CLIENT_H

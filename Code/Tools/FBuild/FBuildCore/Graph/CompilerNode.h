@@ -1,8 +1,6 @@
 // CompilerNode.h - a node that manages a compiler executable
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_COMPILERNODE_H
-#define FBUILD_GRAPH_COMPILERNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -48,4 +46,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_COMPILERNODE_H
