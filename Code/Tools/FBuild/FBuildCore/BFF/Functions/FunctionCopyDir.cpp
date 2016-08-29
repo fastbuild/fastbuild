@@ -30,7 +30,7 @@ FunctionCopyDir::FunctionCopyDir()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionCopyDir::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionCopyDir::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
 	// Get input paths
 	Array< AString > inputPaths;
@@ -52,7 +52,7 @@ FunctionCopyDir::FunctionCopyDir()
 
 	// convert input paths to DirectoryListNodes
 	Dependencies staticDeps( inputPaths.GetSize() );
-	if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, patterns.IsEmpty() ? nullptr : &patterns, ".SourcePaths", staticDeps ) )
+	if ( !GetDirectoryListNodeList( nodeGraph, funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, patterns.IsEmpty() ? nullptr : &patterns, ".SourcePaths", staticDeps ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}
@@ -67,7 +67,7 @@ FunctionCopyDir::FunctionCopyDir()
 
 	// Pre-build dependencies
 	Dependencies preBuildDeps;
-	if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDeps, false ) )
+	if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDeps, false ) )
 	{
 		return false; // GetNodeList will have emitted an error
 	}
@@ -80,15 +80,14 @@ FunctionCopyDir::FunctionCopyDir()
 	}
 
 	// check node doesn't already exist
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();	
-	if ( ng.FindNode( m_AliasForFunction ) )
+	if ( nodeGraph.FindNode( m_AliasForFunction ) )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
 		return false;
 	}
 
 	// create our node
-	ng.CreateCopyDirNode( m_AliasForFunction, staticDeps, destPath, preBuildDeps );
+	nodeGraph.CreateCopyDirNode( m_AliasForFunction, staticDeps, destPath, preBuildDeps );
 	return true;
 }
 

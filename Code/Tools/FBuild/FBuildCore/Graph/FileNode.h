@@ -18,12 +18,12 @@ public:
 
 	static inline Node::Type GetTypeS() { return Node::FILE_NODE; }
 
-	virtual bool IsAFile() const { return true; }
+	virtual bool IsAFile() const override { return true; }
 
-	static Node * Load( IOStream & stream );
-	virtual void Save( IOStream & stream ) const;
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
+	virtual void Save( IOStream & stream ) const override;
 protected:
-	virtual BuildResult DoBuild( Job * job );
+	virtual BuildResult DoBuild( Job * job ) override;
 
 	friend class Client;
 };

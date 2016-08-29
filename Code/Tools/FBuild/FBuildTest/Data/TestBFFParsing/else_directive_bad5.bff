@@ -1,0 +1,6 @@
+//
+// else directive bad - case 5
+//
+
+#else
+#endif

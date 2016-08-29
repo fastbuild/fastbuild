@@ -636,6 +636,19 @@ A token can only be undefined if it was previously defined.
        \--here</div>
 </div>
 
+<!--------------- 1041 --------------->
+    <div class='newsitemheader'>1041 - #else without matching #if.</div>
+    <div class='newsitembody'>
+A #else token can only be used after an #if token.
+<h4>Example Config:</h4>
+<div class='code'>#else</div>
+<h4>Example Output:</h4>
+<div class='output'>C:\Test\fbuild.bff(1,2): FASTBuild Error #1041 - #else without matching #if.
+#else
+ ^
+ \--here</div>
+</div>
+
 <!--------------- 1050 --------------->
     <div class='newsitemheader'>1050 - Property '%s' must be of type <%s> (found <%s>).</div>
     <div class='newsitembody'>

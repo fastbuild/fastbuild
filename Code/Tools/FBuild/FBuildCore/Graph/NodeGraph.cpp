@@ -16,7 +16,7 @@
 #include "AliasNode.h"
 #include "CompilerNode.h"
 #include "CopyDirNode.h"
-#include "CopyNode.h"
+#include "CopyFileNode.h"
 #include "CSNode.h"
 #include "DirectoryListNode.h"
 #include "DLLNode.h"
@@ -65,6 +65,7 @@ NodeGraph::NodeGraph()
 , m_NextNodeIndex( 0 )
 , m_UsedFiles( 16, true )
 {
+	m_NodeMap = FNEW_ARRAY( Node *[NODEMAP_TABLE_SIZE] );
 	memset( m_NodeMap, 0, sizeof( Node * ) * NODEMAP_TABLE_SIZE );
 }
 
@@ -78,118 +79,153 @@ NodeGraph::~NodeGraph()
 	{
 		FDELETE ( *i );
 	}
+
+	FDELETE_ARRAY( m_NodeMap );
 }
 
-// Setup
+// Initialize
 //------------------------------------------------------------------------------
-bool NodeGraph::Initialize( const char * bffFile,
-							const char * nodeGraphDBFile )
+/* static*/ NodeGraph * NodeGraph::Initialize( const char * bffFile,
+											   const char * nodeGraphDBFile )
 {
     PROFILE_FUNCTION
 
 	ASSERT( bffFile ); // must be supplied (or left as default)
 	ASSERT( nodeGraphDBFile ); // must be supplied (or left as default)
 
+	// Try to load the old DB
+	NodeGraph * oldNG = FNEW( NodeGraph );
+	LoadResult res = oldNG->Load( nodeGraphDBFile );
+
+	// What happened?
+	switch ( res )
+	{
+		case LoadResult::MISSING:
+		{
+			// Create a fresh DB by parsing the BFF
+			FDELETE( oldNG );
+			NodeGraph * newNG = FNEW( NodeGraph );
+			if ( newNG->ParseFromRoot( bffFile ) == false )
+			{
+				FDELETE( newNG );
+				return nullptr; // ParseFromRoot will have emitted an error
+			}
+			return newNG;
+		}
+		case LoadResult::LOAD_ERROR:
+		{
+			// Corrupt DB or other fatal problem
+			FDELETE( oldNG );
+			return nullptr;
+		}
+		case LoadResult::OK_BFF_CHANGED:
+		{
+			// Create a fresh DB by parsing the modified BFF
+			NodeGraph * newNG = FNEW( NodeGraph );
+			if ( newNG->ParseFromRoot( bffFile ) == false )
+			{
+				FDELETE( newNG );
+				FDELETE( oldNG );
+				return nullptr;
+			}
+
+			// TODO: Migrate old DB info to new DB
+			FDELETE( oldNG );
+
+			return newNG;
+		}
+		case LoadResult::OK:
+		{
+			// Nothing more to do
+			return oldNG;
+		}
+	}
+
+	ASSERT( false ); // Should not get here
+	return nullptr;
+}
+
+// ParseFromRoot
+//------------------------------------------------------------------------------
+bool NodeGraph::ParseFromRoot( const char * bffFile )
+{
 	ASSERT( m_UsedFiles.IsEmpty() ); // NodeGraph cannot be recycled
 
-	bool needReparsing = false;
-	bool ok = Load( nodeGraphDBFile, needReparsing );
-	if ( !ok )
+	// open the configuration file
+	FLOG_INFO( "Loading BFF '%s'", bffFile );
+	FileStream bffStream;
+	if ( bffStream.Open( bffFile ) == false )
 	{
-		FLOG_ERROR( "Error reading BFF '%s' (corrupt?)", nodeGraphDBFile );
+		// missing bff is a fatal problem
+		FLOG_ERROR( "Failed to open BFF '%s'", bffFile );
 		return false;
 	}
+	const uint64_t rootBFFTimeStamp = FileIO::GetFileLastWriteTime( AStackString<>( bffFile ) );
 
-	// has something changed that requires us to re-parse the BFFs?
-	if ( needReparsing )
+	// read entire config into memory
+	uint32_t size = (uint32_t)bffStream.GetFileSize();
+	AutoPtr< char > data( (char *)ALLOC( size + 1 ) ); // extra byte for null character sentinel
+	if ( bffStream.Read( data.Get(), size ) != size )
 	{
-		// a change in bff means includes may have changed, so we'll build the list from scratch
-		m_UsedFiles.Clear();
-
-		// open the configuration file
-		FLOG_INFO( "Loading BFF '%s'", bffFile );
-		FileStream bffStream;
-		if ( bffStream.Open( bffFile ) == false )
-		{
-			// missing bff is a fatal problem
-			FLOG_ERROR( "Failed to open BFF '%s'", bffFile );
-			return false;
-		}
-		const uint64_t rootBFFTimeStamp = FileIO::GetFileLastWriteTime( AStackString<>( bffFile ) );
-
-		// read entire config into memory
-		uint32_t size = (uint32_t)bffStream.GetFileSize();
-		AutoPtr< char > data( (char *)ALLOC( size + 1 ) ); // extra byte for null character sentinel
-		if ( bffStream.Read( data.Get(), size ) != size )
-		{
-			FLOG_ERROR( "Error reading BFF '%s'", bffFile );
-			return false;
-		}
-		const uint64_t rootBFFDataHash = xxHash::Calc64( data.Get(), size );
-
-		// re-parse the BFF from scratch, clean build will result
-		BFFParser bffParser;
-		data.Get()[ size ] = '\0'; // data passed to parser must be NULL terminated
-		return bffParser.Parse( data.Get(), size, bffFile, rootBFFTimeStamp, rootBFFDataHash ); // pass size excluding sentinel
+		FLOG_ERROR( "Error reading BFF '%s'", bffFile );
+		return false;
 	}
+	const uint64_t rootBFFDataHash = xxHash::Calc64( data.Get(), size );
 
-	return true;
+	// re-parse the BFF from scratch, clean build will result
+	BFFParser bffParser( *this );
+	data.Get()[ size ] = '\0'; // data passed to parser must be NULL terminated
+	return bffParser.Parse( data.Get(), size, bffFile, rootBFFTimeStamp, rootBFFDataHash ); // pass size excluding sentinel
 }
 
 // Load
 //------------------------------------------------------------------------------
-bool NodeGraph::Load( const char * nodeGraphDBFile, bool & needReparsing )
+NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
 {
+	// Open previously saved DB
 	FileStream fs;
-	if ( fs.Open( nodeGraphDBFile, FileStream::READ_ONLY ) == false )	
+	if ( fs.Open( nodeGraphDBFile, FileStream::READ_ONLY ) == false )
 	{
-		FLOG_INFO( "BFF file '%s' missing or unopenable (clean build will result).", nodeGraphDBFile );
-		needReparsing = true;
-		return true; // not opening the file (could be missing) is not an error
+		return LoadResult::MISSING;
 	}
 
-	size_t size = (size_t)fs.GetFileSize();
-	AutoPtr< void > mem( ALLOC( size ) );
-	if ( fs.Read( mem.Get(), size ) != size )
+	// Read it into memory to avoid lots of tiny disk accesses
+	const size_t fileSize = (size_t)fs.GetFileSize();
+	AutoPtr< char > memory( FNEW( char[ fileSize ] ) );
+	if ( fs.ReadBuffer( memory.Get(), fileSize ) != fileSize )
 	{
-		return false; // error reading DB
+		return LoadResult::LOAD_ERROR;
 	}
+	ConstMemoryStream ms( memory.Get(), fileSize );
 
-	// read into memory and load from there
-	ConstMemoryStream nodeGraphStream( mem.Get(), size );
-	if ( !Load( nodeGraphStream, needReparsing ) )
-	{
-		FLOG_ERROR( "Database is corrupt." )
-		return false; // error reading DB
-	}
-
-	return true;
+	// Load the Old DB
+	return Load( ms, nodeGraphDBFile );
 }
 
 // Load
 //------------------------------------------------------------------------------
-bool NodeGraph::Load( IOStream & stream, bool & needReparsing )
+NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraphDBFile )
 {
 	bool compatibleDB = true;
-	if ( ReadHeaderAndUsedFiles( stream, m_UsedFiles, compatibleDB ) == false )
+	Array< UsedFile > usedFiles;
+	if ( ReadHeaderAndUsedFiles( stream, nodeGraphDBFile, usedFiles, compatibleDB ) == false )
 	{
-		return false; // read error
+		return LoadResult::LOAD_ERROR;
 	}
 
-	// old DB version?
+	// old or otherwise incompatible DB version?
 	if ( !compatibleDB )
 	{
 		FLOG_WARN( "Database version has changed (clean build will occur)." );
-		needReparsing = true;
-		return true;
+		return LoadResult::OK_BFF_CHANGED;
 	}
 
 	// check if any files used have changed
-	for ( size_t i=0; i<m_UsedFiles.GetSize(); ++i )
+	for ( size_t i=0; i<usedFiles.GetSize(); ++i )
 	{
-		const AString & fileName = m_UsedFiles[ i ].m_FileName;
+		const AString & fileName = usedFiles[ i ].m_FileName;
 		const uint64_t timeStamp = FileIO::GetFileLastWriteTime( fileName );
-		if ( timeStamp == m_UsedFiles[ i ].m_TimeStamp )
+		if ( timeStamp == usedFiles[ i ].m_TimeStamp )
 		{
 			continue; // timestamps match, no need to check hashes
 		}
@@ -197,139 +233,128 @@ bool NodeGraph::Load( IOStream & stream, bool & needReparsing )
 		FileStream fs;
 		if ( fs.Open( fileName.Get(), FileStream::READ_ONLY ) == false )	
 		{
-			FLOG_INFO( "BFF file '%s' missing or unopenable (clean build will result).", fileName.Get() );
-			needReparsing = true;
-			return true; // not opening the file is not an error, it could be not needed anymore
+			FLOG_INFO( "BFF file '%s' missing or unopenable (reparsing will occur).", fileName.Get() );
+			return LoadResult::OK_BFF_CHANGED; // not opening the file is not an error, it could be not needed anymore
 		}
 
 		const size_t size = (size_t)fs.GetFileSize();
 		AutoPtr< void > mem( ALLOC( size ) );
 		if ( fs.Read( mem.Get(), size ) != size )
 		{
-			return false; // error reading
+			return LoadResult::LOAD_ERROR; // error reading
 		}
 
 		const uint64_t dataHash = xxHash::Calc64( mem.Get(), size );
-		if ( dataHash == m_UsedFiles[ i ].m_DataHash )
+		if ( dataHash == usedFiles[ i ].m_DataHash )
 		{
 			// file didn't change, update stored timestamp to save time on the next run
-			m_UsedFiles[ i ].m_TimeStamp = timeStamp;
+			usedFiles[ i ].m_TimeStamp = timeStamp;
 			continue;
 		}
 
 		FLOG_WARN( "BFF file '%s' has changed (reparsing will occur).", fileName.Get() );
-		needReparsing = true;
-		return true;
+		return LoadResult::OK_BFF_CHANGED;
 	}
 
+	m_UsedFiles = usedFiles;
+
 	// TODO:C The serialization of these settings doesn't really belong here (not part of node graph)
+	// cachepath
+	AStackString<> cachePath;
+	if ( stream.Read( cachePath ) == false )
 	{
-		// cachepath
-		AStackString<> cachePath;
-		if ( stream.Read( cachePath ) == false )
-		{
-			return false;
-		}
-		if ( cachePath.IsEmpty() == false ) // override environment only if not empty
-		{
-			FunctionSettings::SetCachePath( cachePath );
-			FBuild::Get().SetCachePath( cachePath );
-		}
+		return LoadResult::LOAD_ERROR;
+	}
 
-		// cache plugin dll
-		AStackString<> cachePluginDLL;
-		if ( stream.Read( cachePluginDLL ) == false )
-		{
-			return false;
-		}
-		FBuild::Get().SetCachePluginDLL( cachePluginDLL );
+	// cache plugin dll
+	AStackString<> cachePluginDLL;
+	if ( stream.Read( cachePluginDLL ) == false )
+	{
+		return LoadResult::LOAD_ERROR;
+	}
 
-		// environment
-		uint32_t envStringSize = 0;
-		if ( stream.Read( envStringSize ) == false )
+	// environment
+	uint32_t envStringSize = 0;
+	if ( stream.Read( envStringSize ) == false )
+	{
+		return LoadResult::LOAD_ERROR;
+	}
+	AutoPtr< char > envString;
+	AStackString<> libEnvVar;
+	if ( envStringSize > 0 )
+	{
+		envString = ( (char *)ALLOC( envStringSize ) );
+		if ( stream.Read( envString.Get(), envStringSize ) == false )
 		{
-			return false;
+			return LoadResult::LOAD_ERROR;
 		}
-		if ( envStringSize > 0 )
+		if ( stream.Read( libEnvVar ) == false )
 		{
-			AutoPtr< char > envString( (char *)ALLOC( envStringSize ) );
-			if ( stream.Read( envString.Get(), envStringSize ) == false )
+			return LoadResult::LOAD_ERROR;
+		}
+	}
+
+	// imported environment variables
+	uint32_t importedEnvironmentsVarsSize = 0;
+	if ( stream.Read( importedEnvironmentsVarsSize ) == false )
+	{
+		return LoadResult::LOAD_ERROR;
+	}
+	if ( importedEnvironmentsVarsSize > 0 )
+	{
+		AStackString<> varName;
+		AStackString<> varValue;
+		uint32_t savedVarHash = 0;
+		uint32_t importedVarHash = 0;
+
+		for ( uint32_t i = 0; i < importedEnvironmentsVarsSize; ++i )
+		{
+			if ( stream.Read( varName ) == false )
 			{
-				return false;
+				return LoadResult::LOAD_ERROR;
 			}
-			AStackString<> libEnvVar;
-			if ( stream.Read( libEnvVar ) == false )
+			if ( stream.Read( savedVarHash ) == false )
 			{
-				return false;
+				return LoadResult::LOAD_ERROR;
 			}
-			FBuild::Get().SetEnvironmentString( envString.Get(), envStringSize, libEnvVar );
-		}
-
-		// imported environment variables
-		uint32_t importedEnvironmentsVarsSize = 0;
-		if ( stream.Read( importedEnvironmentsVarsSize ) == false )
-		{
-			return false;
-		}
-		if ( importedEnvironmentsVarsSize > 0 )
-		{
-			AStackString<> varName;
-			AStackString<> varValue;
-			uint32_t savedVarHash = 0;
-			uint32_t importedVarHash = 0;
-
-			for ( uint32_t i = 0; i < importedEnvironmentsVarsSize; ++i )
-			{
-				if ( stream.Read( varName ) == false )
-				{
-					return false;
-				}
-				if ( stream.Read( savedVarHash ) == false )
-				{
-					return false;
-				}
-				if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), varValue, importedVarHash ) == false )
-				{
-					// make sure the user knows why some things might re-build
-					FLOG_WARN( "'%s' Environment variable was not found - BFF will be re-parsed\n", varName.Get() );
-					needReparsing = true;
-					return true;
-				}
-				if ( importedVarHash != savedVarHash )
-				{
-					// make sure the user knows why some things might re-build
-					FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", varName.Get() );
-					needReparsing = true;
-					return true;
-				}
-			}
-		}
-
-		// check if 'LIB' env variable has changed
-		uint32_t libEnvVarHashInDB( 0 );
-		if ( stream.Read( libEnvVarHashInDB ) == false )
-		{
-			return false;
-		}
-		else
-		{
-			const uint32_t libEnvVarHash = GetLibEnvVarHash();
-			if ( libEnvVarHashInDB != libEnvVarHash )
+			if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), varValue, importedVarHash ) == false )
 			{
 				// make sure the user knows why some things might re-build
-				FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", "LIB" );
-				needReparsing = true;
-				return true;
+				FLOG_WARN( "'%s' Environment variable was not found - BFF will be re-parsed\n", varName.Get() );
+				return LoadResult::OK_BFF_CHANGED;
+			}
+			if ( importedVarHash != savedVarHash )
+			{
+				// make sure the user knows why some things might re-build
+				FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", varName.Get() );
+				return LoadResult::OK_BFF_CHANGED;
 			}
 		}
+	}
 
-		// worker list
-		Array< AString > workerList( 0, true );
-		if ( stream.Read( workerList ) == false )
+	// check if 'LIB' env variable has changed
+	uint32_t libEnvVarHashInDB( 0 );
+	if ( stream.Read( libEnvVarHashInDB ) == false )
+	{
+		return LoadResult::LOAD_ERROR;
+	}
+	else
+	{
+		// If the Environment will be overriden, make sure we use the LIB from that
+		const uint32_t libEnvVarHash = ( envStringSize > 0 ) ? xxHash::Calc32( libEnvVar ) : GetLibEnvVarHash();
+		if ( libEnvVarHashInDB != libEnvVarHash )
 		{
-			return false;
+			// make sure the user knows why some things might re-build
+			FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", "LIB" );
+			return LoadResult::OK_BFF_CHANGED;
 		}
-		FBuild::Get().SetWorkerList( workerList );
+	}
+
+	// worker list
+	Array< AString > workerList( 0, true );
+	if ( stream.Read( workerList ) == false )
+	{
+		return LoadResult::LOAD_ERROR;
 	}
 
 	ASSERT( m_AllNodes.GetSize() == 0 );
@@ -338,7 +363,7 @@ bool NodeGraph::Load( IOStream & stream, bool & needReparsing )
 	uint32_t numNodes;
 	if ( stream.Read( numNodes ) == false )
 	{
-		return false; // error
+		return LoadResult::LOAD_ERROR;
 	}
 
 	m_AllNodes.SetSize( numNodes );
@@ -347,7 +372,7 @@ bool NodeGraph::Load( IOStream & stream, bool & needReparsing )
 	{
 		if ( LoadNode( stream ) == false )
 		{
-			return false; // error
+			return LoadResult::LOAD_ERROR;
 		}
 	}
 
@@ -358,7 +383,27 @@ bool NodeGraph::Load( IOStream & stream, bool & needReparsing )
 		ASSERT( m_AllNodes[ i ]->GetIndex() == i ); // index was correctly persisted
 	}
 
-	return true;
+	// Everything OK - propagate global settings
+	//------------------------------------------------
+
+	// Cache
+	if ( cachePath.IsEmpty() == false ) // override environment only if not empty
+	{
+		FunctionSettings::SetCachePath( cachePath );
+		FBuild::Get().SetCachePath( cachePath );
+	}
+	FBuild::Get().SetCachePluginDLL( cachePluginDLL );
+
+	// Environment
+	if ( envStringSize > 0 )
+	{
+		FBuild::Get().SetEnvironmentString( envString.Get(), envStringSize, libEnvVar );
+	}
+
+	// Workers
+	FBuild::Get().SetWorkerList( workerList );
+
+	return LoadResult::OK;
 }
 
 // LoadNode
@@ -377,7 +422,7 @@ bool NodeGraph::LoadNode( IOStream & stream )
 	m_NextNodeIndex = nodeIndex;
 
 	// load specifics (create node)
-	Node * n = Node::Load( stream );
+	Node * n = Node::Load( *this, stream );
 	if ( n == nullptr )
 	{
 		return false;
@@ -400,11 +445,15 @@ bool NodeGraph::LoadNode( IOStream & stream )
 
 // Save
 //------------------------------------------------------------------------------
-void NodeGraph::Save( IOStream & stream ) const
+void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
 {
 	// write header and version
 	NodeGraphHeader header;
 	stream.Write( (const void *)&header, sizeof( header ) );
+
+	AStackString<> nodeGraphDBFileClean( nodeGraphDBFile );
+	NodeGraph::CleanPath( nodeGraphDBFileClean );
+	stream.Write( nodeGraphDBFileClean );
 
 	// write used file
 	uint32_t numUsedFiles = (uint32_t)m_UsedFiles.GetSize();
@@ -560,19 +609,15 @@ size_t NodeGraph::GetNodeCount() const
     return m_AllNodes.GetSize();
 }
 
-// CreateCopyNode
+// CreateCopyFileNode
 //------------------------------------------------------------------------------
-CopyNode * NodeGraph::CreateCopyNode( const AString & dstFileName, 
-									  Node * sourceFile,
-									  const Dependencies & preBuildDependencies )
+CopyFileNode * NodeGraph::CreateCopyFileNode( const AString & dstFileName )
 {
 	ASSERT( Thread::IsMainThread() );
-	ASSERT( sourceFile->IsAFile() );
+	ASSERT( IsCleanPath( dstFileName ) );
 
-	AStackString< 1024 > fullPathDst;
-	CleanPath( dstFileName, fullPathDst );
-
-	CopyNode * node = FNEW( CopyNode( fullPathDst, (FileNode *)sourceFile, preBuildDependencies ) );
+	CopyFileNode * node = FNEW( CopyFileNode() );
+	node->SetName( dstFileName );
 	AddNode( node );
 	return node;
 }
@@ -604,7 +649,7 @@ RemoveDirNode * NodeGraph::CreateRemoveDirNode( const AString & nodeName,
 	return node;
 }
 
-// CreateCopyNode
+// CreateExecNode
 //------------------------------------------------------------------------------
 ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName, 
 									  const Dependencies & inputFiles, 
@@ -846,7 +891,8 @@ CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 								  const Dependencies & inputNodes,
 								  const AString & compiler,
 								  const AString & compilerOptions,
-								  const Dependencies & extraRefs )
+								  const Dependencies & extraRefs,
+								  const Dependencies & preBuildDependencies )
 {
 	ASSERT( Thread::IsMainThread() );
 	ASSERT( inputNodes.IsEmpty() == false );
@@ -858,7 +904,8 @@ CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
 								inputNodes,
 								compiler,
 								compilerOptions,
-								extraRefs ) );
+								extraRefs,
+								preBuildDependencies ) );
 	AddNode( node );
 	return node;
 }
@@ -1109,7 +1156,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 
 // BuildRecurse
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
+void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 {
 	ASSERT( nodeToBuild );
 
@@ -1156,7 +1203,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 	{
 		// static deps ready, update dynamic deps
 		bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
-		if ( nodeToBuild->DoDynamicDependencies( forceClean ) == false )
+		if ( nodeToBuild->DoDynamicDependencies( *this, forceClean ) == false )
 		{
 			nodeToBuild->SetState( Node::FAILED );
 			return;		
@@ -1194,7 +1241,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 
 // CheckDependencies
 //------------------------------------------------------------------------------
-/*static*/ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost )
+bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost )
 {
 	ASSERT( nodeToBuild->GetType() != Node::PROXY_NODE );
 
@@ -1647,7 +1694,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
 
 // ReadHeaderAndUsedFiles
 //------------------------------------------------------------------------------
-bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, Array< UsedFile > & files, bool & compatibleDB ) const
+bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB ) const
 {
 	// check for a valid header
 	NodeGraphHeader ngh;
@@ -1662,6 +1709,20 @@ bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, Array< UsedF
 	{
 		compatibleDB = false;
 		return true;
+	}
+
+	// Read location where .fdb was originally saved
+	AStackString<> originalNodeGraphDBFile;
+	if ( !nodeGraphStream.Read( originalNodeGraphDBFile ) )
+	{
+		return false;
+	}
+	AStackString<> nodeGraphDBFileClean( nodeGraphDBFile );
+	NodeGraph::CleanPath( nodeGraphDBFileClean );
+	if ( PathUtils::ArePathsEqual( originalNodeGraphDBFile, nodeGraphDBFileClean ) == false )
+	{
+		FLOG_WARN( "Database has been moved (originally at '%s', now at '%s').", originalNodeGraphDBFile.Get(), nodeGraphDBFileClean.Get() );
+		return false;
 	}
 
 	uint32_t numFiles = 0;
@@ -1704,14 +1765,9 @@ bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, Array< UsedF
 //------------------------------------------------------------------------------
 uint32_t NodeGraph::GetLibEnvVarHash() const
 {
-	// if env var doesn't exist, or is empty
+	// ok for LIB var to be missing, we'll hash the empty string
 	AStackString<> libVar;
 	FBuild::Get().GetLibEnvVar( libVar );
-	if ( libVar.IsEmpty() )
-	{
-		return 0; // return 0 (rather than hash of empty string)
-	}
-
 	return xxHash::Calc32( libVar );
 }
 

@@ -88,9 +88,9 @@ LibraryNode::~LibraryNode()
 
 // GatherDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool LibraryNode::GatherDynamicDependencies( bool forceClean )
+/*virtual*/ bool LibraryNode::GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean )
 {
-    if ( ObjectListNode::GatherDynamicDependencies( forceClean ) == false )
+    if ( ObjectListNode::GatherDynamicDependencies( nodeGraph, forceClean ) == false )
     {
         return false; // GatherDynamicDependencies will have emited an error
     }
@@ -292,7 +292,7 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * LibraryNode::Load( IOStream & stream )
+/*static*/ Node * LibraryNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	name );
 	NODE_LOAD_NODE( CompilerNode,	compilerNode );
@@ -320,8 +320,7 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 	NODE_LOAD( uint32_t,		flags );
     NODE_LOAD_DEPS( 0,			additionalInputs );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	LibraryNode * n = ng.CreateLibraryNode( name, 
+	LibraryNode * n = nodeGraph.CreateLibraryNode( name, 
 								 staticDeps, 
 								 compilerNode, 
 								 compilerArgs,

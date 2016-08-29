@@ -86,14 +86,13 @@ RemoveDirNode::~RemoveDirNode()
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * RemoveDirNode::Load( IOStream & stream )
+/*static*/ Node * RemoveDirNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
     NODE_LOAD( AStackString<>,  name);
     NODE_LOAD_DEPS( 4,          staticDeps );
     NODE_LOAD_DEPS( 0,          preBuildDeps );
 
-    NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-    RemoveDirNode * n = ng.CreateRemoveDirNode( name, staticDeps, preBuildDeps );
+    RemoveDirNode * n = nodeGraph.CreateRemoveDirNode( name, staticDeps, preBuildDeps );
     ASSERT( n );
     return n;
 }

@@ -40,6 +40,11 @@ protected:
 
 	// other helpers
 	void GetCodeDir( AString & codeDir ) const;
+
+	const AString & GetRecordedOutput() const { return s_RecordedOutput; }
+private:
+	static bool LoggingCallback( const char * message );
+	static AString s_RecordedOutput;
 };
 
 //------------------------------------------------------------------------------

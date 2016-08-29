@@ -6,7 +6,7 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define FBUILD_VERSION_STRING "v0.90 [InsightfulVR-Internal Build]"
+#define FBUILD_VERSION_STRING "v0.91 [InsightfulVR-Internal Build]"
 #if defined( __WINDOWS__ )
 	#ifdef WIN64
 		#define FBUILD_VERSION_PLATFORM "x64"

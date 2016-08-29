@@ -38,6 +38,7 @@ FunctionForEach::FunctionForEach()
 
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionForEach::ParseFunction(
+					NodeGraph & nodeGraph,
 					const BFFIterator & functionNameStart,
 					const BFFIterator * functionBodyStartToken, 
 					const BFFIterator * functionBodyStopToken,
@@ -209,7 +210,7 @@ FunctionForEach::FunctionForEach()
 		}
 
 		// parse the function body
-		BFFParser subParser;
+		BFFParser subParser( nodeGraph );
 		BFFIterator subIter( *functionBodyStartToken );
 		subIter++; // skip opening token
 		subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
@@ -220,7 +221,7 @@ FunctionForEach::FunctionForEach()
 		}
 
 		// complete the function
-		if ( Commit( functionNameStart ) == false )
+		if ( Commit( nodeGraph, functionNameStart ) == false )
 		{
 			succeed = false;
 			break;

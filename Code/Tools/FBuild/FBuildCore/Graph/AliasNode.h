@@ -21,7 +21,7 @@ class AliasNode : public Node
     REFLECT_DECLARE( AliasNode )
 public:
 	explicit AliasNode();
-	bool Initialize( const BFFIterator & iter, const Function * function );
+	bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
 	virtual ~AliasNode();
 
 	static inline Node::Type GetTypeS() { return Node::ALIAS_NODE; }
@@ -30,7 +30,7 @@ public:
 
 	inline const Dependencies & GetAliasedNodes() const { return m_StaticDependencies; }
 
-	static Node * Load( IOStream & stream );
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 	virtual void Save( IOStream & stream ) const override;
 private:
 	virtual bool DetermineNeedToBuild( bool forceClean ) const override;

@@ -47,7 +47,7 @@ public:
 
 	virtual bool IsAFile() const override;
 
-	static Node * Load( IOStream & stream );
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 	virtual void Save( IOStream & stream ) const override;
 
 	enum Flag
@@ -61,7 +61,7 @@ public:
 private:
 	friend class FunctionLibrary;
 
-    virtual bool GatherDynamicDependencies( bool forceClean ) override;
+    virtual bool GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
 	virtual BuildResult DoBuild( Job * job ) override;
 
 	// internal helpers

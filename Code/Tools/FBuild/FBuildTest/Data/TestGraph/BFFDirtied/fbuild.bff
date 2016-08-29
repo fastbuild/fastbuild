@@ -1,0 +1,12 @@
+
+Settings
+{
+	.Environment		= { "ENVVAR=value" }
+	#if __WINDOWS__
+		.CachePath		= 'c:\cache\'
+	#endif
+	#if !__WINDOWS__
+		.CachePath		= '/var/tmp/cache'
+	#endif
+	.Workers			= { 'worker-001', 'worker-002' }
+}

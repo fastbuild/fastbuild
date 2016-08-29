@@ -209,6 +209,37 @@ bool BFFIterator::ParseToMatchingBrace( char openBrace, char closeBrace )
 	return false;
 }
 
+// ParseExactString
+//------------------------------------------------------------------------------
+bool BFFIterator::ParseExactString( const char * string )
+{
+	const char * const originalPos = m_Pos;
+
+	const char * stringPos = string; // stores pointer to the next character to be checked for presence in our sequence
+	while ( !IsAtEnd() && ( *stringPos != '\000' ) )
+	{
+		if ( *m_Pos != *stringPos )
+		{
+			break;
+	}
+		m_Pos++;
+		stringPos++;
+	}
+
+	if ( *stringPos == '\000' )
+	{
+		// we are at the end of string, that means all characters have successfuly matched
+		return true;
+	}
+	else
+	{
+		// we are not at the end of string, that means either our sequence ended, or there is non matching character
+		// restore our pos before returning
+		m_Pos = originalPos;
+		return false;
+	}
+}
+
 // IsAtValidVariableNameCharacter
 //------------------------------------------------------------------------------
 bool BFFIterator::IsAtValidVariableNameCharacter() const

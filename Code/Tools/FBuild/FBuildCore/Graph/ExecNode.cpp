@@ -117,7 +117,7 @@ ExecNode::~ExecNode()
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * ExecNode::Load( IOStream & stream )
+/*static*/ Node * ExecNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	fileName );
 	NODE_LOAD_DEPS( 0,			inputFiles );
@@ -128,11 +128,10 @@ ExecNode::~ExecNode()
 	NODE_LOAD_DEPS( 0,			preBuildDependencies );
 	NODE_LOAD( bool,			useStdOutAsOutput);
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * execNode = ng.FindNode( executable );
+	Node * execNode = nodeGraph.FindNode( executable );
 	ASSERT( execNode ); // load/save logic should ensure the src was saved first
 	ASSERT( execNode->IsAFile() );
-	ExecNode * n = ng.CreateExecNode( fileName, 
+	ExecNode * n = nodeGraph.CreateExecNode( fileName, 
 								  inputFiles,
 								  (FileNode *)execNode,
 								  arguments,

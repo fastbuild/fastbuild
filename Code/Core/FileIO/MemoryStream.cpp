@@ -39,6 +39,21 @@ MemoryStream::~MemoryStream()
 	FREE( m_Begin );
 }
 
+// WriteBuffer
+//------------------------------------------------------------------------------
+uint64_t MemoryStream::WriteBuffer( IOStream & stream, uint64_t bytesToWrite )
+{
+	if ( ( m_End + bytesToWrite ) > m_MaxEnd )
+	{
+		GrowToAccomodate( bytesToWrite );
+	}
+
+	// Read directly into end of buffer
+	const uint64_t bytesRead = stream.ReadBuffer( m_End, bytesToWrite );
+	m_End += bytesRead;
+	return bytesRead;
+}
+
 // Read
 //------------------------------------------------------------------------------
 uint64_t MemoryStream::ReadBuffer( void * buffer, uint64_t bytesToRead )

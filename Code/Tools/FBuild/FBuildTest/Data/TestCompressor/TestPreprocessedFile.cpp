@@ -9416,7 +9416,7 @@ public:
 	enum Type
 	{
 		PROXY_NODE			= 0,
-		COPY_NODE			= 1,
+		COPY_FILE_NODE		= 1,
 		DIRECTORY_LIST_NODE	= 2,
 		EXEC_NODE			= 3,
 		FILE_NODE			= 4,
@@ -16891,7 +16891,7 @@ public:
 					    FileNode * sourceFile );
 	virtual ~CopyNode();
 
-	static inline Node::Type GetType() { return Node::COPY_NODE; }
+	static inline Node::Type GetType() { return Node::COPY_FILE_NODE; }
 
 	static Node * Load( IOStream & stream, bool remote );
 	virtual bool Save( IOStream & stream ) const;
@@ -16979,7 +16979,7 @@ CopyNode::CopyNode( const AString & dstFileName,
 	do { __pragma(warning(push)) __pragma(warning(disable:4127)) } while ( false ); __pragma(warning(pop));
 	do { __pragma(warning(push)) __pragma(warning(disable:4127)) } while ( false ); __pragma(warning(pop));
 	m_StaticDependencies.Append( m_SourceFile );
-	m_Type = Node::COPY_NODE;
+	m_Type = Node::COPY_FILE_NODE;
 }
 
 
@@ -188353,7 +188353,7 @@ bool Node::SaveNode( IOStream & fileStream, const Node * node ) const
 	Node * n = nullptr;
 	switch ( (Node::Type)nodeType )
 	{
-		case Node::COPY_NODE:			n = CopyNode::Load( stream, remote );			break;
+		case Node::COPY_FILE_NODE:		n = CopyFileNode::Load( stream, remote );		break;
 		case Node::DIRECTORY_LIST_NODE: n = DirectoryListNode::Load( stream, remote );	break;
 		case Node::EXEC_NODE:			n = ExecNode::Load( stream, remote );			break;
 		case Node::FILE_NODE:			n = FileNode::Load( stream, remote );			break;

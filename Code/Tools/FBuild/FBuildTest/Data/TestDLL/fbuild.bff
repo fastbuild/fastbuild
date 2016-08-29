@@ -15,8 +15,12 @@ Settings {}
 .DLLOptions =
 [
 	#if __WINDOWS__
-		.CompilerOptions	+ ' /DLL'
-		.LinkerOptions		+ ' /DLL /ENTRY:DllMain'
+		.CompilerOptions	+ ' /DLL /MT'
+		.LinkerOptions		+ ' /DLL'
+							+ .WindowsLibPaths
+							+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+							+ ' libcmt.lib'
+							+ ' kernel32.lib'
 	#endif
     #if __LINUX__
         .LinkerOptions      + ' -shared'
@@ -33,6 +37,9 @@ ObjectList( 'DLLTest' )
 	Using( .DLLOptions )
 	.CompilerInputFiles	= 'Data/TestDLL/a.cpp'
     .CompilerOptions    + ' "-IData/TestDLL"'
+	#if __WINDOWS__
+		.CompilerOptions	+ ' -DDLL_A_EXPORT'
+	#endif
 }
 
 DLL
@@ -49,11 +56,17 @@ ObjectList( "DLLTestA" )
 	Using( .DLLOptions )
 	.CompilerInputFiles	= 'Data/TestDLL/a.cpp'
     .CompilerOptions    + ' "-IData/TestDLL"'
+	#if __WINDOWS__
+		.CompilerOptions	+ ' -DDLL_A_EXPORT'
+	#endif
 }
 ObjectList( 'DLLTestB' )
 {
 	Using( .DLLOptions )
 	.CompilerInputFiles	= 'Data/TestDLL/b.cpp'
+	#if __WINDOWS__
+		.CompilerOptions	+ ' -DDLL_B_EXPORT'
+	#endif
 }
 
 DLL( 'DllA' )
@@ -83,6 +96,7 @@ ObjectList( "DLLPCHTest" )
 		.PCHInputFile		= 'Data/TestDLL/PrecompiledHeader.cpp'
 		.PCHOutputFile		= '$Out$/Test/DLL/PrecompiledHeader.pch'
 		.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /W4 /WX /Z7 /Fp"%2" /nologo /c'
+							+ ' -DDLL_A_EXPORT'
 	#endif
     #if __LINUX__
         .PCHInputFile       = "Data/TestDLL/PrecompiledHeader.h"
@@ -99,6 +113,7 @@ ObjectList( "DLLPCHTest" )
 	#if __WINDOWS__
         .CompilerOptions        + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
                                 + ' /I"Data/TestDLL"'
+								+ ' -DDLL_A_EXPORT'
     #endif
     #if __LINUX__
         .CompilerOptions        + ' -Winvalid-pch -H'
@@ -131,7 +146,10 @@ Executable( 'Exe' )
 	.Libraries			= { 'Exe-Lib'
                             'DllA' }
 	#if __WINDOWS__
-		.LinkerOptions		+ ' /ENTRY:main'
+		.LinkerOptions		+ .WindowsLibPaths
+							+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+							+ ' libcmt.lib'
+							+ ' kernel32.lib'
 	#endif
 }
 

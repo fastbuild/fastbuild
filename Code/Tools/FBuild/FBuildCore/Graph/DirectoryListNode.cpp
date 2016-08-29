@@ -181,7 +181,7 @@ DirectoryListNode::~DirectoryListNode()
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * DirectoryListNode::Load( IOStream & stream )
+/*static*/ Node * DirectoryListNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	name );
 	NODE_LOAD( AStackString<>,	path );
@@ -190,9 +190,7 @@ DirectoryListNode::~DirectoryListNode()
 	NODE_LOAD( bool,			recursive );
     NODE_LOAD( Array< AString >, filesToExclude );
 
-
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	Node * n = ng.CreateDirectoryListNode( name, path, &patterns, recursive, excludePaths, filesToExclude );
+	Node * n = nodeGraph.CreateDirectoryListNode( name, path, &patterns, recursive, excludePaths, filesToExclude );
 	ASSERT( n );
 	return n;
 }

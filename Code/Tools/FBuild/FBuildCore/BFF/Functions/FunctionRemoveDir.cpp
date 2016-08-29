@@ -30,7 +30,7 @@ FunctionRemoveDir::FunctionRemoveDir()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionRemoveDir::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionRemoveDir::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
     // Get input paths
     Array< AString > inputPaths;
@@ -56,7 +56,7 @@ FunctionRemoveDir::FunctionRemoveDir()
 
     // convert input paths to DirectoryListNodes
     Dependencies staticDeps( inputPaths.GetSize() );
-    if ( !GetDirectoryListNodeList( funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, patterns.IsEmpty() ? nullptr : &patterns, ".RemovePaths", staticDeps ) )
+    if ( !GetDirectoryListNodeList( nodeGraph, funcStartIter, inputPaths, excludePaths, Array< AString >(), recurse, patterns.IsEmpty() ? nullptr : &patterns, ".RemovePaths", staticDeps ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }
@@ -66,7 +66,7 @@ FunctionRemoveDir::FunctionRemoveDir()
     bool allowCopyDirNodes = true;
     bool allowUnityNodes = false;
     bool allowRemoveDirNodes = true;
-    if ( !GetNodeList( funcStartIter, ".PreBuildDependencies", preBuildDeps, false, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+    if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDeps, false, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
     {
         return false; // GetNodeList will have emitted an error
     }
@@ -79,15 +79,14 @@ FunctionRemoveDir::FunctionRemoveDir()
     }
 
     // check node doesn't already exist
-    NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-    if ( ng.FindNode( m_AliasForFunction ) )
+    if ( nodeGraph.FindNode( m_AliasForFunction ) )
     {
         Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
         return false;
     }
 
     // create our node
-    ng.CreateRemoveDirNode( m_AliasForFunction, staticDeps, preBuildDeps );
+    nodeGraph.CreateRemoveDirNode( m_AliasForFunction, staticDeps, preBuildDeps );
     return true;
 }
 

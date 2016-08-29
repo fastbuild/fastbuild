@@ -20,13 +20,13 @@ class TestNode : public FileNode
 	REFLECT_DECLARE( TestNode )
 public:
 	TestNode();
-	bool Initialize( const BFFIterator & iter, const Function * function );
+	bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
 	virtual ~TestNode();
 
 	static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
 
 	virtual void Save( IOStream & stream ) const override;
-	static Node * Load( IOStream & stream );
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 
 	inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
 private:

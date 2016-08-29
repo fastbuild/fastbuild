@@ -2,14 +2,26 @@
 // Operator -
 //
 
+.BAD = 'BAD'
+
 // Substring removal
 .String = "Good BAD Good"
 .String - 'BAD'
 Print( .String ) // Should print 'Good  Good'
 
+// Substring removal using variable
+.String = "Good BAD Good"
+.String - .BAD
+Print( .String ) // Should print 'Good  Good'
+
 // Multiple Removals
 .String = "Good BAD Good BAD BAD Good"
 .String - 'BAD'
+Print( .String ) // Should print 'Good  Good   Good'
+
+// Multiple Removals using variable
+.String = "Good BAD Good BAD BAD Good"
+.String - .BAD
 Print( .String ) // Should print 'Good  Good   Good'
 
 // Remove not found
@@ -25,4 +37,9 @@ Print( .String ) // Should print 'Good '
 // Remove from Array of Strings
 .Strings = { 'Good', 'BAD', 'Good' }
 		 - 'BAD'
+Print( .Strings ) // Should print { 'Good', 'Good' }
+
+// Remove from Array of Strings using variable
+.Strings = { 'Good', 'BAD', 'Good' }
+		 - .BAD
 Print( .Strings ) // Should print { 'Good', 'Good' }

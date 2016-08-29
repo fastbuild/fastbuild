@@ -545,6 +545,29 @@ void AString::ToUpper()
 	}
 }
 
+// Trim
+//------------------------------------------------------------------------------
+void AString::Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim )
+{
+	// Ensure trim operation is valid
+	ASSERT( GetLength() >= ( startCharsToTrim + endCharsToTrim ) );
+
+	if ( startCharsToTrim == 0 )
+	{
+		if ( endCharsToTrim == 0 )
+		{
+			return; // nothing to do
+		}
+
+		// Trim by adjusting length
+		SetLength( GetLength() - endCharsToTrim );
+		return;
+	}
+
+	// Shuffle string up
+	Assign( Get() + startCharsToTrim, GetEnd() - endCharsToTrim );
+}
+
 // Replace ( char *, char * )
 //------------------------------------------------------------------------------
 uint32_t AString::Replace( const char * from, const char * to, uint32_t maxReplaces )

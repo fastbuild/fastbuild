@@ -1,0 +1,11 @@
+//
+// else directive
+//
+
+#define TOGGLE
+
+// Invalid else inside enabled block
+#if TOGGLE
+#else
+#else
+#endif

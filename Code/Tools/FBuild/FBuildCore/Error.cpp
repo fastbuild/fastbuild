@@ -357,6 +357,13 @@
 	FormatError( iter, 1040u, nullptr, "#undef of built-in token not allowed." );
 }
 
+// Error_1041_ElseWithoutIf
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1041_ElseWithoutIf( const BFFIterator & iter )
+{
+	FormatError( iter, 1041u, nullptr, "#else without matching #if." );
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFIterator & iter,

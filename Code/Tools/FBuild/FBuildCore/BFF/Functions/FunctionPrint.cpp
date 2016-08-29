@@ -40,7 +40,8 @@ FunctionPrint::FunctionPrint()
 }
 
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionPrint::ParseFunction( const BFFIterator & functionNameStart,
+/*virtual*/ bool FunctionPrint::ParseFunction( NodeGraph & /*nodeGraph*/,
+											   const BFFIterator & functionNameStart,
 											   const BFFIterator * functionBodyStartToken, 
 											   const BFFIterator * functionBodyStopToken,
 											   const BFFIterator * functionHeaderStartToken,

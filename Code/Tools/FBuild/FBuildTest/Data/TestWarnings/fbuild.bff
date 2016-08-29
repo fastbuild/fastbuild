@@ -12,24 +12,31 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.CompilerInputPath			= "Data/TestWarnings/"
 .CompilerOutputPath			= '$Out$/Test/TestWarnings/'
+
+// Disable warnings as errors to confirm that we still see warnings
+#if __WINDOWS__
+	.CompilerOptions			- '/WX'
+#endif
+#if __LINUX__
+	.CompilerOptions			- '-Werror'
+#endif
+#if __OSX__
+	.CompilerOptions			- '-Werror'
+#endif
 
 //
 // Compile something that generates warnings
 //------------------------------------------------------------------------------
 ObjectList( 'Warnings' )
 {
-	.CompilerInputExcludedFiles	= 'warning.cpp'
+	.CompilerInputFiles		= 'Data/TestWarnings/warnings.cpp'
+}
 
-	// Disable warnings as errors to confirm that we still see warnings
-	#if __WINDOWS__
-		.CompilerOptions			- '/WX'
-	#endif
-	#if __LINUX__
-		.CompilerOptions			- '-Werror'
-	#endif
-	#if __OSX__
-		.CompilerOptions			- '-Werror'
-	#endif
+//
+// Compile something that generates warnings via a message pragma
+//------------------------------------------------------------------------------
+ObjectList( 'PragmaMessage' )
+{
+	.CompilerInputFiles		= 'Data/TestWarnings/pragma_message.cpp'
 }

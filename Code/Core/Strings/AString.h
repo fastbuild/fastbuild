@@ -89,6 +89,9 @@ public:
 	void ToLower();
 	void ToUpper();
 
+	// Trimming
+	void Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim );
+
 	// searching
 	const char *	Find( char c, const char * startPos = nullptr ) const;
 	char *			Find( char c, char * startPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->Find( c, startPos ) ); }

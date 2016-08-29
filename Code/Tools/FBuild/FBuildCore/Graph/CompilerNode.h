@@ -21,12 +21,12 @@ class CompilerNode : public FileNode
 	REFLECT_DECLARE( CompilerNode )
 public:
 	explicit CompilerNode();
-	bool Initialize( const BFFIterator & iter, const Function * function );
+	bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
 	virtual ~CompilerNode();
 
 	static inline Node::Type GetTypeS() { return Node::COMPILER_NODE; }
 
-	static Node * Load( IOStream & stream );
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 	virtual void Save( IOStream & stream ) const override;
 
 	inline const ToolManifest & GetManifest() const { return m_Manifest; }

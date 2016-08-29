@@ -13,10 +13,6 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
-// Globals
-//------------------------------------------------------------------------------
-const char * dbFile = "../tmp/Test/BuildFBuild/TestFBuild.db";
-
 // TestBuildFBuild
 //------------------------------------------------------------------------------
 class TestBuildFBuild : public FBuildTest
@@ -26,6 +22,7 @@ private:
 
 	// Helpers
 	FBuildStats BuildInternal( FBuildOptions options = FBuildOptions(), bool useDB = true ) const;
+	const char * GetDBFile() const { return "../tmp/Test/BuildFBuild/TestFBuild.db"; }
 
 	// Tests
 	void BuildClean() const;
@@ -58,7 +55,7 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildOptions options, bool useDB ) 
 	options.SetWorkingDir( codeDir );
 
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( useDB ? dbFile : nullptr ) );
+	TEST_ASSERT( fBuild.Initialize( useDB ? GetDBFile() : nullptr ) );
 
     #if defined( __WINDOWS__ )
         const AStackString<> lib( "../tmp/Test/BuildFBuild/Win32/Debug/Core/core.lib" );
@@ -89,8 +86,8 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildOptions options, bool useDB ) 
 	EnsureFileExists( exe );
 
 	// save the db file - make sure it exists
-	TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
-	EnsureFileExists( dbFile );
+	TEST_ASSERT( fBuild.SaveDependencyGraph( GetDBFile() ) );
+	EnsureFileExists( GetDBFile() );
 
 	return fBuild.GetStats();
 }
@@ -163,14 +160,14 @@ void TestBuildFBuild::DBSavePerformance() const
 	options.SetWorkingDir( codeDir );
 
 	FBuild fBuild( options );
-	TEST_ASSERT( fBuild.Initialize( dbFile ) );
+	TEST_ASSERT( fBuild.Initialize( GetDBFile() ) );
 
 	MemoryStream ms( 64 * 1024 * 1024 );
 
 	Timer t;
 	for ( size_t i=0; i<100; ++i )
 	{
-		fBuild.GetDependencyGraph().Save( ms );
+		fBuild.SaveDependencyGraph( ms, "unused.fdb" );
 	}
 
 	const float time = ( t.GetElapsed() * 1000.0f ) / 100.0f;

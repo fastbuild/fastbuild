@@ -24,7 +24,7 @@ REFLECT_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
 	REFLECT( m_TestExecutable,		"TestExecutable",		MetaFile() )
 	REFLECT( m_TestArguments,		"TestArguments",		MetaOptional() )
 	REFLECT( m_TestWorkingDir,		"TestWorkingDir",		MetaOptional() + MetaPath() )
-	REFLECT( m_TestTimeOut,			"TestTimeOut",			MetaOptional() + MetaRange( 0, 4 * 60 * 60 * 1000 ) ) // 4hrs
+	REFLECT( m_TestTimeOut,			"TestTimeOut",			MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
 REFLECT_END( TestNode )
 
 // CONSTRUCTOR
@@ -41,10 +41,10 @@ TestNode::TestNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool TestNode::Initialize( const BFFIterator & iter, const Function * function )
+bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
 	// Get node for Executable
-	if ( !function->GetFileNode( iter, m_TestExecutable, "TestExecutable", m_StaticDependencies ) )
+	if ( !function->GetFileNode( nodeGraph, iter, m_TestExecutable, "TestExecutable", m_StaticDependencies ) )
 	{
 		return false; // GetFileNode will have emitted an error
 	}
@@ -85,10 +85,10 @@ TestNode::~TestNode()
 	AutoPtr< char > memErr;
 	uint32_t memOutSize = 0;
 	uint32_t memErrSize = 0;
-	bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut );
+	bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut * 1000 );
 	if ( timedOut )
 	{
-		FLOG_ERROR( "Test timed out after %u ms (%s)", m_TestTimeOut, m_TestExecutable.Get() );
+		FLOG_ERROR( "Test timed out after %u s (%s)", m_TestTimeOut, m_TestExecutable.Get() );
 		return NODE_RESULT_FAILED;
 	}
 
@@ -164,14 +164,13 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * TestNode::Load( IOStream & stream )
+/*static*/ Node * TestNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>, name );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	TestNode * node = ng.CreateTestNode( name );
+	TestNode * node = nodeGraph.CreateTestNode( name );
 
-	if ( node->Deserialize( stream ) == false )
+	if ( node->Deserialize( nodeGraph, stream ) == false )
 	{
 		return nullptr;
 	}

@@ -13,7 +13,7 @@ ObjectList( "PCHTest-lib" )
     #if __WINDOWS__
         .PCHInputFile       = "Data/TestPrecompiledHeaders/PrecompiledHeader.cpp"
         .PCHOutputFile      = "$Out$/Test/PrecompiledHeaders/PrecompiledHeader.pch"
-        .PCHOptions			= '%1 /Fo"%3" /Z7 /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+        .PCHOptions			= '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
     #endif
     #if __LINUX__
         .PCHInputFile       = "Data/TestPrecompiledHeaders/PrecompiledHeader.h"

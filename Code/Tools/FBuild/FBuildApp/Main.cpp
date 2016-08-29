@@ -42,7 +42,6 @@ enum ReturnCodes
 //------------------------------------------------------------------------------
 void DisplayHelp();
 void DisplayVersion();
-void DisplayTargetList( const NodeGraph & dependencyGraph );
 #if defined( __WINDOWS__ )
     BOOL CtrlHandler( DWORD fdwCtrlType ); // Handle Ctrl+C etc
 #else
@@ -441,7 +440,7 @@ int Main(int argc, char * argv[])
 
 	if ( displayTargetList )
 	{
-        DisplayTargetList( fBuild.GetDependencyGraph() );
+        fBuild.DisplayTargetList();
         return FBUILD_OK;
 	}
 
@@ -617,22 +616,6 @@ int WrapperIntermediateProcess( const AString & args, const FBuildOptions & opti
 	// don't wait for the final process (the main process will do that)
 	p.Detach();
 	return FBUILD_OK;
-}
-
-// DisplayTargetList
-//------------------------------------------------------------------------------
-void DisplayTargetList( const NodeGraph & dependencyGraph )
-{
-    OUTPUT( "FBuild: List of available targets\n" );
-    const size_t totalNodes = dependencyGraph.GetNodeCount();
-    for ( size_t i = 0; i < totalNodes; ++i )
-    {
-	     Node * node = dependencyGraph.GetNodeByIndex( i );
-		 if ( node && node->GetType() == Node::ALIAS_NODE )
-		 {
-		     OUTPUT( "\t%s\n", node->GetName().Get() );
-		 }
-    }
 }
 
 //------------------------------------------------------------------------------

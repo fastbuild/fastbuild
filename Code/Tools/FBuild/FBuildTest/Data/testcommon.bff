@@ -63,6 +63,12 @@
 //==============================================================================
 .ClangPath				= '..\..\..\..\External\SDK\ClangForWindows\3.4'
 //.ClangPath			= 'C:\Program Files (x86)\LLVM'
+.WindowsClangToolChain =
+[
+	.Compiler			= '$ClangPath$\bin\clang++.exe'
+	.CompilerOptions	= '-c -g %1 -o "%2" -integrated-as'
+						+ ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+]
 
 //==============================================================================
 // Linux GCC
@@ -107,10 +113,10 @@
 //==============================================================================
 .OSXClangToolChain =
 [
-    .Compiler           = '/usr/bin/g++'
+    .Compiler           = '/usr/bin/clang++'
     Compiler( 'Compiler-Clang-Dist' )
     {
-        .Executable     = '/usr/bin/g++'
+        .Executable     = '/usr/bin/clang++'
     }
     .CompilerDist       = 'Compiler-Clang-Dist'
     .Librarian          = '/usr/bin/ar'
@@ -140,11 +146,13 @@
 //==============================================================================
 // Standard Environment
 //==============================================================================
+.StandardOutputBase			= '../../../../tmp'
 .StandardEnvironment =
 [
     #if __WINDOWS__
+		#import TMP
         .Environment		= { 'PATH=$VisualStudioPath$\Common7\IDE\',
-                                'TMP=C:\Windows\Temp',
+                                'TMP=$TMP$',
                                 'SystemRoot=C:\Windows' }
         .CachePath			= 'C:\.fbuild.cache'
         Using( .VisualStudioToolChain )
@@ -159,5 +167,5 @@
     #endif
 
 	// Default location for tmp files
-	.Out		= "../../../../tmp"
+	.Out		= .StandardOutputBase
 ]

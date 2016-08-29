@@ -39,35 +39,34 @@ FunctionCompiler::FunctionCompiler()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionCompiler::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionCompiler::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 	AStackString<> name;
-	if ( GetNameForNode( funcStartIter, CompilerNode::GetReflectionInfoS(), name ) == false )
+	if ( GetNameForNode( nodeGraph, funcStartIter, CompilerNode::GetReflectionInfoS(), name ) == false )
 	{
 		return false;
 	}
 
-	if ( ng.FindNode( name ) )
+	if ( nodeGraph.FindNode( name ) )
 	{
 		Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
 		return false;
 	}
 
-	CompilerNode * compilerNode = ng.CreateCompilerNode( name );
+	CompilerNode * compilerNode = nodeGraph.CreateCompilerNode( name );
 
-	if ( !PopulateProperties( funcStartIter, compilerNode ) )
+	if ( !PopulateProperties( nodeGraph, funcStartIter, compilerNode ) )
 	{
 		return false;
 	}
 
-	if ( !compilerNode->Initialize( funcStartIter, this ) )
+	if ( !compilerNode->Initialize( nodeGraph, funcStartIter, this ) )
     {
         return false;
     }
 
 	// handle alias creation
-	return ProcessAlias( funcStartIter, compilerNode );
+	return ProcessAlias( nodeGraph, funcStartIter, compilerNode );
 }
 
 //------------------------------------------------------------------------------

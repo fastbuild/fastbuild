@@ -39,6 +39,7 @@ REFLECT_BEGIN( UnityNode, Node, MetaNone() )
 	REFLECT( m_MaxIsolatedFiles,		"UnityInputIsolateWritableFilesLimit",	MetaOptional() + MetaRange( 0, 1048576 ) )
 	REFLECT( m_IsolateWritableFiles,	"UnityInputIsolateWritableFiles",		MetaOptional() )
 	REFLECT( m_PrecompiledHeader,		"UnityPCH",								MetaOptional() + MetaFile( true ) ) // relative
+	REFLECT_ARRAY( m_PreBuildDependencyNames,	"PreBuildDependencies",			MetaOptional() + MetaFile() )
 REFLECT_END( UnityNode )
 
 // CONSTRUCTOR
@@ -66,22 +67,35 @@ UnityNode::UnityNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool UnityNode::Initialize( const BFFIterator & iter, const Function * function )
+bool UnityNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
+	// Pre-build dependencies
+	if ( !m_PreBuildDependencyNames.IsEmpty() )
+	{
+		m_PreBuildDependencies.SetCapacity( m_PreBuildDependencyNames.GetSize() );
+		for ( const AString & preDepName : m_PreBuildDependencyNames )
+		{
+			if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preDepName, m_PreBuildDependencies, true, true, true ) )
+			{
+				return false; // GetNodeList will have emitted an error
+			}
+		}
+	}
+
 	Dependencies dirNodes( m_InputPaths.GetSize() );
-	if ( !function->GetDirectoryListNodeList( iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
+	if ( !function->GetDirectoryListNodeList( nodeGraph, iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
 	{
 		return false; // GetDirectoryListNodeList will have emitted an error
 	}
 
     Dependencies fileNodes( m_Files.GetSize() );
-    if ( !function->GetFileNodes( iter, m_Files, "UnityInputFiles", fileNodes ) )
+    if ( !function->GetFileNodes( nodeGraph, iter, m_Files, "UnityInputFiles", fileNodes ) )
     {
 		return false; // GetFileNodes will have emitted an error
     }
 
     Dependencies objectListNodes( m_ObjectLists.GetSize() );
-    if ( !function->GetObjectListNodes( iter, m_ObjectLists, "UnityInputObjectLists", objectListNodes ) )
+    if ( !function->GetObjectListNodes( nodeGraph, iter, m_ObjectLists, "UnityInputObjectLists", objectListNodes ) )
     {
 		return false; // GetObjectListNodes will have emitted an error
     }
@@ -326,14 +340,13 @@ UnityNode::~UnityNode()
 
 // Load
 //------------------------------------------------------------------------------
-/*static*/ Node * UnityNode::Load( IOStream & stream )
+/*static*/ Node * UnityNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
 	NODE_LOAD( AStackString<>,	name );
 
-	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
-	UnityNode * un = ng.CreateUnityNode( name );
+	UnityNode * un = nodeGraph.CreateUnityNode( name );
 
-	if ( un->Deserialize( stream ) == false )
+	if ( un->Deserialize( nodeGraph, stream ) == false )
 	{
 		return nullptr;
 	}

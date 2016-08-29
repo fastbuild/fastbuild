@@ -18,7 +18,7 @@ public:
 
 protected:
     virtual bool AcceptsHeader() const override;
-    virtual bool Commit( const BFFIterator & funcStartIter ) const override;
+    virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 };
 
 //------------------------------------------------------------------------------

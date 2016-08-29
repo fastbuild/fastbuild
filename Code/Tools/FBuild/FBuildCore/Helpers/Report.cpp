@@ -27,7 +27,7 @@
 //------------------------------------------------------------------------------
 uint32_t g_ReportNodeColors[Node::NUM_NODE_TYPES] = {
 								  0x000000, // PROXY_NODE (never seen)
-								  0xFFFFFF, // COPY_NODE
+								  0xFFFFFF, // COPY_FILE_NODE
 								  0xAAAAAA, // DIRECTORY_LIST_NODE
 								  0x000000, // EXEC_NODE
 								  0x888888, // FILE_NODE

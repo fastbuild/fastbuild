@@ -35,7 +35,7 @@ FunctionSettings::FunctionSettings()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionSettings::Commit( const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionSettings::Commit( NodeGraph & /*nodeGraph*/, const BFFIterator & funcStartIter ) const
 {
 	// using a cache plugin?
 	AStackString<> cachePluginDLL;

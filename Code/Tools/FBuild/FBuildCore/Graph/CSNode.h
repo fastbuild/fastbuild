@@ -22,16 +22,17 @@ public:
 					 const Dependencies & inputNodes,
 					 const AString & compiler,
 					 const AString & compilerArgs,
-					 const Dependencies & extraRefs );
+					 const Dependencies & extraRefs,
+					 const Dependencies & preBuildDependencies );
 	virtual ~CSNode();
 
 	static inline Node::Type GetTypeS() { return Node::CS_NODE; }
 
-	virtual void Save( IOStream & stream ) const;
-	static Node * Load( IOStream & stream );
+	virtual void Save( IOStream & stream ) const override;
+	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 private:
-	virtual bool DoDynamicDependencies( bool forceClean );
-	virtual BuildResult DoBuild( Job * job );
+	virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+	virtual BuildResult DoBuild( Job * job ) override;
 
 	void EmitCompilationMessage( const Args & fullArgs ) const;
 
