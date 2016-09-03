@@ -45,6 +45,12 @@ void OSLabel::Init( int32_t x, int32_t y, uint32_t w, uint32_t h, const char * l
 
         // Set text
         SendMessage( (HWND)m_Handle, WM_SETTEXT, NULL, (LPARAM)labelText );
+    #else
+        (void)x;
+        (void)y;
+        (void)w;
+        (void)h;
+        (void)labelText;
     #endif
 
     OSWidget::Init();

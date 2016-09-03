@@ -102,6 +102,9 @@ OSWindow::OSWindow( void * hInstance ) :
     #endif
     m_ChildWidgets( 0, true )
 {
+    #if !defined( __WINDOWS__ )
+        (void)hInstance;
+    #endif
 }
 
 // DESTRUCTOR
@@ -159,6 +162,11 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         // User data doesn't take effect until you call SetWindowPos
         VERIFY( SetWindowPos( (HWND)m_Handle, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER ) );
         ASSERT( this == (void*)GetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA ) );
+    #else
+        (void)x;
+        (void)y;
+        (void)w;
+        (void)h;   
     #endif
 }
 
@@ -177,9 +185,9 @@ void OSWindow::SetTitle( const char * title )
     #if defined( __WINDOWS__ )
         VERIFY( SetWindowText( (HWND)m_Handle, title ) );
     #elif defined( __APPLE__ )
-        // TODO:MAC SetWindowText equivalent
+        (void)title; // TODO:MAC SetWindowText equivalent
     #elif defined( __LINUX__ )
-        // TODO:LINUX SetWindowText equivalent
+        (void)title; // TODO:LINUX SetWindowText equivalent
     #else
         #error Unknown Platform
     #endif

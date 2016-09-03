@@ -85,6 +85,7 @@ void * CachePlugin::GetFunction( const char * friendlyName, const char * mangled
         }
         return func;
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        (void)mangledName;
         return dlsym( m_DLL, friendlyName );
     #else
         #error Unknown platform

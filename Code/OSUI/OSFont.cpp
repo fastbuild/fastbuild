@@ -43,6 +43,9 @@ void OSFont::Init( uint32_t size, const char * fontFamily )
                               CLEARTYPE_QUALITY,
                               DEFAULT_PITCH,
                               fontFamily );
+    #else
+        (void)size;
+        (void)fontFamily;
     #endif
 }
 

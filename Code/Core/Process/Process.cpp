@@ -155,6 +155,8 @@ bool Process::Spawn( const char * executable,
         m_Started = true;
         return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        (void)shareHandles; // unsupported
+        
         // create StdOut and StdErr pipes to capture output of spawned process
         int stdOutPipeFDs[ 2 ];
         int stdErrPipeFDs[ 2 ];

@@ -37,9 +37,9 @@ void ShowMsgBox( const char * msg )
     #if defined( __WINDOWS__ )
         MessageBoxA( nullptr, msg, "FBuildWorker", MB_OK );
     #elif defined( __APPLE__ )
-        // TODO:MAC Implement ShowMsgBox
+        (void)msg; // TODO:MAC Implement ShowMsgBox
     #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ShowMsgBox
+        (void)msg; // TODO:LINUX Implement ShowMsgBox
     #else
         #error Unknown Platform
     #endif

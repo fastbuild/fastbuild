@@ -52,6 +52,7 @@ AStackString< RESERVED >::AStackString( const AString & string )
 //------------------------------------------------------------------------------
 template < int RESERVED >
 AStackString< RESERVED >::AStackString( const AStackString & string )
+    : AString()
 {
     static_assert( ( RESERVED % 2 ) == 0, "Capacity must be multiple of 2" );
     m_Contents = m_Storage;

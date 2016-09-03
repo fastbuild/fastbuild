@@ -258,6 +258,7 @@ Compiler( 'Compiler-x64-OSX' )
 
     .BaseCompilerOptions    = '-o"%2" "%1" -c -g'
                             + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                            + ' -Wextra'                        // additional warnings
 
                             // includes
                             + ' -I"./"'
@@ -372,6 +373,7 @@ Compiler( 'Compiler-x64-OSX' )
                             + ' -I./'
                             + ' -D__LINUX__'
                             + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                            + ' -Wextra'
                             + ' -m64'                           // x86-64
 
     .CompilerOptionsC       = .BaseCompilerOptions

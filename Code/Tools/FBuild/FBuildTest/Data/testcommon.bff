@@ -68,6 +68,7 @@
     .Compiler           = '$ClangPath$\bin\clang++.exe'
     .CompilerOptions    = '-c -g %1 -o "%2" -integrated-as'
                         + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                        + ' -Wextra'                        // additional warnings
 ]
 
 //==============================================================================
@@ -92,6 +93,7 @@
                         + ' -I./'
                         + ' -D__LINUX__'
                         + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                        + ' -Wextra'                        // additional warnings
                         + ' -ffreestanding'                 // prevent extra magic includes like stdc-predefs.h
 
     .CompilerOptionsC   = .BaseCompilerOptions

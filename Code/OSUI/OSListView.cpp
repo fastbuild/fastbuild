@@ -54,6 +54,11 @@ void OSListView::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
                                  nullptr,
                                  nullptr,
                                  nullptr );
+    #else
+        (void)x;
+        (void)y;
+        (void)w;
+        (void)h;
     #endif
 
     OSWidget::Init();
@@ -70,6 +75,10 @@ void OSListView::AddColumn( const char * columnHeading, uint32_t columnIndex, ui
         col.cx = columnWidth;
         col.pszText = const_cast< char * >( columnHeading ); // work around lack of const in LV_COLUMN when setting
         SendMessage( (HWND)m_Handle, LVM_INSERTCOLUMN, columnIndex, (LPARAM)&col );
+    #else
+        (void)columnHeading;
+        (void)columnIndex;
+        (void)columnWidth;
     #endif
 }
 
@@ -79,6 +88,8 @@ void OSListView::SetItemCount( uint32_t itemCount )
 {
     #if defined( __WINDOWS__ )
         SendMessage( (HWND)m_Handle, LVM_SETITEMCOUNT, (WPARAM)itemCount, (LPARAM)0 );
+    #else
+       (void)itemCount;
     #endif
 }
 
@@ -92,6 +103,8 @@ void OSListView::AddItem( const char * itemText )
         item.mask = LVIF_TEXT;
         item.pszText = const_cast< char * >( itemText ); // work around lack of const
         SendMessage( (HWND)m_Handle, LVM_INSERTITEM, (WPARAM)0, (LPARAM)&item );
+    #else
+        (void)itemText;
     #endif
 }
 
@@ -109,6 +122,10 @@ void OSListView::SetItemText( uint32_t index, uint32_t subItemIndex, const char 
         item.pszText = (LPSTR)text;
         item.iSubItem = subItemIndex;
         SendMessage( (HWND)m_Handle, LVM_SETITEM, (WPARAM)0, (LPARAM)&item );
+    #else
+        (void)index;
+        (void)subItemIndex;
+        (void)text;
     #endif
 }
 

@@ -1949,15 +1949,15 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
     #if defined( __WINDOWS__ )
         // If remote PC is shutdown by user, compiler can be terminated
-        if ( ( result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
-             ( result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
+        if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
+             ( (uint32_t)result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
         {
             job->OnSystemError(); // task will be retried on another worker
             return;
         }
 
         // If DLLs are not correctly sync'd, add an extra message to help the user
-        if ( result == 0xC000007B ) // STATUS_INVALID_IMAGE_FORMAT
+        if ( (uint32_t)result == 0xC000007B ) // STATUS_INVALID_IMAGE_FORMAT
         {
             job->Error( "Remote failure: STATUS_INVALID_IMAGE_FORMAT (0xC000007B) - Check Compiler() settings!\n" );
             return;

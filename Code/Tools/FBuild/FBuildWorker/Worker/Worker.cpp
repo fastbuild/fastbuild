@@ -47,6 +47,8 @@ Worker::Worker( void * hInstance, const AString & args )
     m_JobQueueRemote = FNEW( JobQueueRemote( Env::GetNumProcessors() ) );
     #if defined( __WINDOWS__ )
         m_MainWindow = FNEW( WorkerWindow( hInstance ) );
+    #else
+        (void)hInstance;
     #endif
     m_ConnectionPool = FNEW( Server );
 

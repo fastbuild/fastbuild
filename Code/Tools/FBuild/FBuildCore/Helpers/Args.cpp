@@ -160,7 +160,10 @@ bool Args::Finalize( const AString & exe, const AString & nodeNameForError, bool
         FLOG_ERROR( "FBuild: Error: Command Line Limit Exceeded (len: %u, limit: %u) '%s'\n", argLen, argLimit, nodeNameForError.Get() );
         return false;
     #elif defined( __LINUX__ )
-        // TODO:LINUX Difficult to reliable determine this due to complex interaction with environment
+        (void)exe;
+        (void)nodeNameForError;
+        (void)canUseResponseFile;
+        // TODO:LINUX Difficult to reliably determine this due to complex interaction with environment
         #if defined( ASSERTS_ENABLED )
             m_Finalized = true;
         #endif

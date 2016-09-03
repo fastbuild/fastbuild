@@ -128,7 +128,7 @@ protected:
     inline void SetReserved( uint32_t reserved, bool mustFreeMemory )
     {
         ASSERT( ( reserved & MEM_MUST_BE_FREED_FLAG ) == 0 ); // ensure reserved does not use lower bit
-        m_ReservedAndFlags = ( reserved ^ ( mustFreeMemory ? MEM_MUST_BE_FREED_FLAG : 0 ) );
+        m_ReservedAndFlags = ( reserved ^ ( mustFreeMemory ? (uint32_t)MEM_MUST_BE_FREED_FLAG : 0 ) );
     }
     NO_INLINE void Grow( uint32_t newLen );     // Grow capacity, transferring existing string data (for concatenation)
     NO_INLINE void GrowNoCopy( uint32_t newLen ); // Grow capacity, discarding existing string data (for assignment/construction)

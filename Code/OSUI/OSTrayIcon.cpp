@@ -35,6 +35,8 @@ OSTrayIcon::OSTrayIcon( OSWindow * parentWindow )
 
         // Display
         Shell_NotifyIcon( NIM_ADD, &m_NotifyIconData );
+    #else
+        (void)parentWindow;
     #endif
 }
 
@@ -62,9 +64,9 @@ void OSTrayIcon::ShowNotification( const char * msg )
             Shell_NotifyIcon( NIM_MODIFY, &m_NotifyIconData );
         }
     #elif defined( __APPLE__ )
-        // TODO:MAC Implement ShowBalloonTip
+        (void)msg; // TODO:MAC Implement ShowBalloonTip
     #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ShowBalloonTip
+        (void)msg; // TODO:LINUX Implement ShowBalloonTip
     #endif
 }
 

@@ -236,7 +236,7 @@ public:
     #if defined( __WINDOWS__ )
         ::CloseHandle( h );
     #elif defined( __APPLE__ ) || defined(__LINUX__)
-        // Nothing to do
+        (void)h; // Nothing to do
     #else
         #error Unknown platform
     #endif

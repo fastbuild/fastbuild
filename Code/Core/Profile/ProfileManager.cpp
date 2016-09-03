@@ -61,7 +61,7 @@ struct ProfileEventBuffer
     // when allocating memory to track events, do it in blocks
     enum{ NUM_EVENTS_PER_BLOCK = 512 };
 };
-THREAD_LOCAL ProfileEventBuffer tls_ProfileEventBuffer = { 0 };
+THREAD_LOCAL ProfileEventBuffer tls_ProfileEventBuffer = { 0, nullptr, nullptr, nullptr, "" };
 
 // ProfileEventBuffer::Start
 //------------------------------------------------------------------------------
