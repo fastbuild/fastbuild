@@ -64,6 +64,7 @@ private:
         explicit ServerState();
 
         const ConnectionInfo *  m_Connection;
+        AString                 m_RemoteName;
 
         Mutex                   m_Mutex;
         const Protocol::IMessage * m_CurrentMessage;

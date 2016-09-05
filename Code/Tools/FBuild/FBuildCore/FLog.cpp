@@ -11,7 +11,11 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 
 #include "Core/Env/Types.h"
+#include "Core/FileIO/FileStream.h"
+#include "Core/Process/Mutex.h"
+#include "Core/Process/Process.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Time/Time.h"
 #include "Core/Tracing/Tracing.h"
 
 #include <stdarg.h>
@@ -38,6 +42,12 @@
 /*static*/ AStackString< 64 > FLog::m_ProgressText;
 static AStackString< 72 > g_ClearLineString( "\r                                                               \r" );
 static AStackString< 64 > g_OutputString( "\r99.9 % [....................] " );
+static Mutex g_MonitorMutex;
+static FileStream * g_MonitorFileStream = nullptr;
+
+// Defines
+//------------------------------------------------------------------------------
+#define FBUILD_MONITOR_VERSION uint32_t( 1 )
 
 // Info
 //------------------------------------------------------------------------------
@@ -65,6 +75,31 @@ static AStackString< 64 > g_OutputString( "\r99.9 % [....................] " );
     va_end( args );
 
     Tracing::Output( buffer.Get() );
+}
+
+// Monitor
+//------------------------------------------------------------------------------
+/*static*/ void FLog::Monitor( const char * formatString, ... )
+{
+    // Is monitoring enabled?
+    if ( g_MonitorFileStream == nullptr )
+    {
+        return; // No - nothing to do
+    }
+
+    PROFILE_SECTION( "FLog::Monitor" )
+
+    AStackString< 1024 > buffer;
+    va_list args;
+    va_start( args, formatString );
+    buffer.VFormat( formatString, args );
+    va_end( args );
+
+    AStackString< 1024 > finalBuffer;
+    finalBuffer.Format( "%llu %s", Time::GetCurrentFileTime(), buffer.Get() );
+
+    MutexHolder lock( g_MonitorMutex );
+    g_MonitorFileStream->WriteBuffer( finalBuffer.Get(), finalBuffer.GetLength() );
 }
 
 // BuildDirect
@@ -149,6 +184,27 @@ static AStackString< 64 > g_OutputString( "\r99.9 % [....................] " );
 //------------------------------------------------------------------------------
 /*static*/ void FLog::StartBuild()
 {
+    if ( FBuild::Get().GetOptions().m_EnableMonitor )
+    {
+        // TODO:B Change the monitoring log path
+        //  - it's not uniquified per instance
+        //  - we already have a .fbuild.tmp folder we should use
+        AStackString<> fullPath;
+        FileIO::GetTempDir( fullPath );
+        fullPath += "FastBuild/FastBuildLog.log";
+
+        ASSERT( g_MonitorFileStream == nullptr );
+        MutexHolder lock( g_MonitorMutex );
+        g_MonitorFileStream = new FileStream();
+        if ( g_MonitorFileStream->Open( fullPath.Get(), FileStream::WRITE_ONLY ) == false )
+        {
+            delete g_MonitorFileStream;
+            g_MonitorFileStream = nullptr;
+        }
+
+        Monitor( "START_BUILD %u %u\n", FBUILD_MONITOR_VERSION, Process::GetCurrentId() );
+    }
+
     Tracing::AddCallbackOutput( &TracingOutputCallback );
 }
 
@@ -156,6 +212,16 @@ static AStackString< 64 > g_OutputString( "\r99.9 % [....................] " );
 //------------------------------------------------------------------------------
 /*static*/ void FLog::StopBuild()
 {
+    if ( g_MonitorFileStream )
+    {
+        MutexHolder lock( g_MonitorMutex );
+        Monitor( "STOP_BUILD\n" );
+        g_MonitorFileStream->Close();
+
+        delete g_MonitorFileStream;
+        g_MonitorFileStream = nullptr;
+    }
+
     Tracing::RemoveCallbackOutput( &TracingOutputCallback );
 
     if ( s_ShowProgress )

@@ -32,6 +32,7 @@ Job::Job( Node * node )
     , m_DataIsCompressed( false )
     , m_IsLocal( true )
     , m_SystemErrorCount( 0 )
+    , m_RemoteName()
     , m_ToolManifest( nullptr )
 {
     m_JobId = AtomicIncU32( &s_LastJobId );

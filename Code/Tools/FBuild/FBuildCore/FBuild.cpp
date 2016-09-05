@@ -551,7 +551,10 @@ void FBuild::UpdateBuildStatus( const Node * node )
 
     if ( FBuild::Get().GetOptions().m_ShowProgress == false )
     {
-        return;
+        if ( FBuild::Get().GetOptions().m_EnableMonitor == false )
+        {
+            return;
+        }
     }
 
     const float OUTPUT_FREQUENCY( 1.0f );
@@ -598,7 +601,13 @@ void FBuild::UpdateBuildStatus( const Node * node )
         JobQueue::Get().GetJobStats( numJobs, numJobsActive, numJobsDist, numJobsDistActive );
     }
 
-    FLog::OutputProgress( timeNow, m_SmoothedProgressCurrent, numJobs, numJobsActive, numJobsDist, numJobsDistActive );
+    if ( FBuild::Get().GetOptions().m_ShowProgress )
+    {
+        FLog::OutputProgress( timeNow, m_SmoothedProgressCurrent, numJobs, numJobsActive, numJobsDist, numJobsDistActive );
+    }
+
+    FLOG_MONITOR( "PROGRESS_STATUS %f \n", m_SmoothedProgressCurrent );
+
     m_LastProgressOutputTime = timeNow;
 }
 

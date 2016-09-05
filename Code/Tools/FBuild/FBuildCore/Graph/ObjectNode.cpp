@@ -32,13 +32,11 @@
 #include "Core/Process/Process.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Process/Thread.h"
+#include "Core/Time/Time.h"
 #include "Core/Tracing/Tracing.h"
 #include "Core/Strings/AStackString.h"
 
 #include <string.h>
-#if defined( __WINDOWS__ )
-    #include <windows.h> // for FILETIME etc
-#endif
 #if defined( __OSX__ ) || defined( __LINUX__ )
     #include <sys/time.h>
 #endif
@@ -204,6 +202,9 @@ ObjectNode::~ObjectNode()
         usePreProcessor = true;
         useDeoptimization = false; // disable deoptimization
     }
+
+    // Graphing the current amount of distributable jobs
+    FLOG_MONITOR( "GRAPH FASTBuild \"Distributable Jobs MemUsage\" MB %f\n", (float)JobQueue::Get().GetDistributableJobsMemUsage() / (float)MEGABYTE );
 
     if ( usePreProcessor )
     {
@@ -992,7 +993,7 @@ void ObjectNode::HandleWarningsMSCL( Job* job, const char * data, uint32_t dataS
         memcpy( mem.Get(), msg.Get(), msg.GetLength() );
         memcpy( mem.Get() + msg.GetLength(), data, dataSize );
 
-        Node::DumpOutput( job, mem.Get(), dataSize + msg.GetLength(), &exclusions );
+        Node::DumpOutput( job, mem.Get(), dataSize + msg.GetLength(), &exclusions, job->GetNode()->GetBuildOutputMessagesStringPointer());
     }
 }
 
@@ -1083,15 +1084,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
             // Get current "system time" and convert to "file time"
             #if defined( __WINDOWS__ )
-                SYSTEMTIME st;
-                FILETIME ft;
-                GetSystemTime( &st );
-                if ( FALSE == SystemTimeToFileTime( &st, &ft ) )
-                {
-                    FLOG_ERROR( "Failed to convert file time after cache hit '%s' (%u)", m_Name.Get(), Env::GetLastErr() );
-                    return false;
-                }
-                uint64_t fileTimeNow = ( (uint64_t)ft.dwLowDateTime | ( (uint64_t)ft.dwHighDateTime << 32 ) );
+                const uint64_t fileTimeNow = Time::GetCurrentFileTime();
             #endif
 
             // Extract the files

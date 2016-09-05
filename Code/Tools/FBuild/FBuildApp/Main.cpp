@@ -110,6 +110,7 @@ int Main(int argc, char * argv[])
     bool waitMode = false;
     bool noStopOnError = false;
     bool displayTargetList = false;
+    bool enableMonitor = false;
     int32_t numWorkers = -1;
     WrapperMode wrapperMode( WRAPPER_MODE_NONE );
     AStackString<> args;
@@ -250,6 +251,11 @@ int Main(int argc, char * argv[])
             else if ( thisArg == "-wait" )
             {
                 waitMode = true;
+                continue;
+            }
+            else if ( thisArg == "-monitor" )
+            {
+                enableMonitor = true;
                 continue;
             }
             else if ( thisArg == "-wrapper")
@@ -416,6 +422,7 @@ int Main(int argc, char * argv[])
     options.m_GenerateReport = report;
     options.m_WrapperChild = ( wrapperMode == WRAPPER_MODE_FINAL_PROCESS );
     options.m_FixupErrorPaths = fixupErrorPaths;
+    options.m_EnableMonitor = enableMonitor;
     if ( ( targets.GetSize() > 1 ) || ( noStopOnError ) )
     {
         options.m_StopOnFirstError = false; // when building multiple targets, try to build as much as possible

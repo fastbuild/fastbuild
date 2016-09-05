@@ -729,7 +729,8 @@ void Node::ReplaceDummyName( const AString & newName )
 /*static*/ void Node::DumpOutput( Job * job,
                                   const char * data,
                                   uint32_t dataSize,
-                                  const Array< AString > * exclusions )
+                                  const Array< AString > * exclusions,
+                                  AString* outputString )
 {
     if ( ( data == nullptr ) || ( dataSize == 0 ) )
     {
@@ -799,11 +800,27 @@ void Node::ReplaceDummyName( const AString & newName )
     // print everything at once
     FLOG_ERROR_DIRECT( buffer.Get() );
 
+    if ( nullptr != outputString )
+    {
+        outputString->Append( buffer );
+    }
+
     // send output back to client if operating remotely
     if ( job && ( !job->IsLocal() ) )
     {
         job->Error( "%s", buffer.Get() );
     }
+}
+
+// GetFinalBuildOutputMessages
+//------------------------------------------------------------------------------
+const AString & Node::GetFinalBuildOutputMessages()
+{
+    m_BuildOutputMessages.Replace( '\n', (char)12 );
+    m_BuildOutputMessages.Replace( '\r', (char)12 );
+    m_BuildOutputMessages.Replace( '\"', '\'' );
+
+    return m_BuildOutputMessages;
 }
 
 // FixupPathForVSIntegration

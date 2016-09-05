@@ -150,8 +150,17 @@ LibraryNode::~LibraryNode()
 
     if ( result != 0 )
     {
-        if ( memOut.Get() ) { FLOG_ERROR_DIRECT( memOut.Get() ); }
-        if ( memErr.Get() ) { FLOG_ERROR_DIRECT( memErr.Get() ); }
+        if ( memOut.Get() )
+        {
+            m_BuildOutputMessages.Append( memOut.Get(), memOutSize );
+            FLOG_ERROR_DIRECT( memOut.Get() );
+        }
+
+        if ( memErr.Get() )
+        {
+            m_BuildOutputMessages.Append( memErr.Get(), memErrSize );
+            FLOG_ERROR_DIRECT( memErr.Get() );
+        }
     }
 
     // did the executable fail?

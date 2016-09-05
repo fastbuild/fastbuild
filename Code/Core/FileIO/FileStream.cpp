@@ -75,6 +75,7 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
     else if ( ( fileMode & WRITE_ONLY ) != 0 )
     {
         desiredAccess       |= GENERIC_WRITE;
+        shareMode           |= FILE_SHARE_READ; // allow other readers
         creationDisposition |= CREATE_ALWAYS; // overwrite existing
     }
     else

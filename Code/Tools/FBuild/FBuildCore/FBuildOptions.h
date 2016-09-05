@@ -33,6 +33,7 @@ public:
     bool m_WrapperChild;
     bool m_FixupErrorPaths;
     bool m_StopOnFirstError;
+    bool m_EnableMonitor;
     uint32_t m_NumWorkerThreads;
     AString m_ConfigFile;
 

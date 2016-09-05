@@ -537,6 +537,20 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     Node * node = job->GetNode();
 
+    bool usingMonitor = false;
+
+    const AString & nodeName = node->GetType() == Node::OBJECT_NODE ? ( (ObjectNode*)node )->GetSourceFile()->GetName() : job->GetNode()->GetName();
+
+    if ( ( node->GetType() == Node::OBJECT_NODE ) ||
+         ( node->GetType() == Node::EXE_NODE ) ||
+         ( node->GetType() == Node::LIBRARY_NODE ) ||
+         ( node->GetType() == Node::DLL_NODE ) ||
+         ( node->GetType() == Node::CS_NODE ) )
+    {
+        usingMonitor = true;
+        FLOG_MONITOR( "START_JOB local \"%s\" \n", nodeName.Get() );
+    }
+
     // make sure the output path exists for files
     // (but don't bother for input files)
     if ( node->IsAFile() && ( node->GetType() != Node::FILE_NODE ) && ( node->GetType() != Node::COMPILER_NODE ) )
@@ -624,6 +638,23 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     // log processing time
     node->AddProcessingTime( timeTakenMS );
+
+    if ( usingMonitor )
+    {
+        const char * resultString = nullptr;
+        switch ( result )
+        {
+            case Node::NODE_RESULT_OK:                      resultString = "SUCCESS_COMPLETE";      break;
+            case Node::NODE_RESULT_NEED_SECOND_BUILD_PASS:  resultString = "SUCCESS_PREPROCESSED";  break;
+            case Node::NODE_RESULT_OK_CACHE:                resultString = "SUCCESS_CACHED";        break;
+            case Node::NODE_RESULT_FAILED:                  resultString = "FAILED";                break;
+        }
+
+        FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n", 
+                      resultString,
+                      nodeName.Get(),
+                      job->GetNode()->GetFinalBuildOutputMessages().Get() );
+    }
 
     return result;
 }

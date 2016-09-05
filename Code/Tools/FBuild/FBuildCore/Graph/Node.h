@@ -123,7 +123,7 @@ public:
     template < class T >
     inline T * CastTo() const;
 
-    // each node must specify if it ouputs a file
+    // each node must specify if it outputs a file
     virtual bool IsAFile() const = 0;
 
     inline State GetState() const { return m_State; }
@@ -156,10 +156,14 @@ public:
     static void DumpOutput( Job * job,
                             const char * data,
                             uint32_t dataSize,
-                            const Array< AString > * exclusions = nullptr );
+                            const Array< AString > * exclusions = nullptr,
+                            AString * outputString = nullptr );
 
     inline void     SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
     inline uint32_t GetBuildPassTag() const             { return m_BuildPassTag; }
+
+    AString * GetBuildOutputMessagesStringPointer() { return &m_BuildOutputMessages; }
+    const AString & GetFinalBuildOutputMessages();
 
 protected:
     friend class FBuild;
@@ -231,6 +235,8 @@ protected:
     Dependencies m_PreBuildDependencies;
     Dependencies m_StaticDependencies;
     Dependencies m_DynamicDependencies;
+
+    AString m_BuildOutputMessages; // TODO:B Move out of Node into Context
 
     static const char * const s_NodeTypeNames[];
 };
