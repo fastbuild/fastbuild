@@ -1447,6 +1447,39 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 }
             }
         }
+	
+	//remove static analyzer from clang preprocessor
+	if ( pass == PASS_PREPROCESSOR_ONLY )
+          {
+            if ( isClang )
+              {
+                if ( StripToken( "--analyze", token ) )
+                  {
+                    continue;
+                  }
+
+                if ( StripTokenWithArg( "-Xanalyzer", token, i ) )
+                  {
+                    continue;
+                  }
+
+                if ( StripTokenWithArg( "-analyzer-output", token, i ) )
+                  {
+                    continue;
+                  }
+
+                if ( StripTokenWithArg( "-analyzer-config", token, i ) )
+                  {
+                    continue;
+                  }
+
+                if ( StripTokenWithArg( "-analyzer-checker", token, i ) )
+                  {
+                    continue;
+                  }
+              }
+          }
+	
 
         // %1 -> InputFile
         const char * found = token.Find( "%1" );
