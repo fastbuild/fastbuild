@@ -156,7 +156,7 @@ bool Process::Spawn( const char * executable,
         return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         (void)shareHandles; // unsupported
-        
+
         // create StdOut and StdErr pipes to capture output of spawned process
         int stdOutPipeFDs[ 2 ];
         int stdErrPipeFDs[ 2 ];
@@ -426,7 +426,6 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
         #if defined( __WINDOWS__ )
             if ( processExited == false )
             {
-                PROFILE_SECTION( "Wait" )
                 DWORD result = WaitForSingleObject( GetProcessInfo().hProcess, 15 );
                 if ( result == WAIT_TIMEOUT )
                 {

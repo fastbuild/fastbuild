@@ -47,6 +47,7 @@ BFFStackFrame::~BFFStackFrame()
                                              BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
+    ASSERT( frame );
 
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
@@ -67,6 +68,7 @@ BFFStackFrame::~BFFStackFrame()
                                                      BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
+    ASSERT( frame );
 
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
@@ -85,6 +87,7 @@ BFFStackFrame::~BFFStackFrame()
 /*static*/ void BFFStackFrame::SetVarBool( const AString & name, bool value, BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
+    ASSERT( frame );
 
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
@@ -103,6 +106,7 @@ BFFStackFrame::~BFFStackFrame()
 /*static*/ void BFFStackFrame::SetVarInt( const AString & name, int value, BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
+    ASSERT( frame );
 
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
@@ -123,6 +127,7 @@ BFFStackFrame::~BFFStackFrame()
                                              BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
+    ASSERT( frame );
 
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
@@ -143,6 +148,7 @@ BFFStackFrame::~BFFStackFrame()
                                                      BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
+    ASSERT( frame );
 
     BFFVariable * var = frame->GetVarMutableNoRecurse( name );
     if ( var )
@@ -162,6 +168,7 @@ BFFStackFrame::~BFFStackFrame()
 /*static*/ void BFFStackFrame::SetVar( const BFFVariable * var, BFFStackFrame * frame )
 {
     frame = frame ? frame : s_StackHead;
+    ASSERT( frame );
 
     ASSERT( var );
 

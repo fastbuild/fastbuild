@@ -42,6 +42,12 @@ typedef signed int          int32_t;
     #define FORCE_INLINE inline __attribute__((always_inline))
 #endif
 
+#if defined( __clang__ )
+    #define NORETURN_CLANG_ANALYZER __attribute__((analyzer_noreturn))
+#else
+    #define NORETURN_CLANG_ANALYZER
+#endif
+
 #if defined( __APPLE__ ) || defined( __LINUX__ )
     #include <stddef.h> // needed for size_t
 #endif

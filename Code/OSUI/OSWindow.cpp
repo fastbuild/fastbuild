@@ -166,7 +166,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         (void)x;
         (void)y;
         (void)w;
-        (void)h;   
+        (void)h;
     #endif
 }
 

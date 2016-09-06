@@ -87,6 +87,7 @@ void * AllocFileLine( size_t size, size_t alignment, const char * file, int line
         VERIFY( posix_memalign( &mem, alignment, size ) == 0 );
     #else
         void * mem = _aligned_malloc( size, alignment );
+        __assume( mem );
     #endif
 
     #ifdef MEM_FILL_NEW_ALLOCATIONS

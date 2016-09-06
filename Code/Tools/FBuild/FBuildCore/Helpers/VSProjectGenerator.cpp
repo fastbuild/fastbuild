@@ -479,12 +479,10 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
     for ( const AString * bIt = m_BasePaths.Begin(); bIt != bEnd; ++bIt )
     {
         const AString & basePath = *bIt;
-        const char * begin = fileName.Get();
-        const char * end = fileName.GetEnd();
-
         if ( fileName.BeginsWithI( basePath ) )
         {
-            begin = fileName.Get() + basePath.GetLength();
+            const char * begin = fileName.Get() + basePath.GetLength();
+            const char * end = fileName.GetEnd();
             const char * lastSlash = fileName.FindLast( BACK_SLASH );
             end = ( lastSlash ) ? lastSlash : end;
             if ( begin < end )
