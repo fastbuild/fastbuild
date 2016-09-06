@@ -71,8 +71,7 @@ void Protocol::IMessage::Send( const ConnectionInfo * connection, const MemorySt
     ASSERT( m_HasPayload == true ); // must NOT use Send with payload
 
     TCPConnectionPool & pool = connection->GetTCPConnectionPool();
-    pool.Send( connection, this, m_MsgSize );
-    pool.Send( connection, payload.GetData(), payload.GetSize() );
+    pool.Send( connection, this, m_MsgSize, payload.GetData(), payload.GetSize() );
 }
 
 // IMessage::Send (with payload)
@@ -83,8 +82,7 @@ void Protocol::IMessage::Send( const ConnectionInfo * connection, const ConstMem
     ASSERT( m_HasPayload == true ); // must NOT use Send with payload
 
     TCPConnectionPool & pool = connection->GetTCPConnectionPool();
-    pool.Send( connection, this, m_MsgSize );
-    pool.Send( connection, payload.GetData(), payload.GetSize() );
+    pool.Send( connection, this, m_MsgSize, payload.GetData(), payload.GetSize() );
 }
 
 // IMessage::Broadcast

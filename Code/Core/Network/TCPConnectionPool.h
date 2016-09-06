@@ -76,6 +76,7 @@ public:
 
     // transmit data
     bool Send( const ConnectionInfo * connection, const void * data, size_t size, uint32_t timeoutMS = 2000 );
+    bool Send( const ConnectionInfo * connection, const void * data, size_t size, const void * payloadData, size_t payloadSize, uint32_t timeoutMS = 2000 );
     bool Broadcast( const void * data, size_t size );
 
     static void GetAddressAsString( uint32_t addr, AString & address );
@@ -106,6 +107,13 @@ private:
     TCPSocket   Accept( TCPSocket socket,
                         struct sockaddr * address,
                         int * addressSize ) const;
+
+    struct SendBuffer
+    {
+        uint32_t        size;
+        const void *    data;
+    };
+    bool        SendInternal( const ConnectionInfo * connection, const SendBuffer * buffers, uint32_t numBuffers, uint32_t timeoutMS );
 
     // thread management
     void                CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port );

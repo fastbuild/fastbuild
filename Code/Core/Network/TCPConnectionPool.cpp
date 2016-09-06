@@ -33,6 +33,9 @@
     #include <unistd.h>
     #define INVALID_SOCKET ( -1 )
     #define SOCKET_ERROR -1
+    #if defined( __APPLE__ )
+        #include <sys/uio.h>
+    #endif
 #else
     #error Unknown platform
 #endif
@@ -413,6 +416,50 @@ size_t TCPConnectionPool::GetNumConnections() const
 //------------------------------------------------------------------------------
 bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * data, size_t size, uint32_t timeoutMS )
 {
+    SendBuffer buffers[ 2 ]; // size + data
+
+    // size
+    uint32_t sizeData = (uint32_t)size;
+    buffers[ 0 ].size = sizeof( sizeData );
+    buffers[ 0 ].data = &sizeData;
+
+    // data
+    buffers[ 1 ].size = (uint32_t)size;
+    buffers[ 1 ].data = data;
+
+    return SendInternal( connection, buffers, 2, timeoutMS );
+}
+
+//------------------------------------------------------------------------------
+bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * data, size_t size, const void * payloadData, size_t payloadSize, uint32_t timeoutMS )
+{
+    SendBuffer buffers[ 4 ]; // size + data + payloadSize + payloadData
+
+    // size
+    uint32_t sizeData = (uint32_t)size;
+    buffers[ 0 ].size = sizeof( sizeData );
+    buffers[ 0 ].data = &sizeData;
+
+    // data
+    buffers[ 1 ].size = (uint32_t)size;
+    buffers[ 1 ].data = data;
+
+    // payloadSize
+    uint32_t payloadSizeData = (uint32_t)payloadSize;
+    buffers[ 2 ].size = sizeof( payloadSizeData );
+    buffers[ 2 ].data = &payloadSizeData;
+
+    // payloadData
+    buffers[ 3 ].size = (uint32_t)payloadSize;
+    buffers[ 3 ].data = payloadData;
+
+    return SendInternal( connection, buffers, 4, timeoutMS );
+}
+
+// SendInternal
+//------------------------------------------------------------------------------
+bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const TCPConnectionPool::SendBuffer * buffers, uint32_t numBuffers, uint32_t timeoutMS )
+{
     PROFILE_FUNCTION
 
     ASSERT( connection );
@@ -421,6 +468,20 @@ bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * da
     if ( connection->m_ThreadQuitNotification || m_ShuttingDown )
     {
         return false;
+    }
+
+    ASSERT( numBuffers <= 4 ); // Worst case = size + data + payloadSize + payload
+    #if defined( __WINDOWS__ )
+        WSABUF sendBuffers[ 4 ];
+    #else
+        struct iovec sendBuffers[ 4 ];
+    #endif
+
+    // Calculate total to send
+    uint32_t totalBytes( 0 );
+    for ( uint32_t i = 0; i<numBuffers; ++i )
+    {
+        totalBytes += buffers[i].size;
     }
 
     Timer timer;
@@ -436,20 +497,43 @@ bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * da
 
     bool sendOK = true;
 
-    // Avoid SIGPIPE signals - we handle broken pipe errors here
-    #if defined( __LINUX__ )
-        const uint32_t sendFlags = MSG_NOSIGNAL;
-    #else
-        const uint32_t sendFlags = 0;
-    #endif
-
-    // send size of subsequent data
-    uint32_t sizeData = (uint32_t)size;
-    uint32_t bytesToSend = 4;
-    while ( bytesToSend > 0 )
+    // Repeat until all bytes sent
+    uint32_t bytesSent = 0;
+    while ( bytesSent < totalBytes )
     {
-        int sent = (int)send( connection->m_Socket, ( (const char *)&sizeData ) + 4 - bytesToSend, bytesToSend, sendFlags );
-        if ( sent <= 0 )
+        // Fill buffers for any unsent data
+        uint32_t numSendBuffers( 0 );
+        uint32_t offset( 0 );
+        for ( uint32_t i = 0; i<numBuffers; ++i )
+        {
+            const uint32_t overlap = bytesSent > offset ? ( bytesSent - offset ) : 0;
+            if ( overlap < buffers[ i ].size )
+            {
+                // add remaining data for this buffer
+                const uint32_t remainder = ( buffers[ i ].size - overlap );
+                #if defined( __WINDOWS__ )
+                    sendBuffers[ numSendBuffers ].len = remainder;
+                    sendBuffers[ numSendBuffers ].buf = const_cast< CHAR * >( (const char *)buffers[ i ].data + buffers[ i ].size - remainder );
+                #else
+                    sendBuffers[ numSendBuffers ].iov_len = remainder;
+                    sendBuffers[ numSendBuffers ].iov_base = const_cast< char * >( (const char *)buffers[ i ].data + buffers[ i ].size - remainder );
+                #endif
+                ++numSendBuffers;
+            }
+            offset += buffers[ i ].size;
+        }
+        ASSERT( offset == totalBytes ); // sanity check
+        ASSERT( numSendBuffers > 0 ); // shouldn't be in loop if there was no data to send!
+
+        // Try send
+        #if defined( __WINDOWS__ )
+            uint32_t sent( 0 );
+            int result = WSASend( connection->m_Socket, sendBuffers, numSendBuffers, (LPDWORD)&sent, 0, nullptr, nullptr );
+            if ( result == SOCKET_ERROR )
+        #else
+            ssize_t sent = writev( connection->m_Socket, sendBuffers, numSendBuffers );
+            if ( sent <= 0 )
+        #endif
         {
             if ( WouldBlock() )
             {
@@ -475,47 +559,7 @@ bool TCPConnectionPool::Send( const ConnectionInfo * connection, const void * da
             sendOK = false;
             break;
         }
-        bytesToSend -= sent;
-    }
-
-    // send actual data
-    if ( sendOK )
-    {
-        // loop until we send all data
-        size_t bytesRemaining = size;
-        const char * dataAsChar = (const char *)data;
-        while ( bytesRemaining > 0 )
-        {
-            int sent = (int)send( connection->m_Socket, dataAsChar, (uint32_t)bytesRemaining, sendFlags );
-            if ( sent <= 0 )
-            {
-                if ( WouldBlock() )
-                {
-                    if ( connection->m_ThreadQuitNotification || m_ShuttingDown )
-                    {
-                        sendOK = false;
-                        break;
-                    }
-
-                    if ( timer.GetElapsedMS() > timeoutMS )
-                    {
-                        Disconnect( connection );
-                        sendOK = false;
-                        break;
-                    }
-
-                    Thread::Sleep( 1 );
-                    continue;
-                }
-                // error
-                TCPDEBUG( "send error B.  Send: %i (Error: %i) (%x)\n", sent, GetLastError(), connection->m_Socket );
-                Disconnect( connection );
-                sendOK = false;
-                break;
-            }
-            bytesRemaining -= sent;
-            dataAsChar += sent;
-        }
+        bytesSent += sent;
     }
 
     #ifdef DEBUG
