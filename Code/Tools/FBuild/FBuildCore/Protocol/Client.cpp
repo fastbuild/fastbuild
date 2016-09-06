@@ -80,7 +80,7 @@ Client::~Client()
         const Job * const * end = ss->m_Jobs.End();
         while ( it != end )
         {
-            FLOG_MONITOR( "FINISH_JOB TIMEOUT %s \"%s\" \n", ss->m_RemoteName.Get(), (*it)->GetNode()->CastTo< ObjectNode >()->GetSourceFile()->GetName().Get() );
+            FLOG_MONITOR( "FINISH_JOB TIMEOUT %s \"%s\" \n", ss->m_RemoteName.Get(), (*it)->GetNode()->GetName().Get() );
             JobQueue::Get().ReturnUnfinishedDistributableJob( *it );
             ++it;
         }
@@ -449,7 +449,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     // output to signify remote start
     FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
-    FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->CastTo< ObjectNode >()->GetSourceFile()->GetName().Get() );
+    FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
 
     {
         PROFILE_SECTION( "SendJob" )
@@ -643,7 +643,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
                   result ? "SUCCESS" : "ERROR",
                   ss->m_RemoteName.Get(),
-                  job->GetNode()->CastTo< ObjectNode >()->GetSourceFile()->GetName().Get(),
+                  job->GetNode()->GetName().Get(),
                   job->GetNode()->GetFinalBuildOutputMessages().Get() );
 
     JobQueue::Get().FinishedProcessingJob( job, result, true, false ); // remote job, not a race of a remote job

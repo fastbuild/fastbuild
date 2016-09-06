@@ -539,13 +539,14 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     bool usingMonitor = false;
 
-    const AString & nodeName = node->GetType() == Node::OBJECT_NODE ? ( (ObjectNode*)node )->GetSourceFile()->GetName() : job->GetNode()->GetName();
+    const AString & nodeName = job->GetNode()->GetName();
 
     if ( ( node->GetType() == Node::OBJECT_NODE ) ||
          ( node->GetType() == Node::EXE_NODE ) ||
          ( node->GetType() == Node::LIBRARY_NODE ) ||
          ( node->GetType() == Node::DLL_NODE ) ||
-         ( node->GetType() == Node::CS_NODE ) )
+         ( node->GetType() == Node::CS_NODE ) ||
+         ( node->GetType() == Node::TEST_NODE ) )
     {
         usingMonitor = true;
         FLOG_MONITOR( "START_JOB local \"%s\" \n", nodeName.Get() );

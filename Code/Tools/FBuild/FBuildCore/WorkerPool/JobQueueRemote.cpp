@@ -283,7 +283,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 
     if ( job->IsLocal() )
     {
-        FLOG_MONITOR( "START_JOB local \"%s\" \n", node->GetSourceFile()->GetName().Get() );
+        FLOG_MONITOR( "START_JOB local \"%s\" \n", job->GetNode()->GetName().Get() );
     }
 
     // remote tasks must output to a tmp file
@@ -396,7 +396,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     {
         FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n", 
                       ( result == Node::NODE_RESULT_FAILED ) ? "ERROR" : "SUCCESS",
-                      node->GetSourceFile()->GetName().Get(),
+                      job->GetNode()->GetName().Get(),
                       job->GetNode()->GetFinalBuildOutputMessages().Get());
     }
 
