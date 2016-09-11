@@ -121,20 +121,53 @@ FunctionObjectList::FunctionObjectList()
     if ( ( objFlags & ObjectNode::FLAG_MSVC ) && ( objFlags & ObjectNode::FLAG_CREATING_PCH ) )
     {
         // must not specify use of precompiled header (must use the PCH specific options)
-        Error::Error_1303_PCHCreateOptionOnlyAllowedOnPCH( funcStartIter, this, "/Yc", "CompilerOptions" );
+        Error::Error_1303_PCHCreateOptionOnlyAllowedOnPCH( funcStartIter, this, "Yc", "CompilerOptions" );
         return false;
     }
 
     // Check input/output for Compiler
     {
+        bool hasInputToken = false;
+        bool hasOutputToken = false;
+        bool hasCompileToken = false;
+
         const AString & args = compilerOptions->GetString();
-        bool hasInputToken = ( args.Find( "%1" ) || args.Find( "\"%1\"" ) );
+        Array< AString > tokens;
+        args.Tokenize( tokens );
+        for ( const AString & token : tokens )
+        {
+            if ( token.Find( "%1" ) )
+            {
+                hasInputToken = true;
+            }
+            else if ( token.Find( "%2" ) )
+            {
+                hasOutputToken = true;
+            }
+            else
+            {
+                if ( objFlags & ObjectNode::FLAG_MSVC )
+                {
+                    if ( ( token == "/c" ) || ( token == "-c" ) )
+                    {
+                        hasCompileToken = true;
+                    }
+                }
+                else
+                {
+                    if ( token == "-c" )
+                    {
+                        hasCompileToken = true;
+                    }
+                }
+            }
+        }
+
         if ( hasInputToken == false )
         {
             Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "%1" );
             return false;
         }
-        bool hasOutputToken = ( args.Find( "%2" ) || args.Find( "\"%2\"" ) );
         if ( hasOutputToken == false )
         {
             Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "%2" );
@@ -144,8 +177,7 @@ FunctionObjectList::FunctionObjectList()
         // check /c or -c
         if ( objFlags & ObjectNode::FLAG_MSVC )
         {
-            if ( args.Find( "/c" ) == nullptr &&
-                args.Find( "-c" ) == nullptr)
+            if ( hasCompileToken == false )
             {
                 Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "/c or -c" );
                 return false;
@@ -153,7 +185,7 @@ FunctionObjectList::FunctionObjectList()
         }
         else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG ) )
         {
-            if ( args.Find( "-c" ) == nullptr )
+            if ( hasCompileToken == false )
             {
                 Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "-c" );
                 return false;
@@ -345,13 +377,15 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( NodeGraph & nodeGraph,
         if ( pchFlags & ObjectNode::FLAG_MSVC )
         {
             // sanity check arguments
+            bool foundYcInPCHOptions = false;
+            bool foundFpInPCHOptions = false;
 
             // Find /Fo option to obtain pch object file name
-            Array< AString > tokens;
-            pchOptions->GetString().Tokenize( tokens );
-            for ( const AString & token : tokens )
+            Array< AString > pchTokens;
+            pchOptions->GetString().Tokenize( pchTokens );
+            for ( const AString & token : pchTokens )
             {
-                if ( token.BeginsWithI( "/Fo" ) )
+                if ( ObjectNode::IsStartOfCompilerArg_MSVC( token, "Fo" ) )
                 {
                     // Extract filename (and remove quotes if found)
                     pchObjectName = token.Get() + 3;
@@ -364,39 +398,63 @@ bool FunctionObjectList::GetPrecompiledHeaderNode( NodeGraph & nodeGraph,
                         pchObjectName = pchOutputFile->GetString();
                         pchObjectName += compilerOutputExtension;
                     }
-                    break;
+                }
+                else if ( ObjectNode::IsStartOfCompilerArg_MSVC( token, "Yc" ) )
+                {
+                    foundYcInPCHOptions = true;
+                }
+                else if ( ObjectNode::IsStartOfCompilerArg_MSVC( token, "Fp" ) )
+                {
+                    foundFpInPCHOptions = true;
                 }
             }
 
             // PCH must have "Create PCH" (e.g. /Yc"PrecompiledHeader.h")
-            if ( pchOptions->GetString().Find( "/Yc" ) == nullptr )
+            if ( foundYcInPCHOptions == false )
             {
-                Error::Error_1302_MissingPCHCompilerOption( iter, this, "/Yc", "PCHOptions" );
+                Error::Error_1302_MissingPCHCompilerOption( iter, this, "Yc", "PCHOptions" );
                 return false;
             }
             // PCH must have "Precompiled Header to Use" (e.g. /Fp"PrecompiledHeader.pch")
-            if ( pchOptions->GetString().Find( "/Fp" ) == nullptr )
+            if ( foundFpInPCHOptions == false )
             {
-                Error::Error_1302_MissingPCHCompilerOption( iter, this, "/Fp", "PCHOptions" );
+                Error::Error_1302_MissingPCHCompilerOption( iter, this, "Fp", "PCHOptions" );
                 return false;
             }
             // PCH must have object output option (e.g. /Fo"PrecompiledHeader.obj")
             if ( pchObjectName.IsEmpty() )
             {
-                Error::Error_1302_MissingPCHCompilerOption( iter, this, "/Fo", "PCHOptions" );
+                Error::Error_1302_MissingPCHCompilerOption( iter, this, "Fo", "PCHOptions" );
                 return false;
             }
 
-            // Object using the PCH must have "Use PCH" option (e.g. /Yu"PrecompiledHeader.h")
-            if ( compilerOptions->GetString().Find( "/Yu" ) == nullptr )
+            // Check Compiler Options
+            bool foundYuInCompilerOptions = false;
+            bool foundFpInCompilerOptions = false;
+            Array< AString > compilerTokens;
+            compilerOptions->GetString().Tokenize( compilerTokens );
+            for ( const AString & token : compilerTokens )
             {
-                Error::Error_1302_MissingPCHCompilerOption( iter, this, "/Yu", "CompilerOptions" );
+                if ( ObjectNode::IsStartOfCompilerArg_MSVC( token, "Yu" ) )
+                {
+                    foundYuInCompilerOptions = true;
+                }
+                else if ( ObjectNode::IsStartOfCompilerArg_MSVC( token, "Fp" ) )
+                {
+                    foundFpInCompilerOptions = true;
+                }
+            }
+
+            // Object using the PCH must have "Use PCH" option (e.g. /Yu"PrecompiledHeader.h")
+            if ( foundYuInCompilerOptions == false )
+            {
+                Error::Error_1302_MissingPCHCompilerOption( iter, this, "Yu", "CompilerOptions" );
                 return false;
             }
             // Object using the PCH must have "Precompiled header to use" (e.g. /Fp"PrecompiledHeader.pch")
-            if ( compilerOptions->GetString().Find( "/Fp" ) == nullptr )
+            if ( foundFpInCompilerOptions == false )
             {
-                Error::Error_1302_MissingPCHCompilerOption( iter, this, "/Fp", "CompilerOptions" );
+                Error::Error_1302_MissingPCHCompilerOption( iter, this, "Fp", "CompilerOptions" );
                 return false;
             }
         }
@@ -545,15 +603,15 @@ void FunctionObjectList::GetExtraOutputPaths( const AString & args, AString & pd
     const AString * const end = tokens.End();
     for ( const AString * it = tokens.Begin(); it != end; ++it )
     {
-        if ( it->BeginsWithI( "/Fd" ) )
+        if ( ObjectNode::IsStartOfCompilerArg_MSVC( *it, "Fd" ) )
         {
-            GetExtraOutputPath( it, end, "/Fd", pdbPath );
+            GetExtraOutputPath( it, end, "Fd", pdbPath );
             continue;
         }
 
-        if ( it->BeginsWithI( "/Fa" ) )
+        if ( ObjectNode::IsStartOfCompilerArg_MSVC( *it, "Fa" ) )
         {
-            GetExtraOutputPath( it, end, "/Fa", asmPath );
+            GetExtraOutputPath( it, end, "Fa", asmPath );
             continue;
         }
     }
@@ -563,7 +621,7 @@ void FunctionObjectList::GetExtraOutputPaths( const AString & args, AString & pd
 //------------------------------------------------------------------------------
 void FunctionObjectList::GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path ) const
 {
-    const char * bodyStart = it->Get() + strlen( option );
+    const char * bodyStart = it->Get() + strlen( option ) + 1; // +1 for - or /
     const char * bodyEnd = it->GetEnd();
 
     // if token is exactly matched then value is next token

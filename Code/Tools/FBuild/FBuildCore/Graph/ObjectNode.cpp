@@ -809,25 +809,25 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         {
             const AString & token = *it;
 
-            if ( ( token == "/Zi" ) || ( token == "/ZI" ) )
+            if ( IsCompilerArg_MSVC( token, "Zi" ) || IsCompilerArg_MSVC( token, "ZI" ) )
             {
                 flags |= ObjectNode::FLAG_USING_PDB;
             }
-            else if ( token == "/clr" )
+            else if ( IsCompilerArg_MSVC( token, "clr" ) )
             {
                 usingCLR = true;
                 flags |= ObjectNode::FLAG_USING_CLR;
             }
-            else if ( token == "/ZW" )
+            else if ( IsCompilerArg_MSVC( token, "ZW" ) )
             {
                 usingWinRT = true;
             }
-            else if ( ( token == "/P" ) || ( token == "-P" ) )
+            else if ( IsCompilerArg_MSVC( token, "P" ) )
             {
                 usingPreprocessorOnly = true;
                 flags |= ObjectNode::FLAG_INCLUDES_IN_STDERR;
             }
-            else if ( token == "/WX" )
+            else if ( IsCompilerArg_MSVC( token, "WX" ) )
             {
                 flags |= ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC;
             }
@@ -877,6 +877,45 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     }
 
     return flags;
+}
+
+// IsCompilerArg_MSVC
+//------------------------------------------------------------------------------
+/*static*/ bool ObjectNode::IsCompilerArg_MSVC( const AString & token, const char * arg )
+{
+    ASSERT( token.IsEmpty() == false );
+
+    // MSVC Compiler args can start with - or /
+    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    {
+        return false;
+    }
+
+    // MSVC Compiler args are case-sensitive
+    return token.EndsWith( arg );
+}
+
+// IsStartOfCompilerArg_MSVC
+//------------------------------------------------------------------------------
+/*static*/ bool ObjectNode::IsStartOfCompilerArg_MSVC( const AString & token, const char * arg )
+{
+    ASSERT( token.IsEmpty() == false );
+
+    // MSVC Compiler args can start with - or /
+    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    {
+        return false;
+    }
+
+    // Length check to early out
+    const size_t argLen = AString::StrLen( arg );
+    if ( ( token.GetLength() - 1 ) < argLen )
+    {
+        return false; // token is too short
+    }
+
+    // MSVC Compiler args are case-sensitive
+    return ( AString::StrNCmp( token.Get() + 1, arg, argLen ) == 0 );
 }
 
 // Save
@@ -1262,6 +1301,20 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     return false; // not found
 }
 
+// StripTokenWithArg_MSVC
+//------------------------------------------------------------------------------
+/*static*/ bool ObjectNode::StripTokenWithArg_MSVC( const char * tokenToCheckFor, const AString & token, size_t & index )
+{
+    if ( IsStartOfCompilerArg_MSVC( token, tokenToCheckFor ) )
+    {
+        if ( IsCompilerArg_MSVC( token, tokenToCheckFor ) )
+        {
+            ++index; // skip additional next token
+        }
+        return true; // found
+    }
+    return false; // not found
+}
 // StripToken
 //------------------------------------------------------------------------------
 /*static*/ bool ObjectNode::StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith )
@@ -1275,6 +1328,21 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
         return ( token == tokenToCheckFor );
     }
 }
+
+// StripToken_MSVC
+//------------------------------------------------------------------------------
+/*static*/ bool ObjectNode::StripToken_MSVC( const char * tokenToCheckFor, const AString & token, bool allowStartsWith )
+{
+    if ( allowStartsWith )
+    {
+        return IsStartOfCompilerArg_MSVC( token, tokenToCheckFor );
+    }
+    else
+    {
+        return IsCompilerArg_MSVC( token, tokenToCheckFor );
+    }
+}
+
 
 // BuildArgs
 //------------------------------------------------------------------------------
@@ -1361,11 +1429,11 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             {
                 // Can't use the precompiled header when compiling the preprocessed output
                 // as this would prevent cacheing.
-                if ( StripTokenWithArg( "/Yu", token, i ) )
+                if ( StripTokenWithArg_MSVC( "Yu", token, i ) )
                 {
                     continue; // skip this token in both cases
                 }
-                if ( StripTokenWithArg( "/Fp", token, i ) )
+                if ( StripTokenWithArg_MSVC( "Fp", token, i ) )
                 {
                     continue; // skip this token in both cases
                 }
@@ -1373,7 +1441,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 // Remote compilation writes to a temp pdb
                 if ( job->IsLocal() == false )
                 {
-                    if ( StripTokenWithArg( "/Fd", token, i ) )
+                    if ( StripTokenWithArg_MSVC( "Fd", token, i ) )
                     {
                         continue; // skip this token in both cases
                     }
@@ -1384,13 +1452,13 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         if ( isMSVC )
         {
             // FASTBuild handles the multiprocessor scheduling
-            if ( StripToken( "/MP", token, true ) ) // true = strip '/MP' and starts with '/MP'
+            if ( StripToken_MSVC( "MP", token, true ) ) // true = strip '/MP' and starts with '/MP'
             {
                 continue;
             }
 
             // "Minimal Rebuild" is not compatible with FASTBuild
-            if ( StripToken( "/Gm", token ) )
+            if ( StripToken_MSVC( "Gm", token ) )
             {
                 continue;
             }
@@ -1422,7 +1490,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 // (unlike Clang, MSVC is ok with leaving the /I when compiling preprocessed code)
 
                 // Strip "Force Includes" statements (as they are merged in now)
-                if ( StripTokenWithArg( "/FI", token, i ) )
+                if ( StripTokenWithArg_MSVC( "FI", token, i ) )
                 {
                     continue; // skip this token in both cases
                 }
@@ -1434,14 +1502,14 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             if ( pass == PASS_PREPROCESSOR_ONLY )
             {
                 //Strip /ZW
-                if ( StripToken( "/ZW", token ) )
+                if ( StripToken_MSVC( "ZW", token ) )
                 {
                     fullArgs += "/D__cplusplus_winrt ";
                     continue;
                 }
 
                 // Strip /Yc (pch creation)
-                if ( StripTokenWithArg( "/Yc", token, i ) )
+                if ( StripTokenWithArg_MSVC( "Yc", token, i ) )
                 {
                     continue;
                 }
@@ -1537,7 +1605,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             //  bad: /I"directory\"  - TODO:B Handle other args with this problem
             //  ok : /I\"directory\"
             //  ok : /I"directory"
-            if ( token.BeginsWith( "/I\"" ) && token.EndsWith( "\\\"" ) )
+            if ( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I\"" ) && token.EndsWith( "\\\"" ) )
             {
                 fullArgs.Append( token.Get(), token.GetLength() - 2 );
                 fullArgs += '"';

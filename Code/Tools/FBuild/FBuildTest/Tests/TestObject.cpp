@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
 // Core
 #include "Core/FileIO/FileStream.h"
@@ -25,14 +26,45 @@ private:
     DECLARE_TESTS
 
     // Tests
+    void MSVCArgHelpers() const;
     void TestStaleDynamicDeps() const;
 };
 
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestObject )
+    REGISTER_TEST( MSVCArgHelpers )             // Test functions that check for MSVC args
     REGISTER_TEST( TestStaleDynamicDeps )       // Test dynamic deps are cleared when necessary
 REGISTER_TESTS_END
+
+// MSVCArgHelpers
+//------------------------------------------------------------------------------
+void TestObject::MSVCArgHelpers() const
+{
+    // Exact match args, using /
+    {
+        AStackString<> token( "/Zi" );
+        TEST_ASSERT( ObjectNode::IsCompilerArg_MSVC( token, "Zi" ) )
+    }
+
+    // Exact match args, using -
+    {
+        AStackString<> token( "-Zi" );
+        TEST_ASSERT( ObjectNode::IsCompilerArg_MSVC( token, "Zi" ) )
+    }
+
+    // Starts with args, using /
+    {
+        AStackString<> token( "/Ipath/path" );
+        TEST_ASSERT( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I" ) )
+    }
+
+    // Starts with args, using -
+    {
+        AStackString<> token( "-Ipath/path" );
+        TEST_ASSERT( ObjectNode::IsStartOfCompilerArg_MSVC( token, "I" ) )
+    }
+}
 
 // TestStaleDynamicDeps
 //------------------------------------------------------------------------------

@@ -128,20 +128,53 @@ FunctionLibrary::FunctionLibrary()
     if ( ( objFlags & ObjectNode::FLAG_MSVC ) && ( objFlags & ObjectNode::FLAG_CREATING_PCH ) )
     {
         // must not specify use of precompiled header (must use the PCH specific options)
-        Error::Error_1303_PCHCreateOptionOnlyAllowedOnPCH( funcStartIter, this, "/Yc", "CompilerOptions" );
+        Error::Error_1303_PCHCreateOptionOnlyAllowedOnPCH( funcStartIter, this, "Yc", "CompilerOptions" );
         return false;
     }
 
     // Check input/output for Compiler
     {
+        bool hasInputToken = false;
+        bool hasOutputToken = false;
+        bool hasCompileToken = false;
+
         const AString & args = compilerOptions->GetString();
-        bool hasInputToken = ( args.Find( "%1" ) || args.Find( "\"%1\"" ) );
+        Array< AString > tokens;
+        args.Tokenize( tokens );
+        for ( const AString & token : tokens )
+        {
+            if ( token.Find( "%1" ) )
+            {
+                hasInputToken = true;
+            }
+            else if ( token.Find( "%2" ) )
+            {
+                hasOutputToken = true;
+            }
+            else
+            {
+                if ( objFlags & ObjectNode::FLAG_MSVC )
+                {
+                    if ( ( token == "/c" ) || ( token == "-c" ) )
+                    {
+                        hasCompileToken = true;
+                    }
+                }
+                else
+                {
+                    if ( token == "-c" )
+                    {
+                        hasCompileToken = true;
+                    }
+                }
+            }
+        }
+
         if ( hasInputToken == false )
         {
             Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "%1" );
             return false;
         }
-        bool hasOutputToken = ( args.Find( "%2" ) || args.Find( "\"%2\"" ) );
         if ( hasOutputToken == false )
         {
             Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "%2" );
@@ -151,8 +184,7 @@ FunctionLibrary::FunctionLibrary()
         // check /c or -c
         if ( objFlags & ObjectNode::FLAG_MSVC )
         {
-            if ( args.Find( "/c" ) == nullptr &&
-                 args.Find( "-c" ) == nullptr)
+            if ( hasCompileToken == false )
             {
                 Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "/c or -c" );
                 return false;
@@ -160,7 +192,7 @@ FunctionLibrary::FunctionLibrary()
         }
         else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG ) )
         {
-            if ( args.Find( "-c" ) == nullptr )
+            if ( hasCompileToken == false )
             {
                 Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "-c" );
                 return false;

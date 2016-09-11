@@ -39,7 +39,8 @@ private:
                                  Array< AString > & list,
                                  const AString * & it,
                                  const AString * const & end,
-                                 bool canonicalizePath = false );
+                                 bool canonicalizePath,
+                                 bool isMSVC );
 };
 
 //------------------------------------------------------------------------------

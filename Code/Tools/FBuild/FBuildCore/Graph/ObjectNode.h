@@ -70,6 +70,8 @@ public:
                                     const AString & args,
                                     bool creatingPCH,
                                     bool usingPCH );
+    static bool IsCompilerArg_MSVC( const AString & token, const char * arg );
+    static bool IsStartOfCompilerArg_MSVC( const AString & token, const char * arg );
 
     inline bool IsCreatingPCH() const { return GetFlag( FLAG_CREATING_PCH ); }
     inline bool IsUsingPCH() const { return GetFlag( FLAG_USING_PCH ); }
@@ -125,7 +127,9 @@ private:
         PASS_COMPILE
     };
     static bool StripTokenWithArg( const char * tokenToCheckFor, const AString & token, size_t & index );
+    static bool StripTokenWithArg_MSVC( const char * tokenToCheckFor, const AString & token, size_t & index );
     static bool StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
+    static bool StripToken_MSVC( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
     bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
     void ExpandTokenList( const Dependencies & nodes, Args & fullArgs, const AString & pre, const AString & post ) const;

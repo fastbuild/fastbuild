@@ -534,49 +534,51 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
         for ( const AString * it=tokens.Begin(); it!=end; ++it )
         {
             const AString & token = *it;
-            if ( token == "/DLL" )
+            if ( IsLinkerArg_MSVC( token, "DLL" ) )
             {
                 flags |= LinkerNode::LINK_FLAG_DLL;
                 continue;
             }
 
-            if ( token == "/DEBUG" )
+            if ( IsLinkerArg_MSVC( token, "DEBUG" ) )
             {
                 debugFlag = true;
                 continue;
             }
 
-            if ( token == "/INCREMENTAL")
+            if ( IsLinkerArg_MSVC( token, "INCREMENTAL" ) )
             {
                 incrementalFlag = true;
                 continue;
             }
 
-            if ( token == "/INCREMENTAL:NO")
+            if ( IsLinkerArg_MSVC( token, "INCREMENTAL:NO" ) )
             {
                 incrementalNoFlag = true;
                 continue;
             }
 
-            if ( token == "/OPT:REF")
+            if ( IsStartOfLinkerArg_MSVC( token, "OPT" ) )
             {
-                optREFFlag = true;
+                if ( token.FindI( "REF" ) )
+                {
+                    optREFFlag = true;
+                }
+
+                if ( token.FindI( "ICF" ) )
+                {
+                    optICFFlag = true;
+                }
+
+                if ( token.FindI( "LBR" ) )
+                {
+                    optLBRFlag = true;
+                }
+
                 continue;
             }
 
-            if ( token == "/OPT:ICF")
-            {
-                optICFFlag = true;
-                continue;
-            }
-
-            if ( token == "/OPT:LBR")
-            {
-                optLBRFlag = true;
-                continue;
-            }
-
-            if ( token.BeginsWith( "/ORDER" ) )
+            if ( IsStartOfLinkerArg_MSVC( token, "ORDER" ) )
             {
                 orderFlag = true;
                 continue;
@@ -622,6 +624,45 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
     }
 
     return flags;
+}
+
+// IsLinkerArg_MSVC
+//------------------------------------------------------------------------------
+/*static*/ bool LinkerNode::IsLinkerArg_MSVC( const AString & token, const char * arg )
+{
+    ASSERT( token.IsEmpty() == false );
+
+    // MSVC Linker args can start with - or /
+    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    {
+        return false;
+    }
+
+    // MSVC Linker args are case-insensitive
+    return token.EndsWithI( arg );
+}
+
+// IsStartOfLinkerArg_MSVC
+//------------------------------------------------------------------------------
+/*static*/ bool LinkerNode::IsStartOfLinkerArg_MSVC( const AString & token, const char * arg )
+{
+    ASSERT( token.IsEmpty() == false );
+
+    // MSVC Linker args can start with - or /
+    if ( ( token[0] != '/' ) && ( token[0] != '-' ) )
+    {
+        return false;
+    }
+
+    // Length check to early out
+    const size_t argLen = AString::StrLen( arg );
+    if ( ( token.GetLength() - 1 ) < argLen )
+    {
+        return false; // token is too short
+    }
+
+    // MSVC Linker args are case-insensitive
+    return ( AString::StrNCmpI( token.Get() + 1, arg, argLen ) == 0 );
 }
 
 // EmitCompilationMessage

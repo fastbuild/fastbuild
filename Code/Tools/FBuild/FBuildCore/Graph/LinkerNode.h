@@ -48,6 +48,10 @@ public:
 
     static uint32_t DetermineLinkerTypeFlags( const AString & linkerType, const AString & linkerName );
     static uint32_t DetermineFlags( const AString & linkerType, const AString & linkerName, const AString & args );
+
+    static bool IsLinkerArg_MSVC( const AString & token, const char * arg );
+    static bool IsStartOfLinkerArg_MSVC( const AString & token, const char * arg );
+
 protected:
     virtual BuildResult DoBuild( Job * job );
 

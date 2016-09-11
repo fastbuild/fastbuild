@@ -333,7 +333,7 @@ void FunctionExecutable::GetImportLibName( const AString & args, AString & impor
     const AString * const end = tokens.End();
     for ( const AString * it = tokens.Begin(); it != end; ++it )
     {
-        if ( it->BeginsWithI( "/IMPLIB:") )
+        if ( LinkerNode::IsStartOfLinkerArg_MSVC( *it, "IMPLIB:" ) )
         {
             const char * impStart = it->Get() + 8;
             const char * impEnd = it->GetEnd();
@@ -393,32 +393,32 @@ bool FunctionExecutable::GetOtherLibraries( NodeGraph & nodeGraph,
         if ( msvc )
         {
             // /NODEFAULTLIB
-            if ( token == "/NODEFAULTLIB" )
+            if ( LinkerNode::IsLinkerArg_MSVC( token, "NODEFAULTLIB" ) )
             {
                 ignoreAllDefaultLibs = true;
                 continue;
             }
 
             // /NODEFAULTLIB:
-            if ( GetOtherLibsArg( "/NODEFAULTLIB:", defaultLibsToIgnore, it, end ) )
+            if ( GetOtherLibsArg( "NODEFAULTLIB:", defaultLibsToIgnore, it, end, false, msvc ) )
             {
                 continue;
             }
 
             // /DEFAULTLIB:
-            if ( GetOtherLibsArg( "/DEFAULTLIB:", defaultLibs, it, end ) )
+            if ( GetOtherLibsArg( "DEFAULTLIB:", defaultLibs, it, end, false, msvc ) )
             {
                 continue;
             }
 
             // /LIBPATH:
-            if ( GetOtherLibsArg( "/LIBPATH:", libPaths, it, end, true ) ) // true = canonicalize path
+            if ( GetOtherLibsArg( "LIBPATH:", libPaths, it, end, true, msvc ) ) // true = canonicalize path
             {
                 continue;
             }
 
             // some other linker argument?
-            if ( token.BeginsWith( '/' ) )
+            if ( token.BeginsWith( '/' ) || token.BeginsWith( '-' ) )
             {
                 continue;
             }
@@ -437,13 +437,13 @@ bool FunctionExecutable::GetOtherLibraries( NodeGraph & nodeGraph,
             //}
 
             // -L (lib path)
-            if ( GetOtherLibsArg( "-L", libPaths, it, end ) )
+            if ( GetOtherLibsArg( "L", libPaths, it, end, false, msvc ) )
             {
                 continue;
             }
 
             // -l (lib)
-            if ( GetOtherLibsArg( "-l", dashlLibs, it, end ) )
+            if ( GetOtherLibsArg( "l", dashlLibs, it, end, false, msvc ) )
             {
                 continue;
             }
@@ -618,16 +618,27 @@ bool FunctionExecutable::GetOtherLibrary( NodeGraph & nodeGraph,
                                                      Array< AString > & list,
                                                      const AString * & it,
                                                      const AString * const & end,
-                                                     bool canonicalizePath )
+                                                     bool canonicalizePath,
+                                                     bool isMSVC )
 {
     // check for expected arg
-    if ( it->BeginsWith( arg ) == false )
+    if ( isMSVC )
     {
-        return false; // not our arg, not consumed
+        if ( LinkerNode::IsStartOfLinkerArg_MSVC( *it, arg ) == false )
+        {
+            return false; // not our arg, not consumed
+        }
+    }
+    else
+    {
+        if ( it->BeginsWith( arg ) == false )
+        {
+            return false; // not our arg, not consumed
+        }
     }
 
     // get remainder of token after arg
-    const char * valueStart = it->Get() + AString::StrLen( arg );
+    const char * valueStart = it->Get() + AString::StrLen( arg ) + 1;
     const char * valueEnd = it->GetEnd();
 
     // if no remainder, arg value is next token
