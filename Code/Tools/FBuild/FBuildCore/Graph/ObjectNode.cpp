@@ -891,6 +891,13 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         return false;
     }
 
+    // Length check to early out
+    const size_t argLen = AString::StrLen( arg );
+    if ( ( token.GetLength() - 1 ) != argLen )
+    {
+        return false; // token is too short or too long
+    }
+
     // MSVC Compiler args are case-sensitive
     return token.EndsWith( arg );
 }

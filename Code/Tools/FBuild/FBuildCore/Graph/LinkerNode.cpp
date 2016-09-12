@@ -638,6 +638,13 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
         return false;
     }
 
+    // Length check to early out
+    const size_t argLen = AString::StrLen( arg );
+    if ( ( token.GetLength() - 1 ) != argLen )
+    {
+        return false; // token is too short or too long
+    }
+
     // MSVC Linker args are case-insensitive
     return token.EndsWithI( arg );
 }
