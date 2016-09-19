@@ -60,6 +60,17 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
         importLibName += ".lib";
         return;
     }
+    else if (GetFlag(LinkerNode::LINK_FLAG_ORBIS_LD))
+    {
+        // get name minus extension (handle no extension gracefully)
+        const char * lastDot = GetName().FindLast('.');
+        lastDot = lastDot ? lastDot : GetName().GetEnd();
+        importLibName.Assign(GetName().Get(), lastDot);
+
+        // Assume we link with stub_weak library (loose linking)
+        importLibName += "_stub_weak.a";
+        return;
+    }
 
     // for other platforms, use the object directly (e.g. .so or .dylib)
     importLibName = GetName();
