@@ -5,8 +5,8 @@
 // define a dummy target
 Copy( "Copy" )
 {
-	.Source = "source.txt"
-	.Dest	= "dest.txt"
+    .Source = "source.txt"
+    .Dest   = "dest.txt"
 }
 
 // include self to test "#once" behaviour

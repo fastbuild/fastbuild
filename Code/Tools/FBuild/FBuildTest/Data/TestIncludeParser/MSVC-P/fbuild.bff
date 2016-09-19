@@ -8,15 +8,15 @@ Settings {} // Activate standard settings
 //------------------------------------------------------------------------------
 ObjectList( 'MSVC-P' )
 {
-	// MSVC option to write preprocessed output to file
-	.CompilerOptions		+ ' /P'
+    // MSVC option to write preprocessed output to file
+    .CompilerOptions        + ' /P'
 
-	.CompilerInputFiles		= { 'Data/TestIncludeParser/MSVC-P/test.cpp' }
-	.CompilerOutputPath		= "$Out$/Test/IncludeParser/MSVC-P/"
+    .CompilerInputFiles     = { 'Data/TestIncludeParser/MSVC-P/test.cpp' }
+    .CompilerOutputPath     = "$Out$/Test/IncludeParser/MSVC-P/"
 
-	// USe the /Fi option to make sure the Compiler and FASTBuild agree on the output location
-	.CompilerOptions		+ ' /Fi"%2"'
-	.CompilerOutputExtension= '.i'
+    // USe the /Fi option to make sure the Compiler and FASTBuild agree on the output location
+    .CompilerOptions        + ' /Fi"%2"'
+    .CompilerOutputExtension= '.i'
 }
 
 //------------------------------------------------------------------------------

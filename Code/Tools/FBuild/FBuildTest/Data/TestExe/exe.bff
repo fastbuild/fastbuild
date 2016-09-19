@@ -15,16 +15,16 @@ Settings {}
 //--------------------
 ObjectList( "Exe-Lib" )
 {
-	.CompilerInputFiles	= "Data/TestExe/exe.cpp"
-	.CompilerOutputPath	= "$Out$/Test/Exe/"
+    .CompilerInputFiles = "Data/TestExe/exe.cpp"
+    .CompilerOutputPath = "$Out$/Test/Exe/"
 }
 
 Executable( "Exe" )
 {
-	#if __WINDOWS__
-		.LinkerOptions		+ ' /SUBSYSTEM:CONSOLE'
-							+ ' /ENTRY:main'
-	#endif
-	.LinkerOutput		= '$Out$/Test/Exe/exe.exe'
-	.Libraries			= { "Exe-Lib" }
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+    #endif
+    .LinkerOutput       = '$Out$/Test/Exe/exe.exe'
+    .Libraries          = { "Exe-Lib" }
 }

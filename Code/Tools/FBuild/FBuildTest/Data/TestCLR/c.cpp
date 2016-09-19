@@ -3,12 +3,12 @@
 ref class C
 {
 public:
-	int i;
+    int i;
 };
 
 void FunctionsAsCLR_C()
 {
-	// use garbage collected new
-	C^ c = gcnew C;
-	(void)c;
+    // use garbage collected new
+    C^ c = gcnew C;
+    (void)c;
 }

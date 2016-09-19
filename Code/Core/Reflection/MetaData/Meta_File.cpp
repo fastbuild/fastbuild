@@ -14,7 +14,7 @@ REFLECT_END( Meta_File )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Meta_File::Meta_File( bool relative )
-	: m_Relative( relative )
+    : m_Relative( relative )
 {
 }
 

@@ -4,8 +4,8 @@
 //
 .Array = {}
 {
-	.String		= 'Test'
-	^Array		+ { .String }
+    .String     = 'Test'
+    ^Array      + { .String }
 }
 Print( .Array ) // Array should now contain String
 
@@ -15,7 +15,7 @@ Print( .Array ) // Array should now contain String
 .String2 = 'Test'
 .Array2 = {}
 {
-	^Array2		+ { .String2 }
+    ^Array2     + { .String2 }
 }
 Print( .Array2 ) // Array should now contain String
 
@@ -25,7 +25,7 @@ Print( .Array2 ) // Array should now contain String
 .String2 = 'Test'
 .Array2 = {}
 {
-	^Array2		+ { ^String2 }
+    ^Array2     + { ^String2 }
 }
 Print( .Array2 ) // Array should now contain String
 
@@ -34,11 +34,11 @@ Print( .Array2 ) // Array should now contain String
 //
 .String3 = 'Test'
 {
-	.Array3 = {}
-	{
-		^Array3		+ { .String3 }
-	}
-	Print( .Array3 ) // Array should now contain String
+    .Array3 = {}
+    {
+        ^Array3     + { .String3 }
+    }
+    Print( .Array3 ) // Array should now contain String
 }
 
 //
@@ -46,9 +46,9 @@ Print( .Array2 ) // Array should now contain String
 //
 .String3 = 'Test'
 {
-	.Array3 = {}
-	{
-		^Array3		+ { ^String3 }
-	}
-	Print( .Array3 ) // Array should now contain String
+    .Array3 = {}
+    {
+        ^Array3     + { ^String3 }
+    }
+    Print( .Array3 ) // Array should now contain String
 }

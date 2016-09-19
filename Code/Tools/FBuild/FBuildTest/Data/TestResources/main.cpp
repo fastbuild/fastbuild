@@ -6,13 +6,13 @@
 //------------------------------------------------------------------------------
 int __stdcall WinMain( HINSTANCE, HINSTANCE, LPSTR, int )
 {
-	// Show the dialog
-	HWND maindialog;
-	HINSTANCE hInst = (HINSTANCE)GetModuleHandle( nullptr );
-	if ( CreateDialog( hInst, MAKEINTRESOURCE( IDD_DIALOG1 ), nullptr, nullptr) )
-	{
-		return 1; // everything is ok - test will check for this
-	}
+    // Show the dialog
+    HWND maindialog;
+    HINSTANCE hInst = (HINSTANCE)GetModuleHandle( nullptr );
+    if ( CreateDialog( hInst, MAKEINTRESOURCE( IDD_DIALOG1 ), nullptr, nullptr) )
+    {
+        return 1; // everything is ok - test will check for this
+    }
 
-	return 0; // failed to find resource - test will fail
+    return 0; // failed to find resource - test will fail
 }

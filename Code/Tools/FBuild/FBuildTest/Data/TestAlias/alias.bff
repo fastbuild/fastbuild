@@ -3,9 +3,9 @@
 //
 Alias( "alias" )
 {
-	.Targets =
-	{ 
-		"Thing_1"
-		"Thing_2"
-	}
+    .Targets =
+    {
+        "Thing_1"
+        "Thing_2"
+    }
 }

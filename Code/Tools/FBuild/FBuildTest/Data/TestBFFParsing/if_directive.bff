@@ -4,13 +4,13 @@
 
 // Define a variable
 #if __WINDOWS__
-	.Platform = 'Windows'
+    .Platform = 'Windows'
 #endif
 #if __LINUX__
-	.Platform = 'Linux'
+    .Platform = 'Linux'
 #endif
 #if __OSX__
-	.Platform = 'OSX'
+    .Platform = 'OSX'
 #endif
 
 // If the variable is not defined this will cause an error
@@ -18,36 +18,36 @@ Print( "Platform = $Platform$" )
 
 // check false blocks are ignored
 #if __WINDOWS__
-	#if __LINUX__
-		should never get here
-	#endif
+    #if __LINUX__
+        should never get here
+    #endif
 #endif
 #if __LINUX__
-	#if __WINDOWS__
-		should never get here
-	#endif
+    #if __WINDOWS__
+        should never get here
+    #endif
 #endif
 #if __OSX__
-	#if __WINDOWS__
-		should never get here
-	#endif
+    #if __WINDOWS__
+        should never get here
+    #endif
 #endif
 
 // Negation
 #if !__WINDOWS__
-	#if __WINDOWS__
-		should never get here
-	#endif	
+    #if __WINDOWS__
+        should never get here
+    #endif
 #endif
 #if !__OSX__
-	#if __OSX__
-		should never get here
-	#endif	
+    #if __OSX__
+        should never get here
+    #endif
 #endif
 #if !__LINUX__
-	#if __LINUX__
-		should never get here
-	#endif	
+    #if __LINUX__
+        should never get here
+    #endif
 #endif
 
 // #endif at very end of line

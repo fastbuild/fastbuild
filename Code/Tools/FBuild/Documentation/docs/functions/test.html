@@ -12,18 +12,68 @@
 
 <h1>Test</h1>
     <div id='test' class='newsitemheader'>
-      Test
+      Summary
     </div>
     <div class='newsitembody'>
       <p>
-Defines the execution of an executable as a test. The executable must be previously defined with the Executable function.</p>
-<div class='code'>Test( alias )      ; (optional) Alias
+Defines the execution of an executable as a test.</p>
+<div class='code'>Test( alias )      // (optional) Alias
 {
-  .TestExecutable  ; Executable to execute
-  .TestOutput      ; Output file for captured test output
-  .TestArguments   ; (optional) Arguments to pass to test executable
-  .TestWorkingDir  ; (optional) Working dir for test execution
-  .TestTimeOut     ; (optional) TimeOut (in seconds) for test (default: 0, no timeout)
+  // Options
+  .TestExecutable       // The executable file to run that will execute the tests
+  .TestOutput           // Output file for captured test output
+  .TestArguments        // (optional) Arguments to pass to test executable
+  .TestWorkingDir       // (optional) Working dir for test execution
+  .TestTimeOut          // (optional) TimeOut (in seconds) for test (default: 0, no timeout)
+  .TestAlwaysShowOutput // (optional) Show output of tests even when they don't fail (default: false)
+}
+</div>
+    </div>
+
+    <div class='newsitemheader'>
+      Details
+    </div>
+    <div class='newsitembody'>
+      <p>The Test function is used to create a target that is used to execute tests. It may depend on other FASTBuild targets via the <b>.TestExecutable</b> option.</p>
+      <p>When a test is run, its output (standard output and error channel) is captured and will be written to the file specified in <b>.TestOutput</b>. The captured output will not be shown directly (printed to FASTBuild's output) unless the test process has a non-zero return value. This is done in order to keep FASTBuild's output clean and reduce noise.</p>
+    </div>
+
+    <div class='newsitemheader'>
+      Options
+    </div>
+    <div class='newsitembody'>
+      <p><b>.TestExecutable</b> - String - (Required)</p>
+      <p>The executable file to run that will execute the tests.</p>
+      <p>Can either be a file path or the name of a target specified with the <a href='executable.html'>Executable</a> function.</p>
+      <hr>
+      <p><b>.TestOutput</b> - String - (Required)</p>
+      <p>Output file for captured test output.</p>
+      <p>When executing tests, FASTBuild will capture standard output channels of the executable and write them to this file when done.</p>
+      <hr>
+      <p><b>.TestArguments</b> - String - (Optional)</p>
+      <p>Arguments to pass to test executable.</p>
+      <hr>
+      <p><b>.TestWorkingDir</b> - String - (Optional)</p>
+      <p>Working dir for test execution.</p>
+      <hr>
+      <p><b>.TestTimeOut</b> - Integer - (Optional)</p>
+      <p>The amount of time (in seconds) to wait for a test to finish execution.</p>
+      <p>The default is 0, which means there is no timeout and FASTBuild will wait until the executable terminates on its own.</p>
+      <hr>
+      <p><b>.TestAlwaysShowOutput</b> - Boolean - (Optional)</p>
+      <p>The output of a test is normally shown only when the test fails. This option specifies that the output should always be shown.</p>
+    </div>
+
+    <div class='newsitemheader'>
+      Simple Example
+    </div>
+    <div class='newsitembody'>
+      The following will produce a target <b>MyCoreTests-Run</b> that will excute the FASTBuild target called <b>MyCoreTests-Exe</b>. The usual FASTBuild rules apply; Whenever <b>MyCoreTests-Exe</b> is considered out-of-date, invoking <b>MyCoreTests-Run</b> will automatically build <b>MyCoreTests-Exe</b>. After <b>MyCoreTests-Run</b> was executed, the file "Tests/MyCoreTests_Output.txt" will contain the output, regardless of success or failure.
+<div class='code'>
+Test( 'MyCoreTests-Run' )
+{
+  .TestExecutable = 'MyCoreTests-Exe' // Must be previously defined with Executable()
+  .TestOutput = 'Tests/MyCoreTests_Output.txt'
 }
 </div>
     </div>

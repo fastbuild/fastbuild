@@ -1,15 +1,13 @@
 // ICache - Interface for Cache plugins
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_CACHEPLUGININTERFACE_H
-#define FBUILD_CACHEPLUGININTERFACE_H
 
 #if __WINDOWS__
-	#define STDCALL __stdcall
+    #define STDCALL __stdcall
 #elif defined(__LINUX__) || defined(__OSX__)
-	#define STDCALL
+    #define STDCALL
 #else
-	#error Unknown Platform
+    #error Unknown Platform
 #endif
 
 // DLL Export
@@ -22,7 +20,7 @@
 extern "C" {
 #endif
 
-// CacheInit 
+// CacheInit
 //------------------------------------------------------------------------------
 // Setup access to cache at start of build.
 //
@@ -30,7 +28,7 @@ extern "C" {
 // Out: bool     - (return) success.  If false is returned, cache will be disabled
 typedef bool (*CacheInitFunc)( const char * cachePath );
 #ifdef CACHEPLUGIN_DLL_EXPORT
-	CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheInit( const char * settings );
+    CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheInit( const char * settings );
 #endif
 
 // CacheShutdown
@@ -38,7 +36,7 @@ typedef bool (*CacheInitFunc)( const char * cachePath );
 // Perform any required cleanup
 typedef void (*CacheShutdownFunc)();
 #ifdef CACHEPLUGIN_DLL_EXPORT
-	CACHEPLUGIN_DLL_EXPORT void STDCALL CacheShutdown();
+    CACHEPLUGIN_DLL_EXPORT void STDCALL CacheShutdown();
 #endif
 
 // CachePublish
@@ -51,7 +49,7 @@ typedef void (*CacheShutdownFunc)();
 // Out: bool     - (return) Indicates if item was stored to cache.
 typedef bool (*CachePublishFunc)( const char * cacheId, const void * data, unsigned long long dataSize );
 #ifdef CACHEPLUGIN_DLL_EXPORT
-	CACHEPLUGIN_DLL_EXPORT bool STDCALL CachePublish( const char * cacheId, const void * data, unsigned long long dataSize );
+    CACHEPLUGIN_DLL_EXPORT bool STDCALL CachePublish( const char * cacheId, const void * data, unsigned long long dataSize );
 #endif
 
 // CacheRetrieve
@@ -63,7 +61,7 @@ typedef bool (*CachePublishFunc)( const char * cacheId, const void * data, unsig
 //      dataSize - on success, size in bytes of retrieved data
 typedef bool (*CacheRetrieveFunc)( const char * cacheId, void * & data, unsigned long long & dataSize );
 #ifdef CACHEPLUGIN_DLL_EXPORT
-	CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheRetrieve( const char * cacheId, void * & data, unsigned long long & dataSize );
+    CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheRetrieve( const char * cacheId, void * & data, unsigned long long & dataSize );
 #endif
 
 // CacheFreeMemory
@@ -74,7 +72,7 @@ typedef bool (*CacheRetrieveFunc)( const char * cacheId, void * & data, unsigned
 //     dataSize - size in bytes of said memory
 typedef void (*CacheFreeMemoryFunc)( void * data, unsigned long long dataSize );
 #ifdef CACHEPLUGIN_DLL_EXPORT
-	CACHEPLUGIN_DLL_EXPORT void STDCALL CacheFreeMemory( void * data, unsigned long long dataSize );
+    CACHEPLUGIN_DLL_EXPORT void STDCALL CacheFreeMemory( void * data, unsigned long long dataSize );
 #endif
 
 #if !defined(__WINDOWS__)//TODO:Windows : Use unmangled name on windows.
@@ -82,4 +80,3 @@ typedef void (*CacheFreeMemoryFunc)( void * data, unsigned long long dataSize );
 #endif
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_CACHEPLUGININTERFACE_H

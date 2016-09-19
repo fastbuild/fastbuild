@@ -7,5 +7,5 @@
 
 int main(int, char**)
 {
-	return FunctionA();
+    return FunctionA();
 }

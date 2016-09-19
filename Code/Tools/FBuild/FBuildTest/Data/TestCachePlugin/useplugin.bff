@@ -17,13 +17,13 @@ Using( .StandardEnvironment )
 .CachePluginDLL = '$Out$/Test/CachePlugin/CachePlugin.so'
 #endif
 
-.CachePath		= 'X:\' // passed to cache plugin
+.CachePath      = 'X:\' // passed to cache plugin
 Settings {} // Activate standard settings
 
 // Plugin library
 //------------------------------------------------------------------------------
 ObjectList( 'TestFiles-Lib' )
 {
-	.CompilerInputFiles	= { 'Data/TestCachePlugin/TestA.cpp' }
-	.CompilerOutputPath	= '$Out$/Test/CachePlugin/'
+    .CompilerInputFiles = { 'Data/TestCachePlugin/TestA.cpp' }
+    .CompilerOutputPath = '$Out$/Test/CachePlugin/'
 }

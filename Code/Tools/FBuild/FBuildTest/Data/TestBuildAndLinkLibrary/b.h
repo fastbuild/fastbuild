@@ -2,10 +2,10 @@
 class ClassB
 {
 public:
-	ClassB();
+    ClassB();
 
-	inline int FunctionA() const { return m_Int; }
+    inline int FunctionA() const { return m_Int; }
 private:
-	int m_Int;
+    int m_Int;
 };
 

@@ -1,5 +1,5 @@
 //
-// Test 
+// Test
 //
 // Build and run a Test
 //
@@ -15,24 +15,24 @@ Settings {}
 //------------------------------------------------------------------------------
 ObjectList( "Exe-Lib" )
 {
-	.CompilerInputFiles	= 'Data/TestTest/test.cpp'
-	.CompilerOutputPath	= '$Out$/Test/Test/'
+    .CompilerInputFiles = 'Data/TestTest/test.cpp'
+    .CompilerOutputPath = '$Out$/Test/Test/'
 }
 
 Executable( "Exe" )
 {
-	#if __WINDOWS__
-		.LinkerOptions		+ ' /SUBSYSTEM:CONSOLE'
-							+ ' /ENTRY:main'
-	#endif
-	.LinkerOutput		= '$Out$/Test/Test/test.exe'
-	.Libraries			= { 'Exe-Lib' }
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+    #endif
+    .LinkerOutput       = '$Out$/Test/Test/test.exe'
+    .Libraries          = { 'Exe-Lib' }
 }
 
 // Run the executable we compiled
 //------------------------------------------------------------------------------
 Test( "Test" )
 {
-	.TestExecutable		= 'Exe'
-	.TestOutput			= '$Out$/Test/Test/testoutput.txt'
+    .TestExecutable     = 'Exe'
+    .TestOutput         = '$Out$/Test/Test/testoutput.txt'
 }

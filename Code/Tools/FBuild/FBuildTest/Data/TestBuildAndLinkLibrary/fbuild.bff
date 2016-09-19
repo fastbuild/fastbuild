@@ -11,29 +11,29 @@ Settings {} // use Standard Environment
 
 Library
 {
-	.CompilerInputPath	= "Data\TestBuildAndLinkLibrary\"
-	.LibrarianOutput	= "$Out$\Test\BuildAndLinkLibrary\test.lib"
+    .CompilerInputPath  = "Data\TestBuildAndLinkLibrary\"
+    .LibrarianOutput    = "$Out$\Test\BuildAndLinkLibrary\test.lib"
 }
 
 // merge libraries
 Library( 'libA' )
 {
-	.CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\a.cpp'
-	.LibrarianOutput	= '$Out$\Test\BuildAndLinkLibrary\a.lib'
+    .CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\a.cpp'
+    .LibrarianOutput    = '$Out$\Test\BuildAndLinkLibrary\a.lib'
 }
 Library( 'libB' )
 {
-	.CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\b.cpp'
-	.LibrarianOutput	= '$Out$\Test\BuildAndLinkLibrary\b.lib'
+    .CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\b.cpp'
+    .LibrarianOutput    = '$Out$\Test\BuildAndLinkLibrary\b.lib'
 }
 ObjectList( 'objListC' )
 {
-	.CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\c.cpp'
+    .CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\c.cpp'
 }
 Library( 'libMerged' )
 {
-	.LibrarianAdditionalInputs  = { 'libA', // library by alias
-									'$Out$\Test\BuildAndLinkLibrary\b.lib', // library by name
-									 'objListC' } // object list
-	.LibrarianOutput	= '$Out$\Test\BuildAndLinkLibrary\merged.lib'
+    .LibrarianAdditionalInputs  = { 'libA', // library by alias
+                                    '$Out$\Test\BuildAndLinkLibrary\b.lib', // library by name
+                                     'objListC' } // object list
+    .LibrarianOutput    = '$Out$\Test\BuildAndLinkLibrary\merged.lib'
 }

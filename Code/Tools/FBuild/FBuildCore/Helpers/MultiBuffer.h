@@ -19,21 +19,21 @@ class MemoryStream;
 class MultiBuffer
 {
 public:
-	MultiBuffer();
-	explicit MultiBuffer( const void * data, size_t dataSize );
-	~MultiBuffer();
+    MultiBuffer();
+    explicit MultiBuffer( const void * data, size_t dataSize );
+    ~MultiBuffer();
 
-	bool CreateFromFiles( const Array< AString > & fileNames );
-	bool ExtractFile( size_t index, const AString& fileName ) const;
+    bool CreateFromFiles( const Array< AString > & fileNames );
+    bool ExtractFile( size_t index, const AString& fileName ) const;
 
-	const void *	GetData() const;
-	uint64_t		GetDataSize() const;
+    const void *    GetData() const;
+    uint64_t        GetDataSize() const;
 
 private:
-	enum : uint32_t { MAX_FILES = 2 };
+    enum : uint32_t { MAX_FILES = 2 };
 
-	ConstMemoryStream *	m_ReadStream;
-	MemoryStream *		m_WriteStream;
+    ConstMemoryStream * m_ReadStream;
+    MemoryStream *      m_WriteStream;
 };
 
 //------------------------------------------------------------------------------

@@ -11,25 +11,25 @@ Settings {} // use Standard Environment
 ObjectList( "PCHTest-lib" )
 {
     #if __WINDOWS__
-        .PCHInputFile       = "Data/TestPrecompiledHeaders/PrecompiledHeader.cpp"
-        .PCHOutputFile      = "$Out$/Test/PrecompiledHeaders/PrecompiledHeader.pch"
-        .PCHOptions			= '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+        .PCHInputFile               = "Data/TestPrecompiledHeaders/PrecompiledHeader.cpp"
+        .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/PrecompiledHeader.pch"
+        .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
     #endif
     #if __LINUX__
-        .PCHInputFile       = "Data/TestPrecompiledHeaders/PrecompiledHeader.h"
-        .PCHOutputFile      = "$Out$/Test/PrecompiledHeaders/PrecompiledHeader.h.gch"
+        .PCHInputFile               = "Data/TestPrecompiledHeaders/PrecompiledHeader.h"
+        .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/PrecompiledHeader.h.gch"
         .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux
     #endif
     #if __OSX__
-        .PCHInputFile       = "Data/TestPrecompiledHeaders/PrecompiledHeader.h"
-        .PCHOutputFile      = "$Out$/Test/PrecompiledHeaders/PrecompiledHeader.pch"
+        .PCHInputFile               = "Data/TestPrecompiledHeaders/PrecompiledHeader.h"
+        .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/PrecompiledHeader.pch"
         .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on OS X
     #endif
 
-    .CompilerInputPath	= "Data/TestPrecompiledHeaders/"
-    .CompilerOutputPath	= "$Out$/Test/PrecompiledHeaders/"
+    .CompilerInputPath  = "Data/TestPrecompiledHeaders/"
+    .CompilerOutputPath = "$Out$/Test/PrecompiledHeaders/"
     #if __WINDOWS__
-        .CompilerOptions	+ ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+        .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
                             + ' "/IData/TestPrecompiledHeaders"'
     #endif
     #if __LINUX__
@@ -48,31 +48,31 @@ ObjectList( "PCHTest-lib" )
 //
 Executable( "PCHTest" )
 {
-	#if __WINDOWS__
-		.LinkerOptions		+ .WindowsLibPaths
-							+ ' /ENTRY:main'
-	#endif
+    #if __WINDOWS__
+        .LinkerOptions      + .WindowsLibPaths
+                            + ' /ENTRY:main'
+    #endif
 
-	.LinkerOutput		= "$Out$/Test/PrecompiledHeaders/PCHTest.exe"
-	.Libraries			= { "PCHTest-lib" }
+    .LinkerOutput       = "$Out$/Test/PrecompiledHeaders/PCHTest.exe"
+    .Libraries          = { "PCHTest-lib" }
 }
 
 //
 // Clang for Windows
 //
 #if __WINDOWS__
-	ObjectList( "PCHTestClang-Windows" )
-	{
-		.PCHInputFile		= "Data\TestPrecompiledHeaders\PrecompiledHeader.h"
-		.PCHOutputFile		= "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
+    ObjectList( "PCHTestClang-Windows" )
+    {
+        .PCHInputFile       = "Data\TestPrecompiledHeaders\PrecompiledHeader.h"
+        .PCHOutputFile      = "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
 
-		.PCHOptions			= ' -c -x c++-header $PCHInputFile$ -o"$PCHOutputFile$"'
+        .PCHOptions         = ' -c -x c++-header $PCHInputFile$ -o"$PCHOutputFile$"'
 
-		.Compiler			= '$ClangPath$\bin\clang++.exe'
-		.CompilerOptions	= ' -c -g -include-pch "$PCHOutputFile$" %1 -o "%2" -integrated-as'
+        .Compiler           = '$ClangPath$\bin\clang++.exe'
+        .CompilerOptions    = ' -c -g -include-pch "$PCHOutputFile$" %1 -o "%2" -integrated-as'
                             + ' "-IData/TestPrecompiledHeaders"'
 
-		.CompilerInputFiles = "Data\TestPrecompiledHeaders\PCHUser.cpp"
-		.CompilerOutputPath	= "$Out$\Test\PrecompiledHeaders\Clang-Windows\"
-	}
+        .CompilerInputFiles = "Data\TestPrecompiledHeaders\PCHUser.cpp"
+        .CompilerOutputPath = "$Out$\Test\PrecompiledHeaders\Clang-Windows\"
+    }
 #endif

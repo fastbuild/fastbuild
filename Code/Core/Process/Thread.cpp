@@ -27,10 +27,10 @@
         #pragma pack(push,8)
         typedef struct tagTHREADNAME_INFO
         {
-           DWORD dwType; // Must be 0x1000.
-           LPCSTR szName; // Pointer to name (in user addr space).
-           DWORD dwThreadID; // Thread ID (-1=caller thread).
-           DWORD dwFlags; // Reserved for future use, must be zero.
+            DWORD dwType; // Must be 0x1000.
+            LPCSTR szName; // Pointer to name (in user addr space).
+            DWORD dwThreadID; // Thread ID (-1=caller thread).
+            DWORD dwFlags; // Reserved for future use, must be zero.
         } THREADNAME_INFO;
         #pragma pack(pop)
     #endif
@@ -41,46 +41,46 @@
 struct ThreadStartInfo
 {
 public:
-	ThreadStartInfo( Thread::ThreadEntryFunction entryFunc, void * userData, const char * threadName )
-		: m_UserEntryFunction( entryFunc )
-		, m_UserData( userData )
-		, m_ThreadName( threadName )
-	{}
+    ThreadStartInfo( Thread::ThreadEntryFunction entryFunc, void * userData, const char * threadName )
+        : m_UserEntryFunction( entryFunc )
+        , m_UserData( userData )
+        , m_ThreadName( threadName )
+    {}
 
-	Thread::ThreadEntryFunction	m_UserEntryFunction;
-	void *			m_UserData;
-	const char *	m_ThreadName;
+    Thread::ThreadEntryFunction m_UserEntryFunction;
+    void *          m_UserData;
+    const char *    m_ThreadName;
 
     #if defined( __WINDOWS__ )
         static uint32_t ThreadStartFunction( void * userData )
     #else
         static void * ThreadStartFunction( void * userData )
     #endif
-	{
-		// take a copy
-		ThreadStartInfo * originalInfo = (ThreadStartInfo *)userData;
-		Thread::ThreadEntryFunction realFunction = originalInfo->m_UserEntryFunction;
-		void * realUserData = originalInfo->m_UserData;
+    {
+        // take a copy
+        ThreadStartInfo * originalInfo = (ThreadStartInfo *)userData;
+        Thread::ThreadEntryFunction realFunction = originalInfo->m_UserEntryFunction;
+        void * realUserData = originalInfo->m_UserData;
 
-		// Set thread name for debugging
-		#ifdef DEBUG
-			if ( originalInfo->m_ThreadName )
-			{
-				Thread::SetThreadName( originalInfo->m_ThreadName );
-			}
-		#endif
+        // Set thread name for debugging
+        #ifdef DEBUG
+            if ( originalInfo->m_ThreadName )
+            {
+                Thread::SetThreadName( originalInfo->m_ThreadName );
+            }
+        #endif
 
-		// done with ThreadStartInfo
-		MemoryBarrier();
+        // done with ThreadStartInfo
+        MemoryBarrier();
         FDELETE( originalInfo );
 
-		// enter into real thread function
+        // enter into real thread function
         #if defined( __WINDOWS__ )
             return (*realFunction)( realUserData );
         #else
             return (void *)(size_t)( (*realFunction)( realUserData ) );
         #endif
-	}
+    }
 };
 
 // Static Data
@@ -91,13 +91,13 @@ public:
 //------------------------------------------------------------------------------
 /*static*/ Thread::ThreadId Thread::GetCurrentThreadId()
 {
-	#if defined( __WINDOWS__ )
-		return (Thread::ThreadId) ::GetCurrentThreadId();
+    #if defined( __WINDOWS__ )
+        return (Thread::ThreadId) ::GetCurrentThreadId();
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         return pthread_self();
     #else
         #error Unknown platform GetCurrentThreadId
-	#endif
+    #endif
 }
 
 //  Sleep
@@ -118,21 +118,21 @@ public:
 // CreateThread
 //------------------------------------------------------------------------------
 /*static*/ Thread::ThreadHandle Thread::CreateThread( ThreadEntryFunction entryFunc,
-													  const char * threadName,
-													  uint32_t stackSize,
-													  void * userData )
+                                                      const char * threadName,
+                                                      uint32_t stackSize,
+                                                      void * userData )
 {
     ThreadStartInfo& info = *FNEW( ThreadStartInfo( entryFunc, userData, threadName ) );
     MemoryBarrier();
-        
-	#if defined( __WINDOWS__ )
-		HANDLE h = ::CreateThread( nullptr,		// LPSECURITY_ATTRIBUTES lpThreadAttributes
-								 stackSize,		// SIZE_T dwStackSize
-								 (LPTHREAD_START_ROUTINE)ThreadStartInfo::ThreadStartFunction,	// LPTHREAD_START_ROUTINE lpStartAddress
-								 &info,			// LPVOID lpParameter
-								 0,				// DWORD dwCreationFlags
-								 nullptr		// LPDWORD lpThreadId
-							   );
+
+    #if defined( __WINDOWS__ )
+        HANDLE h = ::CreateThread( nullptr,     // LPSECURITY_ATTRIBUTES lpThreadAttributes
+                                   stackSize,       // SIZE_T dwStackSize
+                                   (LPTHREAD_START_ROUTINE)ThreadStartInfo::ThreadStartFunction,    // LPTHREAD_START_ROUTINE lpStartAddress
+                                   &info,           // LPVOID lpParameter
+                                   0,               // DWORD dwCreationFlags
+                                   nullptr      // LPDWORD lpThreadId
+                                 );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         pthread_t h;
         pthread_attr_t threadAttr;
@@ -142,8 +142,8 @@ public:
         VERIFY( pthread_create( &h, &threadAttr, ThreadStartInfo::ThreadStartFunction, &info ) == 0 );
     #else
         #error Unknown platform
-	#endif
-        
+    #endif
+
     ASSERT( h != nullptr );
 
     return (Thread::ThreadHandle)h;
@@ -171,16 +171,16 @@ public:
             return 0;
         }
 
-		// get actual return code
-		DWORD ret( 0 );
-		if ( ::GetExitCodeThread( handle, (LPDWORD)&ret ) )
-		{
-			timedOut = false;
-			return ret;
-		}
-		ASSERT( false ); // invalid thread handle
-		timedOut = false;
-		return -1;
+        // get actual return code
+        DWORD ret( 0 );
+        if ( ::GetExitCodeThread( handle, (LPDWORD)&ret ) )
+        {
+            timedOut = false;
+            return ret;
+        }
+        ASSERT( false ); // invalid thread handle
+        timedOut = false;
+        return -1;
     #elif defined( __APPLE__ )
         timedOut = false; // TODO:MAC Implement timeout support
         void * ret;
@@ -191,15 +191,15 @@ public:
         ASSERT( false ); // usage failure
         return 0;
     #elif defined( __LINUX__ )
-        // timeout is specified in absolute time        
+        // timeout is specified in absolute time
         // - get current time
         struct timespec abstime;
-        VERIFY( clock_gettime( CLOCK_REALTIME, &abstime ) == 0 );        
-        
+        VERIFY( clock_gettime( CLOCK_REALTIME, &abstime ) == 0 );
+
         // - add timeout
         abstime.tv_sec += ( timeoutMS / 1000 );
         abstime.tv_nsec += ( timeoutMS % 1000 ) * 1000000;
-        
+
         // handle nanosecond overflow
         if ( abstime.tv_nsec > 1000000000 )
         {
@@ -220,7 +220,7 @@ public:
             timedOut = false;
             return (int)( (size_t)ret );
         }
-            
+
         ASSERT( false ); // a non-timeout error indicates usage failure
         timedOut = false;
         return 0;
@@ -233,53 +233,53 @@ public:
 //------------------------------------------------------------------------------
 /*static*/ void Thread::CloseHandle( ThreadHandle h )
 {
-	#if defined( __WINDOWS__ )
-		::CloseHandle( h );
+    #if defined( __WINDOWS__ )
+        ::CloseHandle( h );
     #elif defined( __APPLE__ ) || defined(__LINUX__)
-        // Nothing to do
+        (void)h; // Nothing to do
     #else
         #error Unknown platform
-	#endif
+    #endif
 }
 
 // SetThreadName
 //------------------------------------------------------------------------------
 #ifdef DEBUG
-	/*static*/ void Thread::SetThreadName( const char * name )
-	{
-		ASSERT( name );
+    /*static*/ void Thread::SetThreadName( const char * name )
+    {
+        ASSERT( name );
 
-		#if defined( __WINDOWS__ )
-			#if defined(__clang__)
-				// Clang for windows (3.7.1) crashes trying to compile this
-			#else
-				const DWORD MS_VC_EXCEPTION=0x406D1388;
+        #if defined( __WINDOWS__ )
+            #if defined(__clang__)
+                // Clang for windows (3.7.1) crashes trying to compile this
+            #else
+                const DWORD MS_VC_EXCEPTION=0x406D1388;
 
-				THREADNAME_INFO info;
-				info.dwType = 0x1000;
-				info.szName = name;
-				info.dwThreadID = GetCurrentThreadId();
-				info.dwFlags = 0;
+                THREADNAME_INFO info;
+                info.dwType = 0x1000;
+                info.szName = name;
+                info.dwThreadID = GetCurrentThreadId();
+                info.dwFlags = 0;
 
-				__try
-				{
-					RaiseException( MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info );
-				}
-				PRAGMA_DISABLE_PUSH_MSVC( 6320 ) // Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER
-				__except( EXCEPTION_EXECUTE_HANDLER )
-				PRAGMA_DISABLE_POP_MSVC
-				{
-					(void)0;
-				}
-			#endif
+                __try
+                {
+                    RaiseException( MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info );
+                }
+                PRAGMA_DISABLE_PUSH_MSVC( 6320 ) // Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER
+                __except( EXCEPTION_EXECUTE_HANDLER )
+                PRAGMA_DISABLE_POP_MSVC
+                {
+                    (void)0;
+                }
+            #endif
         #elif defined( __LINUX__ )
             pthread_setname_np( (pthread_t)GetCurrentThreadId(), name );
         #elif defined( __APPLE__ )
-            pthread_setname_np( name );            
+            pthread_setname_np( name );
         #else
             #error Unknown platform
-		#endif
-	}
+        #endif
+    }
 #endif
 
 //------------------------------------------------------------------------------

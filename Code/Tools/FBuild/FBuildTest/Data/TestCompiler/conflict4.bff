@@ -3,7 +3,7 @@
 //
 Compiler( 'Compiler' )
 {
-	// These would both end up in the root, so that should fail
-	.Executable     = 'Folder/A'
+    // These would both end up in the root, so that should fail
+    .Executable     = 'Folder/A'
     .ExtraFiles     = { 'OtherFolder1/A' }
 }

@@ -10,21 +10,21 @@ Settings {}
 
 // Using Clang
 #if __WINDOWS__
-	Using( .WindowsClangToolChain )
+    Using( .WindowsClangToolChain )
 #endif
 #if __OSX__
-	Using( .OSXClangToolChain )
+    Using( .OSXClangToolChain )
 #endif
 #if __LINUX__
-	// Not testing on Linux for now
+    // Not testing on Linux for now
 #endif
 
 // Common settings
-.CompilerOutputPath			= '$StandardOutputBase$/Test/TestWarnings/ClangMacroExpansion/'
+.CompilerOutputPath         = '$StandardOutputBase$/Test/TestWarnings/ClangMacroExpansion/'
 
 // ClangMacroExpansion
 //------------------------------------------------------------------------------
 ObjectList( 'ClangMacroExpansion' )
 {
-	.CompilerInputFiles		= 'Data/TestWarnings/ClangMacroExpansion/clang_macro_expansion.cpp'
+    .CompilerInputFiles     = 'Data/TestWarnings/ClangMacroExpansion/clang_macro_expansion.cpp'
 }

@@ -73,23 +73,23 @@ static VCXProjectNode * ResolveVCXProjectRecurse( Node * node )
 //------------------------------------------------------------------------------
 VCXProjectNode * FunctionSLN::ResolveVCXProject( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & projectName ) const
 {
-	// Find the Node
+    // Find the Node
     Node * node = nodeGraph.FindNode( projectName );
     if ( node == nullptr )
     {
         Error::Error_1104_TargetNotDefined( iter, this, ".Projects", projectName );
         return nullptr;
     }
-	
+
     VCXProjectNode * project = ResolveVCXProjectRecurse( node );
     if ( project )
-	{
-		return project;
-	}
+    {
+        return project;
+    }
 
     // don't know how to handle this type of node
     Error::Error_1005_UnsupportedNodeType( iter, this, ".Projects", node->GetName(), node->GetType() );
-	return nullptr;
+    return nullptr;
 }
 
 // VSProjectConfigComp
@@ -99,9 +99,8 @@ struct VSProjectConfigComp
     bool operator ()( const VSProjectConfig & a, const VSProjectConfig & b ) const
     {
         int32_t cmpConfig = a.m_Config.CompareI( b.m_Config );
-        return ( cmpConfig == 0 )
-            ? a.m_Platform < b.m_Platform
-            : cmpConfig < 0 ;
+        return ( cmpConfig == 0 ) ? a.m_Platform < b.m_Platform
+                                  : cmpConfig < 0;
     }
 };
 
@@ -131,9 +130,9 @@ struct VCXProjectNodeComp
     AString solutionBuildProject;
     AString solutionVisualStudioVersion;
     AString solutionMinimumVisualStudioVersion;
-    if ( !GetString( funcStartIter, solutionBuildProject,                 ".SolutionBuildProject", false ) ||
-         !GetString( funcStartIter, solutionVisualStudioVersion,          ".SolutionVisualStudioVersion", false ) ||
-         !GetString( funcStartIter, solutionMinimumVisualStudioVersion,   ".SolutionMinimumVisualStudioVersion", false ) )
+    if ( !GetString( funcStartIter, solutionBuildProject,               ".SolutionBuildProject", false ) ||
+         !GetString( funcStartIter, solutionVisualStudioVersion,        ".SolutionVisualStudioVersion", false ) ||
+         !GetString( funcStartIter, solutionMinimumVisualStudioVersion, ".SolutionMinimumVisualStudioVersion", false ) )
     {
         return false;
     }
@@ -162,11 +161,11 @@ struct VCXProjectNodeComp
             // start with the base configuration
             VSProjectConfig newConfig( baseConfig );
 
-			GetStringFromStruct( s, ".SolutionPlatform", newConfig.m_SolutionPlatform );
-			GetStringFromStruct( s, ".SolutionConfig", newConfig.m_SolutionConfig );
+            GetStringFromStruct( s, ".SolutionPlatform", newConfig.m_SolutionPlatform );
+            GetStringFromStruct( s, ".SolutionConfig", newConfig.m_SolutionConfig );
 
             // .Platform must be provided
-            if ( !GetStringFromStruct( s, ".Platform",  newConfig.m_Platform ) )
+            if ( !GetStringFromStruct( s, ".Platform", newConfig.m_Platform ) )
             {
                 // TODO:B custom error
                 Error::Error_1101_MissingProperty( funcStartIter, this, AStackString<>( ".Platform" ) );
@@ -174,7 +173,7 @@ struct VCXProjectNodeComp
             }
 
             // .Config must be provided
-            if ( !GetStringFromStruct( s, ".Config",    newConfig.m_Config ) )
+            if ( !GetStringFromStruct( s, ".Config", newConfig.m_Config ) )
             {
                 // TODO:B custom error
                 Error::Error_1101_MissingProperty( funcStartIter, this, AStackString<>( ".Config" ) );
@@ -235,25 +234,11 @@ struct VCXProjectNodeComp
                 return false;
             }
 
-			// Clean slashes
+            // Clean slashes
             newFolder.m_Path.Replace( OTHER_SLASH, NATIVE_SLASH );
-			if (newFolder.m_Path.EndsWith(NATIVE_SLASH))
-			{
-				newFolder.m_Path.SetLength(newFolder.m_Path.GetLength() - 1); // Remove trailing slash
-			}
-
-            // check if this path was already defined
+            if (newFolder.m_Path.EndsWith(NATIVE_SLASH))
             {
-                const SLNSolutionFolder * const end2 = folders.End();
-                for ( const SLNSolutionFolder * it2 = folders.Begin() ; it2 != end2 ; ++it2 )
-                {
-                    if ( it2->m_Path == newFolder.m_Path  )
-                    {
-                        // TODO:B custom error
-                        Error::Error_1100_AlreadyDefined( funcStartIter, this, it2->m_Path );
-                        return false;
-                    }
-                }
+                newFolder.m_Path.SetLength(newFolder.m_Path.GetLength() - 1); // Remove trailing slash
             }
 
             // .Projects must be provided
@@ -267,11 +252,36 @@ struct VCXProjectNodeComp
             {
                 if ( solutionProjects.Find( projectName ) == nullptr )
                 {
-					solutionProjects.Append( projectName );
+                    solutionProjects.Append( projectName );
                 }
             }
 
-            folders.Append( newFolder );
+            // check if this path was already defined
+            SLNSolutionFolder * it2 = folders.Begin();
+            const SLNSolutionFolder * const end2 = folders.End();
+            for ( ; it2 != end2 ; ++it2 )
+            {
+                if ( it2->m_Path == newFolder.m_Path )
+                {
+                    break;
+                }
+            }
+
+            if ( it2 == end2 )
+            {
+                // folders with an empty are considered as root and won't be added
+                // (but the projects declared inside are still added in the solution)
+                if ( false == newFolder.m_Path.IsEmpty() )
+                {
+                    // append the newly declared project :
+                    folders.Append( newFolder );
+                }
+            }
+            else
+            {
+                // merge this declaration with the already existing one :
+                it2->m_ProjectNames.Append( newFolder.m_ProjectNames );
+            }
         }
     }
 
@@ -342,16 +352,16 @@ struct VCXProjectNodeComp
             AString * const end2 = it->m_ProjectNames.End();
             for ( AString * it2 = it->m_ProjectNames.Begin(); it2 != end2; ++it2 )
             {
-				// Get associate project file
-				VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, *it2 );
-				if ( project == nullptr )
-				{
-					return false; // ResolveVCXProjectRecurse will have emitted error
-				}
+                // Get associate project file
+                VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, *it2 );
+                if ( project == nullptr )
+                {
+                    return false; // ResolveVCXProjectRecurse will have emitted error
+                }
 
                 ASSERT( projects.Find( project ) ); // Sanity check in global list
 
-				// fixup name to be to final project
+                // fixup name to be to final project
                 *it2 = project->GetName();
             }
         }
@@ -360,12 +370,12 @@ struct VCXProjectNodeComp
     // resolves VCXProject node referenced by solutionBuildProject
     if ( solutionBuildProject.GetLength() > 0 )
     {
-		// Get associate project file
-		const VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, solutionBuildProject );
-		if ( project == nullptr )
-		{
-			return false; // ResolveVCXProject will have emitted error
-		}
+        // Get associate project file
+        const VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, solutionBuildProject );
+        if ( project == nullptr )
+        {
+            return false; // ResolveVCXProject will have emitted error
+        }
 
         if ( projects.Find( project ) == nullptr )
         {
@@ -387,53 +397,53 @@ struct VCXProjectNodeComp
             Error::Error_1050_PropertyMustBeOfType( funcStartIter, this, ".SolutionDependencies", projectDepsVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRUCTS );
             return false;
         }
-	
-		slnDeps.SetCapacity( projectDepsVar->GetArrayOfStructs().GetSize() );
-		for ( const BFFVariable * s : projectDepsVar->GetArrayOfStructs() )
-		{
+
+        slnDeps.SetCapacity( projectDepsVar->GetArrayOfStructs().GetSize() );
+        for ( const BFFVariable * s : projectDepsVar->GetArrayOfStructs() )
+        {
             // .Projects must be provided
             // .Dependencies must be provided
-			SLNDependency deps;
+            SLNDependency deps;
             if ( !GetStringOrArrayOfStringsFromStruct( funcStartIter, s, ".Projects", deps.m_Projects ) ||
-				 !GetStringOrArrayOfStringsFromStruct( funcStartIter, s, ".Dependencies", deps.m_Dependencies ) )
+                 !GetStringOrArrayOfStringsFromStruct( funcStartIter, s, ".Dependencies", deps.m_Dependencies ) )
             {
                 return false; // GetStringOrArrayOfStringsFromStruct has emitted an error
             }
 
-			// fixup
-			for ( AString & projectName : deps.m_Projects )
-			{
-				// Get associated project file
-				const VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, projectName );
-				if ( project == nullptr )
-				{
-					return false; // ResolveVCXProject will have emitted error
-				}
-				projectName = project->GetName();
-			}
-			for ( AString & projectName : deps.m_Dependencies )
-			{
-				// Get associated project file
-				const VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, projectName );
-				if ( project == nullptr )
-				{
-					return false; // ResolveVCXProject will have emitted error
-				}
-				projectName = project->GetName();
-			}
+            // fixup
+            for ( AString & projectName : deps.m_Projects )
+            {
+                // Get associated project file
+                const VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, projectName );
+                if ( project == nullptr )
+                {
+                    return false; // ResolveVCXProject will have emitted error
+                }
+                projectName = project->GetName();
+            }
+            for ( AString & projectName : deps.m_Dependencies )
+            {
+                // Get associated project file
+                const VCXProjectNode * project = ResolveVCXProject( nodeGraph, funcStartIter, projectName );
+                if ( project == nullptr )
+                {
+                    return false; // ResolveVCXProject will have emitted error
+                }
+                projectName = project->GetName();
+            }
 
-			slnDeps.Append( deps );
-		}
-	}
+            slnDeps.Append( deps );
+        }
+    }
 
     SLNNode * sln = nodeGraph.CreateSLNNode( solutionOutput,
-                                        solutionBuildProject,
-                                        solutionVisualStudioVersion,
-                                        solutionMinimumVisualStudioVersion,
-                                        configs,
-                                        projects,
-										slnDeps,
-                                        folders );
+                                             solutionBuildProject,
+                                             solutionVisualStudioVersion,
+                                             solutionMinimumVisualStudioVersion,
+                                             configs,
+                                             projects,
+                                             slnDeps,
+                                             folders );
 
     ASSERT( sln );
 
@@ -470,22 +480,22 @@ bool FunctionSLN::GetStringOrArrayOfStringsFromStruct( const BFFIterator & iter,
     {
         if ( v->GetName() == name )
         {
-			if ( ( v->IsArrayOfStrings() == false ) && ( v->IsString() == false ) )
-			{
-				Error::Error_1050_PropertyMustBeOfType( iter, this, name, v->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
-				return false;
-			}
+            if ( ( v->IsArrayOfStrings() == false ) && ( v->IsString() == false ) )
+            {
+                Error::Error_1050_PropertyMustBeOfType( iter, this, name, v->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
+                return false;
+            }
 
-			if ( v->IsArrayOfStrings() )
-			{
-				result = v->GetArrayOfStrings();
-			}
-			else
-			{
-				result.Append( v->GetString() );
-			}
-			return true; // found
-		}
+            if ( v->IsArrayOfStrings() )
+            {
+                result = v->GetArrayOfStrings();
+            }
+            else
+            {
+                result.Append( v->GetString() );
+            }
+            return true; // found
+        }
     }
 
     // TODO:B custom error

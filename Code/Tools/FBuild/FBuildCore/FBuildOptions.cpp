@@ -37,16 +37,17 @@ FBuildOptions::FBuildOptions()
 , m_WrapperChild( false )
 , m_FixupErrorPaths( false )
 , m_StopOnFirstError( true )
+, m_EnableMonitor( false )
 , m_WorkingDirHash( 0 )
 {
 #ifdef DEBUG
-	//m_ShowInfo = true; // uncomment this to enable spam when debugging
+    //m_ShowInfo = true; // uncomment this to enable spam when debugging
 #endif
 
-	// Default to NUMBER_OF_PROCESSORS
-	m_NumWorkerThreads = Env::GetNumProcessors();
+    // Default to NUMBER_OF_PROCESSORS
+    m_NumWorkerThreads = Env::GetNumProcessors();
 
-	// Default working dir is the system working dir
+    // Default working dir is the system working dir
     AStackString<> workingDir;
     VERIFY( FileIO::GetCurrentDir( workingDir ) );
     SetWorkingDir( workingDir );
@@ -57,28 +58,28 @@ FBuildOptions::FBuildOptions()
 void FBuildOptions::SetWorkingDir( const AString & path )
 {
     ASSERT( !path.IsEmpty() );
-	m_WorkingDir = path;
+    m_WorkingDir = path;
 
-	// clean path
-	PathUtils::FixupFolderPath( m_WorkingDir );
-        
+    // clean path
+    PathUtils::FixupFolderPath( m_WorkingDir );
+
     // no trailing slash
     if ( m_WorkingDir.EndsWith( NATIVE_SLASH ) )
     {
         m_WorkingDir.SetLength( m_WorkingDir.GetLength() - 1 );
     }
 
-	#if defined( __WINDOWS__ )
-		// so C:\ and c:\ are treated the same on Windows, for better cache hits
-		// make the drive letter always uppercase
-		if ( ( m_WorkingDir.GetLength() >= 2 ) &&
-			 ( m_WorkingDir[ 1 ] == ':' ) &&
-			 ( m_WorkingDir[ 0 ] >= 'a' ) &&
-			 ( m_WorkingDir[ 0 ] <= 'z' ) )
-		{
-			m_WorkingDir[ 0 ] = ( 'A' + ( m_WorkingDir[ 0 ] - 'a' ) );
-		}
-	#endif
+    #if defined( __WINDOWS__ )
+        // so C:\ and c:\ are treated the same on Windows, for better cache hits
+        // make the drive letter always uppercase
+        if ( ( m_WorkingDir.GetLength() >= 2 ) &&
+             ( m_WorkingDir[ 1 ] == ':' ) &&
+             ( m_WorkingDir[ 0 ] >= 'a' ) &&
+             ( m_WorkingDir[ 0 ] <= 'z' ) )
+        {
+            m_WorkingDir[ 0 ] = ( 'A' + ( m_WorkingDir[ 0 ] - 'a' ) );
+        }
+    #endif
 
     // Generate Mutex/SharedMemory names
     #if defined( __WINDOWS__ ) || defined( __OSX__ )

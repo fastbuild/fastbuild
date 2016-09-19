@@ -1,8 +1,6 @@
 // WorkerBrokerage - Manage worker discovery
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_WORKERBROKERAGE_H
-#define FBUILD_WORKERBROKERAGE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -17,24 +15,23 @@
 class WorkerBrokerage
 {
 public:
-	WorkerBrokerage();
-	~WorkerBrokerage();
+    WorkerBrokerage();
+    ~WorkerBrokerage();
 
-	// client interface
-	void FindWorkers( Array< AString > & workerList );
+    // client interface
+    void FindWorkers( Array< AString > & workerList );
 
-	// server interface
-	void SetAvailability( bool available );
+    // server interface
+    void SetAvailability( bool available );
 private:
-	void Init();
+    void Init();
 
-	AString				m_BrokerageRoot;
-	bool				m_Availability;
-	bool				m_Initialized;
+    AString             m_BrokerageRoot;
+    bool                m_Availability;
+    bool                m_Initialized;
     AString             m_HostName;
     AString             m_BrokerageFilePath;
     Timer               m_TimerLastUpdate;      // Throttle network access
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_WORKERBROKERAGE_H 

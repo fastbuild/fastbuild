@@ -1,15 +1,15 @@
 Alias( 'Exe' )
 {
-	.Targets = { 'test.exe' }
+    .Targets = { 'test.exe' }
 }
 
 Alias( 'ExeAlias' )
 {
-	.Targets = 'Exes'
+    .Targets = 'Exes'
 }
 
 Test( 'Test' )
 {
-	.TestExecutable	= 'ExeAlias'
-	.TestOutput		= 'output.txt'
+    .TestExecutable = 'ExeAlias'
+    .TestOutput     = 'output.txt'
 }

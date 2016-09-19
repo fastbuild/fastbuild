@@ -12,17 +12,17 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.CompilerInputPath			= "Data/TestObjectList/Exclusions/"
-.UnityOutputPath			= '$Out$/Test/ObjectList/Exclusions/'
-.CompilerOutputPath			= '$Out$/Test/ObjectList/Exclusions/'
+.CompilerInputPath          = "Data/TestObjectList/Exclusions/"
+.UnityOutputPath            = '$Out$/Test/ObjectList/Exclusions/'
+.CompilerOutputPath         = '$Out$/Test/ObjectList/Exclusions/'
 
 //
 // Exclude by file name
 //------------------------------------------------------------------------------
 ObjectList( 'ExcludeFileName' )
 {
-	.CompilerInputExcludedFiles	= 'ignore.cpp'
-	.CompilerOutputPath			+ 'ExcludeFileName/'
+    .CompilerInputExcludedFiles = 'ignore.cpp'
+    .CompilerOutputPath         + 'ExcludeFileName/'
 }
 
 //
@@ -30,8 +30,8 @@ ObjectList( 'ExcludeFileName' )
 //------------------------------------------------------------------------------
 ObjectList( 'ExcludeFilePath' )
 {
-	.CompilerInputExcludedFiles	= 'Exclusions/ignore.cpp'
-	.CompilerOutputPath			+ 'ExcludeFilePath/'
+    .CompilerInputExcludedFiles = 'Exclusions/ignore.cpp'
+    .CompilerOutputPath         + 'ExcludeFilePath/'
 }
 
 //
@@ -39,6 +39,15 @@ ObjectList( 'ExcludeFilePath' )
 //------------------------------------------------------------------------------
 ObjectList( 'ExcludeFilePathRelative' )
 {
-	.CompilerInputExcludedFiles	= "../FBuildTest/Data/TestObjectList/Exclusions/ignore.cpp"
-	.CompilerOutputPath			+ 'ExcludeFilePathRelative/'
+    .CompilerInputExcludedFiles = "../FBuildTest/Data/TestObjectList/Exclusions/ignore.cpp"
+    .CompilerOutputPath         + 'ExcludeFilePathRelative/'
+}
+
+//
+// Exclude by file pattern
+//------------------------------------------------------------------------------
+ObjectList( 'ExcludeFilePattern' )
+{
+    .CompilerInputExcludePattern    = "*nore.cpp"
+    .CompilerOutputPath             + 'ExcludeFilePattern/'
 }

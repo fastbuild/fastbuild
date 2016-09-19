@@ -1,8 +1,6 @@
 // Object.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_OBJECT_H
-#define CORE_REFLECTION_OBJECT_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -28,25 +26,24 @@ void Object_ReflectionInfo_Bind();
 class Object : public RefObject
 {
 public:
-	explicit Object();
-	virtual ~Object();
-	virtual void Init() {}
+    explicit Object();
+    virtual ~Object();
+    virtual void Init() {}
 
-	inline uint32_t GetId() const { return m_Id; }
-	inline void SetName( const AString & name ) { m_Name = name; }
-	inline const AString & GetName() const { return m_Name; }
+    inline uint32_t GetId() const { return m_Id; }
+    inline void SetName( const AString & name ) { m_Name = name; }
+    inline const AString & GetName() const { return m_Name; }
 
-	virtual const ReflectionInfo * GetReflectionInfoV() const = 0;
+    virtual const ReflectionInfo * GetReflectionInfoV() const = 0;
 
-	static const ReflectionInfo * GetReflectionInfoS();
+    static const ReflectionInfo * GetReflectionInfoS();
 
-	void GetScopedName( AString & scopedName ) const;
-	Container * GetParent() const { return m_Parent; }
+    void GetScopedName( AString & scopedName ) const;
+    Container * GetParent() const { return m_Parent; }
 protected:
-	uint32_t	m_Id;
-	AString		m_Name;
-	Container * m_Parent;
+    uint32_t    m_Id;
+    AString     m_Name;
+    Container * m_Parent;
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_OBJECT_H

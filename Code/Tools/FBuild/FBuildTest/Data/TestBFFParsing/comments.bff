@@ -28,13 +28,13 @@
 ; comments inside arrays
 // comments inside arrays
 .Array = { "a", ; comment in the middle of an array
-		   "b",
-		   ;"c", commented out entry in array
-		   "d" }
+           "b",
+           ;"c", commented out entry in array
+           "d" }
 .Array = { "a", // comment in the middle of an array
-		   "b",
-		   //"c", commented out entry in array
-		   "d" }
+           "b",
+           //"c", commented out entry in array
+           "d" }
 
 ; some vars to satisfy Library functions below
 // some vars to satisfy Library functions below
@@ -47,46 +47,46 @@
 
 Library(); comment after function name
 { ; comment after bracket
-	; comment in library
-	.LibrarianOutput = "o"
+    ; comment in library
+    .LibrarianOutput = "o"
 }; comment after bracket
 
 Library()// comment after function name
 { // comment after bracket
-	// comment in library
-	.LibrarianOutput = "ob"
+    // comment in library
+    .LibrarianOutput = "ob"
 }// comment after bracket
 
-Library( "hello"; comments in function args 
-		 )
+Library( "hello"; comments in function args
+         )
 {.LibrarianOutput = "o2"}
 
-Library( "hello2"// comments in function args 
-		 )
+Library( "hello2"// comments in function args
+         )
 {.LibrarianOutput = "o2b"}
 
 Library( "hello3")
 {
-	.LibrarianOutput = "o3"
-	; {{{{{{{{  test ignoring of special chars in comments
+    .LibrarianOutput = "o3"
+    ; {{{{{{{{  test ignoring of special chars in comments
 }
 
 Library( "hello4")
 {
-	.LibrarianOutput = "o3b"
-	// {{{{{{{{  test ignoring of special chars in comments
+    .LibrarianOutput = "o3b"
+    // {{{{{{{{  test ignoring of special chars in comments
 }
 
 Library
 {
-	.LibrarianOutput = "o4"
-	; }}}}}}
+    .LibrarianOutput = "o4"
+    ; }}}}}}
 }
 
 Library
 {
-	.LibrarianOutput = "o4b"
-	// }}}}}}
+    .LibrarianOutput = "o4b"
+    // }}}}}}
 }
 
 // this particular construct uncovered a bug

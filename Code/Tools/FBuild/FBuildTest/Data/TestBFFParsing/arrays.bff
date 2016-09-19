@@ -44,17 +44,17 @@
 
 // concatenation
 .ArrayA = .Array1
-		+ .Array2
-		+ { "five", "six" }
-		+ { .Array2 }
-		+ { .String }
-		+ .String
+        + .Array2
+        + { "five", "six" }
+        + { .Array2 }
+        + { .String }
+        + .String
 
 // Mixed - concat String to ArrayOfStrings
 .ArrayOfStrings = { "Str", "Str2", "Str3" }
-				+ "Str4"
+                + "Str4"
 
-.String4		= "Str4"
+.String4        = "Str4"
 .ArrayOfStrings + .String4
 
 // Concat to empty array
@@ -63,74 +63,74 @@
 
 // Operations with ArrayOfStrings and empty arrays
 {
-	.X = "str"
-	.Array = { .X }
+    .X = "str"
+    .Array = { .X }
 
-	// concatentation to empty array
-	.T1 = {} + .X
-	.T2 = {} + { .X }
-	.T3 = {} + .Array
-	.T4 = {} + { .Array }
+    // concatentation to empty array
+    .T1 = {} + .X
+    .T2 = {} + { .X }
+    .T3 = {} + .Array
+    .T4 = {} + { .Array }
 
-	// concatentation of empty array
-	.T5 = .Array + .EmptyArray
+    // concatentation of empty array
+    .T5 = .Array + .EmptyArray
 
-	// concatentation of inplace empty array
-	.T6 = .Array + {}
+    // concatentation of inplace empty array
+    .T6 = .Array + {}
 
-	// concatentation of empty array wrapped in inplace array
-	.T7 = .Array + { .EmptyArray }
+    // concatentation of empty array wrapped in inplace array
+    .T7 = .Array + { .EmptyArray }
 
-	// assignment to empty array
-	.T8 = {}
-	.T8 = .Array
+    // assignment to empty array
+    .T8 = {}
+    .T8 = .Array
 
-	// assignment of empty array to non-empty
-	.T9 = .Array
-	.T9 = .EmptyArray
+    // assignment of empty array to non-empty
+    .T9 = .Array
+    .T9 = .EmptyArray
 
-	// assignment of inplace empty array to non-empty
-	.T10 = .Array
-	.T10 = {}
+    // assignment of inplace empty array to non-empty
+    .T10 = .Array
+    .T10 = {}
 
-	// assignment of empty array wrapped in inplace array to non-empty
-	.T11 = .Array
-	.T11 = { .EmptyArray }
+    // assignment of empty array wrapped in inplace array to non-empty
+    .T11 = .Array
+    .T11 = { .EmptyArray }
 }
 
 // Operations with ArrayOfStructs and empty arrays
 {
-	.X = [ .Y = 42 ]
-	.Array = { .X }
+    .X = [ .Y = 42 ]
+    .Array = { .X }
 
-	// concatentation to empty array
-	.T1 = {} + .X
-	.T2 = {} + { .X }
-	.T3 = {} + .Array
-	.T4 = {} + { .Array }
+    // concatentation to empty array
+    .T1 = {} + .X
+    .T2 = {} + { .X }
+    .T3 = {} + .Array
+    .T4 = {} + { .Array }
 
-	// concatentation of empty array
-	.T5 = .Array + .EmptyArray
+    // concatentation of empty array
+    .T5 = .Array + .EmptyArray
 
-	// concatentation of inplace empty array
-	.T6 = .Array + {}
+    // concatentation of inplace empty array
+    .T6 = .Array + {}
 
-	// concatentation of empty array wrapped in inplace array
-	.T7 = .Array + { .EmptyArray }
+    // concatentation of empty array wrapped in inplace array
+    .T7 = .Array + { .EmptyArray }
 
-	// assignment to empty array
-	.T8 = {}
-	.T8 = .Array
+    // assignment to empty array
+    .T8 = {}
+    .T8 = .Array
 
-	// assignment of empty array to non-empty
-	.T9 = .Array
-	.T9 = .EmptyArray
+    // assignment of empty array to non-empty
+    .T9 = .Array
+    .T9 = .EmptyArray
 
-	// assignment of inplace empty array to non-empty
-	.T10 = .Array
-	.T10 = {}
+    // assignment of inplace empty array to non-empty
+    .T10 = .Array
+    .T10 = {}
 
-	// assignment of empty array wrapped in inplace array to non-empty
-	.T11 = .Array
-	.T11 = { .EmptyArray }
+    // assignment of empty array wrapped in inplace array to non-empty
+    .T11 = .Array
+    .T11 = { .EmptyArray }
 }

@@ -10,18 +10,18 @@
 Using( .StandardEnvironment )
 Settings {}
 
-.CompilerOutputPath	= "$Out$/Test/DLL/"
+.CompilerOutputPath = "$Out$/Test/DLL/"
 
 .DLLOptions =
 [
-	#if __WINDOWS__
-		.CompilerOptions	+ ' /DLL /MT'
-		.LinkerOptions		+ ' /DLL'
-							+ .WindowsLibPaths
-							+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
-							+ ' libcmt.lib'
-							+ ' kernel32.lib'
-	#endif
+    #if __WINDOWS__
+        .CompilerOptions    + ' /DLL /MT'
+        .LinkerOptions      + ' /DLL'
+                            + .WindowsLibPaths
+                            + ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+                            + ' libcmt.lib'
+                            + ' kernel32.lib'
+    #endif
     #if __LINUX__
         .LinkerOptions      + ' -shared'
     #endif
@@ -34,86 +34,86 @@ Settings {}
 //--------------------
 ObjectList( 'DLLTest' )
 {
-	Using( .DLLOptions )
-	.CompilerInputFiles	= 'Data/TestDLL/a.cpp'
+    Using( .DLLOptions )
+    .CompilerInputFiles = 'Data/TestDLL/a.cpp'
     .CompilerOptions    + ' "-IData/TestDLL"'
-	#if __WINDOWS__
-		.CompilerOptions	+ ' -DDLL_A_EXPORT'
-	#endif
+    #if __WINDOWS__
+        .CompilerOptions    + ' -DDLL_A_EXPORT'
+    #endif
 }
 
 DLL
 {
-	Using( .DLLOptions )
-	.LinkerOutput		= '$Out$/Test/DLL/dll.dll'
-	.Libraries			= 'DLLTest'
+    Using( .DLLOptions )
+    .LinkerOutput       = '$Out$/Test/DLL/dll.dll'
+    .Libraries          = 'DLLTest'
 }
 
 // Two DLLs
 //--------------------
 ObjectList( "DLLTestA" )
 {
-	Using( .DLLOptions )
-	.CompilerInputFiles	= 'Data/TestDLL/a.cpp'
+    Using( .DLLOptions )
+    .CompilerInputFiles = 'Data/TestDLL/a.cpp'
     .CompilerOptions    + ' "-IData/TestDLL"'
-	#if __WINDOWS__
-		.CompilerOptions	+ ' -DDLL_A_EXPORT'
-	#endif
+    #if __WINDOWS__
+        .CompilerOptions    + ' -DDLL_A_EXPORT'
+    #endif
 }
 ObjectList( 'DLLTestB' )
 {
-	Using( .DLLOptions )
-	.CompilerInputFiles	= 'Data/TestDLL/b.cpp'
-	#if __WINDOWS__
-		.CompilerOptions	+ ' -DDLL_B_EXPORT'
-	#endif
+    Using( .DLLOptions )
+    .CompilerInputFiles = 'Data/TestDLL/b.cpp'
+    #if __WINDOWS__
+        .CompilerOptions    + ' -DDLL_B_EXPORT'
+    #endif
 }
 
 DLL( 'DllA' )
 {
-	Using( .DLLOptions )
-	.LinkerOutput		= '$Out$/Test/DLL/dllA.dll'
-	.Libraries			= 'DLLTestA'
-	#if __WINDOWS__
-		.LinkerOptions		+ ' /IMPLIB:$Out$\Test\DLL\dll_different_implib.lib'
-	#endif
+    Using( .DLLOptions )
+    .LinkerOutput       = '$Out$/Test/DLL/dllA.dll'
+    .Libraries          = 'DLLTestA'
+    #if __WINDOWS__
+        .LinkerOptions      + ' /IMPLIB:$Out$\Test\DLL\dll_different_implib.lib'
+    #endif
 }
 
 DLL( 'DllB' )
 {
-	Using( .DLLOptions )
-	.LinkerOutput		= '$Out$/Test/DLL/dllB.dll'
-	.Libraries			= { 'dllA',
-							'DLLTestB' }
+    Using( .DLLOptions )
+    .LinkerOutput       = '$Out$/Test/DLL/dllB.dll'
+    .Libraries          = { 'dllA',
+                            'DLLTestB' }
 }
 
 // DLL With PCH
 //--------------------
 ObjectList( "DLLPCHTest" )
 {
-	Using( .DLLOptions )
-	#if __WINDOWS__
-		.PCHInputFile		= 'Data/TestDLL/PrecompiledHeader.cpp'
-		.PCHOutputFile		= '$Out$/Test/DLL/PrecompiledHeader.pch'
-		.PCHOptions			= '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /W4 /WX /Z7 /Fp"%2" /nologo /c'
-							+ ' -DDLL_A_EXPORT'
-	#endif
+    Using( .DLLOptions )
+    #if __WINDOWS__
+        .PCHInputFile               = 'Data/TestDLL/PrecompiledHeader.cpp'
+        .PCHOutputFile              = '$Out$/Test/DLL/PrecompiledHeader.pch'
+        .PCHOptions                 = '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /W4 /WX /Z7 /Fp"%2" /nologo /c'
+                                    + ' -DDLL_A_EXPORT'
+    #endif
     #if __LINUX__
-        .PCHInputFile       = "Data/TestDLL/PrecompiledHeader.h"
-        .PCHOutputFile      = "$Out$/Test/DLL/PrecompiledHeader.h.gch"
+        .PCHInputFile               = "Data/TestDLL/PrecompiledHeader.h"
+        .PCHOutputFile              = "$Out$/Test/DLL/PrecompiledHeader.h.gch"
         .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux
     #endif
     #if __OSX__
-        .PCHInputFile       = "Data/TestDLL/PrecompiledHeader.h"
-        .PCHOutputFile      = "$Out$/Test/DLL/PrecompiledHeader.pch"
+        .PCHInputFile               = "Data/TestDLL/PrecompiledHeader.h"
+        .PCHOutputFile              = "$Out$/Test/DLL/PrecompiledHeader.pch"
         .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on OS X
     #endif
 
-	.CompilerInputFiles	= 'Data/TestDLL/a.cpp'
-	#if __WINDOWS__
+    .CompilerInputFiles = 'Data/TestDLL/a.cpp'
+    #if __WINDOWS__
         .CompilerOptions        + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
                                 + ' /I"Data/TestDLL"'
-								+ ' -DDLL_A_EXPORT'
+                                + ' -DDLL_A_EXPORT'
     #endif
     #if __LINUX__
         .CompilerOptions        + ' -Winvalid-pch -H'
@@ -128,29 +128,29 @@ ObjectList( "DLLPCHTest" )
 
 DLL( "DllPCH" )
 {
-	Using( .DLLOptions )
-	.LinkerOutput		= "$Out$/Test/DLL/dllPCH.dll"
-	.Libraries			= { "DLLPCHTest" }
+    Using( .DLLOptions )
+    .LinkerOutput       = "$Out$/Test/DLL/dllPCH.dll"
+    .Libraries          = { "DLLPCHTest" }
 }
 
 // DLL linked into EXE
 //--------------------
 ObjectList( 'Exe-Lib' )
 {
-	.CompilerInputFiles	= 'Data/TestDLL/exe.cpp'
+    .CompilerInputFiles = 'Data/TestDLL/exe.cpp'
 }
 
 Executable( 'Exe' )
 {
-	.LinkerOutput		= '$Out$/Test/DLL/exe.exe'
-	.Libraries			= { 'Exe-Lib'
+    .LinkerOutput       = '$Out$/Test/DLL/exe.exe'
+    .Libraries          = { 'Exe-Lib'
                             'DllA' }
-	#if __WINDOWS__
-		.LinkerOptions		+ .WindowsLibPaths
-							+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
-							+ ' libcmt.lib'
-							+ ' kernel32.lib'
-	#endif
+    #if __WINDOWS__
+        .LinkerOptions      + .WindowsLibPaths
+                            + ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+                            + ' libcmt.lib'
+                            + ' kernel32.lib'
+    #endif
 }
 
 // DLL link via copy
@@ -158,20 +158,20 @@ Executable( 'Exe' )
 // Copy
 Copy( 'DllACopy' )
 {
-	.Source = 'DllA'
-	.Dest	= '$Out$/Test/DLL/Copy/dllACopy.dll'
+    .Source = 'DllA'
+    .Dest   = '$Out$/Test/DLL/Copy/dllACopy.dll'
 }
 // Copy of Copy
 Copy( 'DllACopy2' )
 {
-	.Source = 'DllACopy'
-	.Dest	= '$Out$/Test/DLL/Copy/dllACopy2.dll'
+    .Source = 'DllACopy'
+    .Dest   = '$Out$/Test/DLL/Copy/dllACopy2.dll'
 }
 // Link to copy of copy
 DLL( 'DllBUsingCopy' )
 {
-	Using( .DLLOptions )
-	.LinkerOutput		= '$Out$/Test/DLL/Copy/dllB.dll'
-	.Libraries			= { 'dllACopy2',
-							'DLLTestB' }
+    Using( .DLLOptions )
+    .LinkerOutput       = '$Out$/Test/DLL/Copy/dllB.dll'
+    .Libraries          = { 'dllACopy2',
+                            'DLLTestB' }
 }

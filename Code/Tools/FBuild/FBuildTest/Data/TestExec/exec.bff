@@ -15,33 +15,33 @@ Settings {}
 // it will open and close those files writing "T" to them.
 // It will also output "Touched: <filename>" to stdout.
 //--------------------
-.OutPath			  = "$Out$/Test/Exec/"
+.OutPath              = "$Out$/Test/Exec/"
 .HelperExecutableName = "$OutPath$exec.exe"
 {
-	.LinkerOutputFile = .HelperExecutableName
+    .LinkerOutputFile = .HelperExecutableName
 
-	ObjectList( "Exec-Lib" )
-	{
-		.CompilerInputFiles	= 'Data/TestExec/exec.cpp'
-		.CompilerOutputPath	= '$OutPath$/'
-		#if __WINDOWS__
-			.CompilerOptions	+ ' $VisualStudioIncludePaths$ /EHsc'
-		#endif
-	}
+    ObjectList( "Exec-Lib" )
+    {
+        .CompilerInputFiles = 'Data/TestExec/exec.cpp'
+        .CompilerOutputPath = '$OutPath$/'
+        #if __WINDOWS__
+            .CompilerOptions    + ' $VisualStudioIncludePaths$ /EHsc'
+        #endif
+    }
 
-	Executable( "HelperExe" )
-	{
-		.LinkerOutput		= .LinkerOutputFile
-		#if __WINDOWS__
-			.LinkerOptions		= '/WX /NODEFAULTLIB /NOLOGO /OUT:%2 %1 /MACHINE:X86'
-								+ .WindowsLibPaths
-								+ ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
-								+ ' kernel32.lib'
-								+ ' libcmt.lib'
-								+ ' libcpmt.lib'
-		#endif
-		.Libraries			= { "Exec-Lib" }
-	}
+    Executable( "HelperExe" )
+    {
+        .LinkerOutput       = .LinkerOutputFile
+        #if __WINDOWS__
+            .LinkerOptions      = '/WX /NODEFAULTLIB /NOLOGO /OUT:%2 %1 /MACHINE:X86'
+                                + .WindowsLibPaths
+                                + ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+                                + ' kernel32.lib'
+                                + ' libcmt.lib'
+                                + ' libcpmt.lib'
+        #endif
+        .Libraries          = { "Exec-Lib" }
+    }
 }
 
 //--------------------
@@ -49,122 +49,122 @@ Settings {}
 // In this case:
 //  - The command is expected to always execute
 //    (because there is no input to detect changes on)
-//  - The helper file is going to generate a file called 
+//  - The helper file is going to generate a file called
 //    "dummy_file_does_not_exist.txt.out" because that string is passed
 //    into the helper.
 //  - Return code will be 1 because 1 argument is passed in
 Exec( "ExecCommandTest_NoInputs" )
 {
-	.ExecExecutable = .HelperExecutableName
-	.ExecInput = '$OutPath$\dummy_file_does_not_exist'
-	.ExecOutput = '$OutPath$\dummy_file_does_not_exist.txt.out' // No output files expected
-	.ExecArguments = 'dummy_file_does_not_exist.txt'
-	.ExecWorkingDir = .OutPath
-	.ExecReturnCode = 1
-	.ExecUseStdOutAsOutput = false
+    .ExecExecutable = .HelperExecutableName
+    .ExecInput = '$OutPath$\dummy_file_does_not_exist'
+    .ExecOutput = '$OutPath$\dummy_file_does_not_exist.txt.out' // No output files expected
+    .ExecArguments = 'dummy_file_does_not_exist.txt'
+    .ExecWorkingDir = .OutPath
+    .ExecReturnCode = 1
+    .ExecUseStdOutAsOutput = false
 }
 
 //--------------------
 // Test with a single input file
 // In this case:
-// - The command is only expected to execute when 
+// - The command is only expected to execute when
 //   the input changes.
 // - The command will generate "OneInput.txt.out"
 // - Return code will be 1 because 1 argument is passed in
 Exec( "ExecCommandTest_OneInput" )
 {
-	.ExecExecutable = .HelperExecutableName
-	.ExecInput = '$OutPath$\OneInput.txt' 
-	.ExecOutput = '$OutPath$\OneInput.txt.out' // Output files expected
-	.ExecArguments = '%1'
-	.ExecWorkingDir = .OutPath
-	.ExecReturnCode = 1
-	.ExecUseStdOutAsOutput = false
+    .ExecExecutable = .HelperExecutableName
+    .ExecInput = '$OutPath$\OneInput.txt'
+    .ExecOutput = '$OutPath$\OneInput.txt.out' // Output files expected
+    .ExecArguments = '%1'
+    .ExecWorkingDir = .OutPath
+    .ExecReturnCode = 1
+    .ExecUseStdOutAsOutput = false
 }
 
 //--------------------
 // Test with a single input file and using stdOut as output
 // In this case:
-// - The command is only expected to execute when 
+// - The command is only expected to execute when
 //   the input changes.
 // - The command will generate "OneInput.txt.out"
 // - Return code will be 1 because 1 argument is passed in
 Exec( "ExecCommandTest_OneInput_StdOut" )
 {
-	.ExecExecutable = .HelperExecutableName
-	.ExecInput = '$OutPath$\OneInput_StdOut.txt'
-	.ExecOutput = '$OutPath$\OneInput_StdOut.txt.stdout' // Output files expected
-	.ExecArguments = '%1'
-	.ExecWorkingDir = .OutPath
-	.ExecReturnCode = 1
-	.ExecUseStdOutAsOutput = true
+    .ExecExecutable = .HelperExecutableName
+    .ExecInput = '$OutPath$\OneInput_StdOut.txt'
+    .ExecOutput = '$OutPath$\OneInput_StdOut.txt.stdout' // Output files expected
+    .ExecArguments = '%1'
+    .ExecWorkingDir = .OutPath
+    .ExecReturnCode = 1
+    .ExecUseStdOutAsOutput = true
 }
 
 //--------------------
 // Test with multiple input files
 // In this case:
-// - The command is only expected to execute when 
+// - The command is only expected to execute when
 //   one of the inputs change.
 // - The command will generate "MultiInputA.txt.out" and "MultiInputB.txt.out"
 // - Note: currently only one of these outputs can be referenced by the command
 // - Return code will be 2 because 2 arguments are passed in
 Exec( "ExecCommandTest_MultipleInput" )
 {
-	.ExecExecutable = .HelperExecutableName
-	.ExecInput = {'$OutPath$/MultiInputA.txt', '$OutPath$/MultiInputB.txt'}
-	.ExecOutput = '$OutPath$/MultiInputA.txt.out' // Output files expected
-	.ExecArguments = '%1'
-	.ExecWorkingDir = .OutPath
-	.ExecReturnCode = 2
-	.ExecUseStdOutAsOutput = false
+    .ExecExecutable = .HelperExecutableName
+    .ExecInput = {'$OutPath$/MultiInputA.txt', '$OutPath$/MultiInputB.txt'}
+    .ExecOutput = '$OutPath$/MultiInputA.txt.out' // Output files expected
+    .ExecArguments = '%1'
+    .ExecWorkingDir = .OutPath
+    .ExecReturnCode = 2
+    .ExecUseStdOutAsOutput = false
 }
 
 //--------------------
 Alias( "ExecCommandTest_ExpectedSuccesses" )
 {
-	.Targets = {
-		'ExecCommandTest_NoInputs',
-		'ExecCommandTest_OneInput',
-		'ExecCommandTest_OneInput_StdOut',
-		'ExecCommandTest_MultipleInput'
-	}
+    .Targets = {
+        'ExecCommandTest_NoInputs',
+        'ExecCommandTest_OneInput',
+        'ExecCommandTest_OneInput_StdOut',
+        'ExecCommandTest_MultipleInput'
+    }
 }
 
 //--------------------
 // Test the return code checking (expect a failure)
 // In this case:
-// - The command is only expected to execute when 
+// - The command is only expected to execute when
 //   the input changes.
 // - The command will generate "OneInput.txt.out"
 // - Return code will be 1 because 1 argument is passed in
 // - The execution will fail because the return code is not correct
 Exec( "ExecCommandTest_OneInput_ReturnCode_ExpectFail" )
 {
-	.ExecExecutable = .HelperExecutableName
-	.ExecInput = '$OutPath$\OneInput_ReturnCode.txt' 
-	.ExecOutput = '$OutPath$\OneInput_ReturnCode.txt.out' // Output files expected
-	.ExecArguments = '%1'
-	.ExecWorkingDir = .OutPath
-	.ExecReturnCode = 0
-	.ExecUseStdOutAsOutput = false
+    .ExecExecutable = .HelperExecutableName
+    .ExecInput = '$OutPath$\OneInput_ReturnCode.txt'
+    .ExecOutput = '$OutPath$\OneInput_ReturnCode.txt.out' // Output files expected
+    .ExecArguments = '%1'
+    .ExecWorkingDir = .OutPath
+    .ExecReturnCode = 0
+    .ExecUseStdOutAsOutput = false
 }
 
 //--------------------
 // Test the output file checking (expect a failure)
 // In this case:
-// - The command is only expected to execute when 
+// - The command is only expected to execute when
 //   the input changes.
 // - The command will generate "OneInput.txt.out"
 // - Return code will be 1 because 1 argument is passed in
 // - The execution will fail because the expected output file is not correct
 Exec( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" )
 {
-	.ExecExecutable = .HelperExecutableName
-	.ExecInput = '$OutPath$\OneInput_WrongOutput.txt' 
-	.ExecOutput = '$OutPath$\OneInput_WrongOutput_isWrong.txt.out' // Output files expected
-	.ExecArguments = '%1 %1'
-	.ExecWorkingDir = .OutPath
-	.ExecReturnCode = 0
-	.ExecUseStdOutAsOutput = false
+    .ExecExecutable = .HelperExecutableName
+    .ExecInput = '$OutPath$\OneInput_WrongOutput.txt'
+    .ExecOutput = '$OutPath$\OneInput_WrongOutput_isWrong.txt.out' // Output files expected
+    .ExecArguments = '%1 %1'
+    .ExecWorkingDir = .OutPath
+    .ExecReturnCode = 0
+    .ExecUseStdOutAsOutput = false
 }
 

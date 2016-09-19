@@ -2,8 +2,6 @@
 //                  recursively.
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_HELPERS_CINCLUDEPARSER_H
-#define FBUILD_HELPERS_CINCLUDEPARSER_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -15,36 +13,35 @@
 class CIncludeParser
 {
 public:
-	explicit CIncludeParser();
-	~CIncludeParser();
+    explicit CIncludeParser();
+    ~CIncludeParser();
 
-	bool ParseMSCL_Output( const char * compilerOutput, size_t compilerOutputSize );
-	bool ParseMSCL_Preprocessed( const char * compilerOutput, size_t compilerOutputSize );
-	bool ParseGCC_Preprocessed( const char * compilerOutput, size_t compilerOutputSize );
+    bool ParseMSCL_Output( const char * compilerOutput, size_t compilerOutputSize );
+    bool ParseMSCL_Preprocessed( const char * compilerOutput, size_t compilerOutputSize );
+    bool ParseGCC_Preprocessed( const char * compilerOutput, size_t compilerOutputSize );
 
-	const Array< AString > & GetIncludes() const { return m_Includes; }
+    const Array< AString > & GetIncludes() const { return m_Includes; }
 
-	// take ownership of includes array to avoid re-allocations
-	void SwapIncludes( Array< AString > & includes );
-	#ifdef DEBUG
-		inline size_t GetNonUniqueCount() const { return m_NonUniqueCount; }
-	#endif
+    // take ownership of includes array to avoid re-allocations
+    void SwapIncludes( Array< AString > & includes );
+    #ifdef DEBUG
+        inline size_t GetNonUniqueCount() const { return m_NonUniqueCount; }
+    #endif
 
 private:
-	void AddInclude( const char * begin, const char * end );
+    void AddInclude( const char * begin, const char * end );
 
-	// temporary data
-	uint32_t			m_LastCRC1;
-	Array< uint32_t >	m_CRCs1;
-	uint32_t			m_LastCRC2;
-	Array< uint32_t >	m_CRCs2;
+    // temporary data
+    uint32_t            m_LastCRC1;
+    Array< uint32_t >   m_CRCs1;
+    uint32_t            m_LastCRC2;
+    Array< uint32_t >   m_CRCs2;
 
-	// final data
-	Array< AString > m_Includes;	// list of unique includes
-	#ifdef DEBUG
-		size_t m_NonUniqueCount;	// number of include directives seen
-	#endif
+    // final data
+    Array< AString > m_Includes;    // list of unique includes
+    #ifdef DEBUG
+        size_t m_NonUniqueCount;    // number of include directives seen
+    #endif
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_HELPERS_CINCLUDEPARSER_H 

@@ -1,8 +1,6 @@
 // RemoveDirNode.h - a node that removes one or more directories
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_REMOVEDIRNODE_H
-#define FBUILD_GRAPH_REMOVEDIRNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -32,4 +30,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_REMOVEDIRNODE_H

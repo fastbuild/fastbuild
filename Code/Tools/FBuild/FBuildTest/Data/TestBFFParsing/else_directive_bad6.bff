@@ -6,9 +6,9 @@
 
 // Valid else before invalid else
 #if TOGGLE
-	// Ok
+    // Ok
 #else
-	#error
+    #error
 #endif
 
 // Followed by invalied else

@@ -15,22 +15,22 @@ Using( .StandardEnvironment )
 Settings {}
 
 #if __WINDOWS__
-	Using( .VisualStudioToolChain )
+    Using( .VisualStudioToolChain )
 #endif
 
 // Compile a real file to create a non-trivial amount of per-object dependencies
 //------------------------------------------------------------------------------
-.CompilerInputFiles	= '../../../Core/FileIO/FileIO.cpp'
-.CompilerOptions	+ ' "-I../../.."'
-					+ ' -DDEBUG -D_DEBUG'
+.CompilerInputFiles = '../../../Core/FileIO/FileIO.cpp'
+.CompilerOptions    + ' "-I../../.."'
+                    + ' -DDEBUG -D_DEBUG'
 #if __WINDOWS__
-					+ .WindowsIncludePaths
-					+ .VisualStudioIncludePaths
+                    + .WindowsIncludePaths
+                    + .VisualStudioIncludePaths
 #endif
 
 // Common options
 //------------------------------------------------------------------------------
-.CompilerOutputPath	= '$Out$/Test/Graph/DeepGraph'
+.CompilerOutputPath = '$Out$/Test/Graph/DeepGraph'
 .PreBuildDependencies = {}
 
 // Create a node which depends on all the other nodes before it
@@ -160,5 +160,5 @@ ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
 //------------------------------------------------------------------------------
 Alias( 'all' )
 {
-	.Targets	= { 'ObjectList_30' }
+    .Targets    = { 'ObjectList_30' }
 }
