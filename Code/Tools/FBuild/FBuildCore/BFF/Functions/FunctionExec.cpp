@@ -78,22 +78,6 @@ FunctionExec::FunctionExec()
     {
         return false; // GetNodeList will have emitted an error
     }
-    else
-    {
-        // Make sure all nodes are files
-        const Dependency * const end = inputNodes.End();
-        for (const Dependency * it = inputNodes.Begin();
-            it != end;
-            ++it)
-        {
-            Node * node = it->GetNode();
-            if (node->IsAFile() == false)
-            {
-                Error::Error_1103_NotAFile(funcStartIter, this, "ExecInput", node->GetName(), node->GetType());
-                return false;
-            }
-        }
-    }
 
     // optional args
     const AString & arguments(  argsV ?         argsV->GetString()      : AString::GetEmpty() );
