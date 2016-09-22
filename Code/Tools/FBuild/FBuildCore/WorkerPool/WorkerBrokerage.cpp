@@ -9,6 +9,7 @@
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
 #include "Core/Env/Env.h"
@@ -83,6 +84,7 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 
     if ( m_BrokerageRoot.IsEmpty() )
     {
+        FLOG_WARN( "No brokerage root; did you set FASTBUILD_BROKERAGE_PATH?" );
         return;
     }
 
@@ -92,6 +94,7 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
                             false,
                             &results ) )
     {
+        FLOG_WARN( "No workers found in %s", m_BrokerageRoot.Get() );
         return; // no files found
     }
 
