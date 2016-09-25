@@ -4,9 +4,9 @@
 ;-------------------------------------------------------------------------------
 ; Windows Platform
 ;-------------------------------------------------------------------------------
-.VSBasePath			= '../External/SDK/VS13.4'
-.WindowsSDKBasePath	= '../External/SDK/Windows8.1'
-.ClangBasePath		= '../External/SDK/ClangForWindows/3.7.1'
+.VSBasePath         = 'C:\Program Files (x86)\Microsoft Visual Studio 13.0'
+.WindowsSDKBasePath = 'C:\Program Files (x86)\Microsoft SDKs\Windows\v8.1'
+.ClangBasePath		= 'C:\Program Files\LLVM\bin'
 
 ;-------------------------------------------------------------------------------
 ; Settings
