@@ -5,9 +5,9 @@ before_build:
 - ps: cd Code
 - ps: "[Environment]::CurrentDirectory = $PWD"
 # Download & Unzip FastBuild
-- ps: (new-object net.webclient).DownloadFile('http://fastbuild.org/downloads/v0.91/FASTBuild-Windows-x64-v0.91.zip', 'C:\Tmp\FastBuild.zip')
+- ps: (new-object net.webclient).DownloadFile('http://fastbuild.org/downloads/v0.91/FASTBuild-Windows-x64-v0.91.zip', 'C:/Tmp/FastBuild.zip')
 - ps: Add-Type -assembly "system.io.compression.filesystem"
-- ps: "[io.compression.zipfile]::ExtractToDirectory('C:\Tmp\FastBuild.zip', 'C:\FastBuild')"
+- ps: "[io.compression.zipfile]::ExtractToDirectory(C:/Tmp/FastBuild.zip, C:/FastBuild)"
 # Add FastBuild to path
 - ps: "$env:Path = $env:Path + ';C:\FastBuild'"
 # Generate VS projects
