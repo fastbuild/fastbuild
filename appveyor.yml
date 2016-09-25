@@ -2,12 +2,10 @@ before_build:
 - ps: (new-object net.webclient).DownloadFile('http://fastbuild.org/downloads/v0.91/FASTBuild-Windows-x64-v0.91.zip', 'FastBuild.zip')
 - ps: Add-Type -assembly “system.io.compression.filesystem”
 - ps: "[io.compression.zipfile]::ExtractToDirectory('FastBuild.zip', $env:APPVEYOR_BUILD_FOLDER)"
-- ps: Write-Output $env:APPVEYOR_BUILD_FOLDER
-- ps: dir
  
 build_script:
-- ps: .\FastBuild\fbuild.exe -config Code\fbuild.bff
+- ps: .\FBuild.exe -config Code\fbuild.bff
   
 after_build:
-- ps: .\FastBuild\fbuild.exe -config Code\fbuild.bff solution
+- ps: .\FBuild.exe -config Code\fbuild.bff solution
 - ps: .\SonarQubeAnalysis.ps1 -hostUrl 'https://sonarqube.com' -login  d5fcf62e7cba7c67b913e9edb4ecee2e9a697d52 -sources Code/ -projectName $env:APPVEYOR_PROJECT_NAME -projectKey $env:APPVEYOR_PROJECT_SLUG -projectVersion $env:APPVEYOR_BUILD_NUMBER -buildWrapperCommand "msbuild  tmp\VisualStudio\FASTBuild.sln  /t:rebuild"
