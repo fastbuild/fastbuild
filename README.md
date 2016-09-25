@@ -1,6 +1,6 @@
 #FASTBuild
 
-https://ci.appveyor.com/api/projects/status/f5vewk6oqi7i5pi9?svg=true
+[![Build](https://ci.appveyor.com/api/projects/status/f5vewk6oqi7i5pi9?svg=true)](https://ci.appveyor.com/api/projects/status/f5vewk6oqi7i5pi9?svg=true)
 
 ##Branch policy
 
