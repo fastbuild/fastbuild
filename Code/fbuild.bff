@@ -5,7 +5,7 @@
 ; Windows Platform
 ;-------------------------------------------------------------------------------
 .VSBasePath         = 'C:\Program Files (x86)\Microsoft Visual Studio 12.0'
-.WindowsSDKBasePath = 'C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0'
+.WindowsSDKBasePath = 'C:\Program Files (x86)\Microsoft SDKs\Windows\v8.1A'
 .ClangBasePath		= 'C:\Program Files\LLVM\bin'
 
 ;-------------------------------------------------------------------------------

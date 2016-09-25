@@ -6,11 +6,7 @@ before_build:
 - ps: "[io.compression.zipfile]::ExtractToDirectory('FastBuild.zip', $env:APPVEYOR_BUILD_FOLDER)"
 - ps: .\FBuild.exe -config Code\fbuild.bff solution
 - ps: $env:Path = $env:Path + $env:APPVEYOR_BUILD_FOLDER
-- ps: dir 'C:\Program Files (x86)\Microsoft SDKs\Windows'
-- ps: dir 'C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0'
-- ps: dir 'C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0A'
-- ps: dir 'C:\Program Files (x86)\Microsoft SDKs\Windows\v8.1'
-- ps: dir 'C:\Program Files (x86)\Microsoft SDKs\Windows\v8.1A'
+- ps: dir 'C:\Program Files (x86)\Microsoft SDKs\Windows\v8.1A\bin'
  
 # Using FastBuild
 build_script:
