@@ -9,7 +9,7 @@ before_build:
 - ps: "[Environment]::CurrentDirectory = $env:APPVEYOR_BUILD_FOLDER"
 - ps: $PWD
 - ps: Get-Location
-- ps: "[Environment]::CurrentDirectory
+- ps: "[Environment]::CurrentDirectory"
 # Generate VS projects
 - ps: .\FBuild.exe -config Code\fbuild.bff solution
 # Add current location to path
