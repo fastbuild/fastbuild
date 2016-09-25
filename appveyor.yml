@@ -15,7 +15,7 @@ before_build:
  
 # Using FastBuild
 build_script:
-- ps: fbuild
+- ps: fbuild All-x86 All-x64
 
 # Using MSbuild
 #build:
