@@ -10,7 +10,7 @@ before_build:
 # Generate VS projects
 - ps: .\FBuild.exe -config Code\fbuild.bff solution
 # Add current location to path
-- ps: $env:Path = $env:Path + $env:APPVEYOR_BUILD_FOLDER
+- ps: "$env:Path = $env:Path + $env:APPVEYOR_BUILD_FOLDER"
  
 # Using FastBuild
 build_script:
