@@ -3,7 +3,7 @@ before_build:
 - ps: Add-Type -assembly “system.io.compression.filesystem”
 - ps: "[io.compression.zipfile]::ExtractToDirectory('FastBuild.zip', $env:APPVEYOR_BUILD_FOLDER +'/FastBuild')"
  
-build:
+build_script:
 - ps: fbuild.exe -config Code\fbuild.bff
   
 after_build:
