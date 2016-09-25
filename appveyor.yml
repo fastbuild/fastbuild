@@ -9,7 +9,7 @@ before_build:
 - ps: Add-Type -assembly "system.io.compression.filesystem"
 - ps: "[io.compression.zipfile]::ExtractToDirectory(C:/Tmp/FastBuild.zip, C:/FastBuild)"
 # Add FastBuild to path
-- ps: "$env:Path = $env:Path + ';C:\FastBuild'"
+- ps: "$env:Path = $env:Path + ';C:/FastBuild'"
 # Generate VS projects
 - ps: fbuild solution
  
@@ -24,4 +24,4 @@ build_script:
   
 after_build:
 #Launch analysis
-- ps: .\SonarQubeAnalysis.ps1 -hostUrl 'https://sonarqube.com' -login  d5fcf62e7cba7c67b913e9edb4ecee2e9a697d52 -sources Code/ -projectName $env:APPVEYOR_PROJECT_NAME -projectKey $env:APPVEYOR_PROJECT_SLUG -projectVersion $env:APPVEYOR_BUILD_NUMBER -buildWrapperCommand "msbuild  '..\tmp\VisualStudio\FASTBuild.sln'  /t:rebuild"
+- ps: .\SonarQubeAnalysis.ps1 -hostUrl 'https://sonarqube.com' -login  d5fcf62e7cba7c67b913e9edb4ecee2e9a697d52 -sources Code/ -projectName $env:APPVEYOR_PROJECT_NAME -projectKey $env:APPVEYOR_PROJECT_SLUG -projectVersion $env:APPVEYOR_BUILD_NUMBER -buildWrapperCommand "msbuild  '../tmp/VisualStudio/FASTBuild.sln'  /t:rebuild"
