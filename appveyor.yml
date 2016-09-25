@@ -1,7 +1,7 @@
 before_build:
 - ps: (new-object net.webclient).DownloadFile('http://fastbuild.org/downloads/v0.91/FASTBuild-Windows-x64-v0.91.zip', 'FastBuild.zip')
 - ps: Add-Type -assembly “system.io.compression.filesystem”
-- ps: "[io.compression.zipfile]::ExtractToDirectory('FastBuild.zip', $env:APPVEYOR_BUILD_FOLDER +'/FastBuild')"
+- ps: "[io.compression.zipfile]::ExtractToDirectory('FastBuild.zip', $env:APPVEYOR_BUILD_FOLDER +'/')"
  
 build_script:
 - ps: fbuild.exe -config Code\fbuild.bff
