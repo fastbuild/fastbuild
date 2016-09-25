@@ -1,12 +1,16 @@
 os: Visual Studio 2013
 
 before_build:
+# Download & Unzip FastBuild
 - ps: (new-object net.webclient).DownloadFile('http://fastbuild.org/downloads/v0.91/FASTBuild-Windows-x64-v0.91.zip', 'FastBuild.zip')
 - ps: Add-Type -assembly “system.io.compression.filesystem”
 - ps: "[io.compression.zipfile]::ExtractToDirectory('FastBuild.zip', $env:APPVEYOR_BUILD_FOLDER)"
+# Attempt to set working directory to current location
+- ps: [Environment]::CurrentDirectory = $env:APPVEYOR_BUILD_FOLDER
+# Generate VS projects
 - ps: .\FBuild.exe -config Code\fbuild.bff solution
+# Add current location to path
 - ps: $env:Path = $env:Path + $env:APPVEYOR_BUILD_FOLDER
-- ps: dir 'C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0A\bin'
  
 # Using FastBuild
 build_script:
@@ -18,4 +22,5 @@ build_script:
 #  verbosity: minimal
   
 after_build:
-- ps: .\SonarQubeAnalysis.ps1 -hostUrl 'https://sonarqube.com' -login  d5fcf62e7cba7c67b913e9edb4ecee2e9a697d52 -sources Code/ -projectName $env:APPVEYOR_PROJECT_NAME -projectKey $env:APPVEYOR_PROJECT_SLUG -projectVersion $env:APPVEYOR_BUILD_NUMBER -buildWrapperCommand "msbuild  'C:\projects\tmp\VisualStudio\FASTBuild.sln'  /t:rebuild"
+#Launch analysis
+- ps: .\SonarQubeAnalysis.ps1 -hostUrl 'https://sonarqube.com' -login  d5fcf62e7cba7c67b913e9edb4ecee2e9a697d52 -sources Code/ -projectName $env:APPVEYOR_PROJECT_NAME -projectKey $env:APPVEYOR_PROJECT_SLUG -projectVersion $env:APPVEYOR_BUILD_NUMBER -buildWrapperCommand "msbuild  '.\tmp\VisualStudio\FASTBuild.sln'  /t:rebuild"
