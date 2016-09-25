@@ -6,7 +6,7 @@ before_build:
 - ps: Add-Type -assembly “system.io.compression.filesystem”
 - ps: "[io.compression.zipfile]::ExtractToDirectory('FastBuild.zip', $env:APPVEYOR_BUILD_FOLDER)"
 # Attempt to set working directory to current location
-- ps: [Environment]::CurrentDirectory = $env:APPVEYOR_BUILD_FOLDER
+- ps: "[Environment]::CurrentDirectory = $env:APPVEYOR_BUILD_FOLDER"
 # Generate VS projects
 - ps: .\FBuild.exe -config Code\fbuild.bff solution
 # Add current location to path
