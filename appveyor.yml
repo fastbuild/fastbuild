@@ -3,6 +3,7 @@ before_build:
 - ps: Add-Type -assembly “system.io.compression.filesystem”
 - ps: "[io.compression.zipfile]::ExtractToDirectory('FastBuild.zip', $env:APPVEYOR_BUILD_FOLDER)"
 - ps: .\FBuild.exe -config Code\fbuild.bff solution
+- ps: $env:Path = $env:Path + $env:APPVEYOR_BUILD_FOLDER
  
 # We need to setup SDK to compile with fbuild
 #build_script:
