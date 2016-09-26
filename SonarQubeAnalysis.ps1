@@ -1,23 +1,33 @@
+
 Param(
-	[parameter(Mandatory=$true)]
+	# Analysis parameters (see http://docs.sonarqube.org/display/SONAR/Analysis+Parameters)
+	[parameter(Mandatory=$true,HelpMessage="Server URL ")]
 	[alias("h")]
 	[string]$hostUrl,
-	[parameter(Mandatory=$true)]
+	[parameter(Mandatory=$true,HelpMessage="The authentication token of a SonarQube user with Execute Analysis permission.")]
 	[alias("l")]
 	[string]$login,
-	[parameter(Mandatory=$true)]
+	[parameter(Mandatory=$true,HelpMessage="Name of the project that will be displayed on the web interface.\nSet through <name> when using Maven.")]
 	[alias("n")]
-	[string]$projectName,
-	[parameter(Mandatory=$true)]
+	[string]$projectName, 
+	[parameter(Mandatory=$true,HelpMessage="The project key that is unique for each project.\nAllowed characters are: letters, numbers, '-', '_', '.' and ':', with at least one non-digit.\nWhen using Maven, it is automatically set to <groupId>:<artifactId>.")]
 	[alias("k")]
 	[string]$projectKey,
-	[parameter(Mandatory=$true)]
-	[alias("b")]
+	[parameter(Mandatory=$true,HelpMessage="The project version.\nSet through <version> when using Maven.")]
+	[alias("v")]
 	[string]$projectVersion,
-	[parameter(Mandatory=$true)]
+	[parameter(Mandatory=$true, HelpMessage="Comma-separated paths to directories containing source files.\nCompatible with Maven. If not set, the source code is retrieved from the default Maven source code location. ")]
 	[alias("s")]
 	[string]$sources,
-	[string]$buildWrapperCommand 
+	#Option build wrapper command (for C/C++/Objective-C builds)
+	[string]$buildWrapperCommand,
+	# Pull request specific arguments (see http://docs.sonarqube.org/display/PLUG/GitHub+Plugin)
+	[parameter(HelpMessage="Pull request number")]
+	[int]$gitHubPullRequest,
+	[parameter(HelpMessage="Personal access token generated in GitHub for the technical user ")]
+	[string]$gitHubOauth,	
+	[parameter(HelpMessage="Identification of the repository. Format is: <organisation/repo>. Exemple: SonarSource/sonarqube	")]
+	[string]$gitHubRepository
 )
 
 Add-Type -assembly system.io.compression.filesystem
@@ -48,6 +58,12 @@ if($buildWrapperCommand)
 	Invoke-Expression $builderCmdLine
 	
 	$scannerCmdLine += ' -D sonar.cfamily.build-wrapper-output=Build'
+}
+
+# Pull request ?
+if($gitHubPullRequest)
+{
+	$scannerCmdLine += " -D sonar.analysis.mode=preview -D sonar.github.oauth='$gitHubOauth' -D sonar.github.repository='$gitHubRepository' -D sonar.github.pullRequest='$gitHubPullRequest'"
 }
 
 Write-Output $scannerCmdLine

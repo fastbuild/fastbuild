@@ -25,4 +25,4 @@ build_script:
 after_build:
 #Launch analysis
 - ps: cd ..
-- ps: .\SonarQubeAnalysis.ps1 -hostUrl $env:SONAR_HOST_URL -login $env:SONAR_TOKEN -sources Code/ -projectName $env:APPVEYOR_PROJECT_NAME -projectKey $env:APPVEYOR_PROJECT_SLUG -projectVersion $env:APPVEYOR_BUILD_NUMBER -buildWrapperCommand "msbuild  'tmp/VisualStudio/FASTBuild.sln'  /t:rebuild"
+- ps:  ./SonarQubeAnalysisForAppVeyor.ps1 -sources Code/ -buildWrapperCommand "msbuild  'tmp/VisualStudio/FASTBuild.sln'  /t:rebuild"
