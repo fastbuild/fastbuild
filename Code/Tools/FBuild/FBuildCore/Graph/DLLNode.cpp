@@ -49,20 +49,20 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
         return;
     }
 
-	// for other platforms, use the object directly (e.g. .so or .dylib)
-	importLibName = GetName();
+    // for other platforms, use the object directly (e.g. .so or .dylib)
+    importLibName = GetName();
 
     // with msvc, we need to link the import lib that matches the dll
     if (GetFlag(LinkerNode::LINK_FLAG_MSVC))
     {
-		PathUtils::StripFileExtension(importLibName);
+        PathUtils::StripFileExtension(importLibName);
 
         // assume .lib extension for import
         importLibName += ".lib";
     }
     else if (GetFlag(LinkerNode::LINK_FLAG_ORBIS_LD))
     {
-		PathUtils::StripFileExtension(importLibName);
+        PathUtils::StripFileExtension(importLibName);
 
         // Assume we link with stub_weak library (loose linking)
         importLibName += "_stub_weak.a";

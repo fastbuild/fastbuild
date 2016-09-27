@@ -45,9 +45,9 @@ public:
     static void FixupFolderPath( AString & path );
     static void FixupFilePath( AString & path );
 
-	// Misc
-	//----------------
-	static void StripFileExtension( AString & filePath );
+    // Misc
+    //----------------
+    static void StripFileExtension( AString & filePath );
 };
 
 //------------------------------------------------------------------------------
