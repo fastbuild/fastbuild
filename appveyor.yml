@@ -1,7 +1,7 @@
 os: Visual Studio 2013
 
 before_build:
-# Change working directoty and current location
+# Change working directory and current location
 - ps: cd Code
 - ps: "[Environment]::CurrentDirectory = $PWD"
 # Download & Unzip FastBuild
@@ -11,11 +11,11 @@ before_build:
 # Add FastBuild to path
 - ps: "$env:Path = $env:Path + ';C:/FastBuild'"
 # Generate VS projects
-- ps: fbuild solution
+- ps: fbuild solution -noprogress
  
 # Using FastBuild
 build_script:
-- ps: fbuild All-x86 All-x64
+- ps: fbuild All-x86 All-x64 -noprogress
 
 # Using MSbuild
 #build:
