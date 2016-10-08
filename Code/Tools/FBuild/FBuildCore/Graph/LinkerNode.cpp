@@ -615,7 +615,7 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
         for ( const AString * it=tokens.Begin(); it!=end; ++it )
         {
             const AString & token = *it;
-            if ( ( token == "-shared" ) || ( token == "-dynamiclib" ) )
+            if ( ( token == "-shared" ) || ( token == "-dynamiclib" ) || (token == "--oformat=prx"))
             {
                 flags |= LinkerNode::LINK_FLAG_DLL;
                 continue;

@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/FileIO/IOStream.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
 // CONSTRUCTOR
@@ -48,21 +49,26 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
         return;
     }
 
+    // for other platforms, use the object directly (e.g. .so or .dylib)
+    importLibName = GetName();
+
     // with msvc, we need to link the import lib that matches the dll
     if (GetFlag(LinkerNode::LINK_FLAG_MSVC))
     {
-        // get name minus extension (handle no extension gracefully)
-        const char * lastDot = GetName().FindLast( '.' );
-        lastDot = lastDot ? lastDot : GetName().GetEnd();
-        importLibName.Assign( GetName().Get(), lastDot );
+        PathUtils::StripFileExtension(importLibName);
 
         // assume .lib extension for import
         importLibName += ".lib";
-        return;
+    }
+    else if (GetFlag(LinkerNode::LINK_FLAG_ORBIS_LD))
+    {
+        PathUtils::StripFileExtension(importLibName);
+
+        // Assume we link with stub_weak library (loose linking)
+        importLibName += "_stub_weak.a";
     }
 
-    // for other platforms, use the object directly (e.g. .so or .dylib)
-    importLibName = GetName();
+    
 }
 
 // Load
