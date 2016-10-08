@@ -1,6 +1,11 @@
 #FASTBuild
 
-[![Build](https://ci.appveyor.com/api/projects/status/f5vewk6oqi7i5pi9?svg=true)](https://ci.appveyor.com/project/jairbubbles/fastbuild) [![Quality Gate](https://sonarqube.com/api/badges/gate?key=fastbuild)](https://sonarqube.com/dashboard/index/fastbuild)
+##Branch State
+
+| Branch | Windows CI | Static Analysis (WIP*) |
+| :----- | :----- |  :----- |
+| master | [![Build](https://ci.appveyor.com/api/projects/status/f5vewk6oqi7i5pi9?svg=true)](https://ci.appveyor.com/project/jairbubbles/fastbuild) | [![Quality Gate](https://sonarqube.com/api/badges/gate?key=fastbuild)](https://sonarqube.com/dashboard/index/fastbuild) |
+\* Static Analysis is being configured, so this quality gate is not indicative
 
 ##Branch policy
 
