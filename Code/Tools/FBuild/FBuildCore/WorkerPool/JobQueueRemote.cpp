@@ -394,7 +394,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 
     if ( job->IsLocal() )
     {
-        FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n", 
+        FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",
                       ( result == Node::NODE_RESULT_FAILED ) ? "ERROR" : "SUCCESS",
                       job->GetNode()->GetName().Get(),
                       job->GetNode()->GetFinalBuildOutputMessages().Get());

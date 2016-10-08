@@ -187,10 +187,10 @@
 //------------------------------------------------------------------------------
 /*static*/ void PathUtils::StripFileExtension( AString & filePath )
 {
-    const char * lastDot = filePath.FindLast('.');
+    const char * lastDot = filePath.FindLast( '.' );
     if (lastDot)
     {
-        filePath.SetLength(lastDot - filePath.Get());
+        filePath.SetLength( (uint32_t)( lastDot - filePath.Get() ) );
     }
 }
 

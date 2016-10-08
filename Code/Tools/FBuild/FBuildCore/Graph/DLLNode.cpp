@@ -53,22 +53,20 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
     importLibName = GetName();
 
     // with msvc, we need to link the import lib that matches the dll
-    if (GetFlag(LinkerNode::LINK_FLAG_MSVC))
+    if ( GetFlag( LinkerNode::LINK_FLAG_MSVC ) )
     {
-        PathUtils::StripFileExtension(importLibName);
+        PathUtils::StripFileExtension( importLibName );
 
         // assume .lib extension for import
         importLibName += ".lib";
     }
-    else if (GetFlag(LinkerNode::LINK_FLAG_ORBIS_LD))
+    else if ( GetFlag( LinkerNode::LINK_FLAG_ORBIS_LD ) )
     {
-        PathUtils::StripFileExtension(importLibName);
+        PathUtils::StripFileExtension( importLibName );
 
         // Assume we link with stub_weak library (loose linking)
         importLibName += "_stub_weak.a";
     }
-
-    
 }
 
 // Load

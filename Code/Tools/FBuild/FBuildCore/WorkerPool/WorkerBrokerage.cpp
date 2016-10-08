@@ -94,7 +94,7 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
                             false,
                             &results ) )
     {
-        FLOG_WARN( "No workers found in %s", m_BrokerageRoot.Get() );
+        FLOG_WARN( "No workers found in '%s'", m_BrokerageRoot.Get() );
         return; // no files found
     }
 
