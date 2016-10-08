@@ -1,0 +1,28 @@
+os: Visual Studio 2013
+
+before_build:
+# Change working directory and current location
+- ps: cd Code
+- ps: "[Environment]::CurrentDirectory = $PWD"
+# Download & Unzip FastBuild
+- ps: (new-object net.webclient).DownloadFile('http://fastbuild.org/downloads/v0.91/FASTBuild-Windows-x64-v0.91.zip', 'C:/FastBuild.zip')
+- ps: Add-Type -assembly "system.io.compression.filesystem"
+- ps: "[io.compression.zipfile]::ExtractToDirectory('C:/FastBuild.zip', 'C:/FastBuild')"
+# Add FastBuild to path
+- ps: "$env:Path = $env:Path + ';C:/FastBuild'"
+# Generate VS projects
+- ps: fbuild solution -noprogress
+ 
+# Using FastBuild
+build_script:
+- ps: fbuild All-x86 All-x64 -noprogress
+
+# Using MSbuild
+#build:
+#  project: C:\projects\tmp\VisualStudio\FASTBuild.sln
+#  verbosity: minimal
+  
+after_build:
+#Launch analysis
+- ps: cd ..
+- ps:  ./SonarQubeAnalysisForAppVeyor.ps1 -sources Code/ -buildWrapperCommand "msbuild  'tmp/VisualStudio/FASTBuild.sln'  /t:rebuild"
