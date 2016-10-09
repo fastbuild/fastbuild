@@ -46,9 +46,7 @@ ExecNode::ExecNode( const AString & dstFileName,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ExecNode::~ExecNode()
-{
-}
+ExecNode::~ExecNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------

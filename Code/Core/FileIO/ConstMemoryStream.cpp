@@ -26,9 +26,7 @@ ConstMemoryStream::ConstMemoryStream( const void * data, size_t size )
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ConstMemoryStream::~ConstMemoryStream()
-{
-}
+ConstMemoryStream::~ConstMemoryStream() = default;
 
 // Replace
 //------------------------------------------------------------------------------

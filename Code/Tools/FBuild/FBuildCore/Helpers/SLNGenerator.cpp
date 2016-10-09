@@ -21,15 +21,11 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-SLNGenerator::SLNGenerator()
-{
-}
+SLNGenerator::SLNGenerator() = default;
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-SLNGenerator::~SLNGenerator()
-{
-}
+SLNGenerator::~SLNGenerator() = default;
 
 // GenerateVCXProj
 //------------------------------------------------------------------------------

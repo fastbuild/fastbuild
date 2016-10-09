@@ -16,9 +16,7 @@ NodeProxy::NodeProxy( const AString & name )
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-NodeProxy::~NodeProxy()
-{
-}
+NodeProxy::~NodeProxy() = default;
 
 // IsAFile
 //------------------------------------------------------------------------------

@@ -45,9 +45,7 @@ ReflectionInfo::ReflectionInfo()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ReflectionInfo::~ReflectionInfo()
-{
-}
+ReflectionInfo::~ReflectionInfo() = default;
 
 // Begin
 //------------------------------------------------------------------------------

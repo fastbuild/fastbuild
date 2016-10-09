@@ -65,9 +65,7 @@ VCXProjectNode::VCXProjectNode( const AString & projectOutput,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-VCXProjectNode::~VCXProjectNode()
-{
-}
+VCXProjectNode::~VCXProjectNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------

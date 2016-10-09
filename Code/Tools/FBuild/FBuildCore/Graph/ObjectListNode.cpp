@@ -71,9 +71,7 @@ ObjectListNode::ObjectListNode( const AString & listName,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ObjectListNode::~ObjectListNode()
-{
-}
+ObjectListNode::~ObjectListNode() = default;
 
 // IsAFile
 //------------------------------------------------------------------------------

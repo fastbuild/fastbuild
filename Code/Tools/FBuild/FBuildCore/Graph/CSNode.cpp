@@ -50,9 +50,7 @@ CSNode::CSNode( const AString & compilerOutput,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-CSNode::~CSNode()
-{
-}
+CSNode::~CSNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------

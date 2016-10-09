@@ -19,8 +19,6 @@ Meta_Optional::Meta_Optional()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-Meta_Optional::~Meta_Optional()
-{
-}
+Meta_Optional::~Meta_Optional() = default;
 
 //------------------------------------------------------------------------------

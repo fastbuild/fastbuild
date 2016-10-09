@@ -1956,9 +1956,7 @@ ObjectNode::CompileHelper::CompileHelper( bool handleOutput )
 
 // CompileHelper::DESTRUCTOR
 //------------------------------------------------------------------------------
-ObjectNode::CompileHelper::~CompileHelper()
-{
-}
+ObjectNode::CompileHelper::~CompileHelper() = default;
 
 // CompilHelper::SpawnCompiler
 //------------------------------------------------------------------------------

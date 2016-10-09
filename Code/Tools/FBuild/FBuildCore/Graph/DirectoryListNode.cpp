@@ -63,9 +63,7 @@ DirectoryListNode::DirectoryListNode( const AString & name,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-DirectoryListNode::~DirectoryListNode()
-{
-}
+DirectoryListNode::~DirectoryListNode() = default;
 
 // FormatName
 //------------------------------------------------------------------------------

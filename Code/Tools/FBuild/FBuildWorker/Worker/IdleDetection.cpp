@@ -48,9 +48,7 @@ IdleDetection::IdleDetection() :
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-IdleDetection::~IdleDetection()
-{
-}
+IdleDetection::~IdleDetection() = default;
 
 // Update
 //------------------------------------------------------------------------------

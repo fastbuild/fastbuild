@@ -28,9 +28,7 @@ RemoveDirNode::RemoveDirNode( const AString & name,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-RemoveDirNode::~RemoveDirNode()
-{
-}
+RemoveDirNode::~RemoveDirNode() = default;
 
 // IsAFile
 //------------------------------------------------------------------------------

@@ -33,9 +33,7 @@ CIncludeParser::CIncludeParser()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-CIncludeParser::~CIncludeParser()
-{
-}
+CIncludeParser::~CIncludeParser() = default;
 
 // Parse
 //------------------------------------------------------------------------------

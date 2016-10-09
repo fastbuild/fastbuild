@@ -83,9 +83,7 @@ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, 
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-CompilerNode::~CompilerNode()
-{
-}
+CompilerNode::~CompilerNode() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------

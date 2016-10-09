@@ -75,9 +75,7 @@ LinkerNode::LinkerNode( const AString & linkerOutputName,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-LinkerNode::~LinkerNode()
-{
-}
+LinkerNode::~LinkerNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------

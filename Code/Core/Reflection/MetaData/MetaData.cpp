@@ -25,10 +25,7 @@ IMetaData::IMetaData()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-IMetaData::~IMetaData()
-{
-}
-
+IMetaData::~IMetaData() = default;
 
 // Chaining operator for reflection macros
 //------------------------------------------------------------------------------

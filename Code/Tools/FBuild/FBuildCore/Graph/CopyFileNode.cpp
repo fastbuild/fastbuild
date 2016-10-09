@@ -62,9 +62,7 @@ bool CopyFileNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, 
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-CopyFileNode::~CopyFileNode()
-{
-}
+CopyFileNode::~CopyFileNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------

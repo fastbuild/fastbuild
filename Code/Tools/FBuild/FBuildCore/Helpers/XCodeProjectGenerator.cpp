@@ -13,15 +13,11 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-XCodeProjectGenerator::XCodeProjectGenerator()
-{
-}
+XCodeProjectGenerator::XCodeProjectGenerator() = default;
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-XCodeProjectGenerator::~XCodeProjectGenerator()
-{
-}
+XCodeProjectGenerator::~XCodeProjectGenerator() = default;
 
 // Generate
 //------------------------------------------------------------------------------

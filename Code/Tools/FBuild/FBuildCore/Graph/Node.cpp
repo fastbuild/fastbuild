@@ -109,9 +109,7 @@ Node::Node( const AString & name, Type type, uint32_t controlFlags )
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-Node::~Node()
-{
-}
+Node::~Node() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------

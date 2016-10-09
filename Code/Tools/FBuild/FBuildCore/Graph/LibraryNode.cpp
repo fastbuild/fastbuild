@@ -75,9 +75,7 @@ LibraryNode::LibraryNode( const AString & libraryName,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-LibraryNode::~LibraryNode()
-{
-}
+LibraryNode::~LibraryNode() = default;
 
 // IsAFile
 //------------------------------------------------------------------------------

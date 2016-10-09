@@ -39,9 +39,7 @@ WorkerSettings::WorkerSettings()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-WorkerSettings::~WorkerSettings()
-{
-}
+WorkerSettings::~WorkerSettings() = default;
 
 // SetMode
 //------------------------------------------------------------------------------

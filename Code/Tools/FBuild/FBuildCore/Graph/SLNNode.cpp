@@ -56,9 +56,7 @@ SLNNode::SLNNode( const AString & solutionOuput,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-SLNNode::~SLNNode()
-{
-}
+SLNNode::~SLNNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------

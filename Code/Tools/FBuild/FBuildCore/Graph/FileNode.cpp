@@ -28,9 +28,7 @@ FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-FileNode::~FileNode()
-{
-}
+FileNode::~FileNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------

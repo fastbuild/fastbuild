@@ -34,9 +34,7 @@ DLLNode::DLLNode( const AString & linkerOutputName,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-DLLNode::~DLLNode()
-{
-}
+DLLNode::~DLLNode() = default;
 
 // GetImportLibName
 //------------------------------------------------------------------------------
