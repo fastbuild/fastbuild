@@ -1,12 +1,5 @@
 #FASTBuild
 
-##Branch State
-
-| Branch | Windows CI | Static Analysis (WIP*) |
-| :----- | :----- |  :----- |
-| master | [![Build](https://ci.appveyor.com/api/projects/status/f5vewk6oqi7i5pi9?svg=true)](https://ci.appveyor.com/project/jairbubbles/fastbuild) | [![Quality Gate](https://sonarqube.com/api/badges/gate?key=fastbuild)](https://sonarqube.com/dashboard/index/fastbuild) |
-\* Static Analysis is being configured, so this quality gate is not indicative
-
 ##Branch policy
 
 | Branch | Purpose |
@@ -22,3 +15,12 @@ The canonical repo for FASTBuild is in perforce. Patches accepted into "dev" wil
 When a new version is released, the stable (master) branch will be updated with a snapshot of the new released version.
 
 "dev" -> Perforce -> "master"
+
+##"dev" Branch State
+
+You can sync the "dev" branch to get the latest in-development features.  The status of this branch is as follows:
+
+| Branch | Windows CI | Static Analysis (WIP*) |
+| :----- | :----- |  :----- |
+| dev | [![Build](https://ci.appveyor.com/api/projects/status/yqgusnykxs383oa6?svg=true)](https://ci.appveyor.com/project/ffulin/fastbuild) | [![Quality Gate](https://sonarqube.com/api/badges/gate?key=fastbuild)](https://sonarqube.com/dashboard/index/fastbuild) |
+\* Static Analysis is being configured, so this quality gate is not indicative
