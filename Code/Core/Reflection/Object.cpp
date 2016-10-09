@@ -31,7 +31,7 @@ Object_ReflectionInfo g_Object_ReflectionInfo;
 
 /*static*/ const ReflectionInfo * Object::GetReflectionInfoS()
 {
-    return reinterpret_cast< const ReflectionInfo * >( &g_Object_ReflectionInfo );
+    return &g_Object_ReflectionInfo;
 }
 
 void Object_ReflectionInfo_Bind()

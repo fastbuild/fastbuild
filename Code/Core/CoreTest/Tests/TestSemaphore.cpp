@@ -65,7 +65,7 @@ void TestSemaphore::WaitForSignal() const
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestSemaphore::WaitForSignal_Thread( void * userData )
 {
-    Semaphore * s = reinterpret_cast< Semaphore * >( userData );
+    Semaphore * s = static_cast< Semaphore * >( userData );
     for ( size_t i=0; i<100; ++i )
     {
         s->Signal();

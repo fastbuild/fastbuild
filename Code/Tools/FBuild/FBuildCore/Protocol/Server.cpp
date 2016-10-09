@@ -207,7 +207,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     if ( cs->m_CurrentMessage == nullptr )
     {
         // message
-        cs->m_CurrentMessage = reinterpret_cast< const Protocol::IMessage * >( data );
+        cs->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
         if ( cs->m_CurrentMessage->HasPayload() )
         {
             return;

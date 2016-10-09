@@ -29,7 +29,7 @@
 
         // fill whole words
         const size_t numWords = size / sizeof( uint32_t );
-        uint32_t * it = reinterpret_cast< uint32_t * >( ptr );
+        uint32_t * it = static_cast< uint32_t * >( ptr );
         const uint32_t * end = it + numWords;
         while ( it != end )
         {
@@ -46,7 +46,7 @@
                                 (char)( ( pattern & 0x0000FF00 ) >> 8 ),
                                 (char)( ( pattern & 0x00FF0000 ) >> 16 ) };
             const char * b = bytes;
-            char * cit = reinterpret_cast< char * >( it );
+            char * cit = static_cast< char * >( static_cast< void * >( it ) );
             switch( remainder )
             {
                 case 3: *cit = *b; ++cit; ++b;

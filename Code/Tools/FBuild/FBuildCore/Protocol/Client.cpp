@@ -331,7 +331,7 @@ void Client::CheckForTimeouts()
     if ( ss->m_CurrentMessage == nullptr )
     {
         // message
-        ss->m_CurrentMessage = reinterpret_cast< const Protocol::IMessage * >( data );
+        ss->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
         if ( ss->m_CurrentMessage->HasPayload() )
         {
             return;

@@ -18,9 +18,9 @@
         Thread::ThreadHandle h = Thread::CreateThread( Test##function##ThreadEntryFunction,     \
                                                        #function,                               \
                                                        ( 64 * KILOBYTE ),                       \
-                                                       reinterpret_cast< void * >( &data ) );   \
+                                                       static_cast< void * >( &data ) );        \
                                                                                                 \
-        volatile type & sharedVar = reinterpret_cast< volatile type & >( data );                \
+        volatile type & sharedVar = static_cast< volatile type & >( data );                     \
         ++sharedVar;                                                                            \
                                                                                                 \
         for ( size_t i=0; i<1000000; ++i )                                                      \
@@ -38,7 +38,7 @@
     }                                                                                           \
     static uint32_t Test##function##ThreadEntryFunction( void * userData )                      \
     {                                                                                           \
-        type & data = *( reinterpret_cast< type * >( userData ) );                              \
+        type & data = *( static_cast< type * >( userData ) );                                   \
         volatile type & sharedVar = data;                                                       \
                                                                                                 \
         while ( sharedVar == initialValue ) {}                                                  \

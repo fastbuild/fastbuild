@@ -116,7 +116,7 @@ void TextWriter::WriteArray( const void * base, const ReflectedProperty * proper
 
     // get access to the array
     void * arrayAddr = (void *)((size_t)base + property->GetOffset() );
-    Array< void * > * array = reinterpret_cast< Array< void * > * >( arrayAddr );
+    Array< void * > * array = static_cast< Array< void * > * >( arrayAddr );
 
     // get access to the array data
     size_t arrayDataBegin = (size_t)array->Begin();
@@ -156,7 +156,7 @@ void TextWriter::WriteArrayOfStruct( const void * base, const ReflectedProperty 
 
     // get access to the array
     void * arrayAddr = (void *)((size_t)base + property->GetOffset() );
-    Array< void * > * array = reinterpret_cast< Array< void * > * >( arrayAddr );
+    Array< void * > * array = static_cast< Array< void * > * >( arrayAddr );
 
     // get access to the array data
     size_t arrayDataBegin = (size_t)array->Begin();

@@ -97,7 +97,7 @@ void WorkerThread::WaitForStop()
 //------------------------------------------------------------------------------
 /*static*/ uint32_t WorkerThread::ThreadWrapperFunc( void * param )
 {
-    WorkerThread * wt = reinterpret_cast< WorkerThread * >( param );
+    WorkerThread * wt = static_cast< WorkerThread * >( param );
     s_WorkerThreadThreadIndex = wt->m_ThreadIndex;
 
     #if defined( PROFILING_ENABLED )
