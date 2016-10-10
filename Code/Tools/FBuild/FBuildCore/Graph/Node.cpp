@@ -885,7 +885,7 @@ const AString & Node::GetFinalBuildOutputMessages()
     // rebuild fixed string
     AStackString<> fixed;
 
-    // convert path if needed;
+    // convert path if needed
     if ( tokens[ 0 ].GetLength() == 1 )
     {
         ASSERT( numTokens >= 4 ); // should have an extra token due to ':'

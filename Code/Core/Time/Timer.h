@@ -12,7 +12,7 @@ class Timer
 {
 public:
     Timer() { Start(); }
-    inline ~Timer() {}
+    inline ~Timer() = default;
 
     inline void Start() { m_StartTime = GetNow(); }
     inline void Start( float time ) { m_StartTime = GetNow() - (int64_t)( (double)GetFrequency() * (double)time ); }

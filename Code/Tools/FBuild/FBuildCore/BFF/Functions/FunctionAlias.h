@@ -12,7 +12,7 @@ class FunctionAlias : public Function
 {
 public:
     explicit        FunctionAlias();
-    inline virtual ~FunctionAlias() {}
+    inline virtual ~FunctionAlias() = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

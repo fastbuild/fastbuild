@@ -459,7 +459,7 @@ int Main(int argc, char * argv[])
     }
 
     // final line of output - status of build
-    float totalBuildTime = t.GetElapsed(); // FBuildStats::GetTotalBuildTimeS();
+    float totalBuildTime = t.GetElapsed();
     uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
     totalBuildTime -= ( minutes * 60.0f );
     float seconds = totalBuildTime;

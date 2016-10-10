@@ -20,7 +20,7 @@ class FunctionExecutable : public Function
 {
 public:
     explicit        FunctionExecutable();
-    inline virtual ~FunctionExecutable() {}
+    inline virtual ~FunctionExecutable() = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

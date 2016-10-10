@@ -16,7 +16,7 @@ class RefObject
 {
 public:
     inline explicit RefObject() : m_ReferenceCount( 0 ) {}
-    inline virtual ~RefObject() {}
+    inline virtual ~RefObject() = default;
 
     virtual const ReflectionInfo * GetReflectionInfoV() const = 0;
 

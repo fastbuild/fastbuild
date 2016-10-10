@@ -591,7 +591,7 @@ void FBuild::UpdateBuildStatus( const Node * node )
 
     m_SmoothedProgressCurrent = ( 0.5f * m_SmoothedProgressCurrent ) + ( m_SmoothedProgressTarget * 0.5f );
 
-    // get nodes counts;
+    // get node counts
     uint32_t numJobs = 0;
     uint32_t numJobsActive = 0;
     uint32_t numJobsDist = 0;

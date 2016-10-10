@@ -61,7 +61,6 @@ void TestExec::BuildHelperExe() const
     options.m_ConfigFile = "Data/TestExec/exec.bff";
     options.m_ForceCleanBuild = true;
     options.m_ShowSummary = true; // required to generate stats for node count checks
-    //options.m_ShowCommandLines = true;
 
     FBuild fBuild( options );
     fBuild.Initialize();
@@ -108,7 +107,6 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     FBuildOptions options;
     options.m_ConfigFile = "Data/TestExec/exec.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
-    //options.m_ShowCommandLines = true;
 
     FBuild fBuild(options);
     fBuild.Initialize();
@@ -121,7 +119,6 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     const AStackString<> inFile_multiInputB("../../../../tmp/Test/Exec/MultiInputB.txt");
 
     // First file commented out because it is supposed to not exist
-    //CreateInputFile( inFile_dummy );
     CreateInputFile( inFile_oneInput );
     CreateInputFile( inFile_stdout );
     CreateInputFile(inFile_multiInputA);
@@ -306,8 +303,6 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     FBuildOptions options;
     options.m_ConfigFile = "Data/TestExec/exec.bff";
     options.m_ForceCleanBuild = true;
-    //options.m_ShowSummary = true; // required to generate stats for node count checks
-    //options.m_ShowCommandLines = true;
 
     FBuild fBuild(options);
     fBuild.Initialize();

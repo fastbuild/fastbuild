@@ -248,9 +248,6 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         return nullptr; // DisableNagle will close socket
     }
 
-    // we have a socket now
-    //m_Socket = sockfd;
-
     // set non-blocking
     u_long nonBlocking = 1;
     #if defined( __WINDOWS__ )
@@ -977,7 +974,6 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
     // close the socket
     CloseSocket( ci->m_Socket );
     ci->m_Socket = INVALID_SOCKET;
-    //ci->m_Thread = INVALID_THREAD_HANDLE;
 
     {
         // try to remove from connection list

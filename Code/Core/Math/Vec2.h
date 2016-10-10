@@ -13,9 +13,9 @@ class Vec2
 public:
     float   x,y;
 
-    inline explicit Vec2() {}
+    inline explicit Vec2() = default;
     inline explicit Vec2( float x1, float y1 ) { x=x1; y=y1; }
-    inline ~Vec2() {}
+    inline ~Vec2() = default;
 
     // basic operators
     inline Vec2 operator + ( const Vec2 & vec ) const;

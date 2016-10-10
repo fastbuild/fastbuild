@@ -61,9 +61,6 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = allowRace;
-    //options.m_ShowProgress = true;
-    //options.m_ShowInfo = true;
-    //options.m_ShowSummary = true;
     FBuild fBuild( options );
 
     JobQueueRemote jqr( numRemoteWorkers );

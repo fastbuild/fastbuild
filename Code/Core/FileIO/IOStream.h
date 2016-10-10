@@ -16,8 +16,8 @@ class AString;
 class IOStream
 {
 public:
-    explicit inline IOStream() {}
-    inline virtual ~IOStream() {}
+    explicit inline IOStream() = default;
+    inline virtual ~IOStream() = default;
 
     // interface that must be implemented
     virtual uint64_t ReadBuffer( void * buffer, uint64_t bytesToRead ) = 0;

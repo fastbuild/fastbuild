@@ -69,11 +69,6 @@
                 }
                 break;
             }
-            //case WM_CLOSE:
-            //{
-            //  WorkerWindow::Get().SetWantToQuit();
-            //  return 0;
-            //}
             case WM_COMMAND:
             {
                 if( HIWORD(wParam) == CBN_SELCHANGE )

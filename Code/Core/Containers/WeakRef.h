@@ -17,7 +17,7 @@ class WeakRef
 public:
     explicit inline WeakRef() : m_Pointer( nullptr ) {}
     explicit inline WeakRef( T * ptr ) : m_Pointer( ptr ) { /*TODO: IncWeakRef*/ }
-    inline         ~WeakRef() { /*TODO: DecWeakRef()*/ }
+    inline         ~WeakRef() = default; // TODO: DecWeakRef()
 
     // access the pointer
     inline      T * Get()               { return m_Pointer; }

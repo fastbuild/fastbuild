@@ -12,7 +12,7 @@ class FunctionRemoveDir : public Function
 {
 public:
     explicit        FunctionRemoveDir();
-    inline virtual ~FunctionRemoveDir() {}
+    inline virtual ~FunctionRemoveDir() = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

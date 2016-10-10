@@ -95,8 +95,7 @@ AString::~AString()
         ASSERT( m_Contents != s_EmptyString );
         // b) NOT be pointing to an internal buffer
         // Depending on the memory alloctor, it could be valid to have an allocation
-        // immediately after the string itself, causing this assert to fire incorrectly
-        //ASSERT( (void *)m_Contents != (void *)( (char *)this + sizeof( AString ) ) );
+        // immediately after the string itself, so we can't have an assert for this
         FREE( m_Contents );
     }
     else

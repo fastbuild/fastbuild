@@ -12,7 +12,7 @@ class FunctionForEach : public Function
 {
 public:
     explicit        FunctionForEach();
-    inline virtual ~FunctionForEach() {}
+    inline virtual ~FunctionForEach() = default;
 
     virtual bool AcceptsHeader() const override;
     virtual bool NeedsHeader() const override;

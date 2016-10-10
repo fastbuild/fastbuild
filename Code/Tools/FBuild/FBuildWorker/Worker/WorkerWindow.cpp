@@ -122,7 +122,7 @@ void WorkerWindow::UIUpdateThread()
         int w = 700;
         int h = 300;
         int x = GetSystemMetrics(SM_CXSCREEN)-w;
-        int y = 0; // GetSystemMetrics(SM_CYSCREEN)/2-(h/2);
+        int y = 0;
 
         Init( x, y, w, h );
 

@@ -14,7 +14,7 @@ class FunctionSettings : public Function
 {
 public:
     explicit        FunctionSettings();
-    inline virtual ~FunctionSettings() {}
+    inline virtual ~FunctionSettings() = default;
 
     static inline void SetCachePath( const AString & cachePath ) { s_CachePath = cachePath; }
     static inline const AString & GetCachePath() { return s_CachePath; }

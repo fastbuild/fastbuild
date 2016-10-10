@@ -35,14 +35,6 @@ IMetaData & operator + ( IMetaData & a, IMetaData & b )
     return a;
 }
 
-// operator +
-//------------------------------------------------------------------------------
-/*IMetaData & IMetaData::operator + ( IMetaData & metaData )
-{
-    m_Next = &metaData;
-    return *this;
-}*/
-
 // No MetaData
 //------------------------------------------------------------------------------
 IMetaData & MetaNone()
