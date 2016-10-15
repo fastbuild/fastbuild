@@ -121,8 +121,8 @@ void Free( void * ptr )
     #if defined( MEMTRACKER_ENABLED )
         void * operator new( size_t size, const char * file, int line ) { return AllocFileLine( size, file, line ); }
         void * operator new[]( size_t size, const char * file, int line ) { return AllocFileLine( size, file, line ); }
-        void operator delete( void * ptr, const char *, int ) { return Free( ptr ); }
-        void operator delete[]( void * ptr, const char *, int ) { return Free( ptr ); }
+        void operator delete( void * ptr, const char *, int ) { Free( ptr ); }
+        void operator delete[]( void * ptr, const char *, int ) { Free( ptr ); }
     #endif
     void * operator new( size_t size ) { return Alloc( size ); }
     void * operator new[]( size_t size ) { return Alloc( size ); }

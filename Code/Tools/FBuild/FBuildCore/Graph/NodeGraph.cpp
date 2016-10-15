@@ -1162,7 +1162,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     ASSERT( nodeToBuild );
 
     // already building, or queued to build?
-    ASSERT( nodeToBuild->GetState() != Node::BUILDING )
+    ASSERT( nodeToBuild->GetState() != Node::BUILDING );
 
     // accumulate recursive cost
     cost += nodeToBuild->GetLastBuildTime();

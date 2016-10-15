@@ -38,7 +38,7 @@ bool IsDebuggerAttached();
                     BREAK_IN_DEBUGGER;                                              \
                 }                                                               \
             }                                                                   \
-        } while ( false );                                                      \
+        } while ( false )                                                       \
         PRAGMA_DISABLE_POP_MSVC
 
     // standard assertion macro with message
@@ -52,7 +52,7 @@ bool IsDebuggerAttached();
                     BREAK_IN_DEBUGGER;                                              \
                 }                                                               \
             }                                                                   \
-        } while ( false );                                                      \
+        } while ( false )                                                       \
         PRAGMA_DISABLE_POP_MSVC
 
     // assert result of code, but still execute code when asserts are disabled
@@ -83,14 +83,14 @@ bool IsDebuggerAttached();
     #define ASSERT( expression )            \
         do {                                \
         PRAGMA_DISABLE_PUSH_MSVC(4127)      \
-        } while ( false );                  \
+        } while ( false )                   \
         PRAGMA_DISABLE_POP_MSVC
 
     #define VERIFY( code )                  \
         do {                                \
             if ( code ) {}                  \
         PRAGMA_DISABLE_PUSH_MSVC(4127)      \
-        } while ( false );                  \
+        } while ( false )                   \
         PRAGMA_DISABLE_POP_MSVC
 #else
     #error neither DEBUG nor RELEASE were defined

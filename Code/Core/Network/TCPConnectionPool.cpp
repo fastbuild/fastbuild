@@ -757,7 +757,7 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
                                          "TCPListen",
                                          ( 32 * KILOBYTE ),
                                          m_ListenConnection ); // user data argument
-    ASSERT( h != INVALID_THREAD_HANDLE )
+    ASSERT( h != INVALID_THREAD_HANDLE );
     Thread::CloseHandle( h ); // we don't need this anymore
 }
 
@@ -900,7 +900,7 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
                                             "TCPConnection",
                                             ( 32 * KILOBYTE ),
                                             ci ); // user data argument
-    ASSERT( h != INVALID_THREAD_HANDLE )
+    ASSERT( h != INVALID_THREAD_HANDLE );
     Thread::CloseHandle( h ); // we don't need this anymore
 
     m_Connections.Append( ci );

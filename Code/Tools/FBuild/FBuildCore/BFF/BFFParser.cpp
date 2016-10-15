@@ -1531,7 +1531,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
     }
 
     // check if selected type correctly
-    ASSERT ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS || varType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
+    ASSERT ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS || varType == BFFVariable::VAR_ARRAY_OF_STRUCTS );
 
     // Register this variable
     if ( varType == BFFVariable::VAR_ARRAY_OF_STRUCTS )

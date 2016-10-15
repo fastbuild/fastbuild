@@ -439,7 +439,7 @@ void ReflectionInfo::SetArraySize( void * array, size_t size ) const
                 }
                 else
                 {
-                    ASSERT( ri->IsStruct() )
+                    ASSERT( ri->IsStruct() );
                     Struct * str = ri->CreateStruct();
                     {
                         TextWriter tw( ms );
