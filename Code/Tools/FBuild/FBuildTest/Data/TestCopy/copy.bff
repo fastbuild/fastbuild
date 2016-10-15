@@ -64,3 +64,13 @@ Copy( 'ChainedCopy3' )
     .Source = 'ChainedCopy2' // via Alias
     .Dest   = '$Out$/Test/Copy/ChainedCopy/copy.copy3'
 }
+
+//
+// CopyDir
+//
+CopyDir( 'CopyDir' )
+{
+    .SourcePaths        = 'Data/TestCopy'
+    .SourcePathsPattern = '*.txt'
+    .Dest               = '$Out$/Test/Copy/CopyDir/'
+}
