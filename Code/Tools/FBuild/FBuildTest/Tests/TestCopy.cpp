@@ -30,6 +30,7 @@ private:
     void ChainedCopy_NoRebuild() const;
     void CopyDir() const;
     void CopyDir_NoRebuild() const;
+    void CopyEmpty() const;
 };
 
 // Register Tests
@@ -47,6 +48,7 @@ REGISTER_TESTS_BEGIN( TestCopy )
     REGISTER_TEST( ChainedCopy_NoRebuild )
     REGISTER_TEST( CopyDir )
     REGISTER_TEST( CopyDir_NoRebuild )
+    REGISTER_TEST( CopyEmpty )
 REGISTER_TESTS_END
 
 // TestCopyFunction_FileToFile
@@ -361,6 +363,20 @@ void TestCopy::CopyDir_NoRebuild() const
     CheckStatsNode ( 1,     0,      Node::COPY_DIR_NODE );
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsTotal( 6,     3 );
+}
+
+// CopyEmpty
+//------------------------------------------------------------------------------
+void TestCopy::CopyEmpty() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestCopy/copy.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyEmpty" ) ) );
 }
 
 //------------------------------------------------------------------------------

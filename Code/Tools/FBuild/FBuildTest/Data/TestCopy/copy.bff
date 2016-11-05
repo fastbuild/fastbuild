@@ -74,3 +74,14 @@ CopyDir( 'CopyDir' )
     .SourcePathsPattern = '*.txt'
     .Dest               = '$Out$/Test/Copy/CopyDir/'
 }
+
+//
+// CopyEmpty
+//
+Copy( 'CopyEmpty' )
+{
+    // It is useful to have empty source copies when multiple
+    // configs are used (e.g. dll vs non-dll configs)
+    .Source             = {}
+    .Dest               = '$Out$/Test/Copy/CopyEmpty/'
+}
