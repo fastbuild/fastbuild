@@ -23,6 +23,7 @@ REFLECT_BEGIN( CompilerNode, Node, MetaName( "Executable" ) + MetaFile() )
     REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
     REFLECT( m_VS2012EnumBugFix,    "VS2012EnumBugFix",     MetaOptional() )
 	REFLECT( m_ExecutableRootPath,  "ExecutableRootPath", MetaOptional() + MetaPath())
+	REFLECT( m_SimpleDistributionMode,	"SimpleDistributionMode",	MetaOptional() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
@@ -31,6 +32,7 @@ CompilerNode::CompilerNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL )
     , m_AllowDistribution( true )
     , m_VS2012EnumBugFix( false )
+	, m_SimpleDistributionMode( false )
 {
     m_Type = Node::COMPILER_NODE;
 }
