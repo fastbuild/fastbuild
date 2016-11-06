@@ -77,8 +77,9 @@ ToolManifest::~ToolManifest()
 
 // Generate
 //------------------------------------------------------------------------------
-bool ToolManifest::Generate( const Node * mainExecutable, const Dependencies & dependencies )
+bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExecutableRoot, const Dependencies & dependencies )
 {
+	m_mainExecutableRootPath = mainExecutableRoot;
     m_Files.Clear();
     m_TimeStamp = 0;
     m_Files.SetCapacity( 1 + dependencies.GetSize() );
@@ -136,6 +137,7 @@ bool ToolManifest::Generate( const Node * mainExecutable, const Dependencies & d
 void ToolManifest::Serialize( IOStream & ms ) const
 {
     ms.Write( m_ToolId );
+	ms.Write(m_mainExecutableRootPath);
 
     const uint32_t numItems( (uint32_t)m_Files.GetSize() );
     ms.Write( numItems );
@@ -155,6 +157,7 @@ void ToolManifest::Serialize( IOStream & ms ) const
 void ToolManifest::Deserialize( IOStream & ms, bool remote )
 {
     ms.Read( m_ToolId );
+	ms.Read(m_mainExecutableRootPath);
 
     ASSERT( m_Files.IsEmpty() );
 
@@ -440,11 +443,9 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & exe, bool fullP
         exe.Clear();
     }
 
-    // determine primary root
-    const File & primaryFile = m_Files[ 0 ];
-    const File & f = m_Files[ fileId ];
+	const File & f = m_Files[ fileId ];
 
-    GetRelativePath( primaryFile.m_Name, f.m_Name, exe );
+	GetRelativePath(m_mainExecutableRootPath, f.m_Name, exe);
 }
 
 // GetRemotePath

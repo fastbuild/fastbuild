@@ -42,6 +42,7 @@ private:
 
     bool            m_AllowDistribution;
     bool            m_VS2012EnumBugFix;
+	AString			m_ExecutableRootPath;
     ToolManifest    m_Manifest;
 };
 
