@@ -20,6 +20,7 @@
 //------------------------------------------------------------------------------
 REFLECT_BEGIN( CompilerNode, Node, MetaName( "Executable" ) + MetaFile() )
     REFLECT_ARRAY( m_ExtraFiles,    "ExtraFiles",           MetaOptional() + MetaFile() )
+	REFLECT_ARRAY( m_CustomEnvironmentVariables, "CustomEnvironmentVariables",	MetaOptional() )
     REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
     REFLECT( m_VS2012EnumBugFix,    "VS2012EnumBugFix",     MetaOptional() )
 	REFLECT( m_ExecutableRootPath,  "ExecutableRootPath", MetaOptional() + MetaPath())
@@ -133,7 +134,7 @@ bool CompilerNode::DetermineNeedToBuild( bool forceClean ) const
     // ensure our timestamp is updated (Generate requires this)
     FileNode::DoBuild( job );
 
-	if ( !m_Manifest.Generate( this, m_ExecutableRootPath, m_StaticDependencies ) )
+	if ( !m_Manifest.Generate( this, m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables ) )
     {
         return Node::NODE_RESULT_FAILED; // Generate will have emitted error
     }
