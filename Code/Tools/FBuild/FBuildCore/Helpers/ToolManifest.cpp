@@ -77,9 +77,10 @@ ToolManifest::~ToolManifest()
 
 // Generate
 //------------------------------------------------------------------------------
-bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExecutableRoot, const Dependencies & dependencies )
+bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExecutableRoot, const Dependencies & dependencies, const Array<AString>& customEnvironmentVariables )
 {
 	m_mainExecutableRootPath = mainExecutableRoot;
+	m_CustomEnvironmentVariables = customEnvironmentVariables;
     m_Files.Clear();
     m_TimeStamp = 0;
     m_Files.SetCapacity( 1 + dependencies.GetSize() );
@@ -101,7 +102,8 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
 
     // create a hash for the whole tool chain
     const size_t numFiles( m_Files.GetSize() );
-    const size_t memSize( numFiles * sizeof( uint32_t ) * 2 );
+	const size_t numEnvVars( m_CustomEnvironmentVariables.GetSize() );
+    const size_t memSize( numFiles * sizeof( uint32_t ) * 2 + numEnvVars);	// Make space for the hash of the file, the hash of the filename, and each of the custom environment variables.
     uint32_t * mem = (uint32_t *)ALLOC( memSize );
     uint32_t * pos = mem;
     for ( size_t i=0; i<numFiles; ++i )
@@ -118,6 +120,11 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
+	for (size_t i = 0; i < numEnvVars; ++i)
+	{
+		*pos = xxHash::Calc32(m_CustomEnvironmentVariables[i]);
+		++pos;
+	}
     m_ToolId = xxHash::Calc64( mem, memSize );
     FREE( mem );
 
@@ -150,6 +157,13 @@ void ToolManifest::Serialize( IOStream & ms ) const
         ms.Write( f.m_Hash );
         ms.Write( f.m_ContentSize );
     }
+
+	const size_t numEnvVars(m_CustomEnvironmentVariables.GetSize());
+	ms.Write((uint32_t)numEnvVars);
+	for (size_t i = 0; i < numEnvVars; ++i)
+	{
+		ms.Write(m_CustomEnvironmentVariables[i]);
+	}
 }
 
 // Deserialize
@@ -177,6 +191,18 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
         ms.Read( contentSize );
         m_Files.Append( File( name, timeStamp, hash, nullptr, contentSize ) );
     }
+
+	ASSERT(m_CustomEnvironmentVariables.IsEmpty());
+
+	uint32_t numEnvVars(0);
+	ms.Read(numEnvVars);
+	m_CustomEnvironmentVariables.SetCapacity(numEnvVars);
+	for (size_t i = 0; i < (size_t)numEnvVars; ++i)
+	{
+		AStackString<> envVar;
+		ms.Read(envVar);
+		m_CustomEnvironmentVariables.Append(envVar);
+	}
 
     // everything else is only needed remotely (in the worker)
     if ( remote == false )
@@ -221,6 +247,7 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
     // Generate Environment
     ASSERT( m_RemoteEnvironmentString == nullptr );
 
+		
     // PATH=
     AStackString<> basePath;
     GetRemotePath( basePath );
@@ -238,12 +265,32 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
         AStackString<> sysRoot( "SystemRoot=C:\\Windows" );
     #endif
 
-    size_t len( paths.GetLength() + 1 );
-    #if defined( __WINDOWS__ )
-        len += ( tmp.GetLength() + 1 );
-        len += ( sysRoot.GetLength() + 1 );
-    #endif
-    len += 1; // for double null
+
+	// Calculate the length of the full environment string
+
+	size_t len(paths.GetLength() + 1);
+	#if defined( __WINDOWS__ )
+		len += (tmp.GetLength() + 1);
+		len += (sysRoot.GetLength() + 1);
+	#endif
+	
+	for (size_t i = 0; i < numEnvVars; ++i)
+	{
+		const AString& envVar = m_CustomEnvironmentVariables[i];
+		if (envVar.Find("%1"))
+		{
+			len += envVar.GetLength() - 2 + basePath.GetLength() + 1;	// If there is a %1 it will be removed and replaced by the basePath. +1 for the null terminator.
+		}
+		else
+		{
+			len += envVar.GetLength() + 1;
+		}
+	}
+
+	len += 1; // for double null
+	
+
+	// Now that the environment string length is calculated, allocate and fill.
 
     char * mem = (char *)ALLOC( len );
     m_RemoteEnvironmentString = mem;
@@ -258,6 +305,26 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
         AString::Copy( sysRoot.Get(), mem, sysRoot.GetLength() + 1 ); // including null
         mem += ( sysRoot.GetLength() + 1 ); // including null
     #endif
+
+	for (size_t i = 0; i < numEnvVars; ++i)
+	{
+		const AString& envVar = m_CustomEnvironmentVariables[i];
+		const char* token = envVar.Find("%1");
+		if (token)
+		{
+			AString::Copy(envVar.Get(), mem, (token - envVar.Get()));	// Copy the data up to the token
+			mem += (token - envVar.Get());
+			AString::Copy(basePath.Get(), mem, basePath.GetLength());	// Append the basePath instead of the token
+			mem += basePath.GetLength();
+			AString::Copy(token + 2, mem, envVar.GetLength() - 2 - (token - envVar.Get()) + 1); // Append the trailing portion of the string.
+			mem += (envVar.GetLength() - 2 - (token - envVar.Get()) + 1);
+		}
+		else
+		{
+			AString::Copy(envVar.Get(), mem, envVar.GetLength() + 1);
+			mem += (envVar.GetLength() + 1);
+		}
+	}
 
     *mem = 0; ++mem; // double null
 

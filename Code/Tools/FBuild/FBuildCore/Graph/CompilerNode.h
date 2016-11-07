@@ -40,6 +40,7 @@ private:
 
     // Exposed params
     Array< AString >    m_ExtraFiles;
+	Array< AString >	m_CustomEnvironmentVariables;
 
     bool            m_AllowDistribution;
     bool            m_VS2012EnumBugFix;
