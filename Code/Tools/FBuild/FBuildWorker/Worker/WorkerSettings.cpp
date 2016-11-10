@@ -17,42 +17,42 @@
 
 // Other
 //------------------------------------------------------------------------------
-#define FBUILDWORKER_SETTINGS_MIN_VERSION ( 1 )     // Oldest compatible version
-#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 2 ) // Current version
+#define FBUILDWORKER_SETTINGS_MIN_VERSION ( 2 )     // Oldest compatible version
+#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 3 ) // Current version
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 WorkerSettings::WorkerSettings()
-    : m_Mode( WHEN_IDLE )
-    , m_NumCPUsToUse( 1 )
+    : m_NumCPUsToUseWhenIdle( 1 )
+	, m_NumCPUsToUseDedicated( 0 )
     , m_StartMinimized( false )
 {
     // half CPUs available to use by default
     uint32_t numCPUs = Env::GetNumProcessors();
-    m_NumCPUsToUse = Math::Max< uint32_t >( 1, numCPUs / 2 );
+    m_NumCPUsToUseWhenIdle = Math::Max< uint32_t >( 1, numCPUs / 2 );
 
     Load();
 
     // handle CPU downgrade
-    m_NumCPUsToUse = Math::Min( Env::GetNumProcessors(), m_NumCPUsToUse );
+    m_NumCPUsToUseWhenIdle = Math::Min( Env::GetNumProcessors(), m_NumCPUsToUseWhenIdle );
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 WorkerSettings::~WorkerSettings() = default;
 
-// SetMode
+// SetNumCPUsToUseWhenIdle
 //------------------------------------------------------------------------------
-void WorkerSettings::SetMode( Mode m )
+void WorkerSettings::SetNumCPUsToUseWhenIdle( uint32_t c )
 {
-    m_Mode = m;
+    m_NumCPUsToUseWhenIdle = c;
 }
 
-// SetNumCPUsToUse
+// SetNumCPUsToUseDedicated
 //------------------------------------------------------------------------------
-void WorkerSettings::SetNumCPUsToUse( uint32_t c )
+void WorkerSettings::SetNumCPUsToUseDedicated(uint32_t c)
 {
-    m_NumCPUsToUse = c;
+	m_NumCPUsToUseDedicated = c;
 }
 
 // SetStartMinimized
@@ -82,10 +82,8 @@ void WorkerSettings::Load()
         }
 
         // settings
-        uint32_t mode;
-        f.Read( mode );
-        m_Mode = (Mode)mode;
-        f.Read( m_NumCPUsToUse );
+        f.Read( m_NumCPUsToUseWhenIdle );
+		f.Read(m_NumCPUsToUseDedicated);
         f.Read( m_StartMinimized );
     }
 }
@@ -108,8 +106,8 @@ void WorkerSettings::Save()
         ok &= ( f.Write( uint8_t( FBUILDWORKER_SETTINGS_CURRENT_VERSION ) ) == 1 );
 
         // settings
-        ok &= f.Write( (uint32_t)m_Mode );
-        ok &= f.Write( m_NumCPUsToUse );
+        ok &= f.Write( m_NumCPUsToUseWhenIdle );
+		ok &= f.Write(m_NumCPUsToUseDedicated);
         ok &= f.Write( m_StartMinimized );
 
         if ( ok )
