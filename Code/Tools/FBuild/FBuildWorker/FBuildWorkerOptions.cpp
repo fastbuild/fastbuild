@@ -19,16 +19,48 @@
 
 // FBuildWorkerOptions (CONSTRUCTOR)
 //------------------------------------------------------------------------------
-FBuildWorkerOptions::FBuildWorkerOptions() :
+FBuildWorkerOptions::FBuildWorkerOptions() 
+	: m_OverrideCPUAllocationWhenIdle( false )
+    , m_CPUAllocationWhenIdle( 0 )
+	, m_OverrideCPUAllocationDedicated(false)
+	, m_CPUAllocationDedicated(0)
 #if defined( __WINDOWS__ )
-    m_IsSubprocess( false ),
-    m_UseSubprocess( true ),
+	, m_IsSubprocess(false)
+	, m_UseSubprocess(true)
 #endif
-    m_OverrideCPUAllocation( false ),
-    m_CPUAllocation( 0 ),
-    m_OverrideWorkMode( false ),
-    m_WorkMode( WorkerSettings::WHEN_IDLE )
 {
+}
+
+// TokenOffset should be the length of the first portion of the string. For example, for a token of "-gpu=4", the tokenOffset should be strlen("-gpu=")
+bool ParseCpuCommandLine(const AString& token, size_t tokenOffset, bool& overrideCpuAllocation, uint32_t& cpuAllocation)
+{
+	int32_t numCPUs = Env::GetNumProcessors();
+	int32_t num(0);
+	if (sscanf(token.Get() + tokenOffset, "%i", &num) == 1)
+	{
+		if (token.EndsWith('%'))
+		{
+			num = (int32_t)(numCPUs * (float)num / 100.0f);
+			cpuAllocation = Math::Clamp(num, 1, numCPUs);
+			overrideCpuAllocation = true;
+			return true;
+		}
+		else if (num > 0)
+		{
+			cpuAllocation = Math::Clamp(num, 1, numCPUs);
+			overrideCpuAllocation = true;
+			return true;
+		}
+		else if (num < 0)
+		{
+			cpuAllocation = Math::Clamp((numCPUs + num), 1, numCPUs);
+			overrideCpuAllocation = true;
+			return true;
+		}
+		// problem... fall through
+	}
+	// problem... fall through
+	return false;
 }
 
 // ProcessCommandLine
@@ -44,53 +76,20 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
     for ( const AString * it=tokens.Begin(); it != end; ++it )
     {
         const AString & token = *it;
-        if ( token.BeginsWith( "-cpus=" ) )
+        if ( token.BeginsWith( "-cpusWhenIdle=" ) )
         {
-            int32_t numCPUs = Env::GetNumProcessors();
-            int32_t num( 0 );
-            if ( sscanf( token.Get() + 6, "%i", &num ) == 1 )
-            {
-                if ( token.EndsWith( '%' ) )
-                {
-                    num = (int32_t)( numCPUs * (float)num / 100.0f );
-                    m_CPUAllocation = Math::Clamp( num, 1, numCPUs );
-                    m_OverrideCPUAllocation = true;
-                    continue;
-                }
-                else if ( num > 0 )
-                {
-                    m_CPUAllocation = Math::Clamp( num, 1, numCPUs );
-                    m_OverrideCPUAllocation = true;
-                    continue;
-                }
-                else if ( num < 0 )
-                {
-                    m_CPUAllocation = Math::Clamp( ( numCPUs + num ), 1, numCPUs );
-                    m_OverrideCPUAllocation = true;
-                    continue;
-                }
-                // problem... fall through
-            }
-            // problem... fall through
+			if (ParseCpuCommandLine(token, strlen("-cpusWhenIdle="), m_OverrideCPUAllocationWhenIdle, m_CPUAllocationWhenIdle))
+			{
+				continue;
+			}
         }
-        else if ( token == "-mode=disabled" )
-        {
-            m_WorkMode = WorkerSettings::DISABLED;
-            m_OverrideWorkMode = true;
-            continue;
-        }
-        else if ( token == "-mode=idle" )
-        {
-            m_WorkMode = WorkerSettings::WHEN_IDLE;
-            m_OverrideWorkMode = true;
-            continue;
-        }
-        else if ( token == "-mode=dedicated" )
-        {
-            m_WorkMode = WorkerSettings::DEDICATED;
-            m_OverrideWorkMode = true;
-            continue;
-        }
+		if (token.BeginsWith("-cpusDedicated="))
+		{
+			if (ParseCpuCommandLine(token, strlen("-cpusDedicated="), m_OverrideCPUAllocationDedicated, m_CPUAllocationDedicated))
+			{
+				continue;
+			}
+		}
         #if defined( __WINDOWS__ )
             else if ( token == "-nosubprocess" )
             {
@@ -119,16 +118,16 @@ void FBuildWorkerOptions::ShowUsageError()
                        "\n"
                        "Command Line Options:\n"
                        "------------------------------------------------------------\n"
-                       "-cpus=[n|-n|n%] : Set number of CPUs to use.\n"
+                       "-cpusWhenIdle=[n|-n|n%] : Set number of CPUs to use when idle.\n"
                        "                n : Explicit number.\n"
                        "                -n : NUMBER_OF_PROCESSORS-n.\n"
                        "                n% : % of NUMBER_OF_PROCESSORS.\n"
                        "\n"
-                       "-mode=[disabled|idle|dedicated] : Set work mode.\n"
-                       "                disabled : Don't accept any work.\n"
-                       "                idle : Accept work when PC is idle.\n"
-                       "                dedicated : Accept work always.\n"
-                       "\n"
+						"-cpusDedicated=[n|-n|n%] : Set number of dedicated CPUs to use.\n"
+						"                n : Explicit number.\n"
+						"                -n : NUMBER_OF_PROCESSORS-n.\n"
+						"                n% : % of NUMBER_OF_PROCESSORS.\n"
+						"\n"
                        #if defined( __WINDOWS__ )
                        "-nosubprocess : Don't spawn a sub-process worker copy.\n";
                        #else
