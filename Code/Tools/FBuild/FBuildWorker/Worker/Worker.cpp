@@ -203,27 +203,21 @@ void Worker::UpdateAvailability()
     m_IdleDetection.Update();
 
     WorkerSettings & ws = WorkerSettings::Get();
-    uint32_t numCPUsToUse = ws.GetNumCPUsToUse();
-    switch( ws.GetMode() )
-    {
-        case WorkerSettings::WHEN_IDLE:
-        {
-            if ( m_IdleDetection.IsIdle() == false )
-            {
-                numCPUsToUse = 0;
-            }
-            break;
-        }
-        case WorkerSettings::DEDICATED:
-        {
-            break; // use all allocated cpus
-        }
-        case WorkerSettings::DISABLED:
-        {
-            numCPUsToUse = 0;
-            break;
-        }
-    }
+    uint32_t numCPUsToUseWhenIdle = ws.GetNumCPUsToUseWhenIdle();
+	uint32_t numCPUsToUseDedicated = ws.GetNumCPUsToUseDedicated();
+
+	if (m_IdleDetection.IsIdle() == false)
+	{
+		numCPUsToUseWhenIdle = 0;
+	}
+
+	uint32_t numProcessors = Env::GetNumProcessors();
+	uint32_t numCPUsToUse = numCPUsToUseWhenIdle + numCPUsToUseDedicated;
+	
+	if (numCPUsToUse > numProcessors)
+	{
+		numCPUsToUse = numProcessors;
+	}
 
     // don't accept any new work while waiting for a restart
     if ( m_RestartNeeded || ( hasEnoughDiskSpace == false ) )
@@ -231,9 +225,9 @@ void Worker::UpdateAvailability()
         numCPUsToUse = 0;
     }
 
-    WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
+    WorkerThreadRemote::SetNumCPUsToUse(numCPUsToUse);
 
-    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
+    m_WorkerBrokerage.SetAvailability(numCPUsToUse > 0);
 }
 
 // UpdateUI
