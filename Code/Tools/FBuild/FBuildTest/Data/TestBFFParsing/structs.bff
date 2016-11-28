@@ -2,25 +2,25 @@
 // A struct containing simple members
 //
 .TestStructA =
-[ 
-	.StringMember = 'String inside TestStructA'
-	.IntMember = 7
-	.BoolMember = true
-	.ArrayMember = { "aaa", "bbb", "ccc" }
+[
+    .StringMember = 'String inside TestStructA'
+    .IntMember = 7
+    .BoolMember = true
+    .ArrayMember = { "aaa", "bbb", "ccc" }
 ]
 
 //
 // Nested structures
 //
 .TestStructB =
-[ 
-	.AnotherStruct =
-	[
-		.YetAnotherStruct =
-		[
-			.Member = "String inside TestStructB.AnotherStruct.YetAnotherStruct"
-		]
-	]
+[
+    .AnotherStruct =
+    [
+        .YetAnotherStruct =
+        [
+            .Member = "String inside TestStructB.AnotherStruct.YetAnotherStruct"
+        ]
+    ]
 ]
 
 // Empty Structure
@@ -41,22 +41,22 @@
 // Using a structure
 //
 {
-	// make members of struct available in local scope
-	Using( .TestStructA )
+    // make members of struct available in local scope
+    Using( .TestStructA )
 
-	// test that a member is available locally by trying to access it
-	Print( "$StringMember$" )
+    // test that a member is available locally by trying to access it
+    Print( "$StringMember$" )
 }
 
 //
 // Using nested structures
 //
 {
-	Using( .TestStructB )
-	Using( .AnotherStruct )
-	Using( .YetAnotherStruct )
+    Using( .TestStructB )
+    Using( .AnotherStruct )
+    Using( .YetAnotherStruct )
 
-	Print( "$Member$" )
+    Print( "$Member$" )
 }
 
 //
@@ -64,148 +64,148 @@
 //
 .X86Config =
 [
-	.Compiler			= "cl.exe"
-	.CompilerOptions	= "%1 /Fo%2 /W4 /WX /Z7 /nologo /c"
-	.Librarian			= "lib.exe"
-	.LibrarianOptions	= '/NODEFAULTLIB /WX /NOLOGO /OUT:%2 %1'
-	.Linker				= "link.exe"
-	.LinkerOptions		= '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:%2 %1'
-	.Defines			= "-DWIN64 -D_WIN64 -DWIN32_LEAN_AND_MEAN"
-	.Platform			= "x86"
+    .Compiler           = "cl.exe"
+    .CompilerOptions    = "%1 /Fo%2 /W4 /WX /Z7 /nologo /c"
+    .Librarian          = "lib.exe"
+    .LibrarianOptions   = '/NODEFAULTLIB /WX /NOLOGO /OUT:%2 %1'
+    .Linker             = "link.exe"
+    .LinkerOptions      = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:%2 %1'
+    .Defines            = "-DWIN64 -D_WIN64 -DWIN32_LEAN_AND_MEAN"
+    .Platform           = "x86"
 ]
 
 .X64Config =
 [
-	.Compiler			= "amd_x64/cl.exe"
-	.CompilerOptions	= "%1 /Fo%2 /W4 /WX /Z7 /nologo /c"
-	.Librarian			= "amd_x64//lib.exe"
-	.LibrarianOptions	= '/NODEFAULTLIB /WX /NOLOGO /OUT:%2 %1'
-	.Linker				= "amd_x64/link.exe"
-	.LinkerOptions		= '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:%2 %1'
-	.Defines			= "-DWIN64 -D_WIN64 -DWIN32_LEAN_AND_MEAN"
-	.Platform			= "x64"
+    .Compiler           = "amd_x64/cl.exe"
+    .CompilerOptions    = "%1 /Fo%2 /W4 /WX /Z7 /nologo /c"
+    .Librarian          = "amd_x64//lib.exe"
+    .LibrarianOptions   = '/NODEFAULTLIB /WX /NOLOGO /OUT:%2 %1'
+    .Linker             = "amd_x64/link.exe"
+    .LinkerOptions      = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:%2 %1'
+    .Defines            = "-DWIN64 -D_WIN64 -DWIN32_LEAN_AND_MEAN"
+    .Platform           = "x64"
 ]
 
 .PS3Config =
 [
-	.Compiler 			= "host-win32\ppu\bin\ppu-lv2-gcc"
-	.CompilerOptions	= "%1 -o%2"
-	.Librarian			= "host-win32\ppu\bin\ppu-lv2-ar"
-	.LibrarianOptions	= "rc %2 %1"
-	.Linker				= "host-win32\ppu\bin\ppu-lv2-ar"
-	.Defines			= "-DPLAYSTATION3 -D_PS3 -DDEBUG"
-	.Platform			= "ps3"
+    .Compiler           = "host-win32\ppu\bin\ppu-lv2-gcc"
+    .CompilerOptions    = "%1 -o%2"
+    .Librarian          = "host-win32\ppu\bin\ppu-lv2-ar"
+    .LibrarianOptions   = "rc %2 %1"
+    .Linker             = "host-win32\ppu\bin\ppu-lv2-ar"
+    .Defines            = "-DPLAYSTATION3 -D_PS3 -DDEBUG"
+    .Platform           = "ps3"
 ]
 
 .X86DebugConfig =
-[ 
-	Using( .X86Config )
-	.CompilerOptions	+ ' /DDEBUG /D_DEBUG'
-	.Config				= 'Debug'
+[
+    Using( .X86Config )
+    .CompilerOptions    + ' /DDEBUG /D_DEBUG'
+    .Config             = 'Debug'
 ]
 
 .X86ReleaseConfig =
-[ 
-	Using( .X86Config )
-	.CompilerOptions	+ ' /DRELEASE /D_RELEASE'
-	.Config				= 'Release'
+[
+    Using( .X86Config )
+    .CompilerOptions    + ' /DRELEASE /D_RELEASE'
+    .Config             = 'Release'
 ]
 
 .X64DebugConfig =
-[ 
-	Using( .X64Config )
-	.CompilerOptions	+ ' /DDEBUG /D_DEBUG'
-	.Config				= 'Debug'
+[
+    Using( .X64Config )
+    .CompilerOptions    + ' /DDEBUG /D_DEBUG'
+    .Config             = 'Debug'
 ]
 
 .X64ReleaseConfig =
-[ 
-	Using( .X64Config )
-	.CompilerOptions	+ ' /DRELEASE /D_RELEASE'
-	.Config				= 'Release'
+[
+    Using( .X64Config )
+    .CompilerOptions    + ' /DRELEASE /D_RELEASE'
+    .Config             = 'Release'
 ]
 
 .PS3DebugConfig =
-[ 
-	Using( .PS3Config )
-	.CompilerOptions	+ ' -DDEBUG -D_DEBUG'
-	.Config				= 'Debug'
+[
+    Using( .PS3Config )
+    .CompilerOptions    + ' -DDEBUG -D_DEBUG'
+    .Config             = 'Debug'
 ]
 
 .PS3ReleaseConfig =
-[ 
-	Using( .PS3Config )
-	.CompilerOptions	+ ' -DRELEASE -D_RELEASE'
-	.Config				= 'Release'
+[
+    Using( .PS3Config )
+    .CompilerOptions    + ' -DRELEASE -D_RELEASE'
+    .Config             = 'Release'
 ]
 
 {
-		Using( .X86DebugConfig )
-		Library( "Name-$Platform$-$Config$" )
-		{
-			.CompilerInputPath = 'code/'
-			.LibrarianOutput = 'out/a.lib'
-			.CompilerOutputPath = 'out/'
-		}
+        Using( .X86DebugConfig )
+        Library( "Name-$Platform$-$Config$" )
+        {
+            .CompilerInputPath = 'code/'
+            .LibrarianOutput = 'out/a.lib'
+            .CompilerOutputPath = 'out/'
+        }
 }
 
 .Configs = { .X86DebugConfig, .X86ReleaseConfig,
-			 .X64DebugConfig, .X64ReleaseConfig,
-			 .PS3DebugConfig, .PS3ReleaseConfig }
+             .X64DebugConfig, .X64ReleaseConfig,
+             .PS3DebugConfig, .PS3ReleaseConfig }
 
 ForEach( .Config in .Configs )
 {
-	Using( .Config )
-	Print( "$Compiler$" )
+    Using( .Config )
+    Print( "$Compiler$" )
 }
 
 // struct assignment
 {
-	.StructA =
-	[
-		.Member = "test string"
-	]
-	.StructB = .StructA
+    .StructA =
+    [
+        .Member = "test string"
+    ]
+    .StructB = .StructA
 
-	Using( .StructB )
-	Print( "$Member$" )
+    Using( .StructB )
+    Print( "$Member$" )
 }
 
 // struct concatenation
 {
-	.StructA =
-	[
-		.MemberA = "member A"
-	]
-	.StructB =
-	[
-		.MemberA = "zzz" // this will be replaced
-		.MemberB = "member B"
-	]
-	.StructB + .StructA
+    .StructA =
+    [
+        .MemberA = "member A"
+    ]
+    .StructB =
+    [
+        .MemberA = "zzz" // this will be replaced
+        .MemberB = "member B"
+    ]
+    .StructB + .StructA
 
-	Using( .StructB )
-	Print( "$MemberA$ + $MemberB$" )
+    Using( .StructB )
+    Print( "$MemberA$ + $MemberB$" )
 }
 
 // array of structs
 {
-	.StructA = [ .StringA = "" ]
-	.StructB = [ .StringA = "" ]
-	.ArrayOfStructs1 = { .StructA, .StructB }
+    .StructA = [ .StringA = "" ]
+    .StructB = [ .StringA = "" ]
+    .ArrayOfStructs1 = { .StructA, .StructB }
 
-	// assignment of ArrayOfStructs
-	.ArrayOfStructs2 = .ArrayOfStructs1
+    // assignment of ArrayOfStructs
+    .ArrayOfStructs2 = .ArrayOfStructs1
 
-	// assignment of Struct (ok because array already defined)
-	.ArrayOfStructs2 = .StructA
-	.ArrayOfStructs2 = { .StructA }
-		
-	// concatenation of ArrayOfStructs
-					 + .ArrayOfStructs1
-					 + { .ArrayOfStructs1 }
+    // assignment of Struct (ok because array already defined)
+    .ArrayOfStructs2 = .StructA
+    .ArrayOfStructs2 = { .StructA }
 
-	// concatentation of Struct (ok because array already defined)
-					 + .StructA
-					 + { .StructA }
+    // concatenation of ArrayOfStructs
+                     + .ArrayOfStructs1
+                     + { .ArrayOfStructs1 }
+
+    // concatentation of Struct (ok because array already defined)
+                     + .StructA
+                     + { .StructA }
 }

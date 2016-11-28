@@ -1,7 +1,6 @@
 // Mat44.h
 //------------------------------------------------------------------------------
-#ifndef CORE_MATH_MAT44_H
-#define CORE_MATH_MAT44_H
+#pragma once
 
 // Includes
 //------------------------------------------------------------------------------
@@ -13,44 +12,44 @@
 class Mat44
 {
 public:
-	Vec4 col0;
-	Vec4 col1;
-	Vec4 col2;
-	Vec4 col3;
+    Vec4 col0;
+    Vec4 col1;
+    Vec4 col2;
+    Vec4 col3;
 
-	inline explicit	Mat44() {}
-	inline explicit	Mat44( const Vec4 & c0, const Vec4 & c1, const Vec4 & c2, const Vec4 & c3 )
-					: col0( c0 ), col1( c1 ), col2( c2 ), col3( c3 ) {}
-	inline		   ~Mat44() {}
+    inline explicit Mat44() = default;
+    inline explicit Mat44( const Vec4 & c0, const Vec4 & c1, const Vec4 & c2, const Vec4 & c3 )
+                    : col0( c0 ), col1( c1 ), col2( c2 ), col3( c3 ) {}
+    inline         ~Mat44() = default;
 
-	// modify the array
-	void				SetTranslation( const Vec3 &tran );
+    // modify the array
+    void                SetTranslation( const Vec3 &tran );
 
-	// multiplications
-	Mat44 operator *( const Mat44 & other ) const;
-	inline Vec4 operator * ( const Vec4 & v ) const;
+    // multiplications
+    Mat44 operator *( const Mat44 & other ) const;
+    inline Vec4 operator * ( const Vec4 & v ) const;
 
-	inline bool operator ==( const Mat44 & other ) const;
+    inline bool operator ==( const Mat44 & other ) const;
 
-	// access x/y/z component axis and translation
-	//inline const Vec3 & GetXAxis() const		{ return (const Vec3 &)col0; }
-	//inline const Vec3 & GetYAxis() const		{ return (const Vec3 &)col1; }
-	//inline const Vec3 & GetZAxis() const		{ return (const Vec3 &)col2; }
-	//inline const Vec3 & GetTranslation() const	{ return (const Vec3 &)col3; }
+    // access x/y/z component axis and translation
+    //inline const Vec3 & GetXAxis() const      { return (const Vec3 &)col0; }
+    //inline const Vec3 & GetYAxis() const      { return (const Vec3 &)col1; }
+    //inline const Vec3 & GetZAxis() const      { return (const Vec3 &)col2; }
+    //inline const Vec3 & GetTranslation() const    { return (const Vec3 &)col3; }
 
-	void				MakeIdentity();
-	void				MakeLookAt( const Vec3 & pos, const Vec3 & lookAt, const Vec3 & upVector );
-	void				MakeRotationX( float angleRadians );
-	void				MakeRotationY( float angleRadians );
-	void				MakeRotationZ( float angleRadians );
-	void				MakeScale( float scale );
-	void				MakeProjection( float yFOV, float aspect, float zNear, float zFar );
+    void                MakeIdentity();
+    void                MakeLookAt( const Vec3 & pos, const Vec3 & lookAt, const Vec3 & upVector );
+    void                MakeRotationX( float angleRadians );
+    void                MakeRotationY( float angleRadians );
+    void                MakeRotationZ( float angleRadians );
+    void                MakeScale( float scale );
+    void                MakeProjection( float yFOV, float aspect, float zNear, float zFar );
 
-	// constants
-	inline static const Mat44 & GetIdentity() { return *( ( const Mat44 *)s_Identity ); }
+    // constants
+    inline static const Mat44 & GetIdentity() { return *( ( const Mat44 *)s_Identity ); }
 
 private:
-	static float s_Identity[ 16 ];
+    static float s_Identity[ 16 ];
 };
 
 // operator * ( Vec4 )
@@ -64,11 +63,10 @@ private:
 //------------------------------------------------------------------------------
 /*inline*/ bool Mat44::operator ==( const Mat44 & other ) const
 {
-	return ( ( col0 == other.col0 ) && 
-			 ( col1 == other.col1 ) && 
-			 ( col2 == other.col2 ) && 
-			 ( col3 == other.col3 ) );
+    return ( ( col0 == other.col0 ) &&
+             ( col1 == other.col1 ) &&
+             ( col2 == other.col2 ) &&
+             ( col3 == other.col3 ) );
 }
 
 //------------------------------------------------------------------------------
-#endif // CORE_MATH_MAT44_H

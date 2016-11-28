@@ -1,8 +1,6 @@
 // LevenshteinDistance.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_STRINGS_LEVENSHTEINDISTANCE_H
-#define CORE_STRINGS_LEVENSHTEINDISTANCE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -25,4 +23,3 @@ public:
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_STRINGS_LEVENSHTEINDISTANCE_H

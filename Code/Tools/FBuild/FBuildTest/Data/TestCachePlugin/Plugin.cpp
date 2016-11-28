@@ -23,40 +23,40 @@ extern "C" {
 
 bool STDCALL CacheInit( const char * settings )
 {
-	printf( "Init : %s\n", settings );
-	return true;
+    printf( "Init : %s\n", settings );
+    return true;
 }
 
 // CacheShutdown
 //------------------------------------------------------------------------------
 void STDCALL CacheShutdown()
 {
-	printf( "Shutdown\n" );
+    printf( "Shutdown\n" );
 }
 
 // CachePublish
 //------------------------------------------------------------------------------
 bool STDCALL CachePublish( const char * cacheId, const void * data, unsigned long long dataSize )
 {
-	printf( "Publish : %s, %p, %llu\n", cacheId, data, dataSize );
-	return true;
+    printf( "Publish : %s, %p, %llu\n", cacheId, data, dataSize );
+    return true;
 }
 
 // CacheRetrieve
 //------------------------------------------------------------------------------
 bool STDCALL CacheRetrieve( const char * cacheId, void * & data, unsigned long long & dataSize )
 {
-	(void)data;
-	(void)dataSize;
-	printf( "Retrieve : %s\n", cacheId );
-	return false;
+    (void)data;
+    (void)dataSize;
+    printf( "Retrieve : %s\n", cacheId );
+    return false;
 }
 
 // CacheFreeMemory
 //------------------------------------------------------------------------------
 void STDCALL CacheFreeMemory( void * data, unsigned long long dataSize )
 {
-	printf( "FreeMemory : %p, %llu\n", data, dataSize );
+    printf( "FreeMemory : %p, %llu\n", data, dataSize );
 }
 
 //------------------------------------------------------------------------------

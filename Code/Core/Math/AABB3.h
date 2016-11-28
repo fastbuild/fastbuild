@@ -1,8 +1,6 @@
 // AABB3
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_MATH_AABB3_H
-#define CORE_MATH_AABB3_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -17,18 +15,17 @@ class Ray3;
 class AABB3
 {
 public:
-	inline explicit AABB3( const Vec3 & mi, const Vec3 & ma )
-		: m_Min( mi ), m_Max( ma )
-	{}
-	inline AABB3() {}
-	inline ~AABB3() {}
+    inline explicit AABB3( const Vec3 & mi, const Vec3 & ma )
+        : m_Min( mi ), m_Max( ma )
+    {}
+    inline AABB3() = default;
+    inline ~AABB3() = default;
 
-	bool Intersect( const Ray3 & ray, float & dist ) const;
-	
+    bool Intersect( const Ray3 & ray, float & dist ) const;
+
 private:
-	Vec3 m_Min;
-	Vec3 m_Max;
+    Vec3 m_Min;
+    Vec3 m_Max;
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_MATH_AABB3_H

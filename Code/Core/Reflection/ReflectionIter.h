@@ -1,8 +1,6 @@
 // ReflectionIter.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_REFLECTIONITER_H
-#define CORE_REFLECTION_REFLECTIONITER_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -18,23 +16,22 @@ class ReflectedProperty;
 class ReflectionIter
 {
 public:
-	explicit ReflectionIter( const ReflectionInfo * info, uint32_t index );
+    explicit ReflectionIter( const ReflectionInfo * info, uint32_t index );
 
-	// comparison of iterators
-	bool operator == ( const ReflectionIter & other ) const;
-	inline bool operator != ( const ReflectionIter & other ) const { return !( *this == other ); }
+    // comparison of iterators
+    bool operator == ( const ReflectionIter & other ) const;
+    inline bool operator != ( const ReflectionIter & other ) const { return !( *this == other ); }
 
-	// iterating
-	void operator ++();
+    // iterating
+    void operator ++();
 
-	// dereferencing
-	const ReflectedProperty & operator ->() const;
-	const ReflectedProperty & operator *() const;
+    // dereferencing
+    const ReflectedProperty & operator ->() const;
+    const ReflectedProperty & operator *() const;
 
 protected:
-	const ReflectionInfo *	m_Info;
-	uint32_t				m_Index;
+    const ReflectionInfo *  m_Info;
+    uint32_t                m_Index;
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_REFLECTIONITER_H

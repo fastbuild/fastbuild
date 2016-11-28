@@ -2,91 +2,91 @@
 //--------------------------------------------------------------------
 Print( "---- Both Empty" )
 {
-	.StructA =
-	[
-	]
-	.StructB =
-	[
-	]
-	.StructA + .StructB
-	Print( .StructA )
+    .StructA =
+    [
+    ]
+    .StructB =
+    [
+    ]
+    .StructA + .StructB
+    Print( .StructA )
 }
 
 // Empty Left
 //--------------------------------------------------------------------
 Print( "---- Empty Left" )
 {
-	.StructA =
-	[
-	]
-	.StructB =
-	[
-		.String			= 'Hello'
-		.Int			= 1
-		.Bool			= false
-		.ArrayOfStrings	= { 'A', 'B' }
-	]
-	.StructA + .StructB
-	Print( .StructA )
+    .StructA =
+    [
+    ]
+    .StructB =
+    [
+        .String         = 'Hello'
+        .Int            = 1
+        .Bool           = false
+        .ArrayOfStrings = { 'A', 'B' }
+    ]
+    .StructA + .StructB
+    Print( .StructA )
 }
 
 // Empty Right
 //--------------------------------------------------------------------
 Print( "---- Empty Right" )
 {
-	.StructA =
-	[
-		.String			= 'Hello'
-		.Int			= 1
-		.Bool			= false
-		.ArrayOfStrings	= { 'A', 'B' }
-	]
-	.StructB =
-	[
-	]
-	.StructA + .StructB
-	Print( .StructA )
+    .StructA =
+    [
+        .String         = 'Hello'
+        .Int            = 1
+        .Bool           = false
+        .ArrayOfStrings = { 'A', 'B' }
+    ]
+    .StructB =
+    [
+    ]
+    .StructA + .StructB
+    Print( .StructA )
 }
 
 // Concat
 //--------------------------------------------------------------------
 Print( "---- Concat" )
 {
-	.StructA =
-	[
-		.String			= 'Hello'
-		.Int			= 1
-		.Bool			= false
-		.ArrayOfStrings	= { 'A', 'B' }
-	]
-	.StructB =
-	[
-		.String			= ' There'
-		.Int			= 2
-		.Bool			= true
-		.ArrayOfStrings	= { 'C', 'D' }
-	]
-	.StructA + .StructB
-	Print( .StructA )
+    .StructA =
+    [
+        .String         = 'Hello'
+        .Int            = 1
+        .Bool           = false
+        .ArrayOfStrings = { 'A', 'B' }
+    ]
+    .StructB =
+    [
+        .String         = ' There'
+        .Int            = 2
+        .Bool           = true
+        .ArrayOfStrings = { 'C', 'D' }
+    ]
+    .StructA + .StructB
+    Print( .StructA )
 }
 
 // ArrayOfStructs Recursion
 //--------------------------------------------------------------------
 Print( "---- ArrayOfStructs Recursion" )
 {
-	.Struct1 = [ .String = '1' ]
-	.Struct2 = [ .String = '2' ]
-	.Struct3 = [ .String = '3' ]
-	.Struct4 = [ .String = '4' ]
-	.StructA =
-	[
-		.ArrayOfStructs = { .Struct1, .Struct2 }
-	]
-	.StructB =
-	[
-		.ArrayOfStructs = { .Struct3, .Struct4 }
-	]
-	.StructC	= .StructA
-				+ .StructB
-	Print( .StructC )
+    .Struct1 = [ .String = '1' ]
+    .Struct2 = [ .String = '2' ]
+    .Struct3 = [ .String = '3' ]
+    .Struct4 = [ .String = '4' ]
+    .StructA =
+    [
+        .ArrayOfStructs = { .Struct1, .Struct2 }
+    ]
+    .StructB =
+    [
+        .ArrayOfStructs = { .Struct3, .Struct4 }
+    ]
+    .StructC    = .StructA
+                + .StructB
+    Print( .StructC )
 }

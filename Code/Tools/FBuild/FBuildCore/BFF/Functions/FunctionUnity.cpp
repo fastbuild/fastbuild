@@ -33,38 +33,38 @@ FunctionUnity::FunctionUnity()
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionUnity::AcceptsHeader() const
 {
-	return true;
+    return true;
 }
 
 // NeedsHeader
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionUnity::NeedsHeader() const
 {
-	return true;
+    return true;
 }
 
 // Commit
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionUnity::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
-	// parsing logic should guarantee we have a string for our name
-	ASSERT( m_AliasForFunction.IsEmpty() == false );
+    // parsing logic should guarantee we have a string for our name
+    ASSERT( m_AliasForFunction.IsEmpty() == false );
 
-	// Check for existing node
-	if ( nodeGraph.FindNode( m_AliasForFunction ) )
-	{
-		Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
-		return false;
-	}
+    // Check for existing node
+    if ( nodeGraph.FindNode( m_AliasForFunction ) )
+    {
+        Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
+        return false;
+    }
 
-	UnityNode * un = nodeGraph.CreateUnityNode( m_AliasForFunction );
+    UnityNode * un = nodeGraph.CreateUnityNode( m_AliasForFunction );
 
-	if ( !PopulateProperties( nodeGraph, funcStartIter, un ) )
-	{
-		return false;
-	}
+    if ( !PopulateProperties( nodeGraph, funcStartIter, un ) )
+    {
+        return false;
+    }
 
-	return un->Initialize( nodeGraph, funcStartIter, this );
+    return un->Initialize( nodeGraph, funcStartIter, this );
 }
 
 //------------------------------------------------------------------------------

@@ -1,8 +1,6 @@
 // Cache - Default cache implementation
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_CACHE_H
-#define FBUILD_CACHE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -14,19 +12,18 @@
 class Cache : public ICache
 {
 public:
-	explicit Cache();
-	virtual ~Cache();
+    explicit Cache();
+    virtual ~Cache();
 
-	virtual bool Init( const AString & cachePath );
-	virtual void Shutdown();
-	virtual bool Publish( const AString & cacheId, const void * data, size_t dataSize );
-	virtual bool Retrieve( const AString & cacheId, void * & data, size_t & dataSize );
-	virtual void FreeMemory( void * data, size_t dataSize );
+    virtual bool Init( const AString & cachePath );
+    virtual void Shutdown();
+    virtual bool Publish( const AString & cacheId, const void * data, size_t dataSize );
+    virtual bool Retrieve( const AString & cacheId, void * & data, size_t & dataSize );
+    virtual void FreeMemory( void * data, size_t dataSize );
 private:
-	void GetCacheFileName( const AString & cacheId, AString & path ) const;
+    void GetCacheFileName( const AString & cacheId, AString & path ) const;
 
-	AString m_CachePath;
+    AString m_CachePath;
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_CACHE_H

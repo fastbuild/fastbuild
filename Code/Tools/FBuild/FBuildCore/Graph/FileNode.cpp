@@ -19,43 +19,41 @@
 FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
 : Node( fileName, Node::FILE_NODE, controlFlags )
 {
-	ASSERT( fileName.EndsWith( "\\" ) == false );
-	ASSERT( ( fileName.FindLast( ':' ) == nullptr ) ||
-			( fileName.FindLast( ':' ) == ( fileName.Get() + 1 ) ) );
+    ASSERT( fileName.EndsWith( "\\" ) == false );
+    ASSERT( ( fileName.FindLast( ':' ) == nullptr ) ||
+            ( fileName.FindLast( ':' ) == ( fileName.Get() + 1 ) ) );
 
-	m_LastBuildTimeMs = 1; // very little work required
+    m_LastBuildTimeMs = 1; // very little work required
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-FileNode::~FileNode()
-{
-}
+FileNode::~FileNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult FileNode::DoBuild( Job * UNUSED( job ) )
 {
-	m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-	return NODE_RESULT_OK;
+    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    return NODE_RESULT_OK;
 }
 
 // Load
 //------------------------------------------------------------------------------
 /*static*/ Node * FileNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
-	NODE_LOAD( AStackString<>,	fileName );
+    NODE_LOAD( AStackString<>,  fileName );
 
-	Node * n = nodeGraph.CreateFileNode( fileName );
-	ASSERT( n );
-	return n;
+    Node * n = nodeGraph.CreateFileNode( fileName );
+    ASSERT( n );
+    return n;
 }
 
 // Save
 //------------------------------------------------------------------------------
 /*virtual*/ void FileNode::Save( IOStream & stream ) const
 {
-	NODE_SAVE( m_Name );
+    NODE_SAVE( m_Name );
 }
 
 //------------------------------------------------------------------------------

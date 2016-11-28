@@ -1,8 +1,6 @@
 // UnitTestManager
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef TESTFRAMEWORK_UNITTESTMANAGER_H
-#define TESTFRAMEWORK_UNITTESTMANAGER_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -19,32 +17,32 @@ class UnitTest;
 class UnitTestManager
 {
 public:
-	UnitTestManager();
-	~UnitTestManager();
+    UnitTestManager();
+    ~UnitTestManager();
 
-	// run all tests, or tests from a group
-	bool RunTests( const char * testGroup = nullptr );
+    // run all tests, or tests from a group
+    bool RunTests( const char * testGroup = nullptr );
 
-	// singleton behaviour
-	#ifdef RELEASE
-		static inline UnitTestManager &	Get() { return *s_Instance; }
-	#else
-		static		  UnitTestManager &	Get();
-	#endif
-	static inline bool					IsValid() { return ( s_Instance != 0 ); }
+    // singleton behaviour
+    #ifdef RELEASE
+        static inline UnitTestManager & Get() { return *s_Instance; }
+    #else
+        static        UnitTestManager & Get();
+    #endif
+    static inline bool                  IsValid() { return ( s_Instance != 0 ); }
 
-	// tests register (using the test declaration macros) via this interface
-	static void RegisterTestGroup( UnitTest * testGroup );
+    // tests register (using the test declaration macros) via this interface
+    static void RegisterTestGroup( UnitTest * testGroup );
 
-	// When tests are being executed, they are wrapped with these
-	void TestBegin( UnitTest * testGroup, const char * testName );
-	void TestEnd();
+    // When tests are being executed, they are wrapped with these
+    void TestBegin( UnitTest * testGroup, const char * testName );
+    void TestEnd();
 
-	// TEST_ASSERT uses this interface to notify of assertion failures
-	static bool AssertFailure( const char * message, const char * file, uint32_t line );
+    // TEST_ASSERT uses this interface to notify of assertion failures
+    static bool AssertFailure( const char * message, const char * file, uint32_t line );
 
 private:
-	Timer		m_Timer;
+    Timer       m_Timer;
 
     enum : uint32_t { MAX_TESTS = 1024 };
     struct TestInfo
@@ -60,9 +58,8 @@ private:
     static uint32_t     s_NumTests;
     static TestInfo     s_TestInfos[ MAX_TESTS ];
 
-	static UnitTestManager * s_Instance;
-	static UnitTest * s_FirstTest; 
+    static UnitTestManager * s_Instance;
+    static UnitTest * s_FirstTest;
 };
 
 //------------------------------------------------------------------------------
-#endif // TESTFRAMEWORK_UNITTESTMANAGER_H

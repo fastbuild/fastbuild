@@ -5,8 +5,8 @@
 #define SWITCH
 
 #if SWITCH
-	.Variable = true
+    .Variable = true
 #invalid
-	.Variable = false
+    .Variable = false
 #endif
 

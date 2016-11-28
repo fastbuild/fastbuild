@@ -1,8 +1,6 @@
 // FunctionCSAssembly
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONCSASSEMBLY_H
-#define FBUILD_FUNCTIONS_FUNCTIONCSASSEMBLY_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -13,14 +11,13 @@
 class FunctionCSAssembly : public Function
 {
 public:
-	explicit		FunctionCSAssembly();
-	inline virtual ~FunctionCSAssembly() {}
+    explicit        FunctionCSAssembly();
+    inline virtual ~FunctionCSAssembly() = default;
 
 protected:
-	virtual bool AcceptsHeader() const override;
+    virtual bool AcceptsHeader() const override;
 
-	virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
+    virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONCSASSEMBLY_H

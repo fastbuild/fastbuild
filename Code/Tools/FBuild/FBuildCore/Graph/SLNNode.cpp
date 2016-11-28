@@ -27,14 +27,14 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-SLNNode::SLNNode(   const AString & solutionOuput,
-                    const AString & solutionBuildProject,
-                    const AString & solutionVisualStudioVersion,
-                    const AString & solutionMinimumVisualStudioVersion,
-                    const Array< VSProjectConfig > & configs,
-                    const Array< VCXProjectNode * > & projects,
-					const Array< SLNDependency > & slnDeps,
-                    const Array< SLNSolutionFolder > & folders )
+SLNNode::SLNNode( const AString & solutionOuput,
+                  const AString & solutionBuildProject,
+                  const AString & solutionVisualStudioVersion,
+                  const AString & solutionMinimumVisualStudioVersion,
+                  const Array< VSProjectConfig > & configs,
+                  const Array< VCXProjectNode * > & projects,
+                  const Array< SLNDependency > & slnDeps,
+                  const Array< SLNSolutionFolder > & folders )
 : FileNode( solutionOuput, Node::FLAG_NONE )
 , m_SolutionBuildProject( solutionBuildProject )
 , m_SolutionVisualStudioVersion( solutionVisualStudioVersion )
@@ -56,9 +56,7 @@ SLNNode::SLNNode(   const AString & solutionOuput,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-SLNNode::~SLNNode()
-{
-}
+SLNNode::~SLNNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
@@ -81,7 +79,7 @@ SLNNode::~SLNNode()
                                             m_SolutionMinimumVisualStudioVersion,
                                             m_Configs,
                                             projects,
-											m_SolutionDeps,
+                                            m_SolutionDeps,
                                             m_Folders );
     if ( Save( sln, m_Name ) == false )
     {
@@ -176,8 +174,8 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     Array< SLNSolutionFolder > folders;
     SLNSolutionFolder::Load( stream, folders );
 
-	Array< SLNDependency > slnDeps;
-	SLNDependency::Load( stream, slnDeps );
+    Array< SLNDependency > slnDeps;
+    SLNDependency::Load( stream, slnDeps );
 
     Array< VCXProjectNode * > projects( staticDeps.GetSize(), false );
     const Dependency * const end = staticDeps.End();
@@ -187,13 +185,13 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     }
 
     SLNNode * n = nodeGraph.CreateSLNNode( name,
-                                    buildProject,
-                                    visualStudioVersion,
-                                    minimumVisualStudioVersion,
-                                    configs,
-                                    projects,
-									slnDeps,
-                                    folders );
+                                           buildProject,
+                                           visualStudioVersion,
+                                           minimumVisualStudioVersion,
+                                           configs,
+                                           projects,
+                                           slnDeps,
+                                           folders );
     return n;
 }
 
@@ -208,7 +206,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     NODE_SAVE_DEPS( m_StaticDependencies );
     VSProjectConfig::Save( stream, m_Configs );
     SLNSolutionFolder::Save( stream, m_Folders );
-	SLNDependency::Save( stream, m_SolutionDeps );
+    SLNDependency::Save( stream, m_SolutionDeps );
 }
 
 //------------------------------------------------------------------------------

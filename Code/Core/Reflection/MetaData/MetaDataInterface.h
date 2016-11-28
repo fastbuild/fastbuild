@@ -1,8 +1,6 @@
 // MetaDaatInterface.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_METADATAINTERFACE_H
-#define CORE_REFLECTION_METADATAINTERFACE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -26,4 +24,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_METADATAINTERFACE_H

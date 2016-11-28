@@ -14,6 +14,47 @@
 <h1>Changelog</h1>
 
 
+<div class='newsitemheader'>
+    v0.92&nbsp;<font color='#bbbbbb'>(27-Nov-2016)</font>
+</div>
+<div class='newsitembody'>
+    Notes
+	<ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version has changed : Existing cache entries will be ignored</li>
+    </ul>
+    New
+    <ul>
+        <li>[Experimental] -monitor option writes a machine-readable log for external visualizers (Thanks to Yass007 and LiamKF)</li>
+        <li>bash completion script for fbuild executable now available (Thanks to dummyunit)</li>
+    </ul>
+    Fixes
+    <ul>
+        <li>Prevent MSVC Error C1382 due to an .obj and .pch mismatch due to multiple machines partially populating the cache</li>
+        <li>FASTBuild is no longer incompatilble with Clang's static analyzer (-analyze) (Thanks to Pavel Bibergal)</li>
+        <li>Fix various MSVC compiler args not being detected when using -X instead of /X syntax</li>
+        <li>Fix various MSVC linker args not being detected when using -X instead of /X syntax</li>
+        <li>Fix various MSVC linker args being assumed to be case-sensitive (linker args are case insensitive)</li>
+        <li>Linking against Orbis .prxs built by FASTBuild uses _stub_weak.a (Thanks to jairbubbles)</li>
+        <li>Fix CopyDir destination path not being normalized causing failures</li>
+        <li>Fix typo in Report when there are no includes (Thanks to Leandros)</li>
+        <li>-showtargets now includes targets defined by ObjectList and Unity</li>
+        <li>.Target property in XCodeProject() .Configs is optional</li>
+        <li>Removing empty strings in bff with operator - is ignored instead of being incredibly slow (Thanks to dummyunit)</li>
+    </ul>
+	Improvements
+	<ul>
+        <li>Solution() allows the same folder to be specified multiple times for added flexibility (Thanks to Poppolopoppo)</li>
+        <li>Documentation for Test() (Thanks to Manuzor)</li>
+        <li>ObjectList(), Library() and CSAssembly() support .CompilerInputPatternExclude (Thanks to Fitzymj)</li>
+        <li>Added .TestAlwaysShowOutput option to Test() which prints the test output even if it passes</li>
+        <li>Optimize network sends, reducing kernel call overhead</li>
+        <li>Improved diagnostic messages for distributed compilation (Thanks to Sam Hocevar)</li>
+        <li>Copy() .Source can now be empty as this allows for greater configuration flexibility</li>
+        <li>An invalid .Target in an XCode configuration will now fail during bff parsing</li>
+	</ul>
+</div>
+
 
 <div class='newsitemheader'>
     v0.91&nbsp;<font color='#bbbbbb'>(25-Aug-2016)</font>

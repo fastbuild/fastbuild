@@ -16,14 +16,14 @@ Settings {}
 //------------------------------------------------------------------------------
 ObjectList( 'Caching' )
 {
-	.CompilerOptions			+ ' /ZW'
-								+ ' /EHsc'
-								+ .VisualStudioIncludePaths
-								+ ' /AI"$VisualStudioPath$/VC/vcpackages"'
-								+ ' /AI"$WindowsSDK$/References/CommonConfiguration/Neutral"'
+    .CompilerOptions            + ' /ZW'
+                                + ' /EHsc'
+                                + .VisualStudioIncludePaths
+                                + ' /AI"$VisualStudioPath$/VC/vcpackages"'
+                                + ' /AI"$WindowsSDK$/References/CommonConfiguration/Neutral"'
 
-	.CompilerInputPath			= 'Data/TestZW/Caching/'
-	.CompilerOutputPath			= '$Out$/Test/ZW/Caching/'
+    .CompilerInputPath          = 'Data/TestZW/Caching/'
+    .CompilerOutputPath         = '$Out$/Test/ZW/Caching/'
 }
 
 //------------------------------------------------------------------------------

@@ -31,15 +31,15 @@ Print( .String ) // Should print 'Good'
 
 // Unnamed minus
 .String = "Good BAD"
-		- "BAD"
+        - "BAD"
 Print( .String ) // Should print 'Good '
 
 // Remove from Array of Strings
 .Strings = { 'Good', 'BAD', 'Good' }
-		 - 'BAD'
+         - 'BAD'
 Print( .Strings ) // Should print { 'Good', 'Good' }
 
 // Remove from Array of Strings using variable
 .Strings = { 'Good', 'BAD', 'Good' }
-		 - .BAD
+         - .BAD
 Print( .Strings ) // Should print { 'Good', 'Good' }

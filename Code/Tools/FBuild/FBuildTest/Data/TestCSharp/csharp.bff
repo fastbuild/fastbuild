@@ -8,16 +8,16 @@
 Using( .StandardEnvironment )
 Settings {}
 
-.Compiler			= "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe"
-.CompilerOptions	= '/out:"%2" /target:library "%1"'
+.Compiler           = "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe"
+.CompilerOptions    = '/out:"%2" /target:library "%1"'
 
 ;
 ; A single c# file
 ;
 CSAssembly( "CSharp-Single-Target" )
 {
-	.CompilerInputFiles	= "Data/TestCSharp/a.cs"
-	.CompilerOutput		= "$Out$/Test/CSharp/csharpsingle.dll"
+    .CompilerInputFiles = "Data/TestCSharp/a.cs"
+    .CompilerOutput     = "$Out$/Test/CSharp/csharpsingle.dll"
 }
 
 ;
@@ -25,9 +25,9 @@ CSAssembly( "CSharp-Single-Target" )
 ;
 CSAssembly( "CSharp-Multi-Target" )
 {
-	.CompilerInputPath		= "Data/TestCSharp/"
-	.CompilerInputPattern	= "*.cs"
-	.CompilerOutput			= "$Out$/Test/CSharp/csharpmulti.dll"
+    .CompilerInputPath      = "Data/TestCSharp/"
+    .CompilerInputPattern   = "*.cs"
+    .CompilerOutput         = "$Out$/Test/CSharp/csharpmulti.dll"
 }
 
 ;
@@ -35,22 +35,22 @@ CSAssembly( "CSharp-Multi-Target" )
 ;
 CSAssembly( "CSharp-AssemblyA" )
 {
-	.CompilerInputFiles		= "Data/TestCSharp/a.cs"
-	.CompilerOutput			= "$Out$/Test/CSharp/csharpassemblya.dll"
+    .CompilerInputFiles     = "Data/TestCSharp/a.cs"
+    .CompilerOutput         = "$Out$/Test/CSharp/csharpassemblya.dll"
 }
 
 CSAssembly( "CSharp-AssemblyB" )
 {
-	.CompilerInputFiles		= "Data/TestCSharp/b.cs"
-	.CompilerOutput			= "$Out$/Test/CSharp/csharpassemblyb.dll"
-	.CompilerOptions		= '/reference:"%3" $CompilerOptions$'
-	.CompilerReferences		= "CSharp-AssemblyA"
+    .CompilerInputFiles     = "Data/TestCSharp/b.cs"
+    .CompilerOutput         = "$Out$/Test/CSharp/csharpassemblyb.dll"
+    .CompilerOptions        = '/reference:"%3" $CompilerOptions$'
+    .CompilerReferences     = "CSharp-AssemblyA"
 }
 
 CSAssembly( "CSharp-AssemblyC" )
 {
-	.CompilerInputFiles		= "Data/TestCSharp/c.cs"
-	.CompilerOutput			= "$Out$/Test/CSharp/csharpassemblyc.dll"
-	.CompilerOptions		= '/reference:"%3" $CompilerOptions$'
-	.CompilerReferences		= { "CSharp-AssemblyA", "CSharp-AssemblyB" }
+    .CompilerInputFiles     = "Data/TestCSharp/c.cs"
+    .CompilerOutput         = "$Out$/Test/CSharp/csharpassemblyc.dll"
+    .CompilerOptions        = '/reference:"%3" $CompilerOptions$'
+    .CompilerReferences     = { "CSharp-AssemblyA", "CSharp-AssemblyB" }
 }

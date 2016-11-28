@@ -10,37 +10,35 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 NodeProxy::NodeProxy( const AString & name )
-	: Node( name, Node::PROXY_NODE, 0 )
+    : Node( name, Node::PROXY_NODE, 0 )
 {
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-NodeProxy::~NodeProxy()
-{
-}
+NodeProxy::~NodeProxy() = default;
 
 // IsAFile
 //------------------------------------------------------------------------------
 /*virtual*/ bool NodeProxy::IsAFile() const
 {
-	ASSERT( false ); // should never call this
-	return false;
+    ASSERT( false ); // should never call this
+    return false;
 }
 
 // Save
 //------------------------------------------------------------------------------
 /*virtual*/ void NodeProxy::Save( IOStream & UNUSED( stream ) ) const
 {
-	ASSERT( false ); // should never call this
+    ASSERT( false ); // should never call this
 }
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
 /*virtual*/ bool NodeProxy::DetermineNeedToBuild( bool UNUSED( forceClean ) ) const
 {
-	ASSERT( false ); // should never call this
-	return false;
+    ASSERT( false ); // should never call this
+    return false;
 }
 
 //------------------------------------------------------------------------------

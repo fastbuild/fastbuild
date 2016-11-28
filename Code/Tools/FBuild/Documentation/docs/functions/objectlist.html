@@ -28,14 +28,15 @@ Builds a list of objects, typically for later input into a Library, Executable o
   .CompilerOutputPrefix     ; (optional) Specify a prefix for generated objects (default none)
 
   ; Specify inputs for compilation
-  .CompilerInputPath        ; (optional) Path to find files in
-  .CompilerInputPattern     ; (optional) Pattern(s) to use when finding files (default *.cpp)
-  .CompilerInputPathRecurse ; (optional) Recurse into dirs when finding files (default true)
-  .CompilerInputExcludePath ; (optional) Path(s) to exclude from compilation
-  .CompilerInputExcludedFiles;(optional) File(s) to exclude from compilation (partial, root-relative of full path)
-  .CompilerInputFiles       ; (optional) Explicit array of files to build
-  .CompilerInputFilesRoot   ; (optional) Root path to use for .obj path generation for explicitly listed files
-  .CompilerInputUnity       ; (optional) Unity to build (or Unities)
+  .CompilerInputPath           ; (optional) Path to find files in
+  .CompilerInputPattern        ; (optional) Pattern(s) to use when finding files (default *.cpp)
+  .CompilerInputPathRecurse    ; (optional) Recurse into dirs when finding files (default true)
+  .CompilerInputExcludePath    ; (optional) Path(s) to exclude from compilation
+  .CompilerInputExcludedFiles  ; (optional) File(s) to exclude from compilation (partial, root-relative of full path)
+  .CompilerInputExcludePattern ; (optional) Pattern(s) to exclude from compilation
+  .CompilerInputFiles          ; (optional) Explicit array of files to build
+  .CompilerInputFilesRoot      ; (optional) Root path to use for .obj path generation for explicitly listed files
+  .CompilerInputUnity          ; (optional) Unity to build (or Unities)
   
   ; Cache & Distributed compilation control
   .AllowCaching             ; (optional) Allow caching of compiled objects if available (default true)

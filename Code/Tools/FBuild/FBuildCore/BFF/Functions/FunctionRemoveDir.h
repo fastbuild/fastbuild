@@ -1,8 +1,6 @@
 // FunctionRemoveDir
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONREMOVEDIR_H
-#define FBUILD_FUNCTIONS_FUNCTIONREMOVEDIR_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -14,7 +12,7 @@ class FunctionRemoveDir : public Function
 {
 public:
     explicit        FunctionRemoveDir();
-    inline virtual ~FunctionRemoveDir() {}
+    inline virtual ~FunctionRemoveDir() = default;
 
 protected:
     virtual bool AcceptsHeader() const override;
@@ -22,4 +20,3 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONREMOVEDIR_H

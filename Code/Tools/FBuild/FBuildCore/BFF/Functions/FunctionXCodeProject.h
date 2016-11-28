@@ -15,13 +15,13 @@ class BFFIterator;
 class FunctionXCodeProject : public Function
 {
 public:
-	explicit		FunctionXCodeProject();
-	inline virtual ~FunctionXCodeProject() {}
+    explicit        FunctionXCodeProject();
+    inline virtual ~FunctionXCodeProject() = default;
 
 protected:
-	virtual bool AcceptsHeader() const override;
+    virtual bool AcceptsHeader() const override;
 
-	virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
+    virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 };
 
 //------------------------------------------------------------------------------

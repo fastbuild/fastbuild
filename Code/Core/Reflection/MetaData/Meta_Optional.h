@@ -1,8 +1,6 @@
 // Meta_Optional.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_REFLECTION_META_OPTIONAL_H
-#define CORE_REFLECTION_META_OPTIONAL_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -12,11 +10,10 @@
 //------------------------------------------------------------------------------
 class Meta_Optional : public IMetaData
 {
-	REFLECT_DECLARE( Meta_Optional )
+    REFLECT_DECLARE( Meta_Optional )
 public:
-	explicit Meta_Optional();
-	virtual ~Meta_Optional();
+    explicit Meta_Optional();
+    virtual ~Meta_Optional();
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_REFLECTION_META_OPTIONAL_H

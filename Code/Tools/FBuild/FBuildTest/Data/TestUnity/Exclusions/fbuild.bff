@@ -6,22 +6,22 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.UnityInputPath				= "Data/TestUnity/Exclusions/"
-.UnityOutputPath			= '$Out$/Test/Unity/Exclusions/'
-.CompilerOutputPath			= '$Out$/Test/Unity/Exclusions/'
+.UnityInputPath             = "Data/TestUnity/Exclusions/"
+.UnityOutputPath            = '$Out$/Test/Unity/Exclusions/'
+.CompilerOutputPath         = '$Out$/Test/Unity/Exclusions/'
 
 //
 // Exclude by file name
 //------------------------------------------------------------------------------
 Unity( 'ExcludeFileName-Unity' )
 {
-	.UnityInputExcludedFiles	= "ignore.cpp"
-	.UnityOutputPath			+ 'ExcludeFileName/'
+    .UnityInputExcludedFiles    = "ignore.cpp"
+    .UnityOutputPath            + 'ExcludeFileName/'
 }
 ObjectList( 'ExcludeFileName' )
 {
-	.CompilerInputUnity			= 'ExcludeFileName-Unity'
-	.CompilerOutputPath			+ 'ExcludeFileName/'
+    .CompilerInputUnity         = 'ExcludeFileName-Unity'
+    .CompilerOutputPath         + 'ExcludeFileName/'
 }
 
 //
@@ -29,13 +29,13 @@ ObjectList( 'ExcludeFileName' )
 //------------------------------------------------------------------------------
 Unity( 'ExcludeFilePath-Unity' )
 {
-	.UnityInputExcludedFiles	= "Exclusions/ignore.cpp"
-	.UnityOutputPath			+ 'ExcludeFilePath/'
+    .UnityInputExcludedFiles    = "Exclusions/ignore.cpp"
+    .UnityOutputPath            + 'ExcludeFilePath/'
 }
 ObjectList( 'ExcludeFilePath' )
 {
-	.CompilerInputUnity			= 'ExcludeFilePath-Unity'
-	.CompilerOutputPath			+ 'ExcludeFilePath/'
+    .CompilerInputUnity         = 'ExcludeFilePath-Unity'
+    .CompilerOutputPath         + 'ExcludeFilePath/'
 }
 
 //
@@ -43,11 +43,25 @@ ObjectList( 'ExcludeFilePath' )
 //------------------------------------------------------------------------------
 Unity( 'ExcludeFilePathRelative-Unity' )
 {
-	.UnityInputExcludedFiles	= "../FBuildTest/Data/TestUnity/Exclusions/ignore.cpp"
-	.UnityOutputPath			+ 'ExcludeFilePathRelative/'
+    .UnityInputExcludedFiles    = "../FBuildTest/Data/TestUnity/Exclusions/ignore.cpp"
+    .UnityOutputPath            + 'ExcludeFilePathRelative/'
 }
 ObjectList( 'ExcludeFilePathRelative' )
 {
-	.CompilerInputUnity			= 'ExcludeFilePathRelative-Unity'
-	.CompilerOutputPath			+ 'ExcludeFilePathRelative/'
+    .CompilerInputUnity         = 'ExcludeFilePathRelative-Unity'
+    .CompilerOutputPath         + 'ExcludeFilePathRelative/'
+}
+
+//
+// Exclude by file pattern
+//------------------------------------------------------------------------------
+Unity( 'ExcludeFilePattern-Unity' )
+{
+    .UnityInputExcludePattern   = "*nore.cpp"
+    .UnityOutputPath            + 'ExcludeFilePattern/'
+}
+ObjectList( 'ExcludeFilePattern' )
+{
+    .CompilerInputUnity         = 'ExcludeFilePattern-Unity'
+    .CompilerOutputPath         + 'ExcludeFilePattern/'
 }

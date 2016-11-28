@@ -1,8 +1,6 @@
 // Ray3
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_MATH_RAY3_H
-#define CORE_MATH_RAY3_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -13,20 +11,19 @@
 class Ray3
 {
 public:
-	inline explicit Ray3( const Vec3 & origin, const Vec3 & dir )
-		: m_Origin( origin )
-		, m_Direction( dir )
-	{}
-	inline Ray3() {}
-	inline ~Ray3() {}
+    inline explicit Ray3( const Vec3 & origin, const Vec3 & dir )
+        : m_Origin( origin )
+        , m_Direction( dir )
+    {}
+    inline Ray3() = default;
+    inline ~Ray3() = default;
 
-	inline const Vec3 & GetOrigin() const { return m_Origin; }
-	inline const Vec3 & GetDir() const { return m_Direction; }
+    inline const Vec3 & GetOrigin() const { return m_Origin; }
+    inline const Vec3 & GetDir() const { return m_Direction; }
 
 private:
-	Vec3 m_Origin;
-	Vec3 m_Direction;
+    Vec3 m_Origin;
+    Vec3 m_Direction;
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_MATH_RAY3_H

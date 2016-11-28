@@ -15,19 +15,19 @@ class OSWindow;
 class OSFont
 {
 public:
-	OSFont();
-	~OSFont();
+    OSFont();
+    ~OSFont();
 
-	void Init( uint32_t size, const char * fontFamily );
+    void Init( uint32_t size, const char * fontFamily );
 
-	#if defined( __WINDOWS__ )
-		inline void * GetFont() { return m_Font; }
-	#endif
+    #if defined( __WINDOWS__ )
+        inline void * GetFont() { return m_Font; }
+    #endif
 
 protected:
-	#if defined( __WINDOWS__ )
-		void * m_Font;
-	#endif
+    #if defined( __WINDOWS__ )
+        void * m_Font;
+    #endif
 };
 
 //------------------------------------------------------------------------------

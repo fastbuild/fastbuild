@@ -9,6 +9,7 @@
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
 #include "Core/Env/Env.h"
@@ -23,8 +24,8 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 WorkerBrokerage::WorkerBrokerage()
-	: m_Availability( false )
-	, m_Initialized( false )
+    : m_Availability( false )
+    , m_Initialized( false )
 {
 }
 
@@ -32,21 +33,21 @@ WorkerBrokerage::WorkerBrokerage()
 //------------------------------------------------------------------------------
 void WorkerBrokerage::Init()
 {
-	PROFILE_FUNCTION
+    PROFILE_FUNCTION
 
-	ASSERT( Thread::IsMainThread() );
+    ASSERT( Thread::IsMainThread() );
 
-	if ( m_Initialized )
-	{
-		return;
-	}
+    if ( m_Initialized )
+    {
+        return;
+    }
 
-	// brokerage path includes version to reduce unnecssary comms attempts
-	uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
+    // brokerage path includes version to reduce unnecssary comms attempts
+    uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
 
-	// root folder
-	AStackString<> root;
-	if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", root ) )
+    // root folder
+    AStackString<> root;
+    if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", root ) )
     {
         // <path>/<group>/<version>/
         #if defined( __WINDOWS__ )
@@ -62,7 +63,7 @@ void WorkerBrokerage::Init()
     m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoot.Get(), m_HostName.Get() );
     m_TimerLastUpdate.Start();
 
-	m_Initialized = true;
+    m_Initialized = true;
 }
 
 // DESTRUCTOR
@@ -79,47 +80,49 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 {
     PROFILE_FUNCTION
 
-	Init();
+    Init();
 
-	if ( m_BrokerageRoot.IsEmpty() )
-	{
-		return;
-	}
+    if ( m_BrokerageRoot.IsEmpty() )
+    {
+        FLOG_WARN( "No brokerage root; did you set FASTBUILD_BROKERAGE_PATH?" );
+        return;
+    }
 
-	Array< AString > results( 256, true );
-	if ( !FileIO::GetFiles( m_BrokerageRoot,
-							AStackString<>( "*" ),
-							false,
-							&results ) )
-	{
-		return; // no files found
-	}
+    Array< AString > results( 256, true );
+    if ( !FileIO::GetFiles( m_BrokerageRoot,
+                            AStackString<>( "*" ),
+                            false,
+                            &results ) )
+    {
+        FLOG_WARN( "No workers found in '%s'", m_BrokerageRoot.Get() );
+        return; // no files found
+    }
 
-	// presize
-	if ( ( workerList.GetSize() + results.GetSize() ) > workerList.GetCapacity() )
-	{
-		workerList.SetCapacity( workerList.GetSize() + results.GetSize() );
-	}
+    // presize
+    if ( ( workerList.GetSize() + results.GetSize() ) > workerList.GetCapacity() )
+    {
+        workerList.SetCapacity( workerList.GetSize() + results.GetSize() );
+    }
 
-	// convert worker strings
-	const AString * const end = results.End();
-	for ( AString * it = results.Begin(); it != end; ++it )
-	{
-		const AString & fileName = *it;
-		const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
-		AStackString<> workerName( lastSlash + 1 );
+    // convert worker strings
+    const AString * const end = results.End();
+    for ( AString * it = results.Begin(); it != end; ++it )
+    {
+        const AString & fileName = *it;
+        const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
+        AStackString<> workerName( lastSlash + 1 );
         if ( workerName.CompareI( m_HostName ) != 0 )
-		{
-			workerList.Append( workerName );
-		}
-	}
+        {
+            workerList.Append( workerName );
+        }
+    }
 }
 
 // SetAvailability
 //------------------------------------------------------------------------------
 void WorkerBrokerage::SetAvailability(bool available)
 {
-	Init();
+    Init();
 
     // ignore if brokerage not configured
     if ( m_BrokerageRoot.IsEmpty() )
@@ -127,18 +130,18 @@ void WorkerBrokerage::SetAvailability(bool available)
         return;
     }
 
-	if ( available )
-	{
+    if ( available )
+    {
         // Check the last update time to avoid too much File IO.
         float elapsedTime = m_TimerLastUpdate.GetElapsedMS();
         if ( elapsedTime >= 10000.0f )
         {
             //
             // Ensure that the file will be recreated if cleanup is done on the brokerage path.
-            // 
+            //
             if ( !FileIO::FileExists( m_BrokerageFilePath.Get() ) )
             {
-        	    FileIO::EnsurePathExists( m_BrokerageRoot );
+                FileIO::EnsurePathExists( m_BrokerageRoot );
 
                 // create file to signify availability
                 FileStream fs;
@@ -148,15 +151,15 @@ void WorkerBrokerage::SetAvailability(bool available)
                 m_TimerLastUpdate.Start();
             }
         }
-	}
-	else if ( m_Availability != available )
-	{        
-		// remove file to remove availability
+    }
+    else if ( m_Availability != available )
+    {
+        // remove file to remove availability
         FileIO::FileDelete( m_BrokerageFilePath.Get() );
 
         // Restart the timer
         m_TimerLastUpdate.Start();
-	}
+    }
     m_Availability = available;
 }
 

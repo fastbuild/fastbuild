@@ -1,8 +1,6 @@
 // Process.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_PROCESS_H
-#define CORE_PROCESS_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -14,23 +12,23 @@
 class Process
 {
 public:
-	Process();
-	~Process();
+    Process();
+    ~Process();
 
-	bool Spawn( const char * executable,
-				const char * args,
-				const char * workingDir,
-				const char * environment,
-				bool shareHandles = false );
-	bool IsRunning() const;
-	int WaitForExit();
-	void Detach();
+    bool Spawn( const char * executable,
+                const char * args,
+                const char * workingDir,
+                const char * environment,
+                bool shareHandles = false );
+    bool IsRunning() const;
+    int WaitForExit();
+    void Detach();
 
-	// Read all data from the process until it exits
-	// NOTE: Owner must free the returned memory!
-	bool ReadAllData( AutoPtr< char > & memOut, uint32_t * memOutSize,
-					  AutoPtr< char > & errOut, uint32_t * errOutSize,
-					  uint32_t timeOutMS = 0 );
+    // Read all data from the process until it exits
+    // NOTE: Owner must free the returned memory!
+    bool ReadAllData( AutoPtr< char > & memOut, uint32_t * memOutSize,
+                      AutoPtr< char > & errOut, uint32_t * errOutSize,
+                      uint32_t timeOutMS = 0 );
 
     #if defined( __WINDOWS__ )
         // Read all available data
@@ -42,11 +40,11 @@ public:
         uint32_t ReadStdOut( char * outputBuffer, uint32_t outputBufferSize );
         uint32_t ReadStdErr( char * outputBuffer, uint32_t outputBufferSize );
 
-		// Prevent handles being redirected
-		inline void DisableHandleRedirection() { m_RedirectHandles = false; }
+        // Prevent handles being redirected
+        inline void DisableHandleRedirection() { m_RedirectHandles = false; }
     #endif
-    
-	static uint32_t GetCurrentId();
+
+    static uint32_t GetCurrentId();
 private:
     #if defined( __WINDOWS__ )
         void Read( void * handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
@@ -56,35 +54,35 @@ private:
         void Read( int handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
     #endif
 
-	void Terminate();
-        
+    void Terminate();
+
     #if defined( __WINDOWS__ )
         // This messyness is to avoid including windows.h in this file
         inline struct _PROCESS_INFORMATION & GetProcessInfo() const
-        { 
+        {
             return (_PROCESS_INFORMATION &)m_ProcessInfo;
         }
     #endif
-    
-	#if defined ( WIN64 )
-		uint32_t m_ProcessInfo[ 2 + 2 + 1 + 1 ]; // PROCESS_INFORMATION
-	#elif defined ( WIN32 )
-		uint32_t m_ProcessInfo[ 1 + 1 + 1 + 1 ]; // PROCESS_INFORMATION
-	#endif
-            
-	bool m_Started;
+
+    #if defined ( WIN64 )
+        uint32_t m_ProcessInfo[ 2 + 2 + 1 + 1 ]; // PROCESS_INFORMATION
+    #elif defined ( WIN32 )
+        uint32_t m_ProcessInfo[ 1 + 1 + 1 + 1 ]; // PROCESS_INFORMATION
+    #endif
+
+    bool m_Started;
     #if defined( __WINDOWS__ )
-		bool m_SharingHandles;
-		bool m_RedirectHandles;
+        bool m_SharingHandles;
+        bool m_RedirectHandles;
     #endif
 
     #if defined( __WINDOWS__ )
-        void * m_StdOutRead;	// HANDLE
-        void * m_StdOutWrite;	// HANDLE
-        void * m_StdErrRead;	// HANDLE
-        void * m_StdErrWrite;	// HANDLE
+        void * m_StdOutRead;    // HANDLE
+        void * m_StdOutWrite;   // HANDLE
+        void * m_StdErrRead;    // HANDLE
+        void * m_StdErrWrite;   // HANDLE
     #endif
-    
+
     #if defined( __LINUX__ ) || defined( __APPLE__ )
         int m_ChildPID;
         mutable bool m_HasAlreadyWaitTerminated;
@@ -95,4 +93,3 @@ private:
 };
 
 //------------------------------------------------------------------------------
-#endif // CORE_PROCESS_H

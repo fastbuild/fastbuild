@@ -14,10 +14,10 @@
 class TestSemaphore : public UnitTest
 {
 private:
-	DECLARE_TESTS
+    DECLARE_TESTS
 
-	void CreateDestroy() const;
-	void WaitForSignal() const;
+    void CreateDestroy() const;
+    void WaitForSignal() const;
     void WaitTimeout() const;
 
     // Internal helpers
@@ -27,8 +27,8 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestSemaphore )
-	REGISTER_TEST( CreateDestroy )
-	REGISTER_TEST( WaitForSignal )
+    REGISTER_TEST( CreateDestroy )
+    REGISTER_TEST( WaitForSignal )
     REGISTER_TEST( WaitTimeout )
 REGISTER_TESTS_END
 
@@ -65,7 +65,7 @@ void TestSemaphore::WaitForSignal() const
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestSemaphore::WaitForSignal_Thread( void * userData )
 {
-    Semaphore * s = reinterpret_cast< Semaphore * >( userData );
+    Semaphore * s = static_cast< Semaphore * >( userData );
     for ( size_t i=0; i<100; ++i )
     {
         s->Signal();
@@ -78,10 +78,10 @@ void TestSemaphore::WaitForSignal() const
 void TestSemaphore::WaitTimeout() const
 {
     Timer t;
-    
+
     Semaphore s;
     s.Wait( 50 ); // wait 50ms
-    
+
     // ensure some sensible time has elapsed
     ASSERT( t.GetElapsed() > 0.025f ); // 25ms (allow wide margin of error)
 }

@@ -1,8 +1,6 @@
 // SLNNode.h - a node that builds a sln file
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_SLNNODE_H
-#define FBUILD_GRAPH_SLNNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -24,14 +22,14 @@ class VCXProjectNode;
 class SLNNode : public FileNode
 {
 public:
-    explicit SLNNode(   const AString & solutionOutput,
-                        const AString & solutionBuildProject,
-                        const AString & solutionVisualStudioVersion,
-                        const AString & solutionMinimumVisualStudioVersion,
-                        const Array< VSProjectConfig > & configs,
-                        const Array< VCXProjectNode * > & projects,
-						const Array< SLNDependency > & slnDeps,
-                        const Array< SLNSolutionFolder > & folders );
+    explicit SLNNode( const AString & solutionOutput,
+                      const AString & solutionBuildProject,
+                      const AString & solutionVisualStudioVersion,
+                      const AString & solutionMinimumVisualStudioVersion,
+                      const Array< VSProjectConfig > & configs,
+                      const Array< VCXProjectNode * > & projects,
+                      const Array< SLNDependency > & slnDeps,
+                      const Array< SLNSolutionFolder > & folders );
     virtual ~SLNNode();
 
     static inline Node::Type GetTypeS() { return Node::SLN_NODE; }
@@ -48,9 +46,8 @@ private:
     AString m_SolutionMinimumVisualStudioVersion;
 
     Array< VSProjectConfig > m_Configs;
-	Array< SLNDependency > m_SolutionDeps;
+    Array< SLNDependency > m_SolutionDeps;
     Array< SLNSolutionFolder > m_Folders;
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_SLNNODE_H

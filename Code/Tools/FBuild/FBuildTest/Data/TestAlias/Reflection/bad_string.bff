@@ -1,10 +1,10 @@
 Alias( 'Exes' )
 {
-	.Targets = { 'testA.exe', 'testB.exe' }
+    .Targets = { 'testA.exe', 'testB.exe' }
 }
 
 Test( 'Test' )
 {
-	.TestExecutable	= 'Exes'	// Expects one exe, not two. Should fail.
-	.TestOutput		= 'output.txt'
+    .TestExecutable = 'Exes'    // Expects one exe, not two. Should fail.
+    .TestOutput     = 'output.txt'
 }

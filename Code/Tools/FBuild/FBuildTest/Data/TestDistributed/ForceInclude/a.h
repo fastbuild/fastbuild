@@ -2,7 +2,7 @@
 class X
 {
 public:
-	X() {}
+    X() = default;
 
-	int m_Value;
+    int m_Value;
 };

@@ -1,8 +1,6 @@
 // FunctionCopyDir
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONCOPYDIR_H
-#define FBUILD_FUNCTIONS_FUNCTIONCOPYDIR_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -16,13 +14,12 @@
 class FunctionCopyDir : public Function
 {
 public:
-	explicit		FunctionCopyDir();
-	inline virtual ~FunctionCopyDir() {}
+    explicit        FunctionCopyDir();
+    inline virtual ~FunctionCopyDir() = default;
 
 protected:
-	virtual bool AcceptsHeader() const override;
-	virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
+    virtual bool AcceptsHeader() const override;
+    virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONCOPYDIR_H

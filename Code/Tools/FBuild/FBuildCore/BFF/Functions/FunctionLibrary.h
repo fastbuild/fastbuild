@@ -1,8 +1,6 @@
 // FunctionLibrary
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_FUNCTIONS_FUNCTIONLIBRARY_H
-#define FBUILD_FUNCTIONS_FUNCTIONLIBRARY_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -14,15 +12,14 @@
 class FunctionLibrary : public FunctionObjectList
 {
 public:
-	explicit		FunctionLibrary();
-	inline virtual ~FunctionLibrary() {}
+    explicit        FunctionLibrary();
+    inline virtual ~FunctionLibrary() = default;
 
 protected:
-	virtual bool AcceptsHeader() const override;
-	virtual bool NeedsHeader() const override;
+    virtual bool AcceptsHeader() const override;
+    virtual bool NeedsHeader() const override;
 
-	virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
+    virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_FUNCTIONS_FUNCTIONLIBRARY_H

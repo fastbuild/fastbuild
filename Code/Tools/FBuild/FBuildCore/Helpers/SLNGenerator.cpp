@@ -21,26 +21,22 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-SLNGenerator::SLNGenerator()
-{
-}
+SLNGenerator::SLNGenerator() = default;
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-SLNGenerator::~SLNGenerator()
-{
-}
+SLNGenerator::~SLNGenerator() = default;
 
 // GenerateVCXProj
 //------------------------------------------------------------------------------
-const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
-                                            const AString & solutionBuildProject,
-                                            const AString & solutionVisualStudioVersion,
-                                            const AString & solutionMinimumVisualStudioVersion,
-                                            const Array< VSProjectConfig > & configs,
-                                            const Array< VCXProjectNode * > & projects,
-											const Array< SLNDependency > & slnDeps,
-                                            const Array< SLNSolutionFolder > & folders )
+const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
+                                           const AString & solutionBuildProject,
+                                           const AString & solutionVisualStudioVersion,
+                                           const AString & solutionMinimumVisualStudioVersion,
+                                           const Array< VSProjectConfig > & configs,
+                                           const Array< VCXProjectNode * > & projects,
+                                           const Array< SLNDependency > & slnDeps,
+                                           const Array< SLNSolutionFolder > & folders )
 {
     // preallocate to avoid re-allocations
     m_Output.SetReserved( MEGABYTE );
@@ -67,18 +63,18 @@ const AString & SLNGenerator::GenerateSLN(  const AString & solutionFile,
         solutionConfig.m_Config = projectConfig.m_Config;
         solutionConfig.m_Platform = projectConfig.m_Platform;
 
-		solutionConfig.m_SolutionPlatform = !projectConfig.m_SolutionPlatform.IsEmpty()
-			? projectConfig.m_SolutionPlatform
-			: projectConfig.m_Platform;
+        solutionConfig.m_SolutionPlatform = !projectConfig.m_SolutionPlatform.IsEmpty()
+            ? projectConfig.m_SolutionPlatform
+            : projectConfig.m_Platform;
 
-		solutionConfig.m_SolutionConfig = !projectConfig.m_SolutionConfig.IsEmpty()
-			? projectConfig.m_SolutionConfig
-			: projectConfig.m_Config;
+        solutionConfig.m_SolutionConfig = !projectConfig.m_SolutionConfig.IsEmpty()
+            ? projectConfig.m_SolutionConfig
+            : projectConfig.m_Config;
 
-		if ( solutionConfig.m_SolutionPlatform.MatchesI( "Win32" ) )
-		{
-			 solutionConfig.m_SolutionPlatform = "x86";
-		}
+        if ( solutionConfig.m_SolutionPlatform.MatchesI( "Win32" ) )
+        {
+             solutionConfig.m_SolutionPlatform = "x86";
+        }
     }
 
     // Sort again with substituted solution platforms
@@ -106,12 +102,12 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
     const char * defaultMinimumVersion  = "10.0.40219.1"; // Visual Studio Express 2010
 
     const char * version = ( solutionVisualStudioVersion.GetLength() > 0 )
-        ? solutionVisualStudioVersion.Get()
-        : defaultVersion ;
+                         ? solutionVisualStudioVersion.Get()
+                         : defaultVersion ;
 
     const char * minimumVersion = ( solutionMinimumVisualStudioVersion.GetLength() > 0 )
-        ? solutionMinimumVisualStudioVersion.Get()
-        : defaultMinimumVersion ;
+                                ? solutionMinimumVisualStudioVersion.Get()
+                                : defaultMinimumVersion ;
 
     const char * shortVersionStart = version;
     const char * shortVersionEnd = version;
@@ -120,7 +116,7 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
     AStackString<> shortVersion( shortVersionStart, shortVersionEnd );
 
     // header
-	Write( "\r\n" ); // Deliberate blank line
+    Write( "\r\n" ); // Deliberate blank line
     Write( "Microsoft Visual Studio Solution File, Format Version 12.00\r\n" );
     Write( "# Visual Studio %s\r\n", shortVersion.Get() );
     Write( "VisualStudioVersion = %s\r\n", version );
@@ -129,14 +125,14 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 
 // WriteProjectListings
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
-                                            const AString& solutionBuildProject,
-                                            const Array< VCXProjectNode * > & projects,
-                                            const Array< SLNSolutionFolder > & folders,
-											const Array< SLNDependency > & slnDeps,
-                                            AString & solutionBuildProjectGuid,
-                                            Array< AString > & projectGuids,
-                                            Array< AString > & solutionProjectsToFolder )
+void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
+                                         const AString& solutionBuildProject,
+                                         const Array< VCXProjectNode * > & projects,
+                                         const Array< SLNSolutionFolder > & folders,
+                                         const Array< SLNDependency > & slnDeps,
+                                         AString & solutionBuildProjectGuid,
+                                         Array< AString > & projectGuids,
+                                         Array< AString > & solutionProjectsToFolder )
 {
     // Project Listings
 
@@ -152,13 +148,13 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
         const char * lastSlash  = projectPath.FindLast( NATIVE_SLASH );
         const char * lastPeriod = projectPath.FindLast( '.' );
         AStackString<> projectName( lastSlash  ? lastSlash + 1  : projectPath.Get(),
-									lastPeriod ? lastPeriod		: projectPath.GetEnd() );
+                                    lastPeriod ? lastPeriod     : projectPath.GetEnd() );
 
         // retrieve projectGuid
         AStackString<> projectGuid;
         if ( (*it)->GetProjectGuid().GetLength() == 0 )
         {
-			// For backward compatibility, keep the preceding slash and .vcxproj extension for GUID generation
+            // For backward compatibility, keep the preceding slash and .vcxproj extension for GUID generation
             AStackString<> projectNameForGuid( lastSlash ? lastSlash : projectPath.Get() );
             VSProjectGenerator::FormatDeterministicProjectGUID( projectGuid, projectNameForGuid );
         }
@@ -167,8 +163,8 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
             projectGuid = (*it)->GetProjectGuid();
         }
 
-		// make project path relative
-		projectPath.Replace( solutionBasePath.Get(), "" );
+        // make project path relative
+        projectPath.Replace( solutionBasePath.Get(), "" );
 
         // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
         projectGuid.ToUpper();
@@ -182,36 +178,36 @@ void SLNGenerator::WriteProjectListings(    const AString& solutionBasePath,
         Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\r\n",
                projectName.Get(), projectPath.Get(), projectGuid.Get() );
 
-		// Manage dependencies
-		Array< AString > dependencyGUIDs( 64, true );
-		const AString & fullProjectPath = (*it)->GetName();
-		for ( const SLNDependency & deps : slnDeps )
-		{
-			// is the set of deps relevant to this project?
-			if ( deps.m_Projects.Find( fullProjectPath ) )
-			{
-				// get all the projects this project depends on
-				for ( const AString & dependency : deps.m_Dependencies )
-				{
-					// For backward compatibility, keep the preceding slash and .vcxproj extension for GUID generation
-			        const char * projNameFromSlash = dependency.FindLast( NATIVE_SLASH );
-		            AStackString<> projectNameForGuid( projNameFromSlash ? projNameFromSlash : dependency.Get() );
+        // Manage dependencies
+        Array< AString > dependencyGUIDs( 64, true );
+        const AString & fullProjectPath = (*it)->GetName();
+        for ( const SLNDependency & deps : slnDeps )
+        {
+            // is the set of deps relevant to this project?
+            if ( deps.m_Projects.Find( fullProjectPath ) )
+            {
+                // get all the projects this project depends on
+                for ( const AString & dependency : deps.m_Dependencies )
+                {
+                    // For backward compatibility, keep the preceding slash and .vcxproj extension for GUID generation
+                    const char * projNameFromSlash = dependency.FindLast( NATIVE_SLASH );
+                    AStackString<> projectNameForGuid( projNameFromSlash ? projNameFromSlash : dependency.Get() );
 
-					AStackString<> newGUID;
-		            VSProjectGenerator::FormatDeterministicProjectGUID( newGUID, projectNameForGuid );
-					dependencyGUIDs.Append( newGUID );
-				}
-			}
-		}
-		if ( !dependencyGUIDs.IsEmpty() )
-		{
-			Write( "\tProjectSection(ProjectDependencies) = postProject\r\n" );
-			for ( const AString & guid : dependencyGUIDs )
-			{
-				Write( "\t\t%s = %s\r\n", guid.Get(), guid.Get() );
-			}
-			Write( "\tEndProjectSection\r\n" );
-		}
+                    AStackString<> newGUID;
+                    VSProjectGenerator::FormatDeterministicProjectGUID( newGUID, projectNameForGuid );
+                    dependencyGUIDs.Append( newGUID );
+                }
+            }
+        }
+        if ( !dependencyGUIDs.IsEmpty() )
+        {
+            Write( "\tProjectSection(ProjectDependencies) = postProject\r\n" );
+            for ( const AString & guid : dependencyGUIDs )
+            {
+                Write( "\t\t%s = %s\r\n", guid.Get(), guid.Get() );
+            }
+            Write( "\tEndProjectSection\r\n" );
+        }
 
         Write( "EndProject\r\n" );
 
@@ -301,9 +297,9 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
     const SolutionConfig * const end = solutionConfigs.End();
     for( const SolutionConfig * it = solutionConfigs.Begin() ; it != end ; ++it )
     {
-        Write(  "\t\t%s|%s = %s|%s\r\n",
-                it->m_SolutionConfig.Get(), it->m_SolutionPlatform.Get(),
-                it->m_SolutionConfig.Get(), it->m_SolutionPlatform.Get() );
+        Write( "\t\t%s|%s = %s|%s\r\n",
+               it->m_SolutionConfig.Get(), it->m_SolutionPlatform.Get(),
+               it->m_SolutionConfig.Get(), it->m_SolutionPlatform.Get() );
     }
 
     Write( "\tEndGlobalSection\r\n" );
@@ -311,9 +307,9 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
 
 // WriteProjectConfigurationPlatforms
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteProjectConfigurationPlatforms(  const AString & solutionBuildProjectGuid,
-                                                        const Array< SolutionConfig > & solutionConfigs,
-                                                        const Array< AString > & projectGuids )
+void SLNGenerator::WriteProjectConfigurationPlatforms( const AString & solutionBuildProjectGuid,
+                                                       const Array< SolutionConfig > & solutionConfigs,
+                                                       const Array< AString > & projectGuids )
 {
     Write( "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n" );
 
@@ -327,10 +323,10 @@ void SLNGenerator::WriteProjectConfigurationPlatforms(  const AString & solution
         const SolutionConfig * const solutionConfigsEnd = solutionConfigs.End();
         for( const SolutionConfig * it2 = solutionConfigs.Begin() ; it2 != solutionConfigsEnd ; ++it2 )
         {
-            Write(  "\t\t%s.%s|%s.ActiveCfg = %s|%s\r\n",
-                    it->Get(),
-                    it2->m_SolutionConfig.Get(), it2->m_SolutionPlatform.Get(),
-                    it2->m_Config.Get(), it2->m_Platform.Get() );
+            Write( "\t\t%s.%s|%s.ActiveCfg = %s|%s\r\n",
+                   it->Get(),
+                   it2->m_SolutionConfig.Get(), it2->m_SolutionPlatform.Get(),
+                   it2->m_Config.Get(), it2->m_Platform.Get() );
 
             if ( projectIsActive )
             {
@@ -476,7 +472,7 @@ void SLNGenerator::Write( const char * fmtString, ... )
         return false;
     }
     slnDeps.SetSize( num );
-	for ( SLNDependency & deps : slnDeps )
+    for ( SLNDependency & deps : slnDeps )
     {
         if ( stream.Read( deps.m_Projects ) == false ) { return false; }
         if ( stream.Read( deps.m_Dependencies ) == false ) { return false; }
@@ -490,7 +486,7 @@ void SLNGenerator::Write( const char * fmtString, ... )
 {
     const uint32_t num = (uint32_t)slnDeps.GetSize();
     stream.Write( num );
-	for ( const SLNDependency & deps : slnDeps )
+    for ( const SLNDependency & deps : slnDeps )
     {
         stream.Write( deps.m_Projects );
         stream.Write( deps.m_Dependencies );

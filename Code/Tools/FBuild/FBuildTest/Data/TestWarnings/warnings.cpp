@@ -1,5 +1,5 @@
 
 void Function()
 {
-	int i; // Generates warnings
+    int i; // Generates warnings
 }

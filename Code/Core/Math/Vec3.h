@@ -1,8 +1,6 @@
 // Vec3.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_MATH_VEC3_H
-#define CORE_MATH_VEC3_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -13,126 +11,126 @@
 class Vec3
 {
 public:
-	float	x,y,z;
-	
-	inline explicit Vec3() {}
-	inline explicit Vec3(float x1, float y1, float z1) { x=x1; y=y1; z=z1; }
-	inline ~Vec3() {}
+    float   x,y,z;
 
-	// basic operators
-	inline void  operator = (const Vec3 &vec);
-	inline Vec3  operator + (const Vec3 &vec) const;
-	inline Vec3  operator - (const Vec3 &vec) const;
-	inline void  operator +=(const Vec3 &vec);
-	inline void  operator -=(const Vec3 &vec);
-	inline bool  operator ==( const Vec3 & vec ) const;
+    inline explicit Vec3() = default;
+    inline explicit Vec3(float x1, float y1, float z1) { x=x1; y=y1; z=z1; }
+    inline ~Vec3() = default;
 
-	inline Vec3 operator - () const;
-	inline Vec3 operator * (const float f) const;
-	inline Vec3 operator / (const float f) const;
-	inline void operator *=(const float f);
+    // basic operators
+    inline void  operator = (const Vec3 &vec);
+    inline Vec3  operator + (const Vec3 &vec) const;
+    inline Vec3  operator - (const Vec3 &vec) const;
+    inline void  operator +=(const Vec3 &vec);
+    inline void  operator -=(const Vec3 &vec);
+    inline bool  operator ==( const Vec3 & vec ) const;
 
-	inline Vec3 Cross( const Vec3 & other ) const;
-	inline float Dot( const Vec3 & other ) const;
+    inline Vec3 operator - () const;
+    inline Vec3 operator * (const float f) const;
+    inline Vec3 operator / (const float f) const;
+    inline void operator *=(const float f);
 
-	// convenience functions
-	inline void  Normalise();
-	inline float GetLength() const;
-	inline float GetLengthSquared() const;
+    inline Vec3 Cross( const Vec3 & other ) const;
+    inline float Dot( const Vec3 & other ) const;
 
-	// constants
-	inline static const Vec3 & GetZero() { return *( (const Vec3 *)s_Zero ); }
-	inline static const Vec3 & GetOne()	 { return *( (const Vec3 *)s_One); }
+    // convenience functions
+    inline void  Normalise();
+    inline float GetLength() const;
+    inline float GetLengthSquared() const;
+
+    // constants
+    inline static const Vec3 & GetZero() { return *( (const Vec3 *)s_Zero ); }
+    inline static const Vec3 & GetOne()  { return *( (const Vec3 *)s_One); }
 
 private:
-	static const float s_Zero[ 3 ];
-	static const float s_One[ 3 ];
+    static const float s_Zero[ 3 ];
+    static const float s_One[ 3 ];
 };
 
 // operator =
 //------------------------------------------------------------------------------
 void Vec3::operator = (const Vec3 &vec)
 {
-	x = vec.x;
-	y = vec.y;
-	z = vec.z;
+    x = vec.x;
+    y = vec.y;
+    z = vec.z;
 }
 
 // operator +
 //------------------------------------------------------------------------------
 Vec3 Vec3::operator + (const Vec3 &vec) const
 {
-	Vec3 result;
-	result.x = x + vec.x;
-	result.y = y + vec.y;
-	result.z = z + vec.z;
-	return result;
+    Vec3 result;
+    result.x = x + vec.x;
+    result.y = y + vec.y;
+    result.z = z + vec.z;
+    return result;
 }
 
 // operator -
 //------------------------------------------------------------------------------
 Vec3 Vec3::operator - (const Vec3 &vec) const
 {
-	Vec3 result;
-	result.x = x - vec.x;
-	result.y = y - vec.y;
-	result.z = z - vec.z;
-	return result;
+    Vec3 result;
+    result.x = x - vec.x;
+    result.y = y - vec.y;
+    result.z = z - vec.z;
+    return result;
 }
 
 // operator +=
 //------------------------------------------------------------------------------
 void Vec3::operator +=(const Vec3 &vec)
 {
-	x += vec.x;
-	y += vec.y;
-	z += vec.z;
+    x += vec.x;
+    y += vec.y;
+    z += vec.z;
 }
 
 // operator -=
 //------------------------------------------------------------------------------
 void Vec3::operator -=(const Vec3 &vec)
 {
-	x -= vec.x;
-	y -= vec.y;
-	z -= vec.z;
+    x -= vec.x;
+    y -= vec.y;
+    z -= vec.z;
 }
 
 // operator ==
 //------------------------------------------------------------------------------
 bool Vec3::operator ==( const Vec3 & vec ) const
 {
-	return ( ( x == vec.x ) && ( y == vec.y ) && ( z == vec.z ));
+    return ( ( x == vec.x ) && ( y == vec.y ) && ( z == vec.z ));
 }
 
 // operator -
 //------------------------------------------------------------------------------
 Vec3 Vec3::operator - () const
 {
-	return Vec3( -x, -y, -z );
+    return Vec3( -x, -y, -z );
 }
 
 // operator * (float)
 //------------------------------------------------------------------------------
 Vec3 Vec3::operator *(const float f) const
 {
-	return Vec3( x * f, y * f, z * f );
+    return Vec3( x * f, y * f, z * f );
 }
 
 // operator / (float)
 //------------------------------------------------------------------------------
 Vec3 Vec3::operator / (const float f) const
 {
-	return Vec3( x / f, y / f, z / f );
+    return Vec3( x / f, y / f, z / f );
 }
 
 // operator *= (float)
 //------------------------------------------------------------------------------
 void Vec3::operator *=(const float f)
 {
-	x *= f;
-	y *= f;
-	z *= f;
+    x *= f;
+    y *= f;
+    z *= f;
 }
 
 // Cross
@@ -150,32 +148,31 @@ Vec3 Vec3::Cross( const Vec3 & other ) const
 //------------------------------------------------------------------------------
 float Vec3::Dot( const Vec3 & other ) const
 {
-	return ( x * other.x ) + ( y * other.y ) + ( z * other.z );
+    return ( x * other.x ) + ( y * other.y ) + ( z * other.z );
 }
 
 // Normalise - make vector unit length
 //------------------------------------------------------------------------------
 void Vec3::Normalise()
 {
-	float length = GetLength();
-	x /= length;
-	y /= length;
-	z /= length;
+    float length = GetLength();
+    x /= length;
+    y /= length;
+    z /= length;
 }
 
 // GetLength - return length of vector
 //------------------------------------------------------------------------------
 float Vec3::GetLength() const
 {
-	return Sqrt((x*x)+(y*y)+(z*z));
+    return Sqrt((x*x)+(y*y)+(z*z));
 }
 
 // GetLengthSquared - return squared length of vector
 //------------------------------------------------------------------------------
 float Vec3::GetLengthSquared() const
 {
-	return ((x*x)+(y*y)+(z*z));
+    return ((x*x)+(y*y)+(z*z));
 }
 
 //------------------------------------------------------------------------------
-#endif // CORE_MATH_VEC3_H

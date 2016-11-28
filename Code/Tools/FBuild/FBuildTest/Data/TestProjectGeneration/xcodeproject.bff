@@ -5,20 +5,32 @@
 Using( .StandardEnvironment )
 Settings {}
 
-.DebugConfig = 
+ObjectList( 'Main-x64OSX-Debug' )
+{
+    .CompilerInputPath  = 'Code/' // dummy - no actual code here
+    .CompilerOutputPath = '$Out$/Test/ProjectGeneration/Debug/'
+}
+
+ObjectList( 'Main-x64OSX-Release' )
+{
+    .CompilerInputPath  = 'Code/' // dummy - no actual code here
+    .CompilerOutputPath = '$Out$/Test/ProjectGeneration/Release/'
+}
+
+.DebugConfig =
 [
-	.Config	= 'Debug'
-	.Target = 'Main-x64OSX-Debug'
+    .Config = 'Debug'
+    .Target = 'Main-x64OSX-Debug'
 ]
-.ReleaseConfig = 
+.ReleaseConfig =
 [
-	.Config	= 'Release'
-	.Target = 'Main-x64OSX-Release'
+    .Config = 'Release'
+    .Target = 'Main-x64OSX-Release'
 ]
 
 XCodeProject( 'XCodeProj' )
 {
-	.ProjectOutput		= '$Out$/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj'
-	
-	.ProjectConfigs		= { .DebugConfig, .ReleaseConfig }
+    .ProjectOutput      = '$Out$/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj'
+
+    .ProjectConfigs     = { .DebugConfig, .ReleaseConfig }
 }

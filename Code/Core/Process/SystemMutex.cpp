@@ -27,7 +27,7 @@ SystemMutex::SystemMutex( const char * name ) :
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         m_Handle( -1 ),
     #endif
-	m_Name( name )
+    m_Name( name )
 {
 }
 
@@ -46,19 +46,19 @@ SystemMutex::~SystemMutex()
 bool SystemMutex::TryLock()
 {
     ASSERT( !IsLocked() ); // Invalid to lock more than once
-    
+
     #if defined( __WINDOWS__ )
-		void * handle = (void *)CreateMutex( nullptr, TRUE, m_Name.Get() );
-		if ( GetLastError() == ERROR_ALREADY_EXISTS )
-		{
-			if ( ( handle != INVALID_HANDLE_VALUE ) && ( handle != 0 ) )
-			{
-				CloseHandle( handle );
-			}
-			return false;
-		}
-		m_Handle = handle;
-		return true;
+        void * handle = (void *)CreateMutex( nullptr, TRUE, m_Name.Get() );
+        if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        {
+            if ( ( handle != INVALID_HANDLE_VALUE ) && ( handle != 0 ) )
+            {
+                CloseHandle( handle );
+            }
+            return false;
+        }
+        m_Handle = handle;
+        return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         AStackString<> tempFileName;
         tempFileName.Format( "/tmp/%s.lock", m_Name.Get());
@@ -104,9 +104,9 @@ bool SystemMutex::IsLocked() const
 void SystemMutex::Unlock()
 {
     #if defined( __WINDOWS__ )
-		ASSERT( m_Handle != INVALID_HANDLE_VALUE );
-		CloseHandle( m_Handle );
-		m_Handle = INVALID_HANDLE_VALUE;
+        ASSERT( m_Handle != INVALID_HANDLE_VALUE );
+        CloseHandle( m_Handle );
+        m_Handle = INVALID_HANDLE_VALUE;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         ASSERT( m_Handle != -1 );
         VERIFY( flock( m_Handle, LOCK_UN ) == 0 );

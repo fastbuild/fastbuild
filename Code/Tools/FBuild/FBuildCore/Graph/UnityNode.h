@@ -1,8 +1,6 @@
 // UnityNode.h - a node that builds a unity.cpp file
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef FBUILD_GRAPH_UNITYNODE_H
-#define FBUILD_GRAPH_UNITYNODE_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -20,17 +18,17 @@ class Function;
 //------------------------------------------------------------------------------
 class UnityNode : public Node
 {
-	REFLECT_DECLARE( UnityNode )
+    REFLECT_DECLARE( UnityNode )
 public:
-	friend class FunctionUnity;
+    friend class FunctionUnity;
 
-	explicit UnityNode();
-	bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
-	virtual ~UnityNode();
+    explicit UnityNode();
+    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual ~UnityNode();
 
-	static inline Node::Type GetTypeS() { return Node::UNITY_NODE; }
+    static inline Node::Type GetTypeS() { return Node::UNITY_NODE; }
 
-	inline const Array< AString > & GetUnityFileNames() const { return m_UnityFileNames; }
+    inline const Array< AString > & GetUnityFileNames() const { return m_UnityFileNames; }
 
     // For each file isolated from Unity, we track the original dir list (if available)
     // This allows ObjectList/Library to create a sensible (relative) output dir.
@@ -50,39 +48,38 @@ public:
         FileIO::FileInfo *      m_Info;
         DirectoryListNode *     m_DirListOrigin;
     };
-	inline const Array< FileAndOrigin > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
+    inline const Array< FileAndOrigin > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
-	static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-	virtual void Save( IOStream & stream ) const override;
+    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
+    virtual void Save( IOStream & stream ) const override;
 private:
-	virtual BuildResult DoBuild( Job * job ) override;
+    virtual BuildResult DoBuild( Job * job ) override;
 
-	virtual bool IsAFile() const override { return false; }
+    virtual bool IsAFile() const override { return false; }
 
-	bool GetFiles( Array< FileAndOrigin > & files );
+    bool GetFiles( Array< FileAndOrigin > & files );
 
-	// Exposed properties
-	Array< AString > m_InputPaths;
-	bool m_InputPathRecurse;
-	Array< AString > m_InputPattern;
-	Array< AString > m_Files;
+    // Exposed properties
+    Array< AString > m_InputPaths;
+    bool m_InputPathRecurse;
+    Array< AString > m_InputPattern;
+    Array< AString > m_Files;
     Array< AString > m_ObjectLists;
-	AString m_OutputPath;
-	AString m_OutputPattern;
-	uint32_t m_NumUnityFilesToCreate;
-	AString m_PrecompiledHeader;
-	Array< AString > m_PathsToExclude;
-	Array< AString > m_FilesToExclude;
-	bool m_IsolateWritableFiles;
-	uint32_t m_MaxIsolatedFiles;
-	Array< AString > m_ExcludePatterns;
-	Array< FileAndOrigin > m_IsolatedFiles;
-	Array< AString > m_PreBuildDependencyNames;
+    AString m_OutputPath;
+    AString m_OutputPattern;
+    uint32_t m_NumUnityFilesToCreate;
+    AString m_PrecompiledHeader;
+    Array< AString > m_PathsToExclude;
+    Array< AString > m_FilesToExclude;
+    bool m_IsolateWritableFiles;
+    uint32_t m_MaxIsolatedFiles;
+    Array< AString > m_ExcludePatterns;
+    Array< FileAndOrigin > m_IsolatedFiles;
+    Array< AString > m_PreBuildDependencyNames;
 
-	// Temporary data
-	Array< AString > m_UnityFileNames;
-	Array< FileIO::FileInfo* > m_FilesInfo;
+    // Temporary data
+    Array< AString > m_UnityFileNames;
+    Array< FileIO::FileInfo* > m_FilesInfo;
 };
 
 //------------------------------------------------------------------------------
-#endif // FBUILD_GRAPH_LIBRARYNODE_H

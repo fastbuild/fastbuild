@@ -4,8 +4,8 @@
 
 int main(int , char **)
 {
-	for (;;)
-	{
-		// busy wait spin to avoid pulling dependencies for sleep/yield
-	}
+    for (;;)
+    {
+        // busy wait spin to avoid pulling dependencies for sleep/yield
+    }
 }

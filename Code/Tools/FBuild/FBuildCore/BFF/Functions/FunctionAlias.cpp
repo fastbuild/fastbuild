@@ -21,33 +21,33 @@ FunctionAlias::FunctionAlias()
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionAlias::AcceptsHeader() const
 {
-	return true;
+    return true;
 }
 
 // NeedsHeader
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionAlias::NeedsHeader() const
 {
-	return true;
+    return true;
 }
 
 // Commit
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionAlias::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
-	if ( nodeGraph.FindNode( m_AliasForFunction ) )
-	{
-		Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
-		return false;
-	}
-	AliasNode * aliasNode = nodeGraph.CreateAliasNode( m_AliasForFunction );
+    if ( nodeGraph.FindNode( m_AliasForFunction ) )
+    {
+        Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
+        return false;
+    }
+    AliasNode * aliasNode = nodeGraph.CreateAliasNode( m_AliasForFunction );
 
-	if ( !PopulateProperties( nodeGraph, funcStartIter, aliasNode ) )
-	{
-		return false;
-	}
+    if ( !PopulateProperties( nodeGraph, funcStartIter, aliasNode ) )
+    {
+        return false;
+    }
 
-	return aliasNode->Initialize( nodeGraph, funcStartIter, this );
+    return aliasNode->Initialize( nodeGraph, funcStartIter, this );
 }
 
 //------------------------------------------------------------------------------

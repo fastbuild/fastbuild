@@ -40,7 +40,7 @@ public:
         #endif
         #if defined( __APPLE__ )
             mach_timebase_info_data_t info;
-            mach_timebase_info( &info );                
+            mach_timebase_info( &info );
             Timer::s_Frequency = (int64_t)( info.numer / info.denom ) * 1000000000;
         #endif
         #if defined( __LINUX__ )

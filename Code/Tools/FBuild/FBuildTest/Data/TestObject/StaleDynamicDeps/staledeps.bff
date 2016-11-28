@@ -6,14 +6,14 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.UnityOutputPath			= '$Out$/Test/Object/StaleDynamicDeps/'
-.CompilerOutputPath			= '$Out$/Test/Object/StaleDynamicDeps/'
+.UnityOutputPath            = '$Out$/Test/Object/StaleDynamicDeps/'
+.CompilerOutputPath         = '$Out$/Test/Object/StaleDynamicDeps/'
 
 // CPPGenerator (previously compiled)
 //------------------------------------------------------------------------------
 Compiler( 'CPPGenerator' )
 {
-	.Executable = '$Out$/Test/Object/StaleDynamicDeps/CPPGenerator.exe'
+    .Executable = '$Out$/Test/Object/StaleDynamicDeps/CPPGenerator.exe'
 }
 
 //
@@ -21,26 +21,26 @@ Compiler( 'CPPGenerator' )
 //------------------------------------------------------------------------------
 ObjectList( 'GenerateCPPFiles' )
 {
-	.Compiler					= 'CPPGenerator'
-	.CompilerOptions			= '"%1" "%2"'
-	.CompilerInputPath			= '$Out$/Test/Object/StaleDynamicDeps/GeneratedInput' // Test will create files in here
-	.CompilerInputPattern		= '*.h'
-	.CompilerOutputExtension	= '.cpp'
-	.CompilerOutputPath			+ 'Generated/'
+    .Compiler                   = 'CPPGenerator'
+    .CompilerOptions            = '"%1" "%2"'
+    .CompilerInputPath          = '$Out$/Test/Object/StaleDynamicDeps/GeneratedInput' // Test will create files in here
+    .CompilerInputPattern       = '*.h'
+    .CompilerOutputExtension    = '.cpp'
+    .CompilerOutputPath         + 'Generated/'
 }
 
 Unity( 'Unity' )
 {
-	.UnityInputObjectLists		= 'GenerateCPPFiles'
-	.UnityOutputPath			+ 'Unity/'
+    .UnityInputObjectLists      = 'GenerateCPPFiles'
+    .UnityOutputPath            + 'Unity/'
 }
 
 ObjectList( 'CompileGeneratedFiles' )
 {
-	.CompilerInputUnity			= 'Unity'
+    .CompilerInputUnity         = 'Unity'
 }
 
 Alias( 'StaleDynamicDeps' )
 {
-	.Targets					= 'CompileGeneratedFiles'
+    .Targets                    = 'CompileGeneratedFiles'
 }

@@ -1,8 +1,6 @@
 // Singleton.h
 //------------------------------------------------------------------------------
 #pragma once
-#ifndef CORE_CONTAINERS_SINGLETON_H
-#define CORE_CONTAINERS_SINGLETON_H
 
 // Includes
 //------------------------------------------------------------------------------
@@ -14,15 +12,15 @@ template < class T >
 class Singleton
 {
 public:
-	static T & Get();
-	static inline bool IsValid() { return ( s_Instance != nullptr ); }
+    static T & Get();
+    static inline bool IsValid() { return ( s_Instance != nullptr ); }
 
 protected:
-	Singleton();
-	~Singleton();
+    Singleton();
+    ~Singleton();
 
 private:
-	static T * s_Instance;
+    static T * s_Instance;
 };
 
 // Static
@@ -35,8 +33,8 @@ T * Singleton< T >::s_Instance = nullptr;
 template < class T >
 Singleton< T >::Singleton()
 {
-	ASSERT( s_Instance == nullptr );
-	s_Instance = static_cast< T * >( this );
+    ASSERT( s_Instance == nullptr );
+    s_Instance = static_cast< T * >( this );
 }
 
 // DESTRUCTOR
@@ -44,8 +42,8 @@ Singleton< T >::Singleton()
 template < class T >
 Singleton< T >::~Singleton()
 {
-	ASSERT( s_Instance == this );
-	s_Instance = nullptr;
+    ASSERT( s_Instance == this );
+    s_Instance = nullptr;
 }
 
 // Get
@@ -53,11 +51,10 @@ Singleton< T >::~Singleton()
 template < class T >
 T & Singleton< T >::Get()
 {
-	ASSERT( s_Instance );
+    ASSERT( s_Instance );
 PRAGMA_DISABLE_PUSH_MSVC( 6011 ) // static analysis generates a C6011: Dereferencing NULL pointer 's_Instance'
-	return *s_Instance;
+    return *s_Instance;
 PRAGMA_DISABLE_POP_MSVC
 }
 
 //------------------------------------------------------------------------------
-#endif // CORE_CONTAINERS_SINGLETON_H
