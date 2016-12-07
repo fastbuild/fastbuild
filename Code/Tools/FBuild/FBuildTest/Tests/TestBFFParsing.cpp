@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 #include "Core/Containers/AutoPtr.h"
+#include "Core/Env/Env.h"
 #include "Core/FileIO/FileStream.h"
 
 // TestBFFParsing
@@ -35,6 +36,7 @@ private:
     void Struct_Unterminated() const;
     void IncludeScope() const;
     void IfDirective() const;
+    void IfExistsDirective() const;
     void ElseDirective() const;
     void ElseDirective_Bad() const;
     void InvalidDirective() const;
@@ -71,6 +73,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Struct_Unterminated )
     REGISTER_TEST( IncludeScope )
     REGISTER_TEST( IfDirective )
+    REGISTER_TEST( IfExistsDirective )
     REGISTER_TEST( ElseDirective )
     REGISTER_TEST( ElseDirective_Bad )
     REGISTER_TEST( InvalidDirective )
@@ -224,11 +227,20 @@ void TestBFFParsing::IncludeScope() const
     Parse( "Data/TestBFFParsing/include_scope.bff" );
 }
 
-// IfDerective
+// IfDirective
 //------------------------------------------------------------------------------
 void TestBFFParsing::IfDirective() const
 {
     Parse( "Data/TestBFFParsing/if_directive.bff" );
+}
+
+// IfExistsDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfExistsDirective() const
+{
+    Env::SetEnvVariable("BFF_TEST_ENV_VAR1", AString("1"));
+    Env::SetEnvVariable("BFF_TEST_ENV_VAR2", AString("2"));
+    Parse( "Data/TestBFFParsing/if_exists_directive.bff" );
 }
 
 // ElseDirective
