@@ -364,7 +364,7 @@
     FormatError( iter, 1041u, nullptr, "#else without matching #if." );
 }
 
-// Error_1042_UnknownDirective
+// Error_1042_UnknownOperator
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1042_UnknownOperator( const BFFIterator & iter, const AString & operatorName )
 {

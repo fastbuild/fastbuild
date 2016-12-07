@@ -1009,7 +1009,7 @@ bool BFFParser::ParseIfCondition( const BFFIterator & directiveStart, BFFIterato
 
     // Check whether this is an #if operator by first looking for an opening parenthesis.
     // For compatibility with previous versions we allow macros to have the same names as
-    // #if operator (e.g. exists) and only parse them as operators if we find a brace.
+    // #if operators (e.g. exists) and only parse them as operators if we find a brace.
     if ( *iter == BFF_FUNCTION_ARGS_OPEN )
     {
         if ( variableOrOperator == "exists" )
