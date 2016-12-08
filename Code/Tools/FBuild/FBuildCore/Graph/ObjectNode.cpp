@@ -1498,10 +1498,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue; // skip this token in both cases
                 }
             }
-            if ( isMSVC )
-            {
-                // NOTE: Leave /I includes for compatibility with Recode
-                // (unlike Clang, MSVC is ok with leaving the /I when compiling preprocessed code)
+			if (isMSVC)
+			{
+				// NOTE: Stripping off /I includes drastically shortens the command line for large projects.
+				// This may break support for Recode.
+				// (unlike Clang, MSVC is ok with leaving the /I when compiling preprocessed code)
+
+				if (StripTokenWithArg_MSVC("I", token, i))
+				{
+					continue;
+				}
 
                 // Strip "Force Includes" statements (as they are merged in now)
                 if ( StripTokenWithArg_MSVC( "FI", token, i ) )
