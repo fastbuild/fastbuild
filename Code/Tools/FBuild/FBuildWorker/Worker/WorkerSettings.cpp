@@ -20,6 +20,8 @@
 #define FBUILDWORKER_SETTINGS_MIN_VERSION ( 2 )     // Oldest compatible version
 #define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 3 ) // Current version
 
+#define FBUILDWORKER_SETTINGS_SUPPORT_DETAILED_CPU (3) // Support detailed CPU in version 3+
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 WorkerSettings::WorkerSettings()
@@ -83,7 +85,10 @@ void WorkerSettings::Load()
 
         // settings
         f.Read( m_NumCPUsToUseWhenIdle );
-		f.Read(m_NumCPUsToUseDedicated);
+		if (header[3] >= FBUILDWORKER_SETTINGS_SUPPORT_DETAILED_CPU)
+		{
+			f.Read(m_NumCPUsToUseDedicated);
+		}
         f.Read( m_StartMinimized );
     }
 }
