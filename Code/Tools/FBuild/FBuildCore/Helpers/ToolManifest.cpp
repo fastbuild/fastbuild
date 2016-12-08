@@ -102,8 +102,7 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
 
     // create a hash for the whole tool chain
     const size_t numFiles( m_Files.GetSize() );
-	const size_t numEnvVars( m_CustomEnvironmentVariables.GetSize() );
-    const size_t memSize( numFiles * sizeof( uint32_t ) * 2 + numEnvVars);	// Make space for the hash of the file, the hash of the filename, and each of the custom environment variables.
+    const size_t memSize( numFiles * sizeof( uint32_t ) * 2);	// Make space for the hash of the file, the hash of the filename, and each of the custom environment variables.
     uint32_t * mem = (uint32_t *)ALLOC( memSize );
     uint32_t * pos = mem;
     for ( size_t i=0; i<numFiles; ++i )
@@ -120,11 +119,6 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
-	for (size_t i = 0; i < numEnvVars; ++i)
-	{
-		*pos = xxHash::Calc32(m_CustomEnvironmentVariables[i]);
-		++pos;
-	}
     m_ToolId = xxHash::Calc64( mem, memSize );
     FREE( mem );
 
