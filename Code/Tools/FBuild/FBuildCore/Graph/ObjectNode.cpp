@@ -334,16 +334,16 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
 	if (pass == PASS_PREPROCESSOR_ONLY)
 	{
-    if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization ) == false )
-    {
-        return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
-    }
+		if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization ) == false )
+		{
+			return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
+		}
 
-    // preprocessed ok, try to extract includes
-    if ( ProcessIncludesWithPreProcessor( job ) == false )
-    {
-        return NODE_RESULT_FAILED; // ProcessIncludesWithPreProcessor will have emitted an error
-    }
+		// preprocessed ok, try to extract includes
+		if ( ProcessIncludesWithPreProcessor( job ) == false )
+		{
+			return NODE_RESULT_FAILED; // ProcessIncludesWithPreProcessor will have emitted an error
+		}
 	}
 
 	if (pass == PASS_PREP_FOR_SIMPLE_DISTRIBUTION)
