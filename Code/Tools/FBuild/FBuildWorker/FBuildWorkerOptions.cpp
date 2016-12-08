@@ -71,11 +71,75 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
     Array< AString > tokens;
     commandLine.Tokenize( tokens );
 
+	// Keep backwards compatibility for CPU selection and disabling work.
+	// Since the legacy settings are applied at the end, they have the opportunity to stomp the new cpusWhenIdle, cpusDedicated settings.
+	uint32_t legacyCPUAllocation = 0;
+	bool legacyOverrideCPUAllocation = false;
+	bool legacyWorkModeDisabled = false;
+	bool legacyWorkModeIdle = false;
+	bool legacyWorkModeDedicated = false;
+	bool legacyOverrideWorkMode = false;
+
     // Check each token
     const AString * const end = tokens.End();
     for ( const AString * it=tokens.Begin(); it != end; ++it )
     {
         const AString & token = *it;
+		if (token.BeginsWith("-cpus="))
+		{
+			int32_t numCPUs = Env::GetNumProcessors();
+			int32_t num(0);
+			if (sscanf(token.Get() + 6, "%i", &num) == 1)
+			{
+				if (token.EndsWith('%'))
+				{
+					num = (int32_t)(numCPUs * (float)num / 100.0f);
+					legacyCPUAllocation = Math::Clamp(num, 1, numCPUs);
+					legacyOverrideCPUAllocation = true;
+					continue;
+				}
+				else if (num > 0)
+				{
+					legacyCPUAllocation = Math::Clamp(num, 1, numCPUs);
+					legacyOverrideCPUAllocation = true;
+					continue;
+				}
+				else if (num < 0)
+				{
+					legacyCPUAllocation = Math::Clamp((numCPUs + num), 1, numCPUs);
+					legacyOverrideCPUAllocation = true;
+					continue;
+				}
+				// problem... fall through
+			}
+			// problem... fall through
+		}
+		else if (token == "-mode=disabled")
+		{
+			legacyWorkModeDisabled = true;
+			legacyWorkModeIdle = false;
+			legacyWorkModeDedicated = false;
+			legacyOverrideWorkMode = true;
+			continue;
+		}
+		else if (token == "-mode=idle")
+		{
+			legacyWorkModeDisabled = false;
+			legacyWorkModeIdle = true;
+			legacyWorkModeDedicated = false;
+			legacyOverrideWorkMode = true;
+			continue;
+		}
+		else if (token == "-mode=dedicated")
+		{
+			legacyWorkModeDisabled = false;
+			legacyWorkModeIdle = false;
+			legacyWorkModeDedicated = true;
+			legacyOverrideWorkMode = true;
+			continue;
+		}
+
+
         if ( token.BeginsWith( "-cpusWhenIdle=" ) )
         {
 			if (ParseCpuCommandLine(token, strlen("-cpusWhenIdle="), m_OverrideCPUAllocationWhenIdle, m_CPUAllocationWhenIdle))
@@ -106,6 +170,24 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         ShowUsageError();
         return false;
     }
+
+	if (legacyOverrideWorkMode && legacyWorkModeDisabled)
+	{
+		m_OverrideCPUAllocationWhenIdle = true;
+		m_CPUAllocationWhenIdle = 0;
+		m_OverrideCPUAllocationDedicated = true;
+		m_CPUAllocationDedicated = 0;
+	}
+	else if (legacyOverrideWorkMode && legacyWorkModeIdle && legacyOverrideCPUAllocation)
+	{
+		m_OverrideCPUAllocationWhenIdle = true;
+		m_CPUAllocationWhenIdle = legacyCPUAllocation;
+	}
+	else if (legacyOverrideWorkMode && legacyWorkModeDedicated && legacyOverrideCPUAllocation)
+	{
+		m_OverrideCPUAllocationDedicated = true;
+		m_CPUAllocationDedicated = legacyCPUAllocation;
+	}
 
     return true;
 }
