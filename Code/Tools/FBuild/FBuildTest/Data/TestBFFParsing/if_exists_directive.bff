@@ -1,0 +1,17 @@
+//
+// #if exists() directive
+//
+// Note: The test harness defines environment variables BFF_TEST_ENV_VAR1 and BFF_TEST_ENV_VAR2
+//
+
+#import BFF_TEST_ENV_VAR1 // this should work
+
+#if exists(BFF_TEST_ENV_VAR3)
+	#import BFF_TEST_ENV_VAR3 // should never get here
+#endif
+
+#if !exists(BFF_TEST_ENV_VAR3)
+	#import BFF_TEST_ENV_VAR2 // this should work
+#else
+	should never get here
+#endif

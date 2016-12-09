@@ -476,17 +476,25 @@ void FBuild::SetEnvironmentString( const char * envString, uint32_t size, const 
 
 // ImportEnvironmentVar
 //------------------------------------------------------------------------------
-bool FBuild::ImportEnvironmentVar( const char * name, AString & value, uint32_t & hash )
+bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & value, uint32_t & hash )
 {
     // check if system environment contains the variable
     if ( Env::GetEnvVariable( name, value ) == false )
     {
-        FLOG_ERROR( "Could not import environment variable '%s'", name );
-        return false;
-    }
+        if ( !optional )
+        {
+            FLOG_ERROR( "Could not import environment variable '%s'", name );
+            return false;
+        }
 
-    // compute hash value for actual value
-    hash = xxHash::Calc32( value );
+        // set the hash to the "missing variable" value of 0
+        hash = 0;
+    }
+    else
+    {
+        // compute hash value for actual value
+        hash = xxHash::Calc32( value );
+    }
 
     // check if the environment var was already imported
     const EnvironmentVarAndHash * it = m_ImportedEnvironmentVars.Begin();
