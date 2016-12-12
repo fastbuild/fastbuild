@@ -107,6 +107,19 @@
     #endif
 }
 
+// SetEnvVariable
+//------------------------------------------------------------------------------
+/*static*/ bool Env::SetEnvVariable( const char * envVarName, const AString & envVarValue )
+{
+    #if defined( __WINDOWS__ )
+        return ::SetEnvironmentVariable( envVarName, envVarValue.Get() ) != 0;
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        return ::setenv( envVarName, envVarValue.Get(), 1 ) == 0;
+    #else
+        #error Unknown platform
+    #endif
+}
+
 // GetCmdLine
 //------------------------------------------------------------------------------
 /*static*/ void Env::GetCmdLine( AString & cmdLine )

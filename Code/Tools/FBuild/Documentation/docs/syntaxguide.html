@@ -135,13 +135,19 @@ Examples:
 	.CompilerOptions = '-c "%1" -o "%2"' 
 #endif
 </div>
-The following pre-defined (and reserved) symbols are available for use:
+<p>The following pre-defined (and reserved) symbols are available for use:</p>
 <table>
 <tr><th>Symbol</th><th>Value</th></tr>
 <tr><td>__LINUX__</td><td>Defined if running on Linux</td></tr>
 <tr><td>__OSX__</td><td>Defined if running on OS X</td></tr>
 <tr><td>__WINDOWS__</td><td>Defined if running on Windows</td></tr>
 </table>
+<p>Additionally, the "exists" operator can be used to branch on the existence of an environment variable.</p>
+Example:
+<div class='code'>#if exists(MY_ENV_VAR)
+    #import MY_ENV_VAR
+#endif
+</div>
 
  </div>
  
@@ -157,6 +163,7 @@ Examples:
 <div class='code'>#import VS120COMNTOOLS
 .VisualStudio2012Compiler = '$VS120COMNTOOLS$\..\..\VC\bin\cl.exe'
 </div>
+#import can be combined with <a href="#if">#if exists</a> to support importation of optional environment variables.
  </div>
 
  
