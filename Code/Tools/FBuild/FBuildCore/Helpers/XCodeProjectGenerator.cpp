@@ -7,6 +7,10 @@
 
 #include "XCodeProjectGenerator.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
+
 // Core
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
@@ -278,6 +282,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         GetGUID_XCBuildConfiguration( configId, xcBuildConfigurationGUID );
         ++configId;
 
+        const AString& target = config.m_TargetNode ? config.m_TargetNode->GetName() : AString::GetEmpty();
         Write( "\t\t%s /* %s */ = {\n"
                 "\t\t\tisa = XCBuildConfiguration;\n"
                 "\t\t\tbuildSettings = {\n"
@@ -286,7 +291,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                 "\t\t\t};\n"
                 "\t\t\tname = %s;\n"
                 "\t\t};\n",
-                xcBuildConfigurationGUID.Get(), config.m_Name.Get(), debugWorkingDir, config.m_Target.Get(), config.m_Name.Get() );
+                xcBuildConfigurationGUID.Get(), config.m_Name.Get(), debugWorkingDir, target.Get(), config.m_Name.Get() );
     }
 
     configId = 100;
@@ -300,6 +305,49 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                "\t\t\tisa = XCBuildConfiguration;\n"
                "\t\t\tbuildSettings = {\n",
                xcBuildConfigurationGUID.Get(), config.m_Name.Get() );
+
+        // Find target from which to extract Intellisense options
+        const ObjectListNode * oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( config.m_TargetNode );
+        if ( oln )
+        {
+            // Defines
+            {
+                Array< AString > defines;
+                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerArgs(), "/D", "-D", defines, true );
+                AStackString<> definesStr;
+                ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, "\t\t\t\t\t\"", "\",\n" );
+                Write( "\t\t\t\tGCC_PREPROCESSOR_DEFINITIONS = (\n" );
+                Write( "%s", definesStr.Get() );
+                //Write( "\t\t\t\t\t\"MONOLITHIC_BUILD=1\",\n" ); // TODO:C Is this needed?
+                Write( "\t\t\t\t);\n" );
+            }
+
+            // System Include Paths
+            // TODO:B Do we need to differentiate include path types? 
+            {
+                //Write( "\t\t\t\tHEADER_SEARCH_PATHS = (\n" );
+                //Write( "%s", includePathsStr.Get() );
+                //Write( "\t\t\t\t);\n" );
+            }
+
+            // User Include Paths
+            {
+                Array< AString > includePaths;
+                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerArgs(), "/I", "-I", includePaths, true );
+                for ( AString & include : includePaths )
+                {
+                    AStackString<> fullIncludePath;
+                    NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path - TODO:C would be better to be project relative
+                    include = fullIncludePath;
+                }
+                AStackString<> includePathsStr;
+                ProjectGeneratorBase::ConcatIntellisenseOptions( includePaths, includePathsStr, "\t\t\t\t\t\"", "\",\n" );
+                Write( "\t\t\t\tUSER_HEADER_SEARCH_PATHS = (\n" );
+                Write( "%s", includePathsStr.Get() );
+                Write( "\t\t\t\t);\n" );
+            }
+        }
+
         Write( "\t\t\t\tOTHER_CFLAGS = \"\";\n"
                "\t\t\t\tOTHER_LDFLAGS = \"\";\n"
                "\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";\n"

@@ -9,7 +9,10 @@
 #include "ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
+#include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 
 // Core
 #include "Core/Containers/AutoPtr.h"
@@ -139,11 +142,11 @@ void ProjectGeneratorBase::Write( const char * fmtString, ... )
 
 // AddConfig
 //------------------------------------------------------------------------------
-void ProjectGeneratorBase::AddConfig( const AString & name, const AString & target )
+void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetNode )
 {
     Config c;
     c.m_Name = name;
-    c.m_Target = target;
+    c.m_TargetNode = targetNode;
     m_Configs.Append( c );
 }
 
@@ -259,6 +262,147 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const AString & targ
         AStackString<> tmp;
         tmp.Format("*%s", ext.Get());
         ext = tmp;
+    }
+}
+
+
+// FindTargetForIntellisenseInfo
+//------------------------------------------------------------------------------
+/*static*/ const ObjectListNode * ProjectGeneratorBase::FindTargetForIntellisenseInfo( const Node * node )
+{
+    if ( node )
+    {
+        switch ( node->GetType() )
+        {
+            case Node::OBJECT_LIST_NODE: return node->CastTo< ObjectListNode >();
+            case Node::LIBRARY_NODE: return node->CastTo< LibraryNode >();
+            case Node::EXE_NODE:
+            {
+                // For Exe use first library
+                const Dependencies & deps = node->GetStaticDependencies();
+                if ( deps.IsEmpty() == false )
+                {
+                    return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+                }
+                break; // Nothing found
+            }
+            case Node::DLL_NODE:
+            {
+                // For DLL use first library
+                const Dependencies & deps = node->GetStaticDependencies();
+                if ( deps.IsEmpty() == false )
+                {
+                    return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+                }
+                break; // Nothing found
+            }
+            case Node::TEST_NODE:
+            {
+                // For test search in executable
+                const Node * testExe = node->CastTo< TestNode >()->GetTestExecutable();
+                if ( testExe )
+                {
+                    return FindTargetForIntellisenseInfo( testExe );
+                }
+                break; // Nothing found
+            }
+            case Node::ALIAS_NODE:
+            {
+                const Dependencies & deps = node->CastTo< AliasNode >()->GetAliasedNodes();
+                if ( deps.IsEmpty() == false )
+                {
+                    return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+                }
+                break; // Nothing aliased - ignore
+            }
+            default: break; // Unsupported type - ignore
+        }
+    }
+    return nullptr;
+}
+
+// ExtractIntellisenseOptions
+//------------------------------------------------------------------------------
+/*static*/ void ProjectGeneratorBase::ExtractIntellisenseOptions( const AString & compilerArgs,
+                                                                  const char * option,
+                                                                  const char * alternateOption,
+                                                                  Array< AString > & outOptions,
+                                                                  bool escapeQuotes )
+{
+    ASSERT( option );
+    Array< AString > tokens;
+    compilerArgs.Tokenize( tokens );
+
+    const size_t optionLen = AString::StrLen( option );
+    const size_t alternateOptionLen = alternateOption ? AString::StrLen( alternateOption ) : 0;
+
+    for ( AString & token : tokens )
+    {
+        // strip quotes around token, e.g:    "-IFolder/Folder"
+        if ( token.BeginsWith( '"' ) && token.EndsWith( '"' ) )
+        {
+            token = AStackString<>( token.Get() + 1, token.GetEnd() - 1 );
+        }
+
+        // check for either option at start of token
+        if ( token.BeginsWith( option ) )
+        {
+            // quoted?
+            AStackString<> tmp;
+            if ( ( token[optionLen] == '"' ) && token.EndsWith( '"' ) )
+            {
+                // use everything after token minus the quotes
+                tmp.Assign( token.Get() + ( optionLen + 1 ), token.GetEnd() - 1 );
+            }
+            else
+            {
+                // use everything after token
+                tmp.Assign( token.Get() + optionLen );
+            }
+            if (escapeQuotes)
+            {
+                tmp.Replace("\"", "\\\"");
+            }
+            outOptions.Append( tmp );
+        }
+        else if ( alternateOption && token.BeginsWith( alternateOption ) )
+        {
+            AStackString<> tmp;
+            if ( ( token[alternateOptionLen] == '"' ) && token.EndsWith( '"' ) )
+            {
+                tmp.Assign( token.Get() + ( alternateOptionLen + 1 ), token.GetEnd() - 1 );
+            }
+            else
+            {
+                tmp.Assign( token.Get() + alternateOptionLen );
+            }
+            if (escapeQuotes)
+            {
+                tmp.Replace("\"", "\\\"");
+            }
+            outOptions.Append( tmp );
+        }
+    }
+}
+
+// ConcatIntellisenseOptions
+//------------------------------------------------------------------------------
+/*static*/ void ProjectGeneratorBase::ConcatIntellisenseOptions( const Array< AString > & tokens,
+                                                                 AString & outTokenString,
+                                                                 const char* preToken,
+                                                                 const char* postToken )
+{
+    for ( const AString & token : tokens )
+    {
+        if ( preToken )
+        {
+            outTokenString += preToken;
+        }
+        outTokenString += token;
+        if ( postToken )
+        {
+            outTokenString += postToken;
+        }
     }
 }
 

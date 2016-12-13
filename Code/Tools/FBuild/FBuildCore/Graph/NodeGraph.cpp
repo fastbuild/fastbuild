@@ -317,9 +317,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
             {
                 return LoadResult::LOAD_ERROR;
             }
-
-            bool optional = ( savedVarHash == 0 ); // a hash of 0 means the env var was missing when it was evaluated
-            if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, importedVarHash ) == false )
+            if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), varValue, importedVarHash ) == false )
             {
                 // make sure the user knows why some things might re-build
                 FLOG_WARN( "'%s' Environment variable was not found - BFF will be re-parsed\n", varName.Get() );

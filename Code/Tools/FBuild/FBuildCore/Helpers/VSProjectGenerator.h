@@ -107,14 +107,6 @@ private:
 
     void GetFolderPath( const AString & fileName, AString & folder ) const;
 
-    static const ObjectListNode * FindTargetForIntellisenseInfo( const Node * node );
-    static void ExtractIntellisenseOptions( const AString & compilerArgs,
-                                            const char * option,
-                                            const char * alternateOption,
-                                            Array< AString > & outOptions );
-    static void ConcatIntellisenseOptions( const Array< AString > & tokens,
-                                           AString & outTokenString );
-
     // project details
     AString m_ProjectName;
     Array< AString > m_BasePaths;

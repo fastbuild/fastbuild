@@ -5,6 +5,18 @@
 Using( .StandardEnvironment )
 Settings {}
 
+ObjectList( 'Main-x64OSX-Debug' )
+{
+    .CompilerInputPath  = 'Code/' // dummy - no actual code here
+    .CompilerOutputPath = '$Out$/Test/ProjectGeneration/Debug/'
+}
+
+ObjectList( 'Main-x64OSX-Release' )
+{
+    .CompilerInputPath  = 'Code/' // dummy - no actual code here
+    .CompilerOutputPath = '$Out$/Test/ProjectGeneration/Release/'
+}
+
 .DebugConfig =
 [
     .Config = 'Debug'

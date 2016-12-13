@@ -8,7 +8,9 @@
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------'
+class Node;
+class ObjectListNode;
 
 // ProjectGeneratorBase
 //------------------------------------------------------------------------------
@@ -21,12 +23,25 @@ public:
     inline void SetBasePaths( const Array< AString > & paths ) { m_BasePaths = paths; }
     void AddFile( const AString & fileName );
 
-    void AddConfig( const AString & name, const AString & target );
+    void AddConfig( const AString & name, const Node * targetNode );
 
     static bool WriteIfDifferent( const char * generatorId, const AString & content, const AString & fileName );
 
     static void GetDefaultAllowedFileExtensions( Array< AString > & extensions );
     static void FixupAllowedFileExtensions( Array< AString > & extensions );
+
+    // Intellisense Helpers
+    static const ObjectListNode * FindTargetForIntellisenseInfo( const Node * node );
+    static void ExtractIntellisenseOptions( const AString & compilerArgs,
+                                            const char * option,
+                                            const char * alternateOption,
+                                            Array< AString > & outOptions,
+                                            bool escapeQuotes );
+    static void ConcatIntellisenseOptions( const Array< AString > & tokens,
+                                           AString & outTokenString,
+                                           const char* preToken,
+                                           const char* postToken );
+
 protected:
     // Helper to format some text
     void Write( const char * fmtString, ... );
@@ -49,8 +64,8 @@ protected:
     };
     struct Config
     {
-        AString     m_Name;         // Config name (e.g. Debug, Release etc.)
-        AString     m_Target;       // Target to pass on cmdline to FASTBuild
+        AString         m_Name;                     // Config name (e.g. Debug, Release etc.)
+        const Node *    m_TargetNode = nullptr;     // Target to pass on cmdline to FASTBuild and used for Intellisense
     };
 
     // Input Data
