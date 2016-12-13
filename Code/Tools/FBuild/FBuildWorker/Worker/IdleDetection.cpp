@@ -48,9 +48,7 @@ IdleDetection::IdleDetection() :
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-IdleDetection::~IdleDetection()
-{
-}
+IdleDetection::~IdleDetection() = default;
 
 // Update
 //------------------------------------------------------------------------------
@@ -76,9 +74,6 @@ void IdleDetection::Update()
     {
         m_IsIdle = false;
     }
-
-    //DEBUGSPAM( "CPU usage: %2.1f (FASTBuild: %2.3f) (%s)\n", m_CPUUsageTotal, m_CPUUsageFASTBuild, m_IsIdle ? "Idle" : "BUSY" );
-    //DEBUGSPAM( "--------------------------------------------------\n" );
 }
 
 //
@@ -163,7 +158,6 @@ bool IdleDetection::IsIdleInternal()
                             {
                                 // gracefully handle failure to open proces
                                 // maybe it closed before we got to it
-                                //DEBUGSPAM( "Can't open process %u\n", pid );
                             }
                         }
                     }
@@ -209,7 +203,6 @@ bool IdleDetection::IsIdleInternal()
                             {
                                 const uint64_t timeSpent = (totalTime - lastTime);
                                 float perc = (float)((double)timeSpent / (double)systemTime) * 100.0f;
-                                //DEBUGSPAM( "Process %u\t%2.3f%%\n", pi.m_PID, perc );
                                 totalPerc += perc;
                             }
                             pi.m_LastTime = totalTime;

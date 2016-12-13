@@ -28,7 +28,7 @@ public:
             , m_MaxPos( pos + dataSize )
             , m_FileName( fileName )
             , m_FileTimeStamp( fileTimeStamp ) {}
-    inline ~BFFIterator() {}
+    inline ~BFFIterator() = default;
 
     void operator = ( const BFFIterator & iter );
 

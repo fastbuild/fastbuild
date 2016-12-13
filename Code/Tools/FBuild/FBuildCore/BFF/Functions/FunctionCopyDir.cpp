@@ -63,7 +63,7 @@ FunctionCopyDir::FunctionCopyDir()
     {
         return false;
     }
-    PathUtils::FixupFolderPath( destPath );
+    NodeGraph::CleanPath( destPath );
 
     // Pre-build dependencies
     Dependencies preBuildDeps;

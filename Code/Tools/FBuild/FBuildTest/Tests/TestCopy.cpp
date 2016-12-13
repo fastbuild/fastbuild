@@ -28,6 +28,9 @@ private:
     void TestCopyFunction_SourceBasePath_NoRebuild() const;
     void ChainedCopy() const;
     void ChainedCopy_NoRebuild() const;
+    void CopyDir() const;
+    void CopyDir_NoRebuild() const;
+    void CopyEmpty() const;
 };
 
 // Register Tests
@@ -43,6 +46,9 @@ REGISTER_TESTS_BEGIN( TestCopy )
     REGISTER_TEST( TestCopyFunction_SourceBasePath_NoRebuild )
     REGISTER_TEST( ChainedCopy )
     REGISTER_TEST( ChainedCopy_NoRebuild )
+    REGISTER_TEST( CopyDir )
+    REGISTER_TEST( CopyDir_NoRebuild )
+    REGISTER_TEST( CopyEmpty )
 REGISTER_TESTS_END
 
 // TestCopyFunction_FileToFile
@@ -301,6 +307,76 @@ void TestCopy::ChainedCopy_NoRebuild() const
     CheckStatsNode ( 3,     0,      Node::COPY_FILE_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsTotal( 5,     2 );
+}
+
+// CopyDir
+//------------------------------------------------------------------------------
+void TestCopy::CopyDir() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestCopy/copy.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    AStackString<> dstA( "../../../../tmp/Test/Copy/CopyDir/a.txt" );
+    AStackString<> dstB( "../../../../tmp/Test/Copy/CopyDir/b.txt" );
+
+    // clean up anything left over from previous runs
+    EnsureFileDoesNotExist( dstA );
+    EnsureFileDoesNotExist( dstB );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDir" ) ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Copy/CopyDir/copydir.fdb" ) );
+
+    // make sure all output is where it is expected
+    EnsureFileExists( dstA );
+    EnsureFileExists( dstB );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 2,     2,      Node::FILE_NODE );
+    CheckStatsNode ( 2,     2,      Node::COPY_FILE_NODE );
+    CheckStatsNode ( 1,     1,      Node::COPY_DIR_NODE );
+    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
+    CheckStatsTotal( 6,     6 );
+}
+
+// CopyDir_NoRebuild
+//------------------------------------------------------------------------------
+void TestCopy::CopyDir_NoRebuild() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestCopy/copy.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Copy/CopyDir/copydir.fdb" ) );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDir" ) ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 2,     2,      Node::FILE_NODE );
+    CheckStatsNode ( 2,     0,      Node::COPY_FILE_NODE );
+    CheckStatsNode ( 1,     0,      Node::COPY_DIR_NODE );
+    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
+    CheckStatsTotal( 6,     3 );
+}
+
+// CopyEmpty
+//------------------------------------------------------------------------------
+void TestCopy::CopyEmpty() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestCopy/copy.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyEmpty" ) ) );
 }
 
 //------------------------------------------------------------------------------

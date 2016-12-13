@@ -10,7 +10,7 @@ class FunctionUnity : public Function
 {
 public:
     explicit        FunctionUnity();
-    inline virtual ~FunctionUnity() {}
+    inline virtual ~FunctionUnity() = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

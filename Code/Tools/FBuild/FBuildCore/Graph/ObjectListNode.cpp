@@ -71,9 +71,7 @@ ObjectListNode::ObjectListNode( const AString & listName,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ObjectListNode::~ObjectListNode()
-{
-}
+ObjectListNode::~ObjectListNode() = default;
 
 // IsAFile
 //------------------------------------------------------------------------------
@@ -90,8 +88,6 @@ ObjectListNode::~ObjectListNode()
 
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
-
-    //Timer t;
 
     #if defined( __WINDOWS__ )
         // On Windows, with MSVC we compile a cpp file to generate the PCH
@@ -214,9 +210,6 @@ ObjectListNode::~ObjectListNode()
             ASSERT( false ); // unexpected node type
         }
     }
-
-    //float time = t.GetElapsed();
-    //FLOG_WARN( "DynamicDeps: %2.3f\t%s", time, GetName().Get() );
 
     // If we have a precompiled header, add that to our dynamic deps so that
     // any symbols in the PCH's .obj are also linked, when either:

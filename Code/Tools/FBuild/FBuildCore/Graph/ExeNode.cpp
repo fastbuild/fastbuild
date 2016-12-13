@@ -33,9 +33,7 @@ ExeNode::ExeNode( const AString & linkerOutputName,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ExeNode::~ExeNode()
-{
-}
+ExeNode::~ExeNode() = default;
 
 // Load
 //------------------------------------------------------------------------------

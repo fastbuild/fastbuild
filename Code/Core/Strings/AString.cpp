@@ -95,8 +95,7 @@ AString::~AString()
         ASSERT( m_Contents != s_EmptyString );
         // b) NOT be pointing to an internal buffer
         // Depending on the memory alloctor, it could be valid to have an allocation
-        // immediately after the string itself, causing this assert to fire incorrectly
-        //ASSERT( (void *)m_Contents != (void *)( (char *)this + sizeof( AString ) ) );
+        // immediately after the string itself, so we can't have an assert for this
         FREE( m_Contents );
     }
     else
@@ -572,14 +571,19 @@ void AString::Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim )
 //------------------------------------------------------------------------------
 uint32_t AString::Replace( const char * from, const char * to, uint32_t maxReplaces )
 {
-    AStackString< 2 * KILOBYTE > temp;
+    const size_t fromLength = StrLen( from );
+    if ( fromLength == 0 )
+    {
+        // string to replace can't be empty, otherwise replace operation doesn't make sense
+        return 0;
+    }
 
+    AStackString< 2 * KILOBYTE > temp;
     uint32_t replaceCount = 0;
 
     // loop until the last possible position for a potential match
     const char * pos = m_Contents;
     const char * end = m_Contents + m_Length;
-    const size_t fromLength = StrLen( from );
     while ( pos <= ( end - fromLength ) )
     {
         if ( StrNCmp( pos, from, fromLength ) == 0 )

@@ -50,7 +50,7 @@ public:
         m_Identifier[ 2 ] = 'D';
         m_Version = NODE_GRAPH_CURRENT_VERSION;
     }
-    inline ~NodeGraphHeader() {}
+    inline ~NodeGraphHeader() = default;
 
     enum { NODE_GRAPH_CURRENT_VERSION = 89 };
 
@@ -264,7 +264,7 @@ private:
 
     struct NodeWithDistance
     {
-        inline NodeWithDistance() {}
+        inline NodeWithDistance() = default;
         NodeWithDistance( Node * n, uint32_t dist ) : m_Node( n ), m_Distance( dist ) {}
         Node *      m_Node;
         uint32_t    m_Distance;

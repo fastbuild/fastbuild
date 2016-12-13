@@ -651,7 +651,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             case Node::NODE_RESULT_FAILED:                  resultString = "FAILED";                break;
         }
 
-        FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n", 
+        FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",
                       resultString,
                       nodeName.Get(),
                       job->GetNode()->GetFinalBuildOutputMessages().Get() );

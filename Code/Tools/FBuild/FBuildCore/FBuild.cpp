@@ -476,17 +476,25 @@ void FBuild::SetEnvironmentString( const char * envString, uint32_t size, const 
 
 // ImportEnvironmentVar
 //------------------------------------------------------------------------------
-bool FBuild::ImportEnvironmentVar( const char * name, AString & value, uint32_t & hash )
+bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & value, uint32_t & hash )
 {
     // check if system environment contains the variable
     if ( Env::GetEnvVariable( name, value ) == false )
     {
-        FLOG_ERROR( "Could not import environment variable '%s'", name );
-        return false;
-    }
+        if ( !optional )
+        {
+            FLOG_ERROR( "Could not import environment variable '%s'", name );
+            return false;
+        }
 
-    // compute hash value for actual value
-    hash = xxHash::Calc32( value );
+        // set the hash to the "missing variable" value of 0
+        hash = 0;
+    }
+    else
+    {
+        // compute hash value for actual value
+        hash = xxHash::Calc32( value );
+    }
 
     // check if the environment var was already imported
     const EnvironmentVarAndHash * it = m_ImportedEnvironmentVars.Begin();
@@ -591,7 +599,7 @@ void FBuild::UpdateBuildStatus( const Node * node )
 
     m_SmoothedProgressCurrent = ( 0.5f * m_SmoothedProgressCurrent ) + ( m_SmoothedProgressTarget * 0.5f );
 
-    // get nodes counts;
+    // get node counts
     uint32_t numJobs = 0;
     uint32_t numJobsActive = 0;
     uint32_t numJobsDist = 0;
@@ -630,7 +638,7 @@ void FBuild::SetCachePath( const AString & path )
 void FBuild::GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD, AString & path ) const
 {
     // cache version - bump if cache format is changed
-    static const int cacheVersion( 7 );
+    static const int cacheVersion( 8 );
 
     // format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC-32A2B04375A2D7DE.7
     path.Format( "%016llX_%08X_%016llX-%016llX.%u", keyA, keyB, keyC, keyD, cacheVersion );
@@ -645,7 +653,32 @@ void FBuild::DisplayTargetList() const
     for ( size_t i = 0; i < totalNodes; ++i )
     {
         Node * node = m_DependencyGraph->GetNodeByIndex( i );
-        if ( node && node->GetType() == Node::ALIAS_NODE )
+        bool displayName = false;
+        switch ( node->GetType() )
+        {
+            case Node::PROXY_NODE:          ASSERT( false ); break;
+            case Node::COPY_FILE_NODE:      break;
+            case Node::DIRECTORY_LIST_NODE: break;
+            case Node::EXEC_NODE:           break;
+            case Node::FILE_NODE:           break;
+            case Node::LIBRARY_NODE:        break;
+            case Node::OBJECT_NODE:         break;
+            case Node::ALIAS_NODE:          displayName = true; break;
+            case Node::EXE_NODE:            break;
+            case Node::CS_NODE:             break;
+            case Node::UNITY_NODE:          displayName = true; break;
+            case Node::TEST_NODE:           break;
+            case Node::COMPILER_NODE:       break;
+            case Node::DLL_NODE:            break;
+            case Node::VCXPROJECT_NODE:     break;
+            case Node::OBJECT_LIST_NODE:    displayName = true; break;
+            case Node::COPY_DIR_NODE:       break;
+            case Node::SLN_NODE:            break;
+            case Node::REMOVE_DIR_NODE:     break;
+            case Node::XCODEPROJECT_NODE:   break;
+            case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
+        }
+        if ( displayName )
         {
             OUTPUT( "\t%s\n", node->GetName().Get() );
         }

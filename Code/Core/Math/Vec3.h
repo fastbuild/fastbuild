@@ -13,9 +13,9 @@ class Vec3
 public:
     float   x,y,z;
 
-    inline explicit Vec3() {}
+    inline explicit Vec3() = default;
     inline explicit Vec3(float x1, float y1, float z1) { x=x1; y=y1; z=z1; }
-    inline ~Vec3() {}
+    inline ~Vec3() = default;
 
     // basic operators
     inline void  operator = (const Vec3 &vec);

@@ -32,9 +32,7 @@ CopyDirNode::CopyDirNode( const AString & name,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-CopyDirNode::~CopyDirNode()
-{
-}
+CopyDirNode::~CopyDirNode() = default;
 
 // IsAFile
 //------------------------------------------------------------------------------

@@ -83,9 +83,7 @@ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & it
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-XCodeProjectNode::~XCodeProjectNode()
-{
-}
+XCodeProjectNode::~XCodeProjectNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------

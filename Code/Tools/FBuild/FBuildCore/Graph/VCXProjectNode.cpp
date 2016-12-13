@@ -65,9 +65,7 @@ VCXProjectNode::VCXProjectNode( const AString & projectOutput,
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-VCXProjectNode::~VCXProjectNode()
-{
-}
+VCXProjectNode::~VCXProjectNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
@@ -298,18 +296,6 @@ void VCXProjectNode::GetFiles( Array< FileIO::FileInfo * > & files ) const
         for ( FileIO::FileInfo * filesIt = dirNode->GetFiles().Begin(); filesIt != filesEnd; ++filesIt )
         {
             bool keep = true;
-
-            // filter excluded files
-/*          auto fit = m_FilesToExclude.Begin();
-            auto fend = m_FilesToExclude.End();
-            for ( ; fit != fend; ++fit )
-            {
-                if ( filesIt->m_Name.EndsWithI( *fit ) )
-                {
-                    keep = false;
-                    break;
-                }
-            }*/
 
             // filter excluded directories
             if ( keep )

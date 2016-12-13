@@ -240,8 +240,6 @@ Job * JobQueueRemote::GetJobToProcess()
 //------------------------------------------------------------------------------
 void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 {
-//  ASSERT( job->GetNode()->GetState() == Node::BUILDING );
-
     // remove from in-flight
     {
         MutexHolder mh( m_InFlightJobsMutex );
@@ -332,7 +330,6 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         // does not represent how long it takes to create this resource)
         node->SetLastBuildTime( timeTakenMS );
         node->SetStatFlag( Node::STATS_BUILT );
-        //FLOG_INFO( "-Build: %u ms\t%s", timeTakenMS, node->GetName().Get() );
 
         #ifdef DEBUG
             if ( job->IsLocal() )
@@ -394,7 +391,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 
     if ( job->IsLocal() )
     {
-        FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n", 
+        FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",
                       ( result == Node::NODE_RESULT_FAILED ) ? "ERROR" : "SUCCESS",
                       job->GetNode()->GetName().Get(),
                       job->GetNode()->GetFinalBuildOutputMessages().Get());

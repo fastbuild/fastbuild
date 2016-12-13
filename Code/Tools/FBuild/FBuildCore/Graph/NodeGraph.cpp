@@ -317,7 +317,9 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
             {
                 return LoadResult::LOAD_ERROR;
             }
-            if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), varValue, importedVarHash ) == false )
+
+            bool optional = ( savedVarHash == 0 ); // a hash of 0 means the env var was missing when it was evaluated
+            if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, importedVarHash ) == false )
             {
                 // make sure the user knows why some things might re-build
                 FLOG_WARN( "'%s' Environment variable was not found - BFF will be re-parsed\n", varName.Get() );
@@ -1162,7 +1164,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     ASSERT( nodeToBuild );
 
     // already building, or queued to build?
-    ASSERT( nodeToBuild->GetState() != Node::BUILDING )
+    ASSERT( nodeToBuild->GetState() != Node::BUILDING );
 
     // accumulate recursive cost
     cost += nodeToBuild->GetLastBuildTime();

@@ -111,14 +111,9 @@ FunctionCopy::FunctionCopy()
         }
     }
 
-    if ( srcNodes.IsEmpty() )
-    {
-        Error::Error_1006_NothingToBuild( funcStartIter, this );
-        return false;
-    }
-
     AStackString<> dstFile;
     NodeGraph::CleanPath( dstFileV->GetString(), dstFile );
+    const bool dstIsFolderPath = PathUtils::IsFolderPath( dstFile );
 
     // make all the nodes for copies
     Dependencies copyNodes( srcNodes.GetSize(), false );
@@ -127,7 +122,7 @@ FunctionCopy::FunctionCopy()
         AStackString<> dst( dstFile );
 
         // dest can be a file OR a path.  If it's a path, use the source filename part
-        if ( PathUtils::IsFolderPath( dstFile ) )
+        if ( dstIsFolderPath )
         {
             // find filename part of source
             const AString & srcName = srcNode->GetName();

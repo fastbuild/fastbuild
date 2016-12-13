@@ -659,7 +659,7 @@ void Report::DoIncludes()
 
         if ( incStats.GetSize() == 0 )
         {
-            Write( "No inludes.\n" );
+            Write( "No includes.\n" );
             continue;
         }
 

@@ -56,9 +56,7 @@ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-TestNode::~TestNode()
-{
-}
+TestNode::~TestNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------

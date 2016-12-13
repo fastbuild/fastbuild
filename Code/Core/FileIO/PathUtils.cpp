@@ -183,4 +183,15 @@
     ASSERT( path.EndsWith( NATIVE_SLASH ) == false );
 }
 
+// StripFileExtension
+//------------------------------------------------------------------------------
+/*static*/ void PathUtils::StripFileExtension( AString & filePath )
+{
+    const char * lastDot = filePath.FindLast( '.' );
+    if (lastDot)
+    {
+        filePath.SetLength( (uint32_t)( lastDot - filePath.Get() ) );
+    }
+}
+
 //------------------------------------------------------------------------------

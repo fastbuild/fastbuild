@@ -15,8 +15,8 @@ public:
         : m_Origin( origin )
         , m_Direction( dir )
     {}
-    inline Ray3() {}
-    inline ~Ray3() {}
+    inline Ray3() = default;
+    inline ~Ray3() = default;
 
     inline const Vec3 & GetOrigin() const { return m_Origin; }
     inline const Vec3 & GetDir() const { return m_Direction; }

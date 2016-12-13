@@ -15,7 +15,7 @@ class RefObject_ReflectionInfo : public ReflectionInfo
 {
 public:
     explicit RefObject_ReflectionInfo() { SetTypeName( "RefObject" ); m_IsAbstract = true; }
-    virtual ~RefObject_ReflectionInfo() {}
+    virtual ~RefObject_ReflectionInfo() = default;
 };
 RefObject_ReflectionInfo g_RefObject_ReflectionInfo;
 void RefObject_ReflectionInfo_Bind()

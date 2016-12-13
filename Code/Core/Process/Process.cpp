@@ -119,7 +119,7 @@ bool Process::Spawn( const char * executable,
 
                 si.hStdOutput = m_StdOutWrite;
                 si.hStdError = m_StdErrWrite;
-                si.hStdInput = GetStdHandle(STD_INPUT_HANDLE); // m_StdInRead;
+                si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
             }
             si.dwFlags |= STARTF_USESTDHANDLES;
         }
@@ -135,7 +135,6 @@ bool Process::Spawn( const char * executable,
             fullArgs += ' ';
             fullArgs += args;
         }
-        //fullArgs.Format( "\"%s\" %s", executable, args );
 
         // create the child
         if ( !CreateProcess( nullptr, //executable,

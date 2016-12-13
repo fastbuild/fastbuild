@@ -919,21 +919,11 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
         }
     }
 
-    // parse out condition
-    const BFFIterator conditionStart( iter );
-    iter.SkipVariableName();
-    if ( conditionStart.GetCurrent() == iter.GetCurrent() )
-    {
-        Error::Error_1007_ExpectedVariable( directiveStart, nullptr );
-        return false;
-    }
-    const BFFIterator conditionEnd( iter );
-
-    // Evaluate the condition
+    // Parse and evaluate condition
     bool result;
-    if ( CheckIfCondition( conditionStart, conditionEnd, result ) == false )
+    if ( !ParseIfCondition( directiveStart, iter, result ) )
     {
-        return false; // CheckIfCondition will have emitted an error
+        return false; // ParseIfCondition will have emitted an error
     }
 
     // #if !
@@ -994,6 +984,90 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
             }
         }
     }
+
+    return true;
+}
+
+// ParseIfCondition
+//------------------------------------------------------------------------------
+bool BFFParser::ParseIfCondition( const BFFIterator & directiveStart, BFFIterator & iter, bool & result )
+{
+    const BFFIterator variableOrOperatorStart( iter );
+    iter.SkipVariableName();
+    if ( variableOrOperatorStart.GetCurrent() == iter.GetCurrent() )
+    {
+        Error::Error_1007_ExpectedVariable( directiveStart, nullptr );
+        return false;
+    }
+    const BFFIterator variableOrOperatorEnd( iter );
+
+    AStackString<> variableOrOperator( variableOrOperatorStart.GetCurrent(), variableOrOperatorEnd.GetCurrent() );
+    iter.SkipWhiteSpace();
+
+    // Check whether this is an #if operator by first looking for an opening parenthesis.
+    // For compatibility with previous versions we allow macros to have the same names as
+    // #if operators (e.g. exists) and only parse them as operators if we find a brace.
+    if ( *iter == BFF_FUNCTION_ARGS_OPEN )
+    {
+        if ( variableOrOperator == "exists" )
+        {
+            return ParseIfExistsCondition( iter, result );
+        }
+
+        Error::Error_1042_UnknownOperator( variableOrOperatorStart, variableOrOperator );
+        return false;
+    }
+    else
+    {
+        // Evaluate the condition
+        if ( CheckIfCondition( variableOrOperatorStart, variableOrOperatorEnd, result ) == false )
+        {
+            return false; // CheckIfCondition will have emitted an error
+        }
+    }
+
+    return true;
+}
+
+// ParseIfExistsCondition
+//------------------------------------------------------------------------------
+bool BFFParser::ParseIfExistsCondition( BFFIterator & iter, bool & result )
+{
+    const BFFIterator openToken = iter;
+    iter++; // skip over opening token
+    iter.SkipWhiteSpace();
+
+    const BFFIterator varNameStart = iter;
+    iter.SkipVariableName();
+    const BFFIterator varNameEnd = iter;
+    if ( *iter != BFF_FUNCTION_ARGS_CLOSE )
+    {
+        Error::Error_1002_MatchingClosingTokenNotFound( openToken, nullptr, BFF_FUNCTION_ARGS_CLOSE );
+        return false;
+    }
+    iter++; // skip over closing token
+    iter.SkipWhiteSpaceAndComments();
+
+    // sanity check it is a sensible length
+    size_t varNameLen = varNameStart.GetDistTo( varNameEnd );
+    if ( varNameLen == 0 )
+    {
+        Error::Error_1007_ExpectedVariable( openToken, nullptr );
+        return false;
+    }
+    if ( varNameLen > MAX_VARIABLE_NAME_LENGTH )
+    {
+        Error::Error_1014_VariableNameIsTooLong( iter, (uint32_t)varNameLen, (uint32_t)MAX_VARIABLE_NAME_LENGTH );
+        return false;
+    }
+    AStackString<> varName( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
+
+    // look for varName in system environment
+    AStackString<> varValue;
+    uint32_t varHash = 0;
+    bool optional = true;
+    FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash );
+    result = ( varHash != 0 ); // a hash of 0 means the env var was not found
 
     return true;
 }
@@ -1145,7 +1219,8 @@ bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIte
     // look for varName in system environment
     AStackString<> varValue;
     uint32_t varHash = 0;
-    if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), varValue, varHash ) == false )
+    bool optional = false;
+    if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash ) == false )
     {
         Error::Error_1009_UnknownVariable( varNameStart, nullptr );
         return false;
@@ -1531,7 +1606,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
     }
 
     // check if selected type correctly
-    ASSERT ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS || varType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
+    ASSERT ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS || varType == BFFVariable::VAR_ARRAY_OF_STRUCTS );
 
     // Register this variable
     if ( varType == BFFVariable::VAR_ARRAY_OF_STRUCTS )

@@ -109,7 +109,7 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 //------------------------------------------------------------------------------
 void TestCompressor::CompressPreprocessedFile() const
 {
-    CompressHelper( "Data/TestCompressor/TestPreprocessedFile.cpp" );
+    CompressHelper( "Data/TestCompressor/TestPreprocessedFile.ii" );
 }
 
 //------------------------------------------------------------------------------

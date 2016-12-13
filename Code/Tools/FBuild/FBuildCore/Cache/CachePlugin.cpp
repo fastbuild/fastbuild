@@ -68,9 +68,7 @@
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-/*virtual*/ CachePlugin::~CachePlugin()
-{
-}
+/*virtual*/ CachePlugin::~CachePlugin() = default;
 
 // GetFunction
 //------------------------------------------------------------------------------
@@ -162,7 +160,7 @@ void * CachePlugin::GetFunction( const char * friendlyName, const char * mangled
     ASSERT( m_FreeMemoryFunc ); // should never get here without being valid
     if ( m_FreeMemoryFunc )
     {
-        return (*m_FreeMemoryFunc)( data, dataSize );
+        (*m_FreeMemoryFunc)( data, dataSize );
     }
 }
 

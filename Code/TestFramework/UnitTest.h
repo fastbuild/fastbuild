@@ -10,7 +10,7 @@ class UnitTest
 {
 protected:
     explicit        UnitTest() { m_NextTestGroup = nullptr; }
-    inline virtual ~UnitTest() {}
+    inline virtual ~UnitTest() = default;
 
     virtual void RunTests() = 0;
     virtual const char * GetName() const = 0;

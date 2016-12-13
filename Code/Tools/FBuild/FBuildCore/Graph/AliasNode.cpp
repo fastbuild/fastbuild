@@ -50,9 +50,7 @@ bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, con
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-AliasNode::~AliasNode()
-{
-}
+AliasNode::~AliasNode() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------

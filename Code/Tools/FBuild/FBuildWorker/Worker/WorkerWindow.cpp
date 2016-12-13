@@ -50,7 +50,6 @@ WorkerWindow::WorkerWindow( void * hInstance )
     , m_UIThreadHandle( INVALID_THREAD_HANDLE )
     #if defined( __WINDOWS__ )
         , m_Menu( nullptr )
-        , m_HInstance( (HINSTANCE)hInstance )
     #endif
 {
     // obtain host name
@@ -123,7 +122,7 @@ void WorkerWindow::UIUpdateThread()
         int w = 700;
         int h = 300;
         int x = GetSystemMetrics(SM_CXSCREEN)-w;
-        int y = 0; // GetSystemMetrics(SM_CYSCREEN)/2-(h/2);
+        int y = 0;
 
         Init( x, y, w, h );
 
@@ -200,7 +199,7 @@ void WorkerWindow::UIUpdateThread()
             int yPos = 27;
             int width = w;
             int height = 2;
-            m_Splitter = CreateWindowEx( WS_EX_TRANSPARENT, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_ETCHEDHORZ , xPos, yPos, width, height, (HWND)GetHandle(), NULL, m_HInstance, NULL );
+            m_Splitter = CreateWindowEx( WS_EX_TRANSPARENT, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_ETCHEDHORZ , xPos, yPos, width, height, (HWND)GetHandle(), NULL, (HINSTANCE)GetHInstance(), NULL );
         }
 
         // popup menu for tray icon

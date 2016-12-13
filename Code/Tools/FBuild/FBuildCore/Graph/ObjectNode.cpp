@@ -1106,6 +1106,13 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         size_t cacheDataSize( 0 );
         if ( cache->Retrieve( cacheFileName, cacheData, cacheDataSize ) )
         {
+            // Hash the PCH result if we will need it later
+            uint64_t pchKey = 0;
+            if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
+            {
+                pchKey = xxHash::Calc64( cacheData, cacheDataSize );
+            }
+
             // do decompression
             Compressor c;
             if ( c.IsValidData( cacheData, cacheDataSize ) == false )
@@ -1173,9 +1180,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             SetStatFlag( Node::STATS_CACHE_HIT );
 
             // Dependent objects need to know the PCH key to be able to pull from the cache
-            if ( GetFlag( FLAG_CREATING_PCH ) )
+            if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
             {
-                m_PCHCacheKey = xxHash::Calc64( cacheFileName.Get(), cacheFileName.GetLength() );
+                m_PCHCacheKey = pchKey;
             }
 
             return true;
@@ -1230,9 +1237,9 @@ void ObjectNode::WriteToCache( Job * job )
                 SetStatFlag( Node::STATS_CACHE_STORE );
 
                 // Dependent objects need to know the PCH key to be able to pull from the cache
-                if ( GetFlag( FLAG_CREATING_PCH ) )
+                if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
                 {
-                    m_PCHCacheKey = xxHash::Calc64( cacheFileName.Get(), cacheFileName.GetLength() );
+                    m_PCHCacheKey = xxHash::Calc64( data, dataSize );
                 }
                 return;
             }
@@ -1956,9 +1963,7 @@ ObjectNode::CompileHelper::CompileHelper( bool handleOutput )
 
 // CompileHelper::DESTRUCTOR
 //------------------------------------------------------------------------------
-ObjectNode::CompileHelper::~CompileHelper()
-{
-}
+ObjectNode::CompileHelper::~CompileHelper() = default;
 
 // CompilHelper::SpawnCompiler
 //------------------------------------------------------------------------------

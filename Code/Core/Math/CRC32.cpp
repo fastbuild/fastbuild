@@ -163,9 +163,6 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
 //------------------------------------------------------------------------------
 /*static*/ uint32_t CRC32::Calc( const void * buffer, size_t len )
 {
-//  uint32_t crc32 = Start();
-//  crc32 = Update( crc32, buffer, len );
-//  return Stop( crc32 );
     return CRC_SlicingBy8( (unsigned char *)buffer, len );
 }
 

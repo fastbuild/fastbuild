@@ -64,3 +64,24 @@ Copy( 'ChainedCopy3' )
     .Source = 'ChainedCopy2' // via Alias
     .Dest   = '$Out$/Test/Copy/ChainedCopy/copy.copy3'
 }
+
+//
+// CopyDir
+//
+CopyDir( 'CopyDir' )
+{
+    .SourcePaths        = 'Data/TestCopy'
+    .SourcePathsPattern = '*.txt'
+    .Dest               = '$Out$/Test/Copy/CopyDir/'
+}
+
+//
+// CopyEmpty
+//
+Copy( 'CopyEmpty' )
+{
+    // It is useful to have empty source copies when multiple
+    // configs are used (e.g. dll vs non-dll configs)
+    .Source             = {}
+    .Dest               = '$Out$/Test/Copy/CopyEmpty/'
+}

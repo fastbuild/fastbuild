@@ -15,21 +15,6 @@
 // Core
 #include "Core/FileIO/IOStream.h"
 
-
-// operator =
-/*//------------------------------------------------------------------------------
-void Dependencies::operator = ( const Array< Node * > & nodes )
-{
-    Clear();
-    SetCapacity( nodes.GetSize() );
-    auto end = nodes.End();
-    for ( auto it = nodes.Begin(); it != end; ++it )
-    {
-        Node * node = *it;
-        Append( Dependency( node ) );
-    }
-}*/
-
 // Save
 //------------------------------------------------------------------------------
 void Dependencies::Save( IOStream & stream ) const

@@ -33,9 +33,7 @@ CIncludeParser::CIncludeParser()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-CIncludeParser::~CIncludeParser()
-{
-}
+CIncludeParser::~CIncludeParser() = default;
 
 // Parse
 //------------------------------------------------------------------------------
@@ -47,7 +45,6 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
     (void)compilerOutputSize;
 
     const char * pos = compilerOutput;
-    //const char * end = pos + compilerOutputSize;
     for (;;)
     {
         const char * lineStart = pos;

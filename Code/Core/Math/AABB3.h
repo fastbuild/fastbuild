@@ -18,8 +18,8 @@ public:
     inline explicit AABB3( const Vec3 & mi, const Vec3 & ma )
         : m_Min( mi ), m_Max( ma )
     {}
-    inline AABB3() {}
-    inline ~AABB3() {}
+    inline AABB3() = default;
+    inline ~AABB3() = default;
 
     bool Intersect( const Ray3 & ray, float & dist ) const;
 

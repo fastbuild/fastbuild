@@ -74,7 +74,7 @@ void TestMutex::TestExclusivity() const
     Thread::ThreadHandle h = Thread::CreateThread( TestExclusivityThreadEntryFunction,
                                                    "TestExclusivity",
                                                    ( 64 * KILOBYTE ),
-                                                   reinterpret_cast< void * >( &data ) );
+                                                   static_cast< void * >( &data ) );
 
     // signal thread
     volatile uint32_t & sharedVar = data.m_Count;
@@ -101,7 +101,7 @@ void TestMutex::TestExclusivity() const
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TestMutex::TestExclusivityThreadEntryFunction( void * userData )
 {
-    TestExclusivityUserData & data = *( reinterpret_cast< TestExclusivityUserData * >( userData ) );
+    TestExclusivityUserData & data = *( static_cast< TestExclusivityUserData * >( userData ) );
     volatile uint32_t & sharedVar = data.m_Count;
 
     // wait for start notification

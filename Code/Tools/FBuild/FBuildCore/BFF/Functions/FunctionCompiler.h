@@ -12,7 +12,7 @@ class FunctionCompiler : public Function
 {
 public:
     explicit        FunctionCompiler();
-    inline virtual ~FunctionCompiler() {}
+    inline virtual ~FunctionCompiler() = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

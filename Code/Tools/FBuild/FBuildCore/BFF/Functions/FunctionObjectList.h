@@ -18,7 +18,7 @@ class FunctionObjectList : public Function
 {
 public:
     explicit        FunctionObjectList();
-    inline virtual ~FunctionObjectList() {}
+    inline virtual ~FunctionObjectList() = default;
 
 protected:
     bool GetBaseDirectory( const BFFIterator & iter, AStackString<> & baseDirectory ) const;

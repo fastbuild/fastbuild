@@ -33,9 +33,7 @@ VSProjectConfig::VSProjectConfig()
 
 // DESTRUCTOR (VSProjectConfig)
 //------------------------------------------------------------------------------
-VSProjectConfig::~VSProjectConfig()
-{
-}
+VSProjectConfig::~VSProjectConfig() = default;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -49,9 +47,7 @@ VSProjectGenerator::VSProjectGenerator()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-VSProjectGenerator::~VSProjectGenerator()
-{
-}
+VSProjectGenerator::~VSProjectGenerator() = default;
 
 // SetBasePaths
 //------------------------------------------------------------------------------

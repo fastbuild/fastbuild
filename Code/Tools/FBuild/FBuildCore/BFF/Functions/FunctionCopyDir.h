@@ -15,7 +15,7 @@ class FunctionCopyDir : public Function
 {
 public:
     explicit        FunctionCopyDir();
-    inline virtual ~FunctionCopyDir() {}
+    inline virtual ~FunctionCopyDir() = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

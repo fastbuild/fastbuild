@@ -25,10 +25,7 @@ IMetaData::IMetaData()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-IMetaData::~IMetaData()
-{
-}
-
+IMetaData::~IMetaData() = default;
 
 // Chaining operator for reflection macros
 //------------------------------------------------------------------------------
@@ -37,14 +34,6 @@ IMetaData & operator + ( IMetaData & a, IMetaData & b )
     a.m_Next = &b;
     return a;
 }
-
-// operator +
-//------------------------------------------------------------------------------
-/*IMetaData & IMetaData::operator + ( IMetaData & metaData )
-{
-    m_Next = &metaData;
-    return *this;
-}*/
 
 // No MetaData
 //------------------------------------------------------------------------------

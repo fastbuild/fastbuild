@@ -12,9 +12,9 @@ class Vec4
 public:
     float   x,y,z,w;
 
-    inline explicit Vec4() {}
+    inline explicit Vec4() = default;
     inline explicit Vec4( float x1, float y1, float z1, float w1 ) { x=x1; y=y1; z=z1; w=w1; }
-    inline ~Vec4() {}
+    inline ~Vec4() = default;
 
     inline Vec4 operator *( float f ) const;
     inline Vec4 operator +( const Vec4 & other ) const;

@@ -12,7 +12,7 @@ class FunctionUsing : public Function
 {
 public:
     explicit        FunctionUsing();
-    inline virtual ~FunctionUsing() {}
+    inline virtual ~FunctionUsing() = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

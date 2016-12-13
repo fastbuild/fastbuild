@@ -32,9 +32,7 @@ ProjectGeneratorBase::ProjectGeneratorBase()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ProjectGeneratorBase::~ProjectGeneratorBase()
-{
-}
+ProjectGeneratorBase::~ProjectGeneratorBase() = default;
 
 // GetProjectRelativePath
 //------------------------------------------------------------------------------

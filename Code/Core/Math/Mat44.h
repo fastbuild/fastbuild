@@ -17,10 +17,10 @@ public:
     Vec4 col2;
     Vec4 col3;
 
-    inline explicit Mat44() {}
+    inline explicit Mat44() = default;
     inline explicit Mat44( const Vec4 & c0, const Vec4 & c1, const Vec4 & c2, const Vec4 & c3 )
                     : col0( c0 ), col1( c1 ), col2( c2 ), col3( c3 ) {}
-    inline         ~Mat44() {}
+    inline         ~Mat44() = default;
 
     // modify the array
     void                SetTranslation( const Vec3 &tran );

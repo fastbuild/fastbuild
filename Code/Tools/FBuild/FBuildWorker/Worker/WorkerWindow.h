@@ -86,7 +86,6 @@ private:
     // properties of the window
     #if defined( __WINDOWS__ )
         HMENU           m_Menu;             // right-click context menu
-        HINSTANCE       m_HInstance;        // main application instance to tie window to
     #endif
 
     // sub items of the window

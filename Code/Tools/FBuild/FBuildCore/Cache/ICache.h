@@ -11,7 +11,7 @@ class AString;
 class ICache
 {
 public:
-    inline virtual ~ICache() {}
+    inline virtual ~ICache() = default;
 
     virtual bool Init( const AString & cachePath ) = 0;
     virtual void Shutdown() = 0;
