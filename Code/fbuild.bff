@@ -4,12 +4,12 @@
 #import FASTBUILD_ROOT_DIR // INSIGHTFUL: Use ENVVAR for FastBuild location on system
 
 ;-------------------------------------------------------------------------------
-; Windows Platform
+; Windows Platform - // Currently using Windows 10 SDK version 10.0.14393.0
 ;-------------------------------------------------------------------------------
 .VSBasePath			= '$FASTBUILD_ROOT_DIR$/External/VS14.0'
 .WindowsSDKBasePath	= '$FASTBUILD_ROOT_DIR$/External/Windows8.1'
-.UCRTBaseIncPath	= '$FASTBUILD_ROOT_DIR$/External/Windows10/Include/10.0.10586.0/ucrt'
-.UCRTBaseLibPath	= '$FASTBUILD_ROOT_DIR$/External/Windows10/Lib/10.0.10586.0/ucrt'
+.UCRTBaseIncPath	= '$FASTBUILD_ROOT_DIR$/External/Windows10/Include/10.0.14393.0/ucrt'
+.UCRTBaseLibPath	= '$FASTBUILD_ROOT_DIR$/External/Windows10/Lib/10.0.14393.0/ucrt'
 .ClangBasePath		= '$FASTBUILD_ROOT_DIR$/External/LLVM'
 
 ;-------------------------------------------------------------------------------
