@@ -1785,20 +1785,23 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
                 }
                 values.Append( varSrc->GetString() );
             }
-            else if ( subtract && !dstIsEmpty )
+            else if ( subtract )
             {
-                auto end = varDst->GetArrayOfStrings().End();
-                for ( auto it = varDst->GetArrayOfStrings().Begin(); it!=end; ++it )
+                if ( dstIsEmpty == false )
                 {
-                    if ( *it != varSrc->GetString() ) // remove equal strings
+                    auto end = varDst->GetArrayOfStrings().End();
+                    for ( auto it = varDst->GetArrayOfStrings().Begin(); it!=end; ++it )
                     {
-                        values.Append( *it );
+                        if ( *it != varSrc->GetString() ) // remove equal strings
+                        {
+                            values.Append( *it );
+                        }
                     }
                 }
             }
             else
             {
-                values.Append( varDst->GetArrayOfStrings() );
+                values.Append( varSrc->GetString() );
             }
 
             BFFStackFrame::SetVarArrayOfStrings( dstName, values, dstFrame );
