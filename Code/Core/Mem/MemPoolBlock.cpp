@@ -96,11 +96,7 @@ void MemPoolBlock::AllocPage()
     ASSERT( ( (size_t)newPage % m_BlockAlignment ) == 0 );
 
     // divide page into blocks
-    #if defined( __APPLE__ ) || defined( __LINUX__ ) // TODO: Fix this weirdness
-        const size_t alignedSize( Math::RoundUp( (size_t)m_BlockSize, (size_t)m_BlockAlignment ) );
-    #else
-        const size_t alignedSize( Math::RoundUp( m_BlockSize, m_BlockAlignment ) );
-    #endif
+    const size_t alignedSize( Math::RoundUp( (size_t)m_BlockSize, (size_t)m_BlockAlignment ) );
     const size_t numBlocksInPage( pageSize / alignedSize );
 
     // build chain into new blocks
