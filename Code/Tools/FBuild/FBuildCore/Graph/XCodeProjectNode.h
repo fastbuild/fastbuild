@@ -23,6 +23,12 @@ struct XCodeProjectConfig : public Struct
 public:
     AString             m_Config;
     AString             m_Target;
+    const Node *        m_TargetNode = nullptr;
+
+    static bool ResolveTagets( NodeGraph & nodeGraph,
+                               Array< XCodeProjectConfig > & configs,
+                               const BFFIterator * iter = nullptr,
+                               const Function * function = nullptr );
 };
 
 // XCodeProjectNode

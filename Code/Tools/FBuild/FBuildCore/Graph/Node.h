@@ -172,9 +172,9 @@ protected:
     friend class JobQueue;
     friend class JobQueueRemote;
     friend class NodeGraph;
+    friend class ProjectGeneratorBase; // TODO:C Remove this
     friend class Report;
     friend class VSProjectConfig; // TODO:C Remove this
-    friend class VSProjectGenerator; // TODO:C Remove this
     friend class WorkerThread;
 
     inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
