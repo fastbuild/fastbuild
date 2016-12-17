@@ -233,7 +233,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     }
 
     // orbis-ar.exe requires escaped slashes inside response file
-    if ( GetFlag( LIB_FLAG_ORBIS_AR ) )
+    if ( GetFlag( LIB_FLAG_ORBIS_AR ) || GetFlag( LIB_FLAG_AR ) )
     {
         fullArgs.SetEscapeSlashesInResponseFile();
     }
