@@ -93,6 +93,7 @@ FBuild::FBuild( const FBuildOptions & options )
     FLog::SetShowInfo( m_Options.m_ShowInfo );
     FLog::SetShowErrors( m_Options.m_ShowErrors );
     FLog::SetShowProgress( m_Options.m_ShowProgress );
+    FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );
 
     Function::Create();
 }
