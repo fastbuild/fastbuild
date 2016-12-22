@@ -38,7 +38,8 @@ void TestCachePlugin::BuildPlugin() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Plugin-DLL" ) ) );
+    const bool is64bits = ( sizeof(void *) == 8 );
+    TEST_ASSERT( fBuild.Build( AStackString<>( is64bits ? "Plugin-DLL-X64" : "Plugin-DLL-X86" ) ) );
 }
 
 // UsePlugin
@@ -50,7 +51,8 @@ void TestCachePlugin::UsePlugin() const
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_UseCacheRead = true;
     options.m_UseCacheWrite = true;
-    options.m_ConfigFile = "Data/TestCachePlugin/useplugin.bff";
+    const bool is64bits = ( sizeof(void *) == 8 );
+    options.m_ConfigFile = is64bits ? "Data/TestCachePlugin/useplugin.bff" : "Data/TestCachePlugin/useplugin-x86.bff";
 
     {
         FBuild fBuild( options );
