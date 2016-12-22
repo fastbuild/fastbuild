@@ -18,6 +18,7 @@ private:
 
     // Tests
     void TestExcludedFiles() const;
+    void CompilerInputFilesRoot() const;
     #if defined( __WINDOWS__ )
         void ExtraOutputFolders() const;
     #endif
@@ -27,6 +28,7 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestObjectList )
     REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
+    REGISTER_TEST( CompilerInputFilesRoot )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( ExtraOutputFolders )
     #endif
@@ -66,6 +68,18 @@ void TestObjectList::TestExcludedFiles() const
 
         TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePattern" ) ) );
     }
+}
+
+// CompilerInputFilesRoot
+//------------------------------------------------------------------------------
+void TestObjectList::CompilerInputFilesRoot() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestObjectList/CompilerInputFilesRoot/fbuild.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
 }
 
 // ExtraOutputFolders
