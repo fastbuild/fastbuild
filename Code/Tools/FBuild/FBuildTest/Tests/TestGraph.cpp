@@ -187,22 +187,17 @@ void TestGraph::TestNodeTypes() const
         TEST_ASSERT( AStackString<>( "Exe" ) == n->GetTypeName() );
     }
     {
-        Dependencies dNodes( 1, false );
-        dNodes.Append( Dependency( dn ) );
         Node * n = ng.CreateUnityNode( AStackString<>( "Unity" ) );
         TEST_ASSERT( n->GetType() == Node::UNITY_NODE);
         TEST_ASSERT( UnityNode::GetTypeS() == Node::UNITY_NODE );
         TEST_ASSERT( AStackString<>( "Unity" ) == n->GetTypeName() );
     }
     {
-        Dependencies files( 1, false );
-        files.Append( Dependency( fn ) );
-        Node * n = ng.CreateCSNode( AStackString<>( "a.cs" ),
-                                    files,
-                                    AString::GetEmpty(),
-                                    AString::GetEmpty(),
-                                    Dependencies(),
-                                    Dependencies() );
+        #if defined( __WINDOWS__ )
+            Node * n = ng.CreateCSNode( AStackString<>( "c:\\csharp.dll" ) );
+        #else
+            Node * n = ng.CreateCSNode( AStackString<>( "/dummy/csharp.dll" ) );
+        #endif
         TEST_ASSERT( n->GetType() == Node::CS_NODE);
         TEST_ASSERT( CSNode::GetTypeS() == Node::CS_NODE );
         TEST_ASSERT( AStackString<>( "C#" ) == n->GetTypeName() );

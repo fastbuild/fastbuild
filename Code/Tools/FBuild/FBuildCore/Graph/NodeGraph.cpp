@@ -890,25 +890,13 @@ UnityNode * NodeGraph::CreateUnityNode( const AString & unityName )
 
 // CreateCSNode
 //------------------------------------------------------------------------------
-CSNode * NodeGraph::CreateCSNode( const AString & compilerOutput,
-                                  const Dependencies & inputNodes,
-                                  const AString & compiler,
-                                  const AString & compilerOptions,
-                                  const Dependencies & extraRefs,
-                                  const Dependencies & preBuildDependencies )
+CSNode * NodeGraph::CreateCSNode( const AString & csAssemblyName )
 {
     ASSERT( Thread::IsMainThread() );
-    ASSERT( inputNodes.IsEmpty() == false );
+    ASSERT( IsCleanPath( csAssemblyName ) );
 
-    AStackString< 1024 > fullPath;
-    CleanPath( compilerOutput, fullPath );
-
-    CSNode * node = FNEW( CSNode( fullPath,
-                                inputNodes,
-                                compiler,
-                                compilerOptions,
-                                extraRefs,
-                                preBuildDependencies ) );
+    CSNode * node = FNEW( CSNode() );
+    node->SetName( csAssemblyName );
     AddNode( node );
     return node;
 }

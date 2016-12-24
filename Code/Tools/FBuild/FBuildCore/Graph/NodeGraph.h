@@ -52,7 +52,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 89 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 90 };
 
     bool IsValid() const
     {
@@ -179,12 +179,7 @@ public:
                                    Node * linkerStampExe,
                                    const AString & linkerStampExeArgs );
     UnityNode * CreateUnityNode( const AString & unityName );
-    CSNode * CreateCSNode( const AString & compilerOutput,
-                           const Dependencies & inputNodes,
-                           const AString & compiler,
-                           const AString & compilerOptions,
-                           const Dependencies & extraRefs,
-                           const Dependencies & preBuildDependencies );
+    CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );
     CompilerNode * CreateCompilerNode( const AString & executable );
     VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
