@@ -92,7 +92,6 @@ void TestGraph::TestNodeTypes() const
 
     CompilerNode * cn( nullptr );
     {
-        Dependencies extraFiles( 0, false );
         #if defined( __WINDOWS__ )
             cn = ng.CreateCompilerNode( AStackString<>( "c:\\cl.exe" ) );
         #else
@@ -103,7 +102,6 @@ void TestGraph::TestNodeTypes() const
     }
 
     {
-        Dependencies empty;
         #if defined( __WINDOWS__ )
             Node * n = ng.CreateCopyFileNode( AStackString<>( "c:\\dummy" ) );
         #else
@@ -164,7 +162,6 @@ void TestGraph::TestNodeTypes() const
         TEST_ASSERT( AStackString<>( "Object" ) == n->GetTypeName() );
     }
     {
-        Dependencies targets( 0, false );
         Node * n = ng.CreateAliasNode( AStackString<>( "alias" ) );
         TEST_ASSERT( n->GetType() == Node::ALIAS_NODE );
         TEST_ASSERT( AliasNode::GetTypeS() == Node::ALIAS_NODE );
