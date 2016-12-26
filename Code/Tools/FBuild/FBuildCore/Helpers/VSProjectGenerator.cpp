@@ -275,7 +275,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > defines;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerArgs(), "/D", "-D", defines, false );
+                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, false );
                     AStackString<> definesStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, nullptr, ";" );
                     WritePGItem( "NMakePreprocessorDefinitions", definesStr );
@@ -290,7 +290,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > includePaths;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerArgs(), "/I", "-I", includePaths, false );
+                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false );
                     for ( AString & include : includePaths )
                     {
                         AStackString<> fullIncludePath;

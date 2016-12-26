@@ -133,71 +133,9 @@ FunctionLibrary::FunctionLibrary()
     }
 
     // Check input/output for Compiler
+    if ( CheckCompilerOptions( funcStartIter, compilerOptions->GetString(), objFlags ) == false )
     {
-        bool hasInputToken = false;
-        bool hasOutputToken = false;
-        bool hasCompileToken = false;
-
-        const AString & args = compilerOptions->GetString();
-        Array< AString > tokens;
-        args.Tokenize( tokens );
-        for ( const AString & token : tokens )
-        {
-            if ( token.Find( "%1" ) )
-            {
-                hasInputToken = true;
-            }
-            else if ( token.Find( "%2" ) )
-            {
-                hasOutputToken = true;
-            }
-            else
-            {
-                if ( objFlags & ObjectNode::FLAG_MSVC )
-                {
-                    if ( ( token == "/c" ) || ( token == "-c" ) )
-                    {
-                        hasCompileToken = true;
-                    }
-                }
-                else
-                {
-                    if ( token == "-c" )
-                    {
-                        hasCompileToken = true;
-                    }
-                }
-            }
-        }
-
-        if ( hasInputToken == false )
-        {
-            Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "%1" );
-            return false;
-        }
-        if ( hasOutputToken == false )
-        {
-            Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "%2" );
-            return false;
-        }
-
-        // check /c or -c
-        if ( objFlags & ObjectNode::FLAG_MSVC )
-        {
-            if ( hasCompileToken == false )
-            {
-                Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "/c or -c" );
-                return false;
-            }
-        }
-        else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG ) )
-        {
-            if ( hasCompileToken == false )
-            {
-                Error::Error_1106_MissingRequiredToken( funcStartIter, this, ".CompilerOptions", "-c" );
-                return false;
-            }
-        }
+        return false; // CheckCompilerOptions will have emitted an error
     }
 
     // Check input/output for Librarian

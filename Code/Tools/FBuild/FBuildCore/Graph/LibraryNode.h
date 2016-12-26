@@ -22,11 +22,11 @@ public:
     explicit LibraryNode( const AString & libraryName,
                           const Dependencies & inputNodes,
                           CompilerNode * compiler,
-                          const AString & compilerArgs,
-                          const AString & compilerArgsDeoptimized,
+                          const AString & compilerOptions,
+                          const AString & compilerOptionsDeoptimized,
                           const AString & compilerOutputPath,
                           const AString & librarian,
-                          const AString & librarianArgs,
+                          const AString & librarianOptions,
                           uint32_t flags,
                           ObjectNode * precompiledHeader,
                           const Dependencies & compilerForceUsing,
@@ -37,7 +37,7 @@ public:
                           bool allowDistribution,
                           bool allowCaching,
                           CompilerNode * preprocessor,
-                          const AString & preprocessorArgs,
+                          const AString & preprocessorOptions,
                           const AString & baseDirectory );
     virtual ~LibraryNode();
 
@@ -71,7 +71,7 @@ private:
     bool CanUseResponseFile() const;
 
     AString m_LibrarianPath;
-    AString m_LibrarianArgs;
+    AString m_LibrarianOptions;
     uint32_t m_Flags;
     Dependencies m_AdditionalInputs;
 };

@@ -23,8 +23,8 @@ public:
     explicit ObjectNode( const AString & objectName,
                          Node * inputNode,
                          Node * compilerNode,
-                         const AString & compilerArgs,
-                         const AString & compilerArgsDeoptimized,
+                         const AString & compilerOptions,
+                         const AString & compilerOptionsDeoptimized,
                          Node * precompiledHeader,
                          uint32_t flags,
                          const Dependencies & compilerForceUsing,
@@ -33,12 +33,12 @@ public:
                          bool allowDistribution,
                          bool allowCaching,
                          Node * preprocessorNode,
-                         const AString & preprocessorArgs,
+                         const AString & preprocessorOptions,
                          uint32_t preprocessorFlags);
     // simplified remote constructor
     explicit ObjectNode( const AString & objectName,
                          NodeProxy * srcFile,
-                         const AString & compilerArgs,
+                         const AString & compilerOptions,
                          uint32_t flags );
     virtual ~ObjectNode();
 
@@ -179,8 +179,8 @@ private:
 
     Array< AString > m_Includes;
     uint32_t m_Flags;
-    AString m_CompilerArgs;
-    AString m_CompilerArgsDeoptimized;
+    AString m_CompilerOptions;
+    AString m_CompilerOptionsDeoptimized;
     AString m_ObjExtensionOverride;
     AString m_PCHObjectFileName;
     uint64_t m_PCHCacheKey;
@@ -192,7 +192,7 @@ private:
     bool m_Remote;
     Node* m_PCHNode;
     Node* m_PreprocessorNode;
-    AString m_PreprocessorArgs;
+    AString m_PreprocessorOptions;
     uint32_t m_PreprocessorFlags;
 };
 

@@ -30,11 +30,11 @@
 LibraryNode::LibraryNode( const AString & libraryName,
                           const Dependencies & inputNodes,
                           CompilerNode * compiler,
-                          const AString & compilerArgs,
-                          const AString & compilerArgsDeoptimized,
+                          const AString & compilerOptions,
+                          const AString & compilerOptionsDeoptimized,
                           const AString & compilerOutputPath,
                           const AString & librarian,
-                          const AString & librarianArgs,
+                          const AString & librarianOptions,
                           uint32_t flags,
                           ObjectNode * precompiledHeader,
                           const Dependencies & compilerForceUsing,
@@ -45,13 +45,13 @@ LibraryNode::LibraryNode( const AString & libraryName,
                           bool allowDistribution,
                           bool allowCaching,
                           CompilerNode * preprocessor,
-                          const AString & preprocessorArgs,
+                          const AString & preprocessorOptions,
                           const AString & baseDirectory )
 : ObjectListNode( libraryName,
                   inputNodes,
                   compiler,
-                  compilerArgs,
-                  compilerArgsDeoptimized,
+                  compilerOptions,
+                  compilerOptionsDeoptimized,
                   compilerOutputPath,
                   precompiledHeader,
                   compilerForceUsing,
@@ -61,7 +61,7 @@ LibraryNode::LibraryNode( const AString & libraryName,
                   allowDistribution,
                   allowCaching,
                   preprocessor,
-                  preprocessorArgs,
+                  preprocessorOptions,
                   baseDirectory )
 , m_AdditionalInputs( additionalInputs )
 {
@@ -69,7 +69,7 @@ LibraryNode::LibraryNode( const AString & libraryName,
     m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved
 
     m_LibrarianPath = librarian; // TODO:C This should be a node
-    m_LibrarianArgs = librarianArgs;
+    m_LibrarianOptions = librarianOptions;
     m_Flags = flags;
 }
 
@@ -180,7 +180,7 @@ LibraryNode::~LibraryNode() = default;
 bool LibraryNode::BuildArgs( Args & fullArgs ) const
 {
     Array< AString > tokens( 1024, true );
-    m_LibrarianArgs.Tokenize( tokens );
+    m_LibrarianOptions.Tokenize( tokens );
 
     const AString * const end = tokens.End();
     for ( const AString * it = tokens.Begin(); it!=end; ++it )
@@ -303,8 +303,8 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
     NODE_LOAD( AStackString<>,  name );
     NODE_LOAD_NODE( CompilerNode,   compilerNode );
-    NODE_LOAD( AStackString<>,  compilerArgs );
-    NODE_LOAD( AStackString<>,  compilerArgsDeoptimized );
+    NODE_LOAD( AStackString<>,  compilerOptions );
+    NODE_LOAD( AStackString<>,  compilerOptionsDeoptimized );
     NODE_LOAD( AStackString<>,  compilerOutputPath );
     NODE_LOAD_DEPS( 16,         staticDeps );
     NODE_LOAD_NODE( Node,       precompiledHeader );
@@ -317,24 +317,24 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
     NODE_LOAD( bool,            allowDistribution );
     NODE_LOAD( bool,            allowCaching );
     NODE_LOAD_NODE( CompilerNode, preprocessorNode );
-    NODE_LOAD( AStackString<>,  preprocessorArgs );
+    NODE_LOAD( AStackString<>,  preprocessorOptions );
     NODE_LOAD( AStackString<>,  baseDirectory );
     NODE_LOAD( AStackString<>,  extraPDBPath );
     NODE_LOAD( AStackString<>,  extraASMPath );
 
     NODE_LOAD( AStackString<>,  librarianPath );
-    NODE_LOAD( AStackString<>,  librarianArgs );
+    NODE_LOAD( AStackString<>,  librarianOptions );
     NODE_LOAD( uint32_t,        flags );
     NODE_LOAD_DEPS( 0,          additionalInputs );
 
     LibraryNode * n = nodeGraph.CreateLibraryNode( name,
                                  staticDeps,
                                  compilerNode,
-                                 compilerArgs,
-                                 compilerArgsDeoptimized,
+                                 compilerOptions,
+                                 compilerOptionsDeoptimized,
                                  compilerOutputPath,
                                  librarianPath,
-                                 librarianArgs,
+                                 librarianOptions,
                                  flags,
                                  precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr,
                                  compilerForceUsing,
@@ -345,7 +345,7 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
                                  allowDistribution,
                                  allowCaching,
                                  preprocessorNode,
-                                 preprocessorArgs,
+                                 preprocessorOptions,
                                  baseDirectory );
     n->m_ObjExtensionOverride = objExtensionOverride;
     n->m_CompilerOutputPrefix = compilerOutputPrefix;
@@ -370,7 +370,7 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
     ObjectListNode::Save( stream );
 
     NODE_SAVE( m_LibrarianPath );
-    NODE_SAVE( m_LibrarianArgs );
+    NODE_SAVE( m_LibrarianOptions );
     NODE_SAVE( m_Flags );
     NODE_SAVE_DEPS( m_AdditionalInputs );
 }

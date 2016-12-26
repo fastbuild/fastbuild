@@ -122,8 +122,8 @@ public:
     LibraryNode *   CreateLibraryNode( const AString & libraryName,
                                        const Dependencies & inputNodes,
                                        CompilerNode * compilerNode,
-                                       const AString & compilerArgs,
-                                       const AString & compilerArgsDeoptimized,
+                                       const AString & compilerOptions,
+                                       const AString & compilerOptionsDeoptimized,
                                        const AString & compilerOutputPath,
                                        const AString & linker,
                                        const AString & linkerArgs,
@@ -137,14 +137,14 @@ public:
                                        bool allowDistribution,
                                        bool allowCaching,
                                        CompilerNode * preprocessor,
-                                       const AString & preprocessorArgs,
+                                       const AString & preprocessorOptions,
                                        const AString & baseDirectory );
 
     ObjectNode *    CreateObjectNode( const AString & objectName,
                                       Node * inputNode,
                                       Node * compilerNode,
-                                      const AString & compilerArgs,
-                                      const AString & compilerArgsDeoptimized,
+                                      const AString & compilerOptions,
+                                      const AString & compilerOptionsDeoptimized,
                                       Node * precompiledHeader,
                                       uint32_t flags,
                                       const Dependencies & compilerForceUsing,
@@ -153,7 +153,7 @@ public:
                                       bool allowDistribution,
                                       bool allowCaching,
                                       Node * preprocessorNode,
-                                      const AString & preprocessorArgs,
+                                      const AString & preprocessorOptions,
                                       uint32_t preprocessorFlags );
     AliasNode *     CreateAliasNode( const AString & aliasName );
     DLLNode *       CreateDLLNode( const AString & linkerOutputName,
@@ -208,8 +208,8 @@ public:
     ObjectListNode * CreateObjectListNode( const AString & listName,
                              const Dependencies & inputNodes,
                              CompilerNode * compiler,
-                             const AString & compilerArgs,
-                             const AString & compilerArgsDeoptimized,
+                             const AString & compilerOptions,
+                             const AString & compilerOptionsDeoptimized,
                              const AString & compilerOutputPath,
                              ObjectNode * precompiledHeader,
                              const Dependencies & compilerForceUsing,
@@ -219,7 +219,7 @@ public:
                              bool allowDistribution,
                              bool allowCaching,
                              CompilerNode * preprocessor,
-                             const AString & preprocessorArgs,
+                             const AString & preprocessorOptions,
                              const AString & baseDirectory );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
 

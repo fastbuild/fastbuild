@@ -27,8 +27,8 @@
 ObjectListNode::ObjectListNode( const AString & listName,
                                 const Dependencies & inputNodes,
                                 CompilerNode * compiler,
-                                const AString & compilerArgs,
-                                const AString & compilerArgsDeoptimized,
+                                const AString & compilerOptions,
+                                const AString & compilerOptionsDeoptimized,
                                 const AString & compilerOutputPath,
                                 ObjectNode * precompiledHeader,
                                 const Dependencies & compilerForceUsing,
@@ -38,8 +38,8 @@ ObjectListNode::ObjectListNode( const AString & listName,
                                 bool allowDistribution,
                                 bool allowCaching,
                                 CompilerNode * preprocessor,
-                                const AString & preprocessorArgs,
-                                const AString & baseDirectory )
+                                const AString & preprocessorOptions,
+                                const AString & compilerInputFilesRoot )
 : Node( listName, Node::OBJECT_LIST_NODE, Node::FLAG_NONE )
 , m_CompilerForceUsing( compilerForceUsing )
 , m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
@@ -57,16 +57,16 @@ ObjectListNode::ObjectListNode( const AString & listName,
 
     // store options we'll need to use dynamically
     m_Compiler = compiler;
-    m_CompilerArgs = compilerArgs;
-    m_CompilerArgsDeoptimized = compilerArgsDeoptimized;
+    m_CompilerOptions = compilerOptions;
+    m_CompilerOptionsDeoptimized = compilerOptionsDeoptimized;
     m_CompilerOutputPath = compilerOutputPath;
 
     m_Preprocessor = preprocessor;
-    m_PreprocessorArgs = preprocessorArgs;
+    m_PreprocessorOptions = preprocessorOptions;
 
     m_PreBuildDependencies = preBuildDependencies;
 
-    m_BaseDirectory = baseDirectory;
+    m_CompilerInputFilesRoot = compilerInputFilesRoot;
 }
 
 // DESTRUCTOR
@@ -374,10 +374,10 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     }
     else
     {
-        if ( !m_BaseDirectory.IsEmpty() && PathUtils::PathBeginsWith( fileName, m_BaseDirectory ) )
+        if ( !m_CompilerInputFilesRoot.IsEmpty() && PathUtils::PathBeginsWith( fileName, m_CompilerInputFilesRoot ) )
         {
             // ... use everything after that
-            subPath.Assign( fileName.Get() + m_BaseDirectory.GetLength(), lastSlash ); // includes last slash
+            subPath.Assign( fileName.Get() + m_CompilerInputFilesRoot.GetLength(), lastSlash ); // includes last slash
         }
     }
 
@@ -395,7 +395,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     {
         // determine flags - TODO:B Move DetermineFlags call out of build-time
         const bool usingPCH = ( m_PrecompiledHeader != nullptr );
-        uint32_t flags = ObjectNode::DetermineFlags( m_Compiler, m_CompilerArgs, false, usingPCH );
+        uint32_t flags = ObjectNode::DetermineFlags( m_Compiler, m_CompilerOptions, false, usingPCH );
         if ( isUnityNode )
         {
             flags |= ObjectNode::FLAG_UNITY;
@@ -408,10 +408,10 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
         if ( m_Preprocessor )
         {
             // determine flags - TODO:B Move DetermineFlags call out of build-time
-            preprocessorFlags = ObjectNode::DetermineFlags( m_Preprocessor, m_PreprocessorArgs, false, usingPCH );
+            preprocessorFlags = ObjectNode::DetermineFlags( m_Preprocessor, m_PreprocessorOptions, false, usingPCH );
         }
 
-        on = nodeGraph.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerArgs, m_CompilerArgsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken, m_AllowDistribution, m_AllowCaching, m_Preprocessor, m_PreprocessorArgs, preprocessorFlags );
+        on = nodeGraph.CreateObjectNode( objFile, inputFile, m_Compiler, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_PrecompiledHeader, flags, m_CompilerForceUsing, m_DeoptimizeWritableFiles, m_DeoptimizeWritableFilesWithToken, m_AllowDistribution, m_AllowCaching, m_Preprocessor, m_PreprocessorOptions, preprocessorFlags );
     }
     else if ( on->GetType() != Node::OBJECT_NODE )
     {
@@ -443,8 +443,8 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
 {
     NODE_LOAD( AStackString<>,  name );
     NODE_LOAD_NODE( CompilerNode,   compilerNode );
-    NODE_LOAD( AStackString<>,  compilerArgs );
-    NODE_LOAD( AStackString<>,  compilerArgsDeoptimized );
+    NODE_LOAD( AStackString<>,  compilerOptions );
+    NODE_LOAD( AStackString<>,  compilerOptionsDeoptimized );
     NODE_LOAD( AStackString<>,  compilerOutputPath );
     NODE_LOAD_DEPS( 16,         staticDeps );
     NODE_LOAD_NODE( Node,       precompiledHeader );
@@ -457,16 +457,16 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     NODE_LOAD( bool,            allowDistribution );
     NODE_LOAD( bool,            allowCaching );
     NODE_LOAD_NODE( CompilerNode, preprocessorNode );
-    NODE_LOAD( AStackString<>,  preprocessorArgs );
-    NODE_LOAD( AStackString<>,  baseDirectory );
+    NODE_LOAD( AStackString<>,  preprocessorOptions );
+    NODE_LOAD( AStackString<>,  compilerInputFilesRoot );
     NODE_LOAD( AStackString<>,  extraPDBPath );
     NODE_LOAD( AStackString<>,  extraASMPath );
 
     ObjectListNode * n = nodeGraph.CreateObjectListNode( name,
                                 staticDeps,
                                 compilerNode,
-                                compilerArgs,
-                                compilerArgsDeoptimized,
+                                compilerOptions,
+                                compilerOptionsDeoptimized,
                                 compilerOutputPath,
                                 precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr,
                                 compilerForceUsing,
@@ -476,8 +476,8 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
                                 allowDistribution,
                                 allowCaching,
                                 preprocessorNode,
-                                preprocessorArgs,
-                                baseDirectory );
+                                preprocessorOptions,
+                                compilerInputFilesRoot );
     n->m_ObjExtensionOverride = objExtensionOverride;
     n->m_CompilerOutputPrefix = compilerOutputPrefix;
     n->m_ExtraPDBPath = extraPDBPath;
@@ -500,8 +500,8 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
 {
     NODE_SAVE( m_Name );
     NODE_SAVE_NODE( m_Compiler );
-    NODE_SAVE( m_CompilerArgs );
-    NODE_SAVE( m_CompilerArgsDeoptimized );
+    NODE_SAVE( m_CompilerOptions );
+    NODE_SAVE( m_CompilerOptionsDeoptimized );
     NODE_SAVE( m_CompilerOutputPath );
     NODE_SAVE_DEPS( m_StaticDependencies );
     NODE_SAVE_NODE( m_PrecompiledHeader );
@@ -514,8 +514,8 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     NODE_SAVE( m_AllowDistribution );
     NODE_SAVE( m_AllowCaching );
     NODE_SAVE_NODE( m_Preprocessor );
-    NODE_SAVE( m_PreprocessorArgs );
-    NODE_SAVE( m_BaseDirectory );
+    NODE_SAVE( m_PreprocessorOptions );
+    NODE_SAVE( m_CompilerInputFilesRoot );
     NODE_SAVE( m_ExtraPDBPath );
     NODE_SAVE( m_ExtraASMPath );
 

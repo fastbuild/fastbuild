@@ -720,8 +720,8 @@ DirectoryListNode * NodeGraph::CreateDirectoryListNode( const AString & name,
 LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
                                             const Dependencies & inputNodes,
                                             CompilerNode * compiler,
-                                            const AString & compilerArgs,
-                                            const AString & compilerArgsDeoptimized,
+                                            const AString & compilerOptions,
+                                            const AString & compilerOptionsDeoptimized,
                                             const AString & compilerOutputPath,
                                             const AString & linker,
                                             const AString & linkerArgs,
@@ -735,7 +735,7 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
                                             bool allowDistribution,
                                             bool allowCaching,
                                             CompilerNode * preprocessor,
-                                            const AString & preprocessorArgs,
+                                            const AString & preprocessorOptions,
                                             const AString & baseDirectory )
 {
     ASSERT( Thread::IsMainThread() );
@@ -746,8 +746,8 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
     LibraryNode * node = FNEW( LibraryNode( fullPath,
                                             inputNodes,
                                             compiler,
-                                            compilerArgs,
-                                            compilerArgsDeoptimized,
+                                            compilerOptions,
+                                            compilerOptionsDeoptimized,
                                             compilerOutputPath,
                                             linker,
                                             linkerArgs,
@@ -761,7 +761,7 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
                                             allowDistribution,
                                             allowCaching,
                                             preprocessor,
-                                            preprocessorArgs,
+                                            preprocessorOptions,
                                             baseDirectory ) );
     AddNode( node );
     return node;
@@ -772,8 +772,8 @@ LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
 ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName,
                                           Node * inputNode,
                                           Node * compilerNode,
-                                          const AString & compilerArgs,
-                                          const AString & compilerArgsDeoptimized,
+                                          const AString & compilerOptions,
+                                          const AString & compilerOptionsDeoptimized,
                                           Node * precompiledHeader,
                                           uint32_t flags,
                                           const Dependencies & compilerForceUsing,
@@ -782,7 +782,7 @@ ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName,
                                           bool allowDistribution,
                                           bool allowCaching,
                                           Node * preprocessorNode,
-                                          const AString & preprocessorArgs,
+                                          const AString & preprocessorOptions,
                                           uint32_t preprocessorFlags )
 {
     ASSERT( Thread::IsMainThread() );
@@ -790,7 +790,7 @@ ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName,
     AStackString< 512 > fullPath;
     CleanPath( objectName, fullPath );
 
-    ObjectNode * node = FNEW( ObjectNode( fullPath, inputNode, compilerNode, compilerArgs, compilerArgsDeoptimized, precompiledHeader, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching, preprocessorNode, preprocessorArgs, preprocessorFlags ) );
+    ObjectNode * node = FNEW( ObjectNode( fullPath, inputNode, compilerNode, compilerOptions, compilerOptionsDeoptimized, precompiledHeader, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching, preprocessorNode, preprocessorOptions, preprocessorFlags ) );
     AddNode( node );
     return node;
 }
@@ -1003,8 +1003,8 @@ SLNNode * NodeGraph::CreateSLNNode( const AString & solutionOutput,
 ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
                                                   const Dependencies & inputNodes,
                                                   CompilerNode * compiler,
-                                                  const AString & compilerArgs,
-                                                  const AString & compilerArgsDeoptimized,
+                                                  const AString & compilerOptions,
+                                                  const AString & compilerOptionsDeoptimized,
                                                   const AString & compilerOutputPath,
                                                   ObjectNode * precompiledHeader,
                                                   const Dependencies & compilerForceUsing,
@@ -1014,7 +1014,7 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
                                                   bool allowDistribution,
                                                   bool allowCaching,
                                                   CompilerNode * preprocessor,
-                                                  const AString & preprocessorArgs,
+                                                  const AString & preprocessorOptions,
                                                   const AString & baseDirectory )
 {
     ASSERT( Thread::IsMainThread() );
@@ -1022,8 +1022,8 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
     ObjectListNode * node = FNEW( ObjectListNode( listName,
                                                   inputNodes,
                                                   compiler,
-                                                  compilerArgs,
-                                                  compilerArgsDeoptimized,
+                                                  compilerOptions,
+                                                  compilerOptionsDeoptimized,
                                                   compilerOutputPath,
                                                   precompiledHeader,
                                                   compilerForceUsing,
@@ -1033,7 +1033,7 @@ ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
                                                   allowDistribution,
                                                   allowCaching,
                                                   preprocessor,
-                                                  preprocessorArgs,
+                                                  preprocessorOptions,
                                                   baseDirectory ) );
     AddNode( node );
     return node;

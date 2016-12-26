@@ -22,8 +22,8 @@ public:
     explicit ObjectListNode( const AString & listName,
                              const Dependencies & inputNodes,
                              CompilerNode * compiler,
-                             const AString & compilerArgs,
-                             const AString & compilerArgsDeoptimized,
+                             const AString & compilerOptions,
+                             const AString & compilerOptionsDeoptimized,
                              const AString & compilerOutputPath,
                              ObjectNode * precompiledHeader,
                              const Dependencies & compilerForceUsing,
@@ -33,7 +33,7 @@ public:
                              bool allowDistribution,
                              bool allowCaching,
                              CompilerNode * preprocessor,
-                             const AString & preprocessorArgs,
+                             const AString & preprocessorOptions,
                              const AString & baseDirectory );
     virtual ~ObjectListNode();
 
@@ -49,7 +49,7 @@ public:
     void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
     void GetInputFiles( Array< AString > & files ) const;
 
-    inline const AString & GetCompilerArgs() const { return m_CompilerArgs; }
+    inline const AString & GetCompilerOptions() const { return m_CompilerOptions; }
 protected:
     friend class FunctionObjectList;
 
@@ -61,8 +61,8 @@ protected:
     bool CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
 
     CompilerNode *  m_Compiler;
-    AString         m_CompilerArgs;
-    AString         m_CompilerArgsDeoptimized;
+    AString         m_CompilerOptions;
+    AString         m_CompilerOptionsDeoptimized;
     AString         m_CompilerOutputPath;
     Dependencies    m_CompilerForceUsing;
     ObjectNode *    m_PrecompiledHeader;
@@ -73,8 +73,8 @@ protected:
     bool            m_AllowDistribution;
     bool            m_AllowCaching;
     CompilerNode *  m_Preprocessor;
-    AString         m_PreprocessorArgs;
-    AString         m_BaseDirectory;
+    AString         m_PreprocessorOptions;
+    AString         m_CompilerInputFilesRoot;
     AString         m_ExtraPDBPath;
     AString         m_ExtraASMPath;
 };

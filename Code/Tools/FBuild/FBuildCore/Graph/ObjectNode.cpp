@@ -46,8 +46,8 @@
 ObjectNode::ObjectNode( const AString & objectName,
                         Node * inputNode,
                         Node * compilerNode,
-                        const AString & compilerArgs,
-                        const AString & compilerArgsDeoptimized,
+                        const AString & compilerOptions,
+                        const AString & compilerOptionsDeoptimized,
                         Node * precompiledHeader,
                         uint32_t flags,
                         const Dependencies & compilerForceUsing,
@@ -56,13 +56,13 @@ ObjectNode::ObjectNode( const AString & objectName,
                         bool allowDistribution,
                         bool allowCaching,
                         Node * preprocessorNode,
-                        const AString & preprocessorArgs,
+                        const AString & preprocessorOptions,
                         uint32_t preprocessorFlags )
 : FileNode( objectName, Node::FLAG_NONE )
 , m_Includes( 0, true )
 , m_Flags( flags )
-, m_CompilerArgs( compilerArgs )
-, m_CompilerArgsDeoptimized( compilerArgsDeoptimized )
+, m_CompilerOptions( compilerOptions )
+, m_CompilerOptionsDeoptimized( compilerOptionsDeoptimized )
 , m_PCHCacheKey( 0 )
 , m_CompilerForceUsing( compilerForceUsing )
 , m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
@@ -72,7 +72,7 @@ ObjectNode::ObjectNode( const AString & objectName,
 , m_Remote( false )
 , m_PCHNode( precompiledHeader )
 , m_PreprocessorNode( preprocessorNode )
-, m_PreprocessorArgs( preprocessorArgs )
+, m_PreprocessorOptions ( preprocessorOptions )
 , m_PreprocessorFlags( preprocessorFlags )
 {
     m_StaticDependencies.SetCapacity( 3 );
@@ -102,18 +102,18 @@ ObjectNode::ObjectNode( const AString & objectName,
 //------------------------------------------------------------------------------
 ObjectNode::ObjectNode( const AString & objectName,
                         NodeProxy * srcFile,
-                        const AString & compilerArgs,
+                        const AString & compilerOptions,
                         uint32_t flags )
 : FileNode( objectName, Node::FLAG_NONE )
 , m_Includes( 0, true )
 , m_Flags( flags )
-, m_CompilerArgs( compilerArgs )
+, m_CompilerOptions( compilerOptions )
 , m_DeoptimizeWritableFiles( false )
 , m_DeoptimizeWritableFilesWithToken( false )
 , m_Remote( true )
 , m_PCHNode( nullptr )
 , m_PreprocessorNode( nullptr )
-, m_PreprocessorArgs()
+, m_PreprocessorOptions()
 , m_PreprocessorFlags( 0 )
 {
     m_Type = OBJECT_NODE;
@@ -933,8 +933,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     NODE_SAVE_DEPS( m_StaticDependencies );
     NODE_SAVE_DEPS( m_DynamicDependencies );
     NODE_SAVE( m_Flags );
-    NODE_SAVE( m_CompilerArgs );
-    NODE_SAVE( m_CompilerArgsDeoptimized );
+    NODE_SAVE( m_CompilerOptions );
+    NODE_SAVE( m_CompilerOptionsDeoptimized );
     NODE_SAVE( m_ObjExtensionOverride );
     NODE_SAVE_DEPS( m_CompilerForceUsing );
     NODE_SAVE( m_DeoptimizeWritableFiles );
@@ -943,7 +943,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     NODE_SAVE( m_AllowCaching );
     NODE_SAVE_NODE( m_PCHNode )
     NODE_SAVE_NODE( m_PreprocessorNode );
-    NODE_SAVE( m_PreprocessorArgs );
+    NODE_SAVE( m_PreprocessorOptions );
     NODE_SAVE( m_PreprocessorFlags );
     NODE_SAVE( m_PCHObjectFileName );
     NODE_SAVE( m_PCHCacheKey );
@@ -966,11 +966,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     const bool useDeoptimization = ShouldUseDeoptimization();
     if ( useDeoptimization )
     {
-        NODE_SAVE( m_CompilerArgsDeoptimized );
+        NODE_SAVE( m_CompilerOptionsDeoptimized );
     }
     else
     {
-        NODE_SAVE( m_CompilerArgs );
+        NODE_SAVE( m_CompilerOptions );
     }
 }
 
@@ -1061,7 +1061,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
-    uint32_t b = xxHash::Calc32( m_CompilerArgs.Get(), m_CompilerArgs.GetLength() );
+    uint32_t b = xxHash::Calc32( m_CompilerOptions.Get(), m_CompilerOptions.GetLength() );
 
     // ToolChain hash
     uint64_t c = GetCompiler()->CastTo< CompilerNode >()->GetManifest().GetToolId();
@@ -1369,16 +1369,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     const bool useDedicatedPreprocessor = ( ( pass == PASS_PREPROCESSOR_ONLY ) && GetDedicatedPreprocessor() );
     if ( useDedicatedPreprocessor )
     {
-        m_PreprocessorArgs.Tokenize( tokens );
+        m_PreprocessorOptions.Tokenize( tokens );
     }
     else if ( useDeoptimization )
     {
-        ASSERT( !m_CompilerArgsDeoptimized.IsEmpty() );
-        m_CompilerArgsDeoptimized.Tokenize( tokens );
+        ASSERT( !m_CompilerOptionsDeoptimized.IsEmpty() );
+        m_CompilerOptionsDeoptimized.Tokenize( tokens );
     }
     else
     {
-        m_CompilerArgs.Tokenize( tokens );
+        m_CompilerOptions.Tokenize( tokens );
     }
     fullArgs.Clear();
 
