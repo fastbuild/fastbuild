@@ -7,6 +7,7 @@
 #include "MetaData.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
+#include "Core/Reflection/MetaData/Meta_Hidden.h"
 #include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/MetaData/Meta_Range.h"
@@ -57,6 +58,13 @@ IMetaData & MetaNone()
 IMetaData & MetaFile( bool relative )
 {
     return *FNEW( Meta_File( relative ) );
+}
+
+// MetaHidden
+//------------------------------------------------------------------------------
+IMetaData & MetaHidden()
+{
+    return *FNEW( Meta_Hidden() );
 }
 
 // MetaOptional

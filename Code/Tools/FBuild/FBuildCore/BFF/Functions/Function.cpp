@@ -43,6 +43,7 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
+#include "Core/Reflection/MetaData/Meta_Hidden.h"
 #include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/MetaData/Meta_Range.h"
@@ -909,6 +910,12 @@ bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & it
         for ( ReflectionIter it = ri->Begin(); it != end; ++it )
         {
             const ReflectedProperty & property = *it;
+
+            // Don't populate hidden properties
+            if ( property.HasMetaData< Meta_Hidden >() )
+            {
+                continue;
+            }
 
             // Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
             AStackString<> propertyName( "." );

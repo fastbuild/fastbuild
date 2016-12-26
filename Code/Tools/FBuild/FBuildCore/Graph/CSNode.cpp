@@ -33,6 +33,10 @@ REFLECT_BEGIN( CSNode, Node, MetaName( "CompilerOutput" ) + MetaFile() )
     REFLECT_ARRAY(  m_CompilerInputFiles,           "CompilerInputFiles",           MetaOptional() + MetaFile() )
     REFLECT_ARRAY(  m_CompilerReferences,           "CompilerReferences",           MetaOptional() + MetaFile() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,      "PreBuildDependencies",         MetaOptional() + MetaFile() )
+
+    // Internal State
+    REFLECT(        m_NumCompilerInputFiles,        "NumCompilerInputFiles",        MetaHidden() )
+    REFLECT(        m_NumCompilerReferences,        "NumCompilerReferences",        MetaHidden() )
 REFLECT_END( CSNode )
 
 // CONSTRUCTOR
@@ -238,12 +242,6 @@ failed:
         return nullptr;
     }
 
-    // TODO:C Handle through normal serialization
-    NODE_LOAD( uint32_t, numCompilerInputFiles );
-    NODE_LOAD( uint32_t, numCompilerReferences );
-    node->m_NumCompilerInputFiles = numCompilerInputFiles;
-    node->m_NumCompilerReferences = numCompilerReferences;
-
     return node;
 }
 
@@ -253,10 +251,6 @@ failed:
 {
     NODE_SAVE( m_Name );
     Node::Serialize( stream );
-
-    // TODO:C Handle through normal serialization
-    NODE_SAVE( m_NumCompilerInputFiles );
-    NODE_SAVE( m_NumCompilerReferences );
 }
 
 // EmitCompilationMessage
