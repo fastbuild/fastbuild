@@ -31,6 +31,7 @@ IMetaData::~IMetaData() = default;
 //------------------------------------------------------------------------------
 IMetaData & operator + ( IMetaData & a, IMetaData & b )
 {
+    b.m_Next = a.m_Next;
     a.m_Next = &b;
     return a;
 }

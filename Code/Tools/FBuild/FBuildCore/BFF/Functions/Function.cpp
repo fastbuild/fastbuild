@@ -902,24 +902,32 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, 
 //------------------------------------------------------------------------------
 bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & iter, Node * node ) const
 {
-    const ReflectionInfo * const ri = node->GetReflectionInfoV();
-    const ReflectionIter end = ri->End();
-    for ( ReflectionIter it = ri->Begin(); it != end; ++it )
+    const ReflectionInfo * ri = node->GetReflectionInfoV();
+    do
     {
-        const ReflectedProperty & property = *it;
-
-        // Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
-        AStackString<> propertyName( "." );
-        propertyName += property.GetName();
-
-        // Find the value for this property from the BFF
-        const BFFVariable * v = BFFStackFrame::GetVar( propertyName );
-
-        if ( !PopulateProperty( nodeGraph, iter, node, property, v ) )
+        const ReflectionIter end = ri->End();
+        for ( ReflectionIter it = ri->Begin(); it != end; ++it )
         {
-            return false; // PopulateProperty will have emitted an error
+            const ReflectedProperty & property = *it;
+
+            // Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
+            AStackString<> propertyName( "." );
+            propertyName += property.GetName();
+
+            // Find the value for this property from the BFF
+            const BFFVariable * v = BFFStackFrame::GetVar( propertyName );
+
+            if ( !PopulateProperty( nodeGraph, iter, node, property, v ) )
+            {
+                return false; // PopulateProperty will have emitted an error
+            }
         }
+
+        // Traverse into parent class (if there is one)
+        ri = ri->GetSuperClass();
     }
+    while ( ri );
+
     return true;
 }
 

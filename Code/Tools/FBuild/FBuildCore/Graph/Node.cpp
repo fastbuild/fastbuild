@@ -514,12 +514,19 @@ void Node::Serialize( IOStream & stream ) const
 //------------------------------------------------------------------------------
 /*static*/ void Node::Serialize( IOStream & stream, const void * base, const ReflectionInfo & ri )
 {
-    const ReflectionIter end = ri.End();
-    for ( ReflectionIter it = ri.Begin(); it != end; ++it )
+    const ReflectionInfo * currentRI = &ri;
+    do
     {
-        const ReflectedProperty & property = *it;
-        Serialize( stream, base, property );
+        const ReflectionIter end = currentRI->End();
+        for ( ReflectionIter it = currentRI->Begin(); it != end; ++it )
+        {
+            const ReflectedProperty & property = *it;
+            Serialize( stream, base, property );
+        }
+
+        currentRI = currentRI->GetSuperClass();
     }
+    while ( currentRI );
 }
 
 // Serialize
@@ -610,15 +617,23 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
 //------------------------------------------------------------------------------
 /*static*/ bool Node::Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri )
 {
-    const ReflectionIter end = ri.End();
-    for ( ReflectionIter it = ri.Begin(); it != end; ++it )
+    const ReflectionInfo * currentRI = &ri;
+    do
     {
-        const ReflectedProperty & property = *it;
-        if ( !Deserialize( stream, base, property ) )
+        const ReflectionIter end = currentRI->End();
+        for ( ReflectionIter it = currentRI->Begin(); it != end; ++it )
         {
-            return false;
+            const ReflectedProperty & property = *it;
+            if ( !Deserialize( stream, base, property ) )
+            {
+                return false;
+            }
         }
+
+        currentRI = currentRI->GetSuperClass();
     }
+    while ( currentRI );
+
     return true;
 }
 
