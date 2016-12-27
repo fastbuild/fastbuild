@@ -302,12 +302,12 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 /*static*/ Node * LibraryNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
     NODE_LOAD( AStackString<>,  name );
-    NODE_LOAD_NODE( CompilerNode,   compilerNode );
+    NODE_LOAD_NODE_LINK( CompilerNode,   compilerNode );
     NODE_LOAD( AStackString<>,  compilerOptions );
     NODE_LOAD( AStackString<>,  compilerOptionsDeoptimized );
     NODE_LOAD( AStackString<>,  compilerOutputPath );
     NODE_LOAD_DEPS( 16,         staticDeps );
-    NODE_LOAD_NODE( Node,       precompiledHeader );
+    NODE_LOAD_NODE_LINK( Node,  precompiledHeader );
     NODE_LOAD( AStackString<>,  objExtensionOverride );
     NODE_LOAD( AStackString<>,  compilerOutputPrefix );
     NODE_LOAD_DEPS( 0,          compilerForceUsing );
@@ -316,7 +316,7 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
     NODE_LOAD( bool,            deoptimizeWritableFilesWithToken );
     NODE_LOAD( bool,            allowDistribution );
     NODE_LOAD( bool,            allowCaching );
-    NODE_LOAD_NODE( CompilerNode, preprocessorNode );
+    NODE_LOAD_NODE_LINK( CompilerNode, preprocessorNode );
     NODE_LOAD( AStackString<>,  preprocessorOptions );
     NODE_LOAD( AStackString<>,  baseDirectory );
     NODE_LOAD( AStackString<>,  extraPDBPath );

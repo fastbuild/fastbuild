@@ -511,7 +511,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         stream.Write( cfg.m_Platform );
         stream.Write( cfg.m_Config );
 
-        Node::SaveNode( stream, cfg.m_Target );
+        Node::SaveNodeLink( stream, cfg.m_Target );
 
         stream.Write( cfg.m_BuildCommand );
         stream.Write( cfg.m_RebuildCommand );
@@ -564,7 +564,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( stream.Read( cfg.m_Platform ) == false ) { return false; }
         if ( stream.Read( cfg.m_Config ) == false ) { return false; }
 
-        if ( !Node::LoadNode( nodeGraph, stream, cfg.m_Target ) ) { return false; }
+        if ( !Node::LoadNodeLink( nodeGraph, stream, cfg.m_Target ) ) { return false; }
 
         if ( stream.Read( cfg.m_BuildCommand ) == false ) { return false; }
         if ( stream.Read( cfg.m_RebuildCommand ) == false ) { return false; }

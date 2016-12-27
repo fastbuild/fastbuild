@@ -730,7 +730,7 @@ void LinkerNode::EmitStampMessage() const
     NODE_SAVE_DEPS( m_AssemblyResources );
     NODE_SAVE_DEPS( m_OtherLibraries );
     NODE_SAVE( m_ImportLibName );
-    NODE_SAVE_NODE( m_LinkerStampExe );
+    NODE_SAVE_NODE_LINK( m_LinkerStampExe );
     NODE_SAVE( m_LinkerStampExeArgs );
 }
 

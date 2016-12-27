@@ -28,15 +28,15 @@ class Job;
 //------------------------------------------------------------------------------
 #define NODE_SAVE( member ) stream.Write( member );
 #define NODE_SAVE_DEPS( depsArray ) depsArray.Save( stream );
-#define NODE_SAVE_NODE( node ) Node::SaveNode( stream, node );
+#define NODE_SAVE_NODE_LINK( node ) Node::SaveNodeLink( stream, node );
 
 #define NODE_LOAD( type, member ) type member; if ( stream.Read( member ) == false ) { return nullptr; }
 #define NODE_LOAD_DEPS( initialCapacity, depsArray ) \
     Dependencies depsArray( initialCapacity, true ); \
     if ( depsArray.Load( nodeGraph, stream ) == false ) { return nullptr; }
-#define NODE_LOAD_NODE( type, node ) \
+#define NODE_LOAD_NODE_LINK( type, node ) \
     type * node = nullptr; \
-    if ( Node::LoadNode( nodeGraph, stream, node ) == false ) { return nullptr; }
+    if ( Node::LoadNodeLink( nodeGraph, stream, node ) == false ) { return nullptr; }
 
 // Custom MetaData
 //------------------------------------------------------------------------------
@@ -204,10 +204,10 @@ protected:
     inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
     inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }
 
-    static void SaveNode( IOStream & stream, const Node * node );
-    static bool LoadNode( NodeGraph & nodeGraph, IOStream & stream, Node * & node );
-    static bool LoadNode( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode );
-    static bool LoadNode( NodeGraph & nodeGraph, IOStream & stream, FileNode * & node );
+    static void SaveNodeLink( IOStream & stream, const Node * node );
+    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, Node * & node );
+    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode );
+    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, FileNode * & node );
 
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );

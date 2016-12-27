@@ -266,9 +266,9 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     return true;
 }
 
-// SaveNode
+// SaveNodeLink
 //------------------------------------------------------------------------------
-/*static*/ void Node::SaveNode( IOStream & fileStream, const Node * node )
+/*static*/ void Node::SaveNodeLink( IOStream & fileStream, const Node * node )
 {
     // for null pointer, write an empty string
     if ( node == nullptr )
@@ -282,9 +282,9 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     }
 }
 
-// LoadNode
+// LoadNodeLink
 //------------------------------------------------------------------------------
-/*static*/ bool Node::LoadNode( NodeGraph & nodeGraph, IOStream & stream, Node * & node )
+/*static*/ bool Node::LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, Node * & node )
 {
     // read the name of the node
     AStackString< 512 > nodeName;
@@ -313,12 +313,12 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     return true;
 }
 
-// LoadNode (CompilerNode)
+// LoadNodeLink (CompilerNode)
 //------------------------------------------------------------------------------
-/*static*/ bool Node::LoadNode( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode )
+/*static*/ bool Node::LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode )
 {
     Node * node;
-    if ( !LoadNode( nodeGraph, stream, node ) )
+    if ( !LoadNodeLink( nodeGraph, stream, node ) )
     {
         return false;
     }
@@ -335,12 +335,12 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     return true;
 }
 
-// LoadNode (FileNode)
+// LoadNodeLink (FileNode)
 //------------------------------------------------------------------------------
-/*static*/ bool Node::LoadNode( NodeGraph & nodeGraph, IOStream & stream, FileNode * & fileNode )
+/*static*/ bool Node::LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, FileNode * & fileNode )
 {
     Node * node;
-    if ( !LoadNode( nodeGraph, stream, node ) )
+    if ( !LoadNodeLink( nodeGraph, stream, node ) )
     {
         return false;
     }

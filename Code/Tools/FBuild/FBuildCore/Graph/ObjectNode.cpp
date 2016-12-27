@@ -682,8 +682,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     NODE_LOAD( bool,            deoptimizeWritableFilesWithToken );
     NODE_LOAD( bool,            allowDistribution );
     NODE_LOAD( bool,            allowCaching );
-    NODE_LOAD_NODE( Node,       m_PCHNode )
-    NODE_LOAD_NODE( CompilerNode, preprocessor );
+    NODE_LOAD_NODE_LINK( Node,       m_PCHNode )
+    NODE_LOAD_NODE_LINK( CompilerNode, preprocessor );
     NODE_LOAD( AStackString<>,  preprocessorArgs );
     NODE_LOAD( uint32_t,        preprocessorFlags );
     NODE_LOAD( AStackString<>,  pchObjectFileName );
@@ -941,8 +941,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     NODE_SAVE( m_DeoptimizeWritableFilesWithToken );
     NODE_SAVE( m_AllowDistribution );
     NODE_SAVE( m_AllowCaching );
-    NODE_SAVE_NODE( m_PCHNode )
-    NODE_SAVE_NODE( m_PreprocessorNode );
+    NODE_SAVE_NODE_LINK( m_PCHNode )
+    NODE_SAVE_NODE_LINK( m_PreprocessorNode );
     NODE_SAVE( m_PreprocessorOptions );
     NODE_SAVE( m_PreprocessorFlags );
     NODE_SAVE( m_PCHObjectFileName );

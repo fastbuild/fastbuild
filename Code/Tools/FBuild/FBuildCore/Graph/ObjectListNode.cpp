@@ -442,12 +442,12 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
 /*static*/ Node * ObjectListNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
     NODE_LOAD( AStackString<>,  name );
-    NODE_LOAD_NODE( CompilerNode,   compilerNode );
+    NODE_LOAD_NODE_LINK( CompilerNode, compilerNode );
     NODE_LOAD( AStackString<>,  compilerOptions );
     NODE_LOAD( AStackString<>,  compilerOptionsDeoptimized );
     NODE_LOAD( AStackString<>,  compilerOutputPath );
     NODE_LOAD_DEPS( 16,         staticDeps );
-    NODE_LOAD_NODE( Node,       precompiledHeader );
+    NODE_LOAD_NODE_LINK( Node,  precompiledHeader );
     NODE_LOAD( AStackString<>,  objExtensionOverride );
     NODE_LOAD( AStackString<>,  compilerOutputPrefix );
     NODE_LOAD_DEPS( 0,          compilerForceUsing );
@@ -456,7 +456,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     NODE_LOAD( bool,            deoptimizeWritableFilesWithToken );
     NODE_LOAD( bool,            allowDistribution );
     NODE_LOAD( bool,            allowCaching );
-    NODE_LOAD_NODE( CompilerNode, preprocessorNode );
+    NODE_LOAD_NODE_LINK( CompilerNode, preprocessorNode );
     NODE_LOAD( AStackString<>,  preprocessorOptions );
     NODE_LOAD( AStackString<>,  compilerInputFilesRoot );
     NODE_LOAD( AStackString<>,  extraPDBPath );
@@ -499,12 +499,12 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
 /*virtual*/ void ObjectListNode::Save( IOStream & stream ) const
 {
     NODE_SAVE( m_Name );
-    NODE_SAVE_NODE( m_Compiler );
+    NODE_SAVE_NODE_LINK( m_Compiler );
     NODE_SAVE( m_CompilerOptions );
     NODE_SAVE( m_CompilerOptionsDeoptimized );
     NODE_SAVE( m_CompilerOutputPath );
     NODE_SAVE_DEPS( m_StaticDependencies );
-    NODE_SAVE_NODE( m_PrecompiledHeader );
+    NODE_SAVE_NODE_LINK( m_PrecompiledHeader );
     NODE_SAVE( m_ObjExtensionOverride );
     NODE_SAVE( m_CompilerOutputPrefix );
     NODE_SAVE_DEPS( m_CompilerForceUsing );
@@ -513,7 +513,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     NODE_SAVE( m_DeoptimizeWritableFilesWithToken );
     NODE_SAVE( m_AllowDistribution );
     NODE_SAVE( m_AllowCaching );
-    NODE_SAVE_NODE( m_Preprocessor );
+    NODE_SAVE_NODE_LINK( m_Preprocessor );
     NODE_SAVE( m_PreprocessorOptions );
     NODE_SAVE( m_CompilerInputFilesRoot );
     NODE_SAVE( m_ExtraPDBPath );
