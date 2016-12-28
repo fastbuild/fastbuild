@@ -56,6 +56,7 @@ class NodeGraph;
 // Custom MetaData
 //------------------------------------------------------------------------------
 IMetaData & MetaName( const char * name );
+IMetaData & MetaAllowObjectList();
 
 // FBuild
 //------------------------------------------------------------------------------

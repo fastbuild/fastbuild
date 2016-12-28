@@ -33,6 +33,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowObjectList.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
@@ -79,6 +80,10 @@
 IMetaData & MetaName( const char * name )
 {
     return *FNEW( Meta_Name( name ) );
+}
+IMetaData & MetaAllowObjectList()
+{
+    return *FNEW( Meta_AllowObjectList() );
 }
 
 // Reflection

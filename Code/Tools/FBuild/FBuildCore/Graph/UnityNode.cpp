@@ -39,7 +39,7 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT( m_MaxIsolatedFiles,        "UnityInputIsolateWritableFilesLimit",  MetaOptional() + MetaRange( 0, 1048576 ) )
     REFLECT( m_IsolateWritableFiles,    "UnityInputIsolateWritableFiles",       MetaOptional() )
     REFLECT( m_PrecompiledHeader,       "UnityPCH",                             MetaOptional() + MetaFile( true ) ) // relative
-    REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() )
+    REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowObjectList() )
 REFLECT_END( UnityNode )
 
 // CONSTRUCTOR
