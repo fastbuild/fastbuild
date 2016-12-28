@@ -14,11 +14,14 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class IOStream;
+class BFFIterator;
 class CompilerNode;
 class FileNode;
+class Function;
 class IMetaData;
+class IOStream;
 class Job;
+class NodeGraph;
 
 // Defines
 //------------------------------------------------------------------------------
@@ -232,6 +235,11 @@ protected:
     static void Serialize( IOStream & stream, const void * base, const ReflectedProperty & property );
     static bool Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri );
     static bool Deserialize( IOStream & stream, void * base, const ReflectedProperty & property );
+
+    bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,  
+                                                    const BFFIterator & iter,
+                                                    const Function * function,
+                                                    const Array< AString > & preBuildDependencyNames );
 
     AString m_Name;
 

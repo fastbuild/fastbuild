@@ -8,6 +8,7 @@
 #include "Node.h"
 #include "FileNode.h"
 
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
@@ -960,4 +961,29 @@ void Node::ReplaceDummyName( const AString & newName )
 
     line = fixed;
 }
+
+// InitializePreBuildDependencies
+//------------------------------------------------------------------------------
+bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const Array< AString > & preBuildDependencyNames )
+{
+    if ( preBuildDependencyNames.IsEmpty() )
+    {
+        return true;
+    }
+
+    // Pre-size hint
+    m_PreBuildDependencies.SetCapacity( preBuildDependencyNames.GetSize() );
+
+    // Expand
+    for ( const AString & preDepName : preBuildDependencyNames )
+    {
+        if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preDepName, m_PreBuildDependencies, true, true, true ) )
+        {
+            return false; // GetNodeList will have emitted an error
+        }
+    }
+
+    return true;
+}
+
 //------------------------------------------------------------------------------

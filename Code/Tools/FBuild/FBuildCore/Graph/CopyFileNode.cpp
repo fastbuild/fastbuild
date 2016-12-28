@@ -38,17 +38,10 @@ CopyFileNode::CopyFileNode()
 //------------------------------------------------------------------------------
 bool CopyFileNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
-    // Pre-build dependencies
-    if ( !m_PreBuildDependencyNames.IsEmpty() )
+    // .PreBuildDependencies
+    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
     {
-        m_PreBuildDependencies.SetCapacity( m_PreBuildDependencyNames.GetSize() );
-        for ( const AString & preDepName : m_PreBuildDependencyNames )
-        {
-            if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preDepName, m_PreBuildDependencies, true, true, true ) )
-            {
-                return false; // GetNodeList will have emitted an error
-            }
-        }
+        return false; // InitializePreBuildDependencies will have emitted an error
     }
 
     // Get node for Source of copy
