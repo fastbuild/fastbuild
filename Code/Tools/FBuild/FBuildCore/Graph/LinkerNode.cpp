@@ -18,6 +18,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -79,7 +80,7 @@ LinkerNode::~LinkerNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult LinkerNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult LinkerNode::DoBuild( Job * job )
 {
     DoPreLinkCleanup();
 
@@ -153,14 +154,12 @@ LinkerNode::~LinkerNode() = default;
 
             if ( memOut.Get() )
             {
-                m_BuildOutputMessages.Append( memOut.Get(), memOutSize );
-                FLOG_ERROR_DIRECT( memOut.Get() );
+                job->ErrorPreformatted( memOut.Get() );
             }
 
             if ( memErr.Get() )
             {
-                m_BuildOutputMessages.Append( memErr.Get(), memErrSize );
-                FLOG_ERROR_DIRECT( memErr.Get() );
+                job->ErrorPreformatted( memErr.Get() );
             }
 
             // some other (genuine) linker failure

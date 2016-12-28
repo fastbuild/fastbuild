@@ -18,7 +18,7 @@ class Function;
 //------------------------------------------------------------------------------
 class UnityNode : public Node
 {
-    REFLECT_DECLARE( UnityNode )
+    REFLECT_NODE_DECLARE( UnityNode )
 public:
     friend class FunctionUnity;
 

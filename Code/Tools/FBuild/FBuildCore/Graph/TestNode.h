@@ -15,7 +15,7 @@ class Function;
 //------------------------------------------------------------------------------
 class TestNode : public FileNode
 {
-    REFLECT_DECLARE( TestNode )
+    REFLECT_NODE_DECLARE( TestNode )
 public:
     TestNode();
     bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );

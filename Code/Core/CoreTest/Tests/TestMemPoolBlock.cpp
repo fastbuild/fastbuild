@@ -10,6 +10,9 @@
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
 
+// System
+#include <stdlib.h>
+
 // TestMemPoolBlock
 //------------------------------------------------------------------------------
 class TestMemPoolBlock : public UnitTest
@@ -85,16 +88,36 @@ void TestMemPoolBlock::TestAllocsMultiplePages() const
 //------------------------------------------------------------------------------
 void TestMemPoolBlock::TestSpeed()
 {
-    const uint32_t numAllocs( 20 * 1000 );
+    const uint32_t numAllocs( 1000 * 1000 );
     const uint32_t allocSize( 24 );
 
     float time1( 0.0f );
     float time2( 0.0f );
+    float time3( 0.0f );
+
+    // System Allocator
+    {
+        Array< void * > allocs( numAllocs, false );
+        Timer t1;
+        {
+            for ( uint32_t i=0; i<numAllocs; ++i )
+            {
+                uint32_t * mem = (uint32_t *)malloc( allocSize );
+                allocs.Append( mem );
+            }
+            for ( uint32_t i=0; i<numAllocs; ++i )
+            {
+                void * mem = allocs[ i ];
+                free( mem );
+            }
+        }
+        time1 = t1.GetElapsed();
+    }
 
     // Alloc
     {
         Array< void * > allocs( numAllocs, false );
-        Timer t1;
+        Timer t2;
         {
             for ( uint32_t i=0; i<numAllocs; ++i )
             {
@@ -107,13 +130,13 @@ void TestMemPoolBlock::TestSpeed()
                 FREE( mem );
             }
         }
-        time1 = t1.GetElapsed();
+        time2 = t2.GetElapsed();
     }
 
     // MemPoolBlock
     {
         Array< void * > allocs( numAllocs, false );
-        Timer t2;
+        Timer t3;
         {
             MemPoolBlock block( allocSize, 4 );
             for ( uint32_t i=0; i<numAllocs; ++i )
@@ -127,12 +150,13 @@ void TestMemPoolBlock::TestSpeed()
                 block.Free( mem );
             }
         }
-        time2 = t2.GetElapsed();
+        time3 = t3.GetElapsed();
     }
 
     // output
-    OUTPUT( "Alloc        : %2.3fs - %u allocs @ %u allocs/sec\n", time1, numAllocs, (uint32_t)( (float)numAllocs / time1 ) );
-    OUTPUT( "MemPoolBlock : %2.3fs - %u allocs @ %u allocs/sec\n", time2, numAllocs, (uint32_t)( (float)numAllocs / time2 ) );
+    OUTPUT( "malloc       : %2.3fs - %u allocs @ %u allocs/sec\n", time1, numAllocs, (uint32_t)( (float)numAllocs / time1 ) );
+    OUTPUT( "Alloc        : %2.3fs - %u allocs @ %u allocs/sec\n", time2, numAllocs, (uint32_t)( (float)numAllocs / time2 ) );
+    OUTPUT( "MemPoolBlock : %2.3fs - %u allocs @ %u allocs/sec\n", time3, numAllocs, (uint32_t)( (float)numAllocs / time3 ) );
 }
 
 //------------------------------------------------------------------------------

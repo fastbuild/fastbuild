@@ -24,7 +24,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( UnityNode, Node, MetaNone() )
+REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT_ARRAY( m_InputPaths,        "UnityInputPath",                       MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_PathsToExclude,    "UnityInputExcludePath",                MetaOptional() + MetaPath() )
     REFLECT( m_InputPathRecurse,        "UnityInputPathRecurse",                MetaOptional() )

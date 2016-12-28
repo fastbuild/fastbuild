@@ -1039,7 +1039,7 @@ void ObjectNode::HandleWarningsMSCL( Job* job, const char * data, uint32_t dataS
         memcpy( mem.Get(), msg.Get(), msg.GetLength() );
         memcpy( mem.Get() + msg.GetLength(), data, dataSize );
 
-        Node::DumpOutput( job, mem.Get(), dataSize + msg.GetLength(), &exclusions, job->GetNode()->GetBuildOutputMessagesStringPointer());
+        Node::DumpOutput( job, mem.Get(), dataSize + msg.GetLength(), &exclusions );
     }
 }
 

@@ -537,7 +537,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     Node * node = job->GetNode();
 
-    bool usingMonitor = false;
+    bool nodeRelevantToMonitorLog = false;
 
     const AString & nodeName = job->GetNode()->GetName();
 
@@ -548,7 +548,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
          ( node->GetType() == Node::CS_NODE ) ||
          ( node->GetType() == Node::TEST_NODE ) )
     {
-        usingMonitor = true;
+        nodeRelevantToMonitorLog = true;
         FLOG_MONITOR( "START_JOB local \"%s\" \n", nodeName.Get() );
     }
 
@@ -640,7 +640,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     // log processing time
     node->AddProcessingTime( timeTakenMS );
 
-    if ( usingMonitor )
+    if ( nodeRelevantToMonitorLog && FLog::IsMonitorEnabled() )
     {
         const char * resultString = nullptr;
         switch ( result )
@@ -651,10 +651,13 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             case Node::NODE_RESULT_FAILED:                  resultString = "FAILED";                break;
         }
 
+        AStackString<> msgBuffer;
+        job->GetMessagesForMonitorLog( msgBuffer );
+
         FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",
                       resultString,
                       nodeName.Get(),
-                      job->GetNode()->GetFinalBuildOutputMessages().Get() );
+                      msgBuffer.Get() );
     }
 
     return result;

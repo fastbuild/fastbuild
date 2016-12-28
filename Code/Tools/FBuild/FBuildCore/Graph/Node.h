@@ -38,15 +38,32 @@ class Job;
     type * node = nullptr; \
     if ( Node::LoadNodeLink( nodeGraph, stream, node ) == false ) { return nullptr; }
 
+// Custom Reflection Macros
+//------------------------------------------------------------------------------
+#define REFLECT_NODE_DECLARE( nodeName )                                \
+    REFLECT_STRUCT_DECLARE( nodeName )                                  \
+    virtual const ReflectionInfo * GetReflectionInfoV() const override  \
+    {                                                                   \
+        return nodeName::GetReflectionInfoS();                          \
+    }
+
+#define REFLECT_NODE_BEGIN( nodeName, baseNodeName, metaData )          \
+    REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, metaData )
+
 // Custom MetaData
 //------------------------------------------------------------------------------
 IMetaData & MetaName( const char * name );
 
 // FBuild
 //------------------------------------------------------------------------------
-class Node : public Object
+class Node : public Struct
 {
-    REFLECT_DECLARE( Node )
+    REFLECT_STRUCT_DECLARE( Node )
+    virtual const ReflectionInfo * GetReflectionInfoV() const
+    {
+        return nullptr; // TODO:B Make pure virtual when everything is using reflection
+    }
+
 public:
     enum Type
     {
@@ -156,14 +173,12 @@ public:
     static void DumpOutput( Job * job,
                             const char * data,
                             uint32_t dataSize,
-                            const Array< AString > * exclusions = nullptr,
-                            AString * outputString = nullptr );
+                            const Array< AString > * exclusions = nullptr );
 
     inline void     SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
     inline uint32_t GetBuildPassTag() const             { return m_BuildPassTag; }
 
-    AString * GetBuildOutputMessagesStringPointer() { return &m_BuildOutputMessages; }
-    const AString & GetFinalBuildOutputMessages();
+    const AString & GetName() const { return m_Name; }
 
 protected:
     friend class FBuild;
@@ -218,6 +233,8 @@ protected:
     static bool Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri );
     static bool Deserialize( IOStream & stream, void * base, const ReflectedProperty & property );
 
+    AString m_Name;
+
     State m_State;
     mutable uint32_t m_BuildPassTag; // prevent multiple recursions into the same node
     uint32_t        m_ControlFlags;
@@ -235,8 +252,6 @@ protected:
     Dependencies m_PreBuildDependencies;
     Dependencies m_StaticDependencies;
     Dependencies m_DynamicDependencies;
-
-    AString m_BuildOutputMessages; // TODO:B Move out of Node into Context
 
     static const char * const s_NodeTypeNames[];
 };

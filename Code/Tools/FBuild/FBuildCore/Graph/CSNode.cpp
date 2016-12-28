@@ -20,7 +20,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( CSNode, Node, MetaName( "CompilerOutput" ) + MetaFile() )
+REFLECT_NODE_BEGIN( CSNode, Node, MetaName( "CompilerOutput" ) + MetaFile() )
     REFLECT(        m_Compiler,                     "Compiler",                     MetaFile() )
     REFLECT(        m_CompilerOptions,              "CompilerOptions",              MetaNone() )
     REFLECT(        m_CompilerOutput,               "CompilerOutput",               MetaFile() )

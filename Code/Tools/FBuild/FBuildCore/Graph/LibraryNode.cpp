@@ -17,6 +17,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -100,7 +101,7 @@ LibraryNode::~LibraryNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult LibraryNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult LibraryNode::DoBuild( Job * job )
 {
     // delete library before creation (so ar.exe will not merge old symbols)
     if ( FileIO::FileExists( GetName().Get() ) )
@@ -150,14 +151,12 @@ LibraryNode::~LibraryNode() = default;
     {
         if ( memOut.Get() )
         {
-            m_BuildOutputMessages.Append( memOut.Get(), memOutSize );
-            FLOG_ERROR_DIRECT( memOut.Get() );
+            job->ErrorPreformatted( memOut.Get() );
         }
 
         if ( memErr.Get() )
         {
-            m_BuildOutputMessages.Append( memErr.Get(), memErrSize );
-            FLOG_ERROR_DIRECT( memErr.Get() );
+            job->ErrorPreformatted( memErr.Get() );
         }
     }
 

@@ -82,7 +82,7 @@ IMetaData & MetaName( const char * name )
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN_ABSTRACT( Node, Object, MetaNone() )
+REFLECT_STRUCT_BEGIN_ABSTRACT( Node, Struct, MetaNone() )
 REFLECT_END( Node )
 
 // CONSTRUCTOR
@@ -566,6 +566,13 @@ void Node::Serialize( IOStream & stream ) const
             VERIFY( stream.Write( u32 ) );
             return;
         }
+        case PT_UINT64:
+        {
+            uint64_t u64( 0 );
+            property.GetProperty( base, &u64 );
+            VERIFY( stream.Write( u64 ) );
+            return;
+        }
         case PT_STRUCT:
         {
             if ( property.IsArray() )
@@ -686,6 +693,16 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
             property.SetProperty( base, u32 );
             return true;
         }
+        case PT_UINT64:
+        {
+            uint64_t u64( 0 );
+            if ( stream.Read( u64 ) == false )
+            {
+                return false;
+            }
+            property.SetProperty( base, u64 );
+            return true;
+        }
         case PT_STRUCT:
         {
             if ( property.IsArray() )
@@ -742,8 +759,7 @@ void Node::ReplaceDummyName( const AString & newName )
 /*static*/ void Node::DumpOutput( Job * job,
                                   const char * data,
                                   uint32_t dataSize,
-                                  const Array< AString > * exclusions,
-                                  AString* outputString )
+                                  const Array< AString > * exclusions )
 {
     if ( ( data == nullptr ) || ( dataSize == 0 ) )
     {
@@ -810,30 +826,16 @@ void Node::ReplaceDummyName( const AString & newName )
         data = ( lineEnd + 1 );
     }
 
-    // print everything at once
-    FLOG_ERROR_DIRECT( buffer.Get() );
-
-    if ( nullptr != outputString )
+    if ( job == nullptr )
     {
-        outputString->Append( buffer );
+        // Log directly to stdout since we have no job
+        FLOG_ERROR_DIRECT( buffer.Get() );
     }
-
-    // send output back to client if operating remotely
-    if ( job && ( !job->IsLocal() ) )
+    else
     {
-        job->Error( "%s", buffer.Get() );
+        // Log via job
+        job->ErrorPreformatted( buffer.Get() );
     }
-}
-
-// GetFinalBuildOutputMessages
-//------------------------------------------------------------------------------
-const AString & Node::GetFinalBuildOutputMessages()
-{
-    m_BuildOutputMessages.Replace( '\n', (char)12 );
-    m_BuildOutputMessages.Replace( '\r', (char)12 );
-    m_BuildOutputMessages.Replace( '\"', '\'' );
-
-    return m_BuildOutputMessages;
 }
 
 // FixupPathForVSIntegration
