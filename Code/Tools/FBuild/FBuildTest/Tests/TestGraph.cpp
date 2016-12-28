@@ -306,19 +306,13 @@ void TestGraph::TestSerialization() const
     const char * dbFile1    = "../tmp/Test/Graph/fbuild.db.1";
     const char * dbFile2    = "../tmp/Test/Graph/fbuild.db.2";
 
-    // clean up anything left over from previous runs
-    FileIO::FileDelete( dbFile1 );
-    FileIO::FileDelete( dbFile2 );
-    TEST_ASSERT( FileIO::FileExists( dbFile1 ) == false );
-    TEST_ASSERT( FileIO::FileExists( dbFile2 ) == false );
-
     // load the config file and save the resulting db
     {
         FBuildOptions options;
         options.m_ConfigFile = "fbuild.bff";
         options.SetWorkingDir( codeDir );
         FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
+        TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
         TEST_ASSERT( FileIO::FileExists( dbFile1 ) );
     }
