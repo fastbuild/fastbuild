@@ -89,11 +89,11 @@ void TestBuildAndLinkLibrary::TestBuildLib() const
     // Check stats
     //               Seen,  Built,  Type
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( 6,     3,      Node::FILE_NODE ); // 3 cpps
+    CheckStatsNode ( 7,     4,      Node::FILE_NODE ); // 3 cpps + librarian
     CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
     CheckStatsNode ( 3,     3,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,     1,      Node::LIBRARY_NODE );
-    CheckStatsTotal( 12,    9 );
+    CheckStatsTotal( 13,    10 );
 }
 
 // TestBuildLib_NoRebuild
@@ -115,11 +115,11 @@ void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild() const
     // Check stats
     //               Seen,  Built,  Type
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( 6,     6,      Node::FILE_NODE ); // 3 cpps + 3 headers
+    CheckStatsNode ( 7,     7,      Node::FILE_NODE ); // 3 cpps + 3 headers + librarian
     CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 3,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,     0,      Node::LIBRARY_NODE );
-    CheckStatsTotal( 12,    7 );
+    CheckStatsTotal( 13,    8 );
 }
 
 // TestLibMerge
@@ -148,12 +148,12 @@ void TestBuildAndLinkLibrary::TestLibMerge() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 6,     3,      Node::FILE_NODE ); // 3x .cpp + 3x .h
+    CheckStatsNode ( 7,     4,      Node::FILE_NODE ); // 3x .cpp + 3x .h + librarian
     CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
     CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 3,     3,      Node::OBJECT_NODE );
     CheckStatsNode ( 3,     3,      Node::LIBRARY_NODE ); // 2 libs + merge lib
-    CheckStatsTotal( 14,    11 );
+    CheckStatsTotal( 15,    12 );
 }
 
 // TestLibMerge_NoRebuild
@@ -174,12 +174,12 @@ void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 6,     6,      Node::FILE_NODE ); // 3 cpps + 3 headers
+    CheckStatsNode ( 7,     7,      Node::FILE_NODE ); // 3 cpps + 3 headers + librarian
     CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 3,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 3,     0,      Node::LIBRARY_NODE ); // 2 libs + merge lib
-    CheckStatsTotal( 14,    6 );
+    CheckStatsTotal( 15,    7 );
 }
 
 //------------------------------------------------------------------------------

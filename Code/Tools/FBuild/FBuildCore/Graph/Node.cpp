@@ -283,6 +283,12 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     }
     else
     {
+        // Can only link to nodes that are:
+        //  a) Dependended on
+        //  b) Our parent
+        // This ensures they are saved in the correct order, which this assert checks
+        ASSERT( node->IsSaved() );
+
         // for valid nodes, write the node name
         fileStream.Write( node->GetName() );
     }
@@ -514,6 +520,10 @@ void Node::Serialize( IOStream & stream ) const
     // Properties
     const ReflectionInfo * const ri = GetReflectionInfoV();
     Serialize( stream, this, *ri );
+
+    #if defined( DEBUG )
+        MarkAsSaved();
+    #endif
 }
 
 // Serialize

@@ -717,80 +717,26 @@ DirectoryListNode * NodeGraph::CreateDirectoryListNode( const AString & name,
 
 // CreateLibraryNode
 //------------------------------------------------------------------------------
-LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName,
-                                            const Dependencies & inputNodes,
-                                            CompilerNode * compiler,
-                                            const AString & compilerOptions,
-                                            const AString & compilerOptionsDeoptimized,
-                                            const AString & compilerOutputPath,
-                                            const AString & linker,
-                                            const AString & linkerArgs,
-                                            uint32_t flags,
-                                            ObjectNode * precompiledHeader,
-                                            const Dependencies & compilerForceUsing,
-                                            const Dependencies & preBuildDependencies,
-                                            const Dependencies & additionalInputs,
-                                            bool deoptimizeWritableFiles,
-                                            bool deoptimizeWritableFilesWithToken,
-                                            bool allowDistribution,
-                                            bool allowCaching,
-                                            CompilerNode * preprocessor,
-                                            const AString & preprocessorOptions,
-                                            const AString & baseDirectory )
+LibraryNode * NodeGraph::CreateLibraryNode( const AString & libraryName )
 {
     ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( libraryName ) );
 
-    AStackString< 1024 > fullPath;
-    CleanPath( libraryName, fullPath );
-
-    LibraryNode * node = FNEW( LibraryNode( fullPath,
-                                            inputNodes,
-                                            compiler,
-                                            compilerOptions,
-                                            compilerOptionsDeoptimized,
-                                            compilerOutputPath,
-                                            linker,
-                                            linkerArgs,
-                                            flags,
-                                            precompiledHeader,
-                                            compilerForceUsing,
-                                            preBuildDependencies,
-                                            additionalInputs,
-                                            deoptimizeWritableFiles,
-                                            deoptimizeWritableFilesWithToken,
-                                            allowDistribution,
-                                            allowCaching,
-                                            preprocessor,
-                                            preprocessorOptions,
-                                            baseDirectory ) );
+    LibraryNode * node = FNEW( LibraryNode() );
+    node->SetName( libraryName );
     AddNode( node );
     return node;
 }
 
 // CreateObjectNode
 //------------------------------------------------------------------------------
-ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName,
-                                          Node * inputNode,
-                                          Node * compilerNode,
-                                          const AString & compilerOptions,
-                                          const AString & compilerOptionsDeoptimized,
-                                          Node * precompiledHeader,
-                                          uint32_t flags,
-                                          const Dependencies & compilerForceUsing,
-                                          bool deoptimizeWritableFiles,
-                                          bool deoptimizeWritableFilesWithToken,
-                                          bool allowDistribution,
-                                          bool allowCaching,
-                                          Node * preprocessorNode,
-                                          const AString & preprocessorOptions,
-                                          uint32_t preprocessorFlags )
+ObjectNode * NodeGraph::CreateObjectNode( const AString & objectName )
 {
     ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( objectName ) );
 
-    AStackString< 512 > fullPath;
-    CleanPath( objectName, fullPath );
-
-    ObjectNode * node = FNEW( ObjectNode( fullPath, inputNode, compilerNode, compilerOptions, compilerOptionsDeoptimized, precompiledHeader, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching, preprocessorNode, preprocessorOptions, preprocessorFlags ) );
+    ObjectNode * node = FNEW( ObjectNode() );
+    node->SetName( objectName );
     AddNode( node );
     return node;
 }
@@ -997,47 +943,16 @@ SLNNode * NodeGraph::CreateSLNNode( const AString & solutionOutput,
     return node;
 }
 
-
 // CreateObjectListNode
 //------------------------------------------------------------------------------
-ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName,
-                                                  const Dependencies & inputNodes,
-                                                  CompilerNode * compiler,
-                                                  const AString & compilerOptions,
-                                                  const AString & compilerOptionsDeoptimized,
-                                                  const AString & compilerOutputPath,
-                                                  ObjectNode * precompiledHeader,
-                                                  const Dependencies & compilerForceUsing,
-                                                  const Dependencies & preBuildDependencies,
-                                                  bool deoptimizeWritableFiles,
-                                                  bool deoptimizeWritableFilesWithToken,
-                                                  bool allowDistribution,
-                                                  bool allowCaching,
-                                                  CompilerNode * preprocessor,
-                                                  const AString & preprocessorOptions,
-                                                  const AString & baseDirectory )
+ObjectListNode * NodeGraph::CreateObjectListNode( const AString & listName )
 {
     ASSERT( Thread::IsMainThread() );
 
-    ObjectListNode * node = FNEW( ObjectListNode( listName,
-                                                  inputNodes,
-                                                  compiler,
-                                                  compilerOptions,
-                                                  compilerOptionsDeoptimized,
-                                                  compilerOutputPath,
-                                                  precompiledHeader,
-                                                  compilerForceUsing,
-                                                  preBuildDependencies,
-                                                  deoptimizeWritableFiles,
-                                                  deoptimizeWritableFilesWithToken,
-                                                  allowDistribution,
-                                                  allowCaching,
-                                                  preprocessor,
-                                                  preprocessorOptions,
-                                                  baseDirectory ) );
+    ObjectListNode * node = FNEW( ObjectListNode() );
+    node->SetName( listName );
     AddNode( node );
     return node;
-
 }
 
 // CreateXCodeProjectNode

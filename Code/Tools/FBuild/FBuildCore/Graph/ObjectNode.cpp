@@ -7,6 +7,7 @@
 
 #include "ObjectNode.h"
 
+#include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/Cache/ICache.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
@@ -41,61 +42,99 @@
     #include <sys/time.h>
 #endif
 
+// Reflection
+//------------------------------------------------------------------------------
+REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
+    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() )
+    REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
+    REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
+    REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
+    REFLECT( m_CompilerOutputExtension,             "CompilerOutputExtension",          MetaOptional() )
+    REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaOptional() + MetaFile() )
+    REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
+    REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
+    REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
+    REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
+    REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
+
+    // Preprocessor
+    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() )
+    REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
+
+    REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowObjectList() )
+
+    // Internal State
+    REFLECT( m_Flags,                               "Flags",                            MetaHidden() )
+    REFLECT( m_PreprocessorFlags,                   "PreprocessorFlags",                MetaHidden() )
+    REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() )
+REFLECT_END( ObjectNode )
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-ObjectNode::ObjectNode( const AString & objectName,
-                        Node * inputNode,
-                        Node * compilerNode,
-                        const AString & compilerOptions,
-                        const AString & compilerOptionsDeoptimized,
-                        Node * precompiledHeader,
-                        uint32_t flags,
-                        const Dependencies & compilerForceUsing,
-                        bool deoptimizeWritableFiles,
-                        bool deoptimizeWritableFilesWithToken,
-                        bool allowDistribution,
-                        bool allowCaching,
-                        Node * preprocessorNode,
-                        const AString & preprocessorOptions,
-                        uint32_t preprocessorFlags )
-: FileNode( objectName, Node::FLAG_NONE )
-, m_Includes( 0, true )
-, m_Flags( flags )
-, m_CompilerOptions( compilerOptions )
-, m_CompilerOptionsDeoptimized( compilerOptionsDeoptimized )
-, m_PCHCacheKey( 0 )
-, m_CompilerForceUsing( compilerForceUsing )
-, m_DeoptimizeWritableFiles( deoptimizeWritableFiles )
-, m_DeoptimizeWritableFilesWithToken( deoptimizeWritableFilesWithToken )
-, m_AllowDistribution( allowDistribution )
-, m_AllowCaching( allowCaching )
-, m_Remote( false )
-, m_PCHNode( precompiledHeader )
-, m_PreprocessorNode( preprocessorNode )
-, m_PreprocessorOptions ( preprocessorOptions )
-, m_PreprocessorFlags( preprocessorFlags )
+ObjectNode::ObjectNode()
+: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
 {
-    m_StaticDependencies.SetCapacity( 3 );
-
-    ASSERT( compilerNode );
-    m_StaticDependencies.Append( Dependency( compilerNode ) );
-
-    ASSERT( inputNode );
-    m_StaticDependencies.Append( Dependency( inputNode ) );
-
-    if ( precompiledHeader )
-    {
-        m_StaticDependencies.Append( Dependency( precompiledHeader ) );
-    }
-    if ( preprocessorNode )
-    {
-        m_StaticDependencies.Append( Dependency( preprocessorNode ) );
-    }
-
-    m_StaticDependencies.Append( compilerForceUsing );
-
     m_Type = OBJECT_NODE;
     m_LastBuildTimeMs = 5000; // higher default than a file node
+}
+
+// Initialize
+//------------------------------------------------------------------------------
+bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+{
+    // .PreBuildDependencies
+    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
+    {
+        return false; // InitializePreBuildDependencies will have emitted an error
+    }
+
+    // .Compiler
+    CompilerNode * compiler( nullptr );
+    if ( !((FunctionObjectList *)function)->GetCompilerNode( nodeGraph, iter, m_Compiler, compiler ) )
+    {
+        return false; // GetCompilerNode will have emitted an error
+    }
+
+    // .CompilerInputFile
+    Dependencies compilerInputFile;
+    if ( !function->GetFileNode( nodeGraph, iter, m_CompilerInputFile, ".CompilerInputFile", compilerInputFile ) )
+    {
+        return false; // GetFileNode will have emitted an error
+    }
+    ASSERT( compilerInputFile.GetSize() == 1 ); // Should not be possible to expand to > 1 thing
+
+    // .Preprocessor
+    CompilerNode * preprocessor( nullptr );
+    if ( m_Preprocessor.IsEmpty() == false )
+    {
+        if ( !((FunctionObjectList *)function)->GetCompilerNode( nodeGraph, iter, m_Preprocessor, preprocessor ) )
+        {
+            return false; // GetCompilerNode will have emitted an error
+        }
+    }
+
+    // .CompilerForceUsing
+    Dependencies compilerForceUsing;
+    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
+    {
+        return false; // GetFileNode will have emitted an error
+    }
+
+    // Store Dependencies
+    m_StaticDependencies.SetCapacity( 1 + 1 + ( m_PrecompiledHeader ? 1 : 0 ) + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
+    m_StaticDependencies.Append( Dependency( compiler ) );
+    m_StaticDependencies.Append( compilerInputFile );
+    if ( m_PrecompiledHeader )
+    {
+        m_StaticDependencies.Append( Dependency( m_PrecompiledHeader ) );
+    }
+    if ( preprocessor )
+    {
+        m_StaticDependencies.Append( Dependency( preprocessor ) );
+    }
+    m_StaticDependencies.Append( compilerForceUsing );
+
+    return true;
 }
 
 // CONSTRUCTOR (Remote)
@@ -105,16 +144,9 @@ ObjectNode::ObjectNode( const AString & objectName,
                         const AString & compilerOptions,
                         uint32_t flags )
 : FileNode( objectName, Node::FLAG_NONE )
-, m_Includes( 0, true )
-, m_Flags( flags )
 , m_CompilerOptions( compilerOptions )
-, m_DeoptimizeWritableFiles( false )
-, m_DeoptimizeWritableFilesWithToken( false )
+, m_Flags( flags )
 , m_Remote( true )
-, m_PCHNode( nullptr )
-, m_PreprocessorNode( nullptr )
-, m_PreprocessorOptions()
-, m_PreprocessorFlags( 0 )
 {
     m_Type = OBJECT_NODE;
     m_LastBuildTimeMs = 5000; // higher default than a file node
@@ -670,46 +702,20 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 //------------------------------------------------------------------------------
 /*static*/ Node * ObjectNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
-    NODE_LOAD( AStackString<>,  name );
-    NODE_LOAD_DEPS( 3,          staticDeps );
-    NODE_LOAD_DEPS( 0,          dynamicDeps );
-    NODE_LOAD( uint32_t,        flags );
-    NODE_LOAD( AStackString<>,  compilerArgs );
-    NODE_LOAD( AStackString<>,  compilerArgsDeoptimized )
-    NODE_LOAD( AStackString<>,  objExtensionOverride );
-    NODE_LOAD_DEPS( 0,          compilerForceUsing );
-    NODE_LOAD( bool,            deoptimizeWritableFiles );
-    NODE_LOAD( bool,            deoptimizeWritableFilesWithToken );
-    NODE_LOAD( bool,            allowDistribution );
-    NODE_LOAD( bool,            allowCaching );
-    NODE_LOAD_NODE_LINK( Node,       m_PCHNode )
-    NODE_LOAD_NODE_LINK( CompilerNode, preprocessor );
-    NODE_LOAD( AStackString<>,  preprocessorArgs );
-    NODE_LOAD( uint32_t,        preprocessorFlags );
-    NODE_LOAD( AStackString<>,  pchObjectFileName );
-    NODE_LOAD( uint64_t,        pchCacheKey );
+    NODE_LOAD( AStackString<>, name );
 
-    // we are making inferences from the size of the staticDeps
-    // ensure we catch if those asumptions break
-    #if defined( ASSERTS_ENABLED )
-        size_t numStaticDepsExcludingForceUsing = staticDeps.GetSize() - compilerForceUsing.GetSize();
-        // compiler + source file + (optional)precompiledHeader + (optional)preprocessor
-        ASSERT( ( numStaticDepsExcludingForceUsing >= 2 ) && ( numStaticDepsExcludingForceUsing <= 4 ) );
-    #endif
+    ObjectNode * node = nodeGraph.CreateObjectNode( name );
 
-    ASSERT( staticDeps.GetSize() >= 2 );
-    Node * compiler = staticDeps[ 0 ].GetNode();
-    Node * staticDepNode = staticDeps[ 1 ].GetNode();
+    if ( node->Deserialize( nodeGraph, stream ) == false )
+    {
+        return nullptr;
+    }
 
-    Node * on = nodeGraph.CreateObjectNode( name, staticDepNode, compiler, compilerArgs, compilerArgsDeoptimized, m_PCHNode, flags, compilerForceUsing, deoptimizeWritableFiles, deoptimizeWritableFilesWithToken, allowDistribution, allowCaching, preprocessor, preprocessorArgs, preprocessorFlags );
+    // TODO:B Use normal serialization
+    NODE_LOAD_NODE_LINK( Node, precompiledHeader );
+    node->m_PrecompiledHeader = precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr;
 
-    ObjectNode * objNode = on->CastTo< ObjectNode >();
-    objNode->m_DynamicDependencies.Swap( dynamicDeps );
-    objNode->m_ObjExtensionOverride = objExtensionOverride;
-    objNode->m_PCHObjectFileName = pchObjectFileName;
-    objNode->m_PCHCacheKey = pchCacheKey;
-
-    return objNode;
+    return node;
 }
 
 // LoadRemote
@@ -930,23 +936,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 /*virtual*/ void ObjectNode::Save( IOStream & stream ) const
 {
     NODE_SAVE( m_Name );
-    NODE_SAVE_DEPS( m_StaticDependencies );
-    NODE_SAVE_DEPS( m_DynamicDependencies );
-    NODE_SAVE( m_Flags );
-    NODE_SAVE( m_CompilerOptions );
-    NODE_SAVE( m_CompilerOptionsDeoptimized );
-    NODE_SAVE( m_ObjExtensionOverride );
-    NODE_SAVE_DEPS( m_CompilerForceUsing );
-    NODE_SAVE( m_DeoptimizeWritableFiles );
-    NODE_SAVE( m_DeoptimizeWritableFilesWithToken );
-    NODE_SAVE( m_AllowDistribution );
-    NODE_SAVE( m_AllowCaching );
-    NODE_SAVE_NODE_LINK( m_PCHNode )
-    NODE_SAVE_NODE_LINK( m_PreprocessorNode );
-    NODE_SAVE( m_PreprocessorOptions );
-    NODE_SAVE( m_PreprocessorFlags );
-    NODE_SAVE( m_PCHObjectFileName );
-    NODE_SAVE( m_PCHCacheKey );
+    Node::Serialize( stream );
+
+    // TODO:B Use normal serialization
+    NODE_SAVE_NODE_LINK( m_PrecompiledHeader );
 }
 
 // SaveRemote
@@ -974,6 +967,22 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     }
 }
 
+// GetDedicatedPreprocessor
+//------------------------------------------------------------------------------
+Node * ObjectNode::GetDedicatedPreprocessor() const
+{
+    if ( m_Preprocessor.IsEmpty() )
+    {
+        return nullptr;
+    }
+    size_t preprocessorIndex = 2;
+    if ( m_PrecompiledHeader )
+    {
+        ++preprocessorIndex;
+    }
+    return m_StaticDependencies[ preprocessorIndex ].GetNode();
+}
+
 // GetPDBName
 //------------------------------------------------------------------------------
 void ObjectNode::GetPDBName( AString & pdbName ) const
@@ -987,7 +996,7 @@ void ObjectNode::GetPDBName( AString & pdbName ) const
 //------------------------------------------------------------------------------
 const char * ObjectNode::GetObjExtension() const
 {
-    if ( m_ObjExtensionOverride.IsEmpty() )
+    if ( m_CompilerOutputExtension.IsEmpty() )
     {
         #if defined( __WINDOWS__ )
             return ".obj";
@@ -995,7 +1004,7 @@ const char * ObjectNode::GetObjExtension() const
             return ".o";
         #endif
     }
-    return m_ObjExtensionOverride.Get();
+    return m_CompilerOutputExtension.Get();
 }
 
 // HandleWarningsMSCL
@@ -1070,7 +1079,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     uint64_t d = 0;
     if ( GetFlag( FLAG_USING_PCH ) && GetFlag( FLAG_MSVC ) )
     {
-        d = m_PCHNode->CastTo< ObjectNode >()->m_PCHCacheKey;
+        d = m_PrecompiledHeader->CastTo< ObjectNode >()->m_PCHCacheKey;
         ASSERT( d != 0 ); // Should not be in here if PCH is not cached
     }
 
@@ -1603,7 +1612,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             {
                 AStackString<> pre( token.Get(), found );
                 AStackString<> post( found + 2, token.GetEnd() );
-                ExpandTokenList( m_CompilerForceUsing, fullArgs, pre, post );
+                ExpandCompilerForceUsing( fullArgs, pre, post );
                 fullArgs.AddDelimiter();
                 continue;
             }
@@ -1684,14 +1693,15 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     return true;
 }
 
-// ExpandTokenList
+// ExpandCompilerForceUsing
 //------------------------------------------------------------------------------
-void ObjectNode::ExpandTokenList( const Dependencies & nodes, Args & fullArgs, const AString & pre, const AString & post ) const
+void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const
 {
-    const Dependency * const end = nodes.End();
-    for ( const Dependency * it = nodes.Begin(); it != end; ++it )
+    const size_t startIndex = 2 + ( m_PrecompiledHeader ? 1 : 0 ) + ( !m_Preprocessor.IsEmpty() ? 1 : 0 ); // Skip Compiler, InputFile, PCH and Preprocessor
+    const size_t endIndex = m_StaticDependencies.GetSize();
+    for ( size_t i=startIndex; i<endIndex; ++i )
     {
-        Node * n = it->GetNode();
+        Node * n = m_StaticDependencies[ i ].GetNode();
 
         fullArgs += pre;
         fullArgs += n->GetName();
@@ -2185,7 +2195,7 @@ bool ObjectNode::ShouldUseCache() const
     {
         // If the PCH is not in the cache, then no point looking there
         // for objects and also no point storing them
-        if ( m_PCHNode->CastTo< ObjectNode >()->m_PCHCacheKey == 0 )
+        if ( m_PrecompiledHeader->CastTo< ObjectNode >()->m_PCHCacheKey == 0 )
         {
             return false;
         }

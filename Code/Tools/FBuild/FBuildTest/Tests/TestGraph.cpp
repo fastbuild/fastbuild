@@ -140,23 +140,21 @@ void TestGraph::TestNodeTypes() const
         TEST_ASSERT( AStackString<>( "Exec" ) == n->GetTypeName() );
     }
     {
-        Dependencies nodes( 1, false );
-        nodes.Append( Dependency( fn ) );
-        Node * n = ng.CreateLibraryNode( AStackString<>( "lib" ), nodes, cn,
-                                         AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(),
-                                         AString::GetEmpty(), AString::GetEmpty(), 0,
-                                         nullptr,
-                                         Dependencies(),
-                                         Dependencies(),
-                                         Dependencies(),
-                                         false, false, false, false,
-                                         nullptr, AString::GetEmpty(), AString::GetEmpty() );
+        #if defined( __WINDOWS__ )
+            Node * n = ng.CreateLibraryNode( AStackString<>( "c:\\library.lib" ) );
+        #else
+            Node * n = ng.CreateLibraryNode( AStackString<>( "/library/library.a" ) );
+        #endif
         TEST_ASSERT( n->GetType() == Node::LIBRARY_NODE );
         TEST_ASSERT( LibraryNode::GetTypeS() == Node::LIBRARY_NODE );
         TEST_ASSERT( AStackString<>( "Library" ) == n->GetTypeName() );
     }
     {
-        Node * n = ng.CreateObjectNode(AStackString<>("obj"), fn, cn, AString::GetEmpty(), AString::GetEmpty(), nullptr, 0, Dependencies(), false, false, false, false, nullptr, AString::GetEmpty(), 0 );
+        #if defined( __WINDOWS__ )
+            Node * n = ng.CreateObjectNode( AStackString<>( "c:\\object.lib" ) );
+        #else
+            Node * n = ng.CreateObjectNode( AStackString<>( "/library/object.o" ) );
+        #endif
         TEST_ASSERT( n->GetType() == Node::OBJECT_NODE );
         TEST_ASSERT( ObjectNode::GetTypeS() == Node::OBJECT_NODE );
         TEST_ASSERT( AStackString<>( "Object" ) == n->GetTypeName() );

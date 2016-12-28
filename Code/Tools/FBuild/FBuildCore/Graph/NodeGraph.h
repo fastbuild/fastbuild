@@ -52,7 +52,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 90 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 91 };
 
     bool IsValid() const
     {
@@ -119,42 +119,8 @@ public:
                                                  const Array< AString > & filesToExclude,
                                                  const Array< AString > & excludePatterns
                                                );
-    LibraryNode *   CreateLibraryNode( const AString & libraryName,
-                                       const Dependencies & inputNodes,
-                                       CompilerNode * compilerNode,
-                                       const AString & compilerOptions,
-                                       const AString & compilerOptionsDeoptimized,
-                                       const AString & compilerOutputPath,
-                                       const AString & linker,
-                                       const AString & linkerArgs,
-                                       uint32_t flags,
-                                       ObjectNode * precompiledHeader,
-                                       const Dependencies & compilerForceUsing,
-                                       const Dependencies & preBuildDependencies,
-                                       const Dependencies & additionalInputs,
-                                       bool deoptimizeWritableFiles,
-                                       bool deoptimizeWritableFilesWithToken,
-                                       bool allowDistribution,
-                                       bool allowCaching,
-                                       CompilerNode * preprocessor,
-                                       const AString & preprocessorOptions,
-                                       const AString & baseDirectory );
-
-    ObjectNode *    CreateObjectNode( const AString & objectName,
-                                      Node * inputNode,
-                                      Node * compilerNode,
-                                      const AString & compilerOptions,
-                                      const AString & compilerOptionsDeoptimized,
-                                      Node * precompiledHeader,
-                                      uint32_t flags,
-                                      const Dependencies & compilerForceUsing,
-                                      bool deoptimizeWritableFiles,
-                                      bool deoptimizeWritableFilesWithToken,
-                                      bool allowDistribution,
-                                      bool allowCaching,
-                                      Node * preprocessorNode,
-                                      const AString & preprocessorOptions,
-                                      uint32_t preprocessorFlags );
+    LibraryNode *   CreateLibraryNode( const AString & libraryName );
+    ObjectNode *    CreateObjectNode( const AString & objectName );
     AliasNode *     CreateAliasNode( const AString & aliasName );
     DLLNode *       CreateDLLNode( const AString & linkerOutputName,
                                    const Dependencies & inputLibraries,
@@ -205,22 +171,7 @@ public:
                                 const Array< VCXProjectNode * > & projects,
                                 const Array< SLNDependency > & slnDeps,
                                 const Array< SLNSolutionFolder > & folders );
-    ObjectListNode * CreateObjectListNode( const AString & listName,
-                             const Dependencies & inputNodes,
-                             CompilerNode * compiler,
-                             const AString & compilerOptions,
-                             const AString & compilerOptionsDeoptimized,
-                             const AString & compilerOutputPath,
-                             ObjectNode * precompiledHeader,
-                             const Dependencies & compilerForceUsing,
-                             const Dependencies & preBuildDependencies,
-                             bool deoptimizeWritableFiles,
-                             bool deoptimizeWritableFilesWithToken,
-                             bool allowDistribution,
-                             bool allowCaching,
-                             CompilerNode * preprocessor,
-                             const AString & preprocessorOptions,
-                             const AString & baseDirectory );
+    ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );

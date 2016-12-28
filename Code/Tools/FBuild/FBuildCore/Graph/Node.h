@@ -184,6 +184,12 @@ public:
 
     const AString & GetName() const { return m_Name; }
 
+    #if defined( DEBUG )
+        // Help catch serialization errors
+        inline bool IsSaved() const     { return m_IsSaved; }
+        inline void MarkAsSaved() const { m_IsSaved = true; }
+    #endif
+
 protected:
     friend class FBuild;
     friend struct FBuildStats;
@@ -261,6 +267,10 @@ protected:
     Dependencies m_PreBuildDependencies;
     Dependencies m_StaticDependencies;
     Dependencies m_DynamicDependencies;
+
+    #if defined( DEBUG )
+        mutable bool    m_IsSaved = false; // Help catch serialization errors
+    #endif
 
     static const char * const s_NodeTypeNames[];
 };

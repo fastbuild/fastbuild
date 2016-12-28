@@ -13,28 +13,20 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
+class BFFIterator;
+class Function;
+class NodeGraph;
 class NodeProxy;
+class ObjectNode;
 
 // ObjectNode
 //------------------------------------------------------------------------------
 class ObjectNode : public FileNode
 {
+    REFLECT_NODE_DECLARE( ObjectNode )
 public:
-    explicit ObjectNode( const AString & objectName,
-                         Node * inputNode,
-                         Node * compilerNode,
-                         const AString & compilerOptions,
-                         const AString & compilerOptionsDeoptimized,
-                         Node * precompiledHeader,
-                         uint32_t flags,
-                         const Dependencies & compilerForceUsing,
-                         bool deoptimizeWritableFiles,
-                         bool deoptimizeWritableFilesWithToken,
-                         bool allowDistribution,
-                         bool allowCaching,
-                         Node * preprocessorNode,
-                         const AString & preprocessorOptions,
-                         uint32_t preprocessorFlags);
+    ObjectNode();
+    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
     // simplified remote constructor
     explicit ObjectNode( const AString & objectName,
                          NodeProxy * srcFile,
@@ -86,7 +78,7 @@ public:
 
     inline Node * GetCompiler() const { return m_StaticDependencies[ 0 ].GetNode(); }
     inline Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
-    inline Node * GetDedicatedPreprocessor() const { return m_PreprocessorNode; }
+    Node * GetDedicatedPreprocessor() const;
     #if defined( __WINDOWS__ )
         inline Node * GetPrecompiledHeaderCPPFile() const { ASSERT( GetFlag( FLAG_CREATING_PCH ) ); return m_StaticDependencies[ 1 ].GetNode(); }
     #endif
@@ -132,7 +124,7 @@ private:
     static bool StripToken_MSVC( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
     bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
-    void ExpandTokenList( const Dependencies & nodes, Args & fullArgs, const AString & pre, const AString & post ) const;
+    void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
     bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
     bool WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
@@ -177,23 +169,32 @@ private:
         int             m_Result;
     };
 
-    Array< AString > m_Includes;
-    uint32_t m_Flags;
-    AString m_CompilerOptions;
-    AString m_CompilerOptionsDeoptimized;
-    AString m_ObjExtensionOverride;
-    AString m_PCHObjectFileName;
-    uint64_t m_PCHCacheKey;
-    Dependencies m_CompilerForceUsing;
-    bool m_DeoptimizeWritableFiles;
-    bool m_DeoptimizeWritableFilesWithToken;
-    bool m_AllowDistribution;
-    bool m_AllowCaching;
-    bool m_Remote;
-    Node* m_PCHNode;
-    Node* m_PreprocessorNode;
-    AString m_PreprocessorOptions;
-    uint32_t m_PreprocessorFlags;
+    // Exposed Properties
+    friend class ObjectListNode;
+    AString             m_Compiler;
+    AString             m_CompilerOptions;
+    AString             m_CompilerOptionsDeoptimized;
+    AString             m_CompilerInputFile;
+    AString             m_CompilerOutputExtension;
+    AString             m_PCHObjectFileName;
+    bool                m_DeoptimizeWritableFiles           = false;
+    bool                m_DeoptimizeWritableFilesWithToken  = false;
+    bool                m_AllowDistribution                 = true;
+    bool                m_AllowCaching                      = true;
+    Array< AString >    m_CompilerForceUsing;
+    AString             m_Preprocessor;
+    AString             m_PreprocessorOptions;
+    Array< AString >    m_PreBuildDependencyNames;
+
+    // Internal State
+    ObjectNode *        m_PrecompiledHeader                 = nullptr;
+    uint32_t            m_Flags                             = 0;
+    uint32_t            m_PreprocessorFlags                 = 0;
+    uint64_t            m_PCHCacheKey                       = 0;
+
+    // Not serialized
+    Array< AString >    m_Includes;
+    bool                m_Remote                            = false;
 };
 
 //------------------------------------------------------------------------------
