@@ -14,6 +14,7 @@
 #include "Core/Math/Conversions.h"
 #include "Core/Mem/MemDebug.h"
 #include "Core/Mem/MemPoolBlock.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
@@ -25,8 +26,7 @@
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ void *                               SmallBlockAllocator::s_BucketMemoryStart( nullptr );
-/*static*/ void *                               SmallBlockAllocator::s_BucketMemoryEnd( nullptr );
-/*static*/ void *                               SmallBlockAllocator::s_BucketNextFreePage( nullptr );
+/*static*/ uint32_t                             SmallBlockAllocator::s_BucketNextFreePageIndex( 0 );
 /*static*/ uint64_t                             SmallBlockAllocator::s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof (uint64_t) ];
 /*static*/ SmallBlockAllocator::MemBucket *     SmallBlockAllocator::s_Buckets( nullptr );
 /*static*/ uint8_t                              SmallBlockAllocator::s_BucketMappingTable[ BUCKET_MAPPING_TABLE_SIZE ] = { 0 };
@@ -43,8 +43,6 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
         s_BucketMemoryStart = ::mmap( nullptr, BUCKET_ADDRESSSPACE_SIZE, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0 );
         ASSERT( (ssize_t)s_BucketMemoryStart != (ssize_t)-1 );
     #endif
-    s_BucketMemoryEnd = (char *)s_BucketMemoryStart + BUCKET_ADDRESSSPACE_SIZE;
-    s_BucketNextFreePage = s_BucketMemoryStart;
 
     // Construct the bucket structures in the reservedspace
     // (Done this way to avoid memory allocations which would be re-entrant)
@@ -141,7 +139,10 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
 
     // Debug fill
     #if defined( MEM_FILL_NEW_ALLOCATIONS )
-        MemDebug::FillMem( ptr, bucket.m_BlockSize, MemDebug::MEM_FILL_NEW_ALLOCATION_PATTERN );
+        if ( ptr )
+        {
+            MemDebug::FillMem( ptr, bucket.m_BlockSize, MemDebug::MEM_FILL_NEW_ALLOCATION_PATTERN );
+        }
     #endif
 
     return ptr;
@@ -181,17 +182,23 @@ bool SmallBlockAllocator::Free( void * ptr )
 //------------------------------------------------------------------------------
 /*virtual*/ void * SmallBlockAllocator::MemBucket::AllocateMemoryForPage()
 {
-    // Used up all pages?
-    if ( SmallBlockAllocator::s_BucketNextFreePage >= SmallBlockAllocator::s_BucketMemoryEnd )
+    // Have we exhausted our page space?
+    if ( SmallBlockAllocator::s_BucketNextFreePageIndex >= BUCKET_NUM_PAGES )
     {
-        return nullptr; // No more free pages
+        return nullptr;
     }
 
-    // Consume the next free page
-    void * newPage = SmallBlockAllocator::s_BucketNextFreePage;
-    SmallBlockAllocator::s_BucketNextFreePage = ( (char *)SmallBlockAllocator::s_BucketNextFreePage + MemPoolBlock::PAGE_SIZE );
+    // Grab the next page
+    const uint32_t pageIndex = AtomicIncU32( &SmallBlockAllocator::s_BucketNextFreePageIndex ) - 1;
+
+    // Handle edge case where two or more threads try to allocate the last page simultaneously
+    if ( pageIndex >= BUCKET_NUM_PAGES )
+    {
+        return nullptr;
+    }
 
     // Commit the page
+    void * newPage = (void *)( ( (size_t)SmallBlockAllocator::s_BucketMemoryStart ) + ( (size_t)pageIndex * MemPoolBlock::PAGE_SIZE ) );
     #if defined( __WINDOWS__ )
         ::VirtualAlloc( newPage, MemPoolBlock::PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE );
     #else
@@ -199,7 +206,6 @@ bool SmallBlockAllocator::Free( void * ptr )
     #endif
 
     // Update page to bucket mapping table
-    const size_t pageIndex = ( ( (char *)newPage - (char *)SmallBlockAllocator::s_BucketMemoryStart ) / MemPoolBlock::PAGE_SIZE );
     ASSERT( s_BucketMappingTable[ pageIndex ] ==  0 );
     const size_t bucketIndex = ( this - SmallBlockAllocator::s_Buckets );
     ASSERT( bucketIndex <= 255 );

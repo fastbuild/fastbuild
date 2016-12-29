@@ -33,8 +33,9 @@
         static const size_t BUCKET_MAX_ALLOC_SIZE = 256;
         static const size_t BUCKET_ALIGNMENT = sizeof( void * );
         static const size_t BUCKET_NUM_BUCKETS = ( BUCKET_MAX_ALLOC_SIZE / BUCKET_ALIGNMENT );
-        static const size_t BUCKET_ADDRESSSPACE_SIZE = ( 100 * 1024 * 1024 );
-        static const size_t BUCKET_MAPPING_TABLE_SIZE = ( BUCKET_ADDRESSSPACE_SIZE / MemPoolBlock::PAGE_SIZE );
+        static const size_t BUCKET_ADDRESSSPACE_SIZE = ( 200 * 1024 * 1024 );
+        static const size_t BUCKET_NUM_PAGES = ( BUCKET_ADDRESSSPACE_SIZE / MemPoolBlock::PAGE_SIZE );
+        static const size_t BUCKET_MAPPING_TABLE_SIZE  = BUCKET_NUM_PAGES;
 
         class MemBucket : public MemPoolBlock
         {
@@ -52,8 +53,7 @@
 
         // Address space used by allocators
         static void *       s_BucketMemoryStart;
-        static void *       s_BucketMemoryEnd;
-        static void *       s_BucketNextFreePage;   // Next free memory page to commit
+        static uint32_t     s_BucketNextFreePageIndex; // Next free memory page to commit
 
         // The actual buckets (using this placeholder memory to avoid static init issues)
         static uint64_t     s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof (uint64_t) ];
