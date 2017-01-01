@@ -1512,6 +1512,46 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 // NOTE: Leave /I includes for compatibility with Recode
                 // (unlike Clang, MSVC is ok with leaving the /I when compiling preprocessed code)
 
+                // To prevent D8049 "command line is too long to fit in debug record"
+                // we expand relative includes as they would be on the host (so the remote machine's
+                // working dir is not used, which might be longer, causing this overflow an internal
+                // limit of cl.exe)
+                if ( ( job->IsLocal() == false ) && IsStartOfCompilerArg_MSVC( token, "I" ) )
+                {
+                    // Get include path part
+                    const char * start = token.Get() + 2; // Skip /I or -I
+                    const char * end = token.GetEnd();
+
+                    // strip quotes if present
+                    if ( *start == '"' )
+                    {
+                        ++start;
+                    }
+                    if ( end[ -1 ] == '"' )
+                    {
+                        --end;
+                    }
+                    AStackString<> includePath( start, end );
+                    const bool isFullPath = PathUtils::IsFullPath( includePath );
+
+                    // Replace relative paths and leave full paths alone
+                    if ( isFullPath == false )
+                    {
+                        // Remove relative include
+                        StripTokenWithArg_MSVC( "I", token, i );
+    
+                        // Add full path include
+                        fullArgs.Append( token.Get(), start - token.Get() );
+                        fullArgs += job->GetRemoteSourceRoot();
+                        fullArgs += '\\';
+                        fullArgs += includePath;
+                        fullArgs.Append( end, token.GetEnd() - end );
+                        fullArgs.AddDelimiter();
+                    }
+
+                    continue;
+                }
+
                 // Strip "Force Includes" statements (as they are merged in now)
                 if ( StripTokenWithArg_MSVC( "FI", token, i ) )
                 {

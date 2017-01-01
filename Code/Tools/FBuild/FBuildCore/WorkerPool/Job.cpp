@@ -117,6 +117,9 @@ void Job::Serialize( IOStream & stream )
     // write jobid
     stream.Write( m_JobId );
     stream.Write( m_Node->GetName() );
+    AStackString<> workingDir;
+    VERIFY( FileIO::GetCurrentDir( workingDir ) );
+    stream.Write( workingDir );
 
     // write properties of node
     Node::SaveRemote( stream, m_Node );
@@ -134,6 +137,7 @@ void Job::Deserialize( IOStream & stream )
     // read jobid
     stream.Read( m_JobId );
     stream.Read( m_RemoteName );
+    stream.Read( m_RemoteSourceRoot );
 
     // read properties of node
     m_Node = Node::LoadRemote( stream );

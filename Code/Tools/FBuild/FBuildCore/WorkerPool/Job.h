@@ -27,6 +27,7 @@ public:
 
     inline Node * GetNode() const { return m_Node; }
     inline const AString & GetRemoteName() const { return m_RemoteName; }
+    inline const AString & GetRemoteSourceRoot() const { return m_RemoteSourceRoot; }
 
     inline void SetCacheName( const AString & cacheName ) { m_CacheName = cacheName; }
     inline const AString & GetCacheName() const { return m_CacheName; }
@@ -72,6 +73,7 @@ private:
     bool                m_IsLocal           = true;
     uint8_t             m_SystemErrorCount  = 0; // On client, the total error count, on the worker a flag for the current attempt
     AString             m_RemoteName;
+    AString             m_RemoteSourceRoot;
     AString             m_CacheName;
 
     ToolManifest *      m_ToolManifest      = nullptr;
