@@ -77,11 +77,11 @@ private:
     // Window Elements
     OSTrayIcon *        m_TrayIcon;
     OSFont *            m_Font;
-    OSLabel *           m_ModeLabel;
-    OSLabel *           m_ResourcesLabel;
+    OSLabel *           m_ResourcesWhenIdleLabel;
+	OSLabel *           m_ResourcesDedicatedLabel;
     OSListView *        m_ThreadList;
-    OSDropDown *        m_ModeDropDown;
-    OSDropDown *        m_ResourcesDropDown;
+    OSDropDown *        m_ResourcesWhenIdleDropDown;
+	OSDropDown *        m_ResourcesDedicatedDropDown;
 
     // properties of the window
     #if defined( __WINDOWS__ )

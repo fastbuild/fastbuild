@@ -129,14 +129,14 @@ int MainCommon( const AString & args, void * hInstance )
     int ret;
     {
         Worker worker( hInstance, args );
-        if ( options.m_OverrideCPUAllocation )
+        if ( options.m_OverrideCPUAllocationWhenIdle )
         {
-            WorkerSettings::Get().SetNumCPUsToUse( options.m_CPUAllocation );
+            WorkerSettings::Get().SetNumCPUsToUseWhenIdle( options.m_CPUAllocationWhenIdle );
         }
-        if ( options.m_OverrideWorkMode )
-        {
-            WorkerSettings::Get().SetMode( options.m_WorkMode );
-        }
+		if (options.m_OverrideCPUAllocationDedicated)
+		{
+			WorkerSettings::Get().SetNumCPUsToUseDedicated(options.m_CPUAllocationDedicated);
+		}
         ret = worker.Work();
     }
 

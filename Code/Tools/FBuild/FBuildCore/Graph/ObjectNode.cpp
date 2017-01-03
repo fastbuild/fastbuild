@@ -228,7 +228,8 @@ ObjectNode::~ObjectNode()
 
     bool useCache = ShouldUseCache();
     bool useDist = GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
-    bool usePreProcessor = ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
+	bool useSimpleDist = GetCompiler()->CastTo< CompilerNode >()->SimpleDistributionMode();
+	bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
     if ( GetDedicatedPreprocessor() )
     {
         usePreProcessor = true;
@@ -238,9 +239,9 @@ ObjectNode::~ObjectNode()
     // Graphing the current amount of distributable jobs
     FLOG_MONITOR( "GRAPH FASTBuild \"Distributable Jobs MemUsage\" MB %f\n", (float)JobQueue::Get().GetDistributableJobsMemUsage() / (float)MEGABYTE );
 
-    if ( usePreProcessor )
+	if ( usePreProcessor || useSimpleDist )
     {
-        return DoBuildWithPreProcessor( job, useDeoptimization, useCache );
+		return DoBuildWithPreProcessor( job, useDeoptimization, useCache, useSimpleDist );
     }
 
     if ( GetFlag( FLAG_MSVC ) )
@@ -353,24 +354,37 @@ ObjectNode::~ObjectNode()
 
 // DoBuildWithPreProcessor
 //------------------------------------------------------------------------------
-Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache )
+Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist )
 {
     Args fullArgs;
     const bool showIncludes( false );
-    if ( !BuildArgs( job, fullArgs, PASS_PREPROCESSOR_ONLY, useDeoptimization, showIncludes ) )
+	Pass pass = useSimpleDist ? PASS_PREP_FOR_SIMPLE_DISTRIBUTION : PASS_PREPROCESSOR_ONLY;
+	if ( !BuildArgs( job, fullArgs, pass, useDeoptimization, showIncludes ) )
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
-    if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization ) == false )
-    {
-        return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
-    }
 
-    // preprocessed ok, try to extract includes
-    if ( ProcessIncludesWithPreProcessor( job ) == false )
-    {
-        return NODE_RESULT_FAILED; // ProcessIncludesWithPreProcessor will have emitted an error
-    }
+	if (pass == PASS_PREPROCESSOR_ONLY)
+	{
+		if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization ) == false )
+		{
+			return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
+		}
+
+		// preprocessed ok, try to extract includes
+		if ( ProcessIncludesWithPreProcessor( job ) == false )
+		{
+			return NODE_RESULT_FAILED; // ProcessIncludesWithPreProcessor will have emitted an error
+		}
+	}
+
+	if (pass == PASS_PREP_FOR_SIMPLE_DISTRIBUTION)
+	{
+		if (LoadStaticSourceFileForDistribution(fullArgs, job, useDeoptimization) == false)
+		{
+			return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
+		}
+	}
 
     // calculate the cache entry lookup
     if ( useCache )
@@ -383,10 +397,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     }
 
     // can we do the rest of the work remotely?
-    if ( GetFlag( FLAG_CAN_BE_DISTRIBUTED ) &&
-         m_AllowDistribution &&
-         FBuild::Get().GetOptions().m_AllowDistributed &&
-         JobQueue::Get().GetDistributableJobsMemUsage() < ( 512 * MEGABYTE ) )
+	if ((( useSimpleDist ) || (GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed))
+		&& JobQueue::Get().GetDistributableJobsMemUsage() < ( 512 * MEGABYTE ) )
     {
         // compress job data
         Compressor c;
@@ -1507,10 +1519,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue; // skip this token in both cases
                 }
             }
-            if ( isMSVC )
-            {
-                // NOTE: Leave /I includes for compatibility with Recode
-                // (unlike Clang, MSVC is ok with leaving the /I when compiling preprocessed code)
+			if (isMSVC)
+			{
+				// NOTE: Stripping off /I includes drastically shortens the command line for large projects.
+				// This may break support for Recode.
+				// (unlike Clang, MSVC is ok with leaving the /I when compiling preprocessed code)
+
+				if (StripTokenWithArg_MSVC("I", token, i))
+				{
+					continue;
+				}
 
                 // To prevent D8049 "command line is too long to fit in debug record"
                 // we expand relative includes as they would be on the host (so the remote machine's
@@ -1778,7 +1796,36 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
     // take a copy of the output because ReadAllData uses huge buffers to avoid re-sizing
     TransferPreprocessedData( ch.GetOut().Get(), ch.GetOutSize(), job );
 
-    return true;
+	return true;
+}
+
+// PreProcessing for SimpleDistribution is just loading the source file
+//------------------------------------------------------------------------------
+bool ObjectNode::LoadStaticSourceFileForDistribution(const Args & fullArgs, Job * job, bool useDeoptimization) const
+{
+	const bool useDedicatedPreprocessor = (GetDedicatedPreprocessor() != nullptr);
+	EmitCompilationMessage(fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor);
+
+	const AString & fileName = job->GetNode()->CastTo<ObjectNode>()->GetSourceFile()->CastTo<FileNode>()->GetName();
+
+	// read the file into memory
+	FileStream fs;
+	if (fs.Open(fileName.Get(), FileStream::READ_ONLY) == false)
+	{
+		FLOG_ERROR("Error: opening file '%s' while loading source file for transport\n", fileName.Get());
+		return false;
+	}
+	uint32_t contentSize = (uint32_t)fs.GetFileSize();
+	AutoPtr< void > mem(ALLOC(contentSize));
+	if (fs.Read(mem.Get(), contentSize) != contentSize)
+	{
+		FLOG_ERROR("Error: reading file '%s' in Compiler ToolManifest\n", fileName.Get());
+		return false;
+	}
+	
+	job->OwnData(mem.Release(), contentSize);
+	
+	return true;
 }
 
 // TransferPreprocessedData
