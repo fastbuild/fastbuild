@@ -53,7 +53,7 @@ AString::AString( const AString & string )
     uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
     m_Contents = (char *)ALLOC( reserved + 1 );
     SetReserved( reserved, true );
-    Copy( string.Get(), m_Contents, len ); // copy handles terminator
+    Copy( string.Get(), m_Contents ); // copy handles terminator
 }
 
 // CONSTRUCTOR (const char *)
@@ -66,7 +66,7 @@ AString::AString( const char * string )
     uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
     m_Contents = (char *)ALLOC( reserved + 1 );
     SetReserved( reserved, true );
-    Copy( string, m_Contents, len ); // copy handles terminator
+    Copy( string, m_Contents ); // copy handles terminator
 }
 
 // CONSTRUCTOR (const char *, const char *)
@@ -348,7 +348,7 @@ void AString::Assign( const AString & string )
         // didn't resize then the passed in string is empty too
         return;
     }
-    Copy( string.Get(), m_Contents, len ); // handles terminator
+    Copy( string.Get(), m_Contents ); // handles terminator
     m_Length = len;
 }
 
@@ -430,7 +430,7 @@ AString & AString::operator += ( const char * string )
             Grow( newLen );
         }
 
-        Copy( string, m_Contents + m_Length, suffixLen ); // handles terminator
+        Copy( string, m_Contents + m_Length ); // handles terminator
         m_Length += suffixLen;
     }
     return *this;
@@ -449,7 +449,7 @@ AString & AString::operator += ( const AString & string )
             Grow( newLen );
         }
 
-        Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator
+        Copy( string.Get(), m_Contents + m_Length ); // handles terminator
         m_Length += suffixLen;
     }
     return *this;
@@ -904,6 +904,23 @@ test_match:
 
 // Copy
 //------------------------------------------------------------------------------
+/*static*/ void AString::Copy( const char * src, char * dst )
+{
+    for (;;)
+    {
+        const char c = *src;
+        *dst = c; // Includes the null terminator
+        if ( c == 0 )
+        {
+            break;
+        }
+        ++dst;
+        ++src;
+    }
+}
+
+// Copy
+//------------------------------------------------------------------------------
 /*static*/ void AString::Copy( const char * src, char * dst, size_t len )
 {
     const char * end = src + len;
@@ -998,7 +1015,7 @@ void AString::Grow( uint32_t newLength )
     char * newMem = (char *)ALLOC( reserve + 1 ); // also allocate for \0 terminator
 
     // transfer existing string data
-    Copy( m_Contents, newMem, m_Length );
+    Copy( m_Contents, newMem ); // copy handles terminator
 
     if ( MemoryMustBeFreed() )
     {
