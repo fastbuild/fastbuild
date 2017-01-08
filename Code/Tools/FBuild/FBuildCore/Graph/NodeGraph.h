@@ -52,7 +52,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 91 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 92 };
 
     bool IsValid() const
     {

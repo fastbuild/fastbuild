@@ -93,7 +93,7 @@ private:
     virtual bool Finalize( NodeGraph & nodeGraph ) override;
 
     BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
-	BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
+    BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
     BuildResult DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob );
     BuildResult DoBuild_QtRCC( Job * job );
     BuildResult DoBuildOther( Job * job, bool useDeoptimization );
@@ -116,8 +116,8 @@ private:
     {
         PASS_PREPROCESSOR_ONLY,
         PASS_COMPILE_PREPROCESSED,
-		PASS_COMPILE,
-		PASS_PREP_FOR_SIMPLE_DISTRIBUTION,
+        PASS_COMPILE,
+        PASS_PREP_FOR_SIMPLE_DISTRIBUTION,
     };
     static bool StripTokenWithArg( const char * tokenToCheckFor, const AString & token, size_t & index );
     static bool StripTokenWithArg_MSVC( const char * tokenToCheckFor, const AString & token, size_t & index );
@@ -127,7 +127,7 @@ private:
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
     bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
-	bool LoadStaticSourceFileForDistribution(const Args & fullArgs, Job * job, bool useDeoptimization) const;
+    bool LoadStaticSourceFileForDistribution( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
     bool WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
     bool BuildFinalOutput( Job * job, const Args & fullArgs ) const;

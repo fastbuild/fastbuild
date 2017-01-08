@@ -14,6 +14,9 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 
+// Core
+#include "Core/FileIO/PathUtils.h"
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionObjectList::FunctionObjectList()
@@ -149,12 +152,17 @@ bool FunctionObjectList::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterat
     {
         // create a compiler node - don't allow distribution
         // (only explicitly defined compiler nodes can be distributed)
-		// set the default executable path to be the compiler exe directory
+        // set the default executable path to be the compiler exe directory
         AStackString<> compilerClean;
         NodeGraph::CleanPath( compiler, compilerClean );
         compilerNode = nodeGraph.CreateCompilerNode( compilerClean );
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
-		VERIFY( compilerNode->GetReflectionInfoV()->SetProperty(compilerNode, "ExecutableRootPath", AString(compilerClean.Get(), compilerClean.FindLast(NATIVE_SLASH) + 1) ) );
+        const char * lastSlash = compilerClean.FindLast( NATIVE_SLASH );
+        if ( lastSlash )
+        {
+            AStackString<> executableRootPath( compilerClean.Get(), lastSlash + 1 );
+            VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "ExecutableRootPath", executableRootPath ) );
+        }
     }
 
     return true;

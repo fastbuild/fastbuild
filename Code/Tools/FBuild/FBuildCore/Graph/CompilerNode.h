@@ -29,7 +29,7 @@ public:
 
     inline const ToolManifest & GetManifest() const { return m_Manifest; }
 
-	inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
+    inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
     inline bool CanBeDistributed() const { return m_AllowDistribution; }
     #if defined( __WINDOWS__ )
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
@@ -40,12 +40,12 @@ private:
 
     // Exposed params
     Array< AString >    m_ExtraFiles;
-	Array< AString >	m_CustomEnvironmentVariables;
+    Array< AString >    m_CustomEnvironmentVariables;
 
     bool            m_AllowDistribution;
     bool            m_VS2012EnumBugFix;
-	AString			m_ExecutableRootPath;
-	bool			m_SimpleDistributionMode;
+    AString         m_ExecutableRootPath;
+    bool            m_SimpleDistributionMode;
     ToolManifest    m_Manifest;
 };
 
