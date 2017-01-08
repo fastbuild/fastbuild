@@ -490,7 +490,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
 
     ASSERT( connection->m_Socket != INVALID_SOCKET );
 
-    TCPDEBUG( "Send: %i (%x)\n", size, connection->m_Socket );
+    TCPDEBUG( "Send: %i (%x)\n", totalBytes, connection->m_Socket );
 
     bool sendOK = true;
 

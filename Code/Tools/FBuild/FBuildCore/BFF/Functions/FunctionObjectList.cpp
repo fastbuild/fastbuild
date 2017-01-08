@@ -149,10 +149,12 @@ bool FunctionObjectList::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterat
     {
         // create a compiler node - don't allow distribution
         // (only explicitly defined compiler nodes can be distributed)
+		// set the default executable path to be the compiler exe directory
         AStackString<> compilerClean;
         NodeGraph::CleanPath( compiler, compilerClean );
         compilerNode = nodeGraph.CreateCompilerNode( compilerClean );
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
+		VERIFY( compilerNode->GetReflectionInfoV()->SetProperty(compilerNode, "ExecutableRootPath", AString(compilerClean.Get(), compilerClean.FindLast(NATIVE_SLASH) + 1) ) );
     }
 
     return true;
