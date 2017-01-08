@@ -16,6 +16,9 @@
 #include "Core/Mem/MemPoolBlock.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
+#if defined( DEBUG )
+    #include "Core/Process/Thread.h"
+#endif
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -25,6 +28,10 @@
 
 // Static Data
 //------------------------------------------------------------------------------
+/*static*/ bool                                 SmallBlockAllocator::s_ThreadSafeAllocs( true );
+#if defined( DEBUG )
+    /*static*/ uint64_t                         SmallBlockAllocator::s_ThreadSafeAllocsDebugOwnerThread( 0 );
+#endif
 /*static*/ void *                               SmallBlockAllocator::s_BucketMemoryStart( nullptr );
 /*static*/ uint32_t                             SmallBlockAllocator::s_BucketNextFreePageIndex( 0 );
 /*static*/ uint64_t                             SmallBlockAllocator::s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof (uint64_t) ];
@@ -130,12 +137,23 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
         return nullptr; // Can't satify alignment
     }
 
+    // Sanity check that we're being used safely
+    #if defined( DEBUG )
+        ASSERT( s_ThreadSafeAllocs || ( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() ) );
+    #endif
+
     // Alloc
-    bucket.m_Mutex.Lock();
+    if ( s_ThreadSafeAllocs )
+    {
+        bucket.m_Mutex.Lock();
+    }
 
     void * ptr = bucket.Alloc( size );
 
-    bucket.m_Mutex.Unlock();
+    if ( s_ThreadSafeAllocs )
+    {
+        bucket.m_Mutex.Unlock();
+    }
 
     // Debug fill
     #if defined( MEM_FILL_NEW_ALLOCATIONS )
@@ -168,14 +186,55 @@ bool SmallBlockAllocator::Free( void * ptr )
         MemDebug::FillMem( ptr, bucket.m_BlockSize, MemDebug::MEM_FILL_FREED_ALLOCATION_PATTERN );
     #endif
 
+    // Sanity check that we're being used safely
+    #if defined( DEBUG )
+        ASSERT( s_ThreadSafeAllocs || ( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() ) );
+    #endif
+
     // Free it
-    bucket.m_Mutex.Lock();
+    if ( s_ThreadSafeAllocs )
+    {
+        bucket.m_Mutex.Lock();
+    }
 
     bucket.Free( ptr );
 
-    bucket.m_Mutex.Unlock();
+    if ( s_ThreadSafeAllocs )
+    {
+        bucket.m_Mutex.Unlock();
+    }
 
     return true;
+}
+
+// SetSingleThreadedMode
+//------------------------------------------------------------------------------
+/*static*/ void SmallBlockAllocator::SetSingleThreadedMode( bool singleThreadedMode )
+{
+    if ( singleThreadedMode )
+    {
+        // Sanity check we're not already in single threaded mode
+        ASSERT( s_ThreadSafeAllocs == true );
+        ASSERT( s_ThreadSafeAllocsDebugOwnerThread == 0 );
+
+        // Store the new owner thread for further safety checks
+        #if defined( DEBUG )
+            s_ThreadSafeAllocsDebugOwnerThread = (uint64_t)Thread::GetCurrentThreadId();
+        #endif
+    }
+    else
+    {
+        // Sanity check we're in single threaded mode
+        ASSERT( s_ThreadSafeAllocs == false );
+        ASSERT( s_ThreadSafeAllocsDebugOwnerThread == (uint64_t)Thread::GetCurrentThreadId() );
+
+        // Store the new owner thread for further safety checks
+        #if defined( DEBUG )
+            s_ThreadSafeAllocsDebugOwnerThread = 0;
+        #endif
+    }
+
+    s_ThreadSafeAllocs = ( !singleThreadedMode );
 }
 
 // AllocateMemoryForPage

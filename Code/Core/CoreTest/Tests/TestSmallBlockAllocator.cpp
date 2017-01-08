@@ -8,6 +8,7 @@
 #include "Core/Containers/Array.h"
 #include "Core/Math/Random.h"
 #include "Core/Mem/Mem.h"
+#include "Core/Mem/SmallBlockAllocator.h"
 #include "Core/Process/Thread.h"
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
@@ -38,7 +39,7 @@ private:
     // Helper functions
     static void     GetRandomAllocSizes( const uint32_t numAllocs, Array< uint32_t> & allocSizes );
     static float    AllocateFromSystemAllocator( const Array< uint32_t > & allocSizes, const uint32_t repeatCount );
-    static float    AllocateFromSmallBlockAllocator( const Array< uint32_t > & allocSizes, const uint32_t repeatCount );
+    static float    AllocateFromSmallBlockAllocator( const Array< uint32_t > & allocSizes, const uint32_t repeatCount, const bool threadSafe = true );
     static uint32_t ThreadFunction_System( void * userData );
     static uint32_t ThreadFunction_SmallBlock( void * userData );
 };
@@ -62,10 +63,12 @@ void TestSmallBlockAllocator::SingleThreaded() const
 
     float time1 = AllocateFromSystemAllocator( allocSizes, repeatCount );
     float time2 = AllocateFromSmallBlockAllocator( allocSizes, repeatCount );
+    float time3 = AllocateFromSmallBlockAllocator( allocSizes, repeatCount, false ); // Thread-safe = false
 
     // output
-    OUTPUT( "System (malloc)        : %2.3fs - %u allocs @ %u allocs/sec\n", time1, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time1 ) );
-    OUTPUT( "SmallBlockAllocator    : %2.3fs - %u allocs @ %u allocs/sec\n", time2, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time2 ) );
+    OUTPUT( "System (malloc)                            : %2.3fs - %u allocs @ %u allocs/sec\n", time1, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time1 ) );
+    OUTPUT( "SmallBlockAllocator                        : %2.3fs - %u allocs @ %u allocs/sec\n", time2, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time2 ) );
+    OUTPUT( "SmallBlockAllocator (Single-Threaded mode) : %2.3fs - %u allocs @ %u allocs/sec\n", time3, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time3 ) );
 }
 
 // MultiThreaded
@@ -181,12 +184,17 @@ void TestSmallBlockAllocator::MultiThreaded() const
 
 // AllocateFromSmallBlockAllocator
 //------------------------------------------------------------------------------
-/*static*/ float TestSmallBlockAllocator::AllocateFromSmallBlockAllocator( const Array< uint32_t > & allocSizes, const uint32_t repeatCount )
+/*static*/ float TestSmallBlockAllocator::AllocateFromSmallBlockAllocator( const Array< uint32_t > & allocSizes, const uint32_t repeatCount, const bool threadSafe  )
 {
     const size_t numAllocs = allocSizes.GetSize();
 
     Array< void * > allocs( numAllocs, false );
     Timer timer;
+
+    if ( threadSafe == false )
+    {
+        SmallBlockAllocator::SetSingleThreadedMode( true );
+    }
 
     for ( size_t r=0; r<repeatCount; ++r )
     {
@@ -205,6 +213,11 @@ void TestSmallBlockAllocator::MultiThreaded() const
         }
 
         allocs.Clear();
+    }
+
+    if ( threadSafe == false )
+    {
+        SmallBlockAllocator::SetSingleThreadedMode( false );
     }
 
     return timer.GetElapsed();

@@ -66,13 +66,13 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     options.m_AllowLocalRace = allowRace;
     FBuild fBuild( options );
 
+    TEST_ASSERT( fBuild.Initialize() );
+
     JobQueueRemote jqr( numRemoteWorkers );
 
     // start a client to emulate the other end
     Server s;
     s.Listen( Protocol::PROTOCOL_PORT );
-
-    TEST_ASSERT( fBuild.Initialize() );
 
     // clean up anything left over from previous runs
     Array< AString > files;
@@ -188,13 +188,13 @@ void TestDistributed::TestZiDebugFormat() const
     options.m_ForceCleanBuild = true;
     FBuild fBuild( options );
 
+    TEST_ASSERT( fBuild.Initialize() );
+
     JobQueueRemote jqr( 1 );
 
     // start a client to emulate the other end
     Server s;
     s.Listen( Protocol::PROTOCOL_PORT );
-
-    TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( AStackString<>( "remoteZi" ) ) );
 }
@@ -209,13 +209,13 @@ void TestDistributed::TestZiDebugFormat_Local() const
     options.m_ForceCleanBuild = true;
     FBuild fBuild( options );
 
+    TEST_ASSERT( fBuild.Initialize() );
+
     JobQueueRemote jqr( 1 );
 
     // start a client to emulate the other end
     Server s;
     s.Listen( Protocol::PROTOCOL_PORT );
-
-    TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( AStackString<>( "remoteZi" ) ) );
 }
@@ -233,13 +233,13 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     options.m_ForceCleanBuild = true;
     FBuild fBuild( options );
 
+    TEST_ASSERT( fBuild.Initialize() );
+
     JobQueueRemote jqr( 1 );
 
     // start a client to emulate the other end
     Server s;
     s.Listen( Protocol::PROTOCOL_PORT );
-
-    TEST_ASSERT( fBuild.Initialize() );
 
     TEST_ASSERT( fBuild.Build( AStackString<>( "D8049" ) ) );
 }
