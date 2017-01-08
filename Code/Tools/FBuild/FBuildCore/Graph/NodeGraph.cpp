@@ -626,14 +626,12 @@ CopyFileNode * NodeGraph::CreateCopyFileNode( const AString & dstFileName )
 
 // CreateCopyDirNode
 //------------------------------------------------------------------------------
-CopyDirNode * NodeGraph::CreateCopyDirNode( const AString & nodeName,
-                                            Dependencies & staticDeps,
-                                            const AString & destPath,
-                                            const Dependencies & preBuildDependencies )
+CopyDirNode * NodeGraph::CreateCopyDirNode( const AString & nodeName )
 {
     ASSERT( Thread::IsMainThread() );
 
-    CopyDirNode * node = FNEW( CopyDirNode( nodeName, staticDeps, destPath, preBuildDependencies ) );
+    CopyDirNode * node = FNEW( CopyDirNode() );
+    node->SetName( nodeName );
     AddNode( node );
     return node;
 }

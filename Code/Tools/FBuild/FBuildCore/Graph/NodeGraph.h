@@ -95,10 +95,7 @@ public:
 
     // create new nodes
     CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
-    CopyDirNode * CreateCopyDirNode( const AString & nodeName,
-                                     Dependencies & staticDeps,
-                                     const AString & destPath,
-                                     const Dependencies & preBuildDependencies );
+    CopyDirNode * CreateCopyDirNode( const AString & nodeName );
     RemoveDirNode * CreateRemoveDirNode(const AString & nodeName,
                                         Dependencies & staticDeps,
                                         const Dependencies & preBuildDependencies );
