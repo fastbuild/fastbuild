@@ -1,22 +1,30 @@
-// Meta_AllowObjectList
+// Meta_AllowNonFile
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-#include "Meta_AllowObjectList.h"
+#include "Meta_AllowNonFile.h"
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( Meta_AllowObjectList, IMetaData, MetaNone() )
-REFLECT_END( Meta_AllowObjectList )
+REFLECT_BEGIN( Meta_AllowNonFile, IMetaData, MetaNone() )
+REFLECT_END( Meta_AllowNonFile )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Meta_AllowObjectList::Meta_AllowObjectList() = default;
+Meta_AllowNonFile::Meta_AllowNonFile() = default;
+
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
+Meta_AllowNonFile::Meta_AllowNonFile( const Node::Type limitToType )
+{
+    m_LimitToTypeEnabled = true;
+    m_LimitToType = limitToType;
+}
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-Meta_AllowObjectList::~Meta_AllowObjectList() = default;
+Meta_AllowNonFile::~Meta_AllowNonFile() = default;
 
 //------------------------------------------------------------------------------

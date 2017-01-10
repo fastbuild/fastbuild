@@ -25,7 +25,7 @@ REFLECT_NODE_BEGIN( CopyDirNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_SourcePathsPattern,       "SourcePathsPattern",       MetaOptional() )
     REFLECT_ARRAY(  m_SourceExcludePaths,       "SourceExcludePaths",       MetaOptional() )
     REFLECT(        m_SourcePathsRecurse,       "SourcePathsRecurse",       MetaOptional() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowObjectList() )
+    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
 REFLECT_END( CopyDirNode )
 
 // CONSTRUCTOR

@@ -33,7 +33,7 @@ REFLECT_NODE_BEGIN( LibraryNode, ObjectListNode, MetaName( "LibrarianOutput" ) +
     REFLECT( m_Librarian,                       "Librarian",                    MetaFile() )
     REFLECT( m_LibrarianOptions,                "LibrarianOptions",             MetaNone() )
     REFLECT( m_LibrarianOutput,                 "LibrarianOutput",              MetaFile() )
-    REFLECT_ARRAY( m_LibrarianAdditionalInputs, "LibrarianAdditionalInputs",    MetaOptional() + MetaFile() + MetaAllowObjectList() )
+    REFLECT_ARRAY( m_LibrarianAdditionalInputs, "LibrarianAdditionalInputs",    MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
 
     REFLECT( m_NumLibrarianAdditionalInputs,    "NumLibrarianAdditionalInputs", MetaHidden() )
     REFLECT( m_LibrarianFlags,                  "LibrarianFlags",               MetaHidden() )

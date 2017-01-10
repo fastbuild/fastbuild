@@ -55,7 +55,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     // Preprocessor
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() )
     REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
-    REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowObjectList() )
+    REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
     // Internal State
     REFLECT( m_ExtraPDBPath,                        "ExtraPDBPath",                     MetaHidden() )

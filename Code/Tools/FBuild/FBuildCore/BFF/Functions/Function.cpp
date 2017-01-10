@@ -36,7 +36,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowObjectList.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 
 // Core
@@ -1000,13 +1000,13 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
 
 // PopulateStringHelper
 //------------------------------------------------------------------------------
-bool Function::PopulateStringHelper( NodeGraph & nodeGraph, const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowObjectList * allowObjectListMD, const BFFVariable * variable, Array< AString > & outStrings ) const
+bool Function::PopulateStringHelper( NodeGraph & nodeGraph, const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, Array< AString > & outStrings ) const
 {
     if ( variable->IsArrayOfStrings() )
     {
         for ( const AString & string : variable->GetArrayOfStrings() )
         {
-            if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowObjectListMD, variable, string, outStrings ) )
+            if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowNonFileMD, variable, string, outStrings ) )
             {
                 return false; // PopulateStringHelper will have emitted an error
             }
@@ -1016,7 +1016,7 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph, const BFFIterator & 
 
     if ( variable->IsString() )
     {
-        if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowObjectListMD, variable, variable->GetString(), outStrings ) )
+        if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowNonFileMD, variable, variable->GetString(), outStrings ) )
         {
             return false; // PopulateStringHelper will have emitted an error
         }
@@ -1033,7 +1033,7 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
                                      const BFFIterator & iter,
                                      const Meta_Path * pathMD,
                                      const Meta_File * fileMD,
-                                     const Meta_AllowObjectList * allowObjectListMD,
+                                     const Meta_AllowNonFile * allowNonFileMD,
                                      const BFFVariable * variable,
                                      const AString & string,
                                      Array< AString > & outStrings ) const
@@ -1050,7 +1050,7 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
                 AliasNode * aliasNode = node->CastTo< AliasNode >();
                 for ( const auto& aliasedNode : aliasNode->GetAliasedNodes() )
                 {
-                    if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowObjectListMD, variable, aliasedNode.GetNode()->GetName(), outStrings ) )
+                    if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowNonFileMD, variable, aliasedNode.GetNode()->GetName(), outStrings ) )
                     {
                         return false; // PopulateStringHelper will have emitted an error
                     }
@@ -1058,9 +1058,18 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
                 return true;
             }
 
-            // ObjectList?
-            if ( allowObjectListMD && ( node->GetType() == Node::OBJECT_LIST_NODE ) )
+            // Handle non-file types (if allowed)
+            if ( allowNonFileMD && ( node->IsAFile() == false ) )
             {
+                // Are we limited to a specific node type?
+                if ( ( allowNonFileMD->IsLimitedToType() == true ) &&
+                     ( allowNonFileMD->GetLimitedType() != node->GetType() ) )
+                {
+                    // Error - node is wrong type
+                    Error::Error_1005_UnsupportedNodeType( iter, this, variable->GetName().Get(), node->GetName(), node->GetType() );
+                    return false;
+                }
+
                 outStrings.Append( string ); // Leave name as-is
                 return true;
             }
@@ -1140,7 +1149,7 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
     Array< AString > strings;
-    if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowObjectList >(), variable, strings ) )
+    if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error
     }
@@ -1154,7 +1163,7 @@ bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator 
 bool Function::PopulateString( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
     Array< AString > strings;
-    if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowObjectList >(), variable, strings ) )
+    if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error
     }

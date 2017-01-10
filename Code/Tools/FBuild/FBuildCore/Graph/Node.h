@@ -53,11 +53,6 @@ class NodeGraph;
 #define REFLECT_NODE_BEGIN( nodeName, baseNodeName, metaData )          \
     REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, metaData )
 
-// Custom MetaData
-//------------------------------------------------------------------------------
-IMetaData & MetaName( const char * name );
-IMetaData & MetaAllowObjectList();
-
 // FBuild
 //------------------------------------------------------------------------------
 class Node : public Struct
@@ -290,5 +285,11 @@ inline FileNode * Node::CastTo< FileNode >() const
     ASSERT( IsAFile() );
     return (FileNode *)this;
 }
+
+// Custom MetaData
+//------------------------------------------------------------------------------
+IMetaData & MetaName( const char * name );
+IMetaData & MetaAllowNonFile();
+IMetaData & MetaAllowNonFile( const Node::Type limitToType );
 
 //------------------------------------------------------------------------------
