@@ -17,7 +17,7 @@ public:
     void *  Alloc( size_t size );
     void    Free( void * ptr );
 
-    enum { PAGE_SIZE = 64 * 1024 };
+    enum { MEMPOOLBLOCK_PAGE_SIZE = 64 * 1024 };
 
 protected:
     bool    AllocPage();

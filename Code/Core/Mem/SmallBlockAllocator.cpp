@@ -48,7 +48,7 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
         ASSERT( s_BucketMemoryStart );
     #else
         s_BucketMemoryStart = ::mmap( nullptr, BUCKET_ADDRESSSPACE_SIZE, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0 );
-        ASSERT( (ssize_t)s_BucketMemoryStart != (ssize_t)-1 );
+        ASSERT( (size_t)s_BucketMemoryStart != (size_t)-1 );
     #endif
 
     // Construct the bucket structures in the reservedspace
@@ -171,7 +171,7 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
 bool SmallBlockAllocator::Free( void * ptr )
 {
     // Determine if this allocation belongs to the buckets
-    const size_t pageIndex = ( ( (char *)ptr - (char *)s_BucketMemoryStart) / MemPoolBlock::PAGE_SIZE );
+    const size_t pageIndex = ( ( (char *)ptr - (char *)s_BucketMemoryStart) / MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE );
     if ( pageIndex >= BUCKET_MAPPING_TABLE_SIZE )
     {
         return false; // Not a bucket allocation
@@ -257,11 +257,11 @@ bool SmallBlockAllocator::Free( void * ptr )
     }
 
     // Commit the page
-    void * newPage = (void *)( ( (size_t)SmallBlockAllocator::s_BucketMemoryStart ) + ( (size_t)pageIndex * MemPoolBlock::PAGE_SIZE ) );
+    void * newPage = (void *)( ( (size_t)SmallBlockAllocator::s_BucketMemoryStart ) + ( (size_t)pageIndex * MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE ) );
     #if defined( __WINDOWS__ )
-        ::VirtualAlloc( newPage, MemPoolBlock::PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE );
+        ::VirtualAlloc( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE );
     #else
-        VERIFY( ::mprotect( newPage, MemPoolBlock::PAGE_SIZE, PROT_READ | PROT_WRITE ) == 0 );
+        VERIFY( ::mprotect( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, PROT_READ | PROT_WRITE ) == 0 );
     #endif
 
     // Update page to bucket mapping table

@@ -22,9 +22,9 @@ MemPoolBlock::MemPoolBlock( size_t blockSize, size_t blockAlignment )
     , m_Pages( 0, true )
 {
     ASSERT( blockSize >= sizeof( FreeBlock ) );
-    ASSERT( blockSize <= PAGE_SIZE );
+    ASSERT( blockSize <= MEMPOOLBLOCK_PAGE_SIZE );
     ASSERT( blockAlignment >= 4 );
-    ASSERT( blockAlignment <= PAGE_SIZE );
+    ASSERT( blockAlignment <= MEMPOOLBLOCK_PAGE_SIZE );
 }
 
 // DESTRUCTOR
@@ -113,7 +113,7 @@ NO_INLINE bool MemPoolBlock::AllocPage()
 
     // divide page into blocks
     const size_t alignedSize( Math::RoundUp( (size_t)m_BlockSize, (size_t)m_BlockAlignment ) );
-    const size_t numBlocksInPage( PAGE_SIZE / alignedSize );
+    const size_t numBlocksInPage( MEMPOOLBLOCK_PAGE_SIZE / alignedSize );
 
     // build chain into new blocks
     FreeBlock * block = reinterpret_cast< FreeBlock * >( (size_t)newPage );
@@ -136,7 +136,7 @@ NO_INLINE bool MemPoolBlock::AllocPage()
 //------------------------------------------------------------------------------
 /*virtual*/ void * MemPoolBlock::AllocateMemoryForPage()
 {
-    void * newPage = ALLOC( PAGE_SIZE );
+    void * newPage = ALLOC( MEMPOOLBLOCK_PAGE_SIZE );
 
     // track new page
     m_Pages.Append( newPage );
