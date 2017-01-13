@@ -248,12 +248,17 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
 
     for (;;)
     {
-        pos = strstr( pos, "\n#" );
+        pos = strpbrk( pos, "\n\r" );
         if ( !pos )
         {
             break;
         }
-        pos += 2;
+        ++pos;
+        if ( *pos != '#' )
+        {
+            continue;
+        }
+        ++pos;
     possibleInclude:
         if ( *pos == ' ' )
         {
