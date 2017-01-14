@@ -1708,7 +1708,9 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         {
             ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA );
             fullArgs += "-E"; // run pre-processor only
-            if ( isClang )
+
+            const bool clangRewriteIncludes = GetCompiler()->CastTo< CompilerNode >()->IsClangRewriteIncludesEnabled();
+            if ( isClang && clangRewriteIncludes )
             {
                 fullArgs += " -frewrite-includes";
             }

@@ -34,6 +34,7 @@ public:
     #if defined( __WINDOWS__ )
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
     #endif
+    inline bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
 private:
     virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
@@ -44,6 +45,7 @@ private:
 
     bool            m_AllowDistribution;
     bool            m_VS2012EnumBugFix;
+    bool            m_ClangRewriteIncludes;
     AString         m_ExecutableRootPath;
     bool            m_SimpleDistributionMode;
     ToolManifest    m_Manifest;
