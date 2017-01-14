@@ -259,7 +259,7 @@ bool Function::GetString( const BFFIterator & iter, const BFFVariable * & var, c
         Error::Error_1050_PropertyMustBeOfType( iter, this, name, v->GetType(), BFFVariable::VAR_STRING );
         return false;
     }
-    if ( v->GetString().IsEmpty() )
+    if ( required && v->GetString().IsEmpty() )
     {
         Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, name );
         return false;
@@ -417,7 +417,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
         nodes.SetCapacity( nodes.GetSize() + nodeNames.GetSize() );
         for ( const AString & nodeName : nodeNames )
         {
-            if ( nodeName.IsEmpty() )
+            if ( nodeName.IsEmpty() ) // Always an error - because an empty node name is invalid
             {
                 Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, propertyName );
                 return false;
@@ -432,7 +432,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
     }
     else if ( var->IsString() )
     {
-        if ( var->GetString().IsEmpty() )
+        if ( var->GetString().IsEmpty() ) // Always an error - because an empty node name is invalid
         {
             Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, propertyName );
             return false;
@@ -872,7 +872,7 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, 
             return false; // PopulateStringHelper will have emitted an error
         }
 
-        // Handle empty strings
+        // Handle empty strings (always required because names can never be empty)
         if ( strings.IsEmpty() || strings[0].IsEmpty() )
         {
             Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
@@ -971,7 +971,8 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
             }
             else
             {
-                return PopulateString( nodeGraph, iter, base, property, variable );
+                const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
+                return PopulateString( nodeGraph, iter, base, property, variable, required );
             }
         }
         case PT_BOOL:
@@ -1160,7 +1161,7 @@ bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator 
 
 // PopulateString
 //------------------------------------------------------------------------------
-bool Function::PopulateString( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
+bool Function::PopulateString( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
     Array< AString > strings;
     if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
@@ -1173,8 +1174,16 @@ bool Function::PopulateString( NodeGraph & nodeGraph, const BFFIterator & iter, 
         // Handle empty strings
         if ( strings.IsEmpty() || strings[0].IsEmpty() )
         {
-            Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
-            return false;
+            if ( required )
+            {
+                Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
+                return false;
+            }
+            else
+            {
+                property.SetProperty( base, AString::GetEmpty() );
+                return true;
+            }
         }
 
         if ( strings.GetSize() != 1 )
