@@ -375,10 +375,22 @@
 {
     #if defined( __WINDOWS__ )
         char buffer[ MAX_PATH ];
-        DWORD len = GetTempPath( MAX_PATH, buffer );
-        if ( len != 0 )
+        DWORD res = GetEnvironmentVariable("FASTBUILD_TEMP_PATH",
+                buffer,MAX_PATH);
+        if ( res == 0 )
+        {
+            DWORD len = GetTempPath( MAX_PATH, buffer );
+            if ( len != 0 )
+            {
+                output = buffer;
+                output += '\\';
+                return true;
+            }
+        }
+        else
         {
             output = buffer;
+            output += '\\';
             return true;
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
