@@ -203,6 +203,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     WritePGItem( "ProjectGuid", guid );
     WritePGItem( "DefaultLanguage", m_DefaultLanguage );
     WritePGItem( "Keyword", AStackString<>( "MakeFileProj" ) );
+    WritePGItem( "SccProjectName", AStackString<>( "SAK" ) );
+    WritePGItem( "SccAuxPath", AStackString<>( "SAK" ) );
+    WritePGItem( "SccLocalPath", AStackString<>( "SAK" ) );
+    WritePGItem( "SccProvider", AStackString<>( "SAK" ) );
     WritePGItem( "ApplicationEnvironment", m_ApplicationEnvironment );
     Write( "  </PropertyGroup>\n" );
 
