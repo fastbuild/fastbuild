@@ -33,20 +33,6 @@ int MainCommon( const AString & args, void * hInstance );
 #endif
 
 //------------------------------------------------------------------------------
-void ShowMsgBox( const char * msg )
-{
-    #if defined( __WINDOWS__ )
-        MessageBoxA( nullptr, msg, "FBuildWorker", MB_OK );
-    #elif defined( __APPLE__ )
-        (void)msg; // TODO:MAC Implement ShowMsgBox
-    #elif defined( __LINUX__ )
-        (void)msg; // TODO:LINUX Implement ShowMsgBox
-    #else
-        #error Unknown Platform
-    #endif
-}
-
-//------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
     PRAGMA_DISABLE_PUSH_MSVC( 28251 ) // don't complain about missing annotations on WinMain
     int WINAPI WinMain( HINSTANCE hInstance,
@@ -98,7 +84,7 @@ int MainCommon( const AString & args, void * hInstance )
         // retry for upto 2 seconds, to allow some time for old worker to close
         if ( t.GetElapsed() > 5.0f )
         {
-            ShowMsgBox( "An FBuildWorker is already running!" );
+            Env::ShowMsgBox( "FBuildWorker", "An FBuildWorker is already running!" );
             return -1;
         }
         Thread::Sleep(100);
@@ -161,7 +147,7 @@ int MainCommon( const AString & args, void * hInstance )
             {
                 AStackString<> msg;
                 msg.Format( "Failed to make sub-process copy. Error: %s\n\nSrc: %s\nDst: %s\n", LAST_ERROR_STR, exeName.Get(), exeNameCopy.Get() );
-                ShowMsgBox( msg.Get() );
+                Env::ShowMsgBox( "FBuildWorker", msg.Get() );
                 return -2;
             }
             Thread::Sleep( 100 );
