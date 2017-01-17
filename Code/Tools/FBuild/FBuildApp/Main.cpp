@@ -14,6 +14,7 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
+#include "Core/Network/NetworkStartupHelper.h"
 
 #include <memory.h>
 #include <stdio.h>
@@ -168,6 +169,7 @@ int Main(int argc, char * argv[])
     }
 
     FBuild fBuild( options );
+    NetworkStartupHelper netStartupHelper;  // This avoids asserts at the end with DNS lookup threads.
 
     // load the dependency graph if available
     if ( !fBuild.Initialize() )
