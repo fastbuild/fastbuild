@@ -325,7 +325,14 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         {
             Write( "  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
             Write( "    <BuildLog>\n" );
-            Write( "      <Path />\n" );
+            if ( !cIt->m_BuildLogFile.IsEmpty() )
+            {
+                WritePGItem( "Path",          cIt->m_BuildLogFile );
+            }
+            else
+            {
+                Write( "      <Path />\n" );
+            }
             Write( "    </BuildLog>\n" );
             if ( ( !cIt->m_DeploymentType.IsEmpty() ) || ( !cIt->m_DeploymentFiles.IsEmpty() ) )
             {

@@ -69,6 +69,7 @@ ForcedIncludes
 ForcedUsingAssemblies
 IncludeSearchPath
 IntermediateDirectory
+BuildLogFile
 LayoutDir
 LayoutExtensionFilter
 Librarian
