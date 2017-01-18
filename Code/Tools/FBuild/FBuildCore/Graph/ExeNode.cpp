@@ -25,10 +25,14 @@ ExeNode::ExeNode( const AString & linkerOutputName,
                   const Dependencies & assemblyResources,
                   const AString & importLibName,
                   Node * linkerStampExe,
-                  const AString & linkerStampExeArgs )
+                  const AString & linkerStampExeArgs,
+                  const Dependencies & preBuildDependencies
+        )
 : LinkerNode( linkerOutputName, inputLibraries, otherLibraries, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs )
 {
     m_Type = EXE_NODE;
+
+    m_PreBuildDependencies = preBuildDependencies;
 }
 
 // DESTRUCTOR
@@ -51,9 +55,16 @@ ExeNode::~ExeNode() = default;
     NODE_LOAD( AStackString<>,  importLibName );
     NODE_LOAD_NODE_LINK( Node,  linkerStampExe );
     NODE_LOAD( AStackString<>,  linkerStampExeArgs );
+    NODE_LOAD_DEPS( 0,  preBuildDependencies);
 
-    ExeNode * en = nodeGraph.CreateExeNode( name, inputLibs, otherLibs, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs );
+    ExeNode * en = nodeGraph.CreateExeNode( name, inputLibs, otherLibs, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs, preBuildDependencies );
     return en;
 }
 
+    
+void ExeNode::Save( IOStream & stream ) const
+{
+    LinkerNode::Save(stream);
+    NODE_SAVE_DEPS( m_PreBuildDependencies);
+}
 //------------------------------------------------------------------------------
