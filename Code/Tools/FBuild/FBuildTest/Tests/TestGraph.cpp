@@ -176,7 +176,7 @@ void TestGraph::TestNodeTypes() const
     {
         Dependencies libraries( 1, false );
         libraries.Append( Dependency( fn ) );
-        Node * n = ng.CreateExeNode( AStackString<>( "zz.exe" ), libraries, Dependencies(), AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), 0, Dependencies(), AStackString<>(),nullptr, AString::GetEmpty() );
+        Node * n = ng.CreateExeNode( AStackString<>( "zz.exe" ), libraries, Dependencies(), AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), 0, Dependencies(), AStackString<>(),nullptr, AString::GetEmpty(), Dependencies() );
         TEST_ASSERT( n->GetType() == Node::EXE_NODE );
         TEST_ASSERT( ExeNode::GetTypeS() == Node::EXE_NODE );
         TEST_ASSERT( AStackString<>( "Exe" ) == n->GetTypeName() );

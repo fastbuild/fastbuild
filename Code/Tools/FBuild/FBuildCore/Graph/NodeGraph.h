@@ -140,7 +140,8 @@ public:
                                    const Dependencies & assemblyResources,
                                    const AString & importLibName,
                                    Node * linkerStampExe,
-                                   const AString & linkerStampExeArgs );
+                                   const AString & linkerStampExeArgs ,
+                                   const Dependencies & preBuildDependencies );
     UnityNode * CreateUnityNode( const AString & unityName );
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );

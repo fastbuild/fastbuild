@@ -199,6 +199,9 @@ FunctionExecutable::FunctionExecutable()
     }
     else
     {
+
+        Dependencies preBuildDependencies;
+        GetNodeList(nodeGraph,funcStartIter,".PreBuildDependencies",preBuildDependencies);
         n = nodeGraph.CreateExeNode( linkerOutput,
                               libraryNodes,
                               otherLibraryNodes,
@@ -209,7 +212,8 @@ FunctionExecutable::FunctionExecutable()
                               assemblyResources,
                               importLibName,
                               linkerStampExe,
-                              linkerStampExeArgs );
+                              linkerStampExeArgs,
+                              preBuildDependencies);
     }
 
     return ProcessAlias( nodeGraph, funcStartIter, n );
