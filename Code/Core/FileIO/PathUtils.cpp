@@ -30,17 +30,21 @@
 //------------------------------------------------------------------------------
 /*static*/ bool PathUtils::IsFullPath( const AString & path )
 {
-    #if defined( __WINDOWS__ )
-        // full paths on Windows are in X: format
-        if ( path.GetLength() >= 2 )
-        {
-            return ( path[ 1 ] == ':' );
-        }
-        return false;
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+
+    #if defined( __LINUX__ ) || defined( __APPLE__ )
         // full paths on Linux/OSX/IOS begin with a slash
-        return path.BeginsWith( NATIVE_SLASH );
+        if (path.BeginsWith( NATIVE_SLASH ))
+        {
+            return true;
+        }
     #endif
+     // full paths on Windows are in X: format
+     // we may testing windows full path filename on linux
+     if ( path.GetLength() >= 2 )
+     {
+         return ( path[ 1 ] == ':' );
+     }
+     return false;
 }
 
 // ArePathsEqual
