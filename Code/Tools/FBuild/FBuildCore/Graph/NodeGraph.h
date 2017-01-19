@@ -106,7 +106,8 @@ public:
                                const AString & workingDir,
                                int32_t expectedReturnCode,
                                const Dependencies & preBuildDependencies,
-                               bool useStdOutAsOutput );
+                               bool useStdOutAsOutput,
+                               bool isGenerator = false );
     FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
     DirectoryListNode * CreateDirectoryListNode( const AString & name,
                                                  const AString & path,
