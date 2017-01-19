@@ -533,6 +533,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         stream.Write( cfg.m_AdditionalOptions );
         stream.Write( cfg.m_OutputDirectory );
         stream.Write( cfg.m_IntermediateDirectory );
+        stream.Write( cfg.m_BuildLogFile );
         stream.Write( cfg.m_LayoutDir );
         stream.Write( cfg.m_LayoutExtensionFilter );
         stream.Write( cfg.m_Xbox360DebuggerCommand );
@@ -586,6 +587,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( stream.Read( cfg.m_AdditionalOptions ) == false ) { return false; }
         if ( stream.Read( cfg.m_OutputDirectory ) == false ) { return false; }
         if ( stream.Read( cfg.m_IntermediateDirectory ) == false ) { return false; }
+        if ( stream.Read( cfg.m_BuildLogFile ) == false) { return false; }
         if ( stream.Read( cfg.m_LayoutDir ) == false ) { return false; }
         if ( stream.Read( cfg.m_LayoutExtensionFilter ) == false ) { return false; }
         if ( stream.Read( cfg.m_Xbox360DebuggerCommand ) == false ) { return false; }
