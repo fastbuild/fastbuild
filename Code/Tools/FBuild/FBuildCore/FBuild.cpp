@@ -126,6 +126,30 @@ FBuild::~FBuild()
     }
 }
 
+    
+bool FBuild::ReloadBff() {
+    if ( m_DependencyGraph) 
+    {
+        FDELETE m_DependencyGraph;
+        m_DependencyGraph = nullptr;
+    }
+
+    SmallBlockAllocator::SetSingleThreadedMode( true );
+
+    m_DependencyGraph = NodeGraph::Initialize( m_BffFile.Get(), m_DependencyGraphFile.Get() );
+
+    SmallBlockAllocator::SetSingleThreadedMode( false );
+
+    if ( m_DependencyGraph == nullptr ) {
+        return false;
+    }
+
+    Function::Destroy();
+    Function::Create();
+
+    return true;
+}
+
 // Initialize
 //------------------------------------------------------------------------------
 bool FBuild::Initialize( const char * nodeGraphDBFile )
@@ -141,6 +165,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 
     const char * bffFile = m_Options.m_ConfigFile.IsEmpty() ? GetDefaultBFFFileName()
                                                             : m_Options.m_ConfigFile.Get();
+    m_BffFile=bffFile;
 
     if ( nodeGraphDBFile != nullptr )
     {
@@ -156,13 +181,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         m_DependencyGraphFile += ".fdb";
     }
 
-    SmallBlockAllocator::SetSingleThreadedMode( true );
-
-    m_DependencyGraph = NodeGraph::Initialize( bffFile, m_DependencyGraphFile.Get() );
-
-    SmallBlockAllocator::SetSingleThreadedMode( false );
-
-    if ( m_DependencyGraph == nullptr )
+    if ( !ReloadBff() )
     {
         return false;
     }
@@ -228,11 +247,87 @@ bool FBuild::Build( const AString & target )
     return Build( targets );
 }
 
+bool FBuild::CheckGenerator()
+{
+    Array< Node* >& generatorNodes = m_DependencyGraph->GetGeneratorNodes();
+
+    if (generatorNodes.GetSize()==0){
+        return true;
+    }
+    
+    bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
+    const size_t numGenerators = generatorNodes.GetSize();
+    Dependencies nodes( numGenerators, 0 );
+
+    Array< AString > targets;
+    for ( size_t i=0; i<numGenerators; ++i )
+    {
+        Node* node = generatorNodes[i];
+        if (node->DetermineNeedToBuild(forceClean))
+        {
+            nodes.Append( Dependency( node ) );
+            targets.Append ( node->GetName() );
+        }
+    }
+
+    if (nodes.GetSize()==0){
+        return true;
+    }
+
+    FLOG_INFO("re-generate config");
+    if (!BuildByProxy(targets,nodes)){
+        FLOG_ERROR("re-generate config failed");
+        return false;
+    }
+
+    //generator build ok
+    bool result = ReloadBff();
+
+    //bff reload leads every node out of date,
+    //but generator targets should be marked as up to date
+    //(although  generator targets maybe changed , 
+    //still delay re-generate to next time)
+    Array< Node* >& newGenerators = m_DependencyGraph->GetGeneratorNodes();
+    const size_t newNumGenerators = newGenerators.GetSize();
+
+    for ( size_t i=0; i<newNumGenerators; ++i )
+    {
+        Node* generator = newGenerators[i];
+        generator->m_Stamp = FileIO::GetFileLastWriteTime( generator->m_Name );
+        generator->m_State = Node::UP_TO_DATE;
+    }
+    
+    return result;
+}
+
+struct SaveTrigger
+{
+    FBuild *instance;
+
+    ~SaveTrigger()
+    {
+        ASSERT(instance);
+
+        if ( instance->m_Options.m_SaveDBOnCompletion )
+        {
+            instance->SaveDependencyGraph( instance->m_DependencyGraphFile.Get() );
+        }
+    }
+};
+
 // Build
 //------------------------------------------------------------------------------
 bool FBuild::Build( const Array< AString > & targets )
 {
     ASSERT( !targets.IsEmpty() );
+
+    SaveTrigger trigger{this};
+
+    // checking generator nodes status
+    if (!CheckGenerator())
+    {
+        return false;
+    }
 
     // Get the nodes for all the targets
     const size_t numTargets = targets.GetSize();
@@ -267,15 +362,27 @@ bool FBuild::Build( const Array< AString > & targets )
 
             return false;
         }
+
+        if ( node->IsGenerator() )
+        {
+            //generator target already built before this step
+            continue;
+        }
         nodes.Append( Dependency( node ) );
     }
 
+    bool result=BuildByProxy(targets,nodes);
+    return result;
+}
+
+bool FBuild::BuildByProxy(const Array<AString>& targets,Dependencies& nodes)
+{
     // create a temporary node, not hooked into the DB
     NodeProxy proxy( AStackString< 32 >( "*proxy*" ) );
     proxy.m_StaticDependencies = nodes;
 
     // build all targets in one sweep
-    bool result = Build( &proxy );
+    bool result = Build( &proxy ,true );
 
     // output per-target results
     for ( size_t i=0; i<targets.GetSize(); ++i )
@@ -357,7 +464,7 @@ void FBuild::SaveDependencyGraph( IOStream & stream, const char* nodeGraphDBFile
 
 // Build
 //------------------------------------------------------------------------------
-bool FBuild::Build( Node * nodeToBuild )
+bool FBuild::Build( Node * nodeToBuild , bool saveLater)
 {
     ASSERT( nodeToBuild );
 
@@ -456,7 +563,7 @@ bool FBuild::Build( Node * nodeToBuild )
     // This is desireable because:
     // - it will save parsing the bff next time
     // - it will record the items that did build, so they won't build again
-    if ( m_Options.m_SaveDBOnCompletion )
+    if ( !saveLater && m_Options.m_SaveDBOnCompletion )
     {
         SaveDependencyGraph( m_DependencyGraphFile.Get() );
     }

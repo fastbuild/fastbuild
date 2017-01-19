@@ -92,6 +92,7 @@ public:
     Node * FindNode( const AString & nodeName ) const;
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
+    Array< Node* >& GetGeneratorNodes() ;
 
     // create new nodes
     CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
@@ -228,6 +229,7 @@ private:
     enum { NODEMAP_TABLE_SIZE = 65536 };
     Node **         m_NodeMap;
     Array< Node * > m_AllNodes;
+    Array< Node * > m_GeneratorNodes;
     uint32_t        m_NextNodeIndex;
 
     Timer m_Timer;

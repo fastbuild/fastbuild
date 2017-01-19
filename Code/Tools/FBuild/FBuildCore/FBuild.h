@@ -25,6 +25,7 @@ class JobQueue;
 class Node;
 class NodeGraph;
 
+struct SaveTrigger;
 // FBuild
 //------------------------------------------------------------------------------
 class FBuild : public Singleton< FBuild >
@@ -40,7 +41,7 @@ public:
     // build a target
     bool Build( const AString & target );
     bool Build( const Array< AString > & targets );
-    bool Build( Node * nodeToBuild );
+    bool Build( Node * nodeToBuild ,bool saveLater = false );
 
     // after a build we can store progress/parsed rules for next time
     bool SaveDependencyGraph( const char * nodeGraphDBFile ) const;
@@ -105,6 +106,10 @@ public:
 
 private:
     void UpdateBuildStatus( const Node * node );
+    bool ReloadBff();
+    bool CheckGenerator();
+    bool BuildByProxy(const Array<AString>& targets, Dependencies& nodes);
+    friend struct SaveTrigger;
 
     static bool s_StopBuild;
 
@@ -114,6 +119,7 @@ private:
     JobQueue * m_JobQueue;
     Client * m_Client; // manage connections to worker servers
 
+    AString m_BffFile;
     AString m_DependencyGraphFile;
     AString m_CachePluginDLL;
     AString m_CachePath;
