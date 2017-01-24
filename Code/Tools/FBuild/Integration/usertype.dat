@@ -110,6 +110,7 @@ ProjectInputPathsExcluded
 ProjectFiles
 ProjectFilesToExclude
 ProjectGuid
+ProjectSccEntrySAK
 ProjectBasePath
 ProjectFileTypes
 ProjectReferences
