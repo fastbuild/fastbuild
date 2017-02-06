@@ -12,6 +12,9 @@
 // Core
 #include "Core/Env/Assert.h"
 
+// System
+#include <stdint.h>
+
 // FillMem
 //------------------------------------------------------------------------------
 void MemDebug::FillMem( void * ptr, const size_t size, const uint32_t pattern )

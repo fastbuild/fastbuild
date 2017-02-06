@@ -253,7 +253,7 @@ ObjectNode::~ObjectNode()
     {
         return DoBuild_QtRCC( job );
     }
-
+ 
     return DoBuildOther( job, useDeoptimization );
 }
 
@@ -682,27 +682,55 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
         CIncludeParser parser;
         bool msvcStyle;
+        bool genericDependencies = false;
         if ( GetDedicatedPreprocessor() != nullptr )
         {
             msvcStyle = GetPreprocessorFlag( FLAG_MSVC ) || GetPreprocessorFlag( FLAG_CUDA_NVCC );
+            genericDependencies = GetPreprocessorFlag( FLAG_GENERIC_DEPENDENCIES );
         }
         else
         {
             msvcStyle = GetFlag( FLAG_MSVC ) || GetFlag( FLAG_CUDA_NVCC );
         }
-        bool result = msvcStyle ? parser.ParseMSCL_Preprocessed( output, outputSize )
-                                : parser.ParseGCC_Preprocessed( output, outputSize );
-        if ( result == false )
-        {
-            FLOG_ERROR( "Failed to process includes for '%s'", GetName().Get() );
-            return false;
-        }
 
-        // record that we have a list of includes
-        // (we need a flag because we can't use the array size
-        // as a determinator, because the file might not include anything)
-        m_Includes.Clear();
-        parser.SwapIncludes( m_Includes );
+        if ( genericDependencies )
+        {
+            AStackString< 4096 > text( output, output + outputSize );
+            text.Replace( '\r', '\n' ); // Normalize all carriage line endings
+
+            // split into lines
+            Array< AString > lines( 256, true );
+            text.Tokenize( lines, '\n' );
+
+            m_Includes.Clear();
+
+            // extract paths and store them as includes
+            for ( const AString & line : lines )
+            {
+                if ( line.GetLength() > 0 )
+                {
+                    AStackString<> cleanedInclude;
+                    NodeGraph::CleanPath( line, cleanedInclude );
+                    m_Includes.Append( cleanedInclude );
+                }
+            }
+        }
+        else
+        {
+            bool result = msvcStyle ? parser.ParseMSCL_Preprocessed( output, outputSize )
+                                    : parser.ParseGCC_Preprocessed( output, outputSize );
+            if ( result == false )
+            {
+                FLOG_ERROR( "Failed to process includes for '%s'", GetName().Get() );
+                return false;
+            }
+
+            // record that we have a list of includes
+            // (we need a flag because we can't use the array size
+            // as a determinator, because the file might not include anything)
+            m_Includes.Clear();
+            parser.SwapIncludes( m_Includes );
+        }
     }
 
     FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
@@ -744,30 +772,18 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     return FNEW( ObjectNode( name, srcFile, compilerArgs, flags ) );
 }
 
-// DetermineFlags
+// DetermineCompilerType
 //------------------------------------------------------------------------------
-/*static*/ uint32_t ObjectNode::DetermineFlags( const Node * compilerNode,
-                                                const AString & args,
-                                                bool creatingPCH,
-                                                bool usingPCH )
+/*static*/ uint32_t ObjectNode::DetermineCompilerType( const Node * node )
 {
-    uint32_t flags = 0;
-
-    // set flags known from the context the args will be used in
-    flags |= ( creatingPCH  ? ObjectNode::FLAG_CREATING_PCH : 0 );
-    flags |= ( usingPCH     ? ObjectNode::FLAG_USING_PCH : 0 );
-
-    const AString & compiler = compilerNode->GetName();
-    const bool isDistributableCompiler = ( compilerNode->GetType() == Node::COMPILER_NODE ) &&
-                                         ( compilerNode->CastTo< CompilerNode >()->CanBeDistributed() );
-
-    // Compiler Type
+    const AString & compiler = node->GetName();
+ 
     if ( compiler.EndsWithI( "\\cl.exe" ) ||
          compiler.EndsWithI( "\\cl" ) ||
          compiler.EndsWithI( "\\icl.exe" ) ||
          compiler.EndsWithI( "\\icl" ) )
     {
-        flags |= ObjectNode::FLAG_MSVC;
+        return ObjectNode::FLAG_MSVC;
     }
     else if ( compiler.EndsWithI( "clang++.exe" ) ||
               compiler.EndsWithI( "clang++" ) ||
@@ -776,42 +792,67 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
               compiler.EndsWithI( "clang-cl.exe" ) ||
               compiler.EndsWithI( "clang-cl" ) )
     {
-        flags |= ObjectNode::FLAG_CLANG;
+        return ObjectNode::FLAG_CLANG;
     }
     else if ( compiler.EndsWithI( "gcc.exe" ) ||
               compiler.EndsWithI( "gcc" ) ||
               compiler.EndsWithI( "g++.exe" ) ||
               compiler.EndsWithI( "g++" ) )
     {
-        flags |= ObjectNode::FLAG_GCC;
+        return ObjectNode::FLAG_GCC;
     }
     else if ( compiler.EndsWithI( "\\ps3ppusnc.exe" ) ||
               compiler.EndsWithI( "\\ps3ppusnc" ) )
     {
-        flags |= ObjectNode::FLAG_SNC;
+        return ObjectNode::FLAG_SNC;
     }
     else if ( compiler.EndsWithI( "\\mwcceppc.exe" ) ||
               compiler.EndsWithI( "\\mwcceppc" ) )
     {
-        flags |= ObjectNode::CODEWARRIOR_WII;
+        return ObjectNode::CODEWARRIOR_WII;
     }
     else if ( compiler.EndsWithI( "\\cxppc.exe" ) ||
               compiler.EndsWithI( "\\cxppc" ) ||
               compiler.EndsWithI( "\\ccppc.exe" ) ||
               compiler.EndsWithI( "\\ccppc" ) )
     {
-        flags |= ObjectNode::GREENHILLS_WIIU;
+        return ObjectNode::GREENHILLS_WIIU;
     }
     else if ( compiler.EndsWithI( "\\nvcc.exe" ) ||
               compiler.EndsWithI( "\\nvcc" ) )
     {
-        flags |= ObjectNode::FLAG_CUDA_NVCC;
+        return ObjectNode::FLAG_CUDA_NVCC;
     }
     else if ( compiler.EndsWith( "rcc.exe" ) ||
               compiler.EndsWith( "rcc" ) )
     {
-        flags |= ObjectNode::FLAG_QT_RCC;
+        return ObjectNode::FLAG_QT_RCC;
     }
+
+    return 0;
+}
+
+
+// DetermineFlags
+//------------------------------------------------------------------------------
+/*static*/ uint32_t ObjectNode::DetermineFlags( const Node * node,
+                                                const AString & args,
+                                                bool creatingPCH,
+                                                bool usingPCH )
+{
+    uint32_t flags = 0;
+
+    const CompilerNode * compilerNode = node->GetType() == Node::COMPILER_NODE
+        ? node->CastTo< CompilerNode >()
+        : nullptr;
+
+    // set flags known from the context the args will be used in
+    flags |= ( creatingPCH  ? ObjectNode::FLAG_CREATING_PCH : 0 );
+    flags |= ( usingPCH     ? ObjectNode::FLAG_USING_PCH : 0 );
+
+    const bool isDistributableCompiler = ( compilerNode != nullptr ) && compilerNode->CanBeDistributed();
+
+    flags |= DetermineCompilerType( node );
 
     // Check MS compiler options
     if ( flags & ObjectNode::FLAG_MSVC )
@@ -1411,6 +1452,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     const bool isGHWiiU = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( GREENHILLS_WIIU ) : GetFlag( GREENHILLS_WIIU );
     const bool isCUDA   = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CUDA_NVCC ) : GetFlag( FLAG_CUDA_NVCC );
     const bool isQtRCC  = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_QT_RCC ) : GetFlag( FLAG_QT_RCC );
+    const bool isGenericDeps = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_GENERIC_DEPENDENCIES ) : false;
 
     const size_t numTokens = tokens.GetSize();
     for ( size_t i = 0; i < numTokens; ++i )
@@ -1551,7 +1593,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     {
                         // Remove relative include
                         StripTokenWithArg_MSVC( "I", token, i );
-    
+ 
                         // Add full path include
                         fullArgs.Append( token.Get(), start - token.Get() );
                         fullArgs += job->GetRemoteSourceRoot();
@@ -1704,7 +1746,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         {
             fullArgs += " --list"; // List used resources
         }
-        else
+        else if ( !isGenericDeps )
         {
             ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA );
             fullArgs += "-E"; // run pre-processor only
