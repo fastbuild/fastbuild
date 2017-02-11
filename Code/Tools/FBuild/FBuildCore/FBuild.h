@@ -69,20 +69,23 @@ public:
     class EnvironmentVarAndHash
     {
     public:
-        EnvironmentVarAndHash( const char * name, uint32_t hash )
+        EnvironmentVarAndHash( const char * name, uint32_t hash, bool isPath )
          : m_Name( name )
          , m_Hash( hash )
+         , m_IsPath( isPath )
         {}
 
         inline const AString &              GetName() const             { return m_Name; }
         inline uint32_t                     GetHash() const             { return m_Hash; }
+        inline bool                         IsPath() const              { return m_IsPath; }
 
     protected:
         AString     m_Name;
         uint32_t    m_Hash;
+        bool        m_IsPath;
     };
 
-    bool ImportEnvironmentVar( const char * name, bool optional, AString & value, uint32_t & hash );
+    bool ImportEnvironmentVar( const char * name, bool optional, AString & value, uint32_t & hash, bool isPath = false );
     const Array< EnvironmentVarAndHash > & GetImportedEnvironmentVars() const { return m_ImportedEnvironmentVars; }
 
     void GetLibEnvVar( AString & libEnvVar ) const;

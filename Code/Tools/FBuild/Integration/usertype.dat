@@ -2,6 +2,7 @@ define
 endif
 if
 import
+importfullpath
 in
 include
 once

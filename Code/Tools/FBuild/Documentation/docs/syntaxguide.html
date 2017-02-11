@@ -31,7 +31,7 @@ Details of the FASTBuild configuration file syntax can be grouped into 4 categor
 <ul>
   <li><a href='#define'>#define / #undef</a></li>
   <li><a href='#if'>#if / #endif</a></li>
-  <li><a href='#import'>#import</a></li>
+  <li><a href='#import'>#import / #importfullpath</a></li>
   <li><a href='#include'>#include</a></li>
   <li><a href='#once'>#once</a></li>
 </ul>
@@ -152,18 +152,23 @@ Example:
  </div>
  
      <div class='newsitemheader' id='import'>
-      #import
+      #import / #importfullpath
     </div>
     <div class='newsitembody'>
 <p>
-The #import directive allows a bff configuration file to import an Environment Variable. A variable with the same name as the Environment
-Variable will be created at the scope of the #import, as if it was locally declared by a normal variable assignment.
+The #import directive, as well as #importfullpath allows a bff configuration file to import an Environment Variable. A variable with the same name as the Environment
+Variable will be created at the scope of the #import, as if it was locally declared by a normal variable assignment.<p>The #importfullpath directive additionally normalizes
+the given full path (resolves symlinks or segments like '../../../..' to the actual path). Using #importfullpath assumes that the environment variable really can be resolved
+to an absolute path (file or directory) and fails if it cannot be accessesed. If this is not desired, plain #import can be used. The normalization of the path performed by
+#importfullpath is done before comparing the resulted value with the previously known one, this has the advantage that different path constructs like '../..' which actually
+resolve to the same absolute path, will be treated as if the environment variable has not changed, thus avoiding a rebuild, which is not assured when using plain #import.  
 </p>
 Examples:
 <div class='code'>#import VS120COMNTOOLS
 .VisualStudio2012Compiler = '$VS120COMNTOOLS$\..\..\VC\bin\cl.exe'
 </div>
-#import can be combined with <a href="#if">#if exists</a> to support importation of optional environment variables.
+#import can be combined with <a href="#if">#if exists / #if existsfullpath</a> to support importation of optional environment variables. Using #if existsfullpath assumes that the
+enclosed #import behaves as #importfullpath.
  </div>
 
  

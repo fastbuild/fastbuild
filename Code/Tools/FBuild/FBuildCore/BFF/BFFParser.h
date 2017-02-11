@@ -75,9 +75,9 @@ private:
     bool ParseToEndIf( BFFIterator & directiveIter, BFFIterator & iter, bool allowElse, bool * outIsElse );
     bool ParseEndIfDirective( const BFFIterator & directiveStart );
     bool ParseIfCondition( const BFFIterator & directiveStart, BFFIterator & iter, bool & result );
-    bool ParseIfExistsCondition( BFFIterator & iter, bool & result );
+    bool ParseIfExistsCondition( BFFIterator & iter, bool & result, bool isPath = false );
     bool CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result );
-    bool ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter );
+    bool ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter, bool isPath = false );
 
     bool StoreVariableString( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, BFFStackFrame * frame );
     bool StoreVariableArray( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, BFFStackFrame * frame );

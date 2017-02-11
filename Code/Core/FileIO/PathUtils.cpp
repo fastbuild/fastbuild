@@ -8,6 +8,11 @@
 #include "PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
+#if defined( __LINUX__ ) || defined( __APPLE__ )
+#include <stdlib.h>
+#include <limits.h>
+#endif
+
 // Exists
 //------------------------------------------------------------------------------
 /*static*/ bool PathUtils::IsFolderPath( const AString & path )
@@ -192,6 +197,48 @@
     {
         filePath.SetLength( (uint32_t)( lastDot - filePath.Get() ) );
     }
+}
+
+// CompactAndCheckFullPath
+//------------------------------------------------------------------------------
+/*static*/ bool PathUtils::CompactAndCheckFullPath( AString & path )
+{
+    bool bRet = true;
+#if defined( __WINDOWS__ )
+    TCHAR*   buffer = nullptr;
+    TCHAR** lppPart = { NULL };
+    // first, obtain the necessary buffer length
+    DWORD buffLength = 0;
+    buffLength = GetFullPathName( path.Get(), buffLength, nullptr, nullptr );
+    // now get the full path if no error occured so far
+    if ( buffLength > 0 )
+    {
+        buffer = new TCHAR[buffLength];
+        buffLength = GetFullPathName( path.Get(), buffLength, buffer, lppPart );
+        // if still no error, we will modify 'value'
+        if ( buffLength > 0 )
+        {
+            path = buffer;
+        }
+        delete[] buffer;
+        buffer = nullptr;
+    }
+    if ( INVALID_FILE_ATTRIBUTES == GetFileAttributes( path.Get() ) )
+    {
+        bRet = false;
+    }
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+    char actualpath[PATH_MAX + 1];
+    if ( realpath( path.Get(), actualpath ) )
+    {
+        path = actualpath;
+    }
+    else
+    {
+        bRet = false;
+    }
+#endif
+    return bRet;
 }
 
 //------------------------------------------------------------------------------
