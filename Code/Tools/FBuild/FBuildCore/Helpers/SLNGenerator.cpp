@@ -154,9 +154,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
         AStackString<> projectGuid;
         if ( (*it)->GetProjectGuid().GetLength() == 0 )
         {
-            // For backward compatibility, keep the preceding slash and .vcxproj extension for GUID generation
-            AStackString<> projectNameForGuid( lastSlash ? lastSlash : projectPath.Get() );
-            VSProjectGenerator::FormatDeterministicProjectGUID( projectGuid, projectNameForGuid );
+            VSProjectGenerator::FormatDeterministicProjectGUID( projectGuid, projectPath );
         }
         else
         {
@@ -189,12 +187,8 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
                 // get all the projects this project depends on
                 for ( const AString & dependency : deps.m_Dependencies )
                 {
-                    // For backward compatibility, keep the preceding slash and .vcxproj extension for GUID generation
-                    const char * projNameFromSlash = dependency.FindLast( NATIVE_SLASH );
-                    AStackString<> projectNameForGuid( projNameFromSlash ? projNameFromSlash : dependency.Get() );
-
                     AStackString<> newGUID;
-                    VSProjectGenerator::FormatDeterministicProjectGUID( newGUID, projectNameForGuid );
+                    VSProjectGenerator::FormatDeterministicProjectGUID( newGUID, dependency );
                     dependencyGUIDs.Append( newGUID );
                 }
             }
