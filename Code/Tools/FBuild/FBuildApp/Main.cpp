@@ -11,6 +11,7 @@
 
 #include "Core/Containers/Array.h"
 #include "Core/Env/Env.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Process.h"
 #include "Core/Process/SharedMemory.h"
 #include "Core/Process/SystemMutex.h"
@@ -40,7 +41,7 @@ enum ReturnCodes
 
 // Headers
 //------------------------------------------------------------------------------
-void DisplayHelp();
+void DisplayHelp(const AString& programName);
 void DisplayVersion();
 #if defined( __WINDOWS__ )
     BOOL CtrlHandler( DWORD fdwCtrlType ); // Handle Ctrl+C etc
@@ -97,6 +98,7 @@ int Main(int argc, char * argv[])
 
     // handle cmd line args
     Array< AString > targets( 8, true );
+    AStackString<> programName( "FBuild.exe" );
     bool cleanBuild = false;
     bool verbose = false;
     bool progressBar = true;
@@ -115,6 +117,17 @@ int Main(int argc, char * argv[])
     WrapperMode wrapperMode( WRAPPER_MODE_NONE );
     AStackString<> args;
     const char * configFile = nullptr;
+
+    if (argc>0)
+    {
+        AStackString<> programPath(argv[0]);
+        if (!programPath.IsEmpty())
+        {
+            const char* slash = programPath.FindLast(NATIVE_SLASH);
+            programName = (slash ? slash + 1 : programPath.Get());
+        }
+    }
+
     for ( int32_t i=1; i<argc; ++i ) // start from 1 to skip exe name
     {
         AStackString<> thisArg( argv[ i ] );
@@ -151,7 +164,7 @@ int Main(int argc, char * argv[])
                 if ( pathIndex >= argc )
                 {
                     OUTPUT( "FBuild: Error: Missing <path> for '-config' argument\n" );
-                    OUTPUT( "Try \"FBuild.exe -help\"\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
                     return FBUILD_BAD_ARGS;
                 }
                 configFile = argv[ pathIndex ];
@@ -181,7 +194,7 @@ int Main(int argc, char * argv[])
             }
             else if ( thisArg == "-help" )
             {
-                DisplayHelp();
+                DisplayHelp( programName );
                 return FBUILD_OK; // exit app
             }
             else if ( thisArg.BeginsWith( "-j" ) &&
@@ -282,7 +295,7 @@ int Main(int argc, char * argv[])
 
             // can't use FLOG_ERROR as FLog is not initialized
             OUTPUT( "FBuild: Error: Unknown argument '%s'\n", thisArg.Get() );
-            OUTPUT( "Try \"FBuild.exe -help\"\n" );
+            OUTPUT( "Try \"%s -help\"\n", programName.Get() );
             return FBUILD_BAD_ARGS;
         }
         else
@@ -321,6 +334,7 @@ int Main(int argc, char * argv[])
 
     // Global mutex names depend on workingDir which is managed by FBuildOptions
     FBuildOptions options;
+    options.m_ProgramName = programName;
 
     if ( wrapperMode == WRAPPER_MODE_INTERMEDIATE_PROCESS )
     {
@@ -477,12 +491,12 @@ int Main(int argc, char * argv[])
 
 // DisplayHelp
 //------------------------------------------------------------------------------
-void DisplayHelp()
+void DisplayHelp( const AString& programName )
 {
     DisplayVersion();
     OUTPUT( "----------------------------------------------------------------------\n"
-            "Usage: fbuild.exe [options] [target1]..[targetn]\n"
-            "----------------------------------------------------------------------\n"
+            "Usage: %s [options] [target1]..[targetn]\n", programName.Get() );
+    OUTPUT( "----------------------------------------------------------------------\n"
             "Options:\n"
             " -cache[read|write] Control use of the build cache.\n"
             " -clean         Force a clean build.\n"
@@ -578,7 +592,7 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
     argsCopy += " -wrapperintermediate";
 
     Process p;
-    if ( !p.Spawn( "fbuild.exe", argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
+    if ( !p.Spawn( options.m_ProgramName.Get(), argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
     {
         return FBUILD_FAILED_TO_SPAWN_WRAPPER;
     }
@@ -615,7 +629,7 @@ int WrapperIntermediateProcess( const AString & args, const FBuildOptions & opti
     argsCopy += " -wrapperfinal";
 
     Process p;
-    if ( !p.Spawn( "fbuild.exe", argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
+    if ( !p.Spawn( options.m_ProgramName.Get(), argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
     {
         return FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL;
     }
