@@ -7,6 +7,7 @@
 ; Windows Platform - // Currently using Windows 10 SDK version 10.0.14393.0
 ;-------------------------------------------------------------------------------
 .VSVer				= '14'
+.VCVer				= '$VSVer0'
 .OldWindowsVer		= '8.1'
 .WindowsVer			= '10'
 .WinSDKVer			= '10.0.14393.0'
@@ -527,7 +528,7 @@ Compiler( 'Compiler-x64-OSX' )
     .OutputDirectory            = '^$(SolutionDir)\..\tmp2'
     .IntermediateDirectory      = '^$(SolutionDir)\..\tmp2'
     .Platform = 'Win32' // unused
-    .PlatformToolset = 'v120'
+    .PlatformToolset = 'v$VCVer$'
 ]
 
 .ProjectX86Debug        = [ Using( .ProjectCommon ) .Config = 'x86-Debug' ]
