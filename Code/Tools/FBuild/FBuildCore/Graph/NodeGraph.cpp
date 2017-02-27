@@ -171,7 +171,7 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
         FLOG_ERROR( "Error reading BFF '%s'", bffFile );
         return false;
     }
-    const uint64_t rootBFFDataHash = xxHash::Calc64( data.Get(), size );
+    const uint64_t rootBFFDataHash = FBuild::Hash64( data.Get(), size );
 
     // re-parse the BFF from scratch, clean build will result
     BFFParser bffParser( *this );
@@ -245,7 +245,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
             return LoadResult::LOAD_ERROR; // error reading
         }
 
-        const uint64_t dataHash = xxHash::Calc64( mem.Get(), size );
+        const uint64_t dataHash = FBuild::Hash64( mem.Get(), size );
         if ( dataHash == usedFiles[ i ].m_DataHash )
         {
             // file didn't change, update stored timestamp to save time on the next run
@@ -331,7 +331,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
     else
     {
         // If the Environment will be overriden, make sure we use the LIB from that
-        const uint32_t libEnvVarHash = ( envStringSize > 0 ) ? xxHash::Calc32( libEnvVar ) : GetLibEnvVarHash();
+        const uint32_t libEnvVarHash = ( envStringSize > 0 ) ? FBuild::Hash32( libEnvVar ) : GetLibEnvVarHash();
         if ( libEnvVarHashInDB != libEnvVarHash )
         {
             // make sure the user knows why some things might re-build
@@ -1666,7 +1666,7 @@ uint32_t NodeGraph::GetLibEnvVarHash() const
     // ok for LIB var to be missing, we'll hash the empty string
     AStackString<> libVar;
     FBuild::Get().GetLibEnvVar( libVar );
-    return xxHash::Calc32( libVar );
+    return FBuild::Hash32( libVar );
 }
 
 // IsCleanPath

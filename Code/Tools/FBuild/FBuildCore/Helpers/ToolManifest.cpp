@@ -6,6 +6,7 @@
 #include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
 
 #include "ToolManifest.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 
 // Core
 #include "Core/Containers/AutoPtr.h"
@@ -117,10 +118,10 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
         // file name & sub-path (relative to remote folder)
         AStackString<> relativePath;
         GetRemoteFilePath( (uint32_t)i, relativePath, false ); // false = don't use full path
-        *pos = xxHash::Calc32( relativePath );
+        *pos = FBuild::Hash32( relativePath );
         ++pos;
     }
-    m_ToolId = xxHash::Calc64( mem, memSize );
+    m_ToolId = FBuild::Hash64( mem, memSize );
     FREE( mem );
 
     // update time stamp (most recent file in manifest)
@@ -228,7 +229,7 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
         {
             continue; // problem reading file
         }
-        if( xxHash::Calc32( mem.Get(), (size_t)f.GetFileSize() ) != m_Files[ i ].m_Hash )
+        if( FBuild::Hash32( mem.Get(), (size_t)f.GetFileSize() ) != m_Files[ i ].m_Hash )
         {
             continue; // file contents unexpected
         }
@@ -536,7 +537,7 @@ bool ToolManifest::AddFile( const Node * node )
     // create the file entry
     const AString & name = node->GetName();
     const uint64_t timeStamp = node->GetStamp();
-    const uint32_t hash = xxHash::Calc32( content, contentSize );
+    const uint32_t hash = FBuild::Hash32( content, contentSize );
     m_Files.Append( File(name, timeStamp, hash, node, contentSize ) );
 
     // store file content (take ownership of file data)
