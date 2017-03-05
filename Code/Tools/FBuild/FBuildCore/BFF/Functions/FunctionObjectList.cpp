@@ -183,7 +183,7 @@ FunctionObjectList::FunctionObjectList()
                 return false;
             }
         }
-        else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG ) )
+        else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG | ObjectNode::FLAG_EMSCRIPTEN ) )
         {
             if ( hasCompileToken == false )
             {

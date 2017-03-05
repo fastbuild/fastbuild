@@ -196,7 +196,7 @@ ObjectNode::~ObjectNode()
 
     bool useCache = ShouldUseCache();
     bool useDist = GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
-    bool usePreProcessor = ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
+    bool usePreProcessor = ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( FLAG_EMSCRIPTEN ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
     if ( GetDedicatedPreprocessor() )
     {
         usePreProcessor = true;
@@ -388,9 +388,9 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     bool usePreProcessedOutput = true;
     if ( job->IsLocal() )
     {
-        if ( GetFlag( FLAG_CLANG | FLAG_GCC | FLAG_SNC ) )
+        if ( GetFlag( FLAG_CLANG | FLAG_EMSCRIPTEN | FLAG_GCC | FLAG_SNC ) )
         {
-            // Using the PCH with Clang/SNC/GCC doesn't prevent storing to the cache
+            // Using the PCH with Clang/SNC/GCC/EMSCRIPTEN doesn't prevent storing to the cache
             // so we can use the PCH accelerated compilation
             if ( GetFlag( FLAG_USING_PCH ) )
             {
@@ -789,6 +789,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     {
         flags |= ObjectNode::FLAG_CUDA_NVCC;
     }
+	else if ( compiler.EndsWithI( "\\emcc" ) ||
+			  compiler.EndsWithI( "\\em++" ) )
+	{
+		flags |= ObjectNode::FLAG_EMSCRIPTEN;
+	}
     else if ( compiler.EndsWith( "rcc.exe" ) ||
               compiler.EndsWith( "rcc" ) )
     {
@@ -854,7 +859,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     }
 
     // check for cacheability/distributability for non-MSVC
-    if ( flags & ( ObjectNode::FLAG_CLANG | ObjectNode::FLAG_GCC | ObjectNode::FLAG_SNC | ObjectNode::CODEWARRIOR_WII | ObjectNode::GREENHILLS_WIIU ) )
+    if ( flags & ( ObjectNode::FLAG_CLANG | ObjectNode::FLAG_EMSCRIPTEN | ObjectNode::FLAG_GCC | ObjectNode::FLAG_SNC | ObjectNode::CODEWARRIOR_WII | ObjectNode::GREENHILLS_WIIU ) )
     {
         // creation of the PCH must be done locally to generate a usable PCH
         if ( !( flags & ObjectNode::FLAG_CREATING_PCH ) )
@@ -1390,6 +1395,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     const bool isGHWiiU = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( GREENHILLS_WIIU ) : GetFlag( GREENHILLS_WIIU );
     const bool isCUDA   = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CUDA_NVCC ) : GetFlag( FLAG_CUDA_NVCC );
     const bool isQtRCC  = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_QT_RCC ) : GetFlag( FLAG_QT_RCC );
+	const bool isEmcc	= ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_EMSCRIPTEN ) : GetFlag( FLAG_EMSCRIPTEN );
 
     const size_t numTokens = tokens.GetSize();
     for ( size_t i = 0; i < numTokens; ++i )
@@ -1400,7 +1406,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         // -o removal for preprocessor
         if ( pass == PASS_PREPROCESSOR_ONLY )
         {
-            if ( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA )
+            if ( isGCC || isSNC || isClang || isEmcc || isCWWii || isGHWiiU || isCUDA )
             {
                 if ( StripTokenWithArg( "-o", token, i ) )
                 {
@@ -1423,7 +1429,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             }
         }
 
-        if ( isClang || isGCC ) // Also check when invoked via gcc sym link
+        if ( isClang || isEmcc || isGCC ) // Also check when invoked via gcc sym link
         {
             // The pch can only be utilized when doing a direct compilation
             //  - Can't be used to generate the preprocessed output
@@ -1481,7 +1487,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         // remove includes for second pass
         if ( pass == PASS_COMPILE_PREPROCESSED )
         {
-            if ( isClang )
+            if ( isClang || isEmcc )
             {
                 // Clang requires -I options be stripped when compiling preprocessed code
                 // (it raises an error if we don't remove these)
@@ -1490,7 +1496,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue; // skip this token in both cases
                 }
             }
-            if ( isGCC || isClang )
+            if ( isGCC || isClang || isEmcc )
             {
                 // Remove forced includes so they aren't forced twice
                 if ( StripTokenWithArg( "-include", token, i ) )
@@ -1533,7 +1539,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         // Remove static analyzer from clang preprocessor
         if ( pass == PASS_PREPROCESSOR_ONLY )
         {
-            if ( isClang )
+            if ( isClang || isEmcc )
             {
                 if ( StripToken( "--analyze", token ) )
                 {
@@ -1645,9 +1651,9 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         }
         else
         {
-            ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA );
+            ASSERT( isGCC || isSNC || isClang || isEmcc || isCWWii || isGHWiiU || isCUDA );
             fullArgs += "-E"; // run pre-processor only
-            if ( isClang )
+            if ( isClang || isEmcc )
             {
                 fullArgs += " -frewrite-includes";
             }
@@ -2086,8 +2092,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             }
         }
 
-        // Clang
-        if ( objectNode->GetFlag( ObjectNode::FLAG_CLANG ) )
+        // Clang + Emscripten (Emcc) [Clang under the hood]
+        if ( objectNode->GetFlag( ObjectNode::FLAG_CLANG ) || objectNode->GetFlag( ObjectNode::FLAG_EMSCRIPTEN ) )
         {
             // When clang fails due to low disk space
             if ( result == 0x01 )
@@ -2199,7 +2205,7 @@ bool ObjectNode::CanUseResponseFile() const
 {
     #if defined( __WINDOWS__ )
         // Generally only windows applications support response files (to overcome Windows command line limits)
-        return ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
+        return ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( FLAG_EMSCRIPTEN ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
     #else
         return false;
     #endif
