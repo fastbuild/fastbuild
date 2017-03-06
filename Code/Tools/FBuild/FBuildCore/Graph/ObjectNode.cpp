@@ -789,8 +789,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     {
         flags |= ObjectNode::FLAG_CUDA_NVCC;
     }
-	else if ( compiler.EndsWithI( "\\emcc" ) ||
-			  compiler.EndsWithI( "\\em++" ) )
+	else if ( compiler.EndsWithI( "emcc" ) ||
+			  compiler.EndsWithI( "em++" ) )
 	{
 		flags |= ObjectNode::FLAG_EMSCRIPTEN;
 	}
