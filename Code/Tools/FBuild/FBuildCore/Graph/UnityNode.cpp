@@ -38,6 +38,7 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT( m_NumUnityFilesToCreate,   "UnityNumFiles",                        MetaOptional() + MetaRange( 1, 1048576 ) )
     REFLECT( m_MaxIsolatedFiles,        "UnityInputIsolateWritableFilesLimit",  MetaOptional() + MetaRange( 0, 1048576 ) )
     REFLECT( m_IsolateWritableFiles,    "UnityInputIsolateWritableFiles",       MetaOptional() )
+    REFLECT( m_IsolateListFile,         "UnityInputIsolateListFile",            MetaOptional() + MetaFile() )
     REFLECT( m_PrecompiledHeader,       "UnityPCH",                             MetaOptional() + MetaFile( true ) ) // relative
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT( m_Hidden,                  "Hidden",                               MetaOptional() )
@@ -143,6 +144,14 @@ UnityNode::~UnityNode()
 
     // TODO:A Sort files for consistent ordering across file systems/platforms
 
+    // get isolated files from list
+    Array< AString > isolatedFilesFromList( 32, true );
+
+    if ( !GetIsolatedFilesFromList( isolatedFilesFromList ) )
+    {
+        return NODE_RESULT_FAILED; // GetFiles will have emitted an error
+    }
+
     // how many files should go in each unity file?
     const size_t numFiles = files.GetSize();
     float numFilesPerUnity = (float)numFiles / m_NumUnityFilesToCreate;
@@ -206,9 +215,25 @@ UnityNode::~UnityNode()
                 }
             }
 
+            // files read from isolated list are excluded from the unity
+            if ( !isolate )
+            {
+                for ( const AString& isolatedFile : isolatedFilesFromList )
+                {
+                    if ( isolatedFile == files[ index ].GetName() )
+                    {
+                        isolate = true;
+                        break;
+                    }
+                }
+            }
+
             if ( isolate )
             {
                 numIsolated++;
+                filesInThisUnity.Top().SetIsolated( true );
+
+                FLOG_INFO( "Isolate file '%s' from unity", files[ index ].GetName().Get() );
             }
 
             // count the file, whether we wrote it or not, to keep unity files stable
@@ -221,12 +246,12 @@ UnityNode::~UnityNode()
         size_t numFilesActuallyIsolatedInThisUnity( 0 );
         for ( const FileAndOrigin * file = filesInThisUnity.Begin(); file != end; ++file )
         {
-            // files which are modified (writable) can optionally be excluded from the unity
+            // files which are modified can optionally be excluded from the unity
             bool isolateThisFile = noUnity;
-            if ( m_IsolateWritableFiles && ( ( m_MaxIsolatedFiles == 0 ) || ( numIsolated <= m_MaxIsolatedFiles ) ) )
+            if ( ( m_MaxIsolatedFiles == 0 ) || ( numIsolated <= m_MaxIsolatedFiles ) )
             {
                 // is the file writable?
-                if ( file->IsReadOnly() == false )
+                if ( file->IsIsolated() )
                 {
                     isolateThisFile = true;
                 }
@@ -539,6 +564,43 @@ void UnityNode::EnumerateInputFiles( void (*callback)( const AString & inputFile
             ASSERT( false ); // unexpected node type
         }
     }
+}
+
+// GetIsolatedFiles
+//------------------------------------------------------------------------------
+bool UnityNode::GetIsolatedFilesFromList( Array< AString > & files ) const
+{
+    bool ok = true;
+
+    if ( !m_IsolateListFile.IsEmpty() && FileIO::FileExists( m_IsolateListFile.Get() ) )
+    {
+        FileStream input;
+
+        if ( false == input.Open( m_IsolateListFile.Get() ) )
+        {
+            FLOG_ERROR( "FBuild: Error: Unity can't open isolated list file: '%s'\n", m_IsolateListFile.Get() );
+            ok = false;
+        }
+        else
+        {
+            if ( false == input.ReadLines( files ) )
+            {
+                FLOG_ERROR( "FBuild: Error: Unity failed to read lines from isolated list file: '%s'\n", m_IsolateListFile.Get() );
+                ok = false;
+            }
+            else
+            {
+                FLOG_INFO( "Imported %u isolated files from list '%s'", (uint32_t)files.GetSize(), m_IsolateListFile.Get() );
+
+                for ( AString& filename : files )
+                {
+                    NodeGraph::CleanPath( filename );
+                }
+            }
+        }
+    }
+
+    return ok;
 }
 
 //------------------------------------------------------------------------------
