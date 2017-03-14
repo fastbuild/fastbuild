@@ -37,7 +37,7 @@ public:
     const Array< const BFFVariable * > & GetStructMembers() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_StructMembers ); }
     const Array< const BFFVariable * > & GetArrayOfStructs() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_ArrayOfStructs ); }
 
-    enum VarType
+    enum VarType : uint8_t
     {
         VAR_ANY     = 0, // used for searching
         VAR_STRING  = 1,
@@ -94,10 +94,10 @@ private:
     mutable bool m_Frozen;
 
     //
-    AString             m_StringValue;
     bool                m_BoolValue;
-    Array< AString >    m_ArrayValues;
     int                 m_IntValue;
+    AString             m_StringValue;
+    Array< AString >    m_ArrayValues;
     Array< BFFVariable * > m_StructMembers;
     Array< BFFVariable * > m_ArrayOfStructs;
 

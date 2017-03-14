@@ -16,8 +16,8 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( AliasNode, Node, MetaNone() )
-    REFLECT_ARRAY( m_Targets,   "Targets",          MetaFile() )
+REFLECT_NODE_BEGIN( AliasNode, Node, MetaNone() )
+    REFLECT_ARRAY( m_Targets,   "Targets",          MetaFile() + MetaAllowNonFile() )
 REFLECT_END( AliasNode )
 
 // CONSTRUCTOR

@@ -6,9 +6,6 @@
 //------------------------------------------------------------------------------
 #include "Function.h"
 
-// Core
-//#include "Core/Containers/Array.h"
-
 // FunctionCopyDir
 //------------------------------------------------------------------------------
 class FunctionCopyDir : public Function

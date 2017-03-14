@@ -116,6 +116,7 @@ public:
     inline bool     MatchesI( const char * pattern ) const { return MatchI( pattern, m_Contents ); }
 
     // string manipulation helpers
+    static void Copy( const char * src, char * dst );
     static void Copy( const char * src, char * dst, size_t len );
     static size_t StrLen( const char * string );
     static int32_t StrNCmp( const char * a, const char * b, size_t num );

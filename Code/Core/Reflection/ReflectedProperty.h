@@ -41,6 +41,7 @@ public:
 
     #define GETSET_PROPERTY( getValueType, setValueType ) \
         void GetProperty( const void * object, getValueType * value ) const; \
+        void GetPtrToProperty( const void * object, getValueType * & value ) const; \
         void SetProperty( void * object, setValueType value ) const;
 
     GETSET_PROPERTY( float, float )
@@ -62,7 +63,8 @@ public:
     GETSET_PROPERTY( WeakRef< Object >, const WeakRef< Object > & )
 
     #define GETSET_PROPERTY_ARRAY( valueType ) \
-        void GetProperty( const void * object, const Array< valueType > * & value ) const; \
+        void GetProperty( const void * object, Array< valueType > * value ) const; \
+        void GetPtrToProperty( const void * object, Array< valueType > * & value ) const; \
         void SetProperty( void * object, const Array< valueType > & value ) const;
 
     GETSET_PROPERTY_ARRAY( AString )

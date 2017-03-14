@@ -81,12 +81,12 @@ void TestCLR::Test() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( stats, 3,      1,      Node::FILE_NODE );  // cpp
+    CheckStatsNode ( stats, 4,      2,      Node::FILE_NODE );  // cpp + librarian
     CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 7,      5 );
+    CheckStatsTotal( stats, 8,      6 );
 
     TEST_ASSERT( stats.GetCacheStores() == 0 ); // cache not supported due to compiler bug
 }
@@ -101,12 +101,12 @@ void TestCLR::Test_NoBuild() const
 
     // Check stats
     //                      Seen,   Built,  Type
-    CheckStatsNode ( stats, 3,      3,      Node::FILE_NODE );  // cpp + h + mscorlib
+    CheckStatsNode ( stats, 4,      4,      Node::FILE_NODE );  // cpp + h + mscorlib + librarian
     CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 7,      4 );
+    CheckStatsTotal( stats, 8,      5 );
 }
 
 // TestCache
@@ -126,12 +126,12 @@ void TestCLR::TestCache() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( stats, 3,      1,      Node::FILE_NODE );  // cpp
+    CheckStatsNode ( stats, 4,      2,      Node::FILE_NODE );  // cpp + librarian
     CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 7,      5 );
+    CheckStatsTotal( stats, 8,      6 );
 
     TEST_ASSERT( stats.GetCacheHits() == 0 ); // cache not supported dur to compiler bug
 }
@@ -153,12 +153,12 @@ void TestCLR::TestParallelBuild() const
     // Check stats
     //               Seen,  Built,  Type
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 5,      3,      Node::FILE_NODE );  // 3xcpp + .h
+    CheckStatsNode ( stats, 6,      4,      Node::FILE_NODE );  // 3xcpp + librarian
     CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 3,      3,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 12,     10 );
+    CheckStatsTotal( stats, 13,     11 );
 }
 
 // TestParallelBuild_NoBuild
@@ -173,12 +173,12 @@ void TestCLR::TestParallelBuild_NoBuild() const
     // Check stats
     //                      Seen,   Built,  Type
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 5,      5,      Node::FILE_NODE );  // 3xcpp + mscorlib.dll
+    CheckStatsNode ( stats, 6,      6,      Node::FILE_NODE );  // 3xcpp + mscorlib.dll + librarian
     CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 12,     7 );
+    CheckStatsTotal( stats, 13,     8 );
 }
 
 // TestCLRToCPPBridge

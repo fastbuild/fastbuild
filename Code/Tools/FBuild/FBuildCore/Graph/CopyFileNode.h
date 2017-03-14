@@ -15,7 +15,7 @@ class Function;
 //------------------------------------------------------------------------------
 class CopyFileNode : public FileNode
 {
-    REFLECT_DECLARE( CopyFileNode )
+    REFLECT_NODE_DECLARE( CopyFileNode )
 public:
     explicit CopyFileNode();
     bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );

@@ -275,7 +275,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > defines;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerArgs(), "/D", "-D", defines, false );
+                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, false );
                     AStackString<> definesStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, nullptr, ";" );
                     WritePGItem( "NMakePreprocessorDefinitions", definesStr );
@@ -290,7 +290,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > includePaths;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerArgs(), "/I", "-I", includePaths, false );
+                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false );
                     for ( AString & include : includePaths )
                     {
                         AStackString<> fullIncludePath;
@@ -511,7 +511,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         stream.Write( cfg.m_Platform );
         stream.Write( cfg.m_Config );
 
-        Node::SaveNode( stream, cfg.m_Target );
+        Node::SaveNodeLink( stream, cfg.m_Target );
 
         stream.Write( cfg.m_BuildCommand );
         stream.Write( cfg.m_RebuildCommand );
@@ -564,7 +564,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( stream.Read( cfg.m_Platform ) == false ) { return false; }
         if ( stream.Read( cfg.m_Config ) == false ) { return false; }
 
-        if ( !Node::LoadNode( nodeGraph, stream, cfg.m_Target ) ) { return false; }
+        if ( !Node::LoadNodeLink( nodeGraph, stream, cfg.m_Target ) ) { return false; }
 
         if ( stream.Read( cfg.m_BuildCommand ) == false ) { return false; }
         if ( stream.Read( cfg.m_RebuildCommand ) == false ) { return false; }

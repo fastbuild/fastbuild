@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="Node">
+    <DisplayString>{{ type: {Node::s_NodeTypeNames[m_Type],s}, name: {m_Name.m_Contents,s} }}</DisplayString>
+  </Type>
+</AutoVisualizer>
