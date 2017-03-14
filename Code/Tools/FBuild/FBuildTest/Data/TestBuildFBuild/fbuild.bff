@@ -53,7 +53,7 @@ Using( .StandardEnvironment )
 
 // External Libs
 //------------------------------------------------------------------------------
-.LZ4BasePath                = '../External/LZ4/lz4-r131'
+.LZ4BasePath                = '../External/LZ4/lz4-1.7.4.2'
 .LZ4IncludePath             = '$LZ4BasePath$'
 
 //
@@ -90,22 +90,14 @@ Using( .StandardEnvironment )
 .ExtraOptions       = ''
 .Exclude            = {}
 .LZ4Lib             = [ .LibName = 'LZ4'            .LibPath = '$LZ4BasePath$'
-                        .CompilerInputFiles = { '$LZ4BasePath$/lz4.c', '$LZ4BasePath$/xxhash.c' }
+                        .CompilerInputFiles = { '$LZ4BasePath$/lib/lz4.c', '$LZ4BasePath$/lib/xxhash.c' }
                         .CompilerOptions = .CompilerOptionsC ]
 .CoreLib            = [ .LibName = 'Core'           .LibPath = 'Core\'
                         .Exclude = { 'Core\CoreTest\' } ]
 .CoreTestLib        = [ .LibName = 'CoreTest'       .LibPath = 'Core\CoreTest\' ]
 .FBuildCoreLib      = [ .LibName = 'FBuildCore'     .LibPath = 'Tools\FBuild\FBuildCore\'
-                        #if __WINDOWS__
-                            .ExtraOptions = ' /I"$LZ4IncludePath$"'
-                        #endif
-                        #if __OSX__
-                            .ExtraOptions = ' "-I$LZ4IncludePath$"'
-                        #endif
-                        #if __LINUX__
-                            .ExtraOptions = ' "-I$LZ4IncludePath$"'
-                        #endif
-                        ]
+                        .ExtraOptions = ' "-I$LZ4IncludePath$/lib"'
+                      ]
 .FBuildAppLib       = [ .LibName = 'FBuildApp'      .LibPath = 'Tools\FBuild\FBuildApp\' ]
 .FBuildTestLib      = [ .LibName = 'FBuildTest'     .LibPath = 'Tools\FBuild\FBuildTest\'
                         .Exclude = { 'Tools\FBuild\FBuildTest\Data\' } ]

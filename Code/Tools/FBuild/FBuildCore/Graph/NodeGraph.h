@@ -52,7 +52,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 89 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 93 };
 
     bool IsValid() const
     {
@@ -95,10 +95,7 @@ public:
 
     // create new nodes
     CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
-    CopyDirNode * CreateCopyDirNode( const AString & nodeName,
-                                     Dependencies & staticDeps,
-                                     const AString & destPath,
-                                     const Dependencies & preBuildDependencies );
+    CopyDirNode * CreateCopyDirNode( const AString & nodeName );
     RemoveDirNode * CreateRemoveDirNode(const AString & nodeName,
                                         Dependencies & staticDeps,
                                         const Dependencies & preBuildDependencies );
@@ -119,42 +116,8 @@ public:
                                                  const Array< AString > & filesToExclude,
                                                  const Array< AString > & excludePatterns
                                                );
-    LibraryNode *   CreateLibraryNode( const AString & libraryName,
-                                       const Dependencies & inputNodes,
-                                       CompilerNode * compilerNode,
-                                       const AString & compilerArgs,
-                                       const AString & compilerArgsDeoptimized,
-                                       const AString & compilerOutputPath,
-                                       const AString & linker,
-                                       const AString & linkerArgs,
-                                       uint32_t flags,
-                                       ObjectNode * precompiledHeader,
-                                       const Dependencies & compilerForceUsing,
-                                       const Dependencies & preBuildDependencies,
-                                       const Dependencies & additionalInputs,
-                                       bool deoptimizeWritableFiles,
-                                       bool deoptimizeWritableFilesWithToken,
-                                       bool allowDistribution,
-                                       bool allowCaching,
-                                       CompilerNode * preprocessor,
-                                       const AString & preprocessorArgs,
-                                       const AString & baseDirectory );
-
-    ObjectNode *    CreateObjectNode( const AString & objectName,
-                                      Node * inputNode,
-                                      Node * compilerNode,
-                                      const AString & compilerArgs,
-                                      const AString & compilerArgsDeoptimized,
-                                      Node * precompiledHeader,
-                                      uint32_t flags,
-                                      const Dependencies & compilerForceUsing,
-                                      bool deoptimizeWritableFiles,
-                                      bool deoptimizeWritableFilesWithToken,
-                                      bool allowDistribution,
-                                      bool allowCaching,
-                                      Node * preprocessorNode,
-                                      const AString & preprocessorArgs,
-                                      uint32_t preprocessorFlags );
+    LibraryNode *   CreateLibraryNode( const AString & libraryName );
+    ObjectNode *    CreateObjectNode( const AString & objectName );
     AliasNode *     CreateAliasNode( const AString & aliasName );
     DLLNode *       CreateDLLNode( const AString & linkerOutputName,
                                    const Dependencies & inputLibraries,
@@ -179,12 +142,7 @@ public:
                                    Node * linkerStampExe,
                                    const AString & linkerStampExeArgs );
     UnityNode * CreateUnityNode( const AString & unityName );
-    CSNode * CreateCSNode( const AString & compilerOutput,
-                           const Dependencies & inputNodes,
-                           const AString & compiler,
-                           const AString & compilerOptions,
-                           const Dependencies & extraRefs,
-                           const Dependencies & preBuildDependencies );
+    CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );
     CompilerNode * CreateCompilerNode( const AString & executable );
     VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
@@ -210,22 +168,7 @@ public:
                                 const Array< VCXProjectNode * > & projects,
                                 const Array< SLNDependency > & slnDeps,
                                 const Array< SLNSolutionFolder > & folders );
-    ObjectListNode * CreateObjectListNode( const AString & listName,
-                             const Dependencies & inputNodes,
-                             CompilerNode * compiler,
-                             const AString & compilerArgs,
-                             const AString & compilerArgsDeoptimized,
-                             const AString & compilerOutputPath,
-                             ObjectNode * precompiledHeader,
-                             const Dependencies & compilerForceUsing,
-                             const Dependencies & preBuildDependencies,
-                             bool deoptimizeWritableFiles,
-                             bool deoptimizeWritableFilesWithToken,
-                             bool allowDistribution,
-                             bool allowCaching,
-                             CompilerNode * preprocessor,
-                             const AString & preprocessorArgs,
-                             const AString & baseDirectory );
+    ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );

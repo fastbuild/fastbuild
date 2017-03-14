@@ -64,10 +64,10 @@ void TestCSharp::TestSingleFile() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );  // cs
+    CheckStatsNode ( 2,     2,      Node::FILE_NODE );  // compiler + 1 cs file
     CheckStatsNode ( 1,     1,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 3,     3 );
+    CheckStatsTotal( 4,     4 );
 }
 
 // TestSingleFile_NoRebuild
@@ -86,10 +86,10 @@ void TestCSharp::TestSingleFile_NoRebuild() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE );  // cs
+    CheckStatsNode ( 2,     2,      Node::FILE_NODE );  // compiler + 1 cs file
     CheckStatsNode ( 1,     0,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 3,     2 );
+    CheckStatsTotal( 4,     3 );
 }
 
 // TestMultipleFiles
@@ -116,11 +116,11 @@ void TestCSharp::TestMultipleFiles() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
+    CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // compiler + 3x cs
     CheckStatsNode ( 1,     1,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsTotal( 6,     6 );
+    CheckStatsTotal( 7,     7 );
 }
 
 // TestMultipleFiles_NoRebuild
@@ -139,11 +139,11 @@ void TestCSharp::TestMultipleFiles_NoRebuild() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
+    CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // compiler + 3x cs
     CheckStatsNode ( 1,     0,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsTotal( 6,     5 );
+    CheckStatsTotal( 7,     6 );
 }
 
 // TestMultipleAssemblies
@@ -174,10 +174,10 @@ void TestCSharp::TestMultipleAssemblies() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 2x cs
+    CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // compiler + 2x cs
     CheckStatsNode ( 3,     3,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 7,     7 );
+    CheckStatsTotal( 8,     8 );
 }
 
 
@@ -197,10 +197,10 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 2x cs
+    CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // compiler + 2x cs
     CheckStatsNode ( 3,     0,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 7,     4 );
+    CheckStatsTotal( 8,     5 );
 }
 
 

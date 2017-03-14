@@ -86,7 +86,7 @@ public:
         uint32_t    m_Hash;
     };
 
-    bool ImportEnvironmentVar( const char * name, AString & value, uint32_t & hash );
+    bool ImportEnvironmentVar( const char * name, bool optional, AString & value, uint32_t & hash );
     const Array< EnvironmentVarAndHash > & GetImportedEnvironmentVars() const { return m_ImportedEnvironmentVars; }
 
     void GetLibEnvVar( AString & libEnvVar ) const;

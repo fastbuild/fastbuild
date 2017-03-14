@@ -86,7 +86,7 @@ public:
     GETSET_PROPERTY( WeakRef< Object >, const WeakRef< Object > & )
 
     #define GETSET_PROPERTY_ARRAY( valueType ) \
-        bool GetProperty( void * object, const char * name, const Array< valueType > * & value ) const; \
+        bool GetProperty( void * object, const char * name, Array< valueType > * value ) const; \
         bool SetProperty( void * object, const char * name, const Array< valueType > & value ) const;
 
     GETSET_PROPERTY_ARRAY( AString )

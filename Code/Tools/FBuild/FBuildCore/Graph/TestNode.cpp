@@ -20,7 +20,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
+REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
     REFLECT( m_TestExecutable,      "TestExecutable",       MetaFile() )
     REFLECT( m_TestArguments,       "TestArguments",        MetaOptional() )
     REFLECT( m_TestWorkingDir,      "TestWorkingDir",       MetaOptional() + MetaPath() )

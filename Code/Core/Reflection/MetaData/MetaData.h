@@ -21,6 +21,7 @@ IMetaData & MetaNone();
 // Basic MetaData Types
 //------------------------------------------------------------------------------
 IMetaData & MetaFile( bool relative = false );
+IMetaData & MetaHidden();
 IMetaData & MetaOptional();
 IMetaData & MetaPath( bool relative = false );
 IMetaData & MetaRange( uint32_t minVal, uint32_t maxVal );

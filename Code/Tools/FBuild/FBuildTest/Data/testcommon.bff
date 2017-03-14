@@ -131,6 +131,9 @@
                         + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
                         + ' -Wno-#pragma-messages'
 
+                        // Fires on our new/delete operator (Clang bug?)
+                        + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
+
     .CompilerOptionsC   = ' -x c'
                         + .BaseCompilerOptions
     .CompilerOptions    = ' -x c++'

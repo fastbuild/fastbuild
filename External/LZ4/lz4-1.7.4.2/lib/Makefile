@@ -1,19 +1,19 @@
 # ################################################################
 # LZ4 library - Makefile
-# Copyright (C) Yann Collet 2011-2015
+# Copyright (C) Yann Collet 2011-2016
 # All rights reserved.
-# 
+#
 # BSD license
 # Redistribution and use in source and binary forms, with or without modification,
 # are permitted provided that the following conditions are met:
-# 
+#
 # * Redistributions of source code must retain the above copyright notice, this
 #   list of conditions and the following disclaimer.
-# 
+#
 # * Redistributions in binary form must reproduce the above copyright notice, this
 #   list of conditions and the following disclaimer in the documentation and/or
 #   other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -24,26 +24,37 @@
 # ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 # You can contact the author at :
 #  - LZ4 source repository : https://github.com/Cyan4973/lz4
 #  - LZ4 forum froup : https://groups.google.com/forum/#!forum/lz4c
 # ################################################################
 
 # Version numbers
-VERSION ?= 129
-LIBVER_MAJOR=`sed -n '/define LZ4_VERSION_MAJOR/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' < lz4.h`
-LIBVER_MINOR=`sed -n '/define LZ4_VERSION_MINOR/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' < lz4.h`
-LIBVER_PATCH=`sed -n '/define LZ4_VERSION_RELEASE/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' < lz4.h`
-LIBVER=$(LIBVER_MAJOR).$(LIBVER_MINOR).$(LIBVER_PATCH)
+LIBVER_MAJOR_SCRIPT:=`sed -n '/define LZ4_VERSION_MAJOR/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' < ./lz4.h`
+LIBVER_MINOR_SCRIPT:=`sed -n '/define LZ4_VERSION_MINOR/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' < ./lz4.h`
+LIBVER_PATCH_SCRIPT:=`sed -n '/define LZ4_VERSION_RELEASE/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' < ./lz4.h`
+LIBVER_SCRIPT:= $(LIBVER_MAJOR_SCRIPT).$(LIBVER_MINOR_SCRIPT).$(LIBVER_PATCH_SCRIPT)
+LIBVER_MAJOR := $(shell echo $(LIBVER_MAJOR_SCRIPT))
+LIBVER_MINOR := $(shell echo $(LIBVER_MINOR_SCRIPT))
+LIBVER_PATCH := $(shell echo $(LIBVER_PATCH_SCRIPT))
+LIBVER  := $(shell echo $(LIBVER_SCRIPT))
 
-DESTDIR?=
-PREFIX ?= /usr/local
-CFLAGS ?= -O3
-CFLAGS += -I. -std=c99 -Wall -Wextra -Wundef -Wshadow -Wcast-align -Wcast-qual -Wstrict-prototypes -pedantic -DXXH_NAMESPACE=LZ4_
+BUILD_STATIC:= yes
 
-LIBDIR?= $(PREFIX)/lib
+DESTDIR ?=
+PREFIX  ?= /usr/local
+LIBDIR  ?= $(PREFIX)/lib
 INCLUDEDIR=$(PREFIX)/include
+
+CPPFLAGS+= -DXXH_NAMESPACE=LZ4_
+CFLAGS  ?= -O3
+DEBUGFLAGS:=-g -Wall -Wextra -Wcast-qual -Wcast-align -Wshadow \
+           -Wswitch-enum -Wdeclaration-after-statement -Wstrict-prototypes -Wundef \
+           -Wpointer-arith -Wstrict-aliasing=1
+CFLAGS  += $(MOREFLAGS)
+FLAGS    = $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
+
 
 
 # OS X linker doesn't support -soname, and use different extension
@@ -60,58 +71,78 @@ else
 	SHARED_EXT_VER = $(SHARED_EXT).$(LIBVER)
 endif
 
-default: liblz4
+default: lib-release
 
-all: liblz4
+lib-release: liblz4.a liblz4
 
-liblz4: lz4.c lz4hc.c lz4frame.c xxhash.c
+lib: CFLAGS += $(DEBUGFLAGS)
+lib: lib-release
+
+all: lib
+
+all32: CFLAGS+=-m32
+all32: all
+
+liblz4.a: *.c
+ifeq ($(BUILD_STATIC),yes)
 	@echo compiling static library
 	@$(CC) $(CPPFLAGS) $(CFLAGS) -c $^
-	@$(AR) rcs liblz4.a lz4.o lz4hc.o lz4frame.o xxhash.o
+	@$(AR) rcs $@ *.o
+endif
+
+liblz4: *.c
 	@echo compiling dynamic library $(LIBVER)
-	@$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -shared $^ -fPIC $(SONAME_FLAGS) -o $@.$(SHARED_EXT_VER)
+ifneq (,$(filter Windows%,$(OS)))
+	@$(CC) $(FLAGS) -DLZ4_DLL_EXPORT=1 -shared $^ -o dll\$@.dll
+	dlltool -D dll\liblz4.dll -d dll\liblz4.def -l dll\liblz4.lib
+else
+	@$(CC) $(FLAGS) -shared $^ -fPIC $(SONAME_FLAGS) -o $@.$(SHARED_EXT_VER)
 	@echo creating versioned links
 	@ln -sf $@.$(SHARED_EXT_VER) $@.$(SHARED_EXT_MAJOR)
 	@ln -sf $@.$(SHARED_EXT_VER) $@.$(SHARED_EXT)
+endif
 
 clean:
-	@rm -f core *.o *.a *.$(SHARED_EXT) *.$(SHARED_EXT).* liblz4.pc
+	@$(RM) core *.o *.a *.$(SHARED_EXT) liblz4.pc dll/liblz4.dll dll/liblz4.lib
 	@echo Cleaning library completed
 
 
 #------------------------------------------------------------------------
-#make install is validated only for Linux, OSX, kFreeBSD and Hurd targets
-ifneq (,$(filter $(shell uname),Linux Darwin GNU/kFreeBSD GNU))
+#make install is validated only for Linux, OSX, kFreeBSD, Hurd and
+#FreeBSD targets
+ifneq (,$(filter $(shell uname),Linux Darwin GNU/kFreeBSD GNU FreeBSD))
 
 liblz4.pc: liblz4.pc.in Makefile
 	@echo creating pkgconfig
 	@sed -e 's|@PREFIX@|$(PREFIX)|' \
-            -e 's|@LIBDIR@|$(LIBDIR)|' \
-            -e 's|@INCLUDEDIR@|$(INCLUDEDIR)|' \
-            -e 's|@VERSION@|$(VERSION)|' \
-             $< >$@
+         -e 's|@LIBDIR@|$(LIBDIR)|' \
+         -e 's|@INCLUDEDIR@|$(INCLUDEDIR)|' \
+         -e 's|@VERSION@|$(LIBVER)|' \
+          $< >$@
 
-install: liblz4 liblz4.pc
+install: lib liblz4.pc
 	@install -d -m 755 $(DESTDIR)$(LIBDIR)/pkgconfig/ $(DESTDIR)$(INCLUDEDIR)/
-	@install -m 755 liblz4.$(SHARED_EXT_VER) $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT_VER)
-	@cp -a liblz4.$(SHARED_EXT_MAJOR) $(DESTDIR)$(LIBDIR)
-	@cp -a liblz4.$(SHARED_EXT) $(DESTDIR)$(LIBDIR)
-	@cp -a liblz4.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
+	@install -m 755 liblz4.$(SHARED_EXT_VER) $(DESTDIR)$(LIBDIR)
+	@ln -sf liblz4.$(SHARED_EXT_VER) $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT_MAJOR)
+	@ln -sf liblz4.$(SHARED_EXT_VER) $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT)
+	@install -m 644 liblz4.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
+ifeq ($(BUILD_STATIC),yes)
 	@install -m 644 liblz4.a $(DESTDIR)$(LIBDIR)/liblz4.a
+endif
 	@install -m 644 lz4.h $(DESTDIR)$(INCLUDEDIR)/lz4.h
 	@install -m 644 lz4hc.h $(DESTDIR)$(INCLUDEDIR)/lz4hc.h
 	@install -m 644 lz4frame.h $(DESTDIR)$(INCLUDEDIR)/lz4frame.h
-	@echo lz4 static and shared library installed
+	@echo lz4 static and shared libraries installed
 
 uninstall:
-	@rm -f $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT)
-	@rm -f $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT_MAJOR)
-	@rm -f $(DESTDIR)$(LIBDIR)/pkgconfig/liblz4.pc
-	@[ -x $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT_VER) ] && rm -f $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT_VER)
-	@[ -f $(DESTDIR)$(LIBDIR)/liblz4.a ] && rm -f $(DESTDIR)$(LIBDIR)/liblz4.a
-	@[ -f $(DESTDIR)$(INCLUDEDIR)/lz4.h ] && rm -f $(DESTDIR)$(INCLUDEDIR)/lz4.h
-	@[ -f $(DESTDIR)$(INCLUDEDIR)/lz4hc.h ] && rm -f $(DESTDIR)$(INCLUDEDIR)/lz4hc.h
-	@[ -f $(DESTDIR)$(INCLUDEDIR)/lz4frame.h ] && rm -f $(DESTDIR)$(INCLUDEDIR)/lz4frame.h
+	@$(RM) $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT)
+	@$(RM) $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT_MAJOR)
+	@$(RM) $(DESTDIR)$(LIBDIR)/pkgconfig/liblz4.pc
+	@$(RM) $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT_VER)
+	@$(RM) $(DESTDIR)$(LIBDIR)/liblz4.a
+	@$(RM) $(DESTDIR)$(INCLUDEDIR)/lz4.h
+	@$(RM) $(DESTDIR)$(INCLUDEDIR)/lz4hc.h
+	@$(RM) $(DESTDIR)$(INCLUDEDIR)/lz4frame.h
 	@echo lz4 libraries successfully uninstalled
 
 endif

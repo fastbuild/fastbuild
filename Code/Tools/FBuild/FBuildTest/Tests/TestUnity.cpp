@@ -154,18 +154,18 @@ void TestUnity::TestCompile() const
 
     // Check stats
     //                      Seen,   Built,  Type
-    uint32_t numF = 9; // pch + 2x generated unity files + 6 source cpp files
+    uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files + librarian
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
-    CheckStatsNode ( stats, numF,   3,      Node::FILE_NODE ); // pch + 2x generated unity files built
+    CheckStatsNode ( stats, numF,   4,      Node::FILE_NODE ); // pch + 2x generated unity files built
     CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 3,      3,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 11 );
+    CheckStatsTotal( stats, 8+numF, 12 );
 }
 
 // TestCompile_NoRebuild
@@ -176,7 +176,7 @@ void TestUnity::TestCompile_NoRebuild() const
 
     // Check stats
     //                      Seen,   Built,  Type
-    uint32_t numF = 9; // pch + 2x generated unity files + 6 source cpp files
+    uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files + librarian
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif

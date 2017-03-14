@@ -6,47 +6,68 @@
 Using( .StandardEnvironment )
 Settings {} // Activate standard settings
 
-// Toolchain
+// Plugin library (X64)
 //------------------------------------------------------------------------------
-#if __WINDOWS__
-.Compiler           = .CompilerX64 // Build for X64 so we can load the DLL
-#endif
-
-// Plugin library
-//------------------------------------------------------------------------------
-ObjectList( "CachePlugin-Lib" )
+ObjectList( 'CachePlugin-Lib-X64' )
 {
 #if __WINDOWS__
+    .Compiler           = .CompilerX64
     .CompilerOptions    + .VisualStudioIncludePaths
 #endif
 #if __LINUX__
     .CompilerOptions    + ' -fPIC'
 #endif
     .CompilerInputFiles = "Data/TestCachePlugin/Plugin.cpp"
-    .CompilerOutputPath = "$Out$/Test/CachePlugin/"
+    .CompilerOutputPath = "$Out$/Test/CachePlugin/X64/"
 }
 
-// Plugin DLL
+// Plugin DLL (X64)
 //------------------------------------------------------------------------------
-DLL( 'Plugin-DLL' )
+DLL( 'Plugin-DLL-X64' )
 {
-#if __WINDOWS__
-    .LinkerOptions      + ' /DLL'
-                        + ' LIBCMT.lib'
-                        + ' OLDNAMES.LIB'
-                        + ' kernel32.lib'
-                        + ' /LIBPATH:"$VisualStudioPath$\VC\lib\amd64"'
-                        + ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x64"'
-    .LinkerOutput       = '$Out$/Test/CachePlugin/CachePlugin.dll'
-#endif
-#if __LINUX__
-    .LinkerOptions      + ' -shared'
-    .LinkerOutput       = '$Out$/Test/CachePlugin/CachePlugin.so'
-#endif
-#if __OSX__
-    .LinkerOptions      + ' -shared'
-    .LinkerOutput       = '$Out$/Test/CachePlugin/CachePlugin.so'
-#endif
+    #if __WINDOWS__
+        .LinkerOptions      + ' /DLL'
+                            + ' LIBCMT.lib'
+                            + ' OLDNAMES.LIB'
+                            + ' kernel32.lib'
+                            + ' /LIBPATH:"$VisualStudioPath$\VC\lib\amd64"'
+                            + ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x64"'
+        .LinkerOutput       = '$Out$/Test/CachePlugin/X64/CachePlugin.dll'
+    #endif
+    #if __LINUX__
+        .LinkerOptions      + ' -shared'
+        .LinkerOutput       = '$Out$/Test/CachePlugin/CachePlugin.so'
+    #endif
+    #if __OSX__
+        .LinkerOptions      + ' -shared'
+        .LinkerOutput       = '$Out$/Test/CachePlugin/CachePlugin.so'
+    #endif
 
-    .Libraries          = { 'CachePlugin-Lib' }
+    .Libraries          = { 'CachePlugin-Lib-X64' }
 }
+
+#if __WINDOWS__
+    // Plugin library (X86)
+    //------------------------------------------------------------------------------
+    ObjectList( 'CachePlugin-Lib-X86' )
+    {
+        .CompilerOptions    + .VisualStudioIncludePaths
+        .CompilerInputFiles = "Data/TestCachePlugin/Plugin.cpp"
+        .CompilerOutputPath = "$Out$/Test/CachePlugin/X86/"
+    }
+
+    // Plugin DLL (X86)
+    //------------------------------------------------------------------------------
+    DLL( 'Plugin-DLL-X86' )
+    {
+        .LinkerOptions      + ' /DLL'
+                            + ' LIBCMT.lib'
+                            + ' OLDNAMES.LIB'
+                            + ' kernel32.lib'
+                            + ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
+                            + ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x86"'
+        .LinkerOutput       = '$Out$/Test/CachePlugin/X86/CachePlugin.dll'
+
+        .Libraries          = { 'CachePlugin-Lib-X86' }
+    }
+#endif

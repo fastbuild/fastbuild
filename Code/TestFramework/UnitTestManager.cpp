@@ -160,11 +160,11 @@ bool UnitTestManager::RunTests( const char * testGroup )
             status = ( info.m_MemoryLeaks ) ? "FAIL (LEAKS)" : "FAIL";
         }
 
-        OUTPUT( "%12s : %5.1fs : %s\n", status, info.m_TimeTaken, info.m_TestName );
+        OUTPUT( "%12s : %5.3fs : %s\n", status, info.m_TimeTaken, info.m_TestName );
         totalTime += info.m_TimeTaken;
     }
     OUTPUT( "------------------------------------------------------------\n" );
-    OUTPUT( "Passed: %u / %u (%u failures) in %2.1fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), totalTime );
+    OUTPUT( "Passed: %u / %u (%u failures) in %2.3fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), totalTime );
     OUTPUT( "------------------------------------------------------------\n" );
 
     return ( s_NumTests == numPassed );

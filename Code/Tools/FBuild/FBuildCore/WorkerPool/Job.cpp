@@ -26,14 +26,6 @@ static uint32_t s_LastJobId( 0 );
 //------------------------------------------------------------------------------
 Job::Job( Node * node )
     : m_Node( node )
-    , m_Data( nullptr )
-    , m_DataSize( 0 )
-    , m_UserData( nullptr )
-    , m_DataIsCompressed( false )
-    , m_IsLocal( true )
-    , m_SystemErrorCount( 0 )
-    , m_RemoteName()
-    , m_ToolManifest( nullptr )
 {
     m_JobId = AtomicIncU32( &s_LastJobId );
 }
@@ -41,13 +33,7 @@ Job::Job( Node * node )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Job::Job( IOStream & stream )
-    : m_Node( nullptr )
-    , m_Data( nullptr )
-    , m_DataSize( 0 )
-    , m_UserData( nullptr )
-    , m_IsLocal( false )
-    , m_SystemErrorCount( 0 )
-    , m_ToolManifest( nullptr )
+    : m_IsLocal( false )
 {
     Deserialize( stream );
 }
@@ -90,11 +76,35 @@ void Job::Error( const char * format, ... )
 
     if ( IsLocal() )
     {
-        FLOG_ERROR( buffer.Get() );
+        FLOG_ERROR( "%s", buffer.Get() );
+
+        if ( FLog::IsMonitorEnabled() )
+        {
+            m_Messages.Append( buffer );
+        }
     }
     else
     {
         m_Messages.Append( buffer );
+    }
+}
+
+// ErrorPreformatted
+//------------------------------------------------------------------------------
+void Job::ErrorPreformatted( const char * message )
+{
+    if ( IsLocal() )
+    {
+        FLOG_ERROR_DIRECT( message );
+
+        if ( FLog::IsMonitorEnabled() )
+        {
+            m_Messages.Append( AStackString<>( message ) );
+        }
+    }
+    else
+    {
+        m_Messages.Append( AStackString<>( message ) );
     }
 }
 
@@ -107,6 +117,9 @@ void Job::Serialize( IOStream & stream )
     // write jobid
     stream.Write( m_JobId );
     stream.Write( m_Node->GetName() );
+    AStackString<> workingDir;
+    VERIFY( FileIO::GetCurrentDir( workingDir ) );
+    stream.Write( workingDir );
 
     // write properties of node
     Node::SaveRemote( stream, m_Node );
@@ -124,6 +137,7 @@ void Job::Deserialize( IOStream & stream )
     // read jobid
     stream.Read( m_JobId );
     stream.Read( m_RemoteName );
+    stream.Read( m_RemoteSourceRoot );
 
     // read properties of node
     m_Node = Node::LoadRemote( stream );
@@ -138,6 +152,38 @@ void Job::Deserialize( IOStream & stream )
     stream.Read( data, dataSize );
 
     OwnData( data, dataSize, compressed );
+}
+
+// GetMessagesForMonitorLog
+//------------------------------------------------------------------------------
+void Job::GetMessagesForMonitorLog( AString & buffer ) const
+{
+    // The common case is that there are no messages
+    if ( m_Messages.IsEmpty() )
+    {
+        return;
+    }
+
+    // Ensure the output buffer is presized
+    // (errors can sometimes be very large so we want to avoid re-allocs)
+    uint32_t size( 0 );
+    for ( const AString & msg : m_Messages )
+    {
+        size += msg.GetLength();
+    }
+    buffer.SetReserved( size ); // Will be safely ignored if smaller than already reserved
+
+    // Concat the errors
+    for( const AString & msg : m_Messages )
+    {
+        buffer += msg;
+    }
+
+    // Escape some characters to simplify parsing in the log
+    // (The monitor will knows how to restore them)
+    buffer.Replace( '\n', (char)12 );
+    buffer.Replace( '\r', (char)12 );
+    buffer.Replace( '\"', '\'' ); // TODO:B The monitor can't differentiate ' and "
 }
 
 //------------------------------------------------------------------------------

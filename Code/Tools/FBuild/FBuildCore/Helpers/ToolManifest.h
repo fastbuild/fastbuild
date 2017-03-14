@@ -24,7 +24,7 @@ public:
     explicit ToolManifest( uint64_t toolId );
     ~ToolManifest();
 
-    bool Generate( const Node * mainExecutable, const Dependencies & dependencies );
+    bool Generate( const Node * mainExecutable, const AString & mainExecutableRoot, const Dependencies & dependencies, const Array<AString>& customEnvironmentVariables );
 
     inline uint64_t GetToolId() const { return m_ToolId; }
     inline uint64_t GetTimeStamp() const { return m_TimeStamp; }
@@ -93,7 +93,9 @@ private:
     Array< File >   m_Files;
     bool            m_Synchronized;
     const char *    m_RemoteEnvironmentString;
+    Array<AString>  m_CustomEnvironmentVariables;
     void *          m_UserData;
+    AString         m_MainExecutableRootPath;
 };
 
 //------------------------------------------------------------------------------

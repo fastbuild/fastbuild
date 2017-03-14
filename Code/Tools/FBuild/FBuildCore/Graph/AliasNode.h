@@ -16,7 +16,7 @@ class Function;
 //------------------------------------------------------------------------------
 class AliasNode : public Node
 {
-    REFLECT_DECLARE( AliasNode )
+    REFLECT_NODE_DECLARE( AliasNode )
 public:
     explicit AliasNode();
     bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );

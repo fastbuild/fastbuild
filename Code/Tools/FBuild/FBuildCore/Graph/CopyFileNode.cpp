@@ -19,11 +19,11 @@
 
 // REFLECTION
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( CopyFileNode, Node, MetaNone() )
+REFLECT_NODE_BEGIN( CopyFileNode, Node, MetaNone() )
     REFLECT(        m_Source,                   "Source",                   MetaFile() )
     REFLECT(        m_Dest,                     "Dest",                     MetaPath() )
     REFLECT(        m_SourceBasePath,           "SourceBasePath",           MetaOptional() + MetaPath() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
 REFLECT_END( CopyFileNode )
 
 // CONSTRUCTOR
@@ -38,17 +38,10 @@ CopyFileNode::CopyFileNode()
 //------------------------------------------------------------------------------
 bool CopyFileNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
-    // Pre-build dependencies
-    if ( !m_PreBuildDependencyNames.IsEmpty() )
+    // .PreBuildDependencies
+    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
     {
-        m_PreBuildDependencies.SetCapacity( m_PreBuildDependencyNames.GetSize() );
-        for ( const AString & preDepName : m_PreBuildDependencyNames )
-        {
-            if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preDepName, m_PreBuildDependencies, true, true, true ) )
-            {
-                return false; // GetNodeList will have emitted an error
-            }
-        }
+        return false; // InitializePreBuildDependencies will have emitted an error
     }
 
     // Get node for Source of copy

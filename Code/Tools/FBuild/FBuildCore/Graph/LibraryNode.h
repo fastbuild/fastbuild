@@ -10,35 +10,20 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
+class BFFIterator;
 class CompilerNode;
-class DirectoryListNode;
+class Function;
+class NodeGraph;
 class ObjectNode;
 
 // LibraryNode
 //------------------------------------------------------------------------------
 class LibraryNode : public ObjectListNode
 {
+    REFLECT_NODE_DECLARE( LibraryNode )
 public:
-    explicit LibraryNode( const AString & libraryName,
-                          const Dependencies & inputNodes,
-                          CompilerNode * compiler,
-                          const AString & compilerArgs,
-                          const AString & compilerArgsDeoptimized,
-                          const AString & compilerOutputPath,
-                          const AString & librarian,
-                          const AString & librarianArgs,
-                          uint32_t flags,
-                          ObjectNode * precompiledHeader,
-                          const Dependencies & compilerForceUsing,
-                          const Dependencies & preBuildDependencies,
-                          const Dependencies & additionalInputs,
-                          bool deoptimizeWritableFiles,
-                          bool deoptimizeWritableFilesWithToken,
-                          bool allowDistribution,
-                          bool allowCaching,
-                          CompilerNode * preprocessor,
-                          const AString & preprocessorArgs,
-                          const AString & baseDirectory );
+    LibraryNode();
+    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
     virtual ~LibraryNode();
 
     static inline Node::Type GetTypeS() { return Node::LIBRARY_NODE; }
@@ -65,15 +50,21 @@ private:
     // internal helpers
     bool BuildArgs( Args & fullArgs ) const;
     void EmitCompilationMessage( const Args & fullArgs ) const;
+    FileNode * GetLibrarian() const;
 
-    inline bool GetFlag( Flag flag ) const { return ( ( m_Flags & (uint32_t)flag ) != 0 ); }
+    inline bool GetFlag( Flag flag ) const { return ( ( m_LibrarianFlags & (uint32_t)flag ) != 0 ); }
 
     bool CanUseResponseFile() const;
 
-    AString m_LibrarianPath;
-    AString m_LibrarianArgs;
-    uint32_t m_Flags;
-    Dependencies m_AdditionalInputs;
+    // Exposed Properties
+    AString             m_Librarian;
+    AString             m_LibrarianOptions;
+    AString             m_LibrarianOutput;
+    Array< AString >    m_LibrarianAdditionalInputs;
+
+    // Internal State
+    uint32_t            m_NumLibrarianAdditionalInputs  = 0;
+    uint32_t            m_LibrarianFlags                = 0;
 };
 
 //------------------------------------------------------------------------------

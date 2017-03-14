@@ -227,6 +227,29 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
     return true;
 }
 
+// ParseToNextLineStaringWithHash
+//------------------------------------------------------------------------------
+/*static*/ void CIncludeParser::ParseToNextLineStartingWithHash( const char * & pos )
+{
+    for (;;)
+    {
+        pos = strchr( pos, '#' );
+        if ( pos )
+        {
+            // Safe to index -1 because # as first char is handled as a
+            // special case to avoid having it in this critical loop
+            const char prevC = pos[ -1 ];
+            if ( ( prevC  == '\n' ) || ( prevC  == '\r' ) )
+            {
+                return;
+            }
+            ++pos;
+            continue;
+        }
+        return;
+    }
+}
+
 // Parse
 //------------------------------------------------------------------------------
 bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
@@ -248,12 +271,12 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
 
     for (;;)
     {
-        pos = strstr( pos, "\n#" );
+        ParseToNextLineStartingWithHash( pos );
         if ( !pos )
         {
             break;
         }
-        pos += 2;
+        ++pos;
     possibleInclude:
         if ( *pos == ' ' )
         {

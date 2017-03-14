@@ -143,11 +143,13 @@
 void Cache::GetCacheFileName( const AString & cacheId, AString & path ) const
 {
     // format example: N:\\fbuild.cache\\23\\77\\2377DE32_FED872A1_AB62FEAA23498AAC.3
-    path.Format( "%s%c%c\\%c%c\\%s", m_CachePath.Get(),
+    path.Format( "%s%c%c%c%c%c%c%s", m_CachePath.Get(),
                                        cacheId[ 0 ],
                                        cacheId[ 1 ],
+                                       NATIVE_SLASH,
                                        cacheId[ 2 ],
                                        cacheId[ 3 ],
+                                       NATIVE_SLASH,
                                        cacheId.Get() );
 }
 
