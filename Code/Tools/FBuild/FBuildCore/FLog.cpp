@@ -39,6 +39,7 @@
 /*static*/ bool FLog::s_ShowInfo = false;
 /*static*/ bool FLog::s_ShowErrors = true;
 /*static*/ bool FLog::s_ShowProgress = false;
+/*static*/ bool FLog::s_MonitorEnabled = false;
 /*static*/ AStackString< 64 > FLog::m_ProgressText;
 static AStackString< 72 > g_ClearLineString( "\r                                                               \r" );
 static AStackString< 64 > g_OutputString( "\r99.9 % [....................] " );

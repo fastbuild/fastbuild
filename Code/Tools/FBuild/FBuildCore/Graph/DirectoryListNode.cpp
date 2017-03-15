@@ -33,7 +33,7 @@ DirectoryListNode::DirectoryListNode( const AString & name,
     , m_FilesToExclude( filesToExclude )
     , m_ExcludePatterns( excludePatterns )
     , m_Recursive( recursive )
-    , m_Files( 4096, true )
+    , m_Files( 0, true )
 {
     if ( patterns )
     {

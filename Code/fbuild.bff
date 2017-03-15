@@ -439,10 +439,14 @@ Compiler( 'Compiler-x64-OSX' )
                             + ' -I./'
                             + ' -D__APPLE__'
                             + ' -D__OSX__'
-                            + ' -Wall -Wfatal-errors'       // warnings as errors
+                            + ' -Wall -Werror -Wfatal-errors'       // warnings as errors
+                            + ' -Wextra'
                             + ' -Wno-#pragma-messages'
                             + ' -std=c++11'                 // allow C++11 features
                             + ' -m64'                       // x86-64
+
+                            // Fires on our new/delete operator (Clang bug?)
+                            + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
 
     .CompilerOutputExtension= '.o'
     .LinkerOptions          = '"%1" -o "%2" -g'

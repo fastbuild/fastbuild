@@ -30,6 +30,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/xxHash.h"
+#include "Core/Mem/SmallBlockAllocator.h"
 #include "Core/Process/SystemMutex.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
@@ -93,6 +94,7 @@ FBuild::FBuild( const FBuildOptions & options )
     FLog::SetShowInfo( m_Options.m_ShowInfo );
     FLog::SetShowErrors( m_Options.m_ShowErrors );
     FLog::SetShowProgress( m_Options.m_ShowProgress );
+    FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );
 
     Function::Create();
 }
@@ -154,7 +156,12 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         m_DependencyGraphFile += ".fdb";
     }
 
+    SmallBlockAllocator::SetSingleThreadedMode( true );
+
     m_DependencyGraph = NodeGraph::Initialize( bffFile, m_DependencyGraphFile.Get() );
+
+    SmallBlockAllocator::SetSingleThreadedMode( false );
+
     if ( m_DependencyGraph == nullptr )
     {
         return false;

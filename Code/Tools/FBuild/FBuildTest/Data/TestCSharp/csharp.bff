@@ -8,7 +8,12 @@
 Using( .StandardEnvironment )
 Settings {}
 
-.Compiler           = "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe"
+Alias( 'CSharpCompiler' )
+{
+    .Targets        = "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe"
+}
+
+.Compiler           = 'CSharpCompiler'
 .CompilerOptions    = '/out:"%2" /target:library "%1"'
 
 ;

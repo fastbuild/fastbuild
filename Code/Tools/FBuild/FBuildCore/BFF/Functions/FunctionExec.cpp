@@ -55,7 +55,8 @@ FunctionExec::FunctionExec()
 
     // Pre-build dependencies
     Dependencies preBuildDependencies;
-    if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDependencies, false ) )
+    const bool allowCopyDirNodes = true;
+    if ( !GetNodeList( nodeGraph, funcStartIter, ".PreBuildDependencies", preBuildDependencies, false, allowCopyDirNodes ) )
     {
         return false; // GetNodeList will have emitted an error
     }

@@ -389,12 +389,15 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     // log processing time
     node->AddProcessingTime( timeTakenMS );
 
-    if ( job->IsLocal() )
+    if ( job->IsLocal() && FLog::IsMonitorEnabled() )
     {
+        AStackString<> msgBuffer;
+        job->GetMessagesForMonitorLog( msgBuffer );
+
         FLOG_MONITOR( "FINISH_JOB %s local \"%s\" \"%s\"\n",
                       ( result == Node::NODE_RESULT_FAILED ) ? "ERROR" : "SUCCESS",
                       job->GetNode()->GetName().Get(),
-                      job->GetNode()->GetFinalBuildOutputMessages().Get());
+                      msgBuffer.Get());
     }
 
     return result;

@@ -22,6 +22,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
@@ -59,6 +60,8 @@ bool BFFParser::Parse( const char * dataWithSentinel,
                        uint64_t fileDataHash,
                        bool pushStackFrame )
 {
+    PROFILE_FUNCTION
+
     // data should be 1 bytes larger than size, with a sentinel
     ASSERT( dataWithSentinel[ sizeExcludingSentinel ] == '\000' );
 
@@ -204,7 +207,7 @@ bool BFFParser::Parse( BFFIterator & iter )
         }
         iter++; // skip close token
 
-        BFFIterator varNameIter( value.Get(), value.GetLength(), iter.GetFileName().Get(), iter.GetFileTimeStamp() );
+        BFFIterator varNameIter( value.Get(), value.GetLength(), iter.GetFileName(), iter.GetFileTimeStamp() );
 
         // sanity check it is a sensible length
         if ( value.GetLength() + 1/* '.' will be added */  > MAX_VARIABLE_NAME_LENGTH )
@@ -784,10 +787,11 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
     AStackString<> includeToUse;
     if (PathUtils::IsFullPath(include) == false)
     {
-        const char * lastSlash = iter.GetFileName().FindLast( NATIVE_SLASH );
-        lastSlash = lastSlash ? lastSlash : iter.GetFileName().FindLast( OTHER_SLASH );
-        lastSlash = lastSlash ? ( lastSlash + 1 ): iter.GetFileName().Get(); // file only, truncate to empty
-        includeToUse.Assign( iter.GetFileName().Get(), lastSlash );
+        AStackString<> fileName( iter.GetFileName() );
+        const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
+        lastSlash = lastSlash ? lastSlash : fileName.FindLast( OTHER_SLASH );
+        lastSlash = lastSlash ? ( lastSlash + 1 ): fileName.Get(); // file only, truncate to empty
+        includeToUse.Assign( fileName.Get(), lastSlash );
     }
     includeToUse += include;
     AStackString<> includeToUseClean;
@@ -1785,20 +1789,23 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
                 }
                 values.Append( varSrc->GetString() );
             }
-            else if ( subtract && !dstIsEmpty )
+            else if ( subtract )
             {
-                auto end = varDst->GetArrayOfStrings().End();
-                for ( auto it = varDst->GetArrayOfStrings().Begin(); it!=end; ++it )
+                if ( dstIsEmpty == false )
                 {
-                    if ( *it != varSrc->GetString() ) // remove equal strings
+                    auto end = varDst->GetArrayOfStrings().End();
+                    for ( auto it = varDst->GetArrayOfStrings().Begin(); it!=end; ++it )
                     {
-                        values.Append( *it );
+                        if ( *it != varSrc->GetString() ) // remove equal strings
+                        {
+                            values.Append( *it );
+                        }
                     }
                 }
             }
             else
             {
-                values.Append( varDst->GetArrayOfStrings() );
+                values.Append( varSrc->GetString() );
             }
 
             BFFStackFrame::SetVarArrayOfStrings( dstName, values, dstFrame );

@@ -67,7 +67,7 @@ bool Compressor::Compress( const void * data, size_t dataSize )
     AutoPtr< char > output( (char *)ALLOC( worstCaseSize ) );
 
     // do compression
-    const int compressedSize = LZ4_compress( (const char*)data, output.Get(), (int)dataSize);
+    const int compressedSize = LZ4_compress_default( (const char*)data, output.Get(), (int)dataSize, worstCaseSize);
 
     // did the compression yield any benefit?
     const bool compressed = ( compressedSize < (int)dataSize );

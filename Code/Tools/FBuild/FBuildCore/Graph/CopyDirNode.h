@@ -8,16 +8,18 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class BFFIterator;
+class Function;
+class NodeGraph;
 
 // CopyDirNode
 //------------------------------------------------------------------------------
 class CopyDirNode : public Node
 {
+    REFLECT_NODE_DECLARE( CopyDirNode )
 public:
-    explicit CopyDirNode( const AString & name,
-                          Dependencies & staticDeps,
-                          const AString & destPath,
-                          const Dependencies & preBuildDeps );
+    explicit CopyDirNode();
+    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
     virtual ~CopyDirNode();
 
     static inline Node::Type GetTypeS() { return Node::COPY_DIR_NODE; }
@@ -30,7 +32,14 @@ private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
-    AString m_DestPath;
+    // Exposed Properties
+    Array< AString >    m_SourcePaths;
+    AString             m_Dest;
+    Array< AString >    m_SourcePathsPattern;
+    Array< AString >    m_SourceExcludePaths;
+    bool                m_SourcePathsRecurse = true;
+    
+    Array< AString >    m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

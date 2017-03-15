@@ -29,6 +29,7 @@ private:
     void Tokenize() const;
     void PatternMatch() const;
     void PatternMatchI() const;
+    void Replace() const;
     void Trim() const;
 };
 
@@ -46,6 +47,7 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( Tokenize )
     REGISTER_TEST( PatternMatch )
     REGISTER_TEST( PatternMatchI )
+    REGISTER_TEST( Replace )
     REGISTER_TEST( Trim )
 REGISTER_TESTS_END
 
@@ -464,6 +466,15 @@ void TestAString::PatternMatchI() const
     CHECK_MATCH( "*.cpp",   "",                 false );
 
     #undef CHECK_MATCH
+}
+
+
+//------------------------------------------------------------------------------
+void TestAString::Replace() const
+{
+    // Replace empty - make sure this is correctly handled
+    AStackString<> test("Test");
+    test.Replace("", "");
 }
 
 // Trim

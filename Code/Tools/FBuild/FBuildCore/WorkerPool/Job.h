@@ -27,6 +27,7 @@ public:
 
     inline Node * GetNode() const { return m_Node; }
     inline const AString & GetRemoteName() const { return m_RemoteName; }
+    inline const AString & GetRemoteSourceRoot() const { return m_RemoteSourceRoot; }
 
     inline void SetCacheName( const AString & cacheName ) { m_CacheName = cacheName; }
     inline const AString & GetCacheName() const { return m_CacheName; }
@@ -49,7 +50,8 @@ public:
     inline const Array< AString > & GetMessages() const { return m_Messages; }
 
     // logging interface
-    void Error( const char * format, ... );
+    void                Error( const char * format, ... );
+    void                ErrorPreformatted( const char * message );
 
     // Flag "system failures" - i.e. not a compilation failure, but some other problem (typically a remote worker misbehaving)
     void OnSystemError() { ++m_SystemErrorCount; }
@@ -59,21 +61,24 @@ public:
     void Serialize( IOStream & stream );
     void Deserialize( IOStream & stream );
 
+    void                GetMessagesForMonitorLog( AString & buffer ) const;
+
 private:
-    uint32_t m_JobId;
-    Node * m_Node;
-    void * m_Data;
-    uint32_t m_DataSize;
-    void * m_UserData;
-    bool m_DataIsCompressed;
-    bool m_IsLocal;
-    uint8_t m_SystemErrorCount; // On client, the total error count, on the worker a flag for the current attempt
-    AString m_RemoteName;
-    AString m_CacheName;
+    uint32_t            m_JobId             = 0;
+    uint32_t            m_DataSize          = 0;
+    Node *              m_Node              = nullptr;
+    void *              m_Data              = nullptr;
+    void *              m_UserData          = nullptr;
+    bool                m_DataIsCompressed  = false;
+    bool                m_IsLocal           = true;
+    uint8_t             m_SystemErrorCount  = 0; // On client, the total error count, on the worker a flag for the current attempt
+    AString             m_RemoteName;
+    AString             m_RemoteSourceRoot;
+    AString             m_CacheName;
 
-    ToolManifest * m_ToolManifest;
+    ToolManifest *      m_ToolManifest      = nullptr;
 
-    Array< AString > m_Messages;
+    Array< AString >    m_Messages;
 };
 
 //------------------------------------------------------------------------------

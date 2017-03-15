@@ -20,7 +20,7 @@ public:
         : m_Pos( nullptr )
         , m_MinPos( nullptr )
         , m_MaxPos( nullptr )
-        //, m_FileName() // default constructed
+        , m_FileName( nullptr )
         , m_FileTimeStamp( 0 ) {}
     inline BFFIterator( const char * pos, uint32_t dataSize, const char * fileName, uint64_t fileTimeStamp )
             : m_Pos( pos )
@@ -66,7 +66,7 @@ public:
     bool IsAtValidDirectiveNameCharacter() const;
     inline bool IsAtEnd() const { ASSERT( m_Pos <= m_MaxPos ); return ( m_Pos == m_MaxPos ); }
 
-    inline const AString & GetFileName() const { return m_FileName; }
+    inline const char * GetFileName() const { return m_FileName; }
     inline uint64_t GetFileTimeStamp() const { return m_FileTimeStamp; }
 private:
     // use to report error position in bff file
@@ -79,7 +79,7 @@ private:
     const char * m_Pos;
     const char * m_MinPos; // the 0th char of the file
     const char * m_MaxPos; // 1 past the end of parseable data
-    AString      m_FileName; // source file name
+    const char * m_FileName; // source file name
     uint64_t     m_FileTimeStamp;
 };
 

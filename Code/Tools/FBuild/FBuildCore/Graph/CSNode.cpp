@@ -7,45 +7,109 @@
 
 #include "CSNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-#include "Tools/FBuild/FBuildCore/Helpers/CIncludeParser.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
 #include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
-#include "Core/Math/CRC32.h"
 #include "Core/Process/Process.h"
-#include "Core/Tracing/Tracing.h"
 #include "Core/Strings/AStackString.h"
+
+// Reflection
+//------------------------------------------------------------------------------
+REFLECT_NODE_BEGIN( CSNode, Node, MetaName( "CompilerOutput" ) + MetaFile() )
+    REFLECT(        m_Compiler,                     "Compiler",                     MetaFile() )
+    REFLECT(        m_CompilerOptions,              "CompilerOptions",              MetaNone() )
+    REFLECT(        m_CompilerOutput,               "CompilerOutput",               MetaFile() )
+    REFLECT_ARRAY(  m_CompilerInputPath,            "CompilerInputPath",            MetaOptional() + MetaPath() )
+    REFLECT(        m_CompilerInputPathRecurse,     "CompilerInputPathRecurse",     MetaOptional() )
+    REFLECT_ARRAY(  m_CompilerInputPattern,         "CompilerInputPattern",         MetaOptional() )
+    REFLECT_ARRAY(  m_CompilerInputExcludePath,     "CompilerInputExcludePath",     MetaOptional() + MetaPath() )
+    REFLECT_ARRAY(  m_CompilerInputExcludedFiles,   "CompilerInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
+    REFLECT_ARRAY(  m_CompilerInputExcludePattern,  "CompilerInputExcludePattern",  MetaOptional() + MetaOptional() )
+    REFLECT_ARRAY(  m_CompilerInputFiles,           "CompilerInputFiles",           MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_CompilerReferences,           "CompilerReferences",           MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_PreBuildDependencyNames,      "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
+
+    // Internal State
+    REFLECT(        m_NumCompilerInputFiles,        "NumCompilerInputFiles",        MetaHidden() )
+    REFLECT(        m_NumCompilerReferences,        "NumCompilerReferences",        MetaHidden() )
+REFLECT_END( CSNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-CSNode::CSNode( const AString & compilerOutput,
-                const Dependencies & inputNodes,
-                const AString & compiler,
-                const AString & compilerArgs,
-                const Dependencies & extraRefs,
-                const Dependencies & preBuildDependencies )
-: FileNode( compilerOutput, Node::FLAG_NONE )
-, m_ExtraRefs( extraRefs )
+CSNode::CSNode()
+: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+, m_CompilerInputPathRecurse( true )
+, m_NumCompilerInputFiles( 0 )
+, m_NumCompilerReferences( 0 )
 {
-    ASSERT( !inputNodes.IsEmpty() );
-
-    m_StaticDependencies.SetCapacity( inputNodes.GetSize() + extraRefs.GetSize() );
-    m_StaticDependencies.Append( inputNodes );
-    m_StaticDependencies.Append( extraRefs );
-
-    // store options we'll need to use when building
-    m_CompilerPath = compiler; // TODO:C This should be a node we statically depend on
-    m_CompilerArgs = compilerArgs;
-
     m_Type = CS_NODE;
     m_LastBuildTimeMs = 5000; // higher default than a file node
+}
 
-    m_PreBuildDependencies = preBuildDependencies;
+// Initialize
+//------------------------------------------------------------------------------
+bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+{
+    // .PreBuildDependencies
+    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
+    {
+        return false; // InitializePreBuildDependencies will have emitted an error
+    }
+
+    // .Compiler
+    Dependencies compiler;
+    if ( !function->GetFileNode( nodeGraph, iter, m_Compiler, "Compiler", compiler ) )
+    {
+        return false; // GetFileNode will have emitted an error
+    }
+    ASSERT( compiler.GetSize() == 1 ); // Should only be possible to be one
+
+    // .CompilerInputPath
+    Dependencies compilerInputPath;
+    if ( !function->GetDirectoryListNodeList( nodeGraph,
+                                              iter,
+                                              m_CompilerInputPath, 
+                                              m_CompilerInputExcludePath,
+                                              m_CompilerInputExcludedFiles, 
+                                              m_CompilerInputExcludePattern,
+                                              m_CompilerInputPathRecurse,
+                                              &m_CompilerInputPattern,
+                                              "CompilerInputPath",
+                                              compilerInputPath ) )
+    {
+        return false; // GetDirectoryListNodeList will have emitted an error
+    }
+    ASSERT( compilerInputPath.GetSize() == m_CompilerInputPath.GetSize() ); // No need to store since they should be the same
+
+    // .CompilerInputFiles
+    Dependencies compilerInputFiles;
+    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerInputFiles, "CompilerInputFiles", compilerInputFiles ) )
+    {
+        return false; // GetFileNode will have emitted an error
+    }
+    m_NumCompilerInputFiles = (uint32_t)compilerInputFiles.GetSize();
+
+    // .CompilerReferences
+    Dependencies compilerReferences;
+    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerReferences, ".CompilerReferences", compilerReferences ) )
+    {
+        return false; // GetNodeList will have emitted an error
+    }
+    m_NumCompilerReferences = (uint32_t)compilerReferences.GetSize();
+
+    // Store dependencies
+    m_StaticDependencies.SetCapacity( 1 + m_CompilerInputPath.GetSize() + m_NumCompilerInputFiles + m_NumCompilerReferences );
+    m_StaticDependencies.Append( compiler );
+    m_StaticDependencies.Append( compilerInputPath );
+    m_StaticDependencies.Append( compilerInputFiles );
+    m_StaticDependencies.Append( compilerReferences );
+
+    return true;
 }
 
 // DESTRUCTOR
@@ -56,53 +120,39 @@ CSNode::~CSNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ bool CSNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
 {
-    ASSERT( m_DynamicDependencies.GetSize() == 0 );
+    // clear dynamic deps from previous passes
+    m_DynamicDependencies.Clear();
 
-    // preallocate a reasonable amount of space
-    m_DynamicDependencies.SetCapacity( m_StaticDependencies.GetSize() );
-
-    // convert static deps to dynamic deps
-    // (ignore the extra refs here)
-    size_t numDeps = m_StaticDependencies.GetSize() - m_ExtraRefs.GetSize();
-    for ( size_t i=0; i<numDeps; ++i )
+    // get the result of the directory lists and depend on those
+    const size_t startIndex = 1; // Skip Compiler
+    const size_t endIndex =  ( 1 + m_CompilerInputPath.GetSize() );
+    for ( size_t i=startIndex; i<endIndex; ++i )
     {
         Node * n = m_StaticDependencies[ i ].GetNode();
 
-        if ( n->IsAFile() )
-        {
-            m_DynamicDependencies.Append( Dependency( n ) );
-            continue;
-        }
+        ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
 
-        if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
+        // get the list of files
+        DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
+        for ( const FileIO::FileInfo & file : files )
         {
-            // get the list of files
-            DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
-            const Array< FileIO::FileInfo > & files = dln->GetFiles();
-            m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
-            for ( Array< FileIO::FileInfo >::Iter fIt = files.Begin();
-                    fIt != files.End();
-                    fIt++ )
+            // Create the file node (or find an existing one)
+            Node * sn = nodeGraph.FindNode( file.m_Name );
+            if ( sn == nullptr )
             {
-                // Create the file node (or find an existing one)
-                Node * sn = nodeGraph.FindNode( fIt->m_Name );
-                if ( sn == nullptr )
-                {
-                    sn = nodeGraph.CreateFileNode( fIt->m_Name );
-                }
-                else if ( sn->IsAFile() == false )
-                {
-                    FLOG_ERROR( "CSAssembly() .CompilerInputFile '%s' is not a FileNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
-                    return false;
-                }
-
-                m_DynamicDependencies.Append( Dependency( sn ) );
+                sn = nodeGraph.CreateFileNode( file.m_Name );
             }
-            continue;
-        }
+            else if ( sn->IsAFile() == false )
+            {
+                FLOG_ERROR( "CSAssembly() .CompilerInputFile '%s' is not a FileNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
+                return false;
+            }
 
-        FLOG_ERROR( "'%s' is not a supported node type (type: %s)", n->GetName().Get(), n->GetTypeName() );
-        return false;
+            m_DynamicDependencies.Append( Dependency( sn ) );
+        }
+        continue;
     }
 
     return true;
@@ -128,7 +178,7 @@ CSNode::~CSNode() = default;
 
     // spawn the process
     Process p;
-    if ( p.Spawn( m_CompilerPath.Get(), fullArgs.GetFinalArgs().Get(),
+    if ( p.Spawn( GetCompiler()->GetName().Get(), fullArgs.GetFinalArgs().Get(),
                   workingDir, environment ) == false )
     {
         FLOG_ERROR( "Failed to spawn process to build '%s'", GetName().Get() );
@@ -176,18 +226,16 @@ failed:
 //------------------------------------------------------------------------------
 /*static*/ Node * CSNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
-    NODE_LOAD( AStackString<>,  name );
-    NODE_LOAD_DEPS( 2,          staticDeps );
-    NODE_LOAD( AStackString<>,  compilerPath );
-    NODE_LOAD( AStackString<>,  compilerArgs );
-    NODE_LOAD_DEPS( 0,          extraRefs );
-    NODE_LOAD_DEPS( 0,          preBuildDependencies );
+    NODE_LOAD( AStackString<>, name );
 
-    ASSERT( staticDeps.GetSize() >= 1 );
+    CSNode * node = nodeGraph.CreateCSNode( name );
 
-    Node * on = nodeGraph.CreateCSNode( name, staticDeps, compilerPath, compilerArgs, extraRefs, preBuildDependencies );
-    CSNode * csNode = on->CastTo< CSNode >();
-    return csNode;
+    if ( node->Deserialize( nodeGraph, stream ) == false )
+    {
+        return nullptr;
+    }
+
+    return node;
 }
 
 // Save
@@ -195,20 +243,7 @@ failed:
 /*virtual*/ void CSNode::Save( IOStream & stream ) const
 {
     NODE_SAVE( m_Name );
-
-    // Only save the original static deps here (remove the extra refs)
-    size_t numBaseDeps = m_StaticDependencies.GetSize() - m_ExtraRefs.GetSize();
-    Dependencies staticDeps( numBaseDeps, false );
-    for ( size_t i=0; i<numBaseDeps; ++i )
-    {
-        staticDeps.Append( Dependency( m_StaticDependencies[ i ].GetNode() ) );
-    }
-    NODE_SAVE_DEPS( staticDeps );
-
-    NODE_SAVE( m_CompilerPath );
-    NODE_SAVE( m_CompilerArgs );
-    NODE_SAVE_DEPS( m_ExtraRefs );
-    NODE_SAVE_DEPS( m_PreBuildDependencies );
+    Node::Serialize( stream );
 }
 
 // EmitCompilationMessage
@@ -224,7 +259,7 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
     output += '\n';
     if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
     {
-        output += m_CompilerPath;
+        output += GetCompiler()->GetName();
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
@@ -238,7 +273,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
 {
     // split into tokens
     Array< AString > tokens( 1024, true );
-    m_CompilerArgs.Tokenize( tokens );
+    m_CompilerOptions.Tokenize( tokens );
 
     AStackString<> quote( "\"" );
 
@@ -311,7 +346,7 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
 
     // Handle all the special needs of args
     const bool canUseResponseFile( true );
-    if ( fullArgs.Finalize( m_CompilerPath, GetName(), canUseResponseFile ) == false )
+    if ( fullArgs.Finalize( m_CompilerOptions, GetName(), canUseResponseFile ) == false )
     {
         return false; // Finalize will have emitted an error
     }
@@ -324,17 +359,31 @@ bool CSNode::BuildArgs( Args & fullArgs ) const
 void CSNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const
 {
     bool first = true;
-    const Dependency * const end = m_DynamicDependencies.End();
-    for ( const Dependency * it = m_DynamicDependencies.Begin();
-          it != end;
-          ++it )
+
+    // Add the explicitly listed files
+    const size_t startIndex = ( 1 + m_CompilerInputPath.GetSize() ); // Skip compiler and input paths
+    const size_t endIndex = ( startIndex + m_NumCompilerInputFiles );
+    for ( size_t i=startIndex; i<endIndex; ++i )
     {
         if ( !first )
         {
             fullArgs.AddDelimiter();
         }
         fullArgs += pre;
-        fullArgs += it->GetNode()->GetName();
+        fullArgs += m_StaticDependencies[ i ].GetNode()->GetName();
+        fullArgs += post;
+        first = false;
+    }
+
+    // Add the files discovered from directory listings
+    for ( const Dependency & dep : m_DynamicDependencies )
+    {
+        if ( !first )
+        {
+            fullArgs.AddDelimiter();
+        }
+        fullArgs += pre;
+        fullArgs += dep.GetNode()->GetName();
         fullArgs += post;
         first = false;
     }
@@ -345,15 +394,17 @@ void CSNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString 
 void CSNode::GetExtraRefs( Args & fullArgs, const AString & pre, const AString & post ) const
 {
     bool first = true;
-    const Dependency * const end = m_ExtraRefs.End();
-    for ( const Dependency * it = m_ExtraRefs.Begin(); it!=end; ++it )
+    const size_t startIndex = ( 1 + m_CompilerInputPath.GetSize() + m_NumCompilerInputFiles ); // Skip compiler, input paths and files
+    const size_t endIndex = ( startIndex + m_NumCompilerReferences );
+    ASSERT( endIndex == m_StaticDependencies.GetSize() ); // References are last
+    for ( size_t i=startIndex; i<endIndex; ++i )
     {
         if ( !first )
         {
             fullArgs += ',';
         }
         fullArgs += pre;
-        fullArgs += it->GetNode()->GetName();
+        fullArgs += m_StaticDependencies[ i ].GetNode()->GetName();
         fullArgs += post;
         first = false;
     }

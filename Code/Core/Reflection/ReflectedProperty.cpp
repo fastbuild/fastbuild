@@ -90,6 +90,12 @@ size_t ReflectedProperty::GetPropertySize() const
         ASSERT( !m_IsArray ); \
         ( *value ) = *(const getValueType *)( (size_t)object + m_Offset ); \
     } \
+    void ReflectedProperty::GetPtrToProperty( const void * object, getValueType * & ptr ) const \
+    { \
+        ASSERT( (PropertyType)m_Type == GetPropertyType( ptr ) ); \
+        ASSERT( !m_IsArray ); \
+        ptr = (getValueType *)( (size_t)object + m_Offset ); \
+    } \
     void ReflectedProperty::SetProperty( void * object, setValueType value ) const \
     { \
         ASSERT( (PropertyType)m_Type == GetPropertyType( &value ) ); \
@@ -116,11 +122,17 @@ GETSET_PROPERTY( Ref< RefObject >, const Ref< RefObject > & )
 GETSET_PROPERTY( WeakRef< Object >, const WeakRef< Object > & )
 
 #define GETSET_PROPERTY_ARRAY( valueType ) \
-    void ReflectedProperty::GetProperty( const void * object, const Array< valueType > * & value ) const \
+    void ReflectedProperty::GetProperty( const void * object, Array< valueType > * value ) const \
     { \
         ASSERT( (PropertyType)m_Type == GetPropertyType( ( valueType *)nullptr ) ); \
         ASSERT( m_IsArray ); \
-        value = (const Array< valueType > *)( (size_t)object + m_Offset ); \
+        ( *value ) = *(const Array< valueType > *)( (size_t)object + m_Offset ); \
+    } \
+    void ReflectedProperty::GetPtrToProperty( const void * object, Array< valueType > * & ptr ) const \
+    { \
+        ASSERT( (PropertyType)m_Type == GetPropertyType( ( valueType *)nullptr ) ); \
+        ASSERT( m_IsArray ); \
+        ptr = (Array< valueType > *)( (size_t)object + m_Offset ); \
     } \
     void ReflectedProperty::SetProperty( void * object, const Array< valueType > & value ) const \
     { \

@@ -29,10 +29,10 @@ BFFVariable::BFFVariable( const AString & name, VarType type )
 : m_Name( name )
 , m_Type( type )
 , m_Frozen( false )
-//, m_StringValue() // default construct this
 , m_BoolValue( false )
-, m_ArrayValues( 0, true )
 , m_IntValue( 0 )
+//, m_StringValue() // default construct this
+, m_ArrayValues( 0, true )
 , m_StructMembers( 0, true )
 , m_ArrayOfStructs( 0, true )
 {
@@ -44,10 +44,10 @@ BFFVariable::BFFVariable( const BFFVariable & other )
 : m_Name( other.m_Name )
 , m_Type( other.m_Type )
 , m_Frozen( false )
-//, m_StringValue() // default construct this
 , m_BoolValue( false )
-, m_ArrayValues( 0, true )
 , m_IntValue( 0 )
+//, m_StringValue() // default construct this
+, m_ArrayValues( 0, true )
 , m_StructMembers( 0, true )
 , m_ArrayOfStructs( 0, true )
 {
@@ -70,10 +70,10 @@ BFFVariable::BFFVariable( const AString & name, const AString & value )
 : m_Name( name )
 , m_Type( VAR_STRING )
 , m_Frozen( false )
-, m_StringValue( value )
 , m_BoolValue( false )
-, m_ArrayValues( 0, false )
 , m_IntValue( 0 )
+, m_StringValue( value )
+, m_ArrayValues( 0, false )
 , m_StructMembers( 0, true )
 , m_ArrayOfStructs( 0, false )
 {
@@ -85,10 +85,10 @@ BFFVariable::BFFVariable( const AString & name, bool value )
 : m_Name( name )
 , m_Type( VAR_BOOL )
 , m_Frozen( false )
-//, m_StringValue() // default construct this
 , m_BoolValue( value )
-, m_ArrayValues( 0, false )
 , m_IntValue( 0 )
+//, m_StringValue() // default construct this
+, m_ArrayValues( 0, false )
 , m_StructMembers( 0, false )
 , m_ArrayOfStructs( 0, false )
 {
@@ -100,10 +100,10 @@ BFFVariable::BFFVariable( const AString & name, const Array< AString > & values 
 : m_Name( name )
 , m_Type( VAR_ARRAY_OF_STRINGS )
 , m_Frozen( false )
-//, m_StringValue() // default construct this
 , m_BoolValue( false )
-, m_ArrayValues( 0, true )
 , m_IntValue( 0 )
+//, m_StringValue() // default construct this
+, m_ArrayValues( 0, true )
 , m_StructMembers( 0, false )
 , m_ArrayOfStructs( 0, false )
 {
@@ -116,10 +116,10 @@ BFFVariable::BFFVariable( const AString & name, int i )
 : m_Name( name )
 , m_Type( VAR_INT )
 , m_Frozen( false )
-//, m_StringValue() // default construct this
 , m_BoolValue( false )
-, m_ArrayValues( 0, true )
 , m_IntValue( i )
+//, m_StringValue() // default construct this
+, m_ArrayValues( 0, true )
 , m_StructMembers( 0, true )
 , m_ArrayOfStructs( 0, false )
 {
@@ -131,10 +131,10 @@ BFFVariable::BFFVariable( const AString & name, const Array< const BFFVariable *
 : m_Name( name )
 , m_Type( VAR_STRUCT )
 , m_Frozen( false )
-//, m_StringValue() // default construct this
 , m_BoolValue( false )
-, m_ArrayValues( 0, false )
 , m_IntValue( 0 )
+//, m_StringValue() // default construct this
+, m_ArrayValues( 0, false )
 , m_StructMembers( values.GetSize(), true )
 , m_ArrayOfStructs( 0, false )
 {
@@ -149,10 +149,10 @@ BFFVariable::BFFVariable( const AString & name,
 : m_Name( name )
 , m_Type( VAR_ARRAY_OF_STRUCTS )
 , m_Frozen( false )
-//, m_StringValue() // default construct this
 , m_BoolValue( false )
-, m_ArrayValues( 0, false )
 , m_IntValue( 0 )
+//, m_StringValue() // default construct this
+, m_ArrayValues( 0, false )
 , m_StructMembers( 0, false )
 , m_ArrayOfStructs( structs.GetSize(), true )
 {

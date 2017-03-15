@@ -1,0 +1,41 @@
+//
+// Alias to nodes which are not files is allowed
+//
+
+// CopyDir
+//----------------------------------------------------------
+CopyDir( 'CopyDir' )
+{
+    .SourcePaths        = 'Src/'
+    .Dest               = 'Dst/'
+}
+Alias( 'AliasToCopyDir' )
+{
+    .Targets            = 'CopyDir'
+}
+
+// ObjectList
+//----------------------------------------------------------
+ObjectList( 'ObjectList' )
+{
+    .Compiler           = 'cl.exe'
+    .CompilerOptions    = '%1 %2 -c'
+    .CompilerOutputPath = 'Out/'
+}
+Alias( 'AliasToObjectList' )
+{
+    .Targets            = 'ObjectList'
+}
+
+// RemoveDir
+//----------------------------------------------------------
+RemoveDir( 'RemoveDir' )
+{
+    .RemovePaths        = 'Tmp/'
+}
+Alias( 'AliasToRemoveDir' )
+{
+    .Targets            = 'RemoveDir'
+}
+
+//----------------------------------------------------------

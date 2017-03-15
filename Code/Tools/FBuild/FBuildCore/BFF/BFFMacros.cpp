@@ -35,24 +35,24 @@ bool BFFMacros::IsDefined(const AString& token) const
     }
 
     // fallbacking to predefined tokens :
-    if ( token == "__WINDOWS__" )
-    {
-        #if defined( __WINDOWS__ )
+    #if defined( __WINDOWS__ )
+        if ( token == "__WINDOWS__" )
+        {
             return true;
-        #endif
-    }
-    if ( token == "__LINUX__" )
-    {
-        #if defined( __LINUX__ )
+        }
+    #endif
+    #if defined( __LINUX__ )
+        if ( token == "__LINUX__" )
+        {
             return true;
-        #endif
-    }
-    if ( token == "__OSX__" )
-    {
-        #if defined( __OSX__ )
+        }
+    #endif
+    #if defined( __OSX__ )
+        if ( token == "__OSX__" )
+        {
             return true;
-        #endif
-    }
+        }
+    #endif
 
     return false;
 }

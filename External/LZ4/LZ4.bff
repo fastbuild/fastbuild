@@ -1,8 +1,11 @@
 // LZ4
 //------------------------------------------------------------------------------
-.LZ4BasePath		= '../External/LZ4/lz4-r131'
+.LZ4BasePath		= '../External/LZ4/lz4-1.7.4.2/lib'
 .LZ4_Windows_MSVC	= [ .LZ4IncludePaths	= ' /I"$LZ4BasePath$"'
-						.LZ4CompilerOptions	= ' /wd6262'	// Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
+						.LZ4CompilerOptions	= ' /wd6237'	// (%s) is always zero.  <expression> is never evaluated and might have side effects.
+											+ ' /wd6239'	// (<non-zero constant> && <expression>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
+											+ ' /wd6262'	// Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
+											+ ' /wd6385'	// Reading invalid data from '%s':  the readable size is '%u' bytes, but '%u' bytes may be read.: Lines:
 											+ ' /wd28251'	// warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
 					  ]
 .LZ4_Windows_Clang	= [ .LZ4IncludePaths	= ' -I"$LZ4BasePath$"'

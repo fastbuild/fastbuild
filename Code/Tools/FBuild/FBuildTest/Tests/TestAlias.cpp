@@ -21,6 +21,7 @@ private:
     // Tests
     void MissingAliasTarget() const;
     void ReflectionAliasResolution() const;
+    void NonFileNodes() const;
 };
 
 // Register Tests
@@ -28,6 +29,7 @@ private:
 REGISTER_TESTS_BEGIN( TestAlias )
     REGISTER_TEST( MissingAliasTarget )
     REGISTER_TEST( ReflectionAliasResolution )
+    REGISTER_TEST( NonFileNodes )
 REGISTER_TESTS_END
 
 // MissingAliasTarget
@@ -89,6 +91,16 @@ void TestAlias::ReflectionAliasResolution() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
     }
+}
+
+// NonFileNodes
+//------------------------------------------------------------------------------
+void TestAlias::NonFileNodes() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestAlias/Reflection/ok_to_non_filenode.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
 }
 
 //------------------------------------------------------------------------------

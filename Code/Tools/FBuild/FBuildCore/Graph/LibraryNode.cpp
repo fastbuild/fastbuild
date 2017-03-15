@@ -10,6 +10,7 @@
 #include "UnityNode.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -17,6 +18,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -25,52 +27,77 @@
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
+// Reflection
+//------------------------------------------------------------------------------
+REFLECT_NODE_BEGIN( LibraryNode, ObjectListNode, MetaName( "LibrarianOutput" ) + MetaFile() )
+    REFLECT( m_Librarian,                       "Librarian",                    MetaFile() )
+    REFLECT( m_LibrarianOptions,                "LibrarianOptions",             MetaNone() )
+    REFLECT( m_LibrarianOutput,                 "LibrarianOutput",              MetaFile() )
+    REFLECT_ARRAY( m_LibrarianAdditionalInputs, "LibrarianAdditionalInputs",    MetaOptional() + MetaFile() + MetaAllowNonFile( Node::OBJECT_LIST_NODE ) )
+
+    REFLECT( m_NumLibrarianAdditionalInputs,    "NumLibrarianAdditionalInputs", MetaHidden() )
+    REFLECT( m_LibrarianFlags,                  "LibrarianFlags",               MetaHidden() )
+REFLECT_END( LibraryNode )
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-LibraryNode::LibraryNode( const AString & libraryName,
-                          const Dependencies & inputNodes,
-                          CompilerNode * compiler,
-                          const AString & compilerArgs,
-                          const AString & compilerArgsDeoptimized,
-                          const AString & compilerOutputPath,
-                          const AString & librarian,
-                          const AString & librarianArgs,
-                          uint32_t flags,
-                          ObjectNode * precompiledHeader,
-                          const Dependencies & compilerForceUsing,
-                          const Dependencies & preBuildDependencies,
-                          const Dependencies & additionalInputs,
-                          bool deoptimizeWritableFiles,
-                          bool deoptimizeWritableFilesWithToken,
-                          bool allowDistribution,
-                          bool allowCaching,
-                          CompilerNode * preprocessor,
-                          const AString & preprocessorArgs,
-                          const AString & baseDirectory )
-: ObjectListNode( libraryName,
-                  inputNodes,
-                  compiler,
-                  compilerArgs,
-                  compilerArgsDeoptimized,
-                  compilerOutputPath,
-                  precompiledHeader,
-                  compilerForceUsing,
-                  preBuildDependencies,
-                  deoptimizeWritableFiles,
-                  deoptimizeWritableFilesWithToken,
-                  allowDistribution,
-                  allowCaching,
-                  preprocessor,
-                  preprocessorArgs,
-                  baseDirectory )
-, m_AdditionalInputs( additionalInputs )
+LibraryNode::LibraryNode()
+: ObjectListNode()
 {
     m_Type = LIBRARY_NODE;
     m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved
+}
 
-    m_LibrarianPath = librarian; // TODO:C This should be a node
-    m_LibrarianArgs = librarianArgs;
-    m_Flags = flags;
+// Initialize
+//------------------------------------------------------------------------------
+bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+{
+    // .Librarian
+    Dependencies librarian;
+    if ( !function->GetFileNode( nodeGraph, iter, m_Librarian, "Librarian", librarian ) )
+    {
+        return false; // GetFileNode will have emitted an error
+    }
+    ASSERT( librarian.GetSize() == 1 ); // Should only be possible to be one
+    m_StaticDependencies.Append( librarian );
+    m_ObjectListInputStartIndex += 1; // Ensure librarian is not treated as an input
+
+    // .LibrarianOptions
+    {
+        if ( m_LibrarianOptions.Find( "%1" ) == nullptr )
+        {
+            Error::Error_1106_MissingRequiredToken( iter, function, ".LibrarianOptions", "%1" );
+            return false;
+        }
+        if ( m_LibrarianOptions.Find( "%2" ) == nullptr )
+        {
+            Error::Error_1106_MissingRequiredToken( iter, function, ".LibrarianOptions", "%2" );
+            return false;
+        }
+    }
+
+    // Handle all the ObjectList common stuff
+    if ( !ObjectListNode::Initialize( nodeGraph, iter, function ) )
+    {
+        return false;
+    }
+
+    // .LibrarianAdditionalInputs  - TODO:B Use m_LibrarianAdditionalInputs instead of finding it again
+    Dependencies librarianAdditionalInputs;
+    if ( !function->GetNodeList( nodeGraph, iter, ".LibrarianAdditionalInputs", librarianAdditionalInputs, false ) )
+    {
+        return false;// GetNodeList will emit error
+    }
+    m_NumLibrarianAdditionalInputs = (uint32_t)librarianAdditionalInputs.GetSize();
+
+    // Store dependencies
+    m_StaticDependencies.SetCapacity( m_StaticDependencies.GetSize() + librarianAdditionalInputs.GetSize() );
+    m_StaticDependencies.Append( librarianAdditionalInputs );
+    // m_ObjectListInputEndIndex // NOTE: Deliberately not added to m_ObjectListInputEndIndex, since we don't want to try and compile these things
+
+    m_LibrarianFlags = DetermineFlags( m_Librarian );
+
+    return true;
 }
 
 // DESTRUCTOR
@@ -93,14 +120,21 @@ LibraryNode::~LibraryNode() = default;
         return false; // GatherDynamicDependencies will have emited an error
     }
 
-    // additional libs/objects
-    m_DynamicDependencies.Append( m_AdditionalInputs );
+    // .LibrarianAdditionalInputs
+    // (By simply pushing these into the DynamicDeps, the existing ObjectListNode logic will
+    //  handle expanding them into the command line like everything else)
+    const size_t startIndex = m_StaticDependencies.GetSize() - m_NumLibrarianAdditionalInputs;
+    const size_t endIndex = m_StaticDependencies.GetSize();
+    for ( size_t i=startIndex; i<endIndex; ++i )
+    {
+        m_DynamicDependencies.Append( Dependency( m_StaticDependencies[ i ].GetNode() ) );
+    }
     return true;
 }
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult LibraryNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult LibraryNode::DoBuild( Job * job )
 {
     // delete library before creation (so ar.exe will not merge old symbols)
     if ( FileIO::FileExists( GetName().Get() ) )
@@ -124,7 +158,7 @@ LibraryNode::~LibraryNode() = default;
 
     // spawn the process
     Process p;
-    bool spawnOK = p.Spawn( m_LibrarianPath.Get(),
+    bool spawnOK = p.Spawn( GetLibrarian()->GetName().Get(),
                             fullArgs.GetFinalArgs().Get(),
                             workingDir,
                             environment );
@@ -150,14 +184,12 @@ LibraryNode::~LibraryNode() = default;
     {
         if ( memOut.Get() )
         {
-            m_BuildOutputMessages.Append( memOut.Get(), memOutSize );
-            FLOG_ERROR_DIRECT( memOut.Get() );
+            job->ErrorPreformatted( memOut.Get() );
         }
 
         if ( memErr.Get() )
         {
-            m_BuildOutputMessages.Append( memErr.Get(), memErrSize );
-            FLOG_ERROR_DIRECT( memErr.Get() );
+            job->ErrorPreformatted( memErr.Get() );
         }
     }
 
@@ -180,7 +212,7 @@ LibraryNode::~LibraryNode() = default;
 bool LibraryNode::BuildArgs( Args & fullArgs ) const
 {
     Array< AString > tokens( 1024, true );
-    m_LibrarianArgs.Tokenize( tokens );
+    m_LibrarianOptions.Tokenize( tokens );
 
     const AString * const end = tokens.End();
     for ( const AString * it = tokens.Begin(); it!=end; ++it )
@@ -233,13 +265,13 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     }
 
     // orbis-ar.exe requires escaped slashes inside response file
-    if ( GetFlag( LIB_FLAG_ORBIS_AR ) )
+    if ( GetFlag( LIB_FLAG_ORBIS_AR ) || GetFlag( LIB_FLAG_AR ) )
     {
         fullArgs.SetEscapeSlashesInResponseFile();
     }
 
     // Handle all the special needs of args
-    if ( fullArgs.Finalize( m_LibrarianPath, GetName(), CanUseResponseFile() ) == false )
+    if ( fullArgs.Finalize( GetLibrarian()->GetName(), GetName(), CanUseResponseFile() ) == false )
     {
         return false; // Finalize will have emitted an error
     }
@@ -289,7 +321,7 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
     output += '\n';
     if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
     {
-        output += m_LibrarianPath;
+        output += m_Librarian;
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
@@ -297,70 +329,32 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
     FLOG_BUILD_DIRECT( output.Get() );
 }
 
+// GetLibrarian
+//------------------------------------------------------------------------------
+FileNode * LibraryNode::GetLibrarian() const
+{
+    // Librarian is always at index 0
+    return m_StaticDependencies[ 0 ].GetNode()->CastTo< FileNode >();
+}
+
 // Load
 //------------------------------------------------------------------------------
 /*static*/ Node * LibraryNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
-    NODE_LOAD( AStackString<>,  name );
-    NODE_LOAD_NODE( CompilerNode,   compilerNode );
-    NODE_LOAD( AStackString<>,  compilerArgs );
-    NODE_LOAD( AStackString<>,  compilerArgsDeoptimized );
-    NODE_LOAD( AStackString<>,  compilerOutputPath );
-    NODE_LOAD_DEPS( 16,         staticDeps );
-    NODE_LOAD_NODE( Node,       precompiledHeader );
-    NODE_LOAD( AStackString<>,  objExtensionOverride );
-    NODE_LOAD( AStackString<>,  compilerOutputPrefix );
-    NODE_LOAD_DEPS( 0,          compilerForceUsing );
-    NODE_LOAD_DEPS( 0,          preBuildDependencies );
-    NODE_LOAD( bool,            deoptimizeWritableFiles );
-    NODE_LOAD( bool,            deoptimizeWritableFilesWithToken );
-    NODE_LOAD( bool,            allowDistribution );
-    NODE_LOAD( bool,            allowCaching );
-    NODE_LOAD_NODE( CompilerNode, preprocessorNode );
-    NODE_LOAD( AStackString<>,  preprocessorArgs );
-    NODE_LOAD( AStackString<>,  baseDirectory );
-    NODE_LOAD( AStackString<>,  extraPDBPath );
-    NODE_LOAD( AStackString<>,  extraASMPath );
+    NODE_LOAD( AStackString<>, name );
 
-    NODE_LOAD( AStackString<>,  librarianPath );
-    NODE_LOAD( AStackString<>,  librarianArgs );
-    NODE_LOAD( uint32_t,        flags );
-    NODE_LOAD_DEPS( 0,          additionalInputs );
+    LibraryNode * node = nodeGraph.CreateLibraryNode( name );
 
-    LibraryNode * n = nodeGraph.CreateLibraryNode( name,
-                                 staticDeps,
-                                 compilerNode,
-                                 compilerArgs,
-                                 compilerArgsDeoptimized,
-                                 compilerOutputPath,
-                                 librarianPath,
-                                 librarianArgs,
-                                 flags,
-                                 precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr,
-                                 compilerForceUsing,
-                                 preBuildDependencies,
-                                 additionalInputs,
-                                 deoptimizeWritableFiles,
-                                 deoptimizeWritableFilesWithToken,
-                                 allowDistribution,
-                                 allowCaching,
-                                 preprocessorNode,
-                                 preprocessorArgs,
-                                 baseDirectory );
-    n->m_ObjExtensionOverride = objExtensionOverride;
-    n->m_CompilerOutputPrefix = compilerOutputPrefix;
-    n->m_ExtraPDBPath = extraPDBPath;
-    n->m_ExtraASMPath = extraASMPath;
+    if ( node->Deserialize( nodeGraph, stream ) == false )
+    {
+        return nullptr;
+    }
 
-    // TODO:B Need to save the dynamic deps, for better progress estimates
-    // but we can't right now because we rely on the nodes we depend on
-    // being saved before us which isn't the case for dynamic deps.
-    //if ( Node::LoadDepArray( fileStream, n->m_DynamicDependencies ) == false )
-    //{
-    //  FDELETE n;
-    //  return nullptr;
-    //}
-    return n;
+    // TODO:C Handle through normal serialization
+    NODE_LOAD_NODE_LINK( Node, precompiledHeader );
+    node->m_PrecompiledHeader = precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr;
+
+    return node;
 }
 
 // Save
@@ -368,11 +362,6 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 /*virtual*/ void LibraryNode::Save( IOStream & stream ) const
 {
     ObjectListNode::Save( stream );
-
-    NODE_SAVE( m_LibrarianPath );
-    NODE_SAVE( m_LibrarianArgs );
-    NODE_SAVE( m_Flags );
-    NODE_SAVE_DEPS( m_AdditionalInputs );
 }
 
 // CanUseResponseFile

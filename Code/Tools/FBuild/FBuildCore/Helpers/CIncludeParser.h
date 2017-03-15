@@ -29,6 +29,8 @@ public:
     #endif
 
 private:
+    static void ParseToNextLineStartingWithHash( const char * & pos );
+
     void AddInclude( const char * begin, const char * end );
 
     // temporary data

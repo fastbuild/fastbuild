@@ -182,7 +182,8 @@ public:
         timedOut = false;
         return -1;
     #elif defined( __APPLE__ )
-        timedOut = false; // TODO:MAC Implement timeout support
+        timedOut = false;
+        (void)timeoutMS; // TODO:MAC Implement timeout support
         void * ret;
         if ( pthread_join( (pthread_t)handle, &ret ) == 0 )
         {

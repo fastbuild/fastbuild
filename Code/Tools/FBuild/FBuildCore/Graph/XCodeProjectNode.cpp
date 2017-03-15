@@ -23,10 +23,10 @@
 //------------------------------------------------------------------------------
 REFLECT_STRUCT_BEGIN_BASE( XCodeProjectConfig )
     REFLECT( m_Config,  "Config",   MetaNone() )
-    REFLECT( m_Target,  "Target",   MetaNone() )
+    REFLECT( m_Target,  "Target",   MetaOptional() )
 REFLECT_END( XCodeProjectConfig )
 
-REFLECT_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
+REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
     REFLECT_ARRAY( m_ProjectInputPaths,             "ProjectInputPaths",            MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_ProjectInputPathsExclude,      "ProjectInputPathsExclude",     MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_ProjectFiles,                  "ProjectFiles",                 MetaOptional() + MetaFile() )
@@ -40,6 +40,43 @@ REFLECT_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() 
     REFLECT( m_XCodeBuildToolArgs,                  "XCodeBuildToolArgs",           MetaOptional() )
     REFLECT( m_XCodeBuildWorkingDir,                "XCodeBuildWorkingDir",         MetaOptional() )
 REFLECT_END( XCodeProjectNode )
+
+// XCodeProjectConfig::ResolveTagets
+//------------------------------------------------------------------------------
+/*static*/ bool XCodeProjectConfig::ResolveTagets( NodeGraph & nodeGraph,
+                                                   Array< XCodeProjectConfig > & configs,
+                                                   const BFFIterator * iter,
+                                                   const Function * function )
+{
+    // Must provide iter and function, or neither
+    ASSERT( ( ( iter == nullptr ) && ( function == nullptr ) ) ||
+            ( iter && function ) );
+
+    for ( auto & config : configs )
+    {
+        // Target is allowed to be empty (perhaps this project represents
+        // something that cannot be built, like header browsing information
+        // for a 3rd party library for example)
+        if ( config.m_Target.IsEmpty() )
+        {
+            return true;
+        }
+
+        // Find the node
+        const Node * node = nodeGraph.FindNode( config.m_Target );
+        if ( node == nullptr )
+        {
+            if ( iter && function )
+            {
+                Error::Error_1104_TargetNotDefined( *iter, function, ".Target", config.m_Target );
+            }
+            return false;
+        }
+
+        config.m_TargetNode = node;
+    }
+    return true;
+}
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -77,6 +114,12 @@ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & it
     ASSERT( m_StaticDependencies.IsEmpty() );
     m_StaticDependencies.Append( dirNodes );
     m_StaticDependencies.Append( fileNodes );
+
+    // Resolve Target names to Node pointers for layer use
+    if ( XCodeProjectConfig::ResolveTagets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
+    {
+        return false; // Initialize will have emitted an error
+    }
 
     return true;
 }
@@ -171,7 +214,7 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     // Add configs
     for ( const auto& cfg : m_ProjectConfigs )
     {
-        g.AddConfig( cfg.m_Config, cfg.m_Target );
+        g.AddConfig( cfg.m_Config, cfg.m_TargetNode );
     }
 
     // Generate project.pbxproj file
@@ -196,6 +239,14 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     {
         return nullptr;
     }
+
+    // Resolve Target names to Node pointers for layer use
+    if ( XCodeProjectConfig::ResolveTagets( nodeGraph, n->m_ProjectConfigs ) == false )
+    {
+        ASSERT( false ); // Should be impossible to be loading a DB where the Target cannot be resolved
+        return nullptr;
+    }
+
     return n;
 }
 

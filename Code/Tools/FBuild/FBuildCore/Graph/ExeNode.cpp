@@ -49,7 +49,7 @@ ExeNode::~ExeNode() = default;
     NODE_LOAD_DEPS( 0,          assemblyResources );
     NODE_LOAD_DEPS( 0,          otherLibs );
     NODE_LOAD( AStackString<>,  importLibName );
-    NODE_LOAD_NODE( Node,       linkerStampExe );
+    NODE_LOAD_NODE_LINK( Node,  linkerStampExe );
     NODE_LOAD( AStackString<>,  linkerStampExeArgs );
 
     ExeNode * en = nodeGraph.CreateExeNode( name, inputLibs, otherLibs, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs );

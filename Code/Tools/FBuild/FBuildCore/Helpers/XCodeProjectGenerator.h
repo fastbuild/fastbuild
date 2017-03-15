@@ -31,6 +31,7 @@ private:
     void WriteFolders();
     void WriteBuildCommand();
     void WriteGeneralSettings();
+	void WritePBXSourcesBuildPhase();
     void WriteBuildConfiguration();
     void WriteConfigurationList();
     void WriteFooter();

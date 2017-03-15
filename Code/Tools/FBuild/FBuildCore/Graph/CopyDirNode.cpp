@@ -1,4 +1,4 @@
-// FileNode.cpp
+// CopyDirNode.cpp
 //------------------------------------------------------------------------------
 
 // Includes
@@ -7,6 +7,7 @@
 
 #include "CopyDirNode.h"
 
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
@@ -14,20 +15,58 @@
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
-//#include "Core/Env/Env.h"
 #include "Core/Strings/AStackString.h"
+
+// REFLECTION
+//------------------------------------------------------------------------------
+REFLECT_NODE_BEGIN( CopyDirNode, Node, MetaNone() )
+    REFLECT_ARRAY(  m_SourcePaths,              "SourcePaths",              MetaPath() )
+    REFLECT(        m_Dest,                     "Dest",                     MetaPath() )
+    REFLECT_ARRAY(  m_SourcePathsPattern,       "SourcePathsPattern",       MetaOptional() )
+    REFLECT_ARRAY(  m_SourceExcludePaths,       "SourceExcludePaths",       MetaOptional() )
+    REFLECT(        m_SourcePathsRecurse,       "SourcePathsRecurse",       MetaOptional() )
+    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+REFLECT_END( CopyDirNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-CopyDirNode::CopyDirNode( const AString & name,
-                          Dependencies & staticDeps,
-                          const AString & destPath,
-                          const Dependencies & preBuildDeps )
-: Node( name, Node::COPY_DIR_NODE, Node::FLAG_NONE )
-, m_DestPath( destPath )
+CopyDirNode::CopyDirNode()
+: Node( AString::GetEmpty(), Node::COPY_DIR_NODE, Node::FLAG_NONE )
 {
-    m_StaticDependencies.Append( staticDeps );
-    m_PreBuildDependencies = preBuildDeps;
+}
+
+// Initialize
+//------------------------------------------------------------------------------
+bool CopyDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+{
+    // .PreBuildDependencies
+    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
+    {
+        return false; // InitializePreBuildDependencies will have emitted an error
+    }
+
+    // .CompilerInputPath
+    Dependencies sourcePaths;
+    if ( !function->GetDirectoryListNodeList( nodeGraph,
+                                              iter,
+                                              m_SourcePaths, 
+                                              m_SourceExcludePaths,
+                                              Array< AString >(),     // Unsupported: Excluded files
+                                              Array< AString >(),    // Unsupported: Excluded patterns
+                                              m_SourcePathsRecurse,
+                                              &m_SourcePathsPattern,
+                                              "SourcePaths",
+                                              sourcePaths ) )
+    {
+        return false; // GetDirectoryListNodeList will have emitted an error
+    }
+    ASSERT( sourcePaths.GetSize() == m_SourcePaths.GetSize() );
+
+    // Store dependencies
+    m_StaticDependencies.SetCapacity( sourcePaths.GetSize() );
+    m_StaticDependencies.Append( sourcePaths );
+
+    return true;
 }
 
 // DESTRUCTOR
@@ -90,8 +129,8 @@ CopyDirNode::~CopyDirNode() = default;
             }
 
             // generate dest file name
-            const AStackString<> dstFile( m_DestPath );
-            (AString &)dstFile += (AString &)srcFileRel;
+            AStackString<> dstFile( m_Dest );
+            dstFile += srcFileRel;
 
             // make sure dest doesn't already exist
             Node * n = nodeGraph.FindNode( dstFile );
@@ -155,14 +194,15 @@ CopyDirNode::~CopyDirNode() = default;
 //------------------------------------------------------------------------------
 /*static*/ Node * CopyDirNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
-    NODE_LOAD( AStackString<>,  name);
-    NODE_LOAD_DEPS( 4,          staticDeps );
-    NODE_LOAD( AStackString<>,  destPath );
-    NODE_LOAD_DEPS( 0,          preBuildDeps );
+    NODE_LOAD( AStackString<>, name );
 
-    CopyDirNode * n = nodeGraph.CreateCopyDirNode( name, staticDeps, destPath, preBuildDeps );
-    ASSERT( n );
-    return n;
+    CopyDirNode * node = nodeGraph.CreateCopyDirNode( name );
+
+    if ( node->Deserialize( nodeGraph, stream ) == false )
+    {
+        return nullptr;
+    }
+    return node;
 }
 
 // Save
@@ -170,9 +210,7 @@ CopyDirNode::~CopyDirNode() = default;
 /*virtual*/ void CopyDirNode::Save( IOStream & stream ) const
 {
     NODE_SAVE( m_Name );
-    NODE_SAVE_DEPS( m_StaticDependencies );
-    NODE_SAVE( m_DestPath );
-    NODE_SAVE_DEPS( m_PreBuildDependencies );
+    Node::Serialize( stream );
 }
 
 //------------------------------------------------------------------------------
