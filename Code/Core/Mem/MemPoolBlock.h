@@ -12,13 +12,17 @@ class MemPoolBlock
 {
 public:
     MemPoolBlock( size_t blockSize, size_t blockAlignment );
-    ~MemPoolBlock();
+    virtual ~MemPoolBlock();
 
     void *  Alloc( size_t size );
     void    Free( void * ptr );
 
-private:
-    void AllocPage();
+    enum { MEMPOOLBLOCK_PAGE_SIZE = 64 * 1024 };
+
+protected:
+    bool    AllocPage();
+
+    virtual void * AllocateMemoryForPage();
 
     struct FreeBlock
     {
@@ -26,19 +30,20 @@ private:
     };
 
     // in-place linked list of free blocks
-    FreeBlock * m_FreeBlockChain;
+    FreeBlock * m_FreeBlockChain            = nullptr;
 
-    // total number of active allocations
-    #ifdef DEBUG
-        uint32_t m_NumAllocations;
+    // debug active allocations
+    #if defined( DEBUG )
+        uint32_t m_NumActiveAllocations     = 0;
+        uint32_t m_NumLifetimeAllocations   = 0;
+        uint32_t m_PeakActiveAllocations    = 0;
     #endif
 
     // internal control params
-    size_t      m_BlockSize;
-    size_t      m_BlockAlignment;
+    uint32_t    m_BlockSize                 = 0;
+    uint32_t    m_BlockAlignment            = 0;
 
     // allocated pages
-    enum { PAGE_SIZE = 64 * 1024 };
     Array< void * > m_Pages;
 };
 

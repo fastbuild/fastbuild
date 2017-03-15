@@ -18,10 +18,14 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( CompilerNode, Node, MetaName( "Executable" ) + MetaFile() )
+REFLECT_NODE_BEGIN( CompilerNode, Node, MetaName( "Executable" ) + MetaFile() )
     REFLECT_ARRAY( m_ExtraFiles,    "ExtraFiles",           MetaOptional() + MetaFile() )
+    REFLECT_ARRAY( m_CustomEnvironmentVariables, "CustomEnvironmentVariables",  MetaOptional() )
     REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
     REFLECT( m_VS2012EnumBugFix,    "VS2012EnumBugFix",     MetaOptional() )
+    REFLECT( m_ClangRewriteIncludes, "ClangRewriteIncludes", MetaOptional() )
+    REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
+    REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
@@ -30,6 +34,8 @@ CompilerNode::CompilerNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL )
     , m_AllowDistribution( true )
     , m_VS2012EnumBugFix( false )
+    , m_ClangRewriteIncludes( true )
+    , m_SimpleDistributionMode( false )
 {
     m_Type = Node::COMPILER_NODE;
 }
@@ -45,15 +51,24 @@ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, 
         return false; // GetNodeList will have emitted an error
     }
 
+    if( m_ExecutableRootPath.IsEmpty() )
+    {
+        const char * lastSlash = m_Name.FindLast( NATIVE_SLASH );
+        if ( lastSlash )
+        {
+            m_ExecutableRootPath.Assign( m_Name.Get(), lastSlash + 1 );
+        }
+    }
+
     // Check for conflicting files
     AStackString<> relPathExe;
-    ToolManifest::GetRelativePath( m_Name, m_Name, relPathExe );
+    ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Name, relPathExe );
 
     const size_t numExtraFiles = extraFiles.GetSize();
     for ( size_t i=0; i<numExtraFiles; ++i )
     {
         AStackString<> relPathA;
-        ToolManifest::GetRelativePath( m_Name, extraFiles[ i ].GetNode()->GetName(), relPathA );
+        ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
 
         // Conflicts with Exe?
         if ( PathUtils::ArePathsEqual( relPathA, relPathExe ) )
@@ -66,7 +81,7 @@ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, 
         for ( size_t j=(i+1); j<numExtraFiles; ++j )
         {
             AStackString<> relPathB;
-            ToolManifest::GetRelativePath( m_Name, extraFiles[ j ].GetNode()->GetName(), relPathB );
+            ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
 
             if ( PathUtils::ArePathsEqual( relPathA, relPathB ) )
             {
@@ -126,7 +141,7 @@ bool CompilerNode::DetermineNeedToBuild( bool forceClean ) const
     // ensure our timestamp is updated (Generate requires this)
     FileNode::DoBuild( job );
 
-    if ( !m_Manifest.Generate( this, m_StaticDependencies ) )
+    if ( !m_Manifest.Generate( this, m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables ) )
     {
         return Node::NODE_RESULT_FAILED; // Generate will have emitted error
     }

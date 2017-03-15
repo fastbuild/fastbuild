@@ -8,6 +8,7 @@
 #include "Node.h"
 #include "FileNode.h"
 
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
@@ -32,6 +33,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
@@ -79,10 +81,18 @@ IMetaData & MetaName( const char * name )
 {
     return *FNEW( Meta_Name( name ) );
 }
+IMetaData & MetaAllowNonFile()
+{
+    return *FNEW( Meta_AllowNonFile() );
+}
+IMetaData & MetaAllowNonFile( const Node::Type limitToType )
+{
+    return *FNEW( Meta_AllowNonFile( limitToType ) );
+}
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN_ABSTRACT( Node, Object, MetaNone() )
+REFLECT_STRUCT_BEGIN_ABSTRACT( Node, Struct, MetaNone() )
 REFLECT_END( Node )
 
 // CONSTRUCTOR
@@ -266,9 +276,9 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     return true;
 }
 
-// SaveNode
+// SaveNodeLink
 //------------------------------------------------------------------------------
-/*static*/ void Node::SaveNode( IOStream & fileStream, const Node * node )
+/*static*/ void Node::SaveNodeLink( IOStream & fileStream, const Node * node )
 {
     // for null pointer, write an empty string
     if ( node == nullptr )
@@ -277,14 +287,20 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     }
     else
     {
+        // Can only link to nodes that are:
+        //  a) Dependended on
+        //  b) Our parent
+        // This ensures they are saved in the correct order, which this assert checks
+        ASSERT( node->IsSaved() );
+
         // for valid nodes, write the node name
         fileStream.Write( node->GetName() );
     }
 }
 
-// LoadNode
+// LoadNodeLink
 //------------------------------------------------------------------------------
-/*static*/ bool Node::LoadNode( NodeGraph & nodeGraph, IOStream & stream, Node * & node )
+/*static*/ bool Node::LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, Node * & node )
 {
     // read the name of the node
     AStackString< 512 > nodeName;
@@ -313,12 +329,12 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     return true;
 }
 
-// LoadNode (CompilerNode)
+// LoadNodeLink (CompilerNode)
 //------------------------------------------------------------------------------
-/*static*/ bool Node::LoadNode( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode )
+/*static*/ bool Node::LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode )
 {
     Node * node;
-    if ( !LoadNode( nodeGraph, stream, node ) )
+    if ( !LoadNodeLink( nodeGraph, stream, node ) )
     {
         return false;
     }
@@ -335,12 +351,12 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     return true;
 }
 
-// LoadNode (FileNode)
+// LoadNodeLink (FileNode)
 //------------------------------------------------------------------------------
-/*static*/ bool Node::LoadNode( NodeGraph & nodeGraph, IOStream & stream, FileNode * & fileNode )
+/*static*/ bool Node::LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, FileNode * & fileNode )
 {
     Node * node;
-    if ( !LoadNode( nodeGraph, stream, node ) )
+    if ( !LoadNodeLink( nodeGraph, stream, node ) )
     {
         return false;
     }
@@ -508,18 +524,29 @@ void Node::Serialize( IOStream & stream ) const
     // Properties
     const ReflectionInfo * const ri = GetReflectionInfoV();
     Serialize( stream, this, *ri );
+
+    #if defined( DEBUG )
+        MarkAsSaved();
+    #endif
 }
 
 // Serialize
 //------------------------------------------------------------------------------
 /*static*/ void Node::Serialize( IOStream & stream, const void * base, const ReflectionInfo & ri )
 {
-    const ReflectionIter end = ri.End();
-    for ( ReflectionIter it = ri.Begin(); it != end; ++it )
+    const ReflectionInfo * currentRI = &ri;
+    do
     {
-        const ReflectedProperty & property = *it;
-        Serialize( stream, base, property );
+        const ReflectionIter end = currentRI->End();
+        for ( ReflectionIter it = currentRI->Begin(); it != end; ++it )
+        {
+            const ReflectedProperty & property = *it;
+            Serialize( stream, base, property );
+        }
+
+        currentRI = currentRI->GetSuperClass();
     }
+    while ( currentRI );
 }
 
 // Serialize
@@ -533,15 +560,15 @@ void Node::Serialize( IOStream & stream ) const
         {
             if ( property.IsArray() )
             {
-                const Array< AString > * arrayOfStrings( nullptr );
-                property.GetProperty( base, arrayOfStrings );
+                Array< AString > * arrayOfStrings( nullptr );
+                property.GetPtrToProperty( base, arrayOfStrings );
                 VERIFY( stream.Write( *arrayOfStrings ) );
             }
             else
             {
-                AString string; // TODO:C remove this copy
-                property.GetProperty( base, &string );
-                VERIFY( stream.Write( string ) );
+                AString * string( nullptr );
+                property.GetPtrToProperty( base, string );
+                VERIFY( stream.Write( *string ) );
             }
             return;
         }
@@ -557,6 +584,13 @@ void Node::Serialize( IOStream & stream ) const
             uint32_t u32( 0 );
             property.GetProperty( base, &u32 );
             VERIFY( stream.Write( u32 ) );
+            return;
+        }
+        case PT_UINT64:
+        {
+            uint64_t u64( 0 );
+            property.GetProperty( base, &u64 );
+            VERIFY( stream.Write( u64 ) );
             return;
         }
         case PT_STRUCT:
@@ -610,15 +644,23 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
 //------------------------------------------------------------------------------
 /*static*/ bool Node::Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri )
 {
-    const ReflectionIter end = ri.End();
-    for ( ReflectionIter it = ri.Begin(); it != end; ++it )
+    const ReflectionInfo * currentRI = &ri;
+    do
     {
-        const ReflectedProperty & property = *it;
-        if ( !Deserialize( stream, base, property ) )
+        const ReflectionIter end = currentRI->End();
+        for ( ReflectionIter it = currentRI->Begin(); it != end; ++it )
         {
-            return false;
+            const ReflectedProperty & property = *it;
+            if ( !Deserialize( stream, base, property ) )
+            {
+                return false;
+            }
         }
+
+        currentRI = currentRI->GetSuperClass();
     }
+    while ( currentRI );
+
     return true;
 }
 
@@ -633,21 +675,21 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
         {
             if ( property.IsArray() )
             {
-                Array< AString > arrayOfStrings; // TODO:C Eliminate this copy
-                if ( stream.Read( arrayOfStrings ) == false )
+                Array< AString > * arrayOfStrings( nullptr );
+                property.GetPtrToProperty( base, arrayOfStrings );
+                if ( stream.Read( *arrayOfStrings ) == false )
                 {
                     return false;
                 }
-                property.SetProperty( base, arrayOfStrings );
             }
             else
             {
-                AStackString<> string; // TODO:C remove this copy
-                if ( stream.Read( string ) == false )
+                AString * string = nullptr;
+                property.GetPtrToProperty( base, string );
+                if ( stream.Read( *string ) == false )
                 {
                     return false;
                 }
-                property.SetProperty( base, string );
             }
             return true;
         }
@@ -669,6 +711,16 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
                 return false;
             }
             property.SetProperty( base, u32 );
+            return true;
+        }
+        case PT_UINT64:
+        {
+            uint64_t u64( 0 );
+            if ( stream.Read( u64 ) == false )
+            {
+                return false;
+            }
+            property.SetProperty( base, u64 );
             return true;
         }
         case PT_STRUCT:
@@ -727,8 +779,7 @@ void Node::ReplaceDummyName( const AString & newName )
 /*static*/ void Node::DumpOutput( Job * job,
                                   const char * data,
                                   uint32_t dataSize,
-                                  const Array< AString > * exclusions,
-                                  AString* outputString )
+                                  const Array< AString > * exclusions )
 {
     if ( ( data == nullptr ) || ( dataSize == 0 ) )
     {
@@ -795,30 +846,16 @@ void Node::ReplaceDummyName( const AString & newName )
         data = ( lineEnd + 1 );
     }
 
-    // print everything at once
-    FLOG_ERROR_DIRECT( buffer.Get() );
-
-    if ( nullptr != outputString )
+    if ( job == nullptr )
     {
-        outputString->Append( buffer );
+        // Log directly to stdout since we have no job
+        FLOG_ERROR_DIRECT( buffer.Get() );
     }
-
-    // send output back to client if operating remotely
-    if ( job && ( !job->IsLocal() ) )
+    else
     {
-        job->Error( "%s", buffer.Get() );
+        // Log via job
+        job->ErrorPreformatted( buffer.Get() );
     }
-}
-
-// GetFinalBuildOutputMessages
-//------------------------------------------------------------------------------
-const AString & Node::GetFinalBuildOutputMessages()
-{
-    m_BuildOutputMessages.Replace( '\n', (char)12 );
-    m_BuildOutputMessages.Replace( '\r', (char)12 );
-    m_BuildOutputMessages.Replace( '\"', '\'' );
-
-    return m_BuildOutputMessages;
 }
 
 // FixupPathForVSIntegration
@@ -943,4 +980,29 @@ const AString & Node::GetFinalBuildOutputMessages()
 
     line = fixed;
 }
+
+// InitializePreBuildDependencies
+//------------------------------------------------------------------------------
+bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const Array< AString > & preBuildDependencyNames )
+{
+    if ( preBuildDependencyNames.IsEmpty() )
+    {
+        return true;
+    }
+
+    // Pre-size hint
+    m_PreBuildDependencies.SetCapacity( preBuildDependencyNames.GetSize() );
+
+    // Expand
+    for ( const AString & preDepName : preBuildDependencyNames )
+    {
+        if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preDepName, m_PreBuildDependencies, true, true, true ) )
+        {
+            return false; // GetNodeList will have emitted an error
+        }
+    }
+
+    return true;
+}
+
 //------------------------------------------------------------------------------

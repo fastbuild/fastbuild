@@ -92,7 +92,6 @@ void TestGraph::TestNodeTypes() const
 
     CompilerNode * cn( nullptr );
     {
-        Dependencies extraFiles( 0, false );
         #if defined( __WINDOWS__ )
             cn = ng.CreateCompilerNode( AStackString<>( "c:\\cl.exe" ) );
         #else
@@ -103,7 +102,6 @@ void TestGraph::TestNodeTypes() const
     }
 
     {
-        Dependencies empty;
         #if defined( __WINDOWS__ )
             Node * n = ng.CreateCopyFileNode( AStackString<>( "c:\\dummy" ) );
         #else
@@ -142,29 +140,26 @@ void TestGraph::TestNodeTypes() const
         TEST_ASSERT( AStackString<>( "Exec" ) == n->GetTypeName() );
     }
     {
-        Dependencies nodes( 1, false );
-        nodes.Append( Dependency( fn ) );
-        Node * n = ng.CreateLibraryNode( AStackString<>( "lib" ), nodes, cn,
-                                         AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(),
-                                         AString::GetEmpty(), AString::GetEmpty(), 0,
-                                         nullptr,
-                                         Dependencies(),
-                                         Dependencies(),
-                                         Dependencies(),
-                                         false, false, false, false,
-                                         nullptr, AString::GetEmpty(), AString::GetEmpty() );
+        #if defined( __WINDOWS__ )
+            Node * n = ng.CreateLibraryNode( AStackString<>( "c:\\library.lib" ) );
+        #else
+            Node * n = ng.CreateLibraryNode( AStackString<>( "/library/library.a" ) );
+        #endif
         TEST_ASSERT( n->GetType() == Node::LIBRARY_NODE );
         TEST_ASSERT( LibraryNode::GetTypeS() == Node::LIBRARY_NODE );
         TEST_ASSERT( AStackString<>( "Library" ) == n->GetTypeName() );
     }
     {
-        Node * n = ng.CreateObjectNode(AStackString<>("obj"), fn, cn, AString::GetEmpty(), AString::GetEmpty(), nullptr, 0, Dependencies(), false, false, false, false, nullptr, AString::GetEmpty(), 0 );
+        #if defined( __WINDOWS__ )
+            Node * n = ng.CreateObjectNode( AStackString<>( "c:\\object.lib" ) );
+        #else
+            Node * n = ng.CreateObjectNode( AStackString<>( "/library/object.o" ) );
+        #endif
         TEST_ASSERT( n->GetType() == Node::OBJECT_NODE );
         TEST_ASSERT( ObjectNode::GetTypeS() == Node::OBJECT_NODE );
         TEST_ASSERT( AStackString<>( "Object" ) == n->GetTypeName() );
     }
     {
-        Dependencies targets( 0, false );
         Node * n = ng.CreateAliasNode( AStackString<>( "alias" ) );
         TEST_ASSERT( n->GetType() == Node::ALIAS_NODE );
         TEST_ASSERT( AliasNode::GetTypeS() == Node::ALIAS_NODE );
@@ -187,22 +182,17 @@ void TestGraph::TestNodeTypes() const
         TEST_ASSERT( AStackString<>( "Exe" ) == n->GetTypeName() );
     }
     {
-        Dependencies dNodes( 1, false );
-        dNodes.Append( Dependency( dn ) );
         Node * n = ng.CreateUnityNode( AStackString<>( "Unity" ) );
         TEST_ASSERT( n->GetType() == Node::UNITY_NODE);
         TEST_ASSERT( UnityNode::GetTypeS() == Node::UNITY_NODE );
         TEST_ASSERT( AStackString<>( "Unity" ) == n->GetTypeName() );
     }
     {
-        Dependencies files( 1, false );
-        files.Append( Dependency( fn ) );
-        Node * n = ng.CreateCSNode( AStackString<>( "a.cs" ),
-                                    files,
-                                    AString::GetEmpty(),
-                                    AString::GetEmpty(),
-                                    Dependencies(),
-                                    Dependencies() );
+        #if defined( __WINDOWS__ )
+            Node * n = ng.CreateCSNode( AStackString<>( "c:\\csharp.dll" ) );
+        #else
+            Node * n = ng.CreateCSNode( AStackString<>( "/dummy/csharp.dll" ) );
+        #endif
         TEST_ASSERT( n->GetType() == Node::CS_NODE);
         TEST_ASSERT( CSNode::GetTypeS() == Node::CS_NODE );
         TEST_ASSERT( AStackString<>( "C#" ) == n->GetTypeName() );
@@ -314,19 +304,13 @@ void TestGraph::TestSerialization() const
     const char * dbFile1    = "../tmp/Test/Graph/fbuild.db.1";
     const char * dbFile2    = "../tmp/Test/Graph/fbuild.db.2";
 
-    // clean up anything left over from previous runs
-    FileIO::FileDelete( dbFile1 );
-    FileIO::FileDelete( dbFile2 );
-    TEST_ASSERT( FileIO::FileExists( dbFile1 ) == false );
-    TEST_ASSERT( FileIO::FileExists( dbFile2 ) == false );
-
     // load the config file and save the resulting db
     {
         FBuildOptions options;
         options.m_ConfigFile = "fbuild.bff";
         options.SetWorkingDir( codeDir );
         FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
+        TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
         TEST_ASSERT( FileIO::FileExists( dbFile1 ) );
     }

@@ -637,14 +637,20 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             failureOutput += tmp;
         }
 
-        Node::DumpOutput( nullptr, failureOutput.Get(), failureOutput.GetLength(), nullptr, job->GetNode()->GetBuildOutputMessagesStringPointer() );
+        Node::DumpOutput( nullptr, failureOutput.Get(), failureOutput.GetLength(), nullptr );
     }
 
-    FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
-                  result ? "SUCCESS" : "ERROR",
-                  ss->m_RemoteName.Get(),
-                  job->GetNode()->GetName().Get(),
-                  job->GetNode()->GetFinalBuildOutputMessages().Get() );
+    if ( FLog::IsMonitorEnabled() )
+    {
+        AStackString<> msgBuffer;
+        job->GetMessagesForMonitorLog( msgBuffer );
+
+        FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
+                      result ? "SUCCESS" : "ERROR",
+                      ss->m_RemoteName.Get(),
+                      job->GetNode()->GetName().Get(),
+                      msgBuffer.Get() );
+    }
 
     JobQueue::Get().FinishedProcessingJob( job, result, true, false ); // remote job, not a race of a remote job
 }

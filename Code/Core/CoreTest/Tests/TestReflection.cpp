@@ -13,7 +13,11 @@
 #include "Core/Math/Vec3.h"
 #include "Core/Math/Vec4.h"
 #include "Core/Reflection/BindReflection.h"
+#include "Core/Reflection/MetaData/Meta_File.h"
+#include "Core/Reflection/MetaData/Meta_Optional.h"
+#include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/Object.h"
+#include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Reflection/Serialization/TextReader.h"
 #include "Core/Reflection/Serialization/TextWriter.h"
 #include "Core/Strings/AStackString.h"
@@ -39,6 +43,7 @@ private:
     void TestGetSet() const;
     void TestSerialization() const;
     void TestInheritence() const;
+    void MetaData() const;
 };
 
 // Register Tests
@@ -47,6 +52,7 @@ REGISTER_TESTS_BEGIN( TestReflection )
     REGISTER_TEST( TestGetSet )
     REGISTER_TEST( TestSerialization )
     REGISTER_TEST( TestInheritence )
+    REGISTER_TEST( MetaData )
 REGISTER_TESTS_END
 
 // TestStruct
@@ -310,6 +316,36 @@ void TestReflection::TestInheritence() const
     int aValueGet = 0;
     TEST_ASSERT( ri->GetProperty( &obj, "a", &aValueGet ) );
     TEST_ASSERT( aValue == aValueGet );
+}
+
+// MetaData
+//------------------------------------------------------------------------------
+class ObjectWithMetaData : public Object
+{
+    REFLECT_DECLARE( ObjectWithMetaData )
+public:
+    uint32_t m_Property = 0;
+};
+
+REFLECT_BEGIN( ObjectWithMetaData, Object, MetaFile() + MetaOptional() + MetaPath() )
+    REFLECT( m_Property, "Property", MetaFile() + MetaOptional() + MetaPath() )
+REFLECT_END( ObjectWithMetaData )
+
+void TestReflection::MetaData() const
+{
+    ObjectWithMetaData obj;
+    const ReflectionInfo * ri = obj.GetReflectionInfoV();
+
+    // Check all MetaData is present on object
+    TEST_ASSERT( ri->HasMetaData< Meta_File >() );
+    TEST_ASSERT( ri->HasMetaData< Meta_Optional >() );
+    TEST_ASSERT( ri->HasMetaData< Meta_Path >() );
+
+    // Check all MetaData is present on property
+    const ReflectedProperty * rp = ri->GetReflectedProperty( AStackString<>( "Property" ) );
+    TEST_ASSERT( rp->HasMetaData< Meta_File >() );
+    TEST_ASSERT( rp->HasMetaData< Meta_Optional >() );
+    TEST_ASSERT( rp->HasMetaData< Meta_Path >() );
 }
 
 //------------------------------------------------------------------------------

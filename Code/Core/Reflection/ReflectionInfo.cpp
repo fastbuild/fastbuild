@@ -118,7 +118,7 @@ GETSET_PROPERTY( Ref< RefObject >, const Ref< RefObject > & )
 GETSET_PROPERTY( WeakRef< Object >, const WeakRef< Object > & )
 
 #define GETSET_PROPERTY_ARRAY( valueType ) \
-    bool ReflectionInfo::GetProperty( void * object, const char * name, const Array< valueType > * & value ) const \
+    bool ReflectionInfo::GetProperty( void * object, const char * name, Array< valueType > * value ) const \
     { \
         const ReflectedProperty * p = FindProperty( name ); \
         if ( p && ( p->GetType() == GetPropertyType( (valueType *)nullptr ) ) && p->IsArray() ) \

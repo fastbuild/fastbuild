@@ -24,7 +24,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( UnityNode, Node, MetaNone() )
+REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT_ARRAY( m_InputPaths,        "UnityInputPath",                       MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_PathsToExclude,    "UnityInputExcludePath",                MetaOptional() + MetaPath() )
     REFLECT( m_InputPathRecurse,        "UnityInputPathRecurse",                MetaOptional() )
@@ -39,7 +39,7 @@ REFLECT_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT( m_MaxIsolatedFiles,        "UnityInputIsolateWritableFilesLimit",  MetaOptional() + MetaRange( 0, 1048576 ) )
     REFLECT( m_IsolateWritableFiles,    "UnityInputIsolateWritableFiles",       MetaOptional() )
     REFLECT( m_PrecompiledHeader,       "UnityPCH",                             MetaOptional() + MetaFile( true ) ) // relative
-    REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() )
+    REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
 REFLECT_END( UnityNode )
 
 // CONSTRUCTOR
@@ -69,17 +69,10 @@ UnityNode::UnityNode()
 //------------------------------------------------------------------------------
 bool UnityNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
-    // Pre-build dependencies
-    if ( !m_PreBuildDependencyNames.IsEmpty() )
+    // .PreBuildDependencies
+    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
     {
-        m_PreBuildDependencies.SetCapacity( m_PreBuildDependencyNames.GetSize() );
-        for ( const AString & preDepName : m_PreBuildDependencyNames )
-        {
-            if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preDepName, m_PreBuildDependencies, true, true, true ) )
-            {
-                return false; // GetNodeList will have emitted an error
-            }
-        }
+        return false; // InitializePreBuildDependencies will have emitted an error
     }
 
     Dependencies dirNodes( m_InputPaths.GetSize() );

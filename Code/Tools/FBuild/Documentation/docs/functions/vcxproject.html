@@ -318,7 +318,7 @@ Example:
 <div class='code'>.ProjectBuildCommand = 'fbuild -ide -dist -cache MyProject-X64-Debug'</div>
       <p>It can be convenient to take advantage of Visual Studio's runtime macro substitution to avoid    having to manually specify this for every configuration.</p>
       Example:
-<div class='code'>.ProjectBuildCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -ide -dist -cache ^$(ProjectName)-^$(Configuration)'</div>
+<div class='code'>.ProjectBuildCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp;amp; fbuild -ide -dist -cache ^$(ProjectName)-^$(Configuration)'</div>
 <hr>
 
       <p><b>ProjectRebuildCommand</b> - String - (Optional)</p>
@@ -327,7 +327,7 @@ Example:
 <div class='code'>.ProjectRebuildCommand = 'fbuild -ide -clean -dist -cache MyProject-X64-Debug'</div>
       <p>It can be convenient to take advantage of Visual Studio's runtime macro substitution to avoid    having to manually specify this for every configuration.</p>
       Example:
-<div class='code'>.ProjectRebuildCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -ide -clean -dist -cache ^$(ProjectName)-^$(Configuration)'</div>
+<div class='code'>.ProjectRebuildCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp;amp; fbuild -ide -clean -dist -cache ^$(ProjectName)-^$(Configuration)'</div>
 <hr>
 
       <p><b>ProjectCleanCommand</b> - String - (Optional)</p>
@@ -336,7 +336,7 @@ Example:
 <div class='code'>.ProjectCleanCommand = 'fbuild -ide Clean-MyProject-X64-Debug'</div>
       <p>It can be convenient to take advantage of Visual Studio's runtime macro substitution to avoid    having to manually specify this for every configuration.</p>
       Example:
-<div class='code'>.ProjectCleanCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -ide Clean-$(ProjectName)-^$(Configuration)'</div>
+<div class='code'>.ProjectCleanCommand = 'cd ^$(SolutionDir)\..\..\Code\ &amp;amp; fbuild -ide Clean-$(ProjectName)-^$(Configuration)'</div>
 <hr>
 
       <p><b>Output</b> - String - (Optional)</p>

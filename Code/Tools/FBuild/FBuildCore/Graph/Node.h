@@ -14,11 +14,14 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class IOStream;
+class BFFIterator;
 class CompilerNode;
 class FileNode;
+class Function;
 class IMetaData;
+class IOStream;
 class Job;
+class NodeGraph;
 
 // Defines
 //------------------------------------------------------------------------------
@@ -28,25 +31,38 @@ class Job;
 //------------------------------------------------------------------------------
 #define NODE_SAVE( member ) stream.Write( member );
 #define NODE_SAVE_DEPS( depsArray ) depsArray.Save( stream );
-#define NODE_SAVE_NODE( node ) Node::SaveNode( stream, node );
+#define NODE_SAVE_NODE_LINK( node ) Node::SaveNodeLink( stream, node );
 
 #define NODE_LOAD( type, member ) type member; if ( stream.Read( member ) == false ) { return nullptr; }
 #define NODE_LOAD_DEPS( initialCapacity, depsArray ) \
     Dependencies depsArray( initialCapacity, true ); \
     if ( depsArray.Load( nodeGraph, stream ) == false ) { return nullptr; }
-#define NODE_LOAD_NODE( type, node ) \
+#define NODE_LOAD_NODE_LINK( type, node ) \
     type * node = nullptr; \
-    if ( Node::LoadNode( nodeGraph, stream, node ) == false ) { return nullptr; }
+    if ( Node::LoadNodeLink( nodeGraph, stream, node ) == false ) { return nullptr; }
 
-// Custom MetaData
+// Custom Reflection Macros
 //------------------------------------------------------------------------------
-IMetaData & MetaName( const char * name );
+#define REFLECT_NODE_DECLARE( nodeName )                                \
+    REFLECT_STRUCT_DECLARE( nodeName )                                  \
+    virtual const ReflectionInfo * GetReflectionInfoV() const override  \
+    {                                                                   \
+        return nodeName::GetReflectionInfoS();                          \
+    }
+
+#define REFLECT_NODE_BEGIN( nodeName, baseNodeName, metaData )          \
+    REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, metaData )
 
 // FBuild
 //------------------------------------------------------------------------------
-class Node : public Object
+class Node : public Struct
 {
-    REFLECT_DECLARE( Node )
+    REFLECT_STRUCT_DECLARE( Node )
+    virtual const ReflectionInfo * GetReflectionInfoV() const
+    {
+        return nullptr; // TODO:B Make pure virtual when everything is using reflection
+    }
+
 public:
     enum Type
     {
@@ -156,14 +172,18 @@ public:
     static void DumpOutput( Job * job,
                             const char * data,
                             uint32_t dataSize,
-                            const Array< AString > * exclusions = nullptr,
-                            AString * outputString = nullptr );
+                            const Array< AString > * exclusions = nullptr );
 
     inline void     SetBuildPassTag( uint32_t pass ) const { m_BuildPassTag = pass; }
     inline uint32_t GetBuildPassTag() const             { return m_BuildPassTag; }
 
-    AString * GetBuildOutputMessagesStringPointer() { return &m_BuildOutputMessages; }
-    const AString & GetFinalBuildOutputMessages();
+    const AString & GetName() const { return m_Name; }
+
+    #if defined( DEBUG )
+        // Help catch serialization errors
+        inline bool IsSaved() const     { return m_IsSaved; }
+        inline void MarkAsSaved() const { m_IsSaved = true; }
+    #endif
 
 protected:
     friend class FBuild;
@@ -172,9 +192,9 @@ protected:
     friend class JobQueue;
     friend class JobQueueRemote;
     friend class NodeGraph;
+    friend class ProjectGeneratorBase; // TODO:C Remove this
     friend class Report;
     friend class VSProjectConfig; // TODO:C Remove this
-    friend class VSProjectGenerator; // TODO:C Remove this
     friend class WorkerThread;
 
     inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
@@ -204,10 +224,10 @@ protected:
     inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
     inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }
 
-    static void SaveNode( IOStream & stream, const Node * node );
-    static bool LoadNode( NodeGraph & nodeGraph, IOStream & stream, Node * & node );
-    static bool LoadNode( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode );
-    static bool LoadNode( NodeGraph & nodeGraph, IOStream & stream, FileNode * & node );
+    static void SaveNodeLink( IOStream & stream, const Node * node );
+    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, Node * & node );
+    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode );
+    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, FileNode * & node );
 
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
@@ -217,6 +237,13 @@ protected:
     static void Serialize( IOStream & stream, const void * base, const ReflectedProperty & property );
     static bool Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri );
     static bool Deserialize( IOStream & stream, void * base, const ReflectedProperty & property );
+
+    bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,  
+                                                    const BFFIterator & iter,
+                                                    const Function * function,
+                                                    const Array< AString > & preBuildDependencyNames );
+
+    AString m_Name;
 
     State m_State;
     mutable uint32_t m_BuildPassTag; // prevent multiple recursions into the same node
@@ -236,7 +263,9 @@ protected:
     Dependencies m_StaticDependencies;
     Dependencies m_DynamicDependencies;
 
-    AString m_BuildOutputMessages; // TODO:B Move out of Node into Context
+    #if defined( DEBUG )
+        mutable bool    m_IsSaved = false; // Help catch serialization errors
+    #endif
 
     static const char * const s_NodeTypeNames[];
 };
@@ -256,5 +285,11 @@ inline FileNode * Node::CastTo< FileNode >() const
     ASSERT( IsAFile() );
     return (FileNode *)this;
 }
+
+// Custom MetaData
+//------------------------------------------------------------------------------
+IMetaData & MetaName( const char * name );
+IMetaData & MetaAllowNonFile();
+IMetaData & MetaAllowNonFile( const Node::Type limitToType );
 
 //------------------------------------------------------------------------------

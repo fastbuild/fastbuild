@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-	<Type Name="Array&lt;*&gt;">
-		<DisplayString>{{ len: {m_End - m_Begin}, cap: {m_End - m_Begin}, resizeable: {m_Resizeable} }}</DisplayString>
-		<Expand>
-			<ArrayItems>
-				<Size>m_End - m_Begin</Size>
-				<ValuePointer>m_Begin</ValuePointer>
-			</ArrayItems>
-		</Expand>
-	</Type>
+  <Type Name="Array&lt;*&gt;">
+    <DisplayString>{{ len: {m_End - m_Begin}, cap: {m_MaxEnd - m_Begin}, resizeable: {m_Resizeable} }}</DisplayString>
+    <Expand>
+      <ArrayItems>
+        <Size>m_End - m_Begin</Size>
+          <ValuePointer>m_Begin</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
   <Type Name="AString">
-    <DisplayString>{{ len: {m_Length} , cap: {m_ReservedAndFlags - (m_ReservedAndFlags % 2)}, str={m_Contents} }}</DisplayString>
+    <DisplayString>{{ len: {m_Length} , cap: {m_ReservedAndFlags - (m_ReservedAndFlags % 2)}, str={m_Contents,s} }}</DisplayString>
     <Expand>
       <Item Name="[m_Contents]" ExcludeView="simple">m_Contents</Item>
       <Item Name="[m_Length]" ExcludeView="simple">m_Length</Item>

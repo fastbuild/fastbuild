@@ -45,19 +45,15 @@ void Free( void * ptr );
 
 // global new/delete
 //------------------------------------------------------------------------------
-#if defined( __OSX__ )
-    // TODO: resolve issue with Clang and inline new/delete
-#else
-    #if defined( MEMTRACKER_ENABLED )
-        void * operator new( size_t size, const char * file, int line );
-        void * operator new[]( size_t size, const char * file, int line );
-        void operator delete( void * ptr, const char *, int );
-        void operator delete[]( void * ptr, const char *, int );
-    #endif
-    void * operator new( size_t size );
-    void * operator new[]( size_t size );
-    void operator delete( void * ptr );
-    void operator delete[]( void * ptr );
+#if defined( MEMTRACKER_ENABLED )
+    void * operator new( size_t size, const char * file, int line );
+    void * operator new[]( size_t size, const char * file, int line );
+    void operator delete( void * ptr, const char *, int );
+    void operator delete[]( void * ptr, const char *, int );
 #endif
+void * operator new( size_t size );
+void * operator new[]( size_t size );
+void operator delete( void * ptr );
+void operator delete[]( void * ptr );
 
 //------------------------------------------------------------------------------

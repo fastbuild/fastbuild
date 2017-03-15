@@ -24,6 +24,7 @@ Specifies compiler and related files for network distribution.
   .ExtraFiles               // (optional) Additional files (usually dlls) required by the compiler.
   
   // Additional Options
+  .ClangRewriteIncludes     // (optional) Use Clang's -frewrite-includes option when preprocessing (default: true)
   .VS2012EnumBugFix         // (optional) Enable work-around for bug in VS2012 compiler (default: false)
 }
 </div>
@@ -86,7 +87,20 @@ Compiler( 'Test' )
 	Additional Options
 -->	
 <div id='alias' class='newsitemheader'>Additional Options</div>
+
 <div class='newsitembody'>
+	<p><b>.ClangRewriteIncludes</b> - Bool - (Optional)</p>
+	<p>FASTBuild uses the -E preprocessor option when compiling with Clang to preprocess the source code. In order to
+    improve consistency between this preprocessed source and the original source, FASTBuild also uses the -frewrite-includes
+    option by default. An exmaple of this improved consistency is that compiler errors originating from macros will
+    have the caret point to the correct column location of the source code instead of the column location where the error
+    would be in the expanded macro.</p>
+    <p>If for some reason the use of -frewrite-includes is not desireable, it can be disabled by setting
+    .ClangRewriteIncludes to false as follows:</p>
+	<div class='code'>.ClangRewriteIncludes = false</div>
+    
+    <p><hr></p>
+    
 	<p><b>.VS2012EnumBugFix</b> - Bool - (Optional)</p>
 	<p><font color=red>NOTE:</font> This option incurs a minor build time cost that impacts compile times.</p>
 	<p>A bug exists in the Visual Studio 2012 compiler whereby enums in preprocessed code are sometimes incorrectly 

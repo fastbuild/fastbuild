@@ -6,7 +6,7 @@
 Using( .StandardEnvironment )
 
 #if __WINDOWS__
-.CachePluginDLL = '$Out$/Test/CachePlugin/CachePlugin.dll'
+.CachePluginDLL = '$Out$/Test/CachePlugin/X64/CachePlugin.dll'
 #endif
 
 #if __LINUX__

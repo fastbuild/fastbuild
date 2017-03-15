@@ -13,16 +13,18 @@
 MemPoolBlock::MemPoolBlock( size_t blockSize, size_t blockAlignment )
     : m_FreeBlockChain( nullptr )
     #ifdef DEBUG
-        , m_NumAllocations( 0 )
+        , m_NumActiveAllocations( 0 )
+        , m_NumLifetimeAllocations( 0 )
+        , m_PeakActiveAllocations( 0 )
     #endif
-    , m_BlockSize( blockSize )
-    , m_BlockAlignment( blockAlignment )
-    , m_Pages( 8, true )
+    , m_BlockSize( (uint32_t)blockSize )
+    , m_BlockAlignment( (uint32_t)blockAlignment )
+    , m_Pages( 0, true )
 {
     ASSERT( blockSize >= sizeof( FreeBlock ) );
-    ASSERT( blockSize <= PAGE_SIZE );
+    ASSERT( blockSize <= MEMPOOLBLOCK_PAGE_SIZE );
     ASSERT( blockAlignment >= 4 );
-    ASSERT( blockAlignment <= PAGE_SIZE );
+    ASSERT( blockAlignment <= MEMPOOLBLOCK_PAGE_SIZE );
 }
 
 // DESTRUCTOR
@@ -31,7 +33,7 @@ MemPoolBlock::~MemPoolBlock()
 {
     // Ensure no memory leaks
     #ifdef DEBUG
-        ASSERT( m_NumAllocations == 0 );
+        ASSERT( m_NumActiveAllocations == 0 );
     #endif
 
     // free pages
@@ -52,12 +54,23 @@ void * MemPoolBlock::Alloc( size_t size )
 
     if ( m_FreeBlockChain == nullptr )
     {
-        AllocPage();
+        if ( AllocPage() == false )
+        {
+            return nullptr;
+        }
         ASSERT( m_FreeBlockChain );
     }
 
     #ifdef DEBUG
-        m_NumAllocations++;
+        m_NumActiveAllocations++;
+        if ( m_NumLifetimeAllocations < 0xFFFFFFFF )
+        {
+            ++m_NumLifetimeAllocations;
+        }
+        if ( m_NumActiveAllocations > m_PeakActiveAllocations )
+        {
+            m_PeakActiveAllocations = m_NumActiveAllocations;
+        }
     #endif
 
     // Take first block from free chain
@@ -71,7 +84,7 @@ void * MemPoolBlock::Alloc( size_t size )
 void MemPoolBlock::Free( void * ptr )
 {
     #ifdef DEBUG
-        ASSERT( m_NumAllocations > 0 );
+        ASSERT( m_NumActiveAllocations > 0 );
     #endif
 
     // Insert free block into head of chain
@@ -80,28 +93,27 @@ void MemPoolBlock::Free( void * ptr )
     m_FreeBlockChain = freeBlock;
 
     #ifdef DEBUG
-        --m_NumAllocations;
+        --m_NumActiveAllocations;
     #endif
 }
 
 // AlocPage
 //------------------------------------------------------------------------------
-void MemPoolBlock::AllocPage()
+NO_INLINE bool MemPoolBlock::AllocPage()
 {
     // allocate page from system
-    const size_t pageSize( PAGE_SIZE );
-    void * newPage = ALLOC( pageSize );
+    void * newPage = AllocateMemoryForPage();
+    if ( newPage == nullptr )
+    {
+        return false;
+    }
 
     // sanity check page alignment can support block alignment
     ASSERT( ( (size_t)newPage % m_BlockAlignment ) == 0 );
 
     // divide page into blocks
-    #if defined( __APPLE__ ) || defined( __LINUX__ ) // TODO: Fix this weirdness
-        const size_t alignedSize( Math::RoundUp( (size_t)m_BlockSize, (size_t)m_BlockAlignment ) );
-    #else
-        const size_t alignedSize( Math::RoundUp( m_BlockSize, m_BlockAlignment ) );
-    #endif
-    const size_t numBlocksInPage( pageSize / alignedSize );
+    const size_t alignedSize( Math::RoundUp( (size_t)m_BlockSize, (size_t)m_BlockAlignment ) );
+    const size_t numBlocksInPage( MEMPOOLBLOCK_PAGE_SIZE / alignedSize );
 
     // build chain into new blocks
     FreeBlock * block = reinterpret_cast< FreeBlock * >( (size_t)newPage );
@@ -117,8 +129,19 @@ void MemPoolBlock::AllocPage()
     block->m_Next = m_FreeBlockChain;
     m_FreeBlockChain = firstBlock;
 
+    return true;
+}
+
+// AllocateMemoryForPage
+//------------------------------------------------------------------------------
+/*virtual*/ void * MemPoolBlock::AllocateMemoryForPage()
+{
+    void * newPage = ALLOC( MEMPOOLBLOCK_PAGE_SIZE );
+
     // track new page
     m_Pages.Append( newPage );
+
+    return newPage;
 }
 
 //------------------------------------------------------------------------------

@@ -31,6 +31,7 @@ public:
     static uint32_t GetNumProcessors();
 
     static bool GetEnvVariable( const char * envVarName, AString & envVarValue );
+    static bool SetEnvVariable( const char * envVarName, const AString & envVarValue );
     static void GetCmdLine( AString & cmdLine );
     static void GetExePath( AString & path );
 

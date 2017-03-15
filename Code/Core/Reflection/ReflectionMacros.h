@@ -107,7 +107,13 @@ class ReflectionInfo;
         } \
         void AddProperties() \
         { \
-            CHECK_BASE_CLASS( className, baseClass )
+            CHECK_BASE_CLASS( structName, baseStruct )
+
+#define REFLECT_STRUCT_BEGIN_ABSTRACT( structName, baseStruct, metaData ) \
+    REFLECT_BEGIN_COMMON( structName, baseStruct, metaData, sizeof( structName ), false ) \
+        void AddProperties() \
+        { \
+            CHECK_BASE_CLASS( structName, baseStruct )
 
 #define REFLECT_STRUCT_BEGIN_BASE( structName ) \
     REFLECT_BEGIN_COMMON( structName, Struct, MetaNone(), sizeof( structName ), false ) \

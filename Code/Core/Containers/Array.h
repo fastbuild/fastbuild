@@ -171,25 +171,19 @@ void Array< T >::Destruct()
 template < class T >
 void Array< T >::SetCapacity( size_t capacity )
 {
-    if ( capacity == GetCapacity() )
+    if ( capacity <= GetCapacity() )
     {
         return;
     }
 
     T * newMem = Allocate( capacity );
 
-    // transfer and items across that can fit, and
-    // destroy all the originals
-    size_t itemsToKeep = Math::Min( capacity, GetSize() );
+    // transfer and items across and destroy all the originals
     T * src = m_Begin;
     T * dst = newMem;
-    T * keepEnd = m_Begin + itemsToKeep;
     while ( src < m_End )
     {
-        if ( src < keepEnd )
-        {
-            INPLACE_NEW ( dst ) T( *src );
-        }
+        INPLACE_NEW ( dst ) T( *src );
         src->~T();
         src++;
         dst++;
@@ -200,7 +194,7 @@ void Array< T >::SetCapacity( size_t capacity )
 
     // hook up to new memory
     m_Begin = newMem;
-    m_End = newMem + itemsToKeep;
+    m_End = dst;
     m_MaxEnd = newMem + capacity;
 }
 

@@ -31,6 +31,7 @@ private:
     void TestClangPreprocessedOutput() const;
     void TestClangMSExtensionsPreprocessedOutput() const;
     void TestEdgeCases() const;
+    void ClangLineEndings() const;
 };
 
 // Register Tests
@@ -47,6 +48,7 @@ REGISTER_TESTS_BEGIN( TestIncludeParser )
     REGISTER_TEST( TestClangPreprocessedOutput );
     REGISTER_TEST( TestClangMSExtensionsPreprocessedOutput );
     REGISTER_TEST( TestEdgeCases );
+    REGISTER_TEST( ClangLineEndings )
 REGISTER_TESTS_END
 
 // TestMSVCPreprocessedOutput
@@ -340,6 +342,35 @@ void TestIncludeParser::TestEdgeCases() const
             TEST_ASSERT( parser.GetNonUniqueCount() == 2 );
         #endif
     }
+}
+
+// ClangLineEndings
+//------------------------------------------------------------------------------
+void TestIncludeParser::ClangLineEndings() const
+{
+    // Depending on the line endings of the source file and files being included
+    // it's possible to end up with a variety of line ending types in the preprocessed
+    // output when using Clang
+    const char* preprocessedData    = "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\"\n"
+                                      "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\r\n"   // Note: CR LF
+                                      "# 1 \"./Empty1.cpp\" 1\n"
+                                      "# 1 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n"     // Note: LF
+                                      "# 1 \"./Empty2.cpp\" 1\n"
+                                      "# 2 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\r"     // Note: CR
+                                      "# 1 \"./Empty3.cpp\" 1\n"
+                                      "# 3 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n";
+
+    FBuild fb; // needed for CleanPath
+
+    CIncludeParser parser;
+    TEST_ASSERT( parser.ParseGCC_Preprocessed( preprocessedData, AString::StrLen( preprocessedData ) ) );
+
+    // check number of includes found to prevent future regressions
+    const Array< AString > & includes = parser.GetIncludes();
+    TEST_ASSERT( includes.GetSize() == 4 );
+    #ifdef DEBUG
+        TEST_ASSERT( parser.GetNonUniqueCount() == 8 );
+    #endif
 }
 
 //------------------------------------------------------------------------------

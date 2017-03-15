@@ -36,6 +36,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 
 // Core
@@ -43,6 +44,7 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
+#include "Core/Reflection/MetaData/Meta_Hidden.h"
 #include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/MetaData/Meta_Range.h"
@@ -257,7 +259,7 @@ bool Function::GetString( const BFFIterator & iter, const BFFVariable * & var, c
         Error::Error_1050_PropertyMustBeOfType( iter, this, name, v->GetType(), BFFVariable::VAR_STRING );
         return false;
     }
-    if ( v->GetString().IsEmpty() )
+    if ( required && v->GetString().IsEmpty() )
     {
         Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, name );
         return false;
@@ -415,7 +417,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
         nodes.SetCapacity( nodes.GetSize() + nodeNames.GetSize() );
         for ( const AString & nodeName : nodeNames )
         {
-            if ( nodeName.IsEmpty() )
+            if ( nodeName.IsEmpty() ) // Always an error - because an empty node name is invalid
             {
                 Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, propertyName );
                 return false;
@@ -430,7 +432,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
     }
     else if ( var->IsString() )
     {
-        if ( var->GetString().IsEmpty() )
+        if ( var->GetString().IsEmpty() ) // Always an error - because an empty node name is invalid
         {
             Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, propertyName );
             return false;
@@ -865,12 +867,12 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, 
     if ( variable->IsString() )
     {
         Array< AString > strings;
-        if ( !PopulateStringHelper( nodeGraph, iter, nullptr, ri->HasMetaData< Meta_File >(), variable, strings ) )
+        if ( !PopulateStringHelper( nodeGraph, iter, nullptr, ri->HasMetaData< Meta_File >(), nullptr, variable, strings ) )
         {
             return false; // PopulateStringHelper will have emitted an error
         }
 
-        // Handle empty strings
+        // Handle empty strings (always required because names can never be empty)
         if ( strings.IsEmpty() || strings[0].IsEmpty() )
         {
             Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
@@ -902,24 +904,38 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, 
 //------------------------------------------------------------------------------
 bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & iter, Node * node ) const
 {
-    const ReflectionInfo * const ri = node->GetReflectionInfoV();
-    const ReflectionIter end = ri->End();
-    for ( ReflectionIter it = ri->Begin(); it != end; ++it )
+    const ReflectionInfo * ri = node->GetReflectionInfoV();
+    do
     {
-        const ReflectedProperty & property = *it;
-
-        // Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
-        AStackString<> propertyName( "." );
-        propertyName += property.GetName();
-
-        // Find the value for this property from the BFF
-        const BFFVariable * v = BFFStackFrame::GetVar( propertyName );
-
-        if ( !PopulateProperty( nodeGraph, iter, node, property, v ) )
+        const ReflectionIter end = ri->End();
+        for ( ReflectionIter it = ri->Begin(); it != end; ++it )
         {
-            return false; // PopulateProperty will have emitted an error
+            const ReflectedProperty & property = *it;
+
+            // Don't populate hidden properties
+            if ( property.HasMetaData< Meta_Hidden >() )
+            {
+                continue;
+            }
+
+            // Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
+            AStackString<> propertyName( "." );
+            propertyName += property.GetName();
+
+            // Find the value for this property from the BFF
+            const BFFVariable * v = BFFStackFrame::GetVar( propertyName );
+
+            if ( !PopulateProperty( nodeGraph, iter, node, property, v ) )
+            {
+                return false; // PopulateProperty will have emitted an error
+            }
         }
+
+        // Traverse into parent class (if there is one)
+        ri = ri->GetSuperClass();
     }
+    while ( ri );
+
     return true;
 }
 
@@ -955,7 +971,8 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
             }
             else
             {
-                return PopulateString( nodeGraph, iter, base, property, variable );
+                const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
+                return PopulateString( nodeGraph, iter, base, property, variable, required );
             }
         }
         case PT_BOOL:
@@ -984,13 +1001,13 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
 
 // PopulateStringHelper
 //------------------------------------------------------------------------------
-bool Function::PopulateStringHelper( NodeGraph & nodeGraph, const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const BFFVariable * variable, Array< AString > & outStrings ) const
+bool Function::PopulateStringHelper( NodeGraph & nodeGraph, const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, Array< AString > & outStrings ) const
 {
     if ( variable->IsArrayOfStrings() )
     {
         for ( const AString & string : variable->GetArrayOfStrings() )
         {
-            if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, variable, string, outStrings ) )
+            if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowNonFileMD, variable, string, outStrings ) )
             {
                 return false; // PopulateStringHelper will have emitted an error
             }
@@ -1000,7 +1017,7 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph, const BFFIterator & 
 
     if ( variable->IsString() )
     {
-        if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, variable, variable->GetString(), outStrings ) )
+        if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowNonFileMD, variable, variable->GetString(), outStrings ) )
         {
             return false; // PopulateStringHelper will have emitted an error
         }
@@ -1017,6 +1034,7 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
                                      const BFFIterator & iter,
                                      const Meta_Path * pathMD,
                                      const Meta_File * fileMD,
+                                     const Meta_AllowNonFile * allowNonFileMD,
                                      const BFFVariable * variable,
                                      const AString & string,
                                      Array< AString > & outStrings ) const
@@ -1026,20 +1044,46 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
     {
         // Is it an Alias?
         Node * node = nodeGraph.FindNode( string );
-        if ( node && ( node->GetType() == Node::ALIAS_NODE ) )
+        if ( node )
         {
-            AliasNode * aliasNode = node->CastTo< AliasNode >();
-            for ( const auto& aliasedNode : aliasNode->GetAliasedNodes() )
+            if ( node->GetType() == Node::ALIAS_NODE )
             {
-                if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, variable, aliasedNode.GetNode()->GetName(), outStrings ) )
+                AliasNode * aliasNode = node->CastTo< AliasNode >();
+                for ( const auto& aliasedNode : aliasNode->GetAliasedNodes() )
                 {
-                    return false; // PopulateStringHelper will have emitted an error
+                    if ( !PopulateStringHelper( nodeGraph, iter, pathMD, fileMD, allowNonFileMD, variable, aliasedNode.GetNode()->GetName(), outStrings ) )
+                    {
+                        return false; // PopulateStringHelper will have emitted an error
+                    }
                 }
+                return true;
             }
-            return true;
+
+            // Handle non-file types (if allowed)
+            if ( allowNonFileMD && ( node->IsAFile() == false ) )
+            {
+                // Are we limited to a specific node type?
+                if ( ( allowNonFileMD->IsLimitedToType() == true ) &&
+                     ( allowNonFileMD->GetLimitedType() != node->GetType() ) )
+                {
+                    // Error - node is wrong type
+                    Error::Error_1005_UnsupportedNodeType( iter, this, variable->GetName().Get(), node->GetName(), node->GetType() );
+                    return false;
+                }
+
+                outStrings.Append( string ); // Leave name as-is
+                return true;
+            }
+
+            // Is the passed in thing a file?
+            if ( node->IsAFile() == false )
+            {
+                Error::Error_1103_NotAFile( iter, this, variable->GetName().Get(), node->GetName(), node->GetType() );
+                return false;
+            }
         }
 
-        // Not an alias - fall through to normal handling
+        // Fall through to normal file handling
     }
 
     AStackString<> stringToFix( string );
@@ -1106,7 +1150,7 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
 {
     Array< AString > strings;
-    if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), variable, strings ) )
+    if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error
     }
@@ -1117,10 +1161,10 @@ bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator 
 
 // PopulateString
 //------------------------------------------------------------------------------
-bool Function::PopulateString( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
+bool Function::PopulateString( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
     Array< AString > strings;
-    if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), variable, strings ) )
+    if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error
     }
@@ -1130,8 +1174,16 @@ bool Function::PopulateString( NodeGraph & nodeGraph, const BFFIterator & iter, 
         // Handle empty strings
         if ( strings.IsEmpty() || strings[0].IsEmpty() )
         {
-            Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
-            return false;
+            if ( required )
+            {
+                Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, variable->GetName().Get() );
+                return false;
+            }
+            else
+            {
+                property.SetProperty( base, AString::GetEmpty() );
+                return true;
+            }
         }
 
         if ( strings.GetSize() != 1 )
