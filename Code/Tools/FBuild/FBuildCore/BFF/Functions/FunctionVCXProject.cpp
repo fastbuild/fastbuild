@@ -175,7 +175,8 @@ FunctionVCXProject::FunctionVCXProject()
          !GetString( funcStartIter, baseConfig.m_LocalDebuggerCommandArguments, ".LocalDebuggerCommandArguments", false ) ||
          !GetString( funcStartIter, baseConfig.m_LocalDebuggerWorkingDirectory, ".LocalDebuggerWorkingDirectory", false ) ||
          !GetString( funcStartIter, baseConfig.m_LocalDebuggerCommand,          ".LocalDebuggerCommand", false ) ||
-         !GetString( funcStartIter, baseConfig.m_LocalDebuggerEnvironment,      ".LocalDebuggerEnvironment", false ) )
+         !GetString( funcStartIter, baseConfig.m_LocalDebuggerEnvironment,      ".LocalDebuggerEnvironment", false ) ||
+		 !GetString( funcStartIter, baseConfig.m_ProjectBuildType,      ".ProjectBuildType", false ) )
     {
         return false;
     }
@@ -256,6 +257,7 @@ FunctionVCXProject::FunctionVCXProject()
             GetStringFromStruct( s, ".LocalDebuggerWorkingDirectory",   newConfig.m_LocalDebuggerWorkingDirectory );
             GetStringFromStruct( s, ".LocalDebuggerCommand",            newConfig.m_LocalDebuggerCommand );
             GetStringFromStruct( s, ".LocalDebuggerEnvironment",        newConfig.m_LocalDebuggerEnvironment );
+			GetStringFromStruct( s, ".ProjectBuildType",        newConfig.m_ProjectBuildType );
 
             configs.Append( newConfig );
         }

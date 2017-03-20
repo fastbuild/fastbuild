@@ -54,6 +54,8 @@ public:
     AString m_LocalDebuggerCommand;
     AString m_LocalDebuggerEnvironment;
 
+	AString m_ProjectBuildType;
+
     static bool Load( NodeGraph & nodeGraph, IOStream & stream, Array< VSProjectConfig > & configs );
     static void Save( IOStream & stream, const Array< VSProjectConfig > & configs );
 };
@@ -74,6 +76,13 @@ public:
 //------------------------------------------------------------------------------
 class VSProjectGenerator
 {
+
+	friend static inline bool Insightful_HelpGenerateCustomBuildVCXProj( VSProjectGenerator& ref_vsgen,
+																		 const AString * fIt,
+																		 const char * fileName,
+																		 const char * fileType,
+																		 const Array< VSProjectConfig > & configs );
+
 public:
     VSProjectGenerator();
     ~VSProjectGenerator();

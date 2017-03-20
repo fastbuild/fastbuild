@@ -80,6 +80,8 @@ void TestProjectGeneration::Test() const
     cfg.m_BuildCommand = "fbuild -cache $(Project)-$(Config)-$(Platform)";
     cfg.m_RebuildCommand = "fbuild -cache -clean $(Project)-$(Config)-$(Platform)";
 
+	cfg.m_ProjectBuildType = "Makefile";
+
     // debugger
     cfg.m_LocalDebuggerCommand = "$(SolutionDir)..\\..\\..\\tmp\\$(Platform)\\$(Config)\\Tools\\FBuild\\FBuildTest\\FBuildTest.exe";
     cfg.m_LocalDebuggerWorkingDirectory = "$(ProjectDir)";

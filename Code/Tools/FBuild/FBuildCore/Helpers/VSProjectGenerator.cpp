@@ -9,6 +9,7 @@
 
 // FBuildCore
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h" // TODO:C Remove when VSProjectGenerator derives from ProjectGeneratorBase
 
@@ -86,6 +87,73 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files )
     guid.Format( "{%08x-6c94-4f93-bc2a-7f5284b7d434}", CRC32::Calc( projectNameNormalized ) );
 }
 
+
+
+// Insightful_HelpGenerateCustomBuildVCXProj
+//------------------------------------------------------------------------------
+static inline bool Insightful_HelpGenerateCustomBuildVCXProj(	VSProjectGenerator& ref_vsgen,
+																const AString * fIt,
+																const char * fileName,
+																const char * fileType,
+																const Array< VSProjectConfig > & configs )
+{
+
+	const bool bUseNewCustomBuild = true;
+
+	// TODO: .h, .hpp, .hxx, .inl, etc.
+	if ( fIt->EndsWith( 'h' ) )
+	{
+		// C++ Header Files which should not be built
+		ref_vsgen.Write( "    <ClInclude Include=\"%s\" />\n", fileName );
+	}
+	else if ( bUseNewCustomBuild )
+	{
+
+		//	Write( "    <CustomBuild IncludeProjectBasePath=\"%s\" />\n", projectBasePath.Get( ) );
+		ref_vsgen.Write( "    <CustomBuild Include=\"%s\">\n", fileName );
+		//	Write( "    <CustomBuild Include=\"%s\">\n", fileName );
+		if ( fileType )
+		{
+			ref_vsgen.Write( "        <FileType>%s</FileType>\n", fileType );
+		}
+		ref_vsgen.Write( "        <Message>Compiling %%(Identity)</Message>\n" );
+		//	Write( "        <Message>Compiling %s</Message>\n", fileName );
+
+		// Build Command [Conditional]
+		{
+			const VSProjectConfig * const cEnd = configs.End( );
+			for ( const VSProjectConfig * cIt = configs.Begin( ); cIt != cEnd; ++cIt )
+			{
+				const ObjectListNode * oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( cIt->m_Target );
+				if ( oln != nullptr )
+				{
+					AString my_compilerName( ( oln != nullptr ) ? oln->GetCompiler( )->GetName( ).Get( ) : "error: compiler unknown" );
+					AString my_compilerOptions( ( oln != nullptr ) ? oln->GetCompilerOptions( ).Get( ) : "error: compiler options unknown" );
+
+					my_compilerOptions.Replace( "%1", "%(FullPath)" );
+					my_compilerOptions.Replace( "%2", "$(OutDir)%(Identity).o" ); // or .obj
+
+					ref_vsgen.Write( "        <Command Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">@echo on &amp; SET PATH=%%PATH%%;%%FASTBUILD_ROOT_DIR%%/External/VS14.0\\Common7\\IDE\\;%%FASTBUILD_ROOT_DIR%%\\External\\VS14.0\\VC\\bin\\; &amp; %s %s</Command>\n", cIt->m_Config.Get( ), cIt->m_Platform.Get( ), my_compilerName.Get( ), my_compilerOptions.Get( ) );
+				}
+				else
+				{
+					ref_vsgen.Write( "        <Command Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">echo FastBuild VSProjectGenerator.cpp Failed To Generate Command</Command>\n", cIt->m_Config.Get( ), cIt->m_Platform.Get( ) );
+				}
+
+				//WritePGItem( "NMakeOutput", cIt->m_Output );
+			}
+		}
+
+		//Write( "        <Command>%%(Identity)</Command>\n" );
+		ref_vsgen.Write( "        <Outputs>$(OutDir)%%(Identity).o</Outputs>\n" );
+		ref_vsgen.Write( "    </CustomBuild>\n" );
+	}
+
+	return true;
+
+}
+
+
 // GenerateVCXProj
 //------------------------------------------------------------------------------
 const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile,
@@ -137,16 +205,24 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                     break;
                 }
             }
-            if ( fileType )
-            {
-                Write( "    <CustomBuild Include=\"%s\">\n", fileName );
-                Write( "        <FileType>%s</FileType>\n", fileType );
-                Write( "    </CustomBuild>\n" );
-            }
-            else
-            {
-                Write( "    <CustomBuild Include=\"%s\" />\n", fileName );
-            }
+
+			if( true ) Insightful_HelpGenerateCustomBuildVCXProj( *this, fIt, fileName, fileType, configs );
+			else
+			{ // NoIndent To avoid changing source control
+
+			if ( fileType )
+			{
+				Write( "    <CustomBuild Include=\"%s\">\n", fileName );
+				Write( "        <FileType>%s</FileType>\n", fileType );
+				Write( "    </CustomBuild>\n" );
+			}
+			else
+			{
+				Write( "    <CustomBuild Include=\"%s\" />\n", fileName );
+			}
+
+			} // End NoIndent
+
         }
         Write("  </ItemGroup>\n" );
     }
@@ -215,7 +291,17 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
         {
             Write( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Configuration\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
-            Write( "    <ConfigurationType>Makefile</ConfigurationType>\n" );
+			
+			if( !cIt->m_ProjectBuildType.IsEmpty( ) )
+			{
+			    WritePGItem( "ConfigurationType", cIt->m_ProjectBuildType );
+			//  Write( "    <ConfigurationType>%s</ConfigurationType>\n", cIt->m_ProjectBuildType.Get() );
+			}
+			else
+			{
+				Write( "    <ConfigurationType>Makefile</ConfigurationType>\n" );
+			}
+
             Write( "    <UseDebugLibraries>false</UseDebugLibraries>\n" );
 
             WritePGItem( "PlatformToolset",                 cIt->m_PlatformToolset );
@@ -539,6 +625,9 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         stream.Write( cfg.m_LocalDebuggerWorkingDirectory );
         stream.Write( cfg.m_LocalDebuggerCommand );
         stream.Write( cfg.m_LocalDebuggerEnvironment );
+
+		stream.Write( cfg.m_ProjectBuildType );
+		
     }
 }
 
@@ -592,6 +681,9 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( stream.Read( cfg.m_LocalDebuggerWorkingDirectory ) == false ) { return false; }
         if ( stream.Read( cfg.m_LocalDebuggerCommand ) == false ) { return false; }
         if ( stream.Read( cfg.m_LocalDebuggerEnvironment ) == false ) { return false; }
+
+		if ( stream.Read( cfg.m_ProjectBuildType ) == false ) { return false; }	
+
     }
     return true;
 }
