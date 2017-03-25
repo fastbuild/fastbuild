@@ -20,12 +20,16 @@ Specifies compiler and related files for network distribution.
       </p>
 <div class='code'>Compiler( 'name' )          // (optional) Alias
 {
-  .Executable               // Primary compiler executable
-  .ExtraFiles               // (optional) Additional files (usually dlls) required by the compiler.
-  
+  .Executable                   // Primary compiler executable
+  .ExtraFiles                   // (optional) Additional files (usually dlls) required by the compiler.
+ 
   // Additional Options
-  .ClangRewriteIncludes     // (optional) Use Clang's -frewrite-includes option when preprocessing (default: true)
-  .VS2012EnumBugFix         // (optional) Enable work-around for bug in VS2012 compiler (default: false)
+  .AllowDistribution            // (optional) Allow distributed compilation (if available) (default: true)
+  .ExecutableRootPath           // (optional) Override default path for executable distribution
+  .SimpleDistributionMode       // (optional) Allow distribution of otherwise unsuported "compilers" (default: false)
+  .CustomEnvironmentVariables   // (optional) Environment variables to set on remote host
+  .ClangRewriteIncludes         // (optional) Use Clang's -frewrite-includes option when preprocessing (default: true)
+  .VS2012EnumBugFix             // (optional) Enable work-around for bug in VS2012 compiler (default: false)
 }
 </div>
     </div>
@@ -81,6 +85,7 @@ Compiler( 'Test' )
                   'C:\cruntime\mvscrt.dll'         // dest: msvcrt.dll
 }</div>
 	</p>
+
 </div>
 
 <!-- 
@@ -89,6 +94,32 @@ Compiler( 'Test' )
 <div id='alias' class='newsitemheader'>Additional Options</div>
 
 <div class='newsitembody'>
+
+	<p><b>.AllowDistribution</b> - Boolean - (Optional)</p>
+	<p>For compilers where distributed compilation is supported, said feature can be disabled.<p>
+ 
+  	<p><hr></p>
+    
+	<p><b>.ExecutableRootPath</b> - String - (Optional)</p>
+	<p>When a compiler is distributed the .Compiler and .ExtraFiles hierarchy is replicated on the remote machine as documented above (see .ExtraFiles).
+    The base path for this replication can be overriden by setting the .ExectuableRootPath property, allowing more flexibility in how the file
+    hierarchy is replicated on the remote host.<p>
+ 
+  	<p><hr></p>
+    
+	<p><b>.SimpleDistributionMode</b> - Boolean - (Optional)</p>
+	<p>FASTbuild supports distributed compilation for certain compilers that it explicitly understands how to interact with in order to obtain
+    dependency information (in addition to the simple primary input file). By setting .SimpleDistributionMode, FASTBuild can be told that the
+    single file input of a "compiler" is the only dependency and thus can be safely used with distributed compilation. This allows distribution
+    of custom tools or other useful work like texture conversion.<p>
+
+  	<p><hr></p>
+    
+	<p><b>.CustomEnvironmentVariables</b> - String or ArrayOfStrings - (Optional)</p>
+	<p>When compiling on a remote host, a clean environment is used. If needed, environment variables can be set.<p>
+
+  	<p><hr></p>
+
 	<p><b>.ClangRewriteIncludes</b> - Bool - (Optional)</p>
 	<p>FASTBuild uses the -E preprocessor option when compiling with Clang to preprocess the source code. In order to
     improve consistency between this preprocessed source and the original source, FASTBuild also uses the -frewrite-includes

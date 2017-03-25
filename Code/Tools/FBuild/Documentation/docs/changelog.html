@@ -15,6 +15,48 @@
 
 
 <div class='newsitemheader'>
+    v0.93&nbsp;<font color='#bbbbbb'>(13-Mar-2017)</font>
+</div>
+<div class='newsitembody'>
+    Notes
+	<ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Distributed protocol version has changed</li>
+    </ul>
+    New
+    <ul>
+        <li>New .SimpleDistributionMode allows distributed compilation of arbitrary single file objects (Thanks to gkoreman)</li>
+    </ul>
+    Fixes
+    <ul>
+        <li>Prevent error D8049 when compiling remotely with really long command line args</li>
+        <li>Fix missing depencies when using Clang with empty files and mixed line endings (Thanks to Wickerwaka)</li>
+        <li>Fix unescaped ampersands in VCXProject documentation</li>
+        <li>[Linux][OSX] Fix cache paths using wrong slash type (Thanks to dummyunit)</li>
+        <li>Slashes are escaped in response files for ar.exe in Windows (useful when building for Android)</li>
+        <li>Assignment of .String to .ArrayOfStrings silently failing in some cases</li>
+        <li>Cache plugin DLL is correctly handled on X86 Windows</li>
+        <li>Copy, CSAssembly and Unity can have PreBuildDependencies which are ObjectLists</li>
+        <li>Alias .Targets can be ObjectLists</li>
+        <li>Libraries are rebuilt when Librarian changes</li>
+        <li>Correct documentation for -ide option (add note about -ideo enabling -fixuperrorpaths on Windows only)</li>
+    </ul>
+	Improvements
+	<ul>
+        <li>XCode Projects now support CodeSense</li>
+        <li>Support for optional environment variables via "#if exists(VAR_NAME)" (Thanks to Javier Blazquez)</li>
+        <li>[Linux][OSX] New LZ4 (v1.7.4.2) improves compression speed  for OSX and Linux ~10-30%, improving cache performance</li>
+        <li>BFF parsing speed significantly increased (upto 2x)</li>
+        <li>Exec() can have a PreBuildDependency on a CopyDir node</li>
+        <li>.CustomEnvironmentVariables can be set for distributed compilation (Thanks to gkoreman)</li>
+        <li>.ExecutableRootPath can control root of distributed toolchains (Thanks to gkoreman)</li>
+        <li>Allow string properties to be set to empty strings if they are optional</li>
+        <li>Compiler exposes .ClangRewriteIncludes to allow use of -frewrite-includes to be disabled if needed</li>
+        <li>Add Sublime Text markup (Thanks to Andreas Haferburg)</li>
+	</ul>
+</div>
+
+<div class='newsitemheader'>
     v0.92&nbsp;<font color='#bbbbbb'>(27-Nov-2016)</font>
 </div>
 <div class='newsitembody'>
