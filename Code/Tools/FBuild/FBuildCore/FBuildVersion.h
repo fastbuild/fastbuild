@@ -4,7 +4,7 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define FBUILD_VERSION_STRING "v0.93.ivr.vsprojectgen"
+#define FBUILD_VERSION_STRING "v0.93.ivr.vsprojectgen.5"
 #if defined( __WINDOWS__ )
     #ifdef WIN64
         #define FBUILD_VERSION_PLATFORM "x64"

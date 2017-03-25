@@ -87,7 +87,13 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files )
     guid.Format( "{%08x-6c94-4f93-bc2a-7f5284b7d434}", CRC32::Calc( projectNameNormalized ) );
 }
 
-
+// IsFilenameAHeaderFile
+//------------------------------------------------------------------------------
+static inline const bool IsFilenameAHeaderFile( const AString & fileName )
+{
+	// TODO: Add support for other header types?
+	return ( fileName.EndsWith( 'h' ) || fileName.EndsWith( ".hpp" ) || fileName.EndsWith( ".hxx" ) || fileName.EndsWith( ".inl" ) );
+}
 
 // Insightful_HelpGenerateCustomBuildVCXProj
 //------------------------------------------------------------------------------
@@ -97,21 +103,11 @@ static inline bool Insightful_HelpGenerateCustomBuildVCXProj(	VSProjectGenerator
 																const char * fileType,
 																const Array< VSProjectConfig > & configs )
 {
+	const char * includeTypeString = IsFilenameAHeaderFile( *fIt ) ? "ClInclude" : "CustomBuild";
 
-	const bool bUseNewCustomBuild = true;
-
-	// TODO: .h, .hpp, .hxx, .inl, etc.
-	if ( fIt->EndsWith( 'h' ) )
-	{
-		// C++ Header Files which should not be built
-		ref_vsgen.Write( "    <ClInclude Include=\"%s\" />\n", fileName );
-	}
-	else if ( bUseNewCustomBuild )
 	{
 
-		//	Write( "    <CustomBuild IncludeProjectBasePath=\"%s\" />\n", projectBasePath.Get( ) );
-		ref_vsgen.Write( "    <CustomBuild Include=\"%s\">\n", fileName );
-		//	Write( "    <CustomBuild Include=\"%s\">\n", fileName );
+		ref_vsgen.Write( "    <%s Include=\"%s\">\n", includeTypeString, fileName );
 		if ( fileType )
 		{
 			ref_vsgen.Write( "        <FileType>%s</FileType>\n", fileType );
@@ -146,7 +142,7 @@ static inline bool Insightful_HelpGenerateCustomBuildVCXProj(	VSProjectGenerator
 
 		//Write( "        <Command>%%(Identity)</Command>\n" );
 		ref_vsgen.Write( "        <Outputs>$(OutDir)%%(Identity).o</Outputs>\n" );
-		ref_vsgen.Write( "    </CustomBuild>\n" );
+		ref_vsgen.Write( "    </%s>\n", includeTypeString );
 	}
 
 	return true;
@@ -206,19 +202,21 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 }
             }
 
+			const char * includeTypeString = IsFilenameAHeaderFile( *fIt ) ? "ClInclude" : "CustomBuild";
+
 			if( true ) Insightful_HelpGenerateCustomBuildVCXProj( *this, fIt, fileName, fileType, configs );
 			else
 			{ // NoIndent To avoid changing source control
 
 			if ( fileType )
 			{
-				Write( "    <CustomBuild Include=\"%s\">\n", fileName );
+				Write( "    <%s Include=\"%s\">\n", includeTypeString, fileName );
 				Write( "        <FileType>%s</FileType>\n", fileType );
-				Write( "    </CustomBuild>\n" );
+				Write( "    </%s>\n", includeTypeString );
 			}
 			else
 			{
-				Write( "    <CustomBuild Include=\"%s\" />\n", fileName );
+				Write( "    <%s Include=\"%s\" />\n", includeTypeString, fileName );
 			}
 
 			} // End NoIndent
@@ -308,6 +306,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "LocalDebuggerCommandArguments",   cIt->m_LocalDebuggerCommandArguments );
             WritePGItem( "LocalDebuggerCommand",            cIt->m_LocalDebuggerCommand );
             WritePGItem( "LocalDebuggerEnvironment",        cIt->m_LocalDebuggerEnvironment );
+            WritePGItem( "WebBrowserDebuggerHttpUrl",		cIt->m_WebBrowserDebuggerHttpUrl );
 
             Write( "  </PropertyGroup>\n" );
         }
@@ -345,6 +344,16 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "NMakeReBuildCommandLine",         cIt->m_RebuildCommand );
             WritePGItem( "NMakeCleanCommandLine",           cIt->m_CleanCommand );
             WritePGItem( "NMakeOutput",                     cIt->m_Output );
+            WritePGItem( "TargetName",                      cIt->m_TargetName );
+            WritePGItem( "TargetExt",                       cIt->m_TargetExt );
+
+            AStackString<> vsIncludeSearchPath;
+            if ( !cIt->m_AdditionalIncludePaths.IsEmpty( ) )
+            {
+                vsIncludeSearchPath = cIt->m_AdditionalIncludePaths;
+                vsIncludeSearchPath += "$(IncludePath);";
+                WritePGItem( "IncludePath", vsIncludeSearchPath );
+            }
 
             const ObjectListNode * oln = nullptr;
             if ( cIt->m_PreprocessorDefinitions.IsEmpty() || cIt->m_IncludeSearchPath.IsEmpty() )
@@ -464,12 +473,14 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
             AStackString<> folder;
             GetFolderPath( *fIt, folder );
             const char * fileName = fIt->BeginsWithI( projectBasePath ) ? fIt->Get() + projectBasePath.GetLength() : fIt->Get();
-            Write( "    <CustomBuild Include=\"%s\">\n", fileName );
+            const char * includeTypeString = IsFilenameAHeaderFile( *fIt ) ? "ClInclude" : "CustomBuild";
+
+            Write( "    <%s Include=\"%s\">\n", includeTypeString, fileName );
             if ( !folder.IsEmpty() )
             {
                 Write( "      <Filter>%s</Filter>\n", folder.Get() );
             }
-            Write( "    </CustomBuild>\n" );
+            Write( "    </%s>\n", includeTypeString );
 
             // add new folders
             if ( !folder.IsEmpty() )
@@ -603,7 +614,11 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         stream.Write( cfg.m_RebuildCommand );
         stream.Write( cfg.m_CleanCommand );
 
+        stream.Write( cfg.m_TargetName );
+        stream.Write( cfg.m_TargetExt );
+
         stream.Write( cfg.m_Output );
+        stream.Write( cfg.m_AdditionalIncludePaths );
         stream.Write( cfg.m_PreprocessorDefinitions );
         stream.Write( cfg.m_IncludeSearchPath );
         stream.Write( cfg.m_ForcedIncludes );
@@ -625,8 +640,8 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         stream.Write( cfg.m_LocalDebuggerWorkingDirectory );
         stream.Write( cfg.m_LocalDebuggerCommand );
         stream.Write( cfg.m_LocalDebuggerEnvironment );
-
-		stream.Write( cfg.m_ProjectBuildType );
+        stream.Write( cfg.m_WebBrowserDebuggerHttpUrl );	
+        stream.Write( cfg.m_ProjectBuildType );
 		
     }
 }
@@ -659,7 +674,11 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( stream.Read( cfg.m_RebuildCommand ) == false ) { return false; }
         if ( stream.Read( cfg.m_CleanCommand ) == false ) { return false; }
 
+        if ( stream.Read( cfg.m_TargetName ) == false ) { return false; }
+        if ( stream.Read( cfg.m_TargetExt ) == false ) { return false; }
+		
         if ( stream.Read( cfg.m_Output ) == false ) { return false; }
+        if ( stream.Read( cfg.m_AdditionalIncludePaths ) == false ) { return false; }
         if ( stream.Read( cfg.m_PreprocessorDefinitions ) == false ) { return false; }
         if ( stream.Read( cfg.m_IncludeSearchPath ) == false ) { return false; }
         if ( stream.Read( cfg.m_ForcedIncludes ) == false ) { return false; }
@@ -681,8 +700,9 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( stream.Read( cfg.m_LocalDebuggerWorkingDirectory ) == false ) { return false; }
         if ( stream.Read( cfg.m_LocalDebuggerCommand ) == false ) { return false; }
         if ( stream.Read( cfg.m_LocalDebuggerEnvironment ) == false ) { return false; }
+        if ( stream.Read( cfg.m_WebBrowserDebuggerHttpUrl ) == false ) { return false; }
 
-		if ( stream.Read( cfg.m_ProjectBuildType ) == false ) { return false; }	
+        if ( stream.Read( cfg.m_ProjectBuildType ) == false ) { return false; }	
 
     }
     return true;
