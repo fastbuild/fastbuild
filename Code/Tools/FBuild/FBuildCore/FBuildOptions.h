@@ -22,6 +22,7 @@ public:
     bool m_UseCacheWrite;
     bool m_ShowInfo;
     bool m_ShowCommandLines;
+    bool m_ShowBuildCommands;
     bool m_ShowErrors;
     bool m_ShowProgress;
     bool m_AllowDistributed;
