@@ -495,12 +495,12 @@ void DisplayHelp()
             "Options:\n"
             " -cache[read|write] Control use of the build cache.\n"
             " -clean         Force a clean build.\n"
-            " -config [path] Explicitly specify the config file to use\n" );
+            " -config [path] Explicitly specify the config file to use.\n" );
 #ifdef DEBUG
     OUTPUT( " -debug         Break at startup, to attach debugger.\n" );
 #endif
     OUTPUT( " -dist          Allow distributed compilation.\n"
-            " -fixuperrorpaths Reformat error paths to be VisualStudio friendly.\n"
+            " -fixuperrorpaths Reformat error paths to be Visual Studio friendly.\n"
             " -help          Show this help.\n"
             " -ide           Enable multiple options when building from an IDE.\n"
             "                Enables: -noprogress, -fixuperrorpaths &\n"
@@ -508,11 +508,11 @@ void DisplayHelp()
             " -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
             "                default of hardware thread count.\n"
             " -noprogress    Don't show the progress bar while building.\n"
-            " -nostoponerror Don't stop building on first error. Try to build as much"
+            " -nostoponerror Don't stop building on first error. Try to build as much\n"
             "                as possible.\n"
-            " -report        Ouput a detailed report at the end of the build,\n"
-            "                to report.html.  This will lengthen the total build\n"
             " -quiet         Don't show build output.\n"
+            " -report        Ouput a detailed report at the end of the build.\n"
+            "                to report.html. This will lengthen the total build\n"
             "                time.\n"
             " -showcmds      Show command lines used to launch external processes.\n"
             " -showtargets   Display list of primary build targets.\n"
