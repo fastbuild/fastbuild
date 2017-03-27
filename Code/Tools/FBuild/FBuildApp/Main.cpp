@@ -100,6 +100,7 @@ int Main(int argc, char * argv[])
     bool cleanBuild = false;
     bool verbose = false;
     bool progressBar = true;
+    bool quiet = false;
     bool useCacheRead = false;
     bool useCacheWrite = false;
     bool allowDistributed = false;
@@ -232,6 +233,7 @@ int Main(int argc, char * argv[])
             else if ( thisArg == "-verbose" )
             {
                 verbose = true;
+                quiet = false;
                 continue;
             }
             else if ( thisArg == "-version" )
@@ -246,6 +248,12 @@ int Main(int argc, char * argv[])
                     fixupErrorPaths = true;
                     wrapperMode = WRAPPER_MODE_MAIN_PROCESS;
                 #endif
+                continue;
+            }
+            else if ((thisArg == "-quiet"))
+            {
+                quiet = true;
+                verbose = false;
                 continue;
             }
             else if ( thisArg == "-wait" )
@@ -404,6 +412,7 @@ int Main(int argc, char * argv[])
 
     options.m_ShowProgress = progressBar;
     options.m_ShowInfo = verbose;
+    options.m_ShowBuildCommands = !quiet;
     options.m_ShowCommandLines = showCommands;
     options.m_UseCacheRead = useCacheRead;
     options.m_UseCacheWrite = useCacheWrite;
@@ -503,6 +512,7 @@ void DisplayHelp()
             "                as possible.\n"
             " -report        Ouput a detailed report at the end of the build,\n"
             "                to report.html.  This will lengthen the total build\n"
+            " -quiet         Don't show build output.\n"
             "                time.\n"
             " -showcmds      Show command lines used to launch external processes.\n"
             " -showtargets   Display list of primary build targets.\n"
