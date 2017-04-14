@@ -8,6 +8,7 @@
 #include "VSProjectGenerator.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuild.h" // for GetEnvironmentString
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
@@ -95,61 +96,6 @@ static inline const bool IsFilenameAHeaderFile( const AString & fileName )
 	return ( fileName.EndsWith( 'h' ) || fileName.EndsWith( ".hpp" ) || fileName.EndsWith( ".hxx" ) || fileName.EndsWith( ".inl" ) );
 }
 
-// Insightful_HelpGenerateCustomBuildVCXProj
-//------------------------------------------------------------------------------
-static inline bool Insightful_HelpGenerateCustomBuildVCXProj(	VSProjectGenerator& ref_vsgen,
-																const AString * fIt,
-																const char * fileName,
-																const char * fileType,
-																const Array< VSProjectConfig > & configs )
-{
-	const char * includeTypeString = IsFilenameAHeaderFile( *fIt ) ? "ClInclude" : "CustomBuild";
-
-	{
-
-		ref_vsgen.Write( "    <%s Include=\"%s\">\n", includeTypeString, fileName );
-		if ( fileType )
-		{
-			ref_vsgen.Write( "        <FileType>%s</FileType>\n", fileType );
-		}
-		ref_vsgen.Write( "        <Message>Compiling %%(Identity)</Message>\n" );
-		//	Write( "        <Message>Compiling %s</Message>\n", fileName );
-
-		// Build Command [Conditional]
-		{
-			const VSProjectConfig * const cEnd = configs.End( );
-			for ( const VSProjectConfig * cIt = configs.Begin( ); cIt != cEnd; ++cIt )
-			{
-				const ObjectListNode * oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( cIt->m_Target );
-				if ( oln != nullptr )
-				{
-					AString my_compilerName( ( oln != nullptr ) ? oln->GetCompiler( )->GetName( ).Get( ) : "error: compiler unknown" );
-					AString my_compilerOptions( ( oln != nullptr ) ? oln->GetCompilerOptions( ).Get( ) : "error: compiler options unknown" );
-
-					my_compilerOptions.Replace( "%1", "%(FullPath)" );
-					my_compilerOptions.Replace( "%2", "$(OutDir)%(Identity).o" ); // or .obj
-
-					ref_vsgen.Write( "        <Command Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">@echo on &amp; SET PATH=%%PATH%%;%%FASTBUILD_ROOT_DIR%%/External/VS14.0\\Common7\\IDE\\;%%FASTBUILD_ROOT_DIR%%\\External\\VS14.0\\VC\\bin\\; &amp; %s %s</Command>\n", cIt->m_Config.Get( ), cIt->m_Platform.Get( ), my_compilerName.Get( ), my_compilerOptions.Get( ) );
-				}
-				else
-				{
-					ref_vsgen.Write( "        <Command Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">echo FastBuild VSProjectGenerator.cpp Failed To Generate Command</Command>\n", cIt->m_Config.Get( ), cIt->m_Platform.Get( ) );
-				}
-
-				//WritePGItem( "NMakeOutput", cIt->m_Output );
-			}
-		}
-
-		//Write( "        <Command>%%(Identity)</Command>\n" );
-		ref_vsgen.Write( "        <Outputs>$(OutDir)%%(Identity).o</Outputs>\n" );
-		ref_vsgen.Write( "    </%s>\n", includeTypeString );
-	}
-
-	return true;
-
-}
-
-
 // GenerateVCXProj
 //------------------------------------------------------------------------------
 const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile,
@@ -186,6 +132,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
     // files
     {
+        const char * environment = FBuild::Get( ).GetEnvironmentString( );
         Write("  <ItemGroup>\n" );
         const AString * const fEnd = m_Files.End();
         for ( const AString * fIt = m_Files.Begin(); fIt!=fEnd; ++fIt )
@@ -202,26 +149,45 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 }
             }
 
-			const char * includeTypeString = IsFilenameAHeaderFile( *fIt ) ? "ClInclude" : "CustomBuild";
+            const bool   isHeader = IsFilenameAHeaderFile( *fIt );
+            const char * includeTypeString = isHeader ? "ClInclude" : "CustomBuild";
+			Write( "    <%s Include=\"%s\">\n", includeTypeString, fileName );
+            if ( fileType )
+            {
+                Write( "        <FileType>%s</FileType>\n", fileType );
+            }
 
-			if( true ) Insightful_HelpGenerateCustomBuildVCXProj( *this, fIt, fileName, fileType, configs );
-			else
-			{ // NoIndent To avoid changing source control
+            const bool writeBuildCommand = true;
+            if ( writeBuildCommand && !isHeader )
+            {
+                // Build Command [Conditional]
+                Write( "        <Message>Compiling %%(Identity)</Message>\n" );
+                const VSProjectConfig * const cEnd = configs.End( );
+                for ( const VSProjectConfig * cIt = configs.Begin( ); cIt != cEnd; ++cIt )
+                {
+                    const ObjectListNode * oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( cIt->m_Target );
+                    if ( oln != nullptr )
+                    {
+                        AString my_compilerName( ( oln != nullptr ) ? oln->GetCompiler( )->GetName( ).Get( ) : "error: compiler unknown" );
+                        AString my_compilerOptions( ( oln != nullptr ) ? oln->GetCompilerOptions( ).Get( ) : "error: compiler options unknown" );
 
-			if ( fileType )
-			{
-				Write( "    <%s Include=\"%s\">\n", includeTypeString, fileName );
-				Write( "        <FileType>%s</FileType>\n", fileType );
-				Write( "    </%s>\n", includeTypeString );
-			}
-			else
-			{
-				Write( "    <%s Include=\"%s\" />\n", includeTypeString, fileName );
-			}
+                        my_compilerOptions.Replace( "%1", "%(FullPath)" );
+                        my_compilerOptions.Replace( "%2", "$(OutDir)%(Identity).obj" );
 
-			} // End NoIndent
+                        Write( "        <Command Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">@echo on &amp; SET %s; &amp; %s %s</Command>\n", cIt->m_Config.Get( ), cIt->m_Platform.Get( ), environment, my_compilerName.Get( ), my_compilerOptions.Get( ) );
+                    }
+                    else
+                    {
+                        Write( "        <Command Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">echo FastBuild VSProjectGenerator.cpp Failed To Generate Command</Command>\n", cIt->m_Config.Get( ), cIt->m_Platform.Get( ) );
+                    }
+                }
 
+                Write( "        <Outputs>$(OutDir)%%(Identity).obj</Outputs>\n" );
+            }
+
+            Write( "    </%s>\n", includeTypeString );
         }
+
         Write("  </ItemGroup>\n" );
     }
 

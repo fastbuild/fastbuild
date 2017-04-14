@@ -80,12 +80,6 @@ public:
 class VSProjectGenerator
 {
 
-	friend static inline bool Insightful_HelpGenerateCustomBuildVCXProj( VSProjectGenerator& ref_vsgen,
-																		 const AString * fIt,
-																		 const char * fileName,
-																		 const char * fileType,
-																		 const Array< VSProjectConfig > & configs );
-
 public:
     VSProjectGenerator();
     ~VSProjectGenerator();
