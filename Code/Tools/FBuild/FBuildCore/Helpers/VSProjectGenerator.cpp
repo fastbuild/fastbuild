@@ -112,6 +112,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     const char * lastSlash = projectFile.FindLast( NATIVE_SLASH );
     AStackString<> projectBasePath( projectFile.Get(), lastSlash ? lastSlash + 1 : projectFile.Get() );
 
+    // Don't write a custom build command by default, because as of Visual Studio 2015 R3, Makefile projects can't currently utilize this functionality
+    // However, if we have a Utility project, then we can execute per-file custom build steps
+    bool writeCustomBuildCommands = false;
+
     // header
     Write( "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" );
     Write( "<Project DefaultTargets=\"Build\" ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n" );
@@ -126,6 +130,17 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             Write( "      <Configuration>%s</Configuration>\n", cIt->m_Config.Get() );
             Write( "      <Platform>%s</Platform>\n", cIt->m_Platform.Get() );
             Write( "    </ProjectConfiguration>\n" );
+
+            // Don't write a custom build command by default, because as of Visual Studio 2015 R3, Makefile projects can't currently utilize this functionality
+            if ( !cIt->m_ProjectBuildType.IsEmpty( ) )
+            {
+                if ( cIt->m_ProjectBuildType == "Utility" )
+                {
+                    // Visual Studio Utility Projects Can Execute Per-File Custom Build Steps
+                    writeCustomBuildCommands = true;
+                }
+            }
+
         }
         Write( "  </ItemGroup>\n" );
     }
@@ -157,18 +172,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 Write( "        <FileType>%s</FileType>\n", fileType );
             }
 
-            // Don't write a custom build command by default, because as of Visual Studio 2015 R3, Makefile projects can't currently utilize this functionality
-            bool writeBuildCommand = false;
-            if ( !cIt->m_ProjectBuildType.IsEmpty( ) )
-            {
-                if ( cIt->m_ProjectBuildType == "Utility" )
-                {
-                    // Visual Studio Utility Projects Can Execute Per-File Custom Build Steps
-                    writeBuildCommand = true;
-                }
-            }
-
-            if ( writeBuildCommand && !isHeader )
+            if ( writeCustomBuildCommands && !isHeader )
             {
                 // Build Command [Conditional]
                 Write( "        <Message>Compiling %%(Identity)</Message>\n" );
