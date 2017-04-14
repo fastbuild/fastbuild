@@ -92,8 +92,8 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files )
 //------------------------------------------------------------------------------
 static inline const bool IsFilenameAHeaderFile( const AString & fileName )
 {
-	// TODO: Add support for other header types?
-	return ( fileName.EndsWith( 'h' ) || fileName.EndsWith( ".hpp" ) || fileName.EndsWith( ".hxx" ) || fileName.EndsWith( ".inl" ) );
+    // TODO: Add support for other header types?
+    return ( fileName.EndsWith( 'h' ) || fileName.EndsWith( ".hpp" ) || fileName.EndsWith( ".hxx" ) || fileName.EndsWith( ".inl" ) );
 }
 
 // GenerateVCXProj
@@ -151,13 +151,23 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
             const bool   isHeader = IsFilenameAHeaderFile( *fIt );
             const char * includeTypeString = isHeader ? "ClInclude" : "CustomBuild";
-			Write( "    <%s Include=\"%s\">\n", includeTypeString, fileName );
+            Write( "    <%s Include=\"%s\">\n", includeTypeString, fileName );
             if ( fileType )
             {
                 Write( "        <FileType>%s</FileType>\n", fileType );
             }
 
-            const bool writeBuildCommand = true;
+            // Don't write a custom build command by default, because as of Visual Studio 2015 R3, Makefile projects can't currently utilize this functionality
+            bool writeBuildCommand = false;
+            if ( !cIt->m_ProjectBuildType.IsEmpty( ) )
+            {
+                if ( cIt->m_ProjectBuildType == "Utility" )
+                {
+                    // Visual Studio Utility Projects Can Execute Per-File Custom Build Steps
+                    writeBuildCommand = true;
+                }
+            }
+
             if ( writeBuildCommand && !isHeader )
             {
                 // Build Command [Conditional]
@@ -255,16 +265,15 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
         {
             Write( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Configuration\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
-			
-			if( !cIt->m_ProjectBuildType.IsEmpty( ) )
-			{
-			    WritePGItem( "ConfigurationType", cIt->m_ProjectBuildType );
-			//  Write( "    <ConfigurationType>%s</ConfigurationType>\n", cIt->m_ProjectBuildType.Get() );
-			}
-			else
-			{
-				Write( "    <ConfigurationType>Makefile</ConfigurationType>\n" );
-			}
+            
+            if( !cIt->m_ProjectBuildType.IsEmpty( ) )
+            {
+                WritePGItem( "ConfigurationType", cIt->m_ProjectBuildType );
+            }
+            else
+            {
+                Write( "    <ConfigurationType>Makefile</ConfigurationType>\n" );
+            }
 
             Write( "    <UseDebugLibraries>false</UseDebugLibraries>\n" );
 
@@ -608,7 +617,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         stream.Write( cfg.m_LocalDebuggerEnvironment );
         stream.Write( cfg.m_WebBrowserDebuggerHttpUrl );	
         stream.Write( cfg.m_ProjectBuildType );
-		
+
     }
 }
 
@@ -642,7 +651,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
 
         if ( stream.Read( cfg.m_TargetName ) == false ) { return false; }
         if ( stream.Read( cfg.m_TargetExt ) == false ) { return false; }
-		
+
         if ( stream.Read( cfg.m_Output ) == false ) { return false; }
         if ( stream.Read( cfg.m_AdditionalIncludePaths ) == false ) { return false; }
         if ( stream.Read( cfg.m_PreprocessorDefinitions ) == false ) { return false; }
