@@ -47,6 +47,7 @@ CSNode::CSNode()
 , m_NumCompilerInputFiles( 0 )
 , m_NumCompilerReferences( 0 )
 {
+    m_CompilerInputPattern.Append( AStackString<>( "*.cs" ) );
     m_Type = CS_NODE;
     m_LastBuildTimeMs = 5000; // higher default than a file node
 }
