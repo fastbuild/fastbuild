@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 #include "TestFramework/UnitTest.h"
 
+#include "Core/Mem/Mem.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Thread.h"
 
@@ -26,6 +27,16 @@ private:
         volatile uint32_t m_Count;
     };
     static uint32_t TestExclusivityThreadEntryFunction( void * userData );
+
+    #if defined( __WINDOWS__ )
+        struct PaddingStruct
+        {
+            Mutex   m_Mutex1;
+            uint8_t m_Padding;
+            Mutex   m_Mutex2;
+        };
+        void TestAlignment() const;
+    #endif
 };
 
 // Register Tests
@@ -35,6 +46,9 @@ REGISTER_TESTS_BEGIN( TestMutex )
     REGISTER_TEST( TestLockUnlock )
     REGISTER_TEST( TestMultiLockUnlock )
     REGISTER_TEST( TestExclusivity )
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( TestAlignment )
+    #endif
 REGISTER_TESTS_END
 
 // TestConstruct
@@ -116,5 +130,24 @@ void TestMutex::TestExclusivity() const
 
     return 0;
 }
+
+// TestAlignment
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    void TestMutex::TestAlignment() const
+    {
+        // Check that alignment on stack and heap is correct
+        PaddingStruct ps1;
+        PaddingStruct * ps2 = FNEW( PaddingStruct );
+
+        ASSERT( ( (size_t)&ps1.m_Mutex1 % sizeof( void * ) ) == 0 );
+        ASSERT( ( (size_t)&ps1.m_Mutex2 % sizeof( void * ) ) == 0 );
+
+        ASSERT( ( (size_t)&ps2->m_Mutex1 % sizeof( void * ) ) == 0 );
+        ASSERT( ( (size_t)&ps2->m_Mutex2 % sizeof( void * ) ) == 0 );
+
+        delete ps2;
+    }
+#endif
 
 //------------------------------------------------------------------------------

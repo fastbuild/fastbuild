@@ -24,9 +24,9 @@ public:
 private:
     // do this to avoid including windows.h
     #if defined ( WIN64 )
-        unsigned char m_CriticalSection[ 8 + 4 + 4 + 8 + 8 + 8 ]; // CRITICAL_SECTION
+        uint64_t m_CriticalSection[ 5 ]; // CRITICAL_SECTION
     #elif defined ( WIN32 )
-        unsigned char m_CriticalSection[ 4 + 4 + 4 + 4 + 4 + 4 ]; // CRITICAL_SECTION
+        uint32_t m_CriticalSection[ 6 ]; // CRITICAL_SECTION
     #endif
 
     #if defined( __LINUX__ ) || defined( __APPLE__ )
