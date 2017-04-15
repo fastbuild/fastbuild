@@ -1559,9 +1559,9 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                         fullArgs += includePath;
                         fullArgs.Append( end, token.GetEnd() - end );
                         fullArgs.AddDelimiter();
-                    }
 
-                    continue;
+                        continue; // Include path has been replaced
+                    }
                 }
 
                 // Strip "Force Includes" statements (as they are merged in now)
