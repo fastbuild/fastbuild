@@ -35,7 +35,8 @@ enum ReturnCodes
     FBUILD_BAD_ARGS                         = -3,
     FBUILD_ALREADY_RUNNING                  = -4,
     FBUILD_FAILED_TO_SPAWN_WRAPPER          = -5,
-    FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL    = -6
+    FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL    = -6,
+    FBUILD_WRAPPER_CRASHED                  = -7,
 };
 
 // Headers
@@ -572,6 +573,7 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
     g_SharedMemory.Create( options.GetSharedMemoryName().Get(), sizeof( SharedData ) );
     SharedData * sd = (SharedData *)g_SharedMemory.GetPtr();
     memset( sd, 0, sizeof( SharedData ) );
+    sd->ReturnCode = FBUILD_WRAPPER_CRASHED;
 
     // launch intermediate process
     AStackString<> argsCopy( args );
