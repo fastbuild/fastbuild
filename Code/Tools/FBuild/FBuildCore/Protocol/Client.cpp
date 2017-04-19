@@ -73,7 +73,7 @@ Client::~Client()
     ServerState * ss = (ServerState *)connection->GetUserData();
     ASSERT( ss );
 
-    MutexHolder mh( m_ServerListMutex );
+    MutexHolder mh( ss->m_Mutex );
     if ( ss->m_Jobs.IsEmpty() == false )
     {
         Job ** it = ss->m_Jobs.Begin();
@@ -299,9 +299,9 @@ void Client::CheckForTimeouts()
     for ( ServerState * it = m_ServerList.Begin(); it != end; ++it )
     {
         ServerState & ss = *it;
+        MutexHolder ssMH( ss.m_Mutex );
         if ( ss.m_Connection )
         {
-            MutexHolder ssMH( it->m_Mutex );
             if ( ss.m_StatusTimer.GetElapsedMS() >= Protocol::SERVER_STATUS_TIMEOUT )
             {
                 Disconnect( ss.m_Connection );
