@@ -80,11 +80,19 @@ void TestProjectGeneration::Test() const
     cfg.m_BuildCommand = "fbuild -cache $(Project)-$(Config)-$(Platform)";
     cfg.m_RebuildCommand = "fbuild -cache -clean $(Project)-$(Config)-$(Platform)";
 
+//  cfg.m_TargetName = "^$(ProjectName)";
+//  cfg.m_TargetExt = ".exe";
+
+    cfg.m_ProjectBuildType = "Makefile";
+
     // debugger
     cfg.m_LocalDebuggerCommand = "$(SolutionDir)..\\..\\..\\tmp\\$(Platform)\\$(Config)\\Tools\\FBuild\\FBuildTest\\FBuildTest.exe";
     cfg.m_LocalDebuggerWorkingDirectory = "$(ProjectDir)";
     cfg.m_LocalDebuggerCommandArguments = "-verbose";
     cfg.m_LocalDebuggerEnvironment = "_NO_DEBUG_HEAP=1";
+
+    // web debugger
+    // cfg.m_WebBrowserDebuggerHttpUrl
 
     cfg.m_Platform = "Win32";
     cfg.m_Config = "Debug";
