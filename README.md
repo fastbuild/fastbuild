@@ -1,6 +1,6 @@
-#FASTBuild
+# FASTBuild
 
-##Branch policy
+## Branch policy
 
 **Patches will only be accepted into the "dev" branch.**
 
