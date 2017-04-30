@@ -51,7 +51,18 @@ protected:
 
     // internal helpers
     bool CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
-    ObjectNode * CreateObjectNode( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const uint32_t flags, const AString & compilerOptions, const AString & compilerOptionsDeoptimized, const AString & objectName, const AString & objectInput, const AString & pchObjectName = AString::GetEmpty() );
+    ObjectNode * CreateObjectNode( NodeGraph & nodeGraph,
+                                   const BFFIterator & iter,
+                                   const Function * function,
+                                   const uint32_t flags,
+                                   const uint32_t preprocessorFlags,
+                                   const AString & compilerOptions,
+                                   const AString & compilerOptionsDeoptimized,
+                                   const AString & preprocessor,
+                                   const AString & preprocessorOptions,
+                                   const AString & objectName,
+                                   const AString & objectInput,
+                                   const AString & pchObjectName );
 
     // Exposed Properties
     AString             m_Compiler;
