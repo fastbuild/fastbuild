@@ -62,6 +62,7 @@
 //------------------------------------------------------------------------------
 NodeGraph::NodeGraph()
 : m_AllNodes( 1024, true )
+, m_GeneratorNodes( 1, true )
 , m_NextNodeIndex( 0 )
 , m_UsedFiles( 16, true )
 {
@@ -611,6 +612,11 @@ size_t NodeGraph::GetNodeCount() const
     return m_AllNodes.GetSize();
 }
 
+Array< Node* >& NodeGraph::GetGeneratorNodes()
+{
+    return m_GeneratorNodes;
+}
+
 // CreateCopyFileNode
 //------------------------------------------------------------------------------
 CopyFileNode * NodeGraph::CreateCopyFileNode( const AString & dstFileName )
@@ -658,15 +664,20 @@ ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName,
                                       const AString & workingDir,
                                       int32_t expectedReturnCode,
                                       const Dependencies & preBuildDependencies,
-                                      bool useStdOutAsOutput )
+                                      bool useStdOutAsOutput,
+                                      bool isGenerator )
 {
     ASSERT( Thread::IsMainThread() );
 
     AStackString< 512 > fullPath;
     CleanPath( dstFileName, fullPath );
 
-    ExecNode * node = FNEW( ExecNode( fullPath, inputFiles, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies, useStdOutAsOutput ) );
+    ExecNode * node = FNEW( ExecNode( fullPath, inputFiles, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies, useStdOutAsOutput, isGenerator ) );
     AddNode( node );
+    if (isGenerator)
+    {
+        m_GeneratorNodes.Append( node );
+    }
     return node;
 }
 
@@ -798,7 +809,8 @@ ExeNode * NodeGraph::CreateExeNode( const AString & linkerOutputName,
                                     const Dependencies & assemblyResources,
                                     const AString & importLibName,
                                     Node * linkerStampExe,
-                                    const AString & linkerStampExeArgs )
+                                    const AString & linkerStampExeArgs,
+                                    const Dependencies & preBuildDependencies )
 {
     ASSERT( Thread::IsMainThread() );
 
@@ -815,7 +827,8 @@ ExeNode * NodeGraph::CreateExeNode( const AString & linkerOutputName,
                                   assemblyResources,
                                   importLibName,
                                   linkerStampExe,
-                                  linkerStampExeArgs ) );
+                                  linkerStampExeArgs,
+                                  preBuildDependencies ) );
     AddNode( node );
     return node;
 }

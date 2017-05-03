@@ -26,7 +26,8 @@ ExecNode::ExecNode( const AString & dstFileName,
                         const AString & workingDir,
                         int32_t expectedReturnCode,
                         const Dependencies & preBuildDependencies,
-                        bool useStdOutAsOutput )
+                        bool useStdOutAsOutput,
+                        bool isGenerator )
 : FileNode( dstFileName, Node::FLAG_NONE )
 , m_InputFiles( inputFiles )
 , m_Executable( executable )
@@ -34,6 +35,7 @@ ExecNode::ExecNode( const AString & dstFileName,
 , m_WorkingDir( workingDir )
 , m_ExpectedReturnCode( expectedReturnCode )
 , m_UseStdOutAsOutput( useStdOutAsOutput )
+, m_IsGenerator( isGenerator )
 {
     ASSERT( executable );
     m_StaticDependencies.SetCapacity( m_InputFiles.GetSize() + 1 );
@@ -84,14 +86,18 @@ ExecNode::~ExecNode() = default;
     ASSERT( !p.IsRunning() );
     // Get result
     int result = p.WaitForExit();
+    bool failed = (result != m_ExpectedReturnCode);
 
-    // did the executable fail?
-    if ( result != m_ExpectedReturnCode )
+    if (m_IsGenerator || failed )
     {
-        // something went wrong, print details
+        // always show generator command outputs
+        // or something went wrong, print details
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
+    }
 
+    if ( failed )
+    {
         FLOG_ERROR( "Execution failed (error %i) '%s'", result, GetName().Get() );
         return NODE_RESULT_FAILED;
     }
@@ -125,6 +131,7 @@ ExecNode::~ExecNode() = default;
     NODE_LOAD( int32_t,         expectedReturnCode );
     NODE_LOAD_DEPS( 0,          preBuildDependencies );
     NODE_LOAD( bool,            useStdOutAsOutput);
+    NODE_LOAD( bool,            generator);
 
     Node * execNode = nodeGraph.FindNode( executable );
     ASSERT( execNode ); // load/save logic should ensure the src was saved first
@@ -136,7 +143,8 @@ ExecNode::~ExecNode() = default;
                                   workingDir,
                                   expectedReturnCode,
                                   preBuildDependencies,
-                                  useStdOutAsOutput );
+                                  useStdOutAsOutput,
+                                  generator );
     ASSERT( n );
 
     return n;
@@ -154,6 +162,7 @@ ExecNode::~ExecNode() = default;
     NODE_SAVE( m_ExpectedReturnCode );
     NODE_SAVE_DEPS( m_PreBuildDependencies );
     NODE_SAVE( m_UseStdOutAsOutput );
+    NODE_SAVE( m_IsGenerator);
 }
 
 // EmitCompilationMessage
@@ -264,3 +273,8 @@ void ExecNode::GetInputFiles(AString & fullArgs, const AString & pre, const AStr
 }
 
 //------------------------------------------------------------------------------
+    
+bool ExecNode::IsGenerator() const 
+{
+    return m_IsGenerator;
+}

@@ -142,6 +142,9 @@ public:
     // each node must specify if it outputs a file
     virtual bool IsAFile() const = 0;
 
+    //if this node is used to generate bff file 
+    virtual bool IsGenerator() const;
+
     inline State GetState() const { return m_State; }
 
     inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }

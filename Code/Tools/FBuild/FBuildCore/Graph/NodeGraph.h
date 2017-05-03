@@ -92,6 +92,7 @@ public:
     Node * FindNode( const AString & nodeName ) const;
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
+    Array< Node* >& GetGeneratorNodes() ;
 
     // create new nodes
     CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
@@ -106,7 +107,8 @@ public:
                                const AString & workingDir,
                                int32_t expectedReturnCode,
                                const Dependencies & preBuildDependencies,
-                               bool useStdOutAsOutput );
+                               bool useStdOutAsOutput,
+                               bool isGenerator = false );
     FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
     DirectoryListNode * CreateDirectoryListNode( const AString & name,
                                                  const AString & path,
@@ -140,7 +142,8 @@ public:
                                    const Dependencies & assemblyResources,
                                    const AString & importLibName,
                                    Node * linkerStampExe,
-                                   const AString & linkerStampExeArgs );
+                                   const AString & linkerStampExeArgs ,
+                                   const Dependencies & preBuildDependencies );
     UnityNode * CreateUnityNode( const AString & unityName );
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );
@@ -226,6 +229,7 @@ private:
     enum { NODEMAP_TABLE_SIZE = 65536 };
     Node **         m_NodeMap;
     Array< Node * > m_AllNodes;
+    Array< Node * > m_GeneratorNodes;
     uint32_t        m_NextNodeIndex;
 
     Timer m_Timer;

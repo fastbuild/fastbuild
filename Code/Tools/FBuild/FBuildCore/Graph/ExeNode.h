@@ -24,8 +24,12 @@ public:
                       const Dependencies & assemblyResources,
                       const AString & importLibName,
                       Node * linkerStampExe,
-                      const AString & linkerStampExeArgs );
+                      const AString & linkerStampExeArgs,
+                      const Dependencies & preBuildDependencies
+                      );
     virtual ~ExeNode();
+
+    virtual void Save( IOStream & stream ) const;
 
     static inline Node::Type GetTypeS() { return Node::EXE_NODE; }
 

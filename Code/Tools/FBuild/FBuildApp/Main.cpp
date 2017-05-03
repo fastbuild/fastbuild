@@ -23,6 +23,8 @@
 #include <stdio.h>
 #if defined( __WINDOWS__ )
     #include <windows.h>
+#elif defined( __LINUX__ )
+    #include <signal.h>
 #endif
 
 // Return Codes
@@ -45,9 +47,10 @@ void DisplayHelp();
 void DisplayVersion();
 #if defined( __WINDOWS__ )
     BOOL CtrlHandler( DWORD fdwCtrlType ); // Handle Ctrl+C etc
+#elif defined( __LINUX__ )
+    void CtrlHandler( int dummy );
 #else
     // TODO:MAC Implement CtrlHandler
-    // TODO:LINUX Implement CtrlHandler
 #endif
 int WrapperMainProcess( const AString & args, const FBuildOptions & options, SystemMutex & finalProcess );
 int WrapperIntermediateProcess( const AString & args, const FBuildOptions & options );
@@ -94,6 +97,8 @@ int Main(int argc, char * argv[])
 
     #if defined( __WINDOWS__ )
         VERIFY( SetConsoleCtrlHandler( (PHANDLER_ROUTINE)CtrlHandler, TRUE ) ); // Register
+    #elif defined( __LINUX__ )
+        signal(SIGINT,CtrlHandler);
     #endif
 
     // handle cmd line args
@@ -561,6 +566,19 @@ void DisplayVersion()
         }
 
         return TRUE; // tell Windows we've "handled" it
+    }
+#elif defined (__LINUX__)
+
+void CtrlHandler( int UNUSED( dummy ) )
+    {
+        // tell FBuild we want to stop the build cleanly
+        FBuild::AbortBuild();
+        static bool received = false;
+        if ( received == false )
+        {
+            received = true;
+            OUTPUT( "<<<< ABORT SIGNAL RECEIVED >>>>\n" );
+        }
     }
 #endif
 

@@ -22,13 +22,15 @@ public:
                         const AString & workingDir,
                         int32_t expectedReturnCode,
                         const Dependencies & preBuildDependencies,
-                        bool useStdOutAsOutput );
+                        bool useStdOutAsOutput,
+                        bool isGenerator = false );
     virtual ~ExecNode();
 
     static inline Node::Type GetTypeS() { return Node::EXEC_NODE; }
 
     static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
     virtual void Save( IOStream & stream ) const override;
+    virtual bool IsGenerator() const override;
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
@@ -43,6 +45,7 @@ private:
     AString     m_WorkingDir;
     int32_t     m_ExpectedReturnCode;
     bool        m_UseStdOutAsOutput;
+    bool        m_IsGenerator;
 };
 
 //------------------------------------------------------------------------------
