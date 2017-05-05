@@ -27,7 +27,7 @@ SLNGenerator::SLNGenerator() = default;
 //------------------------------------------------------------------------------
 SLNGenerator::~SLNGenerator() = default;
 
-// GenerateVCXProj
+// GenerateSLN
 //------------------------------------------------------------------------------
 const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
                                            const AString & solutionBuildProject,
@@ -175,8 +175,19 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
             solutionBuildProjectGuid = projectGuid;
         }
 
-        Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\r\n",
-               projectName.Get(), projectPath.Get(), projectGuid.Get() );
+        const bool writeAndroidProj = projectPath.EndsWithI( ".androidproj" );
+        if ( writeAndroidProj )
+        {
+            // This is a GUID which works for .androidprojs (found this out the hard way by hand)
+            Write( "Project(\"{39E2626F-3545-4960-A6E8-258AD8476CE5}\") = \"%s\", \"%s\", \"%s\"\r\n",
+                   projectName.Get(), projectPath.Get(), projectGuid.Get() );
+        }
+        else
+        {
+            // Use the default fastbuild C++ .vcxproj GUID
+            Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\r\n",
+                   projectName.Get(), projectPath.Get(), projectGuid.Get() );
+        }
 
         // Manage dependencies
         Array< AString > dependencyGUIDs( 64, true );

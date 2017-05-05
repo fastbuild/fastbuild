@@ -155,7 +155,10 @@ FunctionVCXProject::FunctionVCXProject()
     if ( !GetString( funcStartIter, baseConfig.m_BuildCommand,  ".ProjectBuildCommand", false ) ||
          !GetString( funcStartIter, baseConfig.m_RebuildCommand,".ProjectRebuildCommand", false ) ||
          !GetString( funcStartIter, baseConfig.m_CleanCommand,  ".ProjectCleanCommand", false ) ||
+         !GetString( funcStartIter, baseConfig.m_TargetName,    ".TargetName", false ) ||
+         !GetString( funcStartIter, baseConfig.m_TargetExt,     ".TargetExtension", false ) ||
          !GetString( funcStartIter, baseConfig.m_Output,        ".Output", false ) ||
+         !GetString( funcStartIter, baseConfig.m_AdditionalIncludePaths,    ".AdditionalIncludeDirectories", false ) ||
          !GetString( funcStartIter, baseConfig.m_PreprocessorDefinitions,   ".PreprocessorDefinitions", false ) ||
          !GetString( funcStartIter, baseConfig.m_IncludeSearchPath,     ".IncludeSearchPath", false ) ||
          !GetString( funcStartIter, baseConfig.m_ForcedIncludes,        ".ForcedIncludes", false ) ||
@@ -172,10 +175,17 @@ FunctionVCXProject::FunctionVCXProject()
          !GetString( funcStartIter, baseConfig.m_PlatformToolset,       ".PlatformToolset", false ) ||
          !GetString( funcStartIter, baseConfig.m_DeploymentType,        ".DeploymentType", false ) ||
          !GetString( funcStartIter, baseConfig.m_DeploymentFiles,       ".DeploymentFiles", false ) ||
+         !GetString( funcStartIter, baseConfig.m_PackagePath,           ".PackagePath", false ) ||
+         !GetString( funcStartIter, baseConfig.m_LaunchActivity,        ".LaunchActivity", false ) ||
+         !GetString( funcStartIter, baseConfig.m_PlatformIncludePattern,        ".PlatformIncludePattern", false ) ||
+         !GetString( funcStartIter, baseConfig.m_TargetArchitectureAlias,       ".TargetArchitectureAlias", false ) ||
+         !GetString( funcStartIter, baseConfig.m_AdditionalSymbolSearchPaths,   ".AdditionalSymbolSearchPaths", false ) ||
          !GetString( funcStartIter, baseConfig.m_LocalDebuggerCommandArguments, ".LocalDebuggerCommandArguments", false ) ||
          !GetString( funcStartIter, baseConfig.m_LocalDebuggerWorkingDirectory, ".LocalDebuggerWorkingDirectory", false ) ||
          !GetString( funcStartIter, baseConfig.m_LocalDebuggerCommand,          ".LocalDebuggerCommand", false ) ||
-         !GetString( funcStartIter, baseConfig.m_LocalDebuggerEnvironment,      ".LocalDebuggerEnvironment", false ) )
+         !GetString( funcStartIter, baseConfig.m_LocalDebuggerEnvironment,      ".LocalDebuggerEnvironment", false ) ||
+         !GetString( funcStartIter, baseConfig.m_WebBrowserDebuggerHttpUrl,     ".WebBrowserDebuggerHttpUrl", false ) ||
+         !GetString( funcStartIter, baseConfig.m_ProjectBuildType,      ".ProjectBuildType", false ) )
     {
         return false;
     }
@@ -217,6 +227,9 @@ FunctionVCXProject::FunctionVCXProject()
                 return false;
             }
 
+            GetStringFromStruct( s, ".TargetName",      newConfig.m_TargetName );
+            GetStringFromStruct( s, ".TargetExtension", newConfig.m_TargetExt );
+
             // .Target is optional
             AStackString<> target;
             if ( GetStringFromStruct( s, ".Target", target ) )
@@ -236,6 +249,7 @@ FunctionVCXProject::FunctionVCXProject()
             GetStringFromStruct( s, ".ProjectRebuildCommand",   newConfig.m_RebuildCommand );
             GetStringFromStruct( s, ".ProjectCleanCommand",     newConfig.m_CleanCommand );
             GetStringFromStruct( s, ".Output",                  newConfig.m_Output );
+            GetStringFromStruct( s, ".AdditionalIncludeDirectories",	newConfig.m_AdditionalIncludePaths );
             GetStringFromStruct( s, ".PreprocessorDefinitions", newConfig.m_PreprocessorDefinitions );
             GetStringFromStruct( s, ".IncludeSearchPath",       newConfig.m_IncludeSearchPath );
             GetStringFromStruct( s, ".ForcedIncludes",          newConfig.m_ForcedIncludes );
@@ -252,10 +266,17 @@ FunctionVCXProject::FunctionVCXProject()
             GetStringFromStruct( s, ".PlatformToolset",         newConfig.m_PlatformToolset );
             GetStringFromStruct( s, ".DeploymentType",          newConfig.m_DeploymentType );
             GetStringFromStruct( s, ".DeploymentFiles",         newConfig.m_DeploymentFiles );
+            GetStringFromStruct( s, ".PackagePath",             newConfig.m_PackagePath );
+            GetStringFromStruct( s, ".LaunchActivity",          newConfig.m_LaunchActivity );
+            GetStringFromStruct( s, ".PlatformIncludePattern",  newConfig.m_PlatformIncludePattern );
+            GetStringFromStruct( s, ".TargetArchitectureAlias", newConfig.m_TargetArchitectureAlias );
+            GetStringFromStruct( s, ".AdditionalSymbolSearchPaths",     newConfig.m_AdditionalSymbolSearchPaths );
             GetStringFromStruct( s, ".LocalDebuggerCommandArguments",   newConfig.m_LocalDebuggerCommandArguments );
             GetStringFromStruct( s, ".LocalDebuggerWorkingDirectory",   newConfig.m_LocalDebuggerWorkingDirectory );
             GetStringFromStruct( s, ".LocalDebuggerCommand",            newConfig.m_LocalDebuggerCommand );
             GetStringFromStruct( s, ".LocalDebuggerEnvironment",        newConfig.m_LocalDebuggerEnvironment );
+            GetStringFromStruct( s, ".WebBrowserDebuggerHttpUrl",       newConfig.m_WebBrowserDebuggerHttpUrl );
+            GetStringFromStruct( s, ".ProjectBuildType",        newConfig.m_ProjectBuildType );
 
             configs.Append( newConfig );
         }
