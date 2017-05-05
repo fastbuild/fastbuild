@@ -31,7 +31,10 @@ public:
     AString m_BuildCommand;
     AString m_RebuildCommand;
     AString m_CleanCommand;
+    AString m_TargetName;
+    AString m_TargetExt;
     AString m_Output;
+    AString m_AdditionalIncludePaths;
     AString m_PreprocessorDefinitions;
     AString m_IncludeSearchPath;
     AString m_ForcedIncludes;
@@ -48,11 +51,18 @@ public:
     AString m_PlatformToolset;
     AString m_DeploymentType;
     AString m_DeploymentFiles;
+    AString m_PackagePath;
+    AString m_LaunchActivity;
+    AString m_PlatformIncludePattern;
+    AString m_TargetArchitectureAlias;
+    AString m_AdditionalSymbolSearchPaths;
 
     AString m_LocalDebuggerCommandArguments;
     AString m_LocalDebuggerWorkingDirectory;
     AString m_LocalDebuggerCommand;
     AString m_LocalDebuggerEnvironment;
+    AString m_WebBrowserDebuggerHttpUrl;
+    AString m_ProjectBuildType;
 
     static bool Load( NodeGraph & nodeGraph, IOStream & stream, Array< VSProjectConfig > & configs );
     static void Save( IOStream & stream, const Array< VSProjectConfig > & configs );
@@ -74,6 +84,7 @@ public:
 //------------------------------------------------------------------------------
 class VSProjectGenerator
 {
+
 public:
     VSProjectGenerator();
     ~VSProjectGenerator();
