@@ -2170,8 +2170,9 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 }
             }
 
-            // Internal compiler error is a system error; usually caused by
-            // hardware issues.
+            // If the compiler crashed (Internal Compiler Error), treat this
+            // as a system error so it will be retried, since it can alse be 
+            // the result of faulty hardware.
             if ( stdOut && strstr( stdOut, "C1001" ) )
             {
                 job->OnSystemError();
