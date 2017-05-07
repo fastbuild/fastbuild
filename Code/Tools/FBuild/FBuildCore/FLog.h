@@ -23,7 +23,7 @@
     do {                                            \
         if ( FLog::ShowBuildCommands() )            \
         {                                           \
-          FLog::Build( fmtString, ##__VA_ARGS__ );  \
+            FLog::Build( fmtString, ##__VA_ARGS__ );\
         }                                           \
     PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
     } while ( false );                              \
@@ -33,7 +33,7 @@
     do {                                            \
         if ( FLog::ShowBuildCommands() )            \
         {                                           \
-          FLog::BuildDirect( message );             \
+            FLog::BuildDirect( message );           \
         }                                           \
     PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
     } while ( false );                              \

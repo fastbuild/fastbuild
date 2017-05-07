@@ -251,7 +251,7 @@ int Main(int argc, char * argv[])
                 #endif
                 continue;
             }
-            else if ((thisArg == "-quiet"))
+            else if ( thisArg == "-quiet" )
             {
                 quiet = true;
                 verbose = false;
@@ -512,9 +512,8 @@ void DisplayHelp()
             " -nostoponerror Don't stop building on first error. Try to build as much\n"
             "                as possible.\n"
             " -quiet         Don't show build output.\n"
-            " -report        Ouput a detailed report at the end of the build.\n"
-            "                to report.html. This will lengthen the total build\n"
-            "                time.\n"
+            " -report        Ouput a detailed report.html at the end of the build.\n"
+            "                This will lengthen the total build time.\n"
             " -showcmds      Show command lines used to launch external processes.\n"
             " -showtargets   Display list of primary build targets.\n"
             " -summary       Show a summary at the end of the build.\n"
