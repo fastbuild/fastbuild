@@ -19,6 +19,6 @@ ObjectList( 'CustomPreprocessor' )
 
     // Just use the normal compiler, but with some special options to make the input valid
     .Preprocessor               = .Compiler
-    .PreprocessorOptions        = .CompilerOptions + ' /DTHING_TO_REPLACE=12345'
+    .PreprocessorOptions        = .CompilerOptions + ' -DTHING_TO_REPLACE=12345'
 }
 
