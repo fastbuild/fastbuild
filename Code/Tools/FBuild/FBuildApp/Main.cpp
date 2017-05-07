@@ -98,7 +98,7 @@ int Main(int argc, char * argv[])
     #if defined( __WINDOWS__ )
         VERIFY( SetConsoleCtrlHandler( (PHANDLER_ROUTINE)CtrlHandler, TRUE ) ); // Register
     #elif defined( __LINUX__ )
-        signal(SIGINT,CtrlHandler);
+        signal( SIGINT, CtrlHandler );
     #endif
 
     // handle cmd line args
@@ -576,12 +576,14 @@ void DisplayVersion()
 
         return TRUE; // tell Windows we've "handled" it
     }
-#elif defined (__LINUX__)
+#elif defined( __LINUX__ )
 
-void CtrlHandler( int UNUSED( dummy ) )
+    void CtrlHandler( int UNUSED( dummy ) )
     {
         // tell FBuild we want to stop the build cleanly
         FBuild::AbortBuild();
+
+        // only printf output for the first break received
         static bool received = false;
         if ( received == false )
         {
