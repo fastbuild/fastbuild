@@ -106,6 +106,9 @@ private:
     void WritePGItem( const char * xmlTag, const AString & value );
 
     void GetFolderPath( const AString & fileName, AString & folder ) const;
+    static void GetProjectRelativePath( const AString & projectFolderPath,
+                                        const AString & fileName,
+                                        AString & outRelativeFileName );
 
     // project details
     AString m_ProjectName;
