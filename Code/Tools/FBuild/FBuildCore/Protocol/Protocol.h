@@ -31,7 +31,7 @@ namespace Protocol
     enum { PROTOCOL_VERSION = 16 };
 
     enum { SERVER_STATUS_FREQUENCY_MS = 1000 }; // frequency of server status updates to client
-    enum { SERVER_STATUS_TIMEOUT = 5000 };      // server is dead if time elapses between updates
+    enum { SERVER_STATUS_TIMEOUT_MS = 30000 };  // server is dead if time elapses between updates
 
     // Identifiers for all unique messages
     //------------------------------------------------------------------------------
