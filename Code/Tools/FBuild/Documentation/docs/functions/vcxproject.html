@@ -39,7 +39,7 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
   // Reference Options
   .ProjectReferences              // (optional) References to assemblies (e.g "System.Core")
   .ProjectProjectReferences       // (optional) References to projects (e.g. "myproj.csproj|{guid}")
-
+								  
   // Other Options
   .RootNamespace                  // (optional) Set RootNamespace for project
   .ProjectGuid                    // (optional) Override default generated ProjectGuid
@@ -302,13 +302,13 @@ Example:
       <p><b>.ApplicationEnvironment</b> - String - (Optional)</p>
       <p>Set the application environment property.  This may be necessary for XboxOne and WinRT applications.</p>
       Example:
-<div class='code'>.ProjectSccEntrySAK = 'title'</div>
+<div class='code'>.ApplicationEnvironment = 'title'</div>
       <hr> 
 
       <p><b>.ProjectSccEntrySAK</b> - bool - (Optional)</p>
       <p>Specifies if generic source control strings (SAK) should be generated in the project file.</p>
       Example:
-<div class='code'>.ProjectSccEntrySAK = 'title'</div>
+<div class='code'>.ProjectSccEntrySAK = true</div>
       
 </div>
 								  

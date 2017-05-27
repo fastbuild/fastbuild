@@ -52,7 +52,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 95 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 94 };
 
     bool IsValid() const
     {
@@ -156,7 +156,7 @@ public:
                                            const AString & projectGuid,
                                            const AString & defaultLanguage,
                                            const AString & applicationEnvironment,
-                                           const bool & bProjectSccEntrySAK,
+                                           const bool projectSccEntrySAK,
                                            const Array< VSProjectConfig > & configs,
                                            const Array< VSProjectFileType > & fileTypes,
                                            const Array< AString > & references,

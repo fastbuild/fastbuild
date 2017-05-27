@@ -36,10 +36,10 @@ VSProjectConfig::~VSProjectConfig() = default;
 //------------------------------------------------------------------------------
 VSProjectGenerator::VSProjectGenerator()
     : m_BasePaths( 0, true )
+    , m_ProjectSccEntrySAK( false )
     , m_References( 0, true )
     , m_ProjectReferences( 0, true )
     , m_Files( 1024, true )
-    , m_ProjectSccEntrySAK(false)
 {
 }
 
@@ -205,15 +205,16 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     WritePGItem( "ProjectGuid", guid );
     WritePGItem( "DefaultLanguage", m_DefaultLanguage );
     WritePGItem( "Keyword", AStackString<>( "MakeFileProj" ) );
-    if (m_ProjectSccEntrySAK)
+    if ( m_ProjectSccEntrySAK )
     {
-        WritePGItem( "SccProjectName", AStackString<>( "SAK" ) );
-        WritePGItem( "SccAuxPath", AStackString<>( "SAK" ) );
-        WritePGItem( "SccLocalPath", AStackString<>( "SAK" ) );
-        WritePGItem( "SccProvider", AStackString<>( "SAK" ) );
+        const AStackString<> sakString( "SAK" );
+        WritePGItem( "SccProjectName", sakString );
+        WritePGItem( "SccAuxPath", sakString );
+        WritePGItem( "SccLocalPath", sakString );
+        WritePGItem( "SccProvider", sakString );
     }
-	WritePGItem("ApplicationEnvironment", m_ApplicationEnvironment);
-	Write("  </PropertyGroup>\n");
+    WritePGItem( "ApplicationEnvironment", m_ApplicationEnvironment );
+    Write( "  </PropertyGroup>\n" );
 
     // Default props
     Write( "  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />\n" );
