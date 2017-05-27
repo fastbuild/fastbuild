@@ -515,6 +515,7 @@ Compiler( 'Compiler-x64-OSX' )
 //------------------------------------------------------------------------------
 // VisualStudio Project Generation
 //------------------------------------------------------------------------------
+.ProjectSccEntrySAK = true
 .ProjectCommon =
 [
     .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -cache ^$(ProjectName)-^$(Configuration)'
