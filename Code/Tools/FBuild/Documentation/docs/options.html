@@ -63,6 +63,10 @@
     <td>Don't stop building on first error.</td>
   </tr>
   <tr>
+    <td><a href="#quiet">-quiet</a></td>
+    <td>Don't show build output.</td>
+  </tr>
+  <tr>
     <td><a href="#report">-report</a></td>
     <td>Output a report at build termination.</td>
   </tr>
@@ -203,6 +207,12 @@ of FASTBuild to distribute work efficiently.</p>
 <p>-nostoponerror instructs FASTBuild to instead build as much as possible before stopping when failures occur. This is
 useful if you want to see as many errors as possible in your compilation output.</p>
 <p>NOTE: When specifying multiple targets to compile on the command line, -nostoponerror is implied.</p>
+</div>
+
+    <div class='newsitemheader' id="quiet">-quiet</div>
+    <div class='newsitembody'>
+<p>Don't show build output. Information about which items are being built and the overall state of the build will be
+suppressed.</p>
 </div>
 
     <div class='newsitemheader' id="report">-report</div>

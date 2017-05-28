@@ -54,6 +54,9 @@ FileNode::~FileNode() = default;
 /*virtual*/ void FileNode::Save( IOStream & stream ) const
 {
     NODE_SAVE( m_Name );
+    #if defined( DEBUG )
+        MarkAsSaved();
+    #endif
 }
 
 //------------------------------------------------------------------------------

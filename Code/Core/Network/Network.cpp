@@ -141,8 +141,6 @@
             data->safeToFree = true;
         }
 
-        ASSERT( NetworkStartupHelper::IsStarted() ); // ensure network is up
-
         // perform lookup
         {
             PROFILE_SECTION( "::getaddrinfo" )

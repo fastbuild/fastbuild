@@ -30,6 +30,7 @@ private:
     void TestPCHWithCache() const;
     void TestPCHWithCache_NoRebuild() const;
     void PreventUselessCacheTraffic_MSVC() const;
+    void CacheUniqueness() const;
 
     // Clang on Windows
     #if defined( __WINDOWS__ )
@@ -47,6 +48,7 @@ REGISTER_TESTS_BEGIN( TestPrecompiledHeaders )
     REGISTER_TEST( TestPCH_NoRebuild )
     REGISTER_TEST( TestPCHWithCache )
     REGISTER_TEST( TestPCHWithCache_NoRebuild )
+    REGISTER_TEST( CacheUniqueness )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( PreventUselessCacheTraffic_MSVC )
         REGISTER_TEST( TestPCHClangWindows )
@@ -243,6 +245,71 @@ void TestPrecompiledHeaders::PreventUselessCacheTraffic_MSVC() const
         TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 0 );
     }
 
+}
+
+// CacheUniqueness
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::CacheUniqueness() const
+{
+    // Two headers, differing only in unused defines
+    const char * pchA = "Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeaderA.h";
+    const char * pchB = "Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeaderB.h";
+    const char * dstPCH = "../../../../tmp/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.h";
+    #if defined( __WINDOWS__ )
+        // On windows we need a CPP to create the PCH
+        const char * pchCPP = "Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp";
+        const char * dstPCHCPP = "../../../../tmp/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp";
+    #endif
+    const char * pchUser = "Data/TestPrecompiledHeaders/CacheUniqueness/PCHUser.cpp";
+    const char * dstPCHUser = "../../../../tmp/Test/PrecompiledHeaders/CacheUniqueness/PCHUser.cpp";
+
+    // Copy the files to the tmp Dir
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../../../../tmp/Test/PrecompiledHeaders/CacheUniqueness/" ) ) );
+    TEST_ASSERT( FileIO::FileCopy( pchA, dstPCH ) );
+    #if defined( __WINDOWS__ )
+        TEST_ASSERT( FileIO::FileCopy( pchCPP, dstPCHCPP ) );
+    #endif
+    TEST_ASSERT( FileIO::FileCopy( pchUser, dstPCHUser ) );
+
+    FBuildOptions baseOptions;
+    baseOptions.m_ConfigFile = "Data/TestPrecompiledHeaders/CacheUniqueness/fbuild.bff";
+    baseOptions.m_ForceCleanBuild = true;
+    baseOptions.m_ShowSummary = true; // required to generate stats for node count checks
+
+    // Compile A
+    {
+        FBuildOptions options( baseOptions );
+        options.m_UseCacheWrite = true;
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( nullptr ) );
+
+        AStackString<> target( "PCHTest-Uniqueness" );
+
+        TEST_ASSERT( fBuild.Build( target ) );
+
+        // Ensure we stored to the cache
+        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 2 );
+    }
+
+    // Replace header with one that differs only by the define it declares
+    TEST_ASSERT( FileIO::FileCopy( pchB, dstPCH ) );
+
+    // Compile B
+    {
+        FBuildOptions options( baseOptions );
+        options.m_UseCacheRead = true;
+
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( nullptr ) );
+
+        AStackString<> target( "PCHTest-Uniqueness" );
+
+        TEST_ASSERT( fBuild.Build( target ) );
+
+        // Should not have retrieved from the cache
+        TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 0 );
+    }
 }
 
 // TestPCHClang

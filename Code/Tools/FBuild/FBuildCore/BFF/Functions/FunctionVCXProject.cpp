@@ -42,11 +42,13 @@ FunctionVCXProject::FunctionVCXProject()
     AStackString<> projectGuid;
     AStackString<> defaultLanguage;
     AStackString<> applicationEnvironment;
+    bool projectSccEntrySAK = false;
     if ( !GetString( funcStartIter, projectOutput,      ".ProjectOutput", true ) ||
          !GetString( funcStartIter, rootNamespace,      ".RootNamespace", false ) ||
          !GetString( funcStartIter, projectGuid,        ".ProjectGuid", false ) ||
          !GetString( funcStartIter, defaultLanguage,    ".DefaultLanguage", false ) ||
-         !GetString( funcStartIter, applicationEnvironment, ".ApplicationEnvironment", false ) )
+         !GetString( funcStartIter, applicationEnvironment, ".ApplicationEnvironment", false ) ||
+         !GetBool( funcStartIter, projectSccEntrySAK,   ".ProjectSccEntrySAK", false, false) )
     {
         return false;
     }
@@ -304,6 +306,7 @@ FunctionVCXProject::FunctionVCXProject()
                                                    projectGuid,
                                                    defaultLanguage,
                                                    applicationEnvironment,
+                                                   projectSccEntrySAK,
                                                    configs,
                                                    fileTypes,
                                                    references,

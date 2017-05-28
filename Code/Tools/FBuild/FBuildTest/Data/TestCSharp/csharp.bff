@@ -31,7 +31,6 @@ CSAssembly( "CSharp-Single-Target" )
 CSAssembly( "CSharp-Multi-Target" )
 {
     .CompilerInputPath      = "Data/TestCSharp/"
-    .CompilerInputPattern   = "*.cs"
     .CompilerOutput         = "$Out$/Test/CSharp/csharpmulti.dll"
 }
 

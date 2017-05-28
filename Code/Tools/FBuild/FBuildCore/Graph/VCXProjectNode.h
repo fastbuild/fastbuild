@@ -32,6 +32,7 @@ public:
                              const AString & projectGuid,
                              const AString & defaultLanguage,
                              const AString & applicationEnvironment,
+                             const bool projectSccEntrySAK,
                              const Array< VSProjectConfig > & configs,
                              const Array< VSProjectFileType > & fileTypes,
                              const Array< AString > & references,
@@ -64,6 +65,7 @@ private:
     AString             m_ProjectGuid;
     AString             m_DefaultLanguage;
     AString             m_ApplicationEnvironment;
+    bool                m_ProjectSccEntrySAK;
     Array< VSProjectConfig > m_Configs;
     Array< VSProjectFileType > m_FileTypes;
     Array< AString >    m_References;

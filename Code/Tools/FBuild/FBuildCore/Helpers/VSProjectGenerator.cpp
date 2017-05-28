@@ -36,6 +36,7 @@ VSProjectConfig::~VSProjectConfig() = default;
 //------------------------------------------------------------------------------
 VSProjectGenerator::VSProjectGenerator()
     : m_BasePaths( 0, true )
+    , m_ProjectSccEntrySAK( false )
     , m_References( 0, true )
     , m_ProjectReferences( 0, true )
     , m_Files( 1024, true )
@@ -126,12 +127,13 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         const AString * const fEnd = m_Files.End();
         for ( const AString * fIt = m_Files.Begin(); fIt!=fEnd; ++fIt )
         {
-            const char * fileName = fIt->BeginsWithI( projectBasePath ) ? fIt->Get() + projectBasePath.GetLength() : fIt->Get();
+            AStackString<> fileName;
+            GetProjectRelativePath( projectBasePath, *fIt, fileName );
             const char * fileType = nullptr;
             const VSProjectFileType * const end = fileTypes.End();
             for ( const VSProjectFileType * it=fileTypes.Begin(); it!=end; ++it )
             {
-                if ( AString::MatchI( it->m_Pattern.Get(), fileName ) )
+                if ( AString::MatchI( it->m_Pattern.Get(), fileName.Get() ) )
                 {
                     fileType = it->m_FileType.Get();
                     break;
@@ -139,13 +141,13 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             }
             if ( fileType )
             {
-                Write( "    <CustomBuild Include=\"%s\">\n", fileName );
+                Write( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
                 Write( "        <FileType>%s</FileType>\n", fileType );
                 Write( "    </CustomBuild>\n" );
             }
             else
             {
-                Write( "    <CustomBuild Include=\"%s\" />\n", fileName );
+                Write( "    <CustomBuild Include=\"%s\" />\n", fileName.Get() );
             }
         }
         Write("  </ItemGroup>\n" );
@@ -203,6 +205,14 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     WritePGItem( "ProjectGuid", guid );
     WritePGItem( "DefaultLanguage", m_DefaultLanguage );
     WritePGItem( "Keyword", AStackString<>( "MakeFileProj" ) );
+    if ( m_ProjectSccEntrySAK )
+    {
+        const AStackString<> sakString( "SAK" );
+        WritePGItem( "SccProjectName", sakString );
+        WritePGItem( "SccAuxPath", sakString );
+        WritePGItem( "SccLocalPath", sakString );
+        WritePGItem( "SccProvider", sakString );
+    }
     WritePGItem( "ApplicationEnvironment", m_ApplicationEnvironment );
     Write( "  </PropertyGroup>\n" );
 
@@ -294,8 +304,8 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                     for ( AString & include : includePaths )
                     {
                         AStackString<> fullIncludePath;
-                        NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path - TODO:C would be better to be project relative
-                        include = fullIncludePath;
+                        NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path
+                        GetProjectRelativePath( projectBasePath, fullIncludePath, include );
                     }
                     AStackString<> includePathsStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( includePaths, includePathsStr, nullptr, ";" );
@@ -377,8 +387,9 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
             // get folder part, relative to base dir
             AStackString<> folder;
             GetFolderPath( *fIt, folder );
-            const char * fileName = fIt->BeginsWithI( projectBasePath ) ? fIt->Get() + projectBasePath.GetLength() : fIt->Get();
-            Write( "    <CustomBuild Include=\"%s\">\n", fileName );
+            AStackString<> fileName;
+            GetProjectRelativePath( projectBasePath, *fIt, fileName );
+            Write( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
             if ( !folder.IsEmpty() )
             {
                 Write( "      <Filter>%s</Filter>\n", folder.Get() );
@@ -493,6 +504,50 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
 
     // no matching base path (use root)
     folder.Clear();
+}
+
+// GetProjectRelativePath
+//------------------------------------------------------------------------------
+/*static*/ void VSProjectGenerator::GetProjectRelativePath( const AString & projectFolderPath,
+                                                            const AString & fileName,
+                                                            AString & outRelativeFileName )
+{
+    // Find common sub-path
+    const char * pathA = projectFolderPath.Get();
+    const char * pathB = fileName.Get();
+    while ( ( *pathA == *pathB ) && ( *pathA != '\0' ) )
+    {
+        pathA++;
+        pathB++;
+    }
+    const bool hasCommonSubPath = ( pathA != projectFolderPath.Get() );
+    if ( hasCommonSubPath == false )
+    {
+        // No common sub-path, so use relative name
+        outRelativeFileName = fileName;
+        return;
+    }
+
+    // Build relative path
+
+    // For every remaining dir in the project path, go up one directory
+    outRelativeFileName.Clear();
+    for (;;)
+    {
+        const char c = *pathA;
+        if ( c == 0 )
+        {
+            break;
+        }
+        if ( ( c == '/' ) || ( c == '\\' ) )
+        {
+            outRelativeFileName += "..\\";
+        }
+        ++pathA;
+    }
+
+    // Add remainder of source path relative to the common sub path
+    outRelativeFileName += pathB;
 }
 
 // VSProjectConfig::Save

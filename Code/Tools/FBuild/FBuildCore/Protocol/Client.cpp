@@ -302,7 +302,7 @@ void Client::CheckForTimeouts()
         MutexHolder ssMH( ss.m_Mutex );
         if ( ss.m_Connection )
         {
-            if ( ss.m_StatusTimer.GetElapsedMS() >= Protocol::SERVER_STATUS_TIMEOUT )
+            if ( ss.m_StatusTimer.GetElapsedMS() >= Protocol::SERVER_STATUS_TIMEOUT_MS )
             {
                 Disconnect( ss.m_Connection );
             }
