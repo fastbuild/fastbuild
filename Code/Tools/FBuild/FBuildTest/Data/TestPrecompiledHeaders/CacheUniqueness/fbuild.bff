@@ -1,0 +1,50 @@
+
+#include "..\..\testcommon.bff"
+
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+#if __WINDOWS__
+    .PCHInputFile               = '$Out$/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp'
+    .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.pch'
+    .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+#endif
+#if __LINUX__
+    .PCHInputFile               = '$Out$/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.h'
+    .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.h.gch'
+    .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux
+#endif
+#if __OSX__
+    .PCHInputFile               = '$Out$/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.h'
+    .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.pch'
+    .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on OS X
+#endif
+
+//
+// Build an object using a precompiled header
+//
+ObjectList( 'PCHTest-Uniqueness' )
+{
+    .CompilerInputPath      = '$Out$/Test/PrecompiledHeaders/CacheUniqueness/'
+    .CompilerOutputPath     ='"$Out$/Test/PrecompiledHeaders/CacheUniqueness/'
+    #if __WINDOWS__
+        .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+                            + ' "/I$Out$/Test/PrecompiledHeaders/CacheUniqueness/"'
+    #endif
+    #if __LINUX__
+        .CompilerOptions    + ' -Winvalid-pch -H'
+                            + ' "-I$Out$/Test/PrecompiledHeaders/CacheUniqueness/"'
+    #endif
+    #if __OSX__
+        .CompilerOptions    + ' -include-pch "$PCHOutputFile$"'
+                            + ' "-I$Out$/Test/PrecompiledHeaders/CacheUniqueness/"'
+    #endif
+}
+
+// Create an alias to make it easier for the test to find the thing we want
+Alias( 'PCHTest-Uniqueness-PCH' )
+{
+    .Targets            = .PCHOutputFile
+}
+

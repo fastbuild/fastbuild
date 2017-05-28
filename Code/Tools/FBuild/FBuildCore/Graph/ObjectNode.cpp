@@ -1699,6 +1699,13 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         if ( isMSVC )
         {
             fullArgs += "/E"; // run pre-processor only
+
+            // Ensure unused defines declared in the PCH but not used
+            // in the PCH are accounted for (See TestPrecompiledHeaders/CacheUniqueness)
+            if ( GetFlag( FLAG_CREATING_PCH ) )
+            {
+                fullArgs += " /d1PP"; // Must be after /E
+            }
         }
         else if ( isQtRCC )
         {
@@ -1708,6 +1715,13 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         {
             ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA );
             fullArgs += "-E"; // run pre-processor only
+
+            // Ensure unused defines declared in the PCH but not used
+            // in the PCH are accounted for (See TestPrecompiledHeaders/CacheUniqueness)
+            if ( GetFlag( FLAG_CREATING_PCH ) )
+            {
+                fullArgs += " -dD";
+            }
 
             const bool clangRewriteIncludes = GetCompiler()->CastTo< CompilerNode >()->IsClangRewriteIncludesEnabled();
             if ( isClang && clangRewriteIncludes )
