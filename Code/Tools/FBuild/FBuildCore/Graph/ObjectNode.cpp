@@ -398,7 +398,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
     // can we do the rest of the work remotely?
     if ( ( ( useSimpleDist ) || (GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed ) )
-        && JobQueue::Get().GetDistributableJobsMemUsage() < ( 512 * MEGABYTE ) )
+        && JobQueue::Get().GetDistributableJobsMemUsage() < ( 1024 * MEGABYTE ) )
     {
         // compress job data
         Compressor c;
