@@ -3,6 +3,9 @@
 //
 // Test that specifying a custom preprocessor works properly
 //
+
+.ClangRewriteIncludes = false // When using Clang as the preprocessor, we want macros expanded
+
 #include "../../testcommon.bff"
 Using( .StandardEnvironment )
 Settings {}
