@@ -58,6 +58,12 @@ public:
     template < class U >
     T * FindDeref( const U & obj ) const;
 
+    // find and erase
+    template < class U >
+    bool FindAndErase( const U & obj );
+    template < class U >
+    bool FindDerefAndErase( const U & obj );
+
     // add/remove items
     void Append( const T & item );
     template < class U >
@@ -317,6 +323,36 @@ T * Array< T >::FindDeref( const U & obj ) const
         pos++;
     }
     return nullptr;
+}
+
+// FindAndErase
+//------------------------------------------------------------------------------
+template < class T >
+template < class U >
+bool Array< T >::FindAndErase( const U & obj )
+{
+    T * iter = Find( obj );
+    if ( iter )
+    {
+        Erase( iter );
+        return true;
+    }
+    return false;
+}
+
+// FindAndEraseDeref
+//------------------------------------------------------------------------------
+template < class T >
+template < class U >
+bool Array< T >::FindDerefAndErase( const U & obj )
+{
+    T * iter = FindDeref( obj );
+    if ( iter )
+    {
+        Erase( iter );
+        return true;
+    }
+    return false;
 }
 
 // Append

@@ -63,6 +63,23 @@ public:
 
     void                GetMessagesForMonitorLog( AString & buffer ) const;
 
+    enum DistributionState
+    {
+        DIST_NONE                           = 0, // All non-distributable jobs
+        DIST_AVAILABLE                      = 1, // A distributable job, not in progress
+
+        DIST_BUILDING_REMOTELY              = 2, // Building remotely only
+        DIST_COMPLETED_REMOTELY             = 3, // Completed remotely, but not finalized (don't start racing)
+
+        DIST_BUILDING_LOCALLY               = 4, // Building locally only
+        DIST_COMPLETED_LOCALLY              = 5, // Completed locally, but not finalized
+
+        DIST_RACING                         = 6, // Building locally AND remotely
+        DIST_RACE_WON_LOCALLY               = 7, // Completed locally, but still in flight remotely
+    };
+    inline void                 SetDistributionState( DistributionState state ) { m_DistributionState = state; }
+    inline DistributionState    GetDistributionState() const                    { return m_DistributionState; }
+
 private:
     uint32_t            m_JobId             = 0;
     uint32_t            m_DataSize          = 0;
@@ -72,6 +89,7 @@ private:
     bool                m_DataIsCompressed  = false;
     bool                m_IsLocal           = true;
     uint8_t             m_SystemErrorCount  = 0; // On client, the total error count, on the worker a flag for the current attempt
+    DistributionState   m_DistributionState = DIST_NONE;
     AString             m_RemoteName;
     AString             m_RemoteSourceRoot;
     AString             m_CacheName;

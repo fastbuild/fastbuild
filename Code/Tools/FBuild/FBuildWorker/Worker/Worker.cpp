@@ -44,7 +44,6 @@ Worker::Worker( void * hInstance, const AString & args )
 {
     m_WorkerSettings = FNEW( WorkerSettings );
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
-    m_JobQueueRemote = FNEW( JobQueueRemote( Env::GetNumProcessors() ) );
     #if defined( __WINDOWS__ )
         m_MainWindow = FNEW( WorkerWindow( hInstance ) );
     #else
@@ -69,7 +68,6 @@ Worker::~Worker()
     FDELETE m_NetworkStartupHelper;
     FDELETE m_ConnectionPool;
     FDELETE m_MainWindow;
-    FDELETE m_JobQueueRemote;
     FDELETE m_WorkerSettings;
 
     if ( m_RestartNeeded )

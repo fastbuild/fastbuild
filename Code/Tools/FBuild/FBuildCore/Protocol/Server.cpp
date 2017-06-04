@@ -14,6 +14,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThreadRemote.h"
 
+#include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Profile/Profile.h"
@@ -25,11 +26,13 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Server::Server()
+Server::Server( uint32_t numThreadsInJobQueue )
     : m_ShouldExit( false )
     , m_Exited( false )
     , m_ClientList( 32, true )
 {
+    m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
+
     m_Thread = Thread::CreateThread( ThreadFuncStatic,
                                      "Server",
                                      ( 64 * KILOBYTE ),
@@ -51,6 +54,8 @@ Server::~Server()
     ShutdownAllConnections();
 
     Thread::CloseHandle( m_Thread );
+
+    FDELETE m_JobQueueRemote;
 
     const ToolManifest * const * end = m_Tools.End();
     for ( ToolManifest ** it = m_Tools.Begin(); it != end; ++it )

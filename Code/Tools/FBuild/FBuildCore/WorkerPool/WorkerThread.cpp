@@ -163,11 +163,12 @@ void WorkerThread::WaitForStop()
 
         if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
         {
-            JobQueue::Get().QueueJob2( job );
+            // Only distributable jobs have two passes, and the 2nd pass is always distributable
+            JobQueue::Get().QueueDistributableJob( job );
         }
         else
         {
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), false, false );
+            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), false );
         }
 
         return true; // did some work
@@ -187,7 +188,7 @@ void WorkerThread::WaitForStop()
                 FBuild::OnBuildError();
             }
 
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true, false ); // returning a remote job, not a local race
+            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job
 
             return true; // did some work
         }
@@ -207,7 +208,7 @@ void WorkerThread::WaitForStop()
                 FBuild::OnBuildError();
             }
 
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true, true ); // returning a remote job, local race
+            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job
 
             return true; // did some work
         }

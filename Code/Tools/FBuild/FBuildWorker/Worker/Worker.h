@@ -43,7 +43,6 @@ private:
 
     WorkerWindow        * m_MainWindow;
     Server              * m_ConnectionPool;
-    JobQueueRemote      * m_JobQueueRemote;
     NetworkStartupHelper * m_NetworkStartupHelper;
     WorkerSettings      * m_WorkerSettings;
     IdleDetection       m_IdleDetection;

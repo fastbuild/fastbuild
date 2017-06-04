@@ -10,6 +10,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Job;
+class JobQueueRemote;
 namespace Protocol
 {
     class IMessage;
@@ -27,7 +28,7 @@ class ToolManifest;
 class Server : public TCPConnectionPool
 {
 public:
-    Server();
+    Server( uint32_t numThreadsInJobQueue = 0 );
     ~Server();
 
     static void GetHostForJob( const Job * job, AString & hostName );
@@ -78,6 +79,8 @@ private:
 
         Timer                   m_StatusTimer;
     };
+
+    JobQueueRemote *        m_JobQueueRemote;
 
     volatile bool           m_ShouldExit;   // signal from main thread
     volatile bool           m_Exited;       // flagged on exit

@@ -493,19 +493,15 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     ms.Read( size );
     const void * data = (const char *)ms.GetData() + ms.Tell();
 
-    // manage job races
-    bool cancelled( false );
-    Job * job = JobQueue::Get().OnReturnRemoteJob( jobId, cancelled );
-
     {
         MutexHolder mh( ss->m_Mutex );
-        Job ** iter = ss->m_Jobs.Find( job );
-        ASSERT( iter );
-        ss->m_Jobs.Erase( iter );
+        VERIFY( ss->m_Jobs.FindDerefAndErase( jobId ) );
     }
 
-    // has the job been cancelled in the interim?
-    if ( cancelled )
+    // Has the job been cancelled in the interim?
+    // (Due to a Race by the main thread for example)
+    Job * job = JobQueue::Get().OnReturnRemoteJob( jobId );
+    if ( job == nullptr )
     {
         // don't save result as we were cancelled
         return;
@@ -622,7 +618,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             if ( job->GetSystemErrorCount() < SYSTEM_ERROR_ATTEMPT_COUNT )
             {
                 // re-queue job which will be re-attempted on another worker
-                JobQueue::Get().ReturnUnfinishedDistributableJob( job, systemError );
+                JobQueue::Get().ReturnUnfinishedDistributableJob( job );
                 return;
             }
 
@@ -652,7 +648,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                       msgBuffer.Get() );
     }
 
-    JobQueue::Get().FinishedProcessingJob( job, result, true, false ); // remote job, not a race of a remote job
+    JobQueue::Get().FinishedProcessingJob( job, result, true ); // remote job
 }
 
 // Process( MsgRequestManifest )
