@@ -11,6 +11,8 @@
 
 #include "Core/Containers/Array.h"
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Process.h"
 #include "Core/Process/SharedMemory.h"
 #include "Core/Process/SystemMutex.h"
@@ -335,6 +337,27 @@ int Main(int argc, char * argv[])
 
     // Global mutex names depend on workingDir which is managed by FBuildOptions
     FBuildOptions options;
+    if ( configFile )
+    {
+        AStackString<> configDir,configBaseName;
+        bool splitOk = PathUtils::SplitDirFileName(configFile, configDir,configBaseName);
+        if (!splitOk) {
+            OUTPUT( "FBuild: Error: config file '%s' should not be a folder.\n", configFile );
+            return FBUILD_BAD_ARGS;
+        }
+
+        if (!PathUtils::IsFullPath(configDir) )
+        {
+            AStackString<> currentDir;
+            FileIO::GetCurrentDir(currentDir);
+            currentDir.Append(NATIVE_SLASH_STR,1);
+            currentDir.Append(configDir);
+            configDir = currentDir;
+        }
+
+        options.SetWorkingDir(configDir);
+        options.m_ConfigFile = configBaseName;
+    }
 
     if ( wrapperMode == WRAPPER_MODE_INTERMEDIATE_PROCESS )
     {
@@ -429,10 +452,7 @@ int Main(int argc, char * argv[])
     options.m_ForceCleanBuild = cleanBuild;
     options.m_AllowDistributed = allowDistributed;
     options.m_ShowSummary = showSummary;
-    if ( configFile )
-    {
-        options.m_ConfigFile = configFile;
-    }
+    
     options.m_SaveDBOnCompletion = true;
     options.m_GenerateReport = report;
     options.m_WrapperChild = ( wrapperMode == WRAPPER_MODE_FINAL_PROCESS );
