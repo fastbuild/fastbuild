@@ -145,11 +145,26 @@ LinkerNode::~LinkerNode() = default;
         // did the executable fail?
         if ( result != 0 )
         {
-            // did the linker have an ICE (LNK1000)?
-            if ( GetFlag( LINK_FLAG_MSVC ) && ( result == 1000 ) && ( attempt == 1 ) )
+            // Handle bugs in the MSVC linker
+            if ( GetFlag( LINK_FLAG_MSVC ) && ( attempt == 1 ) )
             {
-                FLOG_WARN( "FBuild: Warning: Linker crashed (LNK1000), retrying '%s'", GetName().Get() );
-                continue; // try again
+                // Did the linker have an ICE (crash) (LNK1000)?
+                if ( result == 1000 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker crashed (LNK1000), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
+
+                // Did the linker have an "unexpected PDB error" (LNK1318)?
+                // Example: "fatal error LNK1318: Unexpected PDB error; CORRUPT (13)"
+                // (The linker or mspdbsrv.exe (as of VS2017) seems to have bugs which cause the PDB
+                // to sometimes be corrupted when doing very large links, possibly because the linker
+                // is running out of memory)
+                if ( result == 1318 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker corrupted the PDB (LNK1318), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
             }
 
             if ( memOut.Get() )
