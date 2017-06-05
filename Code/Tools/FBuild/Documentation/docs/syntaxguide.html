@@ -310,6 +310,21 @@ A struct contains a number of properties, isolating them from the current namesp
   .StringB = 'b'    // "extend" - An additional property
 ]
 </div>
+<p>Structs can be concatenated using the plus operator. The plus operator will be applied recursively to each member within the struct.<p>
+<div class='code'>.StructA =
+[
+  .ArrayOfStrings     = { 'String1', 'String2' }
+  .String             = 'String'
+]
+.StructB =
+[
+  .ArrayOfStrings     = { 'String3' }
+  .String             = '!'
+]
+.StructC = .StructA
+         + .StructB
+// StructC now contains .ArrayOfStrings = { 'String1', 'String2', 'String3' } and .String = 'String!'
+</div>
 <p>Looping through arrays of structures is a useful technique for minimizing configuration complexity.<p>
 <div class='code'>.ConfigX86 =
 [ 
