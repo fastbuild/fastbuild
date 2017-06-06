@@ -44,12 +44,12 @@ Worker::Worker( void * hInstance, const AString & args )
 {
     m_WorkerSettings = FNEW( WorkerSettings );
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
+    m_ConnectionPool = FNEW( Server );
     #if defined( __WINDOWS__ )
         m_MainWindow = FNEW( WorkerWindow( hInstance ) );
     #else
         (void)hInstance;
     #endif
-    m_ConnectionPool = FNEW( Server );
 
     Env::GetExePath( m_BaseExeName );
     if ( m_BaseExeName.Replace( ".copy", "" ) != 1 )
