@@ -1519,10 +1519,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue; // skip this token in both cases
                 }
             }
-            if ( isMSVC )
-            {
-                // NOTE: Leave /I includes for compatibility with Recode
-                // (unlike Clang, MSVC is ok with leaving the /I when compiling preprocessed code)
+			if (isMSVC)
+			{
+				// NOTE: Stripping off /I includes drastically shortens the command line for large projects.
+				// This may break support for Recode.
+				// (unlike Clang, MSVC is ok with leaving the /I when compiling preprocessed code)
+
+				if (StripTokenWithArg_MSVC("I", token, i))
+				{
+					continue;
+				}
 
                 // To prevent D8049 "command line is too long to fit in debug record"
                 // we expand relative includes as they would be on the host (so the remote machine's
