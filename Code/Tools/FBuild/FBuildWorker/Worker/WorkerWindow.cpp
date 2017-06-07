@@ -157,24 +157,45 @@ void WorkerWindow::UIUpdateThread()
         m_Font = FNEW( OSFont() );
         m_Font->Init( 14, "Verdana" );
 
-        // Mode drop down
-        m_ModeDropDown = FNEW( OSDropDown( this ) );
-        m_ModeDropDown->SetFont( m_Font );
-        m_ModeDropDown->Init( 100, 3, 200, 200 );
-        m_ModeDropDown->AddItem( "Disabled" );
-        m_ModeDropDown->AddItem( "Work For Others When Idle" );
-        m_ModeDropDown->AddItem( "Work For Others Always" );
-        m_ModeDropDown->SetSelectedItem( WorkerSettings::Get().GetMode() );
+		
+		int32_t xPosition = 5;
+		
 
-        // Mode label
-        m_ModeLabel = FNEW( OSLabel( this ) );
-        m_ModeLabel->SetFont( m_Font );
-        m_ModeLabel->Init( 5, 7, 95, 15, "Current Mode:" );
+		// Resources label
+		m_ResourcesDedicatedLabel = FNEW(OSLabel(this));
+		m_ResourcesDedicatedLabel->SetFont(m_Font);
+		m_ResourcesDedicatedLabel->Init(xPosition, 7, 115, 15, "Dedicated Cores:");
+		xPosition += 115;
+
+		// Resources drop down
+		m_ResourcesDedicatedDropDown = FNEW(OSDropDown(this));
+		m_ResourcesDedicatedDropDown->SetFont(m_Font);
+		m_ResourcesDedicatedDropDown->Init(xPosition, 3, 150, 200);
+		{
+			// add items
+			uint32_t numProcessors = Env::GetNumProcessors();
+			AStackString<> buffer;
+			for (uint32_t i = 0; i < numProcessors; ++i)
+			{
+				float perc = (i == (numProcessors - 1)) ? 100.0f : ((float)(i + 1) / (float)numProcessors) * 100.0f;
+				buffer.Format("%i CPUs (%2.1f%%)", (i + 1), perc);
+				m_ResourcesDedicatedDropDown->AddItem(buffer.Get());
+			}
+		}
+		m_ResourcesDedicatedDropDown->SetSelectedItem(WorkerSettings::Get().GetNumCPUsToUseDedicated() - 1);
+		xPosition += 155;
+
+
+		// Resources label
+		m_ResourcesWhenIdleLabel = FNEW(OSLabel(this));
+		m_ResourcesWhenIdleLabel->SetFont(m_Font);
+		m_ResourcesWhenIdleLabel->Init(xPosition, 7, 115, 15, "Cores When Idle:");
+		xPosition += 115;
 
         // Resources drop down
-        m_ResourcesDropDown = FNEW( OSDropDown( this ) );
-        m_ResourcesDropDown->SetFont( m_Font );
-        m_ResourcesDropDown->Init( 350, 3, 150, 200 );
+		m_ResourcesWhenIdleDropDown = FNEW( OSDropDown( this ) );
+		m_ResourcesWhenIdleDropDown->SetFont( m_Font );
+		m_ResourcesWhenIdleDropDown->Init( xPosition, 3, 150, 200 );
         {
             // add items
             uint32_t numProcessors = Env::GetNumProcessors();
@@ -183,16 +204,13 @@ void WorkerWindow::UIUpdateThread()
             {
                 float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
                 buffer.Format( "%i CPUs (%2.1f%%)", ( i + 1 ), perc );
-                m_ResourcesDropDown->AddItem( buffer.Get() );
+				m_ResourcesWhenIdleDropDown->AddItem( buffer.Get() );
             }
         }
-        m_ResourcesDropDown->SetSelectedItem( WorkerSettings::Get().GetNumCPUsToUse() - 1 );
+        m_ResourcesWhenIdleDropDown->SetSelectedItem( WorkerSettings::Get().GetNumCPUsToUseWhenIdle() - 1 );
+		xPosition += 150;
 
-        // Resources label
-        m_ResourcesLabel = FNEW( OSLabel( this ) );
-        m_ResourcesLabel->SetFont( m_Font );
-        m_ResourcesLabel->Init( 305, 7, 45, 15, "Using:" );
-
+        
         // splitter
         {
             int xPos = 0;
@@ -243,10 +261,10 @@ void WorkerWindow::UIUpdateThread()
 
         // clean up UI resources
         DestroyWindow( m_Splitter );
-        FDELETE( m_ResourcesLabel );
-        FDELETE( m_ResourcesDropDown );
-        FDELETE( m_ModeLabel );
-        FDELETE( m_ModeDropDown );
+        FDELETE( m_ResourcesWhenIdleLabel );
+		FDELETE(m_ResourcesDedicatedLabel);
+        FDELETE( m_ResourcesWhenIdleDropDown );
+		FDELETE(m_ResourcesDedicatedDropDown);
         FDELETE( m_ThreadList );
         DestroyMenu( m_Menu );
         FDELETE( m_Font );
@@ -320,13 +338,13 @@ void WorkerWindow::UIUpdateThread()
 /*virtual*/ void WorkerWindow::OnDropDownSelectionChanged( OSDropDown * dropDown )
 {
     const size_t index = dropDown->GetSelectedItem();
-    if ( dropDown == m_ModeDropDown )
+    if (dropDown == m_ResourcesWhenIdleDropDown)
+	{
+		WorkerSettings::Get().SetNumCPUsToUseWhenIdle((uint32_t)index + 1);
+	}
+    else if ( dropDown == m_ResourcesDedicatedDropDown )
     {
-        WorkerSettings::Get().SetMode( (WorkerSettings::Mode)index );
-    }
-    else if ( dropDown == m_ResourcesDropDown )
-    {
-        WorkerSettings::Get().SetNumCPUsToUse( (uint32_t)index + 1 );
+        WorkerSettings::Get().SetNumCPUsToUseDedicated( (uint32_t)index + 1 );
     }
     WorkerSettings::Get().Save();
 }
