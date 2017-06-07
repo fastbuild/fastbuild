@@ -86,6 +86,8 @@ CopyDirNode::~CopyDirNode() = default;
 {
     (void)forceClean; // dynamic deps are always re-added here, so this is meaningless
 
+    m_DynamicDependencies.Clear();
+
     ASSERT( !m_StaticDependencies.IsEmpty() );
 
     Array< AString > preBuildDependencyNames( m_PreBuildDependencies.GetSize(), false );

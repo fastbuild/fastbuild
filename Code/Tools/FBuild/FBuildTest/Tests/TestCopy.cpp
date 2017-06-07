@@ -30,6 +30,8 @@ private:
     void ChainedCopy_NoRebuild() const;
     void CopyDir() const;
     void CopyDir_NoRebuild() const;
+    void CopyDirDeleteSrc() const;
+    void CopyDirDeleteSrc_NoRebuild() const;
     void CopyEmpty() const;
 };
 
@@ -48,6 +50,8 @@ REGISTER_TESTS_BEGIN( TestCopy )
     REGISTER_TEST( ChainedCopy_NoRebuild )
     REGISTER_TEST( CopyDir )
     REGISTER_TEST( CopyDir_NoRebuild )
+    REGISTER_TEST( CopyDirDeleteSrc)
+    REGISTER_TEST( CopyDirDeleteSrc_NoRebuild)
     REGISTER_TEST( CopyEmpty )
 REGISTER_TESTS_END
 
@@ -363,6 +367,89 @@ void TestCopy::CopyDir_NoRebuild() const
     CheckStatsNode ( 1,     0,      Node::COPY_DIR_NODE );
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsTotal( 6,     3 );
+}
+
+// CopyDirDeleteSrc
+//------------------------------------------------------------------------------
+void TestCopy::CopyDirDeleteSrc() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestCopy/copy.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuild fBuild(options);
+    TEST_ASSERT(fBuild.Initialize());
+
+    AStackString<> srcA("../../../../tmp/Test/Copy/CopyDir/a.txt");
+    AStackString<> srcB("../../../../tmp/Test/Copy/CopyDir/b.txt");
+
+    FileIO::FileCopy("Data/TestCopy/a.txt", srcA.Get(), true);
+    FileIO::FileCopy("Data/TestCopy/a.txt", srcB.Get(), true);
+
+    EnsureFileExists(srcA);
+    EnsureFileExists(srcB);
+
+    AStackString<> dstA("../../../../tmp/Test/Copy/CopyDirDeleteSrc/a.txt");
+    AStackString<> dstB("../../../../tmp/Test/Copy/CopyDirDeleteSrc/b.txt");
+
+    // clean up anything left over from previous runs
+    EnsureFileDoesNotExist(dstA);
+    EnsureFileDoesNotExist(dstB);
+
+    // build (via alias)
+    TEST_ASSERT(fBuild.Build(AStackString<>("CopyDirDeleteSrc")));
+    TEST_ASSERT(fBuild.SaveDependencyGraph("../../../../tmp/Test/Copy/CopyDir/copydirdeletesrc.fdb"));
+
+    // make sure all output is where it is expected
+    EnsureFileExists(dstA);
+    EnsureFileExists(dstB);
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode(2, 2, Node::FILE_NODE);
+    CheckStatsNode(2, 2, Node::COPY_FILE_NODE);
+    CheckStatsNode(1, 1, Node::COPY_DIR_NODE);
+    CheckStatsNode(1, 1, Node::DIRECTORY_LIST_NODE);
+    CheckStatsTotal(6, 6);
+}
+
+// CopyDirDeleteSrc_NoRebuild
+//------------------------------------------------------------------------------
+void TestCopy::CopyDirDeleteSrc_NoRebuild() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestCopy/copy.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuild fBuild(options);
+    TEST_ASSERT(fBuild.Initialize());
+
+    // Delete one of the source files and check rebuild doesn't try to still copy it.
+    AStackString<> srcA("../../../../tmp/Test/Copy/CopyDir/a.txt");
+    AStackString<> srcB("../../../../tmp/Test/Copy/CopyDir/b.txt");
+
+    EnsureFileExists(srcA);
+    EnsureFileDoesNotExist(srcB);
+
+    AStackString<> dstA("../../../../tmp/Test/Copy/CopyDirDeleteSrc/a.txt");
+    AStackString<> dstB("../../../../tmp/Test/Copy/CopyDirDeleteSrc/b.txt");
+
+    // clean up anything left over from previous runs
+    EnsureFileDoesNotExist(dstA);
+    EnsureFileDoesNotExist(dstB);
+
+    // build (via alias)
+    TEST_ASSERT(fBuild.Build(AStackString<>("CopyDirDeleteSrc")));
+    TEST_ASSERT(fBuild.SaveDependencyGraph("../../../../tmp/Test/Copy/CopyDir/copydirdeletesrc.fdb"));
+
+    // make sure all output is where it is expected
+    EnsureFileExists(dstA);
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode(1, 1, Node::FILE_NODE);
+    CheckStatsNode(1, 1, Node::COPY_FILE_NODE);
+    CheckStatsNode(1, 1, Node::COPY_DIR_NODE);
+    CheckStatsNode(1, 1, Node::DIRECTORY_LIST_NODE);
+    CheckStatsTotal(4, 4);
 }
 
 // CopyEmpty
