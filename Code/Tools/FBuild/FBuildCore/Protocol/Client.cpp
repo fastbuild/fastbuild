@@ -228,7 +228,6 @@ void Client::LookForWorkers()
 
             // send connection msg
             Protocol::MsgConnection msg( numJobsAvailable );
-            MutexHolder mh2( ss.m_Mutex );
             msg.Send( ci );
         }
 
