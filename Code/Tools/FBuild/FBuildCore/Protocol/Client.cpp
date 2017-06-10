@@ -275,11 +275,14 @@ void Client::CommunicateJobAvailability()
         if ( it->m_Connection )
         {
             MutexHolder ssMH( it->m_Mutex );
-            if ( it->m_NumJobsAvailable != numJobsAvailable )
+            if ( it->m_Connection )
             {
-                PROFILE_SECTION( "UpdateJobAvailability" )
-                msg.Send( it->m_Connection );
-                it->m_NumJobsAvailable = numJobsAvailable;
+                if ( it->m_NumJobsAvailable != numJobsAvailable )
+                {
+                    PROFILE_SECTION( "UpdateJobAvailability" )
+                    msg.Send( it->m_Connection );
+                    it->m_NumJobsAvailable = numJobsAvailable;
+                }
             }
         }
         ++it;
