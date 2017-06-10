@@ -224,7 +224,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
 
     // set send/recv timeout
     #if defined( __APPLE__ )
-        uint32_t bufferSize = ( 5 * 1024 * 1024 ); // larger values fail on OS X
+        uint32_t bufferSize = ( 7 * 1024 * 1024 ); // larger values fail on OS X
     #else
         uint32_t bufferSize = ( 10 * 1024 * 1024 );
     #endif
@@ -833,7 +833,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
 
         // set send/recv timeout
         #if defined( __APPLE__ )
-            uint32_t bufferSize = ( 5 * 1024 * 1024 ); // larger values fail on OS X
+            uint32_t bufferSize = ( 7 * 1024 * 1024 ); // larger values fail on OS X
         #else
             uint32_t bufferSize = ( 10 * 1024 * 1024 );
         #endif
