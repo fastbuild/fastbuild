@@ -175,7 +175,6 @@ Compiler( 'Compiler-x64-OSX' )
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
     .DeoptimizeWritableFilesWithToken   = true
     .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
-    .PCHOptionsDeoptimized          = '$PCHOptions$ /Od'
 
     .CompilerOptions        + .CompilerReleaseOptimizations
     .PCHOptions             + .CompilerReleaseOptimizations
@@ -228,7 +227,6 @@ Compiler( 'Compiler-x64-OSX' )
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
     .DeoptimizeWritableFilesWithToken   = true
     .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
-    .PCHOptionsDeoptimized          = '$PCHOptions$ /Od'
 
     .CompilerOptions        + .CompilerReleaseOptimizations
     .PCHOptions             + .CompilerReleaseOptimizations
@@ -344,7 +342,6 @@ Compiler( 'Compiler-x64-OSX' )
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
     .DeoptimizeWritableFilesWithToken   = true
     .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
-    .PCHOptionsDeoptimized          = '$PCHOptions$ /Od'
 
     .CompilerOptions        + .CompilerReleaseOptimizations
     .PCHOptions             + .CompilerReleaseOptimizations
@@ -515,7 +512,6 @@ Compiler( 'Compiler-x64-OSX' )
 //------------------------------------------------------------------------------
 // VisualStudio Project Generation
 //------------------------------------------------------------------------------
-.ProjectSccEntrySAK = true
 .ProjectCommon =
 [
     .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -cache ^$(ProjectName)-^$(Configuration)'
