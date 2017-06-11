@@ -152,6 +152,7 @@ Compiler( 'Compiler-x64-OSX' )
     .LinkerOptions          + ' /MACHINE:X86'
     .Platform               = 'x86'
     .LinkerOptions          + ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib"'
+                            + ' /LARGEADDRESSAWARE'
 ]
 .X86DebugConfig =
 [
