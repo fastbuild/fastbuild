@@ -222,25 +222,10 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         return nullptr;
     }
 
-    // set send/recv timeout
-    #if defined( __APPLE__ )
-        uint32_t bufferSize = ( 7 * 1024 * 1024 ); // larger values fail on OS X
-    #else
-        uint32_t bufferSize = ( 10 * 1024 * 1024 );
-    #endif
-    int ret = setsockopt( sockfd, SOL_SOCKET, SO_RCVBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
-    if ( ret != 0 )
+    // Set send/recv buffer sizes
+    if ( !SetBufferSizes( sockfd ) )
     {
-        TCPDEBUG( "setsockopt SO_RCVBUF failed: %i\n", GetLastError() );
-        CloseSocket( sockfd );
-        return nullptr;
-    }
-    ret = setsockopt( sockfd, SOL_SOCKET, SO_SNDBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
-    if ( ret != 0 )
-    {
-        TCPDEBUG( "setsockopt SO_SNDBUF failed: %i\n", GetLastError() );
-        CloseSocket( sockfd );
-        return nullptr;
+        return nullptr; // SetBufferSizes will close socket
     }
 
     if ( !DisableNagle( sockfd ) )
@@ -822,32 +807,12 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         #endif
 
         // set non-blocking
-        u_long nonBlocking = 1;
-        #if defined( __WINDOWS__ )
-            ioctlsocket( newSocket, FIONBIO, &nonBlocking );
-        #elif defined( __APPLE__ ) || defined( __LINUX__ )
-            ioctl( newSocket, FIONBIO, &nonBlocking );
-        #else
-            #error Unknown platform
-        #endif
+        SetNonBlocking( newSocket, true );
 
-        // set send/recv timeout
-        #if defined( __APPLE__ )
-            uint32_t bufferSize = ( 7 * 1024 * 1024 ); // larger values fail on OS X
-        #else
-            uint32_t bufferSize = ( 10 * 1024 * 1024 );
-        #endif
-        int ret = setsockopt( newSocket, SOL_SOCKET, SO_RCVBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
-        if ( ret != 0 )
+        // Set send/recv buffer sizes
+        if ( !SetBufferSizes( newSocket ) )
         {
-            TCPDEBUG( "setsockopt SO_RCVBUF failed: %i\n", GetLastError() );
-            break;
-        }
-        ret = setsockopt( newSocket, SOL_SOCKET, SO_SNDBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
-        if ( ret != 0 )
-        {
-            TCPDEBUG( "setsockopt SO_SNDBUF failed: %i\n", GetLastError() );
-            break;
+            break; // SetBufferSizes will close socket
         }
 
         // keep the new connected socket
@@ -1006,6 +971,54 @@ bool TCPConnectionPool::DisableNagle( TCPSocket sockfd )
         return false;
     }
     return true;
+}
+
+// SetBufferSizes
+//------------------------------------------------------------------------------
+bool TCPConnectionPool::SetBufferSizes( TCPSocket socket )
+{
+    #if defined( __APPLE__ )
+        const uint32_t bufferSize = ( 5 * 1024 * 1024 ); // larger values fail on OS X
+    #else
+        const uint32_t bufferSize = ( 10 * 1024 * 1024 );
+    #endif
+
+    // Receive Buffer
+    {
+        int ret = setsockopt( socket, SOL_SOCKET, SO_RCVBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
+        if ( ret != 0 )
+        {
+            TCPDEBUG( "setsockopt SO_RCVBUF failed: %i\n", GetLastError() );
+            CloseSocket( socket );
+            return false;
+        }
+    }
+
+    // Send Buffer
+    {
+        int ret = setsockopt( socket, SOL_SOCKET, SO_SNDBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
+        if ( ret != 0 )
+        {
+            TCPDEBUG( "setsockopt SO_SNDBUF failed: %i\n", GetLastError() );
+            CloseSocket( socket );
+            return false;
+        }
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------
+void TCPConnectionPool::SetNonBlocking( TCPSocket socket, bool nonBlocking ) const
+{
+    u_long optionValue = ( nonBlocking ? 1 : 0 );
+    #if defined( __WINDOWS__ )
+        ioctlsocket( socket, FIONBIO, &optionValue );
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        ioctl( socket, FIONBIO, &optionValue );
+    #else
+        #error Unknown platform
+    #endif
 }
 
 //------------------------------------------------------------------------------

@@ -125,6 +125,8 @@ private:
 
     // internal helpers
     bool                DisableNagle( TCPSocket sockfd );
+    bool                SetBufferSizes( TCPSocket socket );
+    void                SetNonBlocking( TCPSocket socket, bool nonBlocking ) const;
 
     // listen socket related info
     ConnectionInfo *            m_ListenConnection;
