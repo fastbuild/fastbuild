@@ -35,6 +35,7 @@ public:
     bool m_FixupErrorPaths;
     bool m_StopOnFirstError;
     bool m_EnableMonitor;
+    bool m_DistVerbose;
     uint32_t m_NumWorkerThreads;
     AString m_ConfigFile;
 

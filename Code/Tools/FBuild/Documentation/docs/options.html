@@ -39,6 +39,10 @@
     <td>Enable distributed compilation.</td>
   </tr>
   <tr>
+    <td><a href="#distverbose">-distverbose</a></td>
+    <td>Enable detailed logging for distributed compilation.</td>
+  </tr>
+  <tr>
     <td><a href="#fixuperrorpaths">-fixuperrorpaths</a></td>
     <td>Reformat GCC/SNC/Clang error messages in Visual Studio format.</td>
   </tr>
@@ -154,6 +158,11 @@ specified instead.</p>
 <p>Enable distributed compilation. Requires some build configuration.</p>
 </div>
 
+    <div class='newsitemheader' id="distverbose">-distverbose</div>
+    <div class='newsitembody'>
+<p>Print detailed information about distributed compilation. This can help when investigating connectivity issues. Activates -dist if not already specified.</p>
+</div>
+
     <div class='newsitemheader' id="fixuperrorpaths">-fixuperrorpaths</div>
     <div class='newsitembody'>
 <p>Enables re-formatting of warnings, errors and notes for GCC/SNC & Clang to Visual Studio format. Additionally, relative paths are expanded to full paths. This allows these errors to be double-clickable inside Visual Studio.</p>
@@ -239,7 +248,7 @@ suppressed.</p>
 
     <div class='newsitemheader' id="showtargets">-showtargets</div>
     <div class='newsitembody'>
-<p>Displays the list of targets defined in the bff configuraiton file.</p>
+<p>Displays the list of targets defined in the bff configuration file.</p>
 <p></p>
 </div>
 

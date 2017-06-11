@@ -24,6 +24,7 @@ class IOStream;
 class JobQueue;
 class Node;
 class NodeGraph;
+class SettingsNode;
 
 // FBuild
 //------------------------------------------------------------------------------
@@ -52,17 +53,10 @@ public:
 
     static const char * GetDefaultBFFFileName();
 
-    const AString & GetCachePath() const { return m_CachePath; }
-    void SetCachePath( const AString & path );
-
-    const AString & GetCachePluginDLL() const { return m_CachePluginDLL; }
-    void SetCachePluginDLL( const AString & plugin ) { m_CachePluginDLL = plugin; }
+    inline const SettingsNode * GetSettings() const { return m_Settings; }
 
     void GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD,
                            AString & path ) const;
-
-    void SetWorkerList( const Array< AString > & workers )      { m_WorkerList = workers; }
-    const Array< AString > & GetWorkerList() const { return m_WorkerList; }
 
     void SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar );
     inline const char * GetEnvironmentString() const            { return m_EnvironmentString; }
@@ -115,9 +109,9 @@ private:
     Client * m_Client; // manage connections to worker servers
 
     AString m_DependencyGraphFile;
-    AString m_CachePluginDLL;
-    AString m_CachePath;
     ICache * m_Cache;
+
+    SettingsNode * m_Settings;
 
     Timer m_Timer;
     float m_LastProgressOutputTime;
@@ -130,8 +124,6 @@ private:
     FBuildOptions m_Options;
 
     WorkerBrokerage m_WorkerBrokerage;
-
-    Array< AString > m_WorkerList;
 
     AString m_OldWorkingDir;
 

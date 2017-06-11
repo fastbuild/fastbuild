@@ -118,6 +118,7 @@ int Main(int argc, char * argv[])
     bool noStopOnError = false;
     bool displayTargetList = false;
     bool enableMonitor = false;
+    bool distVerbose = false;
     int32_t numWorkers = -1;
     WrapperMode wrapperMode( WRAPPER_MODE_NONE );
     AStackString<> args;
@@ -179,6 +180,12 @@ int Main(int argc, char * argv[])
             else if ( thisArg == "-dist" )
             {
                 allowDistributed = true;
+                continue;
+            }
+            else if ( thisArg == "-distverbose" )
+            {
+                allowDistributed = true;
+                distVerbose = true;
                 continue;
             }
             else if ( thisArg == "-fixuperrorpaths" )
@@ -442,6 +449,7 @@ int Main(int argc, char * argv[])
     {
         options.m_StopOnFirstError = false; // when building multiple targets, try to build as much as possible
     }
+    options.m_DistVerbose = distVerbose;
     FBuild fBuild( options );
 
     if ( targets.IsEmpty() )
@@ -506,6 +514,7 @@ void DisplayHelp()
     OUTPUT( " -debug         Break at startup, to attach debugger.\n" );
 #endif
     OUTPUT( " -dist          Allow distributed compilation.\n"
+            " -distverbose   Print detailed info for distributed compilation.\n"
             " -fixuperrorpaths Reformat error paths to be Visual Studio friendly.\n"
             " -help          Show this help.\n"
             " -ide           Enable multiple options when building from an IDE.\n"

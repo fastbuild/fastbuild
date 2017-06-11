@@ -27,16 +27,20 @@
 // Defines
 //------------------------------------------------------------------------------
 #define CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS ( 0.1f )
-#define CONNECTION_LIMIT ( 15 )
 #define CONNECTION_REATTEMPT_DELAY_TIME ( 10.0f )
 #define SYSTEM_ERROR_ATTEMPT_COUNT ( 3 )
+#define DIST_INFO( ... ) if ( m_DetailedLogging ) { FLOG_BUILD( __VA_ARGS__ ); }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Client::Client( const Array< AString > & workerList )
+Client::Client( const Array< AString > & workerList,
+                uint32_t workerConnectionLimit,
+                bool detailedLogging )
     : m_WorkerList( workerList )
     , m_ShouldExit( false )
     , m_Exited( false )
+    , m_DetailedLogging( detailedLogging )
+    , m_WorkerConnectionLimit( workerConnectionLimit )
 {
     // allocate space for server states
     m_ServerList.SetSize( workerList.GetSize() );
@@ -74,6 +78,7 @@ Client::~Client()
     ASSERT( ss );
 
     MutexHolder mh( ss->m_Mutex );
+    DIST_INFO( "Disconnected: %s\n", ss->m_RemoteName.Get() );
     if ( ss->m_Jobs.IsEmpty() == false )
     {
         Job ** it = ss->m_Jobs.Begin();
@@ -167,7 +172,7 @@ void Client::LookForWorkers()
     }
 
     // limit maximum concurrent connections
-    if ( numConnections >= CONNECTION_LIMIT )
+    if ( numConnections >= m_WorkerConnectionLimit )
     {
         return;
     }
@@ -180,7 +185,7 @@ void Client::LookForWorkers()
 
     // randomize the start index to better distribute workers when there
     // are many workers/clients - otherwise all clients will attempt to connect
-    // to the first CONNECTION_LIMIT workers
+    // to the same subset of workers
     Random r;
     size_t startIndex = r.GetRandIndex( (uint32_t)numWorkers );
 
@@ -218,6 +223,7 @@ void Client::LookForWorkers()
         }
         else
         {
+            DIST_INFO( "Connected: %s\n", m_WorkerList[ i ].Get() );
             const uint32_t numJobsAvailable( JobQueue::IsValid() ? (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable() : 0 );
 
             ci->SetUserData( &ss );
@@ -228,7 +234,7 @@ void Client::LookForWorkers()
 
             // send connection msg
             Protocol::MsgConnection msg( numJobsAvailable );
-            msg.Send( ci );
+            SendMessageInternal( ci, msg );
         }
 
         // limit to one connection attempt per iteration
@@ -279,7 +285,7 @@ void Client::CommunicateJobAvailability()
                 if ( it->m_NumJobsAvailable != numJobsAvailable )
                 {
                     PROFILE_SECTION( "UpdateJobAvailability" )
-                    msg.Send( it->m_Connection );
+                    SendMessageInternal( it->m_Connection, msg );
                     it->m_NumJobsAvailable = numJobsAvailable;
                 }
             }
@@ -306,6 +312,7 @@ void Client::CheckForTimeouts()
         {
             if ( ss.m_StatusTimer.GetElapsedMS() >= Protocol::SERVER_STATUS_TIMEOUT_MS )
             {
+                DIST_INFO( "Timed out: %s\n", ss.m_RemoteName.Get() );
                 Disconnect( ss.m_Connection );
             }
         }
@@ -314,6 +321,37 @@ void Client::CheckForTimeouts()
             ASSERT( ss.m_Jobs.IsEmpty() );
         }
     }
+}
+
+// SendMessageInternal
+//------------------------------------------------------------------------------
+void Client::SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg )
+{
+    if ( msg.Send( connection ) )
+    {
+        return;
+    }
+
+    DIST_INFO( "Send Failed: %s (Type: %u, Size: %u)\n",
+                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
+                (uint32_t)msg.GetType(),
+                msg.GetSize() );
+}
+
+// SendMessageInternal
+//------------------------------------------------------------------------------
+void Client::SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream )
+{
+    if ( msg.Send( connection, memoryStream ) )
+    {
+        return;
+    }
+
+    DIST_INFO( "Send Failed: %s (Type: %u, Size: %u, Payload: %u)\n",
+                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
+                (uint32_t)msg.GetType(),
+                msg.GetSize(),
+                (uint32_t)memoryStream.GetSize() );
 }
 
 // OnReceive
@@ -389,6 +427,7 @@ void Client::CheckForTimeouts()
         {
             // unknown message type
             ASSERT( false ); // this indicates a protocol bug
+            DIST_INFO( "Protocol Error: %s\n", ss->m_RemoteName.Get() );
             Disconnect( connection );
             break;
         }
@@ -419,7 +458,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     {
         MutexHolder mh( ss->m_Mutex );
         Protocol::MsgNoJobAvailable msg;
-        msg.Send( connection );
+        SendMessageInternal( connection, msg );
         return;
     }
 
@@ -431,7 +470,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
         // (we completed or gave away the job already)
         MutexHolder mh( ss->m_Mutex );
         Protocol::MsgNoJobAvailable msg;
-        msg.Send( connection );
+        SendMessageInternal( connection, msg );
         return;
     }
 
@@ -456,7 +495,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     {
         PROFILE_SECTION( "SendJob" )
         Protocol::MsgJob msg( toolId );
-        msg.Send( connection, stream );
+        SendMessageInternal( connection, msg, stream );
     }
 }
 
@@ -508,6 +547,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         // don't save result as we were cancelled
         return;
     }
+
+    DIST_INFO( "Got Result: %s - %s\n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
 
     if ( result == true )
     {

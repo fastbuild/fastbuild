@@ -17,6 +17,7 @@
 #include "Graph/Node.h"
 #include "Graph/NodeGraph.h"
 #include "Graph/NodeProxy.h"
+#include "Graph/SettingsNode.h"
 #include "Helpers/Report.h"
 #include "Protocol/Client.h"
 #include "Protocol/Protocol.h"
@@ -55,11 +56,11 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_JobQueue( nullptr )
     , m_Client( nullptr )
     , m_Cache( nullptr )
+    , m_Settings( nullptr )
     , m_LastProgressOutputTime( 0.0f )
     , m_LastProgressCalcTime( 0.0f )
     , m_SmoothedProgressCurrent( 0.0f )
     , m_SmoothedProgressTarget( 0.0f )
-    , m_WorkerList( 0, true )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
     , m_ImportedEnvironmentVars( 0, true )
@@ -79,16 +80,6 @@ FBuild::FBuild( const FBuildOptions & options )
 
     // track the old working dir to restore if modified (mainly for unit tests)
     VERIFY( FileIO::GetCurrentDir( m_OldWorkingDir ) );
-
-    // check for cache environment variable to use as default
-    AStackString<> cachePath;
-    if ( Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", cachePath ) )
-    {
-        if ( cachePath.IsEmpty() == false )
-        {
-            SetCachePath( cachePath );
-        }
-    }
 
     // poke options where required
     FLog::SetShowInfo( m_Options.m_ShowInfo );
@@ -168,19 +159,24 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         return false;
     }
 
+    // Store a pointer to the SettingsNode as defined by the BFF, or create a
+    // default instance if needed.
+    const Node * settingsNode = m_DependencyGraph->FindNode( AStackString<>( "$$Settings$$" ) );
+    m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : m_DependencyGraph->CreateSettingsNode( AStackString<>( "$$Settings$$" ) ); // Create a default
+
     // if the cache is enabled, make sure the path is set and accessible
     if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite )
     {
-        if ( !m_CachePluginDLL.IsEmpty() )
+        if ( !m_Settings->GetCachePluginDLL().IsEmpty() )
         {
-            m_Cache = FNEW( CachePlugin( m_CachePluginDLL ) );
+            m_Cache = FNEW( CachePlugin( m_Settings->GetCachePluginDLL() ) );
         }
         else
         {
             m_Cache = FNEW( Cache() );
         }
 
-        if ( m_Cache->Init( m_CachePath ) == false )
+        if ( m_Cache->Init( m_Settings->GetCachePath() ) == false )
         {
             m_Options.m_UseCacheRead = false;
             m_Options.m_UseCacheWrite = false;
@@ -192,7 +188,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     if ( m_Options.m_AllowDistributed )
     {
         Array< AString > workers;
-        if ( m_WorkerList.IsEmpty() )
+        if ( m_Settings->GetWorkerList().IsEmpty() )
         {
             // check for workers through brokerage
             // TODO:C This could be moved out of the main code path
@@ -200,7 +196,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         }
         else
         {
-            workers = m_WorkerList;
+            workers = m_Settings->GetWorkerList();
         }
 
         if ( workers.IsEmpty() )
@@ -211,7 +207,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         else
         {
             OUTPUT( "Distributed Compilation : %u Workers in pool\n", workers.GetSize() );
-            m_Client = FNEW( Client( workers ) );
+            m_Client = FNEW( Client( workers, m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
         }
     }
 
@@ -634,13 +630,6 @@ void FBuild::UpdateBuildStatus( const Node * node )
     return "fbuild.bff";
 }
 
-// SetCachePath
-//------------------------------------------------------------------------------
-void FBuild::SetCachePath( const AString & path )
-{
-    m_CachePath = path;
-}
-
 // GetCacheFileName
 //------------------------------------------------------------------------------
 void FBuild::GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD, AString & path ) const
@@ -684,6 +673,7 @@ void FBuild::DisplayTargetList() const
             case Node::SLN_NODE:            break;
             case Node::REMOVE_DIR_NODE:     break;
             case Node::XCODEPROJECT_NODE:   break;
+            case Node::SETTINGS_NODE:       break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
         if ( displayName )
