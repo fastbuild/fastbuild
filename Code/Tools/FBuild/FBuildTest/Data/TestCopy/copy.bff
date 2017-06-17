@@ -80,9 +80,9 @@ CopyDir( 'CopyDir' )
 //
 CopyDir( 'CopyDirDeleteSrc' )
 {
-    .SourcePaths        = '$Out$/Test/Copy/CopyDir/'
+    .SourcePaths        = '$Out$/Test/Copy/CopyDirDeleteSrc/Src/'
     .SourcePathsPattern = '*.txt'
-    .Dest               = '$Out$/Test/Copy/CopyDirDeleteSrc/'
+    .Dest               = '$Out$/Test/Copy/CopyDirDeleteSrc/Dst/'
 }
 
 //
