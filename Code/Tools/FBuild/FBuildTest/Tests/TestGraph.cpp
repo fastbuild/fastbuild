@@ -110,7 +110,7 @@ void TestGraph::TestNodeTypes() const
         #endif
         TEST_ASSERT( n->GetType() == Node::COPY_FILE_NODE );
         TEST_ASSERT( CopyFileNode::GetTypeS() == Node::COPY_FILE_NODE );
-        TEST_ASSERT( AStackString<>( "Copy" ) == n->GetTypeName() );
+        TEST_ASSERT( AStackString<>( "CopyFile" ) == n->GetTypeName() );
     }
 
     Array< AString > patterns;

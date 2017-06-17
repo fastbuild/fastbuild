@@ -55,7 +55,7 @@
 /*static*/ const char * const Node::s_NodeTypeNames[] =
 {
     "Proxy",
-    "Copy",
+    "CopyFile",
     "Directory",
     "Exec",
     "File",
@@ -70,9 +70,9 @@
     "DLL",
     "VCXProj",
     "ObjectList",
-    "CopyDirNode",
+    "CopyDir",
     "SLN",
-    "RemoveDirNode",
+    "RemoveDir",
     "XCodeProj",
     "Settings",
 };
