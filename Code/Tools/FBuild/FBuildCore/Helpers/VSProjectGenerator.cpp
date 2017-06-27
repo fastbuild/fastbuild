@@ -525,7 +525,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "Xbox360DebuggerCommand",          cIt->m_Xbox360DebuggerCommand );
             WritePGItem( "DebuggerFlavor",                  cIt->m_DebuggerFlavor );
             WritePGItem( "AumidOverride",                   cIt->m_AumidOverride );
-            WritePGItem( "LocalDebuggerType",               cIt->m_LocalDebuggerType );
+            WritePGItem( "LocalDebuggerDebuggerType",       cIt->m_LocalDebuggerType );
             WritePGItem( "LocalDebuggerWorkingDirectory",   cIt->m_LocalDebuggerWorkingDirectory );
             WritePGItem( "IntDir",                          cIt->m_IntermediateDirectory );
             WritePGItem( "OutDir",                          cIt->m_OutputDirectory );
