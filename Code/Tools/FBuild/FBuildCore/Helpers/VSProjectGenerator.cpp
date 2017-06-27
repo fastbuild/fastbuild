@@ -525,6 +525,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "Xbox360DebuggerCommand",          cIt->m_Xbox360DebuggerCommand );
             WritePGItem( "DebuggerFlavor",                  cIt->m_DebuggerFlavor );
             WritePGItem( "AumidOverride",                   cIt->m_AumidOverride );
+            WritePGItem( "LocalDebuggerType",               cIt->m_LocalDebuggerType );
             WritePGItem( "LocalDebuggerWorkingDirectory",   cIt->m_LocalDebuggerWorkingDirectory );
             WritePGItem( "IntDir",                          cIt->m_IntermediateDirectory );
             WritePGItem( "OutDir",                          cIt->m_OutputDirectory );
@@ -771,6 +772,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         stream.Write( cfg.m_LocalDebuggerCommandArguments );
         stream.Write( cfg.m_LocalDebuggerWorkingDirectory );
         stream.Write( cfg.m_LocalDebuggerCommand );
+        stream.Write( cfg.m_LocalDebuggerType );
         stream.Write( cfg.m_LocalDebuggerEnvironment );
         stream.Write( cfg.m_WebBrowserDebuggerHttpUrl );
         stream.Write( cfg.m_ProjectBuildType );
@@ -836,6 +838,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( stream.Read( cfg.m_LocalDebuggerCommandArguments ) == false ) { return false; }
         if ( stream.Read( cfg.m_LocalDebuggerWorkingDirectory ) == false ) { return false; }
         if ( stream.Read( cfg.m_LocalDebuggerCommand ) == false ) { return false; }
+        if ( stream.Read( cfg.m_LocalDebuggerType ) == false ) { return false; }
         if ( stream.Read( cfg.m_LocalDebuggerEnvironment ) == false ) { return false; }
         if ( stream.Read( cfg.m_WebBrowserDebuggerHttpUrl ) == false ) { return false; }
 

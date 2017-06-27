@@ -60,6 +60,7 @@ public:
     AString m_LocalDebuggerCommandArguments;
     AString m_LocalDebuggerWorkingDirectory;
     AString m_LocalDebuggerCommand;
+    AString m_LocalDebuggerType;
     AString m_LocalDebuggerEnvironment;
     AString m_WebBrowserDebuggerHttpUrl;
     AString m_ProjectBuildType;

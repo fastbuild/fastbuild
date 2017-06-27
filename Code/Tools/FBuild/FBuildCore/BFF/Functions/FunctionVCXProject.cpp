@@ -183,6 +183,7 @@ FunctionVCXProject::FunctionVCXProject()
          !GetString( funcStartIter, baseConfig.m_LocalDebuggerCommandArguments, ".LocalDebuggerCommandArguments", false ) ||
          !GetString( funcStartIter, baseConfig.m_LocalDebuggerWorkingDirectory, ".LocalDebuggerWorkingDirectory", false ) ||
          !GetString( funcStartIter, baseConfig.m_LocalDebuggerCommand,          ".LocalDebuggerCommand", false ) ||
+         !GetString( funcStartIter, baseConfig.m_LocalDebuggerType,             ".LocalDebuggerCommand", false ) ||
          !GetString( funcStartIter, baseConfig.m_LocalDebuggerEnvironment,      ".LocalDebuggerEnvironment", false ) ||
          !GetString( funcStartIter, baseConfig.m_WebBrowserDebuggerHttpUrl,     ".WebBrowserDebuggerHttpUrl", false ) ||
          !GetString( funcStartIter, baseConfig.m_ProjectBuildType,      ".ProjectBuildType", false ) )
@@ -274,6 +275,7 @@ FunctionVCXProject::FunctionVCXProject()
             GetStringFromStruct( s, ".LocalDebuggerCommandArguments",   newConfig.m_LocalDebuggerCommandArguments );
             GetStringFromStruct( s, ".LocalDebuggerWorkingDirectory",   newConfig.m_LocalDebuggerWorkingDirectory );
             GetStringFromStruct( s, ".LocalDebuggerCommand",            newConfig.m_LocalDebuggerCommand );
+            GetStringFromStruct( s, ".LocalDebuggerType",               newConfig.m_LocalDebuggerType );
             GetStringFromStruct( s, ".LocalDebuggerEnvironment",        newConfig.m_LocalDebuggerEnvironment );
             GetStringFromStruct( s, ".WebBrowserDebuggerHttpUrl",       newConfig.m_WebBrowserDebuggerHttpUrl );
             GetStringFromStruct( s, ".ProjectBuildType",        newConfig.m_ProjectBuildType );
