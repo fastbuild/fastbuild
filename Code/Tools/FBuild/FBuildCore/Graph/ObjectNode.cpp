@@ -758,11 +758,70 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     flags |= ( usingPCH     ? ObjectNode::FLAG_USING_PCH : 0 );
 
     const AString & compiler = compilerNode->GetName();
-    const bool isDistributableCompiler = ( compilerNode->GetType() == Node::COMPILER_NODE ) &&
+    const bool isCompilerNode = (compilerNode->GetType() == Node::COMPILER_NODE);
+    const bool isDistributableCompiler = isCompilerNode &&
                                          ( compilerNode->CastTo< CompilerNode >()->CanBeDistributed() );
 
+    bool compilerTypeSpecified = false;
+    if (isCompilerNode)
+    {
+        const AString &compilerFamily = compilerNode->CastTo< CompilerNode >()->GetCompilerFamily();
+        if (!compilerFamily.IsEmpty())
+        {
+            compilerTypeSpecified = true;
+            static AString strMSVC("msvc");
+            static AString strClang("clang");
+            static AString strGCC("gcc");
+            static AString strSNC("snc");
+            static AString strWii("codewarrior_wii");
+            static AString strWiiU("greenhills_wiiu");
+            static AString strNVCC("cuda_nvcc");
+            static AString strRCC("qt_rcc");
+
+            if (0 == compilerFamily.CompareI(strMSVC))
+            {
+                flags |= ObjectNode::FLAG_MSVC;
+            }
+            else if (0 == compilerFamily.CompareI(strClang))
+            {
+                flags |= ObjectNode::FLAG_CLANG;
+            }
+            else if (0 == compilerFamily.CompareI(strGCC))
+            {
+                flags |= ObjectNode::FLAG_GCC;
+            }
+            else if (0 == compilerFamily.CompareI(strSNC))
+            {
+                flags |= ObjectNode::FLAG_SNC;
+            }
+            else if (0 == compilerFamily.CompareI(strWii))
+            {
+                flags |= ObjectNode::CODEWARRIOR_WII;
+            }
+            else if (0 == compilerFamily.CompareI(strWiiU))
+            {
+                flags |= ObjectNode::GREENHILLS_WIIU;
+            }
+            else if (0 == compilerFamily.CompareI(strNVCC))
+            {
+                flags |= ObjectNode::FLAG_CUDA_NVCC;
+            }
+            else if (0 == compilerFamily.CompareI(strRCC))
+            {
+                flags |= ObjectNode::FLAG_QT_RCC;
+            }
+            else
+            {
+                compilerTypeSpecified = false;
+            }
+        }
+    }
+
     // Compiler Type
-    if ( compiler.EndsWithI( "\\cl.exe" ) ||
+    if (compilerTypeSpecified)
+    {
+    }
+    else if ( compiler.EndsWithI( "\\cl.exe" ) ||
          compiler.EndsWithI( "\\cl" ) ||
          compiler.EndsWithI( "\\icl.exe" ) ||
          compiler.EndsWithI( "\\icl" ) )

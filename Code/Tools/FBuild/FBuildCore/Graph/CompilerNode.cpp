@@ -26,6 +26,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaName( "Executable" ) + MetaFile() )
     REFLECT( m_ClangRewriteIncludes, "ClangRewriteIncludes", MetaOptional() )
     REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
     REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
+    REFLECT( m_CompilerFamily, "CompilerFamily", MetaOptional() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
