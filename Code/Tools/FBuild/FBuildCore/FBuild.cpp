@@ -692,4 +692,10 @@ void FBuild::DisplayTargetList() const
     }
 }
 
+void FBuild::DisplayDependencyDB() const
+{
+    OUTPUT("FBuild: Dependency database\n");
+    m_DependencyGraph->Display();
+}
+
 //------------------------------------------------------------------------------

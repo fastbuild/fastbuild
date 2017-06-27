@@ -110,6 +110,7 @@ int Main(int argc, char * argv[])
     bool waitMode = false;
     bool noStopOnError = false;
     bool displayTargetList = false;
+    bool displayDependencyDB = false;
     bool enableMonitor = false;
     int32_t numWorkers = -1;
     WrapperMode wrapperMode( WRAPPER_MODE_NONE );
@@ -217,6 +218,11 @@ int Main(int argc, char * argv[])
             else if ( thisArg == "-showcmds" )
             {
                 showCommands = true;
+                continue;
+            }
+            else if ( thisArg == "-showdeps" )
+            {
+                displayDependencyDB = true;
                 continue;
             }
             else if ( thisArg == "-showtargets" )
@@ -448,6 +454,12 @@ int Main(int argc, char * argv[])
     if ( displayTargetList )
     {
         fBuild.DisplayTargetList();
+        return FBUILD_OK;
+    }
+
+    if (displayDependencyDB)
+    {
+        fBuild.DisplayDependencyDB();
         return FBUILD_OK;
     }
 
