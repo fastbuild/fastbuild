@@ -212,7 +212,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         }
         else
         {
-            OUTPUT( "Distributed Compilation : %u Workers in pool\n", (uint32_t)workers.GetSize() );
+            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRoot().Get() );
             m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
         }
     }

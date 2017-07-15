@@ -18,6 +18,8 @@ public:
     WorkerBrokerage();
     ~WorkerBrokerage();
 
+    inline const AString & GetBrokerageRoot() const { return m_BrokerageRoot; }
+
     // client interface
     void FindWorkers( Array< AString > & workerList );
 
