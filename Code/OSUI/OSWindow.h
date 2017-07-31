@@ -40,6 +40,7 @@ public:
     #endif
 
     void SetTitle( const char * title );
+    void Enable( void * handle, bool enable );
 
     // Events for derived classes to respond to
     virtual bool OnMinimize();

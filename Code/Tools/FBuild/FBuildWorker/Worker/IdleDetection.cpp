@@ -25,7 +25,6 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define IDLE_DETECTION_THRESHOLD_PERCENT ( 20.0f )
 #define IDLE_CHECK_DELAY_SECONDS ( 0.1f )
 
 // CONSTRUCTOR
@@ -55,10 +54,10 @@ IdleDetection::~IdleDetection() = default;
 
 // Update
 //------------------------------------------------------------------------------
-void IdleDetection::Update()
+void IdleDetection::Update( uint32_t idleThresholdPercent )
 {
     // apply smoothing based on current "idle" state
-    if ( IsIdleInternal() )
+    if ( IsIdleInternal( idleThresholdPercent ) )
     {
         ++m_IdleSmoother;
     }
@@ -81,7 +80,7 @@ void IdleDetection::Update()
 
 //
 //------------------------------------------------------------------------------
-bool IdleDetection::IsIdleInternal()
+bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent )
 {
     // determine total cpu time (including idle)
     uint64_t systemTime = 0;
@@ -104,7 +103,7 @@ bool IdleDetection::IsIdleInternal()
 
     // if the total CPU time is below the idle theshold, we don't need to
     // check to know acurately what the cpu use of FASTBuild is
-    if ( m_CPUUsageTotal < IDLE_DETECTION_THRESHOLD_PERCENT )
+    if ( m_CPUUsageTotal < idleThresholdPercent )
     {
         return true;
     }
@@ -143,7 +142,7 @@ bool IdleDetection::IsIdleInternal()
         m_Timer.Start();
     }
 
-    return ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) < IDLE_DETECTION_THRESHOLD_PERCENT );
+    return ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) < idleThresholdPercent );
 }
 
 // GetSystemTotalCPUUsage

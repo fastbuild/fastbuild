@@ -198,6 +198,21 @@ void OSWindow::SetTitle( const char * title )
     #endif
 }
 
+// Enable
+//------------------------------------------------------------------------------
+void OSWindow::Enable( void * handle, bool enable )
+{
+#if defined( __WINDOWS__ )
+    EnableWindow( (HWND)handle, enable );
+#elif defined( __APPLE__ )
+    // TODO:MAC EnableWindow equivalent
+#elif defined( __LINUX__ )
+    // TODO:LINUX EnableWindow equivalent
+#else
+#error Unknown Platform
+#endif
+}
+
 // OnMinimize
 //------------------------------------------------------------------------------
 /*virtual*/ bool OSWindow::OnMinimize()

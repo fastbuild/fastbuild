@@ -22,7 +22,7 @@ public:
     ~IdleDetection();
 
     // returns true if idle
-    void Update();
+    void Update( uint32_t idleThresholdPercent );
 
     // query status
     inline bool IsIdle() const { return m_IsIdle; }
@@ -41,7 +41,7 @@ private:
         uint64_t    m_LastTime;
     };
 
-    bool IsIdleInternal();
+    bool IsIdleInternal( uint32_t idleThresholdPercent );
 
     static void GetSystemTotalCPUUsage( uint64_t & outIdleTime,
                                         uint64_t & outKernTime,

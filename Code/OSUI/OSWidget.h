@@ -20,6 +20,8 @@ public:
     void Init();
     inline bool IsInitialized() const { return m_Initialized; }
 
+    void Enable(bool enable);
+
     #if defined( __WINDOWS__ )
         inline void * GetHandle() const { return m_Handle; }
     #endif

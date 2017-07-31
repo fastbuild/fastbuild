@@ -224,9 +224,10 @@ void Worker::UpdateAvailability()
     // Check disk space
     bool hasEnoughDiskSpace = HasEnoughDiskSpace();
 
-    m_IdleDetection.Update();
-
     WorkerSettings & ws = WorkerSettings::Get();
+
+    m_IdleDetection.Update( ws.GetIdleThresholdPercent() );
+
     uint32_t numCPUsToUse = ws.GetNumCPUsToUse();
     switch( ws.GetMode() )
     {
