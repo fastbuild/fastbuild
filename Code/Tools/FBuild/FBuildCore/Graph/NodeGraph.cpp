@@ -1476,90 +1476,75 @@ Node * NodeGraph::FindNodeInternal( const AString & fullPath ) const
     return nullptr;
 }
 
+// Comparaison operator for NodeWithDistance
+//------------------------------------------------------------------------------
+bool operator < ( const NodeGraph::NodeWithDistance & lhs, const NodeGraph::NodeWithDistance & rhs  )
+{
+    return ( lhs.m_Distance == rhs.m_Distance
+        ? ( lhs.m_Node->GetName() < rhs.m_Node->GetName() )
+        : ( lhs.m_Distance < rhs.m_Distance )
+    );
+}
+
 // FindNearestNodesInternal
 //------------------------------------------------------------------------------
-void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance ) const
+void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes ) const
 {
     ASSERT( Thread::IsMainThread() );
     ASSERT( nodes.IsEmpty() );
     ASSERT( false == nodes.IsAtCapacity() );
 
-    if ( fullPath.IsEmpty() )
-    {
-        return;
-    }
+    const uint32_t SIMILAR_ENOUGH = 9; // empirical number
 
-    uint32_t worstMinDistance = fullPath.GetLength() + 1;
+    Array< NodeWithDistance > tmp;
 
-    for ( size_t i = 0 ; i < NODEMAP_TABLE_SIZE ; i++ )
+    const size_t totalNodes = GetNodeCount();
+    for ( size_t i = 0 ; i < totalNodes ; ++i )
     {
-        for ( Node * node = m_NodeMap[i] ; nullptr != node ; node = node->m_Next )
+        Node * node = GetNodeByIndex( i );
+        bool displayName = false;
+        switch ( node->GetType() )
         {
-            const uint32_t d = LevenshteinDistance::DistanceI( fullPath, node->GetName() );
+            case Node::PROXY_NODE:          ASSERT( false ); break;
+            case Node::COPY_FILE_NODE:      break;
+            case Node::DIRECTORY_LIST_NODE: break;
+            case Node::EXEC_NODE:           break;
+            case Node::FILE_NODE:           break;
+            case Node::LIBRARY_NODE:        break;
+            case Node::OBJECT_NODE:         break;
+            case Node::ALIAS_NODE:          displayName = true; break;
+            case Node::EXE_NODE:            break;
+            case Node::CS_NODE:             break;
+            case Node::UNITY_NODE:          displayName = true; break;
+            case Node::TEST_NODE:           break;
+            case Node::COMPILER_NODE:       break;
+            case Node::DLL_NODE:            break;
+            case Node::VCXPROJECT_NODE:     break;
+            case Node::OBJECT_LIST_NODE:    displayName = true; break;
+            case Node::COPY_DIR_NODE:       break;
+            case Node::SLN_NODE:            break;
+            case Node::REMOVE_DIR_NODE:     break;
+            case Node::XCODEPROJECT_NODE:   break;
+            case Node::SETTINGS_NODE:       break;
+            default:                        ASSERT( false ); break;
+        }
+        if ( displayName )
+        {
+            const uint32_t d = LevenshteinDistance::DistanceI( fullPath, node->GetName(), 0, 2, 1, 3 );
 
-            if ( d > maxDistance )
+            if ( d < SIMILAR_ENOUGH )
             {
-                continue;
-            }
-
-            // skips nodes which don't share any character with fullpath
-            if ( fullPath.GetLength() < node->GetName().GetLength() )
-            {
-                if ( d > node->GetName().GetLength() - fullPath.GetLength() )
-                {
-                    continue; // completly different <=> d deletions
-                }
-            }
-            else
-            {
-                if ( d > fullPath.GetLength() - node->GetName().GetLength() )
-                {
-                    continue; // completly different <=> d deletions
-                }
-            }
-
-            if ( nodes.IsEmpty() )
-            {
-                nodes.Append( NodeWithDistance( node, d ) );
-                worstMinDistance = nodes.Top().m_Distance;
-            }
-            else if ( d >= worstMinDistance )
-            {
-                ASSERT( nodes.IsEmpty() || nodes.Top().m_Distance == worstMinDistance );
-                if ( false == nodes.IsAtCapacity() )
-                {
-                    nodes.Append( NodeWithDistance( node, d ) );
-                    worstMinDistance = d;
-                }
-            }
-            else if ( d < worstMinDistance )
-            {
-                ASSERT( nodes.Top().m_Distance > d );
-                const size_t count = nodes.GetSize();
-
-                if ( false == nodes.IsAtCapacity() )
-                {
-                    nodes.Append(NodeWithDistance());
-                }
-
-                size_t pos = count;
-                for ( ; pos > 0 ; pos-- )
-                {
-                    if ( nodes[pos - 1].m_Distance <= d )
-                    {
-                        break;
-                    }
-                    else if (pos < nodes.GetSize() )
-                    {
-                        nodes[pos] = nodes[pos - 1];
-                    }
-                }
-
-                ASSERT( pos < count );
-                nodes[pos] = NodeWithDistance( node, d );
-                worstMinDistance = nodes.Top().m_Distance;
+                tmp.Append( NodeWithDistance( node, d ) );
             }
         }
+    }
+
+    tmp.Sort();
+
+    const size_t count = ( nodes.GetCapacity() < tmp.GetSize() ? nodes.GetCapacity() : tmp.GetSize() );
+    for ( size_t i = 0 ; i < count ; ++i )
+    {
+        nodes.Append( tmp[ i ] );
     }
 }
 

@@ -216,7 +216,8 @@ private:
         Node *      m_Node;
         uint32_t    m_Distance;
     };
-    void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance = 5 ) const;
+    friend bool operator < ( const NodeWithDistance & lhs , const NodeWithDistance & rhs  );
+    void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes ) const;
 
     struct UsedFile;
     bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB ) const;
