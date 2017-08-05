@@ -48,6 +48,7 @@ public:
     // Misc
     //----------------
     static void StripFileExtension( AString & filePath );
+    static bool SplitDirFileName(const char* fileName,AString & dirname ,AString & baseName);
 };
 
 //------------------------------------------------------------------------------

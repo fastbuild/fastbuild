@@ -194,4 +194,28 @@
     }
 }
 
+// SplitDirFileName
 //------------------------------------------------------------------------------
+/*static*/ bool PathUtils::SplitDirFileName( const char * fileName, AString & dirName ,AString & baseName)
+{
+
+    AStackString<> fileNameStr( fileName );
+    if (IsFolderPath(fileNameStr)) {
+       return false; 
+    }
+
+    PathUtils::FixupFilePath( fileNameStr );
+    const char * last_slash = fileNameStr.FindLast(NATIVE_SLASH);
+
+    if (!last_slash) {
+        dirName.SetLength(0);
+        baseName=fileNameStr;
+        return true;
+    }
+
+    dirName = fileNameStr;
+    dirName.SetLength(last_slash-fileNameStr.Get());
+    baseName.Assign(last_slash+1, fileNameStr.Get()+fileNameStr.GetLength());
+    return true;
+}
+
