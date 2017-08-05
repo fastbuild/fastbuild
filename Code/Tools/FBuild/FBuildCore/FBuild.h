@@ -63,6 +63,7 @@ public:
     inline uint32_t     GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
 
     void DisplayTargetList() const;
+    void DisplayDependencyDB() const;
 
     class EnvironmentVarAndHash
     {
