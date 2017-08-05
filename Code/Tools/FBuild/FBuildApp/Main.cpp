@@ -480,7 +480,7 @@ int Main(int argc, char * argv[])
         return FBUILD_OK;
     }
 
-    if (displayDependencyDB)
+    if ( displayDependencyDB )
     {
         fBuild.DisplayDependencyDB();
         return FBUILD_OK;
