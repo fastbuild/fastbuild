@@ -79,6 +79,10 @@
     <td>Show command lines used to launch external processes.</td>
   </tr>
   <tr>
+    <td><a href="#showdeps">-showdeps</a></td>
+    <td>Show known dependency tree for specified targets.</td>
+  </tr>
+  <tr>
     <td><a href="#showtargets">-showtargets</a></td>
     <td>Show primary targets defined in build configuration.</td>
   </tr>
@@ -243,6 +247,17 @@ suppressed.</p>
 <p>Displays the full command lines passed to external tools as they are invoked.</p>
 <p>This option is useful for debugging build configurations, where the -verbose mode is too spammy.</p>
 <p>NOTE: This option may have an impact on build performance.</p>
+<p></p>
+</div>
+
+    <div class='newsitemheader' id="showdeps">-showdeps</div>
+    <div class='newsitembody'>
+<p>Displays the hierearchy of dependencies for the specified target(s). This can be useful for debugging build configurations.</p>
+<p>Example:</p>
+<div class='code'>fbuild.exe -showdeps Game-x86-Debug</div>
+<p>If no target is specified, "all" is used.</p>
+<p><b>NOTE:</b> The dependencies  shown will refelect the state as of the last completed build.
+i.e. dependencies that would be discovered during the next build will not be shown.</p>
 <p></p>
 </div>
 
