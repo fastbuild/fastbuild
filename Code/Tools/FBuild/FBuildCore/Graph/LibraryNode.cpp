@@ -214,6 +214,10 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     Array< AString > tokens( 1024, true );
     m_LibrarianOptions.Tokenize( tokens );
 
+    // When merging libs for non-MSVC toolchains, merge the source
+    // objects instead of the libs
+    const bool objectsInsteadOfLibs = ( m_LibrarianFlags & LIB_FLAG_LIB ) ? false : true;
+
     const AString * const end = tokens.End();
     for ( const AString * it = tokens.Begin(); it!=end; ++it )
     {
@@ -228,7 +232,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             }
 
             // concatenate files, unquoted
-            GetInputFiles( fullArgs, pre, AString::GetEmpty() );
+            GetInputFiles( fullArgs, pre, AString::GetEmpty(), objectsInsteadOfLibs );
         }
         else if ( token.EndsWith( "\"%1\"" ) )
         {
@@ -237,7 +241,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             AStackString<> post( "\"" );
 
             // concatenate files, quoted
-            GetInputFiles( fullArgs, pre, post );
+            GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
         }
         else if ( token.EndsWith( "%2" ) )
         {

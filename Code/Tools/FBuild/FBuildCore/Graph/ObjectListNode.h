@@ -35,7 +35,7 @@ public:
 
     const char * GetObjExtension() const;
 
-    void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
+    void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post, bool objectsInsteadOfLibs ) const;
     void GetInputFiles( Array< AString > & files ) const;
 
     CompilerNode * GetCompiler() const;

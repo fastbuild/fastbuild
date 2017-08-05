@@ -15,6 +15,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
@@ -452,7 +453,7 @@ ObjectListNode::~ObjectListNode() = default;
 
 // GetInputFiles
 //------------------------------------------------------------------------------
-void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const
+void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const AString & post, bool objectsInsteadOfLibs ) const
 {
     for ( Dependencies::Iter i = m_DynamicDependencies.Begin();
           i != m_DynamicDependencies.End();
@@ -491,7 +492,18 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
 
             // insert all the objects in the object list
             ObjectListNode * oln = n->CastTo< ObjectListNode >();
-            oln->GetInputFiles( fullArgs, pre, post );
+            oln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
+            continue;
+        }
+
+        // get objects used to create libs
+        if ( ( n->GetType() == Node::LIBRARY_NODE ) && objectsInsteadOfLibs )
+        {
+            ASSERT( GetType() == Node::LIBRARY_NODE ); // should only be possible for a LibraryNode
+
+            // insert all the objects in the object list
+            LibraryNode * ln = n->CastTo< LibraryNode >();
+            ln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
             continue;
         }
 

@@ -372,12 +372,12 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
 {
     if ( n->GetType() == Node::LIBRARY_NODE )
     {
-        bool linkObjectsInsteadOfLibs = GetFlag( LINK_OBJECTS );
+        const bool linkObjectsInsteadOfLibs = GetFlag( LINK_OBJECTS );
 
         if ( linkObjectsInsteadOfLibs )
         {
             LibraryNode * ln = n->CastTo< LibraryNode >();
-            ln->GetInputFiles( fullArgs, pre, post );
+            ln->GetInputFiles( fullArgs, pre, post, linkObjectsInsteadOfLibs );
         }
         else
         {
@@ -389,8 +389,10 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
     }
     else if ( n->GetType() == Node::OBJECT_LIST_NODE )
     {
+        const bool linkObjectsInsteadOfLibs = GetFlag( LINK_OBJECTS );
+
         ObjectListNode * ol = n->CastTo< ObjectListNode >();
-        ol->GetInputFiles( fullArgs, pre, post );
+        ol->GetInputFiles( fullArgs, pre, post, linkObjectsInsteadOfLibs );
     }
     else if ( n->GetType() == Node::DLL_NODE )
     {
@@ -433,14 +435,14 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
         if ( n->GetType() == Node::OBJECT_LIST_NODE )
         {
             ObjectListNode * oln = n->CastTo< ObjectListNode >();
-            oln->GetInputFiles( fullArgs, pre, post );
+            oln->GetInputFiles( fullArgs, pre, post, false );
             continue;
         }
 
         if ( n->GetType() == Node::LIBRARY_NODE )
         {
             LibraryNode * ln = n->CastTo< LibraryNode >();
-            ln->GetInputFiles( fullArgs, pre, post );
+            ln->GetInputFiles( fullArgs, pre, post, false );
             continue;
         }
 
