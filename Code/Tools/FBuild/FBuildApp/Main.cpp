@@ -480,13 +480,15 @@ int Main(int argc, char * argv[])
         return FBUILD_OK;
     }
 
+    bool result = false;
     if ( displayDependencyDB )
     {
-        fBuild.DisplayDependencyDB();
-        return FBUILD_OK;
+        result = fBuild.DisplayDependencyDB( targets );
     }
-
-    bool result = fBuild.Build( targets );
+    else
+    {
+        result = fBuild.Build( targets );
+    }
 
     if ( sharedData )
     {

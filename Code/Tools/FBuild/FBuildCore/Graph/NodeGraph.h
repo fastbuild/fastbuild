@@ -88,7 +88,7 @@ public:
 
     LoadResult Load( IOStream & stream, const char * nodeGraphDBFile );
     void Save( IOStream & stream, const char * nodeGraphDBFile ) const;
-    void Display() const;
+    void Display( const Dependencies & dependencies ) const;
 
     // access existing nodes
     Node * FindNode( const AString & nodeName ) const;
@@ -226,8 +226,8 @@ private:
     static void SaveRecurse( IOStream & stream, Node * node, Array< bool > & savedNodeFlags );
     static void SaveRecurse( IOStream & stream, const Dependencies & dependencies, Array< bool > & savedNodeFlags );
     bool LoadNode( IOStream & stream );
-    static void DisplayRecurse( Node * node, Array< bool > & savedNodeFlags, uint32_t depth );
-    static void DisplayRecurse( const char * title, const Dependencies & dependencies, Array< bool > & savedNodeFlags, uint32_t depth );
+    static void DisplayRecurse( Node * node, Array< bool > & savedNodeFlags, uint32_t depth, AString & outBuffer );
+    static void DisplayRecurse( const char * title, const Dependencies & dependencies, Array< bool > & savedNodeFlags, uint32_t depth, AString & outBuffer );
 
     enum { NODEMAP_TABLE_SIZE = 65536 };
     Node **         m_NodeMap;

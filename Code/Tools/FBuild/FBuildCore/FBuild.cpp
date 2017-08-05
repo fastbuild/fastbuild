@@ -225,15 +225,14 @@ bool FBuild::Build( const AString & target )
     return Build( targets );
 }
 
-// Build
+// GetTargets
 //------------------------------------------------------------------------------
-bool FBuild::Build( const Array< AString > & targets )
+bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const
 {
     ASSERT( !targets.IsEmpty() );
 
     // Get the nodes for all the targets
     const size_t numTargets = targets.GetSize();
-    Dependencies nodes( numTargets, 0 );
     for ( size_t i=0; i<numTargets; ++i )
     {
         const AString & target = targets[ i ];
@@ -252,24 +251,38 @@ bool FBuild::Build( const Array< AString > & targets )
 
             // Gets the 5 targets with minimal distance to user input
             Array< NodeGraph::NodeWithDistance > nearestNodes( 5, false );
-             m_DependencyGraph->FindNearestNodesInternal( target, nearestNodes, 0xFFFFFFFF );
+            m_DependencyGraph->FindNearestNodesInternal( target, nearestNodes, 0xFFFFFFFF );
 
             if ( false == nearestNodes.IsEmpty() )
             {
                 FLOG_WARN( "Did you mean one of these ?" );
                 const size_t count = nearestNodes.GetSize();
                 for ( size_t j = 0 ; j < count ; ++j )
+                {
                     FLOG_WARN( "    %s", nearestNodes[j].m_Node->GetName().Get() );
+                }
             }
 
             return false;
         }
-        nodes.Append( Dependency( node ) );
+        outDeps.Append( Dependency( node ) );
     }
 
+    return true;
+}
+
+// Build
+//------------------------------------------------------------------------------
+bool FBuild::Build( const Array< AString > & targets )
+{
     // create a temporary node, not hooked into the DB
     NodeProxy proxy( AStackString< 32 >( "*proxy*" ) );
-    proxy.m_StaticDependencies = nodes;
+    Dependencies deps( targets.GetSize(), 0 );
+    if ( !GetTargets( targets, deps ) )
+    {
+        return false; // GetTargets will have emitted an error
+    }
+    proxy.m_StaticDependencies = deps;
 
     // build all targets in one sweep
     bool result = Build( &proxy );
@@ -277,7 +290,7 @@ bool FBuild::Build( const Array< AString > & targets )
     // output per-target results
     for ( size_t i=0; i<targets.GetSize(); ++i )
     {
-        bool nodeResult = ( nodes[ i ].GetNode()->GetState() == Node::UP_TO_DATE );
+        bool nodeResult = ( deps[ i ].GetNode()->GetState() == Node::UP_TO_DATE );
         OUTPUT( "FBuild: %s: %s\n", nodeResult ? "OK" : "Error: BUILD FAILED", targets[ i ].Get() );
     }
 
@@ -685,10 +698,19 @@ void FBuild::DisplayTargetList() const
 
 // DisplayDependencyDB
 //------------------------------------------------------------------------------
-void FBuild::DisplayDependencyDB() const
+bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
 {
+    // create a temporary node, not hooked into the DB
+    Dependencies deps;
+    if ( !GetTargets( targets, deps ) )
+    {
+        return false; // GetTargets will have emitted an error
+    }
+
     OUTPUT( "FBuild: Dependency database\n" );
-    m_DependencyGraph->Display();
+
+    m_DependencyGraph->Display( deps );
+    return true;
 }
 
 //------------------------------------------------------------------------------

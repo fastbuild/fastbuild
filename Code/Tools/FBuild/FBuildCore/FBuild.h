@@ -18,6 +18,7 @@
 //------------------------------------------------------------------------------
 class BFFMacros;
 class Client;
+class Dependencies;
 class FileStream;
 class ICache;
 class IOStream;
@@ -63,7 +64,7 @@ public:
     inline uint32_t     GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
 
     void DisplayTargetList() const;
-    void DisplayDependencyDB() const;
+    bool DisplayDependencyDB( const Array< AString > & targets ) const;
 
     class EnvironmentVarAndHash
     {
@@ -99,6 +100,8 @@ public:
     inline ICache * GetCache() const { return m_Cache; }
 
 private:
+    bool GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const;
+
     void UpdateBuildStatus( const Node * node );
 
     static bool s_StopBuild;
