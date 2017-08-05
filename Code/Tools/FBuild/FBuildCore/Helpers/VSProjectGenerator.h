@@ -40,6 +40,7 @@ public:
     AString m_AdditionalOptions;
     AString m_OutputDirectory;
     AString m_IntermediateDirectory;
+    AString m_BuildLogFile;
     AString m_LayoutDir;
     AString m_LayoutExtensionFilter;
     AString m_Xbox360DebuggerCommand;

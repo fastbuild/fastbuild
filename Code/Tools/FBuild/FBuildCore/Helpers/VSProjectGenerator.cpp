@@ -335,7 +335,14 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         {
             Write( "  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
             Write( "    <BuildLog>\n" );
-            Write( "      <Path />\n" );
+            if ( !cIt->m_BuildLogFile.IsEmpty() )
+            {
+                WritePGItem( "Path",          cIt->m_BuildLogFile );
+            }
+            else
+            {
+                Write( "      <Path />\n" );
+            }
             Write( "    </BuildLog>\n" );
             if ( ( !cIt->m_DeploymentType.IsEmpty() ) || ( !cIt->m_DeploymentFiles.IsEmpty() ) )
             {
@@ -581,6 +588,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         stream.Write( cfg.m_AdditionalOptions );
         stream.Write( cfg.m_OutputDirectory );
         stream.Write( cfg.m_IntermediateDirectory );
+        stream.Write( cfg.m_BuildLogFile );
         stream.Write( cfg.m_LayoutDir );
         stream.Write( cfg.m_LayoutExtensionFilter );
         stream.Write( cfg.m_Xbox360DebuggerCommand );
@@ -634,6 +642,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( stream.Read( cfg.m_AdditionalOptions ) == false ) { return false; }
         if ( stream.Read( cfg.m_OutputDirectory ) == false ) { return false; }
         if ( stream.Read( cfg.m_IntermediateDirectory ) == false ) { return false; }
+        if ( stream.Read( cfg.m_BuildLogFile ) == false) { return false; }
         if ( stream.Read( cfg.m_LayoutDir ) == false ) { return false; }
         if ( stream.Read( cfg.m_LayoutExtensionFilter ) == false ) { return false; }
         if ( stream.Read( cfg.m_Xbox360DebuggerCommand ) == false ) { return false; }
