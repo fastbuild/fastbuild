@@ -1,6 +1,6 @@
-#FASTBuild
+# FASTBuild
 
-##Branch policy
+## Branch policy
 
 | Branch | Purpose |
 | :----- | :----- |

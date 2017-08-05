@@ -32,6 +32,7 @@ class Node;
 class ObjectListNode;
 class ObjectNode;
 class RemoveDirNode;
+class SettingsNode;
 class SLNNode;
 class TestNode;
 class UnityNode;
@@ -52,7 +53,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 94 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 96 };
 
     bool IsValid() const
     {
@@ -156,6 +157,7 @@ public:
                                            const AString & projectGuid,
                                            const AString & defaultLanguage,
                                            const AString & applicationEnvironment,
+                                           const bool projectSccEntrySAK,
                                            const Array< VSProjectConfig > & configs,
                                            const Array< VSProjectFileType > & fileTypes,
                                            const Array< AString > & references,
@@ -170,6 +172,7 @@ public:
                                 const Array< SLNSolutionFolder > & folders );
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
+    SettingsNode * CreateSettingsNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );
 

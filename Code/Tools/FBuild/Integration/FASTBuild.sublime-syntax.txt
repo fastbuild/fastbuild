@@ -1,0 +1,67 @@
+%YAML 1.2
+---
+name: FASTBuild
+file_extensions: [bff]
+scope: source.bff
+
+contexts:
+  in-double-quotes:
+    - match: \$\w*\$
+      scope: variable.other
+    - match: "[^\"]"
+      scope: string.quoted.double
+    - match: \"
+      pop: true
+      scope: string.quoted.double
+  double-quoted-strings:
+    - match: \"
+      push: in-double-quotes
+      scope: string.quoted.double
+
+  in-single-quotes:
+    - match: \$\w*\$
+      scope: variable.other
+    - match: "[^']"
+      scope: string.quoted.single
+    - match: "'"
+      pop: true
+      scope: string.quoted.single
+  single-quoted-strings:
+    - match: "'"
+      push: in-single-quotes
+      scope: string.quoted.single
+
+  preprocessor-includes:
+    - match: "^\\s*(#\\s*\\binclude)\\b"
+      captures:
+        1: keyword.control.include.c++
+  preprocessor-import:
+    - match: ^\s*(#)\s*\b(import)\b
+      scope: keyword.control.c
+
+  preprocessor:
+    - include: scope:source.c#incomplete-inc
+    - include: preprocessor-macro-define
+    - include: scope:source.c#pragma-mark
+    - include: preprocessor-includes
+    - include: preprocessor-import
+  global:
+    - include: preprocessor
+    - include: double-quoted-strings
+    - include: single-quoted-strings
+  main:
+    - include: global
+    - match: \b(Alias|Compiler|Copy|CopyDir|CSAssembly|DLL|Exec|Executable|ForEach|Library|ObjectList|Print|RemoveDir|Settings|Test|Unity|Using|VCXProject|VSSolution|XCodeProject)\b
+      scope: support.function
+    - match: \+|=
+      scope: keyword.operator
+    - match: \,
+      scope: punctuation.separator
+    - match: \{
+      scope: punctuation.section.block.begin
+    - match: \}
+      scope: punctuation.section.block.end
+    - match: \.\w+|\^\w+
+      scope: variable
+    - match: //.*|;.*
+      scope: comment.line

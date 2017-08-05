@@ -140,7 +140,7 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
             return false;
         }
 
-        m_PrecompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, m_PCHOptions, AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
+        m_PrecompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
         if ( m_PrecompiledHeader == nullptr )
         {
             return false; // CreateObjectNode will have emitted an error
@@ -538,7 +538,7 @@ CompilerNode * ObjectListNode::GetCompiler() const
 CompilerNode * ObjectListNode::GetPreprocessor() const
 {
     // Do we have a preprocessor?
-    if ( m_PreprocessorOptions.IsEmpty() )
+    if ( m_Preprocessor.IsEmpty() )
     {
         return nullptr;
     }
@@ -618,13 +618,12 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
         }
 
         BFFIterator dummyIter;
-        ObjectNode * objectNode = CreateObjectNode( nodeGraph, dummyIter, nullptr, flags, m_CompilerOptions, m_CompilerOptionsDeoptimized, objFile, inputFile->GetName() );
+        ObjectNode * objectNode = CreateObjectNode( nodeGraph, dummyIter, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
         if ( !objectNode )
         {
             FLOG_ERROR( "Failed to create node '%s'!", objFile.Get() );
             return false;
         }
-        objectNode->m_PreprocessorFlags = preprocessorFlags;
         on = objectNode;
     }
     else if ( on->GetType() != Node::OBJECT_NODE )
@@ -653,7 +652,18 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
 
 // CreateObjectNode
 //------------------------------------------------------------------------------
-ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const uint32_t flags, const AString & compilerOptions, const AString & compilerOptionsDeoptimized, const AString & objectName, const AString & objectInput, const AString & pchObjectName )
+ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph, 
+                                               const BFFIterator & iter,
+                                               const Function * function,
+                                               const uint32_t flags,
+                                               const uint32_t preprocessorFlags,
+                                               const AString & compilerOptions,
+                                               const AString & compilerOptionsDeoptimized,
+                                               const AString & preprocessor,
+                                               const AString & preprocessorOptions,
+                                               const AString & objectName,
+                                               const AString & objectInput,
+                                               const AString & pchObjectName )
 {
     ObjectNode * node= nodeGraph.CreateObjectNode( objectName );
     node->m_Compiler = m_Compiler;
@@ -669,7 +679,10 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph, const BFFI
     node->m_CompilerForceUsing = m_CompilerForceUsing;
     node->m_PreBuildDependencyNames = m_PreBuildDependencyNames;
     node->m_PrecompiledHeader = m_PrecompiledHeader;
+    node->m_Preprocessor = preprocessor;
+    node->m_PreprocessorOptions = preprocessorOptions;
     node->m_Flags = flags;
+    node->m_PreprocessorFlags = preprocessorFlags;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {

@@ -23,6 +23,8 @@
 #include <stdio.h>
 #if defined( __WINDOWS__ )
     #include <windows.h>
+#elif defined( __LINUX__ )
+    #include <signal.h>
 #endif
 
 // Return Codes
@@ -35,7 +37,8 @@ enum ReturnCodes
     FBUILD_BAD_ARGS                         = -3,
     FBUILD_ALREADY_RUNNING                  = -4,
     FBUILD_FAILED_TO_SPAWN_WRAPPER          = -5,
-    FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL    = -6
+    FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL    = -6,
+    FBUILD_WRAPPER_CRASHED                  = -7,
 };
 
 // Headers
@@ -44,9 +47,10 @@ void DisplayHelp();
 void DisplayVersion();
 #if defined( __WINDOWS__ )
     BOOL CtrlHandler( DWORD fdwCtrlType ); // Handle Ctrl+C etc
+#elif defined( __LINUX__ )
+    void CtrlHandler( int dummy );
 #else
     // TODO:MAC Implement CtrlHandler
-    // TODO:LINUX Implement CtrlHandler
 #endif
 int WrapperMainProcess( const AString & args, const FBuildOptions & options, SystemMutex & finalProcess );
 int WrapperIntermediateProcess( const AString & args, const FBuildOptions & options );
@@ -93,6 +97,8 @@ int Main(int argc, char * argv[])
 
     #if defined( __WINDOWS__ )
         VERIFY( SetConsoleCtrlHandler( (PHANDLER_ROUTINE)CtrlHandler, TRUE ) ); // Register
+    #elif defined( __LINUX__ )
+        signal( SIGINT, CtrlHandler );
     #endif
 
     // handle cmd line args
@@ -100,6 +106,7 @@ int Main(int argc, char * argv[])
     bool cleanBuild = false;
     bool verbose = false;
     bool progressBar = true;
+    bool quiet = false;
     bool useCacheRead = false;
     bool useCacheWrite = false;
     bool allowDistributed = false;
@@ -111,6 +118,7 @@ int Main(int argc, char * argv[])
     bool noStopOnError = false;
     bool displayTargetList = false;
     bool enableMonitor = false;
+    bool distVerbose = false;
     int32_t numWorkers = -1;
     WrapperMode wrapperMode( WRAPPER_MODE_NONE );
     AStackString<> args;
@@ -174,6 +182,12 @@ int Main(int argc, char * argv[])
                 allowDistributed = true;
                 continue;
             }
+            else if ( thisArg == "-distverbose" )
+            {
+                allowDistributed = true;
+                distVerbose = true;
+                continue;
+            }
             else if ( thisArg == "-fixuperrorpaths" )
             {
                 fixupErrorPaths = true;
@@ -232,6 +246,7 @@ int Main(int argc, char * argv[])
             else if ( thisArg == "-verbose" )
             {
                 verbose = true;
+                quiet = false;
                 continue;
             }
             else if ( thisArg == "-version" )
@@ -246,6 +261,12 @@ int Main(int argc, char * argv[])
                     fixupErrorPaths = true;
                     wrapperMode = WRAPPER_MODE_MAIN_PROCESS;
                 #endif
+                continue;
+            }
+            else if ( thisArg == "-quiet" )
+            {
+                quiet = true;
+                verbose = false;
                 continue;
             }
             else if ( thisArg == "-wait" )
@@ -404,6 +425,7 @@ int Main(int argc, char * argv[])
 
     options.m_ShowProgress = progressBar;
     options.m_ShowInfo = verbose;
+    options.m_ShowBuildCommands = !quiet;
     options.m_ShowCommandLines = showCommands;
     options.m_UseCacheRead = useCacheRead;
     options.m_UseCacheWrite = useCacheWrite;
@@ -427,6 +449,7 @@ int Main(int argc, char * argv[])
     {
         options.m_StopOnFirstError = false; // when building multiple targets, try to build as much as possible
     }
+    options.m_DistVerbose = distVerbose;
     FBuild fBuild( options );
 
     if ( targets.IsEmpty() )
@@ -486,12 +509,13 @@ void DisplayHelp()
             "Options:\n"
             " -cache[read|write] Control use of the build cache.\n"
             " -clean         Force a clean build.\n"
-            " -config [path] Explicitly specify the config file to use\n" );
+            " -config [path] Explicitly specify the config file to use.\n" );
 #ifdef DEBUG
     OUTPUT( " -debug         Break at startup, to attach debugger.\n" );
 #endif
     OUTPUT( " -dist          Allow distributed compilation.\n"
-            " -fixuperrorpaths Reformat error paths to be VisualStudio friendly.\n"
+            " -distverbose   Print detailed info for distributed compilation.\n"
+            " -fixuperrorpaths Reformat error paths to be Visual Studio friendly.\n"
             " -help          Show this help.\n"
             " -ide           Enable multiple options when building from an IDE.\n"
             "                Enables: -noprogress, -fixuperrorpaths &\n"
@@ -499,11 +523,11 @@ void DisplayHelp()
             " -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
             "                default of hardware thread count.\n"
             " -noprogress    Don't show the progress bar while building.\n"
-            " -nostoponerror Don't stop building on first error. Try to build as much"
+            " -nostoponerror Don't stop building on first error. Try to build as much\n"
             "                as possible.\n"
-            " -report        Ouput a detailed report at the end of the build,\n"
-            "                to report.html.  This will lengthen the total build\n"
-            "                time.\n"
+            " -quiet         Don't show build output.\n"
+            " -report        Ouput a detailed report.html at the end of the build.\n"
+            "                This will lengthen the total build time.\n"
             " -showcmds      Show command lines used to launch external processes.\n"
             " -showtargets   Display list of primary build targets.\n"
             " -summary       Show a summary at the end of the build.\n"
@@ -561,6 +585,21 @@ void DisplayVersion()
 
         return TRUE; // tell Windows we've "handled" it
     }
+#elif defined( __LINUX__ )
+
+    void CtrlHandler( int UNUSED( dummy ) )
+    {
+        // tell FBuild we want to stop the build cleanly
+        FBuild::AbortBuild();
+
+        // only printf output for the first break received
+        static bool received = false;
+        if ( received == false )
+        {
+            received = true;
+            OUTPUT( "<<<< ABORT SIGNAL RECEIVED >>>>\n" );
+        }
+    }
 #endif
 
 // WrapperMainProcess
@@ -572,6 +611,7 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
     g_SharedMemory.Create( options.GetSharedMemoryName().Get(), sizeof( SharedData ) );
     SharedData * sd = (SharedData *)g_SharedMemory.GetPtr();
     memset( sd, 0, sizeof( SharedData ) );
+    sd->ReturnCode = FBUILD_WRAPPER_CRASHED;
 
     // launch intermediate process
     AStackString<> argsCopy( args );

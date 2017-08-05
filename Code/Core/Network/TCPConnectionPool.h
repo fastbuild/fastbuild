@@ -75,8 +75,8 @@ public:
     size_t GetNumConnections() const;
 
     // transmit data
-    bool Send( const ConnectionInfo * connection, const void * data, size_t size, uint32_t timeoutMS = 2000 );
-    bool Send( const ConnectionInfo * connection, const void * data, size_t size, const void * payloadData, size_t payloadSize, uint32_t timeoutMS = 2000 );
+    bool Send( const ConnectionInfo * connection, const void * data, size_t size, uint32_t timeoutMS = 30000 );
+    bool Send( const ConnectionInfo * connection, const void * data, size_t size, const void * payloadData, size_t payloadSize, uint32_t timeoutMS = 30000 );
     bool Broadcast( const void * data, size_t size );
 
     static void GetAddressAsString( uint32_t addr, AString & address );
@@ -125,6 +125,8 @@ private:
 
     // internal helpers
     bool                DisableNagle( TCPSocket sockfd );
+    bool                SetBufferSizes( TCPSocket socket );
+    void                SetNonBlocking( TCPSocket socket, bool nonBlocking ) const;
 
     // listen socket related info
     ConnectionInfo *            m_ListenConnection;

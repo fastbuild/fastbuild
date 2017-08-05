@@ -15,8 +15,9 @@
 #include "Tools/FBuild/FBuildCore/Graph/ExecNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 
 #include "Core/Containers/AutoPtr.h"
@@ -109,7 +110,7 @@ void TestGraph::TestNodeTypes() const
         #endif
         TEST_ASSERT( n->GetType() == Node::COPY_FILE_NODE );
         TEST_ASSERT( CopyFileNode::GetTypeS() == Node::COPY_FILE_NODE );
-        TEST_ASSERT( AStackString<>( "Copy" ) == n->GetTypeName() );
+        TEST_ASSERT( AStackString<>( "CopyFile" ) == n->GetTypeName() );
     }
 
     Array< AString > patterns;
@@ -594,9 +595,9 @@ void TestGraph::BFFDirtied() const
 
         // Ensure Settings() are being read in, since tests below
         // are verifying they don't persist when the BFF changes
-        TEST_ASSERT( fBuild.GetCachePath().IsEmpty() == false );
+        TEST_ASSERT( fBuild.GetSettings()->GetCachePath().IsEmpty() == false );
         TEST_ASSERT( fBuild.GetEnvironmentStringSize() > 0 );
-        TEST_ASSERT( fBuild.GetWorkerList().IsEmpty() == false );
+        TEST_ASSERT( fBuild.GetSettings()->GetWorkerList().IsEmpty() == false );
     }
 
     #if defined( __OSX__ )
@@ -618,9 +619,9 @@ void TestGraph::BFFDirtied() const
         TEST_ASSERT( GetRecordedOutput().Find( "has changed (reparsing will occur)" ) );
 
         // Make sure settings don't "leak" from the original BFF into the new one
-        TEST_ASSERT( fBuild.GetCachePath().IsEmpty() );
+        TEST_ASSERT( fBuild.GetSettings()->GetCachePath().IsEmpty() );
         TEST_ASSERT( fBuild.GetEnvironmentStringSize() == 0 );
-        TEST_ASSERT( fBuild.GetWorkerList().IsEmpty() );
+        TEST_ASSERT( fBuild.GetSettings()->GetWorkerList().IsEmpty() );
     }
 }
 

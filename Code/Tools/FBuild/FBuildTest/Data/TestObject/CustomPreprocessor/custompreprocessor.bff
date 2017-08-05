@@ -1,0 +1,27 @@
+//
+// Preprocessor
+//
+// Test that specifying a custom preprocessor works properly
+//
+
+.ClangRewriteIncludes = false // When using Clang as the preprocessor, we want macros expanded
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Common settings
+.CompilerOutputPath         = '$Out$/Test/Object/CustomPreprocessor/'
+
+//
+// Compile using custom preprocessor
+//------------------------------------------------------------------------------
+ObjectList( 'CustomPreprocessor' )
+{
+    .CompilerInputFiles         = "Data/TestObject/CustomPreprocessor/a.cpp"
+
+    // Just use the normal compiler, but with some special options to make the input valid
+    .Preprocessor               = .Compiler
+    .PreprocessorOptions        = .CompilerOptions + ' -DTHING_TO_REPLACE=12345'
+}
+

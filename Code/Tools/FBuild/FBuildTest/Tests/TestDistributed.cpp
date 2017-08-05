@@ -64,14 +64,13 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = allowRace;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
-    JobQueueRemote jqr( numRemoteWorkers );
-
     // start a client to emulate the other end
-    Server s;
+    Server s( numRemoteWorkers );
     s.Listen( Protocol::PROTOCOL_PORT );
 
     // clean up anything left over from previous runs
@@ -186,14 +185,13 @@ void TestDistributed::TestZiDebugFormat() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
-    JobQueueRemote jqr( 1 );
-
     // start a client to emulate the other end
-    Server s;
+    Server s( 1 );
     s.Listen( Protocol::PROTOCOL_PORT );
 
     TEST_ASSERT( fBuild.Build( AStackString<>( "remoteZi" ) ) );
@@ -207,14 +205,13 @@ void TestDistributed::TestZiDebugFormat_Local() const
     options.m_ConfigFile = "Data/TestDistributed/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
-    JobQueueRemote jqr( 1 );
-
     // start a client to emulate the other end
-    Server s;
+    Server s( 1 );
     s.Listen( Protocol::PROTOCOL_PORT );
 
     TEST_ASSERT( fBuild.Build( AStackString<>( "remoteZi" ) ) );
@@ -231,14 +228,13 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
-    JobQueueRemote jqr( 1 );
-
     // start a client to emulate the other end
-    Server s;
+    Server s( 1 );
     s.Listen( Protocol::PROTOCOL_PORT );
 
     TEST_ASSERT( fBuild.Build( AStackString<>( "D8049" ) ) );

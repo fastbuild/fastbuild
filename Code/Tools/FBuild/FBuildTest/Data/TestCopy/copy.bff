@@ -76,6 +76,16 @@ CopyDir( 'CopyDir' )
 }
 
 //
+// CopyDirDeleteSrc
+//
+CopyDir( 'CopyDirDeleteSrc' )
+{
+    .SourcePaths        = '$Out$/Test/Copy/CopyDirDeleteSrc/Src/'
+    .SourcePathsPattern = '*.txt'
+    .Dest               = '$Out$/Test/Copy/CopyDirDeleteSrc/Dst/'
+}
+
+//
 // CopyEmpty
 //
 Copy( 'CopyEmpty' )

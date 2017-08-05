@@ -89,6 +89,7 @@ public:
     void SetProjectGuid( const AString & s )            { m_ProjectGuid = s; }
     void SetDefaultLanguage( const AString & s )        { m_DefaultLanguage = s; }
     void SetApplicationEnvironment( const AString & s ) { m_ApplicationEnvironment = s; }
+    void SetProjectSccEntrySAK( const bool b )          { m_ProjectSccEntrySAK = b; }
     void SetReferences( const Array< AString > & a )    { m_References = a; }
     void SetProjectReferences( const Array< AString > & a ) { m_ProjectReferences = a; }
 
@@ -107,6 +108,9 @@ private:
     void WritePGItem( const char * xmlTag, const AString & value );
 
     void GetFolderPath( const AString & fileName, AString & folder ) const;
+    static void GetProjectRelativePath( const AString & projectFolderPath,
+                                        const AString & fileName,
+                                        AString & outRelativeFileName );
 
     // project details
     AString m_ProjectName;
@@ -117,6 +121,7 @@ private:
     AString m_ProjectGuid;
     AString m_DefaultLanguage;
     AString m_ApplicationEnvironment;
+    bool m_ProjectSccEntrySAK;
     Array< AString > m_References;
     Array< AString > m_ProjectReferences;
 

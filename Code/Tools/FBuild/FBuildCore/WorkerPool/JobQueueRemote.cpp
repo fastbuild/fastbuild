@@ -414,6 +414,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     FileStream fs;
     if ( fs.Open( node->GetName().Get() ) == false )
     {
+        job->Error( "File missing despite success: '%s'", node->GetName().Get() );
         FLOG_ERROR( "File missing despite success: '%s'", node->GetName().Get() );
         return false;
     }
@@ -422,12 +423,13 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 
     // pdb file if present
     FileStream fs2;
+    AStackString<> pdbName;
     if ( includePDB )
     {
-        AStackString<> pdbName;
         node->GetPDBName( pdbName );
         if ( fs2.Open( pdbName.Get() ) == false )
         {
+            job->Error( "File missing despite success: '%s'", pdbName.Get() );
             FLOG_ERROR( "File missing despite success: '%s'", pdbName.Get() );
             return false;
         }
@@ -452,6 +454,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     // read first file
     if ( fs.Read( mem.Get() + sizeof( uint32_t ), size ) != size )
     {
+        job->Error( "File read error for '%s'", node->GetName().Get() );
         FLOG_ERROR( "File read error for '%s'", node->GetName().Get() );
         return false;
     }
@@ -464,7 +467,8 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         // read second file
         if ( fs2.Read( mem.Get() + sizeof( uint32_t ) + size + sizeof( uint32_t ), size2 ) != size2 )
         {
-            FLOG_ERROR( "File read error for '%s'", node->GetName().Get() );
+            job->Error( "File read error for '%s'", pdbName.Get() );
+            FLOG_ERROR( "File read error for '%s'", pdbName.Get() );
             return false;
         }
     }

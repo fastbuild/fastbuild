@@ -21,14 +21,20 @@
 
 #define FLOG_BUILD( fmtString, ... )                \
     do {                                            \
-        FLog::Build( fmtString, ##__VA_ARGS__ );    \
+        if ( FLog::ShowBuildCommands() )            \
+        {                                           \
+            FLog::Build( fmtString, ##__VA_ARGS__ );\
+        }                                           \
     PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
     } while ( false );                              \
     PRAGMA_DISABLE_POP_MSVC
 
 #define FLOG_BUILD_DIRECT( message )                \
     do {                                            \
-        FLog::BuildDirect( message );               \
+        if ( FLog::ShowBuildCommands() )            \
+        {                                           \
+            FLog::BuildDirect( message );           \
+        }                                           \
     PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
     } while ( false );                              \
     PRAGMA_DISABLE_POP_MSVC
@@ -70,6 +76,7 @@ class FLog
 {
 public:
     inline static bool ShowInfo() { return s_ShowInfo; }
+    inline static bool ShowBuildCommands() { return s_ShowBuildCommands; }
     inline static bool ShowErrors() { return s_ShowErrors; }
     inline static bool IsMonitorEnabled() { return s_MonitorEnabled; }
 
@@ -91,6 +98,7 @@ public:
 private:
     friend class FBuild;
     static inline void SetShowInfo( bool showInfo ) { s_ShowInfo = showInfo; }
+    static inline void SetShowBuildCommands( bool showBuildCommands ) { s_ShowBuildCommands = showBuildCommands;}
     static inline void SetShowErrors( bool showErrors ) { s_ShowErrors = showErrors; }
     static inline void SetShowProgress( bool showProgress ) { s_ShowProgress = showProgress; }
     static inline void SetMonitorEnabled( bool enabled ) { s_MonitorEnabled = enabled; }
@@ -100,6 +108,7 @@ private:
     static bool TracingOutputCallback( const char * message );
 
     static bool s_ShowInfo;
+    static bool s_ShowBuildCommands;
     static bool s_ShowErrors;
     static bool s_ShowProgress;
     static bool s_MonitorEnabled;

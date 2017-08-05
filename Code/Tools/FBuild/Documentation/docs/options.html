@@ -39,6 +39,10 @@
     <td>Enable distributed compilation.</td>
   </tr>
   <tr>
+    <td><a href="#distverbose">-distverbose</a></td>
+    <td>Enable detailed logging for distributed compilation.</td>
+  </tr>
+  <tr>
     <td><a href="#fixuperrorpaths">-fixuperrorpaths</a></td>
     <td>Reformat GCC/SNC/Clang error messages in Visual Studio format.</td>
   </tr>
@@ -61,6 +65,10 @@
   <tr>
     <td><a href="#nostoponerror">-nostoponerror</a></td>
     <td>Don't stop building on first error.</td>
+  </tr>
+  <tr>
+    <td><a href="#quiet">-quiet</a></td>
+    <td>Don't show build output.</td>
   </tr>
   <tr>
     <td><a href="#report">-report</a></td>
@@ -150,6 +158,11 @@ specified instead.</p>
 <p>Enable distributed compilation. Requires some build configuration.</p>
 </div>
 
+    <div class='newsitemheader' id="distverbose">-distverbose</div>
+    <div class='newsitembody'>
+<p>Print detailed information about distributed compilation. This can help when investigating connectivity issues. Activates -dist if not already specified.</p>
+</div>
+
     <div class='newsitemheader' id="fixuperrorpaths">-fixuperrorpaths</div>
     <div class='newsitembody'>
 <p>Enables re-formatting of warnings, errors and notes for GCC/SNC & Clang to Visual Studio format. Additionally, relative paths are expanded to full paths. This allows these errors to be double-clickable inside Visual Studio.</p>
@@ -205,6 +218,12 @@ useful if you want to see as many errors as possible in your compilation output.
 <p>NOTE: When specifying multiple targets to compile on the command line, -nostoponerror is implied.</p>
 </div>
 
+    <div class='newsitemheader' id="quiet">-quiet</div>
+    <div class='newsitembody'>
+<p>Don't show build output. Information about which items are being built and the overall state of the build will be
+suppressed.</p>
+</div>
+
     <div class='newsitemheader' id="report">-report</div>
     <div class='newsitembody'>
 <p>Ouput a detailed report at the end of the build.  The report is written to report.html in the current directory.</p>
@@ -229,7 +248,7 @@ useful if you want to see as many errors as possible in your compilation output.
 
     <div class='newsitemheader' id="showtargets">-showtargets</div>
     <div class='newsitembody'>
-<p>Displays the list of targets defined in the bff configuraiton file.</p>
+<p>Displays the list of targets defined in the bff configuration file.</p>
 <p></p>
 </div>
 
