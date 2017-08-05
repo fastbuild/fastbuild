@@ -642,7 +642,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( stream.Read( cfg.m_AdditionalOptions ) == false ) { return false; }
         if ( stream.Read( cfg.m_OutputDirectory ) == false ) { return false; }
         if ( stream.Read( cfg.m_IntermediateDirectory ) == false ) { return false; }
-        if ( stream.Read( cfg.m_BuildLogFile ) == false) { return false; }
+        if ( stream.Read( cfg.m_BuildLogFile ) == false ) { return false; }
         if ( stream.Read( cfg.m_LayoutDir ) == false ) { return false; }
         if ( stream.Read( cfg.m_LayoutExtensionFilter ) == false ) { return false; }
         if ( stream.Read( cfg.m_Xbox360DebuggerCommand ) == false ) { return false; }
