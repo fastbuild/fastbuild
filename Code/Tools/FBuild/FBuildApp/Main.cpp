@@ -44,7 +44,7 @@ enum ReturnCodes
 
 // Headers
 //------------------------------------------------------------------------------
-void DisplayHelp(const AString& programName);
+void DisplayHelp( const AString & programName );
 void DisplayVersion();
 #if defined( __WINDOWS__ )
     BOOL CtrlHandler( DWORD fdwCtrlType ); // Handle Ctrl+C etc
@@ -127,13 +127,13 @@ int Main(int argc, char * argv[])
     AStackString<> args;
     const char * configFile = nullptr;
 
-    if (argc>0)
+    if ( argc > 0 )
     {
-        AStackString<> programPath(argv[0]);
-        if (!programPath.IsEmpty())
+        AStackString<> programPath( argv[0] );
+        if ( !programPath.IsEmpty() )
         {
-            const char* slash = programPath.FindLast(NATIVE_SLASH);
-            programName = (slash ? slash + 1 : programPath.Get());
+            const char* slash = programPath.FindLast( NATIVE_SLASH );
+            programName = ( slash ? slash + 1 : programPath.Get() );
         }
     }
 
