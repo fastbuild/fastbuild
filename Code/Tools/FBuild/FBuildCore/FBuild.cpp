@@ -735,7 +735,7 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
         // Use regular system temp path
         return FileIO::GetTempDir( outTempDir );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        output = "/tmp/";
+        outTempDir = "/tmp/";
         return true;
     #else
         #error Unknown platform
