@@ -99,6 +99,8 @@ public:
 
     inline ICache * GetCache() const { return m_Cache; }
 
+    static bool GetTempDir( AString & outTempDir );
+
 private:
     bool GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const;
 

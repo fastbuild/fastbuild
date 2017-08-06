@@ -375,22 +375,18 @@
 {
     #if defined( __WINDOWS__ )
         char buffer[ MAX_PATH ];
-        DWORD res = GetEnvironmentVariable("FASTBUILD_TEMP_PATH",
-                buffer,MAX_PATH);
-        if ( res == 0 )
-        {
-            DWORD len = GetTempPath( MAX_PATH, buffer );
-            if ( len != 0 )
-            {
-                output = buffer;
-                output += '\\';
-                return true;
-            }
-        }
-        else
+        DWORD len = GetTempPath( MAX_PATH, buffer );
+        if ( len != 0 )
         {
             output = buffer;
-            output += '\\';
+
+            // Ensure slash terminated
+            const bool slashTerminated = ( output.EndsWith( '/' ) || output.EndsWith( '\\' ) );
+            if ( !slashTerminated )
+            {
+                output += '\\';
+            }
+
             return true;
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )

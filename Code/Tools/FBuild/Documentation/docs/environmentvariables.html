@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<link href="style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../favicon.ico">
+<title>FASTBuild - Environment Variables</title>
+</head>
+<body>
+  <script>generateHeader()</script>
+
+<h1>Environment Variables</h1>
+
+<h2>Summary</h2>
+
+    <div class='newsitembody'>
+
+<table width=700>
+  <tr>
+    <th width=150 align=left>Env Var</th>
+    <th align=left>Purpose</th>
+  </tr>
+  <tr>
+    <td><a href="#FASTBUILD_TEMP_PATH">FASTBUILD_TEMP_PATH</a></td>
+    <td>Override system temp path for FASTBuild to use.</td>
+  </tr>
+  <tr>
+    <td><a href="#FASTBUILD_BROKERAGE_PATH">FASTBUILD_BROKERAGE_PATH</a></td>
+    <td>Set location of the Brokerage Path for distributed compilation.</td>
+  </tr>
+  <tr>
+    <td><a href="#FASTBUILD_CACHE_PATH">FASTBUILD_CACHE_PATH</a></td>
+    <td>Set the location of the cache.</td>
+  </tr> 
+  <tr>
+    <td><a href="#FASTBUILD_CACHE_MODE">FASTBUILD_CACHE_MODE</a></td>
+    <td>Set the cache mode.</td>
+  </tr> 
+</table>
+</div>
+
+<h2>Details</h2>
+
+    <div class='newsitemheader' id="FASTBUILD_TEMP_PATH">FASTBUILD_TEMP_PATH</div>
+    <div class='newsitembody'>
+<p>FASTBuild uses the system temp dir. This can be overridden by setting the FASTBUILD_TEMP_PATH. This
+can be useful in certain cases, such as when certain Anti-Virus software is used that prevents
+executables being spawned from the temp directory.</p>
+</div>
+
+    <div class='newsitemheader' id="FASTBUILD_BROKERAGE_PATH">FASTBUILD_BROKERAGE_PATH</div>
+    <div class='newsitembody'>
+<p>FBuildWorkers signal their availability by writing a token to the "Brokerage Path".
+The location of the brokerage path can be set via the FASTBUILD_BROKERAGE_PATH.</p>
+</div>
+
+    <div class='newsitemheader' id="FASTBUILD_CACHE_PATH">FASTBUILD_CACHE_PATH</div>
+    <div class='newsitembody'>The location of the FASTBuild cache can be set via the
+FASTBUILD_CACHE_PATH environment variable instead of via the .CachePath option
+in the <a href="functions/settings.html">Settings</a> function.
+<p></p>
+</div>
+
+    <div class='newsitemheader' id="FASTBUILD_CACHE_MODE">FASTBUILD_CACHE_MODE</div>
+    <div class='newsitembody'>The cache mode can be set via the FASTBUILD_CACHE_MODE
+environment variable, instead of via the command line <a href="options.html#cache">-cache</a> options.
+<p></p>
+</div>
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

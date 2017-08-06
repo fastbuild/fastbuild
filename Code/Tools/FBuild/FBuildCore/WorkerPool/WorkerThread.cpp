@@ -61,7 +61,7 @@ WorkerThread::~WorkerThread()
 {
     PROFILE_FUNCTION
 
-    VERIFY( FileIO::GetTempDir( s_TmpRoot ) );
+    VERIFY( FBuild::GetTempDir( s_TmpRoot ) );
     #if defined( __WINDOWS__ )
         s_TmpRoot += ".fbuild.tmp\\";
     #else

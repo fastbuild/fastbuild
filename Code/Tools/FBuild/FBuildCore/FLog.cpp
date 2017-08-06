@@ -192,7 +192,7 @@ static FileStream * g_MonitorFileStream = nullptr;
         //  - it's not uniquified per instance
         //  - we already have a .fbuild.tmp folder we should use
         AStackString<> fullPath;
-        FileIO::GetTempDir( fullPath );
+        FBuild::GetTempDir( fullPath );
         fullPath += "FastBuild/FastBuildLog.log";
 
         ASSERT( g_MonitorFileStream == nullptr );

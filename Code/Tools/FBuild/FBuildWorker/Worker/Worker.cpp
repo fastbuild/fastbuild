@@ -12,6 +12,7 @@
 #include "WorkerSettings.h"
 
 // FBuild
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
@@ -97,7 +98,7 @@ int Worker::Work()
     // We just create this folder whether it's needed or not
     {
         AStackString<> tmpPath;
-        VERIFY( FileIO::GetTempDir( tmpPath ) );
+        VERIFY( FBuild::GetTempDir( tmpPath ) );
         #if defined( __WINDOWS__ )
             tmpPath += ".fbuild.tmp\\target\\include";
         #else
@@ -175,7 +176,7 @@ bool Worker::HasEnoughDiskSpace()
 
         // Check available disk space of temp path
         AStackString<> tmpPath;
-        VERIFY( FileIO::GetTempDir( tmpPath ) );
+        VERIFY( FBuild::GetTempDir( tmpPath ) );
         BOOL result = GetDiskFreeSpaceExA( tmpPath.Get(), (PULARGE_INTEGER)&freeBytesAvailable, (PULARGE_INTEGER)&totalNumberOfBytes, (PULARGE_INTEGER)&totalNumberOfFreeBytes );
         if ( result && ( freeBytesAvailable >= MIN_DISK_SPACE ) )
         {
