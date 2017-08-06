@@ -17,6 +17,7 @@ public:
     void SetWorkingDir( const AString & path );
     inline const AString & GetWorkingDir() const { return m_WorkingDir; }
 
+    AString m_ProgramName;
     bool m_ForceCleanBuild;
     bool m_UseCacheRead;
     bool m_UseCacheWrite;
