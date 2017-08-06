@@ -123,6 +123,10 @@
     <th align=left>Summary</th>
   </tr>
   <tr>
+    <td><a href="#console">-console</a></td>
+    <td>Disable UI. (Windows Only)</td>
+  </tr>
+  <tr>
     <td><a href="#cpus">-cpus=[n|-n|n%]</a></td>
     <td>Control worker CPUs allocation.</td>
   </tr>
@@ -312,6 +316,14 @@ on the original command line.</p>
 </div>
 
 <h2>FBuildWorker.exe Detailed</h2>
+
+    <div class='newsitemheader' id="console">-console</div>
+    <div class='newsitembody'>
+<p>Disable worker UI.</p>
+<p>The FBuildWorker can run in a UI-less mode on Windows. (On OSX and Linux, the worker currently always
+runs in UI-less mode)</p>
+</div>
+
 
     <div class='newsitemheader' id="cpus">-cpus=[n|-n|n%]</div>
     <div class='newsitembody'>

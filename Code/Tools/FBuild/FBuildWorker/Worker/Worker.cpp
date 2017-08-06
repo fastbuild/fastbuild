@@ -32,7 +32,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Worker::Worker( void * hInstance, const AString & args )
+Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
     : m_MainWindow( nullptr )
     , m_ConnectionPool( nullptr )
     , m_NetworkStartupHelper( nullptr )
@@ -46,11 +46,17 @@ Worker::Worker( void * hInstance, const AString & args )
     m_WorkerSettings = FNEW( WorkerSettings );
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
     m_ConnectionPool = FNEW( Server );
-    #if defined( __WINDOWS__ )
-        m_MainWindow = FNEW( WorkerWindow( hInstance ) );
-    #else
-        (void)hInstance;
-    #endif
+    if ( consoleMode == true )
+    {
+        #if __WINDOWS__
+            VERIFY( ::AllocConsole() );
+            (void)freopen("CONOUT$", "w", stdout);
+        #endif
+    }
+    else
+    {
+		m_MainWindow = FNEW( WorkerWindow( hInstance ) );
+    }
 
     Env::GetExePath( m_BaseExeName );
     if ( m_BaseExeName.Replace( ".copy", "" ) != 1 )

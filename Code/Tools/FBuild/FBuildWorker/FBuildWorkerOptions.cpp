@@ -27,8 +27,12 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_OverrideCPUAllocation( false ),
     m_CPUAllocation( 0 ),
     m_OverrideWorkMode( false ),
-    m_WorkMode( WorkerSettings::WHEN_IDLE )
+    m_WorkMode( WorkerSettings::WHEN_IDLE ),
+	m_ConsoleMode( false )
 {
+	#ifndef __WINDOWS__
+		m_ConsoleMode = true; // TODO:OSX Support GUI mode
+	#endif
 }
 
 // ProcessCommandLine
@@ -44,7 +48,15 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
     for ( const AString * it=tokens.Begin(); it != end; ++it )
     {
         const AString & token = *it;
-        if ( token.BeginsWith( "-cpus=" ) )
+        if ( token == "-console" )
+        {
+            m_ConsoleMode = true;
+            #if defined( __WINDOWS__ )
+                m_UseSubprocess = false;
+            #endif
+            continue;
+        }
+        else if ( token.BeginsWith( "-cpus=" ) )
         {
             int32_t numCPUs = Env::GetNumProcessors();
             int32_t num( 0 );

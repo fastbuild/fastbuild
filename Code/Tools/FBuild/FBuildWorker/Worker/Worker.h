@@ -25,7 +25,7 @@ class WorkerSettings;
 class Worker
 {
 public:
-    explicit Worker( void * hInstance, const AString & args );
+    explicit Worker( void * hInstance, const AString & args, bool consoleMode );
     ~Worker();
 
     int Work();
