@@ -557,7 +557,7 @@ void DisplayHelp( const AString& programName )
             " -report        Ouput a detailed report.html at the end of the build.\n"
             "                This will lengthen the total build time.\n"
             " -showcmds      Show command lines used to launch external processes.\n"
-            " -showdeps      Show known dependency tree for specified targets.\n\n"
+            " -showdeps      Show known dependency tree for specified targets.\n"
             " -showtargets   Display list of primary build targets.\n"
             " -summary       Show a summary at the end of the build.\n"
             " -verbose       Show detailed diagnostic information. This will slow\n"
