@@ -114,6 +114,7 @@ int Main(int argc, char * argv[])
     bool allowDistributed = false;
     bool showCommands = false;
     bool showSummary = false;
+    bool noSummaryOnError = false;
     bool report = false;
     bool fixupErrorPaths = false;
     bool waitMode = false;
@@ -235,6 +236,12 @@ int Main(int argc, char * argv[])
             else if ( thisArg == "-nostoponerror")
             {
                 noStopOnError = true;
+                continue;
+            }
+            else if ( thisArg == "-nosummaryonerror" )
+            {
+                showSummary = true;
+                noSummaryOnError = true;
                 continue;
             }
             else if ( thisArg == "-report" )
@@ -456,6 +463,7 @@ int Main(int argc, char * argv[])
     options.m_ForceCleanBuild = cleanBuild;
     options.m_AllowDistributed = allowDistributed;
     options.m_ShowSummary = showSummary;
+    options.m_NoSummaryOnError = noSummaryOnError;
     if ( configFile )
     {
         options.m_ConfigFile = configFile;
@@ -553,6 +561,7 @@ void DisplayHelp( const AString& programName )
             " -noprogress    Don't show the progress bar while building.\n"
             " -nostoponerror Don't stop building on first error. Try to build as much\n"
             "                as possible.\n"
+            " -nosummaryonerror Hide the summary if the build fails. Implies -summary.\n"
             " -quiet         Don't show build output.\n"
             " -report        Ouput a detailed report.html at the end of the build.\n"
             "                This will lengthen the total build time.\n"

@@ -67,6 +67,10 @@
     <td>Don't stop building on first error.</td>
   </tr>
   <tr>
+    <td><a href="#nosummaryonerror">-nosummaryonerror</a></td>
+    <td>Don't print the -summary output if there is an error.</td>
+  </tr>
+  <tr>
     <td><a href="#quiet">-quiet</a></td>
     <td>Don't show build output.</td>
   </tr>
@@ -224,6 +228,12 @@ of FASTBuild to distribute work efficiently.</p>
 <p>-nostoponerror instructs FASTBuild to instead build as much as possible before stopping when failures occur. This is
 useful if you want to see as many errors as possible in your compilation output.</p>
 <p>NOTE: When specifying multiple targets to compile on the command line, -nostoponerror is implied.</p>
+</div>
+
+    <div class='newsitemheader' id="nosummaryonerror">-nosummaryonerror</div>
+    <div class='newsitembody'>
+<p>The -nosummaryonerror option instructs FASTBuild to only print the -summary overview if the build completes successfully.</p>
+<p>NOTE: When specifying -nosummaryonerror, -summary is implied if not already specified.</p>
 </div>
 
     <div class='newsitemheader' id="quiet">-quiet</div>
