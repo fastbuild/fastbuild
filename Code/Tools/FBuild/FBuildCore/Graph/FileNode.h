@@ -20,8 +20,12 @@ public:
 
     static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
     virtual void Save( IOStream & stream ) const override;
+
+    static void HandleWarningsMSVC( Job * job, const AString & name, const char * data, uint32_t dataSize );
 protected:
     virtual BuildResult DoBuild( Job * job ) override;
+
+    static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
 
     friend class Client;
 };

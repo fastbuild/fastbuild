@@ -319,9 +319,11 @@ ObjectNode::~ObjectNode()
     }
 
     // Handle MSCL warnings if not already a failure
-    if ( ch.GetResult() == 0 )
+    // If "warnings as errors" is enabled (/WX) we don't need to check
+    // (since compilation will fail anyway, and the output will be shown)
+    if ( ( ch.GetResult() == 0 ) && !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
     {
-        HandleWarningsMSCL( job, ch.GetOut().Get(), ch.GetOutSize() );
+        HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
     }
 
     const char *output = nullptr;
@@ -1017,51 +1019,6 @@ const char * ObjectNode::GetObjExtension() const
         #endif
     }
     return m_CompilerOutputExtension.Get();
-}
-
-// HandleWarningsMSCL
-//------------------------------------------------------------------------------
-void ObjectNode::HandleWarningsMSCL( Job* job, const char * data, uint32_t dataSize ) const
-{
-    // If "warnings as errors" is enabled (/WX) we don't need to check
-    // (since compilation will fail anyway, and the output will be shown)
-    if ( GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
-    {
-        return;
-    }
-
-    if ( ( data == nullptr ) || ( dataSize == 0 ) )
-    {
-        return;
-    }
-
-    // Are there any warnings? (string is ok even in non-English)
-    if ( strstr( data, ": warning " ) )
-    {
-        const bool treatAsWarnings = true;
-        DumpOutput( job, data, dataSize, GetName(), treatAsWarnings );
-    }
-}
-
-// DumpOutput
-//------------------------------------------------------------------------------
-/*static*/ void ObjectNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings )
-{
-    if ( ( data != nullptr ) && ( dataSize > 0 ) )
-    {
-        Array< AString > exclusions( 2, false );
-        exclusions.Append( AString( "Note: including file:" ) );
-        exclusions.Append( AString( "#line" ) );
-
-        AStackString<> msg;
-        msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
-
-        AutoPtr< char > mem( (char *)Alloc( dataSize + msg.GetLength() ) );
-        memcpy( mem.Get(), msg.Get(), msg.GetLength() );
-        memcpy( mem.Get() + msg.GetLength(), data, dataSize );
-
-        Node::DumpOutput( job, mem.Get(), dataSize + msg.GetLength(), &exclusions );
-    }
 }
 
 // GetCacheName
@@ -2051,9 +2008,9 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
     else
     {
         // Handle MSCL warnings if not already a failure
-        if ( IsMSVC() && ( ch.GetResult() == 0 ) )
+        if ( IsMSVC() && ( ch.GetResult() == 0 ) && !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ))
         {
-            HandleWarningsMSCL( job, ch.GetOut().Get(), ch.GetOutSize() );
+            HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
         }
     }
 

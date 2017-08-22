@@ -106,10 +106,6 @@ private:
     void WriteToCache( Job * job );
     bool GetExtraCacheFilePath( const Job * job, AString & extraFileName ) const;
 
-    void HandleWarningsMSCL( Job* job, const char * data, uint32_t dataSize ) const;
-
-    static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
-
     void EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false, bool isRemote = false ) const;
 
     enum Pass

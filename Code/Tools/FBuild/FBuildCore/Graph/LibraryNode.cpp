@@ -13,6 +13,8 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/LinkerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
@@ -95,7 +97,7 @@ bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, c
     m_StaticDependencies.Append( librarianAdditionalInputs );
     // m_ObjectListInputEndIndex // NOTE: Deliberately not added to m_ObjectListInputEndIndex, since we don't want to try and compile these things
 
-    m_LibrarianFlags = DetermineFlags( m_Librarian );
+    m_LibrarianFlags = DetermineFlags( m_Librarian, m_LibrarianOptions );
 
     return true;
 }
@@ -180,6 +182,7 @@ LibraryNode::~LibraryNode() = default;
     // Get result
     int result = p.WaitForExit();
 
+    // did the executable fail?
     if ( result != 0 )
     {
         if ( memOut.Get() )
@@ -191,13 +194,18 @@ LibraryNode::~LibraryNode() = default;
         {
             job->ErrorPreformatted( memErr.Get() );
         }
-    }
 
-    // did the executable fail?
-    if ( result != 0 )
-    {
         FLOG_ERROR( "Failed to build Library (error %i) '%s'", result, GetName().Get() );
         return NODE_RESULT_FAILED;
+    }
+    else
+    {
+        // If "warnings as errors" is enabled (/WX) we don't need to check
+        // (since compilation will fail anyway, and the output will be shown)
+        if ( GetFlag( LIB_FLAG_LIB ) && !GetFlag( LIB_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
+        {
+            FileNode::HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+        }
     }
 
     // record time stamp for next time
@@ -285,7 +293,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
 
 // DetermineFlags
 //------------------------------------------------------------------------------
-/*static*/ uint32_t LibraryNode::DetermineFlags( const AString & librarianName )
+/*static*/ uint32_t LibraryNode::DetermineFlags( const AString & librarianName, const AString & args )
 {
     uint32_t flags = 0;
     if ( librarianName.EndsWithI("lib.exe") ||
@@ -294,6 +302,21 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
         librarianName.EndsWithI("link"))
     {
         flags |= LIB_FLAG_LIB;
+
+        // Parse args for some other flags
+        Array< AString > tokens;
+        args.Tokenize( tokens );
+
+        const AString * const end = tokens.End();
+        for ( const AString * it = tokens.Begin(); it != end; ++it )
+        {
+            const AString & token = *it;
+            if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ) )
+            {
+                flags |= LIB_FLAG_WARNINGS_AS_ERRORS_MSVC;
+                continue;
+            }
+        }
     }
     else if ( librarianName.EndsWithI("ar.exe") ||
          librarianName.EndsWithI("ar") )

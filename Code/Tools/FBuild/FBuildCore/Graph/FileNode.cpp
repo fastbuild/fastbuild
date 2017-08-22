@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+#include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
@@ -36,6 +37,44 @@ FileNode::~FileNode() = default;
 {
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
     return NODE_RESULT_OK;
+}
+
+// HandleWarningsMSVC
+//------------------------------------------------------------------------------
+void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const char * data, uint32_t dataSize )
+{
+    if ( ( data == nullptr ) || ( dataSize == 0 ) )
+    {
+        return;
+    }
+
+    // Are there any warnings? (string is ok even in non-English)
+    if ( strstr( data, ": warning " ) )
+    {
+        const bool treatAsWarnings = true;
+        DumpOutput( job, data, dataSize, name, treatAsWarnings );
+    }
+}
+
+// DumpOutput
+//------------------------------------------------------------------------------
+void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings )
+{
+    if ( ( data != nullptr ) && ( dataSize > 0 ) )
+    {
+        Array< AString > exclusions( 2, false );
+        exclusions.Append( AString( "Note: including file:" ) );
+        exclusions.Append( AString( "#line" ) );
+
+        AStackString<> msg;
+        msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
+
+        AutoPtr< char > mem( (char *)Alloc( dataSize + msg.GetLength() ) );
+        memcpy( mem.Get(), msg.Get(), msg.GetLength() );
+        memcpy( mem.Get() + msg.GetLength(), data, dataSize );
+
+        Node::DumpOutput( job, mem.Get(), dataSize + msg.GetLength(), &exclusions );
+    }
 }
 
 // Load

@@ -183,6 +183,12 @@ LinkerNode::~LinkerNode() = default;
         }
         else
         {
+            // If "warnings as errors" is enabled (/WX) we don't need to check
+            // (since compilation will fail anyway, and the output will be shown)
+            if ( GetFlag( LINK_FLAG_MSVC ) && !GetFlag( LINK_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
+            {
+                HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+            }
             break; // success!
         }
     }
@@ -569,6 +575,12 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
             if ( IsLinkerArg_MSVC( token, "INCREMENTAL:NO" ) )
             {
                 incrementalNoFlag = true;
+                continue;
+            }
+
+            if ( IsLinkerArg_MSVC( token, "WX" ) )
+            {
+                flags |= LinkerNode::LINK_FLAG_WARNINGS_AS_ERRORS_MSVC;
                 continue;
             }
 

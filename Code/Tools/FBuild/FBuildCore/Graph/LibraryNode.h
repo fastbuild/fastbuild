@@ -39,8 +39,9 @@ public:
         LIB_FLAG_AR     = 0x02, // gcc/clang style ar.exe
         LIB_FLAG_ORBIS_AR=0x04, // Orbis ar.exe
         LIB_FLAG_GREENHILLS_AX=0x08, // Greenhills (WiiU) ax.exe
+        LIB_FLAG_WARNINGS_AS_ERRORS_MSVC = 0x10,
     };
-    static uint32_t DetermineFlags( const AString & librarianName );
+    static uint32_t DetermineFlags( const AString & librarianName, const AString & args );
 private:
     friend class FunctionLibrary;
 
