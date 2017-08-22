@@ -116,6 +116,7 @@ int Main(int argc, char * argv[])
     bool showSummary = false;
     bool noSummaryOnError = false;
     bool report = false;
+    bool forceremote = false;
     bool fixupErrorPaths = false;
     bool waitMode = false;
     bool noStopOnError = false;
@@ -247,6 +248,11 @@ int Main(int argc, char * argv[])
             else if ( thisArg == "-report" )
             {
                 report = true;
+                continue;
+            }
+            else if ( thisArg == "-forceremote" )
+            {
+                forceremote = true;
                 continue;
             }
             else if ( thisArg == "-showcmds" )
@@ -470,6 +476,14 @@ int Main(int argc, char * argv[])
     }
     options.m_SaveDBOnCompletion = true;
     options.m_GenerateReport = report;
+    if ( forceremote )
+    {
+        options.m_AllowDistributed = true;
+        options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+        options.m_AllowLocalRace = false;
+        options.m_UseCacheRead = false;
+        options.m_UseCacheWrite = false;
+    }
     options.m_WrapperChild = ( wrapperMode == WRAPPER_MODE_FINAL_PROCESS );
     options.m_FixupErrorPaths = fixupErrorPaths;
     options.m_EnableMonitor = enableMonitor;
@@ -552,6 +566,7 @@ void DisplayHelp( const AString& programName )
     OUTPUT( " -dist          Allow distributed compilation.\n"
             " -distverbose   Print detailed info for distributed compilation.\n"
             " -fixuperrorpaths Reformat error paths to be Visual Studio friendly.\n"
+            " -forceremote   Force distributable jobs to only be built remotely.\n"
             " -help          Show this help.\n"
             " -ide           Enable multiple options when building from an IDE.\n"
             "                Enables: -noprogress, -fixuperrorpaths &\n"

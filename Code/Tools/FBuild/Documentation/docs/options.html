@@ -47,6 +47,10 @@
     <td>Reformat GCC/SNC/Clang error messages in Visual Studio format.</td>
   </tr>
   <tr>
+    <td><a href="#forceremote">-forceremote</a></td>
+    <td>Force distributable jobs to only be built remotely.</td>
+  </tr>
+  <tr>
     <td><a href="#help">-help</a></td>
     <td>Show usage help.</td>
   </tr>
@@ -181,6 +185,23 @@ specified instead.</p>
 <p>Enabled automatically when '-vs' is used.</p>
 </div>
 
+    <div class='newsitemheader' id="forceremote">-forceremote</div>
+    <div class='newsitembody'>
+<p>Prevents all local compilation of distributable jobs.</p>
+<p>FASTBuild will normally utilize local CPU resources to compile distributable jobs in several
+situations, in order to improve performance:</p>
+<ul>
+    <li>When there are no remote workers available (otherwise build would not complete)</li>
+    <li>When all remote workers are busy and local CPUs would be idle</li>
+    <li>When blocked on remote work</li>
+</ul>
+<p>This option prevents local consumption of distributable jobs in all these cases. This will generally
+result in slower builds and may even prevent the build completing entirely. As such, this options should
+generally only be used for troubleshooting.</p>
+<p>Additionally, this option disabled use of the cache.</p>
+<p><b>NOTE:</b> This option can prevent builds from completing (if no workers are available for example).</p>
+<p><b>NOTE:</b> This option will generally degrade build performance.</p>
+</div>
 
     <div class='newsitemheader' id="help">-help</div>
     <div class='newsitembody'>
