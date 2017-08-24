@@ -711,17 +711,17 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
 
             if ( IsStartOfLinkerArg_MSVC( token, "OPT" ) )
             {
-                if ( token.FindI( "REF" ) )
+                if ( token.FindI( ":REF" ) )
                 {
                     optREFFlag = true;
                 }
 
-                if ( token.FindI( "ICF" ) )
+                if ( token.FindI( ":ICF" ) )
                 {
                     optICFFlag = true;
                 }
 
-                if ( token.FindI( "LBR" ) )
+                if ( token.FindI( ":LBR" ) )
                 {
                     optLBRFlag = true;
                 }
