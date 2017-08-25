@@ -28,7 +28,8 @@ IdleDetection::IdleDetection() :
         m_CPUUsageFASTBuild( 0.0f ),
         m_CPUUsageTotal( 0.0f ),
     #endif
-      m_IsIdle( false )
+      m_IsIdle( 0.0f )
+    , m_IsIdleReal( 0.0f )
     , m_IdleSmoother( 0 )
     , m_ProcessesInOurHierarchy( 32, true )
     #if defined( __WINDOWS__ )
@@ -55,7 +56,9 @@ IdleDetection::~IdleDetection() = default;
 void IdleDetection::Update()
 {
     // apply smoothing based on current "idle" state
-    if ( IsIdleInternal() )
+    m_IsIdleReal = IsIdleInternal();
+
+    if ( m_IsIdleReal >= m_IsIdle )
     {
         ++m_IdleSmoother;
     }
@@ -66,26 +69,22 @@ void IdleDetection::Update()
     m_IdleSmoother = Math::Clamp(m_IdleSmoother, 0, 50);
 
     // change state only when at extreme of either end of scale
-    if (m_IdleSmoother == 50)
+    if (m_IdleSmoother == 50 || m_IdleSmoother == 0)
     {
-        m_IsIdle = true;
-    }
-    if (m_IdleSmoother == 0)
-    {
-        m_IsIdle = false;
+        m_IsIdle = m_IsIdleReal;
     }
 }
 
 //
 //------------------------------------------------------------------------------
-bool IdleDetection::IsIdleInternal()
+float IdleDetection::IsIdleInternal()
 {
     #if defined( __APPLE__ )
         ASSERT( false ); // TODO:MAC Implement IdleDetection::IsIdleInternal
-        return false;
+        return 0.0f;
     #elif defined( __LINUX__ )
         ASSERT( false ); // TODO:LINUX Implement IdleDetection::IsIdleInternal
-        return false;
+        return 0.0f;
     #else
         // determine total cpu time (including idle)
         uint64_t systemTime = 0;
@@ -110,7 +109,7 @@ bool IdleDetection::IsIdleInternal()
         // check to know acurately what the cpu use of FASTBuild is
         if ( m_CPUUsageTotal < IDLE_DETECTION_THRESHOLD_PERCENT )
         {
-            return true;
+            return 1.0f;
         }
 
         // reduce check frequency
@@ -221,7 +220,7 @@ bool IdleDetection::IsIdleInternal()
             m_Timer.Start();
         }
 
-        return ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) < IDLE_DETECTION_THRESHOLD_PERCENT );
+        return ( 1.0f - ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) * 0.01f) );
     #endif
 }
 

@@ -24,17 +24,18 @@ public:
     void Update();
 
     // query status
-    inline bool IsIdle() const { return m_IsIdle; }
+    inline float IsIdle() const { return m_IsIdle; }
 
 private:
-    bool IsIdleInternal();
+    float IsIdleInternal();
 
     Timer   m_Timer;
     #if defined( __WINDOWS__ )
         float   m_CPUUsageFASTBuild;
         float   m_CPUUsageTotal;
     #endif
-    bool    m_IsIdle;
+    float    m_IsIdle;
+    float    m_IsIdleReal;
     int32_t m_IdleSmoother;
 
     // struct to track processes with

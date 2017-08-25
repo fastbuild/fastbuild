@@ -213,7 +213,11 @@ void Worker::UpdateAvailability()
     {
         case WorkerSettings::WHEN_IDLE:
         {
-            if ( m_IdleDetection.IsIdle() == false )
+            if ( m_IdleDetection.IsIdle() >= 0.0f && m_IdleDetection.IsIdle() <= 1.0f )
+            {
+                numCPUsToUse = uint32_t(numCPUsToUse * m_IdleDetection.IsIdle());
+            }
+            else
             {
                 numCPUsToUse = 0;
             }
