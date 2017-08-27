@@ -41,6 +41,7 @@ FBuildOptions::FBuildOptions()
 , m_StopOnFirstError( true )
 , m_EnableMonitor( false )
 , m_DistVerbose( false )
+, m_FastCancel( false )
 , m_WorkingDirHash( 0 )
 {
 #ifdef DEBUG

@@ -1752,7 +1752,9 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
         // only output errors in failure case
         // (as preprocessed output goes to stdout, normal logging is pushed to
         // stderr, and we don't want to see that unless there is a problem)
-        if ( ch.GetResult() != 0 )
+        // NOTE: Output is omitted in case the compiler has been aborted because we don't care about the errors
+        // caused by the manual process abortion (process killed)
+        if ( ( ch.GetResult() != 0 ) && !ch.HasAborted() )
         {
             DumpOutput( job, ch.GetErr().Get(), ch.GetErrSize(), GetName() );
         }
@@ -2060,8 +2062,13 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     m_Process.ReadAllData( m_Out, &m_OutSize, m_Err, &m_ErrSize );
 
     // Get result
-    ASSERT( !m_Process.IsRunning() );
     m_Result = m_Process.WaitForExit();
+    // Process are aborted only when the master process has been killed or there is a failed build and fastcancel is active
+    // This is to be really sure that the result code is not 0 and the job is not retried when the process is aborted(killed).
+    if ( m_Process.HasAborted() )
+    {
+        return false;
+    }
 
     // Handle special types of failures
     HandleSystemFailures( job, m_Result, m_Out.Get(), m_Err.Get() );

@@ -178,7 +178,6 @@ LibraryNode::~LibraryNode() = default;
     uint32_t memErrSize = 0;
     p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
 
-    ASSERT( !p.IsRunning() );
     // Get result
     int result = p.WaitForExit();
 

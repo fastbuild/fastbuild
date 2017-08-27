@@ -636,7 +636,13 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         }
     }
 
-    Node::BuildResult result;
+    Node::BuildResult result = Node::NODE_RESULT_FAILED;
+    if ( FBuild::Get().GetOptions().m_FastCancel && FBuild::GetStopBuild() )
+    {
+        // When stopping build and fast cancel is active we simulate a build error with this node.
+        result = Node::NODE_RESULT_FAILED;
+    }
+    else
     {
         #ifdef PROFILING_ENABLED
             const char * profilingTag = node->GetTypeName();

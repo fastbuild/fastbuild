@@ -36,6 +36,7 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
+#include "Core/Process/Process.h"
 
 #include <stdio.h>
 #include <time.h>
@@ -425,6 +426,11 @@ bool FBuild::Build( Node * nodeToBuild )
                 //  - aborted build, so workers can be incomplete
                 m_JobQueue->SignalStopWorkers();
                 stopping = true;
+                if ( m_Options.m_FastCancel )
+                {
+                    // Notify the system that the master process has been killed and that it can kill its process.
+                    Process::SetMasterProcessAborted();
+                }
             }
         }
 
@@ -436,7 +442,7 @@ bool FBuild::Build( Node * nodeToBuild )
                 if ( wrapperMutex.TryLock() )
                 {
                     // parent process has terminated
-                    s_StopBuild = true;
+                    AbortBuild();
                 }
             }
         }
@@ -558,13 +564,25 @@ void FBuild::GetLibEnvVar( AString & value ) const
     }
 }
 
+// AbortBuild
+//------------------------------------------------------------------------------
+void FBuild::AbortBuild()
+{ 
+    s_StopBuild = true; 
+    if ( FBuild::Get().m_Options.m_FastCancel )
+    {
+        // Notify the system that the master process has been killed and that it can kill its process.
+        Process::SetMasterProcessAborted(); 
+    }
+}
+
 // OnBuildError
 //------------------------------------------------------------------------------
 /*static*/ void FBuild::OnBuildError()
 {
     if ( FBuild::Get().GetOptions().m_StopOnFirstError )
     {
-        s_StopBuild = true;
+        AbortBuild();
     }
 }
 

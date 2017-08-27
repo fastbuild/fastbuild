@@ -43,6 +43,10 @@
     <td>Enable detailed logging for distributed compilation.</td>
   </tr>
   <tr>
+    <td><a href="#fastcancel">-fastcancel</a></td>
+    <td>[Experimental] Active fast cancellation on build failure.</td>
+  </tr>
+  <tr>
     <td><a href="#fixuperrorpaths">-fixuperrorpaths</a></td>
     <td>Reformat GCC/SNC/Clang error messages in Visual Studio format.</td>
   </tr>
@@ -177,6 +181,13 @@ specified instead.</p>
     <div class='newsitemheader' id="distverbose">-distverbose</div>
     <div class='newsitembody'>
 <p>Print detailed information about distributed compilation. This can help when investigating connectivity issues. Activates -dist if not already specified.</p>
+</div>
+
+    <td>[Experimental] Active fast cancellation on build failure.</td>
+    <div class='newsitemheader' id="fastcancel">-fastcancel</div>
+    <div class='newsitembody'>
+<p>Normally, when a build fails, FASTBuild will stop spawning new tasks, but will allow any other concurrently running processes to complete. In some cases, these tasks can
+take a long time to complete. When activated, the -fastcancel option will allow FASTBuild to instead terminate those concurrent jobs.</p>
 </div>
 
     <div class='newsitemheader' id="fixuperrorpaths">-fixuperrorpaths</div>

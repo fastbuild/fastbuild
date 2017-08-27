@@ -92,7 +92,6 @@ TestNode::~TestNode() = default;
         return NODE_RESULT_FAILED;
     }
 
-    ASSERT( !p.IsRunning() );
     // Get result
     int result = p.WaitForExit();
     if ( ( result != 0 ) || ( m_TestAlwaysShowOutput == true ) )

@@ -23,6 +23,7 @@ public:
     bool IsRunning() const;
     int WaitForExit();
     void Detach();
+    void KillProcessTree();
 
     // Read all data from the process until it exits
     // NOTE: Owner must free the returned memory!
@@ -43,10 +44,12 @@ public:
         // Prevent handles being redirected
         inline void DisableHandleRedirection() { m_RedirectHandles = false; }
     #endif
-
+    bool HasAborted() const { return m_HasAborted; }
     static uint32_t GetCurrentId();
+    static void SetMasterProcessAborted() { ms_MasterProcessAborted = true; }
 private:
     #if defined( __WINDOWS__ )
+        void KillProcessTreeInternal( uint32_t processID );
         void Read( void * handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
         char * Read( void * handle, uint32_t * bytesRead );
         uint32_t Read( void * handle, char * outputBuffer, uint32_t outputBufferSize );
@@ -90,6 +93,8 @@ private:
         int m_StdOutRead;
         int m_StdErrRead;
     #endif
+        bool m_HasAborted;
+        static bool ms_MasterProcessAborted; // This member is set when we must cancel processes asap when the master process dies.
 };
 
 //------------------------------------------------------------------------------

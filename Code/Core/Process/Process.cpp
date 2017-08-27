@@ -15,9 +15,11 @@
 #include "Core/Time/Timer.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
+#include "Core/Tracing/Tracing.h"
 
 #if defined( __WINDOWS__ )
     #include <windows.h>
+    #include <TlHelp32.h>
 #endif
 
 #if defined( __LINUX__ ) || defined( __APPLE__ )
@@ -30,6 +32,10 @@
     #include <sys/wait.h>
     #include <unistd.h>
 #endif
+
+// Static Data
+//------------------------------------------------------------------------------
+bool Process::ms_MasterProcessAborted = false;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -47,6 +53,7 @@ Process::Process()
     , m_ChildPID( -1 )
     , m_HasAlreadyWaitTerminated( false )
 #endif
+    , m_HasAborted( false )
 {
     #if defined( __WINDOWS__ )
         static_assert( sizeof( m_ProcessInfo ) == sizeof( PROCESS_INFORMATION ), "Unexpected sizeof(PROCESS_INFORMATION)" );
@@ -63,6 +70,71 @@ Process::~Process()
     }
 }
 
+// KillProcessTreeInternal
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+   void Process::KillProcessTreeInternal( uint32_t processID )
+   {
+       PROCESSENTRY32 pe;
+   
+       memset( &pe, 0, sizeof( PROCESSENTRY32) );
+       pe.dwSize = sizeof( PROCESSENTRY32 );
+   
+       HANDLE hSnap = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, processID );
+   
+       if ( ::Process32First( hSnap, &pe ) )
+       {
+           BOOL canContinue = TRUE;
+   
+           // kill child processes
+           while ( canContinue )
+           {
+               if ( pe.th32ParentProcessID == processID )
+               {
+                   // Recursion
+                   KillProcessTreeInternal( pe.th32ProcessID );
+   
+                   HANDLE hChildProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, pe.th32ProcessID );
+   
+                   if ( hChildProc )
+                   {
+                       ::TerminateProcess( hChildProc, 1 );
+                       ::CloseHandle( hChildProc );
+                   }
+               }
+               canContinue = ::Process32Next( hSnap, &pe );
+           }
+   
+           // kill the main process
+           HANDLE hProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, processID );
+   
+           if ( hProc )
+           {
+               ::TerminateProcess( hProc, 1 );
+               ::CloseHandle( hProc );
+           }
+       }
+       else
+       {
+           //OUTPUT( "Unable to kill process 0x%x. Last Error: %u", processID, GetLastError() );
+       }    
+   }
+#endif
+
+// KillProcessTree
+//------------------------------------------------------------------------------
+void Process::KillProcessTree()
+{
+    #if defined( __WINDOWS__ )
+        KillProcessTreeInternal( GetProcessInfo().dwProcessId );
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        // TODO: Kill process tree if necessary?
+        kill( m_ChildPID, SIGTERM );
+    #else
+        #error Unknown platform
+    #endif
+}
+
 // Spawn
 //------------------------------------------------------------------------------
 bool Process::Spawn( const char * executable,
@@ -75,6 +147,12 @@ bool Process::Spawn( const char * executable,
 
     ASSERT( !m_Started );
     ASSERT( executable );
+
+    if ( ms_MasterProcessAborted )
+    {
+        // Once master process has aborted, we no longer permit spawning sub-processes.
+        return false;
+    }
 
     #if defined( __WINDOWS__ )
         // Set up the start up info struct.
@@ -317,12 +395,22 @@ int Process::WaitForExit()
     m_Started = false;
 
     #if defined( __WINDOWS__ )
-        // wait for it to finish
-        VERIFY( WaitForSingleObject( GetProcessInfo().hProcess, INFINITE ) == WAIT_OBJECT_0 );
 
-        // get the result code
         DWORD exitCode = 0;
-        VERIFY( GetExitCodeProcess( GetProcessInfo().hProcess, (LPDWORD)&exitCode ) );
+
+        if ( m_HasAborted == false )
+        {
+            // Don't wait if using jobs and the process has been aborted. 
+            // It will be killed along with the fbuild process if the TerminateProcess has failed for any reason and
+            // it is useless to wait for it was anyways we are reporting a failing exit code. 
+            // Also, This accelerate further more the cancellation.
+
+            // wait for it to finish
+            VERIFY( WaitForSingleObject( GetProcessInfo().hProcess, INFINITE ) == WAIT_OBJECT_0 );
+
+            // get the result code
+            VERIFY( GetExitCodeProcess( GetProcessInfo().hProcess, (LPDWORD)&exitCode ) );
+        }
 
         // cleanup
         VERIFY( CloseHandle( GetProcessInfo().hProcess ) );
@@ -334,6 +422,14 @@ int Process::WaitForExit()
             VERIFY( CloseHandle( m_StdOutWrite ) );
             VERIFY( CloseHandle( m_StdErrRead ) );
             VERIFY( CloseHandle( m_StdErrWrite ) );
+        }
+
+        if ( m_HasAborted )
+        {
+            // Process are aborted only when the master process has been killed and fastcancel is active.
+            // This is to be really sure that the result code is not a success. This code assumes that 0 = success. Any code that
+            // has a different success code will need to call HasAborted().
+            exitCode = 1;
         }
 
         return exitCode;
@@ -359,6 +455,14 @@ int Process::WaitForExit()
                 break;
             }
         }
+
+        if ( m_HasAborted )
+        {
+            // Process are normally aborted only when the master process has been killed and fastcancel is active.
+            // This is to be really sure that the result code is not a success
+            m_ReturnStatus = 1;
+        }
+
         return m_ReturnStatus;
     #else
         #error Unknown platform
@@ -410,6 +514,13 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     bool processExited = false;
     for ( ;; )
     {
+        if ( ms_MasterProcessAborted )
+        {
+            KillProcessTree();
+            m_HasAborted = true;
+            break;
+        }
+
         uint32_t prevOutSize = outSize;
         uint32_t prevErrSize = errSize;
         Read( m_StdOutRead, outMem, outSize, outBufferSize );

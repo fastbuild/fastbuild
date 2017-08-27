@@ -81,9 +81,14 @@ ExecNode::~ExecNode() = default;
     uint32_t memErrSize = 0;
     p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
 
-    ASSERT( !p.IsRunning() );
     // Get result
     int result = p.WaitForExit();
+    if ( p.HasAborted() )
+    {
+        // Process are aborted only when the master process has been killed and fastcancel is active.
+        // This is to be really sure that the result code is not a success
+        result = m_ExpectedReturnCode + 1;
+    }
 
     // did the executable fail?
     if ( result != m_ExpectedReturnCode )

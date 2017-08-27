@@ -121,6 +121,7 @@ int Main(int argc, char * argv[])
     bool waitMode = false;
     bool noStopOnError = false;
     bool displayTargetList = false;
+    bool fastCancel = false;
     bool displayDependencyDB = false;
     bool enableMonitor = false;
     bool distVerbose = false;
@@ -202,6 +203,11 @@ int Main(int argc, char * argv[])
             {
                 allowDistributed = true;
                 distVerbose = true;
+                continue;
+            }
+            else if ( thisArg == "-fastcancel" )
+            {
+                fastCancel = true;
                 continue;
             }
             else if ( thisArg == "-fixuperrorpaths" )
@@ -487,6 +493,7 @@ int Main(int argc, char * argv[])
     options.m_WrapperChild = ( wrapperMode == WRAPPER_MODE_FINAL_PROCESS );
     options.m_FixupErrorPaths = fixupErrorPaths;
     options.m_EnableMonitor = enableMonitor;
+    options.m_FastCancel = fastCancel;
     if ( ( targets.GetSize() > 1 ) || ( noStopOnError ) )
     {
         options.m_StopOnFirstError = false; // when building multiple targets, try to build as much as possible
@@ -565,6 +572,7 @@ void DisplayHelp( const AString& programName )
 #endif
     OUTPUT( " -dist          Allow distributed compilation.\n"
             " -distverbose   Print detailed info for distributed compilation.\n"
+            " -fastcancel    [Experimental] Fast cancellation behavior on buidl failure.\n"
             " -fixuperrorpaths Reformat error paths to be Visual Studio friendly.\n"
             " -forceremote   Force distributable jobs to only be built remotely.\n"
             " -help          Show this help.\n"

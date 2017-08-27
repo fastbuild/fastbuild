@@ -194,7 +194,6 @@ CSNode::~CSNode() = default;
     p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
 
     // Get result
-    ASSERT( !p.IsRunning() );
     int result = p.WaitForExit();
     bool ok = ( result == 0 );
 

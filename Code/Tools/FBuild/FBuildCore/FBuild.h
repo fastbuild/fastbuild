@@ -93,7 +93,7 @@ public:
     FBuildStats & GetStatsMutable()         { return m_BuildStats; }
 
     // attempt to cleanly stop the build
-    static inline void AbortBuild() { s_StopBuild = true; }
+    static        void AbortBuild();
     static        void OnBuildError();
     static inline bool GetStopBuild() { return s_StopBuild; }
 

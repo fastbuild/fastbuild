@@ -156,6 +156,7 @@ private:
         inline uint32_t                 GetOutSize() const { return m_OutSize; }
         inline const AutoPtr< char > &  GetErr() const { return m_Err; }
         inline uint32_t                 GetErrSize() const { return m_ErrSize; }
+        inline bool                     HasAborted() const { return m_Process.HasAborted(); }
 
     private:
         bool            m_HandleOutput;
