@@ -138,10 +138,13 @@ LibraryNode::~LibraryNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult LibraryNode::DoBuild( Job * job )
 {
-    // delete library before creation (so ar.exe will not merge old symbols)
-    if ( FileIO::FileExists( GetName().Get() ) )
+    // Delete previous file(s) if doing a clean build
+    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
     {
-        FileIO::FileDelete( GetName().Get() );
+        if ( FileIO::FileExists( GetName().Get() ) )
+        {
+            FileIO::FileDelete( GetName().Get() );
+        }
     }
 
     // Format compiler args string

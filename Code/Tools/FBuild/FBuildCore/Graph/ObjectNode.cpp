@@ -200,27 +200,34 @@ ObjectNode::~ObjectNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ObjectNode::DoBuild( Job * job )
 {
-    // delete previous file
-    if ( FileIO::FileExists( GetName().Get() ) )
+    // Delete previous file(s) if doing a clean build
+    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
     {
-        if ( FileIO::FileDelete( GetName().Get() ) == false )
+        if ( FileIO::FileExists( GetName().Get() ) )
         {
-            FLOG_ERROR( "Failed to delete file before build '%s'", GetName().Get() );
-            return NODE_RESULT_FAILED;
-        }
-    }
-    if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
-    {
-        if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
-        {
-            if ( FileIO::FileDelete( m_PCHObjectFileName.Get() ) == false )
+            if ( FileIO::FileDelete( GetName().Get() ) == false )
             {
-                FLOG_ERROR( "Failed to delete file before build '%s'", m_PCHObjectFileName.Get() );
+                FLOG_ERROR( "Failed to delete file before build '%s'", GetName().Get() );
                 return NODE_RESULT_FAILED;
             }
         }
+        if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
+        {
+            if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
+            {
+                if ( FileIO::FileDelete( m_PCHObjectFileName.Get() ) == false )
+                {
+                    FLOG_ERROR( "Failed to delete file before build '%s'", m_PCHObjectFileName.Get() );
+                    return NODE_RESULT_FAILED;
+                }
+            }
+        }
+    }
 
-        m_PCHCacheKey = 0; // Will be set correctly if we end up using the cache
+    // Reset PCH cache key - will be set correctly if we end up using the cache
+    if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
+    {
+        m_PCHCacheKey = 0;
     }
 
     // using deoptimization?
