@@ -120,9 +120,9 @@ void TestFileIO::FileCopy() const
 
     // ensure attributes are transferred properly
     FileIO::FileInfo sourceInfo;
-    TEST_ASSERT( FileIO::GetFileInfo(path, sourceInfo) == true );
+    TEST_ASSERT( FileIO::GetFileInfo( path, sourceInfo ) == true );
     FileIO::FileInfo destInfo;
-    TEST_ASSERT( FileIO::GetFileInfo(pathCopy, destInfo) == true );
+    TEST_ASSERT( FileIO::GetFileInfo( pathCopy, destInfo ) == true );
     TEST_ASSERT( destInfo.m_Attributes == sourceInfo.m_Attributes );
 
     // copy without overwrite allowed should fail
