@@ -180,10 +180,19 @@
     struct stat stat_source;
     VERIFY( fstat( source, &stat_source ) == 0 );
 
-    int dest = open( dstFileName, O_WRONLY | O_CREAT | O_TRUNC, stat_source.st_mode );
+    int dest = open( dstFileName, O_WRONLY | O_CREAT | O_TRUNC, 0644 );
     if ( dest < 0 )
     {
         close( source );
+        return false;
+    }
+
+    // set permissions to match the source file's
+    // we can't do this during open because in some filesystems (e.g. CIFS) that can fail
+    if ( fchmod(dest, stat_source.st_mode) < 0 )
+    {
+        close( source );
+        close( dest );
         return false;
     }
 
