@@ -189,7 +189,7 @@
 
     // set permissions to match the source file's
     // we can't do this during open because in some filesystems (e.g. CIFS) that can fail
-    if ( fchmod(dest, stat_source.st_mode) < 0 )
+    if ( fchmod( dest, stat_source.st_mode ) < 0 )
     {
         close( source );
         close( dest );
