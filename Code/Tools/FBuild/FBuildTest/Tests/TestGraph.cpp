@@ -486,6 +486,7 @@ void TestGraph::TestNoStopOnFirstError() const
     options.m_ShowSummary = true;   // required to generate stats for node count checks
     options.m_NumWorkerThreads = 0; // ensure test behaves deterministically
     options.m_ConfigFile = "Data/TestGraph/NoStopOnFirstError/fbuild.bff";
+    options.m_FastCancel = true;
 
     // "Stop On First Error" build (default behaviour)
     {

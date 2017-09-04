@@ -116,6 +116,7 @@ void TestTest::TimeOut() const
 {
     FBuildOptions options;
     options.m_ConfigFile = "Data/TestTest/test_timeout.bff";
+    options.m_FastCancel = true;
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
