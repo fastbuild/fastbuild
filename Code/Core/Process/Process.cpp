@@ -35,11 +35,10 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-bool Process::ms_MasterProcessAborted = false;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Process::Process()
+Process::Process( volatile bool * masterAbortFlag )
 : m_Started( false )
 #if defined( __WINDOWS__ )
     , m_SharingHandles( false )
@@ -54,6 +53,7 @@ Process::Process()
     , m_HasAlreadyWaitTerminated( false )
 #endif
     , m_HasAborted( false )
+    , m_MasterAbortFlag( masterAbortFlag )
 {
     #if defined( __WINDOWS__ )
         static_assert( sizeof( m_ProcessInfo ) == sizeof( PROCESS_INFORMATION ), "Unexpected sizeof(PROCESS_INFORMATION)" );
@@ -148,7 +148,7 @@ bool Process::Spawn( const char * executable,
     ASSERT( !m_Started );
     ASSERT( executable );
 
-    if ( ms_MasterProcessAborted )
+    if ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) )
     {
         // Once master process has aborted, we no longer permit spawning sub-processes.
         return false;
@@ -514,7 +514,7 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     bool processExited = false;
     for ( ;; )
     {
-        if ( ms_MasterProcessAborted )
+        if ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) )
         {
             KillProcessTree();
             m_HasAborted = true;

@@ -49,6 +49,7 @@
 // Static
 //------------------------------------------------------------------------------
 /*static*/ bool FBuild::s_StopBuild( false );
+/*static*/ volatile bool FBuild::s_AbortBuild( false );
 
 // CONSTRUCTOR - FBuild
 //------------------------------------------------------------------------------
@@ -373,6 +374,7 @@ bool FBuild::Build( Node * nodeToBuild )
     ASSERT( nodeToBuild );
 
     s_StopBuild = false; // allow multiple runs in same process
+    s_AbortBuild = false; // allow multiple runs in same process
 
     // create worker threads
     m_JobQueue = FNEW( JobQueue( m_Options.m_NumWorkerThreads ) );
@@ -429,7 +431,7 @@ bool FBuild::Build( Node * nodeToBuild )
                 if ( m_Options.m_FastCancel )
                 {
                     // Notify the system that the master process has been killed and that it can kill its process.
-                    Process::SetMasterProcessAborted();
+                    s_AbortBuild = true;
                 }
             }
         }
@@ -572,7 +574,7 @@ void FBuild::AbortBuild()
     if ( FBuild::Get().m_Options.m_FastCancel )
     {
         // Notify the system that the master process has been killed and that it can kill its process.
-        Process::SetMasterProcessAborted(); 
+        s_AbortBuild = true;
     }
 }
 

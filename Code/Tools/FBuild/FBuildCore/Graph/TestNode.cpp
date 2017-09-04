@@ -68,7 +68,7 @@ TestNode::~TestNode() = default;
     EmitCompilationMessage( workingDir );
 
     // spawn the process
-    Process p;
+    Process p( FBuild::Get().GetAbortBuildPointer() );
     bool spawnOK = p.Spawn( GetTestExecutable()->GetName().Get(),
                             m_TestArguments.Get(),
                             workingDir,

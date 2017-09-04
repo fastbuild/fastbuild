@@ -62,7 +62,7 @@ ExecNode::~ExecNode() = default;
     EmitCompilationMessage( fullArgs );
 
     // spawn the process
-    Process p;
+    Process p( FBuild::Get().GetAbortBuildPointer() );
     bool spawnOK = p.Spawn( m_Executable->GetName().Get(),
                             fullArgs.Get(),
                             workingDir,

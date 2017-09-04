@@ -119,7 +119,7 @@ LinkerNode::~LinkerNode() = default;
         ++attempt;
 
         // spawn the process
-        Process p;
+        Process p( FBuild::Get().GetAbortBuildPointer() );
         bool spawnOK = p.Spawn( m_Linker.Get(),
                                 fullArgs.GetFinalArgs().Get(),
                                 workingDir,
@@ -198,7 +198,7 @@ LinkerNode::~LinkerNode() = default;
     {
         EmitStampMessage();
 
-        Process stampProcess;
+        Process stampProcess( FBuild::Get().GetAbortBuildPointer() );
         bool spawnOk = stampProcess.Spawn( m_LinkerStampExe->GetName().Get(),
                                            m_LinkerStampExeArgs.Get(),
                                            nullptr,     // working dir

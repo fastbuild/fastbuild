@@ -12,7 +12,7 @@
 class Process
 {
 public:
-    Process();
+    explicit Process( volatile bool * masterAbortFlag = nullptr );
     ~Process();
 
     bool Spawn( const char * executable,
@@ -46,7 +46,6 @@ public:
     #endif
     bool HasAborted() const { return m_HasAborted; }
     static uint32_t GetCurrentId();
-    static void SetMasterProcessAborted() { ms_MasterProcessAborted = true; }
 private:
     #if defined( __WINDOWS__ )
         void KillProcessTreeInternal( uint32_t processID );
@@ -94,7 +93,7 @@ private:
         int m_StdErrRead;
     #endif
         bool m_HasAborted;
-        static bool ms_MasterProcessAborted; // This member is set when we must cancel processes asap when the master process dies.
+        volatile bool * m_MasterAbortFlag; // This member is set when we must cancel processes asap when the master process dies.
 };
 
 //------------------------------------------------------------------------------

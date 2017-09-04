@@ -178,7 +178,7 @@ CSNode::~CSNode() = default;
     EmitCompilationMessage( fullArgs );
 
     // spawn the process
-    Process p;
+    Process p( FBuild::Get().GetAbortBuildPointer() );
     if ( p.Spawn( GetCompiler()->GetName().Get(), fullArgs.GetFinalArgs().Get(),
                   workingDir, environment ) == false )
     {
