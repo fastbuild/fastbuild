@@ -2061,6 +2061,11 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                                    workingDir,
                                    environmentString ) )
     {
+        if ( m_Process.HasAborted() )
+        {
+            return false;
+        }
+
         job->Error( "Failed to spawn process (error 0x%x) to build '%s'\n", Env::GetLastErr(), name.Get() );
         job->OnSystemError();
         return false;
@@ -2071,8 +2076,6 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
     // Get result
     m_Result = m_Process.WaitForExit();
-    // Process are aborted only when the master process has been killed or there is a failed build and fastcancel is active
-    // This is to be really sure that the result code is not 0 and the job is not retried when the process is aborted(killed).
     if ( m_Process.HasAborted() )
     {
         return false;

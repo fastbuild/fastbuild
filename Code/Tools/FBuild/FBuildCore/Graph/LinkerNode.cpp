@@ -127,6 +127,11 @@ LinkerNode::~LinkerNode() = default;
 
         if ( !spawnOK )
         {
+            if ( p.HasAborted() )
+            {
+                return NODE_RESULT_FAILED;
+            }
+
             FLOG_ERROR( "Failed to spawn process '%s' for %s creation for '%s'", m_Linker.Get(), GetDLLOrExe(), GetName().Get() );
             return NODE_RESULT_FAILED;
         }
@@ -141,6 +146,10 @@ LinkerNode::~LinkerNode() = default;
         ASSERT( !p.IsRunning() );
         // Get result
         int result = p.WaitForExit();
+        if ( p.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
 
         // did the executable fail?
         if ( result != 0 )
@@ -205,6 +214,11 @@ LinkerNode::~LinkerNode() = default;
                                            nullptr );   // env
         if ( spawnOk == false )
         {
+            if ( stampProcess.HasAborted() )
+            {
+                return NODE_RESULT_FAILED;
+            }
+
             FLOG_ERROR( "Failed to spawn process '%s' for '%s' stamping of '%s'", m_LinkerStampExe->GetName().Get(), GetDLLOrExe(), GetName().Get() );
             return NODE_RESULT_FAILED;
         }
@@ -219,6 +233,10 @@ LinkerNode::~LinkerNode() = default;
 
         // Get result
         int result = stampProcess.WaitForExit();
+        if ( stampProcess.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
 
         // did the executable fail?
         if ( result != 0 )

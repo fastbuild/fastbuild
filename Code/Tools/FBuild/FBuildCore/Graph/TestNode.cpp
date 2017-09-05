@@ -76,6 +76,11 @@ TestNode::~TestNode() = default;
 
     if ( !spawnOK )
     {
+        if ( p.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
+
         FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
@@ -94,6 +99,11 @@ TestNode::~TestNode() = default;
 
     // Get result
     int result = p.WaitForExit();
+    if ( p.HasAborted() )
+    {
+        return NODE_RESULT_FAILED;
+    }
+
     if ( ( result != 0 ) || ( m_TestAlwaysShowOutput == true ) )
     {
         // something went wrong, print details

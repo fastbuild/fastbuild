@@ -182,6 +182,11 @@ CSNode::~CSNode() = default;
     if ( p.Spawn( GetCompiler()->GetName().Get(), fullArgs.GetFinalArgs().Get(),
                   workingDir, environment ) == false )
     {
+        if ( p.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
+
         FLOG_ERROR( "Failed to spawn process to build '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
@@ -195,6 +200,11 @@ CSNode::~CSNode() = default;
 
     // Get result
     int result = p.WaitForExit();
+    if ( p.HasAborted() )
+    {
+        return NODE_RESULT_FAILED;
+    }
+
     bool ok = ( result == 0 );
 
     if ( !ok )

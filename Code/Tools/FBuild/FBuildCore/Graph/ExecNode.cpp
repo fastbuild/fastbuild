@@ -70,6 +70,11 @@ ExecNode::~ExecNode() = default;
 
     if ( !spawnOK )
     {
+        if ( p.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
+
         FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
@@ -85,9 +90,7 @@ ExecNode::~ExecNode() = default;
     int result = p.WaitForExit();
     if ( p.HasAborted() )
     {
-        // Process are aborted only when the master process has been killed and fastcancel is active.
-        // This is to be really sure that the result code is not a success
-        result = m_ExpectedReturnCode + 1;
+        return NODE_RESULT_FAILED;
     }
 
     // did the executable fail?

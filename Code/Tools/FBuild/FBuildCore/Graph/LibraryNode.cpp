@@ -170,6 +170,11 @@ LibraryNode::~LibraryNode() = default;
 
     if ( !spawnOK )
     {
+        if ( p.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
+
         FLOG_ERROR( "Failed to spawn process for Library creation for '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
@@ -183,6 +188,10 @@ LibraryNode::~LibraryNode() = default;
 
     // Get result
     int result = p.WaitForExit();
+    if ( p.HasAborted() )
+    {
+        return NODE_RESULT_FAILED;
+    }
 
     // did the executable fail?
     if ( result != 0 )

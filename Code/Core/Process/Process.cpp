@@ -424,14 +424,6 @@ int Process::WaitForExit()
             VERIFY( CloseHandle( m_StdErrWrite ) );
         }
 
-        if ( m_HasAborted )
-        {
-            // Process are aborted only when the master process has been killed and fastcancel is active.
-            // This is to be really sure that the result code is not a success. This code assumes that 0 = success. Any code that
-            // has a different success code will need to call HasAborted().
-            exitCode = 1;
-        }
-
         return exitCode;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         VERIFY( close( m_StdOutRead ) == 0 );
@@ -454,13 +446,6 @@ int Process::WaitForExit()
                 m_ReturnStatus = WEXITSTATUS(status);
                 break;
             }
-        }
-
-        if ( m_HasAborted )
-        {
-            // Process are normally aborted only when the master process has been killed and fastcancel is active.
-            // This is to be really sure that the result code is not a success
-            m_ReturnStatus = 1;
         }
 
         return m_ReturnStatus;
