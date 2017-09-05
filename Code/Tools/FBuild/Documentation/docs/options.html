@@ -143,7 +143,7 @@
 
 <table width=700>
   <tr>
-    <th width=250 align=left>Option</th>
+    <th width=320 align=left>Option</th>
     <th align=left>Summary</th>
   </tr>
   <tr>
@@ -155,7 +155,7 @@
     <td>Control worker CPUs allocation.</td>
   </tr>
   <tr>
-    <td><a href="#mode">-mode=[disabled|idle|dedicated]</a></td>
+    <td><a href="#mode">-mode=[disabled|idle|available|dedicated]</a></td>
     <td>Control worker availability.</td>
   </tr>
   <tr>
@@ -413,7 +413,7 @@ runs in UI-less mode)</p>
 </div>
 
 
-    <div class='newsitemheader' id="mode">-mode=[disabled|idle|dedicated]</div>
+    <div class='newsitemheader' id="mode">-mode=[disabled|idle|available|dedicated]</div>
     <div class='newsitembody'>
 <p>Control worker availability.</p>
 <p>The FBuildWorker.exe mode is normally controlled through the UI. The "-mode" command line option will override this as follows:
@@ -421,6 +421,7 @@ runs in UI-less mode)</p>
   <tr><th width=150>Syntax</th><th>Description</th></tr>
   <tr><td>-mode=disabled</td><td>Worker will accept no tasks.</td></tr>
   <tr><td>-mode=idle</td><td>Worker will accept tasks when PC is considerd idle.</td>
+  <tr><td>-mode=available</td><td>Worker will accept tasks when PC has some available power.</td>
   <tr><td>-mode=dedicated</td><td>Worker will accept tasks regardless of PC state.</td></tr>
 </table>
 </p>

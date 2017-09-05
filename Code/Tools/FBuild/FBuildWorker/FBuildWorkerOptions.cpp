@@ -97,6 +97,12 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_OverrideWorkMode = true;
             continue;
         }
+        else if ( token == "-mode=available" )
+        {
+            m_WorkMode = WorkerSettings::WHEN_AVAILABLE;
+            m_OverrideWorkMode = true;
+            continue;
+        }
         else if ( token == "-mode=dedicated" )
         {
             m_WorkMode = WorkerSettings::DEDICATED;
