@@ -172,7 +172,7 @@
 
 <table width=700>
   <tr>
-    <th width=250 align=left>Option</th>
+    <th width=340 align=left>Option</th>
     <th align=left>Summary</th>
   </tr>
   <tr>
@@ -184,7 +184,7 @@
     <td>Control worker CPUs allocation.</td>
   </tr>
   <tr>
-    <td><a href="#mode">-mode=[disabled|idle|dedicated]</a></td>
+    <td><a href="#mode">-mode=[disabled|idle|dedicated|proportional]</a></td>
     <td>Control worker availability.</td>
   </tr>
   <tr>
@@ -469,7 +469,7 @@ runs in UI-less mode)</p>
 </div>
 
 
-    <div class='newsitemheader' id="mode">-mode=[disabled|idle|dedicated]</div>
+    <div class='newsitemheader' id="mode">-mode=[disabled|idle|dedicated|proportional]</div>
     <div class='newsitembody'>
 <p>Control worker availability.</p>
 <p>The FBuildWorker.exe mode is normally controlled through the UI. The "-mode" command line option will override this as follows:
@@ -478,6 +478,7 @@ runs in UI-less mode)</p>
   <tr><td>-mode=disabled</td><td>Worker will accept no tasks.</td></tr>
   <tr><td>-mode=idle</td><td>Worker will accept tasks when PC is considerd idle.</td>
   <tr><td>-mode=dedicated</td><td>Worker will accept tasks regardless of PC state.</td></tr>
+  <tr><td>-mode=proportional</td><td>Worker will accept tasks proportional to PC's available power.</td>
 </table>
 </p>
 <p>NOTE: The newly overridden options will be saved and used on subsequent restarts of the worker.</p>
