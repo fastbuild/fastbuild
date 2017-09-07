@@ -1350,6 +1350,8 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     PROFILE_FUNCTION
 
     Array< AString > tokens( 1024, true );
+    if ( GetFlag( FLAG_CREATING_PCH ) )
+        useDeoptimization = false; // Deoptimization not supported for precompiled header.
 
     const bool useDedicatedPreprocessor = ( ( pass == PASS_PREPROCESSOR_ONLY ) && GetDedicatedPreprocessor() );
     if ( useDedicatedPreprocessor )
