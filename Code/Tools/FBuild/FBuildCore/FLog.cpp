@@ -49,7 +49,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
 // Defines
 //------------------------------------------------------------------------------
-#define FBUILD_MONITOR_VERSION uint32_t( 1 )
+#define FBUILD_MONITOR_VERSION uint32_t( 2 )
 
 // Info
 //------------------------------------------------------------------------------
