@@ -33,7 +33,8 @@ public:
     bool m_GenerateReport;
     bool m_NoLocalConsumptionOfRemoteJobs;
     bool m_AllowLocalRace;
-    bool m_WrapperChild;
+	bool m_WrapperChild;
+	uint32_t m_MainProcessId; // main process ID of the wrapper chain, only available if this is a wrapped child
     bool m_FixupErrorPaths;
     bool m_StopOnFirstError;
     bool m_EnableMonitor;

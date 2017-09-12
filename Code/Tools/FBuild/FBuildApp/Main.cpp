@@ -126,6 +126,7 @@ int Main(int argc, char * argv[])
     bool enableMonitor = false;
     bool distVerbose = false;
     int32_t numWorkers = -1;
+	int32_t mainProcessId = Process::GetCurrentId();
     WrapperMode wrapperMode( WRAPPER_MODE_NONE );
     AStackString<> args;
     const char * configFile = nullptr;
@@ -324,14 +325,16 @@ int Main(int argc, char * argv[])
                 #endif
                 continue;
             }
-            else if ( thisArg == "-wrapperintermediate")
+			else if ( thisArg.BeginsWith( "-wrapperintermediate:" ) &&
+					  sscanf( thisArg.Get(), "-wrapperintermediate:%i", &mainProcessId ) == 1)
             {
                 #if defined( __WINDOWS__ )
                     wrapperMode = WRAPPER_MODE_INTERMEDIATE_PROCESS;
                 #endif
                 continue;
             }
-            else if ( thisArg == "-wrapperfinal")
+			else if ( thisArg.BeginsWith( "-wrapperfinal:" ) &&
+					  sscanf( thisArg.Get(), "-wrapperfinal:%i", &mainProcessId ) == 1)
             {
                 #if defined( __WINDOWS__ )
                     wrapperMode = WRAPPER_MODE_FINAL_PROCESS;
@@ -381,6 +384,7 @@ int Main(int argc, char * argv[])
     // Global mutex names depend on workingDir which is managed by FBuildOptions
     FBuildOptions options;
     options.m_ProgramName = programName;
+	options.m_MainProcessId = mainProcessId;
 
     if ( wrapperMode == WRAPPER_MODE_INTERMEDIATE_PROCESS )
     {
@@ -676,7 +680,9 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
 
     // launch intermediate process
     AStackString<> argsCopy( args );
-    argsCopy += " -wrapperintermediate";
+	AStackString<> additionalArgs;
+	additionalArgs.Format( " -wrapperintermediate:%u", Process::GetCurrentId() );
+    argsCopy += additionalArgs;
 
     Process p;
     if ( !p.Spawn( options.m_ProgramName.Get(), argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
@@ -709,11 +715,13 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
 
 // WrapperIntermediateProcess
 //------------------------------------------------------------------------------
-int WrapperIntermediateProcess( const AString & args, const FBuildOptions & options  )
+int WrapperIntermediateProcess( const AString & args, const FBuildOptions & options )
 {
     // launch final process
     AStackString<> argsCopy( args );
-    argsCopy += " -wrapperfinal";
+	AStackString<> additionalArgs;
+	additionalArgs.Format( " -wrapperfinal:%u", options.m_MainProcessId );
+    argsCopy += additionalArgs;
 
     Process p;
     if ( !p.Spawn( options.m_ProgramName.Get(), argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty

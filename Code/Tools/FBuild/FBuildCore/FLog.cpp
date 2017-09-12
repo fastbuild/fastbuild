@@ -204,7 +204,7 @@ static FileStream * g_MonitorFileStream = nullptr;
             g_MonitorFileStream = nullptr;
         }
 
-        Monitor( "START_BUILD %u %u\n", FBUILD_MONITOR_VERSION, Process::GetCurrentId() );
+        Monitor( "START_BUILD %u %u %u\n", FBUILD_MONITOR_VERSION, Process::GetCurrentId(), FBuild::Get().GetOptions().m_MainProcessId );
     }
 
     Tracing::AddCallbackOutput( &TracingOutputCallback );
