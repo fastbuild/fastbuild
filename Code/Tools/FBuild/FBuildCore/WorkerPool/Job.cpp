@@ -108,6 +108,11 @@ void Job::ErrorPreformatted( const char * message )
     }
 }
 
+void Job::SetMessages( const Array< AString > & messages )
+{
+	m_Messages = messages;
+}
+
 // Serialize
 //------------------------------------------------------------------------------
 void Job::Serialize( IOStream & stream )
