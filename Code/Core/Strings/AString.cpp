@@ -184,30 +184,37 @@ void AString::VFormat( const char * fmtString, va_list args )
     char * buffer = stackBuffer;
     size_t bufferSize = STACK_BUFFER_SIZE;
 
-loop:
-    // attempt the formatting
     #if defined( __WINDOWS__ )
+loop:
+        // attempt the formatting
         int len = vsnprintf_s( buffer, bufferSize, _TRUNCATE, fmtString, args );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        int len = vsnprintf( buffer, bufferSize, fmtString, args );
-    #else
-        #error Unknown platform
-    #endif
 
-    // did it fail to fit?
-    if ( len < 0 )
-    {
-        // free any old buffer allocations
-        if ( buffer != stackBuffer )
+        // did it fail to fit?
+        if ( len < 0 )
         {
-            FREE( buffer );
-        }
+            // free any old buffer allocations
+            if ( buffer != stackBuffer )
+            {
+                FREE( buffer );
+            }
 
-        // double the buffer and try again
-        bufferSize *= 2;
-        buffer = (char *)ALLOC( bufferSize );
-        goto loop;
-    }
+            // double the buffer and try again
+            bufferSize *= 2;
+            buffer = (char *)ALLOC( bufferSize );
+            goto loop;
+        }
+    #else
+        va_list argsCopy;
+        va_copy( argsCopy, args );
+        int len = vsnprintf( nullptr, 0, fmtString, argsCopy );
+        va_end( argsCopy );
+        if ( len > ( (int)bufferSize - 1 ) )
+        {
+            bufferSize = len + 1;
+            buffer = (char *)ALLOC( bufferSize );
+        }
+        VERIFY( vsnprintf( buffer, bufferSize, fmtString, args ) >= 0 );
+    #endif
 
     // keep the final result
     Assign( buffer, buffer + len );

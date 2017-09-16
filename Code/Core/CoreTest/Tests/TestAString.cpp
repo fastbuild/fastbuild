@@ -26,6 +26,7 @@ private:
     void Concatenation() const;
     void EndsWithI() const;
     void Find() const;
+    void Format() const;
     void Tokenize() const;
     void PatternMatch() const;
     void PatternMatchI() const;
@@ -44,6 +45,7 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( Concatenation )
     REGISTER_TEST( EndsWithI )
     REGISTER_TEST( Find )
+    REGISTER_TEST( Format )
     REGISTER_TEST( Tokenize )
     REGISTER_TEST( PatternMatch )
     REGISTER_TEST( PatternMatchI )
@@ -299,6 +301,25 @@ void TestAString::Find() const
         TEST_ASSERT(tmp.Find('X') == nullptr ); // This was OK
         TEST_ASSERT(tmp.Find('X', tmp.Get() + 8) == nullptr); // This was returning junk data past end of string
     }
+}
+
+// Format
+//------------------------------------------------------------------------------
+void TestAString::Format() const
+{
+    // Create a really long input string
+    AStackString<> longInput;
+    const size_t longStringLen( 1024 * 1024 );
+    for ( size_t i=0; i<longStringLen; ++i )
+    {
+        longInput += 'A';
+    }
+    
+    // Make sure we correctly handle formatting large strings
+    AStackString<> buffer;
+    buffer.Format( "%s", longInput.Get() );
+    TEST_ASSERT( buffer.GetLength() == longStringLen );
+    TEST_ASSERT( AString::StrLen( buffer.Get() ) == longStringLen );
 }
 
 // Tokenize
