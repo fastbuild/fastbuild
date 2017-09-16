@@ -14,6 +14,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
@@ -504,6 +505,15 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
             // insert all the objects in the object list
             LibraryNode * ln = n->CastTo< LibraryNode >();
             ln->GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
+            continue;
+        }
+        if ( n->GetType() == Node::LIBRARY_NODE )
+        {
+            ASSERT( GetType() == Node::LIBRARY_NODE ); // should only be possible for a LibraryNode
+
+            // insert all the objects in the object list
+            LibraryNode * ln = n->CastTo< LibraryNode >();
+            ln->GetInputFiles( fullArgs, pre, post );
             continue;
         }
 
