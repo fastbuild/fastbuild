@@ -35,12 +35,16 @@ public:
     void SetStartMinimized( bool startMinimized );
     inline bool GetStartMinimzed() { return m_StartMinimized; }
 
+    inline bool GetAllowBrokerClean() const { return m_AllowBrokerClean; }
+    void SetAllowBrokerClean(bool allowBrokerClean);
+
     void Load();
     void Save();
 private:
     Mode        m_Mode;
     uint32_t    m_NumCPUsToUse;
     bool        m_StartMinimized;
+    bool        m_AllowBrokerClean;
 };
 
 //------------------------------------------------------------------------------

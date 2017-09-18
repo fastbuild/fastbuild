@@ -28,6 +28,7 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_CPUAllocation( 0 ),
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
+    m_AllowBrokerClean( false ),
     m_ConsoleMode( false )
 {
     #ifndef __WINDOWS__
@@ -105,6 +106,11 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_OverrideWorkMode = true;
             continue;
         }
+        else if ( token == "-allowbrokerclean" )
+        {
+            m_AllowBrokerClean = true;
+            continue;
+        }
         #if defined( __WINDOWS__ )
             else if ( token == "-nosubprocess" )
             {
@@ -143,6 +149,8 @@ void FBuildWorkerOptions::ShowUsageError()
                        "                disabled : Don't accept any work.\n"
                        "                idle : Accept work when PC is idle.\n"
                        "                dedicated : Accept work always.\n"
+                       "\n"
+                       "-allowbrokerclean : Allow FastBuildWorker to clean the broker folder\n"
                        "\n"
                        #if defined( __WINDOWS__ )
                        "-nosubprocess : Don't spawn a sub-process worker copy.\n";

@@ -38,5 +38,13 @@ uint64_t Time::GetCurrentFileTime()
         #error Unknown platform
     #endif
 }
-
+//------------------------------------------------------------------------------
+uint64_t Time::FileTimeToSeconds(uint64_t _filetime)
+{
+    #if defined( __WINDOWS__ )
+        return _filetime / 10000000U;
+    #else
+        #error Unknown platform
+    #endif
+}
 //------------------------------------------------------------------------------

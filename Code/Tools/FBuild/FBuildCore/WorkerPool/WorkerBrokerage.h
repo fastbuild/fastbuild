@@ -34,6 +34,7 @@ private:
     AString             m_HostName;
     AString             m_BrokerageFilePath;
     Timer               m_TimerLastUpdate;      // Throttle network access
+    Timer               m_TimerLastCleanBroker;
 };
 
 //------------------------------------------------------------------------------

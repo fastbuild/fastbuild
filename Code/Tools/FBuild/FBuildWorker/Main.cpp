@@ -138,6 +138,10 @@ int MainCommon( const AString & args, void * hInstance )
         {
             WorkerSettings::Get().SetMode( options.m_WorkMode );
         }
+        if (options.m_AllowBrokerClean)
+        {
+            WorkerSettings::Get().SetAllowBrokerClean(options.m_AllowBrokerClean);
+        }
         ret = worker.Work();
     }
 

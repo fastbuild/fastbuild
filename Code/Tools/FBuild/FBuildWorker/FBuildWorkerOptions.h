@@ -35,6 +35,9 @@ public:
     bool m_OverrideWorkMode;
     WorkerSettings::Mode m_WorkMode;
 
+    // broker folder cleanup
+    bool m_AllowBrokerClean;
+
     // Console mode
     bool m_ConsoleMode;
 
