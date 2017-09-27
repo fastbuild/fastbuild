@@ -31,6 +31,10 @@
 // system
 #include <stdio.h>
 
+#if defined( __WINDOWS__ )
+#include <psapi.h>
+#endif
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
@@ -42,7 +46,8 @@ Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
     , m_RestartNeeded( false )
     #if defined( __WINDOWS__ )
         , m_LastDiskSpaceResult( -1 )
-    #endif
+        , m_LastMemoryCheckResult(-1)
+#endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
@@ -217,12 +222,54 @@ bool Worker::HasEnoughDiskSpace()
     #endif
 }
 
+// HasEnoughMemory
+//------------------------------------------------------------------------------
+bool Worker::HasEnoughMemory()
+{
+#if defined( __WINDOWS__ )
+    // Only check free memory every few seconds
+    float elapsedTime = m_TimerLastMemoryCheck.GetElapsedMS();
+    if ( ( elapsedTime < 1000.0f ) && ( m_LastMemoryCheckResult != -1 ) )
+    {
+        return ( m_LastMemoryCheckResult != 0 );
+    }
+    m_TimerLastMemoryCheck.Start();
+
+    PERFORMANCE_INFORMATION memInfo;
+    memInfo.cb = sizeof( memInfo );
+    BOOL result = GetPerformanceInfo( &memInfo, sizeof( memInfo ) );
+    if ( result )
+    {
+        SIZE_T limitMemSize = memInfo.CommitLimit * memInfo.PageSize;
+        SIZE_T currentMemSize = memInfo.CommitTotal * memInfo.PageSize;
+
+        // Calculate the free memory in MB.
+        SIZE_T freeMemSize = ( limitMemSize - currentMemSize ) / ( 1024 * 1024 );
+
+        // Check if the free memory is high enough
+        WorkerSettings & ws = WorkerSettings::Get();
+        if ( freeMemSize > ws.GetMinimumFreeMemoryInMB() )
+        {
+            m_LastMemoryCheckResult = 1;
+            return true;
+        }
+    }
+
+    // The machine doesn't have enough memory or query failed. Exclude this machine from worker pool.
+    m_LastMemoryCheckResult = 0;
+    return false;
+#else
+    return true;
+#endif
+}
+
 // UpdateAvailability
 //------------------------------------------------------------------------------
 void Worker::UpdateAvailability()
 {
     // Check disk space
     bool hasEnoughDiskSpace = HasEnoughDiskSpace();
+    bool hasEnoughMemory = HasEnoughMemory();
 
     m_IdleDetection.Update();
 
@@ -250,7 +297,7 @@ void Worker::UpdateAvailability()
     }
 
     // don't accept any new work while waiting for a restart
-    if ( m_RestartNeeded || ( hasEnoughDiskSpace == false ) )
+    if ( m_RestartNeeded || ( hasEnoughDiskSpace == false ) || ( hasEnoughMemory == false ) )
     {
         numCPUsToUse = 0;
     }

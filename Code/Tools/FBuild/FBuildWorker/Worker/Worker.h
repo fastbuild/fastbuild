@@ -35,6 +35,7 @@ private:
     void UpdateUI();
     void CheckForExeUpdate();
     bool HasEnoughDiskSpace();
+    bool HasEnoughMemory();
 
     inline bool InConsoleMode() const { return ( m_MainWindow == nullptr ); }
 
@@ -56,7 +57,10 @@ private:
     #if defined( __WINDOWS__ )
         Timer               m_TimerLastDiskSpaceCheck;
         int32_t             m_LastDiskSpaceResult;      // -1 : No check done yet. 0=Not enough space right now. 1=OK for now.
-    #endif
+
+        Timer               m_TimerLastMemoryCheck;
+        int32_t             m_LastMemoryCheckResult;      // -1 : No check done yet. 0=Not enough memory right now. 1=OK for now.
+#endif
     mutable AString     m_LastStatusMessage;
 };
 
