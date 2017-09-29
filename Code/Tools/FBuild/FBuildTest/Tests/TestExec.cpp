@@ -303,6 +303,7 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     FBuildOptions options;
     options.m_ConfigFile = "Data/TestExec/exec.bff";
     options.m_ForceCleanBuild = true;
+    options.m_FastCancel = true;
 
     FBuild fBuild(options);
     fBuild.Initialize();

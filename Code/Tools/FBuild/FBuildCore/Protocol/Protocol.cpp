@@ -53,47 +53,47 @@ Protocol::IMessage::IMessage( Protocol::MessageType msgType, uint32_t msgSize, b
 
 // IMessage::Send
 //------------------------------------------------------------------------------
-void Protocol::IMessage::Send( const ConnectionInfo * connection ) const
+bool Protocol::IMessage::Send( const ConnectionInfo * connection ) const
 {
     ASSERT( connection );
     ASSERT( m_HasPayload == false ); // must use Send with payload
 
     // the packet is the contents of the derived class
     TCPConnectionPool & pool = connection->GetTCPConnectionPool();
-    pool.Send( connection, this, m_MsgSize );
+    return pool.Send( connection, this, m_MsgSize );
 }
 
 // IMessage::Send (with payload)
 //------------------------------------------------------------------------------
-void Protocol::IMessage::Send( const ConnectionInfo * connection, const MemoryStream & payload ) const
+bool Protocol::IMessage::Send( const ConnectionInfo * connection, const MemoryStream & payload ) const
 {
     ASSERT( connection );
     ASSERT( m_HasPayload == true ); // must NOT use Send with payload
 
     TCPConnectionPool & pool = connection->GetTCPConnectionPool();
-    pool.Send( connection, this, m_MsgSize, payload.GetData(), payload.GetSize() );
+    return pool.Send( connection, this, m_MsgSize, payload.GetData(), payload.GetSize() );
 }
 
 // IMessage::Send (with payload)
 //------------------------------------------------------------------------------
-void Protocol::IMessage::Send( const ConnectionInfo * connection, const ConstMemoryStream & payload ) const
+bool Protocol::IMessage::Send( const ConnectionInfo * connection, const ConstMemoryStream & payload ) const
 {
     ASSERT( connection );
     ASSERT( m_HasPayload == true ); // must NOT use Send with payload
 
     TCPConnectionPool & pool = connection->GetTCPConnectionPool();
-    pool.Send( connection, this, m_MsgSize, payload.GetData(), payload.GetSize() );
+    return pool.Send( connection, this, m_MsgSize, payload.GetData(), payload.GetSize() );
 }
 
 // IMessage::Broadcast
 //------------------------------------------------------------------------------
-void Protocol::IMessage::Broadcast( TCPConnectionPool * pool ) const
+bool Protocol::IMessage::Broadcast( TCPConnectionPool * pool ) const
 {
     ASSERT( pool );
     ASSERT( m_HasPayload == false ); // must implement custom function
 
     // the packet is the contents of the derived class
-    pool->Broadcast( this, m_MsgSize );
+    return pool->Broadcast( this, m_MsgSize );
 }
 
 // MsgConnection

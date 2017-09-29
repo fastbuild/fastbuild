@@ -32,6 +32,7 @@ class Node;
 class ObjectListNode;
 class ObjectNode;
 class RemoveDirNode;
+class SettingsNode;
 class SLNNode;
 class TestNode;
 class UnityNode;
@@ -52,7 +53,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 93 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 96 };
 
     bool IsValid() const
     {
@@ -87,6 +88,7 @@ public:
 
     LoadResult Load( IOStream & stream, const char * nodeGraphDBFile );
     void Save( IOStream & stream, const char * nodeGraphDBFile ) const;
+    void Display( const Dependencies & dependencies ) const;
 
     // access existing nodes
     Node * FindNode( const AString & nodeName ) const;
@@ -156,6 +158,7 @@ public:
                                            const AString & projectGuid,
                                            const AString & defaultLanguage,
                                            const AString & applicationEnvironment,
+                                           const bool projectSccEntrySAK,
                                            const Array< VSProjectConfig > & configs,
                                            const Array< VSProjectFileType > & fileTypes,
                                            const Array< AString > & references,
@@ -170,6 +173,7 @@ public:
                                 const Array< SLNSolutionFolder > & folders );
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
+    SettingsNode * CreateSettingsNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );
 
@@ -222,6 +226,8 @@ private:
     static void SaveRecurse( IOStream & stream, Node * node, Array< bool > & savedNodeFlags );
     static void SaveRecurse( IOStream & stream, const Dependencies & dependencies, Array< bool > & savedNodeFlags );
     bool LoadNode( IOStream & stream );
+    static void DisplayRecurse( Node * node, Array< bool > & savedNodeFlags, uint32_t depth, AString & outBuffer );
+    static void DisplayRecurse( const char * title, const Dependencies & dependencies, Array< bool > & savedNodeFlags, uint32_t depth, AString & outBuffer );
 
     enum { NODEMAP_TABLE_SIZE = 65536 };
     Node **         m_NodeMap;

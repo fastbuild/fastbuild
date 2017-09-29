@@ -118,6 +118,13 @@ void TestFileIO::FileCopy() const
     TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get() ) );
     TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
 
+    // ensure attributes are transferred properly
+    FileIO::FileInfo sourceInfo;
+    TEST_ASSERT( FileIO::GetFileInfo( path, sourceInfo ) == true );
+    FileIO::FileInfo destInfo;
+    TEST_ASSERT( FileIO::GetFileInfo( pathCopy, destInfo ) == true );
+    TEST_ASSERT( destInfo.m_Attributes == sourceInfo.m_Attributes );
+
     // copy without overwrite allowed should fail
     const bool allowOverwrite = false;
     TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), allowOverwrite ) == false );

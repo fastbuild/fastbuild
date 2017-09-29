@@ -68,7 +68,7 @@ TestNode::~TestNode() = default;
     EmitCompilationMessage( workingDir );
 
     // spawn the process
-    Process p;
+    Process p( FBuild::Get().GetAbortBuildPointer() );
     bool spawnOK = p.Spawn( GetTestExecutable()->GetName().Get(),
                             m_TestArguments.Get(),
                             workingDir,
@@ -76,6 +76,11 @@ TestNode::~TestNode() = default;
 
     if ( !spawnOK )
     {
+        if ( p.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
+
         FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
@@ -92,9 +97,13 @@ TestNode::~TestNode() = default;
         return NODE_RESULT_FAILED;
     }
 
-    ASSERT( !p.IsRunning() );
     // Get result
     int result = p.WaitForExit();
+    if ( p.HasAborted() )
+    {
+        return NODE_RESULT_FAILED;
+    }
+
     if ( ( result != 0 ) || ( m_TestAlwaysShowOutput == true ) )
     {
         // something went wrong, print details

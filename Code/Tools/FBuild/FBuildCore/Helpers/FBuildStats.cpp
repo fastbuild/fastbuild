@@ -62,8 +62,10 @@ void FBuildStats::OnBuildStop( Node * node )
 {
     m_RootNode = node;
 
+    const bool buildOk = ( m_RootNode->GetState() == Node::UP_TO_DATE );
+
     const FBuildOptions & options = FBuild::Get().GetOptions();
-    const bool showSummary = options.m_ShowSummary;
+    const bool showSummary = options.m_ShowSummary && ( !options.m_NoSummaryOnError || buildOk );
     const bool generateReport = options.m_GenerateReport;
 
     // Any output required?

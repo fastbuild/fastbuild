@@ -39,8 +39,20 @@
     <td>Enable distributed compilation.</td>
   </tr>
   <tr>
+    <td><a href="#distverbose">-distverbose</a></td>
+    <td>Enable detailed logging for distributed compilation.</td>
+  </tr>
+  <tr>
+    <td><a href="#fastcancel">-fastcancel</a></td>
+    <td>[Experimental] Active fast cancellation on build failure.</td>
+  </tr>
+  <tr>
     <td><a href="#fixuperrorpaths">-fixuperrorpaths</a></td>
     <td>Reformat GCC/SNC/Clang error messages in Visual Studio format.</td>
+  </tr>
+  <tr>
+    <td><a href="#forceremote">-forceremote</a></td>
+    <td>Force distributable jobs to only be built remotely.</td>
   </tr>
   <tr>
     <td><a href="#help">-help</a></td>
@@ -63,12 +75,24 @@
     <td>Don't stop building on first error.</td>
   </tr>
   <tr>
+    <td><a href="#nosummaryonerror">-nosummaryonerror</a></td>
+    <td>Don't print the -summary output if there is an error.</td>
+  </tr>
+  <tr>
+    <td><a href="#quiet">-quiet</a></td>
+    <td>Don't show build output.</td>
+  </tr>
+  <tr>
     <td><a href="#report">-report</a></td>
     <td>Output a report at build termination.</td>
   </tr>
   <tr>
     <td><a href="#showcmds">-showcmds</a></td>
     <td>Show command lines used to launch external processes.</td>
+  </tr>
+  <tr>
+    <td><a href="#showdeps">-showdeps</a></td>
+    <td>Show known dependency tree for specified targets.</td>
   </tr>
   <tr>
     <td><a href="#showtargets">-showtargets</a></td>
@@ -111,6 +135,10 @@
     <th align=left>Summary</th>
   </tr>
   <tr>
+    <td><a href="#console">-console</a></td>
+    <td>Disable UI. (Windows Only)</td>
+  </tr>
+  <tr>
     <td><a href="#cpus">-cpus=[n|-n|n%]</a></td>
     <td>Control worker CPUs allocation.</td>
   </tr>
@@ -150,12 +178,41 @@ specified instead.</p>
 <p>Enable distributed compilation. Requires some build configuration.</p>
 </div>
 
+    <div class='newsitemheader' id="distverbose">-distverbose</div>
+    <div class='newsitembody'>
+<p>Print detailed information about distributed compilation. This can help when investigating connectivity issues. Activates -dist if not already specified.</p>
+</div>
+
+    <td>[Experimental] Active fast cancellation on build failure.</td>
+    <div class='newsitemheader' id="fastcancel">-fastcancel</div>
+    <div class='newsitembody'>
+<p>Normally, when a build fails, FASTBuild will stop spawning new tasks, but will allow any other concurrently running processes to complete. In some cases, these tasks can
+take a long time to complete. When activated, the -fastcancel option will allow FASTBuild to instead terminate those concurrent jobs.</p>
+</div>
+
     <div class='newsitemheader' id="fixuperrorpaths">-fixuperrorpaths</div>
     <div class='newsitembody'>
 <p>Enables re-formatting of warnings, errors and notes for GCC/SNC & Clang to Visual Studio format. Additionally, relative paths are expanded to full paths. This allows these errors to be double-clickable inside Visual Studio.</p>
 <p>Enabled automatically when '-vs' is used.</p>
 </div>
 
+    <div class='newsitemheader' id="forceremote">-forceremote</div>
+    <div class='newsitembody'>
+<p>Prevents all local compilation of distributable jobs.</p>
+<p>FASTBuild will normally utilize local CPU resources to compile distributable jobs in several
+situations, in order to improve performance:</p>
+<ul>
+    <li>When there are no remote workers available (otherwise build would not complete)</li>
+    <li>When all remote workers are busy and local CPUs would be idle</li>
+    <li>When blocked on remote work</li>
+</ul>
+<p>This option prevents local consumption of distributable jobs in all these cases. This will generally
+result in slower builds and may even prevent the build completing entirely. As such, this options should
+generally only be used for troubleshooting.</p>
+<p>Additionally, this option disabled use of the cache.</p>
+<p><b>NOTE:</b> This option can prevent builds from completing (if no workers are available for example).</p>
+<p><b>NOTE:</b> This option will generally degrade build performance.</p>
+</div>
 
     <div class='newsitemheader' id="help">-help</div>
     <div class='newsitembody'>
@@ -205,6 +262,18 @@ useful if you want to see as many errors as possible in your compilation output.
 <p>NOTE: When specifying multiple targets to compile on the command line, -nostoponerror is implied.</p>
 </div>
 
+    <div class='newsitemheader' id="nosummaryonerror">-nosummaryonerror</div>
+    <div class='newsitembody'>
+<p>The -nosummaryonerror option instructs FASTBuild to only print the -summary overview if the build completes successfully.</p>
+<p>NOTE: When specifying -nosummaryonerror, -summary is implied if not already specified.</p>
+</div>
+
+    <div class='newsitemheader' id="quiet">-quiet</div>
+    <div class='newsitembody'>
+<p>Don't show build output. Information about which items are being built and the overall state of the build will be
+suppressed.</p>
+</div>
+
     <div class='newsitemheader' id="report">-report</div>
     <div class='newsitembody'>
 <p>Ouput a detailed report at the end of the build.  The report is written to report.html in the current directory.</p>
@@ -227,9 +296,20 @@ useful if you want to see as many errors as possible in your compilation output.
 <p></p>
 </div>
 
+    <div class='newsitemheader' id="showdeps">-showdeps</div>
+    <div class='newsitembody'>
+<p>Displays the hierearchy of dependencies for the specified target(s). This can be useful for debugging build configurations.</p>
+<p>Example:</p>
+<div class='code'>fbuild.exe -showdeps Game-x86-Debug</div>
+<p>If no target is specified, "all" is used.</p>
+<p><b>NOTE:</b> The dependencies  shown will refelect the state as of the last completed build.
+i.e. dependencies that would be discovered during the next build will not be shown.</p>
+<p></p>
+</div>
+
     <div class='newsitemheader' id="showtargets">-showtargets</div>
     <div class='newsitembody'>
-<p>Displays the list of targets defined in the bff configuraiton file.</p>
+<p>Displays the list of targets defined in the bff configuration file.</p>
 <p></p>
 </div>
 
@@ -278,6 +358,14 @@ on the original command line.</p>
 </div>
 
 <h2>FBuildWorker.exe Detailed</h2>
+
+    <div class='newsitemheader' id="console">-console</div>
+    <div class='newsitembody'>
+<p>Disable worker UI.</p>
+<p>The FBuildWorker can run in a UI-less mode on Windows. (On OSX and Linux, the worker currently always
+runs in UI-less mode)</p>
+</div>
+
 
     <div class='newsitemheader' id="cpus">-cpus=[n|-n|n%]</div>
     <div class='newsitembody'>

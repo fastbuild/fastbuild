@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Core/Strings/AStackString.h"
 
 // TestCachePlugin
@@ -91,8 +92,8 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
         TEST_ASSERT( f.Initialize() );
 
         // sotre a copy of the cache params
-        cachePath = f.GetCachePath();
-        cachePluginDLL = f.GetCachePluginDLL();
+        cachePath = f.GetSettings()->GetCachePath();
+        cachePluginDLL = f.GetSettings()->GetCachePluginDLL();
         TEST_ASSERT( !cachePath.IsEmpty() );
         TEST_ASSERT( !cachePluginDLL.IsEmpty() );
 
@@ -106,8 +107,8 @@ void TestCachePlugin::PluginOptionsSavedToDB() const
         TEST_ASSERT( f.Initialize( "../../../../tmp/Test/CachePlugin/CachePlugin.fdb" ) );
 
         // check that the cache params were persisted
-        TEST_ASSERT( cachePath == f.GetCachePath() );
-        TEST_ASSERT( cachePluginDLL == f.GetCachePluginDLL() );
+        TEST_ASSERT( cachePath == f.GetSettings()->GetCachePath() );
+        TEST_ASSERT( cachePluginDLL == f.GetSettings()->GetCachePluginDLL() );
     }
 }
 

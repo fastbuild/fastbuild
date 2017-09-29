@@ -69,6 +69,7 @@
         {
             .TestExecutable                 = '$ProjectName$-Exe-$Platform$-$Config$'
             .TestOutput                     = "$OutputBase$\$ProjectPath$\TestOutput.txt"
+            .TestTimeOut                    = 60
         }
     }
 

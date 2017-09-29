@@ -200,27 +200,34 @@ ObjectNode::~ObjectNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ObjectNode::DoBuild( Job * job )
 {
-    // delete previous file
-    if ( FileIO::FileExists( GetName().Get() ) )
+    // Delete previous file(s) if doing a clean build
+    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
     {
-        if ( FileIO::FileDelete( GetName().Get() ) == false )
+        if ( FileIO::FileExists( GetName().Get() ) )
         {
-            FLOG_ERROR( "Failed to delete file before build '%s'", GetName().Get() );
-            return NODE_RESULT_FAILED;
-        }
-    }
-    if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
-    {
-        if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
-        {
-            if ( FileIO::FileDelete( m_PCHObjectFileName.Get() ) == false )
+            if ( FileIO::FileDelete( GetName().Get() ) == false )
             {
-                FLOG_ERROR( "Failed to delete file before build '%s'", m_PCHObjectFileName.Get() );
+                FLOG_ERROR( "Failed to delete file before build '%s'", GetName().Get() );
                 return NODE_RESULT_FAILED;
             }
         }
+        if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
+        {
+            if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
+            {
+                if ( FileIO::FileDelete( m_PCHObjectFileName.Get() ) == false )
+                {
+                    FLOG_ERROR( "Failed to delete file before build '%s'", m_PCHObjectFileName.Get() );
+                    return NODE_RESULT_FAILED;
+                }
+            }
+        }
+    }
 
-        m_PCHCacheKey = 0; // Will be set correctly if we end up using the cache
+    // Reset PCH cache key - will be set correctly if we end up using the cache
+    if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
+    {
+        m_PCHCacheKey = 0;
     }
 
     // using deoptimization?
@@ -319,9 +326,11 @@ ObjectNode::~ObjectNode()
     }
 
     // Handle MSCL warnings if not already a failure
-    if ( ch.GetResult() == 0 )
+    // If "warnings as errors" is enabled (/WX) we don't need to check
+    // (since compilation will fail anyway, and the output will be shown)
+    if ( ( ch.GetResult() == 0 ) && !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
     {
-        HandleWarningsMSCL( job, ch.GetOut().Get(), ch.GetOutSize() );
+        HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
     }
 
     const char *output = nullptr;
@@ -398,7 +407,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
     // can we do the rest of the work remotely?
     if ( ( ( useSimpleDist ) || (GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed ) )
-        && JobQueue::Get().GetDistributableJobsMemUsage() < ( 512 * MEGABYTE ) )
+        && JobQueue::Get().GetDistributableJobsMemUsage() < ( 1024 * MEGABYTE ) )
     {
         // compress job data
         Compressor c;
@@ -1019,51 +1028,6 @@ const char * ObjectNode::GetObjExtension() const
     return m_CompilerOutputExtension.Get();
 }
 
-// HandleWarningsMSCL
-//------------------------------------------------------------------------------
-void ObjectNode::HandleWarningsMSCL( Job* job, const char * data, uint32_t dataSize ) const
-{
-    // If "warnings as errors" is enabled (/WX) we don't need to check
-    // (since compilation will fail anyway, and the output will be shown)
-    if ( GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
-    {
-        return;
-    }
-
-    if ( ( data == nullptr ) || ( dataSize == 0 ) )
-    {
-        return;
-    }
-
-    // Are there any warnings? (string is ok even in non-English)
-    if ( strstr( data, ": warning " ) )
-    {
-        const bool treatAsWarnings = true;
-        DumpOutput( job, data, dataSize, GetName(), treatAsWarnings );
-    }
-}
-
-// DumpOutput
-//------------------------------------------------------------------------------
-/*static*/ void ObjectNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings )
-{
-    if ( ( data != nullptr ) && ( dataSize > 0 ) )
-    {
-        Array< AString > exclusions( 2, false );
-        exclusions.Append( AString( "Note: including file:" ) );
-        exclusions.Append( AString( "#line" ) );
-
-        AStackString<> msg;
-        msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
-
-        AutoPtr< char > mem( (char *)Alloc( dataSize + msg.GetLength() ) );
-        memcpy( mem.Get(), msg.Get(), msg.GetLength() );
-        memcpy( mem.Get() + msg.GetLength(), data, dataSize );
-
-        Node::DumpOutput( job, mem.Get(), dataSize + msg.GetLength(), &exclusions );
-    }
-}
-
 // GetCacheName
 //------------------------------------------------------------------------------
 const AString & ObjectNode::GetCacheName( Job * job ) const
@@ -1559,9 +1523,9 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                         fullArgs += includePath;
                         fullArgs.Append( end, token.GetEnd() - end );
                         fullArgs.AddDelimiter();
-                    }
 
-                    continue;
+                        continue; // Include path has been replaced
+                    }
                 }
 
                 // Strip "Force Includes" statements (as they are merged in now)
@@ -1699,6 +1663,13 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         if ( isMSVC )
         {
             fullArgs += "/E"; // run pre-processor only
+
+            // Ensure unused defines declared in the PCH but not used
+            // in the PCH are accounted for (See TestPrecompiledHeaders/CacheUniqueness)
+            if ( GetFlag( FLAG_CREATING_PCH ) )
+            {
+                fullArgs += " /d1PP"; // Must be after /E
+            }
         }
         else if ( isQtRCC )
         {
@@ -1708,6 +1679,13 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         {
             ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA );
             fullArgs += "-E"; // run pre-processor only
+
+            // Ensure unused defines declared in the PCH but not used
+            // in the PCH are accounted for (See TestPrecompiledHeaders/CacheUniqueness)
+            if ( GetFlag( FLAG_CREATING_PCH ) )
+            {
+                fullArgs += " -dD";
+            }
 
             const bool clangRewriteIncludes = GetCompiler()->CastTo< CompilerNode >()->IsClangRewriteIncludesEnabled();
             if ( isClang && clangRewriteIncludes )
@@ -1781,7 +1759,9 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
         // only output errors in failure case
         // (as preprocessed output goes to stdout, normal logging is pushed to
         // stderr, and we don't want to see that unless there is a problem)
-        if ( ch.GetResult() != 0 )
+        // NOTE: Output is omitted in case the compiler has been aborted because we don't care about the errors
+        // caused by the manual process abortion (process killed)
+        if ( ( ch.GetResult() != 0 ) && !ch.HasAborted() )
         {
             DumpOutput( job, ch.GetErr().Get(), ch.GetErrSize(), GetName() );
         }
@@ -2037,9 +2017,9 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
     else
     {
         // Handle MSCL warnings if not already a failure
-        if ( IsMSVC() && ( ch.GetResult() == 0 ) )
+        if ( IsMSVC() && ( ch.GetResult() == 0 ) && !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ))
         {
-            HandleWarningsMSCL( job, ch.GetOut().Get(), ch.GetOutSize() );
+            HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
         }
     }
 
@@ -2050,6 +2030,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 //------------------------------------------------------------------------------
 ObjectNode::CompileHelper::CompileHelper( bool handleOutput )
     : m_HandleOutput( handleOutput )
+    , m_Process( FBuild::Get().GetAbortBuildPointer() )
     , m_OutSize( 0 )
     , m_ErrSize( 0 )
     , m_Result( 0 )
@@ -2080,6 +2061,11 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                                    workingDir,
                                    environmentString ) )
     {
+        if ( m_Process.HasAborted() )
+        {
+            return false;
+        }
+
         job->Error( "Failed to spawn process (error 0x%x) to build '%s'\n", Env::GetLastErr(), name.Get() );
         job->OnSystemError();
         return false;
@@ -2089,8 +2075,11 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     m_Process.ReadAllData( m_Out, &m_OutSize, m_Err, &m_ErrSize );
 
     // Get result
-    ASSERT( !m_Process.IsRunning() );
     m_Result = m_Process.WaitForExit();
+    if ( m_Process.HasAborted() )
+    {
+        return false;
+    }
 
     // Handle special types of failures
     HandleSystemFailures( job, m_Result, m_Out.Get(), m_Err.Get() );
@@ -2168,6 +2157,15 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     job->OnSystemError();
                     return;
                 }
+            }
+
+            // If the compiler crashed (Internal Compiler Error), treat this
+            // as a system error so it will be retried, since it can alse be 
+            // the result of faulty hardware.
+            if ( stdOut && strstr( stdOut, "C1001" ) )
+            {
+                job->OnSystemError();
+                return;
             }
 
             // Error messages above also contains this text

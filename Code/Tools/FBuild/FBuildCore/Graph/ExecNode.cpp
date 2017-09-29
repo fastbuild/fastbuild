@@ -62,7 +62,7 @@ ExecNode::~ExecNode() = default;
     EmitCompilationMessage( fullArgs );
 
     // spawn the process
-    Process p;
+    Process p( FBuild::Get().GetAbortBuildPointer() );
     bool spawnOK = p.Spawn( m_Executable->GetName().Get(),
                             fullArgs.Get(),
                             workingDir,
@@ -70,6 +70,11 @@ ExecNode::~ExecNode() = default;
 
     if ( !spawnOK )
     {
+        if ( p.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
+
         FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
@@ -81,9 +86,12 @@ ExecNode::~ExecNode() = default;
     uint32_t memErrSize = 0;
     p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
 
-    ASSERT( !p.IsRunning() );
     // Get result
     int result = p.WaitForExit();
+    if ( p.HasAborted() )
+    {
+        return NODE_RESULT_FAILED;
+    }
 
     // did the executable fail?
     if ( result != m_ExpectedReturnCode )

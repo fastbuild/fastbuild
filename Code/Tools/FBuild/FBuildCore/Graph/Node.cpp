@@ -27,6 +27,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/RemoveDirNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
@@ -51,10 +52,10 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ const char * const Node::s_NodeTypeNames[Node::NUM_NODE_TYPES] =
+/*static*/ const char * const Node::s_NodeTypeNames[] =
 {
     "Proxy",
-    "Copy",
+    "CopyFile",
     "Directory",
     "Exec",
     "File",
@@ -69,10 +70,11 @@
     "DLL",
     "VCXProj",
     "ObjectList",
-    "CopyDirNode",
+    "CopyDir",
     "SLN",
-    "RemoveDirNode",
+    "RemoveDir",
     "XCodeProj",
+    "Settings",
 };
 
 // Custom MetaData
@@ -435,6 +437,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         case Node::SLN_NODE:            n = SLNNode::Load( nodeGraph, stream );             break;
         case Node::REMOVE_DIR_NODE:     n = RemoveDirNode::Load( nodeGraph, stream );       break;
         case Node::XCODEPROJECT_NODE:   n = XCodeProjectNode::Load( nodeGraph, stream );    break;
+        case Node::SETTINGS_NODE:       n = SettingsNode::Load( nodeGraph, stream );        break;
         case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
     }
 

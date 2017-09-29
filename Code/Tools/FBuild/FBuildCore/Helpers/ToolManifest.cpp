@@ -17,8 +17,9 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
-#include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 
 // system
 #include <memory.h> // memcpy
@@ -509,7 +510,7 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & exe, bool fullP
 //------------------------------------------------------------------------------
 void ToolManifest::GetRemotePath( AString & path ) const
 {
-    VERIFY( FileIO::GetTempDir( path ) );
+    VERIFY( FBuild::GetTempDir( path ) );
     AStackString<> subDir;
     #if defined( __WINDOWS__ )
         subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016llx\\", m_ToolId );

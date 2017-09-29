@@ -10,6 +10,7 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
+#include "Core/Tracing/Tracing.h"
 
 // Defines
 //------------------------------------------------------------------------------
@@ -166,23 +167,25 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     public:
         virtual void OnReceive( const ConnectionInfo *, void * data, uint32_t size, bool & )
         {
-            TEST_ASSERT( m_DataSize == size );
+            TEST_ASSERT( size == m_DataSize );
+            bool ok = true;
             for ( size_t i=0; i< size; ++i )
             {
-                TEST_ASSERT( ((char *)data)[ i ] == (char)i );
+                ok &= (((char *)data)[ i ] == (char)i );
             }
-            m_ReceivedOK = true;
+            TEST_ASSERT( ok );
+            m_ReceivedBytes += size;
         }
-        bool m_ReceivedOK;
-        size_t m_DataSize;
+        volatile size_t m_ReceivedBytes = 0;
+        size_t m_DataSize = 0;
     };
 
     const uint16_t testPort( TEST_PORT );
 
     // a big piece of data, initialized to some known pattern
-    #define maxDataSize size_t( 1024 * 1024 * 10 )
-    AutoPtr< char > data( (char *)ALLOC( maxDataSize ) );
-    for ( size_t i=0; i< maxDataSize; ++i )
+    const size_t maxSendSize( 1024 * 1024 * 10 );
+    AutoPtr< char > data( (char *)ALLOC( maxSendSize ) );
+    for ( size_t i=0; i< maxSendSize; ++i )
     {
         data.Get()[ i ] = (char)i;
     }
@@ -195,24 +198,31 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     const ConnectionInfo * ci = client.Connect( AStackString<>( "127.0.0.1" ), testPort );
     TEST_ASSERT( ci );
 
-    size_t testSize = 1;
-    while ( testSize <= maxDataSize )
+    size_t sendSize = 31;
+    while ( sendSize <= maxSendSize )
     {
-        for ( size_t repeat = 0; repeat < 8; ++repeat )
+        server.m_ReceivedBytes = 0;
+        server.m_DataSize = sendSize;
+        
+        Timer timer;
+
+        size_t totalSent = 0;
+        while ( timer.GetElapsed() < 0.1f )
         {
-            server.m_ReceivedOK = false;
-            server.m_DataSize = testSize;
-
             // client sends some know data to the server
-            client.Send( ci, data.Get(), testSize );
-
-            while( !server.m_ReceivedOK )
-            {
-                Thread::Sleep( 1 );
-            }
+            TEST_ASSERT( client.Send( ci, data.Get(), sendSize ) );
+            totalSent += sendSize;
         }
+        
+        while( server.m_ReceivedBytes < totalSent )
+        {
+            Thread::Sleep( 1 );
+        }
+        
+        const float speedMBs = ( float( totalSent ) / timer.GetElapsed() ) / float( 1024 * 1024 );
+        OUTPUT( "Speed: %2.1f MiB/s, SendSize: %u\n", speedMBs, (uint32_t)sendSize );
 
-        testSize = ( testSize * 2 ) + 33; // +33 to avoid powers of 2
+        sendSize = ( sendSize * 2 ) + 33; // +33 to avoid powers of 2
     }
 }
 

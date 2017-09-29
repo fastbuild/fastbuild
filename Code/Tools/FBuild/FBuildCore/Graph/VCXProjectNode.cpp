@@ -37,6 +37,7 @@ VCXProjectNode::VCXProjectNode( const AString & projectOutput,
                                 const AString & projectGuid,
                                 const AString & defaultLanguage,
                                 const AString & applicationEnvironment,
+                                const bool projectSccEntrySAK,
                                 const Array< VSProjectConfig > & configs,
                                 const Array< VSProjectFileType > & fileTypes,
                                 const Array< AString > & references,
@@ -51,6 +52,7 @@ VCXProjectNode::VCXProjectNode( const AString & projectOutput,
 , m_ProjectGuid( projectGuid )
 , m_DefaultLanguage( defaultLanguage )
 , m_ApplicationEnvironment( applicationEnvironment )
+, m_ProjectSccEntrySAK( projectSccEntrySAK )
 , m_Configs( configs )
 , m_FileTypes( fileTypes )
 , m_References( references )
@@ -85,6 +87,7 @@ VCXProjectNode::~VCXProjectNode() = default;
     pg.SetProjectGuid( m_ProjectGuid );
     pg.SetDefaultLanguage( m_DefaultLanguage );
     pg.SetApplicationEnvironment( m_ApplicationEnvironment );
+    pg.SetProjectSccEntrySAK( m_ProjectSccEntrySAK );
 
     // References
     pg.SetReferences( m_References );
@@ -233,6 +236,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
     NODE_LOAD( AStackString<>, projectGuid );
     NODE_LOAD( AStackString<>, defaultLanguage );
     NODE_LOAD( AStackString<>, applicationEnvironment );
+    NODE_LOAD( bool, projectSccEntrySAK );
     NODE_LOAD( Array< AString >, references );
     NODE_LOAD( Array< AString >, projectReferences );
 
@@ -253,6 +257,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
                                  projectGuid,
                                  defaultLanguage,
                                  applicationEnvironment,
+                                 projectSccEntrySAK,
                                  configs,
                                  fileTypes,
                                  references,
@@ -275,6 +280,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
     NODE_SAVE( m_ProjectGuid );
     NODE_SAVE( m_DefaultLanguage );
     NODE_SAVE( m_ApplicationEnvironment );
+    NODE_SAVE( m_ProjectSccEntrySAK );
     NODE_SAVE( m_References );
     NODE_SAVE( m_ProjectReferences );
     VSProjectConfig::Save( stream, m_Configs );

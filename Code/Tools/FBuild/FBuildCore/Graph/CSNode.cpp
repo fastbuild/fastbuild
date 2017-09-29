@@ -47,6 +47,7 @@ CSNode::CSNode()
 , m_NumCompilerInputFiles( 0 )
 , m_NumCompilerReferences( 0 )
 {
+    m_CompilerInputPattern.Append( AStackString<>( "*.cs" ) );
     m_Type = CS_NODE;
     m_LastBuildTimeMs = 5000; // higher default than a file node
 }
@@ -177,10 +178,15 @@ CSNode::~CSNode() = default;
     EmitCompilationMessage( fullArgs );
 
     // spawn the process
-    Process p;
+    Process p( FBuild::Get().GetAbortBuildPointer() );
     if ( p.Spawn( GetCompiler()->GetName().Get(), fullArgs.GetFinalArgs().Get(),
                   workingDir, environment ) == false )
     {
+        if ( p.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
+
         FLOG_ERROR( "Failed to spawn process to build '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
@@ -193,8 +199,12 @@ CSNode::~CSNode() = default;
     p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
 
     // Get result
-    ASSERT( !p.IsRunning() );
     int result = p.WaitForExit();
+    if ( p.HasAborted() )
+    {
+        return NODE_RESULT_FAILED;
+    }
+
     bool ok = ( result == 0 );
 
     if ( !ok )

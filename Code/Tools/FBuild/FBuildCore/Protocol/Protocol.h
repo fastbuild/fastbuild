@@ -31,7 +31,7 @@ namespace Protocol
     enum { PROTOCOL_VERSION = 16 };
 
     enum { SERVER_STATUS_FREQUENCY_MS = 1000 }; // frequency of server status updates to client
-    enum { SERVER_STATUS_TIMEOUT = 5000 };      // server is dead if time elapses between updates
+    enum { SERVER_STATUS_TIMEOUT_MS = 30000 };  // server is dead if time elapses between updates
 
     // Identifiers for all unique messages
     //------------------------------------------------------------------------------
@@ -69,12 +69,13 @@ namespace Protocol
     class IMessage
     {
     public:
-        void Send( const ConnectionInfo * connection ) const;
-        void Send( const ConnectionInfo * connection, const MemoryStream & payload ) const;
-        void Send( const ConnectionInfo * connection, const ConstMemoryStream & payload ) const;
-        void Broadcast( TCPConnectionPool * pool ) const;
+        bool Send( const ConnectionInfo * connection ) const;
+        bool Send( const ConnectionInfo * connection, const MemoryStream & payload ) const;
+        bool Send( const ConnectionInfo * connection, const ConstMemoryStream & payload ) const;
+        bool Broadcast( TCPConnectionPool * pool ) const;
 
         inline MessageType  GetType() const { return m_MsgType; }
+        inline uint32_t     GetSize() const { return m_MsgSize; }
         inline bool         HasPayload() const { return m_HasPayload; }
 
     protected:

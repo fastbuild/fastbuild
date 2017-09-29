@@ -27,14 +27,14 @@ public:
     bool IsOpen() const;
 
     // raw read/write functions
-    virtual uint64_t ReadBuffer( void * buffer, uint64_t bytesToRead );
-    virtual uint64_t WriteBuffer( const void * buffer, uint64_t bytesToWrite );
-    virtual void Flush();
+    virtual uint64_t ReadBuffer( void * buffer, uint64_t bytesToRead ) override;
+    virtual uint64_t WriteBuffer( const void * buffer, uint64_t bytesToWrite ) override;
+    virtual void Flush() override;
 
     // size/position
-    virtual uint64_t Tell() const;
-    virtual bool Seek( uint64_t pos ) const;
-    virtual uint64_t GetFileSize() const;
+    virtual uint64_t Tell() const override;
+    virtual bool Seek( uint64_t pos ) const override;
+    virtual uint64_t GetFileSize() const override;
 
     // file specific
     #if defined( __WINDOWS__ )

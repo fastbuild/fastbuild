@@ -111,7 +111,7 @@ void Semaphore::Wait( uint32_t timeoutMS )
             ts.tv_nsec = totalNS % 1000000000;
             if ( sem_timedwait( &m_Semaphore, &ts ) != 0 )
             {
-                ASSERT( errno == ETIMEDOUT ); // anything else is a usage error?
+                ASSERT( ( errno == ETIMEDOUT ) || ( errno == EINTR ) ); // anything else is a usage error?
             }
         #endif
     }

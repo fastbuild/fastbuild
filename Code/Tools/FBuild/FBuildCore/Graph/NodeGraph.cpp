@@ -27,6 +27,7 @@
 #include "ObjectListNode.h"
 #include "ObjectNode.h"
 #include "RemoveDirNode.h"
+#include "SettingsNode.h"
 #include "SLNNode.h"
 #include "TestNode.h"
 #include "UnityNode.h"
@@ -259,19 +260,6 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
     m_UsedFiles = usedFiles;
 
     // TODO:C The serialization of these settings doesn't really belong here (not part of node graph)
-    // cachepath
-    AStackString<> cachePath;
-    if ( stream.Read( cachePath ) == false )
-    {
-        return LoadResult::LOAD_ERROR;
-    }
-
-    // cache plugin dll
-    AStackString<> cachePluginDLL;
-    if ( stream.Read( cachePluginDLL ) == false )
-    {
-        return LoadResult::LOAD_ERROR;
-    }
 
     // environment
     uint32_t envStringSize = 0;
@@ -352,13 +340,6 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         }
     }
 
-    // worker list
-    Array< AString > workerList( 0, true );
-    if ( stream.Read( workerList ) == false )
-    {
-        return LoadResult::LOAD_ERROR;
-    }
-
     ASSERT( m_AllNodes.GetSize() == 0 );
 
     // Read nodes
@@ -388,22 +369,11 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
     // Everything OK - propagate global settings
     //------------------------------------------------
 
-    // Cache
-    if ( cachePath.IsEmpty() == false ) // override environment only if not empty
-    {
-        FunctionSettings::SetCachePath( cachePath );
-        FBuild::Get().SetCachePath( cachePath );
-    }
-    FBuild::Get().SetCachePluginDLL( cachePluginDLL );
-
     // Environment
     if ( envStringSize > 0 )
     {
         FBuild::Get().SetEnvironmentString( envString.Get(), envStringSize, libEnvVar );
     }
-
-    // Workers
-    FBuild::Get().SetWorkerList( workerList );
 
     return LoadResult::OK;
 }
@@ -475,10 +445,6 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
 
     // TODO:C The serialization of these settings doesn't really belong here (not part of node graph)
     {
-        // cache path
-        stream.Write( FunctionSettings::GetCachePath() );
-        stream.Write( FBuild::Get().GetCachePluginDLL() );
-
         // environment
         const uint32_t envStringSize = FBuild::Get().GetEnvironmentStringSize();
         stream.Write( envStringSize );
@@ -507,10 +473,6 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
         // 'LIB' env var hash
         const uint32_t libEnvVarHash = GetLibEnvVarHash();
         stream.Write( libEnvVarHash );
-
-        // worker list
-        const Array< AString > & workerList = FBuild::Get().GetWorkerList();
-        stream.Write( workerList );
     }
 
     // Write nodes
@@ -575,6 +537,69 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
     {
         Node * n = it->GetNode();
         SaveRecurse( stream, n, savedNodeFlags );
+    }
+}
+
+// Display
+//------------------------------------------------------------------------------
+void NodeGraph::Display( const Dependencies & deps ) const
+{
+    AString buffer( 10 * 1024 * 1024 );
+
+    const size_t numNodes = m_AllNodes.GetSize();
+    Array< bool > visited( numNodes, false );
+    visited.SetSize( numNodes );
+    memset( visited.Begin(), 0, numNodes );
+    for ( const Dependency & dep : deps )
+    {
+        DisplayRecurse( dep.GetNode(), visited, 0, buffer );
+    }
+
+    OUTPUT("%s", buffer.Get());
+}
+
+// DisplayRecurse
+//------------------------------------------------------------------------------
+/*static*/ void NodeGraph::DisplayRecurse( Node * node, Array< bool > & visited, uint32_t depth, AString& outBuffer )
+{
+    // Print this even if it has been visited before so the edge is visible
+    outBuffer.AppendFormat( "%*s%s %s\n", depth * 4, "", node->GetTypeName(), node->GetName().Get() );
+
+    // Don't descend into already visited nodes
+    uint32_t nodeIndex = node->GetIndex();
+    ASSERT( nodeIndex != INVALID_NODE_INDEX );
+    if ( visited[ nodeIndex ] )
+    {
+        if ( node->GetPreBuildDependencies().GetSize() || 
+             node->GetStaticDependencies().GetSize() || 
+             node->GetDynamicDependencies().GetSize() )
+        {
+            outBuffer.AppendFormat( "%*s...\n", ( depth + 1 ) * 4, "" );
+        }
+        return;
+    }
+    visited[ nodeIndex ] = true;
+
+    // Dependencies
+    DisplayRecurse( "PreBuild", node->GetPreBuildDependencies(), visited, depth, outBuffer );
+    DisplayRecurse( "Static", node->GetStaticDependencies(), visited, depth, outBuffer );
+    DisplayRecurse( "Dynamic", node->GetDynamicDependencies(), visited, depth, outBuffer );
+}
+
+// DisplayRecurse
+//------------------------------------------------------------------------------
+/*static*/ void NodeGraph::DisplayRecurse( const char * title, const Dependencies & dependencies, Array< bool > & visited, uint32_t depth, AString & outBuffer )
+{
+    const Dependency * const end = dependencies.End();
+    const Dependency * it = dependencies.Begin();
+    if ( it != end )
+    {
+        outBuffer.AppendFormat( "%*s%s\n", depth * 4 + 2, "", title );
+    }
+    for ( ; it != end; ++it )
+    {
+        Node * n = it->GetNode();
+        DisplayRecurse( n, visited, depth + 1, outBuffer );
     }
 }
 
@@ -884,6 +909,7 @@ VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
                                                   const AString & projectGuid,
                                                   const AString & defaultLanguage,
                                                   const AString & applicationEnvironment,
+                                                  const bool projectSccEntrySAK,
                                                   const Array< VSProjectConfig > & configs,
                                                   const Array< VSProjectFileType > & fileTypes,
                                                   const Array< AString > & references,
@@ -905,6 +931,7 @@ VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
                                                 projectGuid,
                                                 defaultLanguage,
                                                 applicationEnvironment,
+                                                projectSccEntrySAK,
                                                 configs,
                                                 fileTypes,
                                                 references,
@@ -961,6 +988,18 @@ XCodeProjectNode * NodeGraph::CreateXCodeProjectNode( const AString & name )
     ASSERT( IsCleanPath( name ) );
 
     XCodeProjectNode * node = FNEW( XCodeProjectNode() );
+    node->SetName( name );
+    AddNode( node );
+    return node;
+}
+
+// CreateSettingsNode
+//------------------------------------------------------------------------------
+SettingsNode * NodeGraph::CreateSettingsNode( const AString & name )
+{
+    ASSERT( Thread::IsMainThread() );
+
+    SettingsNode * node = FNEW( SettingsNode() );
     node->SetName( name );
     AddNode( node );
     return node;

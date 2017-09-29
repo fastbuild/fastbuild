@@ -27,6 +27,7 @@ ObjectList( "PCHTest-lib" )
     #endif
 
     .CompilerInputPath  = "Data/TestPrecompiledHeaders/"
+    .CompilerInputPathRecurse = false
     .CompilerOutputPath = "$Out$/Test/PrecompiledHeaders/"
     #if __WINDOWS__
         .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'

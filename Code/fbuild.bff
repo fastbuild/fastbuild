@@ -152,6 +152,7 @@ Compiler( 'Compiler-x64-OSX' )
     .LinkerOptions          + ' /MACHINE:X86'
     .Platform               = 'x86'
     .LinkerOptions          + ' /LIBPATH:"$WindowsLibPaths$/x86" /LIBPATH:"$VSBasePath$/VC/lib"'
+                            + ' /LARGEADDRESSAWARE'
 ]
 .X86DebugConfig =
 [
@@ -175,7 +176,6 @@ Compiler( 'Compiler-x64-OSX' )
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
     .DeoptimizeWritableFilesWithToken   = true
     .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
-    .PCHOptionsDeoptimized          = '$PCHOptions$ /Od'
 
     .CompilerOptions        + .CompilerReleaseOptimizations
     .PCHOptions             + .CompilerReleaseOptimizations
@@ -228,7 +228,6 @@ Compiler( 'Compiler-x64-OSX' )
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
     .DeoptimizeWritableFilesWithToken   = true
     .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
-    .PCHOptionsDeoptimized          = '$PCHOptions$ /Od'
 
     .CompilerOptions        + .CompilerReleaseOptimizations
     .PCHOptions             + .CompilerReleaseOptimizations
@@ -344,7 +343,6 @@ Compiler( 'Compiler-x64-OSX' )
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
     .DeoptimizeWritableFilesWithToken   = true
     .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
-    .PCHOptionsDeoptimized          = '$PCHOptions$ /Od'
 
     .CompilerOptions        + .CompilerReleaseOptimizations
     .PCHOptions             + .CompilerReleaseOptimizations
@@ -517,10 +515,11 @@ Compiler( 'Compiler-x64-OSX' )
 //------------------------------------------------------------------------------
 .ProjectCommon =
 [
-    .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -cache ^$(ProjectName)-^$(Configuration)'
-    .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -cache -clean ^$(ProjectName)-^$(Configuration)'
+    .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -fastcancel -cache ^$(ProjectName)-^$(Configuration)'
+    .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -fastcancel -cache -clean ^$(ProjectName)-^$(Configuration)'
     .OutputDirectory            = '^$(SolutionDir)\..\tmp2'
     .IntermediateDirectory      = '^$(SolutionDir)\..\tmp2'
+    .BuildLogFile               = '^$(SolutionDir)\..\tmp2\^$(ProjectName)-^$(Configuration).log'
     .Platform = 'Win32' // unused
     .PlatformToolset = 'v120'
 ]

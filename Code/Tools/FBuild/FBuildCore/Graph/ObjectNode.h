@@ -106,10 +106,6 @@ private:
     void WriteToCache( Job * job );
     bool GetExtraCacheFilePath( const Job * job, AString & extraFileName ) const;
 
-    void HandleWarningsMSCL( Job* job, const char * data, uint32_t dataSize ) const;
-
-    static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
-
     void EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false, bool isRemote = false ) const;
 
     enum Pass
@@ -160,6 +156,7 @@ private:
         inline uint32_t                 GetOutSize() const { return m_OutSize; }
         inline const AutoPtr< char > &  GetErr() const { return m_Err; }
         inline uint32_t                 GetErrSize() const { return m_ErrSize; }
+        inline bool                     HasAborted() const { return m_Process.HasAborted(); }
 
     private:
         bool            m_HandleOutput;

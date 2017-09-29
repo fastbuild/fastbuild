@@ -42,11 +42,13 @@ FunctionVCXProject::FunctionVCXProject()
     AStackString<> projectGuid;
     AStackString<> defaultLanguage;
     AStackString<> applicationEnvironment;
+    bool projectSccEntrySAK = false;
     if ( !GetString( funcStartIter, projectOutput,      ".ProjectOutput", true ) ||
          !GetString( funcStartIter, rootNamespace,      ".RootNamespace", false ) ||
          !GetString( funcStartIter, projectGuid,        ".ProjectGuid", false ) ||
          !GetString( funcStartIter, defaultLanguage,    ".DefaultLanguage", false ) ||
-         !GetString( funcStartIter, applicationEnvironment, ".ApplicationEnvironment", false ) )
+         !GetString( funcStartIter, applicationEnvironment, ".ApplicationEnvironment", false ) ||
+         !GetBool( funcStartIter, projectSccEntrySAK,   ".ProjectSccEntrySAK", false, false) )
     {
         return false;
     }
@@ -164,6 +166,7 @@ FunctionVCXProject::FunctionVCXProject()
          !GetString( funcStartIter, baseConfig.m_AdditionalOptions,     ".AdditionalOptions", false ) ||
          !GetString( funcStartIter, baseConfig.m_OutputDirectory,       ".OutputDirectory", false ) ||
          !GetString( funcStartIter, baseConfig.m_IntermediateDirectory, ".IntermediateDirectory", false ) ||
+         !GetString( funcStartIter, baseConfig.m_BuildLogFile,          ".BuildLogFile", false ) ||
          !GetString( funcStartIter, baseConfig.m_Xbox360DebuggerCommand,".Xbox360DebuggerCommand", false ) ||
          !GetString( funcStartIter, baseConfig.m_LayoutDir,             ".LayoutDir", false ) ||
          !GetString( funcStartIter, baseConfig.m_LayoutExtensionFilter, ".LayoutExtensionFilter", false ) ||
@@ -244,6 +247,7 @@ FunctionVCXProject::FunctionVCXProject()
             GetStringFromStruct( s, ".AdditionalOptions",       newConfig.m_AdditionalOptions );
             GetStringFromStruct( s, ".OutputDirectory",         newConfig.m_OutputDirectory );
             GetStringFromStruct( s, ".IntermediateDirectory",   newConfig.m_IntermediateDirectory );
+            GetStringFromStruct( s, ".BuildLogFile",            newConfig.m_BuildLogFile );
             GetStringFromStruct( s, ".LayoutDir",               newConfig.m_LayoutDir );
             GetStringFromStruct( s, ".LayoutExtensionFilter",   newConfig.m_LayoutExtensionFilter );
             GetStringFromStruct( s, ".Xbox360DebuggerCommand",  newConfig.m_Xbox360DebuggerCommand );
@@ -304,6 +308,7 @@ FunctionVCXProject::FunctionVCXProject()
                                                    projectGuid,
                                                    defaultLanguage,
                                                    applicationEnvironment,
+                                                   projectSccEntrySAK,
                                                    configs,
                                                    fileTypes,
                                                    references,

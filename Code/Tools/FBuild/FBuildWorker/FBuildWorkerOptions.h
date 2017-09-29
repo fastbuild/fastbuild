@@ -35,6 +35,9 @@ public:
     bool m_OverrideWorkMode;
     WorkerSettings::Mode m_WorkMode;
 
+	// Console mode
+	bool m_ConsoleMode;
+
 private:
     void ShowUsageError();
 };

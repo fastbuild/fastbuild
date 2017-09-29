@@ -52,7 +52,7 @@ public:
     const char *    m_ThreadName;
 
     #if defined( __WINDOWS__ )
-        static uint32_t ThreadStartFunction( void * userData )
+        static uint32_t WINAPI ThreadStartFunction( void * userData )
     #else
         static void * ThreadStartFunction( void * userData )
     #endif

@@ -25,7 +25,7 @@ class WorkerSettings;
 class Worker
 {
 public:
-    explicit Worker( void * hInstance, const AString & args );
+    explicit Worker( void * hInstance, const AString & args, bool consoleMode );
     ~Worker();
 
     int Work();
@@ -43,7 +43,6 @@ private:
 
     WorkerWindow        * m_MainWindow;
     Server              * m_ConnectionPool;
-    JobQueueRemote      * m_JobQueueRemote;
     NetworkStartupHelper * m_NetworkStartupHelper;
     WorkerSettings      * m_WorkerSettings;
     IdleDetection       m_IdleDetection;

@@ -13,6 +13,8 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/LinkerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
@@ -95,7 +97,7 @@ bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, c
     m_StaticDependencies.Append( librarianAdditionalInputs );
     // m_ObjectListInputEndIndex // NOTE: Deliberately not added to m_ObjectListInputEndIndex, since we don't want to try and compile these things
 
-    m_LibrarianFlags = DetermineFlags( m_Librarian );
+    m_LibrarianFlags = DetermineFlags( m_Librarian, m_LibrarianOptions );
 
     return true;
 }
@@ -136,10 +138,13 @@ LibraryNode::~LibraryNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult LibraryNode::DoBuild( Job * job )
 {
-    // delete library before creation (so ar.exe will not merge old symbols)
-    if ( FileIO::FileExists( GetName().Get() ) )
+    // Delete previous file(s) if doing a clean build
+    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
     {
-        FileIO::FileDelete( GetName().Get() );
+        if ( FileIO::FileExists( GetName().Get() ) )
+        {
+            FileIO::FileDelete( GetName().Get() );
+        }
     }
 
     // Format compiler args string
@@ -157,7 +162,7 @@ LibraryNode::~LibraryNode() = default;
     EmitCompilationMessage( fullArgs );
 
     // spawn the process
-    Process p;
+    Process p( FBuild::Get().GetAbortBuildPointer() );
     bool spawnOK = p.Spawn( GetLibrarian()->GetName().Get(),
                             fullArgs.GetFinalArgs().Get(),
                             workingDir,
@@ -165,6 +170,11 @@ LibraryNode::~LibraryNode() = default;
 
     if ( !spawnOK )
     {
+        if ( p.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
+
         FLOG_ERROR( "Failed to spawn process for Library creation for '%s'", GetName().Get() );
         return NODE_RESULT_FAILED;
     }
@@ -176,10 +186,14 @@ LibraryNode::~LibraryNode() = default;
     uint32_t memErrSize = 0;
     p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
 
-    ASSERT( !p.IsRunning() );
     // Get result
     int result = p.WaitForExit();
+    if ( p.HasAborted() )
+    {
+        return NODE_RESULT_FAILED;
+    }
 
+    // did the executable fail?
     if ( result != 0 )
     {
         if ( memOut.Get() )
@@ -191,13 +205,18 @@ LibraryNode::~LibraryNode() = default;
         {
             job->ErrorPreformatted( memErr.Get() );
         }
-    }
 
-    // did the executable fail?
-    if ( result != 0 )
-    {
         FLOG_ERROR( "Failed to build Library (error %i) '%s'", result, GetName().Get() );
         return NODE_RESULT_FAILED;
+    }
+    else
+    {
+        // If "warnings as errors" is enabled (/WX) we don't need to check
+        // (since compilation will fail anyway, and the output will be shown)
+        if ( GetFlag( LIB_FLAG_LIB ) && !GetFlag( LIB_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
+        {
+            FileNode::HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+        }
     }
 
     // record time stamp for next time
@@ -214,6 +233,10 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
     Array< AString > tokens( 1024, true );
     m_LibrarianOptions.Tokenize( tokens );
 
+    // When merging libs for non-MSVC toolchains, merge the source
+    // objects instead of the libs
+    const bool objectsInsteadOfLibs = ( m_LibrarianFlags & LIB_FLAG_LIB ) ? false : true;
+
     const AString * const end = tokens.End();
     for ( const AString * it = tokens.Begin(); it!=end; ++it )
     {
@@ -228,7 +251,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             }
 
             // concatenate files, unquoted
-            GetInputFiles( fullArgs, pre, AString::GetEmpty() );
+            GetInputFiles( fullArgs, pre, AString::GetEmpty(), objectsInsteadOfLibs );
         }
         else if ( token.EndsWith( "\"%1\"" ) )
         {
@@ -237,7 +260,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             AStackString<> post( "\"" );
 
             // concatenate files, quoted
-            GetInputFiles( fullArgs, pre, post );
+            GetInputFiles( fullArgs, pre, post, objectsInsteadOfLibs );
         }
         else if ( token.EndsWith( "%2" ) )
         {
@@ -281,7 +304,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
 
 // DetermineFlags
 //------------------------------------------------------------------------------
-/*static*/ uint32_t LibraryNode::DetermineFlags( const AString & librarianName )
+/*static*/ uint32_t LibraryNode::DetermineFlags( const AString & librarianName, const AString & args )
 {
     uint32_t flags = 0;
     if ( librarianName.EndsWithI("lib.exe") ||
@@ -290,6 +313,21 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
         librarianName.EndsWithI("link"))
     {
         flags |= LIB_FLAG_LIB;
+
+        // Parse args for some other flags
+        Array< AString > tokens;
+        args.Tokenize( tokens );
+
+        const AString * const end = tokens.End();
+        for ( const AString * it = tokens.Begin(); it != end; ++it )
+        {
+            const AString & token = *it;
+            if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ) )
+            {
+                flags |= LIB_FLAG_WARNINGS_AS_ERRORS_MSVC;
+                continue;
+            }
+        }
     }
     else if ( librarianName.EndsWithI("ar.exe") ||
          librarianName.EndsWithI("ar") )

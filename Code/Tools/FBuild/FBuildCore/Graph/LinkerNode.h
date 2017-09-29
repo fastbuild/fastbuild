@@ -39,7 +39,8 @@ public:
         LINK_FLAG_ORBIS_LD  = 0x20,
         LINK_FLAG_INCREMENTAL = 0x40,
         LINK_FLAG_GREENHILLS_ELXR = 0x80,
-        LINK_FLAG_CODEWARRIOR_LD=0x100
+        LINK_FLAG_CODEWARRIOR_LD=0x100,
+        LINK_FLAG_WARNINGS_AS_ERRORS_MSVC = 0x200,
     };
 
     inline bool IsADLL() const { return GetFlag( LINK_FLAG_DLL ); }

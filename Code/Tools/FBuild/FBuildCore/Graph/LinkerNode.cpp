@@ -119,7 +119,7 @@ LinkerNode::~LinkerNode() = default;
         ++attempt;
 
         // spawn the process
-        Process p;
+        Process p( FBuild::Get().GetAbortBuildPointer() );
         bool spawnOK = p.Spawn( m_Linker.Get(),
                                 fullArgs.GetFinalArgs().Get(),
                                 workingDir,
@@ -127,6 +127,11 @@ LinkerNode::~LinkerNode() = default;
 
         if ( !spawnOK )
         {
+            if ( p.HasAborted() )
+            {
+                return NODE_RESULT_FAILED;
+            }
+
             FLOG_ERROR( "Failed to spawn process '%s' for %s creation for '%s'", m_Linker.Get(), GetDLLOrExe(), GetName().Get() );
             return NODE_RESULT_FAILED;
         }
@@ -141,15 +146,34 @@ LinkerNode::~LinkerNode() = default;
         ASSERT( !p.IsRunning() );
         // Get result
         int result = p.WaitForExit();
+        if ( p.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
 
         // did the executable fail?
         if ( result != 0 )
         {
-            // did the linker have an ICE (LNK1000)?
-            if ( GetFlag( LINK_FLAG_MSVC ) && ( result == 1000 ) && ( attempt == 1 ) )
+            // Handle bugs in the MSVC linker
+            if ( GetFlag( LINK_FLAG_MSVC ) && ( attempt == 1 ) )
             {
-                FLOG_WARN( "FBuild: Warning: Linker crashed (LNK1000), retrying '%s'", GetName().Get() );
-                continue; // try again
+                // Did the linker have an ICE (crash) (LNK1000)?
+                if ( result == 1000 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker crashed (LNK1000), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
+
+                // Did the linker have an "unexpected PDB error" (LNK1318)?
+                // Example: "fatal error LNK1318: Unexpected PDB error; CORRUPT (13)"
+                // (The linker or mspdbsrv.exe (as of VS2017) seems to have bugs which cause the PDB
+                // to sometimes be corrupted when doing very large links, possibly because the linker
+                // is running out of memory)
+                if ( result == 1318 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker corrupted the PDB (LNK1318), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
             }
 
             if ( memOut.Get() )
@@ -168,6 +192,12 @@ LinkerNode::~LinkerNode() = default;
         }
         else
         {
+            // If "warnings as errors" is enabled (/WX) we don't need to check
+            // (since compilation will fail anyway, and the output will be shown)
+            if ( GetFlag( LINK_FLAG_MSVC ) && !GetFlag( LINK_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
+            {
+                HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+            }
             break; // success!
         }
     }
@@ -177,13 +207,18 @@ LinkerNode::~LinkerNode() = default;
     {
         EmitStampMessage();
 
-        Process stampProcess;
+        Process stampProcess( FBuild::Get().GetAbortBuildPointer() );
         bool spawnOk = stampProcess.Spawn( m_LinkerStampExe->GetName().Get(),
                                            m_LinkerStampExeArgs.Get(),
                                            nullptr,     // working dir
                                            nullptr );   // env
         if ( spawnOk == false )
         {
+            if ( stampProcess.HasAborted() )
+            {
+                return NODE_RESULT_FAILED;
+            }
+
             FLOG_ERROR( "Failed to spawn process '%s' for '%s' stamping of '%s'", m_LinkerStampExe->GetName().Get(), GetDLLOrExe(), GetName().Get() );
             return NODE_RESULT_FAILED;
         }
@@ -198,6 +233,10 @@ LinkerNode::~LinkerNode() = default;
 
         // Get result
         int result = stampProcess.WaitForExit();
+        if ( stampProcess.HasAborted() )
+        {
+            return NODE_RESULT_FAILED;
+        }
 
         // did the executable fail?
         if ( result != 0 )
@@ -357,12 +396,12 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
 {
     if ( n->GetType() == Node::LIBRARY_NODE )
     {
-        bool linkObjectsInsteadOfLibs = GetFlag( LINK_OBJECTS );
+        const bool linkObjectsInsteadOfLibs = GetFlag( LINK_OBJECTS );
 
         if ( linkObjectsInsteadOfLibs )
         {
             LibraryNode * ln = n->CastTo< LibraryNode >();
-            ln->GetInputFiles( fullArgs, pre, post );
+            ln->GetInputFiles( fullArgs, pre, post, linkObjectsInsteadOfLibs );
         }
         else
         {
@@ -374,8 +413,10 @@ void LinkerNode::GetInputFiles( Node * n, Args & fullArgs, const AString & pre, 
     }
     else if ( n->GetType() == Node::OBJECT_LIST_NODE )
     {
+        const bool linkObjectsInsteadOfLibs = GetFlag( LINK_OBJECTS );
+
         ObjectListNode * ol = n->CastTo< ObjectListNode >();
-        ol->GetInputFiles( fullArgs, pre, post );
+        ol->GetInputFiles( fullArgs, pre, post, linkObjectsInsteadOfLibs );
     }
     else if ( n->GetType() == Node::DLL_NODE )
     {
@@ -418,14 +459,14 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
         if ( n->GetType() == Node::OBJECT_LIST_NODE )
         {
             ObjectListNode * oln = n->CastTo< ObjectListNode >();
-            oln->GetInputFiles( fullArgs, pre, post );
+            oln->GetInputFiles( fullArgs, pre, post, false );
             continue;
         }
 
         if ( n->GetType() == Node::LIBRARY_NODE )
         {
             LibraryNode * ln = n->CastTo< LibraryNode >();
-            ln->GetInputFiles( fullArgs, pre, post );
+            ln->GetInputFiles( fullArgs, pre, post, false );
             continue;
         }
 
@@ -552,6 +593,12 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
             if ( IsLinkerArg_MSVC( token, "INCREMENTAL:NO" ) )
             {
                 incrementalNoFlag = true;
+                continue;
+            }
+
+            if ( IsLinkerArg_MSVC( token, "WX" ) )
+            {
+                flags |= LinkerNode::LINK_FLAG_WARNINGS_AS_ERRORS_MSVC;
                 continue;
             }
 
