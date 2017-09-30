@@ -595,6 +595,8 @@ void TestGraph::BFFDirtied() const
 
     #if defined( __OSX__ )
         Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #elif defined( __LINUX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
     #endif
 
     // Modity BFF (make it empty)
