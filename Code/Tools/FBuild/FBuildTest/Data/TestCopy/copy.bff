@@ -72,6 +72,7 @@ CopyDir( 'CopyDir' )
 {
     .SourcePaths        = 'Data/TestCopy'
     .SourcePathsPattern = '*.txt'
+    .SourcePathsRecurse = false
     .Dest               = '$Out$/Test/Copy/CopyDir/'
 }
 

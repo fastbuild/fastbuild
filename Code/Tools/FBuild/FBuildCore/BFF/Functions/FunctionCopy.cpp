@@ -115,6 +115,13 @@ FunctionCopy::FunctionCopy()
     NodeGraph::CleanPath( dstFileV->GetString(), dstFile );
     const bool dstIsFolderPath = PathUtils::IsFolderPath( dstFile );
 
+    // If source is multiple files, destination must be a path
+    if ( ( srcNodes.GetSize() > 1 ) && ( dstIsFolderPath == false ) )
+    {
+        Error::Error_1400_CopyDestMissingSlash( funcStartIter, this );
+        return false;
+    }
+
     // make all the nodes for copies
     Dependencies copyNodes( srcNodes.GetSize(), false );
     for ( const Node * srcNode : srcNodes )
@@ -145,8 +152,6 @@ FunctionCopy::FunctionCopy()
         // check node doesn't already exist
         if ( nodeGraph.FindNode( dst ) )
         {
-            // TODO:C could have a specific error for multiple sources with only 1 output
-            // to differentiate from two rules creating the same dst target
             Error::Error_1100_AlreadyDefined( funcStartIter, this, dst );
             return false;
         }

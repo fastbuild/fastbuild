@@ -1,0 +1,27 @@
+//
+// MissingTrailingSlash
+//
+// Ensure multiple copies with the same destination fails and gives a helpful
+// error message.
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+//
+// MissingTrailingSlash
+//------------------------------------------------------------------------------
+Copy( 'MissingTrailingSlash' )
+{
+    .Source             = {
+                            'Data/TestCopy/MissingTrailingSlash/a.txt'
+                            'Data/TestCopy/MissingTrailingSlash/b.txt'
+                          }
+    .Dest               = '$Out$/Test/Copy/MissingTrailingSlash' // NOTE: Missing slash
+}
+
+//------------------------------------------------------------------------------

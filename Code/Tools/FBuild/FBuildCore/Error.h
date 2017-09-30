@@ -182,6 +182,12 @@ public:
                                                             const Function * function,
                                                             const char * option,
                                                             const char * property );
+
+    // 1400-1499 : Copy specific errors
+    //------------------------------------------------------------------------------
+    static void Error_1400_CopyDestMissingSlash( const BFFIterator & iter,
+                                                 const Function * function );
+
 private:
     static void FormatError( const BFFIterator & iter,
                              uint32_t errNum,

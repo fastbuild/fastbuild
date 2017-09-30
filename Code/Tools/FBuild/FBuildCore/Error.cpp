@@ -577,6 +577,14 @@
     FormatError( iter, 1303u, function, "Precompiled Header option '%s' in '%s' invalid. Only allowed on Precompiled Header.", option, property );
 }
 
+// Error_1400_CopyDestMissingSlash
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1400_CopyDestMissingSlash( const BFFIterator & iter,
+                                                        const Function * function )
+{
+    FormatError( iter, 1400u, function, "'Dest' with multiple 'Source' files should be a path. Missing trailing '/'?" );
+}
+
 // FormatError
 //------------------------------------------------------------------------------
 void Error::FormatError( const BFFIterator & iter,

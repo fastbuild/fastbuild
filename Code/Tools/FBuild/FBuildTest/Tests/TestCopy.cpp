@@ -32,6 +32,7 @@ private:
     void CopyDir_NoRebuild() const;
     void CopyDirDeleteSrc() const;
     void CopyEmpty() const;
+    void MissingTrailingSlash() const;
 };
 
 // Register Tests
@@ -51,6 +52,7 @@ REGISTER_TESTS_BEGIN( TestCopy )
     REGISTER_TEST( CopyDir_NoRebuild )
     REGISTER_TEST( CopyDirDeleteSrc )
     REGISTER_TEST( CopyEmpty )
+    REGISTER_TEST( MissingTrailingSlash )
 REGISTER_TESTS_END
 
 // TestCopyFunction_FileToFile
@@ -452,6 +454,25 @@ void TestCopy::CopyEmpty() const
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( AStackString<>( "CopyEmpty" ) ) );
+}
+
+// MissingTrailingSlash
+//------------------------------------------------------------------------------
+void TestCopy::MissingTrailingSlash() const
+{
+    // Ensure a copy of multiple files to destination that is not a path
+    // is reported as an explicit error
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestCopy/MissingTrailingSlash/fbuild.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuild fBuild( options );
+
+    // Parsing should fail
+    TEST_ASSERT( fBuild.Initialize() == false );
+
+    // Ensure the explcit error for this case is reported (not a generic one about
+    // the target already being defined)
+    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1400" ) );
 }
 
 //------------------------------------------------------------------------------

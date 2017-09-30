@@ -17,6 +17,7 @@
   <li><a href='#1100'>1100 - 1199</a> Function Parameter Errors</li>
   <li><a href='#1200'>1200 - 1299</a> ForEach Specific Errors</li>
   <li><a href='#1300'>1300 - 1399</a> Library Specific Errors</li>
+  <li><a href='#1400'>1400 - 1499</a> Copy Specific Errors</li>
 </ul>
 <h2 id='1000'>1001 - 1099 : General Parsing Errors</h2>
 <!--------------- 1001 --------------->
@@ -1050,6 +1051,31 @@ Library( "test" )
 <div class='output'>c:\test\fbuild.bff(3):(1) FASTBuild Error #1303 - Library() - Precompiled Header option '/Yc' in
 'CompilerOptions' invalid. Only allowed on Precompiled Header.
 Library( "test" )
+^
+\--here
+</div>
+</div>
+
+
+<h2 id='1400'>1400 - 1499 : Copy  Specific Errors</h2>
+<!--------------- 1300 --------------->
+    <div class='newsitemheader'>1400 - 'Dest' with multiple 'Source' files should be a path. Missing trailing '/'?</div>
+    <div class='newsitembody'>
+A Copy() target was declared with multiple .Source files, but .Dest was not a path. If the .Dest is a file, then only one
+.Source can be specified. If .Dest is intended to be a path, it requires a trailing slash to disambiguate.
+<h4>Example Config:</h4>
+<div class='code'>Copy( 'MissingTrailingSlash' )
+{
+  .Source             = {
+                          'Files/a.txt'
+                          'Files/b.txt'
+                        }
+  .Dest               = 'Folder/Folder' // NOTE: Missing trailing slash
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff.bff(1,1): FASTBuild Error #1400 - Copy() - 'Dest' with multiple 'Source' files should be a path. Missing trailing '/'?
+Copy( 'MissingTrailingSlash' )
 ^
 \--here
 </div>
