@@ -78,7 +78,7 @@ public:
     Array & operator = ( const Array< T > & other );
 
     // query state
-    inline bool     IsAtCapacity() const    { return ( m_End == m_MaxEnd ) && ( m_Resizeable == false ); }
+    inline bool     IsAtCapacity() const    { return ( m_End == m_MaxEnd ); }
     inline size_t   GetCapacity() const     { return ( m_MaxEnd - m_Begin ); }
     inline size_t   GetSize() const         { return ( m_End - m_Begin ); }
     inline bool     IsEmpty() const         { return ( m_Begin == m_End ); }
@@ -91,7 +91,9 @@ private:
     T * m_Begin;
     T * m_End;
     T * m_MaxEnd;
-    bool m_Resizeable;
+    #if defined( ASSERTS_ENABLED )
+        bool m_Resizeable;
+    #endif
 };
 
 // CONSTRUCTOR
@@ -101,7 +103,9 @@ Array< T >::Array()
     : m_Begin( nullptr )
     , m_End( nullptr )
     , m_MaxEnd( nullptr )
-    , m_Resizeable( true )
+    #if defined( ASSERTS_ENABLED )
+        , m_Resizeable( true )
+    #endif
 {
 }
 
@@ -131,7 +135,7 @@ Array< T >::Array( size_t initialCapacity, bool resizeable )
 {
     if ( initialCapacity )
     {
-        #ifdef ASSERTS_ENABLED
+        #if defined( ASSERTS_ENABLED )
             m_Resizeable = true; // allow initial allocation
         #endif
         m_Begin = Allocate( initialCapacity );
@@ -144,7 +148,11 @@ Array< T >::Array( size_t initialCapacity, bool resizeable )
         m_End = nullptr;
         m_MaxEnd = nullptr;
     }
-    m_Resizeable = resizeable;
+    #if defined( ASSERTS_ENABLED )
+        m_Resizeable = resizeable;
+    #else
+        (void)resizeable;
+    #endif
 }
 
 // DESTRUCTOR
@@ -276,15 +284,21 @@ void Array< T >::Swap( Array< T > & other )
     T * tmpBegin = m_Begin;
     T * tmpEnd = m_End;
     T * tmpMaxEnd = m_MaxEnd;
-    bool tmpResizeable = m_Resizeable;
+    #if defined( ASSERTS_ENABLED )
+        bool tmpResizeable = m_Resizeable;
+    #endif
     m_Begin = other.m_Begin;
     m_End = other.m_End;
     m_MaxEnd = other.m_MaxEnd;
-    m_Resizeable = other.m_Resizeable;
+    #if defined( ASSERTS_ENABLED )
+        m_Resizeable = other.m_Resizeable;
+    #endif
     other.m_Begin = tmpBegin;
     other.m_End = tmpEnd;
     other.m_MaxEnd = tmpMaxEnd;
-    other.m_Resizeable = tmpResizeable;
+    #if defined( ASSERTS_ENABLED )
+        other.m_Resizeable = tmpResizeable;
+    #endif
 }
 
 // Find
@@ -511,7 +525,7 @@ void Array< T >::Grow()
 template < class T >
 T * Array< T >::Allocate( size_t numElements ) const
 {
-    ASSERT( m_Resizeable == true );
+    ASSERT( m_Resizeable );
     const size_t align = __alignof( T ) > sizeof( void * ) ? __alignof( T ) : sizeof( void * );
     return static_cast< T * >( ALLOC( sizeof( T ) * numElements, align ) );
 }

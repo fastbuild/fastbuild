@@ -796,18 +796,19 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
     includeToUse += include;
     AStackString<> includeToUseClean;
     NodeGraph::CleanPath( includeToUse, includeToUseClean );
-    FileStream f;
-    if ( f.Open( includeToUseClean.Get(), FileStream::READ_ONLY ) == false )
-    {
-        Error::Error_1032_UnableToOpenInclude( stringStart, includeToUseClean );
-        return false;
-    }
 
     // check if include uses "once" pragma
     if ( m_NodeGraph.IsOneUseFile( includeToUseClean ) )
     {
         // already seen, and uses #once : don't include again
         return true;
+    }
+
+    FileStream f;
+    if ( f.Open( includeToUseClean.Get(), FileStream::READ_ONLY ) == false )
+    {
+        Error::Error_1032_UnableToOpenInclude( stringStart, includeToUseClean );
+        return false;
     }
 
     uint64_t includeTimeStamp = FileIO::GetFileLastWriteTime( includeToUseClean );

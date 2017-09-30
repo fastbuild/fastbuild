@@ -13,6 +13,69 @@
 
 <h1>Changelog</h1>
 
+<div class='newsitemheader'>
+    v0.94&nbsp;<font color='#bbbbbb'>(28-Sep-2017)</font>
+</div>
+<div class='newsitembody'>
+    Notes
+	<ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    New
+    <ul>
+        <li>-quiet option can be used to supress build output (Thanks to Nik Reiman)</li>
+        <li>-showdeps displays dependencies, useful for debugging build configs (Thanks to Layla Mah)</li>
+        <li>FBuildWorker -console cmd line arg enables UI-less "console" mode</li>
+        <li>-nosummaryonerror option supresses -summary if the build fails (Thanks to Lambert Clara)</li>
+        <li>Added -forceremote option for troubleshooting (Thanks to Lambert Clara)</li>
+    </ul>
+    Fixes
+    <ul>
+        <li>CSAssembly pattern defaults to *.cs again (regression introduced in v0.93)</li>
+        <li>Fix compatibility with Recode (include paths removed sometimes) (regression introduced in v0.93)</li>
+        <li>Return code in wrapper mode is now non-zero when child process crashes (Thanks to Sam Hocevar)</li>
+        <li>Restore custom Preprocessor functionality (regression in v0.93)</li>
+        <li>[Linux] Ctrl+C no longer causes build progress to be lost on Linux (Thanks to comicfans)</li>
+        <li>Keep-alive timeout was too low, causing dropped connections during distributed compilation</li>
+        <li>Prevent unsafe caching of precompiled headers that differ only in unused defines (Thanks to Lambert Clara)</li>
+        <li>Fix rare crash when using distributed compilation</li>
+        <li>Distributed job local memory limit is now correctly respected</li>
+        <li>Prevent rare crash when using distributed compilation (Thanks to Jean-Sebastien Pelletier)</li>
+        <li>[OSX] Fix init failure on some configurations when using -dist due to TCP send/recv buffer size (Thanks to myevan)</li>
+        <li>Fix socket leak when send/recv buffer size could not be set</li>
+        <li>Prevent network disconnections due to too small Send timeouts</li>
+        <li>DirCopy no longer fails if a source file is deleted (Thanks to kwayle)</li>
+        <li>Remote workers failing to read files no longer fail without error (Thanks to Lambert Clara)</li>
+        <li>Fix -wrapper mode on Windows if fbuild.exe is renamed (Thanks to James Leitch)</li>
+        <li>Exe name is printed correctly in usage info if exe is renamed (Thanks to James Leitch)</li>
+        <li>Exe name is printed correctly in usage info on OSX and Linux (Thanks to James Leitch)</li>
+        <li>MSVC linker and lib warnings shown when not using /WX (Thanks to Lambert Clara)</li>
+        <li>[Linux] CopyFile and CopyDir transfer file permissions on copy (Thanks to Javier Blazquez)</li>
+    </ul>
+	Improvements
+	<ul>
+        <li>[Experimental] New -fastcancel option allows immediate termination on build failure (Thanks to Jean-Sebastien Pelletier)</li>
+        <li>Remote internal compiler errors will be retried to avoid breaks due to faulty hardware (Thanks to Sam Hocevar)</li>
+        <li>Paths inside VisualStudio projects are relative where possible, including Intellisense (Thanks to Eric Arnold)</li>
+        <li>[Windows] FASTBuild supports >64 cores on x64 and >32 cores on x86 (Thanks to missmah)</li>
+        <li>Visual Studio projects can be generated with generic source bindings via ProjectSccEntrySAK (Thanks to Lucian Muresan)</li>
+        <li>Increase distributed job local memory limit to 1GiB (was 512MiB)</li>
+        <li>Add work around for bugs in MS Linker causing PDB corruption (LNK1318), seen in VS2017</li>
+        <li>Add basic documentation for operator + when used on Structs</li>
+        <li>Lib uses source objects for other libs where possible (Thanks to Javier Blazquez)</li>
+        <li>Add link to Syntax highlighting link by Manuzor (Thanks to Manuzor)</li>
+        <li>Distributed compilation worked limit can be set via .WorkerConnectionLimit</li>
+        <li>Add -distverbose command line to help with troubleshooting distributed compilation issues</li>
+        <li>Improve summary output for CopyFile, CopyDir and RemoveDir</li>
+        <li>.BuildLogFile path can be set for generated Visual Studio projects (thanks to lucianm)</li>
+        <li>Libraries are flattened for non-MSVC librarian when nesting libs (Thanks to Javier Blazquez)</li>
+        <li>New FASTBUILD_TEMP_PATH env var can set TEMP dir for FASTBuild to use (Thanks to comicfans)</li>
+        <li>Objects and Libs are only deleted before building if using -clean, reducing overhead</li>
+        <li>Small memory usage and performance optimization during builds and bff parsing</li>
+        <li>Avoid opening files unnecessarily when #once directive is used</li>
+	</ul>
+</div>
+
 
 <div class='newsitemheader'>
     v0.93&nbsp;<font color='#bbbbbb'>(13-Mar-2017)</font>
@@ -96,7 +159,6 @@
         <li>An invalid .Target in an XCode configuration will now fail during bff parsing</li>
 	</ul>
 </div>
-
 
 <div class='newsitemheader'>
     v0.91&nbsp;<font color='#bbbbbb'>(25-Aug-2016)</font>
