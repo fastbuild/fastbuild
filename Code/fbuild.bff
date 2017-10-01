@@ -381,6 +381,9 @@ Compiler( 'Compiler-x64-OSX' )
                             // Disabled warnings
                             + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
 
+							// Additional warnings
+							+ ' -Wshadow'
+
     .LinkerOptions          = '"%1" -o "%2"'
 
     .LibrarianOptions       = 'rcs "%2" "%1"'
