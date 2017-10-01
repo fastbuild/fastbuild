@@ -179,6 +179,9 @@
 
     struct stat stat_source;
     VERIFY( fstat( source, &stat_source ) == 0 );
+    
+    // Ensure dest file will be writable if it exists
+    FileIO::SetReadOnly( dstFileName, false );
 
     int dest = open( dstFileName, O_WRONLY | O_CREAT | O_TRUNC, 0644 );
     if ( dest < 0 )
