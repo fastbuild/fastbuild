@@ -22,8 +22,8 @@ void Dependencies::Save( IOStream & stream ) const
     size_t numDeps = GetSize();
     stream.Write( (uint32_t)numDeps );
 
-    Iter end = End();
-    for ( Iter it = Begin(); it != end; ++it )
+    Iter endIt = End();
+    for ( Iter it = Begin(); it != endIt; ++it )
     {
         const Dependency & dep = *it;
 

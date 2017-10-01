@@ -45,8 +45,8 @@ public:
     explicit inline Dependencies( size_t initialCapacity, bool resizeable = false )
         : Array< Dependency >( initialCapacity, resizeable )
     {}
-    explicit inline Dependencies( Dependency * begin, Dependency * end )
-        : Array< Dependency >( begin, end )
+    explicit inline Dependencies( Dependency * otherBegin, Dependency * otherEnd )
+        : Array< Dependency >( otherBegin, otherEnd )
     {}
 
     void Save( IOStream & stream ) const;
