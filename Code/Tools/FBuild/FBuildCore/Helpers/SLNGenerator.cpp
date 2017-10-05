@@ -116,7 +116,6 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
     AStackString<> shortVersion( shortVersionStart, shortVersionEnd );
 
     // header
-    Write( "\r\n" ); // Deliberate blank line
     Write( "Microsoft Visual Studio Solution File, Format Version 12.00\r\n" );
     Write( "# Visual Studio %s\r\n", shortVersion.Get() );
     Write( "VisualStudioVersion = %s\r\n", version );
