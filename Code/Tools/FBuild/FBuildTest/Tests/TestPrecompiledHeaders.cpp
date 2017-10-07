@@ -31,6 +31,7 @@ private:
     void TestPCHWithCache_NoRebuild() const;
     void PreventUselessCacheTraffic_MSVC() const;
     void CacheUniqueness() const;
+    void Deoptimization() const;
 
     // Clang on Windows
     #if defined( __WINDOWS__ )
@@ -49,6 +50,7 @@ REGISTER_TESTS_BEGIN( TestPrecompiledHeaders )
     REGISTER_TEST( TestPCHWithCache )
     REGISTER_TEST( TestPCHWithCache_NoRebuild )
     REGISTER_TEST( CacheUniqueness )
+    REGISTER_TEST( Deoptimization )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( PreventUselessCacheTraffic_MSVC )
         REGISTER_TEST( TestPCHClangWindows )
@@ -310,6 +312,27 @@ void TestPrecompiledHeaders::CacheUniqueness() const
         // Should not have retrieved from the cache
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 0 );
     }
+}
+
+// Deoptimization
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::Deoptimization() const
+{
+    // Initialize
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestPrecompiledHeaders/Deoptimization/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( nullptr ) );
+
+    AStackString<> target( "PCHTest-Deoptimization" );
+
+    TEST_ASSERT( fBuild.Build( target ) );
+
+    CheckStatsNode ( 2,      2,      Node::OBJECT_NODE );
+    CheckStatsNode ( 1,      1,      Node::OBJECT_LIST_NODE );
 }
 
 // TestPCHClang

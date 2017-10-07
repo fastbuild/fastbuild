@@ -2230,6 +2230,9 @@ bool ObjectNode::ShouldUseDeoptimization() const
         return false; // feature not enabled
     }
 
+    // Neither flag should be set for the creation of Precompiled Headers
+    ASSERT( GetFlag( FLAG_CREATING_PCH ) == false );
+
     if ( FileIO::GetReadOnly( GetSourceFile()->GetName() ) )
     {
         return false; // file is read only (not modified)
