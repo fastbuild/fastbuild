@@ -141,8 +141,8 @@ public:
 
     void DoBuildPass( Node * nodeToBuild );
 
-    static void CleanPath( AString & name );
-    static void CleanPath( const AString & name, AString & fullPath );
+    static void CleanPath( AString & name, bool makeFullPath = true );
+    static void CleanPath(const AString & name, AString & cleanPath, bool makeFullPath = true );
     #if defined( ASSERTS_ENABLED )
         static bool IsCleanPath( const AString & path );
     #endif
