@@ -474,16 +474,12 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
     Array< AString > filesToExcludeCleaned( filesToExclude.GetSize(), true );
     for ( const AString& file : filesToExclude )
     {
-        if ( file.BeginsWith( ".." ) )
-        {
-            AStackString<> fullPath;
-            NodeGraph::CleanPath( file, fullPath );
-            filesToExcludeCleaned.Append( fullPath );
-        }
-        else
-        {
-            filesToExcludeCleaned.Append( file );
-        }
+        AStackString<> cleanPath;
+        NodeGraph::CleanPath( file, cleanPath, false );
+        if ( cleanPath.BeginsWith( ".." ) )
+            NodeGraph::CleanPath( cleanPath );
+
+        filesToExcludeCleaned.Append( cleanPath );
     }
 
     const AString * const  end = paths.End();
