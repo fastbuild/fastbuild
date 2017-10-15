@@ -627,7 +627,8 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     // make sure the output path exists for files
     // (but don't bother for input files)
-    if ( node->IsAFile() && ( node->GetType() != Node::FILE_NODE ) && ( node->GetType() != Node::COMPILER_NODE ) )
+    const bool isOutputFile = node->IsAFile() && ( node->GetType() != Node::FILE_NODE ) && ( node->GetType() != Node::COMPILER_NODE );
+    if ( isOutputFile )
     {
         if ( Node::EnsurePathExistsForFile( node->GetName() ) == false )
         {
@@ -680,7 +681,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     {
         if ( result == Node::NODE_RESULT_FAILED )
         {
-            if ( node->GetControlFlags() & Node::FLAG_NO_DELETE_ON_FAIL )
+            if ( !isOutputFile || ( node->GetControlFlags() & Node::FLAG_NO_DELETE_ON_FAIL ) )
             {
                 // node failed, but builder wants result left on disc
             }
