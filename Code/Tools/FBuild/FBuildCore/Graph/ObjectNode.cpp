@@ -200,8 +200,10 @@ ObjectNode::~ObjectNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ObjectNode::DoBuild( Job * job )
 {
-    // Delete previous file(s) if doing a clean build
-    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
+    // Delete previous file(s) if doing a clean build, or if creating the pch,
+    // otherwise /showIncludes doesn't work
+    const bool msvcCreatingPch = GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH );
+    if ( FBuild::Get().GetOptions().m_ForceCleanBuild || msvcCreatingPch )
     {
         if ( FileIO::FileExists( GetName().Get() ) )
         {
@@ -211,7 +213,7 @@ ObjectNode::~ObjectNode()
                 return NODE_RESULT_FAILED;
             }
         }
-        if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
+        if ( msvcCreatingPch )
         {
             if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
             {
@@ -221,13 +223,9 @@ ObjectNode::~ObjectNode()
                     return NODE_RESULT_FAILED;
                 }
             }
+            // Reset PCH cache key - will be set correctly if we end up using the cache
+            m_PCHCacheKey = 0;
         }
-    }
-
-    // Reset PCH cache key - will be set correctly if we end up using the cache
-    if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
-    {
-        m_PCHCacheKey = 0;
     }
 
     // using deoptimization?
