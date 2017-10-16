@@ -28,6 +28,7 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_CPUAllocation( 0 ),
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
+    m_WriteExtraInfoInBrokerFile( false ),
     m_ConsoleMode( false )
 {
     #ifndef __WINDOWS__
@@ -103,6 +104,11 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         {
             m_WorkMode = WorkerSettings::DEDICATED;
             m_OverrideWorkMode = true;
+            continue;
+        }
+        else if ( token == "-writeextrainfo" )
+        {
+            m_WriteExtraInfoInBrokerFile = true;
             continue;
         }
         #if defined( __WINDOWS__ )

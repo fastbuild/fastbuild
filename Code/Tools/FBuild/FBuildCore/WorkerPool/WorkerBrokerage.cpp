@@ -7,6 +7,7 @@
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
+#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
@@ -24,6 +25,7 @@
 WorkerBrokerage::WorkerBrokerage()
     : m_Availability( false )
     , m_Initialized( false )
+    , m_SettingsTime( 0 )
 {
 }
 
@@ -142,13 +144,52 @@ void WorkerBrokerage::SetAvailability(bool available)
             //
             // Ensure that the file will be recreated if cleanup is done on the brokerage path.
             //
-            if ( !FileIO::FileExists( m_BrokerageFilePath.Get() ) )
+            const WorkerSettings& workerSettings = WorkerSettings::Get();
+            const uint64_t currentSettingsTime = workerSettings.GetLastWriteTime();
+
+            if ( !FileIO::FileExists( m_BrokerageFilePath.Get() ) || 
+                 ( workerSettings.GetWriteExtraInfoInBrokerFile() && ( currentSettingsTime > m_SettingsTime ) ) )
             {
                 FileIO::EnsurePathExists( m_BrokerageRoot );
 
                 // create file to signify availability
                 FileStream fs;
                 fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
+
+                // and write some human readable info in it if needed
+                if ( workerSettings.GetWriteExtraInfoInBrokerFile() )
+                {
+                    AStackString<> line( FBUILD_VERSION_STRING );
+
+                    AStackString<> username;
+                    if ( Env::GetEnvVariable( "USERNAME", username ) || Env::GetEnvVariable( "USER", username ) )
+                    {
+                        line.Append("\n", 1);
+                        line.Append(username);
+                    }
+
+                    static const uint32_t numProcessors = Env::GetNumProcessors();
+                    line.AppendFormat( "\n%u/%u cpus\n", workerSettings.GetNumCPUsToUse(), numProcessors );
+
+                    switch ( workerSettings.GetMode() )
+                    {
+                        case WorkerSettings::DEDICATED:
+                            {
+                                line.Append( "dedicated\n", 10 );
+                            }
+                            break;
+                        case WorkerSettings::WHEN_IDLE:
+                            {
+                                line.AppendFormat( "idle (%u%%)\n", workerSettings.GetIdleThresholdPercent() );
+                            }
+                            break;
+                        case WorkerSettings::DISABLED:
+                        default:
+                            break;
+                    }
+                    fs.WriteBuffer( line.Get(), line.GetLength() );
+                    m_SettingsTime = currentSettingsTime;
+                }
 
                 // Restart the timer
                 m_TimerLastUpdate.Start();

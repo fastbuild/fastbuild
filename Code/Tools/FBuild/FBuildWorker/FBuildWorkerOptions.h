@@ -35,6 +35,9 @@ public:
     bool m_OverrideWorkMode;
     WorkerSettings::Mode m_WorkMode;
 
+    // broker settings
+    bool m_WriteExtraInfoInBrokerFile;
+
     // Console mode
     bool m_ConsoleMode;
 

@@ -138,6 +138,10 @@ int MainCommon( const AString & args, void * hInstance )
         {
             WorkerSettings::Get().SetMode( options.m_WorkMode );
         }
+        if ( options.m_WriteExtraInfoInBrokerFile )
+        {
+            WorkerSettings::Get().SetWriteExtraInfoInBrokerFile( true );
+        }
         ret = worker.Work();
     }
 
