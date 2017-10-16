@@ -720,20 +720,12 @@ FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
 
 // CreateDirectoryListNode
 //------------------------------------------------------------------------------
-DirectoryListNode * NodeGraph::CreateDirectoryListNode( const AString & name,
-                                                        const AString & path,
-                                                        const Array< AString > * patterns,
-                                                        bool recursive,
-                                                        const Array< AString > & excludePaths,
-                                                        const Array< AString > & filesToExclude,
-                                                        const Array< AString > & excludePatterns )
+DirectoryListNode * NodeGraph::CreateDirectoryListNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
 
-    // NOTE: DirectoryListNode assumes valid values from here
-    // and will assert as such (so we don't check here)
-
-    DirectoryListNode * node = FNEW( DirectoryListNode( name, path, patterns, recursive, excludePaths, filesToExclude, excludePatterns ) );
+    DirectoryListNode * node = FNEW( DirectoryListNode() );
+    node->SetName( name );
     AddNode( node );
     return node;
 }

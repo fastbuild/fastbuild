@@ -468,7 +468,7 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
                                          Dependencies & nodes ) const
 {
     // Handle special case of excluded files beginning with ../
-    // Since they can be used seinsibly by matching just the end
+    // Since they can be used sensibly by matching just the end
     // of a path, assume they are relative to the working dir.
     // TODO:C Move this during bff parsing when everything is using reflection
     Array< AString > filesToExcludeCleaned( filesToExclude.GetSize(), true );
@@ -497,13 +497,21 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
         Node * node = nodeGraph.FindNode( name );
         if ( node == nullptr )
         {
-            node = nodeGraph.CreateDirectoryListNode( name,
-                                               path,
-                                               patterns,
-                                               recurse,
-                                               excludePaths,
-                                               filesToExcludeCleaned,
-                                               excludePatterns );
+            node = nodeGraph.CreateDirectoryListNode( name );
+            DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
+            dln->m_Path = path;
+            if ( patterns )
+            {
+                dln->m_Patterns = *patterns;
+            }
+            dln->m_Recursive = recurse;
+            dln->m_ExcludePaths = excludePaths;
+            dln->m_FilesToExclude = filesToExcludeCleaned;
+            dln->m_ExcludePatterns = excludePatterns;
+            if ( !dln->Initialize( nodeGraph, iter, this ) )
+            {
+                return false; // Initialize will have emitted an error
+            }
         }
         else if ( node->GetType() != Node::DIRECTORY_LIST_NODE )
         {

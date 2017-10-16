@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
@@ -113,20 +114,11 @@ void TestGraph::TestNodeTypes() const
         TEST_ASSERT( AStackString<>( "CopyFile" ) == n->GetTypeName() );
     }
 
-    Array< AString > patterns;
-    patterns.Append( AStackString<>( "*.cpp" ) );
     #if defined( __WINDOWS__ )
-        DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path\\|*.cpp|false|" ),
-                                                             AStackString<>( "path\\" ),
+        DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path\\|*.cpp|false|" ) );
     #else
-        DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path/|*.cpp|false|" ),
-                                                             AStackString<>( "path/" ),
+        DirectoryListNode * dn = ng.CreateDirectoryListNode( AStackString<>( "path/|*.cpp|false|" ) );
     #endif
-                                                             &patterns,
-                                                             false,
-                                                             Array< AString >(),
-                                                             Array< AString >(),
-                                                             Array< AString >() );
     TEST_ASSERT( dn->GetType() == Node::DIRECTORY_LIST_NODE );
     TEST_ASSERT( DirectoryListNode::GetTypeS() == Node::DIRECTORY_LIST_NODE );
     TEST_ASSERT( AStackString<>( "Directory" ) == dn->GetTypeName() );
@@ -246,29 +238,29 @@ void TestGraph::TestDirectoryListNode() const
     FBuild fb;
     NodeGraph ng;
 
-    // make sure a node of the name we are going to use doesn't exist
+    // Generate a valid DirectoryListNode name
+    AStackString<> name;
     #if defined( __WINDOWS__ )
         const AStackString<> testFolder( "Data\\TestGraph\\" );
     #else
         const AStackString<> testFolder( "Data/TestGraph/" );
     #endif
-
     Array< AString > patterns;
     patterns.Append( AStackString<>( "library.*" ) );
+    DirectoryListNode::FormatName( testFolder,
+                                   &patterns,
+                                   true, // recursive
+                                   Array< AString >(), // excludePaths,
+                                   Array< AString >(), // excludeFiles,
+                                   Array< AString >(), // excludePatterns,
+                                   name );
 
     // create the node, and make sure we can access it by name
-    #if defined( __WINDOWS__ )
-        const AStackString<> name( "Data\\TestGraph\\|library.*|true|" );
-    #else
-        const AStackString<> name( "Data/TestGraph/|library.*|true|" );
-    #endif
-    DirectoryListNode * node = ng.CreateDirectoryListNode( name,
-                                                           testFolder,
-                                                           &patterns,
-                                                           true,
-                                                           Array< AString >(),
-                                                           Array< AString >(),
-                                                           Array< AString >() );
+    DirectoryListNode * node = ng.CreateDirectoryListNode( name );
+    node->m_Path = testFolder;
+    node->m_Patterns = patterns;
+    BFFIterator iter;
+    TEST_ASSERT( node->Initialize( ng, iter, nullptr ) );
     TEST_ASSERT( ng.FindNode( name ) == node );
 
     TEST_ASSERT( fb.Build( node ) );

@@ -53,7 +53,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 96 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 97 };
 
     bool IsValid() const
     {
@@ -110,14 +110,7 @@ public:
                                const Dependencies & preBuildDependencies,
                                bool useStdOutAsOutput );
     FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
-    DirectoryListNode * CreateDirectoryListNode( const AString & name,
-                                                 const AString & path,
-                                                 const Array< AString > * patterns,
-                                                 bool recursive,
-                                                 const Array< AString > & excludePaths,
-                                                 const Array< AString > & filesToExclude,
-                                                 const Array< AString > & excludePatterns
-                                               );
+    DirectoryListNode * CreateDirectoryListNode( const AString & name );
     LibraryNode *   CreateLibraryNode( const AString & libraryName );
     ObjectNode *    CreateObjectNode( const AString & objectName );
     AliasNode *     CreateAliasNode( const AString & aliasName );
