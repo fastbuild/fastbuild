@@ -233,6 +233,7 @@ protected:
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
     static void FixupPathForVSIntegration_SNC( AString & line, const char * tag );
+    static void FixupPathForVSIntegration_VBCC( AString & line, const char * tag );
 
     static void Serialize( IOStream & stream, const void * base, const ReflectionInfo & ri );
     static void Serialize( IOStream & stream, const void * base, const ReflectedProperty & property );

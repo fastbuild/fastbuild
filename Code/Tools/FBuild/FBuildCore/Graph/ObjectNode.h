@@ -14,6 +14,7 @@
 //------------------------------------------------------------------------------
 class Args;
 class BFFIterator;
+class ConstMemoryStream;
 class Function;
 class NodeGraph;
 class NodeProxy;
@@ -57,6 +58,7 @@ public:
         FLAG_INCLUDES_IN_STDERR =   0x20000,
         FLAG_QT_RCC             =   0x40000,
         FLAG_WARNINGS_AS_ERRORS_MSVC    = 0x80000,
+        FLAG_VBCC               =   0x100000
     };
     static uint32_t DetermineFlags( const Node * compilerNode,
                                     const AString & args,
@@ -136,6 +138,7 @@ private:
     friend class Client;
     bool ShouldUseCache() const;
     bool CanUseResponseFile() const;
+    bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
 
     friend class FunctionObjectList;
 

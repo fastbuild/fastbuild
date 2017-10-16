@@ -116,7 +116,7 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFIterator & iter, const A
             return false;
         }
     }
-    else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG ) )
+    else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG | ObjectNode::FLAG_VBCC ) )
     {
         if ( hasCompileToken == false )
         {

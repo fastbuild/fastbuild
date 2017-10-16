@@ -871,15 +871,17 @@ void Node::ReplaceDummyName( const AString & newName )
     // To:
     //     <path>\Core\Mem\Mem.h(23,1): warning: some warning text
     //
-    const char * tag = line.Find( ": warning:" );
-    tag = tag ? tag : line.Find( ": note:" );
-    tag = tag ? tag : line.Find( ": error:" );
-    tag = tag ? tag : line.Find( ": fatal error:" );
-    tag = tag ? tag : line.Find( ": remark:" );
-    if ( tag )
     {
-        FixupPathForVSIntegration_GCC( line, tag );
-        return;
+        const char * tag = line.Find( ": warning:" );
+        tag = tag ? tag : line.Find( ": note:" );
+        tag = tag ? tag : line.Find( ": error:" );
+        tag = tag ? tag : line.Find( ": fatal error:" );
+        tag = tag ? tag : line.Find( ": remark:" );
+        if ( tag )
+        {
+            FixupPathForVSIntegration_GCC( line, tag );
+            return;
+        }
     }
 
     // SNC Style
@@ -888,14 +890,32 @@ void Node::ReplaceDummyName( const AString & newName )
     // To:
     //     <path>\Core\Mem\Mem.h(23,1): warning 55: some warning text
     //
-    tag = tag ? tag : line.Find( ": error " );
-    tag = tag ? tag : line.Find( ": warning " );
-    tag = tag ? tag : line.Find( ": note " );
-    tag = tag ? tag : line.Find( ": remark " );
-    if ( tag )
     {
-        FixupPathForVSIntegration_SNC( line, tag );
-        return;
+        const char * tag = line.Find( ": error " );
+        tag = tag ? tag : line.Find( ": warning " );
+        tag = tag ? tag : line.Find( ": note " );
+        tag = tag ? tag : line.Find( ": remark " );
+        if ( tag )
+        {
+            FixupPathForVSIntegration_SNC( line, tag );
+            return;
+        }
+    }
+
+    // VBCC Style
+    // Convert:
+    //     warning 55 in line 23 of "Core/Mem/Mem.h": some warning text
+    // To:
+    //     <path>\Core\Mem\Mem.h(23,1): warning 55: some warning text
+    //
+    {
+        const char * tag = ( line.BeginsWith( "warning " ) ? line.Get() : nullptr );
+        tag = tag ? tag : ( line.BeginsWith( "error " ) ? line.Get() : nullptr );
+        if ( tag )
+        {
+            FixupPathForVSIntegration_VBCC( line, tag );
+            return;
+        }
     }
 
     // leave line untouched
@@ -982,6 +1002,44 @@ void Node::ReplaceDummyName( const AString & newName )
     fixed += tag;
 
     line = fixed;
+}
+
+// FixupPathForVSIntegration_VBCC
+//------------------------------------------------------------------------------
+/*static*/ void Node::FixupPathForVSIntegration_VBCC( AString & line, const char * /*tag*/ )
+{
+    Array< AString > tokens;
+    line.Tokenize( tokens, ' ' );
+
+    //     warning 55 in line 8 of "Core/Mem/Mem.h": some warning text
+    if ( tokens.GetSize() < 9 )
+    {
+        return; // A line we don't expect, ignore it
+    }
+    ASSERT( ( tokens[ 0 ] == "warning" ) || ( tokens[ 0 ] == "error" ) );
+
+    const char * problemType = tokens[ 0 ].Get(); // Warning or error
+    const char * warningNum = tokens[ 1 ].Get();
+    const char * warningLine = tokens[ 4 ].Get();
+    AStackString<> fileName( tokens[ 6 ] );
+    if ( fileName.BeginsWith( '"' ) && fileName.EndsWith( "\":" ) )
+    {
+        fileName.Trim( 1, 2 );
+    }
+    NodeGraph::CleanPath( fileName );
+
+    //     <path>\Core\Mem\Mem.h(23,1): warning 55: some warning text
+    AStackString<> buffer;
+    buffer.Format( "%s(%s,1): %s %s: ", fileName.Get(), warningLine, problemType, warningNum );
+    buffer.Replace( '/', '\\' );
+
+    // add rest of warning
+    for ( size_t i=7; i < tokens.GetSize(); ++i )
+    {
+        buffer += tokens[ i ];
+        buffer += ' ';
+    }
+    line = buffer;
 }
 
 // InitializePreBuildDependencies

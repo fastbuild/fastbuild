@@ -17,24 +17,42 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
+ConstMemoryStream::ConstMemoryStream()
+    : m_Buffer( nullptr )
+    , m_Size( 0 )
+    , m_CurrentPos( 0 )
+    , m_OwnsMemory( false )
+{
+}
+
+// CONSTRUCTOR
+//------------------------------------------------------------------------------
 ConstMemoryStream::ConstMemoryStream( const void * data, size_t size )
     : m_Buffer( data )
     , m_Size( size )
     , m_CurrentPos( 0 )
+    , m_OwnsMemory( false )
 {
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ConstMemoryStream::~ConstMemoryStream() = default;
+ConstMemoryStream::~ConstMemoryStream()
+{
+    if ( m_OwnsMemory )
+    {
+        FREE( const_cast< void * >( m_Buffer ) );
+    }
+}
 
 // Replace
 //------------------------------------------------------------------------------
-void ConstMemoryStream::Replace( const void * data, size_t size )
+void ConstMemoryStream::Replace( const void * data, size_t size, bool ownsMemory )
 {
     m_Buffer = data;
     m_Size = size;
     m_CurrentPos = 0;
+    m_OwnsMemory = ownsMemory;
 }
 
 // Read

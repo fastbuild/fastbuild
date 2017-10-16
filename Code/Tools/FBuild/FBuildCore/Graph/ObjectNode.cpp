@@ -26,6 +26,7 @@
 
 // Core
 #include "Core/Env/Env.h"
+#include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -236,7 +237,7 @@ ObjectNode::~ObjectNode()
     bool useCache = ShouldUseCache();
     bool useDist = GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
     bool useSimpleDist = GetCompiler()->CastTo< CompilerNode >()->SimpleDistributionMode();
-    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
+    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( ObjectNode::FLAG_VBCC ) );
     if ( GetDedicatedPreprocessor() )
     {
         usePreProcessor = true;
@@ -480,6 +481,11 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         {
             usePreProcessedOutput = false;
         }
+
+        if ( GetFlag( FLAG_VBCC ) )
+        {
+            usePreProcessedOutput = false;
+        }
     }
 
     Args fullArgs;
@@ -684,8 +690,20 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     Timer t;
 
     {
-        const char  * output = (char *)job->GetData();
-        const size_t outputSize = job->GetDataSize();
+        const char * output = (char *)job->GetData();
+        size_t outputSize = job->GetDataSize();
+
+        // Unlike most compilers, VBCC writes preprocessed output to a file
+        ConstMemoryStream vbccMemoryStream;
+        if ( GetFlag( FLAG_VBCC ) )
+        {
+            if ( !GetVBCCPreprocessedOutput( vbccMemoryStream ) )
+            {
+                return false; // GetVBCCPreprocessedOutput handles error output
+            }
+            output = (const char *)vbccMemoryStream.GetData();
+            outputSize = vbccMemoryStream.GetSize();
+        }
 
         ASSERT( output && outputSize );
 
@@ -820,6 +838,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
               compiler.EndsWith( "rcc" ) )
     {
         flags |= ObjectNode::FLAG_QT_RCC;
+    }
+    else if ( compiler.EndsWith( "vc.exe" ) ||
+              compiler.EndsWith( "vc" ) )
+    {
+        flags |= ObjectNode::FLAG_VBCC;
     }
 
     // Check MS compiler options
@@ -1375,6 +1398,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     const bool isGHWiiU = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( GREENHILLS_WIIU ) : GetFlag( GREENHILLS_WIIU );
     const bool isCUDA   = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CUDA_NVCC ) : GetFlag( FLAG_CUDA_NVCC );
     const bool isQtRCC  = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_QT_RCC ) : GetFlag( FLAG_QT_RCC );
+    const bool isVBCC   = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_VBCC ) : GetFlag( FLAG_VBCC );
 
     const size_t numTokens = tokens.GetSize();
     for ( size_t i = 0; i < numTokens; ++i )
@@ -1385,16 +1409,19 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         // -o removal for preprocessor
         if ( pass == PASS_PREPROCESSOR_ONLY )
         {
-            if ( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA )
+            if ( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA || isVBCC )
             {
                 if ( StripTokenWithArg( "-o", token, i ) )
                 {
                     continue;
                 }
 
-                if ( StripToken( "-c", token ) )
+                if ( !isVBCC )
                 {
-                    continue; // remove -c (compile) option when using preprocessor only
+                    if ( StripToken( "-c", token ) )
+                    {
+                        continue; // remove -c (compile) option when using preprocessor only
+                    }
                 }
             }
             else if ( isQtRCC )
@@ -1475,7 +1502,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue; // skip this token in both cases
                 }
             }
-            if ( isGCC || isClang )
+            if ( isGCC || isClang || isVBCC )
             {
                 // Remove forced includes so they aren't forced twice
                 if ( StripTokenWithArg( "-include", token, i ) )
@@ -1677,7 +1704,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         }
         else
         {
-            ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA );
+            ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA || isVBCC );
             fullArgs += "-E"; // run pre-processor only
 
             // Ensure unused defines declared in the PCH but not used
@@ -1763,7 +1790,15 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
         // caused by the manual process abortion (process killed)
         if ( ( ch.GetResult() != 0 ) && !ch.HasAborted() )
         {
-            DumpOutput( job, ch.GetErr().Get(), ch.GetErrSize(), GetName() );
+            // Use the error text, but if it's empty, use the output
+            if ( ch.GetErr().Get() )
+            {
+                DumpOutput( job, ch.GetErr().Get(), ch.GetErrSize(), GetName() );
+            }
+            else
+            {
+                DumpOutput( job, ch.GetOut().Get(), ch.GetOutSize(), GetName() );
+            }
         }
 
         return false; // SpawnCompiler will have emitted error
@@ -2299,6 +2334,41 @@ bool ObjectNode::CanUseResponseFile() const
     #else
         return false;
     #endif
+}
+
+// GetVBCCPreprocessedOutput
+//------------------------------------------------------------------------------
+bool ObjectNode::GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const
+{
+    // Filename matches the source file, but with extension replaced
+    const AString & sourceFileName = GetSourceFile()->GetName();
+    const char * lastDot = sourceFileName.FindLast( '.' );
+    lastDot = lastDot ? lastDot : sourceFileName.GetEnd();
+    AStackString<> preprocessedFile( sourceFileName.Get(), lastDot );
+    preprocessedFile += ".i";
+
+    // Try to open the file
+    FileStream f;
+    if ( !f.Open( preprocessedFile.Get(), FileStream::READ_ONLY ) )
+    {
+        FLOG_ERROR( "Failed to open preprocessed file '%s'", preprocessedFile.Get() );
+        return false;
+    }
+
+    // Allocate memory
+    const size_t memSize = (size_t)f.GetFileSize();
+    char * mem = (char *)ALLOC( memSize + 1 ); // +1 so we can null terminate
+    outStream.Replace( mem, memSize, true ); // true = outStream now owns memory
+
+    // Read contents
+    if ( (size_t)f.ReadBuffer( mem, memSize ) != memSize )
+    {
+        FLOG_ERROR( "Failed to read preprocessed file '%s'", preprocessedFile.Get() );
+        return false;
+    }
+    mem[ memSize ] = 0; // null terminate text buffer for parsing convenience
+
+    return true;
 }
 
 //------------------------------------------------------------------------------
