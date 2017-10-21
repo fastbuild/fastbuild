@@ -29,6 +29,7 @@ class ReflectedProperty
 {
 public:
     ReflectedProperty( const char * name, uint32_t offset, PropertyType type, bool isArray );
+    ~ReflectedProperty();
 
     inline uint32_t GetNameCRC() const { return m_NameCRC; }
     inline PropertyType GetType() const { return (PropertyType)m_Type; }

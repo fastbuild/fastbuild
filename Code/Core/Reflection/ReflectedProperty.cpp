@@ -44,6 +44,19 @@ ReflectedProperty::ReflectedProperty( const char * name, uint32_t offset, Proper
     m_MetaDataChain = nullptr;
 }
 
+// DESTRUCTOR
+//------------------------------------------------------------------------------
+ReflectedProperty::~ReflectedProperty()
+{
+    const IMetaData * m = m_MetaDataChain;
+    while ( m )
+    {
+        const IMetaData * next = m->GetNext();
+        FDELETE m;
+        m = next;
+    }
+}
+
 // GetPropertySize
 //------------------------------------------------------------------------------
 size_t ReflectedProperty::GetPropertySize() const
