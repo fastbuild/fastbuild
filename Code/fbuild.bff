@@ -424,6 +424,9 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .Platform               = 'x64Linux'
     .Compiler               = 'Compiler-x64-Linux'
     .Linker                 = '/usr/bin/g++'
+
+    .CompilerOptions_ASan   = ' -fsanitize=address -fno-omit-frame-pointer'
+    .LinkerOptions_ASan     = ' -fsanitize=address'
 ]
 .X64DebugConfig_Linux =
 [
@@ -454,12 +457,23 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .CompilerOptions        + ' -DPROFILING_ENABLED'
     .CompilerOptionsC       + ' -DPROFILING_ENABLED'
 ]
+.X64ASanConfig_Linux =
+[
+    Using( .X64ReleaseConfig_Linux ) // Note: based on Release config
+    .Config                 = 'ASan'
+    .CompilerOptions        + .CompilerOptions_ASan
+    .CompilerOptionsC       + .CompilerOptions_ASan
+    .LinkerOptions          + .LinkerOptions_ASan
+]
 .X64ClangBaseConfig_Linux =
 [
     Using( .LinuxBaseConfig )
     .Platform               = 'x64ClangLinux'
     .Compiler               = 'Compiler-x64Clang-LinuxOSX'
     .Linker                 = '/usr/bin/clang++'
+
+    .CompilerOptions_ASan   = ' -fsanitize=address -fno-omit-frame-pointer'
+    .LinkerOptions_ASan     = ' -fsanitize=address'
 ]
 .X64ClangDebugConfig_Linux =
 [
@@ -486,6 +500,14 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     Using( .X64ClangReleaseConfig_Linux ) // Note: based on Release config
     .Config                 = 'Profile'
     .CompilerOptions        + ' -DPROFILING_ENABLED'
+]
+.X64ClangASanConfig_Linux =
+[
+    Using( .X64ClangReleaseConfig_Linux ) // Note: based on Release config
+    .Config                 = 'ASan'
+    .CompilerOptions        + .CompilerOptions_ASan
+    .CompilerOptionsC       + .CompilerOptions_ASan
+    .LinkerOptions          + .LinkerOptions_ASan
 ]
 
 // OSX
@@ -646,14 +668,18 @@ VCXProject( 'UpdateSolution-proj' )
              .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig,
              .X86ClangDebugConfig, .X86ClangProfileConfig, .X86ClangReleaseConfig,
              .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
+             .X64ASanConfig_Linux,
              .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
+             .X64ClangASanConfig_Linux,
             .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
 .Configs_Windows_MSVC   = { .X86DebugConfig, .X86ProfileConfig, .X86ReleaseConfig,
                             .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig }
 .Configs_Windows_Clang  = { .X86ClangDebugConfig, .X86ClangProfileConfig, .X86ClangReleaseConfig }
 .Configs_Linux          = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
-                            .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux }
+                            .X64ASanConfig_Linux,
+                            .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
+                            .X64ClangASanConfig_Linux }
 .Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
 // External
@@ -701,14 +727,21 @@ ForEach( .Config in .Configs )
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
 .Platforms = { 'x86', 'x64', 'x86Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX' }
+.PlatformConfigs_x86           = { 'Debug', 'Profile', 'Release' }
+.PlatformConfigs_x64           = { 'Debug', 'Profile', 'Release' }
+.PlatformConfigs_x86Clang      = { 'Debug', 'Profile', 'Release' }
+.PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan' }
+.PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release', 'ASan' }
+.PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
 ForEach( .Platform in .Platforms )
 {
     Alias( 'All-$Platform$' )
     {
-        .Targets        = { 'All-$Platform$-Debug',
-                            'All-$Platform$-Profile',
-                            'All-$Platform$-Release'
-                          }
+        .Targets = {}
+        ForEach( .Config in .'PlatformConfigs_$Platform$' )
+        {
+            ^Targets + { 'All-$Platform$-$Config$' }
+        }
     }
 }
 
