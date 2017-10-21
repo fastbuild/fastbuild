@@ -46,9 +46,22 @@ matrix:
           packages:
             - clang-8
             - llvm-8 # for llvm-symbolizer
+    # Linux, ThreadSanitizer
+    - os: linux
+      env: CFG=tsan CLANG=clang-8
+      # Use latest clang when building with sanitizers.
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-8
+          packages:
+            - clang-8
+            - llvm-8 # for llvm-symbolizer
   allow_failures:
     - env: CFG=asan CLANG=clang-8
     - env: CFG=msan CLANG=clang-8
+    - env: CFG=tsan CLANG=clang-8
   fast_finish: true
 
 install:
@@ -150,6 +163,9 @@ script:
         ;;
       linux:msan)
         ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-MSan
+        ;;
+      linux:tsan)
+        ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-TSan
         ;;
     esac
   # Check non-unity build.
