@@ -474,6 +474,8 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 
     .CompilerOptions_ASan   = ' -fsanitize=address -fno-omit-frame-pointer'
     .LinkerOptions_ASan     = ' -fsanitize=address'
+    .CompilerOptions_MSan   = ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
+    .LinkerOptions_MSan     = ' -fsanitize=memory'
 ]
 .X64ClangDebugConfig_Linux =
 [
@@ -508,6 +510,14 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .CompilerOptions        + .CompilerOptions_ASan
     .CompilerOptionsC       + .CompilerOptions_ASan
     .LinkerOptions          + .LinkerOptions_ASan
+]
+.X64ClangMSanConfig_Linux =
+[
+    Using( .X64ClangReleaseConfig_Linux ) // Note: based on Release config
+    .Config                 = 'MSan'
+    .CompilerOptions        + .CompilerOptions_MSan
+    .CompilerOptionsC       + .CompilerOptions_MSan
+    .LinkerOptions          + .LinkerOptions_MSan
 ]
 
 // OSX
@@ -670,7 +680,7 @@ VCXProject( 'UpdateSolution-proj' )
              .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
              .X64ASanConfig_Linux,
              .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
-             .X64ClangASanConfig_Linux,
+             .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux,
             .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
 .Configs_Windows_MSVC   = { .X86DebugConfig, .X86ProfileConfig, .X86ReleaseConfig,
@@ -679,7 +689,7 @@ VCXProject( 'UpdateSolution-proj' )
 .Configs_Linux          = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
                             .X64ASanConfig_Linux,
                             .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
-                            .X64ClangASanConfig_Linux }
+                            .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux }
 .Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
 // External
@@ -731,7 +741,7 @@ ForEach( .Config in .Configs )
 .PlatformConfigs_x64           = { 'Debug', 'Profile', 'Release' }
 .PlatformConfigs_x86Clang      = { 'Debug', 'Profile', 'Release' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan' }
-.PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release', 'ASan' }
+.PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release', 'ASan', 'MSan' }
 .PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
 ForEach( .Platform in .Platforms )
 {
