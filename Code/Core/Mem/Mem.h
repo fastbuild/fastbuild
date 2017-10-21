@@ -53,7 +53,7 @@ void Free( void * ptr );
 #endif
 void * operator new( size_t size );
 void * operator new[]( size_t size );
-void operator delete( void * ptr );
-void operator delete[]( void * ptr );
+void operator delete( void * ptr ) NOEXCEPT;
+void operator delete[]( void * ptr ) NOEXCEPT;
 
 //------------------------------------------------------------------------------

@@ -73,9 +73,9 @@
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
     }
 
-    // Linux (GCC)
+    // Linux (GCC, Clang)
     //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Linux_GCC )
+    ForEach( .Config in .Configs_Linux )
     {
         Using( .Config )
         .OutputBase + '\$Platform$-$Config$'

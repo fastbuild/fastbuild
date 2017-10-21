@@ -100,7 +100,7 @@ void Free( void * ptr )
 #endif
 void * operator new( size_t size ) { return Alloc( size ); }
 void * operator new[]( size_t size ) { return Alloc( size ); }
-void operator delete( void * ptr ) { Free( ptr ); }
-void operator delete[]( void * ptr ) { Free( ptr ); }
+void operator delete( void * ptr ) NOEXCEPT { Free( ptr ); }
+void operator delete[]( void * ptr ) NOEXCEPT { Free( ptr ); }
 
 //------------------------------------------------------------------------------
