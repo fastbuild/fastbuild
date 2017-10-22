@@ -476,6 +476,10 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .LinkerOptions_ASan     = ' -fsanitize=address'
     .CompilerOptions_MSan   = ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
     .LinkerOptions_MSan     = ' -fsanitize=memory'
+    // These options are a valid for Clang <= 5.0.0:
+    .CompilerOptions_Fuzzer = ' -fsanitize-coverage=trace-pc-guard'
+    // These options are expected to be valid for Clang > 5.0.0:
+    // .CompilerOptions_Fuzzer = ' -fsanitize=fuzzer-no-link'
 ]
 .X64ClangDebugConfig_Linux =
 [
@@ -507,16 +511,16 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 [
     Using( .X64ClangReleaseConfig_Linux ) // Note: based on Release config
     .Config                 = 'ASan'
-    .CompilerOptions        + .CompilerOptions_ASan
-    .CompilerOptionsC       + .CompilerOptions_ASan
+    .CompilerOptions        + .CompilerOptions_ASan + .CompilerOptions_Fuzzer
+    .CompilerOptionsC       + .CompilerOptions_ASan + .CompilerOptions_Fuzzer
     .LinkerOptions          + .LinkerOptions_ASan
 ]
 .X64ClangMSanConfig_Linux =
 [
     Using( .X64ClangReleaseConfig_Linux ) // Note: based on Release config
     .Config                 = 'MSan'
-    .CompilerOptions        + .CompilerOptions_MSan
-    .CompilerOptionsC       + .CompilerOptions_MSan
+    .CompilerOptions        + .CompilerOptions_MSan + .CompilerOptions_Fuzzer
+    .CompilerOptionsC       + .CompilerOptions_MSan + .CompilerOptions_Fuzzer
     .LinkerOptions          + .LinkerOptions_MSan
 ]
 
@@ -710,6 +714,7 @@ VCXProject( 'UpdateSolution-proj' )
 #include "Tools\FBuild\FBuildApp\FBuildApp.bff"
 #include "Tools\FBuild\FBuildWorker\FBuildWorker.bff"
 #include "Tools\FBuild\FBuildTest\FBuildTest.bff"
+#include "Tools\FBuild\BFFFuzzer\BFFFuzzer.bff"
 
 // Aliases : All-$Platform$-$Config$
 //------------------------------------------------------------------------------
@@ -731,6 +736,11 @@ ForEach( .Config in .Configs )
                             'TestFramework-$Platform$-$Config$',
                             'FBuildCore-$Platform$-$Config$'
                           }
+#if __LINUX__
+        .Targets        + { // libFuzzer targets
+                            'BFFFuzzer-$Platform$-$Config$'
+                          }
+#endif
     }
 }
 
