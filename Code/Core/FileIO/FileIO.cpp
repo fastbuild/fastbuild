@@ -798,22 +798,22 @@
                 break; // no more entries
             }
 
-            bool isDir = entry->d_type == DT_DIR;
+            bool isDir = ( entry->d_type == DT_DIR );
 
             // Not all filesystems have support for returning the file type in
             // d_type and applications must properly handle a return of DT_UNKNOWN.
-            if (entry->d_type == DT_UNKNOWN)
+            if ( entry->d_type == DT_UNKNOWN )
             {
                 pathCopy.SetLength( baseLength );
                 pathCopy += entry->d_name;
 
                 struct stat info;
                 VERIFY( stat( pathCopy.Get(), &info ) == 0 );
-                isDir = S_ISDIR(info.st_mode);
+                isDir = S_ISDIR( info.st_mode );
             }
 
             // dir?
-            if (isDir)
+            if ( isDir )
             {
                 // ignore . and ..
                 if ( entry->d_name[ 0 ] == '.' )
@@ -899,22 +899,22 @@
                 break; // no more entries
             }
 
-            bool isDir = entry->d_type == DT_DIR;
+            bool isDir = ( entry->d_type == DT_DIR );
 
             // Not all filesystems have support for returning the file type in
             // d_type and applications must properly handle a return of DT_UNKNOWN.
-            if (entry->d_type == DT_UNKNOWN)
+            if ( entry->d_type == DT_UNKNOWN )
             {
                 pathCopy.SetLength( baseLength );
                 pathCopy += entry->d_name;
 
                 struct stat info;
                 VERIFY( stat( pathCopy.Get(), &info ) == 0 );
-                isDir = S_ISDIR(info.st_mode);
+                isDir = S_ISDIR( info.st_mode );
             }
 
             // dir?
-            if (isDir)
+            if ( isDir )
             {
                 // ignore dirs
                 continue;
@@ -1026,22 +1026,22 @@
                 break; // no more entries
             }
 
-            bool isDir = entry->d_type == DT_DIR;
+            bool isDir = ( entry->d_type == DT_DIR );
 
             // Not all filesystems have support for returning the file type in
             // d_type and applications must properly handle a return of DT_UNKNOWN.
-            if (entry->d_type == DT_UNKNOWN)
+            if ( entry->d_type == DT_UNKNOWN )
             {
                 pathCopy.SetLength( baseLength );
                 pathCopy += entry->d_name;
 
                 struct stat info;
                 VERIFY( stat( pathCopy.Get(), &info ) == 0 );
-                isDir = S_ISDIR(info.st_mode);
+                isDir = S_ISDIR( info.st_mode );
             }
 
             // dir?
-            if (isDir)
+            if ( isDir )
             {
                 // ignore . and ..
                 if ( entry->d_name[ 0 ] == '.' )
@@ -1155,22 +1155,22 @@
                 break; // no more entries
             }
 
-            bool isDir = entry->d_type == DT_DIR;
+            bool isDir = ( entry->d_type == DT_DIR );
 
             // Not all filesystems have support for returning the file type in
             // d_type and applications must properly handle a return of DT_UNKNOWN.
-            if (entry->d_type == DT_UNKNOWN)
+            if ( entry->d_type == DT_UNKNOWN )
             {
                 pathCopy.SetLength( baseLength );
                 pathCopy += entry->d_name;
 
                 struct stat info;
                 VERIFY( stat( pathCopy.Get(), &info ) == 0 );
-                isDir = S_ISDIR(info.st_mode);
+                isDir = S_ISDIR( info.st_mode );
             }
 
             // dir?
-            if (isDir)
+            if ( isDir )
             {
                 // ingnore dirs
                 continue;
