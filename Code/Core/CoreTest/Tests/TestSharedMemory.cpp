@@ -73,7 +73,7 @@ void TestSharedMemory::CreateAccessDestroy() const
         while ( *magic != 0xBEEFBEEF )
         {
             Thread::Sleep( 1 );
-            TEST_ASSERT( t.GetElapsed() < 1.0f ); // Sanity check timeout
+            TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check timeout
         }
 
         // Write reponse magic
@@ -94,7 +94,7 @@ void TestSharedMemory::CreateAccessDestroy() const
         while ( *magic != 0xB0AFB0AF )
         {
             Thread::Sleep( 1 );
-            TEST_ASSERT( t.GetElapsed() < 1.0f ); // Sanity check timeout
+            TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check timeout
         }
 
         int status;
