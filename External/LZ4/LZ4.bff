@@ -39,7 +39,8 @@
 		// Static Library
 		Library( '$ProjectName$-Lib-$Platform$-$Config$' )
 		{
-			.CompilerOptions			+ .LZ4IncludePaths
+			.CompilerOptions			= .CompilerOptionsC
+                                        + .LZ4IncludePaths
 										+ .LZ4CompilerOptions
 
 			// Output
@@ -107,7 +108,8 @@
         // Static Library
         Library( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
-            .CompilerOptions            + .LZ4IncludePaths
+            .CompilerOptions            = .CompilerOptionsC
+                                        + .LZ4IncludePaths
                                         + .LZ4CompilerOptions
 
             // Output
