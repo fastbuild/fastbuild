@@ -22,7 +22,6 @@
 REFLECT_NODE_BEGIN( CopyFileNode, Node, MetaNone() )
     REFLECT(        m_Source,                   "Source",                   MetaFile() )
     REFLECT(        m_Dest,                     "Dest",                     MetaPath() )
-    REFLECT(        m_SourceBasePath,           "SourceBasePath",           MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
 REFLECT_END( CopyFileNode )
 
@@ -76,20 +75,22 @@ CopyFileNode::~CopyFileNode() = default;
         return NODE_RESULT_FAILED; // failed to remove read-only
     }
 
-    // update the file's "last modified" time to be equal to the src file
-    // TODO:C Use m_SourceFile->GetTimeStamp() when sibling nodes are supported
-    // (because we use PreBuildDependencies as a work around, the source time stamp
-    // can be taken before the copy is done, so get the current time again here for now)
-    //m_Stamp = m_SourceFile->GetStamp();
-    m_Stamp = FileIO::GetFileLastWriteTime( GetSourceNode()->GetName() );
-    ASSERT( m_Stamp );
-    if ( FileIO::SetFileLastWriteTime( m_Name, m_Stamp ) == false )
+    // Ensure the dst file's "last modified" time is equal to or newer than the source
+    uint64_t srcStamp = FileIO::GetFileLastWriteTime( GetSourceNode()->GetName() );
+    uint64_t dstStamp = FileIO::GetFileLastWriteTime( m_Name );
+    ASSERT( srcStamp && dstStamp );
+    if ( dstStamp < srcStamp )
     {
-        FLOG_ERROR( "Copy set last write time failed (error %i) '%s'", Env::GetLastErr(), GetName().Get() );
-        m_Stamp = 0;
-        return NODE_RESULT_FAILED; // failed to set the time
+        // File system copy didn't transfer the "last modified" time, so set it explicitly
+        if ( FileIO::SetFileLastWriteTime( m_Name, srcStamp ) == false )
+        {
+            FLOG_ERROR( "Copy set last write time failed (error %i) '%s'", Env::GetLastErr(), GetName().Get() );
+            m_Stamp = 0;
+            return NODE_RESULT_FAILED; // failed to set the time
+        }
+        dstStamp = srcStamp;
     }
-
+    m_Stamp = dstStamp;
     return NODE_RESULT_OK;
 }
 

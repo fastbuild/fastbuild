@@ -37,7 +37,6 @@ private:
     friend class CopyDirNode; // TODO: Remove
     AString             m_Source;
     AString             m_Dest;
-    AString             m_SourceBasePath;
     Array< AString >    m_PreBuildDependencyNames;
 };
 
