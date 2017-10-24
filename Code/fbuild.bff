@@ -328,6 +328,7 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Debug'
     .CompilerOptions        + ' -DDEBUG -DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
+    .CompilerOptionsC       + .CompilerDebugOptimizations
     .PCHOptions             + ' -DDEBUG -DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
     .LibrarianOptions       + .LibrarianDebugOptimizations
@@ -345,6 +346,7 @@ Compiler( 'Compiler-x64-OSX' )
     .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
 
     .CompilerOptions        + .CompilerReleaseOptimizations
+    .CompilerOptionsC       + .CompilerReleaseOptimizations
     .PCHOptions             + .CompilerReleaseOptimizations
     .LibrarianOptions       + .LibrarianReleaseOptimizations
     .LinkerOptions          + .LinkerReleaseOptimizations
@@ -409,6 +411,7 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Debug'
     .CompilerOptions        + ' -DDEBUG -DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
+    .CompilerOptionsC       + .CompilerDebugOptimizations
     .LibrarianOptions       + .LibrarianDebugOptimizations
     .LinkerOptions          + .LinkerDebugOptimizations
 ]
@@ -418,6 +421,7 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Release'
     .CompilerOptions        + ' -DRELEASE'
                             + .CompilerReleaseOptimizations
+    .CompilerOptionsC       + .CompilerReleaseOptimizations
     .LibrarianOptions       + .LibrarianReleaseOptimizations
     .LinkerOptions          + .LinkerReleaseOptimizations
 ]
