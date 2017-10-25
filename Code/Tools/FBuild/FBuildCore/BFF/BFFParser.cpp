@@ -315,7 +315,7 @@ bool BFFParser::ParseNamedVariableDeclaration( BFFIterator & iter )
         // check if a parent definition exists
         if ( nullptr == m_LastVarFrame )
         {
-            Error::Error_1009_UnknownVariable( varNameStart, nullptr );
+            Error::Error_1009_UnknownVariable( varNameStart, nullptr, m_LastVarName );
             return false;
         }
 
@@ -1227,7 +1227,7 @@ bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIte
     bool optional = false;
     if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash ) == false )
     {
-        Error::Error_1009_UnknownVariable( varNameStart, nullptr );
+        Error::Error_1009_UnknownVariable( varNameStart, nullptr, varName );
         return false;
     }
 
@@ -1730,7 +1730,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
     if ( ( srcParentScope && nullptr == srcFrame ) || ( nullptr == varSrc ) )
     {
-        Error::Error_1009_UnknownVariable( varNameSrcStart, nullptr );
+        Error::Error_1009_UnknownVariable( varNameSrcStart, nullptr, srcName );
         return false;
     }
 
@@ -2053,7 +2053,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
                 const BFFVariable * var = BFFStackFrame::GetVarAny( varName );
                 if ( var == nullptr )
                 {
-                    Error::Error_1009_UnknownVariable( startName, nullptr );
+                    Error::Error_1009_UnknownVariable( startName, nullptr, varName );
                     return false;
                 }
                 if ( var->IsBool() == true )

@@ -96,7 +96,7 @@ FunctionUsing::FunctionUsing()
 
         if ( ( parentScope && ( nullptr == varFrame ) ) || ( nullptr == v ) )
         {
-            Error::Error_1009_UnknownVariable( start, this );
+            Error::Error_1009_UnknownVariable( start, this, varName );
             return false;
         }
 

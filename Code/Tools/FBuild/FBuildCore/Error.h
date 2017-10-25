@@ -45,7 +45,8 @@ public:
                                                 BFFVariable::VarType expectedType,
                                                 BFFVariable::VarType foundType );
     static void Error_1009_UnknownVariable( const BFFIterator & iter,
-                                         const Function * function );
+                                            const Function * function,
+                                            const AString & unknownVariableName );
     static void Error_1010_UnknownConstruct( const BFFIterator & iter );
     static void Error_1011_UnnamedModifcationMustFollowAssignment( const BFFIterator & iter );
     static void Error_1012_UnexpectedEndOfFile( const BFFIterator & iter );

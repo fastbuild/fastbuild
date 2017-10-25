@@ -99,9 +99,10 @@
 // Error_1009_UnknownVariable
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1009_UnknownVariable( const BFFIterator & iter,
-                                                const Function * function )
+                                                   const Function * function,
+                                                   const AString & unknownVariableName )
 {
-    FormatError( iter, 1009u, function, "Unknown variable." );
+    FormatError( iter, 1009u, function, "Unknown variable '%s'.", unknownVariableName.Get() );
 }
 
 // Error_1010_UnknownConstruct

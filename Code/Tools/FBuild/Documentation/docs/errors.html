@@ -169,13 +169,13 @@ Using( .String )
 </div>
 
   <!--------------- 1009 --------------->
-    <div class='newsitemheader'>1009 - Unknown variable.</div>
+    <div class='newsitemheader'>1009 - Unknown variable '%s'.</div>
     <div class='newsitembody'>
 A variable which has not been defined was referenced inside another variable assignment or concatenation.
 <h4>Example Config:</h4>
 <div class='code'>.Var = "$OtherVar$"</div>
 <h4>Example Output:</h4>
-<div class='output'>c:\Test\fbuild.bff(1):(10) FASTBuild Error #1009 - Unknown variable.
+<div class='output'>c:\Test\fbuild.bff(1):(10) FASTBuild Error #1009 - Unknown variable 'OtherVar'.
 .Var = "$OtherVar$"
          ^
          \--here

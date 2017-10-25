@@ -121,7 +121,7 @@ FunctionForEach::FunctionForEach()
 
         if ( ( arrayParentScope && ( nullptr == arrayFrame ) ) || ( var == nullptr ) )
         {
-            Error::Error_1009_UnknownVariable( arrayNameStart, this );
+            Error::Error_1009_UnknownVariable( arrayNameStart, this, arrayVarName );
             return false;
         }
 

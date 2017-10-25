@@ -106,7 +106,7 @@ FunctionPrint::FunctionPrint()
 
             if ( ( parentScope && ( nullptr == varFrame ) ) || ( nullptr == var ) )
             {
-                Error::Error_1009_UnknownVariable( start, this );
+                Error::Error_1009_UnknownVariable( start, this, varName );
                 return false;
             }
 
