@@ -186,10 +186,11 @@ void TestObject::TestStaleDynamicDeps() const
     // Delete one of the generated headers
     EnsureFileDoesNotExist( fileB );
 
-    // Work around poor time resolution of file system on OSX by waiting at least 1 second
     // TODO:C Changes to the way dependencies are managed might make this unnecessary
     #if defined( __OSX__ )
-        Thread::Sleep(1001);
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #elif defined( __LINUX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
     #endif
 
     // Build Again

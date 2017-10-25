@@ -188,8 +188,10 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
     // so sleep long enough to ensure an invalid write would modify the time
     #if defined( __WINDOWS__ )
         Thread::Sleep( 1 ); // 1ms
-    #else
-        Thread::Sleep( 1000 ); // 1 second
+    #elif defined( __OSX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #elif defined( __LINUX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
     #endif
 
     // do build

@@ -106,7 +106,13 @@ void TestUnity::TestGenerate_NoRebuild() const
 
     // NTFS file resolution is 100ns, so sleep long enough to ensure
     // an invalid write would modify the time
-    Thread::Sleep( 1 ); // 1ms
+    #if defined( __WINDOWS__ )
+        Thread::Sleep( 1 ); // 1ms
+    #elif defined( __OSX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #elif defined( __LINUX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
+    #endif
 
     FBuildStats stats = BuildGenerate();
 
