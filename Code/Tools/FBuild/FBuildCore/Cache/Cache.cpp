@@ -59,13 +59,12 @@
     GetCacheFileName( cacheId, cacheFileName );
 
     // make sure the cache output path exists
-    char * lastSlash = cacheFileName.FindLast( NATIVE_SLASH );
-    *lastSlash = 0;
-    if ( !FileIO::EnsurePathExists( cacheFileName ) )
+    const char * lastSlash = cacheFileName.FindLast( NATIVE_SLASH );
+    AStackString<> cachePath( cacheFileName.Get(), lastSlash );
+    if ( !FileIO::EnsurePathExists( cachePath ) )
     {
         return false;
     }
-    *lastSlash = NATIVE_SLASH;
 
     // open output cache (tmp) file
     AStackString<> cacheFileTmpName( cacheFileName );
