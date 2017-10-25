@@ -111,7 +111,7 @@
 
             // Output
             .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.lib'
+            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
         }
 
         // Executable
@@ -151,7 +151,7 @@
 
             // Output
             .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.lib'
+            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
         }
 
         // Executable

@@ -107,7 +107,7 @@
 
             // Output
             .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.lib'
+            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
     }
