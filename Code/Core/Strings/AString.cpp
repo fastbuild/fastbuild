@@ -53,7 +53,7 @@ AString::AString( const AString & string )
     uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
     m_Contents = (char *)ALLOC( reserved + 1 );
     SetReserved( reserved, true );
-    Copy( string.Get(), m_Contents ); // copy handles terminator
+    Copy( string.Get(), m_Contents, len ); // copy handles terminator
 }
 
 // CONSTRUCTOR (const char *)
@@ -355,7 +355,7 @@ void AString::Assign( const AString & string )
         // didn't resize then the passed in string is empty too
         return;
     }
-    Copy( string.Get(), m_Contents ); // handles terminator
+    Copy( string.Get(), m_Contents, len ); // handles terminator
     m_Length = len;
 }
 
@@ -456,7 +456,7 @@ AString & AString::operator += ( const AString & string )
             Grow( newLen );
         }
 
-        Copy( string.Get(), m_Contents + m_Length ); // handles terminator
+        Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator
         m_Length += suffixLen;
     }
     return *this;
