@@ -1982,7 +1982,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
             const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
             if ( concat )
             {
-                BFFVariable *const newVar = BFFStackFrame::ConcatVars( dstName, varSrc, varDst, dstFrame );
+                BFFVariable *const newVar = BFFStackFrame::ConcatVars( dstName, varDst, varSrc, dstFrame );
                 FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), newVar->GetStructMembers().GetSize() );
             }
             else

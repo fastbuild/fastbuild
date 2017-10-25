@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
@@ -15,7 +15,7 @@
 
 // TestBFFParsing
 //------------------------------------------------------------------------------
-class TestBFFParsing : public UnitTest
+class TestBFFParsing : public FBuildTest
 {
 private:
     DECLARE_TESTS
@@ -33,6 +33,7 @@ private:
     void OnceDirective() const;
     void Structs() const;
     void Struct_Concatenation() const;
+    void Struct_ConcatenationOrder() const;
     void Struct_Unterminated() const;
     void IncludeScope() const;
     void IfDirective() const;
@@ -70,6 +71,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( OnceDirective )
     REGISTER_TEST( Structs )
     REGISTER_TEST( Struct_Concatenation )
+    REGISTER_TEST( Struct_ConcatenationOrder )
     REGISTER_TEST( Struct_Unterminated )
     REGISTER_TEST( IncludeScope )
     REGISTER_TEST( IfDirective )
@@ -186,6 +188,20 @@ void TestBFFParsing::Structs() const
 void TestBFFParsing::Struct_Concatenation() const
 {
     Parse( "Data/TestBFFParsing/struct_concatenation.bff" );
+}
+
+// Struct_ConcatenationOrder
+//------------------------------------------------------------------------------
+void TestBFFParsing::Struct_ConcatenationOrder() const
+{
+    Parse( "Data/TestBFFParsing/struct_concatenation_order.bff" );
+
+    // Ensure all properties are concatenated in a consistent order, regardless
+    // of depth of recursion
+    TEST_ASSERT( GetRecordedOutput().Find( ".Value1 = 'AB'" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( ".Value2 = 'AB'" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( ".Value3 = 'AB'" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( ".Value4 = 'AB'" ) );
 }
 
 // Struct_Unterminated

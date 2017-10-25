@@ -407,27 +407,26 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
         if ( srcType == BFFVariable::VAR_STRUCT )
         {
             const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
-            // set all the variable in
             const Array< const BFFVariable * > & dstMembers = varDst->GetStructMembers();
 
             BFFVariable * const result = FNEW( BFFVariable( dstName, BFFVariable::VAR_STRUCT ) );
             result->m_StructMembers.SetCapacity( srcMembers.GetSize() + dstMembers.GetSize() );
             Array< BFFVariable * > & allMembers = result->m_StructMembers;
 
-            // keep original (dst) members where the name doesn't clash
-            // or concatenate recursively values where the name clash
+            // keep original (dst) members where member is only present in original (dst)
+            // or concatenate recursively members where the name exists in both
             for ( const BFFVariable ** it = dstMembers.Begin(); it != dstMembers.End(); ++it )
             {
                 const BFFVariable ** it2 = GetMemberByName( (*it)->GetName(), srcMembers );
 
                 BFFVariable * const newVar = (it2)
-                    ? (*it2)->ConcatVarsRecurse( (*it2)->GetName(), **it )
+                    ? (*it)->ConcatVarsRecurse( (*it)->GetName(), **it2 )
                     : FNEW( BFFVariable( **it ) );
 
                 allMembers.Append( newVar );
             }
 
-            // and keep original (src) members where the name doesn't clash
+            // and add members only present in the src
             for ( const BFFVariable ** it = srcMembers.Begin(); it != srcMembers.End(); ++it )
             {
                 const BFFVariable ** it2 = GetMemberByName( (*it)->GetName(), result->GetStructMembers() );
