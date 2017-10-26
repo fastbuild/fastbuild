@@ -47,6 +47,7 @@ private:
     void BadUndefBuiltInDirective() const;
     void ParentScope() const;
     void ParentScopeBug() const;
+    void ParentScopeBug2() const;
     void ParentScopeUnknown() const;
     void FrozenVariable() const;
     void DynamicVarNameConstruction() const;
@@ -85,6 +86,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( BadUndefBuiltInDirective )
     REGISTER_TEST( ParentScope )
     REGISTER_TEST( ParentScopeBug )
+    REGISTER_TEST( ParentScopeBug2 )
     REGISTER_TEST( ParentScopeUnknown )
     REGISTER_TEST( FrozenVariable )
     REGISTER_TEST( DynamicVarNameConstruction )
@@ -325,6 +327,14 @@ void TestBFFParsing::ParentScope() const
 void TestBFFParsing::ParentScopeBug() const
 {
     Parse( "Data/TestBFFParsing/parent_scope_bug.bff" );
+}
+
+// ParentScopeBug2
+//------------------------------------------------------------------------------
+void TestBFFParsing::ParentScopeBug2() const
+{
+    Parse( "Data/TestBFFParsing/parent_scope_bug2.bff", true );
+    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1026" ) ); // Variable '%s' not found for modification.
 }
 
 // ParentScopeUnknown
