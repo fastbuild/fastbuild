@@ -13,9 +13,7 @@
 
 // Core
 #include "Core/FileIO/FileStream.h"
-#if defined( __OSX__ )
-    #include "Core/Process/Thread.h"
-#endif
+#include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
 // TestObject
