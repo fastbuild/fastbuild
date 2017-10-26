@@ -1497,7 +1497,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             }
 
             // get the variable
-            const BFFVariable * varSrc = srcFrame->GetVariableRecurse( srcName );
+            const BFFVariable * varSrc = srcFrame ? srcFrame->GetVariableRecurse( srcName ) : nullptr;
             if ( varSrc == nullptr )
             {
                 Error::Error_1026_VariableNotFoundForModification( operatorIter, srcName );
