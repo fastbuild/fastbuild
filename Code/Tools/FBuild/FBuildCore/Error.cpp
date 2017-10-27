@@ -586,6 +586,24 @@
     FormatError( iter, 1400u, function, "'Dest' with multiple 'Source' files should be a path. Missing trailing '/'?" );
 }
 
+// Error_1500_CompilerDetectionFailed
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1500_CompilerDetectionFailed( const BFFIterator & iter,
+                                                           const Function * function,
+                                                           const AString & exe )
+{
+    FormatError( iter, 1500u, function, "Compiler detection failed. Unrecognized executable '%s'.", exe.Get() );
+}
+
+// Error_1501_CompilerFamilyUnrecognized
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1501_CompilerFamilyUnrecognized( const BFFIterator & iter,
+                                                              const Function * function,
+                                                              const AString & badCompilerFamily )
+{
+    FormatError( iter, 1501u, function, ".CompilerFamily '%s' is unrecognized.", badCompilerFamily.Get() );
+}
+
 // FormatError
 //------------------------------------------------------------------------------
 void Error::FormatError( const BFFIterator & iter,

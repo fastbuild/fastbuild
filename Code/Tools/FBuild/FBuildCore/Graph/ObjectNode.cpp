@@ -773,7 +773,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
 // DetermineFlags
 //------------------------------------------------------------------------------
-/*static*/ uint32_t ObjectNode::DetermineFlags( const Node * compilerNode,
+/*static*/ uint32_t ObjectNode::DetermineFlags( const CompilerNode * compilerNode,
                                                 const AString & args,
                                                 bool creatingPCH,
                                                 bool usingPCH )
@@ -784,124 +784,22 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     flags |= ( creatingPCH  ? ObjectNode::FLAG_CREATING_PCH : 0 );
     flags |= ( usingPCH     ? ObjectNode::FLAG_USING_PCH : 0 );
 
-    const AString & compiler = compilerNode->GetName();
-    const bool isCompilerNode = (compilerNode->GetType() == Node::COMPILER_NODE);
-    const bool isDistributableCompiler = isCompilerNode &&
-                                         ( compilerNode->CastTo< CompilerNode >()->CanBeDistributed() );
+    const bool isDistributableCompiler = compilerNode->CanBeDistributed();
 
-    bool compilerTypeSpecified = false;
-    if (isCompilerNode)
+    // Compiler Type - TODO:C Eliminate duplication of these flags
+    const CompilerNode::CompilerFamily compilerFamily = compilerNode->GetCompilerFamily();
+    switch ( compilerFamily )
     {
-        const AString &compilerFamily = compilerNode->CastTo< CompilerNode >()->GetCompilerFamily();
-        if (!compilerFamily.IsEmpty())
-        {
-            compilerTypeSpecified = true;
-            static AString strMSVC("msvc");
-            static AString strClang("clang");
-            static AString strGCC("gcc");
-            static AString strSNC("snc");
-            static AString strWii("codewarrior_wii");
-            static AString strWiiU("greenhills_wiiu");
-            static AString strNVCC("cuda_nvcc");
-            static AString strRCC("qt_rcc");
-
-            if (0 == compilerFamily.CompareI(strMSVC))
-            {
-                flags |= ObjectNode::FLAG_MSVC;
-            }
-            else if (0 == compilerFamily.CompareI(strClang))
-            {
-                flags |= ObjectNode::FLAG_CLANG;
-            }
-            else if (0 == compilerFamily.CompareI(strGCC))
-            {
-                flags |= ObjectNode::FLAG_GCC;
-            }
-            else if (0 == compilerFamily.CompareI(strSNC))
-            {
-                flags |= ObjectNode::FLAG_SNC;
-            }
-            else if (0 == compilerFamily.CompareI(strWii))
-            {
-                flags |= ObjectNode::CODEWARRIOR_WII;
-            }
-            else if (0 == compilerFamily.CompareI(strWiiU))
-            {
-                flags |= ObjectNode::GREENHILLS_WIIU;
-            }
-            else if (0 == compilerFamily.CompareI(strNVCC))
-            {
-                flags |= ObjectNode::FLAG_CUDA_NVCC;
-            }
-            else if (0 == compilerFamily.CompareI(strRCC))
-            {
-                flags |= ObjectNode::FLAG_QT_RCC;
-            }
-            else
-            {
-                compilerTypeSpecified = false;
-            }
-        }
-    }
-
-    // Compiler Type
-    if (compilerTypeSpecified)
-    {
-    }
-    else if ( compiler.EndsWithI( "\\cl.exe" ) ||
-         compiler.EndsWithI( "\\cl" ) ||
-         compiler.EndsWithI( "\\icl.exe" ) ||
-         compiler.EndsWithI( "\\icl" ) )
-    {
-        flags |= ObjectNode::FLAG_MSVC;
-    }
-    else if ( compiler.EndsWithI( "clang++.exe" ) ||
-              compiler.EndsWithI( "clang++" ) ||
-              compiler.EndsWithI( "clang.exe" ) ||
-              compiler.EndsWithI( "clang" ) ||
-              compiler.EndsWithI( "clang-cl.exe" ) ||
-              compiler.EndsWithI( "clang-cl" ) )
-    {
-        flags |= ObjectNode::FLAG_CLANG;
-    }
-    else if ( compiler.EndsWithI( "gcc.exe" ) ||
-              compiler.EndsWithI( "gcc" ) ||
-              compiler.EndsWithI( "g++.exe" ) ||
-              compiler.EndsWithI( "g++" ) )
-    {
-        flags |= ObjectNode::FLAG_GCC;
-    }
-    else if ( compiler.EndsWithI( "\\ps3ppusnc.exe" ) ||
-              compiler.EndsWithI( "\\ps3ppusnc" ) )
-    {
-        flags |= ObjectNode::FLAG_SNC;
-    }
-    else if ( compiler.EndsWithI( "\\mwcceppc.exe" ) ||
-              compiler.EndsWithI( "\\mwcceppc" ) )
-    {
-        flags |= ObjectNode::CODEWARRIOR_WII;
-    }
-    else if ( compiler.EndsWithI( "\\cxppc.exe" ) ||
-              compiler.EndsWithI( "\\cxppc" ) ||
-              compiler.EndsWithI( "\\ccppc.exe" ) ||
-              compiler.EndsWithI( "\\ccppc" ) )
-    {
-        flags |= ObjectNode::GREENHILLS_WIIU;
-    }
-    else if ( compiler.EndsWithI( "\\nvcc.exe" ) ||
-              compiler.EndsWithI( "\\nvcc" ) )
-    {
-        flags |= ObjectNode::FLAG_CUDA_NVCC;
-    }
-    else if ( compiler.EndsWith( "rcc.exe" ) ||
-              compiler.EndsWith( "rcc" ) )
-    {
-        flags |= ObjectNode::FLAG_QT_RCC;
-    }
-    else if ( compiler.EndsWith( "vc.exe" ) ||
-              compiler.EndsWith( "vc" ) )
-    {
-        flags |= ObjectNode::FLAG_VBCC;
+        case CompilerNode::CompilerFamily::CUSTOM:          break; // Nothing to do
+        case CompilerNode::CompilerFamily::MSVC:            flags |= FLAG_MSVC;        break;
+        case CompilerNode::CompilerFamily::CLANG:           flags |= FLAG_CLANG;       break;
+        case CompilerNode::CompilerFamily::GCC:             flags |= FLAG_GCC;         break;
+        case CompilerNode::CompilerFamily::SNC:             flags |= FLAG_SNC;         break;
+        case CompilerNode::CompilerFamily::CODEWARRIOR_WII: flags |= CODEWARRIOR_WII;  break;
+        case CompilerNode::CompilerFamily::GREENHILLS_WIIU: flags |= GREENHILLS_WIIU;  break;
+        case CompilerNode::CompilerFamily::CUDA_NVCC:       flags |= FLAG_CUDA_NVCC;   break;
+        case CompilerNode::CompilerFamily::QT_RCC:          flags |= FLAG_QT_RCC;      break;
+        case CompilerNode::CompilerFamily::VBCC:            flags |= FLAG_VBCC;        break;
     }
 
     // Check MS compiler options

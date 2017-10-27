@@ -528,12 +528,11 @@ Compiler( 'Compiler-x64-OSX' )
 
 // Resource Compiler
 //------------------------------------------------------------------------------
-.ResourceCompiler =
-[
-    .Compiler                   = '$WindowsSDKBasePath$\Bin\x86\RC.exe'
-    .CompilerOutputExtension    = '.res'
-    .CompilerOptions            = '/nologo /fo"%2" "%1"'
-]
+Compiler( 'ResourceCompiler' )
+{
+    .Executable                 = '$WindowsSDKBasePath$\Bin\x86\RC.exe'
+    .CompilerFamily             = 'custom'
+}
 
 //------------------------------------------------------------------------------
 //

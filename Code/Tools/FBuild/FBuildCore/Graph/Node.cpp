@@ -582,6 +582,13 @@ void Node::Serialize( IOStream & stream ) const
             VERIFY( stream.Write( b ) );
             return;
         }
+        case PT_UINT8:
+        {
+            uint8_t u8( 0 );
+            property.GetProperty( base, &u8 );
+            VERIFY( stream.Write( u8 ) );
+            return;
+        }
         case PT_UINT32:
         {
             uint32_t u32( 0 );
@@ -704,6 +711,16 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
                 return false;
             }
             property.SetProperty( base, b );
+            return true;
+        }
+        case PT_UINT8:
+        {
+            uint8_t u8( 0 );
+            if ( stream.Read( u8 ) == false )
+            {
+                return false;
+            }
+            property.SetProperty( base, u8 );
             return true;
         }
         case PT_UINT32:

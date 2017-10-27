@@ -14,6 +14,7 @@ Settings {}
 Compiler( 'CPPGenerator' )
 {
     .Executable = '$Out$/Test/Object/StaleDynamicDeps/CPPGenerator.exe'
+    .CompilerFamily = 'custom'
 }
 
 //

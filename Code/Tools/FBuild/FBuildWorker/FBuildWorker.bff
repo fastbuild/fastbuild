@@ -31,7 +31,9 @@
     //--------------------------------------------------------------------------
     ObjectList( '$ProjectName$-Res' )
     {
-        Using( .ResourceCompiler )
+        .Compiler                   = 'ResourceCompiler'
+        .CompilerOutputExtension    = '.res'
+        .CompilerOptions            = '/nologo /fo"%2" "%1"'
         .CompilerInputFiles         = 'Tools\FBuild\FBuildWorker\MainWindowResource.rc'
         .CompilerOutputPath         = '$OutputBase$\Tools\FBuild\FBuildWorker\'
     }

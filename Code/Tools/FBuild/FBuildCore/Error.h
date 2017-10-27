@@ -189,6 +189,15 @@ public:
     static void Error_1400_CopyDestMissingSlash( const BFFIterator & iter,
                                                  const Function * function );
 
+    // 1500-1599 : Compiler specific errors
+    //------------------------------------------------------------------------------
+    static void Error_1500_CompilerDetectionFailed( const BFFIterator & iter,
+                                                    const Function * function,
+                                                    const AString & exe );
+    static void Error_1501_CompilerFamilyUnrecognized( const BFFIterator & iter,
+                                                       const Function * function,
+                                                       const AString & badCompilerFamily );
+
 private:
     static void FormatError( const BFFIterator & iter,
                              uint32_t errNum,

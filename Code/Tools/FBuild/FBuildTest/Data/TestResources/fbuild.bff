@@ -13,7 +13,11 @@ Settings {} // Activate standard settings
 .VSBasePath             = '$VisualStudioPath$/VC'
 
 // Tools
-.ResourceCompiler   = '$WindowsSDKBasePath$\bin\x86\RC.exe'
+Compiler( 'ResourceCompiler' )
+{
+    .Executable         = '$WindowsSDKBasePath$\bin\x86\RC.exe'
+    .CompilerFamily     = 'custom'
+}
 //.ResourceConverter    = '$VSBasePath$\bin\cvtres.exe'
 //.Compiler         = '$VSBasePath$\bin\cl.exe'
 //.Librarian            = '$VSBasePath$\bin\lib.exe'
@@ -26,7 +30,7 @@ Settings {} // Activate standard settings
 //------------------------------------------------------------------------------
 ObjectList( 'resources' )
 {
-    .Compiler               = .ResourceCompiler
+    .Compiler               = 'ResourceCompiler'
     .CompilerInputFiles     = "Data\TestResources\resource.rc"
     .CompilerOptions        = '/nologo /fo%2 $WindowsIncludePaths$ %1'
     .CompilerOutputExtension= '.res'

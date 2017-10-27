@@ -16,14 +16,16 @@
     </div>
     <div class='newsitembody'>
       <p>
-Specifies compiler and related files for network distribution.
+Describes a compiler and specifies how to interact with the compiler process for dependency tracking,
+distribution, caching and more.
       </p>
-<div class='code'>Compiler( 'name' )          // (optional) Alias
+<div class='code'>Compiler( 'name' )              // (optional) Alias
 {
   .Executable                   // Primary compiler executable
   .ExtraFiles                   // (optional) Additional files (usually dlls) required by the compiler.
  
   // Additional Options
+  .CompilerFamily               // (optional) Explicitly specify compiler type (default: auto)
   .AllowDistribution            // (optional) Allow distributed compilation (if available) (default: true)
   .ExecutableRootPath           // (optional) Override default path for executable distribution
   .SimpleDistributionMode       // (optional) Allow distribution of otherwise unsuported "compilers" (default: false)
@@ -94,6 +96,37 @@ Compiler( 'Test' )
 <div id='alias' class='newsitemheader'>Additional Options</div>
 
 <div class='newsitembody'>
+
+	<p><b>.CompilerFamily</b> - String - (Optional)</p>
+	<p>By default, FASTBuild will detect the compiler type based on the executable name. The .CompilerFamily property
+    allows you to explicitly control the compiler type instead. This can be useful for:
+    <ul>
+        <li>custom variants of compilers with unique naming</li>
+        <li>custom exeutables used as compilers</li>
+    </ul>
+    </p>
+    <p>The following values are supported:
+    <table>
+        <tr><th width=150>Value</th><th>Notes</th></tr>
+        <tr><td>auto</td><td><b>(default)</b> Auto detect compiler based on executable path</td></tr>
+        <tr><td>&nbsp;</td><td></td></tr>
+        <tr><th>Value</th><th>Notes</th></tr>
+        <tr><td>msvc</td><td>Microsoft and compatible compilers</td></tr>
+        <tr><td>clang</td><td>Clang and compatible compilers</td></tr>
+        <tr><td>gcc</td><td>GCC and compatible compilers</td></tr>
+        <tr><td>snc</td><td>SNC and compatible compilers</td></tr>
+        <tr><td>codewarrior-wii</td><td>CodeWarrior compiler for the Wii</td></tr>
+        <tr><td>greenhills-wiiu</td><td>GreenHills compiler for the Wii U</td></tr>
+        <tr><td>cuda-nvcc</td><td>NVIDIA's CUDA compiler</td></tr>
+        <tr><td>qt-rcc</td><td>Qt's resource compiler</td></tr>
+        <tr><td>vbcc</td><td>vbcc compiler</td></tr>        
+        <tr><td>&nbsp;</td><td></td></tr>
+        <tr><th>Value</th><th>Notes</th></tr>
+        <tr><td>custom</td><td>Any custom compiler. <font color=red>NOTE:</font> Only primary input and output dependencies will be tracked. No additional
+        dependencies will be tracked as FASTBuild has no way to extract dependency information from arbitrary executables.</b></td></tr>
+    </table></p>
+ 
+  	<p><hr></p>
 
 	<p><b>.AllowDistribution</b> - Boolean - (Optional)</p>
 	<p>For compilers where distributed compilation is supported, said feature can be disabled.<p>

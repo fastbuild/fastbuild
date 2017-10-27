@@ -38,8 +38,8 @@
 
 ; some vars to satisfy Library functions below
 // some vars to satisfy Library functions below
-.Compiler = "z"
-.CompilerOptions = "%1 %2"
+.Compiler = "gcc"
+.CompilerOptions = "-c %1 %2"
 .CompilerInputPath = "c"
 .CompilerOutputPath = "c"
 .Librarian = "l"
