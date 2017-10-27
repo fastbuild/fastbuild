@@ -35,6 +35,8 @@ public:
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
     #endif
     inline bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
+    inline const AString &GetCompilerFamily() const { return m_CompilerFamily; }
+
 private:
     virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
@@ -47,6 +49,7 @@ private:
     bool            m_VS2012EnumBugFix;
     bool            m_ClangRewriteIncludes;
     AString         m_ExecutableRootPath;
+    AString         m_CompilerFamily;
     bool            m_SimpleDistributionMode;
     ToolManifest    m_Manifest;
 };
