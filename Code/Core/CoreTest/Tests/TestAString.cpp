@@ -23,8 +23,10 @@ private:
     void AStackStringConstructors() const;
     void AStackStringOverflow() const;
     void BigString() const;
+    void Compare() const;
     void Concatenation() const;
     void EndsWithI() const;
+    void Equals() const;
     void Find() const;
     void Format() const;
     void Tokenize() const;
@@ -42,8 +44,10 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( AStackStringConstructors )
     REGISTER_TEST( AStackStringOverflow )
     REGISTER_TEST( BigString )
+    REGISTER_TEST( Compare )
     REGISTER_TEST( Concatenation )
     REGISTER_TEST( EndsWithI )
+    REGISTER_TEST( Equals )
     REGISTER_TEST( Find )
     REGISTER_TEST( Format )
     REGISTER_TEST( Tokenize )
@@ -227,6 +231,25 @@ void TestAString::BigString() const
     TEST_ASSERT( string.GetLength() == AString::StrLen( string.Get() ) );
 }
 
+// Compare
+//------------------------------------------------------------------------------
+void TestAString::Compare() const
+{
+    AStackString<> str( "hello" );
+
+    // Equals
+    TEST_ASSERT( 0 == str.Compare( "hello" ) );
+    TEST_ASSERT( 0 == str.Compare( AStackString<>( "hello" ) ) );
+    TEST_ASSERT( 0 != str.Compare( "goodbye" ) );
+    TEST_ASSERT( 0 != str.Compare( AStackString<>( "goodbye" ) ) );
+
+    // EqualsI
+    TEST_ASSERT( 0 == str.CompareI( "hEllO" ) );
+    TEST_ASSERT( 0 == str.CompareI( AStackString<>( "hEllO" ) ) );
+    TEST_ASSERT( 0 != str.CompareI( "goodbye" ) );
+    TEST_ASSERT( 0 != str.CompareI( AStackString<>( "goodbye" ) ) );
+}
+
 // Concatenation
 //------------------------------------------------------------------------------
 void TestAString::Concatenation() const
@@ -288,6 +311,25 @@ void TestAString::EndsWithI() const
         TEST_ASSERT( str.EndsWithI( "Chicken " ) == false );
         TEST_ASSERT( str.EndsWithI( "Turkey" ) == false );
     }
+}
+
+// Equals
+//------------------------------------------------------------------------------
+void TestAString::Equals() const
+{
+    AStackString<> str( "hello" );
+
+    // Equals
+    TEST_ASSERT( true == str.Equals( "hello" ) );
+    TEST_ASSERT( true == str.Equals( AStackString<>( "hello" ) ) );
+    TEST_ASSERT( false == str.Equals( "goodbye" ) );
+    TEST_ASSERT( false == str.Equals( AStackString<>( "goodbye" ) ) );
+
+    // EqualsI
+    TEST_ASSERT( true == str.EqualsI( "hEllO" ) );
+    TEST_ASSERT( true == str.EqualsI( AStackString<>( "hEllO" ) ) );
+    TEST_ASSERT( false == str.EqualsI( "goodbye" ) );
+    TEST_ASSERT( false == str.EqualsI( AStackString<>( "goodbye" ) ) );
 }
 
 // Find

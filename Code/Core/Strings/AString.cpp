@@ -151,6 +151,13 @@ int32_t AString::Compare( const AString & other ) const
     return strcmp( m_Contents, other.Get() );
 }
 
+// Compare
+//------------------------------------------------------------------------------
+int32_t AString::Compare( const char * other ) const
+{
+    return strcmp( m_Contents, other );
+}
+
 // CompareI
 //------------------------------------------------------------------------------
 int32_t AString::CompareI( const AString & other ) const
@@ -159,6 +166,19 @@ int32_t AString::CompareI( const AString & other ) const
         return _stricmp( m_Contents, other.Get() );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         return strcasecmp( m_Contents, other.Get() );
+    #else
+        #error Unknown platform
+    #endif
+}
+
+// CompareI
+//------------------------------------------------------------------------------
+int32_t AString::CompareI( const char * other ) const
+{
+    #if defined( __WINDOWS__ )
+        return _stricmp( m_Contents, other );
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        return strcasecmp( m_Contents, other );
     #else
         #error Unknown platform
     #endif
