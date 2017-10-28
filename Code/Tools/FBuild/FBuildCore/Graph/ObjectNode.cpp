@@ -2178,7 +2178,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             if ( result == 0x01 )
             {
                 // TODO:C Should we check for localized msg?
-                if ( stdErr && ( strcmp( stdErr, "IO failure on output stream" ) ) )
+                if ( stdErr && ( strstr( stdErr, "IO failure on output stream" ) ) )
                 {
                     job->OnSystemError();
                     return;
@@ -2193,7 +2193,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             if ( result == 0x01 )
             {
                 // TODO:C Should we check for localized msg?
-                if ( stdErr && ( strcmp( stdErr, "No space left on device" ) ) )
+                if ( stdErr && ( strstr( stdErr, "No space left on device" ) ) )
                 {
                     job->OnSystemError();
                     return;
