@@ -216,7 +216,7 @@ void Client::LookForWorkers()
             continue;
         }
 
-        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], Protocol::PROTOCOL_PORT, 500 ); // 500ms connection timeout
+        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], Protocol::PROTOCOL_PORT, 2000 ); // 2000ms connection timeout
         if ( ci == nullptr )
         {
             ss.m_DelayTimer.Start(); // reset connection attempt delay
