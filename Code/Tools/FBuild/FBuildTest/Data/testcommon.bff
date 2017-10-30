@@ -65,7 +65,11 @@
 //.ClangPath            = 'C:\Program Files (x86)\LLVM'
 .WindowsClangToolChain =
 [
-    .Compiler           = '$ClangPath$\bin\clang++.exe'
+    .Compiler           = '$ClangPath$/bin/clang++.exe'
+    Compiler( 'Compiler-ClangForWindows-Dist' )
+    {
+        .Executable     = '$ClangPath$/bin/clang++.exe'
+    }
     .CompilerOptions    = '-c -g %1 -o "%2" -integrated-as'
                         + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
                         + ' -Wextra'                        // additional warnings

@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
@@ -15,7 +15,7 @@
 
 // TestDistributed
 //------------------------------------------------------------------------------
-class TestDistributed : public UnitTest
+class TestDistributed : public FBuildTest
 {
 private:
     DECLARE_TESTS
@@ -26,6 +26,7 @@ private:
     void RegressionTest_RemoteCrashOnErrorFormatting();
     void TestLocalRace();
     void AnonymousNamespaces();
+    void ErrorsAreCorrectlyReported() const;
     void TestForceInclude() const;
     void TestZiDebugFormat() const;
     void TestZiDebugFormat_Local() const;
@@ -46,6 +47,7 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( RegressionTest_RemoteCrashOnErrorFormatting )
     REGISTER_TEST( TestLocalRace )
     REGISTER_TEST( AnonymousNamespaces )
+    REGISTER_TEST( ErrorsAreCorrectlyReported )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( TestForceInclude )
         REGISTER_TEST( TestZiDebugFormat )
@@ -172,6 +174,52 @@ void TestDistributed::TestForceInclude() const
 {
     const char * target( "../../../../tmp/Test/Distributed/ForceInclude/ForceInclude.lib" );
     TestHelper( target, 4 );
+}
+
+// ErrorsAreCorrectlyReported
+//------------------------------------------------------------------------------
+void TestDistributed::ErrorsAreCorrectlyReported() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( Protocol::PROTOCOL_PORT );
+
+    // MSVC
+    #if defined( __WINDOWS__ )
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+
+            // Check that build fails
+            TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-MSVC" ) ) );
+
+            // Check that error is returned
+            TEST_ASSERT( GetRecordedOutput().Find( "error C2143: syntax error : missing ';' before '}'" ) );
+        }
+    #endif
+
+    // Clang
+    #if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+
+            // Check that build fails
+            TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-Clang" ) ) );
+
+            // Check that error is returned
+            TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
+        }
+    #endif
 }
 
 // TestZiDebugFormat

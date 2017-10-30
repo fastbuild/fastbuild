@@ -1,0 +1,46 @@
+//
+// Distributed/ErrorsAreReportedCorrectly
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Settings {
+    .Workers = { "127.0.0.1" }
+}
+
+// Common settings
+.CompilerOutputPath         = '$StandardOutputBase$/Test/TestDistributed/ErrorsAreCorrectlyReported/'
+
+// MSVC
+//------------------------------------------------------------------------------
+ObjectList( 'ErrorsAreCorrectlyReported-MSVC' )
+{
+    // MSVC - Windows only
+    #if __WINDOWS__
+        Using( .VisualStudioToolChain )
+    #endif
+
+    .CompilerInputFiles     = 'Data/TestDistributed/ErrorsAreCorrectlyReported/Error.cpp'
+    .CompilerOutputPath     + 'MSVC/'
+}
+
+// Clang
+//------------------------------------------------------------------------------
+ObjectList( 'ErrorsAreCorrectlyReported-Clang' )
+{
+    // Clang
+    #if __WINDOWS__
+        Using( .WindowsClangToolChain )
+    #endif
+    #if __OSX__
+        // TODO:B Enable test for OSX
+    #endif
+    #if __LINUX__
+        // TODO:B Enable test for Linux
+    #endif
+
+    .CompilerInputFiles     = 'Data/TestDistributed/ErrorsAreCorrectlyReported/Error.cpp'
+    .CompilerOutputPath     + 'Clang/'
+}

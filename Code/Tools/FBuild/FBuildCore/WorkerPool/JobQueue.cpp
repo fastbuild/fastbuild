@@ -409,7 +409,15 @@ void JobQueue::ReturnUnfinishedDistributableJob( Job * job )
         else
         {
             // If not racing, only standard remote build is valid
-            ASSERT( job->GetDistributionState() == Job::DIST_BUILDING_REMOTELY );
+            if ( job->GetDistributionState() == Job::DIST_COMPLETED_REMOTELY )
+            {
+                // Can be "completed" due to error
+                ASSERT( job->GetSystemErrorCount() > 0 );
+            }
+            else
+            {
+                ASSERT( job->GetDistributionState() == Job::DIST_BUILDING_REMOTELY );
+            }
 
             // Put back in available queue
             m_DistributableJobs_Available.Append( job );
