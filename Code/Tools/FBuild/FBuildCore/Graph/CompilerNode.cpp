@@ -109,7 +109,9 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
     // Handle auto-detect
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )
     {
-        const AString & compiler = m_Name;
+        // Normalize slashes to make logic consistent on all platforms
+        AStackString<> compiler( m_Name );
+        compiler.Replace( '/', '\\' );
 
         // MSVC
         if ( compiler.EndsWithI( "\\cl.exe" ) ||
