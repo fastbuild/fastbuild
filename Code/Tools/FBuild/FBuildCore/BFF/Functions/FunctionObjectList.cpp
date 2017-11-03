@@ -163,7 +163,10 @@ bool FunctionObjectList::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterat
             AStackString<> executableRootPath( compilerClean.Get(), lastSlash + 1 );
             VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "ExecutableRootPath", executableRootPath ) );
         }
-        VERIFY( compilerNode->Initialize( nodeGraph, iter, nullptr ) );
+        if ( !compilerNode->Initialize( nodeGraph, iter, nullptr ) )
+        {
+            return false; // Initialize will have emitted an error
+        }
     }
 
     return true;
