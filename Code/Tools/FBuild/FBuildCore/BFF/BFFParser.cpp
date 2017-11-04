@@ -1444,7 +1444,8 @@ bool BFFParser::StoreVariableArray( const AString & name,
             // a quoted string
 
             // dest is consistent?
-            if ( varType != BFFVariable::VAR_ARRAY_OF_STRINGS && varType != BFFVariable::VAR_ANY )
+            if ( ( varType != BFFVariable::VAR_ARRAY_OF_STRINGS ) && 
+                 ( varType != BFFVariable::VAR_ANY ) )
             {
                 // Mixed types in vector
                 Error::Error_1034_OperationNotSupported( iter,
@@ -1531,7 +1532,8 @@ bool BFFParser::StoreVariableArray( const AString & name,
             else if ( varSrc->IsString() || varSrc->IsArrayOfStrings() )
             {
                 // dest is consistent?
-                if ( varType != BFFVariable::VAR_ARRAY_OF_STRINGS && varType != BFFVariable::VAR_ANY )
+                if ( ( varType != BFFVariable::VAR_ARRAY_OF_STRINGS ) &&
+                     ( varType != BFFVariable::VAR_ANY ) )
                 {
                     // inconsistency
                     Error::Error_1034_OperationNotSupported( elementStartValue,
@@ -1554,7 +1556,8 @@ bool BFFParser::StoreVariableArray( const AString & name,
             else if ( varSrc->IsStruct() || varSrc->IsArrayOfStructs() )
             {
                 // dest is consistent?
-                if ( varType != BFFVariable::VAR_ARRAY_OF_STRUCTS && varType != BFFVariable::VAR_ANY )
+                if ( ( varType != BFFVariable::VAR_ARRAY_OF_STRUCTS ) &&
+                     ( varType != BFFVariable::VAR_ANY ) )
                 {
                     // inconsistency
                     Error::Error_1034_OperationNotSupported( elementStartValue,

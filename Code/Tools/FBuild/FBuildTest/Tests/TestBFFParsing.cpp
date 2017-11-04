@@ -27,6 +27,7 @@ private:
     void String_Unterminated() const;
     void Arrays() const;
     void Array_Unterminated() const;
+    void Array_TypeMismatch() const;
     void Integers() const;
     void UnnamedScope() const;
     void IncludeDirective() const;
@@ -66,6 +67,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( String_Unterminated )
     REGISTER_TEST( Arrays )
     REGISTER_TEST( Array_Unterminated )
+    REGISTER_TEST( Array_TypeMismatch )
     REGISTER_TEST( Integers )
     REGISTER_TEST( UnnamedScope )
     REGISTER_TEST( IncludeDirective )
@@ -148,6 +150,14 @@ void TestBFFParsing::Arrays() const
 void TestBFFParsing::Array_Unterminated() const
 {
     Parse( "Data/TestBFFParsing/array_unterminated.bff", true ); // expect failure
+}
+
+// Array_TypeMismatch
+//------------------------------------------------------------------------------
+void TestBFFParsing::Array_TypeMismatch() const
+{
+    Parse( "Data/TestBFFParsing/array_typemismatch.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1034 - Operation not supported: 'ArrayOfStructs' = 'String'." ) );
 }
 
 // Integers
