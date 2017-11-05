@@ -98,7 +98,7 @@ static FileStream * g_MonitorFileStream = nullptr;
     va_end( args );
 
     AStackString< 1024 > finalBuffer;
-    finalBuffer.Format( "%llu %s", Time::GetCurrentFileTime(), buffer.Get() );
+    finalBuffer.Format( "%" PRIu64 " %s", Time::GetCurrentFileTime(), buffer.Get() );
 
     MutexHolder lock( g_MonitorMutex );
     g_MonitorFileStream->WriteBuffer( finalBuffer.Get(), finalBuffer.GetLength() );

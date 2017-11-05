@@ -513,9 +513,9 @@ void ToolManifest::GetRemotePath( AString & path ) const
     VERIFY( FBuild::GetTempDir( path ) );
     AStackString<> subDir;
     #if defined( __WINDOWS__ )
-        subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016llx\\", m_ToolId );
+        subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016" PRIx64 "\\", m_ToolId );
     #else
-        subDir.Format( "_fbuild.tmp/worker/toolchain.%016llx/", m_ToolId );
+        subDir.Format( "_fbuild.tmp/worker/toolchain.%016" PRIx64 "/", m_ToolId );
     #endif
     path += subDir;
 }

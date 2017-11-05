@@ -19,8 +19,6 @@
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
 
-#include <inttypes.h>
-
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ Array< ProfileManager::ProfileEventInfo > ProfileManager::s_ProfileEventInfo( 0, true );
@@ -234,7 +232,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 
                 // SetThreadName event
                 // {"name": "thread_name", "ph": "M", "pid": 0, "tid": 164, "args": { "name" : "ThreadName" }},
-                buffer.Format( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":0,\"tid\":%llu,\"args\":{\"name\":\"%s\"}},\n",
+                buffer.Format( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":0,\"tid\":%" PRIu64 ",\"args\":{\"name\":\"%s\"}},\n",
                         threadId,
                         info.m_ThreadName.IsEmpty() ? "_MainThread" : info.m_ThreadName.Get() );
                 g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
@@ -246,7 +244,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
                 const ProfileEvent& e = info.m_Events[i];
 
                 // {"name": "Asub", "ph": "B", "pid": 22630, "tid": 22630, "ts": 829},
-                buffer.Format( "{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":0,\"tid\":%llu,\"ts\":%llu},\n",
+                buffer.Format( "{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":0,\"tid\":%" PRIu64 ",\"ts\":%" PRIu64 "},\n",
                                e.m_Id ? e.m_Id : "",
                                e.m_Id ? 'B' : 'E',
                                threadId,

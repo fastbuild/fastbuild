@@ -185,7 +185,7 @@ GETSET_PROPERTY_ARRAY( AString )
             {
                 uint64_t u;
                 GetProperty( object, &u );
-                buffer.Format( "%llu", u );
+                buffer.Format( "%" PRIu64, u );
                 return;
             }
             case PT_INT8:
@@ -213,7 +213,7 @@ GETSET_PROPERTY_ARRAY( AString )
             {
                 int64_t i;
                 GetProperty( object, &i );
-                buffer.Format( "%lld", i );
+                buffer.Format( "%" PRIi64, i );
                 return;
             }
             case PT_BOOL:

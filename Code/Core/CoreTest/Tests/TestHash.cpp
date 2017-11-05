@@ -62,7 +62,7 @@ void TestHash::CompareHashTimes_Large() const
         }
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "Sum64           : %2.3fs @ %6.3f GiB/s (sum: %016llx)\n", time, speed, sum );
+        OUTPUT( "Sum64           : %2.3fs @ %6.3f GiB/s (sum: %016" PRIx64 ")\n", time, speed, sum );
     }
 
 
@@ -97,7 +97,7 @@ void TestHash::CompareHashTimes_Large() const
         uint64_t crc = xxHash::Calc64( data.Get(), dataSize );
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016llx)\n", time, speed, crc );
+        OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", time, speed, crc );
     }
 
     // CRC32 - 8x8 slicing
@@ -181,7 +181,7 @@ void TestHash::CompareHashTimes_Small() const
         }
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016llx)\n", time, speed, crc );
+        OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", time, speed, crc );
     }
 
     // CRC32 - 8x8 slicing
