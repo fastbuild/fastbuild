@@ -174,7 +174,7 @@ const IMetaData * ReflectionInfo::HasMetaDataInternal( const ReflectionInfo * ri
         }
         m = m->GetNext();
     }
-    return nullptr;
+    return m_SuperClass ? m_SuperClass->HasMetaDataInternal( ri ) : nullptr;
 }
 
 // AddPropertyStruct

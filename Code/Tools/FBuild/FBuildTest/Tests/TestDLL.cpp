@@ -76,8 +76,8 @@ void TestDLL::TestSingleDLL() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 3;
-    uint32_t numB = 1;
+    uint32_t numF = 4;
+    uint32_t numB = 2;
     #if defined( __WINDOWS__ )
         numF += 2;
         numB += 2;
@@ -106,7 +106,7 @@ void TestDLL::TestSingleDLL_NoRebuild() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 3;
+    uint32_t numF = 4;
     #if defined( __WINDOWS__ )
         numF += 2;
     #endif
@@ -145,8 +145,8 @@ void TestDLL::TestTwoDLLs() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 5;
-    uint32_t numB = 2;
+    uint32_t numF = 6;
+    uint32_t numB = 3;
     #if defined( __WINDOWS__ )
         numF += 2;
         numB += 2;
@@ -176,7 +176,7 @@ void TestDLL::TestTwoDLLs_NoRebuild() const
     // Check stats to be sure nothing was built
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 5;
+    uint32_t numF = 6;
     #if defined( __WINDOWS__ )
         numF += 2;
     #endif
@@ -209,7 +209,7 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
 
         // Check stats to be sure one dll was built
         //               Seen,  Built,  Type
-        uint32_t numF = 3;
+        uint32_t numF = 4;
         #if defined( __WINDOWS__ )
             numF += 2;
         #endif
@@ -235,7 +235,7 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
 
         // Check stats to be sure nothing was built
         //               Seen,  Built,  Type
-        uint32_t numF = 5;
+        uint32_t numF = 6;
         #if defined( __WINDOWS__ )
             numF += 2;
         #endif
@@ -272,10 +272,10 @@ void TestDLL::TestDLLWithPCH() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 3; // pch.h + a.cpp + c.h
-    uint32_t numB = 2;
+    uint32_t numF = 4; // pch.h + a.cpp + a.h + linker exe
+    uint32_t numB = 3;
     #if defined( __WINDOWS__ )
-        numF += 3; // pch.cpp and libs
+        numF += 2; // pch.cpp and libs
         numB += 2; // libs
     #endif
     CheckStatsNode ( numF,  numB,   Node::FILE_NODE );
@@ -303,9 +303,9 @@ void TestDLL::TestDLLWithPCH_NoRebuild() const
 
     // Check we build what was expected
     //               Seen,  Built,  Type
-    uint32_t numF = 3; // pch.h + a.cpp + c.h
+    uint32_t numF = 4; // pch.h + a.cpp + c.h + linker exe
     #if defined( __WINDOWS__ )
-        numF += 3;
+        numF += 2;
     #endif
     CheckStatsNode ( numF,  numF,       Node::FILE_NODE );  // 1 cpp + 1 pch cpp + 2 .h
     CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
@@ -339,8 +339,8 @@ void TestDLL::TestExeWithDLL() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 4; // pch.h + a.cpp + c.h
-    uint32_t numB = 2;
+    uint32_t numF = 5; // pch.h + a.cpp + c.h + linker exe
+    uint32_t numB = 3;
     #if defined( __WINDOWS__ )
         numF += 2;
         numB += 2;
@@ -371,7 +371,7 @@ void TestDLL::TestExeWithDLL_NoRebuild() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 4; // pch.h + a.cpp + c.h
+    uint32_t numF = 5; // pch.h + a.cpp + c.h + linker exe
     #if defined( __WINDOWS__ )
         numF += 2;
     #endif
@@ -412,8 +412,8 @@ void TestDLL::TestLinkWithCopy() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 5; // pch.h + a.cpp + c.h
-    uint32_t numB = 2;
+    uint32_t numF = 6; // pch.h + a.cpp + a.h + linker exe
+    uint32_t numB = 3;
     #if defined( __WINDOWS__ )
         numF += 2;
         numB += 2;

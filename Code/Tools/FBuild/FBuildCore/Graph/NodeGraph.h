@@ -53,7 +53,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 99 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 100 };
 
     bool IsValid() const
     {
@@ -114,28 +114,8 @@ public:
     LibraryNode *   CreateLibraryNode( const AString & libraryName );
     ObjectNode *    CreateObjectNode( const AString & objectName );
     AliasNode *     CreateAliasNode( const AString & aliasName );
-    DLLNode *       CreateDLLNode( const AString & linkerOutputName,
-                                   const Dependencies & inputLibraries,
-                                   const Dependencies & otherLibraries,
-                                   const AString & linkerType,
-                                   const AString & linker,
-                                   const AString & linkerArgs,
-                                   uint32_t flags,
-                                   const Dependencies & assemblyResources,
-                                   const AString & importLibName,
-                                   Node * linkerStampExe,
-                                   const AString & linkerStampExeArgs );
-    ExeNode *       CreateExeNode( const AString & linkerOutputName,
-                                   const Dependencies & inputLibraries,
-                                   const Dependencies & otherLibraries,
-                                   const AString & linkerType,
-                                   const AString & linker,
-                                   const AString & linkerArgs,
-                                   uint32_t flags,
-                                   const Dependencies & assemblyResources,
-                                   const AString & importLibName,
-                                   Node * linkerStampExe,
-                                   const AString & linkerStampExeArgs );
+    DLLNode *       CreateDLLNode( const AString & dllName );
+    ExeNode *       CreateExeNode( const AString & exeName );
     UnityNode * CreateUnityNode( const AString & unityName );
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );

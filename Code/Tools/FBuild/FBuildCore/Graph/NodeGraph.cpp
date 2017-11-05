@@ -770,69 +770,26 @@ AliasNode * NodeGraph::CreateAliasNode( const AString & aliasName )
 
 // CreateDLLNode
 //------------------------------------------------------------------------------
-DLLNode * NodeGraph::CreateDLLNode( const AString & linkerOutputName,
-                                    const Dependencies & inputLibraries,
-                                    const Dependencies & otherLibraries,
-                                    const AString & linkerType,
-                                    const AString & linker,
-                                    const AString & linkerArgs,
-                                    uint32_t flags,
-                                    const Dependencies & assemblyResources,
-                                    const AString & importLibName,
-                                    Node * linkerStampExe,
-                                    const AString & linkerStampExeArgs )
+DLLNode * NodeGraph::CreateDLLNode( const AString & dllName )
 {
     ASSERT( Thread::IsMainThread() );
-    ASSERT( inputLibraries.IsEmpty() == false );
+    ASSERT( IsCleanPath( dllName ) );
 
-    AStackString< 1024 > fullPath;
-    CleanPath( linkerOutputName, fullPath );
-
-    DLLNode * node = FNEW( DLLNode( fullPath,
-                                  inputLibraries,
-                                  otherLibraries,
-                                  linkerType,
-                                  linker,
-                                  linkerArgs,
-                                  flags,
-                                  assemblyResources,
-                                  importLibName,
-                                  linkerStampExe,
-                                  linkerStampExeArgs ) );
+    DLLNode * node = FNEW( DLLNode() );
+    node->SetName( dllName );
     AddNode( node );
     return node;
 }
 
 // CreateExeNode
 //------------------------------------------------------------------------------
-ExeNode * NodeGraph::CreateExeNode( const AString & linkerOutputName,
-                                    const Dependencies & inputLibraries,
-                                    const Dependencies & otherLibraries,
-                                    const AString & linkerType,
-                                    const AString & linker,
-                                    const AString & linkerArgs,
-                                    uint32_t flags,
-                                    const Dependencies & assemblyResources,
-                                    const AString & importLibName,
-                                    Node * linkerStampExe,
-                                    const AString & linkerStampExeArgs )
+ExeNode * NodeGraph::CreateExeNode( const AString & exeName )
 {
     ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( exeName ) );
 
-    AStackString< 1024 > fullPath;
-    CleanPath( linkerOutputName, fullPath );
-
-    ExeNode * node = FNEW( ExeNode( fullPath,
-                                  inputLibraries,
-                                  otherLibraries,
-                                  linkerType,
-                                  linker,
-                                  linkerArgs,
-                                  flags,
-                                  assemblyResources,
-                                  importLibName,
-                                  linkerStampExe,
-                                  linkerStampExeArgs ) );
+    ExeNode * node = FNEW( ExeNode() );
+    node->SetName( exeName );
     AddNode( node );
     return node;
 }

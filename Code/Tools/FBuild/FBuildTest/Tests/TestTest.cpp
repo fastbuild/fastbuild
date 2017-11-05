@@ -74,14 +74,14 @@ void TestTest::Build() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE ); // cpp
+    CheckStatsNode ( 2,     2,      Node::FILE_NODE ); // cpp / linker exe
     CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
     CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 1,     1,      Node::EXE_NODE );
     CheckStatsNode ( 1,     1,      Node::TEST_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 7,     7 );
+    CheckStatsTotal( 8,     8 );
 }
 
 // Build_NoRebuild
@@ -99,14 +99,14 @@ void TestTest::Build_NoRebuild() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE ); // cpp
+    CheckStatsNode ( 2,     2,      Node::FILE_NODE ); // cpp  / linker exe
     CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 1,     0,      Node::EXE_NODE );
     CheckStatsNode ( 1,     0,      Node::TEST_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 7,     2 );
+    CheckStatsTotal( 8,     3 );
 
 }
 

@@ -14,22 +14,18 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
+// Reflection
+//------------------------------------------------------------------------------
+REFLECT_NODE_BEGIN( DLLNode, LinkerNode, MetaNone() )
+REFLECT_END( DLLNode )
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-DLLNode::DLLNode( const AString & linkerOutputName,
-                  const Dependencies & inputLibraries,
-                  const Dependencies & otherLibraries,
-                  const AString & linkerType,
-                  const AString & linker,
-                  const AString & linkerArgs,
-                  uint32_t flags,
-                  const Dependencies & assemblyResources,
-                  const AString & importLibName,
-                  Node * linkerStampExe,
-                  const AString & linkerStampExeArgs )
-: LinkerNode( linkerOutputName, inputLibraries, otherLibraries, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs )
+DLLNode::DLLNode()
+    : LinkerNode()
 {
     m_Type = DLL_NODE;
+    m_LinkerLinkObjects = true; // Override LinkerNode default
 }
 
 // DESTRUCTOR
@@ -71,21 +67,16 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
 //------------------------------------------------------------------------------
 /*static*/ Node * DLLNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
-    // common Linker properties
-    NODE_LOAD( AStackString<>,  name );
-    NODE_LOAD( AStackString<>,  linkerType );
-    NODE_LOAD( AStackString<>,  linker );
-    NODE_LOAD( AStackString<>,  linkerArgs );
-    NODE_LOAD_DEPS( 0,          inputLibs);
-    NODE_LOAD( uint32_t,        flags );
-    NODE_LOAD_DEPS( 0,          assemblyResources );
-    NODE_LOAD_DEPS( 0,          otherLibs );
-    NODE_LOAD( AStackString<>,  importLibName );
-    NODE_LOAD_NODE_LINK( Node,  linkerStampExe );
-    NODE_LOAD( AStackString<>,  linkerStampExeArgs );
+    NODE_LOAD( AStackString<>, name );
 
-    DLLNode * dn = nodeGraph.CreateDLLNode( name, inputLibs, otherLibs, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs );
-    return dn;
+    DLLNode * node = nodeGraph.CreateDLLNode( name );
+
+    if ( node->Deserialize( nodeGraph, stream ) == false )
+    {
+        return nullptr;
+    }
+
+    return node;
 }
 
 //------------------------------------------------------------------------------

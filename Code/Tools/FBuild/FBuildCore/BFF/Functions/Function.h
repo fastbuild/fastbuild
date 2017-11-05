@@ -101,6 +101,9 @@ public:
                              bool allowCopyDirNodes = false,
                              bool allowUnityNodes = false,
                              bool allowRemoveDirNodes = false );
+
+    bool GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Node * & fileNode, const char * name, bool required = false ) const;
+
 private:
     Function *  m_NextFunction;
     static Function * s_FirstFunction;
@@ -122,7 +125,6 @@ protected:
     bool GetInt( const BFFIterator & iter, int32_t & var, const char * name, int32_t defaultValue, bool required, int minVal, int maxVal ) const;
     bool GetStrings( const BFFIterator & iter, Array< AString > & strings, const char * name, bool required = false ) const;
     bool GetFolderPaths( const BFFIterator & iter, Array< AString > & strings, const char * name, bool required = false ) const;
-    bool GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Node * & fileNode, const char * name, bool required = false ) const;
 
     // helper function to make alias for target
     bool ProcessAlias( NodeGraph & nodeGraph, const BFFIterator & iter, Node * nodeToAlias ) const;

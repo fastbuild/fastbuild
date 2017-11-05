@@ -105,18 +105,18 @@ void TestPrecompiledHeaders::TestPCH() const
 
     // Check stats
     //                      Seen,   Built,  Type
-    uint32_t numF = 3; // pch.h / slow.h / pchuser.cpp
+    uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif
-    CheckStatsNode ( stats, numF,   2,      Node::FILE_NODE );
+    CheckStatsNode ( stats, numF,   3,      Node::FILE_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 2,      2,      Node::OBJECT_NODE );// obj + pch obj
     CheckStatsNode ( stats, 1,      1,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::EXE_NODE );
-    CheckStatsTotal( stats, numF+7, 9 );
+    CheckStatsTotal( stats, numF+7, 10 );
 
     // check we wrote all objects to the cache
     TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 2 ); // pch and obj using pch
@@ -130,7 +130,7 @@ void TestPrecompiledHeaders::TestPCH_NoRebuild() const
 
     // Check stats
     //                      Seen,   Built,  Type
-    uint32_t numF = 3; // pch.h / slow.h / pchuser.cpp
+    uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp / linker exe
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif
@@ -173,18 +173,18 @@ void TestPrecompiledHeaders::TestPCHWithCache() const
 
     // Check stats
     //                      Seen,   Built,  Type
-    uint32_t numF = 3; // pch.h / slow.h / pchuser.cpp
+    uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp / linker exe
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif
-    CheckStatsNode ( stats, numF,   2,      Node::FILE_NODE );  // cpp + pch
+    CheckStatsNode ( stats, numF,   3,      Node::FILE_NODE );  // cpp + pch
     CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 2,      0,      Node::OBJECT_NODE ); // obj + pch obj
     CheckStatsNode ( stats, 1,      1,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::EXE_NODE );
-    CheckStatsTotal( stats, 7+numF, 7 );
+    CheckStatsTotal( stats, 7+numF, 8 );
 
     // check all objects came from the cache
     TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits == 2 ); // pch & obj
@@ -198,7 +198,7 @@ void TestPrecompiledHeaders::TestPCHWithCache_NoRebuild() const
 
     // Check stats
     //                      Seen,   Built,  Type
-    uint32_t numF = 3; // pch.h / slow.h / pchuser.cpp
+    uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp / linker exe
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif
