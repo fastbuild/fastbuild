@@ -499,8 +499,7 @@ void Report::DoCPUTimeByType( const FBuildStats & stats )
                     typeName,
                     value,
                     processed,
-                    built,
-                    cacheHits );
+                    built );
         if ( type == Node::OBJECT_NODE )
         {
             // cacheable
