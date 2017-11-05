@@ -208,7 +208,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         }
         else
         {
-            OUTPUT( "Distributed Compilation : %u Workers in pool\n", workers.GetSize() );
+            OUTPUT( "Distributed Compilation : %u Workers in pool\n", (unsigned int)workers.GetSize() );
             m_Client = FNEW( Client( workers, m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
         }
     }

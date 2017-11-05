@@ -243,7 +243,7 @@ UnityNode::~UnityNode()
         unityName += m_OutputPattern;
         {
             AStackString<> tmp;
-            tmp.Format( "%u", i + 1 ); // number from 1
+            tmp.Format( "%u", (unsigned int)i + 1 ); // number from 1
             unityName.Replace( "*", tmp.Get() );
         }
 
