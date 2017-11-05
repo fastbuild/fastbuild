@@ -93,6 +93,7 @@ private:
     void WriteFooter();
 
     // Helper to format some text
+    FORMAT_STRING( 2, 3 )
     void Write( const char * fmtString, ... );
 
     // working buffer

@@ -63,6 +63,7 @@ public:
     AString & operator += ( const AString & string );
     inline void Append( const AString & string ) { this->operator +=( string ); }
     void Append( const char * string, size_t len );
+    FORMAT_STRING( 2, 3 )
     void AppendFormat( const char * fmtString, ... );
 
     // comparison
@@ -82,6 +83,7 @@ public:
 
     inline bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
 
+    FORMAT_STRING( 2, 3 )
     void Format( const char * fmtString, ... );
     void VFormat( const char * fmtString, va_list arg );
 

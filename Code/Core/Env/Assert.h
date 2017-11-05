@@ -68,6 +68,7 @@ bool IsDebuggerAttached();
         static bool Failure( const char * message,
                              const char * file,
                              const int line ) NORETURN_CLANG_ANALYZER;
+        FORMAT_STRING( 4, 5 )
         static bool FailureM( const char * message,
                               const char * file,
                               const int line,

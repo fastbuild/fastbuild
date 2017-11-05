@@ -105,6 +105,7 @@ private:
     void DoPieChart( const Array< PieItem > & items, const char * units );
 
     // Helper to format some text
+    FORMAT_STRING( 2, 3 )
     void Write( const char * fmtString, ... );
 
     // gather stats
