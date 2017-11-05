@@ -379,7 +379,22 @@ bool Process::IsRunning() const
 
         // store wait result: can't call again if we just cleaned up process
         ASSERT( result == m_ChildPID );
-        m_ReturnStatus = WEXITSTATUS(status);
+        if ( WIFEXITED(status) )
+        {
+            m_ReturnStatus = WEXITSTATUS(status); // process terminated normally, use exit code
+        }
+        else if ( WIFSIGNALED(status) )
+        {
+            m_ReturnStatus = -( WTERMSIG(status) ); // process was terminated by a signal, use negative signal value
+        }
+        else if ( WIFSTOPPED(status) )
+        {
+            return true; // process was stopped, it is not terminated yet
+        }
+        else
+        {
+            m_ReturnStatus = status; // some other unexpected state change, treat it as a failure
+        }
         m_HasAlreadyWaitTerminated = true;
         return false; // no longer running
     #else
@@ -443,7 +458,22 @@ int Process::WaitForExit()
                     ASSERT( false ); // Usage error
                 }
                 ASSERT( ret == m_ChildPID );
-                m_ReturnStatus = WEXITSTATUS(status);
+                if ( WIFEXITED(status) )
+                {
+                    m_ReturnStatus = WEXITSTATUS(status); // process terminated normally, use exit code
+                }
+                else if ( WIFSIGNALED(status) )
+                {
+                    m_ReturnStatus = -( WTERMSIG(status) ); // process was terminated by a signal, use negative signal value
+                }
+                else if ( WIFSTOPPED(status) )
+                {
+                    continue; // process was stopped, keep waiting for termination
+                }
+                else
+                {
+                    m_ReturnStatus = status; // some other unexpected state change, treat it as a failure
+                }
                 break;
             }
         }
