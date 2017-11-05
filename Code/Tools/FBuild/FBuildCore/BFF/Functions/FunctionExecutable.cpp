@@ -51,12 +51,12 @@ FunctionExecutable::FunctionExecutable()
     }
 
     ExeNode * exeNode = nodeGraph.CreateExeNode( name );
-    
+
     if ( !PopulateProperties( nodeGraph, funcStartIter, exeNode ) )
     {
         return false;
     }
-    
+
     if ( !exeNode->Initialize( nodeGraph, funcStartIter, this ) )
     {
         return false;

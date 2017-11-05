@@ -55,7 +55,7 @@ Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
     }
     else
     {
-		m_MainWindow = FNEW( WorkerWindow( hInstance ) );
+        m_MainWindow = FNEW( WorkerWindow( hInstance ) );
     }
 
     Env::GetExePath( m_BaseExeName );

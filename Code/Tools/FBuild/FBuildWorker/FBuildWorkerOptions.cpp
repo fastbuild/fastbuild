@@ -28,11 +28,11 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_CPUAllocation( 0 ),
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
-	m_ConsoleMode( false )
+    m_ConsoleMode( false )
 {
-	#ifndef __WINDOWS__
-		m_ConsoleMode = true; // TODO:OSX Support GUI mode
-	#endif
+    #ifndef __WINDOWS__
+        m_ConsoleMode = true; // TODO:OSX Support GUI mode
+    #endif
 }
 
 // ProcessCommandLine

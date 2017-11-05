@@ -240,7 +240,7 @@ protected:
     static bool Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri );
     static bool Deserialize( IOStream & stream, void * base, const ReflectedProperty & property );
 
-    bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,  
+    bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,
                                                     const BFFIterator & iter,
                                                     const Function * function,
                                                     const Array< AString > & preBuildDependencyNames );

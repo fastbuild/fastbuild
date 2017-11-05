@@ -47,12 +47,12 @@ FunctionLibrary::FunctionLibrary()
         return false;
     }
     LibraryNode * libraryNode = nodeGraph.CreateLibraryNode( name );
-    
+
     if ( !PopulateProperties( nodeGraph, funcStartIter, libraryNode ) )
     {
         return false;
     }
-    
+
     if ( !libraryNode->Initialize( nodeGraph, funcStartIter, this ) )
     {
         return false;

@@ -356,7 +356,7 @@ void TestAString::Format() const
     {
         longInput += 'A';
     }
-    
+
     // Make sure we correctly handle formatting large strings
     AStackString<> buffer;
     buffer.Format( "%s", longInput.Get() );

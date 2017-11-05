@@ -76,16 +76,16 @@ Process::~Process()
    void Process::KillProcessTreeInternal( uint32_t processID )
    {
        PROCESSENTRY32 pe;
-   
+
        memset( &pe, 0, sizeof( PROCESSENTRY32) );
        pe.dwSize = sizeof( PROCESSENTRY32 );
-   
+
        HANDLE hSnap = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, processID );
-   
+
        if ( ::Process32First( hSnap, &pe ) )
        {
            BOOL canContinue = TRUE;
-   
+
            // kill child processes
            while ( canContinue )
            {
@@ -93,9 +93,9 @@ Process::~Process()
                {
                    // Recursion
                    KillProcessTreeInternal( pe.th32ProcessID );
-   
+
                    HANDLE hChildProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, pe.th32ProcessID );
-   
+
                    if ( hChildProc )
                    {
                        ::TerminateProcess( hChildProc, 1 );
@@ -104,10 +104,10 @@ Process::~Process()
                }
                canContinue = ::Process32Next( hSnap, &pe );
            }
-   
+
            // kill the main process
            HANDLE hProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, processID );
-   
+
            if ( hProc )
            {
                ::TerminateProcess( hProc, 1 );
@@ -117,7 +117,7 @@ Process::~Process()
        else
        {
            //OUTPUT( "Unable to kill process 0x%x. Last Error: %u", processID, GetLastError() );
-       }    
+       }
    }
 #endif
 
@@ -400,9 +400,9 @@ int Process::WaitForExit()
 
         if ( m_HasAborted == false )
         {
-            // Don't wait if using jobs and the process has been aborted. 
+            // Don't wait if using jobs and the process has been aborted.
             // It will be killed along with the fbuild process if the TerminateProcess has failed for any reason and
-            // it is useless to wait for it was anyways we are reporting a failing exit code. 
+            // it is useless to wait for it was anyways we are reporting a failing exit code.
             // Also, This accelerate further more the cancellation.
 
             // wait for it to finish

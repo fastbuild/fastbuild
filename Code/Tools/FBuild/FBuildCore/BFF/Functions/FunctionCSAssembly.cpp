@@ -39,12 +39,12 @@ FunctionCSAssembly::FunctionCSAssembly()
         return false;
     }
     CSNode * csNode = nodeGraph.CreateCSNode( name );
-    
+
     if ( !PopulateProperties( nodeGraph, funcStartIter, csNode ) )
     {
         return false;
     }
-    
+
     if ( !csNode->Initialize( nodeGraph, funcStartIter, this ) )
     {
         return false;

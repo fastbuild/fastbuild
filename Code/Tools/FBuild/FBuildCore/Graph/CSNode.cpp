@@ -74,9 +74,9 @@ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const 
     Dependencies compilerInputPath;
     if ( !function->GetDirectoryListNodeList( nodeGraph,
                                               iter,
-                                              m_CompilerInputPath, 
+                                              m_CompilerInputPath,
                                               m_CompilerInputExcludePath,
-                                              m_CompilerInputExcludedFiles, 
+                                              m_CompilerInputExcludedFiles,
                                               m_CompilerInputExcludePattern,
                                               m_CompilerInputPathRecurse,
                                               &m_CompilerInputPattern,

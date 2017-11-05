@@ -108,7 +108,7 @@ private:
     void UpdateBuildStatus( const Node * node );
 
     static bool s_StopBuild;
-    static volatile bool s_AbortBuild;  // -fastcancel - TODO:C merge with StopBuild 
+    static volatile bool s_AbortBuild;  // -fastcancel - TODO:C merge with StopBuild
 
     BFFMacros * m_Macros;
 

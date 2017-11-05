@@ -3,7 +3,7 @@
 //--------------------------------------------------------------------
 Print( "---- Struct Recursion" )
 {
-    .A = 
+    .A =
     [
         .Value1 = 'A'
         .Sub1 =
@@ -15,9 +15,9 @@ Print( "---- Struct Recursion" )
                 .Sub3 =
                 [
                     .Value4 = 'A'
-                ]   
-            ]   
-        ]   
+                ]
+            ]
+        ]
     ]
 
     .B =
@@ -32,9 +32,9 @@ Print( "---- Struct Recursion" )
                 .Sub3 =
                 [
                     .Value4 = 'B'
-                ]   
-            ]   
-        ]   
+                ]
+            ]
+        ]
     ]
     .AB = .A + .B
     Print( .AB ) // Test will check output

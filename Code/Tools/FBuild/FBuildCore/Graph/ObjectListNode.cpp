@@ -196,7 +196,7 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
     Dependencies compilerInputPath;
     if ( !function->GetDirectoryListNodeList( nodeGraph,
                                               iter,
-                                              m_CompilerInputPath, 
+                                              m_CompilerInputPath,
                                               m_CompilerInputExcludePath,
                                               m_CompilerInputExcludedFiles,
                                               m_CompilerInputExcludePattern,
@@ -664,7 +664,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
 
 // CreateObjectNode
 //------------------------------------------------------------------------------
-ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph, 
+ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const BFFIterator & iter,
                                                const Function * function,
                                                const uint32_t flags,

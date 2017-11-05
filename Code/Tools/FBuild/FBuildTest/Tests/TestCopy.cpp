@@ -384,7 +384,7 @@ void TestCopy::CopyDirDeleteSrc() const
     TEST_ASSERT( FileIO::FileCopy( "Data/TestCopy/a.txt", srcA.Get() ) );
     TEST_ASSERT( FileIO::FileCopy( "Data/TestCopy/b.txt", srcB.Get() ) );
     TEST_ASSERT( FileIO::SetReadOnly( srcA.Get(), false ) ); // Clear read only so it's not persisted by copy
-    TEST_ASSERT( FileIO::SetReadOnly( srcB.Get(), false ) ); // Clear read only so it's not persisted by copy 
+    TEST_ASSERT( FileIO::SetReadOnly( srcB.Get(), false ) ); // Clear read only so it's not persisted by copy
 
     // Do the normal build, which copies the files
     {

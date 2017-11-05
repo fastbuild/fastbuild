@@ -1499,7 +1499,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     {
                         // Remove relative include
                         StripTokenWithArg_MSVC( "I", token, i );
-    
+
                         // Add full path include
                         fullArgs.Append( token.Get(), start - token.Get() );
                         fullArgs += job->GetRemoteSourceRoot();
@@ -2152,7 +2152,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             }
 
             // If the compiler crashed (Internal Compiler Error), treat this
-            // as a system error so it will be retried, since it can alse be 
+            // as a system error so it will be retried, since it can alse be
             // the result of faulty hardware.
             if ( stdOut && strstr( stdOut, "C1001" ) )
             {

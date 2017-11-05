@@ -1444,7 +1444,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             // a quoted string
 
             // dest is consistent?
-            if ( ( varType != BFFVariable::VAR_ARRAY_OF_STRINGS ) && 
+            if ( ( varType != BFFVariable::VAR_ARRAY_OF_STRINGS ) &&
                  ( varType != BFFVariable::VAR_ANY ) )
             {
                 // Mixed types in vector

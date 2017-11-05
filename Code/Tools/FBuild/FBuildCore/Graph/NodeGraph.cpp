@@ -570,8 +570,8 @@ void NodeGraph::Display( const Dependencies & deps ) const
     ASSERT( nodeIndex != INVALID_NODE_INDEX );
     if ( visited[ nodeIndex ] )
     {
-        if ( node->GetPreBuildDependencies().GetSize() || 
-             node->GetStaticDependencies().GetSize() || 
+        if ( node->GetPreBuildDependencies().GetSize() ||
+             node->GetStaticDependencies().GetSize() ||
              node->GetDynamicDependencies().GetSize() )
         {
             outBuffer.AppendFormat( "%*s...\n", ( depth + 1 ) * 4, "" );

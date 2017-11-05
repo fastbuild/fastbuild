@@ -49,7 +49,7 @@ bool CopyDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, c
     Dependencies sourcePaths;
     if ( !function->GetDirectoryListNodeList( nodeGraph,
                                               iter,
-                                              m_SourcePaths, 
+                                              m_SourcePaths,
                                               m_SourceExcludePaths,
                                               Array< AString >(),     // Unsupported: Excluded files
                                               Array< AString >(),    // Unsupported: Excluded patterns

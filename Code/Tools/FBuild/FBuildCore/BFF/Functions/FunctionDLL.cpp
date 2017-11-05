@@ -36,12 +36,12 @@ FunctionDLL::FunctionDLL()
     }
 
     DLLNode * dllNode = nodeGraph.CreateDLLNode( name );
-    
+
     if ( !PopulateProperties( nodeGraph, funcStartIter, dllNode ) )
     {
         return false;
     }
-    
+
     if ( !dllNode->Initialize( nodeGraph, funcStartIter, this ) )
     {
         return false;

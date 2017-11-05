@@ -132,9 +132,9 @@ bool LinkerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, co
 
     // Store all dependencies
     m_StaticDependencies.SetCapacity( 1 + // for .Linker
-                                      libraries.GetSize() + 
+                                      libraries.GetSize() +
                                       assemblyResources.GetSize() +
-                                      otherLibraryNodes.GetSize() + 
+                                      otherLibraryNodes.GetSize() +
                                       ( linkerStampExeNode ? 1 : 0 ) );
     m_StaticDependencies.Append( Dependency( linkerExeNode ) );
     m_StaticDependencies.Append( libraries );
@@ -885,7 +885,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 //------------------------------------------------------------------------------
 bool LinkerNode::GetOtherLibraries( NodeGraph & nodeGraph,
                                     const BFFIterator & iter,
-                                    const Function * function, 
+                                    const Function * function,
                                     const AString & args,
                                     Dependencies & otherLibraries,
                                     bool msvc ) const
