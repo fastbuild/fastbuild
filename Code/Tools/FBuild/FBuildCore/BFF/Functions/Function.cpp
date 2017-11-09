@@ -15,6 +15,7 @@
 #include "FunctionExec.h"
 #include "FunctionExecutable.h"
 #include "FunctionForEach.h"
+#include "FunctionIf.h"
 #include "FunctionLibrary.h"
 #include "FunctionObjectList.h"
 #include "FunctionPrint.h"
@@ -115,6 +116,7 @@ Function::~Function() = default;
     FNEW( FunctionExec );
     FNEW( FunctionExecutable );
     FNEW( FunctionForEach );
+    FNEW( FunctionIf );
     FNEW( FunctionLibrary );
     FNEW( FunctionPrint );
     FNEW( FunctionRemoveDir );
