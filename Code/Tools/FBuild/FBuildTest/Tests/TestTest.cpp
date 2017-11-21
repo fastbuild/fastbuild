@@ -21,8 +21,9 @@ private:
     void CreateNode() const;
     void Build() const;
     void Build_NoRebuild() const;
+    void Fail_ReturnCode() const;
+    void Fail_Crash() const;
     void TimeOut() const;
-    void Crash() const;
 };
 
 // Register Tests
@@ -31,8 +32,9 @@ REGISTER_TESTS_BEGIN( TestTest )
     REGISTER_TEST( CreateNode )
     REGISTER_TEST( Build )
     REGISTER_TEST( Build_NoRebuild )
+    REGISTER_TEST( Fail_ReturnCode )
+    REGISTER_TEST( Fail_Crash )
     REGISTER_TEST( TimeOut )
-    REGISTER_TEST( Crash )
 REGISTER_TESTS_END
 
 // CreateNode
@@ -112,26 +114,44 @@ void TestTest::Build_NoRebuild() const
 
 }
 
+// Fail_ReturnCode
+//------------------------------------------------------------------------------
+void TestTest::Fail_ReturnCode() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestTest/Fail_ReturnCode/fbuild.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Build and run test, expecting failure
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Fail_ReturnCode" ) ) == false );
+
+    // Ensure failure was of the test
+    TEST_ASSERT( GetRecordedOutput().Find( "Test failed (error 1)" ) );
+}
+
+// Fail_Crash
+//------------------------------------------------------------------------------
+void TestTest::Fail_Crash() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestTest/Fail_Crash/fbuild.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Build and run test, expecting failure
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Fail_Crash" ) ) == false );
+
+    // Ensure failure was of the test
+    TEST_ASSERT( GetRecordedOutput().Find( "Test failed" ) );
+}
+
 // TimeOut
 //------------------------------------------------------------------------------
 void TestTest::TimeOut() const
 {
     FBuildOptions options;
     options.m_ConfigFile = "Data/TestTest/test_timeout.bff";
-    options.m_FastCancel = true;
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize() );
-
-    // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) == false );
-}
-
-// Crash
-//------------------------------------------------------------------------------
-void TestTest::Crash() const
-{
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestTest/test_crash.bff";
     options.m_FastCancel = true;
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );

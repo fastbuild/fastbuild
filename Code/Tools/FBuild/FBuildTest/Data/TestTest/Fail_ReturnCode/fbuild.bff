@@ -1,22 +1,22 @@
 //
 // Test
 //
-// Build and run a Test
+// Build and run a Test which fails, checking return code of test
 //
 //------------------------------------------------------------------------------
 
 // Use the standard test environment
 //------------------------------------------------------------------------------
-#include "../testcommon.bff"
+#include "../../testcommon.bff"
 Using( .StandardEnvironment )
 Settings {}
 
 // Compile an executable to run
 //------------------------------------------------------------------------------
-ObjectList( "Exe-Lib" )
+ObjectList( "Lib" )
 {
-    .CompilerInputFiles = 'Data/TestTest/test_timeout.cpp'
-    .CompilerOutputPath = '$Out$/Test/Test/'
+    .CompilerInputFiles = 'Data/TestTest/Fail_ReturnCode/main.cpp'
+    .CompilerOutputPath = '$Out$/Test/Test/Fail_ReturnCode/'
 }
 
 Executable( "Exe" )
@@ -25,15 +25,14 @@ Executable( "Exe" )
         .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
                             + ' /ENTRY:main'
     #endif
-    .LinkerOutput       = '$Out$/Test/Test/test_timeout.exe'
-    .Libraries          = { 'Exe-Lib' }
+    .LinkerOutput       = '$Out$/Test/Fail_ReturnCode/test.exe'
+    .Libraries          = { 'Lib' }
 }
 
 // Run the executable we compiled
 //------------------------------------------------------------------------------
-Test( "Test" )
+Test( "Fail_ReturnCode" )
 {
     .TestExecutable     = 'Exe'
-    .TestOutput         = '$Out$/Test/Test/testoutput.txt'
-    .TestTimeOut        = 1 // kill after 1ms
+    .TestOutput         = '$Out$/Test/Test/Fail_ReturnCode/testoutput.txt'
 }

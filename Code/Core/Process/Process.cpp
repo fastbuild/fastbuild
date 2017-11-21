@@ -379,15 +379,15 @@ bool Process::IsRunning() const
 
         // store wait result: can't call again if we just cleaned up process
         ASSERT( result == m_ChildPID );
-        if ( WIFEXITED(status) )
+        if ( WIFEXITED( status ) )
         {
-            m_ReturnStatus = WEXITSTATUS(status); // process terminated normally, use exit code
+            m_ReturnStatus = WEXITSTATUS( status ); // process terminated normally, use exit code
         }
-        else if ( WIFSIGNALED(status) )
+        else if ( WIFSIGNALED( status ) )
         {
-            m_ReturnStatus = -( WTERMSIG(status) ); // process was terminated by a signal, use negative signal value
+            m_ReturnStatus = -( WTERMSIG( status ) ); // process was terminated by a signal, use negative signal value
         }
-        else if ( WIFSTOPPED(status) )
+        else if ( WIFSTOPPED( status ) )
         {
             return true; // process was stopped, it is not terminated yet
         }
@@ -458,15 +458,15 @@ int Process::WaitForExit()
                     ASSERT( false ); // Usage error
                 }
                 ASSERT( ret == m_ChildPID );
-                if ( WIFEXITED(status) )
+                if ( WIFEXITED( status ) )
                 {
-                    m_ReturnStatus = WEXITSTATUS(status); // process terminated normally, use exit code
+                    m_ReturnStatus = WEXITSTATUS( status ); // process terminated normally, use exit code
                 }
-                else if ( WIFSIGNALED(status) )
+                else if ( WIFSIGNALED( status ) )
                 {
-                    m_ReturnStatus = -( WTERMSIG(status) ); // process was terminated by a signal, use negative signal value
+                    m_ReturnStatus = -( WTERMSIG( status ) ); // process was terminated by a signal, use negative signal value
                 }
-                else if ( WIFSTOPPED(status) )
+                else if ( WIFSTOPPED( status ) )
                 {
                     continue; // process was stopped, keep waiting for termination
                 }
