@@ -22,6 +22,7 @@ private:
     void Build() const;
     void Build_NoRebuild() const;
     void TimeOut() const;
+    void Crash() const;
 };
 
 // Register Tests
@@ -31,6 +32,7 @@ REGISTER_TESTS_BEGIN( TestTest )
     REGISTER_TEST( Build )
     REGISTER_TEST( Build_NoRebuild )
     REGISTER_TEST( TimeOut )
+    REGISTER_TEST( Crash )
 REGISTER_TESTS_END
 
 // CreateNode
@@ -116,6 +118,20 @@ void TestTest::TimeOut() const
 {
     FBuildOptions options;
     options.m_ConfigFile = "Data/TestTest/test_timeout.bff";
+    options.m_FastCancel = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // build (via alias)
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) == false );
+}
+
+// Crash
+//------------------------------------------------------------------------------
+void TestTest::Crash() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestTest/test_crash.bff";
     options.m_FastCancel = true;
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
