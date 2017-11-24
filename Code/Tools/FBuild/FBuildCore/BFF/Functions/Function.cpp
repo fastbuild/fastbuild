@@ -973,13 +973,13 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
     {
         case PT_ASTRING:
         {
+            const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
             if ( property.IsArray() )
             {
-                return PopulateArrayOfStrings( nodeGraph, iter, base, property, variable );
+                return PopulateArrayOfStrings( nodeGraph, iter, base, property, variable, required );
             }
             else
             {
-                const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
                 return PopulateString( nodeGraph, iter, base, property, variable, required );
             }
         }
@@ -1047,6 +1047,13 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
                                      const AString & string,
                                      Array< AString > & outStrings ) const
 {
+    // Return empty string untouched (expansion of aliases or paths makes no sense)
+    if ( string.IsEmpty() )
+    {
+        outStrings.Append( string );
+        return true; // Calling code must determine if this is an error
+    }
+
     // Full paths to files can support aliases
     if ( fileMD && ( !fileMD->IsRelative() ) )
     {
@@ -1111,6 +1118,9 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
                                           const AString & variableName,
                                           AString & valueToFix ) const
 {
+    // Calling code must handle empty strings
+    ASSERT( valueToFix.IsEmpty() == false );
+
     // Only one is allowed (having neither is ok too)
     ASSERT( ( fileMD == nullptr ) || ( pathMD == nullptr ) );
 
@@ -1155,12 +1165,29 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 
 // PopulateArrayOfStrings
 //------------------------------------------------------------------------------
-bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
+bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
     Array< AString > strings;
     if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error
+    }
+
+    // Empty arrays are not allowed if property is required
+    if ( strings.IsEmpty() && required )
+    {
+        Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, property.GetName() ); // TODO:B A specific error for empty array of strings?
+        return false;
+    }
+
+    // Arrays must not contain empty strings
+    for ( const AString& string : strings )
+    {
+        if ( string.IsEmpty() == true )
+        {
+            Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, property.GetName() ); // TODO:B A specific error for empty string in array?
+            return false;
+        }
     }
 
     property.SetProperty( base, strings );
