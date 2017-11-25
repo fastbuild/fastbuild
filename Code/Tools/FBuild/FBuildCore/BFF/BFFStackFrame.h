@@ -46,7 +46,8 @@ public:
     static BFFVariable * ConcatVars( const AString & name,
                                      const BFFVariable * lhs,
                                      const BFFVariable * rhs,
-                                     BFFStackFrame * frame );
+                                     BFFStackFrame * frame,
+                                     const BFFIterator & operatorIter );
 
     // get a variable (caller passes complete name indicating type (user vs system))
     static const BFFVariable * GetVar( const char * name, BFFStackFrame * frame = nullptr );
