@@ -25,6 +25,7 @@ private:
     void BigString() const;
     void Compare() const;
     void Concatenation() const;
+    void EmbeddedNuls() const;
     void EndsWithI() const;
     void Equals() const;
     void Find() const;
@@ -46,6 +47,7 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( BigString )
     REGISTER_TEST( Compare )
     REGISTER_TEST( Concatenation )
+    REGISTER_TEST( EmbeddedNuls )
     REGISTER_TEST( EndsWithI )
     REGISTER_TEST( Equals )
     REGISTER_TEST( Find )
@@ -274,6 +276,78 @@ void TestAString::Concatenation() const
         AString a;
         const char * b = "";
         a.Append( b, 0 );
+    }
+}
+
+// EmbeddedNuls
+//------------------------------------------------------------------------------
+void TestAString::EmbeddedNuls() const
+{
+    // Create a string with an embedded nul and check various behaviours
+    AStackString<> string( "0123456789" );
+    const uint32_t originalStringLen = string.GetLength();
+    string[ 5 ] = 0; // insert null terminator
+
+    // Copy construction
+    {
+        AString copy( string );
+        TEST_ASSERT( copy.GetLength() == originalStringLen );
+        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+    }
+
+    // Assignment (operator =)
+    {
+        AString copy;
+        copy = string;
+        TEST_ASSERT( copy.GetLength() == originalStringLen );
+        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+    }
+
+    // Assignment (Assign)
+    {
+        AString copy;
+        copy.Assign( string );
+        TEST_ASSERT( copy.GetLength() == originalStringLen );
+        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+    }
+
+    // Assignment (Assign with iterators)
+    {
+        AString copy;
+        copy.Assign( string.Get(), string.GetEnd() );
+        TEST_ASSERT( copy.GetLength() == originalStringLen );
+        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+    }
+
+    // Append (operator +=)
+    {
+        // Append to empty
+        AString copy;
+        copy += string;
+        TEST_ASSERT( copy.GetLength() == originalStringLen );
+        TEST_ASSERT( AString::StrNCmp( string.Get(), copy.Get(), originalStringLen ) == 0 );
+        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+
+        // Append to existing
+        AString copy2( string );
+        copy2 += string;
+        TEST_ASSERT( copy2.GetLength() == ( originalStringLen * 2 ) );
+        TEST_ASSERT( memcmp( "01234" "\0" "678901234" "\0" "6789", copy2.Get(), ( originalStringLen * 2 ) ) == 0 );
+    }
+
+    // Append (Append)
+    {
+        // Append to empty
+        AString copy;
+        copy.Append( string );
+        TEST_ASSERT( copy.GetLength() == originalStringLen );
+        TEST_ASSERT( memcmp( "01234" "\0" "6789", copy.Get(), originalStringLen ) == 0 );
+
+        // Append to existing
+        AString copy2( string );
+        copy2.Append( string );
+        TEST_ASSERT( copy2.GetLength() == ( originalStringLen * 2 ) );
+        TEST_ASSERT( memcmp( "01234" "\0" "678901234" "\0" "6789", copy2.Get(), ( originalStringLen * 2 ) ) == 0 );
     }
 }
 
