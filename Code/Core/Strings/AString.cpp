@@ -1042,7 +1042,7 @@ void AString::Grow( uint32_t newLength )
     char * newMem = (char *)ALLOC( reserve + 1 ); // also allocate for \0 terminator
 
     // transfer existing string data
-    Copy( m_Contents, newMem ); // copy handles terminator
+    Copy( m_Contents, newMem, m_Length ); // copy handles terminator
 
     if ( MemoryMustBeFreed() )
     {
