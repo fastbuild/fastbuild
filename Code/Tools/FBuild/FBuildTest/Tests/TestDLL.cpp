@@ -275,7 +275,7 @@ void TestDLL::TestDLLWithPCH() const
     uint32_t numF = 4; // pch.h + a.cpp + a.h + linker exe
     uint32_t numB = 3;
     #if defined( __WINDOWS__ )
-        numF += 2; // pch.cpp and libs
+        numF += 3; // pch.cpp and libs
         numB += 2; // libs
     #endif
     CheckStatsNode ( numF,  numB,   Node::FILE_NODE );
@@ -305,7 +305,7 @@ void TestDLL::TestDLLWithPCH_NoRebuild() const
     //               Seen,  Built,  Type
     uint32_t numF = 4; // pch.h + a.cpp + c.h + linker exe
     #if defined( __WINDOWS__ )
-        numF += 2;
+        numF += 3;
     #endif
     CheckStatsNode ( numF,  numF,       Node::FILE_NODE );  // 1 cpp + 1 pch cpp + 2 .h
     CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );

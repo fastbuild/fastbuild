@@ -1983,8 +1983,12 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
             const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
             if ( concat )
             {
-                BFFVariable *const newVar = BFFStackFrame::ConcatVars( dstName, varDst, varSrc, dstFrame );
-                FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), (unsigned int)newVar->GetStructMembers().GetSize() );
+                BFFVariable *const newVar = BFFStackFrame::ConcatVars( dstName, varDst, varSrc, dstFrame, operatorIter );
+                if ( newVar == nullptr )
+                {
+                    return false; // ConcatVars will have emitted an error
+                }
+                FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), (uint32_t)newVar->GetStructMembers().GetSize() );
             }
             else
             {

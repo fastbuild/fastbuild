@@ -6,6 +6,7 @@
 #include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
 
 #include "BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/Error.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Mem/Mem.h"
@@ -301,7 +302,7 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
 
 // ConcatVarsRecurse
 //------------------------------------------------------------------------------
-BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFFVariable & other ) const
+BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFIterator & operatorIter ) const
 {
     const BFFVariable *varDst = this;
     const BFFVariable *varSrc = &other;
@@ -343,6 +344,12 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             return result;
         }
 
+        // Incompatible types
+        Error::Error_1034_OperationNotSupported( operatorIter, // TODO:C we don't have access to the rhsIterator so we use the operator
+                                                 varDst ? varDst->GetType() : varSrc->GetType(),
+                                                 varSrc->GetType(),
+                                                 operatorIter );
+        return nullptr;
     }
     else
     {
@@ -419,9 +426,20 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             {
                 const BFFVariable ** it2 = GetMemberByName( (*it)->GetName(), srcMembers );
 
-                BFFVariable * const newVar = (it2)
-                    ? (*it)->ConcatVarsRecurse( (*it)->GetName(), **it2 )
-                    : FNEW( BFFVariable( **it ) );
+                BFFVariable * newVar;
+                if ( it2 )
+                {
+                    newVar = (*it)->ConcatVarsRecurse( (*it)->GetName(), **it2, operatorIter );
+                    if ( newVar == nullptr )
+                    {
+                        FDELETE result;
+                        return nullptr; // ConcatVarsRecurse will have emitted an error
+                    }
+                }
+                else
+                {
+                    newVar = FNEW( BFFVariable( **it ) );
+                }
 
                 allMembers.Append( newVar );
             }
@@ -442,6 +460,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
         }
     }
 
+    ASSERT( false ); // Should never get here
     return nullptr;
 }
 

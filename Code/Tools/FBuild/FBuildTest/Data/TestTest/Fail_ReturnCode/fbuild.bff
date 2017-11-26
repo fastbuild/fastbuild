@@ -1,0 +1,38 @@
+//
+// Test
+//
+// Build and run a Test which fails, checking return code of test
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Compile an executable to run
+//------------------------------------------------------------------------------
+ObjectList( "Lib" )
+{
+    .CompilerInputFiles = 'Data/TestTest/Fail_ReturnCode/main.cpp'
+    .CompilerOutputPath = '$Out$/Test/Test/Fail_ReturnCode/'
+}
+
+Executable( "Exe" )
+{
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+    #endif
+    .LinkerOutput       = '$Out$/Test/Fail_ReturnCode/test.exe'
+    .Libraries          = { 'Lib' }
+}
+
+// Run the executable we compiled
+//------------------------------------------------------------------------------
+Test( "Fail_ReturnCode" )
+{
+    .TestExecutable     = 'Exe'
+    .TestOutput         = '$Out$/Test/Test/Fail_ReturnCode/testoutput.txt'
+}

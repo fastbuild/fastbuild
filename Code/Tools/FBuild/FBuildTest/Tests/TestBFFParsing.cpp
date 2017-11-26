@@ -34,6 +34,7 @@ private:
     void OnceDirective() const;
     void Structs() const;
     void Struct_Concatenation() const;
+    void Struct_ConcatenationMismatch() const;
     void Struct_ConcatenationOrder() const;
     void Struct_Unterminated() const;
     void IncludeScope() const;
@@ -74,6 +75,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( OnceDirective )
     REGISTER_TEST( Structs )
     REGISTER_TEST( Struct_Concatenation )
+    REGISTER_TEST( Struct_ConcatenationMismatch )
     REGISTER_TEST( Struct_ConcatenationOrder )
     REGISTER_TEST( Struct_Unterminated )
     REGISTER_TEST( IncludeScope )
@@ -200,6 +202,14 @@ void TestBFFParsing::Structs() const
 void TestBFFParsing::Struct_Concatenation() const
 {
     Parse( "Data/TestBFFParsing/struct_concatenation.bff" );
+}
+
+// Struct_ConcatenationMismatch
+//------------------------------------------------------------------------------
+void TestBFFParsing::Struct_ConcatenationMismatch() const
+{
+    Parse( "Data/TestBFFParsing/struct_concatenation_mismatch.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "#1034 - Operation not supported: 'ArrayOfStrings' + 'Int'" ) );
 }
 
 // Struct_ConcatenationOrder

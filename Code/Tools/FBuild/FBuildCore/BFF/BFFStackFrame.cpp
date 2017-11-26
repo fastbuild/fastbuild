@@ -190,7 +190,8 @@ BFFStackFrame::~BFFStackFrame()
 BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
                                          const BFFVariable * lhs,
                                          const BFFVariable * rhs,
-                                         BFFStackFrame * frame )
+                                         BFFStackFrame * frame,
+                                         const BFFIterator & operatorIter )
 {
     frame = frame ? frame : s_StackHead;
 
@@ -198,7 +199,11 @@ BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
     ASSERT( lhs );
     ASSERT( rhs );
 
-    BFFVariable *const newVar = lhs->ConcatVarsRecurse( name, *rhs );
+    BFFVariable *const newVar = lhs->ConcatVarsRecurse( name, *rhs, operatorIter );
+    if ( newVar == nullptr )
+    {
+        return nullptr; // ConcatVarsRecurse will have emitted an error
+    }
     frame->CreateOrReplaceVarMutableNoRecurse( newVar );
 
     return newVar;
