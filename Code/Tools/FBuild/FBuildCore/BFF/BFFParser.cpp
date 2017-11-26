@@ -1327,7 +1327,7 @@ bool BFFParser::StoreVariableString( const AString & name,
                         value.Get(),
                         ( *operatorIter == BFF_VARIABLE_CONCATENATION ) ? "to" : "from",
                         name.Get(),
-                        (unsigned int)finalValues.GetSize() );
+                        (uint32_t)finalValues.GetSize() );
             return true;
         }
         else
@@ -1619,13 +1619,13 @@ bool BFFParser::StoreVariableArray( const AString & name,
     {
         // structs
         BFFStackFrame::SetVarArrayOfStructs( name, structValues, frame );
-        FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", name.Get(), (unsigned int)structValues.GetSize() );
+        FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", name.Get(), (uint32_t)structValues.GetSize() );
     }
     else if ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS )
     {
         // strings
         BFFStackFrame::SetVarArrayOfStrings( name, values, frame );
-        FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", name.Get(), (unsigned int)values.GetSize() );
+        FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", name.Get(), (uint32_t)values.GetSize() );
     }
 
     return true;
@@ -1676,7 +1676,7 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 
     // Register this variable
     BFFStackFrame::SetVarStruct( name, structMembers, frame ? frame : stackFrame.GetParent() );
-    FLOG_INFO( "Registered <struct> variable '%s' with %u members", name.Get(), (unsigned int)structMembers.GetSize() );
+    FLOG_INFO( "Registered <struct> variable '%s' with %u members", name.Get(), (uint32_t)structMembers.GetSize() );
 
     return true;
 }
@@ -1811,7 +1811,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
             }
 
             BFFStackFrame::SetVarArrayOfStrings( dstName, values, dstFrame );
-            FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), (unsigned int)values.GetSize() );
+            FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), (uint32_t)values.GetSize() );
             return true;
         }
 
@@ -1994,7 +1994,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
             {
                 // Register this variable
                 BFFStackFrame::SetVarStruct( dstName, srcMembers, dstFrame );
-                FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), (unsigned int)srcMembers.GetSize() );
+                FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), (uint32_t)srcMembers.GetSize() );
             }
             return true;
         }

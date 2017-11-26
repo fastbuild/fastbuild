@@ -50,8 +50,7 @@ public:
     inline const Array< AString > & GetMessages() const { return m_Messages; }
 
     // logging interface
-    FORMAT_STRING( 2, 3 )
-    void                Error( const char * format, ... );
+    void                Error( const char * format, ... ) FORMAT_STRING( 2, 3 );
     void                ErrorPreformatted( const char * message );
 
     // Flag "system failures" - i.e. not a compilation failure, but some other problem (typically a remote worker misbehaving)

@@ -199,11 +199,10 @@ public:
                                                        const AString & badCompilerFamily );
 
 private:
-    FORMAT_STRING( 4, 5 )
     static void FormatError( const BFFIterator & iter,
                              uint32_t errNum,
                              const Function * function,
-                             const char * message, ... );
+                             const char * message, ... ) FORMAT_STRING( 4, 5 );
 };
 
 //------------------------------------------------------------------------------

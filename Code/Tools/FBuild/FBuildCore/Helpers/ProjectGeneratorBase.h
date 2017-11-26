@@ -44,8 +44,7 @@ public:
 
 protected:
     // Helper to format some text
-    FORMAT_STRING( 2, 3 )
-    void Write( const char * fmtString, ... );
+    void Write( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // Internal helpers
     void        GetProjectRelativePath( const AString & fileName, AString & shortFileName ) const;
