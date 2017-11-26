@@ -28,13 +28,17 @@ public:
 
     #ifdef DEBUG
         static void DebugSpam( const char * message );
+        FORMAT_STRING( 1, 2 )
         static void DebugSpamFormat( const char * fmtString, ... );
         static void Warning( const char * file, uint32_t line, const char * message );
+        FORMAT_STRING( 3, 4 )
         static void WarningFormat( const char * file, uint32_t line, const char * fmtString, ... );
     #endif
     static void Output( const char * message );
+    FORMAT_STRING( 1, 2 )
     static void OutputFormat( const char * fmtString, ... );
     static void FatalError( const char * message );
+    FORMAT_STRING( 1, 2 )
     static void FatalErrorFormat( const char * fmtString, ... );
 
     typedef bool Callback( const char * mesage );

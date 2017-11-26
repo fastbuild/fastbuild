@@ -455,7 +455,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
                 }
             }
 
-            FLOG_INFO( "Concatenated <struct> variable '%s' with %u members", dstName.Get(), allMembers.GetSize() );
+            FLOG_INFO( "Concatenated <struct> variable '%s' with %u members", dstName.Get(), (unsigned int)allMembers.GetSize() );
             return result;
         }
     }

@@ -209,7 +209,7 @@
                 }
                 *dst = 0;
 
-                OUTPUT( "%s(%u): Id %u : %u bytes @ 0x%016llx (Mem: %s)\n", a->m_File, a->m_Line, id, size, addr, memView );
+                OUTPUT( "%s(%u): Id %u : %" PRIu64 " bytes @ 0x%016" PRIx64 " (Mem: %s)\n", a->m_File, a->m_Line, id, size, addr, memView );
 
                 ++numAllocs;
                 total += size;
@@ -218,7 +218,7 @@
             }
         }
         OUTPUT( "--------------------------------------------------------------------\n" );
-        OUTPUT( "Total: %llu bytes in %llu allocs\n", total, numAllocs );
+        OUTPUT( "Total: %" PRIu64 " bytes in %" PRIu64 " allocs\n", total, numAllocs );
         OUTPUT( "--------------------------------------------------------------------\n" );
     }
 

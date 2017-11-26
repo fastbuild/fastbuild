@@ -166,7 +166,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         {
             // on disk file doesn't match our file
             // (modified by some external process)
-            FLOG_INFO( "Need to build '%s' (externally modified - stamp = %llu, disk = %llu)", GetName().Get(), m_Stamp, lastWriteTime );
+            FLOG_INFO( "Need to build '%s' (externally modified - stamp = %" PRIu64 ", disk = %" PRIu64 ")", GetName().Get(), m_Stamp, lastWriteTime );
             return true;
         }
     }
@@ -210,7 +210,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         if ( n->GetStamp() > m_Stamp )
         {
             // file is newer than us
-            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %llu, dep = %llu)", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
+            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %" PRIu64 ", dep = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
             return true;
         }
     }
@@ -243,7 +243,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         if ( n->GetStamp() > m_Stamp )
         {
             // file is newer than us
-            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %llu, dep = %llu)", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
+            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %" PRIu64 ", dep = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
             return true;
         }
     }

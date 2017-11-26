@@ -35,7 +35,8 @@ private:
     void WriteProperties( const void * base, const ReflectionInfo * info );
     void Write( const void * base, const ReflectedProperty * property );
     void Write( const AString & buffer );
-    void Write( const char * buffer, ... );
+    FORMAT_STRING( 2, 3 )
+    void Write( const char * format, ... );
 
     inline void Indent() { m_Indent++; }
     inline void Unindent() { ASSERT( m_Indent ); m_Indent--; }

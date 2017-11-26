@@ -434,7 +434,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgFile
         if ( manifest->ReceiveFileData( fileId, payload, payloadSize ) == false )
         {
             // something went wrong storing the file
-            FLOG_WARN( "Failed to store fileId %u for manifest 0x%llx\n", fileId, toolId );
+            FLOG_WARN( "Failed to store fileId %u for manifest 0x%" PRIx64 "\n", fileId, toolId );
             Disconnect( connection );
             return;
         }

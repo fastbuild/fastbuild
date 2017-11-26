@@ -38,7 +38,9 @@ private:
 
     inline bool InConsoleMode() const { return ( m_MainWindow == nullptr ); }
 
+    FORMAT_STRING( 2, 3 )
     void StatusMessage( const char * fmtString, ... ) const;
+    FORMAT_STRING( 2, 3 )
     void ErrorMessage( const char * fmtString, ... ) const;
 
     WorkerWindow        * m_MainWindow;

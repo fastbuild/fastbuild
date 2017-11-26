@@ -61,7 +61,7 @@
         m_DLL = dlopen(dllName.Get(), RTLD_NOW);
         if ( !m_DLL )
         {
-            FLOG_WARN( "Cache plugin '%s' load failed (0x%x).", dllName.Get(), dlerror() );
+            FLOG_WARN( "Cache plugin '%s' load failed (%s).", dllName.Get(), dlerror() );
             return;
         }
         m_InitFunc       = (CacheInitFunc)          GetFunction( "CacheInit" );

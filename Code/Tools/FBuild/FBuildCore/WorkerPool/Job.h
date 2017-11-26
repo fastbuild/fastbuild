@@ -50,6 +50,7 @@ public:
     inline const Array< AString > & GetMessages() const { return m_Messages; }
 
     // logging interface
+    FORMAT_STRING( 2, 3 )
     void                Error( const char * format, ... );
     void                ErrorPreformatted( const char * message );
 
