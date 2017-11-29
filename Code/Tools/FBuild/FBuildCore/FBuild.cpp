@@ -28,6 +28,7 @@
 #include "Core/Env/Env.h"
 #include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/xxHash.h"
@@ -501,7 +502,7 @@ void FBuild::SetEnvironmentString( const char * envString, uint32_t size, const 
 
 // ImportEnvironmentVar
 //------------------------------------------------------------------------------
-bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & value, uint32_t & hash )
+bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & value, uint32_t & hash, bool isPath/* = false*/ )
 {
     // check if system environment contains the variable
     if ( Env::GetEnvVariable( name, value ) == false )
@@ -517,6 +518,15 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
     }
     else
     {
+        // if 'value' it is supposed to be a path, try to "normalize" it to an absolute one
+        if (isPath)
+        {
+            if ( !PathUtils::CompactAndCheckFullPath( value ) )
+            {
+                FLOG_ERROR( "The path '%s' imported from the environment variable '%s' is not accessible...", value.Get(), name );
+                return false;
+            }
+        }
         // compute hash value for actual value
         hash = xxHash::Calc32( value );
     }
@@ -543,7 +553,7 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
     }
 
     // import new variable name with its hash value
-    const EnvironmentVarAndHash var( name, hash );
+    const EnvironmentVarAndHash var( name, hash, isPath );
     m_ImportedEnvironmentVars.Append( var );
 
     return true;

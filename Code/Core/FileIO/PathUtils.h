@@ -44,6 +44,7 @@ public:
     static void EnsureTrailingSlash( AString & path );
     static void FixupFolderPath( AString & path );
     static void FixupFilePath( AString & path );
+    static bool CompactAndCheckFullPath( AString & path );
 
     // Misc
     //----------------

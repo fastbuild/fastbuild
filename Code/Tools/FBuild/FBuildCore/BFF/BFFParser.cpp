@@ -736,6 +736,10 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
     {
         return ParseImportDirective( directiveStart, iter );
     }
+    else if ( directive == "importfullpath" )
+    {
+        return ParseImportDirective( directiveStart, iter, true );
+    }
 
     // unknown
     Error::Error_1030_UnknownDirective( directiveStartIter, directive );
@@ -1018,6 +1022,10 @@ bool BFFParser::ParseIfCondition( const BFFIterator & directiveStart, BFFIterato
         {
             return ParseIfExistsCondition( iter, result );
         }
+        else if ( variableOrOperator == "existsfullpath" )
+        {
+            return ParseIfExistsCondition( iter, result, true );
+        }
 
         Error::Error_1042_UnknownOperator( variableOrOperatorStart, variableOrOperator );
         return false;
@@ -1036,7 +1044,7 @@ bool BFFParser::ParseIfCondition( const BFFIterator & directiveStart, BFFIterato
 
 // ParseIfExistsCondition
 //------------------------------------------------------------------------------
-bool BFFParser::ParseIfExistsCondition( BFFIterator & iter, bool & result )
+bool BFFParser::ParseIfExistsCondition( BFFIterator & iter, bool & result, bool isPath/* = false*/ )
 {
     const BFFIterator openToken = iter;
     iter++; // skip over opening token
@@ -1071,7 +1079,7 @@ bool BFFParser::ParseIfExistsCondition( BFFIterator & iter, bool & result )
     AStackString<> varValue;
     uint32_t varHash = 0;
     bool optional = true;
-    FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash );
+    FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash, isPath );
     result = ( varHash != 0 ); // a hash of 0 means the env var was not found
 
     return true;
@@ -1184,7 +1192,7 @@ bool BFFParser::CheckIfCondition( const BFFIterator & conditionStart, const BFFI
 
 // ParseImportDirective
 //------------------------------------------------------------------------------
-bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter, bool isPath/* = false*/ )
 {
     iter.SkipWhiteSpace();
 
@@ -1225,7 +1233,7 @@ bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIte
     AStackString<> varValue;
     uint32_t varHash = 0;
     bool optional = false;
-    if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash ) == false )
+    if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash, isPath ) == false )
     {
         Error::Error_1009_UnknownVariable( varNameStart, nullptr, varName );
         return false;

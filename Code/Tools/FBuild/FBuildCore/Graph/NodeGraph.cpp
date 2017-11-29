@@ -294,6 +294,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         AStackString<> varValue;
         uint32_t savedVarHash = 0;
         uint32_t importedVarHash = 0;
+        bool savedIsPath = false;
 
         for ( uint32_t i = 0; i < importedEnvironmentsVarsSize; ++i )
         {
@@ -305,9 +306,13 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
             {
                 return LoadResult::LOAD_ERROR;
             }
+            if (stream.Read( savedIsPath ) == false)
+            {
+                return LoadResult::LOAD_ERROR;
+            }
 
             bool optional = ( savedVarHash == 0 ); // a hash of 0 means the env var was missing when it was evaluated
-            if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, importedVarHash ) == false )
+            if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, importedVarHash, savedIsPath ) == false )
             {
                 // make sure the user knows why some things might re-build
                 FLOG_WARN( "'%s' Environment variable was not found - BFF will be re-parsed\n", varName.Get() );
@@ -316,7 +321,14 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
             if ( importedVarHash != savedVarHash )
             {
                 // make sure the user knows why some things might re-build
-                FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", varName.Get() );
+                if ( savedIsPath )
+                {
+                    FLOG_WARN( "The full path to which the environment variable '%s' resolves has changed to:\n'%s'- BFF will be re-parsed\n", varName.Get(), varValue.Get() );
+                }
+                else
+                {
+                    FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", varName.Get() );
+                }
                 return LoadResult::OK_BFF_CHANGED;
             }
         }
@@ -468,6 +480,7 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
             const FBuild::EnvironmentVarAndHash & varAndHash = importedEnvironmentsVars[i];
             stream.Write( varAndHash.GetName() );
             stream.Write( varAndHash.GetHash() );
+            stream.Write( varAndHash.IsPath() );
         }
 
         // 'LIB' env var hash
