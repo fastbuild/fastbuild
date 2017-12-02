@@ -2022,7 +2022,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 //------------------------------------------------------------------------------
 ObjectNode::CompileHelper::CompileHelper( bool handleOutput )
     : m_HandleOutput( handleOutput )
-    , m_Process( FBuild::Get().GetAbortBuildPointer() )
+    , m_Process( FBuild::GetAbortBuildPointer() )
     , m_OutSize( 0 )
     , m_ErrSize( 0 )
     , m_Result( 0 )
