@@ -306,6 +306,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                         AStackString<> fullIncludePath;
                         NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path
                         GetProjectRelativePath( projectBasePath, fullIncludePath, include );
+                        #if !defined( __WINDOWS__ )
+                            include.Replace( '/', '\\' ); // Convert to Windows-style slashes
+                        #endif
                     }
                     AStackString<> includePathsStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( includePaths, includePathsStr, nullptr, ";" );
