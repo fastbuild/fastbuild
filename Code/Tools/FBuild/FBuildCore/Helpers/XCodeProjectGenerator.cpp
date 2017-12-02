@@ -480,6 +480,9 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                     AStackString<> fullIncludePath;
                     NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path - TODO:C would be better to be project relative
                     include = fullIncludePath;
+                    #if defined( __WINDOWS__ )
+                        include.Replace( '\\', '/' ); // Convert to OSX style slashes
+                    #endif
                 }
                 AStackString<> includePathsStr;
                 ProjectGeneratorBase::ConcatIntellisenseOptions( includePaths, includePathsStr, "\t\t\t\t\t\"", "\",\n" );

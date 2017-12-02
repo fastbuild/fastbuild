@@ -351,51 +351,55 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
     const size_t optionLen = AString::StrLen( option );
     const size_t alternateOptionLen = alternateOption ? AString::StrLen( alternateOption ) : 0;
 
-    for ( AString & token : tokens )
+    for ( size_t i=0; i<tokens.GetSize(); ++i )
     {
+        AString & token = tokens[ i ];
+
         // strip quotes around token, e.g:    "-IFolder/Folder"
         if ( token.BeginsWith( '"' ) && token.EndsWith( '"' ) )
         {
-            token = AStackString<>( token.Get() + 1, token.GetEnd() - 1 );
+            token.Assign( token.Get() + 1, token.GetEnd() - 1 );
         }
 
-        // check for either option at start of token
-        if ( token.BeginsWith( option ) )
+        AStackString<> optionBody;
+
+        // Handle space between option and payload
+        if ( ( token == option ) || ( token == alternateOption ) )
         {
-            // quoted?
-            AStackString<> tmp;
-            if ( ( token[optionLen] == '"' ) && token.EndsWith( '"' ) )
+            // Handle an incomplete token at the end of list
+            if ( i == ( tokens.GetSize() - 1 ) )
             {
-                // use everything after token minus the quotes
-                tmp.Assign( token.Get() + ( optionLen + 1 ), token.GetEnd() - 1 );
+                break;
             }
-            else
-            {
-                // use everything after token
-                tmp.Assign( token.Get() + optionLen );
-            }
-            if (escapeQuotes)
-            {
-                tmp.Replace("\"", "\\\"");
-            }
-            outOptions.Append( tmp );
+
+            // Use next token
+            optionBody = tokens[ i + 1 ];
+        }
+        else if ( token.BeginsWith( option ) )
+        {
+            // use everything after token
+            optionBody.Assign( token.Get() + optionLen );
         }
         else if ( alternateOption && token.BeginsWith( alternateOption ) )
         {
-            AStackString<> tmp;
-            if ( ( token[alternateOptionLen] == '"' ) && token.EndsWith( '"' ) )
+            // use everything after token
+            optionBody.Assign( token.Get() + alternateOptionLen );
+        }
+
+        // Strip quotes around body (e.g. -I"Folder/Folder")
+        if ( optionBody.BeginsWith( '"' ) && optionBody.EndsWith( '"' ) )
+        {
+            optionBody.Trim( 1, 1 );
+        }
+
+        // Did we find something?
+        if ( optionBody.IsEmpty() == false )
+        {
+            if ( escapeQuotes )
             {
-                tmp.Assign( token.Get() + ( alternateOptionLen + 1 ), token.GetEnd() - 1 );
+                optionBody.Replace( "\"", "\\\"" );
             }
-            else
-            {
-                tmp.Assign( token.Get() + alternateOptionLen );
-            }
-            if (escapeQuotes)
-            {
-                tmp.Replace("\"", "\\\"");
-            }
-            outOptions.Append( tmp );
+            outOptions.Append( optionBody );
         }
     }
 }
