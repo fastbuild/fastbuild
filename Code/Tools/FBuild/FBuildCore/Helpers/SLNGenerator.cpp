@@ -360,7 +360,7 @@ void SLNGenerator::WriteNestedProjects( const Array< AString > & solutionProject
     const AString * const solutionProjectsToFolderEnd = solutionProjectsToFolder.End();
     for( const AString * it = solutionProjectsToFolder.Begin() ; it != solutionProjectsToFolderEnd ; ++it )
     {
-        Write( it->Get() );
+        Write( "%s", it->Get() );
     }
 
     // Write every intermediate path

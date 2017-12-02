@@ -676,9 +676,9 @@ void Error::FormatError( const BFFIterator & iter,
     }
 
     AString::Copy( "^", c, 1 );
-    FLOG_ERROR( buffer.Get() );
+    FLOG_ERROR( "%s", buffer.Get() );
     AString::Copy( "\\--here", c, 8 );
-    FLOG_ERROR( buffer.Get() );
+    FLOG_ERROR( "%s", buffer.Get() );
 }
 
 //------------------------------------------------------------------------------

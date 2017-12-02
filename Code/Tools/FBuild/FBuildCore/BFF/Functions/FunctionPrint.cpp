@@ -133,7 +133,7 @@ FunctionPrint::FunctionPrint()
         indentStr += "    ";
     }
     ++indent;
-    FLOG_BUILD( indentStr.Get() );
+    FLOG_BUILD( "%s", indentStr.Get() );
 
     switch ( var.GetType() )
     {

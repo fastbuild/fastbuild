@@ -268,7 +268,7 @@ void Worker::UpdateUI()
     if ( InConsoleMode() )
     {
         status += '\n';
-        StatusMessage( status.Get() );
+        StatusMessage( "%s", status.Get() );
     }
     else
     {
