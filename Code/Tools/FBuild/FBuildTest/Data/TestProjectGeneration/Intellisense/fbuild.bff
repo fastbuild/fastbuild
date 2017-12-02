@@ -1,0 +1,84 @@
+//
+// Intellisense - Various targets to check Intellisense generation
+//
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Common config
+//------------------------------------------------------------------------------
+.Out                                = '$Out$\Test\ProjectGeneration\Intellisense'
+
+// ObjectList
+//------------------------------------------------------------------------------
+ObjectList( 'ObjectList' )
+{
+    .CompilerOptions    + ' -DINTELLISENSE_DEFINE'          // Define to be checked by test
+                        + ' -IIntellisense/Include/Path'    // Include to be checked by test
+    .CompilerOutputPath = '$Out$/'
+}
+VCXProject( 'ObjectList-proj' )
+{
+    .Config             = [ .Platform = 'Win32' .Config = 'Debug' .Target = 'ObjectList' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$\ObjectList.vcxproj'
+}
+
+// Library
+//------------------------------------------------------------------------------
+Library( 'Library' )
+{
+    .CompilerOptions    + ' -DINTELLISENSE_DEFINE'          // Define to be checked by test
+                        + ' -IIntellisense/Include/Path'    // Include to be checked by test
+    .CompilerOutputPath = '$Out$/'
+    .LibrarianOutput    = '$Out$/Library.lib'
+}
+VCXProject( 'Library-proj' )
+{
+    .Config             = [ .Platform = 'Win32' .Config = 'Debug' .Target = 'Library' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$\Library.vcxproj'
+}
+
+// Executable
+//------------------------------------------------------------------------------
+Executable( 'Executable' )
+{
+    .Libraries          = 'Library' // This provides Intellisense info
+    .LinkerOutput       = '$Out$/Executable.exe'
+}
+VCXProject( 'Executable-proj' )
+{
+    .Config             = [ .Platform = 'Win32' .Config = 'Debug' .Target = 'Executable' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$\Executable.vcxproj'
+}
+
+// Test
+//------------------------------------------------------------------------------
+Test( 'Test' )
+{
+    .TestExecutable     = 'Executable' // This provides Intellisense info
+    .TestOutput         = '$Out$/TestOutput.txt'
+}
+VCXProject( 'Test-proj' )
+{
+    .Config             = [ .Platform = 'Win32' .Config = 'Debug' .Target = 'Test' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$\Test.vcxproj'
+}
+
+// Alias to build
+//------------------------------------------------------------------------------
+Alias( 'Intellisense' )
+{
+    .Targets    = {
+                    'ObjectList-proj',
+                    'Library-proj',
+                    'Executable-proj'
+                    'Test-proj'
+                  }
+}
+
+//------------------------------------------------------------------------------

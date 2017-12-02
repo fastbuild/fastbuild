@@ -29,9 +29,13 @@ private:
     void TestFunction() const;
     void TestFunction_NoRebuild() const;
     void TestFunction_Speed() const;
+    void VCXProj_Intellisense() const;
 
     // XCode
     void XCode() const;
+
+    // Helpers
+    void VCXProj_Intellisense_Check( const char * projectFile ) const;
 };
 
 // Register Tests
@@ -41,6 +45,7 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( TestFunction )
     REGISTER_TEST( TestFunction_NoRebuild )
     REGISTER_TEST( TestFunction_Speed )
+    REGISTER_TEST( VCXProj_Intellisense )
     REGISTER_TEST( XCode )
 REGISTER_TESTS_END
 
@@ -267,6 +272,57 @@ void TestProjectGeneration::TestFunction_Speed() const
         float time = t.GetElapsed();
         OUTPUT( "Gen vcxproj.filters: %2.3fs\n", time );
     }
+}
+
+// VCXProj_Intellisense
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VCXProj_Intellisense() const
+{
+    // Parse bff
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestProjectGeneration/Intellisense/fbuild.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Generate project
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Intellisense" ) ) );
+
+    // Ensure intellisense info is present in project files
+    VCXProj_Intellisense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/ObjectList.vcxproj" );
+    VCXProj_Intellisense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/Library.vcxproj" );
+    VCXProj_Intellisense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/Executable.vcxproj" );
+    VCXProj_Intellisense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/Test.vcxproj" );
+}
+
+// VCXProj_Intellisense_Check
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile ) const
+{
+    // Read Project
+    FileStream f;
+    TEST_ASSERT( f.Open( projectFile, FileStream::READ_ONLY ) );
+    AString buffer;
+    buffer.SetLength( (uint32_t)f.GetFileSize() );
+    TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+    Array< AString > tokens;
+    buffer.Tokenize( tokens, '\n' );
+
+    // Check
+    bool foundDefines = false;
+    bool foundIncludes = false;
+    for ( const AString & token : tokens )
+    {
+        if ( token.Find( "NMakePreprocessorDefinitions" ) )
+        {
+            foundDefines = ( token.Find( "INTELLISENSE_DEFINE" ) != nullptr );
+        }
+        else if ( token.Find( "NMakeIncludeSearchPath" ) )
+        {
+            foundIncludes = ( token.Find( "Intellisense\\Include\\Path" ) != nullptr );
+        }
+    }
+    TEST_ASSERT( foundDefines );
+    TEST_ASSERT( foundIncludes );
 }
 
 // XCode

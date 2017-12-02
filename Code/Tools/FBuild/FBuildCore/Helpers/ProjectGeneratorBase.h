@@ -9,6 +9,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------'
+class Dependencies;
 class Node;
 class ObjectListNode;
 
@@ -32,6 +33,7 @@ public:
 
     // Intellisense Helpers
     static const ObjectListNode * FindTargetForIntellisenseInfo( const Node * node );
+    static const ObjectListNode * FindTargetForIntellisenseInfo( const Dependencies & deps );
     static void ExtractIntellisenseOptions( const AString & compilerArgs,
                                             const char * option,
                                             const char * alternateOption,

@@ -279,20 +279,20 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
             case Node::EXE_NODE:
             {
                 // For Exe use first library
-                const Dependencies & deps = node->GetStaticDependencies();
-                if ( deps.IsEmpty() == false )
+                const ObjectListNode * n = FindTargetForIntellisenseInfo( node->GetStaticDependencies() );
+                if ( n )
                 {
-                    return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+                    return n;
                 }
                 break; // Nothing found
             }
             case Node::DLL_NODE:
             {
                 // For DLL use first library
-                const Dependencies & deps = node->GetStaticDependencies();
-                if ( deps.IsEmpty() == false )
+                const ObjectListNode * n = FindTargetForIntellisenseInfo( node->GetStaticDependencies() );
+                if ( n )
                 {
-                    return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+                    return n;
                 }
                 break; // Nothing found
             }
@@ -308,14 +308,29 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
             }
             case Node::ALIAS_NODE:
             {
-                const Dependencies & deps = node->CastTo< AliasNode >()->GetAliasedNodes();
-                if ( deps.IsEmpty() == false )
+                const ObjectListNode * n = FindTargetForIntellisenseInfo( node->CastTo< AliasNode >()->GetAliasedNodes() );
+                if ( n )
                 {
-                    return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+                    return n;
                 }
                 break; // Nothing aliased - ignore
             }
             default: break; // Unsupported type - ignore
+        }
+    }
+    return nullptr;
+}
+
+// FindTargetForIntellisenseInfo
+//------------------------------------------------------------------------------
+/*static*/ const ObjectListNode * ProjectGeneratorBase::FindTargetForIntellisenseInfo( const Dependencies & deps )
+{
+    for ( const Dependency & dep : deps )
+    {
+        const ObjectListNode * n = FindTargetForIntellisenseInfo( dep.GetNode() );
+        if ( n )
+        {
+            return n;
         }
     }
     return nullptr;
