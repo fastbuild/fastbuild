@@ -51,7 +51,7 @@ REFLECT_END( LinkerNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 LinkerNode::LinkerNode()
-    : FileNode( AString::GetEmpty() )
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_LinkerType( "auto" )
 {
     m_LastBuildTimeMs = 20000; // Assume link times are fairly long by default

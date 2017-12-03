@@ -707,11 +707,11 @@ FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
     {
         AStackString< 512 > fullPath;
         CleanPath( fileName, fullPath );
-        node = FNEW( FileNode( fullPath ) );
+        node = FNEW( FileNode( fullPath, Node::FLAG_TRIVIAL_BUILD ) );
     }
     else
     {
-        node = FNEW( FileNode( fileName ) );
+        node = FNEW( FileNode( fileName, Node::FLAG_TRIVIAL_BUILD ) );
     }
 
     AddNode( node );
