@@ -91,6 +91,8 @@ FBuild::FBuild( const FBuildOptions & options )
     FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );
 
     Function::Create();
+
+    NetworkStartupHelper::SetMasterShutdownFlag( &s_AbortBuild );
 }
 
 // DESTRUCTOR

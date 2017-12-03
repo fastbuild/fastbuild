@@ -57,7 +57,6 @@ Client::Client( const Array< AString > & workerList,
 Client::~Client()
 {
     SetShuttingDown();
-    m_EnsureNetworkStarted.Stop();
 
     m_ShouldExit = true;
     while ( m_Exited == false )

@@ -12,55 +12,45 @@
 //------------------------------------------------------------------------------
 // Static Data
 //------------------------------------------------------------------------------
+/*static*/ bool NetworkStartupHelper::s_Started = false;
+/*static*/ Mutex NetworkStartupHelper::s_Mutex;
+/*static*/ volatile bool * NetworkStartupHelper::s_MasterShutdownFlag = nullptr;
 #if defined( __WINDOWS__ )
     /*static*/ WSADATA NetworkStartupHelper::s_WSAData;
 #endif
-/*static*/ Mutex NetworkStartupHelper::s_Mutex;
-/*static*/ volatile uint32_t NetworkStartupHelper::s_RefCount( 0 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 NetworkStartupHelper::NetworkStartupHelper()
-    : m_Stopped( false )
 {
     MutexHolder mh( s_Mutex );
-
-    s_RefCount++;
-    if ( s_RefCount > 1 )
+    if ( s_Started )
     {
-        return; // already previously started
+        return;
     }
 
     // start up
     #if defined( __WINDOWS__ )
         VERIFY( WSAStartup( MAKEWORD( 2, 2 ), &s_WSAData ) == 0 );
     #endif
+
+    s_Started = true;
 }
 
-// Stop
+// SetMasterShutdownFlag
 //------------------------------------------------------------------------------
-void NetworkStartupHelper::Stop()
-{
-    // Already manually stopped?
-    if ( m_Stopped == true )
-    {
-        return;
-    }
-    m_Stopped = true;
-
+/*static*/ void NetworkStartupHelper::SetMasterShutdownFlag( volatile bool * shutdownFlag )
+{ 
     MutexHolder mh( s_Mutex );
+    s_MasterShutdownFlag = shutdownFlag;
+}
 
-    ASSERT( s_RefCount > 0 );
-    s_RefCount--;
-    if ( s_RefCount > 0 )
-    {
-        return; // still in use
-    }
-
-    // clean up
-    #if defined( __WINDOWS__ )
-        WSACleanup();
-    #endif
+// IsShuttingDown
+//------------------------------------------------------------------------------
+/*static*/ bool NetworkStartupHelper::IsShuttingDown()
+{
+    MutexHolder mh( s_Mutex );
+    return ( s_MasterShutdownFlag ) ? ( *s_MasterShutdownFlag ) : false;
 }
 
 //------------------------------------------------------------------------------
