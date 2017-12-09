@@ -173,6 +173,7 @@ bool IdleDetection::IsIdleInternal()
                         if (m_ProcessesInOurHierarchy[i].m_AliveValue != aliveValue)
                         {
                             // dead process
+                            CloseHandle( m_ProcessesInOurHierarchy[ i ].m_ProcessHandle );
                             m_ProcessesInOurHierarchy.EraseIndex(i);
                         }
                     }
