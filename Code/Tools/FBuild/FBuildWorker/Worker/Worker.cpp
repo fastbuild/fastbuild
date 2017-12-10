@@ -329,8 +329,15 @@ void Worker::CheckForExeUpdate()
         return; // not running as a copy to allow restarts
     }
 
-    /// get the current last write time
+    // get the current last write time
     uint64_t lastWriteTime = FileIO::GetFileLastWriteTime( m_BaseExeName );
+
+    // If exe is has been deleted, but not replaced, do nothing
+    // (may be part of two step delete/replace)
+    if ( lastWriteTime == 0 )
+    {
+        return;
+    }
 
     // store the time when we were launch (first time in this function)
     if ( m_LastWriteTime == 0 )
