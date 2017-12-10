@@ -61,9 +61,9 @@ public:
     AString & operator += ( char c );
     AString & operator += ( const char * string );
     AString & operator += ( const AString & string );
-    inline void Append( const AString & string ) { this->operator +=( string ); }
-    void Append( const char * string, size_t len );
-    void AppendFormat( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    inline AString & Append( const AString & string ) { return this->operator +=( string ); }
+    AString & Append( const char * string, size_t len );
+    AString & AppendFormat( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // comparison
     bool operator == ( const char * other ) const;
@@ -82,8 +82,8 @@ public:
 
     inline bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
 
-    void Format( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
-    void VFormat( const char * fmtString, va_list arg );
+    AString & Format( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    AString & VFormat( const char * fmtString, va_list arg );
 
     void Tokenize( Array< AString > & tokens, char splitChar = ' ' ) const;
 
