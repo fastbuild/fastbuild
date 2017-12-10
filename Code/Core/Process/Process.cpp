@@ -816,7 +816,7 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     #if defined( __WINDOWS__ )
         return ::GetCurrentProcessId();
     #elif defined( __LINUX__ )
-        return 0; // TODO: Implement GetCurrentId()
+        return ::getpid();
     #elif defined( __OSX__ )
         return 0; // TODO: Implement GetCurrentId()
     #endif

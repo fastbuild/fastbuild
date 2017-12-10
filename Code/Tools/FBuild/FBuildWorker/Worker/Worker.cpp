@@ -149,7 +149,7 @@ int Worker::Work()
 
         PROFILE_SYNCHRONIZE
 
-        Thread::Sleep( 100 );
+        Thread::Sleep( 500 );
     }
 
     // allow to UI to shutdown

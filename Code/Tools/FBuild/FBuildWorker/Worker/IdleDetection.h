@@ -7,6 +7,7 @@
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
 #include "Core/Env/Types.h"
+#include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 
 // Forward Declarations
@@ -27,16 +28,6 @@ public:
     inline bool IsIdle() const { return m_IsIdle; }
 
 private:
-    bool IsIdleInternal();
-
-    Timer   m_Timer;
-    #if defined( __WINDOWS__ )
-        float   m_CPUUsageFASTBuild;
-        float   m_CPUUsageTotal;
-    #endif
-    bool    m_IsIdle;
-    int32_t m_IdleSmoother;
-
     // struct to track processes with
     struct ProcessInfo
     {
@@ -44,15 +35,34 @@ private:
 
         uint32_t    m_PID;
         uint32_t    m_AliveValue;
-        void *      m_ProcessHandle;
+        #if defined( __WINDOWS__ )
+            void *      m_ProcessHandle;
+        #endif
         uint64_t    m_LastTime;
     };
-    Array< ProcessInfo > m_ProcessesInOurHierarchy;
 
-    #if defined( __WINDOWS__ )
-        uint64_t m_LastTimeIdle;
-        uint64_t m_LastTimeBusy;
+    bool IsIdleInternal();
+
+    static void GetSystemTotalCPUUsage( uint64_t & outIdleTime,
+                                        uint64_t & outKernTime,
+                                        uint64_t & outUserTime );
+    static void GetProcessTime( const ProcessInfo & pi,
+                                uint64_t & outKernTime,
+                                uint64_t & outUserTime );
+    void UpdateProcessList();
+    #if defined( __LINUX__ )
+        static bool GetProcessInfoString( const char * fileName,
+                                          AStackString< 1024 > & outProcessInfoString );
     #endif
+
+    Timer   m_Timer;
+    float   m_CPUUsageFASTBuild;
+    float   m_CPUUsageTotal;
+    bool    m_IsIdle;
+    int32_t m_IdleSmoother;
+    Array< ProcessInfo > m_ProcessesInOurHierarchy;
+    uint64_t m_LastTimeIdle;
+    uint64_t m_LastTimeBusy;
 };
 
 //------------------------------------------------------------------------------
