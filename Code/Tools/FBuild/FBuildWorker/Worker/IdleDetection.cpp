@@ -25,7 +25,7 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define IDLE_DETECTION_THRESHOLD_PERCENT ( 10.0f )
+#define IDLE_DETECTION_THRESHOLD_PERCENT ( 20.0f )
 #define IDLE_CHECK_DELAY_SECONDS ( 0.1f )
 
 // CONSTRUCTOR
