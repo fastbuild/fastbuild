@@ -987,6 +987,10 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
         {
             return PopulateBool( iter, base, property, variable );
         }
+        case PT_INT32:
+        {
+            return PopulateInt32( iter, base, property, variable );
+        }
         case PT_UINT32:
         {
             return PopulateUInt32( iter, base, property, variable );
@@ -1248,6 +1252,34 @@ bool Function::PopulateBool( const BFFIterator & iter, void * base, const Reflec
     }
 
     Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_BOOL );
+    return false;
+}
+
+// PopulateInt32
+//------------------------------------------------------------------------------
+bool Function::PopulateInt32( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
+{
+    if ( variable->IsInt() )
+    {
+        const int32_t value = variable->GetInt();
+
+        // Check range
+        const Meta_Range * rangeMD = property.HasMetaData< Meta_Range >();
+        if ( rangeMD )
+        {
+            if ( ( value < rangeMD->GetMin() ) || ( value > rangeMD->GetMax() ) )
+            {
+                Error::Error_1054_IntegerOutOfRange( iter, this, variable->GetName().Get(), rangeMD->GetMin(), rangeMD->GetMax() );
+                return false;
+            }
+        }
+
+        // Int32
+        property.SetProperty( base, value );
+        return true;
+    }
+
+    Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_INT );
     return false;
 }
 

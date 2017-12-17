@@ -124,12 +124,13 @@ void TestGraph::TestNodeTypes() const
     TEST_ASSERT( AStackString<>( "Directory" ) == dn->GetTypeName() );
 
     {
-        Dependencies empty;
-        Dependencies inputs;
-        inputs.Append( Dependency( fn ) );
-        Node * n = ng.CreateExecNode( AStackString<>( "dst" ), inputs, fn, AStackString<>( "args" ), AStackString<>( "workingDir" ), 0, empty, false );
+        #if defined( __WINDOWS__ )
+            Node * n = ng.CreateExecNode( AStackString<>( "c:\\execdummy" ) );
+        #else
+            Node * n = ng.CreateExecNode( AStackString<>( "/execdummy/execdummy" ) );
+        #endif
         TEST_ASSERT( n->GetType() == Node::EXEC_NODE );
-        TEST_ASSERT( ExecNode::GetTypeS() == Node::EXEC_NODE);
+        TEST_ASSERT( ExecNode::GetTypeS() == Node::EXEC_NODE );
         TEST_ASSERT( AStackString<>( "Exec" ) == n->GetTypeName() );
     }
     {

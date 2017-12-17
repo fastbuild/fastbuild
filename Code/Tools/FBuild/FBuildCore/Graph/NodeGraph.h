@@ -53,7 +53,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 100 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 101 };
 
     bool IsValid() const
     {
@@ -101,14 +101,7 @@ public:
     RemoveDirNode * CreateRemoveDirNode(const AString & nodeName,
                                         Dependencies & staticDeps,
                                         const Dependencies & preBuildDependencies );
-    ExecNode * CreateExecNode( const AString & dstFileName,
-                               const Dependencies & inputFiles,
-                               FileNode * executable,
-                               const AString & arguments,
-                               const AString & workingDir,
-                               int32_t expectedReturnCode,
-                               const Dependencies & preBuildDependencies,
-                               bool useStdOutAsOutput );
+    ExecNode * CreateExecNode( const AString & dstFileName );
     FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
     DirectoryListNode * CreateDirectoryListNode( const AString & name );
     LibraryNode *   CreateLibraryNode( const AString & libraryName );

@@ -676,21 +676,13 @@ RemoveDirNode * NodeGraph::CreateRemoveDirNode( const AString & nodeName,
 
 // CreateExecNode
 //------------------------------------------------------------------------------
-ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName,
-                                      const Dependencies & inputFiles,
-                                      FileNode * executable,
-                                      const AString & arguments,
-                                      const AString & workingDir,
-                                      int32_t expectedReturnCode,
-                                      const Dependencies & preBuildDependencies,
-                                      bool useStdOutAsOutput )
+ExecNode * NodeGraph::CreateExecNode( const AString & nodeName )
 {
     ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( nodeName ) );
 
-    AStackString< 512 > fullPath;
-    CleanPath( dstFileName, fullPath );
-
-    ExecNode * node = FNEW( ExecNode( fullPath, inputFiles, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies, useStdOutAsOutput ) );
+    ExecNode * node = FNEW( ExecNode() );
+    node->SetName( nodeName );
     AddNode( node );
     return node;
 }
