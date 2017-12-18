@@ -92,6 +92,7 @@ protected:
     bool                m_LinkerLinkObjects             = false;
     AString             m_LinkerStampExe;
     AString             m_LinkerStampExeArgs;
+    Array< AString >    m_PreBuildDependencyNames;
 
     // Internal State
     uint32_t            m_Flags                         = 0;

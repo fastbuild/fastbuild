@@ -32,6 +32,10 @@ Builds an executable by linking together one or more libraries.
   .LinkerType              ; (optional) Specify the linker type. Valid options include: 
                            ; auto, msvc, gcc, snc-ps3, clang-orbis, greenhills-exlr, codewarrior-ld
                            ; Default is 'auto' (use the linker executable name to detect)
+
+  ; Additional options
+  .PreBuildDependencies   ; (optional) Force targets to be built before this Executable (Rarely needed,
+                          ; but useful when Executable relies on externally generated files).                           
 }
 </div>
 <p><b>Build-Time Substitutions</b>
