@@ -663,13 +663,12 @@ CopyDirNode * NodeGraph::CreateCopyDirNode( const AString & nodeName )
 
 // CreateRemoveDirNode
 //------------------------------------------------------------------------------
-RemoveDirNode * NodeGraph::CreateRemoveDirNode( const AString & nodeName,
-                                                Dependencies & staticDeps,
-                                                const Dependencies & preBuildDependencies )
+RemoveDirNode * NodeGraph::CreateRemoveDirNode( const AString & nodeName )
 {
     ASSERT( Thread::IsMainThread() );
 
-    RemoveDirNode * node = FNEW( RemoveDirNode( nodeName, staticDeps, preBuildDependencies ) );
+    RemoveDirNode * node = FNEW( RemoveDirNode() );
+    node->SetName( nodeName );
     AddNode( node );
     return node;
 }
