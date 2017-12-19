@@ -48,9 +48,9 @@ public:
     bool SaveDependencyGraph( const char * nodeGraphDBFile ) const;
     void SaveDependencyGraph( IOStream & memorySteam, const char* nodeGraphDBFile ) const;
 
-    const FBuildOptions & GetOptions() const { return m_Options; }
+    static const FBuildOptions & GetOptions() { return s_Options; }
 
-    const AString & GetWorkingDir() const { return m_Options.GetWorkingDir(); }
+    const AString & GetWorkingDir() const { return s_Options.GetWorkingDir(); }
 
     static const char * GetDefaultBFFFileName();
 
@@ -129,7 +129,7 @@ private:
 
     FBuildStats m_BuildStats;
 
-    FBuildOptions m_Options;
+    static FBuildOptions s_Options;
 
     WorkerBrokerage m_WorkerBrokerage;
 
