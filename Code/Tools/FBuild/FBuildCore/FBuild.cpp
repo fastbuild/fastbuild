@@ -50,6 +50,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FBuild::s_StopBuild( false );
 /*static*/ volatile bool FBuild::s_AbortBuild( false );
+FBuildOptions FBuild::s_Options;
 
 // CONSTRUCTOR - FBuild
 //------------------------------------------------------------------------------
@@ -78,17 +79,17 @@ FBuild::FBuild( const FBuildOptions & options )
     m_Macros = FNEW( BFFMacros() );
 
     // store all user provided options
-    m_Options = options;
+    s_Options = options;
 
     // track the old working dir to restore if modified (mainly for unit tests)
     VERIFY( FileIO::GetCurrentDir( m_OldWorkingDir ) );
 
     // poke options where required
-    FLog::SetShowInfo( m_Options.m_ShowInfo );
-    FLog::SetShowBuildCommands( m_Options.m_ShowBuildCommands );
-    FLog::SetShowErrors( m_Options.m_ShowErrors );
-    FLog::SetShowProgress( m_Options.m_ShowProgress );
-    FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );
+    FLog::SetShowInfo( s_Options.m_ShowInfo );
+    FLog::SetShowBuildCommands( s_Options.m_ShowBuildCommands );
+    FLog::SetShowErrors( s_Options.m_ShowErrors );
+    FLog::SetShowProgress( s_Options.m_ShowProgress );
+    FLog::SetMonitorEnabled( s_Options.m_EnableMonitor );
 
     Function::Create();
 
@@ -129,14 +130,14 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     PROFILE_FUNCTION
 
     // handle working dir
-    if ( !FileIO::SetCurrentDir( m_Options.GetWorkingDir() ) )
+    if ( !FileIO::SetCurrentDir( s_Options.GetWorkingDir() ) )
     {
-        FLOG_ERROR( "Failed to set working dir: '%s' (error: %u)", m_Options.GetWorkingDir().Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to set working dir: '%s' (error: %u)", s_Options.GetWorkingDir().Get(), Env::GetLastErr() );
         return false;
     }
 
-    const char * bffFile = m_Options.m_ConfigFile.IsEmpty() ? GetDefaultBFFFileName()
-                                                            : m_Options.m_ConfigFile.Get();
+    const char * bffFile = s_Options.m_ConfigFile.IsEmpty() ? GetDefaultBFFFileName()
+                                                            : s_Options.m_ConfigFile.Get();
 
     if ( nodeGraphDBFile != nullptr )
     {
@@ -169,7 +170,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : m_DependencyGraph->CreateSettingsNode( AStackString<>( "$$Settings$$" ) ); // Create a default
 
     // if the cache is enabled, make sure the path is set and accessible
-    if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite )
+    if ( s_Options.m_UseCacheRead || s_Options.m_UseCacheWrite )
     {
         if ( !m_Settings->GetCachePluginDLL().IsEmpty() )
         {
@@ -182,14 +183,14 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 
         if ( m_Cache->Init( m_Settings->GetCachePath() ) == false )
         {
-            m_Options.m_UseCacheRead = false;
-            m_Options.m_UseCacheWrite = false;
+            s_Options.m_UseCacheRead = false;
+            s_Options.m_UseCacheWrite = false;
         }
     }
 
     //
     // create the connection management system if we might need it
-    if ( m_Options.m_AllowDistributed )
+    if ( s_Options.m_AllowDistributed )
     {
         Array< AString > workers;
         if ( m_Settings->GetWorkerList().IsEmpty() )
@@ -206,12 +207,12 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         if ( workers.IsEmpty() )
         {
             FLOG_WARN( "No workers available - Distributed compilation disabled" );
-            m_Options.m_AllowDistributed = false;
+            s_Options.m_AllowDistributed = false;
         }
         else
         {
             OUTPUT( "Distributed Compilation : %u Workers in pool\n", (uint32_t)workers.GetSize() );
-            m_Client = FNEW( Client( workers, m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
+            m_Client = FNEW( Client( workers, m_Settings->GetWorkerConnectionLimit(), s_Options.m_DistVerbose ) );
         }
     }
 
@@ -379,7 +380,7 @@ bool FBuild::Build( Node * nodeToBuild )
     s_AbortBuild = false; // allow multiple runs in same process
 
     // create worker threads
-    m_JobQueue = FNEW( JobQueue( m_Options.m_NumWorkerThreads ) );
+    m_JobQueue = FNEW( JobQueue( s_Options.m_NumWorkerThreads ) );
 
     m_Timer.Start();
     m_LastProgressOutputTime = 0.0f;
@@ -389,7 +390,7 @@ bool FBuild::Build( Node * nodeToBuild )
     FLog::StartBuild();
 
     // create worker dir for main thread build case
-    if ( m_Options.m_NumWorkerThreads == 0 )
+    if ( s_Options.m_NumWorkerThreads == 0 )
     {
         WorkerThread::CreateThreadLocalTmpDir();
     }
@@ -408,7 +409,7 @@ bool FBuild::Build( Node * nodeToBuild )
             m_DependencyGraph->DoBuildPass( nodeToBuild );
         }
 
-        if ( m_Options.m_NumWorkerThreads == 0 )
+        if ( s_Options.m_NumWorkerThreads == 0 )
         {
             // no local threads - do build directly
             WorkerThread::Update();
@@ -430,7 +431,7 @@ bool FBuild::Build( Node * nodeToBuild )
                 //  - aborted build, so workers can be incomplete
                 m_JobQueue->SignalStopWorkers();
                 stopping = true;
-                if ( m_Options.m_FastCancel )
+                if ( s_Options.m_FastCancel )
                 {
                     // Notify the system that the master process has been killed and that it can kill its process.
                     s_AbortBuild = true;
@@ -440,9 +441,9 @@ bool FBuild::Build( Node * nodeToBuild )
 
         if ( !stopping )
         {
-            if ( m_Options.m_WrapperChild )
+            if ( s_Options.m_WrapperChild )
             {
-                SystemMutex wrapperMutex( m_Options.GetMainProcessMutexName().Get() );
+                SystemMutex wrapperMutex( s_Options.GetMainProcessMutexName().Get() );
                 if ( wrapperMutex.TryLock() )
                 {
                     // parent process has terminated
@@ -476,7 +477,7 @@ bool FBuild::Build( Node * nodeToBuild )
     // This is desireable because:
     // - it will save parsing the bff next time
     // - it will record the items that did build, so they won't build again
-    if ( m_Options.m_SaveDBOnCompletion )
+    if ( s_Options.m_SaveDBOnCompletion )
     {
         SaveDependencyGraph( m_DependencyGraphFile.Get() );
     }
@@ -571,9 +572,9 @@ void FBuild::GetLibEnvVar( AString & value ) const
 // AbortBuild
 //------------------------------------------------------------------------------
 void FBuild::AbortBuild()
-{
-    s_StopBuild = true;
-    if ( FBuild::Get().m_Options.m_FastCancel )
+{ 
+    s_StopBuild = true; 
+    if ( FBuild::GetOptions().m_FastCancel )
     {
         // Notify the system that the master process has been killed and that it can kill its process.
         s_AbortBuild = true;
