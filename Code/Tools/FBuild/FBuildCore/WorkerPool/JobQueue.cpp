@@ -630,7 +630,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
          ( node->GetType() == Node::TEST_NODE ) )
     {
         nodeRelevantToMonitorLog = true;
-        FLOG_MONITOR( "START_JOB local \"%s\" \n", nodeName.Get() );
+        FLOG_MONITOR( "START_JOB local \"%s\" %s\n", nodeName.Get(), node->GetTypeName() );
     }
 
     // make sure the output path exists for files

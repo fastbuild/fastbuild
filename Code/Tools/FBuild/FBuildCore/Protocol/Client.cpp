@@ -489,7 +489,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     // output to signify remote start
     FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
-    FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
+    FLOG_MONITOR( "START_JOB %s \"%s\" Object\n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
 
     {
         PROFILE_SECTION( "SendJob" )

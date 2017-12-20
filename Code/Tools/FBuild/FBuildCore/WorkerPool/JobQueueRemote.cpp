@@ -281,7 +281,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 
     if ( job->IsLocal() )
     {
-        FLOG_MONITOR( "START_JOB local \"%s\" \n", job->GetNode()->GetName().Get() );
+        FLOG_MONITOR( "START_JOB local \"%s\" %s %s\n", job->GetNode()->GetName().Get(), job->GetNode()->GetTypeName(), racingRemoteJob ? "RACE" : "" );
     }
 
     // remote tasks must output to a tmp file
