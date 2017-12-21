@@ -7,6 +7,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
+#include "Tools/FBuild/FBuildCore/Helpers/CtrlCHandler.h"
 
 #include "Core/Process/Process.h"
 #include "Core/Process/SharedMemory.h"
@@ -20,8 +21,6 @@
 #include <stdio.h>
 #if defined( __WINDOWS__ )
     #include <windows.h>
-#elif defined( __LINUX__ )
-    #include <signal.h>
 #endif
 
 // Return Codes
@@ -40,13 +39,6 @@ enum ReturnCodes
 
 // Headers
 //------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-    BOOL CtrlHandler( DWORD fdwCtrlType ); // Handle Ctrl+C etc
-#elif defined( __LINUX__ )
-    void CtrlHandler( int dummy );
-#else
-    // TODO:MAC Implement CtrlHandler
-#endif
 int WrapperMainProcess( const AString & args, const FBuildOptions & options, SystemMutex & finalProcess );
 int WrapperIntermediateProcess( const FBuildOptions & options );
 int Main(int argc, char * argv[]);
@@ -82,11 +74,8 @@ int Main(int argc, char * argv[])
 
     Timer t;
 
-    #if defined( __WINDOWS__ )
-        VERIFY( SetConsoleCtrlHandler( (PHANDLER_ROUTINE)CtrlHandler, TRUE ) ); // Register
-    #elif defined( __LINUX__ )
-        signal( SIGINT, CtrlHandler );
-    #endif
+    // Register Ctrl-C Handler
+    CtrlCHandler ctrlCHandler;
 
     // handle cmd line args
     FBuildOptions options;
@@ -189,12 +178,14 @@ int Main(int argc, char * argv[])
         {
             sharedData->ReturnCode = FBUILD_ERROR_LOADING_BFF;
         }
+        ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
         return FBUILD_ERROR_LOADING_BFF;
     }
 
     if ( options.m_DisplayTargetList )
     {
         fBuild.DisplayTargetList();
+        ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
         return FBUILD_OK;
     }
 
@@ -227,53 +218,9 @@ int Main(int argc, char * argv[])
         FLOG_BUILD( "Time: %05.3fs\n", seconds );
     }
 
+    ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
     return ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;
 }
-
-// CtrlHandler
-//------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-    BOOL CtrlHandler( DWORD UNUSED( fdwCtrlType ) )
-    {
-        // tell FBuild we want to stop the build cleanly
-        FBuild::AbortBuild();
-
-        // only printf output for the first break received
-        static bool received = false;
-        if ( received == false )
-        {
-            received = true;
-
-            // get the console colours
-            CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
-            VERIFY( GetConsoleScreenBufferInfo( GetStdHandle( STD_OUTPUT_HANDLE ), &consoleInfo ) );
-
-            // print a big red msg
-            VERIFY( SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_RED ) );
-            OUTPUT( "<<<< ABORT SIGNAL RECEIVED >>>>\n" );
-
-            // put the console back to normal
-            VERIFY( SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), consoleInfo.wAttributes ) );
-        }
-
-        return TRUE; // tell Windows we've "handled" it
-    }
-#elif defined( __LINUX__ )
-
-    void CtrlHandler( int UNUSED( dummy ) )
-    {
-        // tell FBuild we want to stop the build cleanly
-        FBuild::AbortBuild();
-
-        // only printf output for the first break received
-        static bool received = false;
-        if ( received == false )
-        {
-            received = true;
-            OUTPUT( "<<<< ABORT SIGNAL RECEIVED >>>>\n" );
-        }
-    }
-#endif
 
 // WrapperMainProcess
 //------------------------------------------------------------------------------

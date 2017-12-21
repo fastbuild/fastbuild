@@ -573,7 +573,7 @@ void FBuild::GetLibEnvVar( AString & value ) const
 void FBuild::AbortBuild()
 {
     s_StopBuild = true;
-    if ( FBuild::Get().m_Options.m_FastCancel )
+    if ( FBuild::IsValid() && FBuild::Get().m_Options.m_FastCancel )
     {
         // Notify the system that the master process has been killed and that it can kill its process.
         s_AbortBuild = true;
