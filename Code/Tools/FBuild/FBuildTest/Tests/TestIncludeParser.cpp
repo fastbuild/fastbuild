@@ -231,7 +231,11 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 32600 ); // Ensure we're actually changing the data
+    #if defined( __WINDOWS__ )
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 32600 ); // Ensure we're actually changing the data
+    #else
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == 32600 ); // Ensure we're actually changing the data
+    #endif
 
     Timer t;
 
@@ -273,7 +277,11 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 29979 ); // Ensure we're actually changing the data
+    #if defined( __WINDOWS__ )
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 29979 ); // Ensure we're actually changing the data
+    #else
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == 29979 ); // Ensure we're actually changing the data
+    #endif
 
     Timer t;
 
@@ -314,7 +322,11 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 76778 ); // Ensure we're actually changing the data
+    #if defined( __WINDOWS__ )
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 76778 ); // Ensure we're actually changing the data
+    #else
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == 76778 ); // Ensure we're actually changing the data
+    #endif
 
     Timer t;
 
