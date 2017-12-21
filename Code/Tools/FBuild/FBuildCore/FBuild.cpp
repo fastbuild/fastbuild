@@ -440,7 +440,7 @@ bool FBuild::Build( Node * nodeToBuild )
 
         if ( !stopping )
         {
-            if ( m_Options.m_WrapperChild )
+            if ( m_Options.m_WrapperMode == FBuildOptions::WRAPPER_MODE_FINAL_PROCESS )
             {
                 SystemMutex wrapperMutex( m_Options.GetMainProcessMutexName().Get() );
                 if ( wrapperMutex.TryLock() )
