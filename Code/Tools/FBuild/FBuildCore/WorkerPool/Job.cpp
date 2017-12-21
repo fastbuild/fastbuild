@@ -8,7 +8,6 @@
 #include "Job.h"
 
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
-#include "Tools/FBuild/FBuildCore/Helpers/Compressor.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Env/Assert.h"
