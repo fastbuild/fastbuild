@@ -1964,6 +1964,13 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 
     FileIO::WorkAroundForWindowsFilePermissionProblem( tmpFileName );
 
+    // On remote workers, free compressed buffer as we don't need it anymore
+    // This reduces memory consumed on the remote worker.
+    if ( job->IsLocal() == false )
+    {
+        job->OwnData( nullptr, 0, false ); // Free compressed buffer
+    }
+
     return true;
 }
 
