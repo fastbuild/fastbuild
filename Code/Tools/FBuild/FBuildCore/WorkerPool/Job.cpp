@@ -53,6 +53,10 @@ Job::~Job()
 //------------------------------------------------------------------------------
 void Job::OwnData( void * data, size_t size, bool compressed )
 {
+    if( m_Data == data ) // self protect
+    {
+        return;
+    }
     FREE( m_Data );
 
     ASSERT( size <= 0xFFFFFFFF ); // only 32bit data supported
