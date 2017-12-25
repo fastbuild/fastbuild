@@ -20,6 +20,7 @@
 // Static
 //------------------------------------------------------------------------------
 static uint32_t s_LastJobId( 0 );
+/*static*/ int64_t Job::s_TotalLocalDataMemoryUsage( 0 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -41,7 +42,10 @@ Job::Job( IOStream & stream )
 //------------------------------------------------------------------------------
 Job::~Job()
 {
-    FREE( m_Data );
+    if ( m_Data )
+    {
+        OwnData( nullptr, 0, false );
+    }
 
     if ( m_IsLocal == false )
     {
@@ -53,13 +57,32 @@ Job::~Job()
 //------------------------------------------------------------------------------
 void Job::OwnData( void * data, size_t size, bool compressed )
 {
-    FREE( m_Data );
-
     ASSERT( size <= 0xFFFFFFFF ); // only 32bit data supported
+    ASSERT( data != m_Data ); // Invalid to set redundantly
 
+    // Free any old data
+    if ( m_Data )
+    {
+        FREE( m_Data );
+
+        // Update total memory use tracking
+        if ( m_IsLocal )
+        {
+            ASSERT( s_TotalLocalDataMemoryUsage >= m_DataSize );
+            AtomicSub64( &s_TotalLocalDataMemoryUsage, m_DataSize );
+        }
+    }
+
+    // Track new data
     m_Data = data;
     m_DataSize = (uint32_t)size;
     m_DataIsCompressed = compressed;
+
+    // Update total memory use tracking
+    if ( m_IsLocal )
+    {
+        AtomicAdd64( &s_TotalLocalDataMemoryUsage, m_DataSize );
+    }
 }
 
 // Error

@@ -21,15 +21,16 @@ Defines global FASTBuild settings.
 <div class='code'>Settings
 {
   // General
-  .Environment           // (optional) Array of environment variables to use
+  .Environment                      // (optional) Array of environment variables to use
   
   // Caching
-  .CachePath             // (optional) Path to cache location
-  .CachePluginDLL        // (optional) User plugin to manage cache back-end
+  .CachePath                        // (optional) Path to cache location
+  .CachePluginDLL                   // (optional) User plugin to manage cache back-end
   
   // Distribution
-  .Workers               // (optional) Fixed list of workers if not using automatic discovery
-  .WorkerConnectionLimit // (optional) Limit number of connected workers (default: 15)
+  .Workers                          // (optional) Fixed list of workers if not using automatic discovery
+  .WorkerConnectionLimit            // (optional) Limit number of connected workers (default: 15)
+  .DistributableJobMemoryLimitMiB   // (optional) Limit memory used locally to prep jobs (default: 2048 (1024 for X86))
 }
 </div>
     </div>

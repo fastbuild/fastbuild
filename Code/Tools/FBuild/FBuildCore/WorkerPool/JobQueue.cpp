@@ -112,7 +112,6 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
     m_NumLocalJobsActive( 0 ),
     m_DistributableJobs_Available( 1024, true ),
     m_DistributableJobs_InProgress( 1024, true ),
-    m_DistributableJobsMemoryUsage( 0 ),
     m_CompletedJobs( 1024, true ),
     m_CompletedJobsFailed( 1024, true ),
     m_CompletedJobs2( 1024, true ),
@@ -144,7 +143,7 @@ JobQueue::~JobQueue()
     // delete incomplete jobs
     while ( Job * job = m_LocalJobs_Available.RemoveJob() )
     {
-        DestroyJob( job );
+        FDELETE job;
     }
 
     // wait for workers to finish - ok if they stopped before this
@@ -157,7 +156,7 @@ JobQueue::~JobQueue()
 
     ASSERT( m_CompletedJobs.IsEmpty() );
     ASSERT( m_CompletedJobsFailed.IsEmpty() );
-    ASSERT( m_DistributableJobsMemoryUsage == 0 );
+    ASSERT( Job::GetTotalLocalDataMemoryUsage() == 0 );
 }
 
 // SignalStopWorkers (Main Thread)
@@ -266,9 +265,6 @@ void JobQueue::QueueDistributableJob( Job * job )
         m_DistributableJobs_Available.Append( job );
 
         job->SetDistributionState( Job::DIST_AVAILABLE );
-
-        // track size of distributable jobs
-        m_DistributableJobsMemoryUsage += job->GetDataSize();
     }
 
     ASSERT( m_NumLocalJobsActive > 0 );
@@ -361,7 +357,7 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
         if ( distState == Job::DIST_RACE_WON_LOCALLY )
         {
             VERIFY( m_DistributableJobs_InProgress.FindAndErase( job ) );
-            DestroyJob( job );
+            FDELETE job;
             return nullptr;
         }
 
@@ -403,7 +399,7 @@ void JobQueue::ReturnUnfinishedDistributableJob( Job * job )
         if ( job->GetDistributionState() == Job::DIST_RACE_WON_LOCALLY )
         {
             // Job locally completed, and we no longer reference it so it can be freed
-            DestroyJob( job );
+            FDELETE job;
             return;
         }
         else
@@ -457,7 +453,7 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
         // Free normal jobs
         if ( job->GetDistributionState() == Job::DIST_NONE )
         {
-            DestroyJob( job );
+            FDELETE job;
             continue;
         }
 
@@ -470,7 +466,7 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
             // Normal local or remote compilation of distributable job?
             if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) || ( distState == Job::DIST_COMPLETED_REMOTELY ) )
             {
-                DestroyJob( job );
+                FDELETE job;
                 continue;
             }
 
@@ -492,7 +488,7 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
         // Free normal jobs
         if ( job->GetDistributionState() == Job::DIST_NONE )
         {
-            DestroyJob( job );
+            FDELETE job;
             continue;
         }
 
@@ -505,7 +501,7 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
             // Normal local or remote compilation of distributable job?
             if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) || ( distState == Job::DIST_COMPLETED_REMOTELY ) )
             {
-                DestroyJob( job );
+                FDELETE job;
                 continue;
             }
 
@@ -749,21 +745,6 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     }
 
     return result;
-}
-
-// DestroyJob
-//------------------------------------------------------------------------------
-void JobQueue::DestroyJob( Job * job )
-{
-    // Manage memory limit book-keeping if job is distributable
-    if ( job->GetDistributionState() != Job::DIST_NONE )
-    {
-        ASSERT( m_DistributableJobsMemoryUsage >= job->GetDataSize() );
-        m_DistributableJobsMemoryUsage -= job->GetDataSize();
-    }
-
-    // Normal free of all jobs
-    FDELETE job;
 }
 
 //------------------------------------------------------------------------------

@@ -80,6 +80,9 @@ public:
     inline void                 SetDistributionState( DistributionState state ) { m_DistributionState = state; }
     inline DistributionState    GetDistributionState() const                    { return m_DistributionState; }
 
+    // Access total memory usage by job data
+    static inline uint64_t     GetTotalLocalDataMemoryUsage() { return s_TotalLocalDataMemoryUsage; }
+
 private:
     uint32_t            m_JobId             = 0;
     uint32_t            m_DataSize          = 0;
@@ -97,6 +100,8 @@ private:
     ToolManifest *      m_ToolManifest      = nullptr;
 
     Array< AString >    m_Messages;
+
+    static int64_t s_TotalLocalDataMemoryUsage; // Total memory being managed by OwnData
 };
 
 //------------------------------------------------------------------------------

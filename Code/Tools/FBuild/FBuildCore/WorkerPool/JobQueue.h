@@ -62,7 +62,6 @@ public:
 
     // access state
     size_t GetNumDistributableJobsAvailable() const;
-    inline size_t GetDistributableJobsMemUsage() const { return m_DistributableJobsMemoryUsage; }
 
     void GetJobStats( uint32_t & numJobs, uint32_t & numJobsActive,
                       uint32_t & numJobsDist, uint32_t & numJobsDistActive ) const;
@@ -84,8 +83,6 @@ private:
     Job *       OnReturnRemoteJob( uint32_t jobId );
     void        ReturnUnfinishedDistributableJob( Job * job );
 
-    void        DestroyJob( Job * job );
-
     // Semaphore to manage work
     Semaphore           m_WorkerThreadSemaphore;
 
@@ -100,7 +97,6 @@ private:
     mutable Mutex       m_DistributedJobsMutex;
     Array< Job * >      m_DistributableJobs_Available;  // Available, not in progress anywhere
     Array< Job * >      m_DistributableJobs_InProgress; // In progress remotely, locally or both
-    size_t              m_DistributableJobsMemoryUsage;
 
     // Semaphore to manage thread idle
     Semaphore           m_MainThreadSemaphore;
