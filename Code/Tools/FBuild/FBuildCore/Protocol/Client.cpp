@@ -34,6 +34,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Client::Client( const Array< AString > & workerList,
+                uint16_t port,
                 uint32_t workerConnectionLimit,
                 bool detailedLogging )
     : m_WorkerList( workerList )
@@ -41,6 +42,7 @@ Client::Client( const Array< AString > & workerList,
     , m_Exited( false )
     , m_DetailedLogging( detailedLogging )
     , m_WorkerConnectionLimit( workerConnectionLimit )
+    , m_Port( port )
 {
     // allocate space for server states
     m_ServerList.SetSize( workerList.GetSize() );
@@ -215,7 +217,7 @@ void Client::LookForWorkers()
             continue;
         }
 
-        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], Protocol::PROTOCOL_PORT, 2000 ); // 2000ms connection timeout
+        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], m_Port, 2000 ); // 2000ms connection timeout
         if ( ci == nullptr )
         {
             ss.m_DelayTimer.Start(); // reset connection attempt delay

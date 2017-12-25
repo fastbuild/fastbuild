@@ -31,6 +31,7 @@ class Client : public TCPConnectionPool
 {
 public:
     Client( const Array< AString > & workerList,
+            uint16_t port,
             uint32_t workerConnectionLimit,
             bool detailedLogging );
     ~Client();
@@ -87,6 +88,7 @@ private:
     Mutex                   m_ServerListMutex;
     Array< ServerState >    m_ServerList;
     uint32_t                m_WorkerConnectionLimit;
+    uint16_t                m_Port;
 };
 
 //------------------------------------------------------------------------------

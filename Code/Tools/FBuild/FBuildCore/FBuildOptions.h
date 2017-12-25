@@ -4,6 +4,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
+// FBuild
+#include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
+
+// Core
 #include "Core/Env/Types.h"
 #include "Core/Strings/AString.h"
 
@@ -60,6 +64,7 @@ public:
     bool        m_DistVerbose                       = false;
     bool        m_NoLocalConsumptionOfRemoteJobs    = false;
     bool        m_AllowLocalRace                    = true;
+    uint16_t    m_DistributionPort                  = Protocol::PROTOCOL_PORT;
 
     // General Output
     bool        m_ShowInfo                          = false;

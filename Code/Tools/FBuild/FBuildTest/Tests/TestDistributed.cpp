@@ -13,6 +13,10 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
 
+// Defines
+//------------------------------------------------------------------------------
+#define TEST_PROTOCOL_PORT ( Protocol::PROTOCOL_PORT + 1 ) // Avoid conflict with real worker
+
 // TestDistributed
 //------------------------------------------------------------------------------
 class TestDistributed : public FBuildTest
@@ -67,13 +71,14 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
     options.m_AllowLocalRace = allowRace;
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
     // start a client to emulate the other end
     Server s( numRemoteWorkers );
-    s.Listen( Protocol::PROTOCOL_PORT );
+    s.Listen( TEST_PROTOCOL_PORT );
 
     // clean up anything left over from previous runs
     Array< AString > files;
@@ -188,10 +193,11 @@ void TestDistributed::ErrorsAreCorrectlyReported() const
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_PORT );
+    s.Listen( TEST_PROTOCOL_PORT );
 
     // MSVC
     #if defined( __WINDOWS__ )
@@ -234,13 +240,14 @@ void TestDistributed::TestZiDebugFormat() const
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_PORT );
+    s.Listen( TEST_PROTOCOL_PORT );
 
     TEST_ASSERT( fBuild.Build( AStackString<>( "remoteZi" ) ) );
 }
@@ -254,13 +261,14 @@ void TestDistributed::TestZiDebugFormat_Local() const
     options.m_AllowDistributed = true;
     options.m_ForceCleanBuild = true;
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_PORT );
+    s.Listen( TEST_PROTOCOL_PORT );
 
     TEST_ASSERT( fBuild.Build( AStackString<>( "remoteZi" ) ) );
 }
@@ -277,13 +285,14 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     options.m_AllowLocalRace = false;
     options.m_ForceCleanBuild = true;
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_PORT );
+    s.Listen( TEST_PROTOCOL_PORT );
 
     TEST_ASSERT( fBuild.Build( AStackString<>( "D8049" ) ) );
 }
