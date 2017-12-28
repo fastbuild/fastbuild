@@ -320,11 +320,6 @@ Job * JobQueue::GetDistributableJobToRace()
             job->SetDistributionState( Job::DIST_RACING );
             return job;
         }
-
-        ASSERT( ( distState == Job::DIST_BUILDING_LOCALLY ) ||
-                ( distState == Job::DIST_RACING ) ||
-                ( distState == Job::DIST_RACE_WON_LOCALLY ) ||
-                ( distState == Job::DIST_COMPLETED_REMOTELY ) );
     }
 
     return nullptr; // No job found to race (all were local or races already)
@@ -335,13 +330,10 @@ Job * JobQueue::GetDistributableJobToRace()
 Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
 {
     MutexHolder m( m_DistributedJobsMutex );
-    for ( Job * job : m_DistributableJobs_InProgress )
+    auto jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
+    if ( jobIt )
     {
-        // Find the matching job
-        if ( job->GetJobId() != jobId )
-        {
-            continue; // Not the right job
-        }
+        Job * job = *jobIt;
 
         // What state is the job in?
         const Job::DistributionState distState = job->GetDistributionState();
@@ -356,7 +348,7 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
         // Did a local race complete this already?
         if ( distState == Job::DIST_RACE_WON_LOCALLY )
         {
-            VERIFY( m_DistributableJobs_InProgress.FindAndErase( job ) );
+            m_DistributableJobs_InProgress.Erase( jobIt );
             FDELETE job;
             return nullptr;
         }
@@ -577,7 +569,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         }
         else
         {
-            // A race was complete locally
+            // A race was completed locally
             ASSERT( distState == Job::DIST_RACING );
 
             // Leave in InProgress and leave state as-is (will be set to

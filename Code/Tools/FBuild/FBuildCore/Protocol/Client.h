@@ -47,6 +47,7 @@ private:
     void Process( const ConnectionInfo * connection, const Protocol::MsgServerStatus * msg );
 
     const ToolManifest * FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const;
+    bool WriteFileToDisk( const AString & fileName, const char * data, const uint32_t dataSize ) const;
 
     static uint32_t ThreadFuncStatic( void * param );
     void            ThreadFunc();
