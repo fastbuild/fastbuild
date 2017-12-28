@@ -356,9 +356,29 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
         // Are we still locally racing?
         if ( distState == Job::DIST_RACING )
         {
-            // Ignore the remote job (we always take the local race)
-            // TODO:B Cancel the local job and take the remote result
-            job->SetDistributionState( Job::DIST_BUILDING_LOCALLY );
+            // Try to cancel the local job
+            job->Cancel();
+            job->SetDistributionState( Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL );
+
+            // Wait for cancellation
+            {
+                PROFILE_SECTION( "WaitForLocalCancel" );
+                m_DistributedJobsMutex.Unlock(); // Allow WorkerThread access
+                while ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+                {
+                    Sleep( 1 );
+                }
+                m_DistributedJobsMutex.Lock();
+            }
+
+            // Did cancallation work? It can fail if we try to cancel after build has finished
+            // but before we finish processing the job
+            if ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY )
+            {
+                return job; // Remote race won - we now own the job
+            }
+
+            // Cancellation failed - job will be managed normally (as if local)
             return nullptr;
         }
 
@@ -456,13 +476,15 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
             const Job::DistributionState distState = job->GetDistributionState();
 
             // Normal local or remote compilation of distributable job?
-            if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) || ( distState == Job::DIST_COMPLETED_REMOTELY ) )
+            if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) ||
+                 ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
+                 ( distState == Job::DIST_RACE_WON_REMOTELY ) )
             {
                 FDELETE job;
                 continue;
             }
 
-            // Local race, won locally (we don't support remote wins at the moment)
+            // Local race, won locally
             ASSERT( distState == Job::DIST_RACING );
             job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
 
@@ -491,13 +513,15 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
             const Job::DistributionState distState = job->GetDistributionState();
 
             // Normal local or remote compilation of distributable job?
-            if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) || ( distState == Job::DIST_COMPLETED_REMOTELY ) )
+            if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) ||
+                 ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
+                 ( distState == Job::DIST_RACE_WON_REMOTELY ) )
             {
                 FDELETE job;
                 continue;
             }
 
-            // Local race, won locally (we don't support remote wins at the moment)
+            // Local race, won locally
             ASSERT( distState == Job::DIST_RACING );
             job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
 
@@ -556,7 +580,27 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         // Handle the various states
         const Job::DistributionState distState = job->GetDistributionState();
 
-        if ( distState == Job::DIST_COMPLETED_REMOTELY )
+        // Cancelling?
+        if ( distState == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+        {
+            ASSERT( *(job->GetAbortFlagPointer()) == true );
+
+            // Did local job actually get cancelled?
+            if ( success == false )
+            {
+                // Allow remote job to win race
+                job->SetDistributionState( Job::DIST_RACE_WON_REMOTELY );
+                return; // Remote job will complete processing
+            }
+
+            // Local Job finished while trying to cancel, so fail cancellation
+            // Local thread now entirely owns Job, so set state as if race
+            // never happened
+            job->SetDistributionState( Job::DIST_COMPLETED_LOCALLY ); // Cancellation has failed
+        
+        }
+        else if ( ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
+                  ( distState == Job::DIST_RACE_WON_REMOTELY ) )
         {
             // Normal remote build
             m_DistributableJobs_InProgress.Erase( it );

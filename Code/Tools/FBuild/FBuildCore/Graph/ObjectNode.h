@@ -145,7 +145,7 @@ private:
     class CompileHelper
     {
     public:
-        explicit CompileHelper( bool handleOutput = true );
+        explicit CompileHelper( bool handleOutput = true, const volatile bool * abort = nullptr );
         ~CompileHelper();
 
         // start compilation

@@ -53,6 +53,15 @@ Job::~Job()
     }
 }
 
+// Cancel
+//------------------------------------------------------------------------------
+void Job::Cancel()
+{
+    ASSERT( m_IsLocal ); // Cancellation should only occur locally
+    ASSERT( m_Abort == false ); // Job must be not already be cancelled
+    m_Abort = true;
+}
+
 // OwnData
 //------------------------------------------------------------------------------
 void Job::OwnData( void * data, size_t size, bool compressed )

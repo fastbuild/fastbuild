@@ -38,7 +38,8 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Process::Process( volatile bool * masterAbortFlag )
+Process::Process( const volatile bool * masterAbortFlag,
+                  const volatile bool * abortFlag )
 : m_Started( false )
 #if defined( __WINDOWS__ )
     , m_SharingHandles( false )
@@ -54,6 +55,7 @@ Process::Process( volatile bool * masterAbortFlag )
 #endif
     , m_HasAborted( false )
     , m_MasterAbortFlag( masterAbortFlag )
+    , m_AbortFlag( abortFlag )
 {
     #if defined( __WINDOWS__ )
         static_assert( sizeof( m_ProcessInfo ) == sizeof( PROCESS_INFORMATION ), "Unexpected sizeof(PROCESS_INFORMATION)" );
@@ -529,8 +531,11 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     bool processExited = false;
     for ( ;; )
     {
-        if ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) )
+        const bool masterAbort = ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) );
+        const bool abort = ( m_AbortFlag && ( *m_AbortFlag ) );
+        if ( abort || masterAbort )
         {
+            PROFILE_SECTION( "Abort" )
             KillProcessTree();
             m_HasAborted = true;
             break;

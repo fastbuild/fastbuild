@@ -29,6 +29,7 @@ private:
     void WithPCH() const;
     void RegressionTest_RemoteCrashOnErrorFormatting();
     void TestLocalRace();
+    void RemoteRaceWinRemote();
     void AnonymousNamespaces();
     void ErrorsAreCorrectlyReported() const;
     void TestForceInclude() const;
@@ -50,6 +51,7 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( WithPCH )
     REGISTER_TEST( RegressionTest_RemoteCrashOnErrorFormatting )
     REGISTER_TEST( TestLocalRace )
+    REGISTER_TEST( RemoteRaceWinRemote )
     REGISTER_TEST( AnonymousNamespaces )
     REGISTER_TEST( ErrorsAreCorrectlyReported )
     #if defined( __WINDOWS__ )
@@ -159,6 +161,30 @@ void TestDistributed::TestLocalRace()
         const char * target( "badcode" );
         TestHelper( target, 4, true, true ); // compilation should fail, allow race
     }
+}
+
+// RemoteRaceWinRemote
+//------------------------------------------------------------------------------
+void TestDistributed::RemoteRaceWinRemote()
+{
+    // Check that a remote race that is won remotely is correctly handled
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestDistributed/RemoteRaceWinRemote/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_ShowSummary = true;
+    options.m_NoLocalConsumptionOfRemoteJobs = true;
+    FBuild fBuild( options );
+
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( Protocol::PROTOCOL_PORT );
+
+    TEST_ASSERT( fBuild.Build( AStackString<>( "RemoteRaceWinRemote" ) ) );
 }
 
 // AnonymousNamespaces

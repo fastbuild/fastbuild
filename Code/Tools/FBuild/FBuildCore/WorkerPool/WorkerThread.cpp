@@ -205,7 +205,11 @@ void WorkerThread::WaitForStop()
 
             if ( result == Node::NODE_RESULT_FAILED )
             {
-                FBuild::OnBuildError();
+                // Ignore error if cancelling due to a remote race win
+                if ( job->GetDistributionState() != Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+                {
+                    FBuild::OnBuildError();
+                }
             }
 
             JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job

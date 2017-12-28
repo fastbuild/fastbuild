@@ -550,7 +550,9 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         return;
     }
 
-    DIST_INFO( "Got Result: %s - %s\n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
+    DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(), 
+                                          job->GetNode()->GetName().Get(), 
+                                          job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
 
     if ( result == true )
     {

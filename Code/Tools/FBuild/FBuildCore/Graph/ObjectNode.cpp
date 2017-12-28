@@ -1995,7 +1995,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
     }
 
     // spawn the process
-    CompileHelper ch;
+    CompileHelper ch( true, job->GetAbortFlagPointer() );
     if ( !ch.SpawnCompiler( job, GetName(), compiler, fullArgs, workingDir.IsEmpty() ? nullptr : workingDir.Get() ) )
     {
         // did spawn fail, or did we spawn and fail to compile?
@@ -2029,9 +2029,9 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 
 // CompileHelper::CONSTRUCTOR
 //------------------------------------------------------------------------------
-ObjectNode::CompileHelper::CompileHelper( bool handleOutput )
+ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const volatile bool * abortPointer )
     : m_HandleOutput( handleOutput )
-    , m_Process( FBuild::GetAbortBuildPointer() )
+    , m_Process( FBuild::GetAbortBuildPointer(), abortPointer )
     , m_OutSize( 0 )
     , m_ErrSize( 0 )
     , m_Result( 0 )
