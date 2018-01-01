@@ -327,12 +327,25 @@ void TestPrecompiledHeaders::Deoptimization() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( nullptr ) );
 
+    // Copy files to temp dir
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../../../../tmp/Test/PrecompiledHeaders/Deoptimization/" ) ) );
+    TEST_ASSERT( FileIO::FileCopy( "Data/TestPrecompiledHeaders/Deoptimization/PrecompiledHeader.cpp", "../../../../tmp/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.cpp" ) );
+    TEST_ASSERT( FileIO::FileCopy( "Data/TestPrecompiledHeaders/Deoptimization/PrecompiledHeader.h", "../../../../tmp/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.h" ) );
+
+    // Mark copied files as writable, which normally activates deoptimization (since we have it enabled)
+    // It should be ignored for the precompiled header (which is what we are testing)
+    TEST_ASSERT( FileIO::SetReadOnly( "../../../../tmp/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.cpp", false ) );
+    TEST_ASSERT( FileIO::SetReadOnly( "../../../../tmp/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.h", false ) );
+
     AStackString<> target( "PCHTest-Deoptimization" );
 
     TEST_ASSERT( fBuild.Build( target ) );
 
-    CheckStatsNode ( 2,      2,      Node::OBJECT_NODE );
+    CheckStatsNode ( 1,      1,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,      1,      Node::OBJECT_LIST_NODE );
+
+    // Make sure nothing was deoptimized
+    TEST_ASSERT( GetRecordedOutput().FindI( "**Deoptimized**" ) == nullptr );
 }
 
 // TestPCHClang

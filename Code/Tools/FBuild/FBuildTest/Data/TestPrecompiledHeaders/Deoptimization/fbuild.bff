@@ -13,17 +13,17 @@ Settings {} // use Standard Environment
 .DeoptimizeWritableFilesWithToken = true
 
 #if __WINDOWS__
-    .PCHInputFile               = 'Data/TestPrecompiledHeaders/Deoptimization/PrecompiledHeader.cpp'
+    .PCHInputFile               = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.cpp'
     .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.pch'
     .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
 #endif
 #if __LINUX__
-    .PCHInputFile               = 'Data/TestPrecompiledHeaders/Deoptimization/PrecompiledHeader.h'
+    .PCHInputFile               = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.h'
     .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.h.gch'
     .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux
 #endif
 #if __OSX__
-    .PCHInputFile               = 'Data/TestPrecompiledHeaders/Deoptimization/PrecompiledHeader.h'
+    .PCHInputFile               = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.h'
     .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.pch'
     .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on OS X
 #endif
@@ -33,10 +33,10 @@ Settings {} // use Standard Environment
 //
 ObjectList( 'PCHTest-Deoptimization' )
 {
-    .CompilerInputPath      = 'Data/TestPrecompiledHeaders/Deoptimization/'
-    .CompilerOutputPath     = '"$Out$/Test/PrecompiledHeaders/Deoptimization/'
-    .CompilerOptions        + ' "-IData/TestPrecompiledHeaders/Deoptimization/"'
-    .PCHOptions             + ' "-IData/TestPrecompiledHeaders/Deoptimization/"'
+    .CompilerInputPath      = '$Out$/Test/PrecompiledHeaders/Deoptimization/'
+    .CompilerOutputPath     = '$Out$/Test/PrecompiledHeaders/Deoptimization/'
+    .CompilerOptions        + ' "-I$Out$/Test/PrecompiledHeaders/Deoptimization/"'
+    .PCHOptions             + ' "-I$Out$/Test/PrecompiledHeaders/Deoptimization/"'
     #if __WINDOWS__
         .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
     #endif
