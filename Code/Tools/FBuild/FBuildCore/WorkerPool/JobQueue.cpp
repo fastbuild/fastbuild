@@ -17,6 +17,7 @@
 #include "Core/Time/Timer.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Atomic.h"
+#include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 
 // JobCostSorter
@@ -366,7 +367,7 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
                 m_DistributedJobsMutex.Unlock(); // Allow WorkerThread access
                 while ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
                 {
-                    Sleep( 1 );
+                    Thread::Sleep( 1 );
                 }
                 m_DistributedJobsMutex.Lock();
             }
