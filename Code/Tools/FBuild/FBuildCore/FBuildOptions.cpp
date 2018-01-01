@@ -86,6 +86,28 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_UseCacheWrite = true;
                 continue;
             }
+            else if ( thisArg == "-cacheinfo" )
+            {
+                m_CacheInfo = true;
+                continue;
+            }
+            else if ( thisArg == "-cachetrim" )
+            {
+                const int sizeIndex = ( i + 1 );
+                if ( ( sizeIndex >= argc ) ||
+                     ( sscanf( argv[ sizeIndex ], "%u", &m_CacheTrim ) ) != 1 )
+                {
+                    OUTPUT( "FBuild: Error: Missing or bad <sizeMiB> for '-cachetrim' argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }                
+                i++; // skip extra arg we've consumed
+
+                // add to args we might pass to subprocess
+                m_Args += ' ';
+                m_Args += argv[ sizeIndex ];
+                continue;
+            }
             else if ( thisArg == "-clean" )
             {
                 m_ForceCleanBuild = true;
@@ -415,6 +437,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
     OUTPUT( "----------------------------------------------------------------------\n"
             "Options:\n"
             " -cache[read|write] Control use of the build cache.\n"
+            " -cacheinfo     Output cache statistics.\n"
+            " -cachetrim [size] Trim the cache to the given size in MiB.\n"
             " -clean         Force a clean build.\n"
             " -config [path] Explicitly specify the config file to use.\n" );
 #ifdef DEBUG

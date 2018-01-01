@@ -94,6 +94,7 @@ public:
     static void StopBuild();
 
     static void OutputProgress( float time, float percentage, uint32_t numJobs, uint32_t numJobsActive, uint32_t numJobsDist, uint32_t numJobsDistActive );
+    static void ClearProgress();
 
 private:
     friend class FBuild;

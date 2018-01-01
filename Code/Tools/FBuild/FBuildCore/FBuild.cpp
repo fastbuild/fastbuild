@@ -169,7 +169,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : m_DependencyGraph->CreateSettingsNode( AStackString<>( "$$Settings$$" ) ); // Create a default
 
     // if the cache is enabled, make sure the path is set and accessible
-    if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite )
+    if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite || m_Options.m_CacheInfo || m_Options.m_CacheTrim )
     {
         if ( !m_Settings->GetCachePluginDLL().IsEmpty() )
         {
@@ -184,6 +184,8 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         {
             m_Options.m_UseCacheRead = false;
             m_Options.m_UseCacheWrite = false;
+            FDELETE m_Cache;
+            m_Cache = nullptr;
         }
     }
 
@@ -763,6 +765,34 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
         #error Unknown platform
         return false;
     #endif
+}
+
+// CacheOutputInfo
+//------------------------------------------------------------------------------
+bool FBuild::CacheOutputInfo() const
+{
+    OUTPUT( "CacheInfo:\n" );
+    if ( m_Cache )
+    {
+        return m_Cache->OutputInfo( m_Options.m_ShowProgress );
+    }
+
+    OUTPUT( "- Cache not configured" );
+    return false;
+}
+
+// CacheTrim
+//------------------------------------------------------------------------------
+bool FBuild::CacheTrim() const
+{
+    OUTPUT( "CacheTrim:\n" );
+    if ( m_Cache )
+    {
+        return m_Cache->Trim( m_Options.m_ShowProgress, m_Options.m_CacheTrim );
+    }
+
+    OUTPUT( "- Cache not configured" );
+    return false;
 }
 
 //------------------------------------------------------------------------------

@@ -24,8 +24,10 @@ public:
     virtual bool Publish( const AString & cacheId, const void * data, size_t dataSize );
     virtual bool Retrieve( const AString & cacheId, void * & data, size_t & dataSize );
     virtual void FreeMemory( void * data, size_t dataSize );
+    virtual bool OutputInfo( bool showProgress );
+    virtual bool Trim( bool showProgress, uint32_t sizeMiB );
 private:
-    void * GetFunction( const char * friendlyName, const char * mangledName = nullptr ) const;
+    void * GetFunction( const char * friendlyName, const char * mangledName = nullptr, bool optional = false ) const;
 
     void *              m_DLL;
     CacheInitFunc       m_InitFunc;
@@ -33,6 +35,8 @@ private:
     CachePublishFunc    m_PublishFunc;
     CacheRetrieveFunc   m_RetrieveFunc;
     CacheFreeMemoryFunc m_FreeMemoryFunc;
+    CacheOutputInfoFunc m_OutputInfoFunc;
+    CacheTrimFunc       m_TrimFunc;
 };
 
 //------------------------------------------------------------------------------

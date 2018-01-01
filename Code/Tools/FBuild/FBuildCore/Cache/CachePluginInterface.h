@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-// CacheInit
+// CacheInit (Required)
 //------------------------------------------------------------------------------
 // Setup access to cache at start of build.
 //
@@ -31,7 +31,7 @@ typedef bool (STDCALL * CacheInitFunc)( const char * cachePath );
     CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheInit( const char * cachePath );
 #endif
 
-// CacheShutdown
+// CacheShutdown (Required)
 //------------------------------------------------------------------------------
 // Perform any required cleanup
 typedef void (STDCALL *CacheShutdownFunc)();
@@ -39,7 +39,7 @@ typedef void (STDCALL *CacheShutdownFunc)();
     CACHEPLUGIN_DLL_EXPORT void STDCALL CacheShutdown();
 #endif
 
-// CachePublish
+// CachePublish (Required)
 //------------------------------------------------------------------------------
 // Store an item to the cache.  Return true on success.
 //
@@ -52,7 +52,7 @@ typedef bool (STDCALL *CachePublishFunc)( const char * cacheId, const void * dat
     CACHEPLUGIN_DLL_EXPORT bool STDCALL CachePublish( const char * cacheId, const void * data, unsigned long long dataSize );
 #endif
 
-// CacheRetrieve
+// CacheRetrieve (Required)
 //------------------------------------------------------------------------------
 // Retrieve a previously stored item.  Returns true on succes.
 //
@@ -64,7 +64,7 @@ typedef bool (STDCALL *CacheRetrieveFunc)( const char * cacheId, void * & data, 
     CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheRetrieve( const char * cacheId, void * & data, unsigned long long & dataSize );
 #endif
 
-// CacheFreeMemory
+// CacheFreeMemory (Required)
 //------------------------------------------------------------------------------
 // Free memory provided by CacheRetrieve
 //
@@ -73,6 +73,27 @@ typedef bool (STDCALL *CacheRetrieveFunc)( const char * cacheId, void * & data, 
 typedef void (STDCALL *CacheFreeMemoryFunc)( void * data, unsigned long long dataSize );
 #ifdef CACHEPLUGIN_DLL_EXPORT
     CACHEPLUGIN_DLL_EXPORT void STDCALL CacheFreeMemory( void * data, unsigned long long dataSize );
+#endif
+
+// CacheOutputInfo (Optional)
+//------------------------------------------------------------------------------
+// Print information about the contents of the cache
+// 
+// In: showProgress - emit progress messages for long operations
+typedef bool (STDCALL *CacheOutputInfoFunc)( bool showProgress );
+#ifdef CACHEPLUGIN_DLL_EXPORT
+    CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheOutputInfo( bool showProgress );
+#endif
+
+// CacheTrim (Optional)
+//------------------------------------------------------------------------------
+// Trim data in the cache to the desired size
+//
+// In: showProgress - emit progress messages for long operations
+//     sizeMiB      - desired size in MiB
+typedef bool (STDCALL *CacheTrimFunc)( bool showProgress, unsigned int sizeMiB );
+#ifdef CACHEPLUGIN_DLL_EXPORT
+    CACHEPLUGIN_DLL_EXPORT bool STDCALL CacheTrim( bool showProgress, unsigned int sizeMiB );
 #endif
 
 #if !defined(__WINDOWS__)//TODO:Windows : Use unmangled name on windows.

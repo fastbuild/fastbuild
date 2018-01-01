@@ -318,6 +318,13 @@ static FileStream * g_MonitorFileStream = nullptr;
     fwrite( m_ProgressText.Get(), 1, m_ProgressText.GetLength(), stdout );
 }
 
+// ClearProgress
+//------------------------------------------------------------------------------
+/*static*/ void FLog::ClearProgress()
+{
+    fwrite( g_ClearLineString.Get(), 1, g_ClearLineString.GetLength(), stdout );    
+}
+
 // TracingOutputCallback
 //------------------------------------------------------------------------------
 /*static*/ bool FLog::TracingOutputCallback( const char * message )

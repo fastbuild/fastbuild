@@ -102,6 +102,9 @@ public:
 
     static bool GetTempDir( AString & outTempDir );
 
+    bool CacheOutputInfo() const;
+    bool CacheTrim() const;
+
 private:
     bool GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const;
 

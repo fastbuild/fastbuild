@@ -5,8 +5,6 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Helpers/CtrlCHandler.h"
 
 #include "Core/Process/Process.h"
@@ -193,6 +191,14 @@ int Main(int argc, char * argv[])
     if ( options.m_DisplayDependencyDB )
     {
         result = fBuild.DisplayDependencyDB( options.m_Targets );
+    }
+    else if ( options.m_CacheInfo )
+    {
+        result = fBuild.CacheOutputInfo();
+    }
+    else if ( options.m_CacheTrim )
+    {
+        result = fBuild.CacheTrim();
     }
     else
     {
