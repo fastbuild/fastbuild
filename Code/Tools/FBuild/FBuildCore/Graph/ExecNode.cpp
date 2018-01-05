@@ -22,7 +22,7 @@
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
     REFLECT(        m_ExecExecutable,           "ExecExecutable",           MetaFile() )
-    REFLECT_ARRAY(  m_ExecInput,                "ExecInput",                MetaFile() )
+    REFLECT_ARRAY(  m_ExecInput,                "ExecInput",                MetaOptional() + MetaFile() )
     REFLECT(        m_ExecArguments,            "ExecArguments",            MetaOptional() )
     REFLECT(        m_ExecWorkingDir,           "ExecWorkingDir",           MetaOptional() + MetaPath() )
     REFLECT(        m_ExecReturnCode,           "ExecReturnCode",           MetaOptional() )
