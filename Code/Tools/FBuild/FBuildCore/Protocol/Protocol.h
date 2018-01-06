@@ -85,6 +85,7 @@ namespace Protocol
         MessageType     m_MsgType;
         uint32_t        m_MsgSize;
         bool            m_HasPayload;
+        char            m_Padding1[ 3 ];
     };
     static_assert( sizeof( IMessage ) == 9 + 3/*padding*/, "Message base class has incorrect size" );
 
@@ -145,6 +146,7 @@ namespace Protocol
 
         inline uint64_t GetToolId() const { return m_ToolId; }
     private:
+        char     m_Padding2[ 4 ];
         uint64_t m_ToolId;
     };
     static_assert( sizeof( MsgJob ) == sizeof( IMessage ) + 4/*alignment*/ + 8, "MsgJob message has incorrect size" );
@@ -167,6 +169,7 @@ namespace Protocol
 
         inline uint64_t GetToolId() const { return m_ToolId; }
     private:
+        char     m_Padding2[ 4 ];
         uint64_t m_ToolId;
     };
     static_assert( sizeof( MsgRequestManifest ) == sizeof( IMessage ) + 4/*alignment*/ + 8, "MsgRequestManifest message has incorrect size" );
@@ -180,6 +183,7 @@ namespace Protocol
 
         inline uint64_t GetToolId() const { return m_ToolId; }
     private:
+        char     m_Padding2[ 4 ];
         uint64_t m_ToolId;
     };
     static_assert( sizeof( MsgManifest ) == sizeof( IMessage ) + 4/*alignment*/ + 8, "MsgManifest message has incorrect size" );
@@ -194,8 +198,10 @@ namespace Protocol
         inline uint64_t GetToolId() const { return m_ToolId; }
         inline uint32_t GetFileId() const { return m_FileId; }
     private:
+        char     m_Padding2[ 4 ];
         uint64_t m_ToolId;
         uint32_t m_FileId;
+        char     m_Padding3[ 4 ];
     };
     static_assert( sizeof( MsgRequestFile ) == sizeof( IMessage ) + 4/*alignment*/ + 12 + 4/*padding*/, "MsgRequestFile message has incorrect size" );
 
@@ -209,8 +215,10 @@ namespace Protocol
         inline uint64_t GetToolId() const { return m_ToolId; }
         inline uint32_t GetFileId() const { return m_FileId; }
     private:
+        char     m_Padding2[ 4 ];
         uint64_t m_ToolId;
         uint32_t m_FileId;
+        char     m_Padding3[ 4 ];
     };
     static_assert( sizeof( MsgFile ) == sizeof( IMessage ) + 4/*alignment*/ + 12 + 4/*padding*/, "MsgFile message has incorrect size" );
 
