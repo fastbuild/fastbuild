@@ -86,6 +86,7 @@ namespace Protocol
         uint32_t        m_MsgSize;
         bool            m_HasPayload;
     };
+    static_assert( sizeof( IMessage ) == 9 + 3/*padding*/, "Message base class has incorrect size" );
 
     // MsgConnection
     //------------------------------------------------------------------------------
@@ -102,6 +103,7 @@ namespace Protocol
         uint32_t        m_NumJobsAvailable;
         char            m_HostName[ 64 ];
     };
+    static_assert( sizeof( MsgConnection ) == sizeof( IMessage ) + 72, "MsgConnection message has incorrect size" );
 
     // MsgStatus
     //------------------------------------------------------------------------------
@@ -114,6 +116,7 @@ namespace Protocol
     private:
         uint32_t        m_NumJobsAvailable;
     };
+    static_assert( sizeof( MsgStatus ) == sizeof( IMessage ) + 4, "MsgStatus message has incorrect size" );
 
     // MsgRequestJob
     //------------------------------------------------------------------------------
@@ -122,6 +125,7 @@ namespace Protocol
     public:
         MsgRequestJob();
     };
+    static_assert( sizeof( MsgRequestJob ) == sizeof( IMessage ), "MsgRequestJob message has incorrect size" );
 
     // MsgNoJobAvailable
     //------------------------------------------------------------------------------
@@ -130,6 +134,7 @@ namespace Protocol
     public:
         MsgNoJobAvailable();
     };
+    static_assert( sizeof( MsgNoJobAvailable ) == sizeof( IMessage ), "MsgNoJobAvailable message has incorrect size" );
 
     // MsgJob
     //------------------------------------------------------------------------------
@@ -142,6 +147,7 @@ namespace Protocol
     private:
         uint64_t m_ToolId;
     };
+    static_assert( sizeof( MsgJob ) == sizeof( IMessage ) + 4/*alignment*/ + 8, "MsgJob message has incorrect size" );
 
     // MsgJobResult
     //------------------------------------------------------------------------------
@@ -150,6 +156,7 @@ namespace Protocol
     public:
         MsgJobResult();
     };
+    static_assert( sizeof( MsgJobResult ) == sizeof( IMessage ), "MsgJobResult message has incorrect size" );
 
     // MsgRequestManifest
     //------------------------------------------------------------------------------
@@ -162,6 +169,7 @@ namespace Protocol
     private:
         uint64_t m_ToolId;
     };
+    static_assert( sizeof( MsgRequestManifest ) == sizeof( IMessage ) + 4/*alignment*/ + 8, "MsgRequestManifest message has incorrect size" );
 
     // MsgManifest
     //------------------------------------------------------------------------------
@@ -174,6 +182,7 @@ namespace Protocol
     private:
         uint64_t m_ToolId;
     };
+    static_assert( sizeof( MsgManifest ) == sizeof( IMessage ) + 4/*alignment*/ + 8, "MsgManifest message has incorrect size" );
 
     // MsgRequestFile
     //------------------------------------------------------------------------------
@@ -188,6 +197,7 @@ namespace Protocol
         uint64_t m_ToolId;
         uint32_t m_FileId;
     };
+    static_assert( sizeof( MsgRequestFile ) == sizeof( IMessage ) + 4/*alignment*/ + 12 + 4/*padding*/, "MsgRequestFile message has incorrect size" );
 
     // MsgFile
     //------------------------------------------------------------------------------
@@ -202,6 +212,7 @@ namespace Protocol
         uint64_t m_ToolId;
         uint32_t m_FileId;
     };
+    static_assert( sizeof( MsgFile ) == sizeof( IMessage ) + 4/*alignment*/ + 12 + 4/*padding*/, "MsgFile message has incorrect size" );
 
     // MsgServerStatus
     //------------------------------------------------------------------------------
@@ -210,6 +221,7 @@ namespace Protocol
     public:
         MsgServerStatus();
     };
+    static_assert( sizeof( MsgServerStatus ) == sizeof( IMessage ), "MsgServerStatus message has incorrect size" );
 };
 
 //------------------------------------------------------------------------------
