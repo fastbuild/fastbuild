@@ -210,7 +210,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             }
             else if ( thisArg == "-showcmds" )
             {
-                m_ShowBuildCommands = true;
+                m_ShowCommandLines = true;
                 continue;
             }
             else if ( thisArg == "-showdeps" )
