@@ -127,7 +127,9 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
 
                 // add to args we might pass to subprocess
                 m_Args += ' ';
+                m_Args += '"'; // surround config file with quotes to avoid problems with spaces in the path
                 m_Args += m_ConfigFile;
+                m_Args += '"';
                 continue;
             }
             #ifdef DEBUG
