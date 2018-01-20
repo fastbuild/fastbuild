@@ -37,6 +37,7 @@ private:
     AString     m_TestWorkingDir;
     uint32_t    m_TestTimeOut;
     bool        m_TestAlwaysShowOutput;
+    Array< AString >    m_PreBuildDependencyNames;
 };
 
 //------------------------------------------------------------------------------

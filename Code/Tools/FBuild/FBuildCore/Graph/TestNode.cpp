@@ -26,6 +26,7 @@ REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
     REFLECT( m_TestWorkingDir,      "TestWorkingDir",       MetaOptional() + MetaPath() )
     REFLECT( m_TestTimeOut,         "TestTimeOut",          MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
     REFLECT( m_TestAlwaysShowOutput,"TestAlwaysShowOutput", MetaOptional() )
+    REFLECT_ARRAY( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
 REFLECT_END( TestNode )
 
 // CONSTRUCTOR
@@ -45,6 +46,12 @@ TestNode::TestNode()
 //------------------------------------------------------------------------------
 bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
+    // .PreBuildDependencies
+    if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
+    {
+        return false; // InitializePreBuildDependencies will have emitted an error
+    }
+
     // Get node for Executable
     if ( !function->GetFileNode( nodeGraph, iter, m_TestExecutable, "TestExecutable", m_StaticDependencies ) )
     {
