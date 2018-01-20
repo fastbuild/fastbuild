@@ -53,7 +53,7 @@ void PosixMapMemory( const char* name,
         }
 
         *memory = mmap( nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, *mapFile, 0 );
-        ASSERT( memory != MAP_FAILED );
+        ASSERT( *memory != MAP_FAILED );
 }
 }
 #endif
