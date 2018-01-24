@@ -206,14 +206,17 @@ void WorkerWindow::UIUpdateThread()
         m_Menu = CreatePopupMenu();
         AppendMenu( m_Menu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT( "Exit" ) );
 
-        // Display the window, and minimize it
-        // - we do this so the user can see the application has run
-        ShowWindow( (HWND)GetHandle(), SW_SHOW );
-        UpdateWindow( (HWND)GetHandle() );
-        ShowWindow( (HWND)GetHandle(), SW_SHOW ); // First call can be ignored
+        // Display the window or and minimize it.
         if ( WorkerSettings::Get().GetStartMinimzed() )
         {
+            UpdateWindow( (HWND)GetHandle() );
             ToggleMinimized(); // minimze
+        }
+        else
+        {
+          ShowWindow( (HWND)GetHandle(), SW_SHOW );
+          UpdateWindow( (HWND)GetHandle() );
+          ShowWindow( (HWND)GetHandle(), SW_SHOW ); // First call can be ignored
         }
 
         SetStatus( "Idle" );
@@ -341,9 +344,6 @@ void WorkerWindow::ToggleMinimized()
         {
             // hide the main window
             ShowWindow( (HWND)GetHandle(), SW_HIDE );
-
-            // balloon
-            m_TrayIcon->ShowNotification( "FBuildWorker minimized to tray." );
         }
         else
         {
