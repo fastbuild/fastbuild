@@ -1020,7 +1020,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
         return job->GetCacheName();
     }
 
-    Timer t;
+    PROFILE_FUNCTION
 
     // hash the pre-processed intput data
     ASSERT( job->GetData() );
@@ -1045,10 +1045,6 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     FBuild::Get().GetCacheFileName( a, b, c, d, cacheName );
     job->SetCacheName(cacheName);
 
-    FLOG_INFO( "Cache hash: %u ms - %u kb '%s'\n",
-                uint32_t( t.GetElapsedMS() ),
-                uint32_t( job->GetDataSize() / KILOBYTE ),
-                cacheName.Get() );
     return job->GetCacheName();
 }
 
@@ -1142,8 +1138,15 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             // granularity for timekeeping, so we need to update with the actual time written
             m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
 
-            FLOG_INFO( "Cache hit: %u ms '%s'\n", uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
-            FLOG_BUILD( "Obj: %s <CACHE>\n", GetName().Get() );
+            // Output
+            AStackString<> output;
+            output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
+            if ( FBuild::Get().GetOptions().m_CacheVerbose )
+            {
+                output.AppendFormat( " - Cache Hit: %u ms '%s'\n", uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+            }
+            FLOG_BUILD_DIRECT( output.Get() );
+
             SetStatFlag( Node::STATS_CACHE_HIT );
 
             // Dependent objects need to know the PCH key to be able to pull from the cache
@@ -1156,7 +1159,14 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         }
     }
 
-    FLOG_INFO( "Cache miss: %u ms '%s'\n", uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+    // Output
+    if ( FBuild::Get().GetOptions().m_CacheVerbose )
+    {
+        FLOG_BUILD( "Obj: %s\n"
+                    " - Cache Miss: %u ms '%s'\n",
+                    GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+    }
+
     SetStatFlag( Node::STATS_CACHE_MISS );
     return false;
 }
@@ -1200,7 +1210,15 @@ void ObjectNode::WriteToCache( Job * job )
             if ( cache->Publish( cacheFileName, data, dataSize ) )
             {
                 // cache store complete
-                FLOG_INFO( "Cache store: %u ms '%s'\n", uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+
+                // Output
+                if ( FBuild::Get().GetOptions().m_CacheVerbose )
+                {
+                    FLOG_BUILD( "Obj: %s\n"
+                                " - Cache Store: %u ms '%s'\n",
+                                GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+                }
+
                 SetStatFlag( Node::STATS_CACHE_STORE );
 
                 // Dependent objects need to know the PCH key to be able to pull from the cache
@@ -1213,7 +1231,13 @@ void ObjectNode::WriteToCache( Job * job )
         }
     }
 
-    FLOG_INFO( "Cache store fail: %u ms '%s'\n", uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+    // Output
+    if ( FBuild::Get().GetOptions().m_CacheVerbose )
+    {
+        FLOG_BUILD( "Obj: %s\n"
+                    " - Cache Store Fail: %u ms '%s'\n",
+                    GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+    }
 }
 
 // GetExtraCacheFilePath

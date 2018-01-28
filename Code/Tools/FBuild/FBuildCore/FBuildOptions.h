@@ -59,6 +59,7 @@ public:
     bool        m_UseCacheRead                      = false;
     bool        m_UseCacheWrite                     = false;
     bool        m_CacheInfo                         = false;
+    bool        m_CacheVerbose                      = false;
     uint32_t    m_CacheTrim                         = 0;
 
     // Distributed Compilation

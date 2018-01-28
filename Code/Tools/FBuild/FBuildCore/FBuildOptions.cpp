@@ -108,6 +108,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Args += argv[ sizeIndex ];
                 continue;
             }
+            else if ( thisArg == "-cacheverbose" )
+            {
+                m_CacheVerbose = true;
+                continue;
+            }
             else if ( thisArg == "-clean" )
             {
                 m_ForceCleanBuild = true;
@@ -233,6 +238,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-verbose" )
             {
                 m_ShowInfo = true;
+                m_CacheVerbose = true;
                 continue;
             }
             else if ( thisArg == "-version" )
@@ -441,6 +447,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -cache[read|write] Control use of the build cache.\n"
             " -cacheinfo     Output cache statistics.\n"
             " -cachetrim [size] Trim the cache to the given size in MiB.\n"
+            " -cacheverbose  Emit details about cache interactions.\n"
             " -clean         Force a clean build.\n"
             " -config [path] Explicitly specify the config file to use.\n" );
 #ifdef DEBUG

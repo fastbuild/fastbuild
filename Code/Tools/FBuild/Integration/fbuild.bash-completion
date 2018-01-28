@@ -8,6 +8,7 @@ _fbuild() {
 		-cacheinfo
 		-cacheread
 		-cachetrim
+		-cacheverbose
 		-cachewrite
 		-clean
 		-config

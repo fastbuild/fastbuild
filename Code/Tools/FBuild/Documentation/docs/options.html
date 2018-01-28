@@ -27,6 +27,18 @@
     <td>Use the build cache.</td>
   </tr>
   <tr>
+    <td><a href="#cacheinfo">-cacheinfo</a></td>
+    <td>Emit summary of objects in the cache.</td>
+  </tr>
+  <tr>
+    <td><a href="#cachetrim">-cachetrim [sizeMiB]</a></td>
+    <td>Reduce the size of the cache.</td>
+  </tr>  
+  <tr>
+    <td><a href="#cacheverbose">-cacheverbose</a></td>
+    <td>Provide additional information about cache interactions.</td>
+  </tr>
+  <tr>
     <td><a href="#clean">-clean</a></td>
     <td>Force a clean build.</td>
   </tr>
@@ -160,6 +172,24 @@
 <p>Enable usage of the build cache.  The cache options need to be configured in the build configuration file.</p>
 <p>The cache can be enabled as read only or write only with '-cacheread' or '-cachewrite'.  This can be useful for automated build systems, where you might like one machine to populate the cache for read-only use by other users.</p>
 <p>Use of '-cache' is equivalent to '-cachread' and '-cachewrite' together.</p>
+</div>
+
+    <div class='newsitemheader' id="cacheinfo">-cacheinfo</div>
+    <div class='newsitembody'>
+<p>Emit summary of objects in the cache. This can be used to understand the total size
+of the cache and how quickly it is growing. (See the related <a href='#cachetrim'>-cachetrim</a>)</p>
+</div>
+
+    <div class='newsitemheader' id="cachetrim">-cachetrim [sizeMiB]</div>
+    <div class='newsitembody'>
+<p>Reduce the size of the cache to the specified size in MiB. This will delete items in the cache (oldest first)
+until under the requested size. (See the related <a href='#cacheinfo'>-cacheinfo</a>)</p>
+</div>
+
+    <div class='newsitemheader' id="cacheverbose">-cacheverbose</div>
+    <div class='newsitembody'>
+<p>Provide additional information about cache interactions, including cache keys, explicit hit/miss/store
+information and performance metrics. This can be used to assist troubleshooting.</p>
 </div>
 
     <div class='newsitemheader' id="clean">-clean</div>
