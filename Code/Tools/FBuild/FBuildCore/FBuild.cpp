@@ -672,7 +672,7 @@ void FBuild::UpdateBuildStatus( const Node * node )
 void FBuild::GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD, AString & path ) const
 {
     // cache version - bump if cache format is changed
-    static const int cacheVersion( 8 );
+    static const int cacheVersion( 9 );
 
     // format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC-32A2B04375A2D7DE.7
     path.Format( "%016" PRIX64 "_%08X_%016" PRIX64 "-%016" PRIX64 ".%u", keyA, keyB, keyC, keyD, cacheVersion );

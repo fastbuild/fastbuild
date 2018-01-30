@@ -58,7 +58,8 @@ public:
         FLAG_INCLUDES_IN_STDERR =   0x20000,
         FLAG_QT_RCC             =   0x40000,
         FLAG_WARNINGS_AS_ERRORS_MSVC    = 0x80000,
-        FLAG_VBCC               =   0x100000
+        FLAG_VBCC               =   0x100000,
+        FLAG_STATIC_ANALYSIS_MSVC = 0x200000
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,
@@ -106,7 +107,7 @@ private:
     const AString & GetCacheName( Job * job ) const;
     bool RetrieveFromCache( Job * job );
     void WriteToCache( Job * job );
-    bool GetExtraCacheFilePath( const Job * job, AString & extraFileName ) const;
+    void GetExtraCacheFilePaths( const Job * job, Array< AString > & outFileNames ) const;
 
     void EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false, bool isRemote = false ) const;
 
@@ -121,7 +122,7 @@ private:
     static bool StripTokenWithArg_MSVC( const char * tokenToCheckFor, const AString & token, size_t & index );
     static bool StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
     static bool StripToken_MSVC( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
-    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, const AString & overrideSrcFile = AString::GetEmpty() ) const;
+    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
     bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;

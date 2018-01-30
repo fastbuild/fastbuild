@@ -31,7 +31,9 @@ private:
     void TestPCHWithCache_NoRebuild() const;
     void PreventUselessCacheTraffic_MSVC() const;
     void CacheUniqueness() const;
+    void CacheUniqueness2() const;
     void Deoptimization() const;
+    void PrecompiledHeaderCacheAnalyze_MSVC() const;
 
     // Clang on Windows
     #if defined( __WINDOWS__ )
@@ -50,8 +52,10 @@ REGISTER_TESTS_BEGIN( TestPrecompiledHeaders )
     REGISTER_TEST( TestPCHWithCache )
     REGISTER_TEST( TestPCHWithCache_NoRebuild )
     REGISTER_TEST( CacheUniqueness )
+    REGISTER_TEST( CacheUniqueness2 )
     REGISTER_TEST( Deoptimization )
     #if defined( __WINDOWS__ )
+        REGISTER_TEST( PrecompiledHeaderCacheAnalyze_MSVC )
         REGISTER_TEST( PreventUselessCacheTraffic_MSVC )
         REGISTER_TEST( TestPCHClangWindows )
         REGISTER_TEST( TestPCHClangWindows_NoRebuild )
@@ -314,6 +318,50 @@ void TestPrecompiledHeaders::CacheUniqueness() const
     }
 }
 
+// CacheUniqueness2
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::CacheUniqueness2() const
+{
+    // Ensure the same source file built into two locations
+    // is cached correctly in both
+
+    // Initialize
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestPrecompiledHeaders/CacheUniqueness2/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+
+    AStackString<> target( "PCHTest-CacheUniqueness2" );
+
+    // Write to cache
+    {
+        FBuildOptions optionsCopy( options );
+        optionsCopy.m_UseCacheWrite = true;
+        FBuild fBuild( optionsCopy );
+        TEST_ASSERT( fBuild.Initialize( nullptr ) );
+
+        TEST_ASSERT( fBuild.Build( target ) );
+
+        TEST_ASSERT(FBuild::Get().GetStats().GetCacheStores() == 4);
+        CheckStatsNode ( 4,      4,      Node::OBJECT_NODE );
+        CheckStatsNode ( 2,      2,      Node::OBJECT_LIST_NODE );
+    }
+
+    // Read from cache
+    {
+        FBuildOptions optionsCopy( options );
+        optionsCopy.m_UseCacheRead = true;
+        FBuild fBuild( optionsCopy );
+        TEST_ASSERT( fBuild.Initialize( nullptr ) );
+
+        TEST_ASSERT( fBuild.Build( target ) );
+
+        TEST_ASSERT(FBuild::Get().GetStats().GetCacheHits() == 4);
+        CheckStatsNode ( 4,      0,      Node::OBJECT_NODE );
+        CheckStatsNode ( 2,      2,      Node::OBJECT_LIST_NODE );
+    }
+}
+
 // Deoptimization
 //------------------------------------------------------------------------------
 void TestPrecompiledHeaders::Deoptimization() const
@@ -346,6 +394,96 @@ void TestPrecompiledHeaders::Deoptimization() const
 
     // Make sure nothing was deoptimized
     TEST_ASSERT( GetRecordedOutput().FindI( "**Deoptimized**" ) == nullptr );
+}
+
+
+// PrecompiledHeaderCacheAnalyze_MSVC
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::PrecompiledHeaderCacheAnalyze_MSVC() const
+{
+    // Initialize
+    FBuildOptions options;
+    options.m_ConfigFile = "Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+
+    AStackString<> target( "PCHTest-CacheAnalyze_MSVC" );
+    const char * pchFile1 = "../../../../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch";
+    const char * pchFile2 = "../../../../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch";
+    const char * pchOBJFile1 = "../../../../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch.obj";
+    const char * pchOBJFile2 = "../../../../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch.obj";
+    const char * pchASTFile1 = "../../../../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pchast";
+    const char * pchASTFile2 = "../../../../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pchast";
+    const char * pchXMLFile1 = "../../../../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch.nativecodeanalysis.xml";
+    const char * pchXMLFile2 = "../../../../tmp/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch.nativecodeanalysis.xml";
+
+    // Delete pch and related files (if left from an old build)
+    FileIO::FileDelete( pchFile1 );
+    FileIO::FileDelete( pchFile2 );
+    FileIO::FileDelete( pchOBJFile1 );
+    FileIO::FileDelete( pchOBJFile2 );
+    FileIO::FileDelete( pchASTFile1 );
+    FileIO::FileDelete( pchASTFile2 );
+    FileIO::FileDelete( pchXMLFile1 );
+    FileIO::FileDelete( pchXMLFile2 );
+
+    // Write to cache
+    {
+        FBuildOptions optionsCopy( options );
+        optionsCopy.m_UseCacheWrite = true;
+        FBuild fBuild( optionsCopy );
+        TEST_ASSERT( fBuild.Initialize( nullptr ) );
+
+        TEST_ASSERT( fBuild.Build( target ) );
+
+        CheckStatsNode ( 6,      6,      Node::OBJECT_NODE );
+        CheckStatsNode ( 2,      2,      Node::OBJECT_LIST_NODE );
+
+        TEST_ASSERT(FBuild::Get().GetStats().GetCacheStores() == 6);
+
+        TEST_ASSERT( FileIO::FileExists( pchFile1 ) );
+        TEST_ASSERT( FileIO::FileExists( pchFile2 ) );
+        TEST_ASSERT( FileIO::FileExists( pchOBJFile1 ) );
+        TEST_ASSERT( FileIO::FileExists( pchOBJFile2 ) );
+        TEST_ASSERT( FileIO::FileExists( pchASTFile1 ) );
+        TEST_ASSERT( FileIO::FileExists( pchASTFile2 ) );
+        TEST_ASSERT( FileIO::FileExists( pchXMLFile1 ) );
+        TEST_ASSERT( FileIO::FileExists( pchXMLFile2 ) );
+    }
+
+    // Delete pch and related files
+    TEST_ASSERT( FileIO::FileDelete( pchFile1 ) );
+    TEST_ASSERT( FileIO::FileDelete( pchFile2 ) );
+    TEST_ASSERT( FileIO::FileDelete( pchOBJFile1 ) );
+    TEST_ASSERT( FileIO::FileDelete( pchOBJFile2 ) );
+    TEST_ASSERT( FileIO::FileDelete( pchASTFile1 ) );
+    TEST_ASSERT( FileIO::FileDelete( pchASTFile2 ) );
+    TEST_ASSERT( FileIO::FileDelete( pchXMLFile1 ) );
+    TEST_ASSERT( FileIO::FileDelete( pchXMLFile2 ) );
+
+    // Read from cache
+    {
+        FBuildOptions optionsCopy( options );
+        optionsCopy.m_UseCacheRead = true;
+        FBuild fBuild( optionsCopy );
+        TEST_ASSERT( fBuild.Initialize( nullptr ) );
+
+        TEST_ASSERT( fBuild.Build( target ) );
+
+        CheckStatsNode ( 6,      0,      Node::OBJECT_NODE );
+        CheckStatsNode ( 2,      2,      Node::OBJECT_LIST_NODE );
+
+        TEST_ASSERT(FBuild::Get().GetStats().GetCacheHits() == 6);
+
+        TEST_ASSERT( FileIO::FileExists( pchFile1 ) );
+        TEST_ASSERT( FileIO::FileExists( pchFile2 ) );
+        TEST_ASSERT( FileIO::FileExists( pchOBJFile1 ) );
+        TEST_ASSERT( FileIO::FileExists( pchOBJFile2 ) );
+        TEST_ASSERT( FileIO::FileExists( pchASTFile1 ) );
+        TEST_ASSERT( FileIO::FileExists( pchASTFile2 ) );
+        TEST_ASSERT( FileIO::FileExists( pchXMLFile1 ) );
+        TEST_ASSERT( FileIO::FileExists( pchXMLFile2 ) );
+    }
 }
 
 // TestPCHClang
