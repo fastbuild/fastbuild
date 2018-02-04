@@ -1,0 +1,41 @@
+
+// Struct Recursion
+//--------------------------------------------------------------------
+Print( "---- Struct Recursion" )
+{
+    .A =
+    [
+        .Value1 = 'A'
+        .Sub1 =
+        [
+            .Value2 = 'A'
+            .Sub2 =
+            [
+                .Value3 = 'A'
+                .Sub3 =
+                [
+                    .Value4 = 'A'
+                ]
+            ]
+        ]
+    ]
+
+    .B =
+    [
+        .Value1 = 'B'
+        .Sub1 =
+        [
+            .Value2 = 'B'
+            .Sub2 =
+            [
+                .Value3 = 'B'
+                .Sub3 =
+                [
+                    .Value4 = 'B'
+                ]
+            ]
+        ]
+    ]
+    .AB = .A + .B
+    Print( .AB ) // Test will check output
+}

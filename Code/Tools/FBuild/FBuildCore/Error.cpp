@@ -99,9 +99,10 @@
 // Error_1009_UnknownVariable
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1009_UnknownVariable( const BFFIterator & iter,
-                                                const Function * function )
+                                                   const Function * function,
+                                                   const AString & unknownVariableName )
 {
-    FormatError( iter, 1009u, function, "Unknown variable." );
+    FormatError( iter, 1009u, function, "Unknown variable '%s'.", unknownVariableName.Get() );
 }
 
 // Error_1010_UnknownConstruct
@@ -577,6 +578,32 @@
     FormatError( iter, 1303u, function, "Precompiled Header option '%s' in '%s' invalid. Only allowed on Precompiled Header.", option, property );
 }
 
+// Error_1400_CopyDestMissingSlash
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1400_CopyDestMissingSlash( const BFFIterator & iter,
+                                                        const Function * function )
+{
+    FormatError( iter, 1400u, function, "'Dest' with multiple 'Source' files should be a path. Missing trailing '/'?" );
+}
+
+// Error_1500_CompilerDetectionFailed
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1500_CompilerDetectionFailed( const BFFIterator & iter,
+                                                           const Function * function,
+                                                           const AString & exe )
+{
+    FormatError( iter, 1500u, function, "Compiler detection failed. Unrecognized executable '%s'.", exe.Get() );
+}
+
+// Error_1501_CompilerFamilyUnrecognized
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1501_CompilerFamilyUnrecognized( const BFFIterator & iter,
+                                                              const Function * function,
+                                                              const AString & badCompilerFamily )
+{
+    FormatError( iter, 1501u, function, ".CompilerFamily '%s' is unrecognized.", badCompilerFamily.Get() );
+}
+
 // FormatError
 //------------------------------------------------------------------------------
 void Error::FormatError( const BFFIterator & iter,
@@ -649,9 +676,9 @@ void Error::FormatError( const BFFIterator & iter,
     }
 
     AString::Copy( "^", c, 1 );
-    FLOG_ERROR( buffer.Get() );
+    FLOG_ERROR( "%s", buffer.Get() );
     AString::Copy( "\\--here", c, 8 );
-    FLOG_ERROR( buffer.Get() );
+    FLOG_ERROR( "%s", buffer.Get() );
 }
 
 //------------------------------------------------------------------------------

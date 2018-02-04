@@ -12,15 +12,36 @@ typedef unsigned short      uint16_t;
 typedef signed short        int16_t;
 typedef unsigned int        uint32_t;
 typedef signed int          int32_t;
-#if defined( __WINDOWS__ )
+#if defined( __WINDOWS__ ) || defined( __OSX__ )
     typedef unsigned long long  uint64_t;
     typedef signed long long    int64_t;
-#elif defined( __OSX__ )
-    typedef unsigned long long  uint64_t;
-    typedef signed long long    int64_t;
+    #ifndef PRIi64
+        #define PRIi64 "lli"
+    #endif
+    #ifndef PRIu64
+        #define PRIu64 "llu"
+    #endif
+    #ifndef PRIx64
+        #define PRIx64 "llx"
+    #endif
+    #ifndef PRIX64
+        #define PRIX64 "llX"
+    #endif
 #else
     typedef unsigned long int   uint64_t;
     typedef signed long int     int64_t;
+    #ifndef PRIi64
+        #define PRIi64 "li"
+    #endif
+    #ifndef PRIu64
+        #define PRIu64 "lu"
+    #endif
+    #ifndef PRIx64
+        #define PRIx64 "lx"
+    #endif
+    #ifndef PRIX64
+        #define PRIX64 "lX"
+    #endif
 #endif
 
 #define KILOBYTE (1024)
@@ -94,6 +115,12 @@ typedef signed int          int32_t;
 
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #define MemoryBarrier() __asm__ __volatile__("")
+#endif
+
+#if defined( __GNUC__ ) // GCC or Clang
+    #define FORMAT_STRING( fmt, args ) __attribute__((format(printf, fmt, args)))
+#else
+    #define FORMAT_STRING( fmt, args )
 #endif
 
 // Warning disabling

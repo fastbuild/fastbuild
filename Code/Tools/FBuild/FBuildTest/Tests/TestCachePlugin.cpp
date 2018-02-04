@@ -55,6 +55,7 @@ void TestCachePlugin::UsePlugin() const
     const bool is64bits = ( sizeof(void *) == 8 );
     options.m_ConfigFile = is64bits ? "Data/TestCachePlugin/useplugin.bff" : "Data/TestCachePlugin/useplugin-x86.bff";
 
+    // Read
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -64,6 +65,7 @@ void TestCachePlugin::UsePlugin() const
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 0 );
     }
 
+    // Write
     {
         options.m_UseCacheWrite = false;
 
@@ -73,6 +75,20 @@ void TestCachePlugin::UsePlugin() const
         TEST_ASSERT( fBuild.Build( AStackString<>( "TestFiles-Lib" ) ) );
         TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 0 );
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 0 );
+    }
+
+    // OutputInfo
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.CacheOutputInfo() );
+    }
+
+    // Trim
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.CacheTrim() );
     }
 }
 

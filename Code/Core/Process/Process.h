@@ -12,7 +12,8 @@
 class Process
 {
 public:
-    explicit Process( volatile bool * masterAbortFlag = nullptr );
+    explicit Process( const volatile bool * masterAbortFlag = nullptr,
+                      const volatile bool * abortFlag = nullptr );
     ~Process();
 
     bool Spawn( const char * executable,
@@ -92,8 +93,9 @@ private:
         int m_StdOutRead;
         int m_StdErrRead;
     #endif
-        bool m_HasAborted;
-        volatile bool * m_MasterAbortFlag; // This member is set when we must cancel processes asap when the master process dies.
+    bool m_HasAborted;
+    const volatile bool * m_MasterAbortFlag; // This member is set when we must cancel processes asap when the master process dies.
+    const volatile bool * m_AbortFlag;
 };
 
 //------------------------------------------------------------------------------

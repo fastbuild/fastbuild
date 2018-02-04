@@ -468,7 +468,7 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
                                          Dependencies & nodes ) const
 {
     // Handle special case of excluded files beginning with ../
-    // Since they can be used seinsibly by matching just the end
+    // Since they can be used sensibly by matching just the end
     // of a path, assume they are relative to the working dir.
     // TODO:C Move this during bff parsing when everything is using reflection
     Array< AString > filesToExcludeCleaned( filesToExclude.GetSize(), true );
@@ -497,13 +497,21 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
         Node * node = nodeGraph.FindNode( name );
         if ( node == nullptr )
         {
-            node = nodeGraph.CreateDirectoryListNode( name,
-                                               path,
-                                               patterns,
-                                               recurse,
-                                               excludePaths,
-                                               filesToExcludeCleaned,
-                                               excludePatterns );
+            node = nodeGraph.CreateDirectoryListNode( name );
+            DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
+            dln->m_Path = path;
+            if ( patterns )
+            {
+                dln->m_Patterns = *patterns;
+            }
+            dln->m_Recursive = recurse;
+            dln->m_ExcludePaths = excludePaths;
+            dln->m_FilesToExclude = filesToExcludeCleaned;
+            dln->m_ExcludePatterns = excludePatterns;
+            if ( !dln->Initialize( nodeGraph, iter, this ) )
+            {
+                return false; // Initialize will have emitted an error
+            }
         }
         else if ( node->GetType() != Node::DIRECTORY_LIST_NODE )
         {
@@ -965,19 +973,23 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
     {
         case PT_ASTRING:
         {
+            const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
             if ( property.IsArray() )
             {
-                return PopulateArrayOfStrings( nodeGraph, iter, base, property, variable );
+                return PopulateArrayOfStrings( nodeGraph, iter, base, property, variable, required );
             }
             else
             {
-                const bool required = ( property.HasMetaData< Meta_Optional >() == nullptr );
                 return PopulateString( nodeGraph, iter, base, property, variable, required );
             }
         }
         case PT_BOOL:
         {
             return PopulateBool( iter, base, property, variable );
+        }
+        case PT_INT32:
+        {
+            return PopulateInt32( iter, base, property, variable );
         }
         case PT_UINT32:
         {
@@ -1039,6 +1051,13 @@ bool Function::PopulateStringHelper( NodeGraph & nodeGraph,
                                      const AString & string,
                                      Array< AString > & outStrings ) const
 {
+    // Return empty string untouched (expansion of aliases or paths makes no sense)
+    if ( string.IsEmpty() )
+    {
+        outStrings.Append( string );
+        return true; // Calling code must determine if this is an error
+    }
+
     // Full paths to files can support aliases
     if ( fileMD && ( !fileMD->IsRelative() ) )
     {
@@ -1103,6 +1122,9 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
                                           const AString & variableName,
                                           AString & valueToFix ) const
 {
+    // Calling code must handle empty strings
+    ASSERT( valueToFix.IsEmpty() == false );
+
     // Only one is allowed (having neither is ok too)
     ASSERT( ( fileMD == nullptr ) || ( pathMD == nullptr ) );
 
@@ -1147,12 +1169,29 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 
 // PopulateArrayOfStrings
 //------------------------------------------------------------------------------
-bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
+bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
     Array< AString > strings;
     if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error
+    }
+
+    // Empty arrays are not allowed if property is required
+    if ( strings.IsEmpty() && required )
+    {
+        Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, property.GetName() ); // TODO:B A specific error for empty array of strings?
+        return false;
+    }
+
+    // Arrays must not contain empty strings
+    for ( const AString& string : strings )
+    {
+        if ( string.IsEmpty() == true )
+        {
+            Error::Error_1004_EmptyStringPropertyNotAllowed( iter, this, property.GetName() ); // TODO:B A specific error for empty string in array?
+            return false;
+        }
     }
 
     property.SetProperty( base, strings );
@@ -1213,6 +1252,34 @@ bool Function::PopulateBool( const BFFIterator & iter, void * base, const Reflec
     }
 
     Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_BOOL );
+    return false;
+}
+
+// PopulateInt32
+//------------------------------------------------------------------------------
+bool Function::PopulateInt32( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const
+{
+    if ( variable->IsInt() )
+    {
+        const int32_t value = variable->GetInt();
+
+        // Check range
+        const Meta_Range * rangeMD = property.HasMetaData< Meta_Range >();
+        if ( rangeMD )
+        {
+            if ( ( value < rangeMD->GetMin() ) || ( value > rangeMD->GetMax() ) )
+            {
+                Error::Error_1054_IntegerOutOfRange( iter, this, variable->GetName().Get(), rangeMD->GetMin(), rangeMD->GetMax() );
+                return false;
+            }
+        }
+
+        // Int32
+        property.SetProperty( base, value );
+        return true;
+    }
+
+    Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_INT );
     return false;
 }
 

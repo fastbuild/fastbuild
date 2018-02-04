@@ -13,6 +13,105 @@
 
 <h1>Changelog</h1>
 
+
+<div class='newsitemheader'>
+    v0.95&nbsp;<font color='#bbbbbb'>(4-Feb-2018)</font>
+</div>
+<div class='newsitembody'>
+    Notes
+	<ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Cache version changed : previous cache entries will be ignored</li>
+        <li>Behaviour Changed: Sub struct concatenation order has been fixed (see fixes)</li>
+        <li>Pre-built executables for 32-bit Windows version will no longer be released</li>
+    </ul>
+    New
+    <ul>
+        <li>The VBCC compiler is now supported</li>
+        <li>-cacheinfo option dumps information about the cache</li>
+        <li>-cachetrim option trims the cache to the desired size</li>
+        <li>Support WindRiver compiler (dcc.exe) (treat as gcc) (Thanks to Mohamed El-Shahawi)</li>
+        <li>Add -cacheverbose command line option</li>
+    </ul>
+    Fixes
+    <ul>
+        <li>Distributed Compilation:</li>
+        <ul>
+            <li>Prevent rare shutdown crash or deadlock when using distributed compilation</li>
+            <li>[Windows] Fix handle leak in FBuildWorker</li>
+            <li>FBuildWorker no longer exits if exe is deleted prior to replacement</li>        
+        </ul>
+        <li>BFF Parsing:</li>
+        <ul>
+            <li>Concatenation of members in first level of sub-structs was reversed</li>
+            <li>Internal string copies avoid some potentially unsafe operations (Thanks to dummyunit)</li>        
+            <li>Fix crash when accessing variable from parent scope that doesn't exist (Thanks to dummyunit)</li>
+            <li>Fix crash when mismatched types are provided in an Array declaration (Thanks to dummyunit)</li>
+            <li>Empty strings in Arrays report 'Empty string not allowed' instead of being silently accepted</li>
+            <li>Empty strings sepcified for files report 'Empty string not allowed' insead of 'Path not allowed'</li>
+            <li>Empty arrays being set for required properties are no longer silently accepted</li>
+            <li>Strings with embedded nuls not being copied properly during a grow operation (Thanks to dummyunit)</li>
+            <li>Mismatched types in Struct concatenation reports error #1034 instead of crashing</li>
+        </ul>
+        <li>Project Generation:</li>
+        <ul>
+            <li>Generated Visual Studio projects are compatible with Visual Studio Selector (Thanks to slonopotamus)</li>
+            <li>[OSX][Linux] .vcxproj Intellisense includes are generated with Windows-style slashes</li>
+            <li>Intellisense and CodeSense options are discovered when using spaces (e.g. "-D WIN32")</li>
+            <li>[Windows] .xcodeproj CodeSense include paths are generated with OSX-style slashes</li>
+        </ul>        
+        <li>Cache:</li>
+        <ul>
+            <li>[OSX][Linux] Error message when failing to load cache plugin dll is correctly output (Thanks to dummyunit)</li>
+            <li>Cache entries not being unique when only filename changes</li>
+            <li>Cache stores additional files required by /analyze flag with msvc compiler</li>
+        </ul>
+        <li>Prevent source files being deleted due to a rare race condition using experimental -fastcancel (Thanks to Lambert Clara)</li>
+        <li>[Linux] Fix FileCopy when dest file is read-only</li>
+        <li>Prevent precompiled headers using deoptimzation settings (Thanks to Jean-Sebastien Pelletier)</li>
+        <li>[Linux] Fix unsafe readlink retrieving executable path for fbuild (Thanks to dummyunit)</li>
+        <li>[Linux] Performance of hashing &amp; compression was 5-10x slower due to incorrect optimizations (Thanks to dummyunit)</li>
+        <li>[OSX] [Linux] Handle DT_UNKNOWN correctly when walking directories on some file systems (Thanks to fuzzac)</li>
+        <li>[Windows] Clang/GCC remote failures no longer incorrectly report as System Failures (Thanks to Arturmazurek)</li>
+        <li>DLL() and Exectuable() have a proper dependency on the linker executable</li>
+        <li>[Linux] Tests which crash are correctly reported as failed (Thanks to dummyunit)</li>
+        <li>Failure to create temp files when compiling objects reports correct error (Thanks to dummyunit)</li>
+        <li>Work around VS2013/15 bug resulting in missing dependencies when an old .pch is on disk (Thanks to Lambert Clara)</li>
+        <li>Fix include detection when Clang is used as cl.exe (Thanks to Poppolopoppo)</li>
+        <li>Prevent crash breaking via Ctrl+C when -wrapper mode is used (-vs, -ide etc)</li>
+        <li>-config paths with spaces are correctly handled when using -vs or -ide (Thanks to liamkf)</li>
+    </ul>
+	Improvements
+	<ul>
+        <li>Distributed Compilation:</li>
+        <ul>
+            <li>Remote compilation can win a race, improving compile times</li>
+            <li>Greatly reduce memory usage of FBuildWorker</li>
+            <li>FBuildWorker idle CPU usage reduced (check every 500ms instead of 100ms)</li>
+            <li>Expose local .DistributableJobMemoryLimitMiB in Settings</li>
+            <li>Increase distributable job memory limit to 2GiB for 64bit builds</li>
+            <li>Increase FBuildWorker idle detection threshold to 20%</li>
+            <li>Increase connection timeout which was too aggressive (0.5s -> 2.0s)</li>
+            <li>[Linux] FBuildWorker idle detection implemented</li>
+        </ul>
+        <li>Project Generation:</li>
+        <ul>
+            <li>VCXProj Intellisense info can be derived automatically in more situations</li>
+            <li>.ProjectAllowedFileExtensions includes *.asm and *.s by default</li>
+        </ul>
+        <li>Copy with multiple .Source and non-dir .Dest generates an explicit error (#1400)</li>
+        <li>Avoid Copy() error setting timestamps for copy if dst file is locked by another application</li>
+        <li>Remove CopyNode serializing SourceBasePath property to DB unnecessarily</li>
+        <li>Error 1009  'Unknown variable.' includes variable name in case it's not obvious from the context</li>
+        <li>.CompilerFamily can be explicitly set on Compiler() to override auto-detection (Thanks to Layla Mah)</li>
+        <li>Unity pragmas are commented out for files isolated from unity</li>
+        <li>DLL() and Executable() support .PreBuildDependencies</li>
+        <li>Test() supports .PreBuildDependencies</li>
+        <li>Bash completion script updates for latest options (Thanks to dummyunit)</li>
+	</ul>
+</div>
+
+
 <div class='newsitemheader'>
     v0.94&nbsp;<font color='#bbbbbb'>(28-Sep-2017)</font>
 </div>

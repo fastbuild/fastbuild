@@ -41,21 +41,12 @@ void TestExe::CreateNode() const
     FBuild fb;
     NodeGraph ng;
 
-    Dependencies inputLibraries( 1, false );
-    inputLibraries.Append( Dependency( ng.CreateFileNode( AStackString<>( "dummy.lib" ) ) ) );
-
-    ExeNode * exeNode = ng.CreateExeNode( AStackString<>( "exe.exe" ),
-                                            inputLibraries,
-                                            Dependencies(),
-                                            AString::GetEmpty(),
-                                            AStackString<>( "linker.exe" ),
-                                            AString::GetEmpty(), // args
-                                            0, // flags
-                                            Dependencies(),
-                                            AStackString<>(),
-                                            nullptr,
-                                            AString::GetEmpty() ); // assembly resources
-
+    #if defined( __WINDOWS__ )
+        AStackString<> exeName( "c:\\exe.exe" );
+    #else
+        AStackString<> exeName( "/tmp/exe.exe" );
+    #endif
+    ExeNode * exeNode = ng.CreateExeNode( exeName );
     TEST_ASSERT( exeNode->GetType() == Node::EXE_NODE );
     TEST_ASSERT( ExeNode::GetTypeS() == Node::EXE_NODE );
     TEST_ASSERT( AStackString<>( "Exe" ) == exeNode->GetTypeName() );
@@ -86,13 +77,13 @@ void TestExe::Build() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE ); // cpp
+    CheckStatsNode ( 2,     2,      Node::FILE_NODE ); // cpp + linker exe
     CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
     CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 1,     1,      Node::EXE_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 6,     6 );
+    CheckStatsTotal( 7,     7 );
 }
 
 // CheckValidExe
@@ -120,13 +111,13 @@ void TestExe::Build_NoRebuild() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::FILE_NODE ); // cpp
+    CheckStatsNode ( 2,     2,      Node::FILE_NODE ); // cpp + linker exe
     CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 1,     0,      Node::EXE_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 6,     2 );
+    CheckStatsTotal( 7,     3 );
 
 }
 

@@ -19,6 +19,12 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 
+// Defines
+//------------------------------------------------------------------------------
+#define DIST_MEMORY_LIMIT_MIN ( 16 ) // 16MiB
+#define DIST_MEMORY_LIMIT_MAX ( ( sizeof(void *) == 8 ) ? 64 * 1024 : 2048 ) // 64 GiB or 2 GiB
+#define DIST_MEMORY_LIMIT_DEFAULT ( ( sizeof(void *) == 8 ) ? 2048 : 1024 ) // 2 GiB or 1 GiB
+
 // REFLECTION
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
@@ -27,6 +33,7 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT(        m_CachePluginDLL,           "CachePluginDLL",           MetaOptional() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
+    REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
 REFLECT_END( SettingsNode )
 
 // CONSTRUCTOR
@@ -34,6 +41,7 @@ REFLECT_END( SettingsNode )
 SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
 , m_WorkerConnectionLimit( 15 )
+, m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );

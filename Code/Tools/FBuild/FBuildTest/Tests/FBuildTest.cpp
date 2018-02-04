@@ -71,19 +71,19 @@ void FBuildTest::CheckStatsNode( const FBuildStats & stats, size_t numSeen, size
 {
     const FBuildStats::Stats & nodeStats = stats.GetStatsFor( nodeType );
 
-    size_t actualNumSeen = nodeStats.m_NumProcessed;
-    size_t actualNumBuilt = nodeStats.m_NumBuilt;
+    const uint32_t actualNumSeen = nodeStats.m_NumProcessed;
+    const uint32_t actualNumBuilt = nodeStats.m_NumBuilt;
 
     const bool nodeStatsOk = ( actualNumSeen == numSeen ) && ( actualNumBuilt == numBuilt );
     if ( !nodeStatsOk )
     {
         if ( actualNumSeen != numSeen )
         {
-            OUTPUT( "PROBLEM for %s: Saw %u instead of %u\n", Node::GetTypeName( nodeType ), actualNumSeen, numSeen );
+            OUTPUT( "PROBLEM for %s: Saw %u instead of %u\n", Node::GetTypeName( nodeType ), actualNumSeen, (uint32_t)numSeen );
         }
         if ( actualNumBuilt != numBuilt )
         {
-            OUTPUT( "PROBLEM for %s: Built %u instead of %u\n", Node::GetTypeName( nodeType ), actualNumBuilt, numBuilt );
+            OUTPUT( "PROBLEM for %s: Built %u instead of %u\n", Node::GetTypeName( nodeType ), actualNumBuilt, (uint32_t)numBuilt );
         }
         TEST_ASSERT( false );
     }

@@ -69,6 +69,14 @@ private:
     IMPLEMENT_TEST( uint64_t, AtomicDecU64, 2000000, 1 )
     IMPLEMENT_TEST( int32_t, AtomicDec32, 0, -1999999 )
     IMPLEMENT_TEST( int64_t, AtomicDec64, 0, -1999999 )
+
+    // Add
+    void Add32() const;
+    void Add64() const;
+
+    // Sub
+    void Sub32() const;
+    void Sub64() const;
 };
 
 // Register Tests
@@ -85,6 +93,50 @@ REGISTER_TESTS_BEGIN( TestAtomic )
     REGISTER_TEST( TestAtomicDecU64 )
     REGISTER_TEST( TestAtomicDec32 )
     REGISTER_TEST( TestAtomicDec64 )
+
+    // Add
+    REGISTER_TEST( Add32 )
+    REGISTER_TEST( Add64 )
+
+    // Sub
+    REGISTER_TEST( Sub32 )
+    REGISTER_TEST( Sub64 )
 REGISTER_TESTS_END
+
+// Add32
+//------------------------------------------------------------------------------
+void TestAtomic::Add32() const
+{
+    // Ensure return result is post-add
+    int32_t i32 = 0;
+    TEST_ASSERT( AtomicAdd32( &i32, 999 ) == 999 );
+}
+
+// Add64
+//------------------------------------------------------------------------------
+void TestAtomic::Add64() const
+{
+    // Ensure return result is post-add
+    int64_t i64 = 0;
+    TEST_ASSERT( AtomicAdd64( &i64, 999 ) == 999 );
+}
+
+// Sub32
+//------------------------------------------------------------------------------
+void TestAtomic::Sub32() const
+{
+    // Ensure return result is post-sub
+    int32_t i32 = 999;
+    TEST_ASSERT( AtomicSub32( &i32, 999 ) == 0 );
+}
+
+// Sub64
+//------------------------------------------------------------------------------
+void TestAtomic::Sub64() const
+{
+    // Ensure return result is post-sub
+    int64_t i64 = 999;
+    TEST_ASSERT( AtomicSub64( &i64, 999 ) == 0 );
+}
 
 //------------------------------------------------------------------------------

@@ -5,18 +5,26 @@ _fbuild() {
 	local prev="${COMP_WORDS[COMP_CWORD-1]}"
 	local opts="
 		-cache
+		-cacheinfo
 		-cacheread
+		-cachetrim
+		-cacheverbose
 		-cachewrite
 		-clean
 		-config
 		-dist
+		-distverbose
+		-fastcancel
 		-fixuperrorpaths
+		-forceremote
 		-help
 		-ide
 		-j
 		-monitor
 		-noprogress
 		-nostoponerror
+		-nosummaryonerror
+		-quiet
 		-report
 		-showcmds
 		-showtargets
@@ -27,6 +35,13 @@ _fbuild() {
 		-wait
 		-wrapper
 	"
+
+	# Offer nothing after -cachetrim to indicate that this option requires an argument
+	case ${prev} in
+	-cachetrim)
+		return 0
+		;;
+	esac
 
 	# Offer files after -config
 	case ${prev} in
@@ -61,11 +76,11 @@ _fbuild() {
 	COMPREPLY=( $( compgen -W "${opts} ${targets}" -- "${cur}" ) )
 }
 
-complete -o bashdefault -o default -F _fbuild fbuild
-complete -o bashdefault -o default -F _fbuild FBuild
+complete -F _fbuild fbuild
+complete -F _fbuild FBuild
 case "$(uname)" in
 MINGW32*|MSYS*|CYGWIN*)
-	complete -o bashdefault -o default -F _fbuild fbuild.exe
-	complete -o bashdefault -o default -F _fbuild FBuild.exe
+	complete -F _fbuild fbuild.exe
+	complete -F _fbuild FBuild.exe
 	;;
 esac

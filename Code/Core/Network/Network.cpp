@@ -81,7 +81,7 @@
         returnCode = Thread::WaitForThread( handle, sleepInterval, timedOut );
 
         // Are we shutting down?
-        if ( NetworkStartupHelper::IsStarted() == false )
+        if ( NetworkStartupHelper::IsShuttingDown() )
         {
             returnCode = 0; // ignore whatever we may have gotten back
             break;
@@ -128,6 +128,8 @@
     uint32_t ip( 0 );
     {
         PROFILE_FUNCTION
+
+        NetworkStartupHelper helper;
 
         AStackString<> hostName;
 

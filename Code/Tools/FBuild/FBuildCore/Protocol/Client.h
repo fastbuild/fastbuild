@@ -31,6 +31,7 @@ class Client : public TCPConnectionPool
 {
 public:
     Client( const Array< AString > & workerList,
+            uint16_t port,
             uint32_t workerConnectionLimit,
             bool detailedLogging );
     ~Client();
@@ -46,6 +47,7 @@ private:
     void Process( const ConnectionInfo * connection, const Protocol::MsgServerStatus * msg );
 
     const ToolManifest * FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const;
+    bool WriteFileToDisk( const AString & fileName, const char * data, const uint32_t dataSize ) const;
 
     static uint32_t ThreadFuncStatic( void * param );
     void            ThreadFunc();
@@ -87,6 +89,7 @@ private:
     Mutex                   m_ServerListMutex;
     Array< ServerState >    m_ServerList;
     uint32_t                m_WorkerConnectionLimit;
+    uint16_t                m_Port;
 };
 
 //------------------------------------------------------------------------------

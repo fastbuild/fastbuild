@@ -72,7 +72,7 @@ bool IsDebuggerAttached();
                               const char * file,
                               const int line,
                               const char * msgFormat,
-                              ... ) NORETURN_CLANG_ANALYZER;
+                              ... ) FORMAT_STRING( 4, 5 ) NORETURN_CLANG_ANALYZER;
 
         static bool s_ThrowOnAssert;
     };

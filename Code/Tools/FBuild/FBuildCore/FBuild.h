@@ -102,13 +102,16 @@ public:
 
     static bool GetTempDir( AString & outTempDir );
 
+    bool CacheOutputInfo() const;
+    bool CacheTrim() const;
+
 private:
     bool GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const;
 
     void UpdateBuildStatus( const Node * node );
 
     static bool s_StopBuild;
-    static volatile bool s_AbortBuild;  // -fastcancel - TODO:C merge with StopBuild 
+    static volatile bool s_AbortBuild;  // -fastcancel - TODO:C merge with StopBuild
 
     BFFMacros * m_Macros;
 

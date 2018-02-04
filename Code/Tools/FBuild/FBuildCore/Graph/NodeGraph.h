@@ -53,7 +53,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 96 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 105 };
 
     bool IsValid() const
     {
@@ -98,51 +98,15 @@ public:
     // create new nodes
     CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
     CopyDirNode * CreateCopyDirNode( const AString & nodeName );
-    RemoveDirNode * CreateRemoveDirNode(const AString & nodeName,
-                                        Dependencies & staticDeps,
-                                        const Dependencies & preBuildDependencies );
-    ExecNode * CreateExecNode( const AString & dstFileName,
-                               const Dependencies & inputFiles,
-                               FileNode * executable,
-                               const AString & arguments,
-                               const AString & workingDir,
-                               int32_t expectedReturnCode,
-                               const Dependencies & preBuildDependencies,
-                               bool useStdOutAsOutput );
+    RemoveDirNode * CreateRemoveDirNode( const AString & nodeName );
+    ExecNode * CreateExecNode( const AString & dstFileName );
     FileNode * CreateFileNode( const AString & fileName, bool cleanPath = true );
-    DirectoryListNode * CreateDirectoryListNode( const AString & name,
-                                                 const AString & path,
-                                                 const Array< AString > * patterns,
-                                                 bool recursive,
-                                                 const Array< AString > & excludePaths,
-                                                 const Array< AString > & filesToExclude,
-                                                 const Array< AString > & excludePatterns
-                                               );
+    DirectoryListNode * CreateDirectoryListNode( const AString & name );
     LibraryNode *   CreateLibraryNode( const AString & libraryName );
     ObjectNode *    CreateObjectNode( const AString & objectName );
     AliasNode *     CreateAliasNode( const AString & aliasName );
-    DLLNode *       CreateDLLNode( const AString & linkerOutputName,
-                                   const Dependencies & inputLibraries,
-                                   const Dependencies & otherLibraries,
-                                   const AString & linkerType,
-                                   const AString & linker,
-                                   const AString & linkerArgs,
-                                   uint32_t flags,
-                                   const Dependencies & assemblyResources,
-                                   const AString & importLibName,
-                                   Node * linkerStampExe,
-                                   const AString & linkerStampExeArgs );
-    ExeNode *       CreateExeNode( const AString & linkerOutputName,
-                                   const Dependencies & inputLibraries,
-                                   const Dependencies & otherLibraries,
-                                   const AString & linkerType,
-                                   const AString & linker,
-                                   const AString & linkerArgs,
-                                   uint32_t flags,
-                                   const Dependencies & assemblyResources,
-                                   const AString & importLibName,
-                                   Node * linkerStampExe,
-                                   const AString & linkerStampExeArgs );
+    DLLNode *       CreateDLLNode( const AString & dllName );
+    ExeNode *       CreateExeNode( const AString & exeName );
     UnityNode * CreateUnityNode( const AString & unityName );
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );

@@ -38,7 +38,8 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Process::Process( volatile bool * masterAbortFlag )
+Process::Process( const volatile bool * masterAbortFlag,
+                  const volatile bool * abortFlag )
 : m_Started( false )
 #if defined( __WINDOWS__ )
     , m_SharingHandles( false )
@@ -54,6 +55,7 @@ Process::Process( volatile bool * masterAbortFlag )
 #endif
     , m_HasAborted( false )
     , m_MasterAbortFlag( masterAbortFlag )
+    , m_AbortFlag( abortFlag )
 {
     #if defined( __WINDOWS__ )
         static_assert( sizeof( m_ProcessInfo ) == sizeof( PROCESS_INFORMATION ), "Unexpected sizeof(PROCESS_INFORMATION)" );
@@ -76,16 +78,16 @@ Process::~Process()
    void Process::KillProcessTreeInternal( uint32_t processID )
    {
        PROCESSENTRY32 pe;
-   
+
        memset( &pe, 0, sizeof( PROCESSENTRY32) );
        pe.dwSize = sizeof( PROCESSENTRY32 );
-   
+
        HANDLE hSnap = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, processID );
-   
+
        if ( ::Process32First( hSnap, &pe ) )
        {
            BOOL canContinue = TRUE;
-   
+
            // kill child processes
            while ( canContinue )
            {
@@ -93,9 +95,9 @@ Process::~Process()
                {
                    // Recursion
                    KillProcessTreeInternal( pe.th32ProcessID );
-   
+
                    HANDLE hChildProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, pe.th32ProcessID );
-   
+
                    if ( hChildProc )
                    {
                        ::TerminateProcess( hChildProc, 1 );
@@ -104,10 +106,10 @@ Process::~Process()
                }
                canContinue = ::Process32Next( hSnap, &pe );
            }
-   
+
            // kill the main process
            HANDLE hProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, processID );
-   
+
            if ( hProc )
            {
                ::TerminateProcess( hProc, 1 );
@@ -117,7 +119,7 @@ Process::~Process()
        else
        {
            //OUTPUT( "Unable to kill process 0x%x. Last Error: %u", processID, GetLastError() );
-       }    
+       }
    }
 #endif
 
@@ -379,7 +381,22 @@ bool Process::IsRunning() const
 
         // store wait result: can't call again if we just cleaned up process
         ASSERT( result == m_ChildPID );
-        m_ReturnStatus = WEXITSTATUS(status);
+        if ( WIFEXITED( status ) )
+        {
+            m_ReturnStatus = WEXITSTATUS( status ); // process terminated normally, use exit code
+        }
+        else if ( WIFSIGNALED( status ) )
+        {
+            m_ReturnStatus = -( WTERMSIG( status ) ); // process was terminated by a signal, use negative signal value
+        }
+        else if ( WIFSTOPPED( status ) )
+        {
+            return true; // process was stopped, it is not terminated yet
+        }
+        else
+        {
+            m_ReturnStatus = status; // some other unexpected state change, treat it as a failure
+        }
         m_HasAlreadyWaitTerminated = true;
         return false; // no longer running
     #else
@@ -400,9 +417,9 @@ int Process::WaitForExit()
 
         if ( m_HasAborted == false )
         {
-            // Don't wait if using jobs and the process has been aborted. 
+            // Don't wait if using jobs and the process has been aborted.
             // It will be killed along with the fbuild process if the TerminateProcess has failed for any reason and
-            // it is useless to wait for it was anyways we are reporting a failing exit code. 
+            // it is useless to wait for it was anyways we are reporting a failing exit code.
             // Also, This accelerate further more the cancellation.
 
             // wait for it to finish
@@ -443,7 +460,22 @@ int Process::WaitForExit()
                     ASSERT( false ); // Usage error
                 }
                 ASSERT( ret == m_ChildPID );
-                m_ReturnStatus = WEXITSTATUS(status);
+                if ( WIFEXITED( status ) )
+                {
+                    m_ReturnStatus = WEXITSTATUS( status ); // process terminated normally, use exit code
+                }
+                else if ( WIFSIGNALED( status ) )
+                {
+                    m_ReturnStatus = -( WTERMSIG( status ) ); // process was terminated by a signal, use negative signal value
+                }
+                else if ( WIFSTOPPED( status ) )
+                {
+                    continue; // process was stopped, keep waiting for termination
+                }
+                else
+                {
+                    m_ReturnStatus = status; // some other unexpected state change, treat it as a failure
+                }
                 break;
             }
         }
@@ -499,8 +531,11 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     bool processExited = false;
     for ( ;; )
     {
-        if ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) )
+        const bool masterAbort = ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) );
+        const bool abort = ( m_AbortFlag && ( *m_AbortFlag ) );
+        if ( abort || masterAbort )
         {
+            PROFILE_SECTION( "Abort" )
             KillProcessTree();
             m_HasAborted = true;
             break;
@@ -786,7 +821,7 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     #if defined( __WINDOWS__ )
         return ::GetCurrentProcessId();
     #elif defined( __LINUX__ )
-        return 0; // TODO: Implement GetCurrentId()
+        return ::getpid();
     #elif defined( __OSX__ )
         return 0; // TODO: Implement GetCurrentId()
     #endif

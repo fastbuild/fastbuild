@@ -26,6 +26,10 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaName( "Executable" ) + MetaFile() )
     REFLECT( m_ClangRewriteIncludes, "ClangRewriteIncludes", MetaOptional() )
     REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
     REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
+    REFLECT( m_CompilerFamilyString,"CompilerFamily",       MetaOptional() )
+
+    // Internal
+    REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
@@ -35,6 +39,8 @@ CompilerNode::CompilerNode()
     , m_AllowDistribution( true )
     , m_VS2012EnumBugFix( false )
     , m_ClangRewriteIncludes( true )
+    , m_CompilerFamilyString( "auto" )
+    , m_CompilerFamilyEnum( static_cast< uint8_t >( CUSTOM ) )
     , m_SimpleDistributionMode( false )
 {
     m_Type = Node::COMPILER_NODE;
@@ -93,7 +99,164 @@ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, 
 
     m_StaticDependencies = extraFiles;
 
-    return true;
+    return InitializeCompilerFamily( iter, function );
+}
+
+// InitializeCompilerFamily
+//------------------------------------------------------------------------------
+bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Function * function )
+{
+    // Handle auto-detect
+    if ( m_CompilerFamilyString.EqualsI( "auto" ) )
+    {
+        // Normalize slashes to make logic consistent on all platforms
+        AStackString<> compiler( m_Name );
+        compiler.Replace( '/', '\\' );
+
+        // MSVC
+        if ( compiler.EndsWithI( "\\cl.exe" ) ||
+             compiler.EndsWithI( "\\cl" ) ||
+             compiler.EndsWithI( "\\icl.exe" ) ||
+             compiler.EndsWithI( "\\icl" ) )
+        {
+            m_CompilerFamilyEnum = MSVC;
+            return true;
+        }
+
+        // Clang
+        if ( compiler.EndsWithI( "clang++.exe" ) ||
+             compiler.EndsWithI( "clang++" ) ||
+             compiler.EndsWithI( "clang.exe" ) ||
+             compiler.EndsWithI( "clang" ) ||
+             compiler.EndsWithI( "clang-cl.exe" ) ||
+             compiler.EndsWithI( "clang-cl" ) )
+        {
+            m_CompilerFamilyEnum = CLANG;
+            return true;
+        }
+
+        // GCC
+        if ( compiler.EndsWithI( "gcc.exe" ) ||
+             compiler.EndsWithI( "gcc" ) ||
+             compiler.EndsWithI( "g++.exe" ) ||
+             compiler.EndsWithI( "g++" ) ||
+             compiler.EndsWithI( "dcc.exe" ) || // WindRiver
+             compiler.EndsWithI( "dcc" ) )      // WindRiver
+        {
+            m_CompilerFamilyEnum = GCC;
+            return true;
+        }
+
+        // SNC
+        if ( compiler.EndsWithI( "\\ps3ppusnc.exe" ) ||
+             compiler.EndsWithI( "\\ps3ppusnc" ) )
+        {
+            m_CompilerFamilyEnum = SNC;
+            return true;
+        }
+
+        // CodeWarrior Wii
+        if ( compiler.EndsWithI( "\\mwcceppc.exe" ) ||
+             compiler.EndsWithI( "\\mwcceppc" ) )
+        {
+            m_CompilerFamilyEnum = CODEWARRIOR_WII;
+            return true;
+        }
+
+        // Greenhills WiiU
+        if ( compiler.EndsWithI( "\\cxppc.exe" ) ||
+             compiler.EndsWithI( "\\cxppc" ) ||
+             compiler.EndsWithI( "\\ccppc.exe" ) ||
+             compiler.EndsWithI( "\\ccppc" ) )
+        {
+            m_CompilerFamilyEnum = GREENHILLS_WIIU;
+            return true;
+        }
+
+        // CUDA
+        if ( compiler.EndsWithI( "\\nvcc.exe" ) ||
+             compiler.EndsWithI( "\\nvcc" ) )
+        {
+            m_CompilerFamilyEnum = CUDA_NVCC;
+            return true;
+        }
+
+        // Qt rcc
+        if ( compiler.EndsWith( "rcc.exe" ) ||
+             compiler.EndsWith( "rcc" ) )
+        {
+            m_CompilerFamilyEnum = QT_RCC;
+            return true;
+        }
+
+        // VBCC
+        if ( compiler.EndsWith( "vc.exe" ) ||
+             compiler.EndsWith( "vc" ) )
+        {
+            m_CompilerFamilyEnum = VBCC;
+            return true;
+        }
+
+        // Auto-detect failed
+        Error::Error_1500_CompilerDetectionFailed( iter, function, compiler );
+        return false;
+    }
+
+    // Handle explicitly set compiler types
+    if ( m_CompilerFamilyString.EqualsI( "custom" ) )
+    {
+        m_CompilerFamilyEnum = CUSTOM;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "msvc" ) )
+    {
+        m_CompilerFamilyEnum = MSVC;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "clang" ) )
+    {
+        m_CompilerFamilyEnum = CLANG;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "gcc" ) )
+    {
+        m_CompilerFamilyEnum = GCC;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "snc" ) )
+    {
+        m_CompilerFamilyEnum = SNC;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "codewarrior-wii" ) )
+    {
+        m_CompilerFamilyEnum = CODEWARRIOR_WII;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "greenhills-wiiu" ) )
+    {
+        m_CompilerFamilyEnum = GREENHILLS_WIIU;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "cuda-nvcc" ) )
+    {
+        m_CompilerFamilyEnum = CUDA_NVCC;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "qt-rcc" ) )
+    {
+        m_CompilerFamilyEnum = QT_RCC;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "vbcc" ) )
+    {
+        m_CompilerFamilyEnum = VBCC;
+        return true;
+    }
+
+    // Invalid option
+    Error::Error_1501_CompilerFamilyUnrecognized( iter, function, m_CompilerFamilyString );
+    return false;
 }
 
 // DESTRUCTOR

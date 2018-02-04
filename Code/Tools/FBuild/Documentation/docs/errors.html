@@ -17,6 +17,8 @@
   <li><a href='#1100'>1100 - 1199</a> Function Parameter Errors</li>
   <li><a href='#1200'>1200 - 1299</a> ForEach Specific Errors</li>
   <li><a href='#1300'>1300 - 1399</a> Library Specific Errors</li>
+  <li><a href='#1400'>1400 - 1499</a> Copy Specific Errors</li>
+  <li><a href='#1500'>1500 - 1599</a> Compiler Specific Errors</li>
 </ul>
 <h2 id='1000'>1001 - 1099 : General Parsing Errors</h2>
 <!--------------- 1001 --------------->
@@ -168,13 +170,13 @@ Using( .String )
 </div>
 
   <!--------------- 1009 --------------->
-    <div class='newsitemheader'>1009 - Unknown variable.</div>
+    <div class='newsitemheader'>1009 - Unknown variable '%s'.</div>
     <div class='newsitembody'>
 A variable which has not been defined was referenced inside another variable assignment or concatenation.
 <h4>Example Config:</h4>
 <div class='code'>.Var = "$OtherVar$"</div>
 <h4>Example Output:</h4>
-<div class='output'>c:\Test\fbuild.bff(1):(10) FASTBuild Error #1009 - Unknown variable.
+<div class='output'>c:\Test\fbuild.bff(1):(10) FASTBuild Error #1009 - Unknown variable 'OtherVar'.
 .Var = "$OtherVar$"
          ^
          \--here
@@ -475,7 +477,7 @@ A variable substitution was begun, but not properly terminated.
 
 
 <!--------------- 1029 --------------->
-    <div class='newsitemheader'>1029 - Variable for substitution '%s' is not a string (Type: <%s>).</div>
+    <div class='newsitemheader'>1029 - Variable for substitution '%s' is not a string (Type: &lt;%s&gt;).</div>
     <div class='newsitembody'>
 A string substitution was attempted with a non-string variable.
 <h4>Example Config:</h4>
@@ -664,7 +666,7 @@ An unknown operator was found while parsing an #if directive.
 
 
 <!--------------- 1050 --------------->
-    <div class='newsitemheader'>1050 - Property '%s' must be of type <%s> (found <%s>).</div>
+    <div class='newsitemheader'>1050 - Property '%s' must be of type &lt;%s&gt; (found &lt;%s&gt;).</div>
     <div class='newsitembody'>
 The property of a Function was of a type other than that which is expected by the Function.
 <h4>Example Config:</h4>
@@ -1050,6 +1052,71 @@ Library( "test" )
 <div class='output'>c:\test\fbuild.bff(3):(1) FASTBuild Error #1303 - Library() - Precompiled Header option '/Yc' in
 'CompilerOptions' invalid. Only allowed on Precompiled Header.
 Library( "test" )
+^
+\--here
+</div>
+</div>
+
+
+<h2 id='1400'>1400 - 1499 : Copy  Specific Errors</h2>
+<!--------------- 1400 --------------->
+    <div class='newsitemheader'>1400 - 'Dest' with multiple 'Source' files should be a path. Missing trailing '/'?</div>
+    <div class='newsitembody'>
+A Copy() target was declared with multiple .Source files, but .Dest was not a path. If the .Dest is a file, then only one
+.Source can be specified. If .Dest is intended to be a path, it requires a trailing slash to disambiguate.
+<h4>Example Config:</h4>
+<div class='code'>Copy( 'MissingTrailingSlash' )
+{
+  .Source             = {
+                          'Files/a.txt'
+                          'Files/b.txt'
+                        }
+  .Dest               = 'Folder/Folder' // NOTE: Missing trailing slash
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff.bff(1,1): FASTBuild Error #1400 - Copy() - 'Dest' with multiple 'Source' files should be a path. Missing trailing '/'?
+Copy( 'MissingTrailingSlash' )
+^
+\--here
+</div>
+</div>
+
+
+<h2 id='1500'>1500 - 1599 : Compiler Specific Errors</h2>
+<!--------------- 1500 --------------->
+    <div class='newsitemheader'>1500 - Compiler detection failed. Unrecognized executable '%s'.</div>
+    <div class='newsitembody'>
+FASTBuild will try to determine the type of compiler by default, using the filename of the specified executable.
+If the compiler type cannot be determined this way, Error #1500 will be emitted. If necessary, you can manually
+specify the compiler type using the .CompilerFamily option.
+<h4>Example Config:</h4>
+<div class='code'>Compiler( 'gcc' )
+{
+	.Executable = 'gccc'
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1,1): FASTBuild Error #1500 - Compiler() - Compiler detection failed. Unrecognized executable 'C:\Test\gccc'.
+Compiler( 'gcc' )
+^
+\--here
+</div>
+</div>
+<!--------------- 1501 --------------->
+    <div class='newsitemheader'>1501 - CompilerFamily '%s' is unrecognized.</div>
+    <div class='newsitembody'>
+When the .CompilerFamily property is set to an unsupported value, Error #1501 will be emitted. For valid values, consult the <a href='functions/compiler.html'>Compiler()</a> documentation.
+<h4>Example Config:</h4>
+<div class='code'>Compiler( 'compiler' )
+{
+	.Executable 	= 'compiler.exe'
+	.CompilerFamily	= 'xyz'
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1,1): FASTBuild Error #1501 - Compiler() - .CompilerFamily 'xyz' is unrecognized.
+Compiler( 'compiler' )
 ^
 \--here
 </div>

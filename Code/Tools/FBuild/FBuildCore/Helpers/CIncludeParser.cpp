@@ -50,15 +50,15 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
         const char * lineStart = pos;
 
         // find end of the line
-        pos = strchr( pos, '\r' );
+        pos = strchr( pos, '\n' );
         if ( !pos )
         {
             break; // end of output
         }
 
-        const char * lineEnd = pos;
+        const char * lineEnd = ( lineStart < pos && pos[-1] == '\r' ) ? pos - 1 : pos;
 
-        ASSERT( *pos == '\r' );
+        ASSERT( *pos == '\n' );
         ++pos; // skip \r for next line
 
         const char * ch = lineStart;

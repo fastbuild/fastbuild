@@ -166,7 +166,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         {
             // on disk file doesn't match our file
             // (modified by some external process)
-            FLOG_INFO( "Need to build '%s' (externally modified - stamp = %llu, disk = %llu)", GetName().Get(), m_Stamp, lastWriteTime );
+            FLOG_INFO( "Need to build '%s' (externally modified - stamp = %" PRIu64 ", disk = %" PRIu64 ")", GetName().Get(), m_Stamp, lastWriteTime );
             return true;
         }
     }
@@ -210,7 +210,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         if ( n->GetStamp() > m_Stamp )
         {
             // file is newer than us
-            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %llu, dep = %llu)", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
+            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %" PRIu64 ", dep = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
             return true;
         }
     }
@@ -243,7 +243,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         if ( n->GetStamp() > m_Stamp )
         {
             // file is newer than us
-            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %llu, dep = %llu)", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
+            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %" PRIu64 ", dep = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
             return true;
         }
     }
@@ -582,6 +582,20 @@ void Node::Serialize( IOStream & stream ) const
             VERIFY( stream.Write( b ) );
             return;
         }
+        case PT_UINT8:
+        {
+            uint8_t u8( 0 );
+            property.GetProperty( base, &u8 );
+            VERIFY( stream.Write( u8 ) );
+            return;
+        }
+        case PT_INT32:
+        {
+            int32_t i32( 0 );
+            property.GetProperty( base, &i32 );
+            VERIFY( stream.Write( i32 ) );
+            return;
+        }
         case PT_UINT32:
         {
             uint32_t u32( 0 );
@@ -704,6 +718,26 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
                 return false;
             }
             property.SetProperty( base, b );
+            return true;
+        }
+        case PT_UINT8:
+        {
+            uint8_t u8( 0 );
+            if ( stream.Read( u8 ) == false )
+            {
+                return false;
+            }
+            property.SetProperty( base, u8 );
+            return true;
+        }
+        case PT_INT32:
+        {
+            int32_t i32( 0 );
+            if ( stream.Read( i32 ) == false )
+            {
+                return false;
+            }
+            property.SetProperty( base, i32 );
             return true;
         }
         case PT_UINT32:
@@ -871,15 +905,17 @@ void Node::ReplaceDummyName( const AString & newName )
     // To:
     //     <path>\Core\Mem\Mem.h(23,1): warning: some warning text
     //
-    const char * tag = line.Find( ": warning:" );
-    tag = tag ? tag : line.Find( ": note:" );
-    tag = tag ? tag : line.Find( ": error:" );
-    tag = tag ? tag : line.Find( ": fatal error:" );
-    tag = tag ? tag : line.Find( ": remark:" );
-    if ( tag )
     {
-        FixupPathForVSIntegration_GCC( line, tag );
-        return;
+        const char * tag = line.Find( ": warning:" );
+        tag = tag ? tag : line.Find( ": note:" );
+        tag = tag ? tag : line.Find( ": error:" );
+        tag = tag ? tag : line.Find( ": fatal error:" );
+        tag = tag ? tag : line.Find( ": remark:" );
+        if ( tag )
+        {
+            FixupPathForVSIntegration_GCC( line, tag );
+            return;
+        }
     }
 
     // SNC Style
@@ -888,14 +924,32 @@ void Node::ReplaceDummyName( const AString & newName )
     // To:
     //     <path>\Core\Mem\Mem.h(23,1): warning 55: some warning text
     //
-    tag = tag ? tag : line.Find( ": error " );
-    tag = tag ? tag : line.Find( ": warning " );
-    tag = tag ? tag : line.Find( ": note " );
-    tag = tag ? tag : line.Find( ": remark " );
-    if ( tag )
     {
-        FixupPathForVSIntegration_SNC( line, tag );
-        return;
+        const char * tag = line.Find( ": error " );
+        tag = tag ? tag : line.Find( ": warning " );
+        tag = tag ? tag : line.Find( ": note " );
+        tag = tag ? tag : line.Find( ": remark " );
+        if ( tag )
+        {
+            FixupPathForVSIntegration_SNC( line, tag );
+            return;
+        }
+    }
+
+    // VBCC Style
+    // Convert:
+    //     warning 55 in line 23 of "Core/Mem/Mem.h": some warning text
+    // To:
+    //     <path>\Core\Mem\Mem.h(23,1): warning 55: some warning text
+    //
+    {
+        const char * tag = ( line.BeginsWith( "warning " ) ? line.Get() : nullptr );
+        tag = tag ? tag : ( line.BeginsWith( "error " ) ? line.Get() : nullptr );
+        if ( tag )
+        {
+            FixupPathForVSIntegration_VBCC( line, tag );
+            return;
+        }
     }
 
     // leave line untouched
@@ -982,6 +1036,44 @@ void Node::ReplaceDummyName( const AString & newName )
     fixed += tag;
 
     line = fixed;
+}
+
+// FixupPathForVSIntegration_VBCC
+//------------------------------------------------------------------------------
+/*static*/ void Node::FixupPathForVSIntegration_VBCC( AString & line, const char * /*tag*/ )
+{
+    Array< AString > tokens;
+    line.Tokenize( tokens, ' ' );
+
+    //     warning 55 in line 8 of "Core/Mem/Mem.h": some warning text
+    if ( tokens.GetSize() < 9 )
+    {
+        return; // A line we don't expect, ignore it
+    }
+    ASSERT( ( tokens[ 0 ] == "warning" ) || ( tokens[ 0 ] == "error" ) );
+
+    const char * problemType = tokens[ 0 ].Get(); // Warning or error
+    const char * warningNum = tokens[ 1 ].Get();
+    const char * warningLine = tokens[ 4 ].Get();
+    AStackString<> fileName( tokens[ 6 ] );
+    if ( fileName.BeginsWith( '"' ) && fileName.EndsWith( "\":" ) )
+    {
+        fileName.Trim( 1, 2 );
+    }
+    NodeGraph::CleanPath( fileName );
+
+    //     <path>\Core\Mem\Mem.h(23,1): warning 55: some warning text
+    AStackString<> buffer;
+    buffer.Format( "%s(%s,1): %s %s: ", fileName.Get(), warningLine, problemType, warningNum );
+    buffer.Replace( '/', '\\' );
+
+    // add rest of warning
+    for ( size_t i=7; i < tokens.GetSize(); ++i )
+    {
+        buffer += tokens[ i ];
+        buffer += ' ';
+    }
+    line = buffer;
 }
 
 // InitializePreBuildDependencies

@@ -13,7 +13,7 @@
 #endif
 #if defined( MEM_DEBUG_ENABLED )
     #define MEM_FILL_NEW_ALLOCATIONS
-    #define MEM_FILL_FREED_ALLOCATIONS	// Will be applied where possible
+    #define MEM_FILL_FREED_ALLOCATIONS  // Will be applied where possible
 #endif
 
 // MemDebug

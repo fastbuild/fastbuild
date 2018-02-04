@@ -106,7 +106,7 @@ FunctionPrint::FunctionPrint()
 
             if ( ( parentScope && ( nullptr == varFrame ) ) || ( nullptr == var ) )
             {
-                Error::Error_1009_UnknownVariable( start, this );
+                Error::Error_1009_UnknownVariable( start, this, varName );
                 return false;
             }
 
@@ -133,7 +133,7 @@ FunctionPrint::FunctionPrint()
         indentStr += "    ";
     }
     ++indent;
-    FLOG_BUILD( indentStr.Get() );
+    FLOG_BUILD( "%s", indentStr.Get() );
 
     switch ( var.GetType() )
     {

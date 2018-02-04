@@ -208,30 +208,40 @@ UnityNode::~UnityNode()
         size_t numFilesActuallyIsolatedInThisUnity( 0 );
         for ( const FileAndOrigin * file = filesInThisUnity.Begin(); file != end; ++file )
         {
-            // write pragma showing cpp file being compiled to assist resolving compilation errors
-            AStackString<> buffer( file->GetName().Get() );
-            buffer.Replace( BACK_SLASH, FORWARD_SLASH ); // avoid problems with slashes in generated code
-            #if defined( __LINUX__ )
-                output += "//"; // TODO:LINUX - Find how to avoid GCC spamming "note:" about use of pragma
-            #endif
-            output += "#pragma message( \"";
-            output += buffer;
-            output += "\" )\r\n";
-
             // files which are modified (writable) can optionally be excluded from the unity
+            bool isolateThisFile = false;
             if ( m_IsolateWritableFiles && ( ( m_MaxIsolatedFiles == 0 ) || ( numIsolated <= m_MaxIsolatedFiles ) ) )
             {
                 // is the file writable?
                 if ( file->IsReadOnly() == false )
                 {
                     // disable compilation of this file (comment it out)
-                    output += "//";
                     m_IsolatedFiles.Append( *file );
                     numFilesActuallyIsolatedInThisUnity++;
+                    isolateThisFile = true;
                 }
             }
 
+            // write pragma showing cpp file being compiled to assist resolving compilation errors
+            AStackString<> buffer( file->GetName().Get() );
+            buffer.Replace( BACK_SLASH, FORWARD_SLASH ); // avoid problems with slashes in generated code
+            #if defined( __LINUX__ )
+                output += "//"; // TODO:LINUX - Find how to avoid GCC spamming "note:" about use of pragma
+            #else
+                if ( isolateThisFile )
+                {
+                    output += "//";
+                }
+            #endif
+            output += "#pragma message( \"";
+            output += buffer;
+            output += "\" )\r\n";
+
             // write include
+            if ( isolateThisFile )
+            {
+                output += "//";
+            }
             output += "#include \"";
             output += file->GetName();
             output += "\"\r\n\r\n";
@@ -243,7 +253,7 @@ UnityNode::~UnityNode()
         unityName += m_OutputPattern;
         {
             AStackString<> tmp;
-            tmp.Format( "%u", i + 1 ); // number from 1
+            tmp.Format( "%u", (uint32_t)i + 1 ); // number from 1
             unityName.Replace( "*", tmp.Get() );
         }
 

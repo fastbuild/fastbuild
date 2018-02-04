@@ -1,0 +1,60 @@
+
+#include "..\..\testcommon.bff"
+
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+//
+// Enable Deoptimizations settings to ensure they are ignored for
+// the precompiled header
+//
+.DeoptimizeWritableFiles = true
+.DeoptimizeWritableFilesWithToken = true
+
+#if __WINDOWS__
+    .PCHInputFile               = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.cpp'
+    .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.pch'
+    .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+#endif
+#if __LINUX__
+    .PCHInputFile               = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.h'
+    .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.h.gch'
+    .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux
+#endif
+#if __OSX__
+    .PCHInputFile               = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.h'
+    .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/Deoptimization/PrecompiledHeader.pch'
+    .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on OS X
+#endif
+
+//
+// Build an object using a precompiled header
+//
+ObjectList( 'PCHTest-Deoptimization' )
+{
+    .CompilerInputPath      = '$Out$/Test/PrecompiledHeaders/Deoptimization/'
+    .CompilerOutputPath     = '$Out$/Test/PrecompiledHeaders/Deoptimization/'
+    .CompilerOptions        + ' "-I$Out$/Test/PrecompiledHeaders/Deoptimization/"'
+    .PCHOptions             + ' "-I$Out$/Test/PrecompiledHeaders/Deoptimization/"'
+    #if __WINDOWS__
+        .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+    #endif
+    #if __LINUX__
+        .CompilerOptions    + ' -Winvalid-pch -H'
+    #endif
+    #if __OSX__
+        .CompilerOptions    + ' -include-pch "$PCHOutputFile$"'
+    #endif
+
+    // Deoptimziation settings must be specified, even though this test
+    // never ends up using them
+    .CompilerOptionsDeoptimized = "UNUSED"
+}
+
+// Create an alias to make it easier for the test to find the thing we want
+Alias( 'PCHTest-Deoptimization-PCH' )
+{
+    .Targets            = .PCHOutputFile
+}
+

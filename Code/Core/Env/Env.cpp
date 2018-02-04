@@ -221,8 +221,10 @@ void Env::GetExePath( AString & output )
         output = argv[0];
     #else
         char path[ PATH_MAX ];
-        VERIFY( readlink( "/proc/self/exe", path, PATH_MAX ) != -1 );
-        output = path;
+        const ssize_t length = readlink( "/proc/self/exe", path, PATH_MAX );
+        ASSERT( length != -1 );
+        ASSERT( length <= PATH_MAX );
+        output.Assign( path, path + length );
     #endif
 }
 

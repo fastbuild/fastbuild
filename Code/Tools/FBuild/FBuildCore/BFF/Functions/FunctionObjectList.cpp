@@ -43,12 +43,12 @@ FunctionObjectList::FunctionObjectList()
 /*virtual*/ bool FunctionObjectList::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
     ObjectListNode * objectListNode = nodeGraph.CreateObjectListNode( m_AliasForFunction );
-    
+
     if ( !PopulateProperties( nodeGraph, funcStartIter, objectListNode ) )
     {
         return false;
     }
-    
+
     if ( !objectListNode->Initialize( nodeGraph, funcStartIter, this ) )
     {
         return false;
@@ -116,7 +116,7 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFIterator & iter, const A
             return false;
         }
     }
-    else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG ) )
+    else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG | ObjectNode::FLAG_VBCC ) )
     {
         if ( hasCompileToken == false )
         {
@@ -163,6 +163,10 @@ bool FunctionObjectList::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterat
             AStackString<> executableRootPath( compilerClean.Get(), lastSlash + 1 );
             VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "ExecutableRootPath", executableRootPath ) );
         }
+        if ( !compilerNode->Initialize( nodeGraph, iter, nullptr ) )
+        {
+            return false; // Initialize will have emitted an error
+        }
     }
 
     return true;
@@ -171,7 +175,7 @@ bool FunctionObjectList::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterat
 // CheckMSVCPCHFlags
 //------------------------------------------------------------------------------
 bool FunctionObjectList::CheckMSVCPCHFlags( const BFFIterator & iter,
-                                            const AString & compilerOptions, 
+                                            const AString & compilerOptions,
                                             const AString & pchOptions,
                                             const AString & pchOutputFile,
                                             const char * compilerOutputExtension,

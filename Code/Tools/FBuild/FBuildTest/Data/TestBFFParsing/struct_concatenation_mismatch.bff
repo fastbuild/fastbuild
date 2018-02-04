@@ -1,0 +1,8 @@
+//
+// Mismatched members when concatenating structs should report an error
+//
+
+.A = [ .C = {} ]  // .C is ArrayOfStrings
+.B = [ .C = 2 ]   // .C is Int
+
+.A + .B // Should cause error about mismatched types

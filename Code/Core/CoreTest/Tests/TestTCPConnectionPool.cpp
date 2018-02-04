@@ -203,7 +203,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     {
         server.m_ReceivedBytes = 0;
         server.m_DataSize = sendSize;
-        
+
         Timer timer;
 
         size_t totalSent = 0;
@@ -213,12 +213,12 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
             TEST_ASSERT( client.Send( ci, data.Get(), sendSize ) );
             totalSent += sendSize;
         }
-        
+
         while( server.m_ReceivedBytes < totalSent )
         {
             Thread::Sleep( 1 );
         }
-        
+
         const float speedMBs = ( float( totalSent ) / timer.GetElapsed() ) / float( 1024 * 1024 );
         OUTPUT( "Speed: %2.1f MiB/s, SendSize: %u\n", speedMBs, (uint32_t)sendSize );
 

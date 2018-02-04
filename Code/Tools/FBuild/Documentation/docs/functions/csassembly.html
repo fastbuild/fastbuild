@@ -22,7 +22,7 @@ Builds one or more files (typically .cs files) into an assembly (a dll or execut
   .Compiler                     ; Path to the C# compiler
   .CompilerOptions              ; Options to pass to the compiler
   .CompilerOutput               ; Output file to be generated
-  .CompilerInputPath            ; Path to include files from
+  .CompilerInputPath            ; (optional) Path to include files from
   .CompilerInputPathRecurse     ; (optional) Whether to recurse into sub-dirs (default true)
   .CompilerInputPattern         ; (optional) Pattern(s) of input files (default *.cs)
   .CompilerInputFiles           ' (optional) Explicit list of files to compile
@@ -41,8 +41,8 @@ Builds one or more files (typically .cs files) into an assembly (a dll or execut
   <li><b>CompilerOptions</b></li>
   <ul>
     <li>%1 - Input file(s) for the compilation, as specified by the various Input parameters.</li>
-    <li>%2 - Output assembly as specified by 'CompilerOutput'.</li>
-    <li>%3 - Additional references as specified by 'CompilerReferences'.</li>
+    <li>%2 - Output assembly as specified by 'CompilerOutput'. Use with /out:"%2"</li>
+    <li>%3 - Additional references as specified by 'CompilerReferences'. Use with /reference:"%3"</li>
   </ul>
 </ul>
 </p>

@@ -53,7 +53,7 @@ AString::AString( const AString & string )
     uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
     m_Contents = (char *)ALLOC( reserved + 1 );
     SetReserved( reserved, true );
-    Copy( string.Get(), m_Contents ); // copy handles terminator
+    Copy( string.Get(), m_Contents, len ); // copy handles terminator
 }
 
 // CONSTRUCTOR (const char *)
@@ -74,7 +74,7 @@ AString::AString( const char * string )
 AString::AString( const char * start, const char * end )
 {
     ASSERT( start );
-    ASSERT( end );
+    ASSERT( end >= start );
     uint32_t len = uint32_t( end - start );
     m_Length = len;
     uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
@@ -151,6 +151,13 @@ int32_t AString::Compare( const AString & other ) const
     return strcmp( m_Contents, other.Get() );
 }
 
+// Compare
+//------------------------------------------------------------------------------
+int32_t AString::Compare( const char * other ) const
+{
+    return strcmp( m_Contents, other );
+}
+
 // CompareI
 //------------------------------------------------------------------------------
 int32_t AString::CompareI( const AString & other ) const
@@ -164,19 +171,34 @@ int32_t AString::CompareI( const AString & other ) const
     #endif
 }
 
+// CompareI
+//------------------------------------------------------------------------------
+int32_t AString::CompareI( const char * other ) const
+{
+    #if defined( __WINDOWS__ )
+        return _stricmp( m_Contents, other );
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        return strcasecmp( m_Contents, other );
+    #else
+        #error Unknown platform
+    #endif
+}
+
 // Format
 //------------------------------------------------------------------------------
-void AString::Format( const char * fmtString, ... )
+AString & AString::Format( const char * fmtString, ... )
 {
     va_list args;
     va_start(args, fmtString);
     VFormat( fmtString, args );
     va_end( args );
+
+    return *this;
 }
 
 // VFormat
 //------------------------------------------------------------------------------
-void AString::VFormat( const char * fmtString, va_list args )
+AString & AString::VFormat( const char * fmtString, va_list args )
 {
     // try to work entirely on the stack
     const uint32_t STACK_BUFFER_SIZE( 8 * KILOBYTE );
@@ -224,6 +246,8 @@ loop:
     {
         FREE( buffer );
     }
+
+    return *this;
 }
 
 // Tokenize
@@ -324,7 +348,8 @@ void AString::Assign( const char * string )
 //------------------------------------------------------------------------------
 void AString::Assign( const char * start, const char * end )
 {
-    ASSERT( start <= end );
+    ASSERT( start );
+    ASSERT( end >= start );
     uint32_t len = uint32_t( end - start );
     if ( len > GetReserved() )
     {
@@ -355,7 +380,7 @@ void AString::Assign( const AString & string )
         // didn't resize then the passed in string is empty too
         return;
     }
-    Copy( string.Get(), m_Contents ); // handles terminator
+    Copy( string.Get(), m_Contents, len ); // handles terminator
     m_Length = len;
 }
 
@@ -456,7 +481,7 @@ AString & AString::operator += ( const AString & string )
             Grow( newLen );
         }
 
-        Copy( string.Get(), m_Contents + m_Length ); // handles terminator
+        Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator
         m_Length += suffixLen;
     }
     return *this;
@@ -464,7 +489,7 @@ AString & AString::operator += ( const AString & string )
 
 // Append
 //------------------------------------------------------------------------------
-void AString::Append( const char * string, size_t len )
+AString & AString::Append( const char * string, size_t len )
 {
     if ( len )
     {
@@ -477,11 +502,13 @@ void AString::Append( const char * string, size_t len )
         Copy( string, m_Contents + m_Length, len ); // handles terminator
         m_Length = newLen;
     }
+
+    return *this;
 }
 
 // AppendFormat
 //------------------------------------------------------------------------------
-void AString::AppendFormat( const char * fmtString, ... )
+AString & AString::AppendFormat( const char * fmtString, ... )
 {
     AStackString< 1024 > buffer;
     va_list args;
@@ -490,6 +517,8 @@ void AString::AppendFormat( const char * fmtString, ... )
     va_end( args );
 
     Append( buffer );
+
+    return *this;
 }
 
 // Replace ( char, char )
@@ -633,8 +662,8 @@ const char * AString::Find( char c, const char * startPos ) const
 {
     // if startPos is provided, validate it
     // (deliberately allow startPos to point one past end of string)
-    ASSERT( (startPos == nullptr ) || ( startPos >= m_Contents ) );
-    ASSERT( (startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
 
     const char * pos = startPos ? startPos : m_Contents;
     const char * end = m_Contents + m_Length;
@@ -1022,7 +1051,7 @@ void AString::Grow( uint32_t newLength )
     char * newMem = (char *)ALLOC( reserve + 1 ); // also allocate for \0 terminator
 
     // transfer existing string data
-    Copy( m_Contents, newMem ); // copy handles terminator
+    Copy( m_Contents, newMem, m_Length ); // copy handles terminator
 
     if ( MemoryMustBeFreed() )
     {

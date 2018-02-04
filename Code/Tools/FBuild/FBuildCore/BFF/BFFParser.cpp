@@ -315,7 +315,7 @@ bool BFFParser::ParseNamedVariableDeclaration( BFFIterator & iter )
         // check if a parent definition exists
         if ( nullptr == m_LastVarFrame )
         {
-            Error::Error_1009_UnknownVariable( varNameStart, nullptr );
+            Error::Error_1009_UnknownVariable( varNameStart, nullptr, m_LastVarName );
             return false;
         }
 
@@ -1227,7 +1227,7 @@ bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIte
     bool optional = false;
     if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash ) == false )
     {
-        Error::Error_1009_UnknownVariable( varNameStart, nullptr );
+        Error::Error_1009_UnknownVariable( varNameStart, nullptr, varName );
         return false;
     }
 
@@ -1322,12 +1322,12 @@ bool BFFParser::StoreVariableString( const AString & name,
             }
 
             BFFStackFrame::SetVarArrayOfStrings( name, finalValues, frame );
-            FLOG_INFO( "%s '%s' %s <ArrayOfStrings> variable '%s' with result of %i items",
+            FLOG_INFO( "%s '%s' %s <ArrayOfStrings> variable '%s' with result of %u items",
                         ( *operatorIter == BFF_VARIABLE_CONCATENATION ) ? "Appending" : "Removing",
                         value.Get(),
                         ( *operatorIter == BFF_VARIABLE_CONCATENATION ) ? "to" : "from",
                         name.Get(),
-                        finalValues.GetSize() );
+                        (uint32_t)finalValues.GetSize() );
             return true;
         }
         else
@@ -1419,9 +1419,12 @@ bool BFFParser::StoreVariableArray( const AString & name,
         }
     }
 
-    const bool dstIsEmpty = ( var == nullptr ) ||
-        ( var->IsArrayOfStrings() && var->GetArrayOfStrings().IsEmpty() ) ||
-        ( var->IsArrayOfStructs() && var->GetArrayOfStructs().IsEmpty() );
+    BFFVariable::VarType varType = var ? var->GetType() : BFFVariable::VAR_ANY;
+    if ( ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS && var->GetArrayOfStrings().IsEmpty() ) ||
+         ( varType == BFFVariable::VAR_ARRAY_OF_STRUCTS && var->GetArrayOfStructs().IsEmpty() ) )
+    {
+        varType = BFFVariable::VAR_ANY; // allow type of an empty array to be changed
+    }
 
     // Parse array of variables
     BFFIterator iter( valueStart );
@@ -1441,12 +1444,12 @@ bool BFFParser::StoreVariableArray( const AString & name,
             // a quoted string
 
             // dest is consistent?
-            // if it started empty it shouldn't contain structs at this point, otherwise it must be ArrayOfStrings
-            if ( !( dstIsEmpty ? structValues.IsEmpty() : var->IsArrayOfStrings() ) )
+            if ( ( varType != BFFVariable::VAR_ARRAY_OF_STRINGS ) &&
+                 ( varType != BFFVariable::VAR_ANY ) )
             {
                 // Mixed types in vector
                 Error::Error_1034_OperationNotSupported( iter,
-                                                         var->GetType(),
+                                                         varType,
                                                          BFFVariable::VAR_STRING,
                                                          operatorIter );
                 return false;
@@ -1455,7 +1458,10 @@ bool BFFParser::StoreVariableArray( const AString & name,
             // subtraction not supported on arrays
             if ( *operatorIter == BFF_VARIABLE_SUBTRACTION )
             {
-                Error::Error_1034_OperationNotSupported( iter, var->GetType(), BFFVariable::VAR_STRING, operatorIter );
+                Error::Error_1034_OperationNotSupported( iter,
+                                                         varType,
+                                                         BFFVariable::VAR_STRING,
+                                                         operatorIter );
                 return false;
             }
 
@@ -1472,6 +1478,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
                 return false;
             }
 
+            varType = BFFVariable::VAR_ARRAY_OF_STRINGS;
             values.Append( elementValue );
 
             iter++; // pass closing quote
@@ -1497,7 +1504,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             }
 
             // get the variable
-            const BFFVariable * varSrc = srcFrame->GetVariableRecurse( srcName );
+            const BFFVariable * varSrc = srcFrame ? srcFrame->GetVariableRecurse( srcName ) : nullptr;
             if ( varSrc == nullptr )
             {
                 Error::Error_1026_VariableNotFoundForModification( operatorIter, srcName );
@@ -1507,7 +1514,10 @@ bool BFFParser::StoreVariableArray( const AString & name,
             // subtraction not supported on arrays
             if ( *operatorIter == BFF_VARIABLE_SUBTRACTION )
             {
-                Error::Error_1034_OperationNotSupported( elementStartValue, var->GetType(), varSrc->GetType(), operatorIter );
+                Error::Error_1034_OperationNotSupported( elementStartValue,
+                                                         varType,
+                                                         varSrc->GetType(),
+                                                         operatorIter );
                 return false;
             }
 
@@ -1522,17 +1532,18 @@ bool BFFParser::StoreVariableArray( const AString & name,
             else if ( varSrc->IsString() || varSrc->IsArrayOfStrings() )
             {
                 // dest is consistent?
-                // if it started empty it shouldn't contain structs at this point, otherwise it must be ArrayOfStrings
-                if ( !( dstIsEmpty ? structValues.IsEmpty() : var->IsArrayOfStrings() ) )
+                if ( ( varType != BFFVariable::VAR_ARRAY_OF_STRINGS ) &&
+                     ( varType != BFFVariable::VAR_ANY ) )
                 {
                     // inconsistency
                     Error::Error_1034_OperationNotSupported( elementStartValue,
-                                                             var->GetType(),
+                                                             varType,
                                                              varSrc->GetType(),
                                                              operatorIter );
                     return false;
                 }
 
+                varType = BFFVariable::VAR_ARRAY_OF_STRINGS;
                 if ( varSrc->IsString() )
                 {
                     values.Append( varSrc->GetString() );
@@ -1545,17 +1556,18 @@ bool BFFParser::StoreVariableArray( const AString & name,
             else if ( varSrc->IsStruct() || varSrc->IsArrayOfStructs() )
             {
                 // dest is consistent?
-                // if it started empty it shouldn't contain strings at this point, otherwise it must be ArrayOfStructs
-                if ( !( dstIsEmpty ? values.IsEmpty() : var->IsArrayOfStructs() ) )
+                if ( ( varType != BFFVariable::VAR_ARRAY_OF_STRUCTS ) &&
+                     ( varType != BFFVariable::VAR_ANY ) )
                 {
                     // inconsistency
                     Error::Error_1034_OperationNotSupported( elementStartValue,
-                                                             var->GetType(),
+                                                             varType,
                                                              varSrc->GetType(),
                                                              operatorIter );
                     return false;
                 }
 
+                varType = BFFVariable::VAR_ARRAY_OF_STRUCTS;
                 if ( varSrc->IsStruct() )
                 {
                     structValues.Append( varSrc );
@@ -1568,7 +1580,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             else
             {
                 Error::Error_1050_PropertyMustBeOfType( iter, nullptr, name.Get(),
-                                                        varSrc->GetType(),
+                                                        varType,
                                                         BFFVariable::VAR_STRING,
                                                         BFFVariable::VAR_STRUCT );
                 return false;
@@ -1592,22 +1604,11 @@ bool BFFParser::StoreVariableArray( const AString & name,
     // should only have one populated array
     ASSERT( values.IsEmpty() || structValues.IsEmpty() );
 
-    // determine type of resulting variable
-    BFFVariable::VarType varType = BFFVariable::VAR_ARRAY_OF_STRINGS; // default (for new empty variables)
-    if ( !dstIsEmpty )
+    // if array is empty then try to preserve it's type
+    if ( varType == BFFVariable::VAR_ANY )
     {
-        // if variable wasn't empty, use its type
-        varType = var->GetType();
-    }
-    else if ( structValues.IsEmpty() == false )
-    {
-        // using type of value: ArrayOfStructs
-        varType = BFFVariable::VAR_ARRAY_OF_STRUCTS;
-    }
-    else if ( values.IsEmpty() == false )
-    {
-        // using type of value: ArrayOfStrings
-        varType = BFFVariable::VAR_ARRAY_OF_STRINGS;
+        ASSERT( values.IsEmpty() && structValues.IsEmpty() );
+        varType = var ? var->GetType() : BFFVariable::VAR_ARRAY_OF_STRINGS;
     }
 
     // check if selected type correctly
@@ -1618,13 +1619,13 @@ bool BFFParser::StoreVariableArray( const AString & name,
     {
         // structs
         BFFStackFrame::SetVarArrayOfStructs( name, structValues, frame );
-        FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", name.Get(), structValues.GetSize() );
+        FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", name.Get(), (uint32_t)structValues.GetSize() );
     }
     else if ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS )
     {
         // strings
         BFFStackFrame::SetVarArrayOfStrings( name, values, frame );
-        FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", name.Get(), values.GetSize() );
+        FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", name.Get(), (uint32_t)values.GetSize() );
     }
 
     return true;
@@ -1675,7 +1676,7 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 
     // Register this variable
     BFFStackFrame::SetVarStruct( name, structMembers, frame ? frame : stackFrame.GetParent() );
-    FLOG_INFO( "Registered <struct> variable '%s' with %u members", name.Get(), structMembers.GetSize() );
+    FLOG_INFO( "Registered <struct> variable '%s' with %u members", name.Get(), (uint32_t)structMembers.GetSize() );
 
     return true;
 }
@@ -1730,7 +1731,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
     if ( ( srcParentScope && nullptr == srcFrame ) || ( nullptr == varSrc ) )
     {
-        Error::Error_1009_UnknownVariable( varNameSrcStart, nullptr );
+        Error::Error_1009_UnknownVariable( varNameSrcStart, nullptr, srcName );
         return false;
     }
 
@@ -1810,7 +1811,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
             }
 
             BFFStackFrame::SetVarArrayOfStrings( dstName, values, dstFrame );
-            FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), values.GetSize() );
+            FLOG_INFO( "Registered <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), (uint32_t)values.GetSize() );
             return true;
         }
 
@@ -1982,14 +1983,18 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
             const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
             if ( concat )
             {
-                BFFVariable *const newVar = BFFStackFrame::ConcatVars( dstName, varSrc, varDst, dstFrame );
-                FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), newVar->GetStructMembers().GetSize() );
+                BFFVariable *const newVar = BFFStackFrame::ConcatVars( dstName, varDst, varSrc, dstFrame, operatorIter );
+                if ( newVar == nullptr )
+                {
+                    return false; // ConcatVars will have emitted an error
+                }
+                FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), (uint32_t)newVar->GetStructMembers().GetSize() );
             }
             else
             {
                 // Register this variable
                 BFFStackFrame::SetVarStruct( dstName, srcMembers, dstFrame );
-                FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), srcMembers.GetSize() );
+                FLOG_INFO( "Registered <struct> variable '%s' with %u members", dstName.Get(), (uint32_t)srcMembers.GetSize() );
             }
             return true;
         }
@@ -2053,7 +2058,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
                 const BFFVariable * var = BFFStackFrame::GetVarAny( varName );
                 if ( var == nullptr )
                 {
-                    Error::Error_1009_UnknownVariable( startName, nullptr );
+                    Error::Error_1009_UnknownVariable( startName, nullptr, varName );
                     return false;
                 }
                 if ( var->IsBool() == true )

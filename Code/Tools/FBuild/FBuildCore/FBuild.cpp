@@ -91,6 +91,8 @@ FBuild::FBuild( const FBuildOptions & options )
     FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );
 
     Function::Create();
+
+    NetworkStartupHelper::SetMasterShutdownFlag( &s_AbortBuild );
 }
 
 // DESTRUCTOR
@@ -167,7 +169,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : m_DependencyGraph->CreateSettingsNode( AStackString<>( "$$Settings$$" ) ); // Create a default
 
     // if the cache is enabled, make sure the path is set and accessible
-    if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite )
+    if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite || m_Options.m_CacheInfo || m_Options.m_CacheTrim )
     {
         if ( !m_Settings->GetCachePluginDLL().IsEmpty() )
         {
@@ -182,6 +184,8 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         {
             m_Options.m_UseCacheRead = false;
             m_Options.m_UseCacheWrite = false;
+            FDELETE m_Cache;
+            m_Cache = nullptr;
         }
     }
 
@@ -208,8 +212,8 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         }
         else
         {
-            OUTPUT( "Distributed Compilation : %u Workers in pool\n", workers.GetSize() );
-            m_Client = FNEW( Client( workers, m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
+            OUTPUT( "Distributed Compilation : %u Workers in pool\n", (uint32_t)workers.GetSize() );
+            m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
         }
     }
 
@@ -438,7 +442,7 @@ bool FBuild::Build( Node * nodeToBuild )
 
         if ( !stopping )
         {
-            if ( m_Options.m_WrapperChild )
+            if ( m_Options.m_WrapperMode == FBuildOptions::WRAPPER_MODE_FINAL_PROCESS )
             {
                 SystemMutex wrapperMutex( m_Options.GetMainProcessMutexName().Get() );
                 if ( wrapperMutex.TryLock() )
@@ -569,9 +573,9 @@ void FBuild::GetLibEnvVar( AString & value ) const
 // AbortBuild
 //------------------------------------------------------------------------------
 void FBuild::AbortBuild()
-{ 
-    s_StopBuild = true; 
-    if ( FBuild::Get().m_Options.m_FastCancel )
+{
+    s_StopBuild = true;
+    if ( FBuild::IsValid() && FBuild::Get().m_Options.m_FastCancel )
     {
         // Notify the system that the master process has been killed and that it can kill its process.
         s_AbortBuild = true;
@@ -668,10 +672,10 @@ void FBuild::UpdateBuildStatus( const Node * node )
 void FBuild::GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD, AString & path ) const
 {
     // cache version - bump if cache format is changed
-    static const int cacheVersion( 8 );
+    static const int cacheVersion( 9 );
 
     // format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC-32A2B04375A2D7DE.7
-    path.Format( "%016llX_%08X_%016llX-%016llX.%u", keyA, keyB, keyC, keyD, cacheVersion );
+    path.Format( "%016" PRIX64 "_%08X_%016" PRIX64 "-%016" PRIX64 ".%u", keyA, keyB, keyC, keyD, cacheVersion );
 }
 
 // DisplayTargetList
@@ -761,6 +765,34 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
         #error Unknown platform
         return false;
     #endif
+}
+
+// CacheOutputInfo
+//------------------------------------------------------------------------------
+bool FBuild::CacheOutputInfo() const
+{
+    OUTPUT( "CacheInfo:\n" );
+    if ( m_Cache )
+    {
+        return m_Cache->OutputInfo( m_Options.m_ShowProgress );
+    }
+
+    OUTPUT( "- Cache not configured" );
+    return false;
+}
+
+// CacheTrim
+//------------------------------------------------------------------------------
+bool FBuild::CacheTrim() const
+{
+    OUTPUT( "CacheTrim:\n" );
+    if ( m_Cache )
+    {
+        return m_Cache->Trim( m_Options.m_ShowProgress, m_Options.m_CacheTrim );
+    }
+
+    OUTPUT( "- Cache not configured" );
+    return false;
 }
 
 //------------------------------------------------------------------------------

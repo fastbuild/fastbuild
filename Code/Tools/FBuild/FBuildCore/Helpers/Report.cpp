@@ -499,8 +499,7 @@ void Report::DoCPUTimeByType( const FBuildStats & stats )
                     typeName,
                     value,
                     processed,
-                    built,
-                    cacheHits );
+                    built );
         if ( type == Node::OBJECT_NODE )
         {
             // cacheable
@@ -737,7 +736,7 @@ void Report::DoPieChart( const Array< PieItem > & items, const char * units )
             Write( "," );
         }
         buffer.Format( "%2.3f", items[ i ].value );
-        Write( buffer.Get() );
+        Write( "%s", buffer.Get() );
     }
     Write( "];\n" );
     Write( "    var myLabels = [" );
@@ -801,7 +800,7 @@ void Report::DoTableStart( int width, const char * id, bool hidden )
         output += " style=\"display:none;\"";
     }
     output += ">\n";
-    Write( output.Get() );
+    Write( "%s", output.Get() );
 }
 
 // DoTableStop

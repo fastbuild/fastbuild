@@ -322,6 +322,15 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         result = ((Node *)node )->DoBuild2( job, racingRemoteJob );
     }
 
+    // Ignore result if job was cancelled
+    if ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+    {
+        if ( result == Node::NODE_RESULT_FAILED )
+        {
+            return Node::NODE_RESULT_FAILED;
+        }
+    }
+
     uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 
     if ( result == Node::NODE_RESULT_OK )

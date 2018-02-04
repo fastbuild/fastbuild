@@ -78,7 +78,12 @@ Compiler( 'Compiler-x86Clang' )
 }
 Compiler( 'Compiler-x64-Linux' )
 {
-    .Executable = '/usr/bin/gcc'
+    .Executable     = '/usr/bin/gcc'
+    .ExtraFiles     = {
+                        '/usr/bin/as'
+                        '/usr/lib/gcc/x86_64-linux-gnu/4.9/cc1'
+                        '/usr/lib/gcc/x86_64-linux-gnu/4.9/cc1plus'
+                      }
 }
 Compiler( 'Compiler-x64-OSX' )
 {
@@ -113,12 +118,13 @@ Compiler( 'Compiler-x64-OSX' )
     .PCHOptions             = .CompilerOptions
                             + ' /Fp"%2" /Fo"%3"'
     .CompilerOptions        + ' /Fo"%2"'
+    .CompilerOptionsC       = .CompilerOptions
     .LibrarianOptions       = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
     .LinkerOptions          = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
 
     // Optimizations
     .CompilerDebugOptimizations     = ' /MTd /Od /RTC1 /GS /Oy- /GR- /analyze'
-    .CompilerReleaseOptimizations   = ' /MT /Ox /Oy /Oi /GS- /GF /GL /Gy /Gw /GR- /analyze'
+    .CompilerReleaseOptimizations   = ' /MT /Ox /Oy /Oi /GS- /GF /GL /Gy /Gw /GR- /analyze /Zo'
     .LibrarianDebugOptimizations    = ''
     .LibrarianReleaseOptimizations  = ' /LTCG'
     .LinkerDebugOptimizations       = ''
@@ -129,6 +135,7 @@ Compiler( 'Compiler-x64-OSX' )
                             + ' /I"$WindowsSDKBasePath$/include/um"'
                             + ' /I"$WindowsSDKBasePath$/include/shared"'
     .CompilerOptions        + .BaseIncludePaths
+    .CompilerOptionsC       + .BaseIncludePaths
     .PCHOptions             + .BaseIncludePaths
 
     .WindowsLibPaths        = '$WindowsSDKBasePath$/lib/winv6.3/um'
@@ -147,6 +154,8 @@ Compiler( 'Compiler-x64-OSX' )
     .Linker                 = '$ToolsBasePath$\link.exe'
     .CompilerOptions        + ' /arch:SSE2'
                             + ' /DWIN32'
+    .CompilerOptionsC       + ' /arch:SSE2'
+                            + ' /DWIN32'
     .PCHOptions             + ' /arch:SSE2'
                             + ' /DWIN32'
     .LinkerOptions          + ' /MACHINE:X86'
@@ -160,6 +169,8 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Debug'
     .CompilerOptions        + ' /DDEBUG /DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
+    .CompilerOptionsC       + ' /DDEBUG /DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
     .PCHOptions             + ' /DDEBUG /DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
     .LibrarianOptions       + .LibrarianDebugOptimizations
@@ -171,6 +182,8 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Release'
     .CompilerOptions        + ' /DRELEASE'
                             + ' /d2Zi+'     // Improve optimized debugging VS2013.3+
+    .CompilerOptionsC       + ' /DRELEASE'
+                            + ' /d2Zi+'     // Improve optimized debugging VS2013.3+
     .PCHOptions             + ' /DRELEASE'
 
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
@@ -178,6 +191,7 @@ Compiler( 'Compiler-x64-OSX' )
     .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
 
     .CompilerOptions        + .CompilerReleaseOptimizations
+    .CompilerOptionsC       + .CompilerReleaseOptimizations
     .PCHOptions             + .CompilerReleaseOptimizations
     .LibrarianOptions       + .LibrarianReleaseOptimizations
     .LinkerOptions          + .LinkerReleaseOptimizations
@@ -187,6 +201,7 @@ Compiler( 'Compiler-x64-OSX' )
     Using( .X86ReleaseConfig ) // Note: based on Release config
     .Config                 = 'Profile'
     .CompilerOptions        + ' /DPROFILING_ENABLED'
+    .CompilerOptionsC       + ' /DPROFILING_ENABLED'
     .PCHOptions             + ' /DPROFILING_ENABLED'
 
     .DeoptimizeWritableFilesWithToken = false
@@ -202,6 +217,7 @@ Compiler( 'Compiler-x64-OSX' )
     .Librarian              = '$ToolsBasePath$\lib.exe'
     .Linker                 = '$ToolsBasePath$\link.exe'
     .CompilerOptions        + ' /DWIN64'
+    .CompilerOptionsC       + ' /DWIN64'
     .PCHOptions             + ' /DWIN64'
     .LinkerOptions          + ' /MACHINE:X64'
     .Platform               = 'x64'
@@ -213,6 +229,8 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Debug'
     .CompilerOptions        + ' /DDEBUG /DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
+    .CompilerOptionsC       + ' /DDEBUG /DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
     .PCHOptions             + ' /DDEBUG /DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
     .LibrarianOptions       + .LibrarianDebugOptimizations
@@ -223,6 +241,7 @@ Compiler( 'Compiler-x64-OSX' )
     Using( .X64BaseConfig )
     .Config                 = 'Release'
     .CompilerOptions        + ' /DRELEASE'
+    .CompilerOptionsC       + ' /DRELEASE'
     .PCHOptions             + ' /DRELEASE'
 
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
@@ -230,6 +249,7 @@ Compiler( 'Compiler-x64-OSX' )
     .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
 
     .CompilerOptions        + .CompilerReleaseOptimizations
+    .CompilerOptionsC       + .CompilerReleaseOptimizations
     .PCHOptions             + .CompilerReleaseOptimizations
     .LibrarianOptions       + .LibrarianReleaseOptimizations
     .LinkerOptions          + .LinkerReleaseOptimizations
@@ -239,6 +259,7 @@ Compiler( 'Compiler-x64-OSX' )
     Using( .X64ReleaseConfig ) // Note: based on Release config
     .Config                 = 'Profile'
     .CompilerOptions        + ' /DPROFILING_ENABLED'
+    .CompilerOptionsC       + ' /DPROFILING_ENABLED'
     .PCHOptions             + ' /DPROFILING_ENABLED'
 
     .DeoptimizeWritableFilesWithToken = false
@@ -328,6 +349,8 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Debug'
     .CompilerOptions        + ' -DDEBUG -DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
+    .CompilerOptionsC       + ' -DDEBUG -DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
     .PCHOptions             + ' -DDEBUG -DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
     .LibrarianOptions       + .LibrarianDebugOptimizations
@@ -338,6 +361,7 @@ Compiler( 'Compiler-x64-OSX' )
     Using( .X86ClangBaseConfig )
     .Config                 = 'Release'
     .CompilerOptions        + ' -DRELEASE'
+    .CompilerOptionsC       + ' -DRELEASE'
     .PCHOptions             + ' -DRELEASE'
 
     // Setup de-optimization options (FASTBUILD_DEOPTIMIZE_OBJECT)
@@ -345,6 +369,7 @@ Compiler( 'Compiler-x64-OSX' )
     .CompilerOptionsDeoptimized     = '$CompilerOptions$ /Od'
 
     .CompilerOptions        + .CompilerReleaseOptimizations
+    .CompilerOptionsC       + .CompilerReleaseOptimizations
     .PCHOptions             + .CompilerReleaseOptimizations
     .LibrarianOptions       + .LibrarianReleaseOptimizations
     .LinkerOptions          + .LinkerReleaseOptimizations
@@ -354,6 +379,7 @@ Compiler( 'Compiler-x64-OSX' )
     Using( .X86ClangReleaseConfig ) // Note: based on Release config
     .Config                 = 'Profile'
     .CompilerOptions        + ' -DPROFILING_ENABLED'
+    .CompilerOptionsC       + ' -DPROFILING_ENABLED'
     .PCHOptions             + ' -DPROFILING_ENABLED'
 
     .DeoptimizeWritableFilesWithToken = false
@@ -381,6 +407,9 @@ Compiler( 'Compiler-x64-OSX' )
                             // Disabled warnings
                             + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
 
+                            // Additional warnings
+                            + ' -Wshadow'
+
     .LinkerOptions          = '"%1" -o "%2"'
 
     .LibrarianOptions       = 'rcs "%2" "%1"'
@@ -406,6 +435,8 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Debug'
     .CompilerOptions        + ' -DDEBUG -DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
+    .CompilerOptionsC       + ' -DDEBUG -DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
     .LibrarianOptions       + .LibrarianDebugOptimizations
     .LinkerOptions          + .LinkerDebugOptimizations
 ]
@@ -415,6 +446,8 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Release'
     .CompilerOptions        + ' -DRELEASE'
                             + .CompilerReleaseOptimizations
+    .CompilerOptionsC       + ' -DRELEASE'
+                            + .CompilerReleaseOptimizations
     .LibrarianOptions       + .LibrarianReleaseOptimizations
     .LinkerOptions          + .LinkerReleaseOptimizations
 ]
@@ -423,6 +456,7 @@ Compiler( 'Compiler-x64-OSX' )
     Using( .X64ReleaseConfig_Linux ) // Note: based on Release config
     .Config                 = 'Profile'
     .CompilerOptions        + ' -DPROFILING_ENABLED'
+    .CompilerOptionsC       + ' -DPROFILING_ENABLED'
 ]
 
 // OSX
@@ -440,11 +474,12 @@ Compiler( 'Compiler-x64-OSX' )
                             + ' -Wall -Werror -Wfatal-errors'       // warnings as errors
                             + ' -Wextra'
                             + ' -Wno-#pragma-messages'
-                            + ' -std=c++11'                 // allow C++11 features
                             + ' -m64'                       // x86-64
 
                             // Fires on our new/delete operator (Clang bug?)
                             + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
+    .CompilerOptionsC       = .CompilerOptions
+    .CompilerOptions        + ' -std=c++11'                 // allow C++11 features
 
     .CompilerOutputExtension= '.o'
     .LinkerOptions          = '"%1" -o "%2" -g'
@@ -472,6 +507,8 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Debug'
     .CompilerOptions        + ' -DDEBUG -DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
+    .CompilerOptionsC       + ' -DDEBUG -DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
     .LibrarianOptions       + .LibrarianDebugOptimizations
     .LinkerOptions          + .LinkerDebugOptimizations
 ]
@@ -481,6 +518,8 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Release'
     .CompilerOptions        + ' -DRELEASE'
                             + .CompilerReleaseOptimizations
+    .CompilerOptionsC       + ' -DRELEASE'
+                            + .CompilerReleaseOptimizations
     .LibrarianOptions       + .LibrarianReleaseOptimizations
     .LinkerOptions          + .LinkerReleaseOptimizations
 ]
@@ -489,16 +528,16 @@ Compiler( 'Compiler-x64-OSX' )
     Using( .X64ReleaseConfig_OSX ) // Note: based on Release config
     .Config                 = 'Profile'
     .CompilerOptions        + ' -DPROFILING_ENABLED'
+    .CompilerOptionsC       + ' -DPROFILING_ENABLED'
 ]
 
 // Resource Compiler
 //------------------------------------------------------------------------------
-.ResourceCompiler =
-[
-    .Compiler                   = '$WindowsSDKBasePath$\Bin\x86\RC.exe'
-    .CompilerOutputExtension    = '.res'
-    .CompilerOptions            = '/nologo /fo"%2" "%1"'
-]
+Compiler( 'ResourceCompiler' )
+{
+    .Executable                 = '$WindowsSDKBasePath$\Bin\x86\RC.exe'
+    .CompilerFamily             = 'custom'
+}
 
 //------------------------------------------------------------------------------
 //
@@ -515,8 +554,8 @@ Compiler( 'Compiler-x64-OSX' )
 //------------------------------------------------------------------------------
 .ProjectCommon =
 [
-    .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -fastcancel -cache ^$(ProjectName)-^$(Configuration)'
-    .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -fastcancel -cache -clean ^$(ProjectName)-^$(Configuration)'
+    .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache ^$(ProjectName)-^$(Configuration)'
+    .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean ^$(ProjectName)-^$(Configuration)'
     .OutputDirectory            = '^$(SolutionDir)\..\tmp2'
     .IntermediateDirectory      = '^$(SolutionDir)\..\tmp2'
     .BuildLogFile               = '^$(SolutionDir)\..\tmp2\^$(ProjectName)-^$(Configuration).log'

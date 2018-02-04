@@ -65,7 +65,7 @@ void GetGUID_PBXNativeTarget( const uint32_t index, AString & outGUID )
     const uint32_t part1 = 0x33333333;
     const uint32_t part2 = 0x00000000;
     const uint32_t part3 = index;
-    outGUID.Format( "%08X%08X%08X", part1, part2, part3 );    
+    outGUID.Format( "%08X%08X%08X", part1, part2, part3 );
 }
 
 void GetGUID_PBXProject( const uint32_t index, AString & outGUID )
@@ -97,7 +97,7 @@ void GetGUID_PBXSourcesBuildPhase( const uint32_t index, AString & outGUID )
     const uint32_t part1 = 0x77777777;
     const uint32_t part2 = 0x77777777;
     const uint32_t part3 = index;
-    outGUID.Format( "%08X%08X%08X", part1, part2, part3 );    
+    outGUID.Format( "%08X%08X%08X", part1, part2, part3 );
 }
 
 // WriteHeader
@@ -134,9 +134,9 @@ void XCodeProjectGenerator::WriteFiles()
         const char * shortFolderName = "TODO"; // TODO:
 
         Write( "\t\t1111111100000000%08X /* %s in %s */ = {isa = PBXBuildFile; fileRef = 1111111111111111%08X /* %s */; };\n",
-                    fileIndex, shortName, shortFolderName, fileIndex, shortName );		
+                    fileIndex, shortName, shortFolderName, fileIndex, shortName );
     }
-    Write( "/* End PBXBuildFile section */\n" );        
+    Write( "/* End PBXBuildFile section */\n" );
 
     // Files (PBXFileReference)
     Write( "\n" );
@@ -144,7 +144,7 @@ void XCodeProjectGenerator::WriteFiles()
     for ( uint32_t fileIndex=0; fileIndex<numFiles; ++fileIndex )
     {
         const File & file = m_Files[ fileIndex ];
-        
+
         // Get just the filename part from the full path
         const char * shortName = file.m_Name.FindLast( NATIVE_SLASH );
         shortName = shortName ? ( shortName + 1 ) : file.m_Name.Get();
@@ -269,7 +269,7 @@ void XCodeProjectGenerator::WriteBuildCommand()
         GetGUID_PBXNativeTarget( 0, pbxNativeTargetGUID );
 
         AStackString<> xConfigurationListGUID;
-        GetGUID_XConfigurationList( 2, xConfigurationListGUID ); 
+        GetGUID_XConfigurationList( 2, xConfigurationListGUID );
 
         AStackString<> buildPhaseGuid;
         GetGUID_PBXSourcesBuildPhase( 0, buildPhaseGuid );
@@ -288,7 +288,7 @@ void XCodeProjectGenerator::WriteBuildCommand()
         Write( "\t\t\t);\n" );
         Write( "\t\t\tname = \"%s-doc\";\n", m_ProjectName.Get() );
         Write( "\t\t\tproductName = \"%s-doc\";\n", m_ProjectName.Get() );
-        Write( "\t\t\tproductType = \"com.apple.product-type.tool\";\n" );        
+        Write( "\t\t\tproductType = \"com.apple.product-type.tool\";\n" );
         Write( "\t\t};\n" );
         Write( "/* End PBXNativeTarget section */\n" );
     }
@@ -373,7 +373,7 @@ void XCodeProjectGenerator::WritePBXSourcesBuildPhase()
         const char * shortFolderName = "TODO"; // TODO:
 
         Write( "\t\t\t\t1111111100000000%08x /* %s in %s */,\n",
-                    fileIndex, shortName, shortFolderName );        
+                    fileIndex, shortName, shortFolderName );
     }
     Write( "\t\t\t);\n" );
 
@@ -464,7 +464,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
             }
 
             // System Include Paths
-            // TODO:B Do we need to differentiate include path types? 
+            // TODO:B Do we need to differentiate include path types?
             {
                 //Write( "\t\t\t\tHEADER_SEARCH_PATHS = (\n" );
                 //Write( "%s", includePathsStr.Get() );
@@ -480,6 +480,9 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                     AStackString<> fullIncludePath;
                     NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path - TODO:C would be better to be project relative
                     include = fullIncludePath;
+                    #if defined( __WINDOWS__ )
+                        include.Replace( '\\', '/' ); // Convert to OSX style slashes
+                    #endif
                 }
                 AStackString<> includePathsStr;
                 ProjectGeneratorBase::ConcatIntellisenseOptions( includePaths, includePathsStr, "\t\t\t\t\t\"", "\",\n" );

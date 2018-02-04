@@ -1,0 +1,126 @@
+//
+// Intellisense - Various targets to check Intellisense generation
+//
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Common config
+//------------------------------------------------------------------------------
+.Out                    = '$Out$\Test\ProjectGeneration\Intellisense'
+.CompilerOptions        + ' -DINTELLISENSE_DEFINE'
+                        + ' -D INTELLISENSE_SPACE_DEFINE'
+                        + ' /DINTELLISENSE_SLASH_DEFINE'
+                        + ' /D INTELLISENSE_SLASH_SPACE_DEFINE'
+                        + ' -DINTELLISENSE_QUOTED_DEFINE'
+                        + ' -D INTELLISENSE_QUOTED_SPACE_DEFINE'
+                        + ' /DINTELLISENSE_QUOTED_SLASH_DEFINE'
+                        + ' /D INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE'
+                        + ' -IIntellisense/Include/Path'
+                        + ' -I Intellisense/Include/Space/Path'
+                        + ' -IIntellisense/Include/Slash/Path'
+                        + ' -I Intellisense/Include/Slash/Space/Path'
+                        + ' -I"Intellisense/Include/Quoted/Path"'
+                        + ' -I "Intellisense/Include/Quoted/Space/Path"'
+                        + ' -I"Intellisense/Include/Quoted/Slash/Path"'
+                        + ' -I "Intellisense/Include/Quoted/Slash/Space/Path"'
+
+// ObjectList
+//------------------------------------------------------------------------------
+ObjectList( 'ObjectList' )
+{
+    .CompilerOutputPath = '$Out$/'
+}
+VCXProject( 'ObjectList-proj' )
+{
+    .Config             = [ .Platform = 'Win32' .Config = 'Debug' .Target = 'ObjectList' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$\ObjectList.vcxproj'
+}
+XCodeProject( 'ObjectList-xcode' )
+{
+    .Config             = [ .Platform = 'OSX' .Config = 'Debug' .Target = 'ObjectList' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$/ObjectList.xcodeproj/project.pbxproj'
+}
+
+// Library
+//------------------------------------------------------------------------------
+Library( 'Library' )
+{
+    .CompilerOptions    + ' -DINTELLISENSE_DEFINE'          // Define to be checked by test
+                        + ' -IIntellisense/Include/Path'    // Include to be checked by test
+    .CompilerOutputPath = '$Out$/'
+    .LibrarianOutput    = '$Out$/Library.lib'
+}
+VCXProject( 'Library-proj' )
+{
+    .Config             = [ .Platform = 'Win32' .Config = 'Debug' .Target = 'Library' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$\Library.vcxproj'
+}
+XCodeProject( 'Library-xcode' )
+{
+    .Config             = [ .Platform = 'OSX' .Config = 'Debug' .Target = 'Library' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$/Library.xcodeproj/project.pbxproj'
+}
+
+// Executable
+//------------------------------------------------------------------------------
+Executable( 'Executable' )
+{
+    .Libraries          = 'Library' // This provides Intellisense info
+    .LinkerOutput       = '$Out$/Executable.exe'
+}
+VCXProject( 'Executable-proj' )
+{
+    .Config             = [ .Platform = 'Win32' .Config = 'Debug' .Target = 'Executable' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$\Executable.vcxproj'
+}
+XCodeProject( 'Executable-xcode' )
+{
+    .Config             = [ .Platform = 'OSX' .Config = 'Debug' .Target = 'Executable' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$/Executable.xcodeproj/project.pbxproj'
+}
+
+// Test
+//------------------------------------------------------------------------------
+Test( 'Test' )
+{
+    .TestExecutable     = 'Executable' // This provides Intellisense info
+    .TestOutput         = '$Out$/TestOutput.txt'
+}
+VCXProject( 'Test-proj' )
+{
+    .Config             = [ .Platform = 'Win32' .Config = 'Debug' .Target = 'Test' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$\Test.vcxproj'
+}
+XCodeProject( 'Test-xcode' )
+{
+    .Config             = [ .Platform = 'OSX' .Config = 'Debug' .Target = 'Test' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$/Test.xcodeproj/project.pbxproj'
+}
+
+// Alias to build
+//------------------------------------------------------------------------------
+Alias( 'Intellisense' )
+{
+    .Targets    = {
+                    'ObjectList-proj',
+                    'ObjectList-xcode',
+                    'Library-proj',
+                    'Library-xcode',
+                    'Executable-proj'
+                    'Executable-xcode'
+                    'Test-proj'
+                    'Test-xcode'
+                  }
+}
+
+//------------------------------------------------------------------------------

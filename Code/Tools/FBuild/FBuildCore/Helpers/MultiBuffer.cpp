@@ -54,6 +54,7 @@ bool MultiBuffer::CreateFromFiles( const Array< AString > & fileNames )
         FileStream& fs = fileStreams[ i ];
         if ( fs.Open( fileNames[ i ].Get(), FileStream::READ_ONLY ) == false )
         {
+            ASSERT( false ); // Shouldn't fail to open file locally
             return false;
         }
         const uint64_t fileSize = fs.GetFileSize();

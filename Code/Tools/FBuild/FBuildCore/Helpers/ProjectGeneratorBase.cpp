@@ -235,6 +235,7 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
                                         "*.cpp", "*.hpp", "*.cxx", "*.hxx", "*.c",   "*.h",  "*.cc",   "*.hh",
                                         "*.cp",  "*.hp",  "*.cs",  "*.inl", "*.bff", "*.rc", "*.resx", "*.m",  "*.mm",
                                         "*.cu",
+                                        "*.asm", "*.s",
                                         "*.natvis" };
     extensions.SetCapacity( sizeof( defaultExtensions ) / sizeof( char * ) );
     for ( auto & ext : defaultExtensions )
@@ -279,20 +280,20 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
             case Node::EXE_NODE:
             {
                 // For Exe use first library
-                const Dependencies & deps = node->GetStaticDependencies();
-                if ( deps.IsEmpty() == false )
+                const ObjectListNode * n = FindTargetForIntellisenseInfo( node->GetStaticDependencies() );
+                if ( n )
                 {
-                    return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+                    return n;
                 }
                 break; // Nothing found
             }
             case Node::DLL_NODE:
             {
                 // For DLL use first library
-                const Dependencies & deps = node->GetStaticDependencies();
-                if ( deps.IsEmpty() == false )
+                const ObjectListNode * n = FindTargetForIntellisenseInfo( node->GetStaticDependencies() );
+                if ( n )
                 {
-                    return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+                    return n;
                 }
                 break; // Nothing found
             }
@@ -308,14 +309,29 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
             }
             case Node::ALIAS_NODE:
             {
-                const Dependencies & deps = node->CastTo< AliasNode >()->GetAliasedNodes();
-                if ( deps.IsEmpty() == false )
+                const ObjectListNode * n = FindTargetForIntellisenseInfo( node->CastTo< AliasNode >()->GetAliasedNodes() );
+                if ( n )
                 {
-                    return FindTargetForIntellisenseInfo( deps[0].GetNode() );
+                    return n;
                 }
                 break; // Nothing aliased - ignore
             }
             default: break; // Unsupported type - ignore
+        }
+    }
+    return nullptr;
+}
+
+// FindTargetForIntellisenseInfo
+//------------------------------------------------------------------------------
+/*static*/ const ObjectListNode * ProjectGeneratorBase::FindTargetForIntellisenseInfo( const Dependencies & deps )
+{
+    for ( const Dependency & dep : deps )
+    {
+        const ObjectListNode * n = FindTargetForIntellisenseInfo( dep.GetNode() );
+        if ( n )
+        {
+            return n;
         }
     }
     return nullptr;
@@ -336,51 +352,55 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
     const size_t optionLen = AString::StrLen( option );
     const size_t alternateOptionLen = alternateOption ? AString::StrLen( alternateOption ) : 0;
 
-    for ( AString & token : tokens )
+    for ( size_t i=0; i<tokens.GetSize(); ++i )
     {
+        AString & token = tokens[ i ];
+
         // strip quotes around token, e.g:    "-IFolder/Folder"
         if ( token.BeginsWith( '"' ) && token.EndsWith( '"' ) )
         {
-            token = AStackString<>( token.Get() + 1, token.GetEnd() - 1 );
+            token.Assign( token.Get() + 1, token.GetEnd() - 1 );
         }
 
-        // check for either option at start of token
-        if ( token.BeginsWith( option ) )
+        AStackString<> optionBody;
+
+        // Handle space between option and payload
+        if ( ( token == option ) || ( token == alternateOption ) )
         {
-            // quoted?
-            AStackString<> tmp;
-            if ( ( token[optionLen] == '"' ) && token.EndsWith( '"' ) )
+            // Handle an incomplete token at the end of list
+            if ( i == ( tokens.GetSize() - 1 ) )
             {
-                // use everything after token minus the quotes
-                tmp.Assign( token.Get() + ( optionLen + 1 ), token.GetEnd() - 1 );
+                break;
             }
-            else
-            {
-                // use everything after token
-                tmp.Assign( token.Get() + optionLen );
-            }
-            if (escapeQuotes)
-            {
-                tmp.Replace("\"", "\\\"");
-            }
-            outOptions.Append( tmp );
+
+            // Use next token
+            optionBody = tokens[ i + 1 ];
+        }
+        else if ( token.BeginsWith( option ) )
+        {
+            // use everything after token
+            optionBody.Assign( token.Get() + optionLen );
         }
         else if ( alternateOption && token.BeginsWith( alternateOption ) )
         {
-            AStackString<> tmp;
-            if ( ( token[alternateOptionLen] == '"' ) && token.EndsWith( '"' ) )
+            // use everything after token
+            optionBody.Assign( token.Get() + alternateOptionLen );
+        }
+
+        // Strip quotes around body (e.g. -I"Folder/Folder")
+        if ( optionBody.BeginsWith( '"' ) && optionBody.EndsWith( '"' ) )
+        {
+            optionBody.Trim( 1, 1 );
+        }
+
+        // Did we find something?
+        if ( optionBody.IsEmpty() == false )
+        {
+            if ( escapeQuotes )
             {
-                tmp.Assign( token.Get() + ( alternateOptionLen + 1 ), token.GetEnd() - 1 );
+                optionBody.Replace( "\"", "\\\"" );
             }
-            else
-            {
-                tmp.Assign( token.Get() + alternateOptionLen );
-            }
-            if (escapeQuotes)
-            {
-                tmp.Replace("\"", "\\\"");
-            }
-            outOptions.Append( tmp );
+            outOptions.Append( optionBody );
         }
     }
 }

@@ -1,0 +1,45 @@
+//
+// Test
+//
+// Build and run a Test which crashes
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Compile an executable to run
+//------------------------------------------------------------------------------
+ObjectList( "Lib" )
+{
+    .CompilerInputFiles = 'Data/TestTest/Fail_Crash/main.cpp'
+    .CompilerOutputPath = '$Out$/Test/Test/Fail_Crash/'
+
+    #if __WINDOWS__
+        .CompilerOptions    + .WindowsIncludePaths      // For SetErrorMode
+                            + .VisualStudioIncludePaths // For SetErrorMode
+    #endif
+}
+
+Executable( "Exe" )
+{
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+                            + .WindowsLibPaths          // For SetErrorMode
+                            + ' kernel32.lib'            // For SetErrorMode
+    #endif
+    .LinkerOutput       = '$Out$/Test/Fail_Crash/test.exe'
+    .Libraries          = { 'Lib' }
+}
+
+// Run the executable we compiled
+//------------------------------------------------------------------------------
+Test( "Fail_Crash" )
+{
+    .TestExecutable     = 'Exe'
+    .TestOutput         = '$Out$/Test/Test/Fail_Crash/testoutput.txt'
+}

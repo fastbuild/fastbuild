@@ -45,7 +45,8 @@ public:
                                                 BFFVariable::VarType expectedType,
                                                 BFFVariable::VarType foundType );
     static void Error_1009_UnknownVariable( const BFFIterator & iter,
-                                         const Function * function );
+                                            const Function * function,
+                                            const AString & unknownVariableName );
     static void Error_1010_UnknownConstruct( const BFFIterator & iter );
     static void Error_1011_UnnamedModifcationMustFollowAssignment( const BFFIterator & iter );
     static void Error_1012_UnexpectedEndOfFile( const BFFIterator & iter );
@@ -182,11 +183,26 @@ public:
                                                             const Function * function,
                                                             const char * option,
                                                             const char * property );
+
+    // 1400-1499 : Copy specific errors
+    //------------------------------------------------------------------------------
+    static void Error_1400_CopyDestMissingSlash( const BFFIterator & iter,
+                                                 const Function * function );
+
+    // 1500-1599 : Compiler specific errors
+    //------------------------------------------------------------------------------
+    static void Error_1500_CompilerDetectionFailed( const BFFIterator & iter,
+                                                    const Function * function,
+                                                    const AString & exe );
+    static void Error_1501_CompilerFamilyUnrecognized( const BFFIterator & iter,
+                                                       const Function * function,
+                                                       const AString & badCompilerFamily );
+
 private:
     static void FormatError( const BFFIterator & iter,
                              uint32_t errNum,
                              const Function * function,
-                             const char * message, ... );
+                             const char * message, ... ) FORMAT_STRING( 4, 5 );
 };
 
 //------------------------------------------------------------------------------

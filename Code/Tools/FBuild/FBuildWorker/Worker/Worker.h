@@ -38,8 +38,8 @@ private:
 
     inline bool InConsoleMode() const { return ( m_MainWindow == nullptr ); }
 
-    void StatusMessage( const char * fmtString, ... ) const;
-    void ErrorMessage( const char * fmtString, ... ) const;
+    void StatusMessage( const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
+    void ErrorMessage( const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
 
     WorkerWindow        * m_MainWindow;
     Server              * m_ConnectionPool;

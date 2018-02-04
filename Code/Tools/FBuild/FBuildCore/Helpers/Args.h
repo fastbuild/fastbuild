@@ -39,7 +39,7 @@ public:
     bool Finalize( const AString & exe, const AString & nodeNameForError, bool canUseResponseFile );
 
     // After finalization, access args
-    const AString& GetRawArgs() const   { ASSERT( m_Finalized ); return m_Args; }
+    const AString& GetRawArgs() const   { return m_Args; }
     const AString& GetFinalArgs() const { ASSERT( m_Finalized ); return m_ResponseFileArgs.IsEmpty() ? m_Args : m_ResponseFileArgs; }
 
     // helper functions

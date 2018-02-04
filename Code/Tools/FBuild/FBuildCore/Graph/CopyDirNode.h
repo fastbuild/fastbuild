@@ -38,7 +38,7 @@ private:
     Array< AString >    m_SourcePathsPattern;
     Array< AString >    m_SourceExcludePaths;
     bool                m_SourcePathsRecurse = true;
-    
+
     Array< AString >    m_PreBuildDependencyNames;
 };
 

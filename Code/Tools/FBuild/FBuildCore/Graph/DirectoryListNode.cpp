@@ -17,48 +17,52 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
+// Reflection
+//------------------------------------------------------------------------------
+REFLECT_NODE_BEGIN( DirectoryListNode, Node, MetaNone() )
+    REFLECT( m_Path,                    "Path",             MetaNone() )
+    REFLECT_ARRAY( m_Patterns,          "Patterns",         MetaNone() )
+    REFLECT_ARRAY( m_ExcludePaths,      "ExcludePaths",     MetaNone() )
+    REFLECT_ARRAY( m_FilesToExclude,    "FilesToExclude",   MetaNone() )
+    REFLECT_ARRAY( m_ExcludePatterns,   "ExcludePatterns",  MetaNone() )
+    REFLECT( m_Recursive,               "Recursive",        MetaNone() )
+REFLECT_END( DirectoryListNode )
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-DirectoryListNode::DirectoryListNode( const AString & name,
-                                      const AString & path,
-                                      const Array< AString > * patterns,
-                                      bool recursive,
-                                      const Array< AString > & excludePaths,
-                                      const Array< AString > & filesToExclude,
-                                      const Array< AString > & excludePatterns )
-: Node( name, Node::DIRECTORY_LIST_NODE, Node::FLAG_NONE )
-    , m_Path( path )
-    , m_Patterns()
-    , m_ExcludePaths( excludePaths )
-    , m_FilesToExclude( filesToExclude )
-    , m_ExcludePatterns( excludePatterns )
-    , m_Recursive( recursive )
-    , m_Files( 0, true )
+DirectoryListNode::DirectoryListNode()
+    : Node( AString::GetEmpty(), Node::DIRECTORY_LIST_NODE, Node::FLAG_NONE )
+    , m_Recursive( true )
 {
-    if ( patterns )
-    {
-        m_Patterns = *patterns;
-    }
+    m_LastBuildTimeMs = 100;
+}
+
+// Initialize
+//------------------------------------------------------------------------------
+bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+{
+    ASSERT( ( m_Recursive == true ) || ( m_Recursive == false ) );
 
     // ensure name is correctly formatted
     //   path|[patterns]|recursive|[excludePath]
-    ASSERT( name.BeginsWith( path ) );
-    ASSERT( name[ path.GetLength() ] == '|' );
-    ASSERT( m_Patterns.IsEmpty() || ( name.Find( m_Patterns[ 0 ].Get() ) == name.Get() + path.GetLength() + 1 ) );
-    ASSERT( ( recursive && name.Find( "|true|" ) ) ||
-            ( !recursive && name.Find( "|false|" ) ) );
+    ASSERT( m_Name.BeginsWith( m_Path ) );
+    ASSERT( m_Name[ m_Path.GetLength() ] == '|' );
+    ASSERT( m_Patterns.IsEmpty() || ( m_Name.Find( m_Patterns[ 0 ].Get() ) == m_Name.Get() + m_Path.GetLength() + 1 ) );
+    ASSERT( ( m_Recursive && m_Name.Find( "|true|" ) ) ||
+            ( !m_Recursive && m_Name.Find( "|false|" ) ) );
 
     // paths must have trailing slash
-    ASSERT( path.EndsWith( NATIVE_SLASH ) );
+    ASSERT( m_Path.EndsWith( NATIVE_SLASH ) );
 
     // make sure exclusion path has trailing slash if provided
-    #ifdef DEBUG
-        const AString * const end = excludePaths.End();
-        for ( const AString * it=excludePaths.Begin(); it != end; ++it )
+    #if defined( ASSERTS_ENABLED )
+        for ( const AString & excludePath : m_ExcludePaths )
         {
-            ASSERT( ( *it ).EndsWith( NATIVE_SLASH ) );
+            ASSERT( excludePath.EndsWith( NATIVE_SLASH ) );
         }
     #endif
+
+    return true;
 }
 
 // DESTRUCTOR
@@ -211,17 +215,16 @@ DirectoryListNode::~DirectoryListNode() = default;
 //------------------------------------------------------------------------------
 /*static*/ Node * DirectoryListNode::Load( NodeGraph & nodeGraph, IOStream & stream )
 {
-    NODE_LOAD( AStackString<>,  name );
-    NODE_LOAD( AStackString<>,  path );
-    NODE_LOAD( Array< AString >,patterns );
-    NODE_LOAD( Array< AString >,excludePaths );
-    NODE_LOAD( bool,            recursive );
-    NODE_LOAD( Array< AString >, filesToExclude );
-    NODE_LOAD( Array< AString >, excludePatterns );
+    NODE_LOAD( AStackString<>, name );
 
-    Node * n = nodeGraph.CreateDirectoryListNode( name, path, &patterns, recursive, excludePaths, filesToExclude, excludePatterns );
-    ASSERT( n );
-    return n;
+    DirectoryListNode * node = nodeGraph.CreateDirectoryListNode( name );
+
+    if ( node->Deserialize( nodeGraph, stream ) == false )
+    {
+        return nullptr;
+    }
+
+    return node;
 }
 
 // Save
@@ -229,12 +232,7 @@ DirectoryListNode::~DirectoryListNode() = default;
 /*virtual*/ void DirectoryListNode::Save( IOStream & stream ) const
 {
     NODE_SAVE( m_Name );
-    NODE_SAVE( m_Path );
-    NODE_SAVE( m_Patterns );
-    NODE_SAVE( m_ExcludePaths );
-    NODE_SAVE( m_Recursive );
-    NODE_SAVE( m_FilesToExclude );
-    NODE_SAVE( m_ExcludePatterns );
+    Node::Serialize( stream );
 }
 
 //------------------------------------------------------------------------------

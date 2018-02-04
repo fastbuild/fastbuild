@@ -196,7 +196,7 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
     Dependencies compilerInputPath;
     if ( !function->GetDirectoryListNodeList( nodeGraph,
                                               iter,
-                                              m_CompilerInputPath, 
+                                              m_CompilerInputPath,
                                               m_CompilerInputExcludePath,
                                               m_CompilerInputExcludedFiles,
                                               m_CompilerInputExcludePattern,
@@ -664,7 +664,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
 
 // CreateObjectNode
 //------------------------------------------------------------------------------
-ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph, 
+ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const BFFIterator & iter,
                                                const Function * function,
                                                const uint32_t flags,
@@ -684,8 +684,17 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_CompilerInputFile = objectInput;
     node->m_CompilerOutputExtension = m_CompilerOutputExtension;
     node->m_PCHObjectFileName = pchObjectName;
-    node->m_DeoptimizeWritableFiles = m_DeoptimizeWritableFiles;
-    node->m_DeoptimizeWritableFilesWithToken = m_DeoptimizeWritableFilesWithToken;
+    if ( flags & ObjectNode::FLAG_CREATING_PCH )
+    {
+        // Precompiled headers are never de-optimized
+        node->m_DeoptimizeWritableFiles = false;
+        node->m_DeoptimizeWritableFilesWithToken = false;
+    }
+    else
+    {
+        node->m_DeoptimizeWritableFiles = m_DeoptimizeWritableFiles;
+        node->m_DeoptimizeWritableFilesWithToken = m_DeoptimizeWritableFilesWithToken;
+    }
     node->m_AllowDistribution = m_AllowDistribution;
     node->m_AllowCaching = m_AllowCaching;
     node->m_CompilerForceUsing = m_CompilerForceUsing;

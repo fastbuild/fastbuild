@@ -17,6 +17,7 @@
 #include "Core/Time/Timer.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Atomic.h"
+#include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 
 // JobCostSorter
@@ -112,7 +113,6 @@ JobQueue::JobQueue( uint32_t numWorkerThreads ) :
     m_NumLocalJobsActive( 0 ),
     m_DistributableJobs_Available( 1024, true ),
     m_DistributableJobs_InProgress( 1024, true ),
-    m_DistributableJobsMemoryUsage( 0 ),
     m_CompletedJobs( 1024, true ),
     m_CompletedJobsFailed( 1024, true ),
     m_CompletedJobs2( 1024, true ),
@@ -144,7 +144,7 @@ JobQueue::~JobQueue()
     // delete incomplete jobs
     while ( Job * job = m_LocalJobs_Available.RemoveJob() )
     {
-        DestroyJob( job );
+        FDELETE job;
     }
 
     // wait for workers to finish - ok if they stopped before this
@@ -157,7 +157,7 @@ JobQueue::~JobQueue()
 
     ASSERT( m_CompletedJobs.IsEmpty() );
     ASSERT( m_CompletedJobsFailed.IsEmpty() );
-    ASSERT( m_DistributableJobsMemoryUsage == 0 );
+    ASSERT( Job::GetTotalLocalDataMemoryUsage() == 0 );
 }
 
 // SignalStopWorkers (Main Thread)
@@ -266,9 +266,6 @@ void JobQueue::QueueDistributableJob( Job * job )
         m_DistributableJobs_Available.Append( job );
 
         job->SetDistributionState( Job::DIST_AVAILABLE );
-
-        // track size of distributable jobs
-        m_DistributableJobsMemoryUsage += job->GetDataSize();
     }
 
     ASSERT( m_NumLocalJobsActive > 0 );
@@ -324,11 +321,6 @@ Job * JobQueue::GetDistributableJobToRace()
             job->SetDistributionState( Job::DIST_RACING );
             return job;
         }
-
-        ASSERT( ( distState == Job::DIST_BUILDING_LOCALLY ) ||
-                ( distState == Job::DIST_RACING ) ||
-                ( distState == Job::DIST_RACE_WON_LOCALLY ) ||
-                ( distState == Job::DIST_COMPLETED_REMOTELY ) );
     }
 
     return nullptr; // No job found to race (all were local or races already)
@@ -339,13 +331,10 @@ Job * JobQueue::GetDistributableJobToRace()
 Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
 {
     MutexHolder m( m_DistributedJobsMutex );
-    for ( Job * job : m_DistributableJobs_InProgress )
+    auto jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
+    if ( jobIt )
     {
-        // Find the matching job
-        if ( job->GetJobId() != jobId )
-        {
-            continue; // Not the right job
-        }
+        Job * job = *jobIt;
 
         // What state is the job in?
         const Job::DistributionState distState = job->GetDistributionState();
@@ -360,17 +349,37 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
         // Did a local race complete this already?
         if ( distState == Job::DIST_RACE_WON_LOCALLY )
         {
-            VERIFY( m_DistributableJobs_InProgress.FindAndErase( job ) );
-            DestroyJob( job );
+            m_DistributableJobs_InProgress.Erase( jobIt );
+            FDELETE job;
             return nullptr;
         }
 
         // Are we still locally racing?
         if ( distState == Job::DIST_RACING )
         {
-            // Ignore the remote job (we always take the local race)
-            // TODO:B Cancel the local job and take the remote result
-            job->SetDistributionState( Job::DIST_BUILDING_LOCALLY );
+            // Try to cancel the local job
+            job->Cancel();
+            job->SetDistributionState( Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL );
+
+            // Wait for cancellation
+            {
+                PROFILE_SECTION( "WaitForLocalCancel" );
+                m_DistributedJobsMutex.Unlock(); // Allow WorkerThread access
+                while ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+                {
+                    Thread::Sleep( 1 );
+                }
+                m_DistributedJobsMutex.Lock();
+            }
+
+            // Did cancallation work? It can fail if we try to cancel after build has finished
+            // but before we finish processing the job
+            if ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY )
+            {
+                return job; // Remote race won - we now own the job
+            }
+
+            // Cancellation failed - job will be managed normally (as if local)
             return nullptr;
         }
 
@@ -403,13 +412,21 @@ void JobQueue::ReturnUnfinishedDistributableJob( Job * job )
         if ( job->GetDistributionState() == Job::DIST_RACE_WON_LOCALLY )
         {
             // Job locally completed, and we no longer reference it so it can be freed
-            DestroyJob( job );
+            FDELETE job;
             return;
         }
         else
         {
             // If not racing, only standard remote build is valid
-            ASSERT( job->GetDistributionState() == Job::DIST_BUILDING_REMOTELY );
+            if ( job->GetDistributionState() == Job::DIST_COMPLETED_REMOTELY )
+            {
+                // Can be "completed" due to error
+                ASSERT( job->GetSystemErrorCount() > 0 );
+            }
+            else
+            {
+                ASSERT( job->GetDistributionState() == Job::DIST_BUILDING_REMOTELY );
+            }
 
             // Put back in available queue
             m_DistributableJobs_Available.Append( job );
@@ -449,7 +466,7 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
         // Free normal jobs
         if ( job->GetDistributionState() == Job::DIST_NONE )
         {
-            DestroyJob( job );
+            FDELETE job;
             continue;
         }
 
@@ -460,13 +477,15 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
             const Job::DistributionState distState = job->GetDistributionState();
 
             // Normal local or remote compilation of distributable job?
-            if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) || ( distState == Job::DIST_COMPLETED_REMOTELY ) )
+            if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) ||
+                 ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
+                 ( distState == Job::DIST_RACE_WON_REMOTELY ) )
             {
-                DestroyJob( job );
+                FDELETE job;
                 continue;
             }
 
-            // Local race, won locally (we don't support remote wins at the moment)
+            // Local race, won locally
             ASSERT( distState == Job::DIST_RACING );
             job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
 
@@ -484,7 +503,7 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
         // Free normal jobs
         if ( job->GetDistributionState() == Job::DIST_NONE )
         {
-            DestroyJob( job );
+            FDELETE job;
             continue;
         }
 
@@ -495,13 +514,15 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
             const Job::DistributionState distState = job->GetDistributionState();
 
             // Normal local or remote compilation of distributable job?
-            if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) || ( distState == Job::DIST_COMPLETED_REMOTELY ) )
+            if ( ( distState == Job::DIST_COMPLETED_LOCALLY ) ||
+                 ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
+                 ( distState == Job::DIST_RACE_WON_REMOTELY ) )
             {
-                DestroyJob( job );
+                FDELETE job;
                 continue;
             }
 
-            // Local race, won locally (we don't support remote wins at the moment)
+            // Local race, won locally
             ASSERT( distState == Job::DIST_RACING );
             job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
 
@@ -560,7 +581,27 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         // Handle the various states
         const Job::DistributionState distState = job->GetDistributionState();
 
-        if ( distState == Job::DIST_COMPLETED_REMOTELY )
+        // Cancelling?
+        if ( distState == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+        {
+            ASSERT( *(job->GetAbortFlagPointer()) == true );
+
+            // Did local job actually get cancelled?
+            if ( success == false )
+            {
+                // Allow remote job to win race
+                job->SetDistributionState( Job::DIST_RACE_WON_REMOTELY );
+                return; // Remote job will complete processing
+            }
+
+            // Local Job finished while trying to cancel, so fail cancellation
+            // Local thread now entirely owns Job, so set state as if race
+            // never happened
+            job->SetDistributionState( Job::DIST_COMPLETED_LOCALLY ); // Cancellation has failed
+
+        }
+        else if ( ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
+                  ( distState == Job::DIST_RACE_WON_REMOTELY ) )
         {
             // Normal remote build
             m_DistributableJobs_InProgress.Erase( it );
@@ -573,7 +614,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         }
         else
         {
-            // A race was complete locally
+            // A race was completed locally
             ASSERT( distState == Job::DIST_RACING );
 
             // Leave in InProgress and leave state as-is (will be set to
@@ -627,7 +668,8 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     // make sure the output path exists for files
     // (but don't bother for input files)
-    if ( node->IsAFile() && ( node->GetType() != Node::FILE_NODE ) && ( node->GetType() != Node::COMPILER_NODE ) )
+    const bool isOutputFile = node->IsAFile() && ( node->GetType() != Node::FILE_NODE ) && ( node->GetType() != Node::COMPILER_NODE );
+    if ( isOutputFile )
     {
         if ( Node::EnsurePathExistsForFile( node->GetName() ) == false )
         {
@@ -680,7 +722,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     {
         if ( result == Node::NODE_RESULT_FAILED )
         {
-            if ( node->GetControlFlags() & Node::FLAG_NO_DELETE_ON_FAIL )
+            if ( !isOutputFile || ( node->GetControlFlags() & Node::FLAG_NO_DELETE_ON_FAIL ) )
             {
                 // node failed, but builder wants result left on disc
             }
@@ -740,21 +782,6 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     }
 
     return result;
-}
-
-// DestroyJob
-//------------------------------------------------------------------------------
-void JobQueue::DestroyJob( Job * job )
-{
-    // Manage memory limit book-keeping if job is distributable
-    if ( job->GetDistributionState() != Job::DIST_NONE )
-    {
-        ASSERT( m_DistributableJobsMemoryUsage >= job->GetDataSize() );
-        m_DistributableJobsMemoryUsage -= job->GetDataSize();
-    }
-
-    // Normal free of all jobs
-    FDELETE job;
 }
 
 //------------------------------------------------------------------------------

@@ -223,7 +223,7 @@ bool FileStream::IsOpen() const
     #error Unknown platform
 #endif
 
-    FSDEBUG( DEBUGSPAM( "Read %llu bytes to %x on %x\n", totalBytesRead, m_Handle, Thread::GetCurrentThreadId() ); )
+    FSDEBUG( DEBUGSPAM( "Read %" PRIu64 " bytes to %x on %x\n", totalBytesRead, m_Handle, Thread::GetCurrentThreadId() ); )
 
     return totalBytesRead;
 }
@@ -258,7 +258,7 @@ bool FileStream::IsOpen() const
     #error Unknown platform
 #endif
 
-    FSDEBUG( DEBUGSPAM( "Write %llu bytes to %x on %x\n", totalBytesWritten, m_Handle, Thread::GetCurrentThreadId() ); )
+    FSDEBUG( DEBUGSPAM( "Write %" PRIu64 " bytes to %x on %x\n", totalBytesWritten, m_Handle, Thread::GetCurrentThreadId() ); )
 
     return totalBytesWritten;
 }
@@ -303,7 +303,7 @@ bool FileStream::IsOpen() const
 //------------------------------------------------------------------------------
 /*virtual*/ bool FileStream::Seek( uint64_t pos ) const
 {
-    FSDEBUG( DEBUGSPAM( "Seek to %llu, %x on %x\n", pos, m_Handle, Thread::GetCurrentThreadId() ); )
+    FSDEBUG( DEBUGSPAM( "Seek to %" PRIu64 ", %x on %x\n", pos, m_Handle, Thread::GetCurrentThreadId() ); )
 
     ASSERT( IsOpen() );
 

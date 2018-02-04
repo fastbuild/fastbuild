@@ -21,8 +21,10 @@ FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
 : Node( fileName, Node::FILE_NODE, controlFlags )
 {
     ASSERT( fileName.EndsWith( "\\" ) == false );
-    ASSERT( ( fileName.FindLast( ':' ) == nullptr ) ||
-            ( fileName.FindLast( ':' ) == ( fileName.Get() + 1 ) ) );
+    #if defined( __WINDOWS__ )
+        ASSERT( ( fileName.FindLast( ':' ) == nullptr ) ||
+                ( fileName.FindLast( ':' ) == ( fileName.Get() + 1 ) ) );
+    #endif
 
     m_LastBuildTimeMs = 1; // very little work required
 }

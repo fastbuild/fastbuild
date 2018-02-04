@@ -1,0 +1,51 @@
+
+#include "..\..\testcommon.bff"
+
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+//
+// PCH + PCH User, both using /analyze
+//
+ObjectList( 'PCHTest-CacheAnalyze_MSVC-1' )
+{
+    // PCH
+    .PCHInputFile               = 'Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
+    .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch'
+    .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+    .PCHOptions                 + ' "/IData/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+                                + ' /analyze'
+
+    // PCH User
+    .CompilerInputPath          = 'Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/'
+    .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/'
+    .CompilerOptions            + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+                                + ' "/IData/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+                                + ' /analyze'
+}
+
+ObjectList( 'PCHTest-CacheAnalyze_MSVC-2' )
+{
+    // PCH
+    .PCHInputFile               = 'Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
+    .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch'
+    .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+    .PCHOptions                 + ' "/IData/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+                                + ' /analyze'
+
+    // PCH User
+    .CompilerInputPath          = 'Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/'
+    .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/'
+    .CompilerOptions            + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+                                + ' "/IData/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+                                + ' /analyze'
+}
+
+Alias( 'PCHTest-CacheAnalyze_MSVC' )
+{
+    .Targets    = {
+                    'PCHTest-CacheAnalyze_MSVC-1'
+                    'PCHTest-CacheAnalyze_MSVC-2'
+                  }
+}

@@ -28,11 +28,11 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_CPUAllocation( 0 ),
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
-	m_ConsoleMode( false )
+    m_ConsoleMode( false )
 {
-	#ifndef __WINDOWS__
-		m_ConsoleMode = true; // TODO:OSX Support GUI mode
-	#endif
+    #ifndef __WINDOWS__
+        m_ConsoleMode = true; // TODO:OSX Support GUI mode
+    #endif
 }
 
 // ProcessCommandLine
@@ -128,6 +128,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 void FBuildWorkerOptions::ShowUsageError()
 {
     const char * msg = "FBuildWorker.exe - " FBUILD_VERSION_STRING " (" FBUILD_VERSION_PLATFORM ")\n"
+                       "Copyright 2012-2018 Franta Fulin - http://www.fastbuild.org\n"
                        "\n"
                        "Command Line Options:\n"
                        "------------------------------------------------------------\n"

@@ -26,6 +26,10 @@ Defines the execution of an executable as a test.</p>
   .TestWorkingDir       // (optional) Working dir for test execution
   .TestTimeOut          // (optional) TimeOut (in seconds) for test (default: 0, no timeout)
   .TestAlwaysShowOutput // (optional) Show output of tests even when they don't fail (default: false)
+  
+   // Additional options
+  .PreBuildDependencies     // (optional) Force targets to be built before this Test (Rarely needed,
+                            // but useful when Test relies on externally generated files). 
 }
 </div>
     </div>
@@ -63,6 +67,16 @@ Defines the execution of an executable as a test.</p>
       <p><b>.TestAlwaysShowOutput</b> - Boolean - (Optional)</p>
       <p>The output of a test is normally shown only when the test fails. This option specifies that the output should always be shown.</p>
     </div>
+    
+    <div id='copy' class='newsitemheader'>
+      Additional Options
+    </div>	
+    <div class='newsitembody'>
+      <p><b>.PreBuildDependencies</b> - String/ArrayOfStrings - (Optional)</p>
+	  <p>One or more nodes which must be built before this test is executed.</p>	  
+	  <p>The .PreBuildDependencies option ensures the specified targets are up-to-date before the 
+	  Test() is executed.</p>
+    </div>	
 
     <div class='newsitemheader'>
       Simple Example

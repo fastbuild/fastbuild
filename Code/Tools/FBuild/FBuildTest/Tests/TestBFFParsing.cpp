@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
@@ -15,7 +15,7 @@
 
 // TestBFFParsing
 //------------------------------------------------------------------------------
-class TestBFFParsing : public UnitTest
+class TestBFFParsing : public FBuildTest
 {
 private:
     DECLARE_TESTS
@@ -27,12 +27,15 @@ private:
     void String_Unterminated() const;
     void Arrays() const;
     void Array_Unterminated() const;
+    void Array_TypeMismatch() const;
     void Integers() const;
     void UnnamedScope() const;
     void IncludeDirective() const;
     void OnceDirective() const;
     void Structs() const;
     void Struct_Concatenation() const;
+    void Struct_ConcatenationMismatch() const;
+    void Struct_ConcatenationOrder() const;
     void Struct_Unterminated() const;
     void IncludeScope() const;
     void IfDirective() const;
@@ -46,6 +49,7 @@ private:
     void BadUndefBuiltInDirective() const;
     void ParentScope() const;
     void ParentScopeBug() const;
+    void ParentScopeBug2() const;
     void ParentScopeUnknown() const;
     void FrozenVariable() const;
     void DynamicVarNameConstruction() const;
@@ -64,12 +68,15 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( String_Unterminated )
     REGISTER_TEST( Arrays )
     REGISTER_TEST( Array_Unterminated )
+    REGISTER_TEST( Array_TypeMismatch )
     REGISTER_TEST( Integers )
     REGISTER_TEST( UnnamedScope )
     REGISTER_TEST( IncludeDirective )
     REGISTER_TEST( OnceDirective )
     REGISTER_TEST( Structs )
     REGISTER_TEST( Struct_Concatenation )
+    REGISTER_TEST( Struct_ConcatenationMismatch )
+    REGISTER_TEST( Struct_ConcatenationOrder )
     REGISTER_TEST( Struct_Unterminated )
     REGISTER_TEST( IncludeScope )
     REGISTER_TEST( IfDirective )
@@ -83,6 +90,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( BadUndefBuiltInDirective )
     REGISTER_TEST( ParentScope )
     REGISTER_TEST( ParentScopeBug )
+    REGISTER_TEST( ParentScopeBug2 )
     REGISTER_TEST( ParentScopeUnknown )
     REGISTER_TEST( FrozenVariable )
     REGISTER_TEST( DynamicVarNameConstruction )
@@ -146,6 +154,14 @@ void TestBFFParsing::Array_Unterminated() const
     Parse( "Data/TestBFFParsing/array_unterminated.bff", true ); // expect failure
 }
 
+// Array_TypeMismatch
+//------------------------------------------------------------------------------
+void TestBFFParsing::Array_TypeMismatch() const
+{
+    Parse( "Data/TestBFFParsing/array_typemismatch.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1034 - Operation not supported: 'ArrayOfStructs' = 'String'." ) );
+}
+
 // Integers
 //------------------------------------------------------------------------------
 void TestBFFParsing::Integers() const
@@ -186,6 +202,28 @@ void TestBFFParsing::Structs() const
 void TestBFFParsing::Struct_Concatenation() const
 {
     Parse( "Data/TestBFFParsing/struct_concatenation.bff" );
+}
+
+// Struct_ConcatenationMismatch
+//------------------------------------------------------------------------------
+void TestBFFParsing::Struct_ConcatenationMismatch() const
+{
+    Parse( "Data/TestBFFParsing/struct_concatenation_mismatch.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "#1034 - Operation not supported: 'ArrayOfStrings' + 'Int'" ) );
+}
+
+// Struct_ConcatenationOrder
+//------------------------------------------------------------------------------
+void TestBFFParsing::Struct_ConcatenationOrder() const
+{
+    Parse( "Data/TestBFFParsing/struct_concatenation_order.bff" );
+
+    // Ensure all properties are concatenated in a consistent order, regardless
+    // of depth of recursion
+    TEST_ASSERT( GetRecordedOutput().Find( ".Value1 = 'AB'" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( ".Value2 = 'AB'" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( ".Value3 = 'AB'" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( ".Value4 = 'AB'" ) );
 }
 
 // Struct_Unterminated
@@ -309,6 +347,14 @@ void TestBFFParsing::ParentScope() const
 void TestBFFParsing::ParentScopeBug() const
 {
     Parse( "Data/TestBFFParsing/parent_scope_bug.bff" );
+}
+
+// ParentScopeBug2
+//------------------------------------------------------------------------------
+void TestBFFParsing::ParentScopeBug2() const
+{
+    Parse( "Data/TestBFFParsing/parent_scope_bug2.bff", true );
+    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1026" ) ); // Variable '%s' not found for modification.
 }
 
 // ParentScopeUnknown

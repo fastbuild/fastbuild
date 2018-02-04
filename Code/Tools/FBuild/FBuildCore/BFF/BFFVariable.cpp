@@ -6,6 +6,7 @@
 #include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
 
 #include "BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/Error.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Mem/Mem.h"
@@ -301,7 +302,7 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
 
 // ConcatVarsRecurse
 //------------------------------------------------------------------------------
-BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFFVariable & other ) const
+BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFIterator & operatorIter ) const
 {
     const BFFVariable *varDst = this;
     const BFFVariable *varSrc = &other;
@@ -343,6 +344,12 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             return result;
         }
 
+        // Incompatible types
+        Error::Error_1034_OperationNotSupported( operatorIter, // TODO:C we don't have access to the rhsIterator so we use the operator
+                                                 varDst ? varDst->GetType() : varSrc->GetType(),
+                                                 varSrc->GetType(),
+                                                 operatorIter );
+        return nullptr;
     }
     else
     {
@@ -407,27 +414,37 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
         if ( srcType == BFFVariable::VAR_STRUCT )
         {
             const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
-            // set all the variable in
             const Array< const BFFVariable * > & dstMembers = varDst->GetStructMembers();
 
             BFFVariable * const result = FNEW( BFFVariable( dstName, BFFVariable::VAR_STRUCT ) );
             result->m_StructMembers.SetCapacity( srcMembers.GetSize() + dstMembers.GetSize() );
             Array< BFFVariable * > & allMembers = result->m_StructMembers;
 
-            // keep original (dst) members where the name doesn't clash
-            // or concatenate recursively values where the name clash
+            // keep original (dst) members where member is only present in original (dst)
+            // or concatenate recursively members where the name exists in both
             for ( const BFFVariable ** it = dstMembers.Begin(); it != dstMembers.End(); ++it )
             {
                 const BFFVariable ** it2 = GetMemberByName( (*it)->GetName(), srcMembers );
 
-                BFFVariable * const newVar = (it2)
-                    ? (*it2)->ConcatVarsRecurse( (*it2)->GetName(), **it )
-                    : FNEW( BFFVariable( **it ) );
+                BFFVariable * newVar;
+                if ( it2 )
+                {
+                    newVar = (*it)->ConcatVarsRecurse( (*it)->GetName(), **it2, operatorIter );
+                    if ( newVar == nullptr )
+                    {
+                        FDELETE result;
+                        return nullptr; // ConcatVarsRecurse will have emitted an error
+                    }
+                }
+                else
+                {
+                    newVar = FNEW( BFFVariable( **it ) );
+                }
 
                 allMembers.Append( newVar );
             }
 
-            // and keep original (src) members where the name doesn't clash
+            // and add members only present in the src
             for ( const BFFVariable ** it = srcMembers.Begin(); it != srcMembers.End(); ++it )
             {
                 const BFFVariable ** it2 = GetMemberByName( (*it)->GetName(), result->GetStructMembers() );
@@ -438,11 +455,12 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
                 }
             }
 
-            FLOG_INFO( "Concatenated <struct> variable '%s' with %u members", dstName.Get(), allMembers.GetSize() );
+            FLOG_INFO( "Concatenated <struct> variable '%s' with %u members", dstName.Get(), (uint32_t)allMembers.GetSize() );
             return result;
         }
     }
 
+    ASSERT( false ); // Should never get here
     return nullptr;
 }
 

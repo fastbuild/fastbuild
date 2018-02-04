@@ -17,6 +17,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
 
+#include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -34,6 +35,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Client::Client( const Array< AString > & workerList,
+                uint16_t port,
                 uint32_t workerConnectionLimit,
                 bool detailedLogging )
     : m_WorkerList( workerList )
@@ -41,6 +43,7 @@ Client::Client( const Array< AString > & workerList,
     , m_Exited( false )
     , m_DetailedLogging( detailedLogging )
     , m_WorkerConnectionLimit( workerConnectionLimit )
+    , m_Port( port )
 {
     // allocate space for server states
     m_ServerList.SetSize( workerList.GetSize() );
@@ -57,7 +60,6 @@ Client::Client( const Array< AString > & workerList,
 Client::~Client()
 {
     SetShuttingDown();
-    m_EnsureNetworkStarted.Stop();
 
     m_ShouldExit = true;
     while ( m_Exited == false )
@@ -216,7 +218,7 @@ void Client::LookForWorkers()
             continue;
         }
 
-        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], Protocol::PROTOCOL_PORT, 500 ); // 500ms connection timeout
+        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], m_Port, 2000 ); // 2000ms connection timeout
         if ( ci == nullptr )
         {
             ss.m_DelayTimer.Start(); // reset connection attempt delay
@@ -548,7 +550,9 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         return;
     }
 
-    DIST_INFO( "Got Result: %s - %s\n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
+    DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
+                                          job->GetNode()->GetName().Get(),
+                                          job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
 
     if ( result == true )
     {
@@ -567,41 +571,20 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             const uint32_t firstFileSize = *(uint32_t *)data;
             const uint32_t secondFileSize = on->IsUsingPDB() ? *(uint32_t *)( (const char *)data + sizeof( uint32_t ) + firstFileSize ) : 0;
 
-            FileStream fs;
-            if ( fs.Open( nodeName.Get(), FileStream::WRITE_ONLY ) == false )
-            {
-                FLOG_ERROR( "Failed to create file '%s'", nodeName.Get() );
-                result = false;
-            }
-            else if ( fs.WriteBuffer( (const char *)data + sizeof( uint32_t ), firstFileSize ) != firstFileSize )
-            {
-                FLOG_ERROR( "Failed to write file '%s'", nodeName.Get() );
-                result = false;
-            }
-            else if ( on->IsUsingPDB() ) // is there a second file?
+            result = WriteFileToDisk( nodeName, (const char *)data + sizeof( uint32_t ), firstFileSize );
+            if ( result && on->IsUsingPDB() )
             {
                 data = (const void *)( (const char *)data + sizeof( uint32_t ) + firstFileSize );
                 ASSERT( ( firstFileSize + secondFileSize + ( sizeof( uint32_t ) * 2 ) ) == size );
 
                 AStackString<> pdbName;
                 on->GetPDBName( pdbName );
-                FileStream fs2;
-                if ( fs2.Open( pdbName.Get(), FileStream::WRITE_ONLY ) == false )
-                {
-                    FLOG_ERROR( "Failed to create file '%s'", pdbName.Get() );
-                    result = false;
-                }
-                else if ( fs2.WriteBuffer( (const char *)data + sizeof( uint32_t ), secondFileSize ) != secondFileSize )
-                {
-                    FLOG_ERROR( "Failed to write file '%s'", pdbName.Get() );
-                    result = false;
-                }
+                result = WriteFileToDisk( pdbName, (const char *)data + sizeof( uint32_t ), secondFileSize );
             }
 
             if ( result == true )
             {
                 // record build time
-                fs.Close();
                 FileNode * f = (FileNode *)job->GetNode();
                 f->m_Stamp = FileIO::GetFileLastWriteTime( nodeName );
 
@@ -796,6 +779,35 @@ const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, ui
     }
 
     return nullptr;
+}
+
+// WriteFileToDisk
+//------------------------------------------------------------------------------
+bool Client::WriteFileToDisk( const AString & fileName, const char * data, const uint32_t dataSize ) const
+{
+    // Open the file
+    FileStream fs;
+    if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
+    {
+        // On Windows, we can occasionally fail to open the file with error 1224 (ERROR_USER_MAPPED_FILE), due to
+        // things like anti-virus etc. Simply retry if that happens
+        FileIO::WorkAroundForWindowsFilePermissionProblem( fileName );
+
+        if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
+        {
+            FLOG_ERROR( "Failed to create file '%s' (Err: %u)", fileName.Get(), Env::GetLastErr() );
+            return false;
+        }
+    }
+
+    // Write the contents
+    if ( fs.WriteBuffer( data, dataSize ) != dataSize )
+    {
+        FLOG_ERROR( "Failed to write file '%s' (Err: %u)", fileName.Get(), Env::GetLastErr() );
+        return false;
+    }
+
+    return true;
 }
 
 // CONSTRUCTOR( ServerState )

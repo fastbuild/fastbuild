@@ -18,6 +18,8 @@ public:
     virtual bool Publish( const AString & cacheId, const void * data, size_t dataSize ) = 0;
     virtual bool Retrieve( const AString & cacheId, void * & data, size_t & dataSize ) = 0;
     virtual void FreeMemory( void * data, size_t dataSize ) = 0;
+    virtual bool OutputInfo( bool showProgress ) = 0;
+    virtual bool Trim( bool showProgress, uint32_t sizeMiB ) = 0;
 };
 
 //------------------------------------------------------------------------------

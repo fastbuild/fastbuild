@@ -1,0 +1,44 @@
+
+#include "..\..\testcommon.bff"
+
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+// Build the same source files into two locations
+// and ensure they are cached correctly in both locations
+
+.SubDirs = { 'A', 'B' }
+ForEach( .SubDir in .SubDirs )
+{
+    ObjectList( 'PCHTest-CacheUniqueness2-$SubDir$' )
+    {
+        // PCH
+        #if __WINDOWS__
+            .PCHInputFile               = 'Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.cpp'
+            .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/PrecompiledHeader.pch'
+            .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+        #else
+            .PCHInputFile               = 'Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.h'
+            .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/PrecompiledHeader.pch'
+            .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux/OS X
+        #endif
+
+        // PCH User
+        .CompilerInputPath          = 'Data/TestPrecompiledHeaders/CacheUniqueness2/'
+        .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/'
+        .CompilerOptions            + ' "-IData/TestPrecompiledHeaders/CacheUniqueness2/"'
+        #if __WINDOWS__
+                                        + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+        #endif
+    }
+}
+
+
+Alias( 'PCHTest-CacheUniqueness2' )
+{
+    .Targets    = {
+                    'PCHTest-CacheUniqueness2-A'
+                    'PCHTest-CacheUniqueness2-B'
+                  }
+}

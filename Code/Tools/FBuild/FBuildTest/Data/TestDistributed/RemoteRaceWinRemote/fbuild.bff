@@ -1,0 +1,40 @@
+//
+// RemoteRaceWinRemote
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers = { "127.0.0.1" }
+}
+
+// Common settings
+.CompilerOutputPath         = '$StandardOutputBase$/Test/TestDistributed/RemoteRaceWinRemote/'
+.CompilerOptions            + ' "-IData/TestDistributed/RemoteRaceWinRemote"'
+
+// ObjectList
+//------------------------------------------------------------------------------
+ObjectList( 'RemoteRaceWinRemote-Fast' )
+{
+    // An object that can't be distributed
+    .AllowDistribution = false
+    .CompilerInputFiles     = 'Data/TestDistributed/RemoteRaceWinRemote/Fast.cpp'
+}
+ObjectList( 'RemoteRaceWinRemote-Slow' )
+{
+    // An object that can be distributed
+    .CompilerInputFiles     = 'Data/TestDistributed/RemoteRaceWinRemote/Slow.cpp'
+}
+Alias( 'RemoteRaceWinRemote' )
+{
+    .Targets    = {
+                    'RemoteRaceWinRemote-Fast'
+                    'RemoteRaceWinRemote-Slow'
+                  }
+}
+
+//------------------------------------------------------------------------------

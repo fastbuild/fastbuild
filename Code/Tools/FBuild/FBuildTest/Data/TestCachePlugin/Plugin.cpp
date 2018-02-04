@@ -59,6 +59,22 @@ void STDCALL CacheFreeMemory( void * data, unsigned long long dataSize )
     printf( "FreeMemory : %p, %llu\n", data, dataSize );
 }
 
+// CacheOutputInfo
+//------------------------------------------------------------------------------
+bool STDCALL CacheOutputInfo( bool showProgress )
+{
+    printf( "OutputInfo : %s\n", showProgress ? "true" : "false" );
+    return 1; // Success
+}
+
+// CacheTrim
+//------------------------------------------------------------------------------
+bool STDCALL CacheTrim( bool showProgress, unsigned int sizeMiB )
+{
+    printf( "Trim : %s, %u MiB\n", showProgress ? "true" : "false", sizeMiB );
+    return 1; // Success
+}
+
 //------------------------------------------------------------------------------
 
 #if !defined(__WINDOWS__)//TODO:Windows : Use unmangled name on windows.

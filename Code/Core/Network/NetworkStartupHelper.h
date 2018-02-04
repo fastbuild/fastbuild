@@ -18,19 +18,20 @@ class NetworkStartupHelper
 public:
     // ensure the network is up around the scope of this object
     NetworkStartupHelper();
-    ~NetworkStartupHelper() { Stop(); }
+    ~NetworkStartupHelper() = default;
 
-    void Stop();
-
-    static inline bool IsStarted() { return (s_RefCount > 0); }
+    // Set master flag to help abort network operations
+    // NOTE: Flag must remain available once set (i.e. static var)
+    static void SetMasterShutdownFlag( volatile bool * shutdownFlag );
+    static bool IsShuttingDown();
 
 private:
-    bool m_Stopped;
+static bool s_Started;
+static Mutex s_Mutex;
+static volatile bool * s_MasterShutdownFlag;
 #if defined( __WINDOWS__ )
     static WSADATA s_WSAData;
 #endif
-    static Mutex s_Mutex;
-    static volatile uint32_t s_RefCount;
 };
 
 //------------------------------------------------------------------------------

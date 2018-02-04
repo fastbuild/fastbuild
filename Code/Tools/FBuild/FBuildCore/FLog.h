@@ -80,11 +80,11 @@ public:
     inline static bool ShowErrors() { return s_ShowErrors; }
     inline static bool IsMonitorEnabled() { return s_MonitorEnabled; }
 
-    static void Info( const char * formatString, ... );
-    static void Build( const char * formatString, ... );
-    static void Warning( const char * formatString, ... );
-    static void Error( const char * formatString, ... );
-    static void Monitor( const char * formatString, ... );
+    static void Info( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Build( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Warning( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Error( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Monitor( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
 
     // for large, already formatted messages
     static void BuildDirect( const char * message );
@@ -94,6 +94,7 @@ public:
     static void StopBuild();
 
     static void OutputProgress( float time, float percentage, uint32_t numJobs, uint32_t numJobsActive, uint32_t numJobsDist, uint32_t numJobsDistActive );
+    static void ClearProgress();
 
 private:
     friend class FBuild;
