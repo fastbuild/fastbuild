@@ -78,7 +78,12 @@ Compiler( 'Compiler-x86Clang' )
 }
 Compiler( 'Compiler-x64-Linux' )
 {
-    .Executable = '/usr/bin/gcc'
+    .Executable     = '/usr/bin/gcc'
+    .ExtraFiles     = {
+                        '/usr/bin/as'
+                        '/usr/lib/gcc/x86_64-linux-gnu/4.9/cc1'
+                        '/usr/lib/gcc/x86_64-linux-gnu/4.9/cc1plus'
+                      }
 }
 Compiler( 'Compiler-x64-OSX' )
 {

@@ -176,7 +176,7 @@ public:
     // Assign files into buckets
     const uint64_t currentTime = Time::GetCurrentFileTime(); // Compare filetimes to now
     for ( const FileIO::FileInfo & info : allFiles )
-    { 
+    {
         // Determine age bucket
         const uint64_t age = currentTime - info.m_LastWriteTime;
         const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );

@@ -40,7 +40,7 @@ NetworkStartupHelper::NetworkStartupHelper()
 // SetMasterShutdownFlag
 //------------------------------------------------------------------------------
 /*static*/ void NetworkStartupHelper::SetMasterShutdownFlag( volatile bool * shutdownFlag )
-{ 
+{
     MutexHolder mh( s_Mutex );
     s_MasterShutdownFlag = shutdownFlag;
 }

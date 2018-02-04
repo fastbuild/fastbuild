@@ -37,7 +37,7 @@ ForEach( .SubDir in .SubDirs )
 
 Alias( 'PCHTest-CacheUniqueness2' )
 {
-    .Targets    = { 
+    .Targets    = {
                     'PCHTest-CacheUniqueness2-A'
                     'PCHTest-CacheUniqueness2-B'
                   }

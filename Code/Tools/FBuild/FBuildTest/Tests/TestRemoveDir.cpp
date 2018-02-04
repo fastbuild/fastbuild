@@ -66,7 +66,7 @@ void TestRemoveDir::RemoveDir() const
     TEST_ASSERT( f.Open( fileA, FileStream::WRITE_ONLY ) );
     f.Close();
     TEST_ASSERT( f.Open( fileB, FileStream::WRITE_ONLY ) );
-    f.Close();        
+    f.Close();
 
     // Check file are there
     Array< AString > files;

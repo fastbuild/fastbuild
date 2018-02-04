@@ -192,7 +192,7 @@ AString & AString::Format( const char * fmtString, ... )
     va_start(args, fmtString);
     VFormat( fmtString, args );
     va_end( args );
-    
+
     return *this;
 }
 
@@ -246,7 +246,7 @@ loop:
     {
         FREE( buffer );
     }
-    
+
     return *this;
 }
 
@@ -502,7 +502,7 @@ AString & AString::Append( const char * string, size_t len )
         Copy( string, m_Contents + m_Length, len ); // handles terminator
         m_Length = newLen;
     }
-    
+
     return *this;
 }
 
@@ -517,7 +517,7 @@ AString & AString::AppendFormat( const char * fmtString, ... )
     va_end( args );
 
     Append( buffer );
-    
+
     return *this;
 }
 

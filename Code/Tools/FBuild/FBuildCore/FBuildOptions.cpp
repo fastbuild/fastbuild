@@ -100,7 +100,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                     OUTPUT( "FBuild: Error: Missing or bad <sizeMiB> for '-cachetrim' argument\n" );
                     OUTPUT( "Try \"%s -help\"\n", programName.Get() );
                     return OPTIONS_ERROR;
-                }                
+                }
                 i++; // skip extra arg we've consumed
 
                 // add to args we might pass to subprocess
@@ -497,7 +497,7 @@ void FBuildOptions::DisplayVersion() const
         #define VERSION_CONFIG " "
     #endif
     OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " FBUILD_VERSION_PLATFORM VERSION_CONFIG " - "
-            "Copyright 2012-2017 Franta Fulin - http://www.fastbuild.org\n" );
+            "Copyright 2012-2018 Franta Fulin - http://www.fastbuild.org\n" );
     #undef VERSION_CONFIG
 }
 

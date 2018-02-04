@@ -53,7 +53,7 @@ bool RemoveDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter,
                                               m_RemoveExcludePaths,
                                               Array< AString >(), // unused FilesToExclude
                                               Array< AString >(), // unused ExcludePatterns
-                                              m_RemovePathsRecurse, 
+                                              m_RemovePathsRecurse,
                                               &m_RemovePatterns,
                                               "RemovePaths",
                                               fileListDeps ) )

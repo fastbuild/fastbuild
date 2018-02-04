@@ -160,7 +160,7 @@ bool IdleDetection::IsIdleInternal()
         outUserTime = ((uint64_t)ftUser.dwHighDateTime << 32) | (uint64_t)ftUser.dwLowDateTime;
         outKernTime -= outIdleTime; // Kern time includes Idle, but we don't want that
     #elif defined( __OSX__ )
-        // TODO:OSX Implement GetSystemTotalCPUUsage 
+        // TODO:OSX Implement GetSystemTotalCPUUsage
         outIdleTime = 0;
         outKernTime = 0;
         outUserTime = 0;
@@ -176,7 +176,7 @@ bool IdleDetection::IsIdleInternal()
             const char * pos = procStat.Get() + 4; // skip "cpu "
             for (;;)
             {
-                char * end; 
+                char * end;
                 values.Append( strtoul( pos, &end, 10 ) );
                 pos = end;
                 if ( pos == procStat.GetEnd() )
@@ -189,14 +189,14 @@ bool IdleDetection::IsIdleInternal()
                 // 0+1 = user/nice time, 2 = kernel time
                 outUserTime = values[ 0 ] + values[ 1 ];
                 outKernTime = values[ 2 ];
-                // idle is all times minus user/nice/kernel 
+                // idle is all times minus user/nice/kernel
                 outIdleTime = 0;
                 for ( const uint32_t v : values )
                 {
                     outIdleTime += v;
                 }
                 outIdleTime -= outUserTime;
-                outIdleTime -= outKernTime;                
+                outIdleTime -= outKernTime;
                 return;
             }
         }
@@ -226,14 +226,14 @@ bool IdleDetection::IsIdleInternal()
             outUserTime = 0;
         }
     #elif defined( __OSX__ )
-        // TODO:OSX Implement GetProcecessTime 
+        // TODO:OSX Implement GetProcecessTime
         (void)pi;
         outKernTime = 0;
         outUserTime = 0;
     #elif defined( __LINUX__ )
         // Read first line of /proc/<pid>/stat for the process
         AStackString< 1024 > processInfo;
-        if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pi.m_PID ).Get(), 
+        if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pi.m_PID ).Get(),
                                    processInfo ) )
         {
             Array< AString > tokens( 32, true );
@@ -251,8 +251,8 @@ bool IdleDetection::IsIdleInternal()
                 ASSERT( false && "Unexpected '/proc/<pid>/stat' format" );
             }
         }
-        
-        // Process may have exited, so handle that gracefully        
+
+        // Process may have exited, so handle that gracefully
         outKernTime = 0;
         outUserTime = 0;
     #endif
@@ -314,7 +314,7 @@ void IdleDetection::UpdateProcessList()
         }
         CloseHandle( hSnapShot );
     #elif defined( __OSX__ )
-        // TODO:OSX Implement FindNewProcesses 
+        // TODO:OSX Implement FindNewProcesses
     #elif defined( __LINUX__ )
         // Each process has a directory in /proc/
         // The name of the dir is the pid
@@ -339,7 +339,7 @@ void IdleDetection::UpdateProcessList()
                 {
                     path.SetLength( 6 ); // truncate to /proc/
                     path += entry->d_name;
-    
+
                     struct stat info;
                     VERIFY( stat( path.Get(), &info ) == 0 );
                     isDir = S_ISDIR( info.st_mode );
@@ -370,28 +370,28 @@ void IdleDetection::UpdateProcessList()
                     // Not a PID
                     continue;
                 }
-                
+
                 // Filename is PID
                 const uint32_t pid = strtoul( entry->d_name, nullptr, 10 );
-                
+
                 // Read the first line of /proc/<pid>/stat for the process
                 AStackString< 1024 > processInfo;
-                if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pid ).Get(), 
+                if ( GetProcessInfoString( AStackString<>().Format( "/proc/%u/stat", pid ).Get(),
                                            processInfo ) == false )
                 {
                     continue; // Process might have exited
                 }
-                
+
                 // Item index 3 (0-based) is the parent PID
                 Array< AString > tokens( 32, true );
                 processInfo.Tokenize( tokens, ' ' );
                 const uint32_t parentPID = strtoul( tokens[ 3 ].Get(), nullptr, 10 );
-                
+
                 // is process a child of one we care about?
                 if ( m_ProcessesInOurHierarchy.Find( parentPID ) )
                 {
                     ASSERT( pid == strtoul( tokens[ 0 ].Get(), nullptr, 10 ) ); // Item index 0 (0-based) is the PID
-                    
+
                     // Are we already tracking this process?
                     ProcessInfo * info = m_ProcessesInOurHierarchy.Find( pid );
                     if ( info )
@@ -408,7 +408,7 @@ void IdleDetection::UpdateProcessList()
                         newProcess.m_LastTime = 0;
                         m_ProcessesInOurHierarchy.Append( newProcess );
                     }
-                }                
+                }
             }
             closedir( dir );
         }
@@ -444,25 +444,25 @@ void IdleDetection::UpdateProcessList()
         {
             return false;
         }
-        
+
         // Try to read 1KiB
         outProcessInfoString.SetLength( 1024 );
         const uint32_t len = f.ReadBuffer( outProcessInfoString.Get(), outProcessInfoString.GetLength() );
         outProcessInfoString.SetLength( len );
-        
-        // Truncate to the first line 
+
+        // Truncate to the first line
         const char * lineEnd = outProcessInfoString.Find( '\n' );
         if ( lineEnd )
         {
             outProcessInfoString.SetLength( lineEnd - outProcessInfoString.Get() );
             return true;
         }
-        
+
         // Line was too long or there was some other problem
-        ASSERT( false && "Unexpected proc file size"); 
+        ASSERT( false && "Unexpected proc file size");
         outProcessInfoString.Clear();
         return false;
     }
 #endif
-        
+
 //------------------------------------------------------------------------------

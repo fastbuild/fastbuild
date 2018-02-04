@@ -44,7 +44,7 @@ ObjectList( 'PCHTest-CacheAnalyze_MSVC-2' )
 
 Alias( 'PCHTest-CacheAnalyze_MSVC' )
 {
-    .Targets    = { 
+    .Targets    = {
                     'PCHTest-CacheAnalyze_MSVC-1'
                     'PCHTest-CacheAnalyze_MSVC-2'
                   }

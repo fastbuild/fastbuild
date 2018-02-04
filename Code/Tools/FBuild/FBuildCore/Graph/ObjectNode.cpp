@@ -1266,7 +1266,7 @@ void ObjectNode::WriteToCache( Job * job )
 //------------------------------------------------------------------------------
 void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & outFileNames ) const
 {
-    const Node * node = job->GetNode();    
+    const Node * node = job->GetNode();
     if ( node->GetType() != Node::OBJECT_NODE )
     {
         return;

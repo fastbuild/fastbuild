@@ -598,7 +598,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             // Local thread now entirely owns Job, so set state as if race
             // never happened
             job->SetDistributionState( Job::DIST_COMPLETED_LOCALLY ); // Cancellation has failed
-        
+
         }
         else if ( ( distState == Job::DIST_COMPLETED_REMOTELY ) ||
                   ( distState == Job::DIST_RACE_WON_REMOTELY ) )

@@ -78,7 +78,7 @@ typedef void (STDCALL *CacheFreeMemoryFunc)( void * data, unsigned long long dat
 // CacheOutputInfo (Optional)
 //------------------------------------------------------------------------------
 // Print information about the contents of the cache
-// 
+//
 // In: showProgress - emit progress messages for long operations
 typedef bool (STDCALL *CacheOutputInfoFunc)( bool showProgress );
 #ifdef CACHEPLUGIN_DLL_EXPORT

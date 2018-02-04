@@ -56,7 +56,7 @@ void CtrlCHandler::RegisterHandler()
     #elif defined( __OSX__ )
         // TODO:MAC Implement
     #endif
-    
+
     m_IsRegistered = true;
 }
 
