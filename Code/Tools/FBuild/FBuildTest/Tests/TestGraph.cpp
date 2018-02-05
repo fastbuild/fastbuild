@@ -45,6 +45,7 @@ private:
     void EmptyGraph() const;
     void TestNodeTypes() const;
     void TestCleanPath() const;
+    void TestCleanPathPartial() const;
     void SingleFileNode() const;
     void SingleFileNodeMissing() const;
     void TestDirectoryListNode() const;
@@ -62,6 +63,7 @@ REGISTER_TESTS_BEGIN( TestGraph )
     REGISTER_TEST( EmptyGraph )
     REGISTER_TEST( TestNodeTypes )
     REGISTER_TEST( TestCleanPath )
+    REGISTER_TEST( TestCleanPathPartial )
     REGISTER_TEST( SingleFileNode )
     REGISTER_TEST( SingleFileNodeMissing )
     REGISTER_TEST( TestDirectoryListNode )
@@ -438,6 +440,101 @@ void TestGraph::TestCleanPath() const
 
     #undef CHECK
 }
+
+// TestPartialCleanPath
+//------------------------------------------------------------------------------
+void TestGraph::TestCleanPathPartial() const
+{
+    // Change current dir to a known location that exists on all windows machines
+    FBuildOptions fo;
+#if defined( __WINDOWS__ )
+    fo.SetWorkingDir(AStackString<>("C:\\Windows\\System32"));
+#else
+    fo.SetWorkingDir(AStackString<>("/tmp/subDir"));
+#endif
+
+    FBuild f(fo);
+
+#if defined( __WINDOWS__ )
+#define CHECK(a, b, c) \
+        { \
+            AStackString<> cleaned; \
+            NodeGraph::CleanPath( AStackString<>( a ), cleaned, false ); \
+            TEST_ASSERT( cleaned == b ); \
+        }
+#else
+#define CHECK(a, b, c) \
+        { \
+            AStackString<> cleaned; \
+            NodeGraph::CleanPath( AStackString<>( a ), cleaned, false ); \
+            TEST_ASSERT( cleaned == c ); \
+        }
+#endif
+
+    //   "\..\"
+    CHECK("file.dat", "file.dat", "file.dat")
+    CHECK("..\\file.dat", "..\\file.dat", "../file.dat")
+    CHECK("..\\..\\file.dat", "..\\..\\file.dat", "../../file.dat")
+    CHECK("..\\..\\..\\file.dat", "..\\..\\..\\file.dat", "../../../file.dat")
+
+    //   "/../"
+    CHECK("../file.dat", "..\\file.dat", "../file.dat")
+    CHECK("../../file.dat", "..\\..\\file.dat", "../../file.dat")
+    CHECK("../../../file.dat", "..\\..\\..\\file.dat", "../../../file.dat")
+
+    //   "\.\"
+    CHECK(".\\file.dat", "file.dat", "file.dat")
+    CHECK("folder\\.\\file.dat", "folder\\file.dat", "folder/file.dat")
+    CHECK(".\\.\\.\\file.dat", "file.dat", "file.dat")
+
+    //   "/./"
+    CHECK("./file.dat", "file.dat", "file.dat")
+    CHECK("folder/./file.dat", "folder\\file.dat", "folder/file.dat")
+    CHECK("./././file.dat", "file.dat", "file.dat")
+
+    // ".." collapsing
+    CHECK("one\\two\\..\\..\\three\\four\\file.dat", "three\\four\\file.dat", "three/four/file.dat")
+    CHECK("one\\two\\..\\three\\file.dat", "one\\three\\file.dat", "one/three/file.dat")
+    CHECK("one\\two\\..\\..\\..\\..\\three\\four\\file.dat", "..\\..\\three\\four\\file.dat", "..//..//three/four/file.dat")
+
+    //   full path '\'
+#if defined( __WINDOWS__ )
+    CHECK("C:\\Windows\\System32\\file.dat", "C:\\Windows\\System32\\file.dat", "")
+    CHECK("C:\\Windows\\System32\\..\\file.dat", "C:\\Windows\\file.dat", "")
+    CHECK("C:\\Windows\\System32\\..\\..\\file.dat", "C:\\file.dat", "")
+    CHECK("C:\\Windows\\System32\\..\\..\\..\\file.dat", "C:\\file.dat", "")
+#endif
+
+    //   full path '/'
+#if defined( __WINDOWS__ )
+    CHECK("C:/Windows/System32/file.dat", "C:\\Windows\\System32\\file.dat", "")
+    CHECK("C:/Windows/System32/../file.dat", "C:\\Windows\\file.dat", "")
+    CHECK("C:/Windows/System32/../../file.dat", "C:\\file.dat", "")
+    CHECK("C:/Windows/System32/../../../file.dat", "C:\\file.dat", "")
+#endif
+
+    // files with . in them
+    CHECK(".file.dat", ".file.dat", ".file.dat")
+    CHECK(".file", ".file", ".file")
+    CHECK("subdir\\.file", "subdir\\.file", "subdir/.file")
+
+    // multiple slash removal
+    CHECK("subdir\\\\.file", "subdir\\.file", "subdir/.file")
+    CHECK("subdir//.file", "subdir\\.file", "subdir/.file")
+    CHECK("subdir//.//.file", "subdir\\.file", "subdir/.file")
+    CHECK("subdir\\\\.\\\\.file", "subdir\\.file", "subdir/.file")
+    CHECK("subdir\\\\..\\\\.file", ".file", ".file")
+    CHECK("subdir//..//.file", ".file", ".file")
+
+    // edge cases/regressions
+#if defined( __WINDOWS__ )
+    // - There was a bug with folders beginning with a slash on Windows
+    CHECK("\\folder\\file", "folder\\file", "")
+#endif
+
+#undef CHECK
+}
+
 
 // TestDeepGraph
 //------------------------------------------------------------------------------
