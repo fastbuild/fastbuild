@@ -50,9 +50,9 @@ bool ExecNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
         return false; // InitializePreBuildDependencies will have emitted an error
     }
 
-    // .ExecExcecutable
+    // .ExecExecutable
     Dependencies executable;
-    if ( !function->GetFileNode( nodeGraph, iter, m_ExecExecutable, "ExecExcecutable", executable ) )
+    if ( !function->GetFileNode( nodeGraph, iter, m_ExecExecutable, "ExecExecutable", executable ) )
     {
         return false; // GetFileNode will have emitted an error
     }
