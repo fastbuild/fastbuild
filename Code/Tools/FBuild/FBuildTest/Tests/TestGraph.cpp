@@ -495,7 +495,7 @@ void TestGraph::TestCleanPathPartial() const
     // ".." collapsing
     CHECK("one\\two\\..\\..\\three\\four\\file.dat", "three\\four\\file.dat", "three/four/file.dat")
     CHECK("one\\two\\..\\three\\file.dat", "one\\three\\file.dat", "one/three/file.dat")
-    CHECK("one\\two\\..\\..\\..\\..\\three\\four\\file.dat", "..\\..\\three\\four\\file.dat", "..//..//three/four/file.dat")
+    CHECK("one\\two\\..\\..\\..\\..\\three\\four\\file.dat", "..\\..\\three\\four\\file.dat", "../../three/four/file.dat")
 
     //   full path '\'
 #if defined( __WINDOWS__ )
