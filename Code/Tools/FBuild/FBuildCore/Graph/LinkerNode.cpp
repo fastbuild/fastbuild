@@ -614,34 +614,33 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
 
     if ( linkerType.IsEmpty() || ( linkerType == "auto" ))
     {
+        AStackString<256> linker( linkerName );
+        PathUtils::StripPathAndExtension( linker );
+
+        linker.ToLower();
+
         // Detect based upon linker executable name
-        if ( ( linkerName.EndsWithI( "link.exe" ) ) ||
-            ( linkerName.EndsWithI( "link" ) ) )
+        if ( linker == "link" )
         {
             flags |= LinkerNode::LINK_FLAG_MSVC;
         }
-        else if ( ( linkerName.EndsWithI( "gcc.exe" ) ) ||
-            ( linkerName.EndsWithI( "gcc" ) ) )
+        else if ( linker == "gcc" )
         {
             flags |= LinkerNode::LINK_FLAG_GCC;
         }
-        else if ( ( linkerName.EndsWithI( "ps3ppuld.exe" ) ) ||
-            ( linkerName.EndsWithI( "ps3ppuld" ) ) )
+        else if ( linker == "ps3ppuld" )
         {
             flags |= LinkerNode::LINK_FLAG_SNC;
         }
-        else if ( ( linkerName.EndsWithI( "orbis-ld.exe" ) ) ||
-            ( linkerName.EndsWithI( "orbis-ld" ) ) )
+        else if ( linker == "orbis-ld" )
         {
             flags |= LinkerNode::LINK_FLAG_ORBIS_LD;
         }
-        else if ( ( linkerName.EndsWithI( "elxr.exe" ) ) ||
-            ( linkerName.EndsWithI( "elxr" ) ) )
+        else if ( linker == "elxr" )
         {
             flags |= LinkerNode::LINK_FLAG_GREENHILLS_ELXR;
         }
-        else if ( ( linkerName.EndsWithI( "mwldeppc.exe" ) ) ||
-            ( linkerName.EndsWithI( "mwldeppc." ) ) )
+        else if ( linker == "mwldeppc" )
         {
             flags |= LinkerNode::LINK_FLAG_CODEWARRIOR_LD;
         }

@@ -189,6 +189,21 @@
     }
 }
 
+// StripPathAndExtension
+//------------------------------------------------------------------------------
+/*static*/ void PathUtils::StripPathAndExtension(AString & filePath)
+{
+    StripFileExtension( filePath );
+
+    PathUtils::FixupFilePath( filePath );
+
+    const char* lastSlash = filePath.FindLast( NATIVE_SLASH );
+    if (lastSlash)
+    {
+        filePath.Trim( (uint32_t)( (lastSlash + 1) - filePath.Get() ), 0 );
+    }
+}
+
 // GetRelativePath
 //------------------------------------------------------------------------------
 /*static*/ void PathUtils::GetRelativePath( const AString & basePath,
