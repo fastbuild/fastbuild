@@ -127,7 +127,7 @@ ObjectListNode::ObjectListNode()
         // Determine flags for PCH - TODO:B Move this into ObjectNode::Initialize
         AStackString<> pchObjectName; // TODO:A Use this
         const uint32_t pchFlags = ObjectNode::DetermineFlags( compilerNode, m_PCHOptions, true, false );
-        if ( pchFlags & ObjectNode::FLAG_MSVC )
+        if ( pchFlags & (ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL) )
         {
             if ( ((FunctionObjectList *)function)->CheckMSVCPCHFlags( iter, m_CompilerOptions, m_PCHOptions, m_PCHOutputFile, GetObjExtension(), pchObjectName ) == false )
             {
@@ -153,7 +153,7 @@ ObjectListNode::ObjectListNode()
 
     // .CompilerOptions
     const uint32_t objFlags = ObjectNode::DetermineFlags( compilerNode, m_CompilerOptions, false, usingPCH );
-    if ( ( objFlags & ObjectNode::FLAG_MSVC ) && ( objFlags & ObjectNode::FLAG_CREATING_PCH ) )
+    if ( ( objFlags & (ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL)) && ( objFlags & ObjectNode::FLAG_CREATING_PCH ) )
     {
         // must not specify use of precompiled header (must use the PCH specific options)
         Error::Error_1303_PCHCreateOptionOnlyAllowedOnPCH( iter, function, "Yc", "CompilerOptions" );
@@ -271,7 +271,7 @@ ObjectListNode::~ObjectListNode() = default;
         // On Windows, with MSVC we compile a cpp file to generate the PCH
         // Filter here to ensure that doesn't get compiled twice
         Node * pchCPP = nullptr;
-        if ( m_UsingPrecompiledHeader && GetPrecompiledHeader()->IsMSVC() )
+        if ( m_UsingPrecompiledHeader && (GetPrecompiledHeader()->IsMSVC() || GetPrecompiledHeader()->IsClangCl()) )
         {
             pchCPP = GetPrecompiledHeader()->GetPrecompiledHeaderCPPFile();
         }
@@ -472,7 +472,7 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
             const ObjectNode * on = n->CastTo< ObjectNode >();
             if ( on->IsCreatingPCH() )
             {
-                if ( on->IsMSVC() )
+                if ( on->IsMSVC() || on->IsClangCl() )
                 {
                     fullArgs += pre;
                     fullArgs += on->GetName();

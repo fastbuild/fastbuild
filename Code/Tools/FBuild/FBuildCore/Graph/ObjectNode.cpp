@@ -252,7 +252,7 @@ ObjectNode::~ObjectNode()
         return DoBuildWithPreProcessor( job, useDeoptimization, useCache, useSimpleDist );
     }
 
-    if ( GetFlag( FLAG_MSVC ) )
+    if ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_CLANG_CL ) )
     {
         return DoBuildMSCL_NoCache( job, useDeoptimization );
     }
@@ -346,7 +346,15 @@ ObjectNode::~ObjectNode()
     // (since compilation will fail anyway, and the output will be shown)
     if ( ( ch.GetResult() == 0 ) && !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
     {
-        HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+        if ( IsClangCl() )
+        {
+            HandleWarningsClangCl( job, GetName(), ch.GetErr().Get(), ch.GetErrSize() );
+            HandleWarningsClangCl( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+        }
+        else
+        {
+            HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+        }
     }
 
     const char *output = nullptr;
@@ -499,7 +507,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     bool usePreProcessedOutput = true;
     if ( job->IsLocal() )
     {
-        if ( GetFlag( FLAG_CLANG | FLAG_GCC | FLAG_SNC ) )
+        if ( GetFlag( FLAG_CLANG | FLAG_CLANG_CL | FLAG_GCC | FLAG_SNC ) )
         {
             // Using the PCH with Clang/SNC/GCC doesn't prevent storing to the cache
             // so we can use the PCH accelerated compilation
@@ -848,6 +856,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         case CompilerNode::CompilerFamily::CUSTOM:          break; // Nothing to do
         case CompilerNode::CompilerFamily::MSVC:            flags |= FLAG_MSVC;             break;
         case CompilerNode::CompilerFamily::CLANG:           flags |= FLAG_CLANG;            break;
+        case CompilerNode::CompilerFamily::CLANG_CL:        flags |= FLAG_CLANG_CL;         break;
         case CompilerNode::CompilerFamily::GCC:             flags |= FLAG_GCC;              break;
         case CompilerNode::CompilerFamily::SNC:             flags |= FLAG_SNC;              break;
         case CompilerNode::CompilerFamily::CODEWARRIOR_WII: flags |= CODEWARRIOR_WII;       break;
@@ -859,7 +868,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     }
 
     // Check MS compiler options
-    if ( flags & ObjectNode::FLAG_MSVC )
+    if ( flags & (ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL) )
     {
         bool usingCLR = false;
         bool usingWinRT = false;
@@ -874,7 +883,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
             if ( IsCompilerArg_MSVC( token, "Zi" ) || IsCompilerArg_MSVC( token, "ZI" ) )
             {
-                flags |= ObjectNode::FLAG_USING_PDB;
+                if (!(flags & ObjectNode::FLAG_CLANG_CL)) // with clang-cl, Zi is an alias for /Z7, it does not produce PDBs
+                    flags |= ObjectNode::FLAG_USING_PDB;
             }
             else if ( IsCompilerArg_MSVC( token, "clr" ) )
             {
@@ -920,7 +930,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             }
 
             // TODO:A Support caching of 7i format
-            if ( ( flags & ObjectNode::FLAG_USING_PDB ) == 0 )
+            if ( (( flags & ObjectNode::FLAG_USING_PDB ) == 0) ||
+                ( !( flags & ObjectNode::FLAG_CLANG_CL ) || !( flags & ObjectNode::FLAG_CREATING_PCH ) || !FBuild::Get().GetOptions().m_DisablePCHCachingWithClang ) )
             {
                 flags |= ObjectNode::FLAG_CAN_BE_CACHED;
             }
@@ -1535,6 +1546,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 
     const bool isMSVC           = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_MSVC ) : GetFlag( FLAG_MSVC );
     const bool isClang          = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CLANG ) : GetFlag( FLAG_CLANG );
+    const bool isClangCl        = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CLANG_CL ) : GetFlag( FLAG_CLANG_CL );
     const bool isGCC            = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_GCC ) : GetFlag( FLAG_GCC );
     const bool isSNC            = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_SNC ) : GetFlag( FLAG_SNC );
     const bool isCWWii          = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( CODEWARRIOR_WII ) : GetFlag( CODEWARRIOR_WII );
@@ -1595,7 +1607,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             }
         }
 
-        if ( isMSVC )
+        if ( isMSVC || isClangCl )
         {
             if ( pass == PASS_COMPILE_PREPROCESSED )
             {
@@ -1621,7 +1633,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             }
         }
 
-        if ( isMSVC )
+        if ( isMSVC || isClangCl )
         {
             // FASTBuild handles the multiprocessor scheduling
             if ( StripToken_MSVC( "MP", token, true ) ) // true = strip '/MP' and starts with '/MP'
@@ -1666,7 +1678,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue; // skip this token in both cases
                 }
             }
-            if ( isMSVC )
+            if ( isMSVC || isClangCl )
             {
                 // NOTE: Leave /I includes for compatibility with Recode
                 // (unlike Clang, MSVC is ok with leaving the /I when compiling preprocessed code)
@@ -1719,7 +1731,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             }
         }
 
-        if ( isMSVC )
+        if ( isMSVC || isClangCl )
         {
             if ( pass == PASS_PREPROCESSOR_ONLY )
             {
@@ -1741,7 +1753,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         // Remove static analyzer from clang preprocessor
         if ( pass == PASS_PREPROCESSOR_ONLY )
         {
-            if ( isClang )
+            if ( isClang || isClangCl )
             {
                 if ( StripToken( "--analyze", token ) )
                 {
@@ -1798,7 +1810,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         }
 
         // %3 -> PrecompiledHeader Obj
-        if ( isMSVC )
+        if ( isMSVC || isClangCl )
         {
             found = token.Find( "%3" );
             if ( found )
@@ -1814,7 +1826,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         }
 
         // %4 -> CompilerForceUsing list
-        if ( isMSVC )
+        if ( isMSVC || isClangCl ) // not sure if force usings are understood by clang-cl
         {
             found = token.Find( "%4" );
             if ( found )
@@ -1831,7 +1843,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         // It's a common user error to terminate things (like include paths) with a quote
         // this way, messing up the rest of the args and causing bizarre failures.
         // Since " is not a valid character in a path, just strip the escape char
-        if ( isMSVC )
+        if ( isMSVC || isClangCl )
         {
             // Is this invalid?
             //  bad: /I"directory\"  - TODO:B Handle other args with this problem
@@ -1853,7 +1865,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 
     if ( pass == PASS_PREPROCESSOR_ONLY )
     {
-        if ( isMSVC )
+        if ( isMSVC || isClangCl )
         {
             fullArgs += "/E"; // run pre-processor only
 
@@ -2246,10 +2258,18 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
     }
     else
     {
-        // Handle MSCL warnings if not already a failure
-        if ( IsMSVC() && ( ch.GetResult() == 0 ) && !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ))
+        // Handle warnings if not already a failure
+        if ( ( ch.GetResult() == 0 ) && !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ))
         {
-            HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+            if ( IsMSVC() )
+            {
+                HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+            }
+            else if (IsClangCl())
+            {
+                HandleWarningsClangCl( job, GetName(), ch.GetErr().Get(), ch.GetErrSize() );
+                HandleWarningsClangCl( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+            }
         }
     }
 
@@ -2444,7 +2464,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
 
         // Clang
-        if ( objectNode->GetFlag( ObjectNode::FLAG_CLANG ) )
+        if ( objectNode->GetFlag( ObjectNode::FLAG_CLANG ) || objectNode->GetFlag( ObjectNode::FLAG_CLANG_CL ) )
         {
             // When clang fails due to low disk space
             // TODO:C Should we check for localized msg?
@@ -2471,6 +2491,14 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         (void)stdOut;
         (void)stdErr;
     #endif
+}
+
+// HandleWarningsClangCl
+//------------------------------------------------------------------------------
+void ObjectNode::HandleWarningsClangCl( Job * job, const AString & name, const char * data, uint32_t dataSize )
+{
+    constexpr const char * clangClWarningString = " warning:";
+    return HandleWarnings(job, name, data, dataSize, clangClWarningString);
 }
 
 // ShouldUseDeoptimization
@@ -2553,7 +2581,7 @@ bool ObjectNode::CanUseResponseFile() const
 {
     #if defined( __WINDOWS__ )
         // Generally only windows applications support response files (to overcome Windows command line limits)
-        return ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
+        return ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( FLAG_CLANG_CL ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
     #else
         return false;
     #endif

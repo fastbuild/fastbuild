@@ -171,11 +171,16 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
              compiler.EndsWithI( "clang++" ) ||
              compiler.EndsWithI( "clang.exe" ) ||
              compiler.EndsWithI( "clang.cmd" ) ||
-             compiler.EndsWithI( "clang" ) ||
-             compiler.EndsWithI( "clang-cl.exe" ) ||
-             compiler.EndsWithI( "clang-cl" ) )
+             compiler.EndsWithI( "clang" ) )
         {
             m_CompilerFamilyEnum = CLANG;
+            return true;
+        }
+
+        if (compiler.EndsWithI("clang-cl.exe") ||
+            compiler.EndsWithI("clang-cl"))
+        {
+            m_CompilerFamilyEnum = CLANG_CL;
             return true;
         }
 

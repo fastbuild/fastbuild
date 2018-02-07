@@ -49,21 +49,29 @@ FileNode::~FileNode() = default;
     return NODE_RESULT_OK;
 }
 
-// HandleWarningsMSVC
+// HandleWarnings
 //------------------------------------------------------------------------------
-void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const char * data, uint32_t dataSize )
+void FileNode::HandleWarnings( Job * job, const AString & name, const char * data, uint32_t dataSize, const char * warningString )
 {
     if ( ( data == nullptr ) || ( dataSize == 0 ) )
     {
         return;
     }
 
-    // Are there any warnings? (string is ok even in non-English)
-    if ( strstr( data, ": warning " ) )
+    // Are there any warnings?
+    if ( strstr( data, warningString ) )
     {
         const bool treatAsWarnings = true;
         DumpOutput( job, data, dataSize, name, treatAsWarnings );
     }
+}
+
+// HandleWarningsMSVC
+//------------------------------------------------------------------------------
+void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const char * data, uint32_t dataSize )
+{
+    constexpr const char * msvcWarningString = ": warning ";  // string is ok even in non-English
+    return HandleWarnings(job, name, data, dataSize, msvcWarningString);
 }
 
 // DumpOutput

@@ -24,6 +24,7 @@ protected:
     virtual BuildResult DoBuild( Job * job ) override;
 
     static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
+    static void HandleWarnings( Job * job, const AString & name, const char * data, uint32_t dataSize, const char * warningString );
 
     friend class Client;
 };

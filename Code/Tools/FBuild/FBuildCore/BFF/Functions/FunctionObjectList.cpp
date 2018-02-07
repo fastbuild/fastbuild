@@ -68,7 +68,7 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFIterator & iter, const A
         }
         else
         {
-            if ( objFlags & ObjectNode::FLAG_MSVC )
+            if ( objFlags & (ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL) )
             {
                 if ( ( token == "/c" ) || ( token == "-c" ) )
                 {
@@ -97,7 +97,7 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFIterator & iter, const A
     }
 
     // check /c or -c
-    if ( objFlags & ObjectNode::FLAG_MSVC )
+    if ( objFlags & (ObjectNode::FLAG_MSVC | ObjectNode::FLAG_CLANG_CL) )
     {
         if ( hasCompileToken == false )
         {
@@ -105,7 +105,7 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFIterator & iter, const A
             return false;
         }
     }
-    else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_CLANG | ObjectNode::FLAG_VBCC ) )
+    else if ( objFlags & ( ObjectNode::FLAG_SNC | ObjectNode::FLAG_GCC | ObjectNode::FLAG_VBCC ) )
     {
         if ( hasCompileToken == false )
         {

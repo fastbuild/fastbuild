@@ -40,28 +40,29 @@ public:
 
     enum Flags
     {
-        FLAG_CAN_BE_CACHED      =   0x01,
-        FLAG_CAN_BE_DISTRIBUTED =   0x02,
-        FLAG_USING_PCH          =   0x04,
-        FLAG_GCC                =   0x10,
-        FLAG_MSVC               =   0x20,
-        FLAG_CREATING_PCH       =   0x40,
-        FLAG_SNC                =   0x80,
-        FLAG_USING_CLR          =   0x100,
-        FLAG_CLANG              =   0x200,
-        FLAG_UNITY              =   0x400,
-        FLAG_ISOLATED_FROM_UNITY=   0x800,
-        FLAG_USING_PDB          =   0x1000,
-        CODEWARRIOR_WII         =   0x2000,
-        GREENHILLS_WIIU         =   0x4000,
-        FLAG_CUDA_NVCC          =   0x10000,
-        FLAG_INCLUDES_IN_STDERR =   0x20000,
-        FLAG_QT_RCC             =   0x40000,
-        FLAG_WARNINGS_AS_ERRORS_MSVC    = 0x80000,
-        FLAG_VBCC               =   0x100000,
-        FLAG_STATIC_ANALYSIS_MSVC = 0x200000,
-        FLAG_ORBIS_WAVE_PSSLC   =   0x400000,
-        FLAG_DIAGNOSTICS_COLOR_AUTO = 0x800000,
+        FLAG_CAN_BE_CACHED           = 0x01,
+        FLAG_CAN_BE_DISTRIBUTED      = 0x02,
+        FLAG_USING_PCH               = 0x04,
+        FLAG_GCC                     = 0x10,
+        FLAG_MSVC                    = 0x20,
+        FLAG_CREATING_PCH            = 0x40,
+        FLAG_SNC                     = 0x80,
+        FLAG_USING_CLR               = 0x100,
+        FLAG_CLANG                   = 0x200,
+        FLAG_UNITY                   = 0x400,
+        FLAG_ISOLATED_FROM_UNITY     = 0x800,
+        FLAG_USING_PDB               = 0x1000,
+        CODEWARRIOR_WII              = 0x2000,
+        GREENHILLS_WIIU              = 0x4000,
+        FLAG_CUDA_NVCC               = 0x10000,
+        FLAG_INCLUDES_IN_STDERR      = 0x20000,
+        FLAG_QT_RCC                  = 0x40000,
+        FLAG_WARNINGS_AS_ERRORS_MSVC = 0x80000,
+        FLAG_VBCC                    = 0x100000,
+        FLAG_STATIC_ANALYSIS_MSVC    = 0x200000,
+        FLAG_ORBIS_WAVE_PSSLC        = 0x400000,
+        FLAG_DIAGNOSTICS_COLOR_AUTO  = 0x800000,
+        FLAG_CLANG_CL                = 0x1000000,
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,
@@ -73,6 +74,7 @@ public:
     inline bool IsCreatingPCH() const { return GetFlag( FLAG_CREATING_PCH ); }
     inline bool IsUsingPCH() const { return GetFlag( FLAG_USING_PCH ); }
     inline bool IsMSVC() const { return GetFlag( FLAG_MSVC ); }
+    inline bool IsClangCl() const { return GetFlag( FLAG_CLANG_CL ); }
     inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
 
     virtual void SaveRemote( IOStream & stream ) const override;
@@ -137,6 +139,7 @@ private:
     inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
 
     static void HandleSystemFailures( Job * job, int result, const char * stdOut, const char * stdErr );
+    static void HandleWarningsClangCl( Job * job, const AString & name, const char * data, uint32_t dataSize );
     bool ShouldUseDeoptimization() const;
     friend class Client;
     bool ShouldUseCache() const;
