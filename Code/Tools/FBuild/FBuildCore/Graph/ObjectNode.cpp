@@ -849,7 +849,14 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             }
             else if ( IsStartOfCompilerArg_MSVC( token, "analyze" ) )
             {
-                flags |= ObjectNode::FLAG_STATIC_ANALYSIS_MSVC;
+                if ( IsCompilerArg_MSVC( token, "analyze-" ) )
+                {
+                    flags &= ( ~ObjectNode::FLAG_STATIC_ANALYSIS_MSVC );
+                }
+                else
+                {
+                    flags |= ObjectNode::FLAG_STATIC_ANALYSIS_MSVC;
+                }
             }
         }
 
