@@ -27,15 +27,13 @@
     #include <arpa/inet.h>
     #include <sys/ioctl.h>
     #include <sys/socket.h>
+    #include <sys/uio.h>
     #include <netinet/in.h>
     #include <netinet/tcp.h>
     #include <fcntl.h>
     #include <unistd.h>
     #define INVALID_SOCKET ( -1 )
     #define SOCKET_ERROR -1
-    #if defined( __APPLE__ )
-        #include <sys/uio.h>
-    #endif
 #else
     #error Unknown platform
 #endif
