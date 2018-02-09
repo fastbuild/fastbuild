@@ -477,7 +477,9 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
         AStackString<> cleanPath;
         NodeGraph::CleanPath( file, cleanPath, false );
         if ( cleanPath.BeginsWith( ".." ) )
+        {
             NodeGraph::CleanPath( cleanPath );
+        }
 
         filesToExcludeCleaned.Append( cleanPath );
     }

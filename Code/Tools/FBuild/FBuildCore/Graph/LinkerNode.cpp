@@ -443,7 +443,7 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
                 continue;
             }
 
-            if ( IsStartOfLinkerArg_MSVC(token, "LIBPATH:") == true )
+            if ( IsStartOfLinkerArg_MSVC( token, "LIBPATH:" ) == true )
             {
                 // get remainder of token after arg
                 const char * valueStart = token.Get() + 8 + 1;

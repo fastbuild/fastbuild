@@ -1265,14 +1265,14 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
         while ( *src == NATIVE_SLASH || *src == OTHER_SLASH ) { ++src; } // strip leading slashes
     #endif
 
-    const char* lowestRemovableChar = cleanPath.Get();
-    if (isFullPath)
+    const char * lowestRemovableChar = cleanPath.Get();
+    if ( isFullPath )
     {
-#if defined( __WINDOWS__ )
-        lowestRemovableChar += 3; // e.g. "c:\"
-#else
-        lowestRemovableChar += 1; // e.g. "/"
-#endif
+        #if defined( __WINDOWS__ )
+            lowestRemovableChar += 3; // e.g. "c:\"
+        #else
+            lowestRemovableChar += 1; // e.g. "/"
+        #endif
     }
 
     while ( src < srcEnd )
