@@ -67,7 +67,17 @@ VCXProjectNode::VCXProjectNode( const AString & projectOutput,
     // generate GUID if not specified
     if ( m_ProjectGuid.IsEmpty() )
     {
-        VSProjectGenerator::FormatDeterministicProjectGUID( m_ProjectGuid, m_Name );
+        AStackString<> relativePath;
+        if ( m_Name.BeginsWith( FBuild::Get().GetWorkingDir() ) )
+        {
+            relativePath = m_Name.Get() + FBuild::Get().GetWorkingDir().GetLength() + 1;
+        }
+        else
+        {
+            relativePath = m_Name;
+        }
+        relativePath.Replace( '\\', '/' );
+        VSProjectGenerator::FormatDeterministicProjectGUID( m_ProjectGuid, relativePath );
     }
 }
 
