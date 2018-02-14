@@ -79,7 +79,6 @@ public:
     VSProjectGenerator();
     ~VSProjectGenerator();
 
-    void SetProjectName( const AString & name ) { m_ProjectName = name; }
     void SetBasePaths( const Array< AString > & paths );
 
     void AddFile( const AString & file );
@@ -113,7 +112,6 @@ private:
                                         AString & outRelativeFileName );
 
     // project details
-    AString m_ProjectName;
     Array< AString > m_BasePaths;
 
     // Globals

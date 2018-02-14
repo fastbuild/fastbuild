@@ -77,8 +77,11 @@ void TestProjectGeneration::Test() const
 
     VSProjectGenerator pg;
 
-    // project name
-    pg.SetProjectName( AStackString<>( "Core" ) );
+    // project name/guid
+    AStackString<> name( "Core" );
+    AStackString<> guid;
+    VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
+    pg.SetProjectGuid( guid );
     pg.SetBasePaths( baseDirs );
 
     Array< VSProjectConfig > configs;
@@ -233,7 +236,10 @@ void TestProjectGeneration::TestFunction_Speed() const
     baseDirs.Append( baseDir );
 
     // project name
-    pg.SetProjectName( AStackString<>( "Big" ) );
+    AStackString<> name( "Big" );
+    AStackString<> guid;
+    VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
+    pg.SetProjectGuid( guid );
     pg.SetBasePaths( baseDirs );
 
     // platforms

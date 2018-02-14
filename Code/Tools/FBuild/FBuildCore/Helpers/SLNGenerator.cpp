@@ -150,23 +150,12 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
                                     lastPeriod ? lastPeriod     : projectPath.GetEnd() );
 
         // retrieve projectGuid
-        AStackString<> projectGuid;
-        if ( (*it)->GetProjectGuid().GetLength() == 0 )
-        {
-            // For backward compatibility, keep the preceding slash and .vcxproj extension for GUID generation
-            AStackString<> projectNameForGuid( lastSlash ? lastSlash : projectPath.Get() );
-            VSProjectGenerator::FormatDeterministicProjectGUID( projectGuid, projectNameForGuid );
-        }
-        else
-        {
-            projectGuid = (*it)->GetProjectGuid();
-        }
+        AStackString<> projectGuid((*it)->GetProjectGuid());
+        // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
+        projectGuid.ToUpper();
 
         // make project path relative
         projectPath.Replace( solutionBasePath.Get(), "" );
-
-        // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
-        projectGuid.ToUpper();
 
         if ( projectIsActive )
         {
@@ -183,18 +172,21 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
         for ( const SLNDependency & deps : slnDeps )
         {
             // is the set of deps relevant to this project?
-            if ( deps.m_Projects.Find( fullProjectPath ) )
+            if ( !deps.m_Projects.Find( fullProjectPath ) )
             {
-                // get all the projects this project depends on
-                for ( const AString & dependency : deps.m_Dependencies )
-                {
-                    // For backward compatibility, keep the preceding slash and .vcxproj extension for GUID generation
-                    const char * projNameFromSlash = dependency.FindLast( NATIVE_SLASH );
-                    AStackString<> projectNameForGuid( projNameFromSlash ? projNameFromSlash : dependency.Get() );
+                continue;
+            }
 
-                    AStackString<> newGUID;
-                    VSProjectGenerator::FormatDeterministicProjectGUID( newGUID, projectNameForGuid );
-                    dependencyGUIDs.Append( newGUID );
+            // get all the projects this project depends on
+            for ( const AString & dependency : deps.m_Dependencies )
+            {
+                for ( const VCXProjectNode* dependencyProject : projects )
+                {
+                    if ( dependencyProject->GetName() == dependency )
+                    {
+                        dependencyGUIDs.Append( dependencyProject->GetProjectGuid() );
+                        break;
+                    }
                 }
             }
         }

@@ -63,6 +63,22 @@ VCXProjectNode::VCXProjectNode( const AString & projectOutput,
 
     // depend on the input nodes
     m_StaticDependencies.Append( paths );
+
+    // generate GUID if not specified
+    if ( m_ProjectGuid.IsEmpty() )
+    {
+        AStackString<> relativePath;
+        if ( m_Name.BeginsWith( FBuild::Get().GetWorkingDir() ) )
+        {
+            relativePath = m_Name.Get() + FBuild::Get().GetWorkingDir().GetLength() + 1;
+        }
+        else
+        {
+            relativePath = m_Name;
+        }
+        relativePath.Replace( '\\', '/' );
+        VSProjectGenerator::FormatDeterministicProjectGUID( m_ProjectGuid, relativePath );
+    }
 }
 
 // DESTRUCTOR
@@ -75,12 +91,6 @@ VCXProjectNode::~VCXProjectNode() = default;
 {
     VSProjectGenerator pg;
     pg.SetBasePaths( m_ProjectBasePaths );
-
-    // get project file name only
-    const char * p1 = m_Name.FindLast( NATIVE_SLASH );
-    p1 = p1 ? p1 : m_Name.Get();
-    AStackString<> projectName( p1 );
-    pg.SetProjectName( projectName );
 
     // Globals
     pg.SetRootNamespace( m_RootNamespace );
