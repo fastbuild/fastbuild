@@ -1,0 +1,28 @@
+;
+; Build a test library
+;
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+.CompilerOutputPath = "$Out$/Test/LinkerDependencies/"
+
+Library( 'libA' )
+{
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestLinkerDependencies/a.cpp'
+    .LibrarianOutput    = '$Out$/Test/LinkerDependencies/a.lib'
+}
+ObjectList( "Exe-Lib" )
+{
+    .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestLinkerDependencies/exe.cpp"
+}
+Executable( "Exe" )
+{
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+    #endif
+    .LinkerOutput       = '$Out$/Test/LinkerDependencies/exe.exe'
+    .Libraries          = { "Exe-Lib" }
+    .LinkerOptions      + ' $Out$/Test/LinkerDependencies/a.lib'
+}

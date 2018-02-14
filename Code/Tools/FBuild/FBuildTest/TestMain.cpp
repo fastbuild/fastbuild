@@ -40,6 +40,7 @@ int main(int , char * [])
     REGISTER_TESTGROUP( TestUnity )
     REGISTER_TESTGROUP( TestVariableStack )
     REGISTER_TESTGROUP( TestWarnings )
+    REGISTER_TESTGROUP( TestLinkerDependencies )
 
     // Windows-specific tests
     #if defined( __WINDOWS__ )

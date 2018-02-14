@@ -1119,33 +1119,32 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     {
         bool found = false;
 
-        // is the file a full path?
-        if ( ( itL->GetLength() > 2 ) && ( (*itL)[ 1 ] == ':' ) )
+        // check file exists in current location
+        if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, AString::GetEmpty(), *itL, found ) )
         {
-            // check file exists in current location
-            if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, AString::GetEmpty(), *itL, found ) )
+            return false; // GetOtherLibrary will have emitted error
+        }
+
+        if ( found )
+        {
+            continue;
+        }
+
+        // check each libpath
+        const AString * const endP = libPaths.End();
+        for ( const AString * itP = libPaths.Begin(); itP != endP; ++itP )
+        {
+            if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, *itP, *itL, found ) )
             {
                 return false; // GetOtherLibrary will have emitted error
             }
-        }
-        else
-        {
-            // check each libpath
-            const AString * const endP = libPaths.End();
-            for ( const AString * itP = libPaths.Begin(); itP != endP; ++itP )
+
+            if ( found )
             {
-                if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, *itP, *itL, found ) )
-                {
-                    return false; // GetOtherLibrary will have emitted error
-                }
-
-                if ( found )
-                {
-                    break;
-                }
-
-                // keep searching lib paths...
+                break;
             }
+
+            // keep searching lib paths...
         }
 
         // file does not exist on disk, and there is no rule to build it
