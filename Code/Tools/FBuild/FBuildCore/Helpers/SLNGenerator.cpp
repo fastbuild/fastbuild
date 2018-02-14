@@ -149,13 +149,14 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
         AStackString<> projectName( lastSlash  ? lastSlash + 1  : projectPath.Get(),
                                     lastPeriod ? lastPeriod     : projectPath.GetEnd() );
 
-        // retrieve projectGuid
-        AStackString<> projectGuid((*it)->GetProjectGuid());
-        // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
-        projectGuid.ToUpper();
-
         // make project path relative
         projectPath.Replace( solutionBasePath.Get(), "" );
+
+        // retrieve projectGuid
+        AStackString<> projectGuid( (*it)->GetProjectGuid() );
+
+        // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
+        projectGuid.ToUpper();
 
         if ( projectIsActive )
         {
