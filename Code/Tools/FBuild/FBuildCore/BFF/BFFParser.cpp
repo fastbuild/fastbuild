@@ -78,6 +78,13 @@ bool BFFParser::Parse( const char * dataWithSentinel,
     if ( pushStackFrame )
     {
         BFFStackFrame stackFrame;
+
+        // Create built-in variables if lowest level of stack
+        if ( s_Depth == 1 )
+        {
+            CreateBuiltInVariables( stackFrame );
+        }
+
         return Parse( iter );
     }
     else
@@ -2091,6 +2098,20 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
     value = output;
     return true;
+}
+
+// CreateBuiltInVariables
+//------------------------------------------------------------------------------
+void BFFParser::CreateBuiltInVariables( BFFStackFrame & stackFrame )
+{
+    // _WORKING_DIR_
+    if ( FBuild::IsValid() ) // Handle special case in tests
+    {
+        AStackString<> varName( "._WORKING_DIR_" );
+        ASSERT( BFFStackFrame::GetVarAny( varName ) == false );
+        BFFStackFrame::SetVarString( varName, FBuild::Get().GetWorkingDir(), &stackFrame );
+        // TODO:B Add a mechanism to mark variable as read-only
+    }
 }
 
 //------------------------------------------------------------------------------

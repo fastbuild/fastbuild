@@ -42,6 +42,7 @@ Details of the FASTBuild configuration file syntax can be grouped into 4 categor
   <li><a href='#scoping'>Scoping</a></li>
   <li><a href='#structs'>Structs</a></li>
   <li><a href='#dynamic_construction'>Dynamic Construction</a></li>
+  <li><a href='#builtin'>Built In Variables</a></li>
 </ul>
 <b>Functions</b>
 <ul>
@@ -362,6 +363,17 @@ Variable names can be dynamically constructed at parse time as follows:
 .Options  = ."CompilerOptions_$Config$_$Platform$" // expands to .CompilerOptions_Debug_X64
 </div>
 </div>
+
+<div class='newsitemheader' id='builtin'>Built In Variables</div>
+    <div class='newsitembody'>
+<p>Built In variables always exist. Their names begin and end with an underscore.
+</p>
+<table>
+  <tr><th>Variable</th><th>Notes</th></tr>
+  <tr><td width=150>_WORKING_DIR_</td><td>The working directory when fbuild executable was launched</td></tr>
+</table>
+</div>
+
 
 <h2>Functions</h2>
 <p>NOTE: See the <a href='functions.html'>Function Reference</a> for a detailed list of all available functions and their Arguments and Properties.</p>
