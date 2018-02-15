@@ -58,6 +58,12 @@ Environment
 ExecArguments
 ExecExecutable
 ExecInput
+ExecInputPath
+ExecInputPattern
+ExecInputPathRecurse
+ExecInputExcludePath
+ExecInputExcludedFiles
+ExecInputExcludePattern	
 ExecOutput
 ExecReturnCode
 ExecUseStdOutAsOutput

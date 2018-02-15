@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -23,6 +24,12 @@
 REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
     REFLECT(        m_ExecExecutable,           "ExecExecutable",           MetaFile() )
     REFLECT_ARRAY(  m_ExecInput,                "ExecInput",                MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_ExecInputPath,            "ExecInputPath",            MetaOptional() + MetaPath() )
+    REFLECT_ARRAY(  m_ExecInputPattern,         "ExecInputPattern",         MetaOptional() )
+    REFLECT(        m_ExecInputPathRecurse,     "ExecInputPathRecurse",     MetaOptional() )
+    REFLECT_ARRAY(  m_ExecInputExcludePath,     "ExecInputExcludePath",     MetaOptional() + MetaPath() )
+    REFLECT_ARRAY(  m_ExecInputExcludedFiles,   "ExecInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
+    REFLECT_ARRAY(  m_ExecInputExcludePattern,  "ExecInputExcludePattern",  MetaOptional() )
     REFLECT(        m_ExecArguments,            "ExecArguments",            MetaOptional() )
     REFLECT(        m_ExecWorkingDir,           "ExecWorkingDir",           MetaOptional() + MetaPath() )
     REFLECT(        m_ExecReturnCode,           "ExecReturnCode",           MetaOptional() )
@@ -36,8 +43,11 @@ ExecNode::ExecNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_ExecReturnCode( 0 )
     , m_ExecUseStdOutAsOutput( false )
+    , m_ExecInputPathRecurse( true )
 {
     m_Type = EXEC_NODE;
+
+    m_ExecInputPattern.Append( AStackString<>( "*.*" ) );
 }
 
 // Initialize
@@ -65,10 +75,28 @@ bool ExecNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
         return false; // GetFileNodes will have emitted an error
     }
 
+    // .CompilerInputPath
+    Dependencies execInputPaths;
+    if ( !function->GetDirectoryListNodeList( nodeGraph,
+                                              iter,
+                                              m_ExecInputPath,
+                                              m_ExecInputExcludePath,
+                                              m_ExecInputExcludedFiles,
+                                              m_ExecInputExcludePattern,
+                                              m_ExecInputPathRecurse,
+                                              &m_ExecInputPattern,
+                                              "ExecInputPath",
+                                              execInputPaths ) )
+    {
+        return false; // GetDirectoryListNodeList will have emitted an error
+    }
+    ASSERT( execInputPaths.GetSize() == m_ExecInputPath.GetSize() ); // No need to store count since they should be the same
+
     // Store Static Dependencies
-    m_StaticDependencies.SetCapacity( 1 + execInputFiles.GetSize() );
+    m_StaticDependencies.SetCapacity( 1 + execInputFiles.GetSize() + execInputPaths.GetSize() );
     m_StaticDependencies.Append( executable );
     m_StaticDependencies.Append( execInputFiles );
+    m_StaticDependencies.Append( execInputPaths );
 
     return true;
 }
@@ -268,6 +296,26 @@ void ExecNode::GetInputFiles(AString & fullArgs, const AString & pre, const AStr
     for ( size_t i=1; i < m_StaticDependencies.GetSize(); ++i ) // Note: Skip first dep (exectuable)
     {
         const Dependency & dep = m_StaticDependencies[ i ];
+        const Node * n = dep.GetNode();
+
+        // Handle directory lists
+        if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
+        {
+            DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            for ( const FileIO::FileInfo & file : files )
+            {
+                if ( !first )
+                {
+                    fullArgs += ' ';
+                }
+                fullArgs += pre;
+                fullArgs += file.m_Name;
+                fullArgs += post;
+                first = false;
+            }
+            continue;
+        }
 
         if ( !first )
         {
