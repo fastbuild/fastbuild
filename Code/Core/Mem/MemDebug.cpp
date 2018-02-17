@@ -9,6 +9,8 @@
 
 #if defined( MEM_DEBUG_ENABLED )
 
+#include <cstdint>
+
 // Core
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
