@@ -15,7 +15,7 @@
 // System
 #if defined( __WINDOWS__ )
     #include "Windows.h"
-#elif defined( __LINUX__ )
+#elif defined( __LINUX__ ) || defined( __OSX__ )
     #include <signal.h>
 #endif
 
@@ -23,10 +23,8 @@
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
     BOOL CtrlHandlerFunc( DWORD fdwCtrlType );
-#elif defined( __LINUX__ )
+#elif defined( __LINUX__ ) || defined( __OSX__ )
     void CtrlHandlerFunc( int dummy );
-#else
-    // TODO:MAC Implement CtrlHandler
 #endif
 
 // CONSTRUCTOR
@@ -51,10 +49,8 @@ void CtrlCHandler::RegisterHandler()
 
     #if defined( __WINDOWS__ )
         VERIFY( SetConsoleCtrlHandler( (PHANDLER_ROUTINE)CtrlHandlerFunc, TRUE ) );
-    #elif defined( __LINUX__ )
+    #elif defined( __LINUX__ ) || defined( __OSX__ )
         signal( SIGINT, CtrlHandlerFunc );
-    #elif defined( __OSX__ )
-        // TODO:MAC Implement
     #endif
 
     m_IsRegistered = true;
@@ -107,7 +103,7 @@ void CtrlCHandler::DeregisterHandler()
 
         return TRUE; // tell Windows we've "handled" it
     }
-#elif defined( __LINUX__ )
+#elif defined( __LINUX__ ) || defined( __OSX__ )
     void CtrlHandlerFunc( int UNUSED( dummy ) )
     {
         // tell FBuild we want to stop the build cleanly
