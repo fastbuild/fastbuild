@@ -2,7 +2,7 @@
 //------------------------------------------------------------------------------
 #pragma once
 
-#if defined ( __LINUX__ )
+#if defined( __LINUX__ ) || defined( __OSX__ )
     #include <sys/types.h>
 #endif
 
