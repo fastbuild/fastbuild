@@ -7,8 +7,6 @@
 
 #include "SmallBlockAllocator.h"
 
-#if defined( SMALL_BLOCK_ALLOCATOR_ENABLED )
-
 // Core
 #include "Core/Env/Types.h"
 #include "Core/Math/Conversions.h"
@@ -274,4 +272,3 @@ bool SmallBlockAllocator::Free( void * ptr )
 }
 
 //------------------------------------------------------------------------------
-#endif // SMALL_BLOCK_ALLOCATOR_ENABLED

@@ -85,7 +85,7 @@ Compiler( 'Compiler-x64-Linux' )
                         '/usr/lib/gcc/x86_64-linux-gnu/4.9/cc1plus'
                       }
 }
-Compiler( 'Compiler-x64-OSX' )
+Compiler( 'Compiler-x64Clang-LinuxOSX' )
 {
     .Executable = '/usr/bin/clang++'
 }
@@ -389,9 +389,7 @@ Compiler( 'Compiler-x64-OSX' )
 //------------------------------------------------------------------------------
 .LinuxBaseConfig =
 [
-    .Compiler               = 'Compiler-x64-Linux'
     .Librarian              = '/usr/bin/ar'
-    .Linker                 = '/usr/bin/g++'
 
     .BaseCompilerOptions    = '-o "%2" "%1" -c -g'
                             + ' -I./'
@@ -400,9 +398,10 @@ Compiler( 'Compiler-x64-OSX' )
                             + ' -Wextra'
                             + ' -m64'                           // x86-64
 
-    .CompilerOptionsC       = .BaseCompilerOptions
-    .CompilerOptions        = .BaseCompilerOptions
-                            + ' -std=c++11'                     // allow C++11 features
+    .CompilerOptionsC       = '-x c '
+                            + .BaseCompilerOptions
+    .CompilerOptions        = '-std=c++11 '                     // allow C++11 features
+                            + .BaseCompilerOptions
 
                             // Disabled warnings
                             + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
@@ -428,6 +427,11 @@ Compiler( 'Compiler-x64-OSX' )
 [
     Using( .LinuxBaseConfig )
     .Platform               = 'x64Linux'
+    .Compiler               = 'Compiler-x64-Linux'
+    .Linker                 = '/usr/bin/g++'
+
+    .CompilerOptions_ASan   = ' -fsanitize=address -fno-omit-frame-pointer'
+    .LinkerOptions_ASan     = ' -fsanitize=address'
 ]
 .X64DebugConfig_Linux =
 [
@@ -458,12 +462,78 @@ Compiler( 'Compiler-x64-OSX' )
     .CompilerOptions        + ' -DPROFILING_ENABLED'
     .CompilerOptionsC       + ' -DPROFILING_ENABLED'
 ]
+.X64ASanConfig_Linux =
+[
+    Using( .X64ReleaseConfig_Linux ) // Note: based on Release config
+    .Config                 = 'ASan'
+    .CompilerOptions        + .CompilerOptions_ASan
+    .CompilerOptionsC       + .CompilerOptions_ASan
+    .LinkerOptions          + .LinkerOptions_ASan
+]
+.X64ClangBaseConfig_Linux =
+[
+    Using( .LinuxBaseConfig )
+    .Platform               = 'x64ClangLinux'
+    .Compiler               = 'Compiler-x64Clang-LinuxOSX'
+    .Linker                 = '/usr/bin/clang++'
+
+    .CompilerOptions_ASan   = ' -fsanitize=address -fno-omit-frame-pointer'
+    .LinkerOptions_ASan     = ' -fsanitize=address'
+    .CompilerOptions_MSan   = ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
+    .LinkerOptions_MSan     = ' -fsanitize=memory'
+    // These options are a valid for Clang <= 5.0.0:
+    .CompilerOptions_Fuzzer = ' -fsanitize-coverage=trace-pc-guard'
+    // These options are expected to be valid for Clang > 5.0.0:
+    // .CompilerOptions_Fuzzer = ' -fsanitize=fuzzer-no-link'
+]
+.X64ClangDebugConfig_Linux =
+[
+    Using( .X64ClangBaseConfig_Linux )
+    .Config                 = 'Debug'
+    .CompilerOptions        + ' -DDEBUG -DPROFILING_ENABLED'
+                            + .CompilerDebugOptimizations
+    .CompilerOptionsC       + .CompilerDebugOptimizations
+    .LibrarianOptions       + .LibrarianDebugOptimizations
+    .LinkerOptions          + .LinkerDebugOptimizations
+]
+.X64ClangReleaseConfig_Linux =
+[
+    Using( .X64ClangBaseConfig_Linux )
+    .Config                 = 'Release'
+    .CompilerOptions        + ' -DRELEASE'
+                            + .CompilerReleaseOptimizations
+    .CompilerOptionsC       + .CompilerReleaseOptimizations
+    .LibrarianOptions       + .LibrarianReleaseOptimizations
+    .LinkerOptions          + .LinkerReleaseOptimizations
+]
+.X64ClangProfileConfig_Linux =
+[
+    Using( .X64ClangReleaseConfig_Linux ) // Note: based on Release config
+    .Config                 = 'Profile'
+    .CompilerOptions        + ' -DPROFILING_ENABLED'
+]
+.X64ClangASanConfig_Linux =
+[
+    Using( .X64ClangReleaseConfig_Linux ) // Note: based on Release config
+    .Config                 = 'ASan'
+    .CompilerOptions        + .CompilerOptions_ASan + .CompilerOptions_Fuzzer
+    .CompilerOptionsC       + .CompilerOptions_ASan + .CompilerOptions_Fuzzer
+    .LinkerOptions          + .LinkerOptions_ASan
+]
+.X64ClangMSanConfig_Linux =
+[
+    Using( .X64ClangReleaseConfig_Linux ) // Note: based on Release config
+    .Config                 = 'MSan'
+    .CompilerOptions        + .CompilerOptions_MSan + .CompilerOptions_Fuzzer
+    .CompilerOptionsC       + .CompilerOptions_MSan + .CompilerOptions_Fuzzer
+    .LinkerOptions          + .LinkerOptions_MSan
+]
 
 // OSX
 //------------------------------------------------------------------------------
 .OSXBaseConfig =
 [
-    .Compiler               = 'Compiler-x64-OSX'
+    .Compiler               = 'Compiler-x64Clang-LinuxOSX'
     .Librarian              = '/usr/bin/ar'
     .Linker                 = '/usr/bin/g++'
 
@@ -617,12 +687,18 @@ VCXProject( 'UpdateSolution-proj' )
              .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig,
              .X86ClangDebugConfig, .X86ClangProfileConfig, .X86ClangReleaseConfig,
              .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
+             .X64ASanConfig_Linux,
+             .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
+             .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux,
             .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
 .Configs_Windows_MSVC   = { .X86DebugConfig, .X86ProfileConfig, .X86ReleaseConfig,
                             .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig }
 .Configs_Windows_Clang  = { .X86ClangDebugConfig, .X86ClangProfileConfig, .X86ClangReleaseConfig }
-.Configs_Linux_GCC      = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux }
+.Configs_Linux          = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
+                            .X64ASanConfig_Linux,
+                            .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
+                            .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux }
 .Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
 // External
@@ -643,6 +719,7 @@ VCXProject( 'UpdateSolution-proj' )
 #include "Tools\FBuild\FBuildApp\FBuildApp.bff"
 #include "Tools\FBuild\FBuildWorker\FBuildWorker.bff"
 #include "Tools\FBuild\FBuildTest\FBuildTest.bff"
+#include "Tools\FBuild\BFFFuzzer\BFFFuzzer.bff"
 
 // Aliases : All-$Platform$-$Config$
 //------------------------------------------------------------------------------
@@ -664,20 +741,32 @@ ForEach( .Config in .Configs )
                             'TestFramework-$Platform$-$Config$',
                             'FBuildCore-$Platform$-$Config$'
                           }
+#if __LINUX__
+        .Targets        + { // libFuzzer targets
+                            'BFFFuzzer-$Platform$-$Config$'
+                          }
+#endif
     }
 }
 
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
-.Platforms = { 'x86', 'x64', 'x86Clang', 'x64Linux', 'x64OSX' }
+.Platforms = { 'x86', 'x64', 'x86Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX' }
+.PlatformConfigs_x86           = { 'Debug', 'Profile', 'Release' }
+.PlatformConfigs_x64           = { 'Debug', 'Profile', 'Release' }
+.PlatformConfigs_x86Clang      = { 'Debug', 'Profile', 'Release' }
+.PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan' }
+.PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release', 'ASan', 'MSan' }
+.PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
 ForEach( .Platform in .Platforms )
 {
     Alias( 'All-$Platform$' )
     {
-        .Targets        = { 'All-$Platform$-Debug',
-                            'All-$Platform$-Profile',
-                            'All-$Platform$-Release'
-                          }
+        .Targets = {}
+        ForEach( .Config in .'PlatformConfigs_$Platform$' )
+        {
+            ^Targets + { 'All-$Platform$-$Config$' }
+        }
     }
 }
 
@@ -701,7 +790,9 @@ ForEach( .Platform in .Platforms )
 #if __LINUX__
     Alias( 'All' )
     {
-        .Targets        = { 'All-x64Linux' }
+        .Targets        = { 'All-x64Linux',
+                            'All-x64ClangLinux'
+                          }
     }
 #endif
 

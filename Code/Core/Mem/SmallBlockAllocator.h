@@ -4,7 +4,18 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define SMALL_BLOCK_ALLOCATOR_ENABLED
+// Enable SmallBlockAllocator unless:
+//   * We are using AddressSanitizer, in which case it is better to have a
+//     separate block for each allocation to catch out-of-bounds reads/writes.
+//   * We are using MemorySanitizer, in which case it is better to not reuse
+//     allocated blocks because doing so will hide uninitialized reads from
+//     reused blocks from MemorySanitizer.
+#if !defined( __has_feature )
+    #define __has_feature( ... ) 0
+#endif
+#if !__has_feature( address_sanitizer ) && !__has_feature( memory_sanitizer ) && !__SANITIZE_ADDRESS__
+    #define SMALL_BLOCK_ALLOCATOR_ENABLED
+#endif
 
 // Includes
 //------------------------------------------------------------------------------
@@ -13,7 +24,6 @@
 
 // SmallBlockAllocator
 //------------------------------------------------------------------------------
-#if defined( SMALL_BLOCK_ALLOCATOR_ENABLED )
     class SmallBlockAllocator
     {
     public:
@@ -72,6 +82,5 @@
         // A table to allow 0(1) conversion of any address to the bucket that owns it
         static uint8_t      s_BucketMappingTable[ BUCKET_MAPPING_TABLE_SIZE ];
     };
-#endif
 
 //------------------------------------------------------------------------------
