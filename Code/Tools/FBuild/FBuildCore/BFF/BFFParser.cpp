@@ -2108,7 +2108,7 @@ void BFFParser::CreateBuiltInVariables( BFFStackFrame & stackFrame )
     if ( FBuild::IsValid() ) // Handle special case in tests
     {
         AStackString<> varName( "._WORKING_DIR_" );
-        ASSERT( BFFStackFrame::GetVarAny( varName ) == false );
+        ASSERT( BFFStackFrame::GetVarAny( varName ) == nullptr );
         BFFStackFrame::SetVarString( varName, FBuild::Get().GetWorkingDir(), &stackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
