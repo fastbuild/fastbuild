@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 #include "../External/SDK/VisualStudio/VisualStudio.bff"
 #include "../External/SDK/Windows/Windows.bff"
-.ClangBasePath      = '../External/SDK/ClangForWindows/3.7.1'
+.ClangBasePath      = '../External/SDK/ClangForWindows/5.0.1'
 
 //------------------------------------------------------------------------------
 // Settings
@@ -31,6 +31,10 @@ Compiler( 'Compiler-x86Clang' )
 {
     .Root       = '$ClangBasePath$'
     .Executable = '$Root$\bin\clang++.exe'
+    .ExtraFiles = {
+                    '$Root$\bin\msvcp140.dll'
+                    '$Root$\bin\vcruntime140.dll'
+                  }
 }
 Compiler( 'Compiler-x64-Linux' )
 {
@@ -244,26 +248,20 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 
                             // x86
                             + ' -m32'
-                            + ' -D"_X86_=1" -D_M_IX86'
-                            + ' -D"_INTEGRAL_MAX_BITS=64"'
 
                             // MS compatibility
                             + ' -fms-compatibility'
                             + ' -fms-extensions'
                             + ' -fmsc-version=1910' // VS2017 equivalent
+                            + ' -Xclang -flto-visibility-public-std' // LTO visibility matches MSVC behaviour
 
-                            // as of v3.6, these warnings fire inside system headers
+                            // as of v5.0.1, these warnings fire inside system headers
                             + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
                             + ' -Wno-unknown-pragmas'           // unknown pragma ignored [-Wunknown-pragmas]
-                            + ' -Wno-unused-function'           // unused function '%s' [-Wunused-function]
-                            + ' -Wno-microsoft'                 // enumerator value is not representable in the underlying type 'int' [-Wmicrosoft]'
-                            + ' -Wno-unused-value'              // expression result unused [-Wunused-value]
                             + ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
-                            + ' -Wno-incompatible-ms-struct'    // ms_struct may not produce MSVC-compatible layouts for classes with base classes or virtual functions [-Wincompatible-ms-struct]
-                            + ' -Wno-invalid-token-paste'       // pasting formed '%s', an invalid preprocessing token
-
-                            // Fires on our new/delete operator (Clang bug?)
-                            + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
+                            + ' -Wno-expansion-to-defined'      // macro expansion producing 'defined' has undefined behavior [-Wexpansion-to-defined]
+                            + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
+                            + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
 
                             // Extra warnings
                             + ' -Wshadow'

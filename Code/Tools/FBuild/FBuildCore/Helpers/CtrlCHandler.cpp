@@ -22,7 +22,7 @@
 // System-Specific Callbacks
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    BOOL CtrlHandlerFunc( DWORD fdwCtrlType );
+    BOOL WINAPI CtrlHandlerFunc( DWORD fdwCtrlType );
 #elif defined( __LINUX__ ) || defined( __OSX__ )
     void CtrlHandlerFunc( int dummy );
 #endif
@@ -78,7 +78,7 @@ void CtrlCHandler::DeregisterHandler()
 // CtrlHandler
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    BOOL CtrlHandlerFunc( DWORD UNUSED( fdwCtrlType ) )
+    BOOL WINAPI CtrlHandlerFunc( DWORD UNUSED( fdwCtrlType ) )
     {
         // tell FBuild we want to stop the build cleanly
         FBuild::AbortBuild();
