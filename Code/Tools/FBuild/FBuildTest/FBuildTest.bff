@@ -56,8 +56,8 @@
             .LinkerOptions              + ' /SUBSYSTEM:CONSOLE'
                                         + ' kernel32.lib'
                                         + ' Ws2_32.lib'
-                                        + ' LIBCMT.LIB'
                                         + ' User32.lib'
+                                        + .CRTLibs_Static
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
     }

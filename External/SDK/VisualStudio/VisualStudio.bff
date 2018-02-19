@@ -1,0 +1,26 @@
+// VisualStudio
+//------------------------------------------------------------------------------
+
+// Select desired Visual Studio version
+//------------------------------------------------------------------------------
+//#define USING_VS2013
+#define USING_VS2017
+
+// Activate
+//------------------------------------------------------------------------------
+#if USING_VS2013
+    #include "VS2013.bff"
+    .ToolChain_VS_Windows_X86           = .ToolChain_VS2013_Windows_X86
+    .ToolChain_VS_Windows_X64           = .ToolChain_VS2013_Windows_X64
+    .VS_PATH                            = .VS_2013_PATH
+    .VS_PlatformToolset                 = .VS_2013_PlatformToolset
+#endif
+#if USING_VS2017
+    #include "VS2017.bff"
+    .ToolChain_VS_Windows_X86           = .ToolChain_VS2017_Windows_X86
+    .ToolChain_VS_Windows_X64           = .ToolChain_VS2017_Windows_X64
+    .VS_PATH                            = .VS_2017_PATH
+    .VS_PlatformToolset                 = .VS_2017_PlatformToolset
+#endif
+
+//------------------------------------------------------------------------------
