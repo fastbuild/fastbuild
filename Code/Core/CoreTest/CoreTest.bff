@@ -12,14 +12,15 @@
         .UnityOutputPath            = '$OutputBase$\Unity\$ProjectPath$\'
     }
 
-    // Library
+    // Executable
     //--------------------------------------------------------------------------
     ForEach( .Config in .Configs )
     {
         Using( .Config )
         .OutputBase + '\$Platform$-$Config$'
 
-        // Objects
+        // Library
+        //--------------------------------------------------------------------------
         ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
             // Input (Unity)
@@ -32,54 +33,9 @@
             .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
             .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
         }
-    }
-
-    // Executable - Windows (MSVC)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Windows_MSVC )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
 
         // Executable
-        Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
-        {
-            .Libraries                      = { 'Core-Lib-$Platform$-$Config$',
-                                                'CoreTest-Lib-$Platform$-$Config$',
-                                                'LZ4-Lib-$Platform$-$Config$'
-                                                'TestFrameWork-Lib-$Platform$-$Config$' }
-            .LinkerOutput                   = '$OutputBase$\Core\CoreTest\CoreTest.exe'
-            .LinkerOptions                  + ' /SUBSYSTEM:CONSOLE'
-                                            + ' kernel32.lib'
-                                            + ' Ws2_32.lib'
-                                            + ' User32.lib'
-                                            + .CRTLibs_Static
-        }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
-    }
-
-    // Executable - Windows (Clang)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Windows_Clang )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
-        // TODO: Remove this when linking is working with Clang
-        .PreBuildDependencies = 'LZ4-$Platform$-$Config$'
-
-        // No linking with Clang for Windows for now
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-    }
-
-    // Executable - Linux (GCC, Clang)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Linux )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
-        // Executable
+        //--------------------------------------------------------------------------
         Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
         {
             .Libraries                      = {
@@ -88,40 +44,22 @@
                                                 'Core-Lib-$Platform$-$Config$'
                                                 'LZ4-Lib-$Platform$-$Config$'
                                               }
-            .LinkerOutput                   = '$OutputBase$\Core\CoreTest\coretest'
-            .LinkerOptions                  + ' -pthread -lrt'
+            .LinkerOutput                   = '$OutputBase$/$ProjectPath$/$ProjectName$$ExeExtension$'
+            #if __WINDOWS__
+                .LinkerOptions                  + ' /SUBSYSTEM:CONSOLE'
+                                                + ' kernel32.lib'
+                                                + ' Ws2_32.lib'
+                                                + ' User32.lib'
+                                                + .CRTLibs_Static
+            #endif
+            #if __LINUX__
+                .LinkerOptions                  + ' -pthread -lrt'
+            #endif
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
-    }
 
-    // Executable - OSX (Clang)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_OSX_Clang )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
-        // Executable
-        Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
-        {
-            .Libraries                      = {
-                                                'CoreTest-Lib-$Platform$-$Config$'
-                                                'TestFrameWork-Lib-$Platform$-$Config$'
-                                                'Core-Lib-$Platform$-$Config$'
-                                                'LZ4-Lib-$Platform$-$Config$'
-                                              }
-            .LinkerOutput                   = '$OutputBase$\Core\CoreTest\CoreTest'
-        }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
-    }
-
-    // Run Test
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
+        // Run Test
+        //--------------------------------------------------------------------------
         Test( "$ProjectName$-RunTest-$Platform$-$Config$" )
         {
             .TestExecutable                 = '$ProjectName$-Exe-$Platform$-$Config$'

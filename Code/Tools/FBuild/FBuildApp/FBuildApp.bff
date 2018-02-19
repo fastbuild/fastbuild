@@ -12,14 +12,15 @@
         .UnityOutputPath            = '$OutputBase$\Unity\$ProjectPath$\'
     }
 
-    // Library
+    // Executable
     //--------------------------------------------------------------------------
     ForEach( .Config in .Configs )
     {
         Using( .Config )
         .OutputBase + '\$Platform$-$Config$'
 
-        // Objects
+        // Library
+        //--------------------------------------------------------------------------
         ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
             // Input (Unity)
@@ -29,48 +30,6 @@
             .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
             .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
         }
-    }
-
-    // Windows (MSVC)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Windows_MSVC )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
-        // Executable
-        Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
-        {
-            .Libraries                  = { 'Core-Lib-$Platform$-$Config$',
-                                            'FBuildCore-Lib-$Platform$-$Config$',
-                                            'FBuildApp-Lib-$Platform$-$Config$',
-                                            'LZ4-Lib-$Platform$-$Config$' }
-            .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildApp\FBuild.exe'
-            .LinkerOptions              + ' /SUBSYSTEM:CONSOLE'
-                                        + ' kernel32.lib'
-                                        + ' Ws2_32.lib'
-                                        + ' User32.lib'
-                                        + .CRTLibs_Static
-        }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
-    }
-
-    // Windows (Clang)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Windows_Clang )
-    {
-        Using( .Config )
-
-        // No linking with Clang for Windows for now
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-    }
-
-    // Linux (GCC, Clang)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Linux )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
 
         // Executable
         Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
@@ -81,29 +40,17 @@
                                             'Core-Lib-$Platform$-$Config$',
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }
-            .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildApp\fbuild'
-            .LinkerOptions              + ' -pthread -ldl -lrt'
-        }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
-    }
-
-    // OSX (Clang)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_OSX_Clang )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
-        // Executable
-        Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
-        {
-            .Libraries                  = {
-                                            'FBuildApp-Lib-$Platform$-$Config$',
-                                            'FBuildCore-Lib-$Platform$-$Config$',
-                                            'Core-Lib-$Platform$-$Config$',
-                                            'LZ4-Lib-$Platform$-$Config$'
-                                          }
-            .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildApp\FBuild'
+            .LinkerOutput               = '$OutputBase$/$ProjectPath$/FBuild$ExeExtension$'
+            #if __WINDOWS__
+                .LinkerOptions              + ' /SUBSYSTEM:CONSOLE'
+                                            + ' kernel32.lib'
+                                            + ' Ws2_32.lib'
+                                            + ' User32.lib'
+                                            + .CRTLibs_Static
+            #endif
+            #if __LINUX__
+                .LinkerOptions              + ' -pthread -ldl -lrt'
+            #endif
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
     }

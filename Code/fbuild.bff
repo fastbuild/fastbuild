@@ -185,6 +185,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .LinkerOptions          = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
 
     .LibExtension           = '.lib'
+    .ExeExtension           = '.exe'
 
     .UseExceptions          = ' /EHsc'
 ]
@@ -280,6 +281,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             + .VSLibPaths
 
     .LibExtension           = '.a'
+    .ExeExtension           = '.exe'
 
     .Platform               = 'x86Clang'
 
@@ -325,6 +327,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .LibrarianOptions       = 'rcs "%2" "%1"'
 
     .LibExtension           = '.a'
+    .ExeExtension           = ''
 
     .UseExceptions          = ' -fexceptions'
 ]
@@ -398,6 +401,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .LibrarianOptions       = 'rcs "%2" "%1"'
 
     .LibExtension           = '.a'
+    .ExeExtension           = ''
 
     .UseExceptions          = ' -fexceptions'
 ]
