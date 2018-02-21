@@ -14,19 +14,11 @@
 Using( .StandardEnvironment )
 Settings {}
 
-#if __WINDOWS__
-    Using( .VisualStudioToolChain )
-#endif
-
 // Compile a real file to create a non-trivial amount of per-object dependencies
 //------------------------------------------------------------------------------
-.CompilerInputFiles = '../../../Core/FileIO/FileIO.cpp'
-.CompilerOptions    + ' "-I../../.."'
+.CompilerInputFiles = 'Core/FileIO/FileIO.cpp'
+.CompilerOptions    + ' "-I."'
                     + ' -DDEBUG -D_DEBUG'
-#if __WINDOWS__
-                    + .WindowsIncludePaths
-                    + .VisualStudioIncludePaths
-#endif
 
 // Common options
 //------------------------------------------------------------------------------

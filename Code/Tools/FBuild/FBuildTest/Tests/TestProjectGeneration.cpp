@@ -151,22 +151,25 @@ void TestProjectGeneration::Test() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::TestFunction() const
 {
-    AStackString<> project( "../../../../tmp/Test/ProjectGeneration/testproj.vcxproj" );
-    AStackString<> solution( "../../../../tmp/Test/ProjectGeneration/testsln.sln" );
-    AStackString<> filters( "../../../../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
+    AStackString<> project( "../tmp/Test/ProjectGeneration/testproj.vcxproj" );
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/testsln.sln" );
+    AStackString<> filters( "../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
     EnsureFileDoesNotExist( project );
     EnsureFileDoesNotExist( solution );
     EnsureFileDoesNotExist( filters );
 
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestProjectGeneration/fbuild.bff";
-    options.m_ForceCleanBuild = true;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize() );
-
+    // do build
     TEST_ASSERT( fBuild.Build( AStackString<>( "TestSln" ) ) );
-    TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/ProjectGeneration/fbuild.fdb" ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/ProjectGeneration/fbuild.fdb" ) );
 
     EnsureFileExists( project );
     EnsureFileExists( solution );
@@ -185,8 +188,16 @@ void TestProjectGeneration::TestFunction() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::TestFunction_NoRebuild() const
 {
-    AStackString<> project( "../../../../tmp/Test/ProjectGeneration/testproj.vcxproj" );
-    AStackString<> filters( "../../../../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
+    AStackString<> project( "../tmp/Test/ProjectGeneration/testproj.vcxproj" );
+    AStackString<> filters( "../tmp/Test/ProjectGeneration/testproj.vcxproj.filters" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Data/TestProjectGeneration/fbuild.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/ProjectGeneration/fbuild.fdb" ) );
+
+    // Delete old files from previous runs
     EnsureFileExists( project );
     EnsureFileExists( filters );
 
@@ -206,12 +217,6 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
     #endif
 
     // do build
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestProjectGeneration/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
-    FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/ProjectGeneration/fbuild.fdb" ) );
-
     TEST_ASSERT( fBuild.Build( AStackString<>( "TestProj" ) ) );
 
     // Make sure files have not been changed
@@ -288,8 +293,8 @@ void TestProjectGeneration::TestFunction_Speed() const
 void TestProjectGeneration::IntellisenseAndCodeSense() const
 {
     // Parse bff
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestProjectGeneration/Intellisense/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Intellisense/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
@@ -297,16 +302,16 @@ void TestProjectGeneration::IntellisenseAndCodeSense() const
     TEST_ASSERT( fBuild.Build( AStackString<>( "Intellisense" ) ) );
 
     // Ensure VS Intellisense info is present
-    VCXProj_Intellisense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/ObjectList.vcxproj" );
-    VCXProj_Intellisense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/Library.vcxproj" );
-    VCXProj_Intellisense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/Executable.vcxproj" );
-    VCXProj_Intellisense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/Test.vcxproj" );
+    VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/ObjectList.vcxproj" );
+    VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Library.vcxproj" );
+    VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Executable.vcxproj" );
+    VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Test.vcxproj" );
 
     // Ensure XCode CodeSense info is present
-    XCodeProj_CodeSense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/ObjectList.xcodeproj/project.pbxproj" );
-    XCodeProj_CodeSense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/Library.xcodeproj/project.pbxproj" );
-    XCodeProj_CodeSense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/Executable.xcodeproj/project.pbxproj" );
-    XCodeProj_CodeSense_Check( "../../../../tmp/Test/ProjectGeneration/Intellisense/Test.xcodeproj/project.pbxproj" );
+    XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/ObjectList.xcodeproj/project.pbxproj" );
+    XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Library.xcodeproj/project.pbxproj" );
+    XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Executable.xcodeproj/project.pbxproj" );
+    XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Test.xcodeproj/project.pbxproj" );
 }
 
 // VCXProj_Intellisense_Check
@@ -447,16 +452,18 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
 //------------------------------------------------------------------------------
 void TestProjectGeneration::XCode() const
 {
-    AStackString<> project( "../../../../tmp/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj" );
-    EnsureFileDoesNotExist( project );
+    AStackString<> project( "../tmp/Test/ProjectGeneration/Test.xcodeproj/project.pbxproj" );
 
-    // do build
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestProjectGeneration/xcodeproject.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/xcodeproject.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
+    // Delete files from previous builds
+    EnsureFileDoesNotExist( project );
+
+    // do build
     TEST_ASSERT( fBuild.Build( AStackString<>( "XCodeProj" ) ) );
 
     // Check stats

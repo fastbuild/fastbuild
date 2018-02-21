@@ -157,14 +157,13 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
 //------------------------------------------------------------------------------
 void TestIncludeParser::TestMSVC_P() const
 {
-    FBuildOptions options;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
-    options.m_ConfigFile = "Data/TestIncludeParser/MSVC-P/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestIncludeParser/MSVC-P/fbuild.bff";
 
     FBuild fBuild( options );
     fBuild.Initialize();
 
-    const AStackString<> file( "../../../../tmp/Test/IncludeParser/MSVC-P/test.i" );
+    const AStackString<> file( "../tmp/Test/IncludeParser/MSVC-P/test.i" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( file );

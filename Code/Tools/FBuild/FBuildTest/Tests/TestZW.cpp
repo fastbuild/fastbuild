@@ -35,14 +35,11 @@ REGISTER_TESTS_END
 #if defined( __WINDOWS__ )
     void TestZW::Caching() const
     {
-        FBuildOptions baseOptions;
-        baseOptions.m_ConfigFile = "Data/TestZW/Caching/fbuild.bff";
-        baseOptions.m_ShowSummary = true; // required to generate stats for node count checks
+        FBuildTestOptions baseOptions;
+        baseOptions.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestZW/Caching/fbuild.bff";
 
-        const char * objFile = "../../../../tmp/Test/ZW/Caching/file.obj";
-        const char * dbFileName = "../../../../tmp/Test/ZW/Caching/fbuild.fdb";
-
-        EnsureFileDoesNotExist( objFile );
+        const char * objFile = "../tmp/Test/ZW/Caching/file.obj";
+        const char * dbFileName = "../tmp/Test/ZW/Caching/fbuild.fdb";
 
         // Build, writing to cache
         {
@@ -52,6 +49,9 @@ REGISTER_TESTS_END
 
             FBuild fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
+
+            EnsureFileDoesNotExist( objFile );
+
             TEST_ASSERT( fBuild.Build( AStackString<>( "Caching" ) ) );
             TEST_ASSERT( fBuild.SaveDependencyGraph( dbFileName ) );
 

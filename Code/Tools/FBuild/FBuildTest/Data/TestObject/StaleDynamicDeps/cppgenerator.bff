@@ -16,9 +16,8 @@ ObjectList( 'CPPGeneratorCompile' )
 {
     #if __WINDOWS__
         .CompilerOptions    + ' /MT'
-                            + .VisualStudioIncludePaths
     #endif
-    .CompilerInputFiles     = 'Data/TestObject/StaleDynamicDeps/CPPGeneratorMain.cpp'
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/CPPGeneratorMain.cpp'
     .CompilerOuputExtension = '.cpp'
     .CompilerOutputPath     + 'CPPGenerator/'
 }
@@ -29,8 +28,6 @@ Executable( 'CPPGenerator' )
     #if __WINDOWS__
         .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
                             + ' kernel32.lib'
-                            + ' msvcrt.lib'
-                            + ' /LIBPATH:"$VisualStudioPath$/VC/lib"'
-                            + .WindowsLibPaths
+                            + .CRTLibs_Static
     #endif
 }

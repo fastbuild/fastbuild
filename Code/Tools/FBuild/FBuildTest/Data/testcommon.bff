@@ -5,33 +5,12 @@
 //==============================================================================
 // Visual Studio
 //==============================================================================
-.VisualStudioPath       = '..\..\..\..\External\SDK\VS13.4'
-//.VisualStudioPath     = 'C:\Program Files (x86)\Microsoft Visual Studio 12.0'
+#include  "../../../../../External/SDK/VisualStudio/VisualStudio.bff"
+#include  "../../../../../External/SDK/Windows/Windows.bff"
 
-.VisualStudioToolChain =
+.VisualStudioBase =
 [
-    .Root               = '$VisualStudioPath$\VC\bin'
-    Compiler( 'Compiler-x86-Dist' )
-    {
-        .Root           = '$VisualStudioPath$\VC\bin'
-        .Executable     = '$Root$\cl.exe'
-        .ExtraFiles     = { '$Root$\c1.dll'
-                            '$Root$\c1xx.dll',
-                            '$Root$\c2.dll',
-                            '$Root$\mspft120.dll'
-                            '$Root$\1033\clui.dll'
-                            '$Root$\mspdb120.dll'
-                            '$Root$\msobj120.dll'
-                            '$Root$\mspdbcore.dll'
-                            '$Root$\mspdbsrv.exe'
-                          }
-    }
-    .Compiler           = 'Compiler-x86-Dist'
-    .CompilerX64        = '$Root$\amd64\cl.exe'
-    .Librarian          = '$Root$\lib.exe'
-    .Linker             = '$Root$\link.exe'
-
-    .BaseCompilerOptions= '"%1" /Fo"%2" /c /Z7 /W4 /WX /nologo'
+    .BaseCompilerOptions= ' "%1" /Fo"%2" /c /Z7 /W4 /WX /nologo'
                         + ' /D"WIN32_LEAN_AND_MEAN" /D_WIN32 /DWIN32 /D__WINDOWS__'
                         + ' /D"_CRT_SECURE_NO_WARNINGS"' // don't warn about unsafe functions
                         + ' /D"_WINSOCK_DEPRECATED_NO_WARNINGS"' // don't warn about deprecated winsock functions
@@ -42,26 +21,21 @@
     .LibrarianOptions   = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
     .LinkerOptions      = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1" /DEBUG'
 ]
+.VisualStudioToolChain_X86  = .VisualStudioBase
+                            + .ToolChain_VS_Windows_X86
+                            + .WindowsSDK_X86
+.VisualStudioToolChain_X64  = .VisualStudioBase
+                            + .ToolChain_VS_Windows_X64
+                            + .WindowsSDK_X64
 .VisualStudioOptionsDebug =
 [
     .Defines            = ' /DDEBUG /D_DEBUG'
 ]
-.VisualStudioIncludePaths = ' /I"$VisualStudioPath$\VC\include"'
-
-//==============================================================================
-// WindowsSDK
-//==============================================================================
-.WindowsSDK             = '..\..\..\..\External\SDK\Windows8.1'
-//.WindowsSDK           = 'C:\Program Files (x86)\Windows Kits\8.1'
-
-.WindowsIncludePaths    = ' /I"$WindowsSDK$/include/um"'
-                        + ' /I"$WindowsSDK$/include/shared"'
-.WindowsLibPaths        = ' /LIBPATH:"$WindowsSDK$/lib/winv6.3/um/x86"'
 
 //==============================================================================
 // Clang
 //==============================================================================
-.ClangPath              = '..\..\..\..\External\SDK\ClangForWindows\3.4'
+.ClangPath              = '../External/SDK/ClangForWindows/3.4' // TODO:B Make this use the same config as fbuild itself
 //.ClangPath            = 'C:\Program Files (x86)\LLVM'
 .WindowsClangToolChain =
 [
@@ -155,16 +129,16 @@
 //==============================================================================
 // Standard Environment
 //==============================================================================
-.StandardOutputBase         = '../../../../tmp'
+.StandardOutputBase         = '../tmp'
 .StandardEnvironment =
 [
     #if __WINDOWS__
         #import TMP
-        .Environment        = { 'PATH=$VisualStudioPath$\Common7\IDE\',
+        .Environment        = { 'PATH=$VS_PATH$',
                                 'TMP=$TMP$',
                                 'SystemRoot=C:\Windows' }
         .CachePath          = 'C:\.fbuild.cache'
-        Using( .VisualStudioToolChain )
+        Using( .VisualStudioToolChain_X86 )
     #endif
     #if __LINUX__
         .CachePath          = '/tmp/.fbuild.cache'
@@ -178,3 +152,5 @@
     // Default location for tmp files
     .Out        = .StandardOutputBase
 ]
+
+.TestRoot = 'Tools/FBuild/FBuildTest'

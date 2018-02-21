@@ -1,12 +1,12 @@
 
-// TODO:B Fix hardcoded path
-.ExternalPath = '..\..\..\..\External'
-.VSPath = '$ExternalPath$\SDK\VS13.2'
+#include "../testcommon.bff"
+
+.ExternalPath = '..\External'
 
 Settings
 {
     #import TMP
-    .Environment    = { "PATH=$VSPath$\Common7\IDE\;$VSPath$\VC\bin\amd64\",
+    .Environment    = { "PATH=$VS_PATH$",
                         "TMP=$TMP$",
                         "SystemRoot=C:\Windows" }
     .CachePath = 'c:\.fbuild.cache'
@@ -14,12 +14,12 @@ Settings
 
 .Compiler   = '$ExternalPath$\SDK\CUDA_6.5.14\CUDAToolkit\bin\nvcc.exe'
 
-.Out        = "..\..\..\..\tmp"
+.Out        = "..\tmp"
 .CompilerOutputPath = "$Out$\Test\CUDA\"
 
 ObjectList( "Cuda-Obj" )
 {
-    .CompilerInputFiles = "Data\TestCUDA\test.cu"
+    .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestCUDA/test.cu"
     .CompilerOutputPath = "$Out$\Test\CUDA\"
     .CompilerOptions    = "%1 -o %2 -c"
 }

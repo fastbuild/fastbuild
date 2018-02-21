@@ -18,7 +18,7 @@ Settings {}
 //------------------------------------------------------------------------------
 ObjectList( 'CustomPreprocessor' )
 {
-    .CompilerInputFiles         = "Data/TestObject/CustomPreprocessor/a.cpp"
+    .CompilerInputFiles         = "Tools/FBuild/FBuildTest/Data/TestObject/CustomPreprocessor/a.cpp"
 
     // Just use the normal compiler, but with some special options to make the input valid
     .Preprocessor               = .Compiler

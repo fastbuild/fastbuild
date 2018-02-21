@@ -80,28 +80,27 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 ]
 .ASan_Config =
 [
-    Using( .Release_Config )
-    .Config                         = 'ASan' // Override Config 
-
-    .CompilerOptions                = ' -fsanitize=address -fno-omit-frame-pointer'
+    .CompilerOptions                = ' -DRELEASE'
+                                    + ' -fsanitize=address -fno-omit-frame-pointer'
                                     + ' -fsanitize-coverage=trace-pc-guard' // These options are a valid for Clang <= 5.0.0:
                                     //+ ' -fsanitize=fuzzer-no-link'          // These options are expected to be valid for Clang > 5.0.0:
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=address'
 
+    .Config                         = 'ASan' 
 ]
 .MSan_Config =
 [
-    Using( .Release_Config )
-    .Config                         = 'MSan' // Override Config
-
-    .CompilerOptions                = ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
+    .CompilerOptions                = ' -DRELEASE'
+                                    + ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
                                     + ' -fsanitize-coverage=trace-pc-guard' // These options are a valid for Clang <= 5.0.0:
                                     //+ ' -fsanitize=fuzzer-no-link'          // These options are expected to be valid for Clang > 5.0.0:
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=memory'
+
+    .Config                         = 'MSan'
 ]
 
 //------------------------------------------------------------------------------
@@ -253,7 +252,12 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             // MS compatibility
                             + ' -fms-compatibility'
                             + ' -fms-extensions'
-                            + ' -fmsc-version=1910' // VS2017 equivalent
+                            #if USING_VS2013
+                                + ' -fmsc-version=1800' // VS2013 equivalent
+                            #endif
+                            #if USING_VS2017
+                                + ' -fmsc-version=1910' // VS2017 equivalent
+                            #endif
                             + ' -Xclang -flto-visibility-public-std' // LTO visibility matches MSVC behaviour
 
                             // as of v5.0.1, these warnings fire inside system headers
@@ -263,6 +267,9 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             + ' -Wno-expansion-to-defined'      // macro expansion producing 'defined' has undefined behavior [-Wexpansion-to-defined]
                             + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
                             + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
+                            #if USING_VS2013
+                                + ' -Wno-implicit-exception-spec-mismatch'
+                            #endif
 
                             // Extra warnings
                             + ' -Wshadow'
@@ -424,6 +431,10 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 //
 //------------------------------------------------------------------------------
 .OutputBase = '../tmp'
+#if BUILDING_FROM_TESTS
+    // FASTBuild builds itself as part of its tests, so we need a unique output path
+    .OutputBase = '../tmp/Test/TestBuildFBuild'
+#endif
 
 //------------------------------------------------------------------------------
 // Unity/Blob files (shared across configs)

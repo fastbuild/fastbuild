@@ -118,7 +118,7 @@ void FBuildTest::CheckStatsTotal( size_t numSeen, size_t numBuilt ) const
 
 // GetCodeDir
 //------------------------------------------------------------------------------
-void FBuildTest::GetCodeDir( AString & codeDir ) const
+/*static*/ void FBuildTest::GetCodeDir( AString & codeDir )
 {
     // we want the working dir to be the 'Code' directory
     TEST_ASSERT( FileIO::GetCurrentDir( codeDir ) );
@@ -137,6 +137,19 @@ bool FBuildTest::LoggingCallback( const char * message )
 {
     s_RecordedOutput.Append( message, AString::StrLen( message ) );
     return true; // continue logging like normal
+}
+
+// CONSTRUCTOR - FBuildTestOptions
+//------------------------------------------------------------------------------
+FBuildTestOptions::FBuildTestOptions()
+{
+    // Set the WorkingDir to be the source code "Code" dir
+    AStackString<> codeDir;
+    FBuildTest::GetCodeDir( codeDir );
+    SetWorkingDir( codeDir );
+
+    // Override defaults
+    m_ShowSummary = true; // required to generate stats for node count checks
 }
 
 //------------------------------------------------------------------------------

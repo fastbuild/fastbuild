@@ -18,8 +18,10 @@
 //------------------------------------------------------------------------------
 .Windows81_SDK_X86 =
 [
-    .CommonCompilerOptions          = ' -I"$Windows81_SDKBasePath$/include/um"'
+    .WindowsSDK_IncludePaths        = ' -I"$Windows81_SDKBasePath$/include/um"'
                                     + ' -I"$Windows81_SDKBasePath$/include/shared"'
+
+    .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
 
     .CompilerOptions                = .CommonCompilerOptions
@@ -33,8 +35,10 @@
 ]
 .Windows81_SDK_X64 =
 [
-    .CommonCompilerOptions          = ' -I"$Windows81_SDKBasePath$/include/um"'
+    .WindowsSDK_IncludePaths        = ' -I"$Windows81_SDKBasePath$/include/um"'
                                     + ' -I"$Windows81_SDKBasePath$/include/shared"'
+
+    .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
                                     + ' -DWIN64'
 

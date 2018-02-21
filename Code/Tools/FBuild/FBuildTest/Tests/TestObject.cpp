@@ -71,15 +71,14 @@ void TestObject::MSVCArgHelpers() const
 //------------------------------------------------------------------------------
 void TestObject::Preprocessor() const
 {
-    const char * configFile = "Data/TestObject/CustomPreprocessor/custompreprocessor.bff";
-    const char * database = "../../../../tmp/Test/Object/CustomPreprocessor/fbuild.fdb";
+    const char * configFile = "Tools/FBuild/FBuildTest/Data/TestObject/CustomPreprocessor/custompreprocessor.bff";
+    const char * database = "../tmp/Test/Object/CustomPreprocessor/fbuild.fdb";
 
     // Build
     {
         // Init
-        FBuildOptions options;
+        FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        options.m_ShowSummary = true; // required to generate stats for node count checks
         options.m_ForceCleanBuild = true;
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
@@ -97,9 +96,8 @@ void TestObject::Preprocessor() const
     // No Rebuild
     {
         // Init
-        FBuildOptions options;
+        FBuildTestOptions options;
         options.m_ConfigFile = configFile;
-        options.m_ShowSummary = true; // required to generate stats for node count checks
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 
@@ -119,23 +117,22 @@ void TestObject::Preprocessor() const
 //------------------------------------------------------------------------------
 void TestObject::TestStaleDynamicDeps() const
 {
-    const char* fileA = "../../../../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileA.h";
-    const char* fileB = "../../../../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileB.h";
-    const char* fileC = "../../../../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileC.h";
-    const char* database = "../../../../tmp/Test/Object/StaleDynamicDeps/fbuild.fdb";
+    const char* fileA = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileA.h";
+    const char* fileB = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileB.h";
+    const char* fileC = "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/FileC.h";
+    const char* database = "../tmp/Test/Object/StaleDynamicDeps/fbuild.fdb";
 
-    // Generate some header files
+    // Build CPP Generator
     {
-        // Need FBuild for CleanPath
-        FBuildOptions options;
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/cppgenerator.bff";
+        options.m_ForceCleanBuild = true;
         FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
 
-        // Ensure output path exists
-        AStackString<> fullOutputPath;
-        NodeGraph::CleanPath( AStackString<>( fileA ), fullOutputPath );
-        TEST_ASSERT( Node::EnsurePathExistsForFile( fullOutputPath ) );
-
-        // Create files
+        // Generate some header files
+        EnsureDirExists( "../tmp/Test/Object/StaleDynamicDeps/GeneratedInput/" );
         FileStream f;
         TEST_ASSERT( f.Open( fileA, FileStream::WRITE_ONLY ) );
         f.Close();
@@ -143,16 +140,6 @@ void TestObject::TestStaleDynamicDeps() const
         f.Close();
         TEST_ASSERT( f.Open( fileC, FileStream::WRITE_ONLY ) );
         f.Close();
-    }
-
-    // Build CPP Generator
-    {
-        // Init
-        FBuildOptions options;
-        options.m_ConfigFile = "Data/TestObject/StaleDynamicDeps/cppgenerator.bff";
-        options.m_ForceCleanBuild = true;
-        FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
         TEST_ASSERT( fBuild.Build( AStackString<>( "CPPGenerator" ) ) );
@@ -161,10 +148,9 @@ void TestObject::TestStaleDynamicDeps() const
     // Build using CPP Generator (clean)
     {
         // Init
-        FBuildOptions options;
-        options.m_ConfigFile = "Data/TestObject/StaleDynamicDeps/staledeps.bff";
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/staledeps.bff";
         options.m_ForceCleanBuild = true;
-        options.m_ShowSummary = true; // required to generate stats for node count checks
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
@@ -179,10 +165,10 @@ void TestObject::TestStaleDynamicDeps() const
         CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
         CheckStatsNode ( 2,     2,      Node::COMPILER_NODE );
         CheckStatsNode ( 4,     4,      Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity
-    }
 
-    // Delete one of the generated headers
-    EnsureFileDoesNotExist( fileB );
+        // Delete one of the generated headers
+        EnsureFileDoesNotExist( fileB );
+    }
 
     // TODO:C Changes to the way dependencies are managed might make this unnecessary
     #if defined( __OSX__ )
@@ -194,9 +180,8 @@ void TestObject::TestStaleDynamicDeps() const
     // Build Again
     {
         // Init
-        FBuildOptions options;
-        options.m_ConfigFile = "Data/TestObject/StaleDynamicDeps/staledeps.bff";
-        options.m_ShowSummary = true; // required to generate stats for node count checks
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/staledeps.bff";
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( database ) );
 

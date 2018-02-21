@@ -6,7 +6,9 @@
 // Use the standard test environment
 //------------------------------------------------------------------------------
 #include "../../testcommon.bff"
-Settings {
+Using( .StandardEnvironment )
+Settings
+{
     .Workers = { "127.0.0.1" }
 }
 
@@ -17,12 +19,7 @@ Settings {
 //------------------------------------------------------------------------------
 ObjectList( 'ErrorsAreCorrectlyReported-MSVC' )
 {
-    // MSVC - Windows only
-    #if __WINDOWS__
-        Using( .VisualStudioToolChain )
-    #endif
-
-    .CompilerInputFiles     = 'Data/TestDistributed/ErrorsAreCorrectlyReported/Error.cpp'
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/Error.cpp'
     .CompilerOutputPath     + 'MSVC/'
 }
 
@@ -41,6 +38,6 @@ ObjectList( 'ErrorsAreCorrectlyReported-Clang' )
         // TODO:B Enable test for Linux
     #endif
 
-    .CompilerInputFiles     = 'Data/TestDistributed/ErrorsAreCorrectlyReported/Error.cpp'
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/Error.cpp'
     .CompilerOutputPath     + 'Clang/'
 }

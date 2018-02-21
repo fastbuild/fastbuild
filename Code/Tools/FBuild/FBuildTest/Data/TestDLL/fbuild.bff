@@ -15,11 +15,10 @@ Settings {}
 .DLLOptions =
 [
     #if __WINDOWS__
+        Using( .VisualStudioToolChain_X86 )
         .CompilerOptions    + ' /DLL /MT'
         .LinkerOptions      + ' /DLL'
-                            + .WindowsLibPaths
-                            + ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
-                            + ' libcmt.lib'
+                            + .CRTLibs_Static
                             + ' kernel32.lib'
     #endif
     #if __LINUX__
@@ -35,8 +34,8 @@ Settings {}
 ObjectList( 'DLLTest' )
 {
     Using( .DLLOptions )
-    .CompilerInputFiles = 'Data/TestDLL/a.cpp'
-    .CompilerOptions    + ' "-IData/TestDLL"'
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestDLL/a.cpp'
+    .CompilerOptions    + ' "-ITools/FBuild/FBuildTest/Data/TestDLL"'
     #if __WINDOWS__
         .CompilerOptions    + ' -DDLL_A_EXPORT'
     #endif
@@ -54,8 +53,8 @@ DLL
 ObjectList( "DLLTestA" )
 {
     Using( .DLLOptions )
-    .CompilerInputFiles = 'Data/TestDLL/a.cpp'
-    .CompilerOptions    + ' "-IData/TestDLL"'
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestDLL/a.cpp'
+    .CompilerOptions    + ' "-ITools/FBuild/FBuildTest/Data/TestDLL"'
     #if __WINDOWS__
         .CompilerOptions    + ' -DDLL_A_EXPORT'
     #endif
@@ -63,7 +62,7 @@ ObjectList( "DLLTestA" )
 ObjectList( 'DLLTestB' )
 {
     Using( .DLLOptions )
-    .CompilerInputFiles = 'Data/TestDLL/b.cpp'
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestDLL/b.cpp'
     #if __WINDOWS__
         .CompilerOptions    + ' -DDLL_B_EXPORT'
     #endif
@@ -93,36 +92,36 @@ ObjectList( "DLLPCHTest" )
 {
     Using( .DLLOptions )
     #if __WINDOWS__
-        .PCHInputFile               = 'Data/TestDLL/PrecompiledHeader.cpp'
+        .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestDLL/PrecompiledHeader.cpp'
         .PCHOutputFile              = '$Out$/Test/DLL/PrecompiledHeader.pch'
         .PCHOptions                 = '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /W4 /WX /Z7 /Fp"%2" /nologo /c'
                                     + ' -DDLL_A_EXPORT'
     #endif
     #if __LINUX__
-        .PCHInputFile               = "Data/TestDLL/PrecompiledHeader.h"
+        .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestDLL/PrecompiledHeader.h"
         .PCHOutputFile              = "$Out$/Test/DLL/PrecompiledHeader.h.gch"
         .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux
     #endif
     #if __OSX__
-        .PCHInputFile               = "Data/TestDLL/PrecompiledHeader.h"
+        .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestDLL/PrecompiledHeader.h"
         .PCHOutputFile              = "$Out$/Test/DLL/PrecompiledHeader.pch"
         .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on OS X
     #endif
 
-    .CompilerInputFiles = 'Data/TestDLL/a.cpp'
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestDLL/a.cpp'
     #if __WINDOWS__
         .CompilerOptions        + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
-                                + ' /I"Data/TestDLL"'
+                                + ' /I"Tools/FBuild/FBuildTest/Data/TestDLL"'
                                 + ' -DDLL_A_EXPORT'
     #endif
     #if __LINUX__
         .CompilerOptions        + ' -Winvalid-pch -H'
                                 + ' "-I$Out$/Test/PrecompiledHeaders"'
-                                + ' "-IData/TestDLL"'
+                                + ' "-ITools/FBuild/FBuildTest/Data/TestDLL"'
     #endif
     #if __OSX__
         .CompilerOptions        + ' -include-pch "$PCHOutputFile$" -H'
-                                + ' "-IData/TestDLL"'
+                                + ' "-ITools/FBuild/FBuildTest/Data/TestDLL"'
     #endif
 }
 
@@ -137,7 +136,7 @@ DLL( "DllPCH" )
 //--------------------
 ObjectList( 'Exe-Lib' )
 {
-    .CompilerInputFiles = 'Data/TestDLL/exe.cpp'
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestDLL/exe.cpp'
 }
 
 Executable( 'Exe' )
@@ -146,9 +145,7 @@ Executable( 'Exe' )
     .Libraries          = { 'Exe-Lib'
                             'DllA' }
     #if __WINDOWS__
-        .LinkerOptions      + .WindowsLibPaths
-                            + ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
-                            + ' libcmt.lib'
+        .LinkerOptions      + .CRTLibs_Static
                             + ' kernel32.lib'
     #endif
 }

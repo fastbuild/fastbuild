@@ -66,8 +66,8 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers, bool shouldFail, bool allowRace ) const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDistributed/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
@@ -84,7 +84,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
 
     // clean up anything left over from previous runs
     Array< AString > files;
-    FileIO::GetFiles( AStackString<>( "../../../../tmp/Test/Distributed" ), AStackString<>( "*.*" ), true, &files );
+    FileIO::GetFiles( AStackString<>( "../tmp/Test/Distributed" ), AStackString<>( "*.*" ), true, &files );
     const AString * iter = files.Begin();
     const AString * const end = files.End();
     for ( ; iter != end; ++iter )
@@ -114,7 +114,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
 //------------------------------------------------------------------------------
 void TestDistributed::TestWith1RemoteWorkerThread() const
 {
-    const char * target( "../../../../tmp/Test/Distributed/dist.lib" );
+    const char * target( "../tmp/Test/Distributed/dist.lib" );
     TestHelper( target, 1 );
 }
 
@@ -122,7 +122,7 @@ void TestDistributed::TestWith1RemoteWorkerThread() const
 //------------------------------------------------------------------------------
 void TestDistributed::TestWith4RemoteWorkerThreads() const
 {
-    const char * target( "../../../../tmp/Test/Distributed/dist.lib" );
+    const char * target( "../tmp/Test/Distributed/dist.lib" );
     TestHelper( target, 4 );
 }
 
@@ -130,7 +130,7 @@ void TestDistributed::TestWith4RemoteWorkerThreads() const
 //------------------------------------------------------------------------------
 void TestDistributed::WithPCH() const
 {
-    const char * target( "../../../../tmp/Test/Distributed/distpch.lib" );
+    const char * target( "../tmp/Test/Distributed/distpch.lib" );
     TestHelper( target, 4 );
 }
 
@@ -146,15 +146,15 @@ void TestDistributed::RegressionTest_RemoteCrashOnErrorFormatting()
 void TestDistributed::TestLocalRace()
 {
     {
-        const char * target( "../../../../tmp/Test/Distributed/dist.lib" );
+        const char * target( "../tmp/Test/Distributed/dist.lib" );
         TestHelper( target, 1, false, true ); // allow race
     }
     {
-        const char * target( "../../../../tmp/Test/Distributed/dist.lib" );
+        const char * target( "../tmp/Test/Distributed/dist.lib" );
         TestHelper( target, 4, false, true ); // allow race
     }
     {
-        const char * target( "../../../../tmp/Test/Distributed/distpch.lib" );
+        const char * target( "../tmp/Test/Distributed/distpch.lib" );
         TestHelper( target, 4, false, true ); // allow race
     }
     {
@@ -168,13 +168,12 @@ void TestDistributed::TestLocalRace()
 void TestDistributed::RemoteRaceWinRemote()
 {
     // Check that a remote race that is won remotely is correctly handled
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDistributed/RemoteRaceWinRemote/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceWinRemote/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_ForceCleanBuild = true;
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_ShowSummary = true;
     options.m_NoLocalConsumptionOfRemoteJobs = true;
     FBuild fBuild( options );
 
@@ -195,7 +194,7 @@ void TestDistributed::AnonymousNamespaces()
     // in anonymouse namespaces don't cause link errors.  This is because
     // the MS compiler uses the path to the cpp file being compiled to
     // generate the symbol name (it doesn't respect the #line directives)
-    const char * target( "../../../../tmp/Test/Distributed/AnonymousNamespaces/AnonymousNamespaces.lib" );
+    const char * target( "../tmp/Test/Distributed/AnonymousNamespaces/AnonymousNamespaces.lib" );
     TestHelper( target, 1 );
 }
 
@@ -203,7 +202,7 @@ void TestDistributed::AnonymousNamespaces()
 //------------------------------------------------------------------------------
 void TestDistributed::TestForceInclude() const
 {
-    const char * target( "../../../../tmp/Test/Distributed/ForceInclude/ForceInclude.lib" );
+    const char * target( "../tmp/Test/Distributed/ForceInclude/ForceInclude.lib" );
     TestHelper( target, 4 );
 }
 
@@ -211,8 +210,8 @@ void TestDistributed::TestForceInclude() const
 //------------------------------------------------------------------------------
 void TestDistributed::ErrorsAreCorrectlyReported() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
@@ -235,7 +234,7 @@ void TestDistributed::ErrorsAreCorrectlyReported() const
             TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-MSVC" ) ) );
 
             // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "error C2143: syntax error : missing ';' before '}'" ) );
+            TEST_ASSERT( GetRecordedOutput().Find( "error C2143" ) && GetRecordedOutput().Find( "missing ';' before '}'" ) );
         }
     #endif
 
@@ -258,8 +257,8 @@ void TestDistributed::ErrorsAreCorrectlyReported() const
 //------------------------------------------------------------------------------
 void TestDistributed::TestZiDebugFormat() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDistributed/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
@@ -282,8 +281,8 @@ void TestDistributed::TestZiDebugFormat() const
 //------------------------------------------------------------------------------
 void TestDistributed::TestZiDebugFormat_Local() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDistributed/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_ForceCleanBuild = true;
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
@@ -303,8 +302,8 @@ void TestDistributed::TestZiDebugFormat_Local() const
 //------------------------------------------------------------------------------
 void TestDistributed::D8049_ToolLongDebugRecord() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDistributed/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker

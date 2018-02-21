@@ -11,13 +11,12 @@ Settings {} // Activate standard settings
 ObjectList( 'CachePlugin-Lib-X64' )
 {
 #if __WINDOWS__
-    .Compiler           = .CompilerX64
-    .CompilerOptions    + .VisualStudioIncludePaths
+    Using( .VisualStudioToolChain_X64 )
 #endif
 #if __LINUX__
     .CompilerOptions    + ' -fPIC'
 #endif
-    .CompilerInputFiles = "Data/TestCachePlugin/Plugin.cpp"
+    .CompilerInputFiles = "$TestRoot$/Data/TestCachePlugin/Plugin.cpp"
     .CompilerOutputPath = "$Out$/Test/CachePlugin/X64/"
 }
 
@@ -26,12 +25,11 @@ ObjectList( 'CachePlugin-Lib-X64' )
 DLL( 'Plugin-DLL-X64' )
 {
     #if __WINDOWS__
+        Using( .VisualStudioToolChain_X64 )
         .LinkerOptions      + ' /DLL'
-                            + ' LIBCMT.lib'
+                            + .CRTLibs_Static
                             + ' OLDNAMES.LIB'
                             + ' kernel32.lib'
-                            + ' /LIBPATH:"$VisualStudioPath$\VC\lib\amd64"'
-                            + ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x64"'
         .LinkerOutput       = '$Out$/Test/CachePlugin/X64/CachePlugin.dll'
     #endif
     #if __LINUX__
@@ -51,8 +49,7 @@ DLL( 'Plugin-DLL-X64' )
     //------------------------------------------------------------------------------
     ObjectList( 'CachePlugin-Lib-X86' )
     {
-        .CompilerOptions    + .VisualStudioIncludePaths
-        .CompilerInputFiles = "Data/TestCachePlugin/Plugin.cpp"
+        .CompilerInputFiles = "$TestRoot$/Data/TestCachePlugin/Plugin.cpp"
         .CompilerOutputPath = "$Out$/Test/CachePlugin/X86/"
     }
 
@@ -61,11 +58,9 @@ DLL( 'Plugin-DLL-X64' )
     DLL( 'Plugin-DLL-X86' )
     {
         .LinkerOptions      + ' /DLL'
-                            + ' LIBCMT.lib'
+                            + .CRTLibs_Static
                             + ' OLDNAMES.LIB'
                             + ' kernel32.lib'
-                            + ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
-                            + ' /LIBPATH:"$WindowsSDK$\Lib\winv6.3\um\x86"'
         .LinkerOutput       = '$Out$/Test/CachePlugin/X86/CachePlugin.dll'
 
         .Libraries          = { 'CachePlugin-Lib-X86' }

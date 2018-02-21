@@ -7,6 +7,7 @@
 #include "TestFramework/UnitTest.h"
 
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
+#include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -37,12 +38,21 @@ protected:
     void CheckStatsTotal( size_t numSeen, size_t numBuilt ) const;
 
     // other helpers
-    void GetCodeDir( AString & codeDir ) const;
+    friend class FBuildTestOptions;
+    static void GetCodeDir( AString & codeDir );
 
     const AString & GetRecordedOutput() const { return s_RecordedOutput; }
 private:
     static bool LoggingCallback( const char * message );
     static AString s_RecordedOutput;
+};
+
+// FBuildTestOptions
+//------------------------------------------------------------------------------
+class FBuildTestOptions : public FBuildOptions
+{
+public:
+    FBuildTestOptions();
 };
 
 //------------------------------------------------------------------------------

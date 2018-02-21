@@ -11,24 +11,24 @@ Settings {} // use Standard Environment
 
 Library
 {
-    .CompilerInputPath  = "Data\TestBuildAndLinkLibrary\"
+    .CompilerInputPath  = "$TestRoot$/Data\TestBuildAndLinkLibrary\"
     .LibrarianOutput    = "$Out$\Test\BuildAndLinkLibrary\test.lib"
 }
 
 // merge libraries
 Library( 'libA' )
 {
-    .CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\a.cpp'
+    .CompilerInputFiles = '$TestRoot$/Data\TestBuildAndLinkLibrary\a.cpp'
     .LibrarianOutput    = '$Out$\Test\BuildAndLinkLibrary\a.lib'
 }
 Library( 'libB' )
 {
-    .CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\b.cpp'
+    .CompilerInputFiles = '$TestRoot$/Data\TestBuildAndLinkLibrary\b.cpp'
     .LibrarianOutput    = '$Out$\Test\BuildAndLinkLibrary\b.lib'
 }
 ObjectList( 'objListC' )
 {
-    .CompilerInputFiles = 'Data\TestBuildAndLinkLibrary\c.cpp'
+    .CompilerInputFiles = '$TestRoot$/Data\TestBuildAndLinkLibrary\c.cpp'
 }
 Library( 'libMerged' )
 {

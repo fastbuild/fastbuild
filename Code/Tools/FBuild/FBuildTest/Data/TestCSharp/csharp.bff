@@ -21,7 +21,7 @@ Alias( 'CSharpCompiler' )
 ;
 CSAssembly( "CSharp-Single-Target" )
 {
-    .CompilerInputFiles = "Data/TestCSharp/a.cs"
+    .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestCSharp/a.cs"
     .CompilerOutput     = "$Out$/Test/CSharp/csharpsingle.dll"
 }
 
@@ -30,7 +30,7 @@ CSAssembly( "CSharp-Single-Target" )
 ;
 CSAssembly( "CSharp-Multi-Target" )
 {
-    .CompilerInputPath      = "Data/TestCSharp/"
+    .CompilerInputPath      = "Tools/FBuild/FBuildTest/Data/TestCSharp/"
     .CompilerOutput         = "$Out$/Test/CSharp/csharpmulti.dll"
 }
 
@@ -39,13 +39,13 @@ CSAssembly( "CSharp-Multi-Target" )
 ;
 CSAssembly( "CSharp-AssemblyA" )
 {
-    .CompilerInputFiles     = "Data/TestCSharp/a.cs"
+    .CompilerInputFiles     = "Tools/FBuild/FBuildTest/Data/TestCSharp/a.cs"
     .CompilerOutput         = "$Out$/Test/CSharp/csharpassemblya.dll"
 }
 
 CSAssembly( "CSharp-AssemblyB" )
 {
-    .CompilerInputFiles     = "Data/TestCSharp/b.cs"
+    .CompilerInputFiles     = "Tools/FBuild/FBuildTest/Data/TestCSharp/b.cs"
     .CompilerOutput         = "$Out$/Test/CSharp/csharpassemblyb.dll"
     .CompilerOptions        = '/reference:"%3" $CompilerOptions$'
     .CompilerReferences     = "CSharp-AssemblyA"
@@ -53,7 +53,7 @@ CSAssembly( "CSharp-AssemblyB" )
 
 CSAssembly( "CSharp-AssemblyC" )
 {
-    .CompilerInputFiles     = "Data/TestCSharp/c.cs"
+    .CompilerInputFiles     = "Tools/FBuild/FBuildTest/Data/TestCSharp/c.cs"
     .CompilerOutput         = "$Out$/Test/CSharp/csharpassemblyc.dll"
     .CompilerOptions        = '/reference:"%3" $CompilerOptions$'
     .CompilerReferences     = { "CSharp-AssemblyA", "CSharp-AssemblyB" }

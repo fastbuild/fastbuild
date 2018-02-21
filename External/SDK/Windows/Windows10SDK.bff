@@ -19,9 +19,11 @@
 //------------------------------------------------------------------------------
 .Windows10_SDK_X86 =
 [
-    .CommonCompilerOptions          = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
+    .WindowsSDK_IncludePaths        = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
                                     + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
                                     + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
+
+    .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
 
     .CompilerOptions                = .CommonCompilerOptions
@@ -36,9 +38,11 @@
 ]
 .Windows10_SDK_X64 =
 [
-    .CommonCompilerOptions          = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
+    .WindowsSDK_IncludePaths        = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
                                     + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
                                     + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
+
+    .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
                                     + ' -DWIN64'
 

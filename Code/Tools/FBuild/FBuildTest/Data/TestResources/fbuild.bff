@@ -6,44 +6,26 @@
 Using( .StandardEnvironment )
 Settings {} // Activate standard settings
 
-// paths needed for resource compilation
-.WindowsSDKBasePath     = '$WindowsSDK$'
-.WindowsIncludePaths    = ' /I"$WindowsSDKBasePath$/include/um"'
-                        + ' /I"$WindowsSDKBasePath$/include/shared"'
-.VSBasePath             = '$VisualStudioPath$/VC'
-
-// Tools
-Compiler( 'ResourceCompiler' )
-{
-    .Executable         = '$WindowsSDKBasePath$\bin\x86\RC.exe'
-    .CompilerFamily     = 'custom'
-}
-//.ResourceConverter    = '$VSBasePath$\bin\cvtres.exe'
-//.Compiler         = '$VSBasePath$\bin\cl.exe'
-//.Librarian            = '$VSBasePath$\bin\lib.exe'
-//.Linker               = "$VSBasePath$\bin\link.exe"
-
 // Test output
-.CompilerOutputPath     = '../../../../tmp/Test/Resources/'
+.CompilerOutputPath     = '../tmp/Test/Resources/'
 
 // Resources
 //------------------------------------------------------------------------------
 ObjectList( 'resources' )
 {
     .Compiler               = 'ResourceCompiler'
-    .CompilerInputFiles     = "Data\TestResources\resource.rc"
-    .CompilerOptions        = '/nologo /fo%2 $WindowsIncludePaths$ %1'
+    .CompilerOptions        = '/nologo /fo%2'
+                            + .WindowsSDK_IncludePaths
+                            + ' %1' // Output must be last
+    .CompilerInputFiles     = "Tools/FBuild/FBuildTest/Data/TestResources/resource.rc"
     .CompilerOutputExtension= '.res'
 }
-.LinkerOptions      = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /MACHINE:X86 /OUT:%2 %1'
 
 // Lib
 //------------------------------------------------------------------------------
 Library( 'exe-lib' )
 {
-    .CompilerInputFiles     = "Data\TestResources\main.cpp"
-    .CompilerOptions        = '"%1" /Fo"%2" /nologo /c $WindowsIncludePaths$ /I"$VSBasePath$\include"'
-    .LibrarianOptions       = '/NOLOGO /NODEFAULTLIB /OUT:"%2" "%1"'
+    .CompilerInputFiles     = "Tools/FBuild/FBuildTest/Data/TestResources/main.cpp"
     .LibrarianOutput        = '$Out$\Test\Resources\exe.lib'
 }
 
@@ -54,14 +36,10 @@ Executable( 'exe' )
     // must link objects so the resources work properly
     .LinkerLinkObjects  = true
 
-    .LinkerOptions      = "/NOLOGO /OUT:%2 %1 /MACHINE:X86"
-                        + " /IGNORE:4001" ; don't complain about linking libs only
-                        + " /SUBSYSTEM:WINDOWS"
-                        + ' /LIBPATH:"$VSBasePath$\lib"'
-                        + ' /LIBPATH:"$WindowsSDKBasePath$\Lib\winv6.3\um\x86"'
-                        + ' libcmt.lib'
+    .LinkerOptions      + " /SUBSYSTEM:WINDOWS"
+                        + .CRTLibs_Static
+                        + ' kernel32.lib'
                         + ' User32.lib'
-                        + ' /MACHINE:X86'
     .LinkerOutput       = "$Out$\Test\Resources\exe.exe"
     .Libraries          = { 'exe-lib',
                             'resources' }
