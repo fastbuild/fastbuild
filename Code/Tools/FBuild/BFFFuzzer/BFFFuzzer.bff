@@ -6,28 +6,13 @@
 
     // Unity
     //--------------------------------------------------------------------------
+    Unity( '$ProjectName$-Unity' )
     {
-        // Common options
         .UnityInputPath             = '$ProjectPath$\'
         .UnityOutputPath            = '$OutputBase$\Unity\$ProjectPath$\'
-
-        // Windows
-        Unity( '$ProjectName$-Unity-Windows' )
-        {
-        }
-
-        // Linux
-        Unity( '$ProjectName$-Unity-Linux' )
-        {
-        }
-
-        // OSX
-        Unity( '$ProjectName$-Unity-OSX' )
-        {
-        }
     }
 
-    // Linux (Clang)
+    // Executable
     //--------------------------------------------------------------------------
     // These options are a valid for Clang <= 5.0.0:
     .ExtraLinkerOptions_ASan = ' -lLLVMFuzzer'
@@ -42,15 +27,16 @@
         Using( .Config )
         .OutputBase + '\$Platform$-$Config$'
 
-        // Objects
+        // Library
+        //--------------------------------------------------------------------------
         ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
             // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity-Linux'
+            .CompilerInputUnity         = '$ProjectName$-Unity'
 
             // Output
-            .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
         }
 
         // Executable
@@ -62,7 +48,7 @@
                                             'Core-Lib-$Platform$-$Config$',
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }
-            .LinkerOutput               = '$OutputBase$\Tools\FBuild\BFFFuzzer\bfffuzzer'
+            .LinkerOutput               = '$OutputBase$/$ProjectPath$/bfffuzzer$ExeExtension$'
             .LinkerOptions              + ' -pthread -ldl -lrt'
                                         + .'ExtraLinkerOptions_$Config$'
         }
