@@ -235,12 +235,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             // MS compatibility
                             + ' -fms-compatibility'
                             + ' -fms-extensions'
-                            #if USING_VS2013
-                                + ' -fmsc-version=1800' // VS2013 equivalent
-                            #endif
-                            #if USING_VS2017
-                                + ' -fmsc-version=1910' // VS2017 equivalent
-                            #endif
+                            + ' -fmsc-version=$MSC_VER$'
                             + ' -Xclang -flto-visibility-public-std' // LTO visibility matches MSVC behaviour
 
                             // as of v5.0.1, these warnings fire inside system headers
@@ -437,7 +432,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .OutputDirectory            = '^$(SolutionDir)\..\tmp2'
     .IntermediateDirectory      = '^$(SolutionDir)\..\tmp2'
     .BuildLogFile               = '^$(SolutionDir)\..\tmp2\^$(ProjectName)-^$(Configuration).log'
-    .Platform                   = 'Win32' // unused
+    .Platform                   = 'x64'
     .PlatformToolset            = '$VS_PlatformToolset$'
 ]
 
@@ -656,7 +651,7 @@ Alias( 'All+Tests' )
         .Folder_0_External =
         [
             .Path           = '0. External'
-            .Projects       = { 'LZ4-proj' }
+            .Projects       = { 'LZ4-proj', 'VisualStudio-proj', 'Windows-proj' }
         ]
         .Folder_1_Test =
         [

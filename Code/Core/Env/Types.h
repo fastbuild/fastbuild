@@ -109,7 +109,8 @@ typedef signed int          int32_t;
     #endif
 #endif
 
-#if defined( _MSC_VER ) && _MSC_VER < 1900
+// Versions of Visual Studio prior to 2017 don't manage noexcept properly
+#if defined( _MSC_VER ) && ( _MSC_VER < 1910 ) && !defined( __clang__ )
     #define NOEXCEPT
 #else
     #define NOEXCEPT noexcept
