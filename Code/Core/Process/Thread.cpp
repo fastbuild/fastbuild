@@ -251,6 +251,19 @@ public:
     #endif
 }
 
+// DetachThread
+//------------------------------------------------------------------------------
+/*static*/ void Thread::DetachThread( ThreadHandle handle )
+{
+    #if defined( __WINDOWS__ )
+        (void)handle; // Nothing to do
+    #elif defined( __APPLE__ ) || defined(__LINUX__)
+        VERIFY( pthread_detach( (pthread_t)handle ) == 0 );
+    #else
+        #error Unknown platform
+    #endif
+}
+
 // CloseHandle
 //------------------------------------------------------------------------------
 /*static*/ void Thread::CloseHandle( ThreadHandle h )
