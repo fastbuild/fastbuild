@@ -117,11 +117,10 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 ]
 .Profile_Optimizations_MSVC =
 [
-    .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /GL /Gy /Gw /GR- /analyze /Zo'
+    .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /analyze /Zo'
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
-    .LibrarianOptions               = ' /LTCG'
-    .LinkerOptions                  = ' /LTCG /OPT:REF,ICF'
+    .LinkerOptions                  = ' /OPT:REF,ICF'
 ]
 .Release_Optimizations_MSVC =
 [
@@ -695,7 +694,9 @@ Alias( 'All+Tests' )
                                         'FBuildCore-xcodeproj'
                                         'FBuildTest-xcodeproj'
                                         'FBuildWorker-xcodeproj'
-                                        'LZ4-xcodeproj' }
+                                        'LZ4-xcodeproj'
+                                        'OSUI-xcodeproj'
+                                        'TestFramework-xcodeproj' }
     
         .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = 'all-x64OSX-Debug' ]
         .ProjectOSXProfile      = [ .Config = 'Profile' .Target = 'all-x64OSX-Profile' ]
