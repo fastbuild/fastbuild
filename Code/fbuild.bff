@@ -82,8 +82,6 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 [
     .CompilerOptions                = ' -DRELEASE'
                                     + ' -fsanitize=address -fno-omit-frame-pointer'
-                                    + ' -fsanitize-coverage=trace-pc-guard' // These options are a valid for Clang <= 5.0.0:
-                                    //+ ' -fsanitize=fuzzer-no-link'          // These options are expected to be valid for Clang > 5.0.0:
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=address'
@@ -94,13 +92,18 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 [
     .CompilerOptions                = ' -DRELEASE'
                                     + ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
-                                    + ' -fsanitize-coverage=trace-pc-guard' // These options are a valid for Clang <= 5.0.0:
-                                    //+ ' -fsanitize=fuzzer-no-link'          // These options are expected to be valid for Clang > 5.0.0:
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=memory'
 
     .Config                         = 'MSan'
+]
+.Fuzzer_Config =
+[
+    .CompilerOptions                = ' -fsanitize-coverage=trace-pc-guard' // These options are a valid for Clang <= 5.0.0:
+                                    //+ ' -fsanitize=fuzzer-no-link'          // These options are expected to be valid for Clang > 5.0.0:
+    .CompilerOptionsC               = .CompilerOptions
+    .CompilerOptionsPCH             = .CompilerOptions
 ]
 
 //------------------------------------------------------------------------------
@@ -375,9 +378,11 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             + .Profile_Optimizations
 .X64ClangASanConfig_Linux   = .X64ClangBaseConfig_Linux
                             + .ASan_Config
+                            + .Fuzzer_Config
                             + .Release_Optimizations
 .X64ClangMSanConfig_Linux   = .X64ClangBaseConfig_Linux
                             + .MSan_Config
+                            + .Fuzzer_Config
                             + .Release_Optimizations
 
 // OSX
