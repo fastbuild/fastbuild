@@ -42,6 +42,7 @@ public:
                                       uint32_t stackSize = ( 64 * KILOBYTE ),
                                       void * userData = nullptr
                                     );
+    static int WaitForThread( ThreadHandle handle );
     static int WaitForThread( ThreadHandle handle, uint32_t timeoutMS, bool & timedOut );
     static void CloseHandle( ThreadHandle h );
 

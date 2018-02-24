@@ -28,7 +28,6 @@
 //------------------------------------------------------------------------------
 Server::Server( uint32_t numThreadsInJobQueue )
     : m_ShouldExit( false )
-    , m_Exited( false )
     , m_ClientList( 32, true )
 {
     m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
@@ -46,10 +45,7 @@ Server::~Server()
 {
     m_ShouldExit = true;
     JobQueueRemote::Get().WakeMainThread();
-    while ( m_Exited == false )
-    {
-        Thread::Sleep( 1 );
-    }
+    Thread::WaitForThread( m_Thread );
 
     ShutdownAllConnections();
 
@@ -519,8 +515,6 @@ void Server::ThreadFunc()
 
         JobQueueRemote::Get().MainThreadWait( 100 );
     }
-
-    m_Exited = true;
 }
 
 // FindNeedyClients

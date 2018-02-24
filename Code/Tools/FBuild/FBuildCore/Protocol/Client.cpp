@@ -40,7 +40,6 @@ Client::Client( const Array< AString > & workerList,
                 bool detailedLogging )
     : m_WorkerList( workerList )
     , m_ShouldExit( false )
-    , m_Exited( false )
     , m_DetailedLogging( detailedLogging )
     , m_WorkerConnectionLimit( workerConnectionLimit )
     , m_Port( port )
@@ -62,10 +61,7 @@ Client::~Client()
     SetShuttingDown();
 
     m_ShouldExit = true;
-    while ( m_Exited == false )
-    {
-        Thread::Sleep( 1 );
-    }
+    Thread::WaitForThread( m_Thread );
 
     ShutdownAllConnections();
 
@@ -149,8 +145,6 @@ void Client::ThreadFunc()
             break;
         }
     }
-
-    m_Exited = true;
 }
 
 // LookForWorkers

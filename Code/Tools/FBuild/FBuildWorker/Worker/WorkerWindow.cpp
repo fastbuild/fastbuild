@@ -74,15 +74,7 @@ WorkerWindow::~WorkerWindow()
     ASSERT( m_UIState == ALLOWED_TO_QUIT );
 
     // ensure the thread is shutdown
-    #if defined( __WINDOWS__ )
-        VERIFY( WaitForSingleObject( m_UIThreadHandle, INFINITE ) == WAIT_OBJECT_0 );
-    #elif defined( __APPLE__ )
-        // TODO:MAC WaitForSingleObject equivalent
-    #elif defined( __LINUX__ )
-        // TODO:LINUX WaitForSingleObject equivalent
-    #else
-        #error Unknown Platform
-    #endif
+    Thread::WaitForThread( m_UIThreadHandle );
 
     // clean up the ui thread
     Thread::CloseHandle( m_UIThreadHandle );
