@@ -158,6 +158,9 @@ void TestTest::TimeOut() const
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) == false );
+
+    // Ensure failure was of the test timing out
+    TEST_ASSERT( GetRecordedOutput().Find( "Test timed out after" ) );
 }
 
 //------------------------------------------------------------------------------
