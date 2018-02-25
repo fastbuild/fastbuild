@@ -90,7 +90,7 @@ void TestExe::Build() const
 void TestExe::CheckValidExe() const
 {
     Process p;
-    p.Spawn( "../../../../tmp/Test/Exe/exe.exe", nullptr, nullptr, nullptr );
+    p.Spawn( "../tmp/Test/Exe/exe.exe", nullptr, nullptr, nullptr );
     int ret = p.WaitForExit();
     TEST_ASSERT( ret == 99 ); // verify expected ret code
 }

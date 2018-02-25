@@ -414,7 +414,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 .OutputBase = '../tmp'
 #if BUILDING_FROM_TESTS
     // FASTBuild builds itself as part of its tests, so we need a unique output path
-    .OutputBase = '../tmp/Test/TestBuildFBuild'
+    .OutputBase = '../tmp/Test/BuildFBuild'
 #endif
 
 //------------------------------------------------------------------------------

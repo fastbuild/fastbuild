@@ -311,7 +311,7 @@ void TestDLL::TestExeWithDLL_NoRebuild() const
 //------------------------------------------------------------------------------
 void TestDLL::TestValidExeWithDLL() const
 {
-    const AStackString<> exe( "../../../../tmp/Test/DLL/exe.exe" );
+    const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
 
     Process p;
     p.Spawn( exe.Get(), nullptr, nullptr, nullptr );

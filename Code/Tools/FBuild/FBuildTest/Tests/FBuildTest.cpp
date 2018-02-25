@@ -16,6 +16,13 @@
 //------------------------------------------------------------------------------
 /*static*/ AString FBuildTest::s_RecordedOutput( 1024 * 1024 );
 
+// CONSTRUCTOR (FBuildTest)
+//------------------------------------------------------------------------------
+FBuildTest::FBuildTest()
+{
+    m_OriginalWorkingDir.SetReserved( 512 );
+}
+
 // PreTest
 //------------------------------------------------------------------------------
 /*virtual*/ void FBuildTest::PreTest() const
@@ -24,12 +31,22 @@
     s_RecordedOutput.Clear();
 
     FBuildStats::SetIgnoreCompilerNodeDeps( true );
+
+    // Store current working 
+    VERIFY( FileIO::GetCurrentDir( m_OriginalWorkingDir ) );
+
+    // Set the WorkingDir to be the source code "Code" dir
+    AStackString<> codeDir;
+    GetCodeDir( codeDir );
+    VERIFY( FileIO::SetCurrentDir( codeDir ) );
 }
 
 // PostTest
 //------------------------------------------------------------------------------
 /*virtual*/ void FBuildTest::PostTest() const
 {
+    VERIFY( FileIO::SetCurrentDir( m_OriginalWorkingDir ) );
+
     FBuildStats::SetIgnoreCompilerNodeDeps( false );
 
     Tracing::RemoveCallbackOutput( LoggingCallback );
@@ -62,7 +79,7 @@ void FBuildTest::EnsureDirDoesNotExist( const char * dirPath ) const
 //------------------------------------------------------------------------------
 void FBuildTest::EnsureDirExists( const char * dirPath ) const
 {
-    TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( dirPath ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( dirPath ) ) );
 }
 
 // CheckStatsNode
@@ -143,11 +160,6 @@ bool FBuildTest::LoggingCallback( const char * message )
 //------------------------------------------------------------------------------
 FBuildTestOptions::FBuildTestOptions()
 {
-    // Set the WorkingDir to be the source code "Code" dir
-    AStackString<> codeDir;
-    FBuildTest::GetCodeDir( codeDir );
-    SetWorkingDir( codeDir );
-
     // Override defaults
     m_ShowSummary = true; // required to generate stats for node count checks
 }

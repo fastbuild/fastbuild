@@ -89,14 +89,14 @@ void TestPrecompiledHeaders::TestPCH() const
     options.m_UseCacheWrite = true;
 
     #if defined( __WINDOWS__ )
-        AStackString<> obj( "../../../../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
-        AStackString<> pch( "../../../../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
+        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
     #elif defined( __LINUX__ )
-        AStackString<> obj( "../../../../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString<> pch( "../../../../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
+        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
     #elif defined( __OSX__ )
-        AStackString<> obj( "../../../../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString<> pch( "../../../../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
     #endif
     EnsureFileDoesNotExist( obj );
     EnsureFileDoesNotExist( pch );
@@ -156,14 +156,14 @@ void TestPrecompiledHeaders::TestPCHWithCache() const
     options.m_UseCacheRead = true;
 
     #if defined( __WINDOWS__ )
-        AStackString<> obj( "../../../../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
-        AStackString<> pch( "../../../../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.obj" );
+        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
     #elif defined( __LINUX__ )
-        AStackString<> obj( "../../../../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString<> pch( "../../../../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
+        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.h.gch" );
     #elif defined( __OSX__ )
-        AStackString<> obj( "../../../../tmp/Test/PrecompiledHeaders/PCHUser.o" );
-        AStackString<> pch( "../../../../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
+        AStackString<> obj( "../tmp/Test/PrecompiledHeaders/PCHUser.o" );
+        AStackString<> pch( "../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch" );
     #endif
     EnsureFileDoesNotExist( obj );
     EnsureFileDoesNotExist( pch );
@@ -256,19 +256,19 @@ void TestPrecompiledHeaders::PreventUselessCacheTraffic_MSVC() const
 void TestPrecompiledHeaders::CacheUniqueness() const
 {
     // Two headers, differing only in unused defines
-    const char * pchA = "Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeaderA.h";
-    const char * pchB = "Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeaderB.h";
-    const char * dstPCH = "../../../../tmp/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.h";
+    const char * pchA = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeaderA.h";
+    const char * pchB = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeaderB.h";
+    const char * dstPCH = "../tmp/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.h";
     #if defined( __WINDOWS__ )
         // On windows we need a CPP to create the PCH
-        const char * pchCPP = "Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp";
-        const char * dstPCHCPP = "../../../../tmp/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp";
+        const char * pchCPP = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp";
+        const char * dstPCHCPP = "../tmp/Test/PrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp";
     #endif
-    const char * pchUser = "Data/TestPrecompiledHeaders/CacheUniqueness/PCHUser.cpp";
-    const char * dstPCHUser = "../../../../tmp/Test/PrecompiledHeaders/CacheUniqueness/PCHUser.cpp";
+    const char * pchUser = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness/PCHUser.cpp";
+    const char * dstPCHUser = "../tmp/Test/PrecompiledHeaders/CacheUniqueness/PCHUser.cpp";
 
     // Copy the files to the tmp Dir
-    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../../../../tmp/Test/PrecompiledHeaders/CacheUniqueness/" ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../tmp/Test/PrecompiledHeaders/CacheUniqueness/" ) ) );
     TEST_ASSERT( FileIO::FileCopy( pchA, dstPCH ) );
     #if defined( __WINDOWS__ )
         TEST_ASSERT( FileIO::FileCopy( pchCPP, dstPCHCPP ) );

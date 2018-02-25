@@ -57,20 +57,13 @@ REGISTER_TESTS_END
 void TestProjectGeneration::Test() const
 {
     // work out where we are running, and find "Core"
-    AStackString<> oldDir;
-    TEST_ASSERT( FileIO::GetCurrentDir( oldDir ) );
-    AStackString<> baseDir( oldDir );
+    AStackString<> baseDir;
+    TEST_ASSERT( FileIO::GetCurrentDir( baseDir ) );
+    TEST_ASSERT( baseDir.FindI( "code" ) );
     #if defined( __WINDOWS__ )
-        const char * codeLoc = baseDir.FindI( "\\code\\" );
+        baseDir += "\\Core\\";
     #else
-        const char * codeLoc = baseDir.FindI( "/code/" );
-    #endif
-    TEST_ASSERT( codeLoc );
-    baseDir.SetLength( (uint32_t)( codeLoc - baseDir.Get() ) );
-    #if defined( __WINDOWS__ )
-        baseDir += "\\Code\\Core\\";
-    #else
-        baseDir += "/Code/Core/";
+        baseDir += "/Core/";
     #endif
     Array< AString > baseDirs;
     baseDirs.Append( baseDir );

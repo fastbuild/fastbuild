@@ -373,7 +373,6 @@ void TestCopy::CopyDirDeleteSrc() const
     {
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-        options.m_ShowSummary = true; // required to generate stats for node count checks
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
@@ -412,7 +411,6 @@ void TestCopy::CopyDirDeleteSrc() const
     {
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCopy/copy.bff";
-        options.m_ShowSummary = true; // required to generate stats for node count checks
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/CopyDir/copydirdeletesrc.fdb" ) );
 
@@ -424,11 +422,11 @@ void TestCopy::CopyDirDeleteSrc() const
 
         // Check stats
         //               Seen,  Built,  Type
-        CheckStatsNode(  2,     2,      Node::FILE_NODE );
-        CheckStatsNode(  2,     0,      Node::COPY_FILE_NODE );
+        CheckStatsNode(  1,     1,      Node::FILE_NODE );
+        CheckStatsNode(  1,     0,      Node::COPY_FILE_NODE );
         CheckStatsNode(  1,     0,      Node::COPY_DIR_NODE );
         CheckStatsNode(  1,     1,      Node::DIRECTORY_LIST_NODE );
-        CheckStatsTotal( 6,     3 );
+        CheckStatsTotal( 4,     2 );
     }
 }
 

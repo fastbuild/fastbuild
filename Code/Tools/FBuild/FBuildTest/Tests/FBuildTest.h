@@ -18,6 +18,8 @@ struct FBuildStats;
 class FBuildTest : public UnitTest
 {
 protected:
+    FBuildTest();
+
     virtual void PreTest() const override;
     virtual void PostTest() const override;
 
@@ -38,11 +40,11 @@ protected:
     void CheckStatsTotal( size_t numSeen, size_t numBuilt ) const;
 
     // other helpers
-    friend class FBuildTestOptions;
     static void GetCodeDir( AString & codeDir );
 
     const AString & GetRecordedOutput() const { return s_RecordedOutput; }
 private:
+    mutable AString m_OriginalWorkingDir;
     static bool LoggingCallback( const char * message );
     static AString s_RecordedOutput;
 };

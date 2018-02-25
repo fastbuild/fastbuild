@@ -250,9 +250,9 @@ void TestGraph::TestDirectoryListNode() const
     // Generate a valid DirectoryListNode name
     AStackString<> name;
     #if defined( __WINDOWS__ )
-        const AStackString<> testFolder( "Data\\TestGraph\\" );
+        const AStackString<> testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
     #else
-        const AStackString<> testFolder( "Data/TestGraph/" );
+        const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
     #endif
     Array< AString > patterns;
     patterns.Append( AStackString<>( "library.*" ) );
@@ -277,8 +277,8 @@ void TestGraph::TestDirectoryListNode() const
     // make sure we got the expected results
     TEST_ASSERT( node->GetFiles().GetSize() == 2 );
     #if defined( __WINDOWS__ )
-        const char * fileName1 = "Data\\TestGraph\\library.cpp";
-        const char * fileName2 = "Data\\TestGraph\\library.o";
+        const char * fileName1 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.cpp";
+        const char * fileName2 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.o";
     #else
         const char * fileName1 = "Data/TestGraph/library.cpp";
         const char * fileName2 = "Data/TestGraph/library.o";
@@ -300,9 +300,6 @@ void TestGraph::TestDirectoryListNode() const
 //------------------------------------------------------------------------------
 void TestGraph::TestSerialization() const
 {
-    AStackString<> codeDir;
-    GetCodeDir( codeDir );
-
     const char * dbFile1    = "../tmp/Test/Graph/fbuild.db.1";
     const char * dbFile2    = "../tmp/Test/Graph/fbuild.db.2";
 
@@ -310,7 +307,6 @@ void TestGraph::TestSerialization() const
     {
         FBuildOptions options;
         options.m_ConfigFile = "fbuild.bff";
-        options.SetWorkingDir( codeDir );
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
@@ -321,7 +317,6 @@ void TestGraph::TestSerialization() const
     {
         FBuildOptions options;
         options.m_ConfigFile = "fbuild.bff";
-        options.SetWorkingDir( codeDir );
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile2 ) );
@@ -657,9 +652,9 @@ void TestGraph::DBLocationChanged() const
 //------------------------------------------------------------------------------
 void TestGraph::BFFDirtied() const
 {
-    const char* originalBFF             = "Data/TestGraph/BFFDirtied/fbuild.bff";
-    const char* copyOfBFF           = "../../../../tmp/Test/Graph/BFFDirtied/fbuild.bff";
-    const char* dbFile              = "../../../../tmp/Test/Graph/BFFDirtied/fbuild.fdb";
+    const char* originalBFF             = "Tools/FBuild/FBuildTest/Data/TestGraph/BFFDirtied/fbuild.bff";
+    const char* copyOfBFF           = "../tmp/Test/Graph/BFFDirtied/fbuild.bff";
+    const char* dbFile              = "../tmp/Test/Graph/BFFDirtied/fbuild.fdb";
 
     EnsureFileDoesNotExist( copyOfBFF );
     EnsureFileDoesNotExist( dbFile );

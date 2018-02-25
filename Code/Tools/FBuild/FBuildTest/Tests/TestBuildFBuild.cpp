@@ -52,33 +52,9 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetDBFile() : nullptr ) );
 
-    #if defined( __WINDOWS__ )
-        const AStackString<> lib( "../tmp/Test/BuildFBuild/Win32/Debug/Core/core.lib" );
-        const AStackString<> lib2( "../tmp/Test/BuildFBuild/Win32/Debug/FBuildCore/fbuildcore.lib" );
-        const AStackString<> lib3( "../tmp/Test/BuildFBuild/Win32/Release/FBuildApp/fbuildapp.lib" );
-        const AStackString<> exe( "../tmp/Test/BuildFBuild/Win32/Release/Tools/FBuild/FBuildApp/fbuild.exe" );
-    #endif
-    #if defined( __OSX__ )
-        const AStackString<> lib( "../tmp/Test/BuildFBuild/OSX/Debug/Core/core.lib" );
-        const AStackString<> lib2( "../tmp/Test/BuildFBuild/OSX/Debug/FBuildCore/fbuildcore.lib" );
-        const AStackString<> lib3( "../tmp/Test/BuildFBuild/OSX/Release/FBuildApp/fbuildapp.lib" );
-        const AStackString<> exe( "../tmp/Test/BuildFBuild/OSX/Release/Tools/FBuild/FBuildApp/fbuild.exe" );
-    #endif
-    #if defined( __LINUX__ )
-        const AStackString<> lib( "../tmp/Test/BuildFBuild/Linux/Debug/Core/Core.lib" );
-        const AStackString<> lib2( "../tmp/Test/BuildFBuild/Linux/Debug/FBuildCore/FBuildCore.lib" );
-        const AStackString<> lib3( "../tmp/Test/BuildFBuild/Linux/Release/FBuildApp/FBuildApp.lib" );
-        const AStackString<> exe( "../tmp/Test/BuildFBuild/Linux/Release/Tools/FBuild/FBuildApp/FBuild.exe" );
-    #endif
     const AStackString<> target( "all" );
 
     TEST_ASSERT( fBuild.Build( target ) );
-
-    // make sure all output files are as expected
-    EnsureFileExists( lib );
-    EnsureFileExists( lib2 );
-    EnsureFileExists( lib3 );
-    EnsureFileExists( exe );
 
     // save the db file - make sure it exists
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetDBFile() ) );

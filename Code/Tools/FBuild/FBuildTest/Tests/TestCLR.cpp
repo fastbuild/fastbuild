@@ -72,11 +72,11 @@ void TestCLR::Test() const
     options.m_ForceCleanBuild = true;
     options.m_UseCacheWrite = true;
 
-    EnsureFileDoesNotExist( "../../../../tmp/Test/CLR/clr.lib" );
+    EnsureFileDoesNotExist( "../tmp/Test/CLR/clr.lib" );
 
     FBuildStats stats = Build( options, false, "CLR-Target" ); // dont' use DB
 
-    EnsureFileExists( "../../../../tmp/Test/CLR/clr.lib" );
+    EnsureFileExists( "../tmp/Test/CLR/clr.lib" );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -115,11 +115,11 @@ void TestCLR::TestCache() const
     options.m_ForceCleanBuild = true;
     options.m_UseCacheRead = true;
 
-    EnsureFileDoesNotExist( "../../../../tmp/Test/CLR/clr.lib" );
+    EnsureFileDoesNotExist( "../tmp/Test/CLR/clr.lib" );
 
     FBuildStats stats = Build( options, false, "CLR-Target" ); // dont' use DB
 
-    EnsureFileExists( "../../../../tmp/Test/CLR/clr.lib" );
+    EnsureFileExists( "../tmp/Test/CLR/clr.lib" );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -140,11 +140,11 @@ void TestCLR::TestParallelBuild() const
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
 
-    EnsureFileDoesNotExist( "../../../../tmp/Test/CLR/clrmulti.lib" );
+    EnsureFileDoesNotExist( "../tmp/Test/CLR/clrmulti.lib" );
 
     FBuildStats stats = Build( options, false, "CLR-Parallel-Target" ); // dont' use DB
 
-    EnsureFileExists( "../../../../tmp/Test/CLR/clrmulti.lib" );
+    EnsureFileExists( "../tmp/Test/CLR/clrmulti.lib" );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -188,7 +188,7 @@ void TestCLR::TestCLRToCPPBridge() const
         FBuildStats stats = Build( options, true, "BridgeTest-Exe" );
 
         Process p;
-        p.Spawn( "../../../../tmp/Test/CLR/Bridge/Bridge.exe", nullptr, nullptr, nullptr );
+        p.Spawn( "../tmp/Test/CLR/Bridge/Bridge.exe", nullptr, nullptr, nullptr );
         int ret = p.WaitForExit();
         TEST_ASSERT( ret == 15613223 ); // verify expected ret code
     #endif

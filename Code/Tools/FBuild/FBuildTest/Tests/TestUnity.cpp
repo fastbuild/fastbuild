@@ -79,8 +79,8 @@ void TestUnity::TestGenerate() const
 
     FBuildStats stats = BuildGenerate( options, false ); // don't use DB
 
-    EnsureFileExists( "../../../../tmp/Test/Unity/Unity1.cpp" );
-    EnsureFileExists( "../../../../tmp/Test/Unity/Unity2.cpp" );
+    EnsureFileExists( "../tmp/Test/Unity/Unity1.cpp" );
+    EnsureFileExists( "../tmp/Test/Unity/Unity2.cpp" );
 
     // Check stats
     //                      Seen,   Built,  Type
@@ -93,8 +93,8 @@ void TestUnity::TestGenerate() const
 //------------------------------------------------------------------------------
 void TestUnity::TestGenerate_NoRebuild() const
 {
-    AStackString<> unity1( "../../../../tmp/Test/Unity/Unity1.cpp" );
-    AStackString<> unity2( "../../../../tmp/Test/Unity/Unity2.cpp" );
+    AStackString<> unity1( "../tmp/Test/Unity/Unity1.cpp" );
+    AStackString<> unity2( "../tmp/Test/Unity/Unity2.cpp" );
 
     EnsureFileExists( unity1 );
     EnsureFileExists( unity2 );
@@ -152,11 +152,11 @@ void TestUnity::TestCompile() const
     options.m_ForceCleanBuild = true;
     options.m_ShowSummary = true; // required to generate stats for node count checks
 
-    EnsureFileDoesNotExist( "../../../../tmp/Test/Unity/Unity.lib" );
+    EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity.lib" );
 
     FBuildStats stats = BuildCompile( options, false ); // don't use DB
 
-    EnsureFileExists( "../../../../tmp/Test/Unity/Unity.lib" );
+    EnsureFileExists( "../tmp/Test/Unity/Unity.lib" );
 
     // Check stats
     //                      Seen,   Built,  Type

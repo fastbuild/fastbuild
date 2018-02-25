@@ -273,7 +273,7 @@ void TestExec::Build_ExecCommand_UseStdOut() const
     // Make sure the stdout from the executable
     // did actually make it into the stdout file
 
-    const AStackString<> outFile_stdout( "../../../../tmp/Test/Exec/OneInput_StdOut.txt.stdout" );
+    const AStackString<> outFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt.stdout" );
     EnsureFileExists(outFile_stdout);
 
     // Expected contents begin with:
