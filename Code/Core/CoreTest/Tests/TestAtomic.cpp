@@ -72,11 +72,15 @@ private:
 
     // Add
     void Add32() const;
+    void AddU32() const;
     void Add64() const;
+    void AddU64() const;
 
     // Sub
     void Sub32() const;
+    void SubU32() const;
     void Sub64() const;
+    void SubU64() const;
 };
 
 // Register Tests
@@ -109,7 +113,16 @@ void TestAtomic::Add32() const
 {
     // Ensure return result is post-add
     int32_t i32 = 0;
-    TEST_ASSERT( AtomicAdd32( &i32, 999 ) == 999 );
+    TEST_ASSERT( AtomicAdd32( &i32, -999 ) == -999 );
+}
+
+// AddU32
+//------------------------------------------------------------------------------
+void TestAtomic::AddU32() const
+{
+    // Ensure return result is post-add
+    uint32_t u32 = 0;
+    TEST_ASSERT( AtomicAddU32( &u32, 999 ) == 999 );
 }
 
 // Add64
@@ -118,7 +131,16 @@ void TestAtomic::Add64() const
 {
     // Ensure return result is post-add
     int64_t i64 = 0;
-    TEST_ASSERT( AtomicAdd64( &i64, 999 ) == 999 );
+    TEST_ASSERT( AtomicAdd64( &i64, -9876543210 ) == -9876543210 );
+}
+
+// AddU64
+//------------------------------------------------------------------------------
+void TestAtomic::AddU64() const
+{
+    // Ensure return result is post-add
+    uint64_t u64 = 0;
+    TEST_ASSERT( AtomicAddU64( &u64, 9876543210 ) == 9876543210 );
 }
 
 // Sub32
@@ -126,8 +148,17 @@ void TestAtomic::Add64() const
 void TestAtomic::Sub32() const
 {
     // Ensure return result is post-sub
-    int32_t i32 = 999;
-    TEST_ASSERT( AtomicSub32( &i32, 999 ) == 0 );
+    int32_t i32 = 0;
+    TEST_ASSERT( AtomicSub32( &i32, 999 ) == -999 );
+}
+
+// SubU32
+//------------------------------------------------------------------------------
+void TestAtomic::SubU32() const
+{
+    // Ensure return result is post-sub
+    uint32_t u32 = 999;
+    TEST_ASSERT( AtomicSubU32( &u32, 999 ) == 0 );
 }
 
 // Sub64
@@ -135,8 +166,17 @@ void TestAtomic::Sub32() const
 void TestAtomic::Sub64() const
 {
     // Ensure return result is post-sub
-    int64_t i64 = 999;
-    TEST_ASSERT( AtomicSub64( &i64, 999 ) == 0 );
+    int64_t i64 = 0;
+    TEST_ASSERT( AtomicSub64( &i64, 9876543210 ) == -9876543210 );
+}
+
+// SubU64
+//------------------------------------------------------------------------------
+void TestAtomic::SubU64() const
+{
+    // Ensure return result is post-sub
+    uint64_t u64 = 9876543210;
+    TEST_ASSERT( AtomicSubU64( &u64, 9876543210 ) == 0 );
 }
 
 //------------------------------------------------------------------------------

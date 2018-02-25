@@ -180,7 +180,23 @@ inline int32_t AtomicAdd32( volatile int32_t * i, int32_t value )
         return __sync_add_and_fetch( i, value );
     #endif
 }
+inline uint32_t AtomicAddU32( volatile uint32_t * i, int32_t value )
+{
+    #if defined( __WINDOWS__ )
+        return InterlockedAdd( (volatile long *)i, value );
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        return __sync_add_and_fetch( i, value );
+    #endif
+}
 inline int32_t AtomicSub32( volatile int32_t * i, int32_t value )
+{
+    #if defined( __WINDOWS__ )
+        return InterlockedAdd( (volatile long *)i, -value );
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        return __sync_sub_and_fetch( i, value );
+    #endif
+}
+inline uint32_t AtomicSubU32( volatile uint32_t * i, int32_t value )
 {
     #if defined( __WINDOWS__ )
         return InterlockedAdd( (volatile long *)i, -value );
@@ -299,7 +315,7 @@ inline uint64_t AtomicDecU64( volatile uint64_t * i )
         return __sync_sub_and_fetch( i, 1 );
     #endif
 }
-inline int64_t AtomicAdd64( volatile int64_t * i, int32_t value )
+inline int64_t AtomicAdd64( volatile int64_t * i, int64_t value )
 {
     #if defined( __WINDOWS__ )
         return InterlockedAdd64( (volatile LONG64 *)i, value );
@@ -307,7 +323,23 @@ inline int64_t AtomicAdd64( volatile int64_t * i, int32_t value )
         return __sync_add_and_fetch( i, value );
     #endif
 }
-inline int64_t AtomicSub64( volatile int64_t * i, int32_t value )
+inline uint64_t AtomicAddU64( volatile uint64_t * i, int64_t value )
+{
+    #if defined( __WINDOWS__ )
+        return InterlockedAdd64( (volatile LONG64 *)i, value );
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        return __sync_add_and_fetch( i, value );
+    #endif
+}
+inline int64_t AtomicSub64( volatile int64_t * i, int64_t value )
+{
+    #if defined( __WINDOWS__ )
+        return InterlockedAdd64( (volatile LONG64 *)i, -value );
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        return __sync_sub_and_fetch( i, value );
+    #endif
+}
+inline uint64_t AtomicSubU64( volatile uint64_t * i, int64_t value )
 {
     #if defined( __WINDOWS__ )
         return InterlockedAdd64( (volatile LONG64 *)i, -value );
