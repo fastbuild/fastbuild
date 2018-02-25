@@ -88,7 +88,7 @@ public:
     inline DistributionState    GetDistributionState() const                    { return m_DistributionState; }
 
     // Access total memory usage by job data
-    static inline uint64_t      GetTotalLocalDataMemoryUsage() { return (uint64_t)s_TotalLocalDataMemoryUsage; }
+    static uint64_t             GetTotalLocalDataMemoryUsage();
 
 private:
     uint32_t            m_JobId             = 0;

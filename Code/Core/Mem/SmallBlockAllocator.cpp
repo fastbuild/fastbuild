@@ -250,7 +250,7 @@ bool SmallBlockAllocator::Free( void * ptr )
 /*virtual*/ void * SmallBlockAllocator::MemBucket::AllocateMemoryForPage()
 {
     // Have we exhausted our page space?
-    if ( SmallBlockAllocator::s_BucketNextFreePageIndex >= BUCKET_NUM_PAGES )
+    if ( AtomicLoadRelaxed( &SmallBlockAllocator::s_BucketNextFreePageIndex ) >= BUCKET_NUM_PAGES )
     {
         return nullptr;
     }

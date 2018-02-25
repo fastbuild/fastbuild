@@ -22,6 +22,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/Random.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 
 // Defines
@@ -59,7 +60,7 @@ Client::~Client()
 {
     SetShuttingDown();
 
-    m_ShouldExit = true;
+    AtomicStoreRelaxed( &m_ShouldExit, true );
     Thread::WaitForThread( m_Thread );
 
     ShutdownAllConnections();
@@ -94,7 +95,7 @@ Client::~Client()
     FREE( (void *)( ss->m_CurrentMessage ) );
 
     ss->m_RemoteName.Clear();
-    ss->m_Connection = nullptr;
+    AtomicStoreRelaxed( &ss->m_Connection, static_cast< const ConnectionInfo * >( nullptr ) );
     ss->m_CurrentMessage = nullptr;
 }
 
@@ -121,19 +122,19 @@ void Client::ThreadFunc()
     for ( ;; )
     {
         LookForWorkers();
-        if ( m_ShouldExit )
+        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
         {
             break;
         }
 
         CommunicateJobAvailability();
-        if ( m_ShouldExit )
+        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
         {
             break;
         }
 
         Thread::Sleep( 1 );
-        if ( m_ShouldExit )
+        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
         {
             break;
         }
@@ -154,7 +155,7 @@ void Client::LookForWorkers()
     size_t numConnections = 0;
     for ( size_t i=0; i<numWorkers; i++ )
     {
-        if ( m_ServerList[ i ].m_Connection )
+        if ( AtomicLoadRelaxed( &m_ServerList[ i ].m_Connection ) )
         {
             numConnections++;
         }
@@ -184,7 +185,7 @@ void Client::LookForWorkers()
         const size_t i( ( j + startIndex ) % numWorkers );
 
         ServerState & ss = m_ServerList[ i ];
-        if ( ss.m_Connection )
+        if ( AtomicLoadRelaxed( &ss.m_Connection ) )
         {
             continue;
         }
@@ -218,7 +219,7 @@ void Client::LookForWorkers()
             const uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
 
             ss.m_RemoteName = m_WorkerList[ i ];
-            ss.m_Connection = ci; // success!
+            AtomicStoreRelaxed( &ss.m_Connection, ci ); // success!
             ss.m_NumJobsAvailable = numJobsAvailable;
 
             // send connection msg
@@ -260,15 +261,15 @@ void Client::CommunicateJobAvailability()
     const ServerState * const end = m_ServerList.End();
     while ( it != end )
     {
-        if ( it->m_Connection )
+        if ( AtomicLoadRelaxed( &it->m_Connection ) )
         {
             MutexHolder ssMH( it->m_Mutex );
-            if ( it->m_Connection )
+            if ( auto connection = AtomicLoadRelaxed( &it->m_Connection ) )
             {
                 if ( it->m_NumJobsAvailable != numJobsAvailable )
                 {
                     PROFILE_SECTION( "UpdateJobAvailability" )
-                    SendMessageInternal( it->m_Connection, msg );
+                    SendMessageInternal( connection, msg );
                     it->m_NumJobsAvailable = numJobsAvailable;
                 }
             }
