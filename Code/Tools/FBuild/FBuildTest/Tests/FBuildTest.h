@@ -9,6 +9,8 @@
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 
+#include "Core/Process/Mutex.h"
+
 // Forward Declarations
 //------------------------------------------------------------------------------
 struct FBuildStats;
@@ -47,6 +49,7 @@ private:
     mutable AString m_OriginalWorkingDir;
     static bool s_DebuggerAttached;
     static bool LoggingCallback( const char * message );
+    static Mutex s_OutputMutex;
     static AString s_RecordedOutput;
 };
 
