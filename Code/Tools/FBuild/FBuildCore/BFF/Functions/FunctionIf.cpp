@@ -45,183 +45,142 @@ FunctionIf::FunctionIf()
                     const BFFIterator * functionHeaderStartToken,
                     const BFFIterator * functionHeaderStopToken ) const
 {
-    // build array for each pair to loop through
-    Array< const BFFVariable * >    arrayVars( 4, true );
-
     bool conditionSuccess = false;
 
     // parse it all out
     BFFIterator pos( *functionHeaderStartToken );
     pos++; // skip opening token
-    while ( pos < *functionHeaderStopToken )
+    pos.SkipWhiteSpace();
+
+    if ( ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL ) &&
+         ( *pos != BFFParser::BFF_DECLARE_VAR_PARENT ) )
     {
-        pos.SkipWhiteSpace();
+        Error::Error_1200_ExpectedVar( pos, this );
+        return false;
+    }
 
-        if ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL &&
-             *pos != BFFParser::BFF_DECLARE_VAR_PARENT )
-        {
-            Error::Error_1200_ExpectedVar( pos, this );
-            return false;
-        }
-
-        const BFFIterator testVarNameBegin = pos;
-        AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > testVarName;
-        bool testVarParentScope = false;
-        if ( BFFParser::ParseVariableName( pos, testVarName, testVarParentScope ) == false )
-        {
-            return false;
-        }
+    const BFFIterator testVarNameBegin = pos;
+    AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > testVarName;
+    bool testVarParentScope = false;
+    if ( BFFParser::ParseVariableName( pos, testVarName, testVarParentScope ) == false )
+    {
+        return false;
+    }
         
-        const BFFVariable * testVar = nullptr;
-        BFFStackFrame * const testVarFrame = ( testVarParentScope )
-            ? BFFStackFrame::GetParentDeclaration( testVarName, BFFStackFrame::GetCurrent()->GetParent(), testVar )
-            : nullptr;
+    const BFFVariable * testVar = nullptr;
+    BFFStackFrame * const testVarFrame = ( testVarParentScope )
+        ? BFFStackFrame::GetParentDeclaration( testVarName, BFFStackFrame::GetCurrent()->GetParent(), testVar )
+        : nullptr;
 
-        if ( false == testVarParentScope )
-        {
-            testVar = BFFStackFrame::GetVar( testVarName, nullptr );
-        }
-
-        if ( ( testVarParentScope && ( nullptr == testVarFrame ) ) || ( testVar == nullptr ) )
-        {
-            Error::Error_1009_UnknownVariable( testVarNameBegin, this, testVarName );
-            return false;
-        }
-
-        pos.SkipWhiteSpace();
-
-        const bool foundNot = pos.ParseExactString("not");
-        if (foundNot)
-            pos.SkipWhiteSpace();
-
-        // check for "in" token
-        bool foundIn = false;
-        if ( *pos == 'i' )
-        {
-            pos++;
-            if ( *pos == 'n' )
-            {
-                foundIn = true;
-            }
-        }
-        if ( foundIn == false )
-        {
-            Error::Error_1201_MissingIn( pos, this );
-            return false;
-        }
-        pos++;
-        pos.SkipWhiteSpace();
-
-        if ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL &&
-             *pos != BFFParser::BFF_DECLARE_VAR_PARENT /* tolerant with parent vars */ )
-        {
-            Error::Error_1202_ExpectedVarFollowingIn( pos, this );
-            return false;
-        }
-
-        const BFFIterator listVarNameBegin( pos );
-        AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > listVarName;
-        bool listParentScope = false;
-        if ( BFFParser::ParseVariableName( pos, listVarName, listParentScope ) == false )
-        {
-            return false;
-        }
-
-        const BFFVariable * listVar = nullptr;
-        BFFStackFrame * const arrayFrame = ( listParentScope )
-            ? BFFStackFrame::GetParentDeclaration( listVarName, BFFStackFrame::GetCurrent()->GetParent(), listVar )
-            : nullptr;
-
-        if ( false == listParentScope )
-        {
-            listVar = BFFStackFrame::GetVar( listVarName, nullptr );
-        }
-
-        if ( ( listParentScope && ( nullptr == arrayFrame ) ) || ( listVar == nullptr ) )
-        {
-            Error::Error_1009_UnknownVariable( listVarNameBegin, this, listVarName );
-            return false;
-        }
-
-        // it can be of any supported type
-        if ( listVar->IsArrayOfStrings() == false )
-        {
-            Error::Error_1050_PropertyMustBeOfType( listVarNameBegin, this, listVarName.Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
-            return false;
-        }
-
-        const Array< AString >& listArray = listVar->GetArrayOfStrings();
-
-        // now iterate over the first set of strings to see if any match the second set of strings
-
-        if ( testVar->IsString() )
-        {
-            const AString& testStr = testVar->GetString();
-
-            for ( size_t n = 0; n < listArray.GetSize(); ++n )
-            {
-                if (testStr == listArray[n])
-                {
-                    conditionSuccess = true;
-                    break;
-                }
-            }
-        }
-        else if (testVar->IsArrayOfStrings())
-        {
-            const Array< AString >& testArray = testVar->GetArrayOfStrings();
-
-            for ( size_t i = 0; i < testArray.GetSize() && !conditionSuccess; ++i )
-            {
-                const AString& testStr = testArray[i];
-
-                for ( size_t j = 0; j < listArray.GetSize(); ++j )
-                {
-                    if (testStr == listArray[j])
-                    {
-                        conditionSuccess = true;
-                        break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            Error::Error_1050_PropertyMustBeOfType( testVarNameBegin, this, listVarName.Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
-            return false;
-        }
-
-        arrayVars.Append( testVar );
-        arrayVars.Append( listVar );
-
-        if (foundNot)
-            conditionSuccess = !conditionSuccess;
-
-        // skip optional separator
-        pos.SkipWhiteSpace();
-        if ( *pos == ',' )
-        {
-            pos++;
-        }
-    }
-
-    // if check failed
-    if ( !conditionSuccess )
+    if ( false == testVarParentScope )
     {
-        return true;
+        testVar = BFFStackFrame::GetVar( testVarName, nullptr );
     }
 
-    // freeze the variable to avoid modifications while looping
-    for ( uint32_t j=0; j<arrayVars.GetSize(); ++j )
+    if ( ( testVarParentScope && ( nullptr == testVarFrame ) ) || ( testVar == nullptr ) )
     {
-        arrayVars[ j ]->Freeze();
-        FLOG_INFO( "Freezing loop array '%s' of type <%s>",
-                   arrayVars[j]->GetName().Get(), BFFVariable::GetTypeName( arrayVars[j]->GetType() ) );
+        Error::Error_1009_UnknownVariable( testVarNameBegin, this, testVarName );
+        return false;
     }
 
-    bool succeed = true;
+    pos.SkipWhiteSpace();
 
-    if (conditionSuccess)
+    // check for optional "not" token
+    const bool foundNot = pos.ParseExactString( "not" );
+    if ( foundNot )
+    {
+        pos.SkipWhiteSpace();
+    }
+
+    // check for required "in" token
+    if ( pos.ParseExactString( "in" ) == false )
+    {
+        Error::Error_1201_MissingIn( pos, this );
+        return false;
+    }
+    pos.SkipWhiteSpace();
+
+    if ( ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL ) &&
+         ( *pos != BFFParser::BFF_DECLARE_VAR_PARENT ) /* tolerant with parent vars */ )
+    {
+        Error::Error_1202_ExpectedVarFollowingIn( pos, this );
+        return false;
+    }
+
+    const BFFIterator listVarNameBegin( pos );
+    AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > listVarName;
+    bool listParentScope = false;
+    if ( BFFParser::ParseVariableName( pos, listVarName, listParentScope ) == false )
+    {
+        return false;
+    }
+
+    const BFFVariable * listVar = nullptr;
+    BFFStackFrame * const arrayFrame = ( listParentScope )
+        ? BFFStackFrame::GetParentDeclaration( listVarName, BFFStackFrame::GetCurrent()->GetParent(), listVar )
+        : nullptr;
+
+    if ( false == listParentScope )
+    {
+        listVar = BFFStackFrame::GetVar( listVarName, nullptr );
+    }
+
+    if ( ( listParentScope && ( nullptr == arrayFrame ) ) || ( listVar == nullptr ) )
+    {
+        Error::Error_1009_UnknownVariable( listVarNameBegin, this, listVarName );
+        return false;
+    }
+
+    // it can be of any supported type
+    if ( listVar->IsArrayOfStrings() == false )
+    {
+        Error::Error_1050_PropertyMustBeOfType( listVarNameBegin, this, listVarName.Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
+        return false;
+    }
+
+    const Array< AString > & listArray = listVar->GetArrayOfStrings();
+
+    // now iterate over the first set of strings to see if any match the second set of strings
+
+    if ( testVar->IsString() )
+    {
+        // Is string in array?
+        conditionSuccess = listArray.Find( testVar->GetString() );
+    }
+    else if ( testVar->IsArrayOfStrings() )
+    {
+        // Is any string in array?
+        for ( const AString & testStr : testVar->GetArrayOfStrings() )
+        {
+            if ( listArray.Find( testStr ) )
+            {
+                conditionSuccess = true;
+                break;
+            }
+        }
+    }
+    else
+    {
+        Error::Error_1050_PropertyMustBeOfType( testVarNameBegin, this, listVarName.Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
+        return false;
+    }
+
+    if ( foundNot )
+    {
+        conditionSuccess = !conditionSuccess;
+    }
+
+    pos.SkipWhiteSpace();
+
+    // If not at the end of the header, there are extraneous tokens
+    if ( pos.GetCurrent() != functionHeaderStopToken->GetCurrent() )
+    {
+        Error::Error_1002_MatchingClosingTokenNotFound( *functionHeaderStartToken, this, ')' );
+        return false;
+    }
+
+    // Parse if condition met
+    if ( conditionSuccess )
     {
         // parse the function body
         BFFParser subParser( nodeGraph );
@@ -230,26 +189,15 @@ FunctionIf::FunctionIf()
         subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
         if ( subParser.Parse( subIter ) == false )
         {
-            succeed = false;
+            return false;
         }
-        else
-        {
-            if ( Commit( nodeGraph, functionNameStart ) == false )
-            {
-                succeed = false;
-            }
-        }
-    }
 
-    // unfreeze all array variables
-    for ( uint32_t j=0; j<arrayVars.GetSize(); ++j )
+        return Commit( nodeGraph, functionNameStart );
+    }
+    else
     {
-        arrayVars[ j ]->Unfreeze();
-        FLOG_INFO( "Unfreezing loop array '%s' of type <%s>",
-                   arrayVars[j]->GetName().Get(), BFFVariable::GetTypeName( arrayVars[j]->GetType() ) );
+        return true;
     }
-
-    return succeed;
 }
 
 //------------------------------------------------------------------------------

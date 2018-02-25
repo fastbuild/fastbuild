@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - If</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>If</h1>
+    <div id='foreach' class='newsitemheader'>
+      If
+    </div>
+    <div class='newsitembody'>
+      <p>
+Allows conditional evaluation of config.
+      </p>
+      <p>
+<b>NOTE:</b> Supported expressions are limited. More condition support coming soon.
+      </p>
+      <p>
+Example:
+      </p>
+<div class='code'>If( .String in .ArrayOfStrings )
+{
+    // Evaluated if .String is in .ArrayOfStrings
+}
+</div>
+      <p>
+Example:
+      </p>
+<div class='code'>If( .String not in .ArrayOfStrings )
+{
+    // Evaluated if .String is NOT in .ArrayOfStrings
+}
+</div>
+    </div>
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

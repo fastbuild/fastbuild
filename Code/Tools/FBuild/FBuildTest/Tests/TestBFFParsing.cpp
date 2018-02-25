@@ -401,52 +401,68 @@ void TestBFFParsing::OperatorMinus() const
     Parse( "Data/TestBFFParsing/operator_minus.bff" );
 }
 
+// IfFunctionTrue
 //------------------------------------------------------------------------------
 void TestBFFParsing::IfFunctionTrue() const
 {
-    Parse( "Data/TestBFFParsing/if_function_true.bff");
+    Parse( "Data/TestBFFParsing/if_function_true.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
+// IfNotFunctionTrue
+//------------------------------------------------------------------------------
 void TestBFFParsing::IfNotFunctionTrue() const
 {
-    Parse( "Data/TestBFFParsing/if_function_true.bff");
+    Parse( "Data/TestBFFParsing/if_function_true.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
+// IfSetFunctionTrue
+//------------------------------------------------------------------------------
 void TestBFFParsing::IfSetFunctionTrue() const
 {
-    Parse( "Data/TestBFFParsing/if_set_function_true.bff");
+    Parse( "Data/TestBFFParsing/if_set_function_true.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
+// IfNotSetFunctionTrue
+//------------------------------------------------------------------------------
 void TestBFFParsing::IfNotSetFunctionTrue() const
 {
-    Parse( "Data/TestBFFParsing/if_not_set_function_true.bff");
+    Parse( "Data/TestBFFParsing/if_not_set_function_true.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
+// IfFunctionFalse
+//------------------------------------------------------------------------------
 void TestBFFParsing::IfFunctionFalse() const
 {
-    Parse( "Data/TestBFFParsing/if_function_false.bff");
+    Parse( "Data/TestBFFParsing/if_function_false.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == false );
 }
 
+// IfNotFunctionFalse
+//------------------------------------------------------------------------------
 void TestBFFParsing::IfNotFunctionFalse() const
 {
-    Parse( "Data/TestBFFParsing/if_function_false.bff");
+    Parse( "Data/TestBFFParsing/if_function_false.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == false );
 }
 
+// IfSetFunctionFalse
+//------------------------------------------------------------------------------
 void TestBFFParsing::IfSetFunctionFalse() const
 {
-    Parse( "Data/TestBFFParsing/if_set_function_false.bff");
+    Parse( "Data/TestBFFParsing/if_set_function_false.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == false );
 }
 
+// IfNotSetFunctionFalse
+//------------------------------------------------------------------------------
 void TestBFFParsing::IfNotSetFunctionFalse() const
 {
-    Parse( "Data/TestBFFParsing/if_not_set_function_false.bff");
+    Parse( "Data/TestBFFParsing/if_not_set_function_false.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == false );
 }
 
+//------------------------------------------------------------------------------
