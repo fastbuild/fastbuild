@@ -11,21 +11,28 @@
 // Macros
 //------------------------------------------------------------------------------
 #define IMPLEMENT_TEST( type, function, initialValue, expectedResult )                          \
+    struct Test##function##UserData                                                             \
+    {                                                                                           \
+        volatile type m_Count;                                                                  \
+        volatile uint32_t m_BarrierCounter;                                                     \
+    };                                                                                          \
     void Test##function() const                                                                 \
     {                                                                                           \
-        type data = initialValue;                                                               \
+        Test##function##UserData data;                                                          \
+        data.m_Count = initialValue;                                                            \
+        data.m_BarrierCounter = 0;                                                              \
                                                                                                 \
         Thread::ThreadHandle h = Thread::CreateThread( Test##function##ThreadEntryFunction,     \
                                                        #function,                               \
                                                        ( 64 * KILOBYTE ),                       \
                                                        static_cast< void * >( &data ) );        \
                                                                                                 \
-        volatile type & sharedVar = static_cast< volatile type & >( data );                     \
-        ++sharedVar;                                                                            \
+        AtomicIncU32( &data.m_BarrierCounter );                                                 \
+        while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}                           \
                                                                                                 \
         for ( size_t i=0; i<1000000; ++i )                                                      \
         {                                                                                       \
-            function( &sharedVar );                                                             \
+            function( &data.m_Count );                                                          \
         }                                                                                       \
                                                                                                 \
         bool timedOut = false;                                                                  \
@@ -33,19 +40,19 @@
         TEST_ASSERT( timedOut == false );                                                       \
         Thread::CloseHandle( h );                                                               \
                                                                                                 \
-        type res = sharedVar;                                                                   \
+        type res = AtomicLoadRelaxed( &data.m_Count );                                          \
         TEST_ASSERT( res == expectedResult );                                                   \
     }                                                                                           \
     static uint32_t Test##function##ThreadEntryFunction( void * userData )                      \
     {                                                                                           \
-        type & data = *( static_cast< type * >( userData ) );                                   \
-        volatile type & sharedVar = data;                                                       \
+        Test##function##UserData & data = *( static_cast< Test##function##UserData * >( userData ) ); \
                                                                                                 \
-        while ( sharedVar == initialValue ) {}                                                  \
+        AtomicIncU32( &data.m_BarrierCounter );                                                 \
+        while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}                           \
                                                                                                 \
         for ( size_t i=0; i<1000000; ++i )                                                      \
         {                                                                                       \
-            function( &sharedVar );                                                             \
+            function( &data.m_Count );                                                          \
         }                                                                                       \
                                                                                                 \
         return 0;                                                                               \
@@ -59,16 +66,16 @@ private:
     DECLARE_TESTS
 
     // Increment
-    IMPLEMENT_TEST( uint32_t, AtomicIncU32, 0, 2000001 )
-    IMPLEMENT_TEST( uint64_t, AtomicIncU64, 0, 2000001 )
-    IMPLEMENT_TEST( int32_t, AtomicInc32, 0, 2000001 )
-    IMPLEMENT_TEST( int64_t, AtomicInc64, 0, 2000001 )
+    IMPLEMENT_TEST( uint32_t, AtomicIncU32, 0, 2000000 )
+    IMPLEMENT_TEST( uint64_t, AtomicIncU64, 0, 2000000 )
+    IMPLEMENT_TEST( int32_t, AtomicInc32, 0, 2000000 )
+    IMPLEMENT_TEST( int64_t, AtomicInc64, 0, 2000000 )
 
     // Decrement
-    IMPLEMENT_TEST( uint32_t, AtomicDecU32, 2000000, 1 )
-    IMPLEMENT_TEST( uint64_t, AtomicDecU64, 2000000, 1 )
-    IMPLEMENT_TEST( int32_t, AtomicDec32, 0, -1999999 )
-    IMPLEMENT_TEST( int64_t, AtomicDec64, 0, -1999999 )
+    IMPLEMENT_TEST( uint32_t, AtomicDecU32, 2000000, 0 )
+    IMPLEMENT_TEST( uint64_t, AtomicDecU64, 2000000, 0 )
+    IMPLEMENT_TEST( int32_t, AtomicDec32, 0, -2000000 )
+    IMPLEMENT_TEST( int64_t, AtomicDec64, 0, -2000000 )
 
     // Add
     void Add32() const;
