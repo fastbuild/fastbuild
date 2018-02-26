@@ -145,7 +145,7 @@ FunctionIf::FunctionIf()
     if ( testVar->IsString() )
     {
         // Is string in array?
-        conditionSuccess = listArray.Find( testVar->GetString() );
+        conditionSuccess = ( listArray.Find( testVar->GetString() ) != nullptr );
     }
     else if ( testVar->IsArrayOfStrings() )
     {
