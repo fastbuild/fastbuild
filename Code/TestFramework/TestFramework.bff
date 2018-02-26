@@ -10,7 +10,7 @@
     {
         // Common options
         .UnityInputPath             = '$ProjectPath$\'
-        .UnityOutputPath            = '$OutputBase$\Unity\$ProjectPath$\'
+        .UnityOutputPath            = '$UnityOutputBase$\$ProjectPath$\'
     }
 
     // Library

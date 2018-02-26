@@ -9,7 +9,7 @@
     Unity( '$ProjectName$-Unity' )
     {
         .UnityInputPath             = '$ProjectPath$\'
-        .UnityOutputPath            = '$OutputBase$\Unity\$ProjectPath$\'
+        .UnityOutputPath            = '$UnityOutputBase$\$ProjectPath$\'
 
         // Ignore test data (some of which is code)
         .UnityInputExcludePath      = 'Tools\FBuild\FBuildTest\Data\'
