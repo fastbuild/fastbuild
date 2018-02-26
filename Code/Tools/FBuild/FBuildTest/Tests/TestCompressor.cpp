@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/Helpers/Compressor.h"
 
@@ -17,7 +17,7 @@
 
 // TestCompressor
 //------------------------------------------------------------------------------
-class TestCompressor : public UnitTest
+class TestCompressor : public FBuildTest
 {
 private:
     DECLARE_TESTS
@@ -109,13 +109,13 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 //------------------------------------------------------------------------------
 void TestCompressor::CompressPreprocessedFile() const
 {
-    CompressHelper( "Data/TestCompressor/TestPreprocessedFile.ii" );
+    CompressHelper( "Tools/FBuild/FBuildTest/Data/TestCompressor/TestPreprocessedFile.ii" );
 }
 
 //------------------------------------------------------------------------------
 void TestCompressor::CompressObjFile() const
 {
-    CompressHelper( "Data/TestCompressor/TestObjFile.o" );
+    CompressHelper( "Tools/FBuild/FBuildTest/Data/TestCompressor/TestObjFile.o" );
 }
 
 // CompressHelper

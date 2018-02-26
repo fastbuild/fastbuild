@@ -14,12 +14,14 @@
 
 // Static Data
 //------------------------------------------------------------------------------
+/*static*/ bool FBuildTest::s_DebuggerAttached( false );
 /*static*/ AString FBuildTest::s_RecordedOutput( 1024 * 1024 );
 
 // CONSTRUCTOR (FBuildTest)
 //------------------------------------------------------------------------------
 FBuildTest::FBuildTest()
 {
+    s_DebuggerAttached = IsDebuggerAttached();
     m_OriginalWorkingDir.SetReserved( 512 );
 }
 
@@ -43,13 +45,20 @@ FBuildTest::FBuildTest()
 
 // PostTest
 //------------------------------------------------------------------------------
-/*virtual*/ void FBuildTest::PostTest() const
+/*virtual*/ void FBuildTest::PostTest( bool passed ) const
 {
     VERIFY( FileIO::SetCurrentDir( m_OriginalWorkingDir ) );
 
     FBuildStats::SetIgnoreCompilerNodeDeps( false );
 
     Tracing::RemoveCallbackOutput( LoggingCallback );
+
+    // Print the output on failure, unless in the debugger
+    // (we print as we go if the debugger is attached)
+    if ( ( passed == false ) && ( s_DebuggerAttached == false ) )
+    {
+        OUTPUT( "%s", s_RecordedOutput.Get() );
+    }
 }
 
 // EnsureFileDoesNotExist
@@ -153,7 +162,9 @@ void FBuildTest::CheckStatsTotal( size_t numSeen, size_t numBuilt ) const
 bool FBuildTest::LoggingCallback( const char * message )
 {
     s_RecordedOutput.Append( message, AString::StrLen( message ) );
-    return true; // continue logging like normal
+    // If in the debugger, print the output normally as well, otherwise
+    // suppress and only print on failure
+    return s_DebuggerAttached;
 }
 
 // CONSTRUCTOR - FBuildTestOptions

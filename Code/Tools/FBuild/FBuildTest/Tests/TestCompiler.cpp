@@ -3,7 +3,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "TestFramework/UnitTest.h"
+#include "FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
@@ -14,7 +14,7 @@
 
 // TestCompiler
 //------------------------------------------------------------------------------
-class TestCompiler : public UnitTest
+class TestCompiler : public FBuildTest
 {
 private:
     DECLARE_TESTS
@@ -40,28 +40,28 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestCompiler::ConflictingFiles1() const
 {
-    Parse( "Data/TestCompiler/conflict1.bff", true ); // Expect failure
+    Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict1.bff", true ); // Expect failure
 }
 
 // ConflictingFiles2
 //------------------------------------------------------------------------------
 void TestCompiler::ConflictingFiles2() const
 {
-    Parse( "Data/TestCompiler/conflict2.bff", true ); // Expect failure
+    Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict2.bff", true ); // Expect failure
 }
 
 // ConflictingFiles3
 //------------------------------------------------------------------------------
 void TestCompiler::ConflictingFiles3() const
 {
-    Parse( "Data/TestCompiler/conflict3.bff", true ); // Expect failure
+    Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict3.bff", true ); // Expect failure
 }
 
 // ConflictingFiles4
 //------------------------------------------------------------------------------
 void TestCompiler::ConflictingFiles4() const
 {
-    Parse( "Data/TestCompiler/conflict4.bff", true ); // Expect failure
+    Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict4.bff", true ); // Expect failure
 }
 
 // Parse

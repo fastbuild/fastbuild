@@ -21,7 +21,7 @@ protected:
     FBuildTest();
 
     virtual void PreTest() const override;
-    virtual void PostTest() const override;
+    virtual void PostTest( bool pased ) const override;
 
     // helpers to clear and check for generated files
     void EnsureFileDoesNotExist( const char * fileName ) const;
@@ -45,6 +45,7 @@ protected:
     const AString & GetRecordedOutput() const { return s_RecordedOutput; }
 private:
     mutable AString m_OriginalWorkingDir;
+    static bool s_DebuggerAttached;
     static bool LoggingCallback( const char * message );
     static AString s_RecordedOutput;
 };
