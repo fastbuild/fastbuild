@@ -48,8 +48,7 @@ Executable( 'BridgeTest-Exe' )
                             + ' MSCOREE.lib'
                             + ' msvcmrt.lib'
                             + ' msvcrt.LIB'
-                        #endif
-                        #if USING_VS2017
+                        #else
                             + ' libvcruntime.lib'
                             + ' libucrt.lib'
                             + ' libcmt.lib'
