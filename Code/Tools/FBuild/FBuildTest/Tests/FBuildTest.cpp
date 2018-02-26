@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -148,6 +149,10 @@ void FBuildTest::CheckStatsTotal( size_t numSeen, size_t numBuilt ) const
 {
     // we want the working dir to be the 'Code' directory
     TEST_ASSERT( FileIO::GetCurrentDir( codeDir ) );
+    if ( !codeDir.EndsWith( NATIVE_SLASH ) )
+    {
+        codeDir += NATIVE_SLASH;
+    }
     #if defined( __WINDOWS__ )
         const char * codePos = codeDir.FindI( "\\code\\" );
     #else
