@@ -66,8 +66,8 @@ public:
     // manage connections
     bool Listen( uint16_t port );
     void StopListening();
-    const ConnectionInfo * Connect( const AString & host, uint16_t port, uint32_t timeout = 2000 );
-    const ConnectionInfo * Connect( uint32_t hostIP, uint16_t port, uint32_t timeout = 2000 );
+    const ConnectionInfo * Connect( const AString & host, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
+    const ConnectionInfo * Connect( uint32_t hostIP, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
     void Disconnect( const ConnectionInfo * ci );
     void SetShuttingDown() { m_ShuttingDown = true; }
 
@@ -119,7 +119,7 @@ private:
     void                CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port );
     static uint32_t     ListenThreadWrapperFunction( void * data );
     void                ListenThreadFunction( ConnectionInfo * ci );
-    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port );
+    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port, void * userData = nullptr );
     static uint32_t     ConnectionThreadWrapperFunction( void * data );
     void                ConnectionThreadFunction( ConnectionInfo * ci );
 

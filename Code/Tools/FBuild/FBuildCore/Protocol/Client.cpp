@@ -218,7 +218,7 @@ void Client::LookForWorkers()
             continue;
         }
 
-        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], m_Port, 2000 ); // 2000ms connection timeout
+        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], m_Port, 2000, &ss ); // 2000ms connection timeout
         if ( ci == nullptr )
         {
             ss.m_DelayTimer.Start(); // reset connection attempt delay
@@ -228,7 +228,6 @@ void Client::LookForWorkers()
             DIST_INFO( "Connected: %s\n", m_WorkerList[ i ].Get() );
             const uint32_t numJobsAvailable( JobQueue::IsValid() ? (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable() : 0 );
 
-            ci->SetUserData( &ss );
             ss.m_RemoteName = m_WorkerList[ i ];
             ss.m_Connection = ci; // success!
             ss.m_NumJobsAvailable = numJobsAvailable;
