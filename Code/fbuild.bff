@@ -290,7 +290,12 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 [
     .Librarian              = '/usr/bin/ar'
 
-    .BaseCompilerOptions    = '-o "%2" "%1" -c -g'
+    .BaseCompilerOptions    = ''
+    
+                            // Compatibility with older glibc (must be first!)
+                            + ' -include Core/Env/glibc_compat.h'
+                            
+                            + ' -o "%2" "%1" -c -g'
                             + ' -I./'
                             + ' -D__LINUX__'
                             + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
