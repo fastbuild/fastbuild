@@ -75,7 +75,7 @@ bool ExecNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
         return false; // GetFileNodes will have emitted an error
     }
 
-    // .CompilerInputPath
+    // .ExecInputPath
     Dependencies execInputPaths;
     if ( !function->GetDirectoryListNodeList( nodeGraph,
                                               iter,

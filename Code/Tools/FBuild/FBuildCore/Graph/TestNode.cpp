@@ -21,12 +21,20 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
-    REFLECT( m_TestExecutable,      "TestExecutable",       MetaFile() )
-    REFLECT( m_TestArguments,       "TestArguments",        MetaOptional() )
-    REFLECT( m_TestWorkingDir,      "TestWorkingDir",       MetaOptional() + MetaPath() )
-    REFLECT( m_TestTimeOut,         "TestTimeOut",          MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
-    REFLECT( m_TestAlwaysShowOutput,"TestAlwaysShowOutput", MetaOptional() )
-    REFLECT_ARRAY( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_TestExecutable,                  "TestExecutable",           MetaFile() )
+    REFLECT_ARRAY(  m_TestInput,                "TestInput",                MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_TestInputPath,            "TestInputPath",            MetaOptional() + MetaPath() )
+    REFLECT_ARRAY(  m_TestInputPattern,         "TestInputPattern",         MetaOptional() )
+    REFLECT(        m_TestInputPathRecurse,     "TestInputPathRecurse",     MetaOptional() )
+    REFLECT(        m_TestInputPathRecurse,     "TestInputPathRecurse",     MetaOptional() )
+    REFLECT_ARRAY(  m_TestInputExcludePath,     "TestInputExcludePath",     MetaOptional() + MetaPath() )
+    REFLECT_ARRAY(  m_TestInputExcludedFiles,   "TestInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
+    REFLECT_ARRAY(  m_TestInputExcludePattern,  "TestInputExcludePattern",  MetaOptional() )
+    REFLECT(        m_TestArguments,            "TestArguments",            MetaOptional() )
+    REFLECT(        m_TestWorkingDir,           "TestWorkingDir",           MetaOptional() + MetaPath() )
+    REFLECT(        m_TestTimeOut,              "TestTimeOut",              MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
+    REFLECT(        m_TestAlwaysShowOutput,     "TestAlwaysShowOutput",     MetaOptional() )
+    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
 REFLECT_END( TestNode )
 
 // CONSTRUCTOR
@@ -38,6 +46,7 @@ TestNode::TestNode()
     , m_TestWorkingDir()
     , m_TestTimeOut( 0 )
     , m_TestAlwaysShowOutput( false )
+    , m_TestInputPathRecurse( true )
 {
     m_Type = Node::TEST_NODE;
 }
@@ -52,11 +61,43 @@ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
         return false; // InitializePreBuildDependencies will have emitted an error
     }
 
-    // Get node for Executable
-    if ( !function->GetFileNode( nodeGraph, iter, m_TestExecutable, "TestExecutable", m_StaticDependencies ) )
+    // .TestExecutable
+    Dependencies executable;
+    if ( !function->GetFileNode( nodeGraph, iter, m_TestExecutable, "TestExecutable", executable ) )
     {
         return false; // GetFileNode will have emitted an error
     }
+    ASSERT( executable.GetSize() == 1 ); // Should only be possible to be one
+
+    // .TestInput
+    Dependencies testInputFiles;
+    if ( !function->GetFileNodes( nodeGraph, iter, m_TestInput, "TestInput", testInputFiles ) )
+    {
+        return false; // GetFileNodes will have emitted an error
+    }
+
+    // .TestInputPath
+    Dependencies testInputPaths;
+    if ( !function->GetDirectoryListNodeList( nodeGraph,
+                                              iter,
+                                              m_TestInputPath,
+                                              m_TestInputExcludePath,
+                                              m_TestInputExcludedFiles,
+                                              m_TestInputExcludePattern,
+                                              m_TestInputPathRecurse,
+                                              &m_TestInputPattern,
+                                              "TestInputPath",
+                                              testInputPaths ) )
+    {
+        return false; // GetDirectoryListNodeList will have emitted an error
+    }
+    ASSERT( testInputPaths.GetSize() == m_TestInputPath.GetSize() ); // No need to store count since they should be the same
+
+    // Store Static Dependencies
+    m_StaticDependencies.SetCapacity( 1 + testInputFiles.GetSize() + testInputPaths.GetSize() );
+    m_StaticDependencies.Append( executable );
+    m_StaticDependencies.Append( testInputFiles );
+    m_StaticDependencies.Append( testInputPaths );
 
     return true;
 }
