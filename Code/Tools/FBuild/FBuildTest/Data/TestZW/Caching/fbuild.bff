@@ -19,16 +19,16 @@ ObjectList( 'Caching' )
     .CompilerOptions            + ' /ZW'
                                 + ' /EHsc'
                                 #if USING_VS2013
-                                    + ' /AI"../External/SDK/VisualStudio/2013/VC/vcpackages"'
-                                    + ' /AI"../External/SDK/Windows/8.1/References/CommonConfiguration/Neutral"'
+                                    + ' /AI"$VS2013_BasePath$/VC/vcpackages"'
+                                    + ' /AI"$Windows81_SDKBasePath$/References/CommonConfiguration/Neutral"'
                                 #endif
                                 #if USING_VS2015
-                                    + ' /AI"../External/SDK/VisualStudio/2015/VC/vcpackages"'
-                                    + ' /AI"../External/SDK/Windows/10/App Certification Kit/winmds/windows81"'
+                                    + ' /AI"$VS2015_BasePath$/VC/vcpackages"'
+                                    + ' /AI"$Windows10_SDKBasePath$/App Certification Kit/winmds/windows81"'
                                 #endif
                                 #if USING_VS2017
-                                    + ' /AI"../External/SDK/VisualStudio/2017/Community/Common7/IDE/VC/vcpackages"'
-                                    + ' /AI"../External/SDK/Windows/10/App Certification Kit/winmds/windows81"'
+                                    + ' /AI"$VS2017_BasePath$/Common7/IDE/VC/vcpackages"'
+                                    + ' /AI"$Windows10_SDKBasePath$/App Certification Kit/winmds/windows81"'
                                 #endif
 
     .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestZW/Caching/'
