@@ -15,6 +15,7 @@
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ bool FBuildTest::s_DebuggerAttached( false );
+/*static*/ Mutex FBuildTest::s_OutputMutex;
 /*static*/ AString FBuildTest::s_RecordedOutput( 1024 * 1024 );
 
 // CONSTRUCTOR (FBuildTest)
@@ -161,6 +162,7 @@ void FBuildTest::CheckStatsTotal( size_t numSeen, size_t numBuilt ) const
 //------------------------------------------------------------------------------
 bool FBuildTest::LoggingCallback( const char * message )
 {
+    MutexHolder mh( s_OutputMutex );
     s_RecordedOutput.Append( message, AString::StrLen( message ) );
     // If in the debugger, print the output normally as well, otherwise
     // suppress and only print on failure
