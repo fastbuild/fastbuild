@@ -31,12 +31,12 @@ class BFFVariable
 public:
     inline const AString & GetName() const { return m_Name; }
 
-    const AString & GetString() const { return m_StringValue; }
-    const Array< AString > & GetArrayOfStrings() const { return m_ArrayValues; }
-    int GetInt() const { return m_IntValue; }
-    bool GetBool() const { return m_BoolValue; }
-    const Array< const BFFVariable * > & GetStructMembers() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_StructMembers ); }
-    const Array< const BFFVariable * > & GetArrayOfStructs() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_ArrayOfStructs ); }
+    const AString & GetString() const { ASSERT( IsString() ); return m_StringValue; }
+    const Array< AString > & GetArrayOfStrings() const { ASSERT( IsArrayOfStrings() ); return m_ArrayValues; }
+    int GetInt() const { ASSERT( IsInt() ); return m_IntValue; }
+    bool GetBool() const { ASSERT( IsBool() ); return m_BoolValue; }
+    const Array< const BFFVariable * > & GetStructMembers() const { ASSERT( IsStruct() ); RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables ); }
+    const Array< const BFFVariable * > & GetArrayOfStructs() const { ASSERT( IsArrayOfStructs() ); RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables ); }
 
     enum VarType : uint8_t
     {
@@ -99,8 +99,7 @@ private:
     int                 m_IntValue;
     AString             m_StringValue;
     Array< AString >    m_ArrayValues;
-    Array< BFFVariable * > m_StructMembers;
-    Array< BFFVariable * > m_ArrayOfStructs;
+    Array< BFFVariable * > m_SubVariables; // Used for struct members of arrays of structs
 
     static const char * s_TypeNames[ MAX_VAR_TYPES ];
 };
