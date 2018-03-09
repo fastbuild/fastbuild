@@ -9,7 +9,7 @@
     Unity( '$ProjectName$-Unity' )
     {
         .UnityInputPath             = '$ProjectPath$\'
-        .UnityOutputPath            = '$OutputBase$\Unity\$ProjectPath$\'
+        .UnityOutputPath            = '$UnityOutputBase$\$ProjectPath$\'
     }
 
     // Windows Resources

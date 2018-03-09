@@ -426,6 +426,15 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 // Unity/Blob files (shared across configs)
 //------------------------------------------------------------------------------
 .UnityInputIsolateWritableFiles = true
+#if __WINDOWS__
+    .UnityOutputBase = '$OutputBase$\Unity-Windows'
+#endif
+#if __LINUX__
+    .UnityOutputBase = '$OutputBase$\Unity-Linux'
+#endif
+#if __OSX__
+    .UnityOutputBase = '$OutputBase$\Unity-OSX'
+#endif
 
 //------------------------------------------------------------------------------
 // VisualStudio Project Generation
