@@ -882,28 +882,13 @@ VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
 
 // CreateSLNNode
 //------------------------------------------------------------------------------
-SLNNode * NodeGraph::CreateSLNNode( const AString & solutionOutput,
-                                    const AString & solutionBuildProject,
-                                    const AString & solutionVisualStudioVersion,
-                                    const AString & solutionMinimumVisualStudioVersion,
-                                    const Array< VSProjectConfig > & configs,
-                                    const Array< VCXProjectNode * > & projects,
-                                    const Array< SLNDependency > & slnDeps,
-                                    const Array< SLNSolutionFolder > & folders )
+SLNNode * NodeGraph::CreateSLNNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( name ) );
 
-    AStackString< 1024 > fullPath;
-    CleanPath( solutionOutput, fullPath );
-
-    SLNNode * node = FNEW( SLNNode( fullPath,
-                                    solutionBuildProject,
-                                    solutionVisualStudioVersion,
-                                    solutionMinimumVisualStudioVersion,
-                                    configs,
-                                    projects,
-                                    slnDeps,
-                                    folders ) );
+    SLNNode * node = FNEW( SLNNode() );
+    node->SetName( name );
     AddNode( node );
     return node;
 }
