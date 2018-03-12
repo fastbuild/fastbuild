@@ -47,7 +47,7 @@ REFLECT_END( SolutionDependency )
 
 REFLECT_NODE_BEGIN( SLNNode, Node, MetaName( "SolutionOutput" ) + MetaFile() )
     REFLECT_ARRAY(  m_SolutionProjects,                     "SolutionProjects",                         MetaOptional() + MetaFile() )
-    REFLECT(        m_SolutionBuildProject,                 "SolutionBuildProject",                     MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_SolutionBuildProjects,                "SolutionBuildProject",                     MetaOptional() + MetaFile() ) // "SolutionBuildProject" for backwards compat
     REFLECT(        m_SolutionVisualStudioVersion,          "SolutionVisualStudioVersion",              MetaOptional() )
     REFLECT(        m_SolutionMinimumVisualStudioVersion,   "SolutionMinimumVisualStudioVersion",       MetaOptional() )
     REFLECT_ARRAY_OF_STRUCT( m_SolutionConfigs,             "SolutionConfigs",      SolutionConfig,     MetaOptional() )
@@ -183,12 +183,9 @@ bool SLNNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const
         }
     }
     // SolutionBuildProjects
-    if ( m_SolutionBuildProject.IsEmpty() == false )
+    if ( !GatherProjects( nodeGraph, function, iter, "SolutionBuildProject", m_SolutionBuildProjects, projects ) )
     {
-        if ( !GatherProject( nodeGraph, function, iter, "SolutionBuildProject", m_SolutionBuildProject, projects ) )
-        {
-            return false; // MergeProjects will have emitted an error
-        }
+        return false; // MergeProjects will have emitted an error
     }
 
     // Sort projects by name (like Visual Studio)
@@ -254,7 +251,7 @@ SLNNode::~SLNNode() = default;
 
     // .sln solution file
     const AString & sln = sg.GenerateSLN(   m_Name,
-                                            m_SolutionBuildProject,
+                                            m_SolutionBuildProjects,
                                             m_SolutionVisualStudioVersion,
                                             m_SolutionMinimumVisualStudioVersion,
                                             m_SolutionConfigs,

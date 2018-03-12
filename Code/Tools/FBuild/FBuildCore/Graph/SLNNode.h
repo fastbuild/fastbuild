@@ -90,7 +90,7 @@ private:
 
     // Reflected
     Array< AString >            m_SolutionProjects;
-    AString                     m_SolutionBuildProject;
+    Array< AString >            m_SolutionBuildProjects;
     AString                     m_SolutionVisualStudioVersion;
     AString                     m_SolutionMinimumVisualStudioVersion;
     Array< SolutionConfig >     m_SolutionConfigs;

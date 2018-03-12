@@ -31,7 +31,7 @@ SLNGenerator::~SLNGenerator() = default;
 // GenerateVCXProj
 //------------------------------------------------------------------------------
 const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
-                                           const AString & solutionBuildProject,
+                                           const Array< AString > & solutionBuildProjects,
                                            const AString & solutionVisualStudioVersion,
                                            const AString & solutionMinimumVisualStudioVersion,
                                            const Array< SolutionConfig > & solutionConfigs,
@@ -47,18 +47,18 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
     const char * lastSlash = solutionFile.FindLast( NATIVE_SLASH );
     AStackString<> solutionBasePath( solutionFile.Get(), lastSlash ? lastSlash + 1 : solutionFile.Get() );
 
-    AStackString<> solutionBuildProjectGuid;
+    Array< AString > solutionBuildProjectGuids;
     Array< AString > projectGuids( projects.GetSize(), false );
     Array< AString > solutionProjectsToFolder( projects.GetSize(), true );
     Array< AString > solutionFolderPaths( solutionFolders.GetSize(), true );
 
     // construct sln file
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
-    WriteProjectListings( solutionBasePath, solutionBuildProject, projects, solutionFolders, solutionDependencies, solutionBuildProjectGuid, projectGuids, solutionProjectsToFolder );
+    WriteProjectListings( solutionBasePath, solutionBuildProjects, projects, solutionFolders, solutionDependencies, solutionBuildProjectGuids, projectGuids, solutionProjectsToFolder );
     WriteSolutionFolderListings( solutionFolders, solutionFolderPaths );
     Write( "Global\r\n" );
     WriteSolutionConfigurationPlatforms( solutionConfigs );
-    WriteProjectConfigurationPlatforms( solutionBuildProjectGuid, solutionConfigs, projectGuids );
+    WriteProjectConfigurationPlatforms( solutionBuildProjectGuids, solutionConfigs, projectGuids );
     WriteNestedProjects( solutionProjectsToFolder, solutionFolderPaths );
     WriteFooter();
 
@@ -97,11 +97,11 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 // WriteProjectListings
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
-                                         const AString& solutionBuildProject,
+                                         const Array< AString > & solutionBuildProjects,
                                          const Array< VCXProjectNode * > & projects,
                                          const Array< SolutionFolder > & solutionFolders,
                                          const Array< SolutionDependency > & solutionDependencies,
-                                         AString & solutionBuildProjectGuid,
+                                         Array< AString > & solutionBuildProjectGuids,
                                          Array< AString > & projectGuids,
                                          Array< AString > & solutionProjectsToFolder )
 {
@@ -110,8 +110,16 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
     VCXProjectNode ** const projectsEnd = projects.End();
     for( VCXProjectNode ** it = projects.Begin() ; it != projectsEnd ; ++it )
     {
-        // check if this project is the master project
-        const bool projectIsActive = ( solutionBuildProject.CompareI( (*it)->GetName() ) == 0 );
+        // Is project active in solution build?
+        bool projectIsActive = false;
+        for ( const AString & solutionBuildProject : solutionBuildProjects )
+        {
+            if ( solutionBuildProject.EqualsI( (*it)->GetName() ) )
+            {
+                projectIsActive = true;
+                break;
+            }
+        }
 
         AStackString<> projectPath( (*it)->GetName() );
 
@@ -132,8 +140,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
 
         if ( projectIsActive )
         {
-            ASSERT( solutionBuildProjectGuid.GetLength() == 0 );
-            solutionBuildProjectGuid = projectGuid;
+            solutionBuildProjectGuids.Append( projectGuid );
         }
 
         Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\r\n",
@@ -268,7 +275,7 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
 
 // WriteProjectConfigurationPlatforms
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteProjectConfigurationPlatforms( const AString & solutionBuildProjectGuid,
+void SLNGenerator::WriteProjectConfigurationPlatforms( const Array< AString > & solutionBuildProjectGuids,
                                                        const Array< SolutionConfig > & solutionConfigs,
                                                        const Array< AString > & projectGuids )
 {
@@ -279,7 +286,7 @@ void SLNGenerator::WriteProjectConfigurationPlatforms( const AString & solutionB
     for( const AString * it = projectGuids.Begin() ; it != projectGuidsEnd ; ++it )
     {
         // only one project active in the solution build
-        const bool projectIsActive = ( solutionBuildProjectGuid == *it );
+        const bool projectIsActive = solutionBuildProjectGuids.Find( *it );
 
         const SolutionConfig * const solutionConfigsEnd = solutionConfigs.End();
         for( const SolutionConfig * it2 = solutionConfigs.Begin() ; it2 != solutionConfigsEnd ; ++it2 )
