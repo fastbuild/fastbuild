@@ -137,7 +137,7 @@ TestNode::~TestNode() = default;
             }
             else if ( sn->IsAFile() == false )
             {
-                FLOG_ERROR( "CSAssembly() .CompilerInputFile '%s' is not a FileNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
+                FLOG_ERROR( "Test() .TestInputFile '%s' is not a FileNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
                 return false;
             }
 
