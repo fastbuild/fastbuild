@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 
 #include "Core/FileIO/FileIO.h"
@@ -105,6 +106,48 @@ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 TestNode::~TestNode() = default;
+
+// DoDynamicDependencies
+//------------------------------------------------------------------------------
+/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+{
+    // clear dynamic deps from previous passes
+    m_DynamicDependencies.Clear();
+
+    // get the result of the directory lists and depend on those
+    const size_t startIndex = 1; // Skip Executable
+    const size_t endIndex =  ( 1 + m_TestInputPath.GetSize() );
+    for ( size_t i=startIndex; i<endIndex; ++i )
+    {
+        Node * n = m_StaticDependencies[ i ].GetNode();
+
+        ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
+
+        // get the list of files
+        DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
+        for ( const FileIO::FileInfo & file : files )
+        {
+            // Create the file node (or find an existing one)
+            Node * sn = nodeGraph.FindNode( file.m_Name );
+            if ( sn == nullptr )
+            {
+                sn = nodeGraph.CreateFileNode( file.m_Name );
+            }
+            else if ( sn->IsAFile() == false )
+            {
+                FLOG_ERROR( "CSAssembly() .CompilerInputFile '%s' is not a FileNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
+                return false;
+            }
+
+            m_DynamicDependencies.Append( Dependency( sn ) );
+        }
+        continue;
+    }
+
+    return true;
+}
 
 // DoBuild
 //------------------------------------------------------------------------------

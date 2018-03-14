@@ -28,6 +28,7 @@ public:
 
     inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
 private:
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     void EmitCompilationMessage( const char * workingDir ) const;
