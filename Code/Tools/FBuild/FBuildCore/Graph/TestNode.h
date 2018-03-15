@@ -46,6 +46,9 @@ private:
     bool                m_TestAlwaysShowOutput;
     bool                m_TestInputPathRecurse;
     Array< AString >    m_PreBuildDependencyNames;
+
+    // Internal State
+    uint32_t            m_NumTestInputFiles;
 };
 
 //------------------------------------------------------------------------------

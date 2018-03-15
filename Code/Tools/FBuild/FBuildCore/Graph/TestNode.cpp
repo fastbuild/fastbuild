@@ -36,6 +36,9 @@ REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
     REFLECT(        m_TestTimeOut,              "TestTimeOut",              MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
     REFLECT(        m_TestAlwaysShowOutput,     "TestAlwaysShowOutput",     MetaOptional() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+
+    // Internal State
+    REFLECT(        m_NumTestInputFiles,        "NumTestInputFiles",        MetaHidden() )
 REFLECT_END( TestNode )
 
 // CONSTRUCTOR
@@ -76,6 +79,7 @@ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
     {
         return false; // GetFileNodes will have emitted an error
     }
+    m_NumTestInputFiles = (uint32_t)testInputFiles.GetSize();
 
     // .TestInputPath
     Dependencies testInputPaths;
@@ -95,7 +99,7 @@ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
     ASSERT( testInputPaths.GetSize() == m_TestInputPath.GetSize() ); // No need to store count since they should be the same
 
     // Store Static Dependencies
-    m_StaticDependencies.SetCapacity( 1 + testInputFiles.GetSize() + testInputPaths.GetSize() );
+    m_StaticDependencies.SetCapacity( 1 + m_NumTestInputFiles + testInputPaths.GetSize() );
     m_StaticDependencies.Append( executable );
     m_StaticDependencies.Append( testInputFiles );
     m_StaticDependencies.Append( testInputPaths );
@@ -115,8 +119,8 @@ TestNode::~TestNode() = default;
     m_DynamicDependencies.Clear();
 
     // get the result of the directory lists and depend on those
-    const size_t startIndex = 1; // Skip Executable
-    const size_t endIndex =  ( 1 + m_TestInputPath.GetSize() );
+    const size_t startIndex = 1 + m_NumTestInputFiles; // Skip Executable + TestInputFiles
+    const size_t endIndex =  ( 1 + m_NumTestInputFiles + m_TestInputPath.GetSize() );
     for ( size_t i=startIndex; i<endIndex; ++i )
     {
         Node * n = m_StaticDependencies[ i ].GetNode();
