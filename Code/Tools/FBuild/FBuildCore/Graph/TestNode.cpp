@@ -22,7 +22,7 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
-    REFLECT( m_TestExecutable,                  "TestExecutable",           MetaFile() )
+    REFLECT(        m_TestExecutable,           "TestExecutable",           MetaFile() )
     REFLECT_ARRAY(  m_TestInput,                "TestInput",                MetaOptional() + MetaFile() )
     REFLECT_ARRAY(  m_TestInputPath,            "TestInputPath",            MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_TestInputPattern,         "TestInputPattern",         MetaOptional() )
