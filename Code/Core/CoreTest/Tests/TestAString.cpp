@@ -29,6 +29,9 @@ private:
     void EndsWithI() const;
     void Equals() const;
     void Find() const;
+    void FindI() const;
+    void FindLast() const;
+    void FindLastI() const;
     void Format() const;
     void Tokenize() const;
     void PatternMatch() const;
@@ -51,6 +54,9 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( EndsWithI )
     REGISTER_TEST( Equals )
     REGISTER_TEST( Find )
+    REGISTER_TEST( FindI )
+    REGISTER_TEST( FindLast )
+    REGISTER_TEST( FindLastI )
     REGISTER_TEST( Format )
     REGISTER_TEST( Tokenize )
     REGISTER_TEST( PatternMatch )
@@ -410,6 +416,22 @@ void TestAString::Equals() const
 //------------------------------------------------------------------------------
 void TestAString::Find() const
 {
+    {
+        AStackString<> str( "the quick brown fox jumps over the lazy dog" );
+
+        TEST_ASSERT( str.Find( 't' ) == str.Get() );
+        TEST_ASSERT( str.Find( 't', str.Get() + 1 ) == str.Get() + 31 );
+        TEST_ASSERT( str.Find( 't', str.Get() + 1, str.Get() + 31 ) == nullptr );
+
+        TEST_ASSERT( str.Find( "the" ) == str.Get() );
+        TEST_ASSERT( str.Find( "the", str.Get() + 1 ) == str.Get() + 31 );
+        TEST_ASSERT( str.Find( "the", str.Get() + 1, str.Get() + 31 ) == nullptr );
+
+        TEST_ASSERT( str.Find( AStackString<>( "the" ) ) == str.Get() );
+        TEST_ASSERT( str.Find( AStackString<>( "the" ), str.Get() + 1 ) == str.Get() + 31 );
+        TEST_ASSERT( str.Find( AStackString<>( "the" ), str.Get() + 1, str.Get() + 31 ) == nullptr );
+    }
+
     // BUG: Returning contents past end of string
     {
         AString tmp( "12345678--X---" );
@@ -417,6 +439,73 @@ void TestAString::Find() const
         TEST_ASSERT(tmp.Find('X') == nullptr ); // This was OK
         TEST_ASSERT(tmp.Find('X', tmp.Get() + 8) == nullptr); // This was returning junk data past end of string
     }
+}
+
+// FindI
+//------------------------------------------------------------------------------
+void TestAString::FindI() const
+{
+    AStackString<> str( "ThE qUiCk BrOwN fOx JuMpS oVeR tHe LaZy DoG" );
+
+    TEST_ASSERT( str.FindI( 't' ) == str.Get() );
+    TEST_ASSERT( str.FindI( 't', str.Get() + 1 ) == str.Get() + 31 );
+    TEST_ASSERT( str.FindI( 't', str.Get() + 1, str.Get() + 31 ) == nullptr );
+
+    TEST_ASSERT( str.FindI( "the" ) == str.Get() );
+    TEST_ASSERT( str.FindI( "the", str.Get() + 1 ) == str.Get() + 31 );
+    TEST_ASSERT( str.FindI( "the", str.Get() + 1, str.Get() + 31 ) == nullptr );
+
+    TEST_ASSERT( str.FindI( AStackString<>( "the" ) ) == str.Get() );
+    TEST_ASSERT( str.FindI( AStackString<>( "the" ), str.Get() + 1 ) == str.Get() + 31 );
+    TEST_ASSERT( str.FindI( AStackString<>( "the" ), str.Get() + 1, str.Get() + 31 ) == nullptr );
+}
+
+// FindLast
+//------------------------------------------------------------------------------
+void TestAString::FindLast() const
+{
+    {
+        AStackString<> str( "the quick brown fox jumps over the lazy dog" );
+
+        TEST_ASSERT( str.FindLast( 't' ) == str.Get() + 31 );
+        TEST_ASSERT( str.FindLast( 't', str.Get() + 30 ) == str.Get() );
+        TEST_ASSERT( str.FindLast( 't', str.Get() + 30, str.Get() + 1 ) == nullptr );
+
+        TEST_ASSERT( str.FindLast( "the" ) == str.Get() + 31 );
+        TEST_ASSERT( str.FindLast( "the", str.Get() + 30 ) == str.Get() );
+        TEST_ASSERT( str.FindLast( "the", str.Get() + 30, str.Get() + 1 ) == nullptr );
+
+        TEST_ASSERT( str.FindLast( AStackString<>( "the" ) ) == str.Get() + 31 );
+        TEST_ASSERT( str.FindLast( AStackString<>( "the" ), str.Get() + 30 ) == str.Get() );
+        TEST_ASSERT( str.FindLast( AStackString<>( "the" ), str.Get() + 30, str.Get() + 1 ) == nullptr );
+    }
+
+    // BUG: Returning contents past end of string
+    {
+        AString tmp( "12345678--X---" );
+        tmp.SetLength(8);
+        TEST_ASSERT(tmp.Find('X') == nullptr ); // This was OK
+        TEST_ASSERT(tmp.Find('X', tmp.Get() + 8) == nullptr); // This was returning junk data past end of string
+    }
+}
+
+// FindLastI
+//------------------------------------------------------------------------------
+void TestAString::FindLastI() const
+{
+    AStackString<> str( "ThE qUiCk BrOwN fOx JuMpS oVeR tHe LaZy DoG" );
+
+    TEST_ASSERT( str.FindLastI( 't' ) == str.Get() + 31 );
+    TEST_ASSERT( str.FindLastI( 't', str.Get() + 30 ) == str.Get() );
+    TEST_ASSERT( str.FindLastI( 't', str.Get() + 30, str.Get() + 1 ) == nullptr );
+
+    TEST_ASSERT( str.FindLastI( "the" ) == str.Get() + 31 );
+    TEST_ASSERT( str.FindLastI( "the", str.Get() + 30 ) == str.Get() );
+    TEST_ASSERT( str.FindLastI( "the", str.Get() + 30, str.Get() + 1 ) == nullptr );
+
+    TEST_ASSERT( str.FindLastI( AStackString<>( "the" ) ) == str.Get() + 31 );
+    TEST_ASSERT( str.FindLastI( AStackString<>( "the" ), str.Get() + 30 ) == str.Get() );
+    TEST_ASSERT( str.FindLastI( AStackString<>( "the" ), str.Get() + 30, str.Get() + 1 ) == nullptr );
 }
 
 // Format
