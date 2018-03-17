@@ -39,7 +39,7 @@ FunctionForEach::FunctionForEach()
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionForEach::ParseFunction(
                     NodeGraph & nodeGraph,
-                    const BFFIterator & functionNameStart,
+                    const BFFIterator & /*functionNameStart*/,
                     const BFFIterator * functionBodyStartToken,
                     const BFFIterator * functionBodyStopToken,
                     const BFFIterator * functionHeaderStartToken,
@@ -173,8 +173,6 @@ FunctionForEach::FunctionForEach()
     for ( uint32_t j=0; j<arrayVars.GetSize(); ++j )
     {
         arrayVars[ j ]->Freeze();
-        FLOG_INFO( "Freezing loop array '%s' of type <%s>",
-                   arrayVars[j]->GetName().Get(), BFFVariable::GetTypeName( arrayVars[j]->GetType() ) );
     }
 
     bool succeed = true;
@@ -209,21 +207,12 @@ FunctionForEach::FunctionForEach()
             succeed = false;
             break;
         }
-
-        // complete the function
-        if ( Commit( nodeGraph, functionNameStart ) == false )
-        {
-            succeed = false;
-            break;
-        }
     }
 
     // unfreeze all array variables
     for ( uint32_t j=0; j<arrayVars.GetSize(); ++j )
     {
         arrayVars[ j ]->Unfreeze();
-        FLOG_INFO( "Unfreezing loop array '%s' of type <%s>",
-                   arrayVars[j]->GetName().Get(), BFFVariable::GetTypeName( arrayVars[j]->GetType() ) );
     }
 
     return succeed;

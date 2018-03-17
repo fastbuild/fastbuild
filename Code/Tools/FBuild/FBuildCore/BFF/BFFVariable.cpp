@@ -310,7 +310,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varSrc->GetString() );
 
             BFFVariable *result = FNEW(BFFVariable(dstName, values));
-            FLOG_INFO("Concatenated <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num);
             return result;
         }
 
@@ -324,7 +323,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varSrc );
 
             BFFVariable *result = FNEW( BFFVariable( dstName, values ) );
-            FLOG_INFO( "Concatenated <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), num );
             return result;
         }
 
@@ -346,7 +344,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             finalValue += varSrc->GetString();
 
             BFFVariable *result = FNEW( BFFVariable( dstName, finalValue ) );
-            FLOG_INFO( "Concatenated <string> variable '%s' with value '%s'", dstName.Get(), finalValue.Get() );
             return result;
         }
 
@@ -358,7 +355,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varSrc->GetArrayOfStrings() );
 
             BFFVariable *result = FNEW( BFFVariable( dstName, values ) );
-            FLOG_INFO( "Concatenated <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num );
             return result;
         }
 
@@ -370,7 +366,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varSrc->GetArrayOfStructs() );
 
             BFFVariable *result = FNEW(BFFVariable(dstName, values));
-            FLOG_INFO("Concatenated <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), num);
             return result;
         }
 
@@ -380,7 +375,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             newVal += varDst->GetInt();
 
             BFFVariable * result = FNEW( BFFVariable( dstName, newVal ) );
-            FLOG_INFO( "Concatenated <int> variable '%s' with value %d", dstName.Get(), newVal );
             return result;
         }
 
@@ -391,7 +385,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             newVal |= varDst->GetBool();
 
             BFFVariable * result = FNEW( BFFVariable( dstName, newVal ) );
-            FLOG_INFO("Concatenated <bool> variable '%s' with value %d", dstName.Get(), newVal);
             return result;
         }
 
@@ -439,7 +432,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
                 }
             }
 
-            FLOG_INFO( "Concatenated <struct> variable '%s' with %u members", dstName.Get(), (uint32_t)allMembers.GetSize() );
             return result;
         }
     }
