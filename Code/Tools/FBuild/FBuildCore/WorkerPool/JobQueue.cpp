@@ -372,7 +372,15 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
                 m_DistributedJobsMutex.Lock();
             }
 
-            // Did cancallation work? It can fail if we try to cancel after build has finished
+            // Did a local race complete this while we were waiting for cancellation?
+            if ( job->GetDistributionState() == Job::DIST_RACE_WON_LOCALLY )
+            {
+                m_DistributableJobs_InProgress.Erase( jobIt );
+                FDELETE job;
+                return nullptr;
+            }
+
+            // Did cancellation work? It can fail if we try to cancel after build has finished
             // but before we finish processing the job
             if ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY )
             {
@@ -485,10 +493,19 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
                 continue;
             }
 
-            // Local race, won locally
-            ASSERT( distState == Job::DIST_RACING );
-            job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
+            if ( distState == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+            {
+                ASSERT( *(job->GetAbortFlagPointer()) == true );
 
+                // Local Job finished while trying to cancel, so fail cancellation
+                job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY ); // Cancellation has failed
+            }
+            else
+            {
+                // Local race, won locally
+                ASSERT( distState == Job::DIST_RACING );
+                job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
+            }
             // We can't delete the job yet, because it's still in use by the remote
             // job. It will be freed when the remote job completes
         }
@@ -522,9 +539,19 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
                 continue;
             }
 
-            // Local race, won locally
-            ASSERT( distState == Job::DIST_RACING );
-            job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
+            if ( distState == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+            {
+                ASSERT( *(job->GetAbortFlagPointer()) == true );
+
+                // Local Job finished while trying to cancel, so fail cancellation
+                job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY ); // Cancellation has failed
+            }
+            else
+            {
+                // Local race, won locally
+                ASSERT( distState == Job::DIST_RACING );
+                job->SetDistributionState( Job::DIST_RACE_WON_LOCALLY );
+            }
 
             // We can't delete the job yet, because it's still in use by the remote
             // job. It will be freed when the remote job completes
