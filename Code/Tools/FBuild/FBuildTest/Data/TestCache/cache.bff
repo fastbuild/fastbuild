@@ -1,0 +1,46 @@
+//
+// Cache
+//
+// Build and link an executable.
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+Compiler( "Compiler-SimpleCompiler-Caching")
+{
+	.Executable = '$Out$/Test/Cache/SimpleCompiler-Caching.exe'
+	.CompilerFamily = 'Custom'
+	.SimpleDistributionMode = true
+	.SimpleDistributionAllowCache = true
+}
+
+ObjectList( 'CompileResources-Caching' )
+{
+    .Compiler                   = 'Compiler-SimpleCompiler-Caching'
+    .CompilerOptions            = '"%1" "%2"'
+    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestCache'
+    .CompilerInputPattern       = '*.resource'
+    .CompilerOutputExtension    = '.compiledresource'
+    .CompilerOutputPath         = '$Out$/Test/Cache/GeneratedCaching/'
+}
+
+Compiler( "Compiler-SimpleCompiler-NonCaching")
+{
+	.Executable = '$Out$/Test/Cache/SimpleCompiler-NonCaching.exe'
+	.CompilerFamily = 'Custom'
+}
+
+ObjectList( 'CompileResources-NonCaching' )
+{
+    .Compiler                   = 'Compiler-SimpleCompiler-NonCaching'
+    .CompilerOptions            = '"%1" "%2"'
+    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestCache'
+    .CompilerInputPattern       = '*.resource'
+    .CompilerOutputExtension    = '.compiledresource'
+    .CompilerOutputPath         = '$Out$/Test/Cache/GeneratedNonCaching/'
+}

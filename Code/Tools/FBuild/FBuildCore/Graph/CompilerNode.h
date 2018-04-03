@@ -30,6 +30,7 @@ public:
     inline const ToolManifest & GetManifest() const { return m_Manifest; }
 
     inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
+	inline bool SimpleDistributionAllowCache() const { return m_SimpleDistributionAllowCache; }
     inline bool CanBeDistributed() const { return m_AllowDistribution; }
     #if defined( __WINDOWS__ )
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
@@ -68,6 +69,7 @@ private:
     AString         m_CompilerFamilyString;
     uint8_t         m_CompilerFamilyEnum;
     bool            m_SimpleDistributionMode;
+	bool			m_SimpleDistributionAllowCache;
     ToolManifest    m_Manifest;
 };
 

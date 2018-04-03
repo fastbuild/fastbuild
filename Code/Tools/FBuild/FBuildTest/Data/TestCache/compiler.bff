@@ -1,0 +1,47 @@
+//
+// SimpleCompiler
+//
+// Build and link an executable.
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+
+ObjectList( "SimpleCompiler-Lib" )
+{
+	#if __WINDOWS__
+        .CompilerOptions    + ' /MT'
+    #endif
+
+    .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestCache/SimpleCompiler.cpp"
+    .CompilerOutputPath = "$Out$/Test/Cache/"
+}
+
+Executable( "SimpleCompiler-Exe-Caching" )
+{
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' kernel32.lib'
+                            + .CRTLibs_Static
+    #endif
+    .LinkerOutput       = '$Out$/Test/Cache/SimpleCompiler-Caching.exe'
+    .Libraries          = { "SimpleCompiler-Lib" }
+}
+
+Executable( "SimpleCompiler-Exe-NonCaching" )
+{
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' kernel32.lib'
+                            + .CRTLibs_Static
+    #endif
+    .LinkerOutput       = '$Out$/Test/Cache/SimpleCompiler-NonCaching.exe'
+    .Libraries          = { "SimpleCompiler-Lib" }
+}
+
+Alias('all') { .Targets={'SimpleCompiler-Exe-Caching' 'SimpleCompiler-Exe-NonCaching'}}
