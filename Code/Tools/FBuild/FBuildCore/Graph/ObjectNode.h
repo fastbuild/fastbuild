@@ -59,7 +59,8 @@ public:
         FLAG_QT_RCC             =   0x40000,
         FLAG_WARNINGS_AS_ERRORS_MSVC    = 0x80000,
         FLAG_VBCC               =   0x100000,
-        FLAG_STATIC_ANALYSIS_MSVC = 0x200000
+        FLAG_STATIC_ANALYSIS_MSVC = 0x200000,
+		FLAG_ORBIS_WAVE_PSSLC	=   0x400000
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,
