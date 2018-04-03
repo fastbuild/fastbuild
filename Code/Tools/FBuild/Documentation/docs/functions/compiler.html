@@ -29,6 +29,7 @@ distribution, caching and more.
   .AllowDistribution            // (optional) Allow distributed compilation (if available) (default: true)
   .ExecutableRootPath           // (optional) Override default path for executable distribution
   .SimpleDistributionMode       // (optional) Allow distribution of otherwise unsuported "compilers" (default: false)
+  .SimpleDistributionAllowCache // (optional) Allow simple distribution compilers to cache their results (default: false)
   .CustomEnvironmentVariables   // (optional) Environment variables to set on remote host
   .ClangRewriteIncludes         // (optional) Use Clang's -frewrite-includes option when preprocessing (default: true)
   .VS2012EnumBugFix             // (optional) Enable work-around for bug in VS2012 compiler (default: false)
@@ -147,6 +148,11 @@ Compiler( 'Test' )
     of custom tools or other useful work like texture conversion.<p>
 
   	<p><hr></p>
+
+  <p><b>.SimpleDistributionAllowCache</b> - Boolean - (Optional)</p>
+  <p>When using SimpleDistributionMode this flag can be set to allow caching of results.<p>
+
+    <p><hr></p>
     
 	<p><b>.CustomEnvironmentVariables</b> - String or ArrayOfStrings - (Optional)</p>
 	<p>When compiling on a remote host, a clean environment is used. If needed, environment variables can be set.<p>
