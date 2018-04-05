@@ -110,7 +110,7 @@ public:
     UnityNode * CreateUnityNode( const AString & unityName );
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );
-    CompilerNode * CreateCompilerNode( const AString & executable );
+    CompilerNode * CreateCompilerNode( const AString & nodeName );
     VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
                                            const Array< AString > & projectBasePaths,
                                            const Dependencies & paths,

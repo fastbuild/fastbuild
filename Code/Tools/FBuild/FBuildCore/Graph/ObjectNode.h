@@ -79,9 +79,9 @@ public:
     virtual void SaveRemote( IOStream & stream ) const override;
     static Node * LoadRemote( IOStream & stream );
 
-    inline Node * GetCompiler() const { return m_StaticDependencies[ 0 ].GetNode(); }
+    inline CompilerNode * GetCompiler() const { return m_StaticDependencies[ 0 ].GetNode() ? m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >() : nullptr; }
     inline Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
-    Node * GetDedicatedPreprocessor() const;
+    CompilerNode * GetDedicatedPreprocessor() const;
     #if defined( __WINDOWS__ )
         inline Node * GetPrecompiledHeaderCPPFile() const { ASSERT( GetFlag( FLAG_CREATING_PCH ) ); return m_StaticDependencies[ 1 ].GetNode(); }
     #endif

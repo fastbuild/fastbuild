@@ -47,7 +47,7 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
-    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() )
+    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() + MetaAllowNonFile())
     REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
     REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
     REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
@@ -60,7 +60,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
 
     // Preprocessor
-    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() )
+    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
     REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
 
     REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
@@ -323,7 +323,7 @@ ObjectNode::~ObjectNode()
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs ) ) // use response file for MSVC
+    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetExecutable(), fullArgs ) ) // use response file for MSVC
     {
         return NODE_RESULT_FAILED; // SpawnCompiler has logged error
     }
@@ -581,7 +581,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         EmitCompilationMessage( fullArgs, false );
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs ) )
+        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetExecutable(), fullArgs ) )
         {
             return NODE_RESULT_FAILED; // compile has logged error
         }
@@ -623,7 +623,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         }
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs ) )
+        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetExecutable(), fullArgs ) )
         {
             return NODE_RESULT_FAILED; // compile has logged error
         }
@@ -652,7 +652,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs ) )
+    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetExecutable(), fullArgs ) )
     {
         return NODE_RESULT_FAILED; // compile has logged error
     }
@@ -990,7 +990,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
 // GetDedicatedPreprocessor
 //------------------------------------------------------------------------------
-Node * ObjectNode::GetDedicatedPreprocessor() const
+CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
 {
     if ( m_Preprocessor.IsEmpty() )
     {
@@ -1001,7 +1001,8 @@ Node * ObjectNode::GetDedicatedPreprocessor() const
     {
         ++preprocessorIndex;
     }
-    return m_StaticDependencies[ preprocessorIndex ].GetNode();
+	Node* node = m_StaticDependencies[ preprocessorIndex ].GetNode();
+	return node ? node->CastTo< CompilerNode >() : nullptr;
 }
 
 // GetPDBName
@@ -1833,7 +1834,7 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
     CompileHelper ch( false ); // don't handle output (we'll do that)
     // TODO:A Add checks in BuildArgs for length of dedicated preprocessor
     if ( !ch.SpawnCompiler( job, GetName(),
-         useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetName() : GetCompiler()->GetName(),
+         useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable() : GetCompiler()->GetExecutable(),
          fullArgs ) )
     {
         // only output errors in failure case
@@ -2079,7 +2080,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
     AStackString<> workingDir;
     if ( job->IsLocal() )
     {
-        compiler = GetCompiler()->GetName();
+        compiler = GetCompiler()->GetExecutable();
     }
     else
     {

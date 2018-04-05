@@ -825,13 +825,12 @@ TestNode * NodeGraph::CreateTestNode( const AString & testOutput )
 
 // CreateCompilerNode
 //------------------------------------------------------------------------------
-CompilerNode * NodeGraph::CreateCompilerNode( const AString & executable )
+CompilerNode * NodeGraph::CreateCompilerNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( executable ) );
 
     CompilerNode * node = FNEW( CompilerNode() );
-    node->SetName( executable );
+    node->SetName( name );
     AddNode( node );
     return node;
 }

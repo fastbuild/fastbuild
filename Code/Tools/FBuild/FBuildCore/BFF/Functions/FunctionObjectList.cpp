@@ -156,6 +156,7 @@ bool FunctionObjectList::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterat
         AStackString<> compilerClean;
         NodeGraph::CleanPath( compiler, compilerClean );
         compilerNode = nodeGraph.CreateCompilerNode( compilerClean );
+		VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "Executable", compiler));
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
         const char * lastSlash = compilerClean.FindLast( NATIVE_SLASH );
         if ( lastSlash )

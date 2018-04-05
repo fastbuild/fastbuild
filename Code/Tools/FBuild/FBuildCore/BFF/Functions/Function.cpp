@@ -396,7 +396,7 @@ bool Function::GetInt( const BFFIterator & iter, int32_t & var, const char * nam
 // GetNodeList
 //------------------------------------------------------------------------------
 bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, const char * propertyName, Dependencies & nodes, bool required,
-                            bool allowCopyDirNodes, bool allowUnityNodes, bool allowRemoveDirNodes ) const
+                            bool allowCopyDirNodes, bool allowUnityNodes, bool allowRemoveDirNodes, bool allowCompilerNodes ) const
 {
     ASSERT( propertyName );
 
@@ -425,7 +425,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
                 return false;
             }
 
-            if ( !GetNodeList( nodeGraph, iter, this, propertyName, nodeName, nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+            if ( !GetNodeList( nodeGraph, iter, this, propertyName, nodeName, nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
             {
                 // child func will have emitted error
                 return false;
@@ -440,7 +440,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
             return false;
         }
 
-        if ( !GetNodeList( nodeGraph, iter, this, propertyName, var->GetString(), nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+        if ( !GetNodeList( nodeGraph, iter, this, propertyName, var->GetString(), nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
         {
             // child func will have emitted error
             return false;
@@ -609,7 +609,8 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
                                        Dependencies & nodes,
                                        bool allowCopyDirNodes,
                                        bool allowUnityNodes,
-                                       bool allowRemoveDirNodes )
+                                       bool allowRemoveDirNodes,
+                                       bool allowCompilerNodes )
 {
     // get node
     Node * n = nodeGraph.FindNode( nodeName );
@@ -660,7 +661,7 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
     }
     if ( allowUnityNodes )
     {
-        // found - is it an ObjectList?
+        // found - is it a Unity?
         if ( n->GetType() == Node::UNITY_NODE )
         {
             // use as-is
@@ -668,6 +669,17 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
             return true;
         }
     }
+
+	if (allowCompilerNodes)
+	{
+		// found - is it a Compiler?
+		if (n->GetType() == Node::COMPILER_NODE)
+		{
+			// use as-is
+			nodes.Append(Dependency(n));
+			return true;
+		}
+	}
 
     // found - is it a group?
     if ( n->GetType() == Node::ALIAS_NODE )
@@ -679,7 +691,7 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
             // TODO:C by passing as string we'll be looking up again for no reason
             const AString & subName = it->GetNode()->GetName();
 
-            if ( !GetNodeList( nodeGraph, iter, function, propertyName, subName, nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+            if ( !GetNodeList( nodeGraph, iter, function, propertyName, subName, nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
             {
                 return false;
             }

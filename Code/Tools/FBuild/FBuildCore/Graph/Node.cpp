@@ -198,7 +198,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         }
 
         // we're about to compare stamps, so we should be a file (or a file list)
-        ASSERT( n->IsAFile() || ( n->GetType() == Node::OBJECT_LIST_NODE ) );
+        ASSERT( n->IsAFile() || ( n->GetType() == Node::COMPILER_NODE ) || ( n->GetType() == Node::OBJECT_LIST_NODE ) );
 
         if ( n->GetStamp() == 0 )
         {
@@ -1091,7 +1091,7 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFItera
     // Expand
     for ( const AString & preDepName : preBuildDependencyNames )
     {
-        if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preDepName, m_PreBuildDependencies, true, true, true ) )
+        if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preDepName, m_PreBuildDependencies, true, true, true, true ) )
         {
             return false; // GetNodeList will have emitted an error
         }

@@ -14,13 +14,15 @@ class Function;
 
 // CompilerNode
 //------------------------------------------------------------------------------
-class CompilerNode : public FileNode
+class CompilerNode : public Node
 {
     REFLECT_NODE_DECLARE( CompilerNode )
 public:
     explicit CompilerNode();
     bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
     virtual ~CompilerNode();
+
+	inline bool IsAFile() const override { return false; }
 
     static inline Node::Type GetTypeS() { return Node::COMPILER_NODE; }
 
@@ -29,7 +31,7 @@ public:
 
     inline const ToolManifest & GetManifest() const { return m_Manifest; }
 
-    inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
+	inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
     inline bool CanBeDistributed() const { return m_AllowDistribution; }
     #if defined( __WINDOWS__ )
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
@@ -51,13 +53,17 @@ public:
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 
+
+	const AString & GetExecutable() const { return m_Executable; }
+
 private:
-    bool            InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
+    bool InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
 
     virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     // Exposed params
+	AString				m_Executable;
     Array< AString >    m_ExtraFiles;
     Array< AString >    m_CustomEnvironmentVariables;
 

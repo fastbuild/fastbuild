@@ -7,6 +7,7 @@
 class Dependencies;
 class IOStream;
 class Node;
+class CompilerNode;
 
 // Includes
 //------------------------------------------------------------------------------
@@ -24,7 +25,7 @@ public:
     explicit ToolManifest( uint64_t toolId );
     ~ToolManifest();
 
-    bool Generate( const Node * mainExecutable, const AString & mainExecutableRoot, const Dependencies & dependencies, const Array<AString>& customEnvironmentVariables );
+    bool Generate( const AString & mainExecutable, const AString & mainExecutableRoot, const uint64_t timeStamp, const Dependencies & dependencies, const Array<AString>& customEnvironmentVariables );
 
     inline uint64_t GetToolId() const { return m_ToolId; }
     inline uint64_t GetTimeStamp() const { return m_TimeStamp; }
@@ -46,7 +47,7 @@ public:
 
     struct File
     {
-        explicit File( const AString & name, uint64_t stamp, uint32_t hash, const Node * node, uint32_t size );
+        explicit File( const AString & name, uint64_t stamp, uint32_t hash, uint32_t size );
         ~File();
 
         enum SyncState
@@ -63,7 +64,6 @@ public:
         mutable uint32_t m_ContentSize;
 
         // "local" members
-        const Node *    m_Node;
         mutable void *  m_Content;
 
         // "remote" members
@@ -85,7 +85,8 @@ public:
     static void     GetRelativePath( const AString & mainExe, const AString & otherFile, AString & otherFileRelativePath );
 private:
     bool            AddFile( const Node * node );
-    bool            LoadFile( const AString & fileName, void * & content, uint32_t & contentSize ) const;
+	bool            AddFile( const AString & fileName, const uint64_t timeStamp );
+	bool            LoadFile(const AString & fileName, void * & content, uint32_t & contentSize) const;
 
     uint64_t        m_ToolId;   // Global identifier for this toolchain
     uint64_t        m_TimeStamp;// Time stamp of most recent file

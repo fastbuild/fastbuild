@@ -21,7 +21,7 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( CSNode, Node, MetaName( "CompilerOutput" ) + MetaFile() )
-    REFLECT(        m_Compiler,                     "Compiler",                     MetaFile() )
+    REFLECT(        m_Compiler,                     "Compiler",                     MetaFile() + MetaAllowNonFile() )
     REFLECT(        m_CompilerOptions,              "CompilerOptions",              MetaNone() )
     REFLECT(        m_CompilerOutput,               "CompilerOutput",               MetaFile() )
     REFLECT_ARRAY(  m_CompilerInputPath,            "CompilerInputPath",            MetaOptional() + MetaPath() )

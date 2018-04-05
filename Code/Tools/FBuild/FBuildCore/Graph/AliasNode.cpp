@@ -38,7 +38,8 @@ bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, con
     const bool allowCopyDirNodes = true;
     const bool allowUnityNodes = true;
     const bool allowRemoveDirNodes = true;
-    if ( !function->GetNodeList( nodeGraph, iter, ".Targets", targets, required, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+	const bool allowCompilerNodes = true;
+    if ( !function->GetNodeList( nodeGraph, iter, ".Targets", targets, required, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
     {
         return false; // GetNodeList will have emitted an error
     }

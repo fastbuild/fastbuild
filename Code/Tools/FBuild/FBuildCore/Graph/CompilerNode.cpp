@@ -18,8 +18,9 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( CompilerNode, Node, MetaName( "Executable" ) + MetaFile() )
-    REFLECT_ARRAY( m_ExtraFiles,    "ExtraFiles",           MetaOptional() + MetaFile() )
+REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
+    REFLECT( m_Executable, "Executable", MetaFile() )
+	REFLECT_ARRAY( m_ExtraFiles,    "ExtraFiles",           MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_CustomEnvironmentVariables, "CustomEnvironmentVariables",  MetaOptional() )
     REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
     REFLECT( m_VS2012EnumBugFix,    "VS2012EnumBugFix",     MetaOptional() )
@@ -35,7 +36,7 @@ REFLECT_END( CompilerNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CompilerNode::CompilerNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL )
+    : Node( AString::GetEmpty(), Node::COMPILER_NODE, Node::FLAG_NO_DELETE_ON_FAIL )
     , m_AllowDistribution( true )
     , m_VS2012EnumBugFix( false )
     , m_ClangRewriteIncludes( true )
@@ -43,33 +44,39 @@ CompilerNode::CompilerNode()
     , m_CompilerFamilyEnum( static_cast< uint8_t >( CUSTOM ) )
     , m_SimpleDistributionMode( false )
 {
-    m_Type = Node::COMPILER_NODE;
 }
 
 // Initialize
 //------------------------------------------------------------------------------
 bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
-    // TODO:B make this use m_ExtraFiles
+	// TODO:B make this use m_ExtraFiles
     Dependencies extraFiles( 32, true );
     if ( !function->GetNodeList( nodeGraph, iter, ".ExtraFiles", extraFiles, false ) ) // optional
     {
         return false; // GetNodeList will have emitted an error
     }
 
+	m_Executable.Replace(OTHER_SLASH, NATIVE_SLASH);;
+
     if( m_ExecutableRootPath.IsEmpty() )
     {
-        const char * lastSlash = m_Name.FindLast( NATIVE_SLASH );
+        const char * lastSlash = m_Executable.FindLast( NATIVE_SLASH );
         if ( lastSlash )
         {
-            m_ExecutableRootPath.Assign( m_Name.Get(), lastSlash + 1 );
+            m_ExecutableRootPath.Assign( m_Executable.Get(), lastSlash + 1 );
         }
     }
 
+
     // Check for conflicting files
     AStackString<> relPathExe;
-    ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Name, relPathExe );
+    ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
 
+	m_Executable.Assign(m_ExecutableRootPath);
+	m_Executable.Append(relPathExe);
+
+	
     const size_t numExtraFiles = extraFiles.GetSize();
     for ( size_t i=0; i<numExtraFiles; ++i )
     {
@@ -110,7 +117,7 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )
     {
         // Normalize slashes to make logic consistent on all platforms
-        AStackString<> compiler( m_Name );
+		AStackString<> compiler(m_Executable);
         compiler.Replace( '/', '\\' );
 
         // MSVC
@@ -279,7 +286,7 @@ bool CompilerNode::DetermineNeedToBuild( bool forceClean ) const
     }
 
     // check primary file
-    const uint64_t fileTime = FileIO::GetFileLastWriteTime( m_Name );
+    const uint64_t fileTime = FileIO::GetFileLastWriteTime( m_Executable );
     if ( fileTime > m_Stamp )
     {
         return true;
@@ -301,10 +308,13 @@ bool CompilerNode::DetermineNeedToBuild( bool forceClean ) const
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * job )
 {
-    // ensure our timestamp is updated (Generate requires this)
-    FileNode::DoBuild( job );
+	Node::DoBuild( job );
 
-    if ( !m_Manifest.Generate( this, m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables ) )
+    // ensure our timestamp is updated (Generate requires this)
+	m_Stamp = FileIO::GetFileLastWriteTime(m_Executable);
+
+
+    if ( !m_Manifest.Generate( m_Executable, m_ExecutableRootPath, m_Stamp, m_StaticDependencies, m_CustomEnvironmentVariables ) )
     {
         return Node::NODE_RESULT_FAILED; // Generate will have emitted error
     }
