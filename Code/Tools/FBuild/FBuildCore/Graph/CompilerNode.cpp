@@ -306,11 +306,9 @@ bool CompilerNode::DetermineNeedToBuild( bool forceClean ) const
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * job )
+/*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * /*job*/ )
 {
-	Node::DoBuild( job );
-
-    // ensure our timestamp is updated (Generate requires this)
+	// ensure our timestamp is updated (Generate requires this)
 	m_Stamp = FileIO::GetFileLastWriteTime(m_Executable);
 
 
