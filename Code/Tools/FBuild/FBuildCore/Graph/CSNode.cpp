@@ -6,11 +6,12 @@
 #include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
 
 #include "CSNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
@@ -63,12 +64,11 @@ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const 
     }
 
     // .Compiler
-    Dependencies compiler;
-    if ( !function->GetFileNode( nodeGraph, iter, m_Compiler, "Compiler", compiler ) )
-    {
-        return false; // GetFileNode will have emitted an error
-    }
-    ASSERT( compiler.GetSize() == 1 ); // Should only be possible to be one
+	CompilerNode * compilerNode(nullptr);
+	if (!function->GetCompilerNode(nodeGraph, iter, m_Compiler, compilerNode))
+	{
+		return false; // GetCompilerNode will have emitted an error
+	}
 
     // .CompilerInputPath
     Dependencies compilerInputPath;
@@ -105,7 +105,7 @@ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const 
 
     // Store dependencies
     m_StaticDependencies.SetCapacity( 1 + m_CompilerInputPath.GetSize() + m_NumCompilerInputFiles + m_NumCompilerReferences );
-    m_StaticDependencies.Append( compiler );
+    m_StaticDependencies.Append( Dependency( compilerNode ) );
     m_StaticDependencies.Append( compilerInputPath );
     m_StaticDependencies.Append( compilerInputFiles );
     m_StaticDependencies.Append( compilerReferences );
@@ -179,7 +179,7 @@ CSNode::~CSNode() = default;
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
-    if ( p.Spawn( GetCompiler()->GetName().Get(), fullArgs.GetFinalArgs().Get(),
+    if ( p.Spawn( GetCompiler()->GetExecutable().Get(), fullArgs.GetFinalArgs().Get(),
                   workingDir, environment ) == false )
     {
         if ( p.HasAborted() )
@@ -256,6 +256,11 @@ failed:
     Node::Serialize( stream );
 }
 
+CompilerNode* CSNode::GetCompiler() const
+{ 
+	return m_StaticDependencies[0].GetNode() ? m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >() : nullptr;
+}
+
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
 void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
@@ -269,7 +274,7 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
     output += '\n';
     if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
     {
-        output += GetCompiler()->GetName();
+        output += GetCompiler()->GetExecutable();
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';

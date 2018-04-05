@@ -19,6 +19,7 @@ class Meta_File;
 class Meta_Path;
 class Node;
 class ReflectionInfo;
+class CompilerNode;
 
 // Function
 //------------------------------------------------------------------------------
@@ -62,6 +63,8 @@ public:
     static void CleanFolderPaths( Array< AString > & folders );
     static void CleanFilePaths( Array< AString > & files );
     void CleanFileNames( Array< AString > & fileNames ) const;
+
+	bool GetCompilerNode(NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode) const;
 
     bool GetDirectoryListNodeList( NodeGraph & nodeGraph,
                                    const BFFIterator & iter,

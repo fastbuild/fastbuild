@@ -92,7 +92,7 @@ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, co
 
     // .Compiler
     CompilerNode * compiler( nullptr );
-    if ( !((FunctionObjectList *)function)->GetCompilerNode( nodeGraph, iter, m_Compiler, compiler ) )
+    if ( !function->GetCompilerNode( nodeGraph, iter, m_Compiler, compiler ) )
     {
         return false; // GetCompilerNode will have emitted an error
     }
@@ -237,7 +237,7 @@ ObjectNode::~ObjectNode()
 
     bool useCache = ShouldUseCache();
     bool useDist = GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
-    bool useSimpleDist = GetCompiler()->CastTo< CompilerNode >()->SimpleDistributionMode();
+    bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
     bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( ObjectNode::FLAG_VBCC ) );
     if ( GetDedicatedPreprocessor() )
     {
@@ -988,6 +988,13 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     }
 }
 
+// GetCompiler
+//-----------------------------------------------------------------------------
+CompilerNode * ObjectNode::GetCompiler() const
+{
+	return m_StaticDependencies[0].GetNode() ? m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >() : nullptr;
+}
+
 // GetDedicatedPreprocessor
 //------------------------------------------------------------------------------
 CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
@@ -1348,7 +1355,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     output += '\n';
     if ( FLog::ShowInfo() || ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
     {
-        output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetName().Get() : GetCompiler() ? GetCompiler()->GetName().Get() : "";
+        output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable().Get() : GetCompiler() ? GetCompiler()->GetExecutable().Get() : "";
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
@@ -1762,7 +1769,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 fullArgs += " -dD";
             }
 
-            const bool clangRewriteIncludes = GetCompiler()->CastTo< CompilerNode >()->IsClangRewriteIncludesEnabled();
+            const bool clangRewriteIncludes = GetCompiler()->IsClangRewriteIncludesEnabled();
             if ( isClang && clangRewriteIncludes )
             {
                 fullArgs += " -frewrite-includes";
@@ -1797,7 +1804,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     {
         job->GetToolManifest()->GetRemoteFilePath( 0, remoteCompiler );
     }
-    const AString& compiler = job->IsLocal() ? GetCompiler()->GetName() : remoteCompiler;
+    const AString& compiler = job->IsLocal() ? GetCompiler()->GetExecutable() : remoteCompiler;
     if ( fullArgs.Finalize( compiler, GetName(), CanUseResponseFile() ) == false )
     {
         return false; // Finalize will have emitted an error
@@ -1925,7 +1932,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
         bool doVS2012Fixup = false;
         if ( GetCompiler()->GetType() == Node::COMPILER_NODE )
         {
-            CompilerNode* cn = GetCompiler()->CastTo< CompilerNode >();
+            CompilerNode* cn = GetCompiler();
             doVS2012Fixup = cn->IsVS2012EnumBugFixEnabled();
         }
 

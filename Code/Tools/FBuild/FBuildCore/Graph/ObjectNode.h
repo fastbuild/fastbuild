@@ -79,7 +79,7 @@ public:
     virtual void SaveRemote( IOStream & stream ) const override;
     static Node * LoadRemote( IOStream & stream );
 
-    inline CompilerNode * GetCompiler() const { return m_StaticDependencies[ 0 ].GetNode() ? m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >() : nullptr; }
+	CompilerNode * GetCompiler() const;
     inline Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
     CompilerNode * GetDedicatedPreprocessor() const;
     #if defined( __WINDOWS__ )
