@@ -88,9 +88,8 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
     }
 
     // .Compiler
-    // TODO:C move GetCompilerNode into ObjectListNode
     CompilerNode * compilerNode( nullptr );
-    if ( !((FunctionObjectList *)function)->GetCompilerNode( nodeGraph, iter, m_Compiler, compilerNode ) )
+    if ( !function->GetCompilerNode( nodeGraph, iter, m_Compiler, compilerNode ) )
     {
         return false; // GetCompilerNode will have emitted an error
     }
@@ -166,7 +165,7 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
     if ( m_Preprocessor.IsEmpty() == false )
     {
         // get the preprocessor executable
-        if ( ((FunctionObjectList *)function)->GetCompilerNode( nodeGraph, iter, m_Preprocessor, preprocessorNode ) == false )
+        if ( function->GetCompilerNode( nodeGraph, iter, m_Preprocessor, preprocessorNode ) == false )
         {
             return false; // GetCompilerNode will have emitted an error
         }

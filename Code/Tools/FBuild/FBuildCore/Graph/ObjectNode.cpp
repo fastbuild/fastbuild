@@ -109,7 +109,7 @@ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, co
     CompilerNode * preprocessor( nullptr );
     if ( m_Preprocessor.IsEmpty() == false )
     {
-        if ( !((FunctionObjectList *)function)->GetCompilerNode( nodeGraph, iter, m_Preprocessor, preprocessor ) )
+        if ( !function->GetCompilerNode( nodeGraph, iter, m_Preprocessor, preprocessor ) )
         {
             return false; // GetCompilerNode will have emitted an error
         }
