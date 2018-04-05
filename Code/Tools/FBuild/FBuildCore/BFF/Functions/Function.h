@@ -104,7 +104,7 @@ public:
                              bool allowCopyDirNodes = false,
                              bool allowUnityNodes = false,
                              bool allowRemoveDirNodes = false,
-		                     bool allowCompilerNodes = false );
+                             bool allowCompilerNodes = false );
 
     bool GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Node * & fileNode, const char * name, bool required = false ) const;
 

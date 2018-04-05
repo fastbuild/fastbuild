@@ -20,7 +20,7 @@
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT( m_Executable, "Executable", MetaFile() )
-	REFLECT_ARRAY( m_ExtraFiles,    "ExtraFiles",           MetaOptional() + MetaFile() )
+    REFLECT_ARRAY( m_ExtraFiles,    "ExtraFiles",           MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_CustomEnvironmentVariables, "CustomEnvironmentVariables",  MetaOptional() )
     REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
     REFLECT( m_VS2012EnumBugFix,    "VS2012EnumBugFix",     MetaOptional() )
