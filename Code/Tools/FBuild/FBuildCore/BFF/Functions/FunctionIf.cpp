@@ -36,10 +36,11 @@ FunctionIf::FunctionIf()
     return true;
 }
 
+// ParseFunction
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionIf::ParseFunction(
                     NodeGraph & nodeGraph,
-                    const BFFIterator & functionNameStart,
+                    const BFFIterator & /*functionNameStart*/,
                     const BFFIterator * functionBodyStartToken,
                     const BFFIterator * functionBodyStopToken,
                     const BFFIterator * functionHeaderStartToken,
@@ -52,89 +53,79 @@ FunctionIf::FunctionIf()
     pos++; // skip opening token
     pos.SkipWhiteSpace();
 
-    if ( ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL ) &&
-         ( *pos != BFFParser::BFF_DECLARE_VAR_PARENT ) )
+    // Check for prefix not character
+    bool negated = false;
+    if ( *pos == '!' )
     {
-        Error::Error_1200_ExpectedVar( pos, this );
-        return false;
+        negated = true;
+        pos++;
     }
 
-    const BFFIterator testVarNameBegin = pos;
-    AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > testVarName;
-    bool testVarParentScope = false;
-    if ( BFFParser::ParseVariableName( pos, testVarName, testVarParentScope ) == false )
+    // Get first variable
+    const BFFIterator testVarNameBegin( pos );
+    const BFFVariable * testVar = GetVar( pos );
+    if ( testVar == nullptr )
     {
-        return false;
-    }
-        
-    const BFFVariable * testVar = nullptr;
-    BFFStackFrame * const testVarFrame = ( testVarParentScope )
-        ? BFFStackFrame::GetParentDeclaration( testVarName, BFFStackFrame::GetCurrent()->GetParent(), testVar )
-        : nullptr;
-
-    if ( false == testVarParentScope )
-    {
-        testVar = BFFStackFrame::GetVar( testVarName, nullptr );
+        return false; // GetVar will have emitted error
     }
 
-    if ( ( testVarParentScope && ( nullptr == testVarFrame ) ) || ( testVar == nullptr ) )
+    // at end?
+    if ( pos.GetCurrent() == functionHeaderStopToken->GetCurrent() )
     {
-        Error::Error_1009_UnknownVariable( testVarNameBegin, this, testVarName );
-        return false;
+        return HandleSimpleBooleanExpression( nodeGraph, functionBodyStartToken, functionBodyStopToken, testVarNameBegin, testVar, negated );
     }
-
-    pos.SkipWhiteSpace();
 
     // check for optional "not" token
-    const bool foundNot = pos.ParseExactString( "not" );
-    if ( foundNot )
+    bool foundNot = false;
+    bool foundIn = false;
+    bool foundEquals = false;
+    bool foundNotEquals = false;
+    if ( negated == false )
     {
-        pos.SkipWhiteSpace();
+        foundNot = pos.ParseExactString( "not" );
+        if ( foundNot )
+        {
+            pos.SkipWhiteSpace();
+        }
+
+        // check for "in"
+        foundIn = pos.ParseExactString( "in" );
+        if ( foundIn )
+        {
+            pos.SkipWhiteSpace();
+        }
+
+        // Check for == and !=
+        if ( ( foundNot == false ) && ( foundIn == false ) )
+        {
+            foundEquals = pos.ParseExactString( "==" );
+            if ( !foundEquals )
+            {
+                foundNotEquals = pos.ParseExactString( "!=" );
+            }
+        }
+        if ( foundEquals || foundNotEquals )
+        {
+            pos.SkipWhiteSpace();
+        }
     }
 
-    // check for required "in" token
-    if ( pos.ParseExactString( "in" ) == false )
+    const BFFIterator listVarNameBegin = pos;
+    const BFFVariable * listVar = GetVar( pos );
+    if ( listVar == nullptr )
     {
-        Error::Error_1201_MissingIn( pos, this );
-        return false;
-    }
-    pos.SkipWhiteSpace();
-
-    if ( ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL ) &&
-         ( *pos != BFFParser::BFF_DECLARE_VAR_PARENT ) /* tolerant with parent vars */ )
-    {
-        Error::Error_1202_ExpectedVarFollowingIn( pos, this );
-        return false;
+        return false; // GetVar will have emitted an error
     }
 
-    const BFFIterator listVarNameBegin( pos );
-    AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > listVarName;
-    bool listParentScope = false;
-    if ( BFFParser::ParseVariableName( pos, listVarName, listParentScope ) == false )
+    if ( foundEquals || foundNotEquals )
     {
-        return false;
-    }
-
-    const BFFVariable * listVar = nullptr;
-    BFFStackFrame * const arrayFrame = ( listParentScope )
-        ? BFFStackFrame::GetParentDeclaration( listVarName, BFFStackFrame::GetCurrent()->GetParent(), listVar )
-        : nullptr;
-
-    if ( false == listParentScope )
-    {
-        listVar = BFFStackFrame::GetVar( listVarName, nullptr );
-    }
-
-    if ( ( listParentScope && ( nullptr == arrayFrame ) ) || ( listVar == nullptr ) )
-    {
-        Error::Error_1009_UnknownVariable( listVarNameBegin, this, listVarName );
-        return false;
+        return HandleSimpleCompare( nodeGraph, functionBodyStartToken, functionBodyStopToken, testVarNameBegin, testVar, listVarNameBegin, listVar, foundNotEquals );
     }
 
     // it can be of any supported type
     if ( listVar->IsArrayOfStrings() == false )
     {
-        Error::Error_1050_PropertyMustBeOfType( listVarNameBegin, this, listVarName.Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
+        Error::Error_1050_PropertyMustBeOfType( listVarNameBegin, this, listVar->GetName().Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
         return false;
     }
 
@@ -161,7 +152,7 @@ FunctionIf::FunctionIf()
     }
     else
     {
-        Error::Error_1050_PropertyMustBeOfType( testVarNameBegin, this, listVarName.Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
+        Error::Error_1050_PropertyMustBeOfType( testVarNameBegin, this, listVar->GetName().Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
         return false;
     }
 
@@ -169,6 +160,7 @@ FunctionIf::FunctionIf()
     {
         conditionSuccess = !conditionSuccess;
     }
+    ASSERT( negated == false ); // Should have reported error (! not allowed for "in")
 
     pos.SkipWhiteSpace();
 
@@ -187,17 +179,134 @@ FunctionIf::FunctionIf()
         BFFIterator subIter( *functionBodyStartToken );
         subIter++; // skip opening token
         subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
-        if ( subParser.Parse( subIter ) == false )
-        {
-            return false;
-        }
-
-        return Commit( nodeGraph, functionNameStart );
+        return subParser.Parse( subIter );
     }
     else
     {
         return true;
     }
+}
+
+// HandleSimpleBooleanExpression
+//------------------------------------------------------------------------------
+bool FunctionIf::HandleSimpleBooleanExpression( NodeGraph & nodeGraph,
+                                                const BFFIterator * functionBodyStartToken,
+                                                const BFFIterator * functionBodyStopToken,
+                                                const BFFIterator & testVarIter,
+                                                const BFFVariable * testVar,
+                                                const bool negated ) const
+{
+    // Check type
+    if ( testVar->IsBool() == false )
+    {
+        Error::Error_1050_PropertyMustBeOfType( testVarIter, this, testVar->GetName().Get(), testVar->GetType(), BFFVariable::VAR_BOOL );
+        return false;
+    }
+
+    // Get result
+    bool result = testVar->GetBool();
+    result = negated ? (!result) : result;
+
+    // Parse body if condition is true
+    if ( result )
+    {
+        // parse the function body
+        BFFParser subParser( nodeGraph );
+        BFFIterator subIter( *functionBodyStartToken );
+        subIter++; // skip opening token
+        subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
+        return subParser.Parse( subIter );
+    }
+    return true;
+}
+
+
+// HandleSimpleCompare
+//------------------------------------------------------------------------------
+bool FunctionIf::HandleSimpleCompare( NodeGraph & nodeGraph,
+                                      const BFFIterator * functionBodyStartToken,
+                                      const BFFIterator * functionBodyStopToken,
+                                      const BFFIterator & lhsVarIter,
+                                      const BFFVariable * lhsVar,
+                                      const BFFIterator & rhsVarIter,
+                                      const BFFVariable * rhsVar,
+                                      const bool negated ) const
+{
+    // Check types are equal
+    if ( lhsVar->GetType() != rhsVar->GetType() )
+    {
+        // Report that rhs is not of same type as lhs
+        Error::Error_1050_PropertyMustBeOfType( rhsVarIter, this, rhsVar->GetName().Get(), rhsVar->GetType(), lhsVar->GetType() );
+        return false;
+    }
+
+    // Check types are supported
+    bool result = false;
+    if ( lhsVar->GetType() == BFFVariable::VAR_STRING )
+    {
+        result = ( lhsVar->GetString() == rhsVar->GetString() );
+    }
+    else if ( lhsVar->GetType() == BFFVariable::VAR_BOOL )
+    {
+        result = ( lhsVar->GetBool() == rhsVar->GetBool() );
+    }
+    else
+    {
+        Error::Error_1050_PropertyMustBeOfType( lhsVarIter, this, lhsVar->GetName().Get(), lhsVar->GetType(), BFFVariable::VAR_STRING, BFFVariable::VAR_BOOL );
+        return false;
+    }
+
+    // Handle negation
+    result = negated ? (!result) : result;
+
+    // Parse body if condition is true
+    if ( result )
+    {
+        // parse the function body
+        BFFParser subParser( nodeGraph );
+        BFFIterator subIter( *functionBodyStartToken );
+        subIter++; // skip opening token
+        subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
+        return subParser.Parse( subIter );
+    }
+    return true;
+}
+
+// GetVar
+//------------------------------------------------------------------------------
+const BFFVariable * FunctionIf::GetVar( BFFIterator & pos ) const
+{
+    if ( ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL ) &&
+         ( *pos != BFFParser::BFF_DECLARE_VAR_PARENT ) )
+    {
+        Error::Error_1200_ExpectedVar( pos, this );
+        return nullptr;
+    }
+
+    const BFFIterator varNameBegin( pos );
+    AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
+    bool varParentScope = false;
+    if ( BFFParser::ParseVariableName( pos, varName, varParentScope ) == false )
+    {
+        return nullptr; // ParseVariableName will have emitted error
+    }
+
+    const BFFVariable * var = nullptr;
+    const BFFStackFrame * varFrame = ( varParentScope ) ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
+                                                        : nullptr;
+    if ( false == varParentScope )
+    {
+        var = BFFStackFrame::GetVar( varName, nullptr );
+    }
+
+    if ( ( varParentScope && ( nullptr == varFrame ) ) || ( var == nullptr ) )
+    {
+        Error::Error_1009_UnknownVariable( varNameBegin, this, varName );
+        return nullptr;
+    }
+
+    pos.SkipWhiteSpace();
+    return var;
 }
 
 //------------------------------------------------------------------------------

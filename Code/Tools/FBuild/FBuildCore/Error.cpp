@@ -540,6 +540,14 @@
                                        expectedSize );
 }
 
+// Error_1254_UnrecognizedOperator
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1254_UnrecognizedOperator( const BFFIterator & iter,
+                                                        const Function * function )
+{
+    FormatError( iter, 1254u, function, "Unrecognized operator." );
+}
+
 // Error_1300_MissingPCHArgs
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1300_MissingPCHArgs( const BFFIterator & iter,

@@ -62,6 +62,8 @@ private:
     void IfNotFunctionFalse() const;
     void IfSetFunctionFalse() const;
     void IfNotSetFunctionFalse() const;
+    void IfFunctionBool() const;
+    void IfFunctionStringCompare() const;
     void BuiltInVariables() const;
 
     void Parse( const char * fileName, bool expectFailure = false ) const;
@@ -112,6 +114,8 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IfNotFunctionFalse )
     REGISTER_TEST( IfSetFunctionFalse )
     REGISTER_TEST( IfNotSetFunctionFalse )    
+    REGISTER_TEST( IfFunctionBool )
+    REGISTER_TEST( IfFunctionStringCompare )
     REGISTER_TEST( BuiltInVariables )
 REGISTER_TESTS_END
 
@@ -465,6 +469,24 @@ void TestBFFParsing::IfNotSetFunctionFalse() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_not_set_function_false.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+}
+
+// IfFunctionBool
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFunctionBool() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_function_boolean.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
+// IfFunctionStringCompare
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFunctionStringCompare() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_function_stringcompare.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
 // BuiltInVariables

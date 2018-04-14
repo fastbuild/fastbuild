@@ -167,6 +167,8 @@ public:
                                                      const char * variableName,
                                                      uint32_t foundSize,
                                                      uint32_t expectedSize );
+    static void Error_1254_UnrecognizedOperator( const BFFIterator & iter,
+                                                 const Function * function );
 
     // 1300 - 1399 : Library specific errors
     //------------------------------------------------------------------------------
