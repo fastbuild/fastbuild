@@ -2228,6 +2228,15 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             return;
         }
 
+        // If process is manually terminated by a user, consider that a system failure
+        // Only do so if there is no error output, as some compilers (like Clang) also
+        // use return code 1 for normal compilation failure
+        if ( ( result == 0x1 ) && ( stdErr == nullptr ) )
+        {
+            job->OnSystemError(); // task will be retried on another worker
+            return;
+        }
+
         // If DLLs are not correctly sync'd, add an extra message to help the user
         if ( (uint32_t)result == 0xC000007B ) // STATUS_INVALID_IMAGE_FORMAT
         {
@@ -2278,14 +2287,11 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         if ( objectNode->GetFlag( ObjectNode::FLAG_CLANG ) )
         {
             // When clang fails due to low disk space
-            if ( result == 0x01 )
+            // TODO:C Should we check for localized msg?
+            if ( stdErr && ( strstr( stdErr, "IO failure on output stream" ) ) )
             {
-                // TODO:C Should we check for localized msg?
-                if ( stdErr && ( strstr( stdErr, "IO failure on output stream" ) ) )
-                {
-                    job->OnSystemError();
-                    return;
-                }
+                job->OnSystemError();
+                return;
             }
         }
 
@@ -2293,14 +2299,11 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         if ( objectNode->GetFlag( ObjectNode::FLAG_GCC ) )
         {
             // When gcc fails due to low disk space
-            if ( result == 0x01 )
+            // TODO:C Should we check for localized msg?
+            if ( stdErr && ( strstr( stdErr, "No space left on device" ) ) )
             {
-                // TODO:C Should we check for localized msg?
-                if ( stdErr && ( strstr( stdErr, "No space left on device" ) ) )
-                {
-                    job->OnSystemError();
-                    return;
-                }
+                job->OnSystemError();
+                return;
             }
         }
     #else
