@@ -94,14 +94,16 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                                     + ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
-    .LinkerOptions                  = ' -fsanitize=memory'
+    .LinkerOptions                  = ' -fsanitize=memory -L../External/MSan'
 
     .Config                         = 'MSan'
 ]
 .Fuzzer_Config =
 [
-    .CompilerOptions                = ' -fsanitize-coverage=trace-pc-guard' // These options are a valid for Clang <= 5.0.0:
-                                    //+ ' -fsanitize=fuzzer-no-link'          // These options are expected to be valid for Clang > 5.0.0:
+    // These options are valid for Clang < 6.0.0:
+    .CompilerOptions                = ' -fsanitize-coverage=trace-pc-guard,trace-cmp'
+    // These options are valid for Clang >= 6.0.0:
+    // .CompilerOptions                = ' -fsanitize=fuzzer-no-link'
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
 ]

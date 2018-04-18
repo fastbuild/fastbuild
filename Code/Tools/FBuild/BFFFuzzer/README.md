@@ -24,7 +24,7 @@ Currently there are build configurations only for Linux, although it can be buil
 *   Build libFuzzer: `./build.sh`
 *   Copy resulting library to some place known to the linker (e.g. `/usr/local/lib`):
     ```bash
-    cp libFuzzer.a /usr/local/lib/libLLVMFuzzer.a
+    cp libFuzzer.a /usr/local/lib/
     ```
 
 ### (optional) Building libc++ with MemorySanitizer
@@ -42,10 +42,13 @@ Currently there are build configurations only for Linux, although it can be buil
 *   Build minimal version of libc++ (no tests, documentation, etc.)
     ```bash
     mkdir build && cd build
-    cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DLIBCXX_USE_COMPILER_RT=ON -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=NO -DLIBCXX_INCLUDE_BENCHMARKS=NO -DLIBCXX_INCLUDE_TESTS=NO -DLIBCXX_INCLUDE_DOCS=NO
+    cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins -DLIBCXX_USE_COMPILER_RT=ON -DLIBCXX_CXX_ABI=libcxxabi -DLIBCXX_CXX_ABI_INCLUDE_PATHS=/usr/include/c++/v1 -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=NO -DLIBCXX_INCLUDE_BENCHMARKS=NO -DLIBCXX_INCLUDE_TESTS=NO -DLIBCXX_INCLUDE_DOCS=NO
     make -j4
     ```
-*   Resulting library will be in `lib64/`.
+*   Copy resulting library to `External/MSan/` subdirectory in the FASTBuild repo:
+    ```bash
+    cp lib64/libc++.a /path/to/fastbuild/External/MSan/
+    ```
 
 ### (optional) Building libFuzzer with MemorySanitizer
 *   Get libFuzzer source code (see above).
@@ -55,9 +58,9 @@ Currently there are build configurations only for Linux, although it can be buil
     echo "fun:_ZNK6fuzzer*" >> blacklist.txt
     CXX='clang -stdlib=libc++ -fsanitize=memory -fsanitize-memory-track-origins -fsanitize-blacklist=blacklist.txt' ./build.sh
     ```
-*   Copy resulting library to some place known to the linker (e.g. `/usr/local/lib`):
+*   Copy resulting library to `External/MSan/` subdirectory in the FASTBuild repo:
     ```bash
-    cp libFuzzer.a /usr/local/lib/libLLVMFuzzerMSan.a
+    cp libFuzzer.a /path/to/fastbuild/External/MSan/
     ```
 
 ## Using BFFFuzzer
@@ -77,11 +80,11 @@ Then we can run it on that directory:
 # ASan build
 ../../../../tmp/x64ClangLinux-ASan/Tools/FBuild/BFFFuzzer/bfffuzzer corpus
 # or MSan build
-LD_LIBRARY_PATH=/path/to/msan-libc++/ ../../../../tmp/x64ClangLinux-MSan/Tools/FBuild/BFFFuzzer/bfffuzzer corpus
+../../../../tmp/x64ClangLinux-MSan/Tools/FBuild/BFFFuzzer/bfffuzzer corpus
 ```
 Generally it is better to do fuzzing with ASan build because it runs faster, and later retest corpus on MSan build:
 ```bash
-LD_LIBRARY_PATH=/path/to/msan-libc++/ ../../../../tmp/x64ClangLinux-MSan/Tools/FBuild/BFFFuzzer/bfffuzzer corpus/*
+../../../../tmp/x64ClangLinux-MSan/Tools/FBuild/BFFFuzzer/bfffuzzer corpus/*
 ```
 
 ### Creating a seed corpus
@@ -98,8 +101,8 @@ To speedup initial corpus load it is useful to periodically remove redundant fil
 ```bash
 mv corpus corpus-old
 mkdir corpus
-bfffuzzer -merge=1 corpus corpus-old
-LD_LIBRARY_PATH=/path/to/msan/libc++/ bfffuzzer -merge=1 corpus corpus-old
+../../../../tmp/x64ClangLinux-ASan/Tools/FBuild/BFFFuzzer/bfffuzzer -merge=1 corpus corpus-old
+../../../../tmp/x64ClangLinux-MSan/Tools/FBuild/BFFFuzzer/bfffuzzer -merge=1 corpus corpus-old
 rm -r corpus-old
 ```
 
