@@ -119,7 +119,7 @@ ExecNode::~ExecNode() = default;
     // get the result of the directory lists and depend on those
     const size_t startIndex = 1 + m_NumExecInputFiles; // Skip Compiler + ExecInputFiles
     const size_t endIndex =  ( 1 + m_NumExecInputFiles + m_ExecInputPath.GetSize() );
-    for ( size_t i=startIndex; i<endIndex; ++i )
+    for ( size_t i = startIndex; i < endIndex; ++i )
     {
         Node * n = m_StaticDependencies[ i ].GetNode();
 
@@ -145,7 +145,6 @@ ExecNode::~ExecNode() = default;
 
             m_DynamicDependencies.Append( Dependency( sn ) );
         }
-        continue;
     }
 
     return true;
