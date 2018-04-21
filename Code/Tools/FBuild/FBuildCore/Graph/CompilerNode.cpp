@@ -197,12 +197,13 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
             return true;
         }
 
-		// Orbis wave shader compiler
-		if (compiler.EndsWithI("orbis-wave-psslc.exe"))
-		{
-			m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
-			return true;
-		}
+        // Orbis wave shader compiler
+        if ( compiler.EndsWithI( "orbis-wave-psslc.exe" ) ||
+             compiler.EndsWithI( "orbis-wave-psslc" ) )
+        {
+            m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
+            return true;
+        }
 
         // Auto-detect failed
         Error::Error_1500_CompilerDetectionFailed( iter, function, compiler );
@@ -260,11 +261,11 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
         m_CompilerFamilyEnum = VBCC;
         return true;
     }
-	if (m_CompilerFamilyString.EqualsI("orbis-wave-psslc"))
-	{
-		m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
-		return true;
-	}
+	if ( m_CompilerFamilyString.EqualsI( "orbis-wave-psslc" ) )
+    {
+        m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
+        return true;
+    }
 
     // Invalid option
     Error::Error_1501_CompilerFamilyUnrecognized( iter, function, m_CompilerFamilyString );
