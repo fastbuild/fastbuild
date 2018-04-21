@@ -25,6 +25,7 @@ private:
     void Comments() const;
     void Strings() const;
     void String_Unterminated() const;
+    void String_Unterminated2() const;
     void Arrays() const;
     void Array_Unterminated() const;
     void Array_TypeMismatch() const;
@@ -77,6 +78,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Comments )
     REGISTER_TEST( Strings )
     REGISTER_TEST( String_Unterminated )
+    REGISTER_TEST( String_Unterminated2 )
     REGISTER_TEST( Arrays )
     REGISTER_TEST( Array_Unterminated )
     REGISTER_TEST( Array_TypeMismatch )
@@ -160,6 +162,13 @@ void TestBFFParsing::Strings() const
 void TestBFFParsing::String_Unterminated() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/string_unterminated.bff", true ); // expect failure
+}
+
+// String_Unterminated2
+//------------------------------------------------------------------------------
+void TestBFFParsing::String_Unterminated2() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/string_unterminated2.bff", true ); // expect failure
 }
 
 // Arrays
