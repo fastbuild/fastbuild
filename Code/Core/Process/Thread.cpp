@@ -178,6 +178,8 @@ public:
     #endif
 }
 
+// WaitForThread
+//------------------------------------------------------------------------------
 /*static*/ int Thread::WaitForThread( ThreadHandle handle, uint32_t timeoutMS, bool & timedOut )
 {
     #if defined( __WINDOWS__ )
