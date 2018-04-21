@@ -62,7 +62,6 @@ private:
 
     Array< AString >    m_WorkerList;   // workers to connect to
     volatile bool       m_ShouldExit;   // signal from main thread
-    volatile bool       m_Exited;       // flagged on exit
     bool                m_DetailedLogging;
     Thread::ThreadHandle m_Thread;      // the thread to find and manage workers
 
