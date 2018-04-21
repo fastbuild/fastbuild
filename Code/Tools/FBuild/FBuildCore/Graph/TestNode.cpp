@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 
 #include "Core/FileIO/FileIO.h"
@@ -21,12 +22,23 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
-    REFLECT( m_TestExecutable,      "TestExecutable",       MetaFile() )
-    REFLECT( m_TestArguments,       "TestArguments",        MetaOptional() )
-    REFLECT( m_TestWorkingDir,      "TestWorkingDir",       MetaOptional() + MetaPath() )
-    REFLECT( m_TestTimeOut,         "TestTimeOut",          MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
-    REFLECT( m_TestAlwaysShowOutput,"TestAlwaysShowOutput", MetaOptional() )
-    REFLECT_ARRAY( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT(        m_TestExecutable,           "TestExecutable",           MetaFile() )
+    REFLECT_ARRAY(  m_TestInput,                "TestInput",                MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_TestInputPath,            "TestInputPath",            MetaOptional() + MetaPath() )
+    REFLECT_ARRAY(  m_TestInputPattern,         "TestInputPattern",         MetaOptional() )
+    REFLECT(        m_TestInputPathRecurse,     "TestInputPathRecurse",     MetaOptional() )
+    REFLECT(        m_TestInputPathRecurse,     "TestInputPathRecurse",     MetaOptional() )
+    REFLECT_ARRAY(  m_TestInputExcludePath,     "TestInputExcludePath",     MetaOptional() + MetaPath() )
+    REFLECT_ARRAY(  m_TestInputExcludedFiles,   "TestInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
+    REFLECT_ARRAY(  m_TestInputExcludePattern,  "TestInputExcludePattern",  MetaOptional() )
+    REFLECT(        m_TestArguments,            "TestArguments",            MetaOptional() )
+    REFLECT(        m_TestWorkingDir,           "TestWorkingDir",           MetaOptional() + MetaPath() )
+    REFLECT(        m_TestTimeOut,              "TestTimeOut",              MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
+    REFLECT(        m_TestAlwaysShowOutput,     "TestAlwaysShowOutput",     MetaOptional() )
+    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+
+    // Internal State
+    REFLECT(        m_NumTestInputFiles,        "NumTestInputFiles",        MetaHidden() )
 REFLECT_END( TestNode )
 
 // CONSTRUCTOR
@@ -38,6 +50,7 @@ TestNode::TestNode()
     , m_TestWorkingDir()
     , m_TestTimeOut( 0 )
     , m_TestAlwaysShowOutput( false )
+    , m_TestInputPathRecurse( true )
 {
     m_Type = Node::TEST_NODE;
 }
@@ -52,11 +65,44 @@ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
         return false; // InitializePreBuildDependencies will have emitted an error
     }
 
-    // Get node for Executable
-    if ( !function->GetFileNode( nodeGraph, iter, m_TestExecutable, "TestExecutable", m_StaticDependencies ) )
+    // .TestExecutable
+    Dependencies executable;
+    if ( !function->GetFileNode( nodeGraph, iter, m_TestExecutable, "TestExecutable", executable ) )
     {
         return false; // GetFileNode will have emitted an error
     }
+    ASSERT( executable.GetSize() == 1 ); // Should only be possible to be one
+
+    // .TestInput
+    Dependencies testInputFiles;
+    if ( !function->GetFileNodes( nodeGraph, iter, m_TestInput, "TestInput", testInputFiles ) )
+    {
+        return false; // GetFileNodes will have emitted an error
+    }
+    m_NumTestInputFiles = (uint32_t)testInputFiles.GetSize();
+
+    // .TestInputPath
+    Dependencies testInputPaths;
+    if ( !function->GetDirectoryListNodeList( nodeGraph,
+                                              iter,
+                                              m_TestInputPath,
+                                              m_TestInputExcludePath,
+                                              m_TestInputExcludedFiles,
+                                              m_TestInputExcludePattern,
+                                              m_TestInputPathRecurse,
+                                              &m_TestInputPattern,
+                                              "TestInputPath",
+                                              testInputPaths ) )
+    {
+        return false; // GetDirectoryListNodeList will have emitted an error
+    }
+    ASSERT( testInputPaths.GetSize() == m_TestInputPath.GetSize() ); // No need to store count since they should be the same
+
+    // Store Static Dependencies
+    m_StaticDependencies.SetCapacity( 1 + m_NumTestInputFiles + testInputPaths.GetSize() );
+    m_StaticDependencies.Append( executable );
+    m_StaticDependencies.Append( testInputFiles );
+    m_StaticDependencies.Append( testInputPaths );
 
     return true;
 }
@@ -64,6 +110,48 @@ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 TestNode::~TestNode() = default;
+
+// DoDynamicDependencies
+//------------------------------------------------------------------------------
+/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+{
+    // clear dynamic deps from previous passes
+    m_DynamicDependencies.Clear();
+
+    // get the result of the directory lists and depend on those
+    const size_t startIndex = 1 + m_NumTestInputFiles; // Skip Executable + TestInputFiles
+    const size_t endIndex =  ( 1 + m_NumTestInputFiles + m_TestInputPath.GetSize() );
+    for ( size_t i=startIndex; i<endIndex; ++i )
+    {
+        Node * n = m_StaticDependencies[ i ].GetNode();
+
+        ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
+
+        // get the list of files
+        DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
+        for ( const FileIO::FileInfo & file : files )
+        {
+            // Create the file node (or find an existing one)
+            Node * sn = nodeGraph.FindNode( file.m_Name );
+            if ( sn == nullptr )
+            {
+                sn = nodeGraph.CreateFileNode( file.m_Name );
+            }
+            else if ( sn->IsAFile() == false )
+            {
+                FLOG_ERROR( "Test() .TestInputFile '%s' is not a FileNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
+                return false;
+            }
+
+            m_DynamicDependencies.Append( Dependency( sn ) );
+        }
+        continue;
+    }
+
+    return true;
+}
 
 // DoBuild
 //------------------------------------------------------------------------------
