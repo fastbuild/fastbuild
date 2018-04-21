@@ -35,6 +35,9 @@ REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
     REFLECT(        m_ExecReturnCode,           "ExecReturnCode",           MetaOptional() )
     REFLECT(        m_ExecUseStdOutAsOutput,    "ExecUseStdOutAsOutput",    MetaOptional() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+
+    // Internal State
+    REFLECT(        m_NumExecInputFiles,        "NumExecInputFiles",        MetaHidden() )
 REFLECT_END( ExecNode )
 
 // CONSTRUCTOR
@@ -74,6 +77,7 @@ bool ExecNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
     {
         return false; // GetFileNodes will have emitted an error
     }
+    m_NumExecInputFiles = (uint32_t)execInputFiles.GetSize();
 
     // .ExecInputPath
     Dependencies execInputPaths;
@@ -93,7 +97,7 @@ bool ExecNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
     ASSERT( execInputPaths.GetSize() == m_ExecInputPath.GetSize() ); // No need to store count since they should be the same
 
     // Store Static Dependencies
-    m_StaticDependencies.SetCapacity( 1 + execInputFiles.GetSize() + execInputPaths.GetSize() );
+    m_StaticDependencies.SetCapacity( 1 + m_NumExecInputFiles + execInputPaths.GetSize() );
     m_StaticDependencies.Append( executable );
     m_StaticDependencies.Append( execInputFiles );
     m_StaticDependencies.Append( execInputPaths );
@@ -104,6 +108,48 @@ bool ExecNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, cons
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 ExecNode::~ExecNode() = default;
+
+// DoDynamicDependencies
+//------------------------------------------------------------------------------
+/*virtual*/ bool ExecNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+{
+    // clear dynamic deps from previous passes
+    m_DynamicDependencies.Clear();
+
+    // get the result of the directory lists and depend on those
+    const size_t startIndex = 1 + m_NumExecInputFiles; // Skip Compiler + ExecInputFiles
+    const size_t endIndex =  ( 1 + m_NumExecInputFiles + m_ExecInputPath.GetSize() );
+    for ( size_t i=startIndex; i<endIndex; ++i )
+    {
+        Node * n = m_StaticDependencies[ i ].GetNode();
+
+        ASSERT( n->GetType() == Node::DIRECTORY_LIST_NODE );
+
+        // get the list of files
+        DirectoryListNode * dln = n->CastTo< DirectoryListNode >();
+        const Array< FileIO::FileInfo > & files = dln->GetFiles();
+        m_DynamicDependencies.SetCapacity( m_DynamicDependencies.GetSize() + files.GetSize() );
+        for ( const FileIO::FileInfo & file : files )
+        {
+            // Create the file node (or find an existing one)
+            Node * sn = nodeGraph.FindNode( file.m_Name );
+            if ( sn == nullptr )
+            {
+                sn = nodeGraph.CreateFileNode( file.m_Name );
+            }
+            else if ( sn->IsAFile() == false )
+            {
+                FLOG_ERROR( "Exec() .ExecInputFile '%s' is not a FileNode (type: %s)", n->GetName().Get(), n->GetTypeName() );
+                return false;
+            }
+
+            m_DynamicDependencies.Append( Dependency( sn ) );
+        }
+        continue;
+    }
+
+    return true;
+}
 
 // DoBuild
 //------------------------------------------------------------------------------
