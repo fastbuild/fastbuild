@@ -14,12 +14,12 @@
 
     // Executable
     //--------------------------------------------------------------------------
-    // These options are a valid for Clang <= 5.0.0:
-    .ExtraLinkerOptions_ASan = ' -lLLVMFuzzer'
-    .ExtraLinkerOptions_MSan = ' -lLLVMFuzzerMSan -lc++'
-    // These options are expected to be valid for Clang > 5.0.0:
+    // These options are a valid for Clang < 6.0.0:
+    .ExtraLinkerOptions_ASan = ' -lFuzzer'
+    .ExtraLinkerOptions_MSan = ' -lFuzzer -nodefaultlibs -Wl,-Bstatic -lc++ -Wl,-Bdynamic -lc++abi -lunwind -lpthread -lc -lrt -ldl -lm'
+    // These options are valid for Clang >= 6.0.0:
     // .ExtraLinkerOptions_ASan = ' -fsanitize=fuzzer'
-    // .ExtraLinkerOptions_MSan = ' -fsanitize=fuzzer -lc++'
+    // .ExtraLinkerOptions_MSan = ' -lFuzzer -nodefaultlibs -Wl,-Bstatic -lc++ -Wl,-Bdynamic -lc++abi -lunwind -lpthread -lc -lrt -ldl -lm'
 
     .MyConfigs = { .X64ClangASanConfig_Linux , .X64ClangMSanConfig_Linux }
     ForEach( .Config in .MyConfigs )

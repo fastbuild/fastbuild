@@ -1,5 +1,6 @@
 # FASTBuild
 External/SDK
+External/MSan
 *.exe
 *.fdb
 *.log
