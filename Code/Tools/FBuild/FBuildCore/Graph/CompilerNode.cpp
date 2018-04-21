@@ -125,12 +125,12 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
 
         // Clang
         if ( compiler.EndsWithI( "clang++.exe" ) ||
-             compiler.EndsWithI( "clang++.cmd") ||
+             compiler.EndsWithI( "clang++.cmd" ) ||
              compiler.EndsWithI( "clang++" ) ||
              compiler.EndsWithI( "clang.exe" ) ||
-             compiler.EndsWithI( "clang.cmd") ||
+             compiler.EndsWithI( "clang.cmd" ) ||
              compiler.EndsWithI( "clang" ) ||
-             compiler.EndsWithI( "clang-cl.exe" ) ||			 			 
+             compiler.EndsWithI( "clang-cl.exe" ) ||
              compiler.EndsWithI( "clang-cl" ) )
         {
             m_CompilerFamilyEnum = CLANG;
