@@ -92,7 +92,7 @@ private:
     AString m_Name;
     VarType m_Type;
 
-    mutable uint32_t m_FreezeCount;
+    mutable uint8_t     m_FreezeCount;
 
     //
     bool                m_BoolValue;

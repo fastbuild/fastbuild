@@ -53,6 +53,7 @@ private:
     void ParentScopeBug2() const;
     void ParentScopeUnknown() const;
     void FrozenVariable() const;
+    void FrozenVariable_Nested() const;
     void DynamicVarNameConstruction() const;
     void OperatorMinus() const;
     void IfFunctionTrue() const;
@@ -106,6 +107,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( ParentScopeBug2 )
     REGISTER_TEST( ParentScopeUnknown )
     REGISTER_TEST( FrozenVariable )
+    REGISTER_TEST( FrozenVariable_Nested )
     REGISTER_TEST( DynamicVarNameConstruction )
     REGISTER_TEST( OperatorMinus )
     REGISTER_TEST( IfFunctionTrue )
@@ -400,6 +402,13 @@ void TestBFFParsing::ParentScopeUnknown() const
 void TestBFFParsing::FrozenVariable() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/frozen_foreach.bff", true ); // expect failure
+}
+
+// FrozenVariable_Nested
+//------------------------------------------------------------------------------
+void TestBFFParsing::FrozenVariable_Nested() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/frozen_foreach_nested.bff", true ); // expect failure
 }
 
 // DynamicVarNameConstruction
