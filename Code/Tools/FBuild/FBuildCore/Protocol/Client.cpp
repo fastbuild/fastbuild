@@ -528,7 +528,6 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     uint32_t size = 0;
     ms.Read( size );
     const void * data = (const char *)ms.GetData() + ms.Tell();
-
     {
         MutexHolder mh( ss->m_Mutex );
         VERIFY( ss->m_Jobs.FindDerefAndErase( jobId ) );
@@ -546,6 +545,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
                                           job->GetNode()->GetName().Get(),
                                           job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
+
+	job->SetMessages( messages );
 
     if ( result == true )
     {
