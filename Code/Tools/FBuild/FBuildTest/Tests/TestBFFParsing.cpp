@@ -67,6 +67,7 @@ private:
     void IfFunctionBool() const;
     void IfFunctionStringCompare() const;
     void BuiltInVariables() const;
+    void CyclicDependency() const;
 
     void Parse( const char * fileName, bool expectFailure = false ) const;
 };
@@ -121,6 +122,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IfFunctionBool )
     REGISTER_TEST( IfFunctionStringCompare )
     REGISTER_TEST( BuiltInVariables )
+    REGISTER_TEST( CyclicDependency )
 REGISTER_TESTS_END
 
 // Empty
@@ -512,6 +514,19 @@ void TestBFFParsing::IfFunctionStringCompare() const
 void TestBFFParsing::BuiltInVariables() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/builtin_variables.bff" );
+}
+
+// CyclicDependency
+//------------------------------------------------------------------------------
+void TestBFFParsing::CyclicDependency() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/cyclic_dependency.bff";
+    FBuild fBuild( options );
+
+    // Parsing should fail due to cyclic dependency
+    TEST_ASSERT( fBuild.Initialize() == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "Cyclic dependency detected for node" ) );
 }
 
 //------------------------------------------------------------------------------

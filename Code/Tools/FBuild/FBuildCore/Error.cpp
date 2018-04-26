@@ -372,6 +372,13 @@
     FormatError( iter, 1042u, nullptr, "Unknown operator '%s'.", operatorName.Get() );
 }
 
+// Error_1043_CyclicDependencyDetected
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1043_CyclicDependencyDetected( const BFFIterator & iter, const AString & nodeName )
+{
+    FormatError( iter, 1043u, nullptr, "Cyclic dependency detected for node '%s'.", nodeName.Get() );
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFIterator & iter,

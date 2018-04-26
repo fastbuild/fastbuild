@@ -224,8 +224,41 @@ Function::~Function() = default;
         return false;
     }
 
+    // Take note of how many nodes there are before Commit
+    const size_t nodeCountBefore = nodeGraph.GetNodeCount();
+
     // complete the function
-    return Commit( nodeGraph, functionNameStart );
+    if (!Commit( nodeGraph, functionNameStart ))
+    {
+        return false;
+    }
+
+    // Check for cyclic dependencies
+    const size_t nodeCountAfter = nodeGraph.GetNodeCount();
+    if ( nodeCountBefore != nodeCountAfter )
+    {
+        for ( size_t index = nodeCountBefore; index < nodeCountAfter; ++index )
+        {
+            const Node* node = nodeGraph.GetNodeByIndex( index );
+
+            const Dependencies * depVectors[ 3 ] = { &node->GetPreBuildDependencies(),
+                                                     &node->GetStaticDependencies(),
+                                                     &node->GetDynamicDependencies() };
+            for ( const Dependencies * depVector : depVectors )
+            {
+                for ( const Dependency & dep : *depVector )
+                {
+                    if ( node == dep.GetNode() )
+                    {
+                        Error::Error_1043_CyclicDependencyDetected( functionNameStart, node->GetName() );
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 // Commit
