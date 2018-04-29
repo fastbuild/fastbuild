@@ -786,7 +786,9 @@ bool Client::WriteFileToDisk( const AString & fileName, const char * data, const
     {
         // On Windows, we can occasionally fail to open the file with error 1224 (ERROR_USER_MAPPED_FILE), due to
         // things like anti-virus etc. Simply retry if that happens
-        FileIO::WorkAroundForWindowsFilePermissionProblem( fileName );
+        // Also, when a <LOCAL RACE> occurs, the local compilation process might not have exited at this point
+        // (we call ::TerminateProcess, which is async),which can cause failure below, because the file is still locked.
+        FileIO::WorkAroundForWindowsFilePermissionProblem( fileName, FileStream::WRITE_ONLY, 15 ); // 15 secs max wait
 
         if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
         {

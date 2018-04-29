@@ -1211,7 +1211,9 @@
 // WorkAroundForWindowsFilePermissionProblem
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    /*static*/ void FileIO::WorkAroundForWindowsFilePermissionProblem( const AString & fileName )
+    /*static*/ void FileIO::WorkAroundForWindowsFilePermissionProblem( const AString & fileName,
+                                                                       const uint32_t openMode,
+                                                                       const uint32_t timeoutSeconds )
     {
         // Sometimes after closing a file, subsequent operations on that file will
         // fail.  For example, trying to set the file time, or even another process
@@ -1225,12 +1227,12 @@
         // problem on the subsequent operation.
         FileStream f;
         Timer timer;
-        while ( f.Open( fileName.Get() ) == false )
+        while ( f.Open( fileName.Get(), openMode ) == false )
         {
             Thread::Sleep( 1 );
 
             // timeout so we don't get stuck in here forever
-            if ( timer.GetElapsed() > 1.0f )
+            if ( timer.GetElapsed() > (float)timeoutSeconds )
             {
                 ASSERT( false && "WorkAroundForWindowsFilePermissionProblem Failed!" );
                 return;
