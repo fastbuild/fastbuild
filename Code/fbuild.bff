@@ -18,7 +18,7 @@ Settings
         .Environment    = { "PATH=$VS_PATH$",
                             "TMP=$TMP$",
                             "SystemRoot=C:\Windows" }
-        .CachePath      = "C:\.fbuild.cache"
+        .CachePath      = "$TMP$\.fbuild.cache"
     #else
         .CachePath      = "/tmp/.fbuild.cache"
     #endif
