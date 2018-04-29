@@ -37,89 +37,140 @@ namespace
 }
 
 // Levenshtein distance
-// https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#C
+// https://github.com/gitster/git/blob/master/levenshtein.c
 //------------------------------------------------------------------------------
-template < size_t _Capacity, bool _CaseSentitive >
+/*
+ * This function implements the Damerau-Levenshtein algorithm to
+ * calculate a distance between strings.
+ *
+ * Basically, it says how many letters need to be swapped, substituted,
+ * deleted from, or added to string1, at least, to get string2.
+ *
+ * The idea is to build a distance matrix for the substrings of both
+ * strings.  To avoid a large space complexity, only the last three rows
+ * are kept in memory (if swaps had the same or higher cost as one deletion
+ * plus one insertion, only two rows would be needed).
+ *
+ * At any stage, "i + 1" denotes the length of the current substring of
+ * string1 that the distance is calculated for.
+ *
+ * row2 holds the current row, row1 the previous row (i.e. for the substring
+ * of string1 of length "i"), and row0 the row before that.
+ *
+ * In other words, at the start of the big loop, row2[j + 1] contains the
+ * Damerau-Levenshtein distance between the substring of string1 of length
+ * "i" and the substring of string2 of length "j + 1".
+ *
+ * All the big loop does is determine the partial minimum-cost paths.
+ *
+ * It does so by calculating the costs of the path ending in characters
+ * i (in string1) and j (in string2), respectively, given that the last
+ * operation is a substitution, a swap, a deletion, or an insertion.
+ *
+ * This implementation allows the costs to be weighted:
+ *
+ * - w (as in "sWap")
+ * - s (as in "Substitution")
+ * - a (for insertion, AKA "Add")
+ * - d (as in "Deletion")
+ *
+ * Note that this algorithm calculates a distance _iff_ d == a.
+ */
+template < bool _CaseSentitive >
 static uint32_t LevenshteinDistanceImpl(const char * str1, uint32_t len1,
-                                        const char * str2, uint32_t len2 )
+                                        const char * str2, uint32_t len2,
+                                        uint32_t w, uint32_t s, uint32_t a, uint32_t d )
 {
     ASSERT( 0 == len1 || nullptr != str1 );
     ASSERT( 0 == len2 || nullptr != str2 );
 
-    if ( 0 == len1 || nullptr == str1 ) return len2;
-    if ( 0 == len2 || nullptr == str2 ) return len1;
+    if ( 0 == len1 || nullptr == str1 ) return ( a * len2 );
+    if ( 0 == len2 || nullptr == str2 ) return ( d * len1 );
 
-    // swap str1 and str2 if str2 is shorter
-    if ( len2 < len1 )
+    typedef CharEqual< _CaseSentitive > equalto;
+
+    uint32_t * row0 = ( uint32_t* )ALLOC( sizeof( uint32_t ) * ( len2 + 1 ) );
+    uint32_t * row1 = ( uint32_t* )ALLOC( sizeof( uint32_t ) * ( len2 + 1 ) );
+    uint32_t * row2 = ( uint32_t* )ALLOC( sizeof( uint32_t ) * ( len2 + 1 ) );
+
+    for ( uint32_t j = 0 ; j <= len2 ; ++j )
     {
-        const char * strTmp = str1;
-        const uint32_t lenTmp = len1;
-        str1 = str2;
-        len1 = len2;
-        str2 = strTmp;
-        len2 = lenTmp;
+        row1[ 1 ] = j * a;
     }
 
-    if ( len1 >= _Capacity )
+    for ( uint32_t i = 0 ; i < len1 ; ++i )
     {
-        ASSERT( false );
-        return len2;
-    }
+        row2[ 0 ] = ( i + 1 ) * d;
 
-    uint32_t column[_Capacity] = { 0 };
-
-    for ( uint32_t y = 1 ; y <= len1; y++ )
-        column[y] = y;
-
-    for ( uint32_t x = 1 ; x <= len2; x++ )
-    {
-        column[0] = x;
-        for ( uint32_t y = 1, lastdiag = x - 1 ; y <= len1 ; y++ )
+        for ( uint32_t j = 0 ; j < len2 ; ++j )
         {
-            const uint32_t olddiag = column[y];
-
-            const uint32_t a = column[y] + 1;
-            const uint32_t b = column[y - 1] + 1;
-            const uint32_t c = lastdiag + ( CharEqual< _CaseSentitive >()( str1[y - 1], str2[x - 1] ) ? 0 : 1 );
-            column[y] = ( ( a < b ) ? ( a < c ? a : c ) : ( b < c ? b : c ) );
-
-            lastdiag = olddiag;
+            /* substitution */
+            row2[ j + 1 ] = row1[ j ] + ( equalto()( str1[ i ], str2[ j ] ) ? 0 : s );
+            /* swap */
+            if ( i > 0 && j > 0 &&
+                equalto()( str1[ i - 1 ], str2[ j ] ) &&
+                equalto()( str1[ i ], str2[ j - 1 ] ) &&
+                row2[ j + 1 ] > row0[ j - 1 ] + w )
+            {
+                row2[ j + 1 ] = row0[ j - 1 ] + w;
+            }
+            /* deletion */
+            if ( row2[ j + 1 ] > row1[ j + 1 ] + d )
+            {
+                row2[ j + 1 ] = row1[ j + 1 ] + d;
+            }
+            /* insertion */
+            if ( row2[ j + 1 ] > row2[ j ] + a )
+            {
+                row2[ j + 1 ] = row2[ j ] + a;
+            }
         }
+
+        auto dummy = row0;
+        row0 = row1;
+        row1 = row2;
+        row2 = dummy;
     }
 
-    return column[ len1 ];
+    const uint32_t result = row1[ len2 ];
+
+    FREE( row0 );
+    FREE( row1 );
+    FREE( row2 );
+
+    return ( result );
 }
 
 // Distance
 //------------------------------------------------------------------------------
-/*static*/ uint32_t LevenshteinDistance::Distance( const char * lhs, const char * rhs )
+/*static*/ uint32_t LevenshteinDistance::Distance( const char * lhs, const char * rhs, uint32_t w, uint32_t s, uint32_t a, uint32_t d )
 {
     const uint32_t lhsLen = ( nullptr == lhs ) ? 0 : ( uint32_t ) AString::StrLen( lhs );
     const uint32_t rhsLen = ( nullptr == rhs ) ? 0 : ( uint32_t ) AString::StrLen( rhs );
-    return ::LevenshteinDistanceImpl< 1024, true >( lhs, lhsLen, rhs, rhsLen );
+    return ::LevenshteinDistanceImpl< true >( lhs, lhsLen, rhs, rhsLen, w, s, a, d );
 }
 
 // Distance
 //------------------------------------------------------------------------------
-/*static*/ uint32_t LevenshteinDistance::Distance( const AString & lhs, const AString & rhs )
+/*static*/ uint32_t LevenshteinDistance::Distance( const AString & lhs, const AString & rhs, uint32_t w, uint32_t s, uint32_t a, uint32_t d )
 {
-    return ::LevenshteinDistanceImpl< 1024, true >( lhs.Get(), lhs.GetLength(), rhs.Get(), rhs.GetLength() );
+    return ::LevenshteinDistanceImpl< true >( lhs.Get(), lhs.GetLength(), rhs.Get(), rhs.GetLength(), w, s, a, d );
 }
 
 // DistanceI
 //------------------------------------------------------------------------------
-/*static*/ uint32_t LevenshteinDistance::DistanceI( const char * lhs, const char * rhs )
+/*static*/ uint32_t LevenshteinDistance::DistanceI( const char * lhs, const char * rhs, uint32_t w, uint32_t s, uint32_t a, uint32_t d )
 {
     const uint32_t lhsLen = ( nullptr == lhs ) ? 0 : ( uint32_t ) AString::StrLen( lhs );
     const uint32_t rhsLen = ( nullptr == rhs ) ? 0 : ( uint32_t ) AString::StrLen( rhs );
-    return ::LevenshteinDistanceImpl< 1024, false >( lhs, lhsLen, rhs, rhsLen );
+    return ::LevenshteinDistanceImpl< false >( lhs, lhsLen, rhs, rhsLen, w, s, a, d );
 }
 
 // DistanceI
 //------------------------------------------------------------------------------
-/*static*/ uint32_t LevenshteinDistance::DistanceI( const AString & lhs, const AString & rhs )
+/*static*/ uint32_t LevenshteinDistance::DistanceI( const AString & lhs, const AString & rhs, uint32_t w, uint32_t s, uint32_t a, uint32_t d )
 {
-    return ::LevenshteinDistanceImpl< 1024, false >( lhs.Get(), lhs.GetLength(), rhs.Get(), rhs.GetLength() );
+    return ::LevenshteinDistanceImpl< false >( lhs.Get(), lhs.GetLength(), rhs.Get(), rhs.GetLength(), w, s, a, d );
 }
 
 //------------------------------------------------------------------------------

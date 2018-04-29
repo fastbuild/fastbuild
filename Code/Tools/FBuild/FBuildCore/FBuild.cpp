@@ -257,7 +257,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
 
             // Gets the 5 targets with minimal distance to user input
             Array< NodeGraph::NodeWithDistance > nearestNodes( 5, false );
-            m_DependencyGraph->FindNearestNodesInternal( target, nearestNodes, 0xFFFFFFFF );
+            m_DependencyGraph->FindNearestNodesInternal( target, nearestNodes );
 
             if ( false == nearestNodes.IsEmpty() )
             {
