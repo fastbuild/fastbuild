@@ -39,12 +39,15 @@
 #include "Core/Process/Process.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 //#define DEBUG_CRT_MEMORY_USAGE // Uncomment this for (very slow) detailed mem checks
 #ifdef DEBUG_CRT_MEMORY_USAGE
     #include <crtdbg.h>
 #endif
+
+#include <cctype>
 
 // Static
 //------------------------------------------------------------------------------
@@ -522,7 +525,7 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
     else
     {
         // compute hash value for actual value
-        hash = xxHash::Calc32( value );
+        hash = FBuild::Hash32( value );
     }
 
     // check if the environment var was already imported
@@ -590,6 +593,108 @@ void FBuild::AbortBuild()
     {
         AbortBuild();
     }
+}
+
+// Hash functions
+//------------------------------------------------------------------------------
+
+PRAGMA_DISABLE_PUSH_MSVC(6308)
+char* TemporaryBlockForHash( size_t size )
+{
+    static THREAD_LOCAL void * s_Block = nullptr;
+    static THREAD_LOCAL size_t s_Size = 0;
+    if ( ( nullptr == s_Block ) || ( size > s_Size ) )
+    {
+        s_Size = ( ( size + 127 ) & ~127 ); // Round to next 128
+        s_Block = realloc( s_Block, s_Size );
+    }
+    return ( ( char * )s_Block );
+}
+PRAGMA_DISABLE_POP_MSVC
+
+static bool BufferForHashEqual( char lhs, char rhs )
+{
+    return ( ( lhs == rhs ) ||
+             ( lhs == '/' && rhs == '\\' ) ||
+             ( lhs == '\\' && rhs == '/' ) ||
+             ( std::tolower(lhs) == std::tolower(rhs) ) );
+}
+
+// Make hash functions path agnostic :
+static const void * PrepareBufferForHash( const char * inputBuffer, size_t inputLen, size_t& outputLen )
+{
+    const AString & rootPath = FBuild::Get().GetRootPath();
+    const uint32_t rootPathLen = rootPath.GetLength();
+    if ( rootPath.IsEmpty() || ( inputLen < rootPathLen ) )
+    {
+        outputLen = inputLen;
+        return inputBuffer;
+    }
+
+    const char rootPathAlias = char( 0x1A ); // SUB (substitute in ASCII)
+    char * preparedBuffer = TemporaryBlockForHash( inputLen/* cannot grow since alias in just one char */ );
+    if ( nullptr == preparedBuffer )
+    {
+        ASSERT( false );
+        return nullptr;
+    }
+
+    uint32_t match = 0, dst = 0;
+    for ( uint32_t src = 0 ; src < inputLen ; ++src )
+    {
+        ASSERT( dst < inputLen );
+
+        if ( BufferForHashEqual( inputBuffer[src], rootPath[match] ) && inputLen - src >= rootPathLen - match )
+        {
+            if ( ++match == rootPathLen )
+            {
+                match = 0;
+                preparedBuffer[dst++] = rootPathAlias;
+            }
+        }
+        else
+        {
+            ASSERT( src >= match );
+
+            if ( match )
+            {
+                for ( uint32_t i = 0 ; i < match ; ++i )
+                {
+                    preparedBuffer[dst++] = inputBuffer[src - match + i];
+                }
+                match = 0;
+            }
+
+            preparedBuffer[dst++] = inputBuffer[src];
+        }
+    }
+
+    outputLen = dst;
+    return preparedBuffer;
+}
+
+/*static*/ uint32_t FBuild::Hash32( const void * buffer, size_t len )
+{
+    size_t hashLen = 0;
+    const void * bufferForHash = PrepareBufferForHash( (const char *)buffer, len, hashLen );
+    const uint32_t h = xxHash::Calc32( bufferForHash, hashLen );
+    if ( bufferForHash == buffer )
+    {
+        ASSERT( hashLen == len );
+    }
+    return h;
+}
+
+/*static*/ uint64_t FBuild::Hash64( const void * buffer, size_t len )
+{
+    size_t hashLen = 0;
+    const void * bufferForHash = PrepareBufferForHash( (const char *)buffer, len, hashLen );
+    const uint64_t h = xxHash::Calc64( bufferForHash, hashLen );
+    if ( bufferForHash == buffer )
+    {
+        ASSERT( hashLen == len );
+    }
+    return h;
 }
 
 // UpdateBuildStatus

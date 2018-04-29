@@ -6,6 +6,8 @@
 #include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
 
 #include "FunctionSettings.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 
@@ -40,6 +42,18 @@ FunctionSettings::FunctionSettings()
     {
         return false;
     }
+    // "RootPath"
+    AStackString<> rootPath;
+    if ( !GetString( funcStartIter, rootPath, ".RootPath" ) )
+    {
+        return false;
+    }
+    FBuild::Get().SetRootPath( rootPath );
+    if ( !rootPath.IsEmpty() )
+    {
+        FLOG_INFO( "RootPath: '%s'", rootPath.Get() );
+    }
+
 
     return settingsNode->Initialize( nodeGraph, funcStartIter, this );
 }
