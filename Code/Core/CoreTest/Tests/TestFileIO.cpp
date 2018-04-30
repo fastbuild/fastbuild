@@ -150,6 +150,8 @@ void TestFileIO::FileCopySymlink() const
     // by the file copy API.  Also on Windows, it would make unit
     // tests require administrator privileges.
 #elif defined ( __LINUX__ )
+    AStackString<> symlinkTarget( "symlink" );
+
     // generate a process unique file path
     AStackString<> path;
     GenerateTempFileName( path );
@@ -165,11 +167,18 @@ void TestFileIO::FileCopySymlink() const
     TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == false );
 
     // create it
-    TEST_ASSERT( symlink( "symlink", path.Get() ) == 0 );
+    TEST_ASSERT( symlink( symlinkTarget.Get(), path.Get() ) == 0 );
 
     // copy it
     TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get() ) );
     TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
+
+    // validate link
+    AStackString<> linkPath;
+    ssize_t length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
+    TEST_ASSERT( length == symlinkTarget.GetLength() );
+    linkPath.SetLength( length );
+    TEST_ASSERT( linkPath == symlinkTarget );
 
     // ensure attributes are transferred properly
     FileIO::FileInfo sourceInfo;
