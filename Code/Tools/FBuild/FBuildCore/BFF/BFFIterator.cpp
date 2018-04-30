@@ -199,12 +199,13 @@ bool BFFIterator::ParseToMatchingBrace( char openBrace, char closeBrace )
             {
                 return false;
             }
+            continue;
         }
 
         // hit the close brace?
         if ( *m_Pos == closeBrace )
         {
-            return true;
+            return !IsAtEnd();
         }
 
         // a regular charater.... keep searching
