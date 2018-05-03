@@ -47,7 +47,9 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( Test )
     REGISTER_TEST( TestFunction )
     REGISTER_TEST( TestFunction_NoRebuild )
-    REGISTER_TEST( TestFunction_Speed )
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( TestFunction_Speed ) // TODO:LINUX TODO:OSX Update this test to do something useful
+    #endif
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
 REGISTER_TESTS_END
