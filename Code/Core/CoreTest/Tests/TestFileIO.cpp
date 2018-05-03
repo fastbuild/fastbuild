@@ -145,58 +145,58 @@ void TestFileIO::FileCopy() const
 //------------------------------------------------------------------------------
 void TestFileIO::FileCopySymlink() const
 {
-#if defined( __WINDOWS__ ) || defined ( __APPLE__ )
-    // Not tested on Windows/MacOS as symlinks are directly supported
-    // by the file copy API.  Also on Windows, it would make unit
-    // tests require administrator privileges.
-#elif defined ( __LINUX__ )
-    AStackString<> symlinkTarget( "symlink" );
+    #if defined( __WINDOWS__ ) || defined ( __APPLE__ )
+        // Not tested on Windows/MacOS as symlinks are directly supported
+        // by the file copy API.  Also on Windows, it would make unit
+        // tests require administrator privileges.
+    #elif defined ( __LINUX__ )
+        AStackString<> symlinkTarget( "symlink" );
 
-    // generate a process unique file path
-    AStackString<> path;
-    GenerateTempFileName( path );
+        // generate a process unique file path
+        AStackString<> path;
+        GenerateTempFileName( path );
 
-    // generate copy file name
-    AStackString<> pathCopy( path );
-    pathCopy += ".copy";
+        // generate copy file name
+        AStackString<> pathCopy( path );
+        pathCopy += ".copy";
 
-    // make sure nothing is left from previous runs
-    FileIO::FileDelete( path.Get() );
-    FileIO::FileDelete( pathCopy.Get() );
-    TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
-    TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == false );
+        // make sure nothing is left from previous runs
+        FileIO::FileDelete( path.Get() );
+        FileIO::FileDelete( pathCopy.Get() );
+        TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
+        TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == false );
 
-    // create it
-    TEST_ASSERT( symlink( symlinkTarget.Get(), path.Get() ) == 0 );
+        // create it
+        TEST_ASSERT( symlink( symlinkTarget.Get(), path.Get() ) == 0 );
 
-    // copy it
-    TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get() ) );
-    TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
+        // copy it
+        TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get() ) );
+        TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
 
-    // validate link
-    AStackString<> linkPath;
-    ssize_t length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
-    TEST_ASSERT( length == symlinkTarget.GetLength() );
-    linkPath.SetLength( length );
-    TEST_ASSERT( linkPath == symlinkTarget );
+        // validate link
+        AStackString<> linkPath;
+        ssize_t length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
+        TEST_ASSERT( length == symlinkTarget.GetLength() );
+        linkPath.SetLength( length );
+        TEST_ASSERT( linkPath == symlinkTarget );
 
-    // ensure attributes are transferred properly
-    FileIO::FileInfo sourceInfo;
-    TEST_ASSERT( FileIO::GetFileInfo( path, sourceInfo ) == true );
-    FileIO::FileInfo destInfo;
-    TEST_ASSERT( FileIO::GetFileInfo( pathCopy, destInfo ) == true );
-    TEST_ASSERT( destInfo.m_Attributes == sourceInfo.m_Attributes );
+        // ensure attributes are transferred properly
+        FileIO::FileInfo sourceInfo;
+        TEST_ASSERT( FileIO::GetFileInfo( path, sourceInfo ) == true );
+        FileIO::FileInfo destInfo;
+        TEST_ASSERT( FileIO::GetFileInfo( pathCopy, destInfo ) == true );
+        TEST_ASSERT( destInfo.m_Attributes == sourceInfo.m_Attributes );
 
-    // copy without overwrite allowed should fail
-    const bool allowOverwrite = false;
-    TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), allowOverwrite ) == false );
+        // copy without overwrite allowed should fail
+        const bool allowOverwrite = false;
+        TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), allowOverwrite ) == false );
 
-    // cleanup
-    VERIFY( FileIO::FileDelete( path.Get() ) );
-    VERIFY( FileIO::FileDelete( pathCopy.Get() ) );
-#else
-    #error Unknown platform
-#endif
+        // cleanup
+        VERIFY( FileIO::FileDelete( path.Get() ) );
+        VERIFY( FileIO::FileDelete( pathCopy.Get() ) );
+    #else
+        #error Unknown platform
+    #endif
 }
 
 // FileMove

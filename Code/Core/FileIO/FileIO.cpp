@@ -159,12 +159,10 @@
             return false;
         }
     }
-    /*
-     If the state parameter is the
-     return value from copyfile_state_alloc(), then copyfile() and fcopyfile() will use the information from
-     the state object; if it is NULL, then both functions will work normally, but less control will be
-     available to the caller.
-    */
+    // If the state parameter is the return value from copyfile_state_alloc(), 
+    // then copyfile() and fcopyfile() will use the information from the state
+    // object; if it is NULL, then both functions will work normally, but less
+    // control will be available to the caller.
     bool result = ( copyfile( srcFileName, dstFileName, nullptr, COPYFILE_DATA | COPYFILE_XATTR | COPYFILE_NOFOLLOW ) == 0 );
     return result;
 #elif defined( __LINUX__ )
