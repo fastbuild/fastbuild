@@ -881,6 +881,30 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         }
     }
 
+    // Check GCC/Clang options
+    if ( flags & ( ObjectNode::FLAG_CLANG | ObjectNode::FLAG_GCC ) )
+    {
+        // Clang supported -fdiagnostics-color option (and defaulted to =auto) since its first release
+        if ( flags & ObjectNode::FLAG_CLANG )
+        {
+            flags |= ObjectNode::FLAG_DIAGNOSTICS_COLOR_AUTO;
+        }
+
+        Array< AString > tokens;
+        args.Tokenize( tokens );
+        for ( const AString & token : tokens )
+        {
+            if ( token == "-fdiagnostics-color=auto" )
+            {
+                flags |= ObjectNode::FLAG_DIAGNOSTICS_COLOR_AUTO;
+            }
+            else if ( token.BeginsWith( "-fdiagnostics-color" ) || token == "-fno-diagnostics-color" )
+            {
+                flags &= ( ~ObjectNode::FLAG_DIAGNOSTICS_COLOR_AUTO );
+            }
+        }
+    }
+
     // check for cacheability/distributability for non-MSVC
     if ( flags & ( ObjectNode::FLAG_CLANG | ObjectNode::FLAG_GCC | ObjectNode::FLAG_SNC | ObjectNode::CODEWARRIOR_WII | ObjectNode::GREENHILLS_WIIU ) )
     {
@@ -1466,6 +1490,8 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     const bool isVBCC           = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_VBCC ) : GetFlag( FLAG_VBCC );
     const bool isOrbisWavePsslc = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_ORBIS_WAVE_PSSLC) : GetFlag(FLAG_ORBIS_WAVE_PSSLC);
 
+    const bool forceColoredDiagnostics = ( ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_DIAGNOSTICS_COLOR_AUTO ) : GetFlag( FLAG_DIAGNOSTICS_COLOR_AUTO ) ) && ( Env::IsStdOutRedirected() == false );
+
     const size_t numTokens = tokens.GetSize();
     for ( size_t i = 0; i < numTokens; ++i )
     {
@@ -1678,6 +1704,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             }
         }
 
+        // Strip -fdiagnostics-color options because we are going to override them
+        if ( forceColoredDiagnostics && ( isClang || isGCC ) )
+        {
+            if ( StripToken( "-fdiagnostics-color", token, true ) ||
+                 StripToken( "-fno-diagnostics-color", token ) )
+            {
+                continue;
+            }
+        }
+
         // %1 -> InputFile
         const char * found = token.Find( "%1" );
         if ( found )
@@ -1811,6 +1847,11 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         GetPDBName( pdbName );
         tmp.Format( " /Fd\"%s\"", pdbName.Get() );
         fullArgs += tmp;
+    }
+
+    if ( forceColoredDiagnostics && ( isClang || isGCC ) )
+    {
+        fullArgs += " -fdiagnostics-color=always";
     }
 
     // Skip finalization?
