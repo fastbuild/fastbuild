@@ -32,6 +32,7 @@
     #include <netinet/tcp.h>
     #include <fcntl.h>
     #include <unistd.h>
+    #include <sys/uio.h>
     #define INVALID_SOCKET ( -1 )
     #define SOCKET_ERROR -1
 #else
