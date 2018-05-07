@@ -135,11 +135,14 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
             return true;
         }
 
+        AStackString<> compilerWithoutVersion( compiler.Get(), compiler.FindLast( '-' ) );
         // GCC
         if ( compiler.EndsWithI( "gcc.exe" ) ||
              compiler.EndsWithI( "gcc" ) ||
+             compilerWithoutVersion.EndsWithI( "gcc" ) ||
              compiler.EndsWithI( "g++.exe" ) ||
              compiler.EndsWithI( "g++" ) ||
+             compilerWithoutVersion.EndsWithI( "g++" ) ||
              compiler.EndsWithI( "dcc.exe" ) || // WindRiver
              compiler.EndsWithI( "dcc" ) )      // WindRiver
         {

@@ -15,11 +15,11 @@
     // Executable
     //--------------------------------------------------------------------------
     // These options are a valid for Clang <= 5.0.0:
-    .ExtraLinkerOptions_ASan = ' -lLLVMFuzzer'
-    .ExtraLinkerOptions_MSan = ' -lLLVMFuzzerMSan -lc++'
+    //.ExtraLinkerOptions_ASan = ' -lLLVMFuzzer'
+    //.ExtraLinkerOptions_MSan = ' -lLLVMFuzzerMSan -lc++'
     // These options are expected to be valid for Clang > 5.0.0:
-    // .ExtraLinkerOptions_ASan = ' -fsanitize=fuzzer'
-    // .ExtraLinkerOptions_MSan = ' -fsanitize=fuzzer -lc++'
+    .ExtraLinkerOptions_ASan = ' -fsanitize=fuzzer'
+    .ExtraLinkerOptions_MSan = ' -fsanitize=fuzzer -lc++'
 
     .MyConfigs = { .X64ClangASanConfig_Linux , .X64ClangMSanConfig_Linux }
     ForEach( .Config in .MyConfigs )
