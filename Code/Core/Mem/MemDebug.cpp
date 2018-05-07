@@ -9,6 +9,10 @@
 
 #if defined( MEM_DEBUG_ENABLED )
 
+#if defined( __GNUC__ ) && __GNUC__ >= 7
+    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
 // Core
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
