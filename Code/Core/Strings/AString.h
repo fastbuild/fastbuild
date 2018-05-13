@@ -93,6 +93,7 @@ public:
     uint32_t Replace( const char * from, const char * to, uint32_t maxReplaces = 0 );
     void ToLower();
     void ToUpper();
+    void JSONEscape();
 
     // Trimming
     void Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim );

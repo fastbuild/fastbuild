@@ -580,6 +580,175 @@ void AString::ToUpper()
     }
 }
 
+// JSONEscape
+//------------------------------------------------------------------------------
+void AString::JSONEscape()
+{
+    // First find how much extra space is needed to store escaped characters
+    uint32_t extraSpace = 0;
+    char * pos = m_Contents;
+    char * end = m_Contents + m_Length;
+    while ( pos < end )
+    {
+        char c = *pos;
+        if ( ( c == 0x08 ) || ( c == 0x09 ) || ( c == 0x0A ) || ( c == 0x0C ) || ( c == 0x0D ) || ( c == '"' ) || ( c == '\\') )
+        {
+            extraSpace += 1;
+        }
+        else if ( ( c >= 0 ) && ( c <= 0x1F ) )
+        {
+            extraSpace += 5;
+        }
+        ++pos;
+    }
+
+    if ( extraSpace == 0 )
+    {
+        return; // No characters need escaping
+    }
+
+    if ( m_Length + extraSpace > GetReserved() )
+    {
+        Grow( m_Length + extraSpace );
+    }
+
+    // Scan string from end to start moving characters into position and escaping when needed
+    char * src = m_Contents + m_Length - 1;
+    char * dst = m_Contents + m_Length + extraSpace - 1;
+    while ( dst > src )
+    {
+        const char c = *src;
+        switch ( c )
+        {
+            case 0x00:
+            case 0x01:
+            case 0x02:
+            case 0x03:
+            case 0x04:
+            case 0x05:
+            case 0x06:
+            case 0x07:
+            {
+                dst -= 5;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = 'u';
+                dst[ 2 ] = '0';
+                dst[ 3 ] = '0';
+                dst[ 4 ] = '0';
+                dst[ 5 ] = c + '0';
+                break;
+            }
+            case 0x0B:
+            case 0x0E:
+            case 0x0F:
+            {
+                dst -= 5;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = 'u';
+                dst[ 2 ] = '0';
+                dst[ 3 ] = '0';
+                dst[ 4 ] = '0';
+                dst[ 5 ] = c - 0x0A + 'A';
+                break;
+            }
+            case 0x10:
+            case 0x11:
+            case 0x12:
+            case 0x13:
+            case 0x14:
+            case 0x15:
+            case 0x16:
+            case 0x17:
+            case 0x18:
+            case 0x19:
+            {
+                dst -= 5;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = 'u';
+                dst[ 2 ] = '0';
+                dst[ 3 ] = '0';
+                dst[ 4 ] = '1';
+                dst[ 5 ] = c - 0x10 + '0';
+                break;
+            }
+            case 0x1A:
+            case 0x1B:
+            case 0x1C:
+            case 0x1D:
+            case 0x1E:
+            case 0x1F:
+            {
+                dst -= 5;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = 'u';
+                dst[ 2 ] = '0';
+                dst[ 3 ] = '0';
+                dst[ 4 ] = '1';
+                dst[ 5 ] = c - 0x1A + 'A';
+                break;
+            }
+            case 0x08:
+            {
+                dst -= 1;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = 'b';
+                break;
+            }
+            case 0x09:
+            {
+                dst -= 1;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = 't';
+                break;
+            }
+            case 0x0A:
+            {
+                dst -= 1;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = 'n';
+                break;
+            }
+            case 0x0C:
+            {
+                dst -= 1;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = 'f';
+                break;
+            }
+            case 0x0D:
+            {
+                dst -= 1;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = 'r';
+                break;
+            }
+            case '"':
+            {
+                dst -= 1;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = '"';
+                break;
+            }
+            case '\\':
+            {
+                dst -= 1;
+                dst[ 0 ] = '\\';
+                dst[ 1 ] = '\\';
+                break;
+            }
+            default:
+            {
+                dst[ 0 ] = c;
+                break;
+            }
+        }
+        --src;
+        --dst;
+    }
+    m_Length += extraSpace;
+    m_Contents[ m_Length ] = '\000';
+}
+
 // Trim
 //------------------------------------------------------------------------------
 void AString::Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim )
