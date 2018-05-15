@@ -742,7 +742,7 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
 //------------------------------------------------------------------------------
 /*static*/ bool FBuild::GetTempDir( AString & outTempDir )
 {
-    #if defined( __WINDOWS__ ) || defined( __LINUX__ )
+    #if defined( __WINDOWS__ ) || defined( __LINUX__ ) || defined( __APPLE__ )
         // Check for override environment variable
         if ( Env::GetEnvVariable( "FASTBUILD_TEMP_PATH", outTempDir ) )
         {
@@ -753,7 +753,7 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
                 {
                     outTempDir += '\\';
                 }
-            #elif defined( __LINUX__ )
+            #else
                 const bool slashTerminated = outTempDir.EndsWith( '/' );
                 if ( !slashTerminated )
                 {
@@ -763,12 +763,10 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
 
             return true;
         }
-
-        // Use regular system temp path
-        return FileIO::GetTempDir( outTempDir );
-    #else
-        return FileIO::GetTempDir( outTempDir );
     #endif
+
+    // Use regular system temp path
+    return FileIO::GetTempDir( outTempDir );
 }
 
 // CacheOutputInfo

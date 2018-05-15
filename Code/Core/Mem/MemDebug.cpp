@@ -9,10 +9,6 @@
 
 #if defined( MEM_DEBUG_ENABLED )
 
-#if defined( __GNUC__ ) && __GNUC__ >= 7
-    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-#endif
-
 // Core
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
@@ -44,12 +40,20 @@ void MemDebug::FillMem( void * ptr, const size_t size, const uint32_t pattern )
                             (char)( ( pattern & 0x00FF0000 ) >> 16 ) };
         const char * b = bytes;
         char * cit = static_cast< char * >( static_cast< void * >( it ) );
+
+        #if defined( __GNUC__ ) && __GNUC__ >= 7
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+        #endif
         switch( remainder )
         {
             case 3: *cit = *b; ++cit; ++b;
             case 2: *cit = *b; ++cit; ++b;
             case 1: *cit = *b;
         }
+        #if defined( __GNUC__ ) && __GNUC__ >= 7
+            #pragma GCC diagnostic pop
+        #endif
     }
 }
 
