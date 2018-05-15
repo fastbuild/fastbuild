@@ -18,7 +18,7 @@ class OSWindow;
 class OSTrayIcon
 {
 public:
-    explicit OSTrayIcon( OSWindow * parentWindow );
+    explicit OSTrayIcon( OSWindow * parentWindow, const char* toolTip );
     ~OSTrayIcon();
 
     void ShowNotification( const char * msg );

@@ -119,7 +119,9 @@ void WorkerWindow::UIUpdateThread()
         Init( x, y, w, h );
 
         // Create the tray icon
-        m_TrayIcon = FNEW( OSTrayIcon( this ) );
+        AStackString<> toolTip;
+        toolTip.Format("FBuildWorker %s (%s)", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM);
+        m_TrayIcon = FNEW( OSTrayIcon( this , toolTip.Get() ) );
 
         // init windows common controls
         INITCOMMONCONTROLSEX icex; // Structure for control initialization.
