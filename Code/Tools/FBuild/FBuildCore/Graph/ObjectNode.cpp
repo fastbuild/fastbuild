@@ -2389,6 +2389,15 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // MSVC errors
         if ( objectNode->IsMSVC() )
         {
+            // The compiler executable was manually killed by the user, through the TaskManager
+            // In that case the error code is set to 1 by TerminateProcess()
+            // See https://stackoverflow.com/questions/4344923/process-exit-code-when-process-is-killed-forcibly
+            if ( result == 0x01 )
+            {
+                job->OnSystemError();
+                return;
+            }
+
             // But we need to determine if it's actually an out of space
             // (rather than some compile error with missing file(s))
             // These error codes have been observed in the wild
@@ -2449,6 +2458,17 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // When clang fails due to low disk space
             // TODO:C Should we check for localized msg?
             if ( stdErr && ( strstr( stdErr, "IO failure on output stream" ) ) )
+            {
+                job->OnSystemError();
+                return;
+            }
+
+            // If exit code is 1, the task was probably killed manually by a remote user from the Task Manager.
+            // As clang already returns 1 as an error, we must check if the log contains the word "error: "
+            // If not, we assume a remote user killed the process manually.
+            // This precise error string is taken from the clang codebase, please see:
+            // https://github.com/llvm-mirror/clang/blob/a38ba9770a70056f9fdd6c71f819e5db45a105e4/tools/libclang/CIndexDiagnostic.cpp#L308
+            if ( ( result == 0x01 ) && stdErr && strstr(stdErr, "error: ") == nullptr )
             {
                 job->OnSystemError();
                 return;

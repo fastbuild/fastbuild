@@ -481,9 +481,16 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         VERIFY( ss->m_Jobs.FindDerefAndErase( jobId ) );
     }
 
+    // was it a system error?
+    if (systemError)
+    {
+        // blacklist misbehaving worker
+        ss->m_Blacklisted = true;
+    }
+
     // Has the job been cancelled in the interim?
     // (Due to a Race by the main thread for example)
-    Job * job = JobQueue::Get().OnReturnRemoteJob( jobId );
+    Job * job = JobQueue::Get().OnReturnRemoteJob( jobId, systemError );
     if ( job == nullptr )
     {
         // don't save result as we were cancelled
@@ -564,9 +571,6 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         // was it a system error?
         if ( systemError )
         {
-            // blacklist misbehaving worker
-            ss->m_Blacklisted = true;
-
             // take note of failure of job
             job->OnSystemError();
 

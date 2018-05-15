@@ -339,7 +339,7 @@ Job * JobQueue::GetDistributableJobToRace()
 
 // OnReturnRemoteJob
 //------------------------------------------------------------------------------
-Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
+Job * JobQueue::OnReturnRemoteJob( uint32_t jobId, const bool systemError )
 {
     MutexHolder m( m_DistributedJobsMutex );
     auto jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
@@ -368,6 +368,15 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
         // Are we still locally racing?
         if ( distState == Job::DIST_RACING )
         {
+            if ( systemError )
+            {
+                // take note of failure of job
+                job->OnSystemError();
+
+                // Let the local job finish, because the remote job failed (because of a system error)
+                return nullptr;
+            }
+
             // Try to cancel the local job
             job->Cancel();
             job->SetDistributionState( Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL );
