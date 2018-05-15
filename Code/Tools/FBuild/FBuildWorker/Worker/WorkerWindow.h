@@ -23,13 +23,14 @@ class OSMenu;
 class OSSplitter;
 class OSTrayIcon;
 class OSWindow;
+class WorkerBrokerage;
 
 // WorkerWindow
 //------------------------------------------------------------------------------
 class WorkerWindow : public OSWindow, public Singleton< WorkerWindow >
 {
 public:
-    explicit WorkerWindow( void * hInstance );
+    explicit WorkerWindow( void * hInstance, WorkerBrokerage * workerBrokerage );
     virtual ~WorkerWindow() override;
 
     void SetStatus( const char * statusText );
@@ -58,6 +59,12 @@ private:
     // Internal Helpers
     void ToggleMinimized();
 
+    enum TrayItems : uint32_t
+    {
+        TRAYITEM_EXIT = 3000,
+        TRAYITEM_OPEN_BROKER_DIRECTORY = 3001
+    };
+
     // UI created/updated in another thread to ensure responsiveness at all times
     enum UIThreadState
     {
@@ -80,7 +87,7 @@ private:
     OSSplitter *        m_Splitter;
     OSMenu *            m_Menu;
 
-    AString         m_HostName;
+    WorkerBrokerage *   m_WorkerBrokerage;
 };
 
 //------------------------------------------------------------------------------

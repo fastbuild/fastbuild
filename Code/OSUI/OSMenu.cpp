@@ -13,10 +13,6 @@
     #include "Core/Env/WindowsHeader.h"
 #endif
 
-// Defines
-//------------------------------------------------------------------------------
-#define ID_TRAY_EXIT_CONTEXT_MENU_ITEM  3000
-
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 OSMenu::OSMenu( OSWindow * parentWindow )
@@ -49,10 +45,10 @@ void OSMenu::Init()
 
 // AddItem
 //------------------------------------------------------------------------------
-void OSMenu::AddItem( const char * text )
+void OSMenu::AddItem( const char * text, uint32_t index )
 {
     #if defined( __WINDOWS__ )
-        AppendMenu( (HMENU)m_Menu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT( text ) );
+        AppendMenu( (HMENU)m_Menu, MF_STRING, index, TEXT( text ) );
     #else
         (void)text;
     #endif
@@ -60,13 +56,18 @@ void OSMenu::AddItem( const char * text )
 
 // ShowAndWaitForSelection
 //------------------------------------------------------------------------------
-bool OSMenu::ShowAndWaitForSelection( uint32_t & outIndex )
+bool OSMenu::ShowAndWaitForSelection( const Array< ItemStatus > & itemStatuses, uint32_t & outIndex )
 {
     #if defined( __WINDOWS__ )
         // display popup menu at mouse position
         POINT curPoint;
         GetCursorPos( &curPoint );
         SetForegroundWindow( (HWND)m_Menu );
+
+        for ( const ItemStatus & itemStatus : itemStatuses )
+        {
+            EnableMenuItem( (HMENU)m_Menu, itemStatus.Index, itemStatus.Enabled ? MF_ENABLED : MF_GRAYED );
+        }
 
         // Show menu and block until hidden
         // NOTE: TPM_RETURNCMD makes this BOOL return actually a UINT
@@ -77,9 +78,9 @@ bool OSMenu::ShowAndWaitForSelection( uint32_t & outIndex )
                                           0,
                                           (HWND)m_Parent->GetHandle(),
                                           nullptr );
-        if ( item == ID_TRAY_EXIT_CONTEXT_MENU_ITEM )
+        if ( item != 0 )
         {
-            outIndex = 0;
+            outIndex = item;
             return true;
         }
     #else
