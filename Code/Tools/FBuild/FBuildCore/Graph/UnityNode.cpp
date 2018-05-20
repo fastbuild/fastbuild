@@ -448,4 +448,40 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
     return ok;
 }
 
+
+// EnumerateInputFiles
+//------------------------------------------------------------------------------
+void UnityNode::EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const
+{
+    for ( const Dependency & dep : m_StaticDependencies )
+    {
+        const Node * node = dep.GetNode();
+
+        if ( node->GetType() == Node::DIRECTORY_LIST_NODE )
+        {
+            const DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
+
+            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            for ( const FileIO::FileInfo & fi : files )
+            {
+                callback( fi.m_Name, dln->GetPath(), userData );
+            }
+        }
+        else if ( node->GetType() == Node::OBJECT_LIST_NODE )
+        {
+            const ObjectListNode * oln = node->CastTo< ObjectListNode >();
+
+            oln->EnumerateInputFiles( callback, userData );
+        }
+        else if ( node->IsAFile() )
+        {
+            callback( node->GetName(), AString::GetEmpty(), userData );
+        }
+        else
+        {
+            ASSERT( false ); // unexpected node type
+        }
+    }
+}
+
 //------------------------------------------------------------------------------

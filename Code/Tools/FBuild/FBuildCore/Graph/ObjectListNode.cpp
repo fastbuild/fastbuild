@@ -569,12 +569,10 @@ CompilerNode * ObjectListNode::GetPreprocessor() const
     return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo< CompilerNode >();
 }
 
-// CreateDynamicObjectNode
+// GetObjectFileName
 //------------------------------------------------------------------------------
-bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode, bool isIsolatedFromUnityNode )
+void ObjectListNode::GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile )
 {
-    const AString & fileName = inputFile->GetName();
-
     // Transform src file to dst object path
     // get file name only (no path, no ext)
     const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
@@ -604,11 +602,19 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     }
 
     AStackString<> fileNameOnly( lastSlash, lastDot );
-    AStackString<> objFile( m_CompilerOutputPath );
+    objFile = m_CompilerOutputPath;
     objFile += subPath;
     objFile += m_CompilerOutputPrefix;
     objFile += fileNameOnly;
     objFile += GetObjExtension();
+}
+
+// CreateDynamicObjectNode
+//------------------------------------------------------------------------------
+bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode, bool isIsolatedFromUnityNode )
+{
+    AStackString<> objFile;
+    GetObjectFileName( inputFile->GetName(), baseDir, objFile );
 
     // Create an ObjectNode to compile the above file
     // and depend on that
@@ -739,6 +745,42 @@ const char * ObjectListNode::GetObjExtension() const
         #endif
     }
     return m_CompilerOutputExtension.Get();
+}
+
+// EnumerateInputFiles
+//------------------------------------------------------------------------------
+void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const
+{
+    for ( size_t i = m_ObjectListInputStartIndex; i < m_ObjectListInputEndIndex; ++i )
+    {
+        const Node * node = m_StaticDependencies[ i ].GetNode();
+
+        if ( node->GetType() == Node::DIRECTORY_LIST_NODE )
+        {
+            const DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
+
+            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            for ( const FileIO::FileInfo & fi : files )
+            {
+                callback( fi.m_Name, dln->GetPath(), userData );
+            }
+        }
+        else if ( node->GetType() == Node::UNITY_NODE )
+        {
+            const UnityNode * un = node->CastTo< UnityNode >();
+
+            un->EnumerateInputFiles( callback, userData );
+        }
+        else if ( node->IsAFile() )
+        {
+            callback( node->GetName(), AString::GetEmpty(), userData );
+        }
+        else
+        {
+            ASSERT( false ); // unexpected node type
+        }
+    }
+
 }
 
 //------------------------------------------------------------------------------

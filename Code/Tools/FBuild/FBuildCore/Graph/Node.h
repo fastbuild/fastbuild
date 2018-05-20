@@ -185,6 +185,7 @@ protected:
     friend class Report;
     friend class VSProjectConfig; // TODO:C Remove this
     friend class WorkerThread;
+    friend class CompilationDatabase;
 
     inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
     inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }

@@ -43,6 +43,10 @@
     <td>Force a clean build.</td>
   </tr>
   <tr>
+    <td><a href="#compdb">-compdb</a></td>
+    <td>Generate JSON compilation database for the specified targets.</td>
+  </tr>
+  <tr>
     <td><a href="#config">-config [path]</a></td>
     <td>Explicity specify the config file to use.</td>
   </tr>
@@ -199,6 +203,11 @@ information and performance metrics. This can be used to assist troubleshooting.
     <div class='newsitemheader' id="clean">-clean</div>
     <div class='newsitembody'>
 <p>Force a clean build.  The build configuration file is re-parsed and all exsiting dependency information is discarded.  A build is performed as if building for the first time with no built files present.</p>
+</div>
+
+    <div class='newsitemheader' id="compdb">-compdb</div>
+    <div class='newsitembody'>
+<p>Instead of building specified targets generate a <a href="https://clang.llvm.org/docs/JSONCompilationDatabase.html">JSON compilation database</a> for them. Resulting compilation database will include entries for all source files from ObjectList and Library nodes that are dependencies of the specified targets.</p>
 </div>
 
     <div class='newsitemheader' id="config">-config [path]</div>
