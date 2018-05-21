@@ -94,6 +94,7 @@ public:
     void ToLower();
     void ToUpper();
     void JSONEscape();
+    void Unquote();
 
     // Trimming
     void Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim );

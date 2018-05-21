@@ -39,6 +39,7 @@ private:
     void Replace() const;
     void Trim() const;
     void JSONEscape() const;
+    void Unquote() const;
 };
 
 // Register Tests
@@ -65,6 +66,7 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( Replace )
     REGISTER_TEST( Trim )
     REGISTER_TEST( JSONEscape )
+    REGISTER_TEST( Unquote )
 REGISTER_TESTS_END
 
 // AStringConstructors
@@ -759,6 +761,32 @@ void TestAString::JSONEscape() const
     CHECK_JSONESCAPE( "\x01 \x0B \x14 \x1E", "\\u0001 \\u000B \\u0014 \\u001E" )
 
     #undef CHECK_JSONESCAPE
+}
+
+// Unquote
+//------------------------------------------------------------------------------
+void TestAString::Unquote() const
+{
+    #define CHECK_UNQUOTE( str, result ) \
+    { \
+        AStackString<> string( str ); \
+        string.Unquote(); \
+        TEST_ASSERT( string == result ); \
+    }
+
+    CHECK_UNQUOTE( "", "" )
+    CHECK_UNQUOTE( "\"\"", "" )
+    CHECK_UNQUOTE( "''", "" )
+    CHECK_UNQUOTE( "\"foo\"", "foo" )
+    CHECK_UNQUOTE( "'foo'", "foo" )
+    CHECK_UNQUOTE( "f\"o\"o", "foo" )
+    CHECK_UNQUOTE( "f'o'o", "foo" )
+    CHECK_UNQUOTE( "\"''\"", "''" )
+    CHECK_UNQUOTE( "'\"\"'", "\"\"" )
+    CHECK_UNQUOTE( "\"foo\"_\"bar\"", "foo_bar" )
+    CHECK_UNQUOTE( "'foo'_'bar'", "foo_bar" )
+
+    #undef CHECK_UNQUOTE
 }
 
 //------------------------------------------------------------------------------

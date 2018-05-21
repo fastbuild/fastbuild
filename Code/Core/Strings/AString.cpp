@@ -749,6 +749,46 @@ void AString::JSONEscape()
     m_Contents[ m_Length ] = '\000';
 }
 
+// Unquote
+//------------------------------------------------------------------------------
+void AString::Unquote()
+{
+    const char * src = m_Contents;
+    const char * end = m_Contents + m_Length;
+    char * dst = m_Contents;
+
+    char quoteChar = 0;
+    for ( ; src < end; ++src )
+    {
+        const char c = *src;
+        if ( ( c == '"' ) || ( c == '\'' ) )
+        {
+            if ( quoteChar == 0 )
+            {
+                // opening quote, ignore it
+                quoteChar = c;
+                --m_Length;
+                continue;
+            }
+            else if ( quoteChar == c )
+            {
+                // closing quote, ignore it
+                quoteChar = 0;
+                --m_Length;
+                continue;
+            }
+            else
+            {
+                // quote of the 'other' type - consider as part of token
+            }
+        }
+        *dst++ = c;
+    }
+
+    ASSERT( m_Length == ( dst - m_Contents ) );
+    m_Contents[ m_Length ] = '\000';
+}
+
 // Trim
 //------------------------------------------------------------------------------
 void AString::Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim )
