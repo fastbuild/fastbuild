@@ -61,8 +61,6 @@ void VSProjectGenerator::AddFile( const AString & file )
     // ensure slash consistency which we rely on later
     AStackString<> fileCopy( file );
     fileCopy.Replace( FORWARD_SLASH, BACK_SLASH );
-
-    ASSERT( !m_Files.Find( fileCopy ) );
     m_Files.Append( fileCopy );
 }
 
@@ -124,11 +122,19 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     // files
     {
         Write("  <ItemGroup>\n" );
+        Array< AString > seenFiles( m_Files.GetSize(), false );
         const AString * const fEnd = m_Files.End();
         for ( const AString * fIt = m_Files.Begin(); fIt!=fEnd; ++fIt )
         {
             AStackString<> fileName;
             GetProjectRelativePath( projectBasePath, *fIt, fileName );
+
+            // Gracefully handle duplicate files
+            if ( CheckForDuplicateFiles( fileName, seenFiles ) )
+            {
+                continue;
+            }
+
             const char * fileType = nullptr;
             const VSProjectFileType * const end = fileTypes.End();
             for ( const VSProjectFileType * it=fileTypes.Begin(); it!=end; ++it )
@@ -292,9 +298,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                     ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false );
                     for ( AString & include : includePaths )
                     {
-                        AStackString<> fullIncludePath;
-                        NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path
-                        GetProjectRelativePath( projectBasePath, fullIncludePath, include );
+                        GetProjectRelativePath( projectBasePath, include, include );
                         #if !defined( __WINDOWS__ )
                             include.Replace( '/', '\\' ); // Convert to Windows-style slashes
                         #endif
@@ -380,6 +384,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
     // files
     {
         Write( "  <ItemGroup>\n" );
+        Array< AString > seenFiles( m_Files.GetSize(), false );
         const AString * const fEnd = m_Files.End();
         for ( const AString * fIt = m_Files.Begin(); fIt!=fEnd; ++fIt )
         {
@@ -388,6 +393,13 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
             GetFolderPath( *fIt, folder );
             AStackString<> fileName;
             GetProjectRelativePath( projectBasePath, *fIt, fileName );
+
+            // Gracefully handle duplicate files
+            if ( CheckForDuplicateFiles( fileName, seenFiles ) )
+            {
+                continue;
+            }
+
             Write( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
             if ( !folder.IsEmpty() )
             {
@@ -511,9 +523,12 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
                                                             const AString & fileName,
                                                             AString & outRelativeFileName )
 {
+    AStackString<> cleanFileName;
+    NodeGraph::CleanPath( fileName, cleanFileName );
+
     // Find common sub-path
     const char * pathA = projectFolderPath.Get();
-    const char * pathB = fileName.Get();
+    const char * pathB = cleanFileName.Get();
     while ( ( *pathA == *pathB ) && ( *pathA != '\0' ) )
     {
         pathA++;
@@ -523,7 +538,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
     if ( hasCommonSubPath == false )
     {
         // No common sub-path, so use relative name
-        outRelativeFileName = fileName;
+        outRelativeFileName = cleanFileName;
         return;
     }
 
@@ -687,6 +702,22 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( stream.Read( ft.m_Pattern ) == false ) { return false; }
     }
     return true;
+}
+
+// CheckForDuplicateFiles
+//------------------------------------------------------------------------------
+bool VSProjectGenerator::CheckForDuplicateFiles( const AString & file,
+                                                 Array< AString > & inoutAlreadySeenFiles ) const
+{
+    for ( const AString & seenFile : inoutAlreadySeenFiles )
+    {
+        if ( seenFile.CompareI( file ) == 0 )
+        {
+            return true; // already seen
+        }
+    }
+    inoutAlreadySeenFiles.Append( file );
+    return false; // not seen before
 }
 
 //------------------------------------------------------------------------------

@@ -111,6 +111,9 @@ private:
                                         const AString & fileName,
                                         AString & outRelativeFileName );
 
+    bool CheckForDuplicateFiles( const AString & file,
+                                 Array< AString > & inoutAlreadySeenFiles ) const;
+
     // project details
     Array< AString > m_BasePaths;
 
