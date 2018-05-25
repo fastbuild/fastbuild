@@ -170,6 +170,8 @@ public:
 
     const AString & GetName() const { return m_Name; }
 
+    virtual const AString & GetPrettyName() const { return GetName(); }
+
     bool IsHidden() const { return m_Hidden; }
 
     #if defined( DEBUG )

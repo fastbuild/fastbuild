@@ -128,7 +128,7 @@ void FBuildStats::OutputSummary() const
         for ( size_t i=0; i<itemsToDisplay; ++i )
         {
             const Node * n = m_NodesByTime[ i ];
-            output.AppendFormat( "%-9.3f %s\n", (double)( (float)n->GetProcessingTime() / 1000.0f ), n->GetName().Get() );
+            output.AppendFormat( "%-9.3f %s\n", (double)( (float)n->GetProcessingTime() / 1000.0f ), n->GetPrettyName().Get() );
         }
         output += "\n";
     }
