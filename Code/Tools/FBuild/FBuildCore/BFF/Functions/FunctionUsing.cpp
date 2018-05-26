@@ -115,7 +115,7 @@ FunctionUsing::FunctionUsing()
               ++it )
         {
             const BFFVariable * member = ( *it );
-            if ( ( nullptr == sameNameMember ) && ( false == parentScope ) && ( member->GetName() == v->GetName() ) )
+            if ( ( sameNameMember == nullptr ) && ( parentScope == false ) && ( member->GetName() == v->GetName() ) )
             {
                 // We have a struct member with the same name as the struct variable itself.
                 // We have to delay putting it in the current scope because it may delete the struct variable and invalidate members array.
@@ -124,7 +124,7 @@ FunctionUsing::FunctionUsing()
             }
             BFFStackFrame::SetVar( member, frame );
         }
-        if ( nullptr != sameNameMember )
+        if ( sameNameMember != nullptr )
         {
             BFFStackFrame::SetVar( sameNameMember, frame );
         }

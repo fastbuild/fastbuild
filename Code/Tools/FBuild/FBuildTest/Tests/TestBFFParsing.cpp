@@ -38,6 +38,7 @@ private:
     void Struct_ConcatenationMismatch() const;
     void Struct_ConcatenationOrder() const;
     void Struct_Unterminated() const;
+    void Struct_MemberShadowsSelf() const;
     void IncludeScope() const;
     void IfDirective() const;
     void IfExistsDirective() const;
@@ -93,6 +94,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Struct_ConcatenationMismatch )
     REGISTER_TEST( Struct_ConcatenationOrder )
     REGISTER_TEST( Struct_Unterminated )
+    REGISTER_TEST( Struct_MemberShadowsSelf )
     REGISTER_TEST( IncludeScope )
     REGISTER_TEST( IfDirective )
     REGISTER_TEST( IfExistsDirective )
@@ -266,6 +268,13 @@ void TestBFFParsing::Struct_ConcatenationOrder() const
 void TestBFFParsing::Struct_Unterminated() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/struct_unterminated.bff", true ); // expect failure
+}
+
+// Struct_MemberShadowsSelf
+//------------------------------------------------------------------------------
+void TestBFFParsing::Struct_MemberShadowsSelf() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/struct_membershadowsself.bff" );
 }
 
 // Parse
