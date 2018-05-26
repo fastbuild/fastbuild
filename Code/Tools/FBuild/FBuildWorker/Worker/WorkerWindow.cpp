@@ -198,7 +198,7 @@ void WorkerWindow::UIUpdateThread()
         m_Menu = CreatePopupMenu();
         AppendMenu( m_Menu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT( "Exit" ) );
 
-        // Display the window or and minimize it.
+        // Display the window and minimize it if needed
         if ( WorkerSettings::Get().GetStartMinimzed() )
         {
             UpdateWindow( (HWND)GetHandle() );
@@ -206,9 +206,9 @@ void WorkerWindow::UIUpdateThread()
         }
         else
         {
-          ShowWindow( (HWND)GetHandle(), SW_SHOW );
-          UpdateWindow( (HWND)GetHandle() );
-          ShowWindow( (HWND)GetHandle(), SW_SHOW ); // First call can be ignored
+            ShowWindow( (HWND)GetHandle(), SW_SHOW );
+            UpdateWindow( (HWND)GetHandle() );
+            ShowWindow( (HWND)GetHandle(), SW_SHOW ); // First call can be ignored
         }
 
         SetStatus( "Idle" );
