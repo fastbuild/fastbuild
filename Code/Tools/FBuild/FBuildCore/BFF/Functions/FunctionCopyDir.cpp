@@ -31,6 +31,12 @@ FunctionCopyDir::FunctionCopyDir()
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionCopyDir::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
+    if ( nodeGraph.FindNode( m_AliasForFunction ) )
+    {
+        Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
+        return false;
+    }
+
     CopyDirNode * copyDirNode = nodeGraph.CreateCopyDirNode( m_AliasForFunction );
 
     if ( !PopulateProperties( nodeGraph, funcStartIter, copyDirNode ) )
