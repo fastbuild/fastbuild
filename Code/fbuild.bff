@@ -427,7 +427,9 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 //------------------------------------------------------------------------------
 // Unity/Blob files (shared across configs)
 //------------------------------------------------------------------------------
-.UnityInputIsolateWritableFiles = true
+#if !BUILDING_FROM_TESTS
+    .UnityInputIsolateWritableFiles = true
+#endif
 #if __WINDOWS__
     .UnityOutputBase = '$OutputBase$\Unity-Windows'
 #endif
