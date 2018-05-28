@@ -31,6 +31,7 @@ private:
     void Array_TypeMismatch() const;
     void Integers() const;
     void UnnamedScope() const;
+    void UnnamedScope_Unterminated() const;
     void IncludeDirective() const;
     void OnceDirective() const;
     void Structs() const;
@@ -87,6 +88,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Array_TypeMismatch )
     REGISTER_TEST( Integers )
     REGISTER_TEST( UnnamedScope )
+    REGISTER_TEST( UnnamedScope_Unterminated )
     REGISTER_TEST( IncludeDirective )
     REGISTER_TEST( OnceDirective )
     REGISTER_TEST( Structs )
@@ -211,6 +213,15 @@ void TestBFFParsing::Integers() const
 void TestBFFParsing::UnnamedScope() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/unnamedscope.bff" );
+}
+
+// UnnamedScope_Unterminated
+//------------------------------------------------------------------------------
+void TestBFFParsing::UnnamedScope_Unterminated() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/unnamedscope_unterminated.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1025 - Missing scope close token '}'." ) );
+
 }
 
 // IncludeDirective
