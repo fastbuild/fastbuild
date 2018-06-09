@@ -47,6 +47,8 @@ public:
     static bool IsStartOfLinkerArg( const AString & token, const char * arg );
 
 protected:
+    friend class TestLinker;
+
     virtual BuildResult DoBuild( Job * job ) override;
 
     void DoPreLinkCleanup() const;
@@ -66,8 +68,8 @@ protected:
 
     void GetImportLibName( const AString & args, AString & importLibName ) const;
 
-    bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc ) const;
-    bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, Dependencies & libs, const AString & path, const AString & lib, bool & found ) const;
+    static bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc );
+    static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, Dependencies & libs, const AString & path, const AString & lib, bool & found );
     static bool GetOtherLibsArg( const char * arg,
                                  Array< AString > & list,
                                  const AString * & it,

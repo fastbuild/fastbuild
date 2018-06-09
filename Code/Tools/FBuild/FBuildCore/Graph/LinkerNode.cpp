@@ -943,12 +943,12 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 
 // GetOtherLibraries
 //------------------------------------------------------------------------------
-bool LinkerNode::GetOtherLibraries( NodeGraph & nodeGraph,
-                                    const BFFIterator & iter,
-                                    const Function * function,
-                                    const AString & args,
-                                    Dependencies & otherLibraries,
-                                    bool msvc ) const
+/*static*/ bool LinkerNode::GetOtherLibraries( NodeGraph & nodeGraph,
+                                               const BFFIterator & iter,
+                                               const Function * function,
+                                               const AString & args,
+                                               Dependencies & otherLibraries,
+                                               bool msvc )
 {
     // split to individual tokens
     Array< AString > tokens;
@@ -1147,13 +1147,13 @@ bool LinkerNode::GetOtherLibraries( NodeGraph & nodeGraph,
 
 // GetOtherLibrary
 //------------------------------------------------------------------------------
-bool LinkerNode::GetOtherLibrary( NodeGraph & nodeGraph,
-                                  const BFFIterator & iter,
-                                  const Function * function,
-                                  Dependencies & libs,
-                                  const AString & path,
-                                  const AString & lib,
-                                  bool & found ) const
+/*static*/ bool LinkerNode::GetOtherLibrary( NodeGraph & nodeGraph,
+                                             const BFFIterator & iter,
+                                             const Function * function,
+                                             Dependencies & libs,
+                                             const AString & path,
+                                             const AString & lib,
+                                             bool & found )
 {
     found = false;
 
