@@ -824,6 +824,29 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
     return ( AString::StrNCmpI( token.Get() + 1, arg, argLen ) == 0 );
 }
 
+// IsStartOfLinkerArg
+//------------------------------------------------------------------------------
+/*static*/ bool LinkerNode::IsStartOfLinkerArg( const AString & token, const char * arg )
+{
+    ASSERT( token.IsEmpty() == false );
+
+    // Args start with -
+    if ( token[0] != '-' )
+    {
+        return false;
+    }
+
+    // Length check to early out
+    const size_t argLen = AString::StrLen( arg );
+    if ( ( token.GetLength() - 1 ) < argLen )
+    {
+        return false; // token is too short
+    }
+
+    // Args are case-sensitive
+    return ( AString::StrNCmp( token.Get() + 1, arg, argLen ) == 0 );
+}
+
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
 void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
@@ -1193,7 +1216,7 @@ bool LinkerNode::GetOtherLibrary( NodeGraph & nodeGraph,
     }
     else
     {
-        if ( it->BeginsWith( arg ) == false )
+        if ( LinkerNode::IsStartOfLinkerArg( *it, arg ) == false )
         {
             return false; // not our arg, not consumed
         }
