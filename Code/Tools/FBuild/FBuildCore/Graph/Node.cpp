@@ -33,8 +33,10 @@
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
@@ -90,6 +92,14 @@ IMetaData & MetaAllowNonFile()
 IMetaData & MetaAllowNonFile( const Node::Type limitToType )
 {
     return *FNEW( Meta_AllowNonFile( limitToType ) );
+}
+IMetaData & MetaEmbedMembers()
+{
+    return *FNEW( Meta_EmbedMembers() );
+}
+IMetaData & MetaInheritFromOwner()
+{
+    return *FNEW( Meta_InheritFromOwner() );
 }
 
 // Reflection
@@ -612,10 +622,11 @@ void Node::Serialize( IOStream & stream ) const
         }
         case PT_STRUCT:
         {
+            const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+
             if ( property.IsArray() )
             {
                 // Write number of elements
-                const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
                 const uint32_t numElements = (uint32_t)propertyS.GetArraySize( base );
                 VERIFY( stream.Write( numElements ) );
 
@@ -627,7 +638,12 @@ void Node::Serialize( IOStream & stream ) const
                 }
                 return;
             }
-            break; // Fall through to error
+            else
+            {
+                const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();    
+                const void * structBase = propertyS.GetStructBase( base );
+                return Serialize( stream, structBase, *structRI );
+            }
         }
         default:
         {
@@ -762,6 +778,8 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
         }
         case PT_STRUCT:
         {
+            const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+
             if ( property.IsArray() )
             {
                 // Read number of elements
@@ -770,7 +788,6 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
                 {
                     return false;
                 }
-                const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
                 propertyS.ResizeArrayOfStruct( base, numElements );
 
                 // Read each element
@@ -784,7 +801,12 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
                 }
                 return true;
             }
-            break; // Fall through to error
+            else
+            {
+                const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();    
+                void * structBase = propertyS.GetStructBase( base );
+                return Deserialize( stream, structBase, *structRI );
+            }
         }
         default:
         {

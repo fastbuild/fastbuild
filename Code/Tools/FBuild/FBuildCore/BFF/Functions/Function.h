@@ -133,6 +133,7 @@ protected:
     // Reflection based property population
     bool GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, const ReflectionInfo * ri, AString & name ) const;
     bool PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & iter, Node * node ) const;
+    bool PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectionInfo * ri ) const;
     bool PopulateProperty( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
     bool PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const;
     bool PopulateString( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const;
@@ -140,6 +141,7 @@ protected:
     bool PopulateInt32( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
     bool PopulateUInt32( const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
     bool PopulateArrayOfStructs( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable ) const;
+    bool PopulateArrayOfStructsElement( NodeGraph & nodeGraph, const BFFIterator & iter, void * structBase, const ReflectionInfo * structRI, const BFFVariable * srcVariable ) const;
 
     bool PopulateStringHelper( NodeGraph & nodeGraph, const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, Array< AString > & outStrings ) const;
     bool PopulateStringHelper( NodeGraph & nodeGraph, const BFFIterator & iter, const Meta_Path * pathMD, const Meta_File * fileMD, const Meta_AllowNonFile * allowNonFileMD, const BFFVariable * variable, const AString & string, Array< AString > & outStrings ) const;

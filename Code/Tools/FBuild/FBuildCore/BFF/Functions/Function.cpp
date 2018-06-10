@@ -38,6 +38,8 @@
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 
 // Core
@@ -946,6 +948,13 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, 
 bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & iter, Node * node ) const
 {
     const ReflectionInfo * ri = node->GetReflectionInfoV();
+    return PopulateProperties( nodeGraph, iter, node, ri );
+}
+
+// PopulateProperties
+//------------------------------------------------------------------------------
+bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectionInfo * ri ) const
+{
     do
     {
         const ReflectionIter end = ri->End();
@@ -966,7 +975,7 @@ bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & it
             // Find the value for this property from the BFF
             const BFFVariable * v = BFFStackFrame::GetVar( propertyName );
 
-            if ( !PopulateProperty( nodeGraph, iter, node, property, v ) )
+            if ( !PopulateProperty( nodeGraph, iter, base, property, v ) )
             {
                 return false; // PopulateProperty will have emitted an error
             }
@@ -988,6 +997,15 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
                                  const ReflectedProperty & property,
                                  const BFFVariable * variable ) const
 {
+    // Handle MetaEmbedMembers
+    if ( property.HasMetaData< Meta_EmbedMembers >() )
+    {
+        ASSERT( property.GetType() == PropertyType::PT_STRUCT );
+        ASSERT( property.IsArray() == false );
+        const ReflectedPropertyStruct & rps = static_cast< const ReflectedPropertyStruct & >( property );
+        return PopulateProperties( nodeGraph, iter, (Struct *)rps.GetStructBase( base ), rps.GetStructReflectionInfo() );
+    }
+
     // Handle missing but required
     if ( variable == nullptr )
     {
@@ -1355,7 +1373,6 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
     // Get the destionation
     const ReflectedPropertyStruct & dstStructs = static_cast< const ReflectedPropertyStruct & >( property );
     ASSERT( dstStructs.IsArray() );
-    const ReflectionInfo * ri = dstStructs.GetStructReflectionInfo();
 
     // Array to Array
     if ( variable->IsArrayOfStructs() )
@@ -1371,20 +1388,12 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
             // Calculate the base for this struct in the array
             void * structBase = dstStructs.GetStructInArray( base, index );
 
-            // Try to populate all the properties for this struct
-            for ( auto it = ri->Begin(); it != ri->End(); ++it )
+            const ReflectionInfo * ri = dstStructs.GetStructReflectionInfo();
+            if ( !PopulateArrayOfStructsElement( nodeGraph, iter, structBase, ri, s ) )
             {
-                AStackString<> propertyName( "." ); // TODO:C Eliminate copy
-                propertyName += (*it).GetName();
-
-                // Try to find property in BFF
-                const BFFVariable ** found = BFFVariable::GetMemberByName( propertyName, s->GetStructMembers() );
-                const BFFVariable * var = found ? *found : nullptr;
-                if ( !PopulateProperty( nodeGraph, iter, structBase, *it, var ) )
-                {
-                    return false; // PopulateProperty will have emitted an error
-                }
+                return false; // PopulateArrayOfStructsElement will have emitted an error
             }
+
             ++index;
         }
         return true;
@@ -1398,25 +1407,69 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
         // Calculate the base for this struct in the array
         void * structBase = dstStructs.GetStructInArray( base, 0 );
 
-        // Try to populate all the properties for this struct
-        for ( auto it = ri->Begin(); it != ri->End(); ++it )
-        {
-            AStackString<> propertyName( "." ); // TODO:C Eliminate copy
-            propertyName += (*it).GetName();
-
-            // Try to find property in BFF
-            const BFFVariable ** found = BFFVariable::GetMemberByName( propertyName, variable->GetStructMembers() );
-            const BFFVariable * var = found ? *found : nullptr;
-            if ( !PopulateProperty( nodeGraph, iter, structBase, *it, var ) )
-            {
-                return false; // PopulateProperty will have emitted an error
-            }
-        }
-        return true;
+        const ReflectionInfo * ri = dstStructs.GetStructReflectionInfo();
+        return PopulateArrayOfStructsElement( nodeGraph, iter, structBase, ri, variable ); // Will emit error if needed
     }
 
     Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRUCT, BFFVariable::VAR_ARRAY_OF_STRUCTS );
     return false;
+}
+
+// PopulateArrayOfStructsElement
+//------------------------------------------------------------------------------
+bool Function::PopulateArrayOfStructsElement( NodeGraph & nodeGraph,
+                                              const BFFIterator & iter,
+                                              void * structBase,
+                                              const ReflectionInfo * structRI,
+                                              const BFFVariable * srcVariable ) const
+{
+    ASSERT( structRI ); // Must be at least one level of reflection
+    ASSERT( srcVariable->IsStruct() );
+
+    do
+    {
+        // Try to populate all the properties for this struct
+        for ( auto it = structRI->Begin(); it != structRI->End(); ++it )
+        {
+            const ReflectedProperty & property = *it;
+
+            // Don't populate hidden properties
+            if ( property.HasMetaData< Meta_Hidden >() )
+            {
+                continue;
+            }
+
+            AStackString<> propertyName( "." ); // TODO:C Eliminate copy
+            propertyName += property.GetName();
+
+            // Try to find property in BFF
+            const BFFVariable ** found = BFFVariable::GetMemberByName( propertyName, srcVariable->GetStructMembers() );
+            const BFFVariable * var = nullptr;
+            if ( found )
+            {
+                // Use variable if found
+                var = *found;
+            }
+            else
+            {
+                // If not found, check for inheritence from containing frame
+                if ( property.HasMetaData<Meta_InheritFromOwner>() )
+                {
+                    var = BFFStackFrame::GetVar( propertyName );
+                }
+            }
+            if ( !PopulateProperty( nodeGraph, iter, structBase, property, var ) )
+            {
+                return false; // PopulateProperty will have emitted an error
+            }
+        }
+
+        // Traverse into parent class (if there is one)
+        structRI = structRI->GetSuperClass();
+    }
+    while ( structRI );
+
+    return true;
 }
 
 //------------------------------------------------------------------------------

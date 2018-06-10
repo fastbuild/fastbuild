@@ -838,44 +838,13 @@ CompilerNode * NodeGraph::CreateCompilerNode( const AString & executable )
 
 // CreateVCXProjectNode
 //------------------------------------------------------------------------------
-VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
-                                                  const Array< AString > & projectBasePaths,
-                                                  const Dependencies & paths,
-                                                  const Array< AString > & pathsToExclude,
-                                                  const Array< AString > & patternToExclude,
-                                                  const Array< AString > & files,
-                                                  const Array< AString > & filesToExclude,
-                                                  const AString & rootNamespace,
-                                                  const AString & projectGuid,
-                                                  const AString & defaultLanguage,
-                                                  const AString & applicationEnvironment,
-                                                  const bool projectSccEntrySAK,
-                                                  const Array< VSProjectConfig > & configs,
-                                                  const Array< VSProjectFileType > & fileTypes,
-                                                  const Array< AString > & references,
-                                                  const Array< AString > & projectReferences )
+VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( name ) );
 
-    AStackString< 1024 > fullPath;
-    CleanPath( projectOutput, fullPath );
-
-    VCXProjectNode * node = FNEW( VCXProjectNode( fullPath,
-                                                projectBasePaths,
-                                                paths,
-                                                pathsToExclude,
-                                                patternToExclude,
-                                                files,
-                                                filesToExclude,
-                                                rootNamespace,
-                                                projectGuid,
-                                                defaultLanguage,
-                                                applicationEnvironment,
-                                                projectSccEntrySAK,
-                                                configs,
-                                                fileTypes,
-                                                references,
-                                                projectReferences ) );
+    VCXProjectNode * node = FNEW( VCXProjectNode() );
+    node->SetName( name );
     AddNode( node );
     return node;
 }

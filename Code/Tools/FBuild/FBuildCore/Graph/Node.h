@@ -293,5 +293,7 @@ inline FileNode * Node::CastTo< FileNode >() const
 IMetaData & MetaName( const char * name );
 IMetaData & MetaAllowNonFile();
 IMetaData & MetaAllowNonFile( const Node::Type limitToType );
+IMetaData & MetaEmbedMembers();
+IMetaData & MetaInheritFromOwner();
 
 //------------------------------------------------------------------------------

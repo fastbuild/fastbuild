@@ -135,6 +135,7 @@ public:
     explicit ReflectedPropertyStruct( const char * name, uint32_t offset, const ReflectionInfo * structInfo, bool isArray = false );
 
     const void * GetStructBase( const void * object ) const;
+    void *       GetStructBase( void * object ) const;
 
     // arrayOfStruct manipulation
     size_t      GetArraySize( const void * object ) const;

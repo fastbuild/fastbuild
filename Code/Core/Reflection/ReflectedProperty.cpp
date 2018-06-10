@@ -477,6 +477,13 @@ const void * ReflectedPropertyStruct::GetStructBase( const void * object ) const
     return (const void *)( (size_t)object + m_Offset );
 }
 
+// GetStructBase
+//------------------------------------------------------------------------------
+void * ReflectedPropertyStruct::GetStructBase( void * object ) const
+{
+    return (void *)( (size_t)object + m_Offset );
+}
+
 //
 //------------------------------------------------------------------------------
 size_t ReflectedPropertyStruct::GetArraySize( const void * object ) const
