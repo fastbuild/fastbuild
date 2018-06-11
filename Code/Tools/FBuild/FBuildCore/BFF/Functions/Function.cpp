@@ -353,81 +353,6 @@ bool Function::GetStringOrArrayOfStrings( const BFFIterator & iter, const BFFVar
     return false;
 }
 
-// GetBool
-//------------------------------------------------------------------------------
-bool Function::GetBool( const BFFIterator & iter, bool & var, const char * name, bool defaultValue, bool required ) const
-{
-    ASSERT( name );
-
-    const BFFVariable * v = BFFStackFrame::GetVar( name );
-    if ( v == nullptr )
-    {
-        if ( required )
-        {
-            Error::Error_1101_MissingProperty( iter, this, AStackString<>( name ) );
-            return false;
-        }
-        var = defaultValue;
-        return true;
-    }
-
-    if ( v->IsBool() == false )
-    {
-        Error::Error_1050_PropertyMustBeOfType( iter, this, name, v->GetType(), BFFVariable::VAR_BOOL );
-        return false;
-    }
-
-    var = v->GetBool();
-    return true;
-}
-
-// GetInt
-//------------------------------------------------------------------------------
-bool Function::GetInt( const BFFIterator & iter, int32_t & var, const char * name, int32_t defaultValue, bool required ) const
-{
-    ASSERT( name );
-
-    const BFFVariable * v = BFFStackFrame::GetVar( name );
-    if ( v == nullptr )
-    {
-        if ( required )
-        {
-            Error::Error_1101_MissingProperty( iter, this, AStackString<>( name ) );
-            return false;
-        }
-        var = defaultValue;
-        return true;
-    }
-
-    if ( v->IsInt() == false )
-    {
-        Error::Error_1050_PropertyMustBeOfType( iter, this, name, v->GetType(), BFFVariable::VAR_INT );
-        return false;
-    }
-
-    var = v->GetInt();
-    return true;
-}
-
-
-// GetInt
-//------------------------------------------------------------------------------
-bool Function::GetInt( const BFFIterator & iter, int32_t & var, const char * name, int32_t defaultValue, bool required, int minVal, int maxVal ) const
-{
-    if ( GetInt( iter, var, name, defaultValue, required ) == false )
-    {
-        return false;
-    }
-
-    // enforce additional limits
-    if ( ( var < minVal ) || ( var > maxVal ) )
-    {
-        Error::Error_1054_IntegerOutOfRange( iter, this, name, minVal, maxVal );
-        return false;
-    }
-    return true;
-}
-
 // GetNodeList
 //------------------------------------------------------------------------------
 bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, const char * propertyName, Dependencies & nodes, bool required,
@@ -758,18 +683,6 @@ bool Function::GetStrings( const BFFIterator & iter, Array< AString > & strings,
     return true;
 }
 
-// GetFolderPaths
-//------------------------------------------------------------------------------
-bool Function::GetFolderPaths(const BFFIterator & iter, Array< AString > & paths, const char * name, bool required) const
-{
-    if ( !GetStrings(iter, paths, name, required ) )
-    {
-        return false; // GetStrings will have emitted an error
-    }
-    CleanFolderPaths( paths );
-    return true;
-}
-
 // GetFileNode
 //------------------------------------------------------------------------------
 bool Function::GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Node * & fileNode, const char * name, bool required ) const
@@ -802,55 +715,6 @@ bool Function::GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Nod
     }
     fileNode = n;
     return true;
-}
-
-// CleanFolderPaths
-//------------------------------------------------------------------------------
-/*static*/ void Function::CleanFolderPaths( Array< AString > & folders )
-{
-    AStackString< 512 > tmp;
-
-    AString * const end = folders.End();
-    for ( AString * it = folders.Begin(); it != end; ++it )
-    {
-        // make full path, clean slashes etc
-        NodeGraph::CleanPath( *it, tmp );
-
-        // ensure path is slash-terminated
-        PathUtils::EnsureTrailingSlash( tmp );
-
-        // replace original
-        *it = tmp;
-    }
-}
-
-//------------------------------------------------------------------------------
-/*static*/ void Function::CleanFilePaths( Array< AString > & files )
-{
-    AStackString< 512 > tmp;
-
-    AString * const end = files.End();
-    for ( AString * it = files.Begin(); it != end; ++it )
-    {
-        // make full path, clean slashes etc
-        NodeGraph::CleanPath( *it, tmp );
-
-        // replace original
-        *it = tmp;
-    }
-}
-
-// CleanFileNames
-//------------------------------------------------------------------------------
-void Function::CleanFileNames( Array< AString > & fileNames ) const
-{
-    // cleanup slashes (keep path relative)
-    AString * const end = fileNames.End();
-    for ( AString * it = fileNames.Begin(); it != end; ++it )
-    {
-        // normalize slashes
-        PathUtils::FixupFilePath( *it );
-    }
 }
 
 // ProcessAlias

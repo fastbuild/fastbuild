@@ -30,13 +30,9 @@ class NodeGraph;
 // Load/SaveMacros
 //------------------------------------------------------------------------------
 #define NODE_SAVE( member ) stream.Write( member );
-#define NODE_SAVE_DEPS( depsArray ) depsArray.Save( stream );
 #define NODE_SAVE_NODE_LINK( node ) Node::SaveNodeLink( stream, node );
 
 #define NODE_LOAD( type, member ) type member; if ( stream.Read( member ) == false ) { return nullptr; }
-#define NODE_LOAD_DEPS( initialCapacity, depsArray ) \
-    Dependencies depsArray( initialCapacity, true ); \
-    if ( depsArray.Load( nodeGraph, stream ) == false ) { return nullptr; }
 #define NODE_LOAD_NODE_LINK( type, node ) \
     type * node = nullptr; \
     if ( Node::LoadNodeLink( nodeGraph, stream, node ) == false ) { return nullptr; }

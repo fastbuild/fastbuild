@@ -58,11 +58,6 @@ public:
     // most functions will override this to commit the effects of the function
     virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const;
 
-    // helpers to clean/fixup paths to files and folders
-    static void CleanFolderPaths( Array< AString > & folders );
-    static void CleanFilePaths( Array< AString > & files );
-    void CleanFileNames( Array< AString > & fileNames ) const;
-
     bool GetDirectoryListNodeList( NodeGraph & nodeGraph,
                                    const BFFIterator & iter,
                                    const Array< AString > & paths,
@@ -120,11 +115,7 @@ protected:
     bool GetString( const BFFIterator & iter, const BFFVariable * & var, const char * name, bool required = false ) const;
     bool GetString( const BFFIterator & iter, AString & var, const char * name, bool required = false ) const;
     bool GetStringOrArrayOfStrings( const BFFIterator & iter, const BFFVariable * & var, const char * name, bool required ) const;
-    bool GetBool( const BFFIterator & iter, bool & var, const char * name, bool defaultValue, bool required = false ) const;
-    bool GetInt( const BFFIterator & iter, int32_t & var, const char * name, int32_t defaultValue, bool required ) const;
-    bool GetInt( const BFFIterator & iter, int32_t & var, const char * name, int32_t defaultValue, bool required, int minVal, int maxVal ) const;
     bool GetStrings( const BFFIterator & iter, Array< AString > & strings, const char * name, bool required = false ) const;
-    bool GetFolderPaths( const BFFIterator & iter, Array< AString > & strings, const char * name, bool required = false ) const;
 
     // helper function to make alias for target
     bool ProcessAlias( NodeGraph & nodeGraph, const BFFIterator & iter, Node * nodeToAlias ) const;

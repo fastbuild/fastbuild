@@ -530,9 +530,9 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 void Node::Serialize( IOStream & stream ) const
 {
     // Deps
-    NODE_SAVE_DEPS( m_PreBuildDependencies );
-    NODE_SAVE_DEPS( m_StaticDependencies );
-    NODE_SAVE_DEPS( m_DynamicDependencies );
+    m_PreBuildDependencies.Save( stream );
+    m_StaticDependencies.Save( stream );
+    m_DynamicDependencies.Save( stream );
 
     // Properties
     const ReflectionInfo * const ri = GetReflectionInfoV();
@@ -657,16 +657,17 @@ void Node::Serialize( IOStream & stream ) const
 //------------------------------------------------------------------------------
 bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
 {
-    // Deps
-    NODE_LOAD_DEPS( 0,          preBuildDeps );
     ASSERT( m_PreBuildDependencies.IsEmpty() );
-    m_PreBuildDependencies.Append( preBuildDeps );
-    NODE_LOAD_DEPS( 0,          staticDeps );
     ASSERT( m_StaticDependencies.IsEmpty() );
-    m_StaticDependencies.Append( staticDeps );
-    NODE_LOAD_DEPS( 0,          dynamicDeps );
     ASSERT( m_DynamicDependencies.IsEmpty() );
-    m_DynamicDependencies.Append( dynamicDeps );
+
+    // Deps
+    if ( ( m_PreBuildDependencies.Load( nodeGraph, stream ) == false ) ||
+         ( m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
+         ( m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
+    {
+        return nullptr;
+    }
 
     // Properties
     const ReflectionInfo * const ri = GetReflectionInfoV();
