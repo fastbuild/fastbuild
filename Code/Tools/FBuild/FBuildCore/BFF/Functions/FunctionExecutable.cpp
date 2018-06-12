@@ -35,34 +35,11 @@ FunctionExecutable::FunctionExecutable()
     return true;
 }
 
-// Commit
+// CreateNode
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionExecutable::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ Node * FunctionExecutable::CreateNode() const
 {
-    AStackString<> name;
-    if ( GetNameForNode( nodeGraph, funcStartIter, ExeNode::GetReflectionInfoS(), name ) == false )
-    {
-        return false;
-    }
-    if ( nodeGraph.FindNode( name ) )
-    {
-        Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
-        return false;
-    }
-
-    ExeNode * exeNode = nodeGraph.CreateExeNode( name );
-
-    if ( !PopulateProperties( nodeGraph, funcStartIter, exeNode ) )
-    {
-        return false;
-    }
-
-    if ( !exeNode->Initialize( nodeGraph, funcStartIter, this ) )
-    {
-        return false;
-    }
-
-    return ProcessAlias( nodeGraph, funcStartIter, exeNode );
+    return FNEW( ExeNode );
 }
 
 //------------------------------------------------------------------------------

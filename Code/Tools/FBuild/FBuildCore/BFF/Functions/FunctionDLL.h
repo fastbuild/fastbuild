@@ -13,8 +13,7 @@ class FunctionDLL : public FunctionExecutable
 public:
     explicit        FunctionDLL();
     inline virtual ~FunctionDLL() = default;
-
-    virtual bool    Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
+    virtual Node *  CreateNode() const override;
 };
 
 //------------------------------------------------------------------------------

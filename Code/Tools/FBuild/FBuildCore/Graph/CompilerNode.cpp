@@ -48,7 +48,7 @@ CompilerNode::CompilerNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // TODO:B make this use m_ExtraFiles
     Dependencies extraFiles( 32, true );

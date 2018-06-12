@@ -143,7 +143,7 @@ VCXProjectNode::VCXProjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool VCXProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool VCXProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 

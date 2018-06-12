@@ -49,7 +49,7 @@ SettingsNode::SettingsNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
 {
     // using a cache plugin?
     if ( m_CachePluginDLL.IsEmpty() == false )

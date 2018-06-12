@@ -27,7 +27,7 @@ class ObjectNode : public FileNode
     REFLECT_NODE_DECLARE( ObjectNode )
 public:
     ObjectNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     // simplified remote constructor
     explicit ObjectNode( const AString & objectName,
                          NodeProxy * srcFile,

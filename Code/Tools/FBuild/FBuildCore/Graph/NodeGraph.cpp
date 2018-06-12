@@ -636,6 +636,16 @@ size_t NodeGraph::GetNodeCount() const
     return m_AllNodes.GetSize();
 }
 
+// RegisterNode
+//------------------------------------------------------------------------------
+void NodeGraph::RegisterNode( Node * node )
+{
+    ASSERT( Thread::IsMainThread() );
+    ASSERT( node->GetName().IsEmpty() == false );
+    ASSERT( FindNode( node->GetName() ) == nullptr );
+    AddNode( node );
+}
+
 // CreateCopyFileNode
 //------------------------------------------------------------------------------
 CopyFileNode * NodeGraph::CreateCopyFileNode( const AString & dstFileName )

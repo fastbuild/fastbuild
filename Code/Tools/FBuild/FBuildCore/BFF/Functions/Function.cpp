@@ -167,6 +167,14 @@ Function::~Function() = default;
     return true;
 }
 
+// CreateNode
+//------------------------------------------------------------------------------
+/*virtual*/ Node * Function::CreateNode() const
+{
+    ASSERT( false ); // Should never get here for Functions that have no Node
+    return nullptr;
+}
+
 // IsUnique
 //------------------------------------------------------------------------------
 /*virtual*/ bool Function::IsUnique() const
@@ -267,9 +275,56 @@ Function::~Function() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ bool Function::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
-    (void)nodeGraph;
-    (void)funcStartIter;
-    return true;
+    // Create Node
+    Node * node = CreateNode();
+    ASSERT( node );
+
+    // Get the name
+    //  - For nodes that specify a name as a property (usually the output of the node)
+    //    use that as the name (i.e. the filename is the name)
+    //  - Otherwise, what would normally be the alias
+    AStackString<> nameFromMetaData;
+    if ( GetNameForNode( nodeGraph, funcStartIter, node->GetReflectionInfoV(), nameFromMetaData ) == false )
+    {
+        return false; // GetNameForNode will have emitted an error
+    }
+    const bool aliasUsedForName = nameFromMetaData.IsEmpty();
+    const AString & name = ( aliasUsedForName ) ? m_AliasForFunction : nameFromMetaData;
+    ASSERT( name.IsEmpty() == false );
+
+    // Check name isn't already used
+    if ( nodeGraph.FindNode( name ) )
+    {
+        Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
+        return false;
+    }
+
+    // Set Name
+    node->SetName( name );
+
+    // Register with NodeGraph
+    nodeGraph.RegisterNode( node );
+
+    // Set properties
+    if ( !PopulateProperties( nodeGraph, funcStartIter, node ) )
+    {
+        return false; // PopulateProperties will have emitted an error
+    }
+
+    // Initialize
+    if ( !node->Initialize( nodeGraph, funcStartIter, this ) )
+    {
+        return false; // Initialize will have emitted an error
+    }
+
+    // If alias was used for name, we're done
+    if ( aliasUsedForName )
+    {
+        return true;
+    }
+
+    // handle alias creation
+    return ProcessAlias( nodeGraph, funcStartIter, node );
 }
 
 // GetString
@@ -758,7 +813,10 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, 
 {
     // get object MetaData
     const Meta_Name * nameMD = ri->HasMetaData< Meta_Name >();
-    ASSERT( nameMD ); // should not call this on types without this MetaData
+    if ( nameMD == nullptr )
+    {
+        return true; // No MetaName, but this is not an error
+    }
 
     // Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
     AStackString<> propertyName( "." );

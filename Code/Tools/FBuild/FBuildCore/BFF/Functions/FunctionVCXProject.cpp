@@ -27,36 +27,11 @@ FunctionVCXProject::FunctionVCXProject()
     return true;
 }
 
-// Commit
+// CreateNode
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionVCXProject::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ Node * FunctionVCXProject::CreateNode() const
 {
-    AStackString<> name;
-    if ( GetNameForNode( nodeGraph, funcStartIter, VCXProjectNode::GetReflectionInfoS(), name ) == false )
-    {
-        return false;
-    }
-
-    if ( nodeGraph.FindNode( name ) )
-    {
-        Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
-        return false;
-    }
-
-    auto * vcxProjNode = nodeGraph.CreateVCXProjectNode( name );
-
-    if ( !PopulateProperties( nodeGraph, funcStartIter, vcxProjNode ) )
-    {
-        return false;
-    }
-
-    if ( !vcxProjNode->Initialize( nodeGraph, funcStartIter, this ) )
-    {
-        return false;
-    }
-
-    // handle alias creation
-    return ProcessAlias( nodeGraph, funcStartIter, vcxProjNode );
+    return FNEW( VCXProjectNode );
 }
 
 //------------------------------------------------------------------------------

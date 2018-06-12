@@ -23,7 +23,7 @@ public:
     friend class FunctionUnity;
 
     explicit UnityNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~UnityNode();
 
     static inline Node::Type GetTypeS() { return Node::UNITY_NODE; }

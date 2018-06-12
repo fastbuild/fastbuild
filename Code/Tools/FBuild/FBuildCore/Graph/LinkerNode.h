@@ -18,7 +18,7 @@ class LinkerNode : public FileNode
     REFLECT_NODE_DECLARE( LinkerNode )
 public:
     explicit LinkerNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~LinkerNode();
 
     enum Flag

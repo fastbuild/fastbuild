@@ -38,7 +38,7 @@ class XCodeProjectNode : public FileNode
     REFLECT_NODE_DECLARE( XCodeProjectNode )
 public:
     explicit XCodeProjectNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~XCodeProjectNode();
 
     static inline Node::Type GetTypeS() { return Node::XCODEPROJECT_NODE; }

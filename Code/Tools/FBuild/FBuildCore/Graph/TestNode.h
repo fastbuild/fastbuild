@@ -18,7 +18,7 @@ class TestNode : public FileNode
     REFLECT_NODE_DECLARE( TestNode )
 public:
     TestNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~TestNode();
 
     static inline Node::Type GetTypeS() { return Node::TEST_NODE; }

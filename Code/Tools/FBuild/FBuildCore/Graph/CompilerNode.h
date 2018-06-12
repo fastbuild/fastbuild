@@ -19,7 +19,7 @@ class CompilerNode : public FileNode
     REFLECT_NODE_DECLARE( CompilerNode )
 public:
     explicit CompilerNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~CompilerNode();
 
     static inline Node::Type GetTypeS() { return Node::COMPILER_NODE; }

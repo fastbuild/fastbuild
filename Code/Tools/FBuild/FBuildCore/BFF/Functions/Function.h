@@ -42,6 +42,8 @@ public:
     virtual bool NeedsHeader() const;   // must have a header
     virtual bool NeedsBody() const;     // must have a body i.e. { ... }
 
+    virtual Node * CreateNode() const;
+
     // must this function be unique?
     virtual bool IsUnique() const;
     inline bool GetSeen() const { return m_Seen; }

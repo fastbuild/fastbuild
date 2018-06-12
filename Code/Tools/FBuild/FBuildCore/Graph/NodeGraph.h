@@ -95,6 +95,8 @@ public:
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
 
+    void RegisterNode( Node * n );
+
     // create new nodes
     CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
     CopyDirNode * CreateCopyDirNode( const AString & nodeName );

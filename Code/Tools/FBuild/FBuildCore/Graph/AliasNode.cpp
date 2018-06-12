@@ -30,7 +30,7 @@ AliasNode::AliasNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // TODO:B make this use m_Targets
     Dependencies targets( 32, true );

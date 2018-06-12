@@ -23,7 +23,7 @@ class ObjectListNode : public Node
     REFLECT_NODE_DECLARE( ObjectListNode )
 public:
     ObjectListNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~ObjectListNode();
 
     static inline Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }

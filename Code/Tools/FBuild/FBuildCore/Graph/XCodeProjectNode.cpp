@@ -94,7 +94,7 @@ XCodeProjectNode::XCodeProjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 

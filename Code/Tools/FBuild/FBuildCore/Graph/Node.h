@@ -127,6 +127,7 @@ public:
     };
 
     explicit Node( const AString & name, Type type, uint32_t controlFlags );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & funcStartIter, const Function * function ) = 0;
     virtual ~Node();
 
     inline uint32_t        GetNameCRC() const { return m_NameCRC; }

@@ -20,7 +20,7 @@ class CSNode : public FileNode
     REFLECT_NODE_DECLARE( CSNode )
 public:
     explicit CSNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~CSNode();
 
     static inline Node::Type GetTypeS() { return Node::CS_NODE; }

@@ -18,6 +18,14 @@ NodeProxy::NodeProxy( const AString & name )
 //------------------------------------------------------------------------------
 NodeProxy::~NodeProxy() = default;
 
+// Initialize
+//------------------------------------------------------------------------------
+/*virtual*/ bool NodeProxy::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*funcStartIter*/, const Function * /*function*/ )
+{
+    ASSERT( false ); // Should never get here
+    return false;
+}
+
 // IsAFile
 //------------------------------------------------------------------------------
 /*virtual*/ bool NodeProxy::IsAFile() const

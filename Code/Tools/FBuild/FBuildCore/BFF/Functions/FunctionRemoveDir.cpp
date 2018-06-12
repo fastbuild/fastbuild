@@ -52,4 +52,11 @@ FunctionRemoveDir::FunctionRemoveDir()
     return true;
 }
 
+// CreateNode
+//------------------------------------------------------------------------------
+/*virtual*/ Node * FunctionRemoveDir::CreateNode() const
+{
+    return FNEW( RemoveDirNode );
+}
+
 //------------------------------------------------------------------------------
