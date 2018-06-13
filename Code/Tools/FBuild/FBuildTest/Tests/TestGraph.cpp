@@ -645,11 +645,10 @@ void TestGraph::DBLocationChanged() const
         TEST_ASSERT( FileIO::FileCopy( dbFile1, dbFile2 ) );
     }
 
-    // Check that the DB in the new location is detected as invalid and the user
-    // is notified appropriately
+    // Check that the DB in the new location doesn't generate any error but verify that the user is notified
     {
         FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize( dbFile2 ) == false );
+        TEST_ASSERT( fBuild.Initialize( dbFile2 ) == true );
         TEST_ASSERT( GetRecordedOutput().Find( "Database has been moved" ) );
     }
 }
