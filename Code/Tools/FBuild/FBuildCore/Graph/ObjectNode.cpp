@@ -99,7 +99,7 @@ ObjectNode::ObjectNode()
 
     // .CompilerInputFile
     Dependencies compilerInputFile;
-    if ( !function->GetFileNode( nodeGraph, iter, m_CompilerInputFile, ".CompilerInputFile", compilerInputFile ) )
+    if ( !Function::GetFileNode( nodeGraph, iter, function, m_CompilerInputFile, ".CompilerInputFile", compilerInputFile ) )
     {
         return false; // GetFileNode will have emitted an error
     }
@@ -1004,7 +1004,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 //-----------------------------------------------------------------------------
 CompilerNode * ObjectNode::GetCompiler() const
 {
-	return m_StaticDependencies[0].GetNode() ? m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >() : nullptr;
+    // node can be null if compiling remotely
+    Node * node = m_StaticDependencies[0].GetNode();
+    return node ? node->CastTo< CompilerNode >() : nullptr;
 }
 
 // GetDedicatedPreprocessor
@@ -1020,8 +1022,7 @@ CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
     {
         ++preprocessorIndex;
     }
-	Node* node = m_StaticDependencies[ preprocessorIndex ].GetNode();
-	return node ? node->CastTo< CompilerNode >() : nullptr;
+    return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo< CompilerNode >();
 }
 
 // GetPDBName

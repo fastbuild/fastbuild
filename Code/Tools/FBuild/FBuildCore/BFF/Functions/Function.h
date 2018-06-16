@@ -61,12 +61,7 @@ public:
     // most functions will override this to commit the effects of the function
     virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const;
 
-    // helpers to clean/fixup paths to files and folders
-    static void CleanFolderPaths( Array< AString > & folders );
-    static void CleanFilePaths( Array< AString > & files );
-    void CleanFileNames( Array< AString > & fileNames ) const;
-
-	bool GetCompilerNode(NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode) const;
+    bool GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode ) const;
 
     bool GetDirectoryListNodeList( NodeGraph & nodeGraph,
                                    const BFFIterator & iter,
@@ -78,11 +73,12 @@ public:
                                    const Array< AString > * patterns,
                                    const char * inputVarName,
                                    Dependencies & nodes ) const;
-    bool GetFileNode( NodeGraph & nodeGraph,
-                      const BFFIterator & iter,
-                      const AString & file,
-                      const char * inputVarName,
-                      Dependencies & nodes ) const;
+    static bool GetFileNode( NodeGraph & nodeGraph,
+                             const BFFIterator & iter,
+                             const Function * function,
+                             const AString & file,
+                             const char * inputVarName,
+                             Dependencies & nodes ) ;
     bool GetFileNodes( NodeGraph & nodeGraph,
                        const BFFIterator & iter,
                        const Array< AString > & files,
@@ -96,6 +92,17 @@ public:
 
     bool GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, const char * name, Dependencies & nodes, bool required = false,
                       bool allowCopyDirNodes = false, bool allowUnityNodes = false, bool allowRemoveDirNodes = false, bool allowCompilerNodes = false ) const;
+
+    static bool GetNodeList( NodeGraph & nodeGraph,
+                             const BFFIterator & iter,
+                             const Function * function,
+                             const char * propertyName,
+                             const Array< AString > & nodeNames,
+                             Dependencies & nodes,
+                             bool allowCopyDirNodes = false, 
+                             bool allowUnityNodes = false, 
+                             bool allowRemoveDirNodes = false,
+                             bool allowCompilerNodes = false );
 
     static bool GetNodeList( NodeGraph & nodeGraph,
                              const BFFIterator & iter,

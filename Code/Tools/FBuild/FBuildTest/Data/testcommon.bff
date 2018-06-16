@@ -54,7 +54,7 @@
 //==============================================================================
 .LinuxGCCToolChain =
 [
-    .Compiler           = '/usr/bin/gcc'
+    .Compiler           = 'Compiler-GCC-Dist'
     Compiler( 'Compiler-GCC-Dist' )
     {
         .Executable     = '/usr/bin/gcc'
@@ -93,7 +93,7 @@
 //==============================================================================
 .OSXClangToolChain =
 [
-    .Compiler           = '/usr/bin/clang++'
+    .Compiler           = 'Compiler-Clang-Dist'
     Compiler( 'Compiler-Clang-Dist' )
     {
         .Executable     = '/usr/bin/clang++'

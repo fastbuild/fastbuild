@@ -31,7 +31,7 @@ private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
-	CompilerNode * GetCompiler() const;
+    CompilerNode * GetCompiler() const;
 
     void EmitCompilationMessage( const Args & fullArgs ) const;
 

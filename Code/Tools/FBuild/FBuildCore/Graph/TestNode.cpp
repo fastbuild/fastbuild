@@ -67,7 +67,7 @@ TestNode::TestNode()
 
     // .TestExecutable
     Dependencies executable;
-    if ( !function->GetFileNode( nodeGraph, iter, m_TestExecutable, "TestExecutable", executable ) )
+    if ( !Function::GetFileNode( nodeGraph, iter, function, m_TestExecutable, "TestExecutable", executable ) )
     {
         return false; // GetFileNode will have emitted an error
     }

@@ -21,29 +21,21 @@ Executable( "Compiler-Exe" )
                             + .CRTLibs_Static
     #endif
     .LinkerOutput       = '$Out$/Test/Compiler/SimpleCompiler.exe'
-    .Libraries          = { "Exe-Lib" }
+    .Libraries          = { "Compiler-Lib" }
 }
 
 Compiler( "SimpleCompiler" )
 {
-	.Executable = "Compiler-Exe"
-	.CompilerFamily = "custom"
+    .Executable = "Compiler-Exe"
+    .CompilerFamily = "custom"
 }
 
 // A simple exe
 //--------------------
-ObjectList( "Exe-Lib" )
+ObjectList( "ObjectList" )
 {
+    .Compiler           = 'SimpleCompiler'
+    .CompilerOptions    = '%1 %2'
     .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestCompiler/exe.cpp"
     .CompilerOutputPath = "$Out$/Test/Compiler/"
-}
-
-Executable( "Exe" )
-{
-    #if __WINDOWS__
-        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
-                            + ' /ENTRY:main'
-    #endif
-    .LinkerOutput       = '$Out$/Test/Compiler/exe.exe'
-    .Libraries          = { "Exe-Lib" }
 }

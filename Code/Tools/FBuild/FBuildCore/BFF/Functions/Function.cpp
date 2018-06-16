@@ -542,56 +542,85 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
 
 // GetCompilerNode
 //------------------------------------------------------------------------------
-bool Function::GetCompilerNode(NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode) const
+bool Function::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode ) const
 {
-	Node * cn = nodeGraph.FindNode(compiler);
-	compilerNode = nullptr;
-	if (cn != nullptr)
-	{
-		if (cn->GetType() == Node::ALIAS_NODE)
-		{
-			AliasNode * an = cn->CastTo< AliasNode >();
-			cn = an->GetAliasedNodes()[0].GetNode();
-		}
-		if (cn->GetType() != Node::COMPILER_NODE)
-		{
-			Error::Error_1102_UnexpectedType(iter, this, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE);
-			return false;
-		}
-		compilerNode = cn->CastTo< CompilerNode >();
-	}
-	else
-	{
-		// create a compiler node - don't allow distribution
-		// (only explicitly defined compiler nodes can be distributed)
-		// set the default executable path to be the compiler exe directory
-		AStackString<> compilerClean;
-		NodeGraph::CleanPath(compiler, compilerClean);
-		compilerNode = nodeGraph.CreateCompilerNode(compilerClean);
-		VERIFY(compilerNode->GetReflectionInfoV()->SetProperty(compilerNode, "Executable", compiler));
-		VERIFY(compilerNode->GetReflectionInfoV()->SetProperty(compilerNode, "AllowDistribution", false));
-		const char * lastSlash = compilerClean.FindLast(NATIVE_SLASH);
-		if (lastSlash)
-		{
-			AStackString<> executableRootPath(compilerClean.Get(), lastSlash + 1);
-			VERIFY(compilerNode->GetReflectionInfoV()->SetProperty(compilerNode, "ExecutableRootPath", executableRootPath));
-		}
-		if (!compilerNode->Initialize(nodeGraph, iter, nullptr))
-		{
-			return false; // Initialize will have emitted an error
-		}
-	}
+    Node * cn = nodeGraph.FindNodeExact( compiler );
+    compilerNode = nullptr;
+    if ( cn != nullptr )
+    {
+        if ( cn->GetType() == Node::ALIAS_NODE )
+        {
+            AliasNode * an = cn->CastTo< AliasNode >();
+            cn = an->GetAliasedNodes()[0].GetNode();
+        }
+        if ( cn->GetType() != Node::COMPILER_NODE )
+        {
+            Error::Error_1102_UnexpectedType( iter, this, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE );
+            return false;
+        }
+        compilerNode = cn->CastTo< CompilerNode >();
+    }
+    else
+    {
+        // create a compiler node - don't allow distribution
+        // (only explicitly defined compiler nodes can be distributed)
+        // set the default executable path to be the compiler exe directory
 
-	return true;
+        AStackString<> compilerExeClean;
+        NodeGraph::CleanPath( compiler, compilerExeClean );
+
+        // Generate a name for the CompilerNode
+        AStackString<> nodeName( "?AutoCompiler?" );
+        nodeName += compilerExeClean;
+
+        // Check if we've already implicitly created this Compiler
+        cn = nodeGraph.FindNode( nodeName );
+        if ( cn )
+        {
+            if ( cn->GetType() != Node::COMPILER_NODE )
+            {
+                Error::Error_1102_UnexpectedType( iter, this, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE );
+                return false;
+            }
+            compilerNode = cn->CastTo< CompilerNode >();
+            return true;
+        }
+
+        // Implicitly create the new node
+        compilerNode = nodeGraph.CreateCompilerNode( nodeName );
+        VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "Executable", compilerExeClean ) );
+        VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
+        const char * lastSlash = compilerExeClean.FindLast( NATIVE_SLASH );
+        if (lastSlash)
+        {
+            AStackString<> executableRootPath( compilerExeClean.Get(), lastSlash + 1 );
+            VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "ExecutableRootPath", executableRootPath ) );
+        }
+        if ( !compilerNode->Initialize( nodeGraph, iter, nullptr ) )
+        {
+            return false; // Initialize will have emitted an error
+        }
+    }
+
+    return true;
 }
+
+/*static*/ bool GetFileNode( NodeGraph & nodeGraph,
+                             const BFFIterator & iter,
+                             const Function * function,
+                             const AString & filePath,
+                             const char * inputVarName,
+                             Dependencies & nodes );
+
 
 // GetFileNode
 //------------------------------------------------------------------------------
-bool Function::GetFileNode( NodeGraph & nodeGraph,
-                            const BFFIterator & iter,
-                            const AString & file,
-                            const char * inputVarName,
-                            Dependencies & nodes ) const
+/*static*/ bool Function::GetFileNode( NodeGraph & nodeGraph,
+                                       const BFFIterator & iter,
+                                       const Function * function,
+                                       const AString & file,
+                                       const char * inputVarName,
+                                       Dependencies & nodes )
 {
     // get node for the dir we depend on
     Node * node = nodeGraph.FindNode( file );
@@ -601,7 +630,7 @@ bool Function::GetFileNode( NodeGraph & nodeGraph,
     }
     else if ( node->IsAFile() == false )
     {
-        Error::Error_1005_UnsupportedNodeType( iter, this, inputVarName, node->GetName(), node->GetType() );
+        Error::Error_1005_UnsupportedNodeType( iter, function, inputVarName, node->GetName(), node->GetType() );
         return false;
     }
 
@@ -621,7 +650,7 @@ bool Function::GetFileNodes( NodeGraph & nodeGraph,
     for ( const AString * it = files.Begin(); it != end; ++it )
     {
         const AString & file = *it;
-        if (!GetFileNode( nodeGraph, iter, file, inputVarName, nodes ))
+        if (!GetFileNode( nodeGraph, iter, this, file, inputVarName, nodes ))
         {
             return false; // GetFileNode will have emitted an error
         }
@@ -657,6 +686,33 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
 
         nodes.Append( Dependency( node ) );
     }
+    return true;
+}
+
+// GetNodeList
+//------------------------------------------------------------------------------
+/*static*/ bool Function::GetNodeList( NodeGraph & nodeGraph,
+                                       const BFFIterator & iter,
+                                       const Function * function,
+                                       const char * propertyName,
+                                       const Array< AString > & nodeNames,
+                                       Dependencies & nodes,
+                                       bool allowCopyDirNodes,
+                                       bool allowUnityNodes,
+                                       bool allowRemoveDirNodes,
+                                       bool allowCompilerNodes )
+{
+    // Ok for nodeNames to be empty
+    for ( const AString & nodeName : nodeNames )
+    {
+        ASSERT( nodeName.IsEmpty() == false ); // MetaData should prevent this
+
+        if ( !GetNodeList( nodeGraph, iter, function, propertyName, nodeName, nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
+        {
+            return false; // GetNodeList will have emitted an error
+        }
+    }
+
     return true;
 }
 
@@ -730,17 +786,16 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
             return true;
         }
     }
-
-	if (allowCompilerNodes)
-	{
-		// found - is it a Compiler?
-		if (n->GetType() == Node::COMPILER_NODE)
-		{
-			// use as-is
-			nodes.Append(Dependency(n));
-			return true;
-		}
-	}
+    if ( allowCompilerNodes )
+    {
+        // found - is it a Compiler?
+        if ( n->GetType() == Node::COMPILER_NODE )
+        {
+            // use as-is
+            nodes.Append( Dependency( n ) );
+            return true;
+        }
+    }
 
     // found - is it a group?
     if ( n->GetType() == Node::ALIAS_NODE )

@@ -620,6 +620,14 @@ Node * NodeGraph::FindNode( const AString & nodeName ) const
     return FindNodeInternal( fullPath );
 }
 
+// FindNodeExact (AString &)
+//------------------------------------------------------------------------------
+Node * NodeGraph::FindNodeExact( const AString & nodeName ) const
+{
+    // try to find node 'as is'
+    return FindNodeInternal( nodeName );
+}
+
 // GetNodeByIndex
 //------------------------------------------------------------------------------
 Node * NodeGraph::GetNodeByIndex( size_t index ) const

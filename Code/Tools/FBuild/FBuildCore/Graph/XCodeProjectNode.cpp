@@ -104,9 +104,9 @@ XCodeProjectNode::XCodeProjectNode()
         return false; // GetDirectoryListNodeList will have emitted an error
     }
 
-    // TODO:B use m_ProjectFiles instead of finding it again
+    // .ProjectFiles
     Dependencies fileNodes( m_ProjectFiles.GetSize() );
-    if ( !function->GetNodeList( nodeGraph, iter, ".ProjectFiles", fileNodes ) )
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".ProjectFiles", m_ProjectFiles, fileNodes ) )
     {
         return false; // GetNodeList will have emitted an error
     }

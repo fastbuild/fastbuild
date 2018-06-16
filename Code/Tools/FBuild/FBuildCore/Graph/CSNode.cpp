@@ -64,11 +64,11 @@ CSNode::CSNode()
     }
 
     // .Compiler
-	CompilerNode * compilerNode(nullptr);
-	if (!function->GetCompilerNode(nodeGraph, iter, m_Compiler, compilerNode))
-	{
-		return false; // GetCompilerNode will have emitted an error
-	}
+    CompilerNode * compilerNode( nullptr );
+    if ( !function->GetCompilerNode( nodeGraph, iter, m_Compiler, compilerNode ) )
+    {
+        return false; // GetCompilerNode will have emitted an error
+    }
 
     // .CompilerInputPath
     Dependencies compilerInputPath;
@@ -256,9 +256,11 @@ failed:
     Node::Serialize( stream );
 }
 
+// GetCompiler
+//------------------------------------------------------------------------------
 CompilerNode* CSNode::GetCompiler() const
-{ 
-	return m_StaticDependencies[0].GetNode() ? m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >() : nullptr;
+{
+    return m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >();
 }
 
 // EmitCompilationMessage

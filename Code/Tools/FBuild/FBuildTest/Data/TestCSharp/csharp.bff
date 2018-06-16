@@ -11,7 +11,7 @@ Settings {}
 Compiler( 'CSharpCompiler' )
 {
     .Executable        = "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe"
-	.CompilerFamily    = "custom"
+    .CompilerFamily    = "custom"
 }
 
 .Compiler           = 'CSharpCompiler'

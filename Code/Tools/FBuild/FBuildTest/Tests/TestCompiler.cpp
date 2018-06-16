@@ -23,9 +23,11 @@ private:
     void ConflictingFiles2() const;
     void ConflictingFiles3() const;
     void ConflictingFiles4() const;
-	void CompilerExecutableAsDependency() const;
+    void CompilerExecutableAsDependency() const;
+    void CompilerExecutableAsDependency_NoRebuild() const;
+    void MultipleImplicitCompilers() const;
 
-    void Parse( const char * fileName, bool expectFailure ) const;
+    void Parse( const char * fileName, bool expectFailure = false ) const;
 };
 
 // Register Tests
@@ -35,7 +37,9 @@ REGISTER_TESTS_BEGIN( TestCompiler )
     REGISTER_TEST( ConflictingFiles2 )
     REGISTER_TEST( ConflictingFiles3 )
     REGISTER_TEST( ConflictingFiles4 )
-	REGISTER_TEST( CompilerExecutableAsDependency )
+    REGISTER_TEST( CompilerExecutableAsDependency )
+    REGISTER_TEST( CompilerExecutableAsDependency_NoRebuild )
+    REGISTER_TEST( MultipleImplicitCompilers )
 REGISTER_TESTS_END
 
 // ConflictingFiles1
@@ -66,24 +70,50 @@ void TestCompiler::ConflictingFiles4() const
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict4.bff", true ); // Expect failure
 }
 
+// CompilerExecutableAsDependency
+//------------------------------------------------------------------------------
 void TestCompiler::CompilerExecutableAsDependency() const
 {
-	FBuildTestOptions options;
-	options.m_ForceCleanBuild = true;
-	options.m_UseCacheRead = true;
-	options.m_UseCacheWrite = true;
-	options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/compile.bff";
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/compile.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
 
-	// Create SimpleCompiler
-	{
-		FBuild fBuild(options);
-		TEST_ASSERT(fBuild.Initialize());
+    // Build a file genereated by a Compiler that we compiled
+    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
 
-		// Build the exe, which depends on a simple compiler
-		TEST_ASSERT(fBuild.Build(AStackString<>("Exe")));
-	}
+    // Save DB for use by NoRebuild test
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/executableasdependency.fdb" ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
 }
 
+// CompilerExecutableAsDependency_NoRebuild
+//------------------------------------------------------------------------------
+void TestCompiler::CompilerExecutableAsDependency_NoRebuild() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/compile.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/executableasdependency.fdb" ) );
+
+    // Build a file genereated by a Compiler that we compiled
+    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
+}
+
+// MultipleImplicitCompilers
+//------------------------------------------------------------------------------
+void TestCompiler::MultipleImplicitCompilers() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/multipleimplicitcompilers.bff" );
+}
 
 // Parse
 //------------------------------------------------------------------------------

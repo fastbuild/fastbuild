@@ -32,14 +32,12 @@ AliasNode::AliasNode()
 //------------------------------------------------------------------------------
 /*virtual*/ bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
-    // TODO:B make this use m_Targets
     Dependencies targets( 32, true );
-    const bool required = true;
     const bool allowCopyDirNodes = true;
     const bool allowUnityNodes = true;
     const bool allowRemoveDirNodes = true;
-	const bool allowCompilerNodes = true;
-    if ( !function->GetNodeList( nodeGraph, iter, ".Targets", targets, required, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
+    const bool allowCompilerNodes = true;
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".Targets", m_Targets, targets, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
     {
         return false; // GetNodeList will have emitted an error
     }

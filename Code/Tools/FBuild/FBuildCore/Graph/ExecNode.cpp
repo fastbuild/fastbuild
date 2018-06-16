@@ -65,7 +65,7 @@ ExecNode::ExecNode()
 
     // .ExecExecutable
     Dependencies executable;
-    if ( !function->GetFileNode( nodeGraph, iter, m_ExecExecutable, "ExecExecutable", executable ) )
+    if ( !Function::GetFileNode( nodeGraph, iter, function, m_ExecExecutable, "ExecExecutable", executable ) )
     {
         return false; // GetFileNode will have emitted an error
     }

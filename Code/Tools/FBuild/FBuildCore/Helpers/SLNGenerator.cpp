@@ -286,7 +286,7 @@ void SLNGenerator::WriteProjectConfigurationPlatforms( const Array< AString > & 
     for( const AString * it = projectGuids.Begin() ; it != projectGuidsEnd ; ++it )
     {
         // only one project active in the solution build
-        const bool projectIsActive = solutionBuildProjectGuids.Find( *it ) != nullptr;
+        const bool projectIsActive = ( solutionBuildProjectGuids.Find( *it ) != nullptr );
 
         const SolutionConfig * const solutionConfigsEnd = solutionConfigs.End();
         for( const SolutionConfig * it2 = solutionConfigs.Begin() ; it2 != solutionConfigsEnd ; ++it2 )

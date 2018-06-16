@@ -668,7 +668,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     // make sure the output path exists for files
     // (but don't bother for input files)
-    const bool isOutputFile = node->IsAFile() && ( node->GetType() != Node::FILE_NODE ) && ( node->GetType() != Node::COMPILER_NODE );
+    const bool isOutputFile = node->IsAFile() && ( node->GetType() != Node::FILE_NODE );
     if ( isOutputFile )
     {
         if ( Node::EnsurePathExistsForFile( node->GetName() ) == false )

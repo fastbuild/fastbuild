@@ -56,7 +56,7 @@ LibraryNode::LibraryNode()
 {
     // .Librarian
     Dependencies librarian;
-    if ( !function->GetFileNode( nodeGraph, iter, m_Librarian, "Librarian", librarian ) )
+    if ( !Function::GetFileNode( nodeGraph, iter, function, m_Librarian, "Librarian", librarian ) )
     {
         return false; // GetFileNode will have emitted an error
     }
@@ -84,9 +84,9 @@ LibraryNode::LibraryNode()
         return false;
     }
 
-    // .LibrarianAdditionalInputs  - TODO:B Use m_LibrarianAdditionalInputs instead of finding it again
+    // .LibrarianAdditionalInputs
     Dependencies librarianAdditionalInputs;
-    if ( !function->GetNodeList( nodeGraph, iter, ".LibrarianAdditionalInputs", librarianAdditionalInputs, false ) )
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".LibrarianAdditionalInputs", m_LibrarianAdditionalInputs, librarianAdditionalInputs ) )
     {
         return false;// GetNodeList will emit error
     }

@@ -111,7 +111,7 @@ LinkerNode::LinkerNode()
 
     // Assembly Resources
     Dependencies assemblyResources( 32, true );
-    if ( !function->GetNodeList( nodeGraph, iter, ".LinkerAssemblyResources", assemblyResources, false ) ) // TODO:B Use m_LinkerAssemblyResources directly
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".LinkerAssemblyResources", m_LinkerAssemblyResources, assemblyResources ) )
     {
         return false; // GetNodeList will have emitted error
     }

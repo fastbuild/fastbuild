@@ -20,7 +20,6 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 
 // system
 #include <memory.h> // memcpy
@@ -78,7 +77,7 @@ ToolManifest::~ToolManifest()
 
 // Generate
 //------------------------------------------------------------------------------
-bool ToolManifest::Generate( const AString& mainExecutable, const AString& mainExecutableRoot, const uint64_t timeStamp, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables )
+bool ToolManifest::Generate( const AString& mainExecutableRoot, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables )
 {
     m_MainExecutableRootPath = mainExecutableRoot;
     m_CustomEnvironmentVariables = customEnvironmentVariables;
@@ -88,14 +87,10 @@ bool ToolManifest::Generate( const AString& mainExecutable, const AString& mainE
 
     // unify "main executable" and "extra files"
     // (loads contents of file into memory, and creates hashes)
-    if ( !AddFile( mainExecutable, timeStamp ) )
-    {
-        return false; // AddFile will have emitted error
-    }
     for ( size_t i=0; i<dependencies.GetSize(); ++i )
     {
         const FileNode & n = *( dependencies[ i ].GetNode()->CastTo< FileNode >() );
-        if ( !AddFile( &n ) )
+        if ( !AddFile( n.GetName(), n.GetStamp() ) )
         {
             return false; // AddFile will have emitted error
         }
@@ -522,34 +517,25 @@ void ToolManifest::GetRemotePath( AString & path ) const
 
 // AddFile
 //------------------------------------------------------------------------------
-bool ToolManifest::AddFile( const Node * node )
+bool ToolManifest::AddFile( const AString & fileName, const uint64_t timeStamp )
 {
-    ASSERT( node->IsAFile() ); // we can only distribute files
+    uint32_t contentSize( 0 );
+    void * content( nullptr );
+    if ( !LoadFile( fileName, content, contentSize ) )
+    {
+        return false; // LoadContent will have emitted an error
+    }
 
-	return AddFile(node->GetName(), node->GetStamp());
-}
+    // create the file entry
+    const uint32_t hash = xxHash::Calc32( content, contentSize );
+    m_Files.Append( File( fileName, timeStamp, hash, contentSize ) );
 
-// AddFile
-//------------------------------------------------------------------------------
-bool ToolManifest::AddFile(const AString& fileName, const uint64_t timeStamp)
-{
-	uint32_t contentSize(0);
-	void * content(nullptr);
-	if (!LoadFile(fileName, content, contentSize))
-	{
-		return false; // LoadContent will have emitted an error
-	}
+    // store file content (take ownership of file data)
+    // TODO:B Compress the data - less memory used + faster to send over network
+    File & f = m_Files.Top();
+    f.m_Content = content;
 
-	// create the file entry
-	const uint32_t hash = xxHash::Calc32(content, contentSize);
-	m_Files.Append(File(fileName, timeStamp, hash, /*node, */contentSize));
-
-	// store file content (take ownership of file data)
-	// TODO:B Compress the data - less memory used + faster to send over network
-	File & f = m_Files.Top();
-	f.m_Content = content;
-
-	return true;
+    return true;
 }
 
 // LoadFile

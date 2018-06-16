@@ -1108,12 +1108,9 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFItera
     m_PreBuildDependencies.SetCapacity( preBuildDependencyNames.GetSize() );
 
     // Expand
-    for ( const AString & preDepName : preBuildDependencyNames )
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preBuildDependencyNames, m_PreBuildDependencies, true, true, true, true ) )
     {
-        if ( !Function::GetNodeList( nodeGraph, iter, function, ".PreBuildDependencies", preDepName, m_PreBuildDependencies, true, true, true, true ) )
-        {
-            return false; // GetNodeList will have emitted an error
-        }
+        return false; // GetNodeList will have emitted an error
     }
 
     return true;
