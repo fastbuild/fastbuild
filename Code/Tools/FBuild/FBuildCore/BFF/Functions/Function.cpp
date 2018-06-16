@@ -34,6 +34,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -411,7 +412,7 @@ bool Function::GetStringOrArrayOfStrings( const BFFIterator & iter, const BFFVar
 // GetNodeList
 //------------------------------------------------------------------------------
 bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, const char * propertyName, Dependencies & nodes, bool required,
-                            bool allowCopyDirNodes, bool allowUnityNodes, bool allowRemoveDirNodes ) const
+                            bool allowCopyDirNodes, bool allowUnityNodes, bool allowRemoveDirNodes, bool allowCompilerNodes ) const
 {
     ASSERT( propertyName );
 
@@ -440,7 +441,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
                 return false;
             }
 
-            if ( !GetNodeList( nodeGraph, iter, this, propertyName, nodeName, nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+            if ( !GetNodeList( nodeGraph, iter, this, propertyName, nodeName, nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
             {
                 // child func will have emitted error
                 return false;
@@ -455,7 +456,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
             return false;
         }
 
-        if ( !GetNodeList( nodeGraph, iter, this, propertyName, var->GetString(), nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+        if ( !GetNodeList( nodeGraph, iter, this, propertyName, var->GetString(), nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
         {
             // child func will have emitted error
             return false;
@@ -537,6 +538,51 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
         nodes.Append( Dependency( node ) );
     }
     return true;
+}
+
+// GetCompilerNode
+//------------------------------------------------------------------------------
+bool Function::GetCompilerNode(NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode) const
+{
+	Node * cn = nodeGraph.FindNode(compiler);
+	compilerNode = nullptr;
+	if (cn != nullptr)
+	{
+		if (cn->GetType() == Node::ALIAS_NODE)
+		{
+			AliasNode * an = cn->CastTo< AliasNode >();
+			cn = an->GetAliasedNodes()[0].GetNode();
+		}
+		if (cn->GetType() != Node::COMPILER_NODE)
+		{
+			Error::Error_1102_UnexpectedType(iter, this, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE);
+			return false;
+		}
+		compilerNode = cn->CastTo< CompilerNode >();
+	}
+	else
+	{
+		// create a compiler node - don't allow distribution
+		// (only explicitly defined compiler nodes can be distributed)
+		// set the default executable path to be the compiler exe directory
+		AStackString<> compilerClean;
+		NodeGraph::CleanPath(compiler, compilerClean);
+		compilerNode = nodeGraph.CreateCompilerNode(compilerClean);
+		VERIFY(compilerNode->GetReflectionInfoV()->SetProperty(compilerNode, "Executable", compiler));
+		VERIFY(compilerNode->GetReflectionInfoV()->SetProperty(compilerNode, "AllowDistribution", false));
+		const char * lastSlash = compilerClean.FindLast(NATIVE_SLASH);
+		if (lastSlash)
+		{
+			AStackString<> executableRootPath(compilerClean.Get(), lastSlash + 1);
+			VERIFY(compilerNode->GetReflectionInfoV()->SetProperty(compilerNode, "ExecutableRootPath", executableRootPath));
+		}
+		if (!compilerNode->Initialize(nodeGraph, iter, nullptr))
+		{
+			return false; // Initialize will have emitted an error
+		}
+	}
+
+	return true;
 }
 
 // GetFileNode
@@ -624,7 +670,8 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
                                        Dependencies & nodes,
                                        bool allowCopyDirNodes,
                                        bool allowUnityNodes,
-                                       bool allowRemoveDirNodes )
+                                       bool allowRemoveDirNodes,
+                                       bool allowCompilerNodes )
 {
     // get node
     Node * n = nodeGraph.FindNode( nodeName );
@@ -675,7 +722,7 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
     }
     if ( allowUnityNodes )
     {
-        // found - is it an ObjectList?
+        // found - is it a Unity?
         if ( n->GetType() == Node::UNITY_NODE )
         {
             // use as-is
@@ -683,6 +730,17 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
             return true;
         }
     }
+
+	if (allowCompilerNodes)
+	{
+		// found - is it a Compiler?
+		if (n->GetType() == Node::COMPILER_NODE)
+		{
+			// use as-is
+			nodes.Append(Dependency(n));
+			return true;
+		}
+	}
 
     // found - is it a group?
     if ( n->GetType() == Node::ALIAS_NODE )
@@ -694,7 +752,7 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
             // TODO:C by passing as string we'll be looking up again for no reason
             const AString & subName = it->GetNode()->GetName();
 
-            if ( !GetNodeList( nodeGraph, iter, function, propertyName, subName, nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
+            if ( !GetNodeList( nodeGraph, iter, function, propertyName, subName, nodes, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes, allowCompilerNodes ) )
             {
                 return false;
             }

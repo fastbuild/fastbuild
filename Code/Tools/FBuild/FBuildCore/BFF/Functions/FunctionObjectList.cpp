@@ -116,50 +116,6 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFIterator & iter, const A
     return true;
 }
 
-// GetCompilerNode
-//------------------------------------------------------------------------------
-bool FunctionObjectList::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode ) const
-{
-    Node * cn = nodeGraph.FindNode( compiler );
-    compilerNode = nullptr;
-    if ( cn != nullptr )
-    {
-        if ( cn->GetType() == Node::ALIAS_NODE )
-        {
-            AliasNode * an = cn->CastTo< AliasNode >();
-            cn = an->GetAliasedNodes()[ 0 ].GetNode();
-        }
-        if ( cn->GetType() != Node::COMPILER_NODE )
-        {
-            Error::Error_1102_UnexpectedType( iter, this, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE );
-            return false;
-        }
-        compilerNode = cn->CastTo< CompilerNode >();
-    }
-    else
-    {
-        // create a compiler node - don't allow distribution
-        // (only explicitly defined compiler nodes can be distributed)
-        // set the default executable path to be the compiler exe directory
-        AStackString<> compilerClean;
-        NodeGraph::CleanPath( compiler, compilerClean );
-        compilerNode = nodeGraph.CreateCompilerNode( compilerClean );
-        VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
-        const char * lastSlash = compilerClean.FindLast( NATIVE_SLASH );
-        if ( lastSlash )
-        {
-            AStackString<> executableRootPath( compilerClean.Get(), lastSlash + 1 );
-            VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "ExecutableRootPath", executableRootPath ) );
-        }
-        if ( !compilerNode->Initialize( nodeGraph, iter, nullptr ) )
-        {
-            return false; // Initialize will have emitted an error
-        }
-    }
-
-    return true;
-}
-
 // CheckMSVCPCHFlags
 //------------------------------------------------------------------------------
 bool FunctionObjectList::CheckMSVCPCHFlags( const BFFIterator & iter,

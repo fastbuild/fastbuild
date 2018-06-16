@@ -23,6 +23,7 @@ private:
     void ConflictingFiles2() const;
     void ConflictingFiles3() const;
     void ConflictingFiles4() const;
+	void CompilerExecutableAsDependency() const;
 
     void Parse( const char * fileName, bool expectFailure ) const;
 };
@@ -34,6 +35,7 @@ REGISTER_TESTS_BEGIN( TestCompiler )
     REGISTER_TEST( ConflictingFiles2 )
     REGISTER_TEST( ConflictingFiles3 )
     REGISTER_TEST( ConflictingFiles4 )
+	REGISTER_TEST( CompilerExecutableAsDependency )
 REGISTER_TESTS_END
 
 // ConflictingFiles1
@@ -63,6 +65,25 @@ void TestCompiler::ConflictingFiles4() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestCompiler/conflict4.bff", true ); // Expect failure
 }
+
+void TestCompiler::CompilerExecutableAsDependency() const
+{
+	FBuildTestOptions options;
+	options.m_ForceCleanBuild = true;
+	options.m_UseCacheRead = true;
+	options.m_UseCacheWrite = true;
+	options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/compile.bff";
+
+	// Create SimpleCompiler
+	{
+		FBuild fBuild(options);
+		TEST_ASSERT(fBuild.Initialize());
+
+		// Build the exe, which depends on a simple compiler
+		TEST_ASSERT(fBuild.Build(AStackString<>("Exe")));
+	}
+}
+
 
 // Parse
 //------------------------------------------------------------------------------

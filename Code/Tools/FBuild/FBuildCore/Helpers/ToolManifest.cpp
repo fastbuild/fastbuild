@@ -20,18 +20,18 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 
 // system
 #include <memory.h> // memcpy
 
 // CONSTRUCTOR (File)
 //------------------------------------------------------------------------------
-ToolManifest::File::File( const AString & name, uint64_t stamp, uint32_t hash, const Node * node, uint32_t size )
+ToolManifest::File::File( const AString & name, uint64_t stamp, uint32_t hash, uint32_t size )
     : m_Name( name ),
     m_TimeStamp( stamp ),
     m_Hash( hash ),
     m_ContentSize( size ),
-    m_Node( node ),
     m_Content( nullptr ),
     m_SyncState( NOT_SYNCHRONIZED ),
     m_FileLock( nullptr )
@@ -78,7 +78,7 @@ ToolManifest::~ToolManifest()
 
 // Generate
 //------------------------------------------------------------------------------
-bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExecutableRoot, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables )
+bool ToolManifest::Generate( const AString& mainExecutable, const AString& mainExecutableRoot, const uint64_t timeStamp, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables )
 {
     m_MainExecutableRootPath = mainExecutableRoot;
     m_CustomEnvironmentVariables = customEnvironmentVariables;
@@ -88,7 +88,7 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
 
     // unify "main executable" and "extra files"
     // (loads contents of file into memory, and creates hashes)
-    if ( !AddFile( mainExecutable ) )
+    if ( !AddFile( mainExecutable, timeStamp ) )
     {
         return false; // AddFile will have emitted error
     }
@@ -184,7 +184,7 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
         ms.Read( timeStamp );
         ms.Read( hash );
         ms.Read( contentSize );
-        m_Files.Append( File( name, timeStamp, hash, nullptr, contentSize ) );
+        m_Files.Append( File( name, timeStamp, hash, contentSize ) );
     }
 
     ASSERT( m_CustomEnvironmentVariables.IsEmpty() );
@@ -526,25 +526,30 @@ bool ToolManifest::AddFile( const Node * node )
 {
     ASSERT( node->IsAFile() ); // we can only distribute files
 
-    uint32_t contentSize( 0 );
-    void * content( nullptr );
-    if ( !LoadFile( node->GetName(), content, contentSize ) )
-    {
-        return false; // LoadContent will have emitted an error
-    }
+	return AddFile(node->GetName(), node->GetStamp());
+}
 
-    // create the file entry
-    const AString & name = node->GetName();
-    const uint64_t timeStamp = node->GetStamp();
-    const uint32_t hash = xxHash::Calc32( content, contentSize );
-    m_Files.Append( File(name, timeStamp, hash, node, contentSize ) );
+// AddFile
+//------------------------------------------------------------------------------
+bool ToolManifest::AddFile(const AString& fileName, const uint64_t timeStamp)
+{
+	uint32_t contentSize(0);
+	void * content(nullptr);
+	if (!LoadFile(fileName, content, contentSize))
+	{
+		return false; // LoadContent will have emitted an error
+	}
 
-    // store file content (take ownership of file data)
-    // TODO:B Compress the data - less memory used + faster to send over network
-    File & f = m_Files.Top();
-    f.m_Content = content;
+	// create the file entry
+	const uint32_t hash = xxHash::Calc32(content, contentSize);
+	m_Files.Append(File(fileName, timeStamp, hash, /*node, */contentSize));
 
-    return true;
+	// store file content (take ownership of file data)
+	// TODO:B Compress the data - less memory used + faster to send over network
+	File & f = m_Files.Top();
+	f.m_Content = content;
+
+	return true;
 }
 
 // LoadFile

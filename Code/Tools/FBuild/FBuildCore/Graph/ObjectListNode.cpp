@@ -29,7 +29,7 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
-    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() )
+    REFLECT( m_Compiler,                            "Compiler",                         MetaNone() )
     REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
     REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
     REFLECT( m_CompilerOutputPath,                  "CompilerOutputPath",               MetaPath() )
@@ -54,7 +54,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_PCHOutputFile,                       "PCHOutputFile",                    MetaOptional() + MetaFile() )
     REFLECT( m_PCHOptions,                          "PCHOptions",                       MetaOptional() )
     // Preprocessor
-    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() )
+    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
@@ -88,9 +88,8 @@ ObjectListNode::ObjectListNode()
     }
 
     // .Compiler
-    // TODO:C move GetCompilerNode into ObjectListNode
     CompilerNode * compilerNode( nullptr );
-    if ( !((FunctionObjectList *)function)->GetCompilerNode( nodeGraph, iter, m_Compiler, compilerNode ) )
+    if ( !function->GetCompilerNode( nodeGraph, iter, m_Compiler, compilerNode ) )
     {
         return false; // GetCompilerNode will have emitted an error
     }
@@ -166,7 +165,7 @@ ObjectListNode::ObjectListNode()
     if ( m_Preprocessor.IsEmpty() == false )
     {
         // get the preprocessor executable
-        if ( ((FunctionObjectList *)function)->GetCompilerNode( nodeGraph, iter, m_Preprocessor, preprocessorNode ) == false )
+        if ( function->GetCompilerNode( nodeGraph, iter, m_Preprocessor, preprocessorNode ) == false )
         {
             return false; // GetCompilerNode will have emitted an error
         }
