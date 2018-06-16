@@ -638,7 +638,7 @@ void Node::Serialize( IOStream & stream ) const
             }
             else
             {
-                const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();    
+                const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();
                 const void * structBase = propertyS.GetStructBase( base );
                 return Serialize( stream, structBase, *structRI );
             }
@@ -800,7 +800,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
             }
             else
             {
-                const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();    
+                const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();
                 void * structBase = propertyS.GetStructBase( base );
                 return Deserialize( stream, structBase, *structRI );
             }

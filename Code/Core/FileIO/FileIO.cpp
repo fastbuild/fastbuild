@@ -159,7 +159,7 @@
             return false;
         }
     }
-    // If the state parameter is the return value from copyfile_state_alloc(), 
+    // If the state parameter is the return value from copyfile_state_alloc(),
     // then copyfile() and fcopyfile() will use the information from the state
     // object; if it is NULL, then both functions will work normally, but less
     // control will be available to the caller.

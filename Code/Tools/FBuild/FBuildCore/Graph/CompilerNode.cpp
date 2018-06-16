@@ -263,7 +263,7 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
         m_CompilerFamilyEnum = VBCC;
         return true;
     }
-	if ( m_CompilerFamilyString.EqualsI( "orbis-wave-psslc" ) )
+    if ( m_CompilerFamilyString.EqualsI( "orbis-wave-psslc" ) )
     {
         m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
         return true;

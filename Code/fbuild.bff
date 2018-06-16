@@ -25,7 +25,7 @@ Settings
 }
 
 //------------------------------------------------------------------------------
-// Clang 
+// Clang
 //------------------------------------------------------------------------------
 Compiler( 'Compiler-x64Clang' )
 {
@@ -55,7 +55,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 //------------------------------------------------------------------------------
 .Debug_Config =
 [
-    .CompilerOptions                = ' -DDEBUG -DPROFILING_ENABLED' 
+    .CompilerOptions                = ' -DDEBUG -DPROFILING_ENABLED'
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
 
@@ -86,7 +86,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=address'
 
-    .Config                         = 'ASan' 
+    .Config                         = 'ASan'
 ]
 .MSan_Config =
 [
@@ -293,10 +293,10 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .Librarian              = '/usr/bin/ar'
 
     .BaseCompilerOptions    = ''
-    
+
                             // Compatibility with older glibc (must be first!)
                             + ' -include Core/Env/glibc_compat.h'
-                            
+
                             + ' -o "%2" "%1" -c -g'
                             + ' -I./'
                             + ' -D__LINUX__'
@@ -658,14 +658,14 @@ Alias( 'All+Tests' )
                               }
         .SolutionBuildProject = 'All-proj'
         .SolutionConfigs    = .ProjectConfigs
-    
+
         // Work around for Visual Studio F5 behaviour up-to-date check
         .Deps               = [
                                 .Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuildApp-proj', 'FBuildWorker-proj' }
                                 .Dependencies = { 'All-proj' }
                               ]
         .SolutionDependencies = { .Deps }
-    
+
         .Folder_0_External =
         [
             .Path           = '0. External'
@@ -698,9 +698,9 @@ Alias( 'All+Tests' )
     {
         .ProjectOutput              = '../tmp/XCode/FASTBuild.xcodeproj/project.pbxproj'
         .ProjectBasePath            = '../tmp/XCode/Projects/'
-    
+
         .XCodeBuildWorkingDir       = '../../../Code/'
-    
+
         .ProjectFiles               = { 'Core-xcodeproj'
                                         'CoreTest-xcodeproj'
                                         'FBuildApp-xcodeproj'
@@ -710,7 +710,7 @@ Alias( 'All+Tests' )
                                         'LZ4-xcodeproj'
                                         'OSUI-xcodeproj'
                                         'TestFramework-xcodeproj' }
-    
+
         .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = 'all-x64OSX-Debug' ]
         .ProjectOSXProfile      = [ .Config = 'Profile' .Target = 'all-x64OSX-Profile' ]
         .ProjectOSXRelease      = [ .Config = 'Release' .Target = 'all-x64OSX-Release' ]

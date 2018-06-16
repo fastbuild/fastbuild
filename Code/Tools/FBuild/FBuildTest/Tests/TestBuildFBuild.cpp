@@ -154,7 +154,7 @@ void TestBuildFBuild::DBSavePerformance() const
     Timer t;
     for ( size_t i=0; i<100; ++i )
     {
-		ms.Reset();
+        ms.Reset();
         fBuild.SaveDependencyGraph( ms, "unused.fdb" );
     }
 

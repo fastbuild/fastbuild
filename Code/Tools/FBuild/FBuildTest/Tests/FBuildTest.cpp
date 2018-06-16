@@ -36,7 +36,7 @@ FBuildTest::FBuildTest()
 
     FBuildStats::SetIgnoreCompilerNodeDeps( true );
 
-    // Store current working 
+    // Store current working
     VERIFY( FileIO::GetCurrentDir( m_OriginalWorkingDir ) );
 
     // Set the WorkingDir to be the source code "Code" dir

@@ -68,9 +68,9 @@
             .ProjectOutput              = '../tmp/XCode/Projects/1_Test/$ProjectName$.xcodeproj/project.pbxproj'
             .ProjectInputPaths          = '$ProjectPath$/'
             .ProjectBasePath            = '$ProjectPath$/'
-    
+
             .XCodeBuildWorkingDir       = '../../../../Code/'
-    
+
             .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = '$ProjectName$-x64OSX-Debug' ]
             .ProjectOSXProfile      = [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
             .ProjectOSXRelease      = [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]
