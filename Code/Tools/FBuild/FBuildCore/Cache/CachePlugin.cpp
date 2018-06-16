@@ -40,7 +40,7 @@
         m_DLL = ::LoadLibrary( dllName.Get() );
         if ( !m_DLL )
         {
-            FLOG_WARN( "Cache plugin '%s' load failed (0x%x).", dllName.Get(), ::GetLastError() );
+            FLOG_WARN( "Cache plugin '%s' load failed (0x%x).", dllName.Get(), (uint32_t)::GetLastError() );
             return;
         }
 
