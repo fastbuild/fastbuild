@@ -20,7 +20,7 @@ template< class T > class WeakRef;
 
 // PropertyType
 //------------------------------------------------------------------------------
-enum PropertyType
+enum PropertyType : uint8_t
 {
     PT_NONE         = 0,
     PT_FLOAT        = 1,

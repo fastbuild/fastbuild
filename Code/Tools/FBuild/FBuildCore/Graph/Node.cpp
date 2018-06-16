@@ -573,14 +573,12 @@ void Node::Serialize( IOStream & stream ) const
         {
             if ( property.IsArray() )
             {
-                Array< AString > * arrayOfStrings( nullptr );
-                property.GetPtrToProperty( base, arrayOfStrings );
+                const Array< AString > * arrayOfStrings = property.GetPtrToArray<AString>( base );
                 VERIFY( stream.Write( *arrayOfStrings ) );
             }
             else
             {
-                AString * string( nullptr );
-                property.GetPtrToProperty( base, string );
+                const AString * string = property.GetPtrToProperty<AString>( base );
                 VERIFY( stream.Write( *string ) );
             }
             return;
@@ -709,8 +707,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
         {
             if ( property.IsArray() )
             {
-                Array< AString > * arrayOfStrings( nullptr );
-                property.GetPtrToProperty( base, arrayOfStrings );
+                Array< AString > * arrayOfStrings = property.GetPtrToArray<AString>( base );
                 if ( stream.Read( *arrayOfStrings ) == false )
                 {
                     return false;
@@ -718,8 +715,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
             }
             else
             {
-                AString * string = nullptr;
-                property.GetPtrToProperty( base, string );
+                AString * string = property.GetPtrToProperty<AString>( base );
                 if ( stream.Read( *string ) == false )
                 {
                     return false;
