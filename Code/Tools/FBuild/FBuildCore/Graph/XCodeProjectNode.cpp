@@ -41,12 +41,12 @@ REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFi
     REFLECT( m_XCodeBuildWorkingDir,                "XCodeBuildWorkingDir",         MetaOptional() )
 REFLECT_END( XCodeProjectNode )
 
-// XCodeProjectConfig::ResolveTagets
+// XCodeProjectConfig::ResolveTargets
 //------------------------------------------------------------------------------
-/*static*/ bool XCodeProjectConfig::ResolveTagets( NodeGraph & nodeGraph,
-                                                   Array< XCodeProjectConfig > & configs,
-                                                   const BFFIterator * iter,
-                                                   const Function * function )
+/*static*/ bool XCodeProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
+                                                    Array< XCodeProjectConfig > & configs,
+                                                    const BFFIterator * iter,
+                                                    const Function * function )
 {
     // Must provide iter and function, or neither
     ASSERT( ( ( iter == nullptr ) && ( function == nullptr ) ) ||
@@ -94,7 +94,7 @@ XCodeProjectNode::XCodeProjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
@@ -115,8 +115,8 @@ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & it
     m_StaticDependencies.Append( dirNodes );
     m_StaticDependencies.Append( fileNodes );
 
-    // Resolve Target names to Node pointers for layer use
-    if ( XCodeProjectConfig::ResolveTagets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
+    // Resolve Target names to Node pointers for later use
+    if ( XCodeProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
     {
         return false; // Initialize will have emitted an error
     }
@@ -240,8 +240,8 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         return nullptr;
     }
 
-    // Resolve Target names to Node pointers for layer use
-    if ( XCodeProjectConfig::ResolveTagets( nodeGraph, n->m_ProjectConfigs ) == false )
+    // Resolve Target names to Node pointers for later use
+    if ( XCodeProjectConfig::ResolveTargets( nodeGraph, n->m_ProjectConfigs ) == false )
     {
         ASSERT( false ); // Should be impossible to be loading a DB where the Target cannot be resolved
         return nullptr;

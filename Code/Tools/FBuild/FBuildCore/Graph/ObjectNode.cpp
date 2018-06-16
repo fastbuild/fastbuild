@@ -82,7 +82,7 @@ ObjectNode::ObjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -238,7 +238,7 @@ ObjectNode::~ObjectNode()
     bool useCache = ShouldUseCache();
     bool useDist = GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
     bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
-    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( ObjectNode::FLAG_VBCC ) );
+    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( ObjectNode::FLAG_VBCC ) || GetFlag( FLAG_ORBIS_WAVE_PSSLC ) );
     if ( GetDedicatedPreprocessor() )
     {
         usePreProcessor = true;
@@ -800,15 +800,16 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     switch ( compilerFamily )
     {
         case CompilerNode::CompilerFamily::CUSTOM:          break; // Nothing to do
-        case CompilerNode::CompilerFamily::MSVC:            flags |= FLAG_MSVC;        break;
-        case CompilerNode::CompilerFamily::CLANG:           flags |= FLAG_CLANG;       break;
-        case CompilerNode::CompilerFamily::GCC:             flags |= FLAG_GCC;         break;
-        case CompilerNode::CompilerFamily::SNC:             flags |= FLAG_SNC;         break;
-        case CompilerNode::CompilerFamily::CODEWARRIOR_WII: flags |= CODEWARRIOR_WII;  break;
-        case CompilerNode::CompilerFamily::GREENHILLS_WIIU: flags |= GREENHILLS_WIIU;  break;
-        case CompilerNode::CompilerFamily::CUDA_NVCC:       flags |= FLAG_CUDA_NVCC;   break;
-        case CompilerNode::CompilerFamily::QT_RCC:          flags |= FLAG_QT_RCC;      break;
-        case CompilerNode::CompilerFamily::VBCC:            flags |= FLAG_VBCC;        break;
+        case CompilerNode::CompilerFamily::MSVC:            flags |= FLAG_MSVC;             break;
+        case CompilerNode::CompilerFamily::CLANG:           flags |= FLAG_CLANG;            break;
+        case CompilerNode::CompilerFamily::GCC:             flags |= FLAG_GCC;              break;
+        case CompilerNode::CompilerFamily::SNC:             flags |= FLAG_SNC;              break;
+        case CompilerNode::CompilerFamily::CODEWARRIOR_WII: flags |= CODEWARRIOR_WII;       break;
+        case CompilerNode::CompilerFamily::GREENHILLS_WIIU: flags |= GREENHILLS_WIIU;       break;
+        case CompilerNode::CompilerFamily::CUDA_NVCC:       flags |= FLAG_CUDA_NVCC;        break;
+        case CompilerNode::CompilerFamily::QT_RCC:          flags |= FLAG_QT_RCC;           break;
+        case CompilerNode::CompilerFamily::VBCC:            flags |= FLAG_VBCC;             break;
+        case CompilerNode::CompilerFamily::ORBIS_WAVE_PSSLC:flags |= FLAG_ORBIS_WAVE_PSSLC; break;
     }
 
     // Check MS compiler options
@@ -899,6 +900,17 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     // CUDA Compiler
     if ( flags & ObjectNode::FLAG_CUDA_NVCC )
     {
+        // Can cache objects
+        flags |= ObjectNode::FLAG_CAN_BE_CACHED;
+    }
+
+    if ( flags & ObjectNode::FLAG_ORBIS_WAVE_PSSLC )
+    {
+        if ( isDistributableCompiler )
+        {
+            flags |= ObjectNode::FLAG_CAN_BE_DISTRIBUTED;
+        }
+
         // Can cache objects
         flags |= ObjectNode::FLAG_CAN_BE_CACHED;
     }
@@ -1445,15 +1457,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     }
     fullArgs.Clear();
 
-    const bool isMSVC   = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_MSVC ) : GetFlag( FLAG_MSVC );
-    const bool isClang  = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CLANG ) : GetFlag( FLAG_CLANG );
-    const bool isGCC    = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_GCC ) : GetFlag( FLAG_GCC );
-    const bool isSNC    = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_SNC ) : GetFlag( FLAG_SNC );
-    const bool isCWWii  = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( CODEWARRIOR_WII ) : GetFlag( CODEWARRIOR_WII );
-    const bool isGHWiiU = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( GREENHILLS_WIIU ) : GetFlag( GREENHILLS_WIIU );
-    const bool isCUDA   = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CUDA_NVCC ) : GetFlag( FLAG_CUDA_NVCC );
-    const bool isQtRCC  = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_QT_RCC ) : GetFlag( FLAG_QT_RCC );
-    const bool isVBCC   = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_VBCC ) : GetFlag( FLAG_VBCC );
+    const bool isMSVC           = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_MSVC ) : GetFlag( FLAG_MSVC );
+    const bool isClang          = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CLANG ) : GetFlag( FLAG_CLANG );
+    const bool isGCC            = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_GCC ) : GetFlag( FLAG_GCC );
+    const bool isSNC            = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_SNC ) : GetFlag( FLAG_SNC );
+    const bool isCWWii          = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( CODEWARRIOR_WII ) : GetFlag( CODEWARRIOR_WII );
+    const bool isGHWiiU         = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( GREENHILLS_WIIU ) : GetFlag( GREENHILLS_WIIU );
+    const bool isCUDA           = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CUDA_NVCC ) : GetFlag( FLAG_CUDA_NVCC );
+    const bool isQtRCC          = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_QT_RCC ) : GetFlag( FLAG_QT_RCC );
+    const bool isVBCC           = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_VBCC ) : GetFlag( FLAG_VBCC );
+    const bool isOrbisWavePsslc = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_ORBIS_WAVE_PSSLC) : GetFlag(FLAG_ORBIS_WAVE_PSSLC);
 
     const size_t numTokens = tokens.GetSize();
     for ( size_t i = 0; i < numTokens; ++i )
@@ -1464,7 +1477,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         // -o removal for preprocessor
         if ( pass == PASS_PREPROCESSOR_ONLY )
         {
-            if ( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA || isVBCC )
+            if ( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA || isVBCC || isOrbisWavePsslc )
             {
                 if ( StripTokenWithArg( "-o", token, i ) )
                 {
@@ -1557,7 +1570,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue; // skip this token in both cases
                 }
             }
-            if ( isGCC || isClang || isVBCC )
+            if ( isGCC || isClang || isVBCC || isOrbisWavePsslc )
             {
                 // Remove forced includes so they aren't forced twice
                 if ( StripTokenWithArg( "-include", token, i ) )
@@ -2054,9 +2067,15 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     tmpFileName += fileName;
     if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
     {
-        job->Error( "Failed to create temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr() );
-        job->OnSystemError();
-        return NODE_RESULT_FAILED;
+        FileIO::WorkAroundForWindowsFilePermissionProblem( tmpFileName, FileStream::WRITE_ONLY, 10 ); // 10s max wait
+
+        // Try again
+        if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
+        {
+            job->Error( "Failed to create temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr() );
+            job->OnSystemError();
+            return NODE_RESULT_FAILED;
+        }
     }
     if ( tmpFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
     {
@@ -2236,6 +2255,15 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             return;
         }
 
+        // If process is manually terminated by a user, consider that a system failure
+        // Only do so if there is no error output, as some compilers (like Clang) also
+        // use return code 1 for normal compilation failure
+        if ( ( result == 0x1 ) && ( stdErr == nullptr ) )
+        {
+            job->OnSystemError(); // task will be retried on another worker
+            return;
+        }
+
         // If DLLs are not correctly sync'd, add an extra message to help the user
         if ( (uint32_t)result == 0xC000007B ) // STATUS_INVALID_IMAGE_FORMAT
         {
@@ -2286,14 +2314,11 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         if ( objectNode->GetFlag( ObjectNode::FLAG_CLANG ) )
         {
             // When clang fails due to low disk space
-            if ( result == 0x01 )
+            // TODO:C Should we check for localized msg?
+            if ( stdErr && ( strstr( stdErr, "IO failure on output stream" ) ) )
             {
-                // TODO:C Should we check for localized msg?
-                if ( stdErr && ( strstr( stdErr, "IO failure on output stream" ) ) )
-                {
-                    job->OnSystemError();
-                    return;
-                }
+                job->OnSystemError();
+                return;
             }
         }
 
@@ -2301,14 +2326,11 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         if ( objectNode->GetFlag( ObjectNode::FLAG_GCC ) )
         {
             // When gcc fails due to low disk space
-            if ( result == 0x01 )
+            // TODO:C Should we check for localized msg?
+            if ( stdErr && ( strstr( stdErr, "No space left on device" ) ) )
             {
-                // TODO:C Should we check for localized msg?
-                if ( stdErr && ( strstr( stdErr, "No space left on device" ) ) )
-                {
-                    job->OnSystemError();
-                    return;
-                }
+                job->OnSystemError();
+                return;
             }
         }
     #else

@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
+#include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AString.h"
 
 // Defines
@@ -60,9 +61,11 @@ public:
     #endif
 
     #if defined( __WINDOWS__ )
-        static void     WorkAroundForWindowsFilePermissionProblem( const AString & fileName );
+        static void     WorkAroundForWindowsFilePermissionProblem( const AString & fileName,
+                                                                   const uint32_t openMode = FileStream::READ_ONLY,
+                                                                   const uint32_t timeoutSeconds = 1 );
     #else
-        FORCE_INLINE static void WorkAroundForWindowsFilePermissionProblem( const AString & ) {}
+        FORCE_INLINE static void WorkAroundForWindowsFilePermissionProblem( const AString &, const uint32_t = 0, const uint32_t = 0 ) {}
     #endif
 
 private:

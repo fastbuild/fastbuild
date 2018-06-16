@@ -103,6 +103,7 @@ public:
     static void Error_1040_UndefOfBuiltInTokenNotAllowed( const BFFIterator & iter );
     static void Error_1041_ElseWithoutIf( const BFFIterator & iter );
     static void Error_1042_UnknownOperator(const BFFIterator & iter, const AString & operatorName );
+    static void Error_1043_CyclicDependencyDetected( const BFFIterator & iter, const AString & nodeName );
 
     // 1050 - 1099 : Variable type errors
     //------------------------------------------------------------------------------
@@ -167,6 +168,8 @@ public:
                                                      const char * variableName,
                                                      uint32_t foundSize,
                                                      uint32_t expectedSize );
+    static void Error_1254_UnrecognizedOperator( const BFFIterator & iter,
+                                                 const Function * function );
 
     // 1300 - 1399 : Library specific errors
     //------------------------------------------------------------------------------

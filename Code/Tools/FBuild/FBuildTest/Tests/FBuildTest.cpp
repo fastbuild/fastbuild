@@ -36,7 +36,7 @@ FBuildTest::FBuildTest()
 
     FBuildStats::SetIgnoreCompilerNodeDeps( true );
 
-    // Store current working 
+    // Store current working
     VERIFY( FileIO::GetCurrentDir( m_OriginalWorkingDir ) );
 
     // Set the WorkingDir to be the source code "Code" dir
@@ -155,9 +155,9 @@ void FBuildTest::CheckStatsTotal( size_t numSeen, size_t numBuilt ) const
         codeDir += NATIVE_SLASH;
     }
     #if defined( __WINDOWS__ )
-        const char * codePos = codeDir.FindI( "\\code\\" );
+        const char * codePos = codeDir.FindLastI( "\\code\\" );
     #else
-        const char * codePos = codeDir.FindI( "/code/" );
+        const char * codePos = codeDir.FindLastI( "/code/" );
     #endif
     TEST_ASSERT( codePos );
     codeDir.SetLength( (uint16_t)( codePos - codeDir.Get() + 6 ) );

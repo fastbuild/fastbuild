@@ -53,7 +53,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 109 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 112 };
 
     bool IsValid() const
     {
@@ -95,6 +95,8 @@ public:
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
 
+    void RegisterNode( Node * n );
+
     // create new nodes
     CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
     CopyDirNode * CreateCopyDirNode( const AString & nodeName );
@@ -111,22 +113,7 @@ public:
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );
     CompilerNode * CreateCompilerNode( const AString & nodeName );
-    VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
-                                           const Array< AString > & projectBasePaths,
-                                           const Dependencies & paths,
-                                           const Array< AString > & pathsToExclude,
-                                           const Array< AString > & files,
-                                           const Array< AString > & filesToExclude,
-                                           const Array< AString > & patternToExclude,
-                                           const AString & rootNamespace,
-                                           const AString & projectGuid,
-                                           const AString & defaultLanguage,
-                                           const AString & applicationEnvironment,
-                                           const bool projectSccEntrySAK,
-                                           const Array< VSProjectConfig > & configs,
-                                           const Array< VSProjectFileType > & fileTypes,
-                                           const Array< AString > & references,
-                                           const Array< AString > & projectReferences );
+    VCXProjectNode * CreateVCXProjectNode( const AString & name );
     SLNNode * CreateSLNNode( const AString & name );
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );

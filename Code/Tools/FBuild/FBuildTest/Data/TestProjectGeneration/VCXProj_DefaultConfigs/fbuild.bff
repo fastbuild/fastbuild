@@ -1,0 +1,15 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+VCXProject( 'DefaultConfigs' )
+{
+    .ProjectOutput              = '$Out$/Test/ProjectGeneration/VCXProj_DefaultConfigs/DefaultConfigs.vcxproj'
+
+    // Set some options are the project level which should end up in
+    // each default config
+    .ProjectBuildCommand        = 'BASE_BUILD_COMMAND'
+    .ProjectRebuildCommand      = 'BASE_REBUILD_COMMAND'
+}
+

@@ -40,7 +40,6 @@ Client::Client( const Array< AString > & workerList,
                 bool detailedLogging )
     : m_WorkerList( workerList )
     , m_ShouldExit( false )
-    , m_Exited( false )
     , m_DetailedLogging( detailedLogging )
     , m_WorkerConnectionLimit( workerConnectionLimit )
     , m_Port( port )
@@ -62,10 +61,7 @@ Client::~Client()
     SetShuttingDown();
 
     m_ShouldExit = true;
-    while ( m_Exited == false )
-    {
-        Thread::Sleep( 1 );
-    }
+    Thread::WaitForThread( m_Thread );
 
     ShutdownAllConnections();
 
@@ -149,8 +145,6 @@ void Client::ThreadFunc()
             break;
         }
     }
-
-    m_Exited = true;
 }
 
 // LookForWorkers
@@ -553,6 +547,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                                           job->GetNode()->GetName().Get(),
                                           job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
 
+    job->SetMessages( messages );
+
     if ( result == true )
     {
         // built ok - serialize to disc
@@ -790,7 +786,9 @@ bool Client::WriteFileToDisk( const AString & fileName, const char * data, const
     {
         // On Windows, we can occasionally fail to open the file with error 1224 (ERROR_USER_MAPPED_FILE), due to
         // things like anti-virus etc. Simply retry if that happens
-        FileIO::WorkAroundForWindowsFilePermissionProblem( fileName );
+        // Also, when a <LOCAL RACE> occurs, the local compilation process might not have exited at this point
+        // (we call ::TerminateProcess, which is async),which can cause failure below, because the file is still locked.
+        FileIO::WorkAroundForWindowsFilePermissionProblem( fileName, FileStream::WRITE_ONLY, 15 ); // 15 secs max wait
 
         if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
         {

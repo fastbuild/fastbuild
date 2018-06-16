@@ -40,9 +40,44 @@ public:
         inline const char * GetName() const { return m_Name; }
     #endif
 
+    template<class T>
+    const T * GetPtrToProperty( const void * base ) const
+    {
+        ASSERT( IsArray() == false );
+        const T * ptr = (T *)( (size_t)base + m_Offset );
+        ASSERT( GetPropertyType( (T *)nullptr ) == GetType() );
+        return ptr;
+    }
+
+    template<class T>
+    T * GetPtrToProperty( void * base ) const
+    {
+        ASSERT( IsArray() == false );
+        T * ptr = (T *)( (size_t)base + m_Offset );
+        ASSERT( GetPropertyType( (T *)nullptr ) == GetType() );
+        return ptr;
+    }
+
+    template<class T>
+    const Array< T > * GetPtrToArray( const void * base ) const
+    {
+        ASSERT( IsArray() );
+        const Array< T > * ptr = (const Array< T > *)( (size_t)base + m_Offset );
+        ASSERT( GetPropertyType( (T *)nullptr ) == GetType() );
+        return ptr;
+    }
+
+    template<class T>
+    Array< T > * GetPtrToArray( void * base ) const
+    {
+        ASSERT( IsArray() );
+        Array< T > * ptr = (Array< T > *)( (size_t)base + m_Offset );
+        ASSERT( GetPropertyType( (T *)nullptr ) == GetType() );
+        return ptr;
+    }
+
     #define GETSET_PROPERTY( getValueType, setValueType ) \
         void GetProperty( const void * object, getValueType * value ) const; \
-        void GetPtrToProperty( const void * object, getValueType * & value ) const; \
         void SetProperty( void * object, setValueType value ) const;
 
     GETSET_PROPERTY( float, float )
@@ -65,7 +100,6 @@ public:
 
     #define GETSET_PROPERTY_ARRAY( valueType ) \
         void GetProperty( const void * object, Array< valueType > * value ) const; \
-        void GetPtrToProperty( const void * object, Array< valueType > * & value ) const; \
         void SetProperty( void * object, const Array< valueType > & value ) const;
 
     GETSET_PROPERTY_ARRAY( AString )
@@ -114,11 +148,10 @@ public:
 protected:
     enum { MAX_OFFSET = ( 1 << 16 ) };
 
-    uint32_t m_NameCRC;
-    uint32_t m_Offset:16; // validated by MAX_OFFSET
-    uint32_t m_Type:8;
-    uint32_t m_IsArray:1;
-    //uint32_t m_Unused:7;
+    uint32_t        m_NameCRC;
+    uint16_t        m_Offset; // validated by MAX_OFFSET
+    PropertyType    m_Type;
+    bool            m_IsArray;
 
     #if defined( REFLECTION_KEEP_STRING_NAMES )
         const char * m_Name;
@@ -135,6 +168,7 @@ public:
     explicit ReflectedPropertyStruct( const char * name, uint32_t offset, const ReflectionInfo * structInfo, bool isArray = false );
 
     const void * GetStructBase( const void * object ) const;
+    void *       GetStructBase( void * object ) const;
 
     // arrayOfStruct manipulation
     size_t      GetArraySize( const void * object ) const;

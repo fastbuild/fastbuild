@@ -12,6 +12,7 @@ class FileNode : public Node
 {
 public:
     explicit FileNode( const AString & fileName, uint32_t controlFlags );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & funcStartIter, const Function * function ) override;
     virtual ~FileNode();
 
     static inline Node::Type GetTypeS() { return Node::FILE_NODE; }

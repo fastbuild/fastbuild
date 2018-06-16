@@ -27,7 +27,7 @@ class ObjectNode : public FileNode
     REFLECT_NODE_DECLARE( ObjectNode )
 public:
     ObjectNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     // simplified remote constructor
     explicit ObjectNode( const AString & objectName,
                          NodeProxy * srcFile,
@@ -59,7 +59,8 @@ public:
         FLAG_QT_RCC             =   0x40000,
         FLAG_WARNINGS_AS_ERRORS_MSVC    = 0x80000,
         FLAG_VBCC               =   0x100000,
-        FLAG_STATIC_ANALYSIS_MSVC = 0x200000
+        FLAG_STATIC_ANALYSIS_MSVC = 0x200000,
+        FLAG_ORBIS_WAVE_PSSLC   =   0x400000
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,

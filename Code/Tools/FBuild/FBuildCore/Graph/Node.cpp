@@ -33,8 +33,10 @@
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
@@ -90,6 +92,14 @@ IMetaData & MetaAllowNonFile()
 IMetaData & MetaAllowNonFile( const Node::Type limitToType )
 {
     return *FNEW( Meta_AllowNonFile( limitToType ) );
+}
+IMetaData & MetaEmbedMembers()
+{
+    return *FNEW( Meta_EmbedMembers() );
+}
+IMetaData & MetaInheritFromOwner()
+{
+    return *FNEW( Meta_InheritFromOwner() );
 }
 
 // Reflection
@@ -520,9 +530,9 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 void Node::Serialize( IOStream & stream ) const
 {
     // Deps
-    NODE_SAVE_DEPS( m_PreBuildDependencies );
-    NODE_SAVE_DEPS( m_StaticDependencies );
-    NODE_SAVE_DEPS( m_DynamicDependencies );
+    m_PreBuildDependencies.Save( stream );
+    m_StaticDependencies.Save( stream );
+    m_DynamicDependencies.Save( stream );
 
     // Properties
     const ReflectionInfo * const ri = GetReflectionInfoV();
@@ -563,14 +573,12 @@ void Node::Serialize( IOStream & stream ) const
         {
             if ( property.IsArray() )
             {
-                Array< AString > * arrayOfStrings( nullptr );
-                property.GetPtrToProperty( base, arrayOfStrings );
+                const Array< AString > * arrayOfStrings = property.GetPtrToArray<AString>( base );
                 VERIFY( stream.Write( *arrayOfStrings ) );
             }
             else
             {
-                AString * string( nullptr );
-                property.GetPtrToProperty( base, string );
+                const AString * string = property.GetPtrToProperty<AString>( base );
                 VERIFY( stream.Write( *string ) );
             }
             return;
@@ -612,10 +620,11 @@ void Node::Serialize( IOStream & stream ) const
         }
         case PT_STRUCT:
         {
+            const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+
             if ( property.IsArray() )
             {
                 // Write number of elements
-                const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
                 const uint32_t numElements = (uint32_t)propertyS.GetArraySize( base );
                 VERIFY( stream.Write( numElements ) );
 
@@ -627,7 +636,12 @@ void Node::Serialize( IOStream & stream ) const
                 }
                 return;
             }
-            break; // Fall through to error
+            else
+            {
+                const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();
+                const void * structBase = propertyS.GetStructBase( base );
+                return Serialize( stream, structBase, *structRI );
+            }
         }
         default:
         {
@@ -641,16 +655,17 @@ void Node::Serialize( IOStream & stream ) const
 //------------------------------------------------------------------------------
 bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
 {
-    // Deps
-    NODE_LOAD_DEPS( 0,          preBuildDeps );
     ASSERT( m_PreBuildDependencies.IsEmpty() );
-    m_PreBuildDependencies.Append( preBuildDeps );
-    NODE_LOAD_DEPS( 0,          staticDeps );
     ASSERT( m_StaticDependencies.IsEmpty() );
-    m_StaticDependencies.Append( staticDeps );
-    NODE_LOAD_DEPS( 0,          dynamicDeps );
     ASSERT( m_DynamicDependencies.IsEmpty() );
-    m_DynamicDependencies.Append( dynamicDeps );
+
+    // Deps
+    if ( ( m_PreBuildDependencies.Load( nodeGraph, stream ) == false ) ||
+         ( m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
+         ( m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
+    {
+        return nullptr;
+    }
 
     // Properties
     const ReflectionInfo * const ri = GetReflectionInfoV();
@@ -692,8 +707,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
         {
             if ( property.IsArray() )
             {
-                Array< AString > * arrayOfStrings( nullptr );
-                property.GetPtrToProperty( base, arrayOfStrings );
+                Array< AString > * arrayOfStrings = property.GetPtrToArray<AString>( base );
                 if ( stream.Read( *arrayOfStrings ) == false )
                 {
                     return false;
@@ -701,8 +715,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
             }
             else
             {
-                AString * string = nullptr;
-                property.GetPtrToProperty( base, string );
+                AString * string = property.GetPtrToProperty<AString>( base );
                 if ( stream.Read( *string ) == false )
                 {
                     return false;
@@ -762,6 +775,8 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
         }
         case PT_STRUCT:
         {
+            const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
+
             if ( property.IsArray() )
             {
                 // Read number of elements
@@ -770,7 +785,6 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
                 {
                     return false;
                 }
-                const auto & propertyS = static_cast< const ReflectedPropertyStruct & >( property );
                 propertyS.ResizeArrayOfStruct( base, numElements );
 
                 // Read each element
@@ -784,7 +798,12 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
                 }
                 return true;
             }
-            break; // Fall through to error
+            else
+            {
+                const ReflectionInfo * structRI = propertyS.GetStructReflectionInfo();
+                void * structBase = propertyS.GetStructBase( base );
+                return Deserialize( stream, structBase, *structRI );
+            }
         }
         default:
         {

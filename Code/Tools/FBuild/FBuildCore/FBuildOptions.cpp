@@ -55,6 +55,8 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         }
     }
 
+    bool progressOptionSpecified = false;
+
     // Parse options
     for ( int32_t i=1; i<argc; ++i ) // start from 1 to skip exe name
     {
@@ -188,6 +190,13 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-noprogress" )
             {
                 m_ShowProgress = false;
+                progressOptionSpecified = true;
+                continue;
+            }
+            else if ( thisArg == "-progress" )
+            {
+                m_ShowProgress = true;
+                progressOptionSpecified = true;
                 continue;
             }
             else if ( thisArg == "-nostoponerror")
@@ -249,6 +258,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( ( thisArg == "-ide" ) || ( thisArg == "-vs" ) )
             {
                 m_ShowProgress = false;
+                progressOptionSpecified = true;
                 #if defined( __WINDOWS__ )
                     m_FixupErrorPaths = true;
                     m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
@@ -303,6 +313,12 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             // assume target
             m_Targets.Append( thisArg );
         }
+    }
+
+    if ( progressOptionSpecified == false )
+    {
+        // By default show progress bar only if stdout goes to the terminal
+        m_ShowProgress = ( Env::IsStdOutRedirected() == false );
     }
 
     // Default to build "all"
@@ -465,6 +481,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
             "                default of hardware thread count.\n"
             " -noprogress    Don't show the progress bar while building.\n"
+            " -progress      Show the progress bar while building, even if stdout is redirected.\n"
             " -nostoponerror Don't stop building on first error. Try to build as much\n"
             "                as possible.\n"
             " -nosummaryonerror Hide the summary if the build fails. Implies -summary.\n"

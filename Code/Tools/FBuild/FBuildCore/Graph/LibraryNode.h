@@ -23,7 +23,7 @@ class LibraryNode : public ObjectListNode
     REFLECT_NODE_DECLARE( LibraryNode )
 public:
     LibraryNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~LibraryNode();
 
     static inline Node::Type GetTypeS() { return Node::LIBRARY_NODE; }

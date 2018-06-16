@@ -30,13 +30,9 @@ class NodeGraph;
 // Load/SaveMacros
 //------------------------------------------------------------------------------
 #define NODE_SAVE( member ) stream.Write( member );
-#define NODE_SAVE_DEPS( depsArray ) depsArray.Save( stream );
 #define NODE_SAVE_NODE_LINK( node ) Node::SaveNodeLink( stream, node );
 
 #define NODE_LOAD( type, member ) type member; if ( stream.Read( member ) == false ) { return nullptr; }
-#define NODE_LOAD_DEPS( initialCapacity, depsArray ) \
-    Dependencies depsArray( initialCapacity, true ); \
-    if ( depsArray.Load( nodeGraph, stream ) == false ) { return nullptr; }
 #define NODE_LOAD_NODE_LINK( type, node ) \
     type * node = nullptr; \
     if ( Node::LoadNodeLink( nodeGraph, stream, node ) == false ) { return nullptr; }
@@ -131,6 +127,7 @@ public:
     };
 
     explicit Node( const AString & name, Type type, uint32_t controlFlags );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & funcStartIter, const Function * function ) = 0;
     virtual ~Node();
 
     inline uint32_t        GetNameCRC() const { return m_NameCRC; }
@@ -293,5 +290,7 @@ inline FileNode * Node::CastTo< FileNode >() const
 IMetaData & MetaName( const char * name );
 IMetaData & MetaAllowNonFile();
 IMetaData & MetaAllowNonFile( const Node::Type limitToType );
+IMetaData & MetaEmbedMembers();
+IMetaData & MetaInheritFromOwner();
 
 //------------------------------------------------------------------------------

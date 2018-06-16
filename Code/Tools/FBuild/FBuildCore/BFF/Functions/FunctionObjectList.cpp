@@ -38,23 +38,11 @@ FunctionObjectList::FunctionObjectList()
     return true;
 }
 
-// Commit
+// CreateNode
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionObjectList::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ Node * FunctionObjectList::CreateNode() const
 {
-    ObjectListNode * objectListNode = nodeGraph.CreateObjectListNode( m_AliasForFunction );
-
-    if ( !PopulateProperties( nodeGraph, funcStartIter, objectListNode ) )
-    {
-        return false;
-    }
-
-    if ( !objectListNode->Initialize( nodeGraph, funcStartIter, this ) )
-    {
-        return false;
-    }
-
-    return true;
+    return FNEW( ObjectListNode );
 }
 
 // CheckCompilerOptions

@@ -1,0 +1,25 @@
+
+// Check string
+.String = 'Hello'
+.OtherStringA = 'Hello'
+.OtherStringB = 'Goodbye'
+
+// Strings match
+If (.String == .OtherStringA)
+{
+    Print( "Success" )
+}
+If (.String != .OtherStringA)
+{
+    Print( "Failure" )
+}
+
+// Strings don't match
+If (.String == .OtherStringB)
+{
+    Print( "Failure" )
+}
+If (.String != .OtherStringB)
+{
+    Print( "Success" )
+}

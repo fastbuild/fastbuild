@@ -39,6 +39,8 @@
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 
 // Core
@@ -166,6 +168,14 @@ Function::~Function() = default;
     return true;
 }
 
+// CreateNode
+//------------------------------------------------------------------------------
+/*virtual*/ Node * Function::CreateNode() const
+{
+    ASSERT( false ); // Should never get here for Functions that have no Node
+    return nullptr;
+}
+
 // IsUnique
 //------------------------------------------------------------------------------
 /*virtual*/ bool Function::IsUnique() const
@@ -225,17 +235,97 @@ Function::~Function() = default;
         return false;
     }
 
+    // Take note of how many nodes there are before Commit
+    const size_t nodeCountBefore = nodeGraph.GetNodeCount();
+
     // complete the function
-    return Commit( nodeGraph, functionNameStart );
+    if (!Commit( nodeGraph, functionNameStart ))
+    {
+        return false;
+    }
+
+    // Check for cyclic dependencies
+    const size_t nodeCountAfter = nodeGraph.GetNodeCount();
+    if ( nodeCountBefore != nodeCountAfter )
+    {
+        for ( size_t index = nodeCountBefore; index < nodeCountAfter; ++index )
+        {
+            const Node* node = nodeGraph.GetNodeByIndex( index );
+
+            const Dependencies * depVectors[ 3 ] = { &node->GetPreBuildDependencies(),
+                                                     &node->GetStaticDependencies(),
+                                                     &node->GetDynamicDependencies() };
+            for ( const Dependencies * depVector : depVectors )
+            {
+                for ( const Dependency & dep : *depVector )
+                {
+                    if ( node == dep.GetNode() )
+                    {
+                        Error::Error_1043_CyclicDependencyDetected( functionNameStart, node->GetName() );
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 // Commit
 //------------------------------------------------------------------------------
 /*virtual*/ bool Function::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
-    (void)nodeGraph;
-    (void)funcStartIter;
-    return true;
+    // Create Node
+    Node * node = CreateNode();
+    ASSERT( node );
+
+    // Get the name
+    //  - For nodes that specify a name as a property (usually the output of the node)
+    //    use that as the name (i.e. the filename is the name)
+    //  - Otherwise, what would normally be the alias
+    AStackString<> nameFromMetaData;
+    if ( GetNameForNode( nodeGraph, funcStartIter, node->GetReflectionInfoV(), nameFromMetaData ) == false )
+    {
+        return false; // GetNameForNode will have emitted an error
+    }
+    const bool aliasUsedForName = nameFromMetaData.IsEmpty();
+    const AString & name = ( aliasUsedForName ) ? m_AliasForFunction : nameFromMetaData;
+    ASSERT( name.IsEmpty() == false );
+
+    // Check name isn't already used
+    if ( nodeGraph.FindNode( name ) )
+    {
+        Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
+        return false;
+    }
+
+    // Set Name
+    node->SetName( name );
+
+    // Register with NodeGraph
+    nodeGraph.RegisterNode( node );
+
+    // Set properties
+    if ( !PopulateProperties( nodeGraph, funcStartIter, node ) )
+    {
+        return false; // PopulateProperties will have emitted an error
+    }
+
+    // Initialize
+    if ( !node->Initialize( nodeGraph, funcStartIter, this ) )
+    {
+        return false; // Initialize will have emitted an error
+    }
+
+    // If alias was used for name, we're done
+    if ( aliasUsedForName )
+    {
+        return true;
+    }
+
+    // handle alias creation
+    return ProcessAlias( nodeGraph, funcStartIter, node );
 }
 
 // GetString
@@ -317,81 +407,6 @@ bool Function::GetStringOrArrayOfStrings( const BFFIterator & iter, const BFFVar
 
     Error::Error_1050_PropertyMustBeOfType( iter, this, name, v->GetType(), BFFVariable::VAR_STRING, BFFVariable::VAR_ARRAY_OF_STRINGS );
     return false;
-}
-
-// GetBool
-//------------------------------------------------------------------------------
-bool Function::GetBool( const BFFIterator & iter, bool & var, const char * name, bool defaultValue, bool required ) const
-{
-    ASSERT( name );
-
-    const BFFVariable * v = BFFStackFrame::GetVar( name );
-    if ( v == nullptr )
-    {
-        if ( required )
-        {
-            Error::Error_1101_MissingProperty( iter, this, AStackString<>( name ) );
-            return false;
-        }
-        var = defaultValue;
-        return true;
-    }
-
-    if ( v->IsBool() == false )
-    {
-        Error::Error_1050_PropertyMustBeOfType( iter, this, name, v->GetType(), BFFVariable::VAR_BOOL );
-        return false;
-    }
-
-    var = v->GetBool();
-    return true;
-}
-
-// GetInt
-//------------------------------------------------------------------------------
-bool Function::GetInt( const BFFIterator & iter, int32_t & var, const char * name, int32_t defaultValue, bool required ) const
-{
-    ASSERT( name );
-
-    const BFFVariable * v = BFFStackFrame::GetVar( name );
-    if ( v == nullptr )
-    {
-        if ( required )
-        {
-            Error::Error_1101_MissingProperty( iter, this, AStackString<>( name ) );
-            return false;
-        }
-        var = defaultValue;
-        return true;
-    }
-
-    if ( v->IsInt() == false )
-    {
-        Error::Error_1050_PropertyMustBeOfType( iter, this, name, v->GetType(), BFFVariable::VAR_INT );
-        return false;
-    }
-
-    var = v->GetInt();
-    return true;
-}
-
-
-// GetInt
-//------------------------------------------------------------------------------
-bool Function::GetInt( const BFFIterator & iter, int32_t & var, const char * name, int32_t defaultValue, bool required, int minVal, int maxVal ) const
-{
-    if ( GetInt( iter, var, name, defaultValue, required ) == false )
-    {
-        return false;
-    }
-
-    // enforce additional limits
-    if ( ( var < minVal ) || ( var > maxVal ) )
-    {
-        Error::Error_1054_IntegerOutOfRange( iter, this, name, minVal, maxVal );
-        return false;
-    }
-    return true;
 }
 
 // GetNodeList
@@ -781,18 +796,6 @@ bool Function::GetStrings( const BFFIterator & iter, Array< AString > & strings,
     return true;
 }
 
-// GetFolderPaths
-//------------------------------------------------------------------------------
-bool Function::GetFolderPaths(const BFFIterator & iter, Array< AString > & paths, const char * name, bool required) const
-{
-    if ( !GetStrings(iter, paths, name, required ) )
-    {
-        return false; // GetStrings will have emitted an error
-    }
-    CleanFolderPaths( paths );
-    return true;
-}
-
 // GetFileNode
 //------------------------------------------------------------------------------
 bool Function::GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Node * & fileNode, const char * name, bool required ) const
@@ -825,55 +828,6 @@ bool Function::GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Nod
     }
     fileNode = n;
     return true;
-}
-
-// CleanFolderPaths
-//------------------------------------------------------------------------------
-/*static*/ void Function::CleanFolderPaths( Array< AString > & folders )
-{
-    AStackString< 512 > tmp;
-
-    AString * const end = folders.End();
-    for ( AString * it = folders.Begin(); it != end; ++it )
-    {
-        // make full path, clean slashes etc
-        NodeGraph::CleanPath( *it, tmp );
-
-        // ensure path is slash-terminated
-        PathUtils::EnsureTrailingSlash( tmp );
-
-        // replace original
-        *it = tmp;
-    }
-}
-
-//------------------------------------------------------------------------------
-/*static*/ void Function::CleanFilePaths( Array< AString > & files )
-{
-    AStackString< 512 > tmp;
-
-    AString * const end = files.End();
-    for ( AString * it = files.Begin(); it != end; ++it )
-    {
-        // make full path, clean slashes etc
-        NodeGraph::CleanPath( *it, tmp );
-
-        // replace original
-        *it = tmp;
-    }
-}
-
-// CleanFileNames
-//------------------------------------------------------------------------------
-void Function::CleanFileNames( Array< AString > & fileNames ) const
-{
-    // cleanup slashes (keep path relative)
-    AString * const end = fileNames.End();
-    for ( AString * it = fileNames.Begin(); it != end; ++it )
-    {
-        // normalize slashes
-        PathUtils::FixupFilePath( *it );
-    }
 }
 
 // ProcessAlias
@@ -917,7 +871,10 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, 
 {
     // get object MetaData
     const Meta_Name * nameMD = ri->HasMetaData< Meta_Name >();
-    ASSERT( nameMD ); // should not call this on types without this MetaData
+    if ( nameMD == nullptr )
+    {
+        return true; // No MetaName, but this is not an error
+    }
 
     // Format "Name" as ".Name" - TODO:C Would be good to eliminate this string copy
     AStackString<> propertyName( "." );
@@ -971,6 +928,13 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, 
 bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & iter, Node * node ) const
 {
     const ReflectionInfo * ri = node->GetReflectionInfoV();
+    return PopulateProperties( nodeGraph, iter, node, ri );
+}
+
+// PopulateProperties
+//------------------------------------------------------------------------------
+bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectionInfo * ri ) const
+{
     do
     {
         const ReflectionIter end = ri->End();
@@ -991,7 +955,7 @@ bool Function::PopulateProperties( NodeGraph & nodeGraph, const BFFIterator & it
             // Find the value for this property from the BFF
             const BFFVariable * v = BFFStackFrame::GetVar( propertyName );
 
-            if ( !PopulateProperty( nodeGraph, iter, node, property, v ) )
+            if ( !PopulateProperty( nodeGraph, iter, base, property, v ) )
             {
                 return false; // PopulateProperty will have emitted an error
             }
@@ -1013,6 +977,15 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
                                  const ReflectedProperty & property,
                                  const BFFVariable * variable ) const
 {
+    // Handle MetaEmbedMembers
+    if ( property.HasMetaData< Meta_EmbedMembers >() )
+    {
+        ASSERT( property.GetType() == PropertyType::PT_STRUCT );
+        ASSERT( property.IsArray() == false );
+        const ReflectedPropertyStruct & rps = static_cast< const ReflectedPropertyStruct & >( property );
+        return PopulateProperties( nodeGraph, iter, (Struct *)rps.GetStructBase( base ), rps.GetStructReflectionInfo() );
+    }
+
     // Handle missing but required
     if ( variable == nullptr )
     {
@@ -1380,7 +1353,6 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
     // Get the destionation
     const ReflectedPropertyStruct & dstStructs = static_cast< const ReflectedPropertyStruct & >( property );
     ASSERT( dstStructs.IsArray() );
-    const ReflectionInfo * ri = dstStructs.GetStructReflectionInfo();
 
     // Array to Array
     if ( variable->IsArrayOfStructs() )
@@ -1396,20 +1368,12 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
             // Calculate the base for this struct in the array
             void * structBase = dstStructs.GetStructInArray( base, index );
 
-            // Try to populate all the properties for this struct
-            for ( auto it = ri->Begin(); it != ri->End(); ++it )
+            const ReflectionInfo * ri = dstStructs.GetStructReflectionInfo();
+            if ( !PopulateArrayOfStructsElement( nodeGraph, iter, structBase, ri, s ) )
             {
-                AStackString<> propertyName( "." ); // TODO:C Eliminate copy
-                propertyName += (*it).GetName();
-
-                // Try to find property in BFF
-                const BFFVariable ** found = BFFVariable::GetMemberByName( propertyName, s->GetStructMembers() );
-                const BFFVariable * var = found ? *found : nullptr;
-                if ( !PopulateProperty( nodeGraph, iter, structBase, *it, var ) )
-                {
-                    return false; // PopulateProperty will have emitted an error
-                }
+                return false; // PopulateArrayOfStructsElement will have emitted an error
             }
+
             ++index;
         }
         return true;
@@ -1423,25 +1387,69 @@ bool Function::PopulateArrayOfStructs( NodeGraph & nodeGraph,
         // Calculate the base for this struct in the array
         void * structBase = dstStructs.GetStructInArray( base, 0 );
 
-        // Try to populate all the properties for this struct
-        for ( auto it = ri->Begin(); it != ri->End(); ++it )
-        {
-            AStackString<> propertyName( "." ); // TODO:C Eliminate copy
-            propertyName += (*it).GetName();
-
-            // Try to find property in BFF
-            const BFFVariable ** found = BFFVariable::GetMemberByName( propertyName, variable->GetStructMembers() );
-            const BFFVariable * var = found ? *found : nullptr;
-            if ( !PopulateProperty( nodeGraph, iter, structBase, *it, var ) )
-            {
-                return false; // PopulateProperty will have emitted an error
-            }
-        }
-        return true;
+        const ReflectionInfo * ri = dstStructs.GetStructReflectionInfo();
+        return PopulateArrayOfStructsElement( nodeGraph, iter, structBase, ri, variable ); // Will emit error if needed
     }
 
     Error::Error_1050_PropertyMustBeOfType( iter, this, variable->GetName().Get(), variable->GetType(), BFFVariable::VAR_STRUCT, BFFVariable::VAR_ARRAY_OF_STRUCTS );
     return false;
+}
+
+// PopulateArrayOfStructsElement
+//------------------------------------------------------------------------------
+bool Function::PopulateArrayOfStructsElement( NodeGraph & nodeGraph,
+                                              const BFFIterator & iter,
+                                              void * structBase,
+                                              const ReflectionInfo * structRI,
+                                              const BFFVariable * srcVariable ) const
+{
+    ASSERT( structRI ); // Must be at least one level of reflection
+    ASSERT( srcVariable->IsStruct() );
+
+    do
+    {
+        // Try to populate all the properties for this struct
+        for ( auto it = structRI->Begin(); it != structRI->End(); ++it )
+        {
+            const ReflectedProperty & property = *it;
+
+            // Don't populate hidden properties
+            if ( property.HasMetaData< Meta_Hidden >() )
+            {
+                continue;
+            }
+
+            AStackString<> propertyName( "." ); // TODO:C Eliminate copy
+            propertyName += property.GetName();
+
+            // Try to find property in BFF
+            const BFFVariable ** found = BFFVariable::GetMemberByName( propertyName, srcVariable->GetStructMembers() );
+            const BFFVariable * var = nullptr;
+            if ( found )
+            {
+                // Use variable if found
+                var = *found;
+            }
+            else
+            {
+                // If not found, check for inheritence from containing frame
+                if ( property.HasMetaData<Meta_InheritFromOwner>() )
+                {
+                    var = BFFStackFrame::GetVar( propertyName );
+                }
+            }
+            if ( !PopulateProperty( nodeGraph, iter, structBase, property, var ) )
+            {
+                return false; // PopulateProperty will have emitted an error
+            }
+        }
+
+        // Traverse into parent class (if there is one)
+        structRI = structRI->GetSuperClass();
+    }
+    while ( structRI );
+
+    return true;
 }
 
 //------------------------------------------------------------------------------

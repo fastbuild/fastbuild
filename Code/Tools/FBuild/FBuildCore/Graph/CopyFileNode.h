@@ -18,7 +18,7 @@ class CopyFileNode : public FileNode
     REFLECT_NODE_DECLARE( CopyFileNode )
 public:
     explicit CopyFileNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~CopyFileNode();
 
     static inline Node::Type GetTypeS() { return Node::COPY_FILE_NODE; }

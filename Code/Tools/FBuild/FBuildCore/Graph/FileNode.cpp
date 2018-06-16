@@ -29,6 +29,14 @@ FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
     m_LastBuildTimeMs = 1; // very little work required
 }
 
+// Initialize
+//------------------------------------------------------------------------------
+/*virtual*/ bool FileNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*funcStartIter*/, const Function * /*function*/ )
+{
+    ASSERT( false ); // Should never get here
+    return false;
+}
+
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 FileNode::~FileNode() = default;

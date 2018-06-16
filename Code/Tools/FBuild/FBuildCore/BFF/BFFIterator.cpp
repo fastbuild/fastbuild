@@ -193,13 +193,19 @@ bool BFFIterator::ParseToMatchingBrace( char openBrace, char closeBrace )
         // hit a string?
         if ( ( *m_Pos == '\'' ) || ( *m_Pos == '"' ) )
         {
+            const char quote = *m_Pos;
             SkipString( *m_Pos );
+            if ( *m_Pos != quote )
+            {
+                return false;
+            }
+            continue;
         }
 
         // hit the close brace?
         if ( *m_Pos == closeBrace )
         {
-            return true;
+            return !IsAtEnd();
         }
 
         // a regular charater.... keep searching

@@ -19,7 +19,7 @@ class AliasNode : public Node
     REFLECT_NODE_DECLARE( AliasNode )
 public:
     explicit AliasNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~AliasNode();
 
     static inline Node::Type GetTypeS() { return Node::ALIAS_NODE; }

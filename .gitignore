@@ -1,5 +1,13 @@
 # FASTBuild
 External/SDK
+!External/SDK/VisualStudio/VisualStudio.bff
+!External/SDK/VisualStudio/VS2013.bff
+!External/SDK/VisualStudio/VS2015.bff
+!External/SDK/VisualStudio/VS2017.bff
+!External/SDK/Windows/Windows.bff
+!External/SDK/Windows/Windows10SDK.bff
+!External/SDK/Windows/Windows81SDK.bff
+External/MSan
 *.exe
 *.fdb
 *.log

@@ -124,7 +124,7 @@ typedef signed int          int32_t;
     #define MemoryBarrier() __asm__ __volatile__("")
 #endif
 
-#if defined( __GNUC__ ) // GCC or Clang
+#if defined( __GNUC__ ) || defined( __clang__ ) // GCC or Clang
     #define FORMAT_STRING( fmt, args ) __attribute__((format(printf, fmt, args)))
 #else
     #define FORMAT_STRING( fmt, args )

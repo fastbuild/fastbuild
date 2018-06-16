@@ -37,7 +37,10 @@
 
 # Other interesting sequences
 "exists"
+"not"
 "in"
+"=="
+"!="
 "true"
 "false"
 "//"

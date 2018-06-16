@@ -52,9 +52,25 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetDBFile() : nullptr ) );
 
-    const AStackString<> target( "all" );
+    Array< AString > targets;
+    #if defined( __WINDOWS__ )
+        targets.Append( AStackString<>( "All-x64-Debug" ) );
+        targets.Append( AStackString<>( "All-x64-Release" ) );
+        targets.Append( AStackString<>( "All-x64Clang-Debug" ) );
+        targets.Append( AStackString<>( "All-x64Clang-Release" ) );
+    #elif defined( __LINUX__ )
+        targets.Append( AStackString<>( "All-x64Linux-Debug" ) );
+        targets.Append( AStackString<>( "All-x64Linux-Release" ) );
+        targets.Append( AStackString<>( "All-x64ClangLinux-Debug" ) );
+        targets.Append( AStackString<>( "All-x64ClangLinux-Release" ) );
+    #elif defined( __OSX__ )
+        targets.Append( AStackString<>( "All-x64OSX-Debug" ) );
+        targets.Append( AStackString<>( "All-x64OSX-Release" ) );
+    #else
+        #error Unknown platform
+    #endif
 
-    TEST_ASSERT( fBuild.Build( target ) );
+    TEST_ASSERT( fBuild.Build( targets ) );
 
     // save the db file - make sure it exists
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetDBFile() ) );
@@ -138,7 +154,7 @@ void TestBuildFBuild::DBSavePerformance() const
     Timer t;
     for ( size_t i=0; i<100; ++i )
     {
-		ms.Reset();
+        ms.Reset();
         fBuild.SaveDependencyGraph( ms, "unused.fdb" );
     }
 

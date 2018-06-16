@@ -37,23 +37,11 @@ FunctionCompiler::FunctionCompiler()
     return true;
 }
 
-// Commit
+// CreateNode
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionCompiler::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ Node * FunctionCompiler::CreateNode() const
 {
-    CompilerNode * compilerNode = nodeGraph.CreateCompilerNode(m_AliasForFunction);
-
-    if ( !PopulateProperties( nodeGraph, funcStartIter, compilerNode ) )
-    {
-        return false;
-    }
-
-    if ( !compilerNode->Initialize( nodeGraph, funcStartIter, this ) )
-    {
-        return false;
-    }
-
-    return true;
+    return FNEW( CompilerNode );
 }
 
 //------------------------------------------------------------------------------

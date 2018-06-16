@@ -74,15 +74,7 @@ WorkerWindow::~WorkerWindow()
     ASSERT( m_UIState == ALLOWED_TO_QUIT );
 
     // ensure the thread is shutdown
-    #if defined( __WINDOWS__ )
-        VERIFY( WaitForSingleObject( m_UIThreadHandle, INFINITE ) == WAIT_OBJECT_0 );
-    #elif defined( __APPLE__ )
-        // TODO:MAC WaitForSingleObject equivalent
-    #elif defined( __LINUX__ )
-        // TODO:LINUX WaitForSingleObject equivalent
-    #else
-        #error Unknown Platform
-    #endif
+    Thread::WaitForThread( m_UIThreadHandle );
 
     // clean up the ui thread
     Thread::CloseHandle( m_UIThreadHandle );
@@ -206,14 +198,17 @@ void WorkerWindow::UIUpdateThread()
         m_Menu = CreatePopupMenu();
         AppendMenu( m_Menu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT( "Exit" ) );
 
-        // Display the window, and minimize it
-        // - we do this so the user can see the application has run
-        ShowWindow( (HWND)GetHandle(), SW_SHOW );
-        UpdateWindow( (HWND)GetHandle() );
-        ShowWindow( (HWND)GetHandle(), SW_SHOW ); // First call can be ignored
+        // Display the window and minimize it if needed
         if ( WorkerSettings::Get().GetStartMinimzed() )
         {
+            UpdateWindow( (HWND)GetHandle() );
             ToggleMinimized(); // minimze
+        }
+        else
+        {
+            ShowWindow( (HWND)GetHandle(), SW_SHOW );
+            UpdateWindow( (HWND)GetHandle() );
+            ShowWindow( (HWND)GetHandle(), SW_SHOW ); // First call can be ignored
         }
 
         SetStatus( "Idle" );
@@ -341,9 +336,6 @@ void WorkerWindow::ToggleMinimized()
         {
             // hide the main window
             ShowWindow( (HWND)GetHandle(), SW_HIDE );
-
-            // balloon
-            m_TrayIcon->ShowNotification( "FBuildWorker minimized to tray." );
         }
         else
         {

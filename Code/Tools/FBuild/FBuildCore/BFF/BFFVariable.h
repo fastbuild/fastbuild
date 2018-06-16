@@ -60,9 +60,9 @@ public:
     inline bool IsStruct() const    { return m_Type == BFFVariable::VAR_STRUCT; }
     inline bool IsArrayOfStructs() const { return m_Type == BFFVariable::VAR_ARRAY_OF_STRUCTS; }
 
-    inline bool Frozen() const { return m_Frozen; }
-    inline void Freeze() const { ASSERT( false == m_Frozen ); m_Frozen = true; }
-    inline void Unfreeze() const { ASSERT( m_Frozen ); m_Frozen = false; }
+    inline bool Frozen() const { return m_FreezeCount > 0; }
+    inline void Freeze() const { ++m_FreezeCount; }
+    inline void Unfreeze() const { ASSERT( m_FreezeCount != 0 ); --m_FreezeCount; }
 
     BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFIterator & operatorIter ) const;
 
@@ -92,7 +92,7 @@ private:
     AString m_Name;
     VarType m_Type;
 
-    mutable bool m_Frozen;
+    mutable uint8_t     m_FreezeCount;
 
     //
     bool                m_BoolValue;

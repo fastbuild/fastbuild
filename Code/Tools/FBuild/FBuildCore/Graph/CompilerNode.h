@@ -19,7 +19,7 @@ class CompilerNode : public Node
     REFLECT_NODE_DECLARE( CompilerNode )
 public:
     explicit CompilerNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~CompilerNode();
 
 	inline bool IsAFile() const override { return false; }
@@ -50,6 +50,7 @@ public:
         CUDA_NVCC       = 7,
         QT_RCC          = 8,
         VBCC            = 9,
+        ORBIS_WAVE_PSSLC= 10,
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 

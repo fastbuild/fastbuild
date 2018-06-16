@@ -60,7 +60,7 @@ LinkerNode::LinkerNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool LinkerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool LinkerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -824,6 +824,29 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
     return ( AString::StrNCmpI( token.Get() + 1, arg, argLen ) == 0 );
 }
 
+// IsStartOfLinkerArg
+//------------------------------------------------------------------------------
+/*static*/ bool LinkerNode::IsStartOfLinkerArg( const AString & token, const char * arg )
+{
+    ASSERT( token.IsEmpty() == false );
+
+    // Args start with -
+    if ( token[0] != '-' )
+    {
+        return false;
+    }
+
+    // Length check to early out
+    const size_t argLen = AString::StrLen( arg );
+    if ( ( token.GetLength() - 1 ) < argLen )
+    {
+        return false; // token is too short
+    }
+
+    // Args are case-sensitive
+    return ( AString::StrNCmp( token.Get() + 1, arg, argLen ) == 0 );
+}
+
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
 void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
@@ -920,12 +943,12 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 
 // GetOtherLibraries
 //------------------------------------------------------------------------------
-bool LinkerNode::GetOtherLibraries( NodeGraph & nodeGraph,
-                                    const BFFIterator & iter,
-                                    const Function * function,
-                                    const AString & args,
-                                    Dependencies & otherLibraries,
-                                    bool msvc ) const
+/*static*/ bool LinkerNode::GetOtherLibraries( NodeGraph & nodeGraph,
+                                               const BFFIterator & iter,
+                                               const Function * function,
+                                               const AString & args,
+                                               Dependencies & otherLibraries,
+                                               bool msvc )
 {
     // split to individual tokens
     Array< AString > tokens;
@@ -1124,13 +1147,13 @@ bool LinkerNode::GetOtherLibraries( NodeGraph & nodeGraph,
 
 // GetOtherLibrary
 //------------------------------------------------------------------------------
-bool LinkerNode::GetOtherLibrary( NodeGraph & nodeGraph,
-                                  const BFFIterator & iter,
-                                  const Function * function,
-                                  Dependencies & libs,
-                                  const AString & path,
-                                  const AString & lib,
-                                  bool & found ) const
+/*static*/ bool LinkerNode::GetOtherLibrary( NodeGraph & nodeGraph,
+                                             const BFFIterator & iter,
+                                             const Function * function,
+                                             Dependencies & libs,
+                                             const AString & path,
+                                             const AString & lib,
+                                             bool & found )
 {
     found = false;
 
@@ -1193,7 +1216,7 @@ bool LinkerNode::GetOtherLibrary( NodeGraph & nodeGraph,
     }
     else
     {
-        if ( it->BeginsWith( arg ) == false )
+        if ( LinkerNode::IsStartOfLinkerArg( *it, arg ) == false )
         {
             return false; // not our arg, not consumed
         }

@@ -76,7 +76,7 @@ SLNNode::SLNNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool SLNNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool SLNNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // Solution Configs
     //------------------------------------------------------------------------------

@@ -10,6 +10,7 @@
 // FBuildCore
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h" // TODO:C Remove when VSProjectGenerator derives from ProjectGeneratorBase
 
 // Core
@@ -20,17 +21,6 @@
 
 // system
 #include <stdarg.h> // for va_args
-
-// CONSTRUCTOR (VSProjectConfig)
-//------------------------------------------------------------------------------
-VSProjectConfig::VSProjectConfig()
-    : m_Target( nullptr )
-{
-}
-
-// DESTRUCTOR (VSProjectConfig)
-//------------------------------------------------------------------------------
-VSProjectConfig::~VSProjectConfig() = default;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -61,8 +51,6 @@ void VSProjectGenerator::AddFile( const AString & file )
     // ensure slash consistency which we rely on later
     AStackString<> fileCopy( file );
     fileCopy.Replace( FORWARD_SLASH, BACK_SLASH );
-
-    ASSERT( !m_Files.Find( fileCopy ) );
     m_Files.Append( fileCopy );
 }
 
@@ -105,7 +93,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 
     // header
     Write( "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" );
-    Write( "<Project DefaultTargets=\"Build\" ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n" );
+    Write( "<Project DefaultTargets=\"Build\" ToolsVersion=\"15.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n" );
 
     // Project Configurations
     {
@@ -124,11 +112,19 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     // files
     {
         Write("  <ItemGroup>\n" );
+        Array< AString > seenFiles( m_Files.GetSize(), false );
         const AString * const fEnd = m_Files.End();
         for ( const AString * fIt = m_Files.Begin(); fIt!=fEnd; ++fIt )
         {
             AStackString<> fileName;
             GetProjectRelativePath( projectBasePath, *fIt, fileName );
+
+            // Gracefully handle duplicate files
+            if ( CheckForDuplicateFiles( fileName, seenFiles ) )
+            {
+                continue;
+            }
+
             const char * fileType = nullptr;
             const VSProjectFileType * const end = fileTypes.End();
             for ( const VSProjectFileType * it=fileTypes.Begin(); it!=end; ++it )
@@ -254,15 +250,15 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         {
             Write( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
 
-            WritePGItem( "NMakeBuildCommandLine",           cIt->m_BuildCommand );
-            WritePGItem( "NMakeReBuildCommandLine",         cIt->m_RebuildCommand );
-            WritePGItem( "NMakeCleanCommandLine",           cIt->m_CleanCommand );
+            WritePGItem( "NMakeBuildCommandLine",           cIt->m_ProjectBuildCommand );
+            WritePGItem( "NMakeReBuildCommandLine",         cIt->m_ProjectRebuildCommand );
+            WritePGItem( "NMakeCleanCommandLine",           cIt->m_ProjectCleanCommand );
             WritePGItem( "NMakeOutput",                     cIt->m_Output );
 
             const ObjectListNode * oln = nullptr;
             if ( cIt->m_PreprocessorDefinitions.IsEmpty() || cIt->m_IncludeSearchPath.IsEmpty() )
             {
-                oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( cIt->m_Target );
+                oln = ProjectGeneratorBase::FindTargetForIntellisenseInfo( cIt->m_TargetNode );
             }
 
             if ( cIt->m_PreprocessorDefinitions.IsEmpty() == false )
@@ -292,9 +288,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                     ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false );
                     for ( AString & include : includePaths )
                     {
-                        AStackString<> fullIncludePath;
-                        NodeGraph::CleanPath( include, fullIncludePath ); // Expand to full path
-                        GetProjectRelativePath( projectBasePath, fullIncludePath, include );
+                        GetProjectRelativePath( projectBasePath, include, include );
                         #if !defined( __WINDOWS__ )
                             include.Replace( '/', '\\' ); // Convert to Windows-style slashes
                         #endif
@@ -380,6 +374,7 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
     // files
     {
         Write( "  <ItemGroup>\n" );
+        Array< AString > seenFiles( m_Files.GetSize(), false );
         const AString * const fEnd = m_Files.End();
         for ( const AString * fIt = m_Files.Begin(); fIt!=fEnd; ++fIt )
         {
@@ -388,6 +383,13 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
             GetFolderPath( *fIt, folder );
             AStackString<> fileName;
             GetProjectRelativePath( projectBasePath, *fIt, fileName );
+
+            // Gracefully handle duplicate files
+            if ( CheckForDuplicateFiles( fileName, seenFiles ) )
+            {
+                continue;
+            }
+
             Write( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
             if ( !folder.IsEmpty() )
             {
@@ -511,9 +513,20 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
                                                             const AString & fileName,
                                                             AString & outRelativeFileName )
 {
+    AStackString<> cleanFileName;
+    #if !defined( __WINDOWS__ )
+        // Normally we keep all paths with native slashes, but in this case we
+        // have windows slashes, so convert to native for the relative check
+        AStackString<> pathCopy( fileName );
+        pathCopy.Replace( '\\', '/' );
+        NodeGraph::CleanPath( pathCopy, cleanFileName );
+    #else
+        NodeGraph::CleanPath( fileName, cleanFileName );
+    #endif
+
     // Find common sub-path
     const char * pathA = projectFolderPath.Get();
-    const char * pathB = fileName.Get();
+    const char * pathB = cleanFileName.Get();
     while ( ( *pathA == *pathB ) && ( *pathA != '\0' ) )
     {
         pathA++;
@@ -523,7 +536,7 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
     if ( hasCommonSubPath == false )
     {
         // No common sub-path, so use relative name
-        outRelativeFileName = fileName;
+        outRelativeFileName = cleanFileName;
         return;
     }
 
@@ -549,144 +562,20 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
     outRelativeFileName += pathB;
 }
 
-// VSProjectConfig::Save
+// CheckForDuplicateFiles
 //------------------------------------------------------------------------------
-/*static*/ void VSProjectConfig::Save( IOStream & stream, const Array< VSProjectConfig > & configs )
+bool VSProjectGenerator::CheckForDuplicateFiles( const AString & file,
+                                                 Array< AString > & inoutAlreadySeenFiles ) const
 {
-    uint32_t numConfigs = (uint32_t)configs.GetSize();
-    stream.Write( numConfigs );
-    for ( uint32_t i=0; i<numConfigs; ++i )
+    for ( const AString & seenFile : inoutAlreadySeenFiles )
     {
-        const VSProjectConfig & cfg = configs[ i ];
-
-        stream.Write( cfg.m_SolutionPlatform );
-        stream.Write( cfg.m_SolutionConfig );
-
-        stream.Write( cfg.m_Platform );
-        stream.Write( cfg.m_Config );
-
-        Node::SaveNodeLink( stream, cfg.m_Target );
-
-        stream.Write( cfg.m_BuildCommand );
-        stream.Write( cfg.m_RebuildCommand );
-        stream.Write( cfg.m_CleanCommand );
-
-        stream.Write( cfg.m_Output );
-        stream.Write( cfg.m_PreprocessorDefinitions );
-        stream.Write( cfg.m_IncludeSearchPath );
-        stream.Write( cfg.m_ForcedIncludes );
-        stream.Write( cfg.m_AssemblySearchPath );
-        stream.Write( cfg.m_ForcedUsingAssemblies );
-        stream.Write( cfg.m_AdditionalOptions );
-        stream.Write( cfg.m_OutputDirectory );
-        stream.Write( cfg.m_IntermediateDirectory );
-        stream.Write( cfg.m_BuildLogFile );
-        stream.Write( cfg.m_LayoutDir );
-        stream.Write( cfg.m_LayoutExtensionFilter );
-        stream.Write( cfg.m_Xbox360DebuggerCommand );
-        stream.Write( cfg.m_DebuggerFlavor );
-        stream.Write( cfg.m_AumidOverride );
-        stream.Write( cfg.m_PlatformToolset );
-        stream.Write( cfg.m_DeploymentType );
-        stream.Write( cfg.m_DeploymentFiles );
-
-        stream.Write( cfg.m_LocalDebuggerCommandArguments );
-        stream.Write( cfg.m_LocalDebuggerWorkingDirectory );
-        stream.Write( cfg.m_LocalDebuggerCommand );
-        stream.Write( cfg.m_LocalDebuggerEnvironment );
+        if ( seenFile.CompareI( file ) == 0 )
+        {
+            return true; // already seen
+        }
     }
-}
-
-// VSProjectConfig::Load
-//------------------------------------------------------------------------------
-/*static*/ bool VSProjectConfig::Load( NodeGraph & nodeGraph, IOStream & stream, Array< VSProjectConfig > & configs )
-{
-    ASSERT( configs.IsEmpty() );
-
-    uint32_t numConfigs( 0 );
-    if ( !stream.Read( numConfigs ) )
-    {
-        return false;
-    }
-    configs.SetSize( numConfigs );
-    for ( uint32_t i=0; i<numConfigs; ++i )
-    {
-        VSProjectConfig & cfg = configs[ i ];
-
-        if ( stream.Read( cfg.m_SolutionPlatform ) == false ) { return false; }
-        if ( stream.Read( cfg.m_SolutionConfig ) == false ) { return false;  }
-
-        if ( stream.Read( cfg.m_Platform ) == false ) { return false; }
-        if ( stream.Read( cfg.m_Config ) == false ) { return false; }
-
-        if ( !Node::LoadNodeLink( nodeGraph, stream, cfg.m_Target ) ) { return false; }
-
-        if ( stream.Read( cfg.m_BuildCommand ) == false ) { return false; }
-        if ( stream.Read( cfg.m_RebuildCommand ) == false ) { return false; }
-        if ( stream.Read( cfg.m_CleanCommand ) == false ) { return false; }
-
-        if ( stream.Read( cfg.m_Output ) == false ) { return false; }
-        if ( stream.Read( cfg.m_PreprocessorDefinitions ) == false ) { return false; }
-        if ( stream.Read( cfg.m_IncludeSearchPath ) == false ) { return false; }
-        if ( stream.Read( cfg.m_ForcedIncludes ) == false ) { return false; }
-        if ( stream.Read( cfg.m_AssemblySearchPath ) == false ) { return false; }
-        if ( stream.Read( cfg.m_ForcedUsingAssemblies ) == false ) { return false; }
-        if ( stream.Read( cfg.m_AdditionalOptions ) == false ) { return false; }
-        if ( stream.Read( cfg.m_OutputDirectory ) == false ) { return false; }
-        if ( stream.Read( cfg.m_IntermediateDirectory ) == false ) { return false; }
-        if ( stream.Read( cfg.m_BuildLogFile ) == false ) { return false; }
-        if ( stream.Read( cfg.m_LayoutDir ) == false ) { return false; }
-        if ( stream.Read( cfg.m_LayoutExtensionFilter ) == false ) { return false; }
-        if ( stream.Read( cfg.m_Xbox360DebuggerCommand ) == false ) { return false; }
-        if ( stream.Read( cfg.m_DebuggerFlavor ) == false ) { return false; }
-        if ( stream.Read( cfg.m_AumidOverride ) == false ) { return false; }
-        if ( stream.Read( cfg.m_PlatformToolset ) == false ) { return false; }
-        if ( stream.Read( cfg.m_DeploymentType ) == false ) { return false; }
-        if ( stream.Read( cfg.m_DeploymentFiles ) == false ) { return false; }
-
-        if ( stream.Read( cfg.m_LocalDebuggerCommandArguments ) == false ) { return false; }
-        if ( stream.Read( cfg.m_LocalDebuggerWorkingDirectory ) == false ) { return false; }
-        if ( stream.Read( cfg.m_LocalDebuggerCommand ) == false ) { return false; }
-        if ( stream.Read( cfg.m_LocalDebuggerEnvironment ) == false ) { return false; }
-    }
-    return true;
-}
-
-// VSProjectFileType::Save
-//------------------------------------------------------------------------------
-/*static*/ void VSProjectFileType::Save( IOStream & stream, const Array< VSProjectFileType > & fileTypes )
-{
-    uint32_t numFileTypes = (uint32_t)fileTypes.GetSize();
-    stream.Write( numFileTypes );
-    for ( uint32_t i=0; i<numFileTypes; ++i )
-    {
-        const VSProjectFileType & ft = fileTypes[ i ];
-
-        stream.Write( ft.m_FileType );
-        stream.Write( ft.m_Pattern );
-    }
-}
-
-// VSProjectFileType::Load
-//------------------------------------------------------------------------------
-/*static*/ bool VSProjectFileType::Load( IOStream & stream, Array< VSProjectFileType > & fileTypes )
-{
-    ASSERT( fileTypes.IsEmpty() );
-
-    uint32_t numFileTypes( 0 );
-    if ( !stream.Read( numFileTypes ) )
-    {
-        return false;
-    }
-    fileTypes.SetSize( numFileTypes );
-    for ( uint32_t i=0; i<numFileTypes; ++i )
-    {
-        VSProjectFileType & ft = fileTypes[ i ];
-
-        if ( stream.Read( ft.m_FileType ) == false ) { return false; }
-        if ( stream.Read( ft.m_Pattern ) == false ) { return false; }
-    }
-    return true;
+    inoutAlreadySeenFiles.Append( file );
+    return false; // not seen before
 }
 
 //------------------------------------------------------------------------------
