@@ -65,15 +65,16 @@ CSNode::CSNode()
 
     // .Compiler
     CompilerNode * compilerNode( nullptr );
-    if ( !function->GetCompilerNode( nodeGraph, iter, m_Compiler, compilerNode ) )
+    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, compilerNode ) )
     {
         return false; // GetCompilerNode will have emitted an error
     }
 
     // .CompilerInputPath
     Dependencies compilerInputPath;
-    if ( !function->GetDirectoryListNodeList( nodeGraph,
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
                                               iter,
+                                              function,
                                               m_CompilerInputPath,
                                               m_CompilerInputExcludePath,
                                               m_CompilerInputExcludedFiles,
@@ -89,7 +90,7 @@ CSNode::CSNode()
 
     // .CompilerInputFiles
     Dependencies compilerInputFiles;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerInputFiles, "CompilerInputFiles", compilerInputFiles ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerInputFiles, "CompilerInputFiles", compilerInputFiles ) )
     {
         return false; // GetFileNode will have emitted an error
     }
@@ -97,7 +98,7 @@ CSNode::CSNode()
 
     // .CompilerReferences
     Dependencies compilerReferences;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerReferences, ".CompilerReferences", compilerReferences ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerReferences, ".CompilerReferences", compilerReferences ) )
     {
         return false; // GetNodeList will have emitted an error
     }

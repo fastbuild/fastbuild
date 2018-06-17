@@ -73,7 +73,7 @@ ExecNode::ExecNode()
 
     // .ExecInput
     Dependencies execInputFiles;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_ExecInput, "ExecInput", execInputFiles ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_ExecInput, "ExecInput", execInputFiles ) )
     {
         return false; // GetFileNodes will have emitted an error
     }
@@ -81,8 +81,9 @@ ExecNode::ExecNode()
 
     // .ExecInputPath
     Dependencies execInputPaths;
-    if ( !function->GetDirectoryListNodeList( nodeGraph,
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
                                               iter,
+                                              function,
                                               m_ExecInputPath,
                                               m_ExecInputExcludePath,
                                               m_ExecInputExcludedFiles,

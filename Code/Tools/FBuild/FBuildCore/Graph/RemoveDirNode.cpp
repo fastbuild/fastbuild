@@ -47,8 +47,9 @@ RemoveDirNode::RemoveDirNode()
 
     // Convert RemovePaths paths to DirectoryListNodes
     Dependencies fileListDeps( m_RemovePaths.GetSize() );
-    if ( !function->GetDirectoryListNodeList( nodeGraph,
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
                                               iter,
+                                              function,
                                               m_RemovePaths,
                                               m_RemoveExcludePaths,
                                               Array< AString >(), // unused FilesToExclude

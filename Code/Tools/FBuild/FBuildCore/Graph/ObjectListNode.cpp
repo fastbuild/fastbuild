@@ -89,7 +89,7 @@ ObjectListNode::ObjectListNode()
 
     // .Compiler
     CompilerNode * compilerNode( nullptr );
-    if ( !function->GetCompilerNode( nodeGraph, iter, m_Compiler, compilerNode ) )
+    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, compilerNode ) )
     {
         return false; // GetCompilerNode will have emitted an error
     }
@@ -98,7 +98,7 @@ ObjectListNode::ObjectListNode()
     // (ObjectListNode doesn't need to depend on this, but we want to check it so that
     //  we can raise errors during parsing instead of during the build when ObjectNode might be created)
     Dependencies compilerForceUsing;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
     {
         return false; // GetFileNode will have emitted an error
     }
@@ -165,7 +165,7 @@ ObjectListNode::ObjectListNode()
     if ( m_Preprocessor.IsEmpty() == false )
     {
         // get the preprocessor executable
-        if ( function->GetCompilerNode( nodeGraph, iter, m_Preprocessor, preprocessorNode ) == false )
+        if ( Function::GetCompilerNode( nodeGraph, iter, function, m_Preprocessor, preprocessorNode ) == false )
         {
             return false; // GetCompilerNode will have emitted an error
         }
@@ -193,8 +193,9 @@ ObjectListNode::ObjectListNode()
 
     // .CompilerInputPath
     Dependencies compilerInputPath;
-    if ( !function->GetDirectoryListNodeList( nodeGraph,
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
                                               iter,
+                                              function,
                                               m_CompilerInputPath,
                                               m_CompilerInputExcludePath,
                                               m_CompilerInputExcludedFiles,
@@ -210,7 +211,7 @@ ObjectListNode::ObjectListNode()
 
     // .CompilerInputFiles
     Dependencies compilerInputFiles;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerInputFiles, "CompilerInputFiles", compilerInputFiles ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerInputFiles, "CompilerInputFiles", compilerInputFiles ) )
     {
         return false; // GetFileNode will have emitted an error
     }

@@ -76,19 +76,19 @@ UnityNode::UnityNode()
     }
 
     Dependencies dirNodes( m_InputPaths.GetSize() );
-    if ( !function->GetDirectoryListNodeList( nodeGraph, iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_ExcludePatterns, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
+    if ( !Function::GetDirectoryListNodeList( nodeGraph, iter, function, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_ExcludePatterns, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }
 
     Dependencies fileNodes( m_Files.GetSize() );
-    if ( !function->GetFileNodes( nodeGraph, iter, m_Files, "UnityInputFiles", fileNodes ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_Files, "UnityInputFiles", fileNodes ) )
     {
         return false; // GetFileNodes will have emitted an error
     }
 
     Dependencies objectListNodes( m_ObjectLists.GetSize() );
-    if ( !function->GetObjectListNodes( nodeGraph, iter, m_ObjectLists, "UnityInputObjectLists", objectListNodes ) )
+    if ( !Function::GetObjectListNodes( nodeGraph, iter, function, m_ObjectLists, "UnityInputObjectLists", objectListNodes ) )
     {
         return false; // GetObjectListNodes will have emitted an error
     }

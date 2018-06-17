@@ -75,7 +75,7 @@ TestNode::TestNode()
 
     // .TestInput
     Dependencies testInputFiles;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_TestInput, "TestInput", testInputFiles ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_TestInput, "TestInput", testInputFiles ) )
     {
         return false; // GetFileNodes will have emitted an error
     }
@@ -83,8 +83,9 @@ TestNode::TestNode()
 
     // .TestInputPath
     Dependencies testInputPaths;
-    if ( !function->GetDirectoryListNodeList( nodeGraph,
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
                                               iter,
+                                              function,
                                               m_TestInputPath,
                                               m_TestInputExcludePath,
                                               m_TestInputExcludedFiles,

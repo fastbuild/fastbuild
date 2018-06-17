@@ -474,16 +474,17 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
 
 // GetDirectoryNodeList
 //------------------------------------------------------------------------------
-bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
-                                         const BFFIterator & iter,
-                                         const Array< AString > & paths,
-                                         const Array< AString > & excludePaths,
-                                         const Array< AString > & filesToExclude,
-                                         const Array< AString > & excludePatterns,
-                                         bool recurse,
-                                         const Array< AString > * patterns,
-                                         const char * inputVarName,
-                                         Dependencies & nodes ) const
+/*static*/ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
+                                                    const BFFIterator & iter,
+                                                    const Function * function,
+                                                    const Array< AString > & paths,
+                                                    const Array< AString > & excludePaths,
+                                                    const Array< AString > & filesToExclude,
+                                                    const Array< AString > & excludePatterns,
+                                                    bool recurse,
+                                                    const Array< AString > * patterns,
+                                                    const char * inputVarName,
+                                                    Dependencies & nodes )
 {
     // Handle special case of excluded files beginning with ../
     // Since they can be used sensibly by matching just the end
@@ -524,14 +525,14 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
             dln->m_ExcludePaths = excludePaths;
             dln->m_FilesToExclude = filesToExcludeCleaned;
             dln->m_ExcludePatterns = excludePatterns;
-            if ( !dln->Initialize( nodeGraph, iter, this ) )
+            if ( !dln->Initialize( nodeGraph, iter, function ) )
             {
                 return false; // Initialize will have emitted an error
             }
         }
         else if ( node->GetType() != Node::DIRECTORY_LIST_NODE )
         {
-            Error::Error_1102_UnexpectedType( iter, this, inputVarName, node->GetName(), node->GetType(), Node::DIRECTORY_LIST_NODE );
+            Error::Error_1102_UnexpectedType( iter, function, inputVarName, node->GetName(), node->GetType(), Node::DIRECTORY_LIST_NODE );
             return false;
         }
 
@@ -542,7 +543,11 @@ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
 
 // GetCompilerNode
 //------------------------------------------------------------------------------
-bool Function::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode ) const
+/*static*/ bool Function::GetCompilerNode( NodeGraph & nodeGraph,
+                                           const BFFIterator & iter,
+                                           const Function * function,
+                                           const AString & compiler,
+                                           CompilerNode * & compilerNode )
 {
     Node * cn = nodeGraph.FindNodeExact( compiler );
     compilerNode = nullptr;
@@ -555,7 +560,7 @@ bool Function::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter,
         }
         if ( cn->GetType() != Node::COMPILER_NODE )
         {
-            Error::Error_1102_UnexpectedType( iter, this, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE );
+            Error::Error_1102_UnexpectedType( iter, function, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE );
             return false;
         }
         compilerNode = cn->CastTo< CompilerNode >();
@@ -579,7 +584,7 @@ bool Function::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter,
         {
             if ( cn->GetType() != Node::COMPILER_NODE )
             {
-                Error::Error_1102_UnexpectedType( iter, this, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE );
+                Error::Error_1102_UnexpectedType( iter, function, "Compiler", cn->GetName(), cn->GetType(), Node::COMPILER_NODE );
                 return false;
             }
             compilerNode = cn->CastTo< CompilerNode >();
@@ -604,14 +609,6 @@ bool Function::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter,
 
     return true;
 }
-
-/*static*/ bool GetFileNode( NodeGraph & nodeGraph,
-                             const BFFIterator & iter,
-                             const Function * function,
-                             const AString & filePath,
-                             const char * inputVarName,
-                             Dependencies & nodes );
-
 
 // GetFileNode
 //------------------------------------------------------------------------------
@@ -640,17 +637,18 @@ bool Function::GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter,
 
 // GetFileNodes
 //------------------------------------------------------------------------------
-bool Function::GetFileNodes( NodeGraph & nodeGraph,
-                             const BFFIterator & iter,
-                             const Array< AString > & files,
-                             const char * inputVarName,
-                             Dependencies & nodes ) const
+/*static*/ bool Function::GetFileNodes( NodeGraph & nodeGraph,
+                                        const BFFIterator & iter,
+                                        const Function * function,
+                                        const Array< AString > & files,
+                                        const char * inputVarName,
+                                        Dependencies & nodes )
 {
     const AString * const  end = files.End();
     for ( const AString * it = files.Begin(); it != end; ++it )
     {
         const AString & file = *it;
-        if (!GetFileNode( nodeGraph, iter, this, file, inputVarName, nodes ))
+        if (!GetFileNode( nodeGraph, iter, function, file, inputVarName, nodes ))
         {
             return false; // GetFileNode will have emitted an error
         }
@@ -660,11 +658,12 @@ bool Function::GetFileNodes( NodeGraph & nodeGraph,
 
 // GetObjectListNodes
 //------------------------------------------------------------------------------
-bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
-                                   const BFFIterator & iter,
-                                   const Array< AString > & objectLists,
-                                   const char * inputVarName,
-                                   Dependencies & nodes ) const
+/*static*/ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
+                                              const BFFIterator & iter,
+                                              const Function * function,
+                                              const Array< AString > & objectLists,
+                                              const char * inputVarName,
+                                              Dependencies & nodes )
 {
     const AString * const  end = objectLists.End();
     for ( const AString * it = objectLists.Begin(); it != end; ++it )
@@ -675,12 +674,12 @@ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
         Node * node = nodeGraph.FindNode( objectList );
         if ( node == nullptr )
         {
-            Error::Error_1104_TargetNotDefined( iter, this, inputVarName, objectList );
+            Error::Error_1104_TargetNotDefined( iter, function, inputVarName, objectList );
             return false;
         }
         else if ( node->GetType() != Node::OBJECT_LIST_NODE )
         {
-            Error::Error_1102_UnexpectedType( iter, this, inputVarName, node->GetName(), node->GetType(), Node::OBJECT_LIST_NODE );
+            Error::Error_1102_UnexpectedType( iter, function, inputVarName, node->GetName(), node->GetType(), Node::OBJECT_LIST_NODE );
             return false;
         }
 

@@ -92,7 +92,7 @@ ObjectNode::ObjectNode()
 
     // .Compiler
     CompilerNode * compiler( nullptr );
-    if ( !function->GetCompilerNode( nodeGraph, iter, m_Compiler, compiler ) )
+    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, compiler ) )
     {
         return false; // GetCompilerNode will have emitted an error
     }
@@ -109,7 +109,7 @@ ObjectNode::ObjectNode()
     CompilerNode * preprocessor( nullptr );
     if ( m_Preprocessor.IsEmpty() == false )
     {
-        if ( !function->GetCompilerNode( nodeGraph, iter, m_Preprocessor, preprocessor ) )
+        if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Preprocessor, preprocessor ) )
         {
             return false; // GetCompilerNode will have emitted an error
         }
@@ -117,7 +117,7 @@ ObjectNode::ObjectNode()
 
     // .CompilerForceUsing
     Dependencies compilerForceUsing;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
     {
         return false; // GetFileNode will have emitted an error
     }

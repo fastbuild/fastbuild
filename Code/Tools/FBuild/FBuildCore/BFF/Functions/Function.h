@@ -61,49 +61,51 @@ public:
     // most functions will override this to commit the effects of the function
     virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const;
 
-    bool GetCompilerNode( NodeGraph & nodeGraph, const BFFIterator & iter, const AString & compiler, CompilerNode * & compilerNode ) const;
-
-    bool GetDirectoryListNodeList( NodeGraph & nodeGraph,
-                                   const BFFIterator & iter,
-                                   const Array< AString > & paths,
-                                   const Array< AString > & excludePaths,
-                                   const Array< AString > & filesToExclude,
-                                   const Array< AString > & excludePatterns,
-                                   bool recurse,
-                                   const Array< AString > * patterns,
-                                   const char * inputVarName,
-                                   Dependencies & nodes ) const;
+    // Node::Initialize helpers
+    static bool GetCompilerNode( NodeGraph & nodeGraph,
+                                 const BFFIterator & iter,
+                                 const Function * function,
+                                 const AString & compiler,
+                                 CompilerNode * & compilerNode );
+    static bool GetDirectoryListNodeList( NodeGraph & nodeGraph,
+                                          const BFFIterator & iter,
+                                          const Function * function,
+                                          const Array< AString > & paths,
+                                          const Array< AString > & excludePaths,
+                                          const Array< AString > & filesToExclude,
+                                          const Array< AString > & excludePatterns,
+                                          bool recurse,
+                                          const Array< AString > * patterns,
+                                          const char * inputVarName,
+                                          Dependencies & nodes );
     static bool GetFileNode( NodeGraph & nodeGraph,
                              const BFFIterator & iter,
                              const Function * function,
                              const AString & file,
                              const char * inputVarName,
-                             Dependencies & nodes ) ;
-    bool GetFileNodes( NodeGraph & nodeGraph,
-                       const BFFIterator & iter,
-                       const Array< AString > & files,
-                       const char * inputVarName,
-                       Dependencies & nodes ) const;
-    bool GetObjectListNodes( NodeGraph & nodeGraph,
-                             const BFFIterator & iter,
-                             const Array< AString > & objectLists,
-                             const char * inputVarName,
-                             Dependencies & nodes ) const;
-
-    bool GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, const char * name, Dependencies & nodes, bool required = false,
-                      bool allowCopyDirNodes = false, bool allowUnityNodes = false, bool allowRemoveDirNodes = false, bool allowCompilerNodes = false ) const;
-
+                             Dependencies & nodes );
+    static bool GetFileNodes( NodeGraph & nodeGraph,
+                              const BFFIterator & iter,
+                              const Function * function,
+                              const Array< AString > & files,
+                              const char * inputVarName,
+                              Dependencies & nodes );
+    static bool GetObjectListNodes( NodeGraph & nodeGraph,
+                                    const BFFIterator & iter,
+                                    const Function * function,
+                                    const Array< AString > & objectLists,
+                                    const char * inputVarName,
+                                    Dependencies & nodes );
     static bool GetNodeList( NodeGraph & nodeGraph,
                              const BFFIterator & iter,
                              const Function * function,
                              const char * propertyName,
                              const Array< AString > & nodeNames,
                              Dependencies & nodes,
-                             bool allowCopyDirNodes = false, 
-                             bool allowUnityNodes = false, 
+                             bool allowCopyDirNodes = false,
+                             bool allowUnityNodes = false,
                              bool allowRemoveDirNodes = false,
                              bool allowCompilerNodes = false );
-
     static bool GetNodeList( NodeGraph & nodeGraph,
                              const BFFIterator & iter,
                              const Function * function,
@@ -114,8 +116,6 @@ public:
                              bool allowUnityNodes = false,
                              bool allowRemoveDirNodes = false,
                              bool allowCompilerNodes = false );
-
-    bool GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Node * & fileNode, const char * name, bool required = false ) const;
 
 private:
     Function *  m_NextFunction;
@@ -128,6 +128,11 @@ protected:
     // for functions that support a simple alias parameter, the base class can
     // parse it out
     mutable AString m_AliasForFunction;
+
+    // Helpers to get nodes
+    bool GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, const char * name, Dependencies & nodes, bool required = false,
+                      bool allowCopyDirNodes = false, bool allowUnityNodes = false, bool allowRemoveDirNodes = false, bool allowCompilerNodes = false ) const;
+    bool GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Node * & fileNode, const char * name, bool required = false ) const;
 
     // helpers to get properties
     bool GetString( const BFFIterator & iter, const BFFVariable * & var, const char * name, bool required = false ) const;

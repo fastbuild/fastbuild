@@ -47,8 +47,9 @@ CopyDirNode::CopyDirNode()
 
     // .CompilerInputPath
     Dependencies sourcePaths;
-    if ( !function->GetDirectoryListNodeList( nodeGraph,
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
                                               iter,
+                                              function,
                                               m_SourcePaths,
                                               m_SourceExcludePaths,
                                               Array< AString >(),     // Unsupported: Excluded files

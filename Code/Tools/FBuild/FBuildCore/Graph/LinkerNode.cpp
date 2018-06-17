@@ -68,12 +68,13 @@ LinkerNode::LinkerNode()
         return false; // InitializePreBuildDependencies will have emitted an error
     }
 
-    // Get linker exe
-    Node * linkerExeNode = nullptr;
-    if ( !function->GetFileNode( nodeGraph, iter, linkerExeNode, ".Linker" ) ) // TODO:B Use m_Linker property
+    // .Linker
+    Dependencies linkerExe;
+    if ( !Function::GetFileNode( nodeGraph, iter, function, m_Linker, ".Linker", linkerExe ) )
     {
         return false; // GetFileNode will have emitted an error
     }
+    ASSERT( linkerExe.GetSize() == 1 );
 
     m_Flags = DetermineFlags( m_LinkerType, m_Linker, m_LinkerOptions );
 
@@ -127,14 +128,15 @@ LinkerNode::LinkerNode()
         }
     }
 
-    // Handle LinkerStampExe
-    Node * linkerStampExeNode = nullptr;
+    // .LinkerStampExe
+    Dependencies linkerStampExe;
     if ( m_LinkerStampExe.IsEmpty() == false )
     {
-        if ( !function->GetFileNode( nodeGraph, iter, linkerStampExeNode, ".LinkerStampExe" ) ) // TODO: Use m_LinkerStampExe property
+        if ( !Function::GetFileNode( nodeGraph, iter, function, m_LinkerStampExe, ".LinkerStampExe", linkerStampExe ) )
         {
             return false; // GetFileNode will have emitted an error
         }
+        ASSERT( linkerStampExe.GetSize() == 1 );
     }
 
     // Store all dependencies
@@ -142,17 +144,14 @@ LinkerNode::LinkerNode()
                                       libraries.GetSize() +
                                       assemblyResources.GetSize() +
                                       otherLibraryNodes.GetSize() +
-                                      ( linkerStampExeNode ? 1 : 0 ) );
-    m_StaticDependencies.Append( Dependency( linkerExeNode ) );
+                                      ( linkerStampExe.IsEmpty() ? 0 : 1 ) );
+    m_StaticDependencies.Append( linkerExe );
     m_StaticDependencies.Append( libraries );
     m_AssemblyResourcesStartIndex = (uint32_t)m_StaticDependencies.GetSize();
     m_StaticDependencies.Append( assemblyResources );
     m_AssemblyResourcesNum = (uint32_t)assemblyResources.GetSize();
     m_StaticDependencies.Append( otherLibraryNodes );
-    if ( linkerStampExeNode )
-    {
-        m_StaticDependencies.Append( Dependency( linkerStampExeNode ) );
-    }
+    m_StaticDependencies.Append( linkerStampExe );
 
     return true;
 }
