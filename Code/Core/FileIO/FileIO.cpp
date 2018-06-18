@@ -803,7 +803,10 @@
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         // Special case symlinks.
         struct stat stat_source;
-        VERIFY( lstat( pathCopy.Get(), &stat_source ) == 0 );
+        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+        {
+            return;
+        }
         if ( S_ISLNK( stat_source.st_mode ) )
         {
             return;
@@ -912,7 +915,10 @@
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         // Special case symlinks.
         struct stat stat_source;
-        VERIFY( lstat( pathCopy.Get(), &stat_source ) == 0 );
+        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+        {
+            return;
+        }
         if ( S_ISLNK( stat_source.st_mode ) )
         {
             return;
@@ -1047,7 +1053,10 @@
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         // Special case symlinks.
         struct stat stat_source;
-        VERIFY( lstat( pathCopy.Get(), &stat_source ) == 0 );
+        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+        {
+            return;
+        }
         if ( S_ISLNK( stat_source.st_mode ) )
         {
             return;
@@ -1184,7 +1193,10 @@
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         // Special case symlinks.
         struct stat stat_source;
-        VERIFY( lstat( pathCopy.Get(), &stat_source ) == 0 );
+        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+        {
+            return;
+        }
         if ( S_ISLNK( stat_source.st_mode ) )
         {
             return;
