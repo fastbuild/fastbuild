@@ -261,6 +261,10 @@ void TestProjectGeneration::TestFunction_Speed() const
     // files (about 5,000)
     Array< AString > files;
     FileIO::GetFiles( baseDir, AStackString<>( "*" ), true, &files );
+    if ( files.GetSize() > 5000 )
+    {
+        files.SetSize( 5000 );
+    }
     pg.AddFiles( files );
 
     Array< VSProjectFileType > fileTypes;
