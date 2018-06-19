@@ -59,6 +59,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
     // Internal State
+    REFLECT( m_UsingPrecompiledHeader,              "UsingPrecompiledHeader",           MetaHidden() )
     REFLECT( m_ExtraPDBPath,                        "ExtraPDBPath",                     MetaHidden() )
     REFLECT( m_ExtraASMPath,                        "ExtraASMPath",                     MetaHidden() )
     REFLECT( m_ObjectListInputStartIndex,           "ObjectListInputStartIndex",        MetaHidden() )
@@ -112,6 +113,7 @@ ObjectListNode::ObjectListNode()
 
     // .PCHInputFile
     const bool usingPCH = ( m_PCHInputFile.IsEmpty() == false );
+    Node * precompiledHeader = nullptr;
     if ( usingPCH )
     {
         // .PCHOutput and .PCHOptions are required is .PCHInputFile is set
@@ -140,11 +142,12 @@ ObjectListNode::ObjectListNode()
             return false;
         }
 
-        m_PrecompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
-        if ( m_PrecompiledHeader == nullptr )
+        precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
+        if ( precompiledHeader == nullptr )
         {
             return false; // CreateObjectNode will have emitted an error
         }
+        m_UsingPrecompiledHeader = true;
     }
 
     // .CompilerOptions
@@ -221,15 +224,15 @@ ObjectListNode::ObjectListNode()
     ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions, m_ExtraPDBPath, m_ExtraASMPath );
 
     // Store dependencies
-    m_StaticDependencies.SetCapacity( m_StaticDependencies.GetSize() + 1 + ( preprocessorNode ? 1 : 0 ) + ( m_PrecompiledHeader ? 1 : 0 ) + compilerInputPath.GetSize() + m_NumCompilerInputUnity + m_NumCompilerInputFiles );
+    m_StaticDependencies.SetCapacity( m_StaticDependencies.GetSize() + 1 + ( preprocessorNode ? 1 : 0 ) + ( precompiledHeader ? 1 : 0 ) + compilerInputPath.GetSize() + m_NumCompilerInputUnity + m_NumCompilerInputFiles );
     m_StaticDependencies.Append( Dependency( compilerNode ) );
     if ( preprocessorNode )
     {
         m_StaticDependencies.Append( Dependency( preprocessorNode ) );
     }
-    if ( m_PrecompiledHeader )
+    if ( precompiledHeader )
     {
-        m_StaticDependencies.Append( Dependency( m_PrecompiledHeader ) );
+        m_StaticDependencies.Append( Dependency( precompiledHeader ) );
     }
     m_StaticDependencies.Append( compilerInputPath );
     m_StaticDependencies.Append( compilerInputUnity );
@@ -237,7 +240,7 @@ ObjectListNode::ObjectListNode()
     //m_StaticDependencies.Append( compilerForceUsing ); // NOTE: Deliberately not depending on this
 
     // Take note of how many things are not to be treated as inputs (the compiler and preprocessor)
-    m_ObjectListInputStartIndex += ( 1 + ( preprocessorNode ? 1 : 0 ) + ( m_PrecompiledHeader ? 1 : 0 ) );
+    m_ObjectListInputStartIndex += ( 1 + ( preprocessorNode ? 1 : 0 ) + ( precompiledHeader ? 1 : 0 ) );
     m_ObjectListInputEndIndex = (uint32_t)m_StaticDependencies.GetSize();
 
     return true;
@@ -267,9 +270,9 @@ ObjectListNode::~ObjectListNode() = default;
         // On Windows, with MSVC we compile a cpp file to generate the PCH
         // Filter here to ensure that doesn't get compiled twice
         Node * pchCPP = nullptr;
-        if ( m_PrecompiledHeader && m_PrecompiledHeader->IsMSVC() )
+        if ( m_UsingPrecompiledHeader && GetPrecompiledHeader()->IsMSVC() )
         {
-            pchCPP = m_PrecompiledHeader->GetPrecompiledHeaderCPPFile();
+            pchCPP = GetPrecompiledHeader()->GetPrecompiledHeaderCPPFile();
         }
     #endif
 
@@ -389,9 +392,9 @@ ObjectListNode::~ObjectListNode() = default;
     // any symbols in the PCH's .obj are also linked, when either:
     // a) we are a static library
     // b) a DLL or executable links our .obj files
-    if ( m_PrecompiledHeader )
+    if ( m_UsingPrecompiledHeader )
     {
-        m_DynamicDependencies.Append( Dependency( m_PrecompiledHeader ) );
+        m_DynamicDependencies.Append( Dependency( GetPrecompiledHeader() ) );
     }
 
     return true;
@@ -699,7 +702,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_AllowCaching = m_AllowCaching;
     node->m_CompilerForceUsing = m_CompilerForceUsing;
     node->m_PreBuildDependencyNames = m_PreBuildDependencyNames;
-    node->m_PrecompiledHeader = m_PrecompiledHeader;
+    node->m_PrecompiledHeader = m_UsingPrecompiledHeader ? GetPrecompiledHeader()->GetName() : AString::GetEmpty();
     node->m_Preprocessor = preprocessor;
     node->m_PreprocessorOptions = preprocessorOptions;
     node->m_Flags = flags;
@@ -711,6 +714,15 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
         return nullptr; // Initialize will have emitted an error
     }
     return node;
+}
+
+// GetPrecompiledHeader
+//------------------------------------------------------------------------------
+ObjectNode * ObjectListNode::GetPrecompiledHeader() const
+{
+    ASSERT( m_UsingPrecompiledHeader );
+    // Precompiled header stored just before inputs
+    return m_StaticDependencies[ m_ObjectListInputStartIndex - 1 ].GetNode()->CastTo< ObjectNode >();
 }
 
 // Load
@@ -726,10 +738,6 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
         return nullptr;
     }
 
-    // TODO:C Handle through normal serialization
-    NODE_LOAD_NODE_LINK( Node, precompiledHeader );
-    node->m_PrecompiledHeader = precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr;
-
     return node;
 }
 
@@ -739,9 +747,6 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
 {
     NODE_SAVE( m_Name );
     Node::Serialize( stream );
-
-    // TODO:C Handle through normal serialization
-    NODE_SAVE_NODE_LINK( m_PrecompiledHeader );
 }
 
 // GetObjExtension

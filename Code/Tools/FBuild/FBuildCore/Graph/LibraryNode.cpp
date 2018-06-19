@@ -388,10 +388,6 @@ FileNode * LibraryNode::GetLibrarian() const
         return nullptr;
     }
 
-    // TODO:C Handle through normal serialization
-    NODE_LOAD_NODE_LINK( Node, precompiledHeader );
-    node->m_PrecompiledHeader = precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr;
-
     return node;
 }
 

@@ -86,6 +86,7 @@ public:
     #if defined( __WINDOWS__ )
         inline Node * GetPrecompiledHeaderCPPFile() const { ASSERT( GetFlag( FLAG_CREATING_PCH ) ); return m_StaticDependencies[ 1 ].GetNode(); }
     #endif
+    ObjectNode * GetPrecompiledHeader() const;
 
     void GetPDBName( AString & pdbName ) const;
 
@@ -191,7 +192,7 @@ private:
     Array< AString >    m_PreBuildDependencyNames;
 
     // Internal State
-    ObjectNode *        m_PrecompiledHeader                 = nullptr;
+    AString             m_PrecompiledHeader;
     uint32_t            m_Flags                             = 0;
     uint32_t            m_PreprocessorFlags                 = 0;
     uint64_t            m_PCHCacheKey                       = 0;

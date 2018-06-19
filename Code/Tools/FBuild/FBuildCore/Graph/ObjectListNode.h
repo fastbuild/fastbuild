@@ -63,6 +63,7 @@ protected:
                                    const AString & objectName,
                                    const AString & objectInput,
                                    const AString & pchObjectName );
+    ObjectNode * GetPrecompiledHeader() const;
 
     // Exposed Properties
     AString             m_Compiler;
@@ -93,7 +94,7 @@ protected:
     Array< AString >    m_PreBuildDependencyNames;
 
     // Internal State
-    ObjectNode *        m_PrecompiledHeader                 = nullptr;
+    bool                m_UsingPrecompiledHeader            = false;
     AString             m_ExtraPDBPath;
     AString             m_ExtraASMPath;
     uint32_t            m_ObjectListInputStartIndex         = 0;

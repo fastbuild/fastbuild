@@ -66,6 +66,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
     // Internal State
+    REFLECT( m_PrecompiledHeader,                   "PrecompiledHeader",                MetaHidden() )
     REFLECT( m_Flags,                               "Flags",                            MetaHidden() )
     REFLECT( m_PreprocessorFlags,                   "PreprocessorFlags",                MetaHidden() )
     REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() )
@@ -122,14 +123,20 @@ ObjectNode::ObjectNode()
         return false; // GetFileNode will have emitted an error
     }
 
+    // Precompiled Header
+    Dependencies precompiledHeader;
+    if ( m_PrecompiledHeader.IsEmpty() == false )
+    {
+        // m_PrecompiledHeader is only set if our associated ObjectList or Library created one
+        VERIFY( Function::GetFileNode( nodeGraph, iter, function, m_PrecompiledHeader, ".PrecompiledHeader", precompiledHeader ) );
+        ASSERT( precompiledHeader.GetSize() == 1 );
+    }
+
     // Store Dependencies
-    m_StaticDependencies.SetCapacity( 1 + 1 + ( m_PrecompiledHeader ? 1 : 0 ) + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
+    m_StaticDependencies.SetCapacity( 1 + 1 + precompiledHeader.GetSize() + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
     m_StaticDependencies.Append( Dependency( compiler ) );
     m_StaticDependencies.Append( compilerInputFile );
-    if ( m_PrecompiledHeader )
-    {
-        m_StaticDependencies.Append( Dependency( m_PrecompiledHeader ) );
-    }
+    m_StaticDependencies.Append( precompiledHeader );
     if ( preprocessor )
     {
         m_StaticDependencies.Append( Dependency( preprocessor ) );
@@ -759,10 +766,6 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         return nullptr;
     }
 
-    // TODO:B Use normal serialization
-    NODE_LOAD_NODE_LINK( Node, precompiledHeader );
-    node->m_PrecompiledHeader = precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr;
-
     return node;
 }
 
@@ -970,9 +973,6 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 {
     NODE_SAVE( m_Name );
     Node::Serialize( stream );
-
-    // TODO:B Use normal serialization
-    NODE_SAVE_NODE_LINK( m_PrecompiledHeader );
 }
 
 // SaveRemote
@@ -1018,11 +1018,19 @@ CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
         return nullptr;
     }
     size_t preprocessorIndex = 2;
-    if ( m_PrecompiledHeader )
+    if ( m_PrecompiledHeader.IsEmpty() == false )
     {
         ++preprocessorIndex;
     }
     return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo< CompilerNode >();
+}
+
+// GetPrecompiledHeader()
+//------------------------------------------------------------------------------
+ObjectNode * ObjectNode::GetPrecompiledHeader() const
+{
+    ASSERT( m_PrecompiledHeader.IsEmpty() == false );
+    return m_StaticDependencies[ 2 ].GetNode()->CastTo< ObjectNode >();
 }
 
 // GetPDBName
@@ -1084,7 +1092,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     uint64_t d = 0;
     if ( GetFlag( FLAG_USING_PCH ) && GetFlag( FLAG_MSVC ) )
     {
-        d = m_PrecompiledHeader->CastTo< ObjectNode >()->m_PCHCacheKey;
+        d = GetPrecompiledHeader()->m_PCHCacheKey;
         ASSERT( d != 0 ); // Should not be in here if PCH is not cached
     }
 
@@ -1831,7 +1839,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 //------------------------------------------------------------------------------
 void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const
 {
-    const size_t startIndex = 2 + ( m_PrecompiledHeader ? 1 : 0 ) + ( !m_Preprocessor.IsEmpty() ? 1 : 0 ); // Skip Compiler, InputFile, PCH and Preprocessor
+    const size_t startIndex = 2 + ( !m_PrecompiledHeader.IsEmpty() ? 1 : 0 ) + ( !m_Preprocessor.IsEmpty() ? 1 : 0 ); // Skip Compiler, InputFile, PCH and Preprocessor
     const size_t endIndex = m_StaticDependencies.GetSize();
     for ( size_t i=startIndex; i<endIndex; ++i )
     {
@@ -2407,7 +2415,7 @@ bool ObjectNode::ShouldUseCache() const
     {
         // If the PCH is not in the cache, then no point looking there
         // for objects and also no point storing them
-        if ( m_PrecompiledHeader->CastTo< ObjectNode >()->m_PCHCacheKey == 0 )
+        if ( GetPrecompiledHeader()->m_PCHCacheKey == 0 )
         {
             return false;
         }
