@@ -193,6 +193,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 progressOptionSpecified = true;
                 continue;
             }
+            else if ( thisArg == "-nounity" )
+            {
+                m_NoUnity = true;
+                continue;
+            }
             else if ( thisArg == "-progress" )
             {
                 m_ShowProgress = true;
@@ -481,6 +486,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
             "                default of hardware thread count.\n"
             " -noprogress    Don't show the progress bar while building.\n"
+            " -nounity       [Experimental] Build files individually instead of in Unity.\n"
             " -progress      Show the progress bar while building, even if stdout is redirected.\n"
             " -nostoponerror Don't stop building on first error. Try to build as much\n"
             "                as possible.\n"
