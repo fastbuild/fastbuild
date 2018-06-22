@@ -18,16 +18,24 @@
 // Activate
 //------------------------------------------------------------------------------
 #if__LINUX__
-    #if USING_CLANG_3
-        #include "Linux/Clang3.bff"
-    #endif
-    #if USING_CLANG_6
-        #include "Linux/Clang6.bff"
+    #if CI_BUILD
+        #include "Linux/Clang_CI.bff"
+    #else
+        #if USING_CLANG_3
+            #include "Linux/Clang3.bff"
+        #endif
+        #if USING_CLANG_6
+            #include "Linux/Clang6.bff"
+        #endif
     #endif
 #endif
 #if __OSX__
-    #if USING_CLANG_8
-        #include "OSX/Clang8.bff"
+    #if CI_BUILD
+        #include "OSX/Clang_CI.bff"
+    #else
+        #if USING_CLANG_8
+            #include "OSX/Clang8.bff"
+        #endif
     #endif
 #endif
 #if __WINDOWS__

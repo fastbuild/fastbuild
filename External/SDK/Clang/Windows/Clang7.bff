@@ -1,6 +1,9 @@
 // Clang 7.x.x
 //------------------------------------------------------------------------------
-.Clang7_BasePath = '../External/SDK/Clang/Windows/7.0.1'
+.Clang7_BasePath     = '../External/SDK/Clang/Windows/7.0.1'
+#if CI_BUILD
+    .Clang7_BasePath = 'C:\Program Files\LLVM'
+#endif
 
 // Compiler
 //------------------------------------------------------------------------------
