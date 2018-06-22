@@ -53,6 +53,7 @@
             #endif
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
+        ^'Targets_$Platform$_$Config$' + { '$ProjectName$-$Platform$-$Config$' }
     }
 
     // Aliases
