@@ -19,6 +19,10 @@ class TestCompiler : public FBuildTest
 private:
     DECLARE_TESTS
 
+    void BuildCompiler_Explicit() const;
+    void BuildCompiler_Explicit_NoRebuild() const;
+    void BuildCompiler_Implicit() const;
+    void BuildCompiler_Implicit_NoRebuild() const;
     void ConflictingFiles1() const;
     void ConflictingFiles2() const;
     void ConflictingFiles3() const;
@@ -33,6 +37,10 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestCompiler )
+    REGISTER_TEST( BuildCompiler_Explicit )
+    REGISTER_TEST( BuildCompiler_Explicit_NoRebuild )
+    REGISTER_TEST( BuildCompiler_Implicit )
+    REGISTER_TEST( BuildCompiler_Implicit_NoRebuild )
     REGISTER_TEST( ConflictingFiles1 )
     REGISTER_TEST( ConflictingFiles2 )
     REGISTER_TEST( ConflictingFiles3 )
@@ -41,6 +49,85 @@ REGISTER_TESTS_BEGIN( TestCompiler )
     REGISTER_TEST( CompilerExecutableAsDependency_NoRebuild )
     REGISTER_TEST( MultipleImplicitCompilers )
 REGISTER_TESTS_END
+
+// BuildCompiler_Explicit
+//------------------------------------------------------------------------------
+void TestCompiler::BuildCompiler_Explicit() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Explicit/explicit.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Build a file genereated by a Compiler that we compiled
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Compiler" ) ) );
+
+    // Save DB for use by NoRebuild test
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
+}
+
+// BuildCompiler_Explicit_NoRebuild
+//------------------------------------------------------------------------------
+void TestCompiler::BuildCompiler_Explicit_NoRebuild() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Explicit/explicit.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
+
+    // Build a file genereated by a Compiler that we compiled
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Compiler" ) ) );
+
+    // Check stats
+    //              Seen,   Built,  Type
+    CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
+}
+
+// BuildCompiler_Implicit
+//------------------------------------------------------------------------------
+void TestCompiler::BuildCompiler_Implicit() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/implicit.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Build a file genereated by a Compiler that we compiled
+    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+    // Save DB for use by NoRebuild test
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
+}
+
+// BuildCompiler_Implicit_NoRebuild
+//------------------------------------------------------------------------------
+void TestCompiler::BuildCompiler_Implicit_NoRebuild() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/implicit.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+
+    // Build a file genereated by a Compiler that we compiled
+    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+    // Save DB for use by NoRebuild test
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
+}
 
 // ConflictingFiles1
 //------------------------------------------------------------------------------
