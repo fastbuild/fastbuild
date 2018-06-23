@@ -110,7 +110,7 @@ REFLECT_END( VCXProjectNode )
         // for a 3rd party library for example)
         if ( config.m_Target.IsEmpty() )
         {
-            return true;
+            continue;
         }
 
         // Find the node
@@ -120,8 +120,10 @@ REFLECT_END( VCXProjectNode )
             if ( iter && function )
             {
                 Error::Error_1104_TargetNotDefined( *iter, function, ".Target", config.m_Target );
+                return false;
             }
-            return false;
+            ASSERT( false ); // Should not be possible to fail when restoring from serialized DB
+            continue;
         }
 
         config.m_TargetNode = node;
