@@ -553,10 +553,17 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
     compilerNode = nullptr;
     if ( cn != nullptr )
     {
-        if ( cn->GetType() == Node::ALIAS_NODE )
+        // Handle resolving to a file which might be created by an implicit compiler
+        if ( cn->GetType() == Node::FILE_NODE )
         {
-            AliasNode * an = cn->CastTo< AliasNode >();
-            cn = an->GetAliasedNodes()[0].GetNode();
+            // Generate a name for the CompilerNode
+            AStackString<> implicitCompilerNodeName( "?AutoCompiler?" );
+            implicitCompilerNodeName += compiler;
+            Node * implicitCompilerNode = nodeGraph.FindNode( implicitCompilerNodeName );
+            if ( implicitCompilerNode && ( implicitCompilerNode->GetType() == Node::COMPILER_NODE ) )
+            {
+                cn = implicitCompilerNode;
+            }
         }
         if ( cn->GetType() != Node::COMPILER_NODE )
         {
@@ -571,12 +578,9 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
         // (only explicitly defined compiler nodes can be distributed)
         // set the default executable path to be the compiler exe directory
 
-        AStackString<> compilerExeClean;
-        NodeGraph::CleanPath( compiler, compilerExeClean );
-
         // Generate a name for the CompilerNode
         AStackString<> nodeName( "?AutoCompiler?" );
-        nodeName += compilerExeClean;
+        nodeName += compiler;
 
         // Check if we've already implicitly created this Compiler
         cn = nodeGraph.FindNode( nodeName );
@@ -593,12 +597,12 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
 
         // Implicitly create the new node
         compilerNode = nodeGraph.CreateCompilerNode( nodeName );
-        VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "Executable", compilerExeClean ) );
+        VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "Executable", compiler ) );
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
-        const char * lastSlash = compilerExeClean.FindLast( NATIVE_SLASH );
+        const char * lastSlash = compiler.FindLast( NATIVE_SLASH );
         if (lastSlash)
         {
-            AStackString<> executableRootPath( compilerExeClean.Get(), lastSlash + 1 );
+            AStackString<> executableRootPath( compiler.Get(), lastSlash + 1 );
             VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "ExecutableRootPath", executableRootPath ) );
         }
         if ( !compilerNode->Initialize( nodeGraph, iter, nullptr ) )
