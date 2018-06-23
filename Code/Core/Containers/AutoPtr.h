@@ -6,17 +6,26 @@
 //------------------------------------------------------------------------------
 #include "Core/Mem/Mem.h"
 
-// DefaultDeletor - free using "Free"
+// FreeDeletor - free using FREE
 //------------------------------------------------------------------------------
-class DefaultDeletor
+class FreeDeletor
 {
 public:
     static inline void Delete( void * ptr ) { FREE( ptr ); }
 };
 
+// DeleteDeletor - free using FDELETE
+//------------------------------------------------------------------------------
+class DeleteDeletor
+{
+public:
+    template < class T >
+    static inline void Delete( T * ptr ) { FDELETE ptr; }
+};
+
 // AutoPtr
 //------------------------------------------------------------------------------
-template < class T, class DELETOR = DefaultDeletor >
+template < class T, class DELETOR = FreeDeletor >
 class AutoPtr
 {
 public:
