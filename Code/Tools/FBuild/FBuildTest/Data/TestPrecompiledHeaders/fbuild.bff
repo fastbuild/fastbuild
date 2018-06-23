@@ -68,7 +68,7 @@ Executable( "PCHTest" )
 
         .PCHOptions         = ' -c -x c++-header $PCHInputFile$ -o"$PCHOutputFile$"'
 
-        .Compiler           = '$ClangPath$\bin\clang++.exe'
+        .Compiler           = 'Compiler-ClangForWindows-Dist'
         .CompilerOptions    = ' -c -g -include-pch "$PCHOutputFile$" %1 -o "%2" -integrated-as'
                             + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
 

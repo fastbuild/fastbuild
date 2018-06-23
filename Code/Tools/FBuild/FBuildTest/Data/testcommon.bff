@@ -39,7 +39,7 @@
 //.ClangPath            = 'C:\Program Files (x86)\LLVM'
 .WindowsClangToolChain =
 [
-    .Compiler           = '$ClangPath$/bin/clang++.exe'
+    .Compiler           = 'Compiler-ClangForWindows-Dist'
     Compiler( 'Compiler-ClangForWindows-Dist' )
     {
         .Executable     = '$ClangPath$/bin/clang++.exe'
