@@ -757,10 +757,17 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 //------------------------------------------------------------------------------
 /*static*/ Node * ObjectNode::LoadRemote( IOStream & stream )
 {
-    NODE_LOAD( AStackString<>,  name );
-    NODE_LOAD( AStackString<>,  sourceFile );
-    NODE_LOAD( uint32_t,        flags );
-    NODE_LOAD( AStackString<>,  compilerArgs );
+    AStackString<> name; 
+    AStackString<> sourceFile; 
+    uint32_t flags; 
+    AStackString<> compilerArgs; 
+    if ( ( stream.Read( name ) == false ) ||
+         ( stream.Read( sourceFile ) == false ) ||
+         ( stream.Read( flags ) == false ) ||
+         ( stream.Read( compilerArgs ) == false ) )
+    {
+        return nullptr; 
+    }
 
     NodeProxy * srcFile = FNEW( NodeProxy( sourceFile ) );
 
@@ -959,20 +966,20 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     ASSERT( m_CompilerForceUsing.IsEmpty() );
 
     // Save minimal information for the remote worker
-    NODE_SAVE( m_Name );
-    NODE_SAVE( GetSourceFile()->GetName() );
-    NODE_SAVE( m_Flags );
+    stream.Write( m_Name );
+    stream.Write( GetSourceFile()->GetName() );
+    stream.Write( m_Flags );
 
     // TODO:B would be nice to make ShouldUseDeoptimization cache the result for this build
     // instead of opening the file again.
     const bool useDeoptimization = ShouldUseDeoptimization();
     if ( useDeoptimization )
     {
-        NODE_SAVE( m_CompilerOptionsDeoptimized );
+        stream.Write( m_CompilerOptionsDeoptimized );
     }
     else
     {
-        NODE_SAVE( m_CompilerOptions );
+        stream.Write( m_CompilerOptions );
     }
 }
 

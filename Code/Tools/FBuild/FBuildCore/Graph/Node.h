@@ -27,16 +27,6 @@ class NodeGraph;
 //------------------------------------------------------------------------------
 #define INVALID_NODE_INDEX ( (uint32_t)0xFFFFFFFF )
 
-// Load/SaveMacros
-//------------------------------------------------------------------------------
-#define NODE_SAVE( member ) stream.Write( member );
-#define NODE_SAVE_NODE_LINK( node ) Node::SaveNodeLink( stream, node );
-
-#define NODE_LOAD( type, member ) type member; if ( stream.Read( member ) == false ) { return nullptr; }
-#define NODE_LOAD_NODE_LINK( type, node ) \
-    type * node = nullptr; \
-    if ( Node::LoadNodeLink( nodeGraph, stream, node ) == false ) { return nullptr; }
-
 // Custom Reflection Macros
 //------------------------------------------------------------------------------
 #define REFLECT_NODE_DECLARE( nodeName )                                \
@@ -221,11 +211,6 @@ protected:
 
     inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
     inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }
-
-    static void SaveNodeLink( IOStream & stream, const Node * node );
-    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, Node * & node );
-    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode );
-    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, FileNode * & node );
 
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
