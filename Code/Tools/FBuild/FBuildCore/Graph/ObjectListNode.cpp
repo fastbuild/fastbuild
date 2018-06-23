@@ -35,6 +35,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_CompilerOutputPath,                  "CompilerOutputPath",               MetaPath() )
     REFLECT( m_CompilerOutputPrefix,                "CompilerOutputPrefix",             MetaOptional() )
     REFLECT( m_CompilerOutputExtension,             "CompilerOutputExtension",          MetaOptional() )
+    REFLECT( m_CompilerInputAllowNoFiles,           "CompilerInputAllowNoFiles",        MetaOptional() )
     REFLECT_ARRAY( m_CompilerInputPath,             "CompilerInputPath",                MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_CompilerInputPattern,          "CompilerInputPattern",             MetaOptional() )
     REFLECT( m_CompilerInputPathRecurse,            "CompilerInputPathRecurse",         MetaOptional() )
@@ -410,7 +411,7 @@ ObjectListNode::~ObjectListNode() = default;
     }
 
     // make sure we have something to build!
-    if ( m_DynamicDependencies.GetSize() == 0 )
+    if ( ( m_DynamicDependencies.GetSize() == 0 ) && ( m_CompilerInputAllowNoFiles == false ) )
     {
         FLOG_ERROR( "No files found to build '%s'", GetName().Get() );
         return false;

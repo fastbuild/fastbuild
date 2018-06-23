@@ -78,6 +78,7 @@ protected:
     Array< AString >    m_CompilerInputUnity;
     AString             m_CompilerInputFilesRoot;
     Array< AString >    m_CompilerForceUsing;
+    bool                m_CompilerInputAllowNoFiles         = false;
     bool                m_CompilerInputPathRecurse          = true;
     bool                m_DeoptimizeWritableFiles           = false;
     bool                m_DeoptimizeWritableFilesWithToken  = false;
