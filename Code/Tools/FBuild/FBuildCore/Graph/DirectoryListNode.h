@@ -34,9 +34,6 @@ public:
                             const Array< AString > & excludePatterns,
                             AString & result );
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
-
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 

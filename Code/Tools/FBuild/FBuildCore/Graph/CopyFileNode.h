@@ -23,9 +23,6 @@ public:
 
     static inline Node::Type GetTypeS() { return Node::COPY_FILE_NODE; }
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
-
     FileNode * GetSourceNode() const { return m_StaticDependencies[0].GetNode()->CastTo< FileNode >(); }
 
 private:

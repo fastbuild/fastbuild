@@ -30,9 +30,6 @@ public:
 
     virtual bool IsAFile() const override;
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
-
     enum Flag
     {
         LIB_FLAG_LIB    = 0x01, // MSVC style lib.exe

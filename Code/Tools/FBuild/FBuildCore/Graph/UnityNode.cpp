@@ -356,30 +356,6 @@ UnityNode::~UnityNode()
     return NODE_RESULT_OK;
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * UnityNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>,  name );
-
-    UnityNode * un = nodeGraph.CreateUnityNode( name );
-
-    if ( un->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return un;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void UnityNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
 // GetFiles
 //------------------------------------------------------------------------------
 bool UnityNode::GetFiles( Array< FileAndOrigin > & files )

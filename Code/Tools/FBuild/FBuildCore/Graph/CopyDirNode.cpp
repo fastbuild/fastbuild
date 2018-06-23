@@ -193,27 +193,4 @@ CopyDirNode::~CopyDirNode() = default;
     return NODE_RESULT_OK;
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * CopyDirNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    CopyDirNode * node = nodeGraph.CreateCopyDirNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void CopyDirNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
 //------------------------------------------------------------------------------

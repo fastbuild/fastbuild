@@ -336,35 +336,11 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
     return true;
 }
 
-// Load
+// PostLoad
 //------------------------------------------------------------------------------
-/*static*/ Node * VCXProjectNode::Load( NodeGraph & nodeGraph, IOStream & stream )
+/*virtual*/ void VCXProjectNode::PostLoad( NodeGraph & nodeGraph )
 {
-    NODE_LOAD( AStackString<>, name );
-
-    auto * n = nodeGraph.CreateVCXProjectNode( name );
-
-    if ( n->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    // Resolve Target names to Node pointers for later use
-    if ( VSProjectConfig::ResolveTargets( nodeGraph, n->m_ProjectConfigs ) == false )
-    {
-        ASSERT( false ); // Should be impossible to be loading a DB where the Target cannot be resolved
-        return nullptr;
-    }
-
-    return n;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void VCXProjectNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
+    VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs );
 }
 
 //------------------------------------------------------------------------------

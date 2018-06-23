@@ -25,9 +25,6 @@ public:
 
     virtual bool IsAFile() const override;
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
-
     // Access to settings
     const AString &                     GetCachePath() const;
     const AString &                     GetCachePluginDLL() const;

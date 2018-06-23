@@ -30,9 +30,6 @@ public:
 
     virtual bool IsAFile() const override;
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
-
     const char * GetObjExtension() const;
 
     void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post, bool objectsInsteadOfLibs ) const;

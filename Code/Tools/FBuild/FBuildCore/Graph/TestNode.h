@@ -23,9 +23,6 @@ public:
 
     static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
 
-    virtual void Save( IOStream & stream ) const override;
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-
     inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;

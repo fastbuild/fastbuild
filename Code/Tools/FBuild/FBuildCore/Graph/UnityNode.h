@@ -50,8 +50,6 @@ public:
     };
     inline const Array< FileAndOrigin > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 

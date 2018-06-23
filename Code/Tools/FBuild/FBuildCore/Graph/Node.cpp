@@ -400,6 +400,38 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     return true;
 }
 
+// CreateNode
+//------------------------------------------------------------------------------
+/*static*/ Node * Node::CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name )
+{
+    switch ( nodeType )
+    {
+        case Node::PROXY_NODE:          ASSERT( false ); return nullptr;
+        case Node::COPY_FILE_NODE:      return nodeGraph.CreateCopyFileNode( name );
+        case Node::DIRECTORY_LIST_NODE: return nodeGraph.CreateDirectoryListNode( name );
+        case Node::EXEC_NODE:           return nodeGraph.CreateExecNode( name );
+        case Node::FILE_NODE:           return nodeGraph.CreateFileNode( name );
+        case Node::LIBRARY_NODE:        return nodeGraph.CreateLibraryNode( name );
+        case Node::OBJECT_NODE:         return nodeGraph.CreateObjectNode( name );
+        case Node::ALIAS_NODE:          return nodeGraph.CreateAliasNode( name );
+        case Node::EXE_NODE:            return nodeGraph.CreateExeNode( name );
+        case Node::CS_NODE:             return nodeGraph.CreateCSNode( name );
+        case Node::UNITY_NODE:          return nodeGraph.CreateUnityNode( name );
+        case Node::TEST_NODE:           return nodeGraph.CreateTestNode( name );
+        case Node::COMPILER_NODE:       return nodeGraph.CreateCompilerNode( name );
+        case Node::DLL_NODE:            return nodeGraph.CreateDLLNode( name );
+        case Node::VCXPROJECT_NODE:     return nodeGraph.CreateVCXProjectNode( name );
+        case Node::OBJECT_LIST_NODE:    return nodeGraph.CreateObjectListNode( name );
+        case Node::COPY_DIR_NODE:       return nodeGraph.CreateCopyDirNode( name );
+        case Node::SLN_NODE:            return nodeGraph.CreateSLNNode( name );
+        case Node::REMOVE_DIR_NODE:     return nodeGraph.CreateRemoveDirNode( name );
+        case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
+        case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
+        case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
+        default:                        ASSERT( false ); return nullptr;
+    }
+}
+
 // Load
 //------------------------------------------------------------------------------
 /*static*/ Node * Node::Load( NodeGraph & nodeGraph, IOStream & stream )
@@ -423,45 +455,42 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         }
     }
 
-    // read contents
-    Node * n = nullptr;
-    switch ( (Node::Type)nodeType )
+    // Name of node
+    AStackString<> name;
+    if ( stream.Read( name ) == false )
     {
-        case Node::PROXY_NODE:          ASSERT( false );                                    break;
-        case Node::COPY_FILE_NODE:      n = CopyFileNode::Load( nodeGraph, stream );        break;
-        case Node::DIRECTORY_LIST_NODE: n = DirectoryListNode::Load( nodeGraph, stream );   break;
-        case Node::EXEC_NODE:           n = ExecNode::Load( nodeGraph, stream );            break;
-        case Node::FILE_NODE:           n = FileNode::Load( nodeGraph, stream );            break;
-        case Node::LIBRARY_NODE:        n = LibraryNode::Load( nodeGraph, stream );         break;
-        case Node::OBJECT_NODE:         n = ObjectNode::Load( nodeGraph, stream );          break;
-        case Node::ALIAS_NODE:          n = AliasNode::Load( nodeGraph, stream );           break;
-        case Node::EXE_NODE:            n = ExeNode::Load( nodeGraph, stream );             break;
-        case Node::CS_NODE:             n = CSNode::Load( nodeGraph, stream );              break;
-        case Node::UNITY_NODE:          n = UnityNode::Load( nodeGraph, stream );           break;
-        case Node::TEST_NODE:           n = TestNode::Load( nodeGraph, stream );            break;
-        case Node::COMPILER_NODE:       n = CompilerNode::Load( nodeGraph, stream );        break;
-        case Node::DLL_NODE:            n = DLLNode::Load( nodeGraph, stream );             break;
-        case Node::VCXPROJECT_NODE:     n = VCXProjectNode::Load( nodeGraph, stream );      break;
-        case Node::OBJECT_LIST_NODE:    n = ObjectListNode::Load( nodeGraph, stream );      break;
-        case Node::COPY_DIR_NODE:       n = CopyDirNode::Load( nodeGraph, stream );         break;
-        case Node::SLN_NODE:            n = SLNNode::Load( nodeGraph, stream );             break;
-        case Node::REMOVE_DIR_NODE:     n = RemoveDirNode::Load( nodeGraph, stream );       break;
-        case Node::XCODEPROJECT_NODE:   n = XCodeProjectNode::Load( nodeGraph, stream );    break;
-        case Node::SETTINGS_NODE:       n = SettingsNode::Load( nodeGraph, stream );        break;
-        case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
+        return nullptr;
     }
 
-    ASSERT( n );
-    if ( n )
+    // Create node
+    Node * n = CreateNode( nodeGraph, (Type)nodeType, name );
+
+    // Early out for FileNode
+    if ( nodeType == Node::FILE_NODE )
     {
-        // set stamp
-        n->m_Stamp = stamp;
+        return n;
     }
 
+    // Deserialize properties
+    if ( n->Deserialize( nodeGraph, stream ) == false )
+    {
+        return nullptr;
+    }
+
+    n->PostLoad( nodeGraph ); // TODO:C Eliminate the need for this
+
+    // set stamp
+    n->m_Stamp = stamp;
     return n;
 }
 
-//
+// PostLoad
+//------------------------------------------------------------------------------
+/*virtual*/ void Node::PostLoad( NodeGraph & /*nodeGraph*/ )
+{
+}
+
+// Save
 //------------------------------------------------------------------------------
 /*static*/ void Node::Save( IOStream & stream, const Node * node )
 {
@@ -478,8 +507,26 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         stream.Write( stamp );
     }
 
-    // save contents
-    node->Save( stream );
+    // Save Name
+    stream.Write( node->m_Name );
+
+    #if defined( DEBUG )
+        node->MarkAsSaved();
+    #endif
+
+    if ( nodeType == Node::FILE_NODE )
+    {
+        return;
+    }
+
+    // Deps
+    node->m_PreBuildDependencies.Save( stream );
+    node->m_StaticDependencies.Save( stream );
+    node->m_DynamicDependencies.Save( stream );
+
+    // Properties
+    const ReflectionInfo * const ri = node->GetReflectionInfoV();
+    Serialize( stream, node, *ri );
 }
 
 // LoadRemote
@@ -523,24 +570,6 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     // a) Derived Node is missing SaveRemote implementation
     // b) Serializing an unexpected type
     ASSERT( false );
-}
-
-// Serialize
-//------------------------------------------------------------------------------
-void Node::Serialize( IOStream & stream ) const
-{
-    // Deps
-    m_PreBuildDependencies.Save( stream );
-    m_StaticDependencies.Save( stream );
-    m_DynamicDependencies.Save( stream );
-
-    // Properties
-    const ReflectionInfo * const ri = GetReflectionInfoV();
-    Serialize( stream, this, *ri );
-
-    #if defined( DEBUG )
-        MarkAsSaved();
-    #endif
 }
 
 // Serialize

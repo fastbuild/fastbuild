@@ -25,8 +25,6 @@ public:
 
     static inline Node::Type GetTypeS() { return Node::CS_NODE; }
 
-    virtual void Save( IOStream & stream ) const override;
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;

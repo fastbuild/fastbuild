@@ -259,27 +259,4 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
     FLOG_BUILD_DIRECT( output.Get() );
 }
 
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void TestNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * TestNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    TestNode * node = nodeGraph.CreateTestNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    return node;
-}
-
 //------------------------------------------------------------------------------

@@ -77,29 +77,6 @@ SettingsNode::~SettingsNode() = default;
     return false;
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * SettingsNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    SettingsNode * node = nodeGraph.CreateSettingsNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void SettingsNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
 // GetCachePath
 //------------------------------------------------------------------------------
 const AString & SettingsNode::GetCachePath() const

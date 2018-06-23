@@ -175,7 +175,6 @@ public:
     {}
     virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*funcStartIter*/, const Function * /*function*/ ) override { ASSERT( false ); return false; }
     virtual bool IsAFile() const override { return true; }
-    virtual void Save(IOStream &) const override { ASSERT( false ); }
 
     AString         m_String;
     Array<AString>  m_ArrayOfStrings;

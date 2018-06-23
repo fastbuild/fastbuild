@@ -395,7 +395,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgMani
         ToolManifest ** found = m_Tools.FindDeref( toolId );
         ASSERT( found );
         manifest = *found;
-        manifest->Deserialize( ms, true ); // true == remote
+        manifest->DeserializeFromRemote( ms );
     }
 
     // manifest has checked local files, from previous sessions an may
@@ -675,12 +675,12 @@ void Server::RequestMissingFiles( const ConnectionInfo * connection, ToolManifes
 {
     MutexHolder manifestMH( m_ToolManifestsMutex );
 
-    const Array< ToolManifest::File > & files = manifest->GetFiles();
+    const Array< ToolManifestFile > & files = manifest->GetFiles();
     const size_t numFiles = files.GetSize();
     for ( size_t i=0; i<numFiles; ++i )
     {
-        const ToolManifest::File & f = files[ i ];
-        if ( f.m_SyncState == ToolManifest::File::NOT_SYNCHRONIZED )
+        const ToolManifestFile & f = files[ i ];
+        if ( f.m_SyncState == ToolManifestFile::NOT_SYNCHRONIZED )
         {
             // request this file
             Protocol::MsgRequestFile reqFileMsg( manifest->GetToolId(), (uint32_t)i );

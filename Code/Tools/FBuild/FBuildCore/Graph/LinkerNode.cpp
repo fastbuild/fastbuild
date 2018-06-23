@@ -886,14 +886,6 @@ void LinkerNode::EmitStampMessage() const
     FLOG_BUILD_DIRECT( output.Get() );
 }
 
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void LinkerNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
 // CanUseResponseFile
 //------------------------------------------------------------------------------
 bool LinkerNode::CanUseResponseFile() const

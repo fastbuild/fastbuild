@@ -74,9 +74,6 @@ public:
     inline bool IsMSVC() const { return GetFlag( FLAG_MSVC ); }
     inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
 
-    virtual void Save( IOStream & stream ) const override;
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-
     virtual void SaveRemote( IOStream & stream ) const override;
     static Node * LoadRemote( IOStream & stream );
 

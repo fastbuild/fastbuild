@@ -233,30 +233,6 @@ failed:
     return NODE_RESULT_FAILED;
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * CSNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    CSNode * node = nodeGraph.CreateCSNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void CSNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
 // GetCompiler
 //------------------------------------------------------------------------------
 CompilerNode* CSNode::GetCompiler() const

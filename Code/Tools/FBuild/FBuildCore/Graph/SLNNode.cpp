@@ -335,29 +335,6 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     return true;
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * SLNNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    SLNNode * sn = nodeGraph.CreateSLNNode( name );
-
-    if ( sn->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    return sn;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void SLNNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
 // GatherProject
 //------------------------------------------------------------------------------
 bool SLNNode::GatherProject( NodeGraph & nodeGraph,

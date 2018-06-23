@@ -25,9 +25,6 @@ public:
     static inline Node::Type GetTypeS() { return Node::COPY_DIR_NODE; }
     virtual bool IsAFile() const override;
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
-
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;

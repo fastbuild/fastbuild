@@ -36,8 +36,6 @@ public:
 
     inline bool IsADLL() const { return GetFlag( LINK_FLAG_DLL ); }
 
-    virtual void Save( IOStream & stream ) const override;
-
     static uint32_t DetermineLinkerTypeFlags( const AString & linkerType, const AString & linkerName );
     static uint32_t DetermineFlags( const AString & linkerType, const AString & linkerName, const AString & args );
 

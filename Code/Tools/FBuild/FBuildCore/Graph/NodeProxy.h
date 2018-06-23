@@ -18,7 +18,6 @@ public:
     virtual bool IsAFile() const override;
 
 protected:
-    virtual void Save( IOStream & stream ) const override;
     virtual bool DetermineNeedToBuild( bool forceClean ) const override;
 };
 

@@ -84,27 +84,4 @@ AliasNode::~AliasNode() = default;
     return NODE_RESULT_OK;
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * AliasNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    AliasNode * an = nodeGraph.CreateAliasNode( name );
-
-    if ( an->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    return an;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void AliasNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
 //------------------------------------------------------------------------------

@@ -152,13 +152,14 @@ public:
     inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
     inline void     SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
+    static Node *   CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name );
     static Node *   Load( NodeGraph & nodeGraph, IOStream & stream );
     static void     Save( IOStream & stream, const Node * node );
+    virtual void    PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
 
     static Node *   LoadRemote( IOStream & stream );
     static void     SaveRemote( IOStream & stream, const Node * node );
 
-    void Serialize( IOStream & stream ) const;
     bool Deserialize( NodeGraph & nodeGraph, IOStream & stream );
 
     static bool EnsurePathExistsForFile( const AString & name );
@@ -203,7 +204,6 @@ protected:
 
     void ReplaceDummyName( const AString & newName );
 
-    virtual void Save( IOStream & stream ) const = 0;
     virtual void SaveRemote( IOStream & stream ) const;
 
     inline uint32_t GetControlFlags() const { return m_ControlFlags; }

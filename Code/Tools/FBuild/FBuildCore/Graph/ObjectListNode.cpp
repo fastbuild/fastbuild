@@ -725,30 +725,6 @@ ObjectNode * ObjectListNode::GetPrecompiledHeader() const
     return m_StaticDependencies[ m_ObjectListInputStartIndex - 1 ].GetNode()->CastTo< ObjectNode >();
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * ObjectListNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    ObjectListNode * node = nodeGraph.CreateObjectListNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void ObjectListNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
 // GetObjExtension
 //------------------------------------------------------------------------------
 const char * ObjectListNode::GetObjExtension() const

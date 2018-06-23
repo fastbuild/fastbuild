@@ -375,29 +375,6 @@ FileNode * LibraryNode::GetLibrarian() const
     return m_StaticDependencies[ 0 ].GetNode()->CastTo< FileNode >();
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * LibraryNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    LibraryNode * node = nodeGraph.CreateLibraryNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void LibraryNode::Save( IOStream & stream ) const
-{
-    ObjectListNode::Save( stream );
-}
-
 // CanUseResponseFile
 //------------------------------------------------------------------------------
 bool LibraryNode::CanUseResponseFile() const

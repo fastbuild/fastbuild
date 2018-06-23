@@ -31,6 +31,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
+    REFLECT_STRUCT( m_Manifest,     "Manifest", ToolManifest, MetaHidden() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
@@ -309,31 +310,6 @@ CompilerNode::~CompilerNode() = default;
 
     m_Stamp = m_Manifest.GetTimeStamp();
     return Node::NODE_RESULT_OK;
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * CompilerNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    CompilerNode * cn = nodeGraph.CreateCompilerNode( name );
-
-    if ( cn->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    cn->m_Manifest.Deserialize( stream, false ); // false == not remote
-    return cn;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void CompilerNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-    m_Manifest.Serialize( stream );
 }
 
 //------------------------------------------------------------------------------

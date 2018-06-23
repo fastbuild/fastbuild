@@ -26,9 +26,6 @@ public:
 
     static inline Node::Type GetTypeS() { return Node::COMPILER_NODE; }
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
-
     inline const ToolManifest & GetManifest() const { return m_Manifest; }
 
     inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }

@@ -68,8 +68,6 @@ public:
 
     static inline Node::Type GetTypeS() { return Node::SLN_NODE; }
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 

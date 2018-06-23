@@ -753,22 +753,6 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     return true;
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * ObjectNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    ObjectNode * node = nodeGraph.CreateObjectNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return node;
-}
-
 // LoadRemote
 //------------------------------------------------------------------------------
 /*static*/ Node * ObjectNode::LoadRemote( IOStream & stream )
@@ -965,14 +949,6 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
     // MSVC Compiler args are case-sensitive
     return ( AString::StrNCmp( token.Get() + 1, arg, argLen ) == 0 );
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void ObjectNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
 }
 
 // SaveRemote

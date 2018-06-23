@@ -87,25 +87,4 @@ void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, cons
     }
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * FileNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>,  fileName );
-
-    Node * n = nodeGraph.CreateFileNode( fileName );
-    ASSERT( n );
-    return n;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void FileNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    #if defined( DEBUG )
-        MarkAsSaved();
-    #endif
-}
-
 //------------------------------------------------------------------------------

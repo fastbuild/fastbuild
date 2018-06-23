@@ -692,7 +692,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     }
 
     MemoryStream ms;
-    manifest->Serialize( ms );
+    manifest->SerializeForRemote( ms );
 
     // Send manifest to worker
     Protocol::MsgManifest resultMsg( toolId );

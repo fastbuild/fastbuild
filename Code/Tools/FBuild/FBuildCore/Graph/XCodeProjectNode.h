@@ -43,10 +43,9 @@ public:
 
     static inline Node::Type GetTypeS() { return Node::XCODEPROJECT_NODE; }
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 private:
     virtual BuildResult DoBuild( Job * job ) override;
+    virtual void PostLoad( NodeGraph & nodeGraph ) override;
 
     Array< AString >    m_ProjectInputPaths;
     Array< AString >    m_ProjectInputPathsExclude;

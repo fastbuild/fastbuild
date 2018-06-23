@@ -227,35 +227,11 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     return Node::NODE_RESULT_OK;
 }
 
-// Load
+// PostLoad
 //------------------------------------------------------------------------------
-/*static*/ Node * XCodeProjectNode::Load( NodeGraph & nodeGraph, IOStream & stream )
+/*virtual*/ void XCodeProjectNode::PostLoad( NodeGraph & nodeGraph )
 {
-    NODE_LOAD( AStackString<>, name );
-
-    auto * n = nodeGraph.CreateXCodeProjectNode( name );
-
-    if ( n->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    // Resolve Target names to Node pointers for later use
-    if ( XCodeProjectConfig::ResolveTargets( nodeGraph, n->m_ProjectConfigs ) == false )
-    {
-        ASSERT( false ); // Should be impossible to be loading a DB where the Target cannot be resolved
-        return nullptr;
-    }
-
-    return n;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void XCodeProjectNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
+    XCodeProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs );
 }
 
 //------------------------------------------------------------------------------

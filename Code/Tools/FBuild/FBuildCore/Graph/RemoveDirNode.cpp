@@ -124,28 +124,4 @@ RemoveDirNode::~RemoveDirNode() = default;
     return NODE_RESULT_OK;
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * RemoveDirNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    RemoveDirNode * node = nodeGraph.CreateRemoveDirNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void RemoveDirNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
 //------------------------------------------------------------------------------
