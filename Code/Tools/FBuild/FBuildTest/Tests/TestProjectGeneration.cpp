@@ -34,6 +34,7 @@ private:
     // VCXProj
     void VCXProj_DefaultConfigs() const;
     void VCXProj_PerConfigOverrides() const;
+    void VCXProj_HandleDuplicateFiles() const;
 
     // XCode
     void XCode() const;
@@ -55,6 +56,7 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( TestFunction_Speed )
     REGISTER_TEST( VCXProj_DefaultConfigs )
     REGISTER_TEST( VCXProj_PerConfigOverrides )
+    REGISTER_TEST( VCXProj_HandleDuplicateFiles )
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
 REGISTER_TESTS_END
@@ -546,6 +548,54 @@ void TestProjectGeneration::VCXProj_PerConfigOverrides() const
     // Check option set only on config
     const uint32_t cleanCmdCount  = fileContents.Replace( "<NMakeCleanCommandLine>CONFIG_CLEAN_COMMAND</NMakeCleanCommandLine>", "" );
     TEST_ASSERT( cleanCmdCount == numConfigs );
+}
+
+// VCXProj_HandleDuplicateFiles
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
+{
+    FBuild fb; // For CleanPath
+
+    VSProjectGenerator pg;
+
+    // Project name
+    AStackString<> name( "Project" );
+    AStackString<> guid;
+    VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
+    pg.SetProjectGuid( guid );
+
+    // Base dir
+
+    // Platforms
+    Array< VSProjectConfig > configs;
+    configs.SetCapacity( 6 );
+    VSProjectConfig cfg;
+    cfg.m_Platform = "Win32";
+    cfg.m_Config = "Debug";
+    configs.Append( cfg );
+
+    // Files 
+    pg.AddFile( AStackString<>( "File.cpp" ) );
+    pg.AddFile( AStackString<>( "file.cpp" ) );                 // Duplicate with case difference
+    pg.AddFile( AStackString<>( "File.cpp" ) );                 // Exact duplicate
+    pg.AddFile( AStackString<>( "../Code/File.cpp" ) );         // Duplicate with path difference
+    pg.AddFile( AStackString<>( "../Dir/../Code/File.cpp" ) );  // Duplicate with path difference
+    
+    AStackString<> projectFileName( "dummy.vcxproj" );
+
+    // Check vcxproj
+    {
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >() ) );
+        TEST_ASSERT( proj.Replace( "File.cpp", "" ) == 1 );
+        TEST_ASSERT( proj.FindI( "File.cpp" ) == nullptr );
+    }
+
+    // Check vcxproj.filters
+    {
+        AStackString<> filter( pg.GenerateVCXProjFilters( projectFileName ) );
+        TEST_ASSERT( filter.Replace( "File.cpp", "" ) == 1 );
+        TEST_ASSERT( filter.FindI( "File.cpp" ) == nullptr );
+    }
 }
 
 // XCode

@@ -22,6 +22,17 @@
 // system
 #include <stdarg.h> // for va_args
 
+// FileAscendingCompareIDeref
+//------------------------------------------------------------------------------
+class FileAscendingCompareIDeref
+{
+public:
+    inline bool operator () ( const AString * a, const AString * b ) const
+    {
+        return ( a->CompareI( *b ) < 0 );
+    }
+};
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 VSProjectGenerator::VSProjectGenerator()
@@ -29,6 +40,7 @@ VSProjectGenerator::VSProjectGenerator()
     , m_ProjectSccEntrySAK( false )
     , m_References( 0, true )
     , m_ProjectReferences( 0, true )
+    , m_FilePathsCanonicalized( false )
     , m_Files( 1024, true )
 {
 }
@@ -41,6 +53,7 @@ VSProjectGenerator::~VSProjectGenerator() = default;
 //------------------------------------------------------------------------------
 void VSProjectGenerator::SetBasePaths( const Array< AString > & paths )
 {
+    ASSERT( m_FilePathsCanonicalized == false );
     m_BasePaths = paths;
 }
 
@@ -91,6 +104,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     const char * lastSlash = projectFile.FindLast( NATIVE_SLASH );
     AStackString<> projectBasePath( projectFile.Get(), lastSlash ? lastSlash + 1 : projectFile.Get() );
 
+    // Canonicalize and de-duplicate files
+    CanonicalizeFilePaths( projectBasePath );
+
     // header
     Write( "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" );
     Write( "<Project DefaultTargets=\"Build\" ToolsVersion=\"15.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n" );
@@ -112,19 +128,8 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     // files
     {
         Write("  <ItemGroup>\n" );
-        Array< AString > seenFiles( m_Files.GetSize(), false );
-        const AString * const fEnd = m_Files.End();
-        for ( const AString * fIt = m_Files.Begin(); fIt!=fEnd; ++fIt )
+        for ( const AString & fileName : m_Files )
         {
-            AStackString<> fileName;
-            GetProjectRelativePath( projectBasePath, *fIt, fileName );
-
-            // Gracefully handle duplicate files
-            if ( CheckForDuplicateFiles( fileName, seenFiles ) )
-            {
-                continue;
-            }
-
             const char * fileType = nullptr;
             const VSProjectFileType * const end = fileTypes.End();
             for ( const VSProjectFileType * it=fileTypes.Begin(); it!=end; ++it )
@@ -364,6 +369,9 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
     const char * lastProjSlash = projectFile.FindLast( NATIVE_SLASH );
     AStackString<> projectBasePath( projectFile.Get(), lastProjSlash ? lastProjSlash + 1 : projectFile.Get() );
 
+    // Must already be canonicalized/de-duplicated
+    ASSERT( m_FilePathsCanonicalized == true );
+
     // header
     Write( "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" );
     Write( "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n" );
@@ -374,21 +382,11 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
     // files
     {
         Write( "  <ItemGroup>\n" );
-        Array< AString > seenFiles( m_Files.GetSize(), false );
-        const AString * const fEnd = m_Files.End();
-        for ( const AString * fIt = m_Files.Begin(); fIt!=fEnd; ++fIt )
+        for ( const AString & fileName : m_Files )
         {
             // get folder part, relative to base dir
             AStackString<> folder;
-            GetFolderPath( *fIt, folder );
-            AStackString<> fileName;
-            GetProjectRelativePath( projectBasePath, *fIt, fileName );
-
-            // Gracefully handle duplicate files
-            if ( CheckForDuplicateFiles( fileName, seenFiles ) )
-            {
-                continue;
-            }
+            GetFolderPath( fileName, folder );
 
             Write( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
             if ( !folder.IsEmpty() )
@@ -400,30 +398,9 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
             // add new folders
             if ( !folder.IsEmpty() )
             {
-                for (;;)
+                if ( folders.IsEmpty() || ( folders.Top().EqualsI( folder ) == false ) )
                 {
-                    // add this folder if unique
-                    bool found = false;
-                    for ( const AString * it=folders.Begin(); it!=folders.End(); ++it )
-                    {
-                        if ( it->CompareI( folder ) == 0 )
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if ( !found )
-                    {
-                        folders.Append( folder );
-                    }
-
-                    // handle intermediate folders
-                    const char * lastSlash = folder.FindLast( BACK_SLASH );
-                    if ( lastSlash == nullptr )
-                    {
-                        break;
-                    }
-                    folder.SetLength( (uint32_t)( lastSlash - folder.Get() ) );
+                    folders.Append( folder );
                 }
             }
         }
@@ -485,6 +462,7 @@ void VSProjectGenerator::WritePGItem( const char * xmlTag, const AString & value
 //------------------------------------------------------------------------------
 void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & folder ) const
 {
+    ASSERT( m_FilePathsCanonicalized );
     const AString * const bEnd = m_BasePaths.End();
     for ( const AString * bIt = m_BasePaths.Begin(); bIt != bEnd; ++bIt )
     {
@@ -492,9 +470,8 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
         if ( fileName.BeginsWithI( basePath ) )
         {
             const char * begin = fileName.Get() + basePath.GetLength();
-            const char * end = fileName.GetEnd();
-            const char * lastSlash = fileName.FindLast( BACK_SLASH );
-            end = ( lastSlash ) ? lastSlash : end;
+            const char * end = fileName.FindLast( BACK_SLASH );
+            end = ( end ) ? end : fileName.GetEnd();
             if ( begin < end )
             {
                 folder.Assign( begin, end );
@@ -562,20 +539,58 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
     outRelativeFileName += pathB;
 }
 
-// CheckForDuplicateFiles
+// CanonicalizeFilePaths
 //------------------------------------------------------------------------------
-bool VSProjectGenerator::CheckForDuplicateFiles( const AString & file,
-                                                 Array< AString > & inoutAlreadySeenFiles ) const
+void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath )
 {
-    for ( const AString & seenFile : inoutAlreadySeenFiles )
+    if ( m_FilePathsCanonicalized )
     {
-        if ( seenFile.CompareI( file ) == 0 )
-        {
-            return true; // already seen
-        }
+        return;
     }
-    inoutAlreadySeenFiles.Append( file );
-    return false; // not seen before
+
+    // Base Paths
+    for ( AString & basePath : m_BasePaths )
+    {
+        GetProjectRelativePath( projectBasePath, basePath, basePath );
+    }
+    
+    // Files
+    if ( m_Files.IsEmpty() == false )
+    {
+        // Canonicalize and make all paths relative to project
+        Array< const AString * > filePointers( m_Files.GetSize(), false );
+        for ( AString & file : m_Files )
+        {
+            GetProjectRelativePath( projectBasePath, file, file );
+            filePointers.Append( &file );
+        }
+
+        // Sort filenames to allow finding de-duplication
+        FileAscendingCompareIDeref sorter;
+        filePointers.Sort( sorter );
+
+        // Find unique files
+        Array< AString > uniqueFiles( m_Files.GetSize(), false );
+        const AString * prev = filePointers[ 0 ];
+        uniqueFiles.Append( *filePointers[ 0 ] );
+        size_t numFiles = m_Files.GetSize();
+        for ( size_t i=1; i<numFiles; ++i )
+        {
+            const AString * current = filePointers[ i ];
+            if ( current->EqualsI( *prev ) )
+            {
+                continue;
+            }
+            uniqueFiles.Append( *current );
+            prev = current;
+        }
+
+        // Keep uniquified list. Even if there were no duplicates
+        // we keep the sorted list in order to have more consistent behaviour
+        uniqueFiles.Swap( m_Files );
+    }
+   
+    m_FilePathsCanonicalized = true;
 }
 
 //------------------------------------------------------------------------------

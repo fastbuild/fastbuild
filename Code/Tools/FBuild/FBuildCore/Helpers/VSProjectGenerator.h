@@ -52,8 +52,7 @@ private:
                                         const AString & fileName,
                                         AString & outRelativeFileName );
 
-    bool CheckForDuplicateFiles( const AString & file,
-                                 Array< AString > & inoutAlreadySeenFiles ) const;
+    void CanonicalizeFilePaths( const AString & projectBasePath );
 
     // project details
     Array< AString > m_BasePaths;
@@ -68,6 +67,7 @@ private:
     Array< AString > m_ProjectReferences;
 
     // intermediate data
+    bool m_FilePathsCanonicalized;
     Array< AString > m_Files;
 
     // working buffer
