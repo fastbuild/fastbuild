@@ -86,10 +86,10 @@ public:
     bool            ReceiveFileData( uint32_t fileId, const void * data, size_t & dataSize );
 
     void            GetRemotePath( AString & path ) const;
-    void            GetRemoteFilePath( uint32_t fileId, AString & exe, bool fullPath = true ) const;
+    void            GetRemoteFilePath( uint32_t fileId, AString & exe ) const;
     const char *    GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
 
-    static void     GetRelativePath( const AString & mainExe, const AString & otherFile, AString & otherFileRelativePath );
+    static void     GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
 private:
     bool            AddFile( const AString & fileName, const uint64_t timeStamp );
     bool            LoadFile( const AString & fileName, void * & content, uint32_t & contentSize ) const;
