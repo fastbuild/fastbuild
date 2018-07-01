@@ -20,7 +20,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const char* toolTip )
+OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
 {
     #if defined( __WINDOWS__ )
         ZeroMemory( &m_NotifyIconData, sizeof( NOTIFYICONDATA ) );
@@ -34,10 +34,9 @@ OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const char* toolTip )
         m_NotifyIconData.hIcon = (HICON)LoadIcon( (HINSTANCE)parentWindow->GetHInstance(), MAKEINTRESOURCE(IDI_TRAY_ICON) );
         ASSERT( m_NotifyIconData.hIcon );
 
-        if ( toolTip && toolTip[0] )
+        if ( toolTip.IsEmpty() == false )
         {
-            const size_t toolTipLength = strlen(toolTip);
-            AString::Copy(toolTip, m_NotifyIconData.szTip, Math::Min<size_t>(toolTipLength, sizeof(m_NotifyIconData.szTip) - 1));
+            AString::Copy( toolTip.Get(), m_NotifyIconData.szTip, Math::Min<size_t>( toolTip.GetLength(), sizeof( m_NotifyIconData.szTip ) - 1 ) );
         }
 
         // Display
