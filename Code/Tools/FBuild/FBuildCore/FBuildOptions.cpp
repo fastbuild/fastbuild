@@ -476,7 +476,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
 #endif
     OUTPUT( " -dist          Allow distributed compilation.\n"
             " -distverbose   Print detailed info for distributed compilation.\n"
-            " -fastcancel    [Experimental] Fast cancellation behavior on buidl failure.\n"
+            " -fastcancel    [Experimental] Fast cancellation behavior on build failure.\n"
             " -fixuperrorpaths Reformat error paths to be Visual Studio friendly.\n"
             " -forceremote   Force distributable jobs to only be built remotely.\n"
             " -help          Show this help.\n"
