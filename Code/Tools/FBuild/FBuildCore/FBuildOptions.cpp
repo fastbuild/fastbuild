@@ -515,11 +515,11 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
 void FBuildOptions::DisplayVersion() const
 {
     #ifdef DEBUG
-        #define VERSION_CONFIG " (DEBUG) "
+        #define VERSION_CONFIG "(DEBUG) "
     #else
-        #define VERSION_CONFIG " "
+        #define VERSION_CONFIG ""
     #endif
-    OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " FBUILD_VERSION_PLATFORM VERSION_CONFIG " - "
+    OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
             "Copyright 2012-2018 Franta Fulin - http://www.fastbuild.org\n" );
     #undef VERSION_CONFIG
 }

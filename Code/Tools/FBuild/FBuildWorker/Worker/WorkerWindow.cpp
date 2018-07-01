@@ -85,7 +85,7 @@ WorkerWindow::~WorkerWindow()
 void WorkerWindow::SetStatus( const char * statusText )
 {
     AStackString< 512 > text;
-    text.Format( "FBuildWorker %s (%s) | \"%s\" | %s", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM, m_HostName.Get(), statusText );
+    text.Format( "FBuildWorker %s | \"%s\" | %s", FBUILD_VERSION_STRING, m_HostName.Get(), statusText );
     SetTitle( text.Get() );
 }
 

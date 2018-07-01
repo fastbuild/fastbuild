@@ -65,7 +65,7 @@ Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
     }
     m_BaseArgs.Replace( "-subprocess", "" );
 
-    StatusMessage( "FBuildWorker %s (%s)", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
+    StatusMessage( "FBuildWorker %s", FBUILD_VERSION_STRING );
 }
 
 // DESTRUCTOR
