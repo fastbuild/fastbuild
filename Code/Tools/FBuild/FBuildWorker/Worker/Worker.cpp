@@ -80,11 +80,27 @@ Worker::~Worker()
     if ( m_RestartNeeded )
     {
         Process p;
-        p.Spawn( m_BaseExeName.Get(),
-                 m_BaseArgs.Get(),
-                 nullptr,   // default workingDir
-                 nullptr ); // default env
-        p.Detach();
+        size_t tryCount = 10;
+        for ( ;; )
+        {
+            if ( p.Spawn( m_BaseExeName.Get(),
+                          m_BaseArgs.Get(),
+                          nullptr,      // default workingDir
+                          nullptr ) )   // default env
+            {
+                p.Detach();
+                break;
+            }
+
+            --tryCount;
+            if ( tryCount == 0 )
+            {
+                break;
+            }
+
+            // wait before trying again
+            Thread::Sleep( 1000 );
+        }
     }
 }
 
