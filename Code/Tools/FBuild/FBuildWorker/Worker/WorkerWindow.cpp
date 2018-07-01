@@ -206,9 +206,9 @@ void WorkerWindow::UIUpdateThread()
         }
         else
         {
-            ShowWindow( (HWND)GetHandle(), SW_SHOW );
+            ShowWindow( (HWND)GetHandle(), SW_SHOWNOACTIVATE );
             UpdateWindow( (HWND)GetHandle() );
-            ShowWindow( (HWND)GetHandle(), SW_SHOW ); // First call can be ignored
+            ShowWindow( (HWND)GetHandle(), SW_SHOWNOACTIVATE ); // First call can be ignored
         }
 
         SetStatus( "Idle" );
