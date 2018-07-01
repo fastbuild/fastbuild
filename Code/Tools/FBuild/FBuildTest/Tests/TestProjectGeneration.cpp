@@ -35,6 +35,7 @@ private:
     void VCXProj_DefaultConfigs() const;
     void VCXProj_PerConfigOverrides() const;
     void VCXProj_HandleDuplicateFiles() const;
+    void VCXProj_Folders() const;
 
     // XCode
     void XCode() const;
@@ -57,6 +58,7 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( VCXProj_DefaultConfigs )
     REGISTER_TEST( VCXProj_PerConfigOverrides )
     REGISTER_TEST( VCXProj_HandleDuplicateFiles )
+    REGISTER_TEST( VCXProj_Folders )
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
 REGISTER_TESTS_END
@@ -260,7 +262,7 @@ void TestProjectGeneration::TestFunction_Speed() const
     cfg.m_Platform = "x64";     cfg.m_Config = "Profile";   configs.Append( cfg );
     cfg.m_Platform = "x64";     cfg.m_Config = "Release";   configs.Append( cfg );
 
-    // files (about 5,000)
+    // files
     Array< AString > files;
     FileIO::GetFiles( baseDir, AStackString<>( "*" ), true, &files );
     pg.AddFiles( files );
@@ -595,6 +597,84 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
         AStackString<> filter( pg.GenerateVCXProjFilters( projectFileName ) );
         TEST_ASSERT( filter.Replace( "File.cpp", "" ) == 1 );
         TEST_ASSERT( filter.FindI( "File.cpp" ) == nullptr );
+    }
+}
+
+// VCXProj_Folders
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VCXProj_Folders() const
+{
+    FBuild fb; // For CleanPath
+
+    VSProjectGenerator pg;
+
+    // Project name
+    AStackString<> name( "Project" );
+    AStackString<> guid;
+    VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
+    pg.SetProjectGuid( guid );
+
+    // Base dir
+    AStackString<> baseDir;
+    GetCodeDir( baseDir );
+    Array< AString > baseDirs;
+    baseDirs.Append( baseDir );
+    pg.SetBasePaths( baseDirs );
+
+    // Platforms
+    Array< VSProjectConfig > configs;
+    configs.SetCapacity( 6 );
+    VSProjectConfig cfg;
+    cfg.m_Platform = "Win32";
+    cfg.m_Config = "Debug";
+    configs.Append( cfg );
+
+    // Files in various sub-dirs
+    pg.AddFile( AStackString<>( "FolderA/AFile.cpp" ) );
+    pg.AddFile( AStackString<>( "FolderA/BFolder/SubDir/AFile.cpp" ) );
+    pg.AddFile( AStackString<>( "FolderA/ZFile.cpp" ) );
+    pg.AddFile( AStackString<>( "FolderA/ZFolder/SubDir/AFile.cpp" ) );
+    pg.AddFile( AStackString<>( "FolderZ/ZFile.cpp" ) );
+
+    // Dirs which are substrings of each other but unique
+    pg.AddFile( AStackString<>( "Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.cpp" ) );
+    pg.AddFile( AStackString<>( "Data/TestPrecompiledHeaders/CacheUniqueness/PrecompiledHeader.cpp" ) );
+    
+    AStackString<> projectFileName;
+    projectFileName.Format( "%sdummy.vcxproj", baseDir.Get() );
+
+    // Check vcxproj
+    {
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >() ) );
+        TEST_ASSERT( proj.Replace( "AFile.cpp", "" ) == 3 );
+        TEST_ASSERT( proj.FindI( "AFile.cpp" ) == nullptr );
+        TEST_ASSERT( proj.Replace( "ZFile.cpp", "" ) == 2 );
+        TEST_ASSERT( proj.FindI( "ZFile.cpp" ) == nullptr );
+        TEST_ASSERT( proj.Replace( "PrecompiledHeader.cpp", "" ) == 2 );
+        TEST_ASSERT( proj.FindI( "PrecompiledHeader.cpp" ) == nullptr );
+    }
+
+    // Check vcxproj.filters
+    {
+        AStackString<> filter( pg.GenerateVCXProjFilters( projectFileName ) );
+
+        // Should have a folder entry for each unique folder, including
+        // directories who don't directly have any files in them
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"FolderA\">", "" ) == 1 );
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"FolderA\\BFolder\">", "" ) == 1 );
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"FolderA\\BFolder\\SubDir\">", "" ) == 1 );
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"FolderA\\ZFolder\">", "" ) == 1 );
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"FolderA\\ZFolder\\SubDir\">", "" ) == 1 );
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"FolderZ\">", "" ) == 1 );
+
+        // Ensure dirs which are substrings of each other but unique
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"Data\\TestPrecompiledHeaders\\CacheUniqueness2\">", "" ) == 1 );
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"Data\\TestPrecompiledHeaders\">", "" ) == 1 );
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"Data\">", "" ) == 1 );
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"Data\\TestPrecompiledHeaders\\CacheUniqueness\">", "" ) == 1 );
+
+        // Ensure test has accounted for all paths
+        TEST_ASSERT( filter.Find( "Filter Include=" ) == nullptr );
     }
 }
 

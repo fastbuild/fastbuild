@@ -17,6 +17,7 @@
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/CRC32.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // system
@@ -378,9 +379,11 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
     // list of all folders
     Array< AString > folders( 1024, true );
+    Array< uint32_t > folderHashes( 1024, true );
 
     // files
     {
+        AStackString<> lastFolder;
         Write( "  <ItemGroup>\n" );
         for ( const AString & fileName : m_Files )
         {
@@ -396,11 +399,32 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
             Write( "    </CustomBuild>\n" );
 
             // add new folders
-            if ( !folder.IsEmpty() )
+            if ( ( folder.IsEmpty() == false ) && ( folder != lastFolder ) )
             {
-                if ( folders.IsEmpty() || ( folders.Top().EqualsI( folder ) == false ) )
+                lastFolder = folder;
+
+                // Each unique path must be added, so FolderA/FolderB/FolderC
+                // will result in 3 entries, FolderA, FolderA/FolderB and FolderA/FolderB/FolderC
+                for (;;)
                 {
+                    // add this folder if not already added
+                    const uint32_t folderHash = xxHash::Calc32( folder );
+                    if ( folderHashes.Find( folderHash ) )
+                    {
+                        break; // If we've seen this folder, we've also seen the parent dirs
+                    }
+
+                    ASSERT( folder.IsEmpty() == false );
                     folders.Append( folder );
+                    folderHashes.Append( folderHash );
+
+                    // cehck parent folder
+                    const char * lastSlash = folder.FindLast( BACK_SLASH );
+                    if ( lastSlash == nullptr )
+                    {
+                        break; // no more parents
+                    }
+                    folder.SetLength( (uint32_t)( lastSlash - folder.Get() ) );
                 }
             }
         }
@@ -409,12 +433,15 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
     // folders
     {
-        const AString * const fEnd = folders.End();
-        for ( const AString * fIt = folders.Begin(); fIt!=fEnd; ++fIt )
+        const size_t numFolders = folders.GetSize();
+        for ( size_t i=0; i<numFolders; ++i )
         {
+            const AString & folder = folders[ i ];
+            const uint32_t folderHash = folderHashes[ i ];
+
             Write( "  <ItemGroup>\n" );
-            Write( "    <Filter Include=\"%s\">\n", fIt->Get() );
-            Write( "      <UniqueIdentifier>{%08x-6c94-4f93-bc2a-7f5284b7d434}</UniqueIdentifier>\n", CRC32::Calc( *fIt ) );
+            Write( "    <Filter Include=\"%s\">\n", folder.Get() );
+            Write( "      <UniqueIdentifier>{%08x-6c94-4f93-bc2a-7f5284b7d434}</UniqueIdentifier>\n", folderHash );
             Write( "    </Filter>\n" );
             Write( "  </ItemGroup>\n" );
         }
@@ -552,6 +579,9 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
     for ( AString & basePath : m_BasePaths )
     {
         GetProjectRelativePath( projectBasePath, basePath, basePath );
+        #if !defined( __WINDOWS__ )
+            basePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
+        #endif
     }
     
     // Files
@@ -562,6 +592,9 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         for ( AString & file : m_Files )
         {
             GetProjectRelativePath( projectBasePath, file, file );
+            #if !defined( __WINDOWS__ )
+                file.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
+            #endif
             filePointers.Append( &file );
         }
 
@@ -582,6 +615,7 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
                 continue;
             }
             uniqueFiles.Append( *current );
+
             prev = current;
         }
 
