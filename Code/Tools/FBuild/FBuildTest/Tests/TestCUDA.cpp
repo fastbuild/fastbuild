@@ -58,11 +58,11 @@ void TestCUDA::Build() const
 
         // Check stats
         //               Seen,  Built,  Type
-        CheckStatsNode ( 65,    1,      Node::FILE_NODE ); // many included files
+        CheckStatsNode ( 1,     1,       Node::FILE_NODE );
         CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
         CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
         CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsTotal( 68,    4 );
+        CheckStatsTotal( 4,     4 );
 
         // Test cache was stored to
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -81,7 +81,7 @@ void TestCUDA::Build_NoRebuild() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CUDA/cuda.fdb" ) );
 
-        const AStackString<> obj( "../tmp/Test/CUDA/test.obj" );
+            const AStackString<> obj( "../tmp/Test/CUDA/test.obj" );
 
         // build (via alias)
         TEST_ASSERT( fBuild.Build( AStackString<>( "CUDA-Obj" ) ) );
@@ -91,11 +91,11 @@ void TestCUDA::Build_NoRebuild() const
 
         // Check stats
         //               Seen,  Built,  Type
-        CheckStatsNode ( 65,    65,     Node::FILE_NODE ); // many included files
+        CheckStatsNode ( 1,     1,      Node::FILE_NODE ); // many included files
         CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
         CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
         CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
-        CheckStatsTotal( 68,    65 );
+        CheckStatsTotal( 4,     1 );
     #endif
 }
 
@@ -111,7 +111,7 @@ void TestCUDA::Build_CacheHit() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CUDA/cuda.fdb" ) );
 
-        const AStackString<> obj( "../tmp/Test/CUDA/test.obj" );
+            const AStackString<> obj( "../tmp/Test/CUDA/test.obj" );
 
         // clean up anything left over from previous runs
         EnsureFileDoesNotExist( obj );
@@ -124,11 +124,11 @@ void TestCUDA::Build_CacheHit() const
 
         // Check stats
         //               Seen,  Built,  Type
-        CheckStatsNode ( 65,    65,     Node::FILE_NODE ); // many included files
+        CheckStatsNode ( 1,     1,      Node::FILE_NODE );
         CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
         CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
         CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
-        CheckStatsTotal( 68,    66 );
+        CheckStatsTotal( 4,     2 );
 
         // Test we got a cache hit
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );

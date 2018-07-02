@@ -9,6 +9,7 @@
 
 // Core
 #include "Core/Env/Types.h"
+#include "Core/Containers/Tags.h"
 #include "Core/Strings/AString.h"
 
 // FBuildOptions
@@ -92,6 +93,20 @@ public:
     inline const AString & GetMainProcessMutexName() const      { return m_ProcessMutexName; }
     inline const AString & GetFinalProcessMutexName( ) const    { return m_FinalProcessMutexName; }
     inline const AString & GetSharedMemoryName() const          { return m_SharedMemoryName; }
+    const AString & GetObfuscatedSandboxTmp() const;
+
+    bool    m_OverrideSandboxEnabled = false;
+    bool    m_SandboxEnabled = false;
+    bool    m_OverrideSandboxExe = false;
+    AString m_SandboxExe;
+    bool    m_OverrideSandboxArgs = false;
+    AString m_SandboxArgs;
+    bool    m_OverrideSandboxTmp = false;
+    AString m_SandboxTmp;
+    bool    m_OverrideLocalWorkerTags = false;
+    Tags    m_LocalWorkerTags;
+
+    mutable AString m_ObfuscatedSandboxTmp;
 
 private:
     void DisplayHelp( const AString & programName ) const;

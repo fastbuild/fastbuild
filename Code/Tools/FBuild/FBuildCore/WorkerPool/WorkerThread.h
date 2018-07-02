@@ -8,10 +8,13 @@
 #include "Core/Process/Semaphore.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
+#include "Core/Containers/Tags.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
 class FileStream;
+
+#define CORE_PHRASE "core_"
 
 // WorkerThread
 //------------------------------------------------------------------------------
@@ -22,7 +25,10 @@ public:
     void Init();
     virtual ~WorkerThread();
 
-    static void InitTmpDir( bool remote = false );
+    static void InitTmpDir(
+        const bool sandboxEnabled,
+        const AString & obfuscatedSandboxTmp,
+        bool remote = false );
 
     inline void Stop()              { m_ShouldExit = true; }
     inline bool HasExited() const   { return m_Exited; }
@@ -37,6 +43,7 @@ public:
     static bool CreateTempFile( const AString & tmpFileName,
                                 FileStream & file );
     static void CreateThreadLocalTmpDir();
+
 protected:
     // allow update from the main thread when in -j0 mode
     friend class FBuild;

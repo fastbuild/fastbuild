@@ -7,7 +7,6 @@
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 
 #include "Helpers/FBuildStats.h"
-#include "WorkerPool/WorkerBrokerage.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
@@ -39,6 +38,9 @@ public:
     // OR a previously saved NodeGraph DB (if available/matching the BFF)
     bool Initialize( const char * nodeGraphDBFile = nullptr );
 
+    // for graph tests to call
+    NodeGraph * GetGraph();
+
     // build a target
     bool Build( const AString & target );
     bool Build( const Array< AString > & targets );
@@ -60,6 +62,9 @@ public:
                            AString & path ) const;
 
     void SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar );
+    void CoerceEnvironment( const AString & obfuscatedSandboxTmp );
+    inline const char * GetBaseEnvironmentString() const        { return m_BaseEnvironmentString; }
+    inline uint32_t     GetBaseEnvironmentStringSize() const    { return m_BaseEnvironmentStringSize; }
     inline const char * GetEnvironmentString() const            { return m_EnvironmentString; }
     inline uint32_t     GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
 
@@ -134,10 +139,11 @@ private:
 
     FBuildOptions m_Options;
 
-    WorkerBrokerage m_WorkerBrokerage;
-
     AString m_OldWorkingDir;
 
+    // a double-null terminated string
+    char *      m_BaseEnvironmentString;
+    uint32_t    m_BaseEnvironmentStringSize; // size excluding last null
     // a double-null terminated string
     char *      m_EnvironmentString;
     uint32_t    m_EnvironmentStringSize; // size excluding last null

@@ -13,6 +13,7 @@
 #include "Core/Process/SystemMutex.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
 
 // system
 #if defined( __WINDOWS__ )
@@ -128,15 +129,97 @@ int MainCommon( const AString & args, void * hInstance )
     // start the worker and wait for it to be closed
     int ret;
     {
-        Worker worker( hInstance, args, options.m_ConsoleMode );
+        // construct worker
+        Worker worker( args );
+
+        // before initializing worker, set initial worker settings
+        bool anyOverrides = false;
+        WorkerSettings & workerSettings = WorkerSettings::Get();
         if ( options.m_OverrideCPUAllocation )
         {
-            WorkerSettings::Get().SetNumCPUsToUse( options.m_CPUAllocation );
+            workerSettings.SetNumCPUsToUse( options.m_CPUAllocation );
+            anyOverrides = true;
         }
         if ( options.m_OverrideWorkMode )
         {
-            WorkerSettings::Get().SetMode( options.m_WorkMode );
+            workerSettings.SetWorkMode( options.m_WorkMode );
+            anyOverrides = true;
         }
+        if ( options.m_OverrideStartMinimized )
+        {
+            workerSettings.SetStartMinimized( options.m_StartMinimized );
+            anyOverrides = true;
+        }
+        if ( options.m_OverrideSandboxEnabled )
+        {
+            workerSettings.SetSandboxEnabled( options.m_SandboxEnabled );
+            anyOverrides = true;
+        }
+        if ( options.m_OverrideSandboxExe )
+        {
+            workerSettings.SetSandboxExe( options.m_SandboxExe );
+            anyOverrides = true;
+        }
+        if ( options.m_OverrideSandboxArgs )
+        {
+            workerSettings.SetSandboxArgs( options.m_SandboxArgs );
+            anyOverrides = true;
+        }
+        if ( options.m_OverrideSandboxTmp )
+        {
+            workerSettings.SetSandboxTmp( options.m_SandboxTmp );
+            anyOverrides = true;
+        }
+        if ( options.m_OverrideWorkerTags )
+        {
+            workerSettings.ApplyWorkerTags( options.m_WorkerTags );
+            anyOverrides = true;
+        }
+
+        // remote workers store their tag keys and values
+        // as dir names on the shared network drive, so
+        // tag keys and values must contain valid dir chars
+        const Tags & workerTags = workerSettings.GetWorkerTags();
+        AStackString<> errorMsg;
+        if ( !workerTags.ContainsValidDirChars( errorMsg ) )
+        {
+            ShowMsgBox( errorMsg.Get() );
+            return -1;
+        }
+
+        if ( anyOverrides )
+        {
+            // save our state out to the .settings file
+            workerSettings.Save();
+        }
+
+        // error check settings
+        if ( workerSettings.GetSandboxEnabled() )
+        {
+            const AString & absSandboxExe = workerSettings.GetAbsSandboxExe();
+            if ( absSandboxExe.IsEmpty() ||
+                 workerSettings.GetSandboxTmp().IsEmpty() )
+            {
+                AStackString<> sandboxError( "To enable the sandbox, please specify a non-empty sandbox exe " );
+                sandboxError += "and a non-empty sandbox tmp in either the ";
+                sandboxError += ".settings file or via the command line -sandboxexe and -sandboxtmp args\n";
+                ShowMsgBox( sandboxError.Get() );
+                return -1;
+            }
+            if ( !absSandboxExe.IsEmpty() && !FileIO::FileExists( absSandboxExe.Get() ) )
+            {
+                AStackString<> sandboxError;
+                sandboxError.Format( "sandbox executable '%s' was not found on disk\n", absSandboxExe.Get() );
+                ShowMsgBox( sandboxError.Get() );
+                return -1;
+            }
+        }
+        // the remaining sandbox init logic for the worker is in Worker.cpp 
+        
+        // worker settings are set, so initialize the worker
+        worker.Initialize( hInstance, options.m_ConsoleMode );
+
+        // do work
         ret = worker.Work();
     }
 
@@ -161,7 +244,7 @@ int MainCommon( const AString & args, void * hInstance )
             if ( t.GetElapsed() > 5.0f )
             {
                 AStackString<> msg;
-                msg.Format( "Failed to make sub-process copy - error: %u (0x%x)\n\nSrc: %s\nDst: %s\n", Env::GetLastErr(), Env::GetLastErr(), exeName.Get(), exeNameCopy.Get() );
+                msg.Format( "Failed to make sub-process copy (error 0x%x)\n\nSrc: %s\nDst: %s\n", Env::GetLastErr(), exeName.Get(), exeNameCopy.Get() );
                 ShowMsgBox( msg.Get() );
                 return -2;
             }

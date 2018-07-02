@@ -56,6 +56,13 @@
     } while ( false );                              \
     PRAGMA_DISABLE_POP_MSVC
 
+#define FLOG_ERROR_STRING( message )             \
+    do {                                            \
+        FLog::ErrorString( message );    \
+    PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
+    } while ( false );                              \
+    PRAGMA_DISABLE_POP_MSVC
+
 #define FLOG_ERROR( fmtString, ... )                \
     do {                                            \
         FLog::Error( fmtString, ##__VA_ARGS__ );    \
@@ -83,6 +90,7 @@ public:
     static void Info( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
     static void Build( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
     static void Warning( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void ErrorString( const char * message );
     static void Error( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
     static void Monitor( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
 

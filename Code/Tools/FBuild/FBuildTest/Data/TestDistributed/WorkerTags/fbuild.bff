@@ -1,0 +1,306 @@
+//
+// WorkerTags
+//
+// Build steps to test worker tags
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers = { "127.0.0.1" }
+}
+
+// Tags and os values
+//------------------------------------------------------------------------------
+#if __WINDOWS__
+.OSTag = 'OS=Win-*-*'
+.ExeExtension = '.exe'
+#endif
+
+#if __OSX__
+.OSTag = 'OS=OSX-*-*'
+.ExeExtension = ''
+#endif
+
+#if __LINUX__
+.OSTag = 'OS=Linux-*-*'
+.ExeExtension = ''
+}
+#endif
+
+.BaseTagsStruct =
+[
+    .RequiredWorkerTags =
+    {
+        '!raretag'
+        .OSTag
+    }
+]
+
+.CompilerTagsStruct =
+[
+    Using( .BaseTagsStruct )
+    .RequiredWorkerTags + 'InstalledCompilerA'
+    .RequiredWorkerTags + 'CompileHarness=CH1'
+]
+
+.TestTagsStruct =
+[
+    Using( .BaseTagsStruct )
+    .RequiredWorkerTags + 'InstalledTesterA'
+    .RequiredWorkerTags + 'TestHarness=*'
+]
+
+// Tagged compilers
+//------------------------------------------------------------------------------
+#if __WINDOWS__
+Using( .WindowsClangToolChain )
+.CompilerStruct =
+[
+    .Executable     = '$ClangPath$/bin/clang++.exe'
+    Using( .CompilerTagsStruct )
+]
+Compiler( 'Compiler-ClangForWindows-Dist-Tags' )
+{
+    Using( .CompilerStruct )
+}
+Compiler( 'Compiler-ClangForWindows-Dist-Tags-Sandbox' )
+{
+    Using( .CompilerStruct )
+    .RequiredWorkerTags + 'sandbox'
+}
+Compiler( 'Compiler-ClangForWindows-Dist-Tags-NotSandbox' )
+{
+    Using( .CompilerStruct )
+    .RequiredWorkerTags + '!sandbox'
+}
+#endif
+
+#if __OSX__
+Using( .OSXClangToolChain )
+.CompilerStruct =
+[
+    .Executable     = '/usr/bin/clang++'
+    Using( .CompilerTagsStruct )
+]
+Compiler( 'Compiler-Clang-Dist-Tags' )
+{
+    Using( .CompilerStruct )
+}
+Compiler( 'Compiler-Clang-Dist-Tags-Sandbox' )
+{
+    Using( .CompilerStruct )
+    .RequiredWorkerTags + 'sandbox'
+}
+Compiler( 'Compiler-Clang-Dist-Tags-NotSandbox' )
+{
+    Using( .CompilerStruct )
+    .RequiredWorkerTags + '!sandbox'
+}
+#endif
+
+#if __LINUX__
+Using( .LinuxGCCToolChain )
+.CompilerStruct =
+[
+    .Executable     = '/usr/bin/gcc'
+    .ExtraFiles     = {
+                        '/usr/bin/as'
+                        '/usr/lib/gcc/x86_64-linux-gnu/4.9/cc1plus'
+                      }
+    Using( .CompilerTagsStruct )
+]
+Compiler( 'Compiler-GCC-Dist-Tags' )
+{
+    Using( .CompilerStruct )
+}
+Compiler( 'Compiler-GCC-Dist-Tags-Sandbox' )
+{
+    Using( .CompilerStruct )
+    .RequiredWorkerTags + 'sandbox'
+}
+Compiler( 'Compiler-GCC-Dist-Tags-NotSandbox' )
+{
+    Using( .CompilerStruct )
+    .RequiredWorkerTags + '!sandbox'
+}
+#endif
+
+// Compile steps
+//------------------------------------------------------------------------------
+.TestObjectListStruct =
+[
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestDistributed/WorkerTags/test.cpp'
+]
+
+ObjectList( "TestExe-Lib-Tags" )
+{
+    Using( .TestObjectListStruct )
+#if __WINDOWS__
+    .Compiler = 'Compiler-ClangForWindows-Dist-Tags'
+#endif
+
+#if __OSX__
+    .Compiler = 'Compiler-Clang-Dist-Tags'
+#endif
+
+#if __LINUX__
+    .Compiler = 'Compiler-GCC-Dist-Tags'
+#endif
+    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/WorkerTags'
+}
+
+ObjectList( "DummySandboxExe-Lib" )
+{
+#if __WINDOWS__
+    Using( .VisualStudioToolChain_X64 )
+#endif
+    .CompilerInputFiles = { './Tools/FBuild/FBuildTest/Data/TestDistributed/WorkerTags/dummysandbox.cpp'
+                            './Core/Env/Env.cpp'
+                            './Core/Mem/Mem.cpp'
+                            './Core/Mem/MemPoolBlock.cpp'
+                            './Core/Mem/SmallBlockAllocator.cpp'
+                            './Core/Process/Mutex.cpp'
+                            './Core/Process/Process.cpp'
+                            './Core/Strings/AString.cpp'
+                            './Core/Time/Timer.cpp'
+                          }
+    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/WorkerTags/Sandbox'
+
+#if __WINDOWS__
+    .CompilerOptions + ' /DRELEASE'
+                     + ' /I"./"'
+#endif
+
+#if __OSX__
+    .CompilerOptions + ' -DRELEASE'
+                     + ' -D__APPLE__'
+                     + ' -I./'
+#endif
+
+#if __LINUX__
+    .CompilerOptions + ' -DRELEASE'
+                     + ' -D__LINUX__'
+                     + ' -I./'
+#endif
+}
+
+ObjectList( "TestExe-Lib-Tags-Sandbox" )
+{
+    Using( .TestObjectListStruct )
+#if __WINDOWS__
+    .Compiler = 'Compiler-ClangForWindows-Dist-Tags-Sandbox'
+#endif
+
+#if __OSX__
+    .Compiler = 'Compiler-Clang-Dist-Tags-Sandbox'
+#endif
+
+#if __LINUX__
+    .Compiler = 'Compiler-GCC-Dist-Tags-Sandbox'
+#endif
+    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/WorkerTags/Sandbox'
+}
+
+ObjectList( "TestExe-Lib-Tags-NotSandbox" )
+{
+    Using( .TestObjectListStruct )
+#if __WINDOWS__
+    .Compiler = 'Compiler-ClangForWindows-Dist-Tags-NotSandbox'
+#endif
+
+#if __OSX__
+    .Compiler = 'Compiler-Clang-Dist-Tags-NotSandbox'
+#endif
+
+#if __LINUX__
+    .Compiler = 'Compiler-GCC-Dist-Tags-NotSandbox'
+#endif
+    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/WorkerTags/NotSandbox'
+}
+
+.ExecutableStruct =
+[
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+    #endif
+]
+
+Executable( "TestExe-Tags" )
+{
+    Using( .ExecutableStruct )
+    .Libraries          = { 'TestExe-Lib-Tags' }
+    .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/WorkerTags/test$ExeExtension$'
+}
+
+Executable( "DummySandboxExe" )
+{
+    #if __WINDOWS__
+        Using( .VisualStudioToolChain_X64 )
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+    #endif
+    .Libraries          = { 'DummySandboxExe-Lib' }
+    #if __WINDOWS__
+    .LinkerOptions      + ' kernel32.lib'
+                        + .CRTLibs_Static
+    #endif
+    .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/WorkerTags/Sandbox/dummysandbox$ExeExtension$'
+}
+
+Executable( "TestExe-Tags-Sandbox" )
+{
+    Using( .ExecutableStruct )
+    .Libraries          = { 'TestExe-Lib-Tags-Sandbox' }
+    .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/WorkerTags/Sandbox/test$ExeExtension$'
+}
+
+Executable( "TestExe-Tags-NotSandbox" )
+{
+    Using( .ExecutableStruct )
+    .Libraries          = { 'TestExe-Lib-Tags-NotSandbox' }
+    .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/WorkerTags/NotSandbox/test$ExeExtension$'
+}
+
+// Test steps
+//------------------------------------------------------------------------------
+.TestStruct =
+[
+    .TestArguments     = ''
+    .AllowDistribution = true
+    .DeleteRemoteFilesWhenDone = true
+	.ExtraFiles = {}
+    Using( .TestTagsStruct )
+]
+
+Test( "Test-Tags" )
+{
+    Using( .TestStruct )
+    .TestExecutable    = 'TestExe-Tags'
+	.Root              = '$StandardOutputBase$/Test/Distributed/WorkerTags'
+    .TestOutput        = '$Root$/testoutput.txt'
+}
+
+// no Test for dummysandbox, since fbuild will call it via its sandbox exe option
+
+Test( "Test-Tags-Sandbox" )
+{
+    Using( .TestStruct )
+    .TestExecutable    = 'TestExe-Tags-Sandbox'
+	.Root              = '$StandardOutputBase$/Test/Distributed/WorkerTags/Sandbox'
+    .TestOutput        = '$Root$/testoutput.txt'
+    .RequiredWorkerTags + 'sandbox'
+}
+
+Test( "Test-Tags-NotSandbox" )
+{
+    Using( .TestStruct )
+    .TestExecutable    = 'TestExe-Tags-NotSandbox'
+	.Root              = '$StandardOutputBase$/Test/Distributed/WorkerTags/NotSandbox'
+    .TestOutput        = '$Root$/testoutput.txt'
+    .RequiredWorkerTags + '!sandbox'
+}

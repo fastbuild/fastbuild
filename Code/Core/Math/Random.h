@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Env/Types.h"
+#include "Core/Strings/AString.h"
 
 // Random
 //------------------------------------------------------------------------------
@@ -37,6 +38,10 @@ public:
     // access the seed value
     inline void     SetSeed( uint32_t seed ) { m_Seed = seed; }
     inline uint32_t GetSeed() const { return m_Seed; }
+    
+    static bool GetCryptRandom( uint32_t ( & randomInts )[ 2 ] );
+    static bool GetCryptRandomString( AString & randomString );
+
 private:
     uint32_t m_Seed;
 };

@@ -6,9 +6,11 @@
 //------------------------------------------------------------------------------
 // FBuild
 #include "Tools/FBuild/FBuildCore/Graph/Dependencies.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerRecords.h"
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Containers/Tags.h"
 #include "Core/Reflection/Object.h"
 #include "Core/Strings/AString.h"
 
@@ -73,6 +75,7 @@ public:
         REMOVE_DIR_NODE     = 18,
         XCODEPROJECT_NODE   = 19,
         SETTINGS_NODE       = 20,
+        WORKER_SETTINGS_NODE = 21,
         // Make sure you update 's_NodeTypeNames' in the cpp
         NUM_NODE_TYPES      // leave this last
     };
@@ -129,6 +132,20 @@ public:
 
     // each node must specify if it outputs a file
     virtual bool IsAFile() const = 0;
+    virtual bool EnsureCanBuild( Job * job ) const;
+    virtual const Tags & GetRequiredWorkerTags() const;
+    virtual const WorkerRecords & GetWorkerRecords() const;
+    virtual void UpdateWorkerRecord( const AString & workerName, const bool canBuildOnWorker ) const;
+    virtual void RemoveWorkerRecord( const AString & workerName ) const;
+
+    static bool GetSandboxEnabled();
+    static const AString & GetAbsSandboxExe();
+    static const AString & GetSandboxArgs();
+    static const AString & GetObfuscatedSandboxTmp();
+    static void GetSandboxTmpFile( const AString & basePath, const AString & filePath,
+                    AString & sandboxTmpFile );
+    static void GetSandboxTag( Tag & sandboxTag );
+    static void HideSandboxTmpInString( AString & stringToChange );
 
     inline State GetState() const { return m_State; }
 
@@ -146,6 +163,7 @@ public:
     static Node *   Load( NodeGraph & nodeGraph, IOStream & stream );
     static void     Save( IOStream & stream, const Node * node );
     virtual void    PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
+    virtual void    SaveBFF( IOStream & stream ) const;
 
     static Node *   LoadRemote( IOStream & stream );
     static void     SaveRemote( IOStream & stream, const Node * node );
@@ -174,6 +192,8 @@ public:
         inline void MarkAsSaved() const { m_IsSaved = true; }
     #endif
 
+    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
+
 protected:
     friend class FBuild;
     friend struct FBuildStats;
@@ -187,7 +207,6 @@ protected:
     friend class WorkerThread;
 
     inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
-    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
     inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
     void SetName( const AString & name );
@@ -195,6 +214,15 @@ protected:
     void ReplaceDummyName( const AString & newName );
 
     virtual void SaveRemote( IOStream & stream ) const;
+    virtual void GetIndentSpaces(
+        const uint32_t indentLevel,
+        AString & spaces ) const;
+    virtual void WriteBFFProperty(
+        const ReflectedProperty & property,
+        const void * base,
+        const bool includeKey,
+        IOStream & stream,
+        uint32_t & indentLevel ) const;
 
     inline uint32_t GetControlFlags() const { return m_ControlFlags; }
 
@@ -230,18 +258,19 @@ protected:
     AString m_Name;
 
     State m_State;
-    mutable uint32_t m_BuildPassTag; // prevent multiple recursions into the same node
-    uint32_t        m_ControlFlags;
-    mutable uint32_t        m_StatsFlags;
-    uint64_t        m_Stamp;
-    uint32_t        m_RecursiveCost;
+    mutable uint32_t      m_BuildPassTag; // prevent multiple recursions into the same node
+    uint32_t              m_ControlFlags;
+    mutable uint32_t      m_StatsFlags;
+    uint64_t              m_Stamp;
+    uint32_t              m_RecursiveCost;
     Type m_Type;
-    Node *          m_Next; // node map linked list pointer
-    uint32_t        m_NameCRC;
-    uint32_t m_LastBuildTimeMs; // time it took to do last known full build of this node
-    uint32_t m_ProcessingTime;  // time spent on this node
-    mutable uint32_t m_ProgressAccumulator;
-    uint32_t        m_Index;
+    Node *                m_Next; // node map linked list pointer
+    uint32_t              m_NameCRC;
+    uint32_t              m_LastBuildTimeMs; // time it took to do last known full build of this node
+    uint32_t              m_ProcessingTime;  // time spent on this node
+    mutable uint32_t      m_ProgressAccumulator;
+    uint32_t              m_Index;
+    mutable WorkerRecords m_WorkerRecords;
 
     Dependencies m_PreBuildDependencies;
     Dependencies m_StaticDependencies;
@@ -252,6 +281,7 @@ protected:
     #endif
 
     static const char * const s_NodeTypeNames[];
+    static const Tags         s_EmptyRequirementTags;
 };
 
 //------------------------------------------------------------------------------

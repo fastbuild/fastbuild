@@ -160,7 +160,7 @@ void TestUnity::TestCompile() const
 
     // Check stats
     //                      Seen,   Built,  Type
-    uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files + librarian
+    uint32_t numF = 6; // pch + 2x generated unity files + source cpp files + librarian
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif
@@ -182,7 +182,7 @@ void TestUnity::TestCompile_NoRebuild() const
 
     // Check stats
     //                      Seen,   Built,  Type
-    uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files + librarian
+    uint32_t numF = 6; // pch + 2x generated unity files + source cpp files + librarian
     #if defined( __WINDOWS__ )
         numF++; // pch.cpp
     #endif

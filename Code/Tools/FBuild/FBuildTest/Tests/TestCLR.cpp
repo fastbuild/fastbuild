@@ -80,12 +80,12 @@ void TestCLR::Test() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( stats, 4,      2,      Node::FILE_NODE );  // cpp + librarian
+    CheckStatsNode ( stats, 3,      2,      Node::FILE_NODE );  // cpp + librarian
     CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8,      6 );
+    CheckStatsTotal( stats, 7,      6 );
 
     TEST_ASSERT( stats.GetCacheStores() == 0 ); // cache not supported due to compiler bug
 }
@@ -99,12 +99,12 @@ void TestCLR::Test_NoBuild() const
 
     // Check stats
     //                      Seen,   Built,  Type
-    CheckStatsNode ( stats, 4,      4,      Node::FILE_NODE );  // cpp + h + mscorlib + librarian
+    CheckStatsNode ( stats, 3,      3,      Node::FILE_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8,      5 );
+    CheckStatsTotal( stats, 7,      4 );
 }
 
 // TestCache
@@ -123,12 +123,12 @@ void TestCLR::TestCache() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( stats, 4,      2,      Node::FILE_NODE );  // cpp + librarian
+    CheckStatsNode ( stats, 3,      2,      Node::FILE_NODE );  // cpp + librarian
     CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8,      6 );
+    CheckStatsTotal( stats, 7,      6 );
 
     TEST_ASSERT( stats.GetCacheHits() == 0 ); // cache not supported dur to compiler bug
 }
@@ -149,12 +149,12 @@ void TestCLR::TestParallelBuild() const
     // Check stats
     //               Seen,  Built,  Type
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 6,      4,      Node::FILE_NODE );  // 3xcpp + librarian
+    CheckStatsNode ( stats, 5,      4,      Node::FILE_NODE );  // 3xcpp + librarian
     CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 3,      3,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 13,     11 );
+    CheckStatsTotal( stats, 12,     11 );
 }
 
 // TestParallelBuild_NoBuild
@@ -168,12 +168,12 @@ void TestCLR::TestParallelBuild_NoBuild() const
     // Check stats
     //                      Seen,   Built,  Type
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsNode ( stats, 6,      6,      Node::FILE_NODE );  // 3xcpp + mscorlib.dll + librarian
+    CheckStatsNode ( stats, 5,      5,      Node::FILE_NODE );  // 3xcpp + mscorlib.dll + librarian
     CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 13,     8 );
+    CheckStatsTotal( stats, 12,     7 );
 }
 
 // TestCLRToCPPBridge
@@ -183,14 +183,14 @@ void TestCLR::TestCLRToCPPBridge() const
     // TODO:B FIX this test for VS2015 & VS2017
     #if ( _MSC_VER < 1900 )
         FBuildTestOptions options;
-        options.m_ForceCleanBuild = true;
+    options.m_ForceCleanBuild = true;
 
-        FBuildStats stats = Build( options, true, "BridgeTest-Exe" );
+    FBuildStats stats = Build( options, true, "BridgeTest-Exe" );
 
-        Process p;
+    Process p;
         p.Spawn( "../tmp/Test/CLR/Bridge/Bridge.exe", nullptr, nullptr, nullptr );
-        int ret = p.WaitForExit();
-        TEST_ASSERT( ret == 15613223 ); // verify expected ret code
+    int ret = p.WaitForExit();
+    TEST_ASSERT( ret == 15613223 ); // verify expected ret code
     #endif
 }
 

@@ -65,13 +65,13 @@ CopyFileNode::~CopyFileNode() = default;
     // copy the file
     if ( FileIO::FileCopy( GetSourceNode()->GetName().Get(), m_Name.Get() ) == false )
     {
-        FLOG_ERROR( "Copy failed (error %i) '%s'", Env::GetLastErr(), GetName().Get() );
+        FLOG_ERROR( "Copy failed (error 0x%x) '%s'", Env::GetLastErr(), GetName().Get() );
         return NODE_RESULT_FAILED; // copy failed
     }
 
     if ( FileIO::SetReadOnly( m_Name.Get(), false ) == false )
     {
-        FLOG_ERROR( "Copy read-only flag set failed (error %i) '%s'", Env::GetLastErr(), GetName().Get() );
+        FLOG_ERROR( "Copy read-only flag set failed (error 0x%x) '%s'", Env::GetLastErr(), GetName().Get() );
         return NODE_RESULT_FAILED; // failed to remove read-only
     }
 
@@ -84,7 +84,7 @@ CopyFileNode::~CopyFileNode() = default;
         // File system copy didn't transfer the "last modified" time, so set it explicitly
         if ( FileIO::SetFileLastWriteTime( m_Name, srcStamp ) == false )
         {
-            FLOG_ERROR( "Copy set last write time failed (error %i) '%s'", Env::GetLastErr(), GetName().Get() );
+            FLOG_ERROR( "Copy set last write time failed (error 0x%x) '%s'", Env::GetLastErr(), GetName().Get() );
             m_Stamp = 0;
             return NODE_RESULT_FAILED; // failed to set the time
         }

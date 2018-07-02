@@ -11,6 +11,7 @@ class Node;
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
+#include "Core/Containers/Tags.h"
 #include "Core/Env/Types.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Reflection/Object.h"
@@ -26,6 +27,8 @@ public:
     ToolManifestFile();
     explicit ToolManifestFile( const AString & name, uint64_t stamp, uint32_t hash, uint32_t size );
     ~ToolManifestFile();
+    void Release();
+    void StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const;
 
     enum SyncState
     {
@@ -35,13 +38,15 @@ public:
     };
 
     // common members
-    AString         m_Name;
-    uint64_t        m_TimeStamp     = 0;
-    uint32_t        m_Hash          = 0;
-    mutable uint32_t m_ContentSize  = 0;
+    AString          m_Name;
+    uint64_t         m_TimeStamp     = 0;
+    uint32_t         m_Hash          = 0;
+    mutable uint32_t m_UncompressedContentSize = 0;
+    mutable uint32_t m_CompressedContentSize = 0;
 
     // "local" members
-    mutable void *  m_Content       = nullptr;
+    const Node *     m_Node = nullptr;
+    mutable void *   m_CompressedContent = nullptr;
 
     // "remote" members
     SyncState       m_SyncState     = NOT_SYNCHRONIZED;
@@ -58,7 +63,11 @@ public:
     explicit ToolManifest( uint64_t toolId );
     ~ToolManifest();
 
-    bool Generate( const AString & mainExecutableRoot, const Dependencies & dependencies, const Array<AString>& customEnvironmentVariables );
+    bool Generate( const AString & mainExecutableRoot,
+        const Dependencies & dependencies, 
+        const Array<AString>& customEnvironmentVariables,
+        const Tags & requiredWorkerTags,
+        bool deleteRemoteFilesWhenDone = false );
 
     inline uint64_t GetToolId() const { return m_ToolId; }
     inline uint64_t GetTimeStamp() const { return m_TimeStamp; }
@@ -88,11 +97,12 @@ public:
     void            GetRemotePath( AString & path ) const;
     void            GetRemoteFilePath( uint32_t fileId, AString & exe ) const;
     const char *    GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
+    const Tags &    GetRequiredWorkerTags() const { return m_RequiredWorkerTags; }
 
-    static void     GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
+    void Cleanup();
 private:
     bool            AddFile( const AString & fileName, const uint64_t timeStamp );
-    bool            LoadFile( const AString & fileName, void * & content, uint32_t & contentSize ) const;
+    bool            LoadFile( const AString & fileName, void * & uncompressedContent, uint32_t & uncompressedContentSize ) const;
 
     mutable Mutex   m_Mutex;
 
@@ -106,7 +116,12 @@ private:
     // Internal state
     bool            m_Synchronized;
     const char *    m_RemoteEnvironmentString;
+    Tags            m_RequiredWorkerTags;
     void *          m_UserData;
+    bool            m_DeleteRemoteFilesWhenDone;
+
+    // Not serialized
+    bool            m_Remote;
 };
 
 //------------------------------------------------------------------------------

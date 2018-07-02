@@ -18,6 +18,7 @@
 #include "Core/Math/Conversions.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Process/Process.h"
+#include "Core/Env/Env.h"
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -178,7 +179,8 @@ ExecNode::~ExecNode() = default;
             return NODE_RESULT_FAILED;
         }
 
-        FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
+        FLOG_ERROR( "Failed to spawn '%s' process (error 0x%x) to build '%s'\n",
+            GetExecutable()->GetName().Get(), Env::GetLastErr(), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
 
@@ -203,7 +205,7 @@ ExecNode::~ExecNode() = default;
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
 
-        FLOG_ERROR( "Execution failed (error %i) '%s'", result, GetName().Get() );
+        FLOG_ERROR( "Execution failed (error 0x%x) '%s'", result, GetName().Get() );
         return NODE_RESULT_FAILED;
     }
 
@@ -238,7 +240,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
     if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         AStackString< 1024 > verboseOutput;
-        verboseOutput.Format( "%s %s\nWorkingDir: %s\nExpectedReturnCode: %i\n",
+        verboseOutput.Format( "%s %s\nWorkingDir: %s\nExpectedReturnCode: 0x%x\n",
                               GetExecutable()->GetName().Get(),
                               args.Get(),
                               m_ExecWorkingDir.Get(),

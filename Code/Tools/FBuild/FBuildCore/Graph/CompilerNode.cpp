@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+#include "Core/Containers/Tags.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
@@ -28,6 +29,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
     REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
     REFLECT( m_CompilerFamilyString,"CompilerFamily",       MetaOptional() )
+    REFLECT_ARRAY( m_RequiredWorkerTagStrings, "RequiredWorkerTags",  MetaOptional() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
@@ -67,25 +69,24 @@ CompilerNode::CompilerNode()
     }
 
     // If .ExecutableRootPath is not specified, generate it from the .Executable's path
-    if ( m_ExecutableRootPath.IsEmpty() )
+    if( m_ExecutableRootPath.IsEmpty() )
     {
         const char * lastSlash = m_Executable.FindLast( NATIVE_SLASH );
         if ( lastSlash )
         {
-            m_ExecutableRootPath.Assign( m_Executable.Get(), lastSlash + 1 );
+            m_ExecutableRootPath.Assign( m_Executable.Get(), lastSlash );
         }
     }
 
     // Check for conflicting files
     AStackString<> relPathExe;
-    ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
-
+    PathUtils::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
 
     const size_t numExtraFiles = extraFiles.GetSize();
     for ( size_t i=0; i<numExtraFiles; ++i )
     {
         AStackString<> relPathA;
-        ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
+        PathUtils::GetRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
 
         // Conflicts with Exe?
         if ( PathUtils::ArePathsEqual( relPathA, relPathExe ) )
@@ -98,7 +99,7 @@ CompilerNode::CompilerNode()
         for ( size_t j=(i+1); j<numExtraFiles; ++j )
         {
             AStackString<> relPathB;
-            ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
+            PathUtils::GetRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
 
             if ( PathUtils::ArePathsEqual( relPathA, relPathB ) )
             {
@@ -303,12 +304,17 @@ CompilerNode::~CompilerNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * /*job*/ )
 {
-    if ( !m_Manifest.Generate( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables ) )
+    // get the tags from the strings
+    Tags requiredWorkerTags;
+    requiredWorkerTags.ParseAndAddTags( m_RequiredWorkerTagStrings );
+
+    if ( !m_Manifest.Generate( m_ExecutableRootPath, 
+        m_StaticDependencies, m_CustomEnvironmentVariables, requiredWorkerTags ) )
     {
         return Node::NODE_RESULT_FAILED; // Generate will have emitted error
     }
 
-    m_Stamp = m_Manifest.GetTimeStamp();
+    m_Stamp = Math::Max( m_Stamp, m_Manifest.GetTimeStamp() );
     return Node::NODE_RESULT_OK;
 }
 

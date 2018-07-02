@@ -79,9 +79,12 @@ private:
     OSFont *            m_Font;
     OSLabel *           m_ModeLabel;
     OSLabel *           m_ResourcesLabel;
+    OSLabel *           m_TagsLabel;
+    OSLabel *           m_TagsNoneLabel;
     OSListView *        m_ThreadList;
     OSDropDown *        m_ModeDropDown;
     OSDropDown *        m_ResourcesDropDown;
+    OSDropDown *        m_TagsDropDown;
 
     // properties of the window
     #if defined( __WINDOWS__ )

@@ -18,7 +18,6 @@
 #include "Core/Tracing/Tracing.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
     #include <TlHelp32.h>
 #endif
 
@@ -118,7 +117,7 @@ Process::~Process()
        }
        else
        {
-           //OUTPUT( "Unable to kill process 0x%x. Last Error: %u", processID, GetLastError() );
+           //OUTPUT( "Unable to kill process 0x%x. Last Error 0x%x", processID, GetLastError() );
        }
    }
 #endif

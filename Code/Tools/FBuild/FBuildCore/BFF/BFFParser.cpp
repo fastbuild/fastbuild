@@ -65,7 +65,7 @@ bool BFFParser::Parse( const char * dataWithSentinel,
     // data should be 1 bytes larger than size, with a sentinel
     ASSERT( dataWithSentinel[ sizeExcludingSentinel ] == '\000' );
 
-    if ( FBuild::IsValid() ) // cope with null for unit tests
+    if ( FBuild::IsValid() ) // cope with null for unit tests and fbuildworker cases
     {
         // NOTE: filename may or may not be clean already - ok to do twice
         AStackString<> fileNameClean;
@@ -790,7 +790,12 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
     AStackString<> includeToUse;
     if (PathUtils::IsFullPath(include) == false)
     {
-        AStackString<> fileName( iter.GetFileName() );
+        AStackString<> fileName;
+        const char * iterName = iter.GetFileName();
+        if ( iterName )
+        {
+            fileName += iterName;
+        }
         const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
         lastSlash = lastSlash ? lastSlash : fileName.FindLast( OTHER_SLASH );
         lastSlash = lastSlash ? ( lastSlash + 1 ): fileName.Get(); // file only, truncate to empty
