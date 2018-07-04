@@ -212,14 +212,16 @@ void Client::LookForWorkers()
             continue;
         }
 
+        DIST_INFO( "Connecting to: %s\n", m_WorkerList[ i ].Get() );
         const ConnectionInfo * ci = Connect( m_WorkerList[ i ], m_Port, 2000, &ss ); // 2000ms connection timeout
         if ( ci == nullptr )
         {
+            DIST_INFO( " - connection: %s (FAILED)\n", m_WorkerList[ i ].Get() );
             ss.m_DelayTimer.Start(); // reset connection attempt delay
         }
         else
         {
-            DIST_INFO( "Connected: %s\n", m_WorkerList[ i ].Get() );
+            DIST_INFO( " - connection: %s (OK)\n", m_WorkerList[ i ].Get() );
             const uint32_t numJobsAvailable( JobQueue::IsValid() ? (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable() : 0 );
 
             ss.m_RemoteName = m_WorkerList[ i ];
