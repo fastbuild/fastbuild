@@ -217,6 +217,7 @@ bool Process::Spawn( const char * executable,
         }
 
         // create the child
+        PRAGMA_DISABLE_PUSH_MSVC( 6335 ) // False positive: Leaking process information handle '%s'
         if ( !CreateProcess( nullptr, //executable,
                              fullArgs.Get(),
                              nullptr,
@@ -230,6 +231,7 @@ bool Process::Spawn( const char * executable,
         {
             return false;
         }
+        PRAGMA_DISABLE_POP_MSVC // 6335
 
         m_Started = true;
         return true;

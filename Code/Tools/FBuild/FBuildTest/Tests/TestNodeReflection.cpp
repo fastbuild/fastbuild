@@ -163,6 +163,25 @@ REGISTER_TESTS_END
 // Helper classese
 //------------------------------------------------------------------------------
 
+// BaseNode
+//  - De-duplicate common elements
+//------------------------------------------------------------------------------
+class BaseNode : public Node
+{
+    REFLECT_DECLARE( BaseNode )
+public:
+    BaseNode()
+        : Node( AStackString<>( "dummy" ), Node:: PROXY_NODE, 0 )
+    {}
+    virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*funcStartIter*/, const Function * /*function*/ ) override { ASSERT( false ); return false; }
+    virtual bool IsAFile() const override { return true; }
+
+    AString         m_String;
+    Array<AString>  m_ArrayOfStrings;
+};
+REFLECT_BEGIN( BaseNode, Node, MetaNone() )
+REFLECT_END( BaseNode )
+
 // FunctionWrapper
 //  - Allow test to directly invoke PopulateProperties outside of normal BFF parsing
 //------------------------------------------------------------------------------
@@ -177,26 +196,9 @@ public:
     {
         return Function::PopulateProperties( ng, iter, &n );
     }
-};
 
-// BaseNode
-//  - De-duplicate common elements
-//------------------------------------------------------------------------------
-class BaseNode : public Node
-{
-    REFLECT_DECLARE( BaseNode )
-public:
-    BaseNode()
-        : Node( AStackString<>( "dummy" ), Node:: PROXY_NODE, 0 )
-    {}
-    virtual bool IsAFile() const override { return true; }
-    virtual void Save(IOStream &) const override { ASSERT( false ); }
-
-    AString         m_String;
-    Array<AString>  m_ArrayOfStrings;
+    virtual Node * CreateNode() const override { return FNEW( BaseNode ); }
 };
-REFLECT_BEGIN( BaseNode, Node, MetaNone() )
-REFLECT_END( BaseNode )
 
 // TestHelper
 //  - De-duplicate common setup for tests

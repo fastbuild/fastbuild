@@ -26,5 +26,5 @@ Settings {}
 //------------------------------------------------------------------------------
 ObjectList( 'ClangMacroExpansion' )
 {
-    .CompilerInputFiles     = 'Data/TestWarnings/ClangMacroExpansion/clang_macro_expansion.cpp'
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestWarnings/ClangMacroExpansion/clang_macro_expansion.cpp'
 }

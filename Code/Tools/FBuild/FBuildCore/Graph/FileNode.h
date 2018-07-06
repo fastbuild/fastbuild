@@ -12,14 +12,12 @@ class FileNode : public Node
 {
 public:
     explicit FileNode( const AString & fileName, uint32_t controlFlags );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & funcStartIter, const Function * function ) override;
     virtual ~FileNode();
 
     static inline Node::Type GetTypeS() { return Node::FILE_NODE; }
 
     virtual bool IsAFile() const override { return true; }
-
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 
     static void HandleWarningsMSVC( Job * job, const AString & name, const char * data, uint32_t dataSize );
 protected:

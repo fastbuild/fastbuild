@@ -228,6 +228,68 @@ void Env::GetExePath( AString & output )
     #endif
 }
 
+// IsStdOutRedirected
+//------------------------------------------------------------------------------
+/*static*/ bool Env::IsStdOutRedirected()
+{
+    #if defined( __WINDOWS__ )
+        HANDLE h = GetStdHandle( STD_OUTPUT_HANDLE );
+        ASSERT( h != INVALID_HANDLE_VALUE );
+        if ( h == nullptr )
+        {
+            return true; // There is no handle associated with stdout, this is essentially a redirection to NUL
+        }
+
+        // Check if the handle belongs to a console window
+        DWORD unused;
+        if ( GetConsoleMode( h, (LPDWORD)&unused ) )
+        {
+            return false; // Console window exists, so there is no redirection
+        }
+
+        // Check if the handle belongs to a pipe used by Cygwin/MSYS to forward output to a terminal
+        if ( GetFileType( h ) != FILE_TYPE_PIPE )
+        {
+            return true; // Redirected to something that is not a pipe
+        }
+
+        char buffer[ sizeof( FILE_NAME_INFO ) + MAX_PATH * sizeof( wchar_t ) ];
+        if ( ! GetFileInformationByHandleEx( h, FileNameInfo, buffer, sizeof( buffer ) ) )
+        {
+            return true; // Redirected to something that doesn't have a name
+        }
+
+        FILE_NAME_INFO * info = reinterpret_cast< FILE_NAME_INFO * >( buffer );
+        info->FileName[ info->FileNameLength / sizeof( wchar_t ) ] = L'\0';
+
+        // Check if name of the pipe matches pattern "\cygwin-%llx-pty%d-to-master" or "\msys-%llx-pty%d-to-master"
+        const wchar_t * p = nullptr;
+        if ( ( p = wcsstr( info->FileName, L"\\cygwin-" ) ) != nullptr )
+        {
+            p += 7;
+        }
+        else if ( ( p = wcsstr( info->FileName, L"\\msys-" ) ) != nullptr )
+        {
+            p += 5;
+        }
+        else
+        {
+            return true; // Redirected to a pipe that is not related to Cygwin/MSYS
+        }
+        int nChars = 0;
+        if ( ( swscanf( p, L"%*llx-pty%*d-to-master%n", &nChars ) == 0 ) && ( nChars > 0 ) )
+        {
+            return false; // Pipe name matches the pattern, stdout is forwarded to a terminal by Cygwin/MSYS
+        }
+
+        return true;
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        return ( isatty( STDOUT_FILENO ) == 0 );
+    #else
+        #error Unknown platform
+    #endif
+}
+
 // GetLastErr
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Env::GetLastErr()

@@ -65,7 +65,7 @@ Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
     }
     m_BaseArgs.Replace( "-subprocess", "" );
 
-    StatusMessage( "FBuildWorker %s (%s)", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
+    StatusMessage( "FBuildWorker %s", FBUILD_VERSION_STRING );
 }
 
 // DESTRUCTOR
@@ -80,11 +80,27 @@ Worker::~Worker()
     if ( m_RestartNeeded )
     {
         Process p;
-        p.Spawn( m_BaseExeName.Get(),
-                 m_BaseArgs.Get(),
-                 nullptr,   // default workingDir
-                 nullptr ); // default env
-        p.Detach();
+        size_t tryCount = 10;
+        for ( ;; )
+        {
+            if ( p.Spawn( m_BaseExeName.Get(),
+                          m_BaseArgs.Get(),
+                          nullptr,      // default workingDir
+                          nullptr ) )   // default env
+            {
+                p.Detach();
+                break;
+            }
+
+            --tryCount;
+            if ( tryCount == 0 )
+            {
+                break;
+            }
+
+            // wait before trying again
+            Thread::Sleep( 1000 );
+        }
     }
 }
 

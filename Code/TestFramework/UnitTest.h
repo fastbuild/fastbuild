@@ -17,7 +17,7 @@ protected:
 
     // Run before and after each test
     virtual void PreTest() const {}
-    virtual void PostTest() const {}
+    virtual void PostTest( bool /*passed*/ ) const {}
 
 private:
     friend class UnitTestManager;

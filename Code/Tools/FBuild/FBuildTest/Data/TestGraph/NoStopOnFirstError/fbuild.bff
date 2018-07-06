@@ -16,8 +16,8 @@ Settings {} // use Standard Environment
 Library( 'libA' )
 {
     .CompilerInputFiles = {
-                            "Data/TestGraph/NoStopOnFirstError/a.cpp"
-                            "Data/TestGraph/NoStopOnFirstError/b.cpp"
+                            "Tools/FBuild/FBuildTest/Data/TestGraph/NoStopOnFirstError/a.cpp"
+                            "Tools/FBuild/FBuildTest/Data/TestGraph/NoStopOnFirstError/b.cpp"
                           }
     .LibrarianOutput    = "$Out$/Test/Graph/NoStopOnFirstError/libA.lib"
 }
@@ -25,8 +25,8 @@ Library( 'libA' )
 Library( 'libB' )
 {
     .CompilerInputFiles = {
-                            "Data/TestGraph/NoStopOnFirstError/c.cpp"
-                            "Data/TestGraph/NoStopOnFirstError/d.cpp"
+                            "Tools/FBuild/FBuildTest/Data/TestGraph/NoStopOnFirstError/c.cpp"
+                            "Tools/FBuild/FBuildTest/Data/TestGraph/NoStopOnFirstError/d.cpp"
                           }
     .LibrarianOutput    = "$Out$/Test/Graph/NoStopOnFirstError/libB.lib"
 }

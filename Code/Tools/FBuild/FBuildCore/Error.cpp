@@ -372,6 +372,13 @@
     FormatError( iter, 1042u, nullptr, "Unknown operator '%s'.", operatorName.Get() );
 }
 
+// Error_1043_CyclicDependencyDetected
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1043_CyclicDependencyDetected( const BFFIterator & iter, const AString & nodeName )
+{
+    FormatError( iter, 1043u, nullptr, "Cyclic dependency detected for node '%s'.", nodeName.Get() );
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFIterator & iter,
@@ -538,6 +545,14 @@
                                        variableName,
                                        foundSize,
                                        expectedSize );
+}
+
+// Error_1254_UnrecognizedOperator
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1254_UnrecognizedOperator( const BFFIterator & iter,
+                                                        const Function * function )
+{
+    FormatError( iter, 1254u, function, "Unrecognized operator." );
 }
 
 // Error_1300_MissingPCHArgs

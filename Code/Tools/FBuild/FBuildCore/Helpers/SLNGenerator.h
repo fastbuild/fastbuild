@@ -10,49 +10,11 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class IOStream;
+class SolutionConfig;
+class SolutionDependency;
+class SolutionFolder;
 class VSProjectConfig;
 class VCXProjectNode;
-
-// SLNSolutionFolder
-//------------------------------------------------------------------------------
-class SLNSolutionFolder
-{
-public:
-    AString m_Path;
-    Array< AString > m_ProjectNames;
-
-    static bool Load( IOStream & stream, Array< SLNSolutionFolder > & solutionFolders );
-    static void Save( IOStream & stream, const Array< SLNSolutionFolder > & solutionFolders );
-};
-
-// SolutionConfig
-//------------------------------------------------------------------------------
-struct SolutionConfig
-{
-    AString m_Config;
-    AString m_Platform;
-    AString m_SolutionPlatform;
-    AString m_SolutionConfig;
-
-    bool operator < ( const SolutionConfig& other ) const
-    {
-        int32_t cmpConfig = m_Config.CompareI( other.m_Config );
-        return ( cmpConfig == 0 ) ? m_SolutionPlatform < other.m_SolutionPlatform
-                                  : cmpConfig < 0 ;
-    }
-};
-
-// SLNDependency
-//------------------------------------------------------------------------------
-class SLNDependency
-{
-public:
-    Array< AString > m_Projects;
-    Array< AString > m_Dependencies;
-
-    static bool Load( IOStream & stream, Array< SLNDependency > & slnDeps );
-    static void Save( IOStream & stream, const Array< SLNDependency > & slnDeps );
-};
 
 // SLNGenerator
 //------------------------------------------------------------------------------
@@ -63,29 +25,29 @@ public:
     ~SLNGenerator();
 
     const AString & GenerateSLN( const AString & solutionFile,
-                                 const AString & solutionBuildProject,
+                                 const Array< AString > & solutionBuildProjects,
                                  const AString & solutionVisualStudioVersion,
                                  const AString & solutionMinimumVisualStudioVersion,
-                                 const Array< VSProjectConfig > & configs,
+                                 const Array< SolutionConfig > & solutionConfigs,
                                  const Array< VCXProjectNode * > & projects,
-                                 const Array< SLNDependency > & slnDeps,
-                                 const Array< SLNSolutionFolder > & folders );
+                                 const Array< SolutionDependency > & solutionDependencies,
+                                 const Array< SolutionFolder > & solutionFolders );
 
 private:
     void WriteHeader( const AString & solutionVisualStudioVersion,
                       const AString & solutionMinimumVisualStudioVersion );
     void WriteProjectListings( const AString& solutionBasePath,
-                               const AString & solutionBuildProject,
+                               const Array< AString > & solutionBuildProjects,
                                const Array< VCXProjectNode * > & projects,
-                               const Array< SLNSolutionFolder > & folders,
-                               const Array< SLNDependency > & slnDeps,
-                               AString & solutionBuildProjectGuid,
+                               const Array< SolutionFolder > & solutionFolders,
+                               const Array< SolutionDependency > & solutionDependencies,
+                               Array< AString > & solutionBuildProjectGuids,
                                Array< AString > & projectGuids,
                                Array< AString > & solutionProjectsToFolder );
-    void WriteSolutionFolderListings( const Array< SLNSolutionFolder > & folders,
+    void WriteSolutionFolderListings( const Array< SolutionFolder > & solutionFolders,
                                       Array< AString > & solutionFolderPaths );
     void WriteSolutionConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs );
-    void WriteProjectConfigurationPlatforms( const AString & solutionBuildProjectGuid,
+    void WriteProjectConfigurationPlatforms( const Array< AString > & solutionBuildProjectGuids,
                                              const Array< SolutionConfig > & solutionConfigs,
                                              const Array< AString > & projectGuids );
     void WriteNestedProjects( const Array< AString > & solutionProjectsToFolder,

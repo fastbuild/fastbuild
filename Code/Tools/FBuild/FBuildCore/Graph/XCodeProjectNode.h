@@ -25,10 +25,10 @@ public:
     AString             m_Target;
     const Node *        m_TargetNode = nullptr;
 
-    static bool ResolveTagets( NodeGraph & nodeGraph,
-                               Array< XCodeProjectConfig > & configs,
-                               const BFFIterator * iter = nullptr,
-                               const Function * function = nullptr );
+    static bool ResolveTargets( NodeGraph & nodeGraph,
+                                Array< XCodeProjectConfig > & configs,
+                                const BFFIterator * iter = nullptr,
+                                const Function * function = nullptr );
 };
 
 // XCodeProjectNode
@@ -38,15 +38,14 @@ class XCodeProjectNode : public FileNode
     REFLECT_NODE_DECLARE( XCodeProjectNode )
 public:
     explicit XCodeProjectNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~XCodeProjectNode();
 
     static inline Node::Type GetTypeS() { return Node::XCODEPROJECT_NODE; }
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 private:
     virtual BuildResult DoBuild( Job * job ) override;
+    virtual void PostLoad( NodeGraph & nodeGraph ) override;
 
     Array< AString >    m_ProjectInputPaths;
     Array< AString >    m_ProjectInputPathsExclude;

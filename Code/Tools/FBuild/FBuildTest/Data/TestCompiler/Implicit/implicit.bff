@@ -1,0 +1,13 @@
+//
+// Check the basic behaviour of an implicitly defined Compiler
+//
+ObjectList( 'ObjectList' )
+{
+    // Compiler is implicitly created by this reference
+    .Compiler                   = 'Tools/FBuild/FBuildTest/Data/TestCompiler/Explicit/PlaceholderForClang'
+
+    // Minimal settings for a valid ObjectList
+    .CompilerInputAllowNoFiles  = true;
+    .CompilerOptions            = '-c %1 -o %2'
+    .CompilerOutputPath         = 'Dummy/'
+}

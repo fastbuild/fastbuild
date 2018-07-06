@@ -39,7 +39,7 @@ DirectoryListNode::DirectoryListNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
 {
     ASSERT( ( m_Recursive == true ) || ( m_Recursive == false ) );
 
@@ -209,30 +209,6 @@ DirectoryListNode::~DirectoryListNode() = default;
     }
 
     return NODE_RESULT_OK;
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * DirectoryListNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    DirectoryListNode * node = nodeGraph.CreateDirectoryListNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void DirectoryListNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
 }
 
 //------------------------------------------------------------------------------

@@ -27,15 +27,13 @@
     #include <arpa/inet.h>
     #include <sys/ioctl.h>
     #include <sys/socket.h>
+    #include <sys/uio.h>
     #include <netinet/in.h>
     #include <netinet/tcp.h>
     #include <fcntl.h>
     #include <unistd.h>
     #define INVALID_SOCKET ( -1 )
     #define SOCKET_ERROR -1
-    #if defined( __APPLE__ )
-        #include <sys/uio.h>
-    #endif
 #else
     #error Unknown platform
 #endif
@@ -192,7 +190,7 @@ bool TCPConnectionPool::Listen( uint16_t port )
 
 // Connect
 //------------------------------------------------------------------------------
-const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_t port, uint32_t timeout )
+const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_t port, uint32_t timeout, void * userData )
 {
     ASSERT( !host.IsEmpty() );
 
@@ -203,12 +201,12 @@ const ConnectionInfo * TCPConnectionPool::Connect( const AString & host, uint16_
         TCPDEBUG( "Failed to get address for '%s'\n" , host.Get() );
         return nullptr;
     }
-    return Connect( hostIP, port, timeout );
+    return Connect( hostIP, port, timeout, userData );
 }
 
 // Connect
 //------------------------------------------------------------------------------
-const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t port, uint32_t timeout )
+const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t port, uint32_t timeout, void * userData )
 {
     PROFILE_FUNCTION
 
@@ -350,7 +348,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         ASSERT( false ); // should never get here
     }
 
-    return CreateConnectionThread( sockfd, hostIP, port );
+    return CreateConnectionThread( sockfd, hostIP, port, userData );
 }
 
 // Disconnect
@@ -743,6 +741,7 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
                                          ( 32 * KILOBYTE ),
                                          m_ListenConnection ); // user data argument
     ASSERT( h != INVALID_THREAD_HANDLE );
+    Thread::DetachThread( h );
     Thread::CloseHandle( h ); // we don't need this anymore
 }
 
@@ -844,7 +843,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
 
 // CreateConnectionThread
 //------------------------------------------------------------------------------
-ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port )
+ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port, void * userData )
 {
     MutexHolder mh( m_ConnectionsMutex );
 
@@ -853,6 +852,7 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
     ci->m_RemoteAddress = host;
     ci->m_RemotePort = port;
     ci->m_ThreadQuitNotification = false;
+    ci->m_UserData = userData;
 
     #ifdef TCPCONNECTION_DEBUG
         AStackString<32> addr;
@@ -866,6 +866,7 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
                                             ( 32 * KILOBYTE ),
                                             ci ); // user data argument
     ASSERT( h != INVALID_THREAD_HANDLE );
+    Thread::DetachThread( h );
     Thread::CloseHandle( h ); // we don't need this anymore
 
     m_Connections.Append( ci );

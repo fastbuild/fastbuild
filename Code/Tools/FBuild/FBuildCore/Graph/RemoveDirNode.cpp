@@ -37,7 +37,7 @@ RemoveDirNode::RemoveDirNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool RemoveDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool RemoveDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -47,8 +47,9 @@ bool RemoveDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter,
 
     // Convert RemovePaths paths to DirectoryListNodes
     Dependencies fileListDeps( m_RemovePaths.GetSize() );
-    if ( !function->GetDirectoryListNodeList( nodeGraph,
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
                                               iter,
+                                              function,
                                               m_RemovePaths,
                                               m_RemoveExcludePaths,
                                               Array< AString >(), // unused FilesToExclude
@@ -121,30 +122,6 @@ RemoveDirNode::~RemoveDirNode() = default;
     }
 
     return NODE_RESULT_OK;
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * RemoveDirNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    RemoveDirNode * node = nodeGraph.CreateRemoveDirNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void RemoveDirNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
 }
 
 //------------------------------------------------------------------------------

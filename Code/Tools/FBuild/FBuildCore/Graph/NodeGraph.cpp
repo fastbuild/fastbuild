@@ -192,7 +192,7 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
 
     // Read it into memory to avoid lots of tiny disk accesses
     const size_t fileSize = (size_t)fs.GetFileSize();
-    AutoPtr< char > memory( FNEW( char[ fileSize ] ) );
+    AutoPtr< char > memory( (char *)ALLOC( fileSize ) );
     if ( fs.ReadBuffer( memory.Get(), fileSize ) != fileSize )
     {
         return LoadResult::LOAD_ERROR;
@@ -620,6 +620,14 @@ Node * NodeGraph::FindNode( const AString & nodeName ) const
     return FindNodeInternal( fullPath );
 }
 
+// FindNodeExact (AString &)
+//------------------------------------------------------------------------------
+Node * NodeGraph::FindNodeExact( const AString & nodeName ) const
+{
+    // try to find node 'as is'
+    return FindNodeInternal( nodeName );
+}
+
 // GetNodeByIndex
 //------------------------------------------------------------------------------
 Node * NodeGraph::GetNodeByIndex( size_t index ) const
@@ -634,6 +642,16 @@ Node * NodeGraph::GetNodeByIndex( size_t index ) const
 size_t NodeGraph::GetNodeCount() const
 {
     return m_AllNodes.GetSize();
+}
+
+// RegisterNode
+//------------------------------------------------------------------------------
+void NodeGraph::RegisterNode( Node * node )
+{
+    ASSERT( Thread::IsMainThread() );
+    ASSERT( node->GetName().IsEmpty() == false );
+    ASSERT( FindNode( node->GetName() ) == nullptr );
+    AddNode( node );
 }
 
 // CreateCopyFileNode
@@ -825,85 +843,38 @@ TestNode * NodeGraph::CreateTestNode( const AString & testOutput )
 
 // CreateCompilerNode
 //------------------------------------------------------------------------------
-CompilerNode * NodeGraph::CreateCompilerNode( const AString & executable )
+CompilerNode * NodeGraph::CreateCompilerNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( executable ) );
 
     CompilerNode * node = FNEW( CompilerNode() );
-    node->SetName( executable );
+    node->SetName( name );
     AddNode( node );
     return node;
 }
 
 // CreateVCXProjectNode
 //------------------------------------------------------------------------------
-VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
-                                                  const Array< AString > & projectBasePaths,
-                                                  const Dependencies & paths,
-                                                  const Array< AString > & pathsToExclude,
-                                                  const Array< AString > & patternToExclude,
-                                                  const Array< AString > & files,
-                                                  const Array< AString > & filesToExclude,
-                                                  const AString & rootNamespace,
-                                                  const AString & projectGuid,
-                                                  const AString & defaultLanguage,
-                                                  const AString & applicationEnvironment,
-                                                  const bool projectSccEntrySAK,
-                                                  const Array< VSProjectConfig > & configs,
-                                                  const Array< VSProjectFileType > & fileTypes,
-                                                  const Array< AString > & references,
-                                                  const Array< AString > & projectReferences )
+VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( name ) );
 
-    AStackString< 1024 > fullPath;
-    CleanPath( projectOutput, fullPath );
-
-    VCXProjectNode * node = FNEW( VCXProjectNode( fullPath,
-                                                projectBasePaths,
-                                                paths,
-                                                pathsToExclude,
-                                                patternToExclude,
-                                                files,
-                                                filesToExclude,
-                                                rootNamespace,
-                                                projectGuid,
-                                                defaultLanguage,
-                                                applicationEnvironment,
-                                                projectSccEntrySAK,
-                                                configs,
-                                                fileTypes,
-                                                references,
-                                                projectReferences ) );
+    VCXProjectNode * node = FNEW( VCXProjectNode() );
+    node->SetName( name );
     AddNode( node );
     return node;
 }
 
 // CreateSLNNode
 //------------------------------------------------------------------------------
-SLNNode * NodeGraph::CreateSLNNode( const AString & solutionOutput,
-                                    const AString & solutionBuildProject,
-                                    const AString & solutionVisualStudioVersion,
-                                    const AString & solutionMinimumVisualStudioVersion,
-                                    const Array< VSProjectConfig > & configs,
-                                    const Array< VCXProjectNode * > & projects,
-                                    const Array< SLNDependency > & slnDeps,
-                                    const Array< SLNSolutionFolder > & folders )
+SLNNode * NodeGraph::CreateSLNNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( name ) );
 
-    AStackString< 1024 > fullPath;
-    CleanPath( solutionOutput, fullPath );
-
-    SLNNode * node = FNEW( SLNNode( fullPath,
-                                    solutionBuildProject,
-                                    solutionVisualStudioVersion,
-                                    solutionMinimumVisualStudioVersion,
-                                    configs,
-                                    projects,
-                                    slnDeps,
-                                    folders ) );
+    SLNNode * node = FNEW( SLNNode() );
+    node->SetName( name );
     AddNode( node );
     return node;
 }
@@ -1206,23 +1177,23 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
 
 // CleanPath
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::CleanPath( AString & name )
+/*static*/ void NodeGraph::CleanPath( AString & name, bool makeFullPath )
 {
     AStackString<> nameCopy( name );
-    CleanPath( nameCopy, name );
+    CleanPath( nameCopy, name, makeFullPath );
 }
 
 // CleanPath
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::CleanPath( const AString & name, AString & fullPath )
+/*static*/ void NodeGraph::CleanPath( const AString & name, AString & cleanPath, bool makeFullPath )
 {
-    ASSERT( &name != &fullPath );
+    ASSERT( &name != &cleanPath );
 
     char * dst;
 
-    //  - path should be fully qualified
+    //  - path can be fully qualified
     bool isFullPath = PathUtils::IsFullPath( name );
-    if ( !isFullPath )
+    if ( !isFullPath && makeFullPath )
     {
         // make a full path by prepending working dir
         const AString & workingDir = FBuild::Get().GetWorkingDir();
@@ -1232,25 +1203,27 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
         ASSERT( workingDir.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
 
         // build the start of the path
-        fullPath = workingDir;
-        fullPath += NATIVE_SLASH;
+        cleanPath = workingDir;
+        cleanPath += NATIVE_SLASH;
 
         // concatenate
-        uint32_t len = fullPath.GetLength();
+        uint32_t len = cleanPath.GetLength();
 
         // make sure the dest will be big enough for the extra stuff
-        fullPath.SetLength( fullPath.GetLength() + name.GetLength() );
+        cleanPath.SetLength( cleanPath.GetLength() + name.GetLength() );
 
         // set the output (which maybe a newly allocated ptr)
-        dst = fullPath.Get() + len;
+        dst = cleanPath.Get() + len;
+
+        isFullPath = true;
     }
     else
     {
         // make sure the dest will be big enough
-        fullPath.SetLength( name.GetLength() );
+        cleanPath.SetLength( name.GetLength() );
 
         // copy from the start
-        dst = fullPath.Get();
+        dst = cleanPath.Get();
     }
 
     // the untrusted part of the path we need to copy/fix
@@ -1262,6 +1235,17 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     #if defined( __WINDOWS__ )
         while ( *src == NATIVE_SLASH || *src == OTHER_SLASH ) { ++src; } // strip leading slashes
     #endif
+
+    const char * lowestRemovableChar = cleanPath.Get();
+    if ( isFullPath )
+    {
+        #if defined( __WINDOWS__ )
+            lowestRemovableChar += 3; // e.g. "c:\"
+        #else
+            lowestRemovableChar += 1; // e.g. "/"
+        #endif
+    }
+
     while ( src < srcEnd )
     {
         const char thisChar = *src;
@@ -1309,16 +1293,11 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
                             ++src;
                         }
 
-                        if ( dst > fullPath.Get() + 3 )
+                        if ( dst > lowestRemovableChar )
                         {
                             --dst; // remove slash
 
-                            // remove one level of path (but never past the absolute root)
-                            #if defined( __WINDOWS__ )
-                                while ( dst > fullPath.Get() + 3 ) // e.g. "c:\"
-                            #else
-                                while ( dst > fullPath.Get() + 1 ) // e.g. "/"
-                            #endif
+                            while ( dst > lowestRemovableChar ) // e.g. "c:\"
                             {
                                 --dst;
                                 if ( *dst == NATIVE_SLASH ) // only need to check for cleaned slashes
@@ -1327,6 +1306,13 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
                                     break;
                                 }
                             }
+                        }
+                        else if( !isFullPath )
+                        {
+                            *dst++ = '.';
+                            *dst++ = '.';
+                            *dst++ = NATIVE_SLASH;
+                            lowestRemovableChar = dst;
                         }
 
                         continue;
@@ -1341,12 +1327,12 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     }
 
     // correct length of destination
-    fullPath.SetLength( (uint16_t)( dst - fullPath.Get() ) );
-    ASSERT( AString::StrLen( fullPath.Get() ) == fullPath.GetLength() );
+    cleanPath.SetLength( (uint16_t)( dst - cleanPath.Get() ) );
+    ASSERT( AString::StrLen( cleanPath.Get() ) == cleanPath.GetLength() );
 
     // sanity checks
-    ASSERT( fullPath.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
-    ASSERT( fullPath.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
+    ASSERT( cleanPath.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
+    ASSERT( cleanPath.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
 }
 
 // AddUsedFile

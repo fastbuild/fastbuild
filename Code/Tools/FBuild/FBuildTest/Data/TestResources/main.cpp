@@ -7,7 +7,6 @@
 int __stdcall WinMain( HINSTANCE, HINSTANCE, LPSTR, int )
 {
     // Show the dialog
-    HWND maindialog;
     HINSTANCE hInst = (HINSTANCE)GetModuleHandle( nullptr );
     if ( CreateDialog( hInst, MAKEINTRESOURCE( IDD_DIALOG1 ), nullptr, nullptr) )
     {

@@ -57,15 +57,14 @@ void TestExec::BuildHelperExe() const
 {
     // Make sure the helper executable will build properly
 
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestExec/exec.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_ForceCleanBuild = true;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
 
     FBuild fBuild( options );
     fBuild.Initialize();
 
-    const AStackString<> exec("../../../../tmp/Test/Exec/exec.exe");
+    const AStackString<> exec( "../tmp/Test/Exec/exec.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist(exec);
@@ -104,19 +103,18 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
 {
     // Build all the exec commands that are expected to be successes
 
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestExec/exec.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
 
     FBuild fBuild(options);
     fBuild.Initialize();
 
     // Make the relevant inputs
-    const AStackString<> inFile_dummy("../../../../tmp/Test/Exec/dummy_file_does_not_exist.txt");
-    const AStackString<> inFile_oneInput("../../../../tmp/Test/Exec/OneInput.txt");
-    const AStackString<> inFile_stdout("../../../../tmp/Test/Exec/OneInput_StdOut.txt");
-    const AStackString<> inFile_multiInputA("../../../../tmp/Test/Exec/MultiInputA.txt");
-    const AStackString<> inFile_multiInputB("../../../../tmp/Test/Exec/MultiInputB.txt");
+    const AStackString<> inFile_dummy( "../tmp/Test/Exec/dummy_file_does_not_exist.txt" );
+    const AStackString<> inFile_oneInput( "../tmp/Test/Exec/OneInput.txt" );
+    const AStackString<> inFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt" );
+    const AStackString<> inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
+    const AStackString<> inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
 
     // First file commented out because it is supposed to not exist
     CreateInputFile( inFile_oneInput );
@@ -125,11 +123,11 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     CreateInputFile(inFile_multiInputB);
 
     // make sure all output is where it is expected
-    const AStackString<> outFile_dummy("../../../../tmp/Test/Exec/dummy_file_does_not_exist.txt.out");
-    const AStackString<> outFile_oneInput("../../../../tmp/Test/Exec/OneInput.txt.out");
-    const AStackString<> outFile_stdout("../../../../tmp/Test/Exec/OneInput_StdOut.txt.stdout");
-    const AStackString<> outFile_multiInputA("../../../../tmp/Test/Exec/MultiInputA.txt.out");
-    const AStackString<> outFile_multiInputB("../../../../tmp/Test/Exec/MultiInputB.txt.out");
+    const AStackString<> outFile_dummy( "../tmp/Test/Exec/dummy_file_does_not_exist.txt.out" );
+    const AStackString<> outFile_oneInput( "../tmp/Test/Exec/OneInput.txt.out" );
+    const AStackString<> outFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt.stdout" );
+    const AStackString<> outFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt.out" );
+    const AStackString<> outFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt.out" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist(outFile_dummy);
@@ -140,7 +138,7 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
 
     // build (via alias)
     TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_ExpectedSuccesses")));
-    TEST_ASSERT(fBuild.SaveDependencyGraph("../../../../tmp/Test/Exec/exec.fdb"));
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Exec/exec.fdb" ) );
 
     EnsureFileExists(outFile_dummy);
     EnsureFileExists(outFile_oneInput);
@@ -163,13 +161,12 @@ void TestExec::Build_ExecCommand_NoRebuild() const
     // Rebuild the exec commands
     // - Only the command with a non-existant inputfile should rebuild
 
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestExec/exec.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_ForceCleanBuild = false;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
 
     FBuild fBuild(options);
-    fBuild.Initialize("../../../../tmp/Test/Exec/exec.fdb");
+    fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_ExpectedSuccesses")));
 
@@ -191,15 +188,14 @@ void TestExec::Build_ExecCommand_SingleInputChange() const
     // Rebuild one of the commands after a file has changed
     // - 1 execs should run this time (only asking one directly to run)
 
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestExec/exec.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_ForceCleanBuild = false;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
 
     FBuild fBuild(options);
-    fBuild.Initialize("../../../../tmp/Test/Exec/exec.fdb");
+    fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
-    const AStackString<> inFile_oneInput("../../../../tmp/Test/Exec/OneInput.txt");
+    const AStackString<> inFile_oneInput( "../tmp/Test/Exec/OneInput.txt" );
     #if defined( __OSX__ )
         // OS X FileSystem time granularity is poor, so we need to ensure enough time passes
         // so file is seen as modified
@@ -229,15 +225,14 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
     // Rebuild one of the commands after a file has changed
     // - 1 execs should run this time (only asking one directly to run)
 
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestExec/exec.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_ForceCleanBuild = false;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
 
     FBuild fBuild(options);
-    fBuild.Initialize("../../../../tmp/Test/Exec/exec.fdb");
+    fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
-    const AStackString<> inFile_multiInputA("../../../../tmp/Test/Exec/MultiInputA.txt");
+    const AStackString<> inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
     CreateInputFile(inFile_multiInputA);
 
     TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_MultipleInput")));
@@ -255,7 +250,7 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
 
     // ------- Now try the other file
 
-    const AStackString<> inFile_multiInputB("../../../../tmp/Test/Exec/MultiInputB.txt");
+    const AStackString<> inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
     CreateInputFile(inFile_multiInputB);
 
     TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_MultipleInput")));
@@ -278,7 +273,7 @@ void TestExec::Build_ExecCommand_UseStdOut() const
     // Make sure the stdout from the executable
     // did actually make it into the stdout file
 
-    const AStackString<> outFile_stdout("../../../../tmp/Test/Exec/OneInput_StdOut.txt.stdout");
+    const AStackString<> outFile_stdout( "../tmp/Test/Exec/OneInput_StdOut.txt.stdout" );
     EnsureFileExists(outFile_stdout);
 
     // Expected contents begin with:
@@ -302,8 +297,8 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
     // - Output file not getting written should error
     // - Expected return code not being output should error
 
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestExec/exec.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
     options.m_ForceCleanBuild = true;
     options.m_FastCancel = true;
 

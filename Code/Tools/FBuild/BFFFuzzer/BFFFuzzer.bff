@@ -1,0 +1,68 @@
+// BFFFuzzer
+//------------------------------------------------------------------------------
+{
+    .ProjectName        = 'BFFFuzzer'
+    .ProjectPath        = 'Tools\FBuild\BFFFuzzer'
+
+    // Unity
+    //--------------------------------------------------------------------------
+    Unity( '$ProjectName$-Unity' )
+    {
+        .UnityInputPath             = '$ProjectPath$\'
+        .UnityOutputPath            = '$UnityOutputBase$\$ProjectPath$\'
+    }
+
+    // Executable
+    //--------------------------------------------------------------------------
+    // These options are a valid for Clang < 6.0.0:
+    .ExtraLinkerOptions_ASan = ' -lFuzzer'
+    .ExtraLinkerOptions_MSan = ' -lFuzzer -nodefaultlibs -Wl,-Bstatic -lc++ -Wl,-Bdynamic -lc++abi -lunwind -lpthread -lc -lrt -ldl -lm'
+    // These options are valid for Clang >= 6.0.0:
+    // .ExtraLinkerOptions_ASan = ' -fsanitize=fuzzer'
+    // .ExtraLinkerOptions_MSan = ' -lFuzzer -nodefaultlibs -Wl,-Bstatic -lc++ -Wl,-Bdynamic -lc++abi -lunwind -lpthread -lc -lrt -ldl -lm'
+
+    .MyConfigs = { .X64ClangASanConfig_Linux , .X64ClangMSanConfig_Linux }
+    ForEach( .Config in .MyConfigs )
+    {
+        Using( .Config )
+        .OutputBase + '\$Platform$-$Config$'
+
+        // Library
+        //--------------------------------------------------------------------------
+        ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
+        {
+            // Input (Unity)
+            .CompilerInputUnity         = '$ProjectName$-Unity'
+
+            // Output
+            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
+        }
+
+        // Executable
+        Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
+        {
+            .Libraries                  = {
+                                            'BFFFuzzer-Lib-$Platform$-$Config$',
+                                            'FBuildCore-Lib-$Platform$-$Config$',
+                                            'Core-Lib-$Platform$-$Config$',
+                                            'LZ4-Lib-$Platform$-$Config$'
+                                          }
+            .LinkerOutput               = '$OutputBase$/$ProjectPath$/bfffuzzer$ExeExtension$'
+            .LinkerOptions              + ' -pthread -ldl -lrt'
+                                        + .'ExtraLinkerOptions_$Config$'
+        }
+        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
+    }
+
+    // Aliases
+    //--------------------------------------------------------------------------
+    // Per-Config
+#if __LINUX__
+    Alias( '$ProjectName$-ASan' )            { .Targets = { '$ProjectName$-X64ClangLinux-ASan' } }
+    Alias( '$ProjectName$-MSan' )            { .Targets = { '$ProjectName$-X64ClangLinux-MSan' } }
+#endif
+
+    // Per-Platform
+    Alias( '$ProjectName$-X64ClangLinux' )   { .Targets = { '$ProjectName$-X64ClangLinux-ASan' , '$ProjectName$-X64ClangLinux-MSan' } }
+}

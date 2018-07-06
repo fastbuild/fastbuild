@@ -6,7 +6,7 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.UnityInputPath             = "Data/TestUnity/Exclusions/"
+.UnityInputPath             = "Tools/FBuild/FBuildTest/Data/TestUnity/Exclusions/"
 .UnityOutputPath            = '$Out$/Test/Unity/Exclusions/'
 .CompilerOutputPath         = '$Out$/Test/Unity/Exclusions/'
 
@@ -43,7 +43,7 @@ ObjectList( 'ExcludeFilePath' )
 //------------------------------------------------------------------------------
 Unity( 'ExcludeFilePathRelative-Unity' )
 {
-    .UnityInputExcludedFiles    = "../FBuildTest/Data/TestUnity/Exclusions/ignore.cpp"
+    .UnityInputExcludedFiles    = "../Code/Tools/FBuild/FBuildTest/Data/TestUnity/Exclusions/ignore.cpp"
     .UnityOutputPath            + 'ExcludeFilePathRelative/'
 }
 ObjectList( 'ExcludeFilePathRelative' )

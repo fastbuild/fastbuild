@@ -53,7 +53,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 105 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 116 };
 
     bool IsValid() const
     {
@@ -92,8 +92,11 @@ public:
 
     // access existing nodes
     Node * FindNode( const AString & nodeName ) const;
+    Node * FindNodeExact( const AString & nodeName ) const;
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
+
+    void RegisterNode( Node * n );
 
     // create new nodes
     CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
@@ -110,39 +113,17 @@ public:
     UnityNode * CreateUnityNode( const AString & unityName );
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );
-    CompilerNode * CreateCompilerNode( const AString & executable );
-    VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
-                                           const Array< AString > & projectBasePaths,
-                                           const Dependencies & paths,
-                                           const Array< AString > & pathsToExclude,
-                                           const Array< AString > & files,
-                                           const Array< AString > & filesToExclude,
-                                           const Array< AString > & patternToExclude,
-                                           const AString & rootNamespace,
-                                           const AString & projectGuid,
-                                           const AString & defaultLanguage,
-                                           const AString & applicationEnvironment,
-                                           const bool projectSccEntrySAK,
-                                           const Array< VSProjectConfig > & configs,
-                                           const Array< VSProjectFileType > & fileTypes,
-                                           const Array< AString > & references,
-                                           const Array< AString > & projectReferences );
-    SLNNode * CreateSLNNode(    const AString & solutionOutput,
-                                const AString & solutionBuildProject,
-                                const AString & solutionVisualStudioVersion,
-                                const AString & solutionMinimumVisualStudioVersion,
-                                const Array< VSProjectConfig > & configs,
-                                const Array< VCXProjectNode * > & projects,
-                                const Array< SLNDependency > & slnDeps,
-                                const Array< SLNSolutionFolder > & folders );
+    CompilerNode * CreateCompilerNode( const AString & name );
+    VCXProjectNode * CreateVCXProjectNode( const AString & name );
+    SLNNode * CreateSLNNode( const AString & name );
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
     SettingsNode * CreateSettingsNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );
 
-    static void CleanPath( AString & name );
-    static void CleanPath( const AString & name, AString & fullPath );
+    static void CleanPath( AString & name, bool makeFullPath = true );
+    static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
     #if defined( ASSERTS_ENABLED )
         static bool IsCleanPath( const AString & path );
     #endif

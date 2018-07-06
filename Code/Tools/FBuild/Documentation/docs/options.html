@@ -91,6 +91,10 @@
     <td>Don't print the -summary output if there is an error.</td>
   </tr>
   <tr>
+    <td><a href="#nounity">-nounity</a></td>
+    <td>[Experimental] Individually build all files normally built in Unity.</td>
+  </tr>
+  <tr>
     <td><a href="#quiet">-quiet</a></td>
     <td>Don't show build output.</td>
   </tr>
@@ -213,9 +217,9 @@ specified instead.</p>
 <p>Print detailed information about distributed compilation. This can help when investigating connectivity issues. Activates -dist if not already specified.</p>
 </div>
 
-    <td>[Experimental] Active fast cancellation on build failure.</td>
     <div class='newsitemheader' id="fastcancel">-fastcancel</div>
     <div class='newsitembody'>
+<p><b>[Experimental]</b> Activate fast cancellation on build failure.</p>
 <p>Normally, when a build fails, FASTBuild will stop spawning new tasks, but will allow any other concurrently running processes to complete. In some cases, these tasks can
 take a long time to complete. When activated, the -fastcancel option will allow FASTBuild to instead terminate those concurrent jobs.</p>
 </div>
@@ -296,6 +300,13 @@ useful if you want to see as many errors as possible in your compilation output.
     <div class='newsitembody'>
 <p>The -nosummaryonerror option instructs FASTBuild to only print the -summary overview if the build completes successfully.</p>
 <p>NOTE: When specifying -nosummaryonerror, -summary is implied if not already specified.</p>
+</div>
+
+    <div class='newsitemheader' id="nounity">-nounity</div>
+    <div class='newsitembody'>
+<p><b>[Experimental]</b> Individually build all files normally in Unity.</p>
+<p>NOTE: When alternating between specifying -nounity and not, libraries may not relink when they should. The resulting
+executables are valid, but may contain the previous unity objects instead of the loose objects</p>
 </div>
 
     <div class='newsitemheader' id="quiet">-quiet</div>

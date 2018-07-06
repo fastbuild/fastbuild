@@ -130,7 +130,7 @@ bool UnitTestManager::RunTests( const char * testGroup )
         catch (...)
         {
             OUTPUT( " - Test '%s' *** FAILED ***\n", s_TestInfos[ s_NumTests - 1 ].m_TestName );
-            s_TestInfos[ s_NumTests - 1 ].m_TestGroup->PostTest();
+            s_TestInfos[ s_NumTests - 1 ].m_TestGroup->PostTest( false );
         }
         test = test->m_NextTestGroup;
     }
@@ -199,7 +199,7 @@ void UnitTestManager::TestEnd()
 {
     TestInfo& info = s_TestInfos[ s_NumTests - 1 ];
 
-    info.m_TestGroup->PostTest();
+    info.m_TestGroup->PostTest( true );
 
     #ifdef PROFILING_ENABLED
         ProfileManager::Stop();

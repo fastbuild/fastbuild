@@ -63,20 +63,4 @@ void DLLNode::GetImportLibName( AString & importLibName ) const
     }
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * DLLNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    DLLNode * node = nodeGraph.CreateDLLNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return node;
-}
-
 //------------------------------------------------------------------------------

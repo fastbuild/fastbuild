@@ -27,7 +27,7 @@ Settings {} // use Standard Environment
 ObjectList( 'PCHTest-Uniqueness' )
 {
     .CompilerInputPath      = '$Out$/Test/PrecompiledHeaders/CacheUniqueness/'
-    .CompilerOutputPath     ='"$Out$/Test/PrecompiledHeaders/CacheUniqueness/'
+    .CompilerOutputPath     = '$Out$/Test/PrecompiledHeaders/CacheUniqueness/'
     #if __WINDOWS__
         .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
                             + ' "/I$Out$/Test/PrecompiledHeaders/CacheUniqueness/"'

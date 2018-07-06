@@ -11,6 +11,7 @@
 
 // Core
 #include "Core/Env/Assert.h"
+#include "Core/Env/Types.h"
 
 // FillMem
 //------------------------------------------------------------------------------

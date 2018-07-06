@@ -12,7 +12,7 @@ Settings {}
 //
 Copy( "TestCopyFileToFile" )
 {
-    .Source = "Data/TestCopy/copy.bff"
+    .Source = "$TestRoot$/Data/TestCopy/copy.bff"
     .Dest   = "$Out$/Test/Copy/copy.bff.copy"
 }
 
@@ -21,7 +21,7 @@ Copy( "TestCopyFileToFile" )
 //
 Copy( "TestCopyFileToDir" )
 {
-    .Source = "Data/TestCopy/copy.bff"
+    .Source = "$TestRoot$/Data/TestCopy/copy.bff"
     .Dest   = "$Out$/Test/Copy/"
 }
 
@@ -30,8 +30,8 @@ Copy( "TestCopyFileToDir" )
 //
 Copy( "TestMultiCopyToDir" )
 {
-    .Source = { "Data/TestCopy/a.txt",
-                "Data/TestCopy/b.txt" }
+    .Source = { "$TestRoot$/Data/TestCopy/a.txt",
+                "$TestRoot$/Data/TestCopy/b.txt" }
     .Dest = "$Out$/Test/Copy/"
 }
 
@@ -40,9 +40,9 @@ Copy( "TestMultiCopyToDir" )
 //
 Copy( "TestSourceBasePath" )
 {
-    .Source = { "Data/TestCopy/a.txt",
-                "Data/TestCopy/b.txt" }
-    .SourceBasePath = "Data/" // This means we should re-create the hierarchy after this (i.e. the TestCopy dir)
+    .Source = { "$TestRoot$/Data/TestCopy/a.txt",
+                "$TestRoot$/Data/TestCopy/b.txt" }
+    .SourceBasePath = "$TestRoot$/Data/" // This means we should re-create the hierarchy after this (i.e. the TestCopy dir)
     .Dest = "$Out$/Test/Copy/SourceBasePath/"
 }
 
@@ -51,7 +51,7 @@ Copy( "TestSourceBasePath" )
 //
 Copy( 'ChainedCopy1' )
 {
-    .Source = 'Data/TestCopy/copy.bff'
+    .Source = '$TestRoot$/Data/TestCopy/copy.bff'
     .Dest   = '$Out$/Test/Copy/ChainedCopy/copy.copy1'
 }
 Copy( 'ChainedCopy2' )
@@ -70,7 +70,7 @@ Copy( 'ChainedCopy3' )
 //
 CopyDir( 'CopyDir' )
 {
-    .SourcePaths        = 'Data/TestCopy'
+    .SourcePaths        = '$TestRoot$/Data/TestCopy'
     .SourcePathsPattern = '*.txt'
     .SourcePathsRecurse = false
     .Dest               = '$Out$/Test/Copy/CopyDir/'

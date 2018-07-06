@@ -1,0 +1,23 @@
+
+// Check true
+.Bool = true
+If (.Bool)
+{
+    Print( "Success" )
+}
+If (!.Bool)
+{
+    Print( "Failure" )
+}
+
+// Check false
+.Bool = false
+If (!.Bool)
+{
+    Print( "Success" )
+}
+
+If (.Bool)
+{
+    Print( "Failure" )
+}

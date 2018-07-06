@@ -31,12 +31,12 @@ class BFFVariable
 public:
     inline const AString & GetName() const { return m_Name; }
 
-    const AString & GetString() const { return m_StringValue; }
-    const Array< AString > & GetArrayOfStrings() const { return m_ArrayValues; }
-    int GetInt() const { return m_IntValue; }
-    bool GetBool() const { return m_BoolValue; }
-    const Array< const BFFVariable * > & GetStructMembers() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_StructMembers ); }
-    const Array< const BFFVariable * > & GetArrayOfStructs() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_ArrayOfStructs ); }
+    const AString & GetString() const { ASSERT( IsString() ); return m_StringValue; }
+    const Array< AString > & GetArrayOfStrings() const { ASSERT( IsArrayOfStrings() ); return m_ArrayValues; }
+    int GetInt() const { ASSERT( IsInt() ); return m_IntValue; }
+    bool GetBool() const { ASSERT( IsBool() ); return m_BoolValue; }
+    const Array< const BFFVariable * > & GetStructMembers() const { ASSERT( IsStruct() ); RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables ); }
+    const Array< const BFFVariable * > & GetArrayOfStructs() const { ASSERT( IsArrayOfStructs() ); RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables ); }
 
     enum VarType : uint8_t
     {
@@ -60,9 +60,9 @@ public:
     inline bool IsStruct() const    { return m_Type == BFFVariable::VAR_STRUCT; }
     inline bool IsArrayOfStructs() const { return m_Type == BFFVariable::VAR_ARRAY_OF_STRUCTS; }
 
-    inline bool Frozen() const { return m_Frozen; }
-    inline void Freeze() const { ASSERT( false == m_Frozen ); m_Frozen = true; }
-    inline void Unfreeze() const { ASSERT( m_Frozen ); m_Frozen = false; }
+    inline bool Frozen() const { return m_FreezeCount > 0; }
+    inline void Freeze() const { ++m_FreezeCount; }
+    inline void Unfreeze() const { ASSERT( m_FreezeCount != 0 ); --m_FreezeCount; }
 
     BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFIterator & operatorIter ) const;
 
@@ -92,15 +92,14 @@ private:
     AString m_Name;
     VarType m_Type;
 
-    mutable bool m_Frozen;
+    mutable uint8_t     m_FreezeCount;
 
     //
     bool                m_BoolValue;
     int                 m_IntValue;
     AString             m_StringValue;
     Array< AString >    m_ArrayValues;
-    Array< BFFVariable * > m_StructMembers;
-    Array< BFFVariable * > m_ArrayOfStructs;
+    Array< BFFVariable * > m_SubVariables; // Used for struct members of arrays of structs
 
     static const char * s_TypeNames[ MAX_VAR_TYPES ];
 };

@@ -37,36 +37,11 @@ FunctionCompiler::FunctionCompiler()
     return true;
 }
 
-// Commit
+// CreateNode
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionCompiler::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ Node * FunctionCompiler::CreateNode() const
 {
-    AStackString<> name;
-    if ( GetNameForNode( nodeGraph, funcStartIter, CompilerNode::GetReflectionInfoS(), name ) == false )
-    {
-        return false;
-    }
-
-    if ( nodeGraph.FindNode( name ) )
-    {
-        Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
-        return false;
-    }
-
-    CompilerNode * compilerNode = nodeGraph.CreateCompilerNode( name );
-
-    if ( !PopulateProperties( nodeGraph, funcStartIter, compilerNode ) )
-    {
-        return false;
-    }
-
-    if ( !compilerNode->Initialize( nodeGraph, funcStartIter, this ) )
-    {
-        return false;
-    }
-
-    // handle alias creation
-    return ProcessAlias( nodeGraph, funcStartIter, compilerNode );
+    return FNEW( CompilerNode );
 }
 
 //------------------------------------------------------------------------------

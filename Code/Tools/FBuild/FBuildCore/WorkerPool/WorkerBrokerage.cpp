@@ -71,7 +71,10 @@ void WorkerBrokerage::Init()
 WorkerBrokerage::~WorkerBrokerage()
 {
     // Ensure the file disapears when closing
-    FileIO::FileDelete( m_BrokerageFilePath.Get() );
+    if ( m_Availability )
+    {
+        FileIO::FileDelete( m_BrokerageFilePath.Get() );
+    }
 }
 
 // FindWorkers

@@ -44,27 +44,27 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestCSharp::TestSingleFile() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestCSharp/csharp.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
     options.m_ForceCleanBuild = true;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // delete files from previous runs
-    EnsureFileDoesNotExist( "../../../../tmp/Test/CSharp/csharpsingle.dll" );
+    EnsureFileDoesNotExist( "../tmp/Test/CSharp/csharpsingle.dll" );
 
     // Build it
     TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Single-Target" ) ) );
-    TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/CSharp/csharpsingle.fdb" ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/CSharp/csharpsingle.fdb" ) );
 
     // Test output file
-    EnsureFileExists( "../../../../tmp/Test/CSharp/csharpsingle.dll" );
+    EnsureFileExists( "../tmp/Test/CSharp/csharpsingle.dll" );
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE );  // compiler + 1 cs file
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
+    CheckStatsNode ( 1,     1,      Node::FILE_NODE );  // 1 cs file
     CheckStatsNode ( 1,     1,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsTotal( 4,     4 );
@@ -74,49 +74,50 @@ void TestCSharp::TestSingleFile() const
 //------------------------------------------------------------------------------
 void TestCSharp::TestSingleFile_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestCSharp/csharp.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
 
     FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/CSharp/csharpsingle.fdb" ) );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpsingle.fdb" ) );
 
     // Build it
     TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Single-Target" ) ) );
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 2,     2,      Node::FILE_NODE );  // compiler + 1 cs file
+    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE);
+    CheckStatsNode ( 1,     1,      Node::FILE_NODE );  // 1 cs file
     CheckStatsNode ( 1,     0,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 4,     3 );
+    CheckStatsTotal( 4,     2 );
 }
 
 // TestMultipleFiles
 //------------------------------------------------------------------------------
 void TestCSharp::TestMultipleFiles() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestCSharp/csharp.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
     options.m_ForceCleanBuild = true;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // delete files from previous runs
-    EnsureFileDoesNotExist( "../../../../tmp/Test/CSharp/csharpmulti.dll" );
+    EnsureFileDoesNotExist( "../tmp/Test/CSharp/csharpmulti.dll" );
 
     // Build it
     TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Multi-Target" ) ) );
-    TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/CSharp/csharpmulti.fdb" ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/CSharp/csharpmulti.fdb" ) );
 
     // Test output files
-    EnsureFileExists( "../../../../tmp/Test/CSharp/csharpmulti.dll" );
+    EnsureFileExists( "../tmp/Test/CSharp/csharpmulti.dll" );
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // compiler + 3x cs
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
+    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
     CheckStatsNode ( 1,     1,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
@@ -127,54 +128,54 @@ void TestCSharp::TestMultipleFiles() const
 //------------------------------------------------------------------------------
 void TestCSharp::TestMultipleFiles_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestCSharp/csharp.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
 
     FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/CSharp/csharpmulti.fdb" ) );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmulti.fdb" ) );
 
     // Build it
     TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Multi-Target" ) ) );
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // compiler + 3x cs
+    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
+    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
     CheckStatsNode ( 1,     0,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
-    CheckStatsTotal( 7,     6 );
+    CheckStatsTotal( 7,     5 );
 }
 
 // TestMultipleAssemblies
 //------------------------------------------------------------------------------
 void TestCSharp::TestMultipleAssemblies() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestCSharp/csharp.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
     options.m_ForceCleanBuild = true;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // delete files from previous runs
-    EnsureFileDoesNotExist( "../../../../tmp/Test/CSharp/csharpassemblya.dll" );
-    EnsureFileDoesNotExist( "../../../../tmp/Test/CSharp/csharpassemblyb.dll" );
-    EnsureFileDoesNotExist( "../../../../tmp/Test/CSharp/csharpassemblyc.dll" );
+    EnsureFileDoesNotExist( "../tmp/Test/CSharp/csharpassemblya.dll" );
+    EnsureFileDoesNotExist( "../tmp/Test/CSharp/csharpassemblyb.dll" );
+    EnsureFileDoesNotExist( "../tmp/Test/CSharp/csharpassemblyc.dll" );
 
     // Build it
     TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyC" ) ) );
-    TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 
     // Test output files
-    EnsureFileExists( "../../../../tmp/Test/CSharp/csharpassemblya.dll" );
-    EnsureFileExists( "../../../../tmp/Test/CSharp/csharpassemblyb.dll" );
-    EnsureFileExists( "../../../../tmp/Test/CSharp/csharpassemblyc.dll" );
+    EnsureFileExists( "../tmp/Test/CSharp/csharpassemblya.dll" );
+    EnsureFileExists( "../tmp/Test/CSharp/csharpassemblyb.dll" );
+    EnsureFileExists( "../tmp/Test/CSharp/csharpassemblyc.dll" );
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // compiler + 2x cs
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
+    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 2x cs
     CheckStatsNode ( 3,     3,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsTotal( 8,     8 );
@@ -185,22 +186,22 @@ void TestCSharp::TestMultipleAssemblies() const
 //------------------------------------------------------------------------------
 void TestCSharp::TestMultipleAssemblies_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestCSharp/csharp.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
 
     FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 
     // Build it
     TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyC" ) ) );
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 4,     4,      Node::FILE_NODE );  // compiler + 2x cs
+    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
+    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
     CheckStatsNode ( 3,     0,      Node::CS_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( 8,     5 );
+    CheckStatsTotal( 8,     4 );
 }
 
 

@@ -57,21 +57,21 @@ void TestTest::CreateNode() const
 //------------------------------------------------------------------------------
 void TestTest::Build() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestTest/test.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/test.bff";
     options.m_ForceCleanBuild = true;
     options.m_ShowSummary = true; // required to generate stats for node count checks
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> testExe( "../../../../tmp/Test/Test/test.exe" );
+    const AStackString<> testExe( "../tmp/Test/Test/test.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( testExe );
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) );
-    TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Test/test.fdb" ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Test/test.fdb" ) );
 
     // make sure all output is where it is expected
     EnsureFileExists( testExe );
@@ -92,11 +92,11 @@ void TestTest::Build() const
 //------------------------------------------------------------------------------
 void TestTest::Build_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestTest/test.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/test.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
     FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Test/test.fdb" ) );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Test/test.fdb" ) );
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) );
@@ -118,8 +118,8 @@ void TestTest::Build_NoRebuild() const
 //------------------------------------------------------------------------------
 void TestTest::Fail_ReturnCode() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestTest/Fail_ReturnCode/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/Fail_ReturnCode/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
@@ -134,8 +134,8 @@ void TestTest::Fail_ReturnCode() const
 //------------------------------------------------------------------------------
 void TestTest::Fail_Crash() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestTest/Fail_Crash/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/Fail_Crash/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
@@ -150,14 +150,17 @@ void TestTest::Fail_Crash() const
 //------------------------------------------------------------------------------
 void TestTest::TimeOut() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestTest/test_timeout.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestTest/test_timeout.bff";
     options.m_FastCancel = true;
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) == false );
+
+    // Ensure failure was of the test timing out
+    TEST_ASSERT( GetRecordedOutput().Find( "Test timed out after" ) );
 }
 
 //------------------------------------------------------------------------------

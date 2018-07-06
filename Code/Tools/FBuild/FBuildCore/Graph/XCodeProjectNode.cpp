@@ -41,12 +41,12 @@ REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFi
     REFLECT( m_XCodeBuildWorkingDir,                "XCodeBuildWorkingDir",         MetaOptional() )
 REFLECT_END( XCodeProjectNode )
 
-// XCodeProjectConfig::ResolveTagets
+// XCodeProjectConfig::ResolveTargets
 //------------------------------------------------------------------------------
-/*static*/ bool XCodeProjectConfig::ResolveTagets( NodeGraph & nodeGraph,
-                                                   Array< XCodeProjectConfig > & configs,
-                                                   const BFFIterator * iter,
-                                                   const Function * function )
+/*static*/ bool XCodeProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
+                                                    Array< XCodeProjectConfig > & configs,
+                                                    const BFFIterator * iter,
+                                                    const Function * function )
 {
     // Must provide iter and function, or neither
     ASSERT( ( ( iter == nullptr ) && ( function == nullptr ) ) ||
@@ -59,7 +59,7 @@ REFLECT_END( XCodeProjectNode )
         // for a 3rd party library for example)
         if ( config.m_Target.IsEmpty() )
         {
-            return true;
+            continue;
         }
 
         // Find the node
@@ -69,8 +69,10 @@ REFLECT_END( XCodeProjectNode )
             if ( iter && function )
             {
                 Error::Error_1104_TargetNotDefined( *iter, function, ".Target", config.m_Target );
+                return false;
             }
-            return false;
+            ASSERT( false ); // Should not be possible to fail when restoring from serialized DB
+            continue;
         }
 
         config.m_TargetNode = node;
@@ -94,19 +96,19 @@ XCodeProjectNode::XCodeProjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
     Dependencies dirNodes( m_ProjectInputPaths.GetSize() );
-    if ( !function->GetDirectoryListNodeList( nodeGraph, iter, m_ProjectInputPaths, m_ProjectInputPathsExclude, m_ProjectFilesToExclude, m_PatternToExclude, true, &m_ProjectAllowedFileExtensions, "ProjectInputPaths", dirNodes ) )
+    if ( !Function::GetDirectoryListNodeList( nodeGraph, iter, function, m_ProjectInputPaths, m_ProjectInputPathsExclude, m_ProjectFilesToExclude, m_PatternToExclude, true, &m_ProjectAllowedFileExtensions, "ProjectInputPaths", dirNodes ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }
 
-    // TODO:B use m_ProjectFiles instead of finding it again
+    // .ProjectFiles
     Dependencies fileNodes( m_ProjectFiles.GetSize() );
-    if ( !function->GetNodeList( nodeGraph, iter, ".ProjectFiles", fileNodes ) )
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".ProjectFiles", m_ProjectFiles, fileNodes ) )
     {
         return false; // GetNodeList will have emitted an error
     }
@@ -115,8 +117,8 @@ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & it
     m_StaticDependencies.Append( dirNodes );
     m_StaticDependencies.Append( fileNodes );
 
-    // Resolve Target names to Node pointers for layer use
-    if ( XCodeProjectConfig::ResolveTagets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
+    // Resolve Target names to Node pointers for later use
+    if ( XCodeProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
     {
         return false; // Initialize will have emitted an error
     }
@@ -227,35 +229,11 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     return Node::NODE_RESULT_OK;
 }
 
-// Load
+// PostLoad
 //------------------------------------------------------------------------------
-/*static*/ Node * XCodeProjectNode::Load( NodeGraph & nodeGraph, IOStream & stream )
+/*virtual*/ void XCodeProjectNode::PostLoad( NodeGraph & nodeGraph )
 {
-    NODE_LOAD( AStackString<>, name );
-
-    auto * n = nodeGraph.CreateXCodeProjectNode( name );
-
-    if ( n->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    // Resolve Target names to Node pointers for layer use
-    if ( XCodeProjectConfig::ResolveTagets( nodeGraph, n->m_ProjectConfigs ) == false )
-    {
-        ASSERT( false ); // Should be impossible to be loading a DB where the Target cannot be resolved
-        return nullptr;
-    }
-
-    return n;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void XCodeProjectNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
+    XCodeProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs );
 }
 
 //------------------------------------------------------------------------------

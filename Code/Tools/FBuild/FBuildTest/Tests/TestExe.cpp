@@ -56,21 +56,20 @@ void TestExe::CreateNode() const
 //------------------------------------------------------------------------------
 void TestExe::Build() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestExe/exe.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExe/exe.bff";
     options.m_ForceCleanBuild = true;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> exe( "../../../../tmp/Test/Exe/exe.exe" );
+    const AStackString<> exe( "../tmp/Test/Exe/exe.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( exe );
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( AStackString<>( "Exe" ) ) );
-    TEST_ASSERT( fBuild.SaveDependencyGraph( "../../../../tmp/Test/Exe/exe.fdb" ) );
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Exe/exe.fdb" ) );
 
     // make sure all output is where it is expected
     EnsureFileExists( exe );
@@ -91,7 +90,7 @@ void TestExe::Build() const
 void TestExe::CheckValidExe() const
 {
     Process p;
-    p.Spawn( "../../../../tmp/Test/Exe/exe.exe", nullptr, nullptr, nullptr );
+    p.Spawn( "../tmp/Test/Exe/exe.exe", nullptr, nullptr, nullptr );
     int ret = p.WaitForExit();
     TEST_ASSERT( ret == 99 ); // verify expected ret code
 }
@@ -100,11 +99,10 @@ void TestExe::CheckValidExe() const
 //------------------------------------------------------------------------------
 void TestExe::Build_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestExe/exe.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExe/exe.bff";
     FBuild fBuild( options );
-    TEST_ASSERT( fBuild.Initialize( "../../../../tmp/Test/Exe/exe.fdb" ) );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Exe/exe.fdb" ) );
 
     // build (via alias)
     TEST_ASSERT( fBuild.Build( AStackString<>( "Exe" ) ) );

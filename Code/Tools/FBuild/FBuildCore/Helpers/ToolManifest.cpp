@@ -24,22 +24,39 @@
 // system
 #include <memory.h> // memcpy
 
-// CONSTRUCTOR (File)
+// Reflection
 //------------------------------------------------------------------------------
-ToolManifest::File::File( const AString & name, uint64_t stamp, uint32_t hash, const Node * node, uint32_t size )
-    : m_Name( name ),
-    m_TimeStamp( stamp ),
-    m_Hash( hash ),
-    m_ContentSize( size ),
-    m_Node( node ),
-    m_Content( nullptr ),
-    m_SyncState( NOT_SYNCHRONIZED ),
-    m_FileLock( nullptr )
+REFLECT_STRUCT_BEGIN( ToolManifest, Struct, MetaNone() )
+    REFLECT(        m_ToolId,                       "ToolId",                       MetaNone() )
+    REFLECT(        m_TimeStamp,                    "TimeStamp",                    MetaNone() )
+    REFLECT(        m_MainExecutableRootPath,       "MainExecutableRootPath",       MetaNone() )
+    REFLECT_ARRAY_OF_STRUCT( m_Files,               "Files",    ToolManifestFile,   MetaNone() )
+    REFLECT_ARRAY(  m_CustomEnvironmentVariables,   "CustomEnvironmentVariables",   MetaNone() )
+REFLECT_END( ToolManifest )
+
+REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct, MetaNone() )
+    REFLECT( m_Name,        "Name",         MetaNone() )
+    REFLECT( m_TimeStamp,   "TimeStamp",    MetaNone() )
+    REFLECT( m_Hash,        "Hash",         MetaNone() )
+    REFLECT( m_ContentSize, "ContentSize",  MetaNone() )
+REFLECT_END( ToolManifestFile )
+
+// CONSTRUCTOR (ToolManifestFile)
+//------------------------------------------------------------------------------
+ToolManifestFile::ToolManifestFile() = default;
+
+// CONSTRUCTOR (ToolManifestFile)
+//------------------------------------------------------------------------------
+ToolManifestFile::ToolManifestFile( const AString & name, uint64_t stamp, uint32_t hash, uint32_t size )
+    : m_Name( name )
+    , m_TimeStamp( stamp )
+    , m_Hash( hash )
+    , m_ContentSize( size )
 {}
 
-// DESTRUCTOR (File)
+// DESTRUCTOR (ToolManifestFile)
 //------------------------------------------------------------------------------
-ToolManifest::File::~File()
+ToolManifestFile::~ToolManifestFile()
 {
     FREE( m_Content );
     FDELETE( m_FileLock );
@@ -78,7 +95,7 @@ ToolManifest::~ToolManifest()
 
 // Generate
 //------------------------------------------------------------------------------
-bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExecutableRoot, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables )
+bool ToolManifest::Generate( const AString& mainExecutableRoot, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables )
 {
     m_MainExecutableRootPath = mainExecutableRoot;
     m_CustomEnvironmentVariables = customEnvironmentVariables;
@@ -88,14 +105,10 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
 
     // unify "main executable" and "extra files"
     // (loads contents of file into memory, and creates hashes)
-    if ( !AddFile( mainExecutable ) )
-    {
-        return false; // AddFile will have emitted error
-    }
     for ( size_t i=0; i<dependencies.GetSize(); ++i )
     {
         const FileNode & n = *( dependencies[ i ].GetNode()->CastTo< FileNode >() );
-        if ( !AddFile( &n ) )
+        if ( !AddFile( n.GetName(), n.GetStamp() ) )
         {
             return false; // AddFile will have emitted error
         }
@@ -108,7 +121,7 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
     uint32_t * pos = mem;
     for ( size_t i=0; i<numFiles; ++i )
     {
-        const File & f = m_Files[ i ];
+        const ToolManifestFile & f = m_Files[ i ];
 
         // file contents
         *pos = f.m_Hash;
@@ -116,7 +129,7 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
 
         // file name & sub-path (relative to remote folder)
         AStackString<> relativePath;
-        GetRemoteFilePath( (uint32_t)i, relativePath, false ); // false = don't use full path
+        GetRelativePath( m_MainExecutableRootPath, f.m_Name, relativePath );
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
@@ -126,7 +139,7 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
     // update time stamp (most recent file in manifest)
     for ( size_t i=0; i<numFiles; ++i )
     {
-        const File & f = m_Files[ i ];
+        const ToolManifestFile & f = m_Files[ i ];
         ASSERT( f.m_TimeStamp ); // should have had an error before if the file was missing
         m_TimeStamp = Math::Max( m_TimeStamp, f.m_TimeStamp );
     }
@@ -134,9 +147,9 @@ bool ToolManifest::Generate( const Node * mainExecutable, const AString& mainExe
     return true;
 }
 
-// Serialize
+// SerializeForRemote
 //------------------------------------------------------------------------------
-void ToolManifest::Serialize( IOStream & ms ) const
+void ToolManifest::SerializeForRemote( IOStream & ms ) const
 {
     ms.Write( m_ToolId );
     ms.Write( m_MainExecutableRootPath );
@@ -146,7 +159,7 @@ void ToolManifest::Serialize( IOStream & ms ) const
     const size_t numFiles( m_Files.GetSize() );
     for ( size_t i=0; i<numFiles; ++i )
     {
-        const File & f = m_Files[ i ];
+        const ToolManifestFile & f = m_Files[ i ];
         ms.Write( f.m_Name );
         ms.Write( f.m_TimeStamp );
         ms.Write( f.m_Hash );
@@ -161,9 +174,9 @@ void ToolManifest::Serialize( IOStream & ms ) const
     }
 }
 
-// Deserialize
+// DeserializeFromRemote
 //------------------------------------------------------------------------------
-void ToolManifest::Deserialize( IOStream & ms, bool remote )
+void ToolManifest::DeserializeFromRemote( IOStream & ms )
 {
     ms.Read( m_ToolId );
     ms.Read( m_MainExecutableRootPath );
@@ -184,7 +197,7 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
         ms.Read( timeStamp );
         ms.Read( hash );
         ms.Read( contentSize );
-        m_Files.Append( File( name, timeStamp, hash, nullptr, contentSize ) );
+        m_Files.Append( ToolManifestFile( name, timeStamp, hash, contentSize ) );
     }
 
     ASSERT( m_CustomEnvironmentVariables.IsEmpty() );
@@ -197,12 +210,6 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
         AStackString<> envVar;
         ms.Read( envVar );
         m_CustomEnvironmentVariables.Append( envVar );
-    }
-
-    // everything else is only needed remotely (in the worker)
-    if ( remote == false )
-    {
-        return;
     }
 
     // determine if any files are remaining from a previous run
@@ -235,7 +242,7 @@ void ToolManifest::Deserialize( IOStream & ms, bool remote )
 
         // file present and ok
         m_Files[ i ].m_FileLock = fileStream.Release(); // NOTE: keep file open to prevent deletions
-        m_Files[ i ].m_SyncState = File::SYNCHRONIZED;
+        m_Files[ i ].m_SyncState = ToolManifestFile::SYNCHRONIZED;
         numFilesAlreadySynchronized++;
     }
 
@@ -337,15 +344,15 @@ bool ToolManifest::GetSynchronizationStatus( uint32_t & syncDone, uint32_t & syn
     MutexHolder mh( m_Mutex );
 
     // is completely synchronized?
-    const File * const end = m_Files.End();
-    for ( const File * it = m_Files.Begin(); it != end; ++it )
+    const ToolManifestFile * const end = m_Files.End();
+    for ( const ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
     {
         syncTotal += it->m_ContentSize;
-        if ( it->m_SyncState == File::SYNCHRONIZED )
+        if ( it->m_SyncState == ToolManifestFile::SYNCHRONIZED )
         {
             syncDone += it->m_ContentSize;
         }
-        else if ( it->m_SyncState == File::SYNCHRONIZING )
+        else if ( it->m_SyncState == ToolManifestFile::SYNCHRONIZING )
         {
             synching = true;
         }
@@ -363,12 +370,12 @@ void ToolManifest::CancelSynchronizingFiles()
     bool atLeastOneFileCancelled = false;
 
     // is completely synchronized?
-    File * const end = m_Files.End();
-    for ( File * it = m_Files.Begin(); it != end; ++it )
+    ToolManifestFile * const end = m_Files.End();
+    for ( ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
     {
-        if ( it->m_SyncState == File::SYNCHRONIZING )
+        if ( it->m_SyncState == ToolManifestFile::SYNCHRONIZING )
         {
-            it->m_SyncState = File::NOT_SYNCHRONIZED;
+            it->m_SyncState = ToolManifestFile::NOT_SYNCHRONIZED;
             atLeastOneFileCancelled = true;
         }
     }
@@ -383,7 +390,7 @@ void ToolManifest::CancelSynchronizingFiles()
 //------------------------------------------------------------------------------
 const void * ToolManifest::GetFileData( uint32_t fileId, size_t & dataSize ) const
 {
-    const File & f = m_Files[ fileId ];
+    const ToolManifestFile & f = m_Files[ fileId ];
     if ( f.m_Content == nullptr )
     {
         if ( !LoadFile( f.m_Name, f.m_Content, f.m_ContentSize ) )
@@ -401,16 +408,16 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
 {
     MutexHolder mh( m_Mutex );
 
-    File & f = m_Files[ fileId ];
+    ToolManifestFile & f = m_Files[ fileId ];
 
     // gracefully handle multiple receipts of the same data
     if ( f.m_Content )
     {
-        ASSERT( f.m_SyncState == File::SYNCHRONIZED );
+        ASSERT( f.m_SyncState == ToolManifestFile::SYNCHRONIZED );
         return true;
     }
 
-    ASSERT( f.m_SyncState == File::SYNCHRONIZING );
+    ASSERT( f.m_SyncState == ToolManifestFile::SYNCHRONIZING );
 
     // prepare name for this file
     AStackString<> fileName;
@@ -449,13 +456,13 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
 
     // This file is now synchronized
     f.m_FileLock = fileStream.Release(); // NOTE: Keep file open to prevent deletion
-    f.m_SyncState = File::SYNCHRONIZED;
+    f.m_SyncState = ToolManifestFile::SYNCHRONIZED;
 
     // is completely synchronized?
-    const File * const end = m_Files.End();
-    for ( const File * it = m_Files.Begin(); it != end; ++it )
+    const ToolManifestFile * const end = m_Files.End();
+    for ( const ToolManifestFile * it = m_Files.Begin(); it != end; ++it )
     {
-        if ( it->m_SyncState != File::SYNCHRONIZED )
+        if ( it->m_SyncState != ToolManifestFile::SYNCHRONIZED )
         {
             // still some files to be received
             return true; // file stored ok
@@ -469,41 +476,33 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
 
 // GetRelativePath
 //------------------------------------------------------------------------------
-/*static*/ void ToolManifest::GetRelativePath( const AString & mainExe, const AString & otherFile, AString & otherFileRelativePath )
+/*static*/ void ToolManifest::GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath )
 {
-    // determine primary root
-    AStackString<> primaryPath( mainExe.Get(), mainExe.FindLast( NATIVE_SLASH ) + 1 ); // include backslash
-
-    if ( otherFile.BeginsWithI( primaryPath ) )
+    if ( otherFile.BeginsWithI( root ) )
     {
         // file is in sub dir on master machine, so store with same relative location
-        otherFileRelativePath += ( otherFile.Get() + primaryPath.GetLength() );
+        otherFileRelativePath = ( otherFile.Get() + root.GetLength() );
     }
     else
     {
         // file is in some completely other directory, so put in same place as exe
         const char * lastSlash = otherFile.FindLast( NATIVE_SLASH );
-        otherFileRelativePath += ( lastSlash ? lastSlash + 1 : otherFile.Get() );
+        otherFileRelativePath = ( lastSlash ? lastSlash + 1 : otherFile.Get() );
     }
 }
 
 // GetRemoteFilePath
 //------------------------------------------------------------------------------
-void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & exe, bool fullPath ) const
+void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) const
 {
-    // we'll store in the sub dir
-    if ( fullPath )
-    {
-        GetRemotePath( exe );
-    }
-    else
-    {
-        exe.Clear();
-    }
-
-    const File & f = m_Files[ fileId ];
-
-    GetRelativePath( m_MainExecutableRootPath, f.m_Name, exe );
+    // Get base directory
+    GetRemotePath( remotePath );
+    ASSERT( remotePath.EndsWith( NATIVE_SLASH ) );
+    
+    // Get relative path for file and append
+    AStackString<> relativePath;
+    GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].m_Name, relativePath );
+    remotePath += relativePath;
 }
 
 // GetRemotePath
@@ -522,26 +521,22 @@ void ToolManifest::GetRemotePath( AString & path ) const
 
 // AddFile
 //------------------------------------------------------------------------------
-bool ToolManifest::AddFile( const Node * node )
+bool ToolManifest::AddFile( const AString & fileName, const uint64_t timeStamp )
 {
-    ASSERT( node->IsAFile() ); // we can only distribute files
-
     uint32_t contentSize( 0 );
     void * content( nullptr );
-    if ( !LoadFile( node->GetName(), content, contentSize ) )
+    if ( !LoadFile( fileName, content, contentSize ) )
     {
         return false; // LoadContent will have emitted an error
     }
 
     // create the file entry
-    const AString & name = node->GetName();
-    const uint64_t timeStamp = node->GetStamp();
     const uint32_t hash = xxHash::Calc32( content, contentSize );
-    m_Files.Append( File(name, timeStamp, hash, node, contentSize ) );
+    m_Files.Append( ToolManifestFile( fileName, timeStamp, hash, contentSize ) );
 
     // store file content (take ownership of file data)
     // TODO:B Compress the data - less memory used + faster to send over network
-    File & f = m_Files.Top();
+    ToolManifestFile & f = m_Files.Top();
     f.m_Content = content;
 
     return true;

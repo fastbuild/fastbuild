@@ -51,9 +51,14 @@ void Free( void * ptr );
     void operator delete( void * ptr, const char *, int );
     void operator delete[]( void * ptr, const char *, int );
 #endif
+#if !defined( __has_feature )
+    #define __has_feature( ... ) 0
+#endif
+#if !__has_feature( address_sanitizer ) && !__has_feature( memory_sanitizer ) && !__SANITIZE_ADDRESS__
 void * operator new( size_t size );
 void * operator new[]( size_t size );
-void operator delete( void * ptr );
-void operator delete[]( void * ptr );
+void operator delete( void * ptr ) NOEXCEPT;
+void operator delete[]( void * ptr ) NOEXCEPT;
+#endif
 
 //------------------------------------------------------------------------------

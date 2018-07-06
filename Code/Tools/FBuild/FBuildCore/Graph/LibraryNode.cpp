@@ -52,11 +52,11 @@ LibraryNode::LibraryNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // .Librarian
     Dependencies librarian;
-    if ( !function->GetFileNode( nodeGraph, iter, m_Librarian, "Librarian", librarian ) )
+    if ( !Function::GetFileNode( nodeGraph, iter, function, m_Librarian, "Librarian", librarian ) )
     {
         return false; // GetFileNode will have emitted an error
     }
@@ -84,9 +84,9 @@ bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, c
         return false;
     }
 
-    // .LibrarianAdditionalInputs  - TODO:B Use m_LibrarianAdditionalInputs instead of finding it again
+    // .LibrarianAdditionalInputs
     Dependencies librarianAdditionalInputs;
-    if ( !function->GetNodeList( nodeGraph, iter, ".LibrarianAdditionalInputs", librarianAdditionalInputs, false ) )
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".LibrarianAdditionalInputs", m_LibrarianAdditionalInputs, librarianAdditionalInputs ) )
     {
         return false;// GetNodeList will emit error
     }
@@ -373,33 +373,6 @@ FileNode * LibraryNode::GetLibrarian() const
 {
     // Librarian is always at index 0
     return m_StaticDependencies[ 0 ].GetNode()->CastTo< FileNode >();
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * LibraryNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    LibraryNode * node = nodeGraph.CreateLibraryNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    // TODO:C Handle through normal serialization
-    NODE_LOAD_NODE_LINK( Node, precompiledHeader );
-    node->m_PrecompiledHeader = precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr;
-
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void LibraryNode::Save( IOStream & stream ) const
-{
-    ObjectListNode::Save( stream );
 }
 
 // CanUseResponseFile

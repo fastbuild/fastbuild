@@ -31,6 +31,12 @@ FunctionRemoveDir::FunctionRemoveDir()
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionRemoveDir::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
 {
+    if ( nodeGraph.FindNode( m_AliasForFunction ) )
+    {
+        Error::Error_1100_AlreadyDefined( funcStartIter, this, m_AliasForFunction );
+        return false;
+    }
+
     RemoveDirNode * removeDirNode = nodeGraph.CreateRemoveDirNode( m_AliasForFunction );
 
     if ( !PopulateProperties( nodeGraph, funcStartIter, removeDirNode ) )
@@ -44,6 +50,13 @@ FunctionRemoveDir::FunctionRemoveDir()
     }
 
     return true;
+}
+
+// CreateNode
+//------------------------------------------------------------------------------
+/*virtual*/ Node * FunctionRemoveDir::CreateNode() const
+{
+    return FNEW( RemoveDirNode );
 }
 
 //------------------------------------------------------------------------------

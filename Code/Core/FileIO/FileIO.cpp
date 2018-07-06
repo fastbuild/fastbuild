@@ -51,7 +51,7 @@
     return true; // note this might not be file!
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
     struct stat st;
-    if ( stat( fileName, &st ) == 0 )
+    if ( lstat( fileName, &st ) == 0 )
     {
         if ( ( st.st_mode & S_IFDIR ) != S_IFDIR )
         {
@@ -116,8 +116,10 @@
                               bool allowOverwrite )
 {
 #if defined( __WINDOWS__ )
-    BOOL failIfDestExists = ( allowOverwrite ? FALSE : TRUE );
-    BOOL result = CopyFile( srcFileName, dstFileName, failIfDestExists );
+    DWORD flags = COPY_FILE_COPY_SYMLINK;
+    flags = ( allowOverwrite ? flags : flags | COPY_FILE_FAIL_IF_EXISTS );
+
+    BOOL result = CopyFileEx( srcFileName, dstFileName, nullptr, nullptr, nullptr, flags );
     if ( result == FALSE )
     {
         // even if we allow overwrites, Windows will fail if the dest file
@@ -143,7 +145,7 @@
             }
 
             // try to copy again
-            result = CopyFile( srcFileName, dstFileName, failIfDestExists );
+            result = CopyFileEx( srcFileName, dstFileName, nullptr, nullptr, nullptr, flags );
             return ( result == TRUE );
         }
     }
@@ -157,10 +159,11 @@
             return false;
         }
     }
-    copyfile_state_t s;
-    s = copyfile_state_alloc();
-    bool result = ( copyfile( srcFileName, dstFileName, s, COPYFILE_DATA | COPYFILE_XATTR ) == 0 );
-    copyfile_state_free(s);
+    // If the state parameter is the return value from copyfile_state_alloc(),
+    // then copyfile() and fcopyfile() will use the information from the state
+    // object; if it is NULL, then both functions will work normally, but less
+    // control will be available to the caller.
+    bool result = ( copyfile( srcFileName, dstFileName, nullptr, COPYFILE_DATA | COPYFILE_XATTR | COPYFILE_NOFOLLOW ) == 0 );
     return result;
 #elif defined( __LINUX__ )
     if ( allowOverwrite == false )
@@ -171,14 +174,27 @@
         }
     }
 
+    struct stat stat_source;
+    VERIFY( lstat( srcFileName, &stat_source ) == 0 );
+
+    // Special case symlinks.
+    if ( S_ISLNK( stat_source.st_mode ) )
+    {
+        AString linkPath( stat_source.st_size + 1 );
+        ssize_t length = readlink( srcFileName, linkPath.Get(), linkPath.GetReserved() );
+        if ( length != stat_source.st_size )
+        {
+            return false;
+        }
+        linkPath.SetLength( length );
+        return symlink( linkPath.Get(), dstFileName ) == 0;
+    }
+
     int source = open( srcFileName, O_RDONLY, 0 );
     if ( source < 0 )
     {
         return false;
     }
-
-    struct stat stat_source;
-    VERIFY( fstat( source, &stat_source ) == 0 );
 
     // Ensure dest file will be writable if it exists
     FileIO::SetReadOnly( dstFileName, false );
@@ -289,7 +305,7 @@
         }
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         struct stat s;
-        if ( stat( fileName.Get(), &s ) == 0 )
+        if ( lstat( fileName.Get(), &s ) == 0 )
         {
             info.m_Name = fileName;
             info.m_Attributes = s.st_mode;
@@ -459,7 +475,7 @@
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         struct stat st;
-        if ( stat( path.Get(), &st ) == 0 )
+        if ( lstat( path.Get(), &st ) == 0 )
         {
             if ( ( st.st_mode & S_IFDIR ) != 0 )
             {
@@ -542,7 +558,7 @@
         }
     #elif defined( __APPLE__ )
         struct stat st;
-        if ( stat( fileName.Get(), &st ) == 0 )
+        if ( lstat( fileName.Get(), &st ) == 0 )
         {
             // OSX only supports setting filetimes at usec granularity
             // so if we ever receive times with sub-usec granularity
@@ -553,7 +569,7 @@
         }
     #elif defined( __LINUX__ )
         struct stat st;
-        if ( stat( fileName.Get(), &st ) == 0 )
+        if ( lstat( fileName.Get(), &st ) == 0 )
         {
             return ( ( (uint64_t)st.st_mtim.tv_sec * 1000000000ULL ) + (uint64_t)st.st_mtim.tv_nsec );
         }
@@ -640,7 +656,7 @@
         return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         struct stat s;
-        if ( stat( fileName, &s ) != 0 )
+        if ( lstat( fileName, &s ) != 0 )
         {
             return true; // can't even get the attributes, treat as not read only
         }
@@ -689,7 +705,7 @@
         return readOnly;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         struct stat s;
-        if ( stat( fileName, &s ) != 0 )
+        if ( lstat( fileName, &s ) != 0 )
         {
             return false; // can't even get the attributes, treat as not read only
         }
@@ -785,6 +801,17 @@
         FindClose( hFind );
 
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        // Special case symlinks.
+        struct stat stat_source;
+        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+        {
+            return;
+        }
+        if ( S_ISLNK( stat_source.st_mode ) )
+        {
+            return;
+        }
+
         DIR * dir = opendir( pathCopy.Get() );
         if ( dir == nullptr )
         {
@@ -808,7 +835,7 @@
                 pathCopy += entry->d_name;
 
                 struct stat info;
-                VERIFY( stat( pathCopy.Get(), &info ) == 0 );
+                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
                 isDir = S_ISDIR( info.st_mode );
             }
 
@@ -886,6 +913,17 @@
         FindClose( hFind );
 
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        // Special case symlinks.
+        struct stat stat_source;
+        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+        {
+            return;
+        }
+        if ( S_ISLNK( stat_source.st_mode ) )
+        {
+            return;
+        }
+
         DIR * dir = opendir( pathCopy.Get() );
         if ( dir == nullptr )
         {
@@ -909,7 +947,7 @@
                 pathCopy += entry->d_name;
 
                 struct stat info;
-                VERIFY( stat( pathCopy.Get(), &info ) == 0 );
+                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
                 isDir = S_ISDIR( info.st_mode );
             }
 
@@ -1013,6 +1051,17 @@
         FindClose( hFind );
 
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        // Special case symlinks.
+        struct stat stat_source;
+        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+        {
+            return;
+        }
+        if ( S_ISLNK( stat_source.st_mode ) )
+        {
+            return;
+        }
+
         DIR * dir = opendir( pathCopy.Get() );
         if ( dir == nullptr )
         {
@@ -1036,7 +1085,7 @@
                 pathCopy += entry->d_name;
 
                 struct stat info;
-                VERIFY( stat( pathCopy.Get(), &info ) == 0 );
+                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
                 isDir = S_ISDIR( info.st_mode );
             }
 
@@ -1077,7 +1126,7 @@
 
                 // get additional info
                 struct stat info;
-                VERIFY( stat( pathCopy.Get(), &info ) == 0 );
+                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
                 newInfo.m_Attributes = info.st_mode;
                 #if defined( __APPLE__ )
                     newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
@@ -1142,6 +1191,17 @@
         FindClose( hFind );
 
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        // Special case symlinks.
+        struct stat stat_source;
+        if ( lstat( pathCopy.Get(), &stat_source ) != 0 )
+        {
+            return;
+        }
+        if ( S_ISLNK( stat_source.st_mode ) )
+        {
+            return;
+        }
+
         DIR * dir = opendir( pathCopy.Get() );
         if ( dir == nullptr )
         {
@@ -1165,7 +1225,7 @@
                 pathCopy += entry->d_name;
 
                 struct stat info;
-                VERIFY( stat( pathCopy.Get(), &info ) == 0 );
+                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
                 isDir = S_ISDIR( info.st_mode );
             }
 
@@ -1192,7 +1252,7 @@
 
                 // get additional info
                 struct stat info;
-                VERIFY( stat( pathCopy.Get(), &info ) == 0 );
+                VERIFY( lstat( pathCopy.Get(), &info ) == 0 );
                 newInfo.m_Attributes = info.st_mode;
                 #if defined( __APPLE__ )
                     newInfo.m_LastWriteTime = ( ( (uint64_t)info.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)info.st_mtimespec.tv_nsec );
@@ -1211,7 +1271,9 @@
 // WorkAroundForWindowsFilePermissionProblem
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    /*static*/ void FileIO::WorkAroundForWindowsFilePermissionProblem( const AString & fileName )
+    /*static*/ void FileIO::WorkAroundForWindowsFilePermissionProblem( const AString & fileName,
+                                                                       const uint32_t openMode,
+                                                                       const uint32_t timeoutSeconds )
     {
         // Sometimes after closing a file, subsequent operations on that file will
         // fail.  For example, trying to set the file time, or even another process
@@ -1225,12 +1287,12 @@
         // problem on the subsequent operation.
         FileStream f;
         Timer timer;
-        while ( f.Open( fileName.Get() ) == false )
+        while ( f.Open( fileName.Get(), openMode ) == false )
         {
             Thread::Sleep( 1 );
 
             // timeout so we don't get stuck in here forever
-            if ( timer.GetElapsed() > 1.0f )
+            if ( timer.GetElapsed() > (float)timeoutSeconds )
             {
                 ASSERT( false && "WorkAroundForWindowsFilePermissionProblem Failed!" );
                 return;

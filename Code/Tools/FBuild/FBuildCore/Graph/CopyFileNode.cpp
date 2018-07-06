@@ -35,7 +35,7 @@ CopyFileNode::CopyFileNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool CopyFileNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CopyFileNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -92,29 +92,6 @@ CopyFileNode::~CopyFileNode() = default;
     }
     m_Stamp = dstStamp;
     return NODE_RESULT_OK;
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * CopyFileNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    CopyFileNode * node = nodeGraph.CreateCopyFileNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void CopyFileNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
 }
 
 // EmitCompilationMessage

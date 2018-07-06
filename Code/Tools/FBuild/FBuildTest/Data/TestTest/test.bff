@@ -15,7 +15,7 @@ Settings {}
 //------------------------------------------------------------------------------
 ObjectList( "Exe-Lib" )
 {
-    .CompilerInputFiles = 'Data/TestTest/test.cpp'
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestTest/test.cpp'
     .CompilerOutputPath = '$Out$/Test/Test/'
 }
 

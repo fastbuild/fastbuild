@@ -155,7 +155,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         // Set user data
         SetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA, (LONG_PTR)this );
         // User data doesn't take effect until you call SetWindowPos
-        VERIFY( SetWindowPos( (HWND)m_Handle, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER ) );
+        VERIFY( SetWindowPos( (HWND)m_Handle, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE ) );
         ASSERT( this == (void*)GetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA ) );
     #else
         (void)x;

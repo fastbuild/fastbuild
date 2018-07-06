@@ -23,15 +23,12 @@ class ObjectListNode : public Node
     REFLECT_NODE_DECLARE( ObjectListNode )
 public:
     ObjectListNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~ObjectListNode();
 
     static inline Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
 
     virtual bool IsAFile() const override;
-
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 
     const char * GetObjExtension() const;
 
@@ -63,6 +60,7 @@ protected:
                                    const AString & objectName,
                                    const AString & objectInput,
                                    const AString & pchObjectName );
+    ObjectNode * GetPrecompiledHeader() const;
 
     // Exposed Properties
     AString             m_Compiler;
@@ -80,6 +78,7 @@ protected:
     Array< AString >    m_CompilerInputUnity;
     AString             m_CompilerInputFilesRoot;
     Array< AString >    m_CompilerForceUsing;
+    bool                m_CompilerInputAllowNoFiles         = false;
     bool                m_CompilerInputPathRecurse          = true;
     bool                m_DeoptimizeWritableFiles           = false;
     bool                m_DeoptimizeWritableFilesWithToken  = false;
@@ -93,7 +92,7 @@ protected:
     Array< AString >    m_PreBuildDependencyNames;
 
     // Internal State
-    ObjectNode *        m_PrecompiledHeader                 = nullptr;
+    bool                m_UsingPrecompiledHeader            = false;
     AString             m_ExtraPDBPath;
     AString             m_ExtraASMPath;
     uint32_t            m_ObjectListInputStartIndex         = 0;

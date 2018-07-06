@@ -49,6 +49,7 @@ Protocol::IMessage::IMessage( Protocol::MessageType msgType, uint32_t msgSize, b
     , m_MsgSize( msgSize )
     , m_HasPayload( hasPayload )
 {
+    memset( m_Padding1, 0, sizeof( m_Padding1 ) );
 }
 
 // IMessage::Send
@@ -103,6 +104,7 @@ Protocol::MsgConnection::MsgConnection( uint32_t numJobsAvailable )
     , m_ProtocolVersion( PROTOCOL_VERSION )
     , m_NumJobsAvailable( numJobsAvailable )
 {
+    memset( m_HostName, 0, sizeof( m_HostName ) );
     if ( ::gethostname( m_HostName, 64 ) != 0 )
     {
         AString::Copy( "Unavailable", m_HostName, 12 ); // inc terminator in copy
@@ -137,6 +139,7 @@ Protocol::MsgJob::MsgJob( uint64_t toolId )
     : Protocol::IMessage( Protocol::MSG_JOB, sizeof( MsgJob ), true )
     , m_ToolId( toolId )
 {
+    memset( m_Padding2, 0, sizeof( m_Padding2 ) );
     ASSERT( toolId );
 }
 
@@ -153,6 +156,7 @@ Protocol::MsgRequestManifest::MsgRequestManifest( uint64_t toolId )
     : Protocol::IMessage( Protocol::MSG_REQUEST_MANIFEST, sizeof( MsgRequestManifest ), false )
     , m_ToolId( toolId )
 {
+    memset( m_Padding2, 0, sizeof( m_Padding2 ) );
 }
 
 // MsgManifest
@@ -161,6 +165,7 @@ Protocol::MsgManifest::MsgManifest( uint64_t toolId )
     : Protocol::IMessage( Protocol::MSG_MANIFEST, sizeof( MsgManifest ), true )
     , m_ToolId( toolId )
 {
+    memset( m_Padding2, 0, sizeof( m_Padding2 ) );
 }
 
 // MsgRequestFile
@@ -170,6 +175,8 @@ Protocol::MsgRequestFile::MsgRequestFile( uint64_t toolId, uint32_t fileId )
     , m_ToolId( toolId )
     , m_FileId( fileId )
 {
+    memset( m_Padding2, 0, sizeof( m_Padding2 ) );
+    memset( m_Padding3, 0, sizeof( m_Padding3 ) );
 }
 
 // MsgFile
@@ -179,6 +186,8 @@ Protocol::MsgFile::MsgFile( uint64_t toolId, uint32_t fileId )
     , m_ToolId( toolId )
     , m_FileId( fileId )
 {
+    memset( m_Padding2, 0, sizeof( m_Padding2 ) );
+    memset( m_Padding3, 0, sizeof( m_Padding3 ) );
 }
 
 // MsgServerStatus

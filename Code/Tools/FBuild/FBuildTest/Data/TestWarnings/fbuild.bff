@@ -30,7 +30,7 @@ Settings {}
 //------------------------------------------------------------------------------
 ObjectList( 'Warnings' )
 {
-    .CompilerInputFiles     = 'Data/TestWarnings/warnings.cpp'
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestWarnings/warnings.cpp'
 }
 
 //
@@ -38,5 +38,5 @@ ObjectList( 'Warnings' )
 //------------------------------------------------------------------------------
 ObjectList( 'PragmaMessage' )
 {
-    .CompilerInputFiles     = 'Data/TestWarnings/pragma_message.cpp'
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestWarnings/pragma_message.cpp'
 }

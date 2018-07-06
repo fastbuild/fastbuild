@@ -23,6 +23,17 @@
 /*static*/ bool AssertHandler::s_ThrowOnAssert( false );
 #endif
 
+// NoReturn
+//------------------------------------------------------------------------------
+#if defined( ASSERTS_ENABLED ) && defined( __WINDOWS__ )
+    void NoReturn()
+    {
+        #if defined( __clang__ )
+            for (;;) {}
+        #endif
+    }
+#endif
+
 // IsDebugerAttached
 //------------------------------------------------------------------------------
 bool IsDebuggerAttached()

@@ -57,13 +57,12 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestDLL::TestSingleDLL() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dll( "../../../../tmp/Test/DLL/dll.dll" );
+    const AStackString<> dll( "../tmp/Test/DLL/dll.dll" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dll );
@@ -76,60 +75,44 @@ void TestDLL::TestSingleDLL() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 4;
-    uint32_t numB = 2;
-    #if defined( __WINDOWS__ )
-        numF += 2;
-        numB += 2;
-    #endif
-    CheckStatsNode ( numF,  numB,   Node::FILE_NODE );
     CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
     CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 1,     1,      Node::DLL_NODE );
-    CheckStatsTotal( numF+4,numB+4 );
 }
 
 // TestSingleDLL_NoRebuild
 //------------------------------------------------------------------------------
 void TestDLL::TestSingleDLL_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetSingleDLLDBFileName() ) );
 
-    const AStackString<> dll( "../../../../tmp/Test/DLL/dll.dll" );
+    const AStackString<> dll( "../tmp/Test/DLL/dll.dll" );
 
     TEST_ASSERT( fBuild.Build( dll ) );
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 4;
-    #if defined( __WINDOWS__ )
-        numF += 2;
-    #endif
-    CheckStatsNode ( numF,  numF,   Node::FILE_NODE );
     CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 1,     0,      Node::DLL_NODE );
-    CheckStatsTotal( numF+4,numF );
 }
 
 // TestTwoDLLs
 //------------------------------------------------------------------------------
 void TestDLL::TestTwoDLLs() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest//Data/TestDLL/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dllA( "../../../../tmp/Test/DLL/dllA.dll" );
-    const AStackString<> dllB( "../../../../tmp/Test/DLL/dllB.dll" );
+    const AStackString<> dllA( "../tmp/Test/DLL/dllA.dll" );
+    const AStackString<> dllB( "../tmp/Test/DLL/dllB.dll" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dllA );
@@ -145,47 +128,32 @@ void TestDLL::TestTwoDLLs() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 6;
-    uint32_t numB = 3;
-    #if defined( __WINDOWS__ )
-        numF += 2;
-        numB += 2;
-    #endif
-    CheckStatsNode ( numF,  numB,       Node::FILE_NODE );
     CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
     CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
     CheckStatsNode ( 2,     2,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 2,     2,      Node::DLL_NODE );
-    CheckStatsTotal( numF+7,numB+7 );
 }
 
 // TestTwoDLLs_NoRebuild
 //------------------------------------------------------------------------------
 void TestDLL::TestTwoDLLs_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
     // build again
-    const AStackString<> dllB( "../../../../tmp/Test/DLL/dllB.dll" );
+    const AStackString<> dllB( "../tmp/Test/DLL/dllB.dll" );
     TEST_ASSERT( fBuild.Build( dllB ) );
 
     // Check stats to be sure nothing was built
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 6;
-    #if defined( __WINDOWS__ )
-        numF += 2;
-    #endif
-    CheckStatsNode ( numF,  numF,   Node::FILE_NODE );
     CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 2,     0,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 2,     0,      Node::DLL_NODE );
-    CheckStatsTotal( numF+7,numF );
 }
 
 // TestTwoDLLs_NoUnnecessaryRelink
@@ -194,13 +162,12 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
 {
     // 1) Force DLL A to build
     {
-        FBuildOptions options;
-        options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
-        options.m_ShowSummary = true; // required to generate stats for node count checks
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
-        const AStackString<> dllA( "../../../../tmp/Test/DLL/dllA.dll" );
+        const AStackString<> dllA( "../tmp/Test/DLL/dllA.dll" );
 
         // delete DLL A to have it relink (and regen the import lib)
         EnsureFileDoesNotExist( dllA );
@@ -209,42 +176,29 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
 
         // Check stats to be sure one dll was built
         //               Seen,  Built,  Type
-        uint32_t numF = 4;
-        #if defined( __WINDOWS__ )
-            numF += 2;
-        #endif
-        CheckStatsNode ( numF,  numF,   Node::FILE_NODE );
         CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
         CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
         CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
         CheckStatsNode ( 1,     1,      Node::DLL_NODE );
-        CheckStatsTotal( numF+4,numF+1 );
     }
 
     // 2) Ensure DLL B does not relink
     {
-        FBuildOptions options;
-        options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
-        options.m_ShowSummary = true; // required to generate stats for node count checks
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( GetTwoDLLsDBFileName() ) );
 
         // build again
-        const AStackString<> dllB( "../../../../tmp/Test/DLL/dllB.dll" );
+        const AStackString<> dllB( "../tmp/Test/DLL/dllB.dll" );
         TEST_ASSERT( fBuild.Build( dllB ) );
 
         // Check stats to be sure nothing was built
         //               Seen,  Built,  Type
-        uint32_t numF = 6;
-        #if defined( __WINDOWS__ )
-            numF += 2;
-        #endif
-        CheckStatsNode ( numF,  numF,   Node::FILE_NODE );
         CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
         CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );
         CheckStatsNode ( 2,     0,      Node::OBJECT_LIST_NODE );
         CheckStatsNode ( 2,     0,      Node::DLL_NODE );
-        CheckStatsTotal( numF+7,numF );
     }
 }
 
@@ -252,13 +206,12 @@ void TestDLL::TestTwoDLLs_NoUnnecessaryRelink() const
 //------------------------------------------------------------------------------
 void TestDLL::TestDLLWithPCH() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> dllPCH( "../../../../tmp/Test/DLL/dllPCH.dll" );
+    const AStackString<> dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( dllPCH );
@@ -272,60 +225,45 @@ void TestDLL::TestDLLWithPCH() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 4; // pch.h + a.cpp + a.h + linker exe
-    uint32_t numB = 3;
-    #if defined( __WINDOWS__ )
-        numF += 2; // pch.cpp and libs
-        numB += 2; // libs
-    #endif
-    CheckStatsNode ( numF,  numB,   Node::FILE_NODE );
     CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
     CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );// obj + pch obj
     CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 1,     1,      Node::DLL_NODE );
-    CheckStatsTotal( numF+5,numB+5 );
 }
 
 // TestDLLWithPCH_NoRebuild
 //------------------------------------------------------------------------------
 void TestDLL::TestDLLWithPCH_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetDLLWithPCHDBFileName() ) );
 
-    const AStackString<> dllPCH( "../../../../tmp/Test/DLL/dllPCH.dll" );
+    const AStackString<> dllPCH( "../tmp/Test/DLL/dllPCH.dll" );
 
     // build dllB which depends on dllA
     TEST_ASSERT( fBuild.Build( dllPCH ) );
 
     // Check we build what was expected
     //               Seen,  Built,  Type
-    uint32_t numF = 4; // pch.h + a.cpp + c.h + linker exe
-    #if defined( __WINDOWS__ )
-        numF += 2;
-    #endif
-    CheckStatsNode ( numF,  numF,       Node::FILE_NODE );  // 1 cpp + 1 pch cpp + 2 .h
     CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );// obj + pch obj
     CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 1,     0,      Node::DLL_NODE );
-    CheckStatsTotal( numF+5,numF );
 }
 
 // TestExeWithDLL
 //------------------------------------------------------------------------------
 void TestDLL::TestExeWithDLL() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> exe( "../../../../tmp/Test/DLL/exe.exe" );
+    const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( exe );
@@ -339,56 +277,41 @@ void TestDLL::TestExeWithDLL() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 5; // pch.h + a.cpp + c.h + linker exe
-    uint32_t numB = 3;
-    #if defined( __WINDOWS__ )
-        numF += 2;
-        numB += 2;
-    #endif
-    CheckStatsNode ( numF,  numB,   Node::FILE_NODE );
     CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
     CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );    // exe.obj + a.obj
     CheckStatsNode ( 2,     2,      Node::OBJECT_LIST_NODE );   // exe lib + dll lib
     CheckStatsNode ( 1,     1,      Node::DLL_NODE );
     CheckStatsNode ( 1,     1,      Node::EXE_NODE );
-    CheckStatsTotal( numF+7,numB+7 );
 }
 
 // TestExeWithDLL_NoRebuild
 //------------------------------------------------------------------------------
 void TestDLL::TestExeWithDLL_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetExeWithDLLDBFileName() ) );
 
-    const AStackString<> exe( "../../../../tmp/Test/DLL/exe.exe" );
+    const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
 
     // build executable with depends on DLLA
     TEST_ASSERT( fBuild.Build( exe ) );
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 5; // pch.h + a.cpp + c.h + linker exe
-    #if defined( __WINDOWS__ )
-        numF += 2;
-    #endif
-    CheckStatsNode ( numF,  numF,   Node::FILE_NODE );
     CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 2,     0,      Node::OBJECT_NODE );    // exe.obj + a.obj
     CheckStatsNode ( 2,     0,      Node::OBJECT_LIST_NODE );   // exe lib + dll lib
     CheckStatsNode ( 1,     0,      Node::DLL_NODE );
     CheckStatsNode ( 1,     0,      Node::EXE_NODE );
-    CheckStatsTotal( numF+7,numF );
 }
 
 // TestValidExeWithDLL
 //------------------------------------------------------------------------------
 void TestDLL::TestValidExeWithDLL() const
 {
-    const AStackString<> exe( "../../../../tmp/Test/DLL/exe.exe" );
+    const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
 
     Process p;
     p.Spawn( exe.Get(), nullptr, nullptr, nullptr );
@@ -400,9 +323,8 @@ void TestDLL::TestValidExeWithDLL() const
 //------------------------------------------------------------------------------
 void TestDLL::TestLinkWithCopy() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestDLL/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDLL/fbuild.bff";
     options.m_ForceCleanBuild = true;
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -412,20 +334,12 @@ void TestDLL::TestLinkWithCopy() const
 
     // Check stats
     //               Seen,  Built,  Type
-    uint32_t numF = 6; // pch.h + a.cpp + a.h + linker exe
-    uint32_t numB = 3;
-    #if defined( __WINDOWS__ )
-        numF += 2;
-        numB += 2;
-    #endif
     CheckStatsNode ( 2,     2,      Node::COPY_FILE_NODE );
-    CheckStatsNode ( numF,  numB,   Node::FILE_NODE );
     CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
     CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
     CheckStatsNode ( 2,     2,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 2,     2,      Node::DLL_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsTotal( numF+10,numB+10 );
 }
 
 //------------------------------------------------------------------------------

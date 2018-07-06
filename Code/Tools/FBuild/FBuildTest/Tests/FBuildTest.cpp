@@ -9,12 +9,23 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
 // Static Data
 //------------------------------------------------------------------------------
+/*static*/ bool FBuildTest::s_DebuggerAttached( false );
+/*static*/ Mutex FBuildTest::s_OutputMutex;
 /*static*/ AString FBuildTest::s_RecordedOutput( 1024 * 1024 );
+
+// CONSTRUCTOR (FBuildTest)
+//------------------------------------------------------------------------------
+FBuildTest::FBuildTest()
+{
+    s_DebuggerAttached = IsDebuggerAttached();
+    m_OriginalWorkingDir.SetReserved( 512 );
+}
 
 // PreTest
 //------------------------------------------------------------------------------
@@ -24,15 +35,32 @@
     s_RecordedOutput.Clear();
 
     FBuildStats::SetIgnoreCompilerNodeDeps( true );
+
+    // Store current working
+    VERIFY( FileIO::GetCurrentDir( m_OriginalWorkingDir ) );
+
+    // Set the WorkingDir to be the source code "Code" dir
+    AStackString<> codeDir;
+    GetCodeDir( codeDir );
+    VERIFY( FileIO::SetCurrentDir( codeDir ) );
 }
 
 // PostTest
 //------------------------------------------------------------------------------
-/*virtual*/ void FBuildTest::PostTest() const
+/*virtual*/ void FBuildTest::PostTest( bool passed ) const
 {
+    VERIFY( FileIO::SetCurrentDir( m_OriginalWorkingDir ) );
+
     FBuildStats::SetIgnoreCompilerNodeDeps( false );
 
     Tracing::RemoveCallbackOutput( LoggingCallback );
+
+    // Print the output on failure, unless in the debugger
+    // (we print as we go if the debugger is attached)
+    if ( ( passed == false ) && ( s_DebuggerAttached == false ) )
+    {
+        OUTPUT( "%s", s_RecordedOutput.Get() );
+    }
 }
 
 // EnsureFileDoesNotExist
@@ -62,7 +90,7 @@ void FBuildTest::EnsureDirDoesNotExist( const char * dirPath ) const
 //------------------------------------------------------------------------------
 void FBuildTest::EnsureDirExists( const char * dirPath ) const
 {
-    TEST_ASSERT( FileIO::DirectoryExists( AStackString<>( dirPath ) ) );
+    TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( dirPath ) ) );
 }
 
 // CheckStatsNode
@@ -118,14 +146,18 @@ void FBuildTest::CheckStatsTotal( size_t numSeen, size_t numBuilt ) const
 
 // GetCodeDir
 //------------------------------------------------------------------------------
-void FBuildTest::GetCodeDir( AString & codeDir ) const
+/*static*/ void FBuildTest::GetCodeDir( AString & codeDir )
 {
     // we want the working dir to be the 'Code' directory
     TEST_ASSERT( FileIO::GetCurrentDir( codeDir ) );
+    if ( !codeDir.EndsWith( NATIVE_SLASH ) )
+    {
+        codeDir += NATIVE_SLASH;
+    }
     #if defined( __WINDOWS__ )
-        const char * codePos = codeDir.FindI( "\\code\\" );
+        const char * codePos = codeDir.FindLastI( "\\code\\" );
     #else
-        const char * codePos = codeDir.FindI( "/code/" );
+        const char * codePos = codeDir.FindLastI( "/code/" );
     #endif
     TEST_ASSERT( codePos );
     codeDir.SetLength( (uint16_t)( codePos - codeDir.Get() + 6 ) );
@@ -135,8 +167,19 @@ void FBuildTest::GetCodeDir( AString & codeDir ) const
 //------------------------------------------------------------------------------
 bool FBuildTest::LoggingCallback( const char * message )
 {
+    MutexHolder mh( s_OutputMutex );
     s_RecordedOutput.Append( message, AString::StrLen( message ) );
-    return true; // continue logging like normal
+    // If in the debugger, print the output normally as well, otherwise
+    // suppress and only print on failure
+    return s_DebuggerAttached;
+}
+
+// CONSTRUCTOR - FBuildTestOptions
+//------------------------------------------------------------------------------
+FBuildTestOptions::FBuildTestOptions()
+{
+    // Override defaults
+    m_ShowSummary = true; // required to generate stats for node count checks
 }
 
 //------------------------------------------------------------------------------

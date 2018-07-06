@@ -31,35 +31,11 @@ FunctionLibrary::FunctionLibrary()
     return false;
 }
 
-// Commit
+// CreateNode
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionLibrary::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ Node * FunctionLibrary::CreateNode() const
 {
-    AStackString<> name;
-    if ( GetNameForNode( nodeGraph, funcStartIter, LibraryNode::GetReflectionInfoS(), name ) == false )
-    {
-        return false;
-    }
-
-    if ( nodeGraph.FindNode( name ) )
-    {
-        Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
-        return false;
-    }
-    LibraryNode * libraryNode = nodeGraph.CreateLibraryNode( name );
-
-    if ( !PopulateProperties( nodeGraph, funcStartIter, libraryNode ) )
-    {
-        return false;
-    }
-
-    if ( !libraryNode->Initialize( nodeGraph, funcStartIter, this ) )
-    {
-        return false;
-    }
-
-    // handle alias creation
-    return ProcessAlias( nodeGraph, funcStartIter, libraryNode );
+    return FNEW( LibraryNode );
 }
 
 //------------------------------------------------------------------------------

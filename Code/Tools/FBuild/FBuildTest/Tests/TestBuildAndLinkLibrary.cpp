@@ -23,8 +23,8 @@ private:
     void TestLibMerge() const;
     void TestLibMerge_NoRebuild() const;
 
-    const char * GetBuildLibDBFileName() const { return "../../../../tmp/Test/BuildAndLinkLibrary/buildlib.fdb"; }
-    const char * GetMergeLibDBFileName() const { return "../../../../tmp/Test/BuildAndLinkLibrary/mergelib.fdb"; }
+    const char * GetBuildLibDBFileName() const { return "../tmp/Test/BuildAndLinkLibrary/buildlib.fdb"; }
+    const char * GetMergeLibDBFileName() const { return "../tmp/Test/BuildAndLinkLibrary/mergelib.fdb"; }
 };
 
 // Register Tests
@@ -41,8 +41,8 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestBuildAndLinkLibrary::TestParseBFF() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestBuildAndLinkLibrary/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -52,22 +52,21 @@ void TestBuildAndLinkLibrary::TestParseBFF() const
 //------------------------------------------------------------------------------
 void TestBuildAndLinkLibrary::TestBuildLib() const
 {
-    FBuildOptions options;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
-    options.m_ConfigFile = "Data/TestBuildAndLinkLibrary/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> lib( "../../../../tmp/Test/BuildAndLinkLibrary/test.lib" );
+    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/test.lib" );
     #if defined( __WINDOWS__ )
-        const AStackString<> obj1( "../../../../tmp/Test/BuildAndLinkLibrary/a.obj" );
-        const AStackString<> obj2( "../../../../tmp/Test/BuildAndLinkLibrary/b.obj" );
-        const AStackString<> obj3( "../../../../tmp/Test/BuildAndLinkLibrary/c.obj" );
+        const AStackString<> obj1( "../tmp/Test/BuildAndLinkLibrary/a.obj" );
+        const AStackString<> obj2( "../tmp/Test/BuildAndLinkLibrary/b.obj" );
+        const AStackString<> obj3( "../tmp/Test/BuildAndLinkLibrary/c.obj" );
     #else
-        const AStackString<> obj1( "../../../../tmp/Test/BuildAndLinkLibrary/a.o" );
-        const AStackString<> obj2( "../../../../tmp/Test/BuildAndLinkLibrary/b.o" );
-        const AStackString<> obj3( "../../../../tmp/Test/BuildAndLinkLibrary/c.o" );
+        const AStackString<> obj1( "../tmp/Test/BuildAndLinkLibrary/a.o" );
+        const AStackString<> obj2( "../tmp/Test/BuildAndLinkLibrary/b.o" );
+        const AStackString<> obj3( "../tmp/Test/BuildAndLinkLibrary/c.o" );
     #endif
 
     // clean up anything left over from previous runs
@@ -100,14 +99,13 @@ void TestBuildAndLinkLibrary::TestBuildLib() const
 //------------------------------------------------------------------------------
 void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestBuildAndLinkLibrary/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetBuildLibDBFileName() ) );
 
-    const AStackString<> lib( "../../../../tmp/Test/BuildAndLinkLibrary/test.lib" );
+    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/test.lib" );
 
     // Build
     TEST_ASSERT( fBuild.Build( lib ) );
@@ -126,15 +124,14 @@ void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild() const
 //------------------------------------------------------------------------------
 void TestBuildAndLinkLibrary::TestLibMerge() const
 {
-    FBuildOptions options;
+    FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
-    options.m_ConfigFile = "Data/TestBuildAndLinkLibrary/fbuild.bff";
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const AStackString<> lib( "../../../../tmp/Test/BuildAndLinkLibrary/merged.lib" );
+    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/merged.lib" );
 
     // clean up anything left over from previous runs
     EnsureFileDoesNotExist( lib );
@@ -160,14 +157,13 @@ void TestBuildAndLinkLibrary::TestLibMerge() const
 //------------------------------------------------------------------------------
 void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestBuildAndLinkLibrary/fbuild.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetMergeLibDBFileName() ) );
 
-    const AStackString<> lib( "../../../../tmp/Test/BuildAndLinkLibrary/merged.lib" );
+    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/merged.lib" );
 
     // Build
     TEST_ASSERT( fBuild.Build( lib ) );

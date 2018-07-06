@@ -29,13 +29,12 @@
 BFFVariable::BFFVariable( const AString & name, VarType type )
 : m_Name( name )
 , m_Type( type )
-, m_Frozen( false )
+, m_FreezeCount( 0 )
 , m_BoolValue( false )
 , m_IntValue( 0 )
 //, m_StringValue() // default construct this
 , m_ArrayValues( 0, true )
-, m_StructMembers( 0, true )
-, m_ArrayOfStructs( 0, true )
+, m_SubVariables( 0, true )
 {
 }
 
@@ -44,13 +43,12 @@ BFFVariable::BFFVariable( const AString & name, VarType type )
 BFFVariable::BFFVariable( const BFFVariable & other )
 : m_Name( other.m_Name )
 , m_Type( other.m_Type )
-, m_Frozen( false )
+, m_FreezeCount( 0 )
 , m_BoolValue( false )
 , m_IntValue( 0 )
 //, m_StringValue() // default construct this
 , m_ArrayValues( 0, true )
-, m_StructMembers( 0, true )
-, m_ArrayOfStructs( 0, true )
+, m_SubVariables( 0, true )
 {
     switch( m_Type )
     {
@@ -70,13 +68,12 @@ BFFVariable::BFFVariable( const BFFVariable & other )
 BFFVariable::BFFVariable( const AString & name, const AString & value )
 : m_Name( name )
 , m_Type( VAR_STRING )
-, m_Frozen( false )
+, m_FreezeCount( 0 )
 , m_BoolValue( false )
 , m_IntValue( 0 )
 , m_StringValue( value )
 , m_ArrayValues( 0, false )
-, m_StructMembers( 0, true )
-, m_ArrayOfStructs( 0, false )
+, m_SubVariables( 0, true )
 {
 }
 
@@ -85,13 +82,12 @@ BFFVariable::BFFVariable( const AString & name, const AString & value )
 BFFVariable::BFFVariable( const AString & name, bool value )
 : m_Name( name )
 , m_Type( VAR_BOOL )
-, m_Frozen( false )
+, m_FreezeCount( 0 )
 , m_BoolValue( value )
 , m_IntValue( 0 )
 //, m_StringValue() // default construct this
 , m_ArrayValues( 0, false )
-, m_StructMembers( 0, false )
-, m_ArrayOfStructs( 0, false )
+, m_SubVariables( 0, false )
 {
 }
 
@@ -100,13 +96,12 @@ BFFVariable::BFFVariable( const AString & name, bool value )
 BFFVariable::BFFVariable( const AString & name, const Array< AString > & values )
 : m_Name( name )
 , m_Type( VAR_ARRAY_OF_STRINGS )
-, m_Frozen( false )
+, m_FreezeCount( 0 )
 , m_BoolValue( false )
 , m_IntValue( 0 )
 //, m_StringValue() // default construct this
 , m_ArrayValues( 0, true )
-, m_StructMembers( 0, false )
-, m_ArrayOfStructs( 0, false )
+, m_SubVariables( 0, false )
 {
     m_ArrayValues = values;
 }
@@ -116,13 +111,12 @@ BFFVariable::BFFVariable( const AString & name, const Array< AString > & values 
 BFFVariable::BFFVariable( const AString & name, int i )
 : m_Name( name )
 , m_Type( VAR_INT )
-, m_Frozen( false )
+, m_FreezeCount( 0 )
 , m_BoolValue( false )
 , m_IntValue( i )
 //, m_StringValue() // default construct this
 , m_ArrayValues( 0, true )
-, m_StructMembers( 0, true )
-, m_ArrayOfStructs( 0, false )
+, m_SubVariables( 0, true )
 {
 }
 
@@ -131,13 +125,12 @@ BFFVariable::BFFVariable( const AString & name, int i )
 BFFVariable::BFFVariable( const AString & name, const Array< const BFFVariable * > & values )
 : m_Name( name )
 , m_Type( VAR_STRUCT )
-, m_Frozen( false )
+, m_FreezeCount( 0 )
 , m_BoolValue( false )
 , m_IntValue( 0 )
 //, m_StringValue() // default construct this
 , m_ArrayValues( 0, false )
-, m_StructMembers( values.GetSize(), true )
-, m_ArrayOfStructs( 0, false )
+, m_SubVariables( values.GetSize(), true )
 {
     SetValueStruct( values );
 }
@@ -149,13 +142,12 @@ BFFVariable::BFFVariable( const AString & name,
                           VarType type ) // type for disambiguation
 : m_Name( name )
 , m_Type( VAR_ARRAY_OF_STRUCTS )
-, m_Frozen( false )
+, m_FreezeCount( 0 )
 , m_BoolValue( false )
 , m_IntValue( 0 )
 //, m_StringValue() // default construct this
 , m_ArrayValues( 0, false )
-, m_StructMembers( 0, false )
-, m_ArrayOfStructs( structs.GetSize(), true )
+, m_SubVariables( structs.GetSize(), true )
 {
     // type for disambiguation only - sanity check it's the right type
     ASSERT( type == VAR_ARRAY_OF_STRUCTS ); (void)type;
@@ -167,17 +159,9 @@ BFFVariable::BFFVariable( const AString & name,
 //------------------------------------------------------------------------------
 BFFVariable::~BFFVariable()
 {
-    // clean up struct members
-    for ( BFFVariable ** it = m_StructMembers.Begin();
-          it != m_StructMembers.End();
-          ++it )
-    {
-        FDELETE *it;
-    }
-
-    // clean up arrays of structs
-    for ( BFFVariable ** it = m_ArrayOfStructs.Begin();
-          it != m_ArrayOfStructs.End();
+    // clean up sub variables
+    for ( BFFVariable ** it = m_SubVariables.Begin();
+          it != m_SubVariables.End();
           ++it )
     {
         FDELETE *it;
@@ -188,7 +172,7 @@ BFFVariable::~BFFVariable()
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueString( const AString & value )
 {
-    ASSERT( false == m_Frozen );
+    ASSERT( 0 == m_FreezeCount );
     m_Type = VAR_STRING;
     m_StringValue = value;
 }
@@ -197,7 +181,7 @@ void BFFVariable::SetValueString( const AString & value )
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueBool( bool value )
 {
-    ASSERT( false == m_Frozen );
+    ASSERT( 0 == m_FreezeCount );
     m_Type = VAR_BOOL;
     m_BoolValue = value;
 }
@@ -206,7 +190,7 @@ void BFFVariable::SetValueBool( bool value )
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueArrayOfStrings( const Array< AString > & values )
 {
-    ASSERT( false == m_Frozen );
+    ASSERT( 0 == m_FreezeCount );
     m_Type = VAR_ARRAY_OF_STRINGS;
     m_ArrayValues = values;
 }
@@ -215,7 +199,7 @@ void BFFVariable::SetValueArrayOfStrings( const Array< AString > & values )
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueInt( int i )
 {
-    ASSERT( false == m_Frozen );
+    ASSERT( 0 == m_FreezeCount );
     m_Type = VAR_INT;
     m_IntValue = i;
 }
@@ -224,7 +208,7 @@ void BFFVariable::SetValueInt( int i )
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueStruct( const Array< const BFFVariable * > & values )
 {
-    ASSERT( false == m_Frozen );
+    ASSERT( 0 == m_FreezeCount );
 
     // build list of new members, but don't touch old ones yet to gracefully
     // handle self-assignment
@@ -241,22 +225,22 @@ void BFFVariable::SetValueStruct( const Array< const BFFVariable * > & values )
     }
 
     // free old members
-    for ( BFFVariable ** it = m_StructMembers.Begin();
-          it != m_StructMembers.End();
+    for ( BFFVariable ** it = m_SubVariables.Begin();
+          it != m_SubVariables.End();
           ++it )
     {
         FDELETE *it;
     }
 
     // swap
-    m_StructMembers.Swap( newVars );
+    m_SubVariables.Swap( newVars );
 }
 
 // SetValueArrayOfStructs
 //------------------------------------------------------------------------------
 void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & values )
 {
-    ASSERT( false == m_Frozen );
+    ASSERT( 0 == m_FreezeCount );
 
     // build list of new members, but don't touch old ones yet to gracefully
     // handle self-assignment
@@ -273,14 +257,14 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
     }
 
     // free old members
-    for ( BFFVariable ** it = m_ArrayOfStructs.Begin();
-          it != m_ArrayOfStructs.End();
+    for ( BFFVariable ** it = m_SubVariables.Begin();
+          it != m_SubVariables.End();
           ++it )
     {
         FDELETE *it;
     }
 
-    m_ArrayOfStructs.Swap( newVars );
+    m_SubVariables.Swap( newVars );
 }
 
 // GetMemberByName
@@ -326,7 +310,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varSrc->GetString() );
 
             BFFVariable *result = FNEW(BFFVariable(dstName, values));
-            FLOG_INFO("Concatenated <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num);
             return result;
         }
 
@@ -340,7 +323,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varSrc );
 
             BFFVariable *result = FNEW( BFFVariable( dstName, values ) );
-            FLOG_INFO( "Concatenated <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), num );
             return result;
         }
 
@@ -362,7 +344,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             finalValue += varSrc->GetString();
 
             BFFVariable *result = FNEW( BFFVariable( dstName, finalValue ) );
-            FLOG_INFO( "Concatenated <string> variable '%s' with value '%s'", dstName.Get(), finalValue.Get() );
             return result;
         }
 
@@ -374,7 +355,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varSrc->GetArrayOfStrings() );
 
             BFFVariable *result = FNEW( BFFVariable( dstName, values ) );
-            FLOG_INFO( "Concatenated <ArrayOfStrings> variable '%s' with %u elements", dstName.Get(), num );
             return result;
         }
 
@@ -386,7 +366,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             values.Append( varSrc->GetArrayOfStructs() );
 
             BFFVariable *result = FNEW(BFFVariable(dstName, values));
-            FLOG_INFO("Concatenated <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), num);
             return result;
         }
 
@@ -396,7 +375,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             newVal += varDst->GetInt();
 
             BFFVariable * result = FNEW( BFFVariable( dstName, newVal ) );
-            FLOG_INFO( "Concatenated <int> variable '%s' with value %d", dstName.Get(), newVal );
             return result;
         }
 
@@ -407,7 +385,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             newVal |= varDst->GetBool();
 
             BFFVariable * result = FNEW( BFFVariable( dstName, newVal ) );
-            FLOG_INFO("Concatenated <bool> variable '%s' with value %d", dstName.Get(), newVal);
             return result;
         }
 
@@ -417,8 +394,8 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
             const Array< const BFFVariable * > & dstMembers = varDst->GetStructMembers();
 
             BFFVariable * const result = FNEW( BFFVariable( dstName, BFFVariable::VAR_STRUCT ) );
-            result->m_StructMembers.SetCapacity( srcMembers.GetSize() + dstMembers.GetSize() );
-            Array< BFFVariable * > & allMembers = result->m_StructMembers;
+            result->m_SubVariables.SetCapacity( srcMembers.GetSize() + dstMembers.GetSize() );
+            Array< BFFVariable * > & allMembers = result->m_SubVariables;
 
             // keep original (dst) members where member is only present in original (dst)
             // or concatenate recursively members where the name exists in both
@@ -455,7 +432,6 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
                 }
             }
 
-            FLOG_INFO( "Concatenated <struct> variable '%s' with %u members", dstName.Get(), (uint32_t)allMembers.GetSize() );
             return result;
         }
     }

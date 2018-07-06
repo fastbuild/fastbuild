@@ -27,6 +27,14 @@ bool IsDebuggerAttached();
 #ifdef DEBUG
     #define ASSERTS_ENABLED
 
+    // Create a no-return helper to improve static analysis
+    #if defined( __WINDOWS__ )
+        __declspec(noreturn) void NoReturn();
+        #define NO_RETURN NoReturn();
+    #else
+        #define NO_RETURN
+    #endif
+
     // standard assertion macro
     #define ASSERT( expression )                                                \
         do {                                                                    \
@@ -37,6 +45,7 @@ bool IsDebuggerAttached();
                 {                                                               \
                     BREAK_IN_DEBUGGER;                                              \
                 }                                                               \
+                NO_RETURN                                                       \
             }                                                                   \
         } while ( false )                                                       \
         PRAGMA_DISABLE_POP_MSVC
@@ -51,6 +60,7 @@ bool IsDebuggerAttached();
                 {                                                               \
                     BREAK_IN_DEBUGGER;                                              \
                 }                                                               \
+                NO_RETURN                                                       \
             }                                                                   \
         } while ( false )                                                       \
         PRAGMA_DISABLE_POP_MSVC

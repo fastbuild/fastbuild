@@ -2,7 +2,7 @@
 //------------------------------------------------------------------------------
 #pragma once
 
-#if defined ( __LINUX__ )
+#if defined( __LINUX__ ) || defined( __OSX__ )
     #include <sys/types.h>
 #endif
 
@@ -109,6 +109,13 @@ typedef signed int          int32_t;
     #endif
 #endif
 
+// Versions of Visual Studio prior to 2017 don't manage noexcept properly
+#if defined( _MSC_VER ) && ( _MSC_VER < 1910 ) && !defined( __clang__ )
+    #define NOEXCEPT
+#else
+    #define NOEXCEPT noexcept
+#endif
+
 #ifndef LONGLONG
     typedef long long LONGLONG;
 #endif
@@ -117,7 +124,7 @@ typedef signed int          int32_t;
     #define MemoryBarrier() __asm__ __volatile__("")
 #endif
 
-#if defined( __GNUC__ ) // GCC or Clang
+#if defined( __GNUC__ ) || defined( __clang__ ) // GCC or Clang
     #define FORMAT_STRING( fmt, args ) __attribute__((format(printf, fmt, args)))
 #else
     #define FORMAT_STRING( fmt, args )

@@ -1,0 +1,5 @@
+//
+// Check for presence of built-in variables
+//
+
+Print( ._WORKING_DIR_ )
