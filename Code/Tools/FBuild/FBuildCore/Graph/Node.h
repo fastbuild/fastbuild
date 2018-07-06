@@ -110,8 +110,11 @@ public:
         NOT_PROCESSED,      // no work done (either not part of this build, or waiting on static dependencies )
         PRE_DEPS_READY,     // pre-build deps processed
         STATIC_DEPS_READY,  // static dependencies are uptodate - we are ready to DoDynamicDeps
+		PRE_DYN_DEPS_READY, // pre-build dynamic deps list updated
+		PRE_DYN_DEPS_DONE,  // pre-build dynamic deps list has been updated, wait for pre build dynamic deps to be ready
         DYNAMIC_DEPS_DONE,  // dynamic deps updated, waiting for dynamic deps to be ready
         BUILDING,           // in the queue for building
+		PRE_DYN_DEPS_BUILDING, // use the job queue to build dynamic dependencies
         FAILED,             // failed to build
         UP_TO_DATE,         // built, or confirmed as not needing building
     };
@@ -187,7 +190,8 @@ protected:
     friend class WorkerThread;
 
     inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
-    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
+	inline const Dependencies & GetPreBuildDynamicDependencies() const { return m_PreBuildDynamicDependencies; }
+	inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
     inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
     void SetName( const AString & name );
@@ -204,10 +208,13 @@ protected:
 
     // each node must implement these core functions
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
-    virtual bool DetermineNeedToBuild( bool forceClean ) const;
+	virtual bool DeterminePreBuildDynamicDependenciesNeedToBuild(bool forceClean) const;
+	virtual bool DetermineNeedToBuild(bool forceClean) const;
+	virtual BuildResult DoPreBuildDynamicDependencies( Job * job );
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
-    virtual bool Finalize( NodeGraph & nodeGraph );
+	virtual bool PreBuildDynamicDependenciesFinalize(NodeGraph & nodeGraph);
+	virtual bool Finalize( NodeGraph & nodeGraph );
 
     inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
     inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }
@@ -244,6 +251,7 @@ protected:
     uint32_t        m_Index;
 
     Dependencies m_PreBuildDependencies;
+	Dependencies m_PreBuildDynamicDependencies;
     Dependencies m_StaticDependencies;
     Dependencies m_DynamicDependencies;
 

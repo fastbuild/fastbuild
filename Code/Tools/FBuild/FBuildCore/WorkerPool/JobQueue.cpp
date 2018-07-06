@@ -217,26 +217,36 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
 //------------------------------------------------------------------------------
 void JobQueue::AddJobToBatch( Node * node )
 {
-    ASSERT( node->GetState() == Node::DYNAMIC_DEPS_DONE );
+    ASSERT( node->GetState() == Node::PRE_DYN_DEPS_READY || node->GetState() == Node::DYNAMIC_DEPS_DONE );
 
-    // mark as building
-    node->SetState( Node::BUILDING );
+	if (node->GetState() == Node::PRE_DYN_DEPS_READY)
+	{
+		// mark as building pre-build dynamic dependencies
+		node->SetState(Node::PRE_DYN_DEPS_BUILDING);
 
-    // trivial build tasks are processed immediately and returned
-    if ( node->GetControlFlags() & Node::FLAG_TRIVIAL_BUILD )
-    {
-        Job localJob( node );
-        Node::BuildResult result = DoBuild( &localJob );
-        switch( result )
-        {
-            case Node::NODE_RESULT_FAILED:  node->SetState( Node::FAILED ); break;
-            case Node::NODE_RESULT_OK:      node->SetState( Node::UP_TO_DATE ); break;
-            default:                        ASSERT( false ); break;
-        }
-        return;
-    }
+		m_LocalJobs_Staging.Append(node);
+	}
+	else if( node->GetState() == Node::DYNAMIC_DEPS_DONE )
+	{
+		// mark as building
+		node->SetState( Node::BUILDING );
 
-    m_LocalJobs_Staging.Append( node );
+		// trivial build tasks are processed immediately and returned
+		if ( node->GetControlFlags() & Node::FLAG_TRIVIAL_BUILD )
+		{
+			Job localJob( node );
+			Node::BuildResult result = DoBuild( &localJob );
+			switch( result )
+			{
+				case Node::NODE_RESULT_FAILED:  node->SetState( Node::FAILED ); break;
+				case Node::NODE_RESULT_OK:      node->SetState( Node::UP_TO_DATE ); break;
+				default:                        ASSERT( false ); break;
+			}
+			return;
+		}
+		
+		m_LocalJobs_Staging.Append( node );
+	}
 }
 
 // FlushJobBatch (Main Thread)
@@ -454,14 +464,28 @@ void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
     for ( Job * job : m_CompletedJobs2 )
     {
         Node * n = job->GetNode();
-        if ( n->Finalize( nodeGraph ) )
-        {
-            n->SetState( Node::UP_TO_DATE );
-        }
-        else
-        {
-            n->SetState( Node::FAILED );
-        }
+		if ( n->GetState() == Node::PRE_DYN_DEPS_BUILDING )
+		{
+			if (n->PreBuildDynamicDependenciesFinalize(nodeGraph))
+			{
+				n->SetState(Node::PRE_DYN_DEPS_READY);
+			}
+			else
+			{
+				n->SetState(Node::FAILED);
+			}
+		}
+		else if( n->GetState() == Node::BUILDING )
+		{
+			if ( n->Finalize( nodeGraph ) )
+			{
+				n->SetState( Node::UP_TO_DATE );
+			}
+			else
+			{
+				n->SetState( Node::FAILED );
+			}
+		}
 
         // Free normal jobs
         if ( job->GetDistributionState() == Job::DIST_NONE )
@@ -568,7 +592,7 @@ Job * JobQueue::GetJobToProcess()
 //------------------------------------------------------------------------------
 void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJob )
 {
-    ASSERT( job->GetNode()->GetState() == Node::BUILDING );
+    ASSERT( job->GetNode()->GetState() == Node::BUILDING || job->GetNode()->GetState() == Node::PRE_DYN_DEPS_BUILDING );
 
     if ( wasARemoteJob )
     {
@@ -642,6 +666,39 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     // Wake main thread to process completed jobs
     WakeMainThread();
 }
+
+
+// DoPreBuildDynamicDependencies
+//------------------------------------------------------------------------------
+/*static*/ Node::BuildResult JobQueue::DoPreBuildDynamicDependencies(Job * job)
+{
+	Timer timer; // track how long the item takes
+
+	Node * node = job->GetNode();
+
+	Node::BuildResult result = Node::NODE_RESULT_FAILED;
+	if (FBuild::Get().GetOptions().m_FastCancel && FBuild::GetStopBuild())
+	{
+		// When stopping build and fast cancel is active we simulate a build error with this node.
+		result = Node::NODE_RESULT_FAILED;
+	}
+	else
+	{
+		result = node->DoPreBuildDynamicDependencies(job);
+	}
+
+	uint32_t timeTakenMS = uint32_t(timer.GetElapsedMS());
+	// log processing time
+	node->AddProcessingTime(timeTakenMS);
+
+	if (result == Node::NODE_RESULT_FAILED)
+	{
+		node->SetStatFlag(Node::STATS_FAILED);
+	}
+
+	return result;
+}
+
 
 // DoBuild
 //------------------------------------------------------------------------------

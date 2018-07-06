@@ -152,25 +152,34 @@ void WorkerThread::WaitForStop()
     if ( job != nullptr )
     {
         // make sure state is as expected
-        ASSERT( job->GetNode()->GetState() == Node::BUILDING );
+        ASSERT( job->GetNode()->GetState() == Node::BUILDING || job->GetNode()->GetState() == Node::PRE_DYN_DEPS_BUILDING );
 
-        // process the work
-        Node::BuildResult result = JobQueue::DoBuild( job );
+		Node::BuildResult result = Node::NODE_RESULT_FAILED;
 
-        if ( result == Node::NODE_RESULT_FAILED )
-        {
-            FBuild::OnBuildError();
-        }
+		if (job->GetNode()->GetState() == Node::PRE_DYN_DEPS_BUILDING)
+		{
+			result = JobQueue::DoPreBuildDynamicDependencies(job);
+		}
+		else if (job->GetNode()->GetState() == Node::BUILDING)
+		{
+			result = JobQueue::DoBuild(job);
+		}
 
-        if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
-        {
-            // Only distributable jobs have two passes, and the 2nd pass is always distributable
-            JobQueue::Get().QueueDistributableJob( job );
-        }
-        else
-        {
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), false );
-        }
+
+		if ( result == Node::NODE_RESULT_FAILED )
+		{
+			FBuild::OnBuildError();
+		}
+
+		if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
+		{
+			// Only distributable jobs have two passes, and the 2nd pass is always distributable
+			JobQueue::Get().QueueDistributableJob( job );
+		}
+		else
+		{
+			JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), false );
+		}
 
         return true; // did some work
     }

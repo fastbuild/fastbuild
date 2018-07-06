@@ -63,7 +63,10 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile())
     REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
 
-    REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
+	// Pre Build Dependencies (Static and Dynamic)
+    REFLECT( m_PreBuildDependencyPreprocessor,      "PreBuildDependencyPreprocessor",   MetaOptional() + MetaFile() + MetaAllowNonFile())
+    REFLECT( m_PreBuildDependencyPreprocessorOptions, "PreBuildDependencyPreprocessorOptions", MetaOptional() )
+	REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
     // Internal State
     REFLECT( m_PrecompiledHeader,                   "PrecompiledHeader",                MetaHidden() )
@@ -116,6 +119,16 @@ ObjectNode::ObjectNode()
         }
     }
 
+	// .Preprocessor
+    CompilerNode * preBuildPreprocessor( nullptr );
+    if (m_PreBuildDependencyPreprocessor.IsEmpty() == false )
+    {
+        if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_PreBuildDependencyPreprocessor, preBuildPreprocessor ) )
+        {
+            return false; // GetCompilerNode will have emitted an error
+        }
+    }
+
     // .CompilerForceUsing
     Dependencies compilerForceUsing;
     if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
@@ -133,13 +146,17 @@ ObjectNode::ObjectNode()
     }
 
     // Store Dependencies
-    m_StaticDependencies.SetCapacity( 1 + 1 + precompiledHeader.GetSize() + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
+    m_StaticDependencies.SetCapacity( 1 + 1 + precompiledHeader.GetSize() + ( preprocessor ? 1 : 0 ) + (preBuildPreprocessor ? 1 : 0) + compilerForceUsing.GetSize() );
     m_StaticDependencies.Append( Dependency( compiler ) );
     m_StaticDependencies.Append( compilerInputFile );
     m_StaticDependencies.Append( precompiledHeader );
     if ( preprocessor )
     {
         m_StaticDependencies.Append( Dependency( preprocessor ) );
+    }
+	if ( preBuildPreprocessor )
+    {
+        m_StaticDependencies.Append( Dependency( preBuildPreprocessor ) );
     }
     m_StaticDependencies.Append( compilerForceUsing );
 
@@ -203,6 +220,114 @@ ObjectNode::~ObjectNode()
         }
     }
     return true;
+}
+
+// DeterminePreBuildDynamicDependenciesNeedToBuild
+//------------------------------------------------------------------------------
+/*virtual*/ bool ObjectNode::DeterminePreBuildDynamicDependenciesNeedToBuild(bool forceClean) const
+{
+	if( GetPreBuildPreprocessor() == nullptr )
+		return false;
+
+	if ( forceClean ||
+		 GetSourceFile()->GetStamp() > GetStamp() ||
+		 GetPreBuildPreprocessor()->GetStamp() > GetStamp())
+	{
+		return true;
+	}
+	return false;
+}
+
+// DoPreBuildDynamicDependencies
+//------------------------------------------------------------------------------
+/*virtual*/ Node::BuildResult ObjectNode::DoPreBuildDynamicDependencies(Job * job)
+{
+	m_PreBuildDynamicDependencyNames.Clear();
+
+	Args fullArgs;
+
+	{
+		Array< AString > tokens(1024, true);
+		m_PreBuildDependencyPreprocessorOptions.Tokenize(tokens);
+
+		const size_t numTokens = tokens.GetSize();
+		for (size_t i = 0; i < numTokens; ++i)
+		{
+			// current token
+			const AString & token = tokens[i];
+
+			// %1 -> InputFile
+			const char * found = token.Find("%1");
+			if (found)
+			{
+				fullArgs += AStackString<>(token.Get(), found);
+				fullArgs += GetSourceFile()->GetName();
+				fullArgs += AStackString<>(found + 2, token.GetEnd());
+				fullArgs.AddDelimiter();
+				continue;
+			}
+
+			// %2 -> OutputFile
+			found = token.Find("%2");
+			if (found)
+			{
+				fullArgs += AStackString<>(token.Get(), found);
+				fullArgs += m_Name;
+				fullArgs += AStackString<>(found + 2, token.GetEnd());
+				fullArgs.AddDelimiter();
+				continue;
+			}
+
+			fullArgs += token;
+			fullArgs.AddDelimiter();
+		}
+
+		if (fullArgs.Finalize(GetPreBuildPreprocessor()->GetExecutable(), GetName(), false) == false)
+		{
+			return Node::NODE_RESULT_FAILED; // Finalize will have emitted an error
+		}
+	}
+
+
+
+	// spawn the process
+	CompileHelper ch(false); // don't handle output (we'll do that)
+
+	if (!ch.SpawnCompiler(job, GetName(),
+		GetPreBuildPreprocessor()->GetExecutable(),
+		fullArgs))
+	{
+		// only output errors in failure case
+		// (as preprocessed output goes to stdout, normal logging is pushed to
+		// stderr, and we don't want to see that unless there is a problem)
+		// NOTE: Output is omitted in case the compiler has been aborted because we don't care about the errors
+		// caused by the manual process abortion (process killed)
+		if ((ch.GetResult() != 0) && !ch.HasAborted())
+		{
+			// Use the error text, but if it's empty, use the output
+			if (ch.GetErr().Get())
+			{
+				DumpOutput(job, ch.GetErr().Get(), ch.GetErrSize(), GetName());
+			}
+			else
+			{
+				DumpOutput(job, ch.GetOut().Get(), ch.GetOutSize(), GetName());
+			}
+		}
+
+		return Node::NODE_RESULT_FAILED;
+	}
+
+	{
+		AString output(ch.GetOut().Get(), ch.GetOut().Get() + ch.GetOutSize());
+		output.Replace('\r', '\n'); // Normalize all carriage line endings
+
+		Array< AString > dependencyTokens(1024, true);
+		output.Tokenize(dependencyTokens, '\n');
+		m_PreBuildDynamicDependencyNames = dependencyTokens;
+	}
+
+	return Node::NODE_RESULT_OK;
 }
 
 // DoBuild
@@ -282,6 +407,34 @@ ObjectNode::~ObjectNode()
     bool useDeoptimization = job->IsLocal() && ShouldUseDeoptimization();
     bool stealingRemoteJob = job->IsLocal(); // are we stealing a remote job?
     return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+}
+
+// PreBuildDynamicDependenciesFinalize
+//------------------------------------------------------------------------------
+/*virtual*/ bool ObjectNode::PreBuildDynamicDependenciesFinalize(NodeGraph & nodeGraph)
+{
+	ASSERT(Thread::IsMainThread());
+
+	m_PreBuildDynamicDependencies.Clear();
+	m_PreBuildDynamicDependencies.SetCapacity(m_PreBuildDynamicDependencyNames.GetSize());
+	for (Array< AString >::ConstIter it = m_PreBuildDynamicDependencyNames.Begin();
+		it != m_PreBuildDynamicDependencyNames.End();
+		it++)
+	{
+		Node * fn = nodeGraph.FindNode(*it);
+		if (fn == nullptr)
+		{
+			fn = nodeGraph.CreateFileNode(*it);
+		}
+		else if (fn->IsAFile() == false)
+		{
+			FLOG_ERROR("'%s' is not a FileNode (type: %s)", fn->GetName().Get(), fn->GetTypeName());
+			return false;
+		}
+		m_PreBuildDynamicDependencies.Append(Dependency(fn));
+	}
+
+	return true;
 }
 
 // Finalize
@@ -1006,6 +1159,26 @@ CompilerNode * ObjectNode::GetDedicatedPreprocessor() const
         ++preprocessorIndex;
     }
     return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo< CompilerNode >();
+}
+
+// GetPreBuildPreprocessor
+//------------------------------------------------------------------------------
+CompilerNode * ObjectNode::GetPreBuildPreprocessor() const
+{
+	if (m_PreBuildDependencyPreprocessor.IsEmpty())
+	{
+		return nullptr;
+	}
+	size_t preprocessorIndex = 2;
+	if (m_Preprocessor.IsEmpty() == false)
+	{
+		++preprocessorIndex;
+	}
+	if (m_PrecompiledHeader.IsEmpty() == false)
+	{
+		++preprocessorIndex;
+	}
+	return m_StaticDependencies[preprocessorIndex].GetNode()->CastTo< CompilerNode >();
 }
 
 // GetPrecompiledHeader()
@@ -1822,7 +1995,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 //------------------------------------------------------------------------------
 void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const
 {
-    const size_t startIndex = 2 + ( !m_PrecompiledHeader.IsEmpty() ? 1 : 0 ) + ( !m_Preprocessor.IsEmpty() ? 1 : 0 ); // Skip Compiler, InputFile, PCH and Preprocessor
+    const size_t startIndex = 2 + ( !m_PrecompiledHeader.IsEmpty() ? 1 : 0 ) + ( !m_Preprocessor.IsEmpty() ? 1 : 0 ) + (!m_PreBuildDependencyPreprocessor.IsEmpty() ? 1 : 0); // Skip Compiler, InputFile, PCH, preBuildPreprocessor and Preprocessor
     const size_t endIndex = m_StaticDependencies.GetSize();
     for ( size_t i=startIndex; i<endIndex; ++i )
     {

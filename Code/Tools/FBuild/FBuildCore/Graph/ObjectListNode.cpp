@@ -57,6 +57,8 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     // Preprocessor
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
+    REFLECT( m_PreBuildDependencyPreprocessor,      "PreBuildDependencyPreprocessor",   MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_PreBuildDependencyPreprocessorOptions, "PreBuildDependencyPreprocessorOptions", MetaOptional() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
     // Internal State
@@ -143,7 +145,7 @@ ObjectListNode::ObjectListNode()
             return false;
         }
 
-        precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
+        precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
         if ( precompiledHeader == nullptr )
         {
             return false; // CreateObjectNode will have emitted an error
@@ -174,6 +176,17 @@ ObjectListNode::ObjectListNode()
             return false; // GetCompilerNode will have emitted an error
         }
     }
+
+	// .PreBuildDependencyPreprocessor
+	CompilerNode * preBuildDependencyPreprocessorNode(nullptr);
+	if (m_PreBuildDependencyPreprocessor.IsEmpty() == false)
+	{
+		// get the pre build dependency preprocessor executable
+		if (Function::GetCompilerNode(nodeGraph, iter, function, m_PreBuildDependencyPreprocessor, preBuildDependencyPreprocessorNode) == false)
+		{
+			return false; // GetCompilerNode will have emitted an error
+		}
+	}
 
     // .CompilerInputUnity
     Dependencies compilerInputUnity;
@@ -225,13 +238,17 @@ ObjectListNode::ObjectListNode()
     ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions, m_ExtraPDBPath, m_ExtraASMPath );
 
     // Store dependencies
-    m_StaticDependencies.SetCapacity( m_StaticDependencies.GetSize() + 1 + ( preprocessorNode ? 1 : 0 ) + ( precompiledHeader ? 1 : 0 ) + compilerInputPath.GetSize() + m_NumCompilerInputUnity + m_NumCompilerInputFiles );
+    m_StaticDependencies.SetCapacity( m_StaticDependencies.GetSize() + 1 + ( preprocessorNode ? 1 : 0 ) + (preBuildDependencyPreprocessorNode ? 1 : 0) + ( precompiledHeader ? 1 : 0 ) + compilerInputPath.GetSize() + m_NumCompilerInputUnity + m_NumCompilerInputFiles );
     m_StaticDependencies.Append( Dependency( compilerNode ) );
     if ( preprocessorNode )
-    {
-        m_StaticDependencies.Append( Dependency( preprocessorNode ) );
-    }
-    if ( precompiledHeader )
+	{
+		m_StaticDependencies.Append( Dependency( preprocessorNode ));
+	}
+	if ( preBuildDependencyPreprocessorNode )
+	{
+		m_StaticDependencies.Append( Dependency( preBuildDependencyPreprocessorNode ));
+	}
+	if ( precompiledHeader )
     {
         m_StaticDependencies.Append( Dependency( precompiledHeader ) );
     }
@@ -241,7 +258,7 @@ ObjectListNode::ObjectListNode()
     //m_StaticDependencies.Append( compilerForceUsing ); // NOTE: Deliberately not depending on this
 
     // Take note of how many things are not to be treated as inputs (the compiler and preprocessor)
-    m_ObjectListInputStartIndex += ( 1 + ( preprocessorNode ? 1 : 0 ) + ( precompiledHeader ? 1 : 0 ) );
+    m_ObjectListInputStartIndex += ( 1 + ( preprocessorNode ? 1 : 0 ) + (preBuildDependencyPreprocessorNode ? 1 : 0) + ( precompiledHeader ? 1 : 0 ));
     m_ObjectListInputEndIndex = (uint32_t)m_StaticDependencies.GetSize();
 
     return true;
@@ -569,6 +586,32 @@ CompilerNode * ObjectListNode::GetPreprocessor() const
     return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo< CompilerNode >();
 }
 
+// GetPreprocessor
+//------------------------------------------------------------------------------
+CompilerNode * ObjectListNode::GetPreBuildDependencyPreprocessor() const
+{
+	// Do we have a preprocessor?
+	if (m_PreBuildDependencyPreprocessor.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	size_t preBuildDependencyPreprocessorIndex = 1;
+
+	if (GetPreprocessor() != nullptr)
+	{
+		++preBuildDependencyPreprocessorIndex;
+	}
+
+	if (GetType() == Node::LIBRARY_NODE)
+	{
+		// Libraries store the Librarian at index 0
+		++preBuildDependencyPreprocessorIndex;
+	}
+
+	return m_StaticDependencies[preBuildDependencyPreprocessorIndex].GetNode()->CastTo< CompilerNode >();
+}
+
 // CreateDynamicObjectNode
 //------------------------------------------------------------------------------
 bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode, bool isIsolatedFromUnityNode )
@@ -634,7 +677,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
         }
 
         BFFIterator dummyIter;
-        ObjectNode * objectNode = CreateObjectNode( nodeGraph, dummyIter, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
+        ObjectNode * objectNode = CreateObjectNode( nodeGraph, dummyIter, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, m_PreBuildDependencyPreprocessor, m_PreBuildDependencyPreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
         if ( !objectNode )
         {
             FLOG_ERROR( "Failed to create node '%s'!", objFile.Get() );
@@ -677,6 +720,8 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const AString & compilerOptionsDeoptimized,
                                                const AString & preprocessor,
                                                const AString & preprocessorOptions,
+                                               const AString & preBuildDependencyPreprocessor,
+                                               const AString & preBuildDependencyPreprocessorOptions,
                                                const AString & objectName,
                                                const AString & objectInput,
                                                const AString & pchObjectName )
@@ -706,7 +751,9 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_PrecompiledHeader = m_UsingPrecompiledHeader ? GetPrecompiledHeader()->GetName() : AString::GetEmpty();
     node->m_Preprocessor = preprocessor;
     node->m_PreprocessorOptions = preprocessorOptions;
-    node->m_Flags = flags;
+	node->m_PreBuildDependencyPreprocessor = preBuildDependencyPreprocessor;
+	node->m_PreBuildDependencyPreprocessorOptions = preBuildDependencyPreprocessorOptions;
+	node->m_Flags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )

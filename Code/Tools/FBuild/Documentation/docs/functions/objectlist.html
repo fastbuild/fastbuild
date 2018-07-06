@@ -56,8 +56,12 @@ Builds a list of objects, typically for later input into a Library, Executable o
   .PCHOptions               ; (optional) Options for compiler for precompiled header
 
   ; Additional options
-  .PreBuildDependencies     ; (optional) Force targets to be built before this ObjectList (Rarely needed,
-                            ; but useful when a ObjectList relies on generated code).
+  .PreBuildDependencies                    ; (optional) Force targets to be built before this ObjectList (Rarely needed,
+                                           ; but useful when a ObjectList relies on generated code).
+  .PreBuildDependencyPreprocessor          ; (optional) Compiler to use for preprocessing a file and gathering
+                                           ; PreBuildDependencies from the source file.
+  .PreBuildDependencyPreprocessorOptions   ; (optional) Args to pass to the Pre Build Dependency Preprocessor
+
 }
 </div>
 <p><b>Build-Time Substitutions</b>
@@ -79,8 +83,39 @@ Builds a list of objects, typically for later input into a Library, Executable o
   </ul>
 </ul>
 </p>
-    </div>
+</div>
 
+<div id='copy' class='newsitemheader'>
+      Other Options
+    </div>	
+    <div class='newsitembody'>
+      <p><b>.PreBuildDependencies</b> - String/ArrayOfStrings - (Optional)</p>
+	  <p>One or more nodes which must be built before this node is built.</p>	  
+	  <p>The .PreBuildDependencies option ensures the specified targets are up-to-date before the 
+	  ObjectList() is executed. This is necessary in situations where files are generated as part of
+	  the build. Failure to specify these dependencies in this way could allow the ObjectList() operation
+	  to be performed before the source files are updated/generated. This will result in unreliable builds
+	  (out of date or missing files) or even build failure (compilation attempted while source file is still 
+	  being written/updated).</p>
+	</div>
+    <div class='newsitembody'>
+      <p><b>.PreBuildDependencyPreprocessor</b> - Compiler - (Optional)</p>
+	  <p>A preprocessor compiler that scans the source file for dependencies.</p>	  
+	  <p>The .PreBuildDependencyPreprocessor option allows a preprocessor to be run on the source file
+	  to search for dependencies. The PreBuildDependencyPreprocessor should only be reliant on the source
+	  file for generating these additional dependencies. The Preprocessor should output one dependency per
+	  line to stdout and errors to stderr. Like other compilers, return 0 for success, any other codes for
+	  failure.</p>
+	  <p>All other static dependencies like PreBuildDependencies and Compilers are guaranteed to be completed
+	  before the preprocessor is run. Dynamic dependencies and the regular code preprocessor are run after
+	  all gathered PreBuildDependencies have been completed.</p>
+	</div>
+    <div class='newsitembody'>
+      <p><b>.PreBuildDependencyPreprocessorOptions</b> - String - (Optional)</p>
+	  <p>Options for the PreBuildDependencyPreprocessor</p>	  
+	  <p>These options use the same Compiler Options Build Time Substitutions as other compilers.</p>
+	</div>
+</div>	
 
   <script>generateFooter()</script>
 </body>

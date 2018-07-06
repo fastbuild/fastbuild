@@ -1,0 +1,71 @@
+//
+// Object
+//
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+
+// Common settings
+.UnityOutputPath            = '$Out$/Test/Object/DynamicDeps/'
+.CompilerOutputPath         = '$Out$/Test/Object/DynamicDeps/'
+
+// DependencyProcessor
+// - Create an exe which can parse a file and output dependencies on stdout
+//------------------------------------------------------------------------------
+ObjectList( 'DependencyProcessorCompile' )
+{
+    #if __WINDOWS__
+        .CompilerOptions    + ' /MT'
+    #endif
+    .CompilerInputFiles     = '$Out$/Test/Object/DynamicDeps/DependencyProcessorMain.cpp'
+    .CompilerOuputExtension = '.cpp'
+    .CompilerOutputPath     + 'DependencyProcessor/'
+}
+Executable( 'DependencyProcessor' )
+{
+    .Libraries              = 'DependencyProcessorCompile'
+    .LinkerOutput           = '$Out$/Test/Object/DynamicDeps/DependencyProcessor.exe'
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' kernel32.lib'
+                            + .CRTLibs_Static
+    #endif
+}
+Compiler( 'DependencyProcessorCompiler' )
+{
+    .Executable = 'DependencyProcessor'
+    .CompilerFamily = 'custom'
+}
+
+//
+// Generate a list of targets as copy targets
+//------------------------------------------------------------------------------
+Copy()
+{
+	.Source = 
+	{ 
+		'$Out$/Test/Object/DynamicDeps/PossibleDependencies/a.h'
+		'$Out$/Test/Object/DynamicDeps/PossibleDependencies/b.h'
+		'$Out$/Test/Object/DynamicDeps/PossibleDependencies/c.h'
+	}
+	.Dest = '$Out$/Test/Object/DynamicDeps/Dependencies/'
+}
+
+// DependencyProducer will 
+ObjectList( 'DependencyProducer' )
+{
+	.PreBuildDependencyPreprocessor	= 'DependencyProcessorCompiler'
+	.PreBuildDependencyPreprocessorOptions = '"$Out$/Test/Object/DynamicDeps/Dependencies/" %1'
+	.CompilerInputFiles				= 'Tools/FBuild/FBuildTest/Data/TestObject/DynamicDeps/a.cpp'
+	.CompilerOutputPath				+ 'Output/'
+	.CompilerOptions                + ' /I"$Out$/Test/Object/DynamicDeps/Dependencies/"'
+
+	// Set one of our dependencies as a static pre build dependency.
+	.PreBuildDependencies = {'$Out$/Test/Object/DynamicDeps/Dependencies/a.h'}
+}
+
+Alias( 'DynamicDeps' )
+{
+    .Targets                    = { 'DependencyProducer' }
+}

@@ -252,7 +252,8 @@ Function::~Function() = default;
         {
             const Node* node = nodeGraph.GetNodeByIndex( index );
 
-            const Dependencies * depVectors[ 3 ] = { &node->GetPreBuildDependencies(),
+            const Dependencies * depVectors[ 4 ] = { &node->GetPreBuildDependencies(),
+                                                     &node->GetPreBuildDynamicDependencies(),
                                                      &node->GetStaticDependencies(),
                                                      &node->GetDynamicDependencies() };
             for ( const Dependencies * depVector : depVectors )

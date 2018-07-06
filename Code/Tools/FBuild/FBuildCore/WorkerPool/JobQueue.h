@@ -72,6 +72,7 @@ private:
     void        WorkerThreadWait( uint32_t maxWaitMS );
     Job *       GetJobToProcess();
     Job *       GetDistributableJobToRace();
+	static Node::BuildResult DoPreBuildDynamicDependencies( Job * job );
     static Node::BuildResult DoBuild( Job * job );
     void        FinishedProcessingJob( Job * job, bool result, bool wasARemoteJob );
 

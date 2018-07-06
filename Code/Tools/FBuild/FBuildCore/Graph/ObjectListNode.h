@@ -37,6 +37,7 @@ public:
 
     CompilerNode * GetCompiler() const;
     CompilerNode * GetPreprocessor() const;
+	CompilerNode * GetPreBuildDependencyPreprocessor() const;
 
     inline const AString & GetCompilerOptions() const { return m_CompilerOptions; }
 protected:
@@ -57,6 +58,8 @@ protected:
                                    const AString & compilerOptionsDeoptimized,
                                    const AString & preprocessor,
                                    const AString & preprocessorOptions,
+                                   const AString & preBuildDependencyPreprocessor,
+                                   const AString & preBuildDependencyPreprocessorOptions,
                                    const AString & objectName,
                                    const AString & objectInput,
                                    const AString & pchObjectName );
@@ -89,7 +92,9 @@ protected:
     AString             m_PCHOptions;
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;
-    Array< AString >    m_PreBuildDependencyNames;
+	AString             m_PreBuildDependencyPreprocessor;
+	AString             m_PreBuildDependencyPreprocessorOptions;
+	Array< AString >    m_PreBuildDependencyNames;
 
     // Internal State
     bool                m_UsingPrecompiledHeader            = false;

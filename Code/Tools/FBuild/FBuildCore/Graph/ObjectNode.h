@@ -79,7 +79,8 @@ public:
 
     CompilerNode * GetCompiler() const;
     inline Node * GetSourceFile() const { return m_StaticDependencies[ 1 ].GetNode(); }
-    CompilerNode * GetDedicatedPreprocessor() const;
+	CompilerNode * GetPreBuildPreprocessor() const;
+	CompilerNode * GetDedicatedPreprocessor() const;
     #if defined( __WINDOWS__ )
         inline Node * GetPrecompiledHeaderCPPFile() const { ASSERT( GetFlag( FLAG_CREATING_PCH ) ); return m_StaticDependencies[ 1 ].GetNode(); }
     #endif
@@ -90,8 +91,11 @@ public:
     const char * GetObjExtension() const;
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+	virtual bool DeterminePreBuildDynamicDependenciesNeedToBuild( bool forceClean ) const override;
+	virtual BuildResult DoPreBuildDynamicDependencies( Job * job ) override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
+	virtual bool PreBuildDynamicDependenciesFinalize(NodeGraph & nodeGraph) override;
     virtual bool Finalize( NodeGraph & nodeGraph ) override;
 
     BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
@@ -187,13 +191,16 @@ private:
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;
     Array< AString >    m_PreBuildDependencyNames;
+	AString             m_PreBuildDependencyPreprocessor;
+	AString             m_PreBuildDependencyPreprocessorOptions;
+	Array< AString >    m_PreBuildDynamicDependencyNames;
 
     // Internal State
     AString             m_PrecompiledHeader;
     uint32_t            m_Flags                             = 0;
     uint32_t            m_PreprocessorFlags                 = 0;
     uint64_t            m_PCHCacheKey                       = 0;
-
+	
     // Not serialized
     Array< AString >    m_Includes;
     bool                m_Remote                            = false;
