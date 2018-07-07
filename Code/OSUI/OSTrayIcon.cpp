@@ -43,6 +43,7 @@ OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
         Shell_NotifyIcon( NIM_ADD, &m_NotifyIconData );
     #else
         (void)parentWindow;
+        (void)toolTip;
     #endif
 }
 
