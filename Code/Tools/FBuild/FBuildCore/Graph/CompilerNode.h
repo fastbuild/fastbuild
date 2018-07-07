@@ -14,18 +14,17 @@ class Function;
 
 // CompilerNode
 //------------------------------------------------------------------------------
-class CompilerNode : public FileNode
+class CompilerNode : public Node
 {
     REFLECT_NODE_DECLARE( CompilerNode )
 public:
     explicit CompilerNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~CompilerNode();
 
-    static inline Node::Type GetTypeS() { return Node::COMPILER_NODE; }
+    virtual bool IsAFile() const override;
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
+    static inline Node::Type GetTypeS() { return Node::COMPILER_NODE; }
 
     inline const ToolManifest & GetManifest() const { return m_Manifest; }
 
@@ -49,16 +48,20 @@ public:
         CUDA_NVCC       = 7,
         QT_RCC          = 8,
         VBCC            = 9,
+        ORBIS_WAVE_PSSLC= 10,
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 
-private:
-    bool            InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
 
-    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
+    const AString & GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->GetName(); }
+
+private:
+    bool InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
+
     virtual BuildResult DoBuild( Job * job ) override;
 
     // Exposed params
+    AString             m_Executable;
     Array< AString >    m_ExtraFiles;
     Array< AString >    m_CustomEnvironmentVariables;
 

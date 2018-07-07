@@ -1,0 +1,10 @@
+//
+// Input and Ouput pointing to the same thing caused an infinite recursion on DB save
+//
+
+Exec('all')
+{
+    .ExecExecutable = 'hello'
+    .ExecInput      = 'file.txt'
+    .ExecOutput     = 'file.txt'
+}

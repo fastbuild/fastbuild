@@ -27,34 +27,11 @@ FunctionSLN::FunctionSLN()
     return true;
 }
 
-// Commit
+// CreateNode
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionSLN::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ Node * FunctionSLN::CreateNode() const
 {
-    AStackString<> name;
-    if ( GetNameForNode( nodeGraph, funcStartIter, SLNNode::GetReflectionInfoS(), name ) == false )
-    {
-        return false;
-    }
-    if ( nodeGraph.FindNode( name ) )
-    {
-        Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
-        return false;
-    }
-
-    SLNNode * slnNode = nodeGraph.CreateSLNNode( name );
-
-    if ( !PopulateProperties( nodeGraph, funcStartIter, slnNode ) )
-    {
-        return false;
-    }
-
-    if ( !slnNode->Initialize( nodeGraph, funcStartIter, this ) )
-    {
-        return false;
-    }
-
-    return ProcessAlias( nodeGraph, funcStartIter, slnNode );
+    return FNEW( SLNNode );
 }
 
 //------------------------------------------------------------------------------

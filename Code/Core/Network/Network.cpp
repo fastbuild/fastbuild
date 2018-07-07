@@ -101,6 +101,10 @@
 
         break; // success!
     }
+    if ( timedOut )
+    {
+        Thread::DetachThread( handle );
+    }
     Thread::CloseHandle( handle );
 
     // handle race where timeout occurred before thread marked data as

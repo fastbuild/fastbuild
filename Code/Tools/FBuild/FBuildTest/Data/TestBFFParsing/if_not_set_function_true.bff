@@ -3,5 +3,5 @@
 
 If(.DE not in .ABC)
 {
-	Print("Success")
+    Print("Success")
 }

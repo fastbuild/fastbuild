@@ -3,5 +3,5 @@
 
 If(.A not in .ABC)
 {
-	Print("Failure")
+    Print("Failure")
 }

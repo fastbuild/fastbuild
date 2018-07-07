@@ -81,7 +81,7 @@ void TestObject::Preprocessor() const
         options.m_ConfigFile = configFile;
         options.m_ForceCleanBuild = true;
         FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize( database ) );
+        TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
         TEST_ASSERT( fBuild.Build( AStackString<>( "CustomPreprocessor" ) ) );

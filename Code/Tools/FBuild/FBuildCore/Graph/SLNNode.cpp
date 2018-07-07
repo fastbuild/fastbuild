@@ -76,7 +76,7 @@ SLNNode::SLNNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool SLNNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool SLNNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // Solution Configs
     //------------------------------------------------------------------------------
@@ -333,29 +333,6 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     f.Close();
 
     return true;
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * SLNNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    SLNNode * sn = nodeGraph.CreateSLNNode( name );
-
-    if ( sn->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    return sn;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void SLNNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
 }
 
 // GatherProject

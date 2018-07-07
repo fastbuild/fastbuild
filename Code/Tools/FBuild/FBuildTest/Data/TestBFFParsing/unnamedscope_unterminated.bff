@@ -1,0 +1,5 @@
+// Was incorrectly interpretting } as closing scope, but this is part
+// of a string
+{#ifB'
+#endif
+{;'}

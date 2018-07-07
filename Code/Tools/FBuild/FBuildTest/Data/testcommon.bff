@@ -39,7 +39,7 @@
 //.ClangPath            = 'C:\Program Files (x86)\LLVM'
 .WindowsClangToolChain =
 [
-    .Compiler           = '$ClangPath$/bin/clang++.exe'
+    .Compiler           = 'Compiler-ClangForWindows-Dist'
     Compiler( 'Compiler-ClangForWindows-Dist' )
     {
         .Executable     = '$ClangPath$/bin/clang++.exe'
@@ -54,7 +54,7 @@
 //==============================================================================
 .LinuxGCCToolChain =
 [
-    .Compiler           = '/usr/bin/gcc'
+    .Compiler           = 'Compiler-GCC-Dist'
     Compiler( 'Compiler-GCC-Dist' )
     {
         .Executable     = '/usr/bin/gcc'
@@ -93,7 +93,7 @@
 //==============================================================================
 .OSXClangToolChain =
 [
-    .Compiler           = '/usr/bin/clang++'
+    .Compiler           = 'Compiler-Clang-Dist'
     Compiler( 'Compiler-Clang-Dist' )
     {
         .Executable     = '/usr/bin/clang++'
@@ -137,7 +137,7 @@
         .Environment        = { 'PATH=$VS_PATH$',
                                 'TMP=$TMP$',
                                 'SystemRoot=C:\Windows' }
-        .CachePath          = 'C:\.fbuild.cache'
+        .CachePath          = '$TMP$\.fbuild.cache'
         Using( .VisualStudioToolChain_X86 )
     #endif
     #if __LINUX__

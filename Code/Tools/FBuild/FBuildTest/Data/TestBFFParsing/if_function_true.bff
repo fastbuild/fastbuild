@@ -3,5 +3,5 @@
 
 If(.A in .ABC)
 {
-	Print("Success")
+    Print("Success")
 }

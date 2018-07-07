@@ -18,15 +18,12 @@ class SettingsNode : public Node
     REFLECT_NODE_DECLARE( SettingsNode )
 public:
     explicit SettingsNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~SettingsNode();
 
     static inline Node::Type GetTypeS() { return Node::SETTINGS_NODE; }
 
     virtual bool IsAFile() const override;
-
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 
     // Access to settings
     const AString &                     GetCachePath() const;

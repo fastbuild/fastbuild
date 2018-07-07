@@ -1,0 +1,5 @@
+
+// Regression Test:
+//  - Trying to replace struct with inner struct was deleting struct
+//    while it was still in use causing a crash
+.A=[.A=[]]Using(.A)

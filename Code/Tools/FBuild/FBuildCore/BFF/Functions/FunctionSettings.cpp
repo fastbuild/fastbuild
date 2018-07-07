@@ -44,4 +44,11 @@ FunctionSettings::FunctionSettings()
     return settingsNode->Initialize( nodeGraph, funcStartIter, this );
 }
 
+// CreateNode
+//------------------------------------------------------------------------------
+/*virtual*/ Node * FunctionSettings::CreateNode() const
+{
+    return FNEW( SettingsNode );
+}
+
 //------------------------------------------------------------------------------

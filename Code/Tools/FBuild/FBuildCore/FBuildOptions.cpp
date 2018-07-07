@@ -55,6 +55,8 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         }
     }
 
+    bool progressOptionSpecified = false;
+
     // Parse options
     for ( int32_t i=1; i<argc; ++i ) // start from 1 to skip exe name
     {
@@ -188,6 +190,18 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-noprogress" )
             {
                 m_ShowProgress = false;
+                progressOptionSpecified = true;
+                continue;
+            }
+            else if ( thisArg == "-nounity" )
+            {
+                m_NoUnity = true;
+                continue;
+            }
+            else if ( thisArg == "-progress" )
+            {
+                m_ShowProgress = true;
+                progressOptionSpecified = true;
                 continue;
             }
             else if ( thisArg == "-nostoponerror")
@@ -249,6 +263,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( ( thisArg == "-ide" ) || ( thisArg == "-vs" ) )
             {
                 m_ShowProgress = false;
+                progressOptionSpecified = true;
                 #if defined( __WINDOWS__ )
                     m_FixupErrorPaths = true;
                     m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
@@ -303,6 +318,12 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             // assume target
             m_Targets.Append( thisArg );
         }
+    }
+
+    if ( progressOptionSpecified == false )
+    {
+        // By default show progress bar only if stdout goes to the terminal
+        m_ShowProgress = ( Env::IsStdOutRedirected() == false );
     }
 
     // Default to build "all"
@@ -455,7 +476,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
 #endif
     OUTPUT( " -dist          Allow distributed compilation.\n"
             " -distverbose   Print detailed info for distributed compilation.\n"
-            " -fastcancel    [Experimental] Fast cancellation behavior on buidl failure.\n"
+            " -fastcancel    [Experimental] Fast cancellation behavior on build failure.\n"
             " -fixuperrorpaths Reformat error paths to be Visual Studio friendly.\n"
             " -forceremote   Force distributable jobs to only be built remotely.\n"
             " -help          Show this help.\n"
@@ -465,6 +486,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
             "                default of hardware thread count.\n"
             " -noprogress    Don't show the progress bar while building.\n"
+            " -nounity       [Experimental] Build files individually instead of in Unity.\n"
+            " -progress      Show the progress bar while building, even if stdout is redirected.\n"
             " -nostoponerror Don't stop building on first error. Try to build as much\n"
             "                as possible.\n"
             " -nosummaryonerror Hide the summary if the build fails. Implies -summary.\n"
@@ -492,11 +515,11 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
 void FBuildOptions::DisplayVersion() const
 {
     #ifdef DEBUG
-        #define VERSION_CONFIG " (DEBUG) "
+        #define VERSION_CONFIG "(DEBUG) "
     #else
-        #define VERSION_CONFIG " "
+        #define VERSION_CONFIG ""
     #endif
-    OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " FBUILD_VERSION_PLATFORM VERSION_CONFIG " - "
+    OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
             "Copyright 2012-2018 Franta Fulin - http://www.fastbuild.org\n" );
     #undef VERSION_CONFIG
 }

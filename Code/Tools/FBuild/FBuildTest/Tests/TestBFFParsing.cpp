@@ -25,11 +25,13 @@ private:
     void Comments() const;
     void Strings() const;
     void String_Unterminated() const;
+    void String_Unterminated2() const;
     void Arrays() const;
     void Array_Unterminated() const;
     void Array_TypeMismatch() const;
     void Integers() const;
     void UnnamedScope() const;
+    void UnnamedScope_Unterminated() const;
     void IncludeDirective() const;
     void OnceDirective() const;
     void Structs() const;
@@ -37,6 +39,7 @@ private:
     void Struct_ConcatenationMismatch() const;
     void Struct_ConcatenationOrder() const;
     void Struct_Unterminated() const;
+    void Struct_MemberShadowsSelf() const;
     void IncludeScope() const;
     void IfDirective() const;
     void IfExistsDirective() const;
@@ -52,6 +55,7 @@ private:
     void ParentScopeBug2() const;
     void ParentScopeUnknown() const;
     void FrozenVariable() const;
+    void FrozenVariable_Nested() const;
     void DynamicVarNameConstruction() const;
     void OperatorMinus() const;
     void IfFunctionTrue() const;
@@ -62,7 +66,10 @@ private:
     void IfNotFunctionFalse() const;
     void IfSetFunctionFalse() const;
     void IfNotSetFunctionFalse() const;
+    void IfFunctionBool() const;
+    void IfFunctionStringCompare() const;
     void BuiltInVariables() const;
+    void CyclicDependency() const;
 
     void Parse( const char * fileName, bool expectFailure = false ) const;
 };
@@ -75,11 +82,13 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Comments )
     REGISTER_TEST( Strings )
     REGISTER_TEST( String_Unterminated )
+    REGISTER_TEST( String_Unterminated2 )
     REGISTER_TEST( Arrays )
     REGISTER_TEST( Array_Unterminated )
     REGISTER_TEST( Array_TypeMismatch )
     REGISTER_TEST( Integers )
     REGISTER_TEST( UnnamedScope )
+    REGISTER_TEST( UnnamedScope_Unterminated )
     REGISTER_TEST( IncludeDirective )
     REGISTER_TEST( OnceDirective )
     REGISTER_TEST( Structs )
@@ -87,6 +96,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Struct_ConcatenationMismatch )
     REGISTER_TEST( Struct_ConcatenationOrder )
     REGISTER_TEST( Struct_Unterminated )
+    REGISTER_TEST( Struct_MemberShadowsSelf )
     REGISTER_TEST( IncludeScope )
     REGISTER_TEST( IfDirective )
     REGISTER_TEST( IfExistsDirective )
@@ -102,6 +112,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( ParentScopeBug2 )
     REGISTER_TEST( ParentScopeUnknown )
     REGISTER_TEST( FrozenVariable )
+    REGISTER_TEST( FrozenVariable_Nested )
     REGISTER_TEST( DynamicVarNameConstruction )
     REGISTER_TEST( OperatorMinus )
     REGISTER_TEST( IfFunctionTrue )
@@ -111,8 +122,11 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IfFunctionFalse )
     REGISTER_TEST( IfNotFunctionFalse )
     REGISTER_TEST( IfSetFunctionFalse )
-    REGISTER_TEST( IfNotSetFunctionFalse )    
+    REGISTER_TEST( IfNotSetFunctionFalse )
+    REGISTER_TEST( IfFunctionBool )
+    REGISTER_TEST( IfFunctionStringCompare )
     REGISTER_TEST( BuiltInVariables )
+    REGISTER_TEST( CyclicDependency )
 REGISTER_TESTS_END
 
 // Empty
@@ -158,6 +172,13 @@ void TestBFFParsing::String_Unterminated() const
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/string_unterminated.bff", true ); // expect failure
 }
 
+// String_Unterminated2
+//------------------------------------------------------------------------------
+void TestBFFParsing::String_Unterminated2() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/string_unterminated2.bff", true ); // expect failure
+}
+
 // Arrays
 //------------------------------------------------------------------------------
 void TestBFFParsing::Arrays() const
@@ -192,6 +213,15 @@ void TestBFFParsing::Integers() const
 void TestBFFParsing::UnnamedScope() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/unnamedscope.bff" );
+}
+
+// UnnamedScope_Unterminated
+//------------------------------------------------------------------------------
+void TestBFFParsing::UnnamedScope_Unterminated() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/unnamedscope_unterminated.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1025 - Missing scope close token '}'." ) );
+
 }
 
 // IncludeDirective
@@ -249,6 +279,13 @@ void TestBFFParsing::Struct_ConcatenationOrder() const
 void TestBFFParsing::Struct_Unterminated() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/struct_unterminated.bff", true ); // expect failure
+}
+
+// Struct_MemberShadowsSelf
+//------------------------------------------------------------------------------
+void TestBFFParsing::Struct_MemberShadowsSelf() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/struct_membershadowsself.bff" );
 }
 
 // Parse
@@ -389,6 +426,13 @@ void TestBFFParsing::FrozenVariable() const
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/frozen_foreach.bff", true ); // expect failure
 }
 
+// FrozenVariable_Nested
+//------------------------------------------------------------------------------
+void TestBFFParsing::FrozenVariable_Nested() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/frozen_foreach_nested.bff", true ); // expect failure
+}
+
 // DynamicVarNameConstruction
 //------------------------------------------------------------------------------
 void TestBFFParsing::DynamicVarNameConstruction() const
@@ -467,11 +511,42 @@ void TestBFFParsing::IfNotSetFunctionFalse() const
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
 }
 
+// IfFunctionBool
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFunctionBool() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_function_boolean.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
+// IfFunctionStringCompare
+//------------------------------------------------------------------------------
+void TestBFFParsing::IfFunctionStringCompare() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_function_stringcompare.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
 // BuiltInVariables
 //------------------------------------------------------------------------------
 void TestBFFParsing::BuiltInVariables() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/builtin_variables.bff" );
+}
+
+// CyclicDependency
+//------------------------------------------------------------------------------
+void TestBFFParsing::CyclicDependency() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/cyclic_dependency.bff";
+    FBuild fBuild( options );
+
+    // Parsing should fail due to cyclic dependency
+    TEST_ASSERT( fBuild.Initialize() == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "Cyclic dependency detected for node" ) );
 }
 
 //------------------------------------------------------------------------------

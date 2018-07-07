@@ -27,20 +27,6 @@ class NodeGraph;
 //------------------------------------------------------------------------------
 #define INVALID_NODE_INDEX ( (uint32_t)0xFFFFFFFF )
 
-// Load/SaveMacros
-//------------------------------------------------------------------------------
-#define NODE_SAVE( member ) stream.Write( member );
-#define NODE_SAVE_DEPS( depsArray ) depsArray.Save( stream );
-#define NODE_SAVE_NODE_LINK( node ) Node::SaveNodeLink( stream, node );
-
-#define NODE_LOAD( type, member ) type member; if ( stream.Read( member ) == false ) { return nullptr; }
-#define NODE_LOAD_DEPS( initialCapacity, depsArray ) \
-    Dependencies depsArray( initialCapacity, true ); \
-    if ( depsArray.Load( nodeGraph, stream ) == false ) { return nullptr; }
-#define NODE_LOAD_NODE_LINK( type, node ) \
-    type * node = nullptr; \
-    if ( Node::LoadNodeLink( nodeGraph, stream, node ) == false ) { return nullptr; }
-
 // Custom Reflection Macros
 //------------------------------------------------------------------------------
 #define REFLECT_NODE_DECLARE( nodeName )                                \
@@ -131,6 +117,7 @@ public:
     };
 
     explicit Node( const AString & name, Type type, uint32_t controlFlags );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & funcStartIter, const Function * function ) = 0;
     virtual ~Node();
 
     inline uint32_t        GetNameCRC() const { return m_NameCRC; }
@@ -155,13 +142,14 @@ public:
     inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
     inline void     SetProgressAccumulator( uint32_t p ) const { m_ProgressAccumulator = p; }
 
+    static Node *   CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name );
     static Node *   Load( NodeGraph & nodeGraph, IOStream & stream );
     static void     Save( IOStream & stream, const Node * node );
+    virtual void    PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
 
     static Node *   LoadRemote( IOStream & stream );
     static void     SaveRemote( IOStream & stream, const Node * node );
 
-    void Serialize( IOStream & stream ) const;
     bool Deserialize( NodeGraph & nodeGraph, IOStream & stream );
 
     static bool EnsurePathExistsForFile( const AString & name );
@@ -206,7 +194,6 @@ protected:
 
     void ReplaceDummyName( const AString & newName );
 
-    virtual void Save( IOStream & stream ) const = 0;
     virtual void SaveRemote( IOStream & stream ) const;
 
     inline uint32_t GetControlFlags() const { return m_ControlFlags; }
@@ -224,11 +211,6 @@ protected:
 
     inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
     inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }
-
-    static void SaveNodeLink( IOStream & stream, const Node * node );
-    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, Node * & node );
-    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, CompilerNode * & compilerNode );
-    static bool LoadNodeLink( NodeGraph & nodeGraph, IOStream & stream, FileNode * & node );
 
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
@@ -293,5 +275,7 @@ inline FileNode * Node::CastTo< FileNode >() const
 IMetaData & MetaName( const char * name );
 IMetaData & MetaAllowNonFile();
 IMetaData & MetaAllowNonFile( const Node::Type limitToType );
+IMetaData & MetaEmbedMembers();
+IMetaData & MetaInheritFromOwner();
 
 //------------------------------------------------------------------------------

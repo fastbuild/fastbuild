@@ -53,7 +53,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 109 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 116 };
 
     bool IsValid() const
     {
@@ -92,8 +92,11 @@ public:
 
     // access existing nodes
     Node * FindNode( const AString & nodeName ) const;
+    Node * FindNodeExact( const AString & nodeName ) const;
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
+
+    void RegisterNode( Node * n );
 
     // create new nodes
     CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
@@ -110,23 +113,8 @@ public:
     UnityNode * CreateUnityNode( const AString & unityName );
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );
-    CompilerNode * CreateCompilerNode( const AString & executable );
-    VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
-                                           const Array< AString > & projectBasePaths,
-                                           const Dependencies & paths,
-                                           const Array< AString > & pathsToExclude,
-                                           const Array< AString > & files,
-                                           const Array< AString > & filesToExclude,
-                                           const Array< AString > & patternToExclude,
-                                           const AString & rootNamespace,
-                                           const AString & projectGuid,
-                                           const AString & defaultLanguage,
-                                           const AString & applicationEnvironment,
-                                           const bool projectSccEntrySAK,
-                                           const Array< VSProjectConfig > & configs,
-                                           const Array< VSProjectFileType > & fileTypes,
-                                           const Array< AString > & references,
-                                           const Array< AString > & projectReferences );
+    CompilerNode * CreateCompilerNode( const AString & name );
+    VCXProjectNode * CreateVCXProjectNode( const AString & name );
     SLNNode * CreateSLNNode( const AString & name );
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );

@@ -24,11 +24,11 @@ ObjectList( 'Caching' )
                                 #endif
                                 #if USING_VS2015
                                     + ' /AI"$VS2015_BasePath$/VC/vcpackages"'
-                                    + ' /AI"$Windows10_SDKBasePath$/App Certification Kit/winmds/windows81"'
+                                    + ' /AI"$Windows10_SDKBasePath$/UnionMetadata"'
                                 #endif
                                 #if USING_VS2017
                                     + ' /AI"$VS2017_BasePath$/Common7/IDE/VC/vcpackages"'
-                                    + ' /AI"$Windows10_SDKBasePath$/App Certification Kit/winmds/windows81"'
+                                    + ' /AI"$Windows10_SDKBasePath$/UnionMetadata"'
                                 #endif
 
     .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestZW/Caching/'

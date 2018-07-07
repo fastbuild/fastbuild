@@ -8,9 +8,10 @@
 Using( .StandardEnvironment )
 Settings {}
 
-Alias( 'CSharpCompiler' )
+Compiler( 'CSharpCompiler' )
 {
-    .Targets        = "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe"
+    .Executable        = "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe"
+    .CompilerFamily    = "custom"
 }
 
 .Compiler           = 'CSharpCompiler'

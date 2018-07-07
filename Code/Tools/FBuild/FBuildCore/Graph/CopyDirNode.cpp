@@ -37,7 +37,7 @@ CopyDirNode::CopyDirNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool CopyDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CopyDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -47,8 +47,9 @@ bool CopyDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, c
 
     // .CompilerInputPath
     Dependencies sourcePaths;
-    if ( !function->GetDirectoryListNodeList( nodeGraph,
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
                                               iter,
+                                              function,
                                               m_SourcePaths,
                                               m_SourceExcludePaths,
                                               Array< AString >(),     // Unsupported: Excluded files
@@ -190,29 +191,6 @@ CopyDirNode::~CopyDirNode() = default;
     m_Stamp = timeStamp;
 
     return NODE_RESULT_OK;
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * CopyDirNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    CopyDirNode * node = nodeGraph.CreateCopyDirNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void CopyDirNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
 }
 
 //------------------------------------------------------------------------------

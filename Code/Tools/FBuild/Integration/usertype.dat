@@ -37,6 +37,7 @@ AssemblySearchPath
 AumidOverride
 CachePath
 Compiler
+CompilerFamily
 CompilerForceUsing
 CompilerInputExcludedFiles
 CompilerInputExcludePath
@@ -55,6 +56,7 @@ CompilerReferences
 DebuggerFlavor
 DefaultLanguage
 Dest
+Dependencies
 Environment
 ExecArguments
 ExecExecutable
@@ -97,6 +99,7 @@ LocalDebuggerEnvironment
 LocalDebuggerWorkingDirectory
 Output
 OutputDirectory
+Path
 Pattern
 PCHInputFile
 PCHOutputFile
@@ -107,7 +110,6 @@ Preprocessor
 PreprocessorDefinitions
 PreprocessorOptions
 ProjectAllowedFileExtensions
-ProjectBasePath
 ProjectBuildCommand
 ProjectRebuildCommand
 ProjectCleanCommand
@@ -118,6 +120,7 @@ ProjectInputPathsExcluded
 ProjectFiles
 ProjectFilesToExclude
 ProjectGuid
+Projects
 ProjectSccEntrySAK
 ProjectBasePath
 ProjectFileTypes
@@ -130,6 +133,7 @@ RemovePatterns
 RootNamespace
 SolutionBuildProject
 SolutionConfigs
+SolutionDependencies
 SolutionFolders
 SolutionOutput
 SolutionProjects

@@ -19,14 +19,11 @@ class CopyDirNode : public Node
     REFLECT_NODE_DECLARE( CopyDirNode )
 public:
     explicit CopyDirNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~CopyDirNode();
 
     static inline Node::Type GetTypeS() { return Node::COPY_DIR_NODE; }
     virtual bool IsAFile() const override;
-
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;

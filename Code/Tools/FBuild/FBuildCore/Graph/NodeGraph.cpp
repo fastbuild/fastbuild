@@ -620,6 +620,14 @@ Node * NodeGraph::FindNode( const AString & nodeName ) const
     return FindNodeInternal( fullPath );
 }
 
+// FindNodeExact (AString &)
+//------------------------------------------------------------------------------
+Node * NodeGraph::FindNodeExact( const AString & nodeName ) const
+{
+    // try to find node 'as is'
+    return FindNodeInternal( nodeName );
+}
+
 // GetNodeByIndex
 //------------------------------------------------------------------------------
 Node * NodeGraph::GetNodeByIndex( size_t index ) const
@@ -634,6 +642,16 @@ Node * NodeGraph::GetNodeByIndex( size_t index ) const
 size_t NodeGraph::GetNodeCount() const
 {
     return m_AllNodes.GetSize();
+}
+
+// RegisterNode
+//------------------------------------------------------------------------------
+void NodeGraph::RegisterNode( Node * node )
+{
+    ASSERT( Thread::IsMainThread() );
+    ASSERT( node->GetName().IsEmpty() == false );
+    ASSERT( FindNode( node->GetName() ) == nullptr );
+    AddNode( node );
 }
 
 // CreateCopyFileNode
@@ -825,57 +843,25 @@ TestNode * NodeGraph::CreateTestNode( const AString & testOutput )
 
 // CreateCompilerNode
 //------------------------------------------------------------------------------
-CompilerNode * NodeGraph::CreateCompilerNode( const AString & executable )
+CompilerNode * NodeGraph::CreateCompilerNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
-    ASSERT( IsCleanPath( executable ) );
 
     CompilerNode * node = FNEW( CompilerNode() );
-    node->SetName( executable );
+    node->SetName( name );
     AddNode( node );
     return node;
 }
 
 // CreateVCXProjectNode
 //------------------------------------------------------------------------------
-VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & projectOutput,
-                                                  const Array< AString > & projectBasePaths,
-                                                  const Dependencies & paths,
-                                                  const Array< AString > & pathsToExclude,
-                                                  const Array< AString > & patternToExclude,
-                                                  const Array< AString > & files,
-                                                  const Array< AString > & filesToExclude,
-                                                  const AString & rootNamespace,
-                                                  const AString & projectGuid,
-                                                  const AString & defaultLanguage,
-                                                  const AString & applicationEnvironment,
-                                                  const bool projectSccEntrySAK,
-                                                  const Array< VSProjectConfig > & configs,
-                                                  const Array< VSProjectFileType > & fileTypes,
-                                                  const Array< AString > & references,
-                                                  const Array< AString > & projectReferences )
+VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( name ) );
 
-    AStackString< 1024 > fullPath;
-    CleanPath( projectOutput, fullPath );
-
-    VCXProjectNode * node = FNEW( VCXProjectNode( fullPath,
-                                                projectBasePaths,
-                                                paths,
-                                                pathsToExclude,
-                                                patternToExclude,
-                                                files,
-                                                filesToExclude,
-                                                rootNamespace,
-                                                projectGuid,
-                                                defaultLanguage,
-                                                applicationEnvironment,
-                                                projectSccEntrySAK,
-                                                configs,
-                                                fileTypes,
-                                                references,
-                                                projectReferences ) );
+    VCXProjectNode * node = FNEW( VCXProjectNode() );
+    node->SetName( name );
     AddNode( node );
     return node;
 }

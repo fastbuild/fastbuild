@@ -46,6 +46,7 @@ void WorkerThread::Init()
                                                    64 * KILOBYTE,
                                                    this );
     ASSERT( h != nullptr );
+    Thread::DetachThread( h );
     Thread::CloseHandle( h ); // we don't want to keep this, so free it now
 }
 

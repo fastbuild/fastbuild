@@ -49,7 +49,7 @@ SettingsNode::SettingsNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
 {
     // using a cache plugin?
     if ( m_CachePluginDLL.IsEmpty() == false )
@@ -75,29 +75,6 @@ SettingsNode::~SettingsNode() = default;
 /*virtual*/ bool SettingsNode::IsAFile() const
 {
     return false;
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * SettingsNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    SettingsNode * node = nodeGraph.CreateSettingsNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void SettingsNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
 }
 
 // GetCachePath

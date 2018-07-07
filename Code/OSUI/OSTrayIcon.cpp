@@ -11,6 +11,7 @@
 
 // Core
 #include "Core/Env/Assert.h"
+#include "Core/Strings/AString.h"
 
 // Defines
 //------------------------------------------------------------------------------
@@ -19,7 +20,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-OSTrayIcon::OSTrayIcon( OSWindow * parentWindow )
+OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
 {
     #if defined( __WINDOWS__ )
         ZeroMemory( &m_NotifyIconData, sizeof( NOTIFYICONDATA ) );
@@ -33,10 +34,16 @@ OSTrayIcon::OSTrayIcon( OSWindow * parentWindow )
         m_NotifyIconData.hIcon = (HICON)LoadIcon( (HINSTANCE)parentWindow->GetHInstance(), MAKEINTRESOURCE(IDI_TRAY_ICON) );
         ASSERT( m_NotifyIconData.hIcon );
 
+        if ( toolTip.IsEmpty() == false )
+        {
+            AString::Copy( toolTip.Get(), m_NotifyIconData.szTip, Math::Min<size_t>( toolTip.GetLength(), sizeof( m_NotifyIconData.szTip ) - 1 ) );
+        }
+
         // Display
         Shell_NotifyIcon( NIM_ADD, &m_NotifyIconData );
     #else
         (void)parentWindow;
+        (void)toolTip;
     #endif
 }
 

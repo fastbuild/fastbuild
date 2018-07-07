@@ -151,6 +151,35 @@ public:
 
 // WaitForThread
 //------------------------------------------------------------------------------
+/*static*/ int Thread::WaitForThread( ThreadHandle handle )
+{
+    #if defined( __WINDOWS__ )
+        bool timedOut = true; // default is true to catch cases when timedOut wasn't set by WaitForThread()
+        int ret = WaitForThread( handle, INFINITE, timedOut );
+
+        if ( timedOut )
+        {
+            // something is wrong - we were waiting an INFINITE time
+            ASSERT( false );
+            return 0;
+        }
+
+        return ret;
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        void * ret;
+        if ( pthread_join( (pthread_t)handle, &ret ) == 0 )
+        {
+            return (int)( (size_t)ret );
+        }
+        ASSERT( false ); // usage failure
+        return 0;
+    #else
+        #error Unknown platform
+    #endif
+}
+
+// WaitForThread
+//------------------------------------------------------------------------------
 /*static*/ int Thread::WaitForThread( ThreadHandle handle, uint32_t timeoutMS, bool & timedOut )
 {
     #if defined( __WINDOWS__ )
@@ -184,13 +213,7 @@ public:
     #elif defined( __APPLE__ )
         timedOut = false;
         (void)timeoutMS; // TODO:MAC Implement timeout support
-        void * ret;
-        if ( pthread_join( (pthread_t)handle, &ret ) == 0 )
-        {
-            return (int)( (size_t)ret );
-        }
-        ASSERT( false ); // usage failure
-        return 0;
+        return WaitForThread( handle );
     #elif defined( __LINUX__ )
         // timeout is specified in absolute time
         // - get current time
@@ -225,6 +248,19 @@ public:
         ASSERT( false ); // a non-timeout error indicates usage failure
         timedOut = false;
         return 0;
+    #else
+        #error Unknown platform
+    #endif
+}
+
+// DetachThread
+//------------------------------------------------------------------------------
+/*static*/ void Thread::DetachThread( ThreadHandle handle )
+{
+    #if defined( __WINDOWS__ )
+        (void)handle; // Nothing to do
+    #elif defined( __APPLE__ ) || defined(__LINUX__)
+        VERIFY( pthread_detach( (pthread_t)handle ) == 0 );
     #else
         #error Unknown platform
     #endif

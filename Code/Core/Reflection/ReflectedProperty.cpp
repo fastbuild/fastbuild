@@ -32,8 +32,8 @@ ReflectedProperty::ReflectedProperty( const char * name, uint32_t offset, Proper
     m_NameCRC = CRC32::Calc( name, AString::StrLen( name ) );
 
     ASSERT( offset < MAX_OFFSET );
-    m_Offset = offset;
-    m_Type = (uint32_t)type;
+    m_Offset = (uint16_t)offset;
+    m_Type = type;
 
     #if defined( REFLECTION_KEEP_STRING_NAMES )
         m_Name = name;
@@ -103,12 +103,6 @@ size_t ReflectedProperty::GetPropertySize() const
         ASSERT( !m_IsArray ); \
         ( *value ) = *(const getValueType *)( (size_t)object + m_Offset ); \
     } \
-    void ReflectedProperty::GetPtrToProperty( const void * object, getValueType * & ptr ) const \
-    { \
-        ASSERT( (PropertyType)m_Type == GetPropertyType( ptr ) ); \
-        ASSERT( !m_IsArray ); \
-        ptr = (getValueType *)( (size_t)object + m_Offset ); \
-    } \
     void ReflectedProperty::SetProperty( void * object, setValueType value ) const \
     { \
         ASSERT( (PropertyType)m_Type == GetPropertyType( &value ) ); \
@@ -140,12 +134,6 @@ GETSET_PROPERTY( WeakRef< Object >, const WeakRef< Object > & )
         ASSERT( (PropertyType)m_Type == GetPropertyType( ( valueType *)nullptr ) ); \
         ASSERT( m_IsArray ); \
         ( *value ) = *(const Array< valueType > *)( (size_t)object + m_Offset ); \
-    } \
-    void ReflectedProperty::GetPtrToProperty( const void * object, Array< valueType > * & ptr ) const \
-    { \
-        ASSERT( (PropertyType)m_Type == GetPropertyType( ( valueType *)nullptr ) ); \
-        ASSERT( m_IsArray ); \
-        ptr = (Array< valueType > *)( (size_t)object + m_Offset ); \
     } \
     void ReflectedProperty::SetProperty( void * object, const Array< valueType > & value ) const \
     { \
@@ -293,6 +281,10 @@ GETSET_PROPERTY_ARRAY( AString )
             case PT_STRUCT:
             {
                 ASSERT( false ); // Unsupported
+            }
+            case PT_NONE:
+            {
+                ASSERT( false ); // Should be impossible
             }
         }
     }
@@ -475,6 +467,13 @@ ReflectedPropertyStruct::ReflectedPropertyStruct( const char * name, uint32_t of
 const void * ReflectedPropertyStruct::GetStructBase( const void * object ) const
 {
     return (const void *)( (size_t)object + m_Offset );
+}
+
+// GetStructBase
+//------------------------------------------------------------------------------
+void * ReflectedPropertyStruct::GetStructBase( void * object ) const
+{
+    return (void *)( (size_t)object + m_Offset );
 }
 
 //

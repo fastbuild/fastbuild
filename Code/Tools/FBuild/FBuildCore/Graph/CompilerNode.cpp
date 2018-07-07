@@ -18,7 +18,8 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( CompilerNode, Node, MetaName( "Executable" ) + MetaFile() )
+REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
+    REFLECT( m_Executable,          "Executable",           MetaFile() )
     REFLECT_ARRAY( m_ExtraFiles,    "ExtraFiles",           MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_CustomEnvironmentVariables, "CustomEnvironmentVariables",  MetaOptional() )
     REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
@@ -31,12 +32,13 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaName( "Executable" ) + MetaFile() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
+    REFLECT_STRUCT( m_Manifest,     "Manifest", ToolManifest, MetaHidden() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CompilerNode::CompilerNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL )
+    : Node( AString::GetEmpty(), Node::COMPILER_NODE, Node::FLAG_NONE )
     , m_AllowDistribution( true )
     , m_VS2012EnumBugFix( false )
     , m_ClangRewriteIncludes( true )
@@ -45,32 +47,41 @@ CompilerNode::CompilerNode()
     , m_SimpleDistributionMode( false )
 	, m_SimpleDistributionAllowCache( false )
 {
-    m_Type = Node::COMPILER_NODE;
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
-    // TODO:B make this use m_ExtraFiles
+    // .Executable
+    Dependencies compilerExeFile( 1, false );
+    if ( !Function::GetFileNode( nodeGraph, iter, function, m_Executable, ".Executable", compilerExeFile ) )
+    {
+        return false; // GetFileNode will have emitted an error
+    }
+    ASSERT( compilerExeFile.GetSize() == 1 ); // Should not be possible to expand to > 1 thing
+
+    // .ExtraFiles
     Dependencies extraFiles( 32, true );
-    if ( !function->GetNodeList( nodeGraph, iter, ".ExtraFiles", extraFiles, false ) ) // optional
+    if ( !Function::GetNodeList( nodeGraph, iter, function, ".ExtraFiles", m_ExtraFiles, extraFiles ) )
     {
         return false; // GetNodeList will have emitted an error
     }
 
-    if( m_ExecutableRootPath.IsEmpty() )
+    // If .ExecutableRootPath is not specified, generate it from the .Executable's path
+    if ( m_ExecutableRootPath.IsEmpty() )
     {
-        const char * lastSlash = m_Name.FindLast( NATIVE_SLASH );
+        const char * lastSlash = m_Executable.FindLast( NATIVE_SLASH );
         if ( lastSlash )
         {
-            m_ExecutableRootPath.Assign( m_Name.Get(), lastSlash + 1 );
+            m_ExecutableRootPath.Assign( m_Executable.Get(), lastSlash + 1 );
         }
     }
 
     // Check for conflicting files
     AStackString<> relPathExe;
-    ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Name, relPathExe );
+    ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
+
 
     const size_t numExtraFiles = extraFiles.GetSize();
     for ( size_t i=0; i<numExtraFiles; ++i )
@@ -99,9 +110,19 @@ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, 
         }
     }
 
-    m_StaticDependencies = extraFiles;
+    // Store Static Dependencies
+    m_StaticDependencies.SetCapacity( 1 + extraFiles.GetSize() );
+    m_StaticDependencies.Append( compilerExeFile );
+    m_StaticDependencies.Append( extraFiles );
 
     return InitializeCompilerFamily( iter, function );
+}
+
+// IsAFile
+//------------------------------------------------------------------------------
+/*virtual*/ bool CompilerNode::IsAFile() const
+{
+    return false;
 }
 
 // InitializeCompilerFamily
@@ -112,7 +133,7 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )
     {
         // Normalize slashes to make logic consistent on all platforms
-        AStackString<> compiler( m_Name );
+        AStackString<> compiler( GetExecutable() );
         compiler.Replace( '/', '\\' );
 
         // MSVC
@@ -127,8 +148,10 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
 
         // Clang
         if ( compiler.EndsWithI( "clang++.exe" ) ||
+             compiler.EndsWithI( "clang++.cmd" ) ||
              compiler.EndsWithI( "clang++" ) ||
              compiler.EndsWithI( "clang.exe" ) ||
+             compiler.EndsWithI( "clang.cmd" ) ||
              compiler.EndsWithI( "clang" ) ||
              compiler.EndsWithI( "clang-cl.exe" ) ||
              compiler.EndsWithI( "clang-cl" ) )
@@ -199,6 +222,14 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
             return true;
         }
 
+        // Orbis wave shader compiler
+        if ( compiler.EndsWithI( "orbis-wave-psslc.exe" ) ||
+             compiler.EndsWithI( "orbis-wave-psslc" ) )
+        {
+            m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
+            return true;
+        }
+
         // Auto-detect failed
         Error::Error_1500_CompilerDetectionFailed( iter, function, compiler );
         return false;
@@ -255,6 +286,11 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
         m_CompilerFamilyEnum = VBCC;
         return true;
     }
+    if ( m_CompilerFamilyString.EqualsI( "orbis-wave-psslc" ) )
+    {
+        m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
+        return true;
+    }
 
     // Invalid option
     Error::Error_1501_CompilerFamilyUnrecognized( iter, function, m_CompilerFamilyString );
@@ -265,79 +301,17 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
 //------------------------------------------------------------------------------
 CompilerNode::~CompilerNode() = default;
 
-// DetermineNeedToBuild
-//------------------------------------------------------------------------------
-bool CompilerNode::DetermineNeedToBuild( bool forceClean ) const
-{
-    if ( forceClean )
-    {
-        return true;
-    }
-
-    // Building for the first time?
-    if ( m_Stamp == 0 )
-    {
-        return true;
-    }
-
-    // check primary file
-    const uint64_t fileTime = FileIO::GetFileLastWriteTime( m_Name );
-    if ( fileTime > m_Stamp )
-    {
-        return true;
-    }
-
-    // check additional files
-    for ( const auto & dep : m_StaticDependencies )
-    {
-        if ( dep.GetNode()->GetStamp() > m_Stamp )
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * job )
+/*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * /*job*/ )
 {
-    // ensure our timestamp is updated (Generate requires this)
-    FileNode::DoBuild( job );
-
-    if ( !m_Manifest.Generate( this, m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables ) )
+    if ( !m_Manifest.Generate( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables ) )
     {
         return Node::NODE_RESULT_FAILED; // Generate will have emitted error
     }
 
-    m_Stamp = Math::Max( m_Stamp, m_Manifest.GetTimeStamp() );
+    m_Stamp = m_Manifest.GetTimeStamp();
     return Node::NODE_RESULT_OK;
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * CompilerNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    CompilerNode * cn = nodeGraph.CreateCompilerNode( name );
-
-    if ( cn->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    cn->m_Manifest.Deserialize( stream, false ); // false == not remote
-    return cn;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void CompilerNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-    m_Manifest.Serialize( stream );
 }
 
 //------------------------------------------------------------------------------

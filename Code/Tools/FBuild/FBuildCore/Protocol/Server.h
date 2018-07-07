@@ -83,7 +83,6 @@ private:
     JobQueueRemote *        m_JobQueueRemote;
 
     volatile bool           m_ShouldExit;   // signal from main thread
-    volatile bool           m_Exited;       // flagged on exit
     Thread::ThreadHandle    m_Thread;       // the thread to manage workload
     Mutex                   m_ClientListMutex;
     Array< ClientState * >  m_ClientList;

@@ -108,13 +108,25 @@ FunctionUsing::FunctionUsing()
             return false;
         }
 
+        const BFFVariable * sameNameMember = nullptr;
         const Array< const BFFVariable * > & members = v->GetStructMembers();
         for ( const BFFVariable ** it = members.Begin();
               it != members.End();
               ++it )
         {
             const BFFVariable * member = ( *it );
+            if ( ( sameNameMember == nullptr ) && ( parentScope == false ) && ( member->GetName() == v->GetName() ) )
+            {
+                // We have a struct member with the same name as the struct variable itself.
+                // We have to delay putting it in the current scope because it may delete the struct variable and invalidate members array.
+                sameNameMember = member;
+                continue;
+            }
             BFFStackFrame::SetVar( member, frame );
+        }
+        if ( sameNameMember != nullptr )
+        {
+            BFFStackFrame::SetVar( sameNameMember, frame );
         }
     }
 

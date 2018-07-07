@@ -6,11 +6,12 @@
 #include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
 
 #include "CSNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
@@ -21,7 +22,7 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( CSNode, Node, MetaName( "CompilerOutput" ) + MetaFile() )
-    REFLECT(        m_Compiler,                     "Compiler",                     MetaFile() )
+    REFLECT(        m_Compiler,                     "Compiler",                     MetaFile() + MetaAllowNonFile() )
     REFLECT(        m_CompilerOptions,              "CompilerOptions",              MetaNone() )
     REFLECT(        m_CompilerOutput,               "CompilerOutput",               MetaFile() )
     REFLECT_ARRAY(  m_CompilerInputPath,            "CompilerInputPath",            MetaOptional() + MetaPath() )
@@ -54,7 +55,7 @@ CSNode::CSNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -63,17 +64,17 @@ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const 
     }
 
     // .Compiler
-    Dependencies compiler;
-    if ( !function->GetFileNode( nodeGraph, iter, m_Compiler, "Compiler", compiler ) )
+    CompilerNode * compilerNode( nullptr );
+    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, compilerNode ) )
     {
-        return false; // GetFileNode will have emitted an error
+        return false; // GetCompilerNode will have emitted an error
     }
-    ASSERT( compiler.GetSize() == 1 ); // Should only be possible to be one
 
     // .CompilerInputPath
     Dependencies compilerInputPath;
-    if ( !function->GetDirectoryListNodeList( nodeGraph,
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
                                               iter,
+                                              function,
                                               m_CompilerInputPath,
                                               m_CompilerInputExcludePath,
                                               m_CompilerInputExcludedFiles,
@@ -89,7 +90,7 @@ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const 
 
     // .CompilerInputFiles
     Dependencies compilerInputFiles;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerInputFiles, "CompilerInputFiles", compilerInputFiles ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerInputFiles, "CompilerInputFiles", compilerInputFiles ) )
     {
         return false; // GetFileNode will have emitted an error
     }
@@ -97,7 +98,7 @@ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const 
 
     // .CompilerReferences
     Dependencies compilerReferences;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerReferences, ".CompilerReferences", compilerReferences ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerReferences, ".CompilerReferences", compilerReferences ) )
     {
         return false; // GetNodeList will have emitted an error
     }
@@ -105,7 +106,7 @@ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const 
 
     // Store dependencies
     m_StaticDependencies.SetCapacity( 1 + m_CompilerInputPath.GetSize() + m_NumCompilerInputFiles + m_NumCompilerReferences );
-    m_StaticDependencies.Append( compiler );
+    m_StaticDependencies.Append( Dependency( compilerNode ) );
     m_StaticDependencies.Append( compilerInputPath );
     m_StaticDependencies.Append( compilerInputFiles );
     m_StaticDependencies.Append( compilerReferences );
@@ -179,7 +180,7 @@ CSNode::~CSNode() = default;
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
-    if ( p.Spawn( GetCompiler()->GetName().Get(), fullArgs.GetFinalArgs().Get(),
+    if ( p.Spawn( GetCompiler()->GetExecutable().Get(), fullArgs.GetFinalArgs().Get(),
                   workingDir, environment ) == false )
     {
         if ( p.HasAborted() )
@@ -232,28 +233,11 @@ failed:
     return NODE_RESULT_FAILED;
 }
 
-// Load
+// GetCompiler
 //------------------------------------------------------------------------------
-/*static*/ Node * CSNode::Load( NodeGraph & nodeGraph, IOStream & stream )
+CompilerNode* CSNode::GetCompiler() const
 {
-    NODE_LOAD( AStackString<>, name );
-
-    CSNode * node = nodeGraph.CreateCSNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void CSNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
+    return m_StaticDependencies[0].GetNode()->CastTo< CompilerNode >();
 }
 
 // EmitCompilationMessage
@@ -269,7 +253,7 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
     output += '\n';
     if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
     {
-        output += GetCompiler()->GetName();
+        output += GetCompiler()->GetExecutable();
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';

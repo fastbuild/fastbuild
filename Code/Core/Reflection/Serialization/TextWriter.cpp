@@ -249,7 +249,7 @@ void TextWriter::Write( const void * base, const ReflectedProperty * property )
 //------------------------------------------------------------------------------
 void TextWriter::Write( const AString & buffer )
 {
-    Write( buffer.Get() );
+    Write( "%s", buffer.Get() );
 }
 
 // Write

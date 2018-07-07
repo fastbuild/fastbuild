@@ -1,15 +1,20 @@
-//
-// Cache
-//
-// Build and link an executable.
+// Test cache
 //
 //------------------------------------------------------------------------------
-
-// Use the standard test environment
-//------------------------------------------------------------------------------
-#include "../testcommon.bff"
+#include "..\testcommon.bff"
 Using( .StandardEnvironment )
-Settings {}
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    .CompilerInputFiles =
+    { 
+        '$TestRoot$/Data/TestCache/a.cpp'
+        '$TestRoot$/Data/TestCache/b.cpp'
+    }
+    .CompilerOutputPath = '$Out$/Test/Cache/'
+}
+
 
 Compiler( "Compiler-SimpleCompiler-Caching")
 {

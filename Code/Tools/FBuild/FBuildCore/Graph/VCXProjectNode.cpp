@@ -7,62 +7,153 @@
 
 #include "VCXProjectNode.h"
 
+#include "Tools/FBuild/FBuildCore/Error.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
+#include "Core/Containers/AutoPtr.h"
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
 // system
 #include <string.h> // for memcmp
 
+// Reflection
+//------------------------------------------------------------------------------
+REFLECT_STRUCT_BEGIN_BASE( VSProjectConfigBase )
+    REFLECT(        m_ProjectBuildCommand,          "ProjectBuildCommand",          MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_ProjectRebuildCommand,        "ProjectRebuildCommand",        MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_ProjectCleanCommand,          "ProjectCleanCommand",          MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_Output,                       "Output",                       MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_PreprocessorDefinitions,      "PreprocessorDefinitions",      MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_IncludeSearchPath,            "IncludeSearchPath",            MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_ForcedIncludes,               "ForcedIncludes",               MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AssemblySearchPath,           "AssemblySearchPath",           MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_ForcedUsingAssemblies,        "ForcedUsingAssemblies",        MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AdditionalOptions,            "AdditionalOptions",            MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_OutputDirectory,              "OutputDirectory",              MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_IntermediateDirectory,        "IntermediateDirectory",        MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_BuildLogFile,                 "BuildLogFile",                 MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_LayoutDir,                    "LayoutDir",                    MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_LayoutExtensionFilter,        "LayoutExtensionFilter",        MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_Xbox360DebuggerCommand,       "Xbox360DebuggerCommand",       MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_DebuggerFlavor,               "DebuggerFlavor",               MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_AumidOverride,                "AumidOverride",                MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_PlatformToolset,              "PlatformToolset",              MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_DeploymentType,               "DeploymentType",               MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_DeploymentFiles,              "DeploymentFiles",              MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_LocalDebuggerCommandArguments,"LocalDebuggerCommandArguments",MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_LocalDebuggerWorkingDirectory,"LocalDebuggerWorkingDirectory",MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_LocalDebuggerCommand,         "LocalDebuggerCommand",         MetaInheritFromOwner() + MetaOptional() )
+    REFLECT(        m_LocalDebuggerEnvironment,     "LocalDebuggerEnvironment",     MetaInheritFromOwner() + MetaOptional() )
+REFLECT_END( VSProjectConfigBase )
+
+REFLECT_STRUCT_BEGIN( VSProjectConfig, VSProjectConfigBase, MetaNone() )
+    REFLECT(        m_Platform,                     "Platform",                     MetaNone() )
+    REFLECT(        m_Config,                       "Config",                       MetaNone() )
+    REFLECT(        m_Target,                       "Target",                       MetaOptional() )
+REFLECT_END( VSProjectConfig )
+
+REFLECT_STRUCT_BEGIN_BASE( VSProjectFileType )
+    REFLECT(        m_FileType,                     "FileType",                     MetaNone() )
+    REFLECT(        m_Pattern,                      "Pattern",                      MetaNone() )
+REFLECT_END( VSProjectFileType )
+
+REFLECT_NODE_BEGIN( VCXProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
+    REFLECT_ARRAY(  m_ProjectInputPaths,            "ProjectInputPaths",            MetaOptional() + MetaPath() )
+    REFLECT_ARRAY(  m_ProjectInputPathsExclude,     "ProjectInputPathsExclude",     MetaOptional() + MetaPath() )
+    REFLECT_ARRAY(  m_ProjectFiles,                 "ProjectFiles",                 MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_ProjectFilesToExclude,        "ProjectFilesToExclude",        MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_ProjectPatternToExclude,      "ProjectPatternToExclude",      MetaOptional() + MetaFile() )
+    REFLECT_ARRAY(  m_ProjectBasePaths,             "ProjectBasePath",              MetaOptional() + MetaPath() ) // NOTE: Exposed as "ProjectBasePath" for backwards compat
+    REFLECT_ARRAY(  m_ProjectAllowedFileExtensions, "ProjectAllowedFileExtensions", MetaOptional() )
+    REFLECT_ARRAY_OF_STRUCT(    m_ProjectConfigs,   "ProjectConfigs",               VSProjectConfig,    MetaOptional() )
+    REFLECT_ARRAY_OF_STRUCT(    m_ProjectFileTypes, "ProjectFileTypes",             VSProjectFileType,  MetaOptional() )
+
+    REFLECT(        m_RootNamespace,                "RootNamespace",                MetaOptional() )
+    REFLECT(        m_ProjectGuid,                  "ProjectGuid",                  MetaOptional() )
+    REFLECT(        m_DefaultLanguage,              "DefaultLanguage",              MetaOptional() )
+    REFLECT(        m_ApplicationEnvironment,       "ApplicationEnvironment",       MetaOptional() )
+    REFLECT(        m_ProjectSccEntrySAK,           "ProjectSccEntrySAK",           MetaOptional() )
+
+    REFLECT_ARRAY(  m_ProjectReferences,            "ProjectReferences",            MetaOptional() )
+    REFLECT_ARRAY(  m_ProjectProjectReferences,     "ProjectProjectReferences",     MetaOptional() )
+
+    // Base Project Config settings
+    REFLECT_STRUCT( m_BaseProjectConfig,            "BaseProjectConfig",            VSProjectConfigBase,    MetaEmbedMembers() );
+REFLECT_END( VCXProjectNode )
+
+// VSProjectConfig::ResolveTargets
+//------------------------------------------------------------------------------
+/*static*/ bool VSProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
+                                                 Array< VSProjectConfig > & configs,
+                                                 const BFFIterator * iter,
+                                                 const Function * function )
+{
+    // Must provide iter and function, or neither
+    ASSERT( ( ( iter == nullptr ) && ( function == nullptr ) ) ||
+            ( iter && function ) );
+
+    for ( auto & config : configs )
+    {
+        // Target is allowed to be empty (perhaps this project represents
+        // something that cannot be built, like header browsing information
+        // for a 3rd party library for example)
+        if ( config.m_Target.IsEmpty() )
+        {
+            continue;
+        }
+
+        // Find the node
+        const Node * node = nodeGraph.FindNode( config.m_Target );
+        if ( node == nullptr )
+        {
+            if ( iter && function )
+            {
+                Error::Error_1104_TargetNotDefined( *iter, function, ".Target", config.m_Target );
+                return false;
+            }
+            ASSERT( false ); // Should not be possible to fail when restoring from serialized DB
+            continue;
+        }
+
+        config.m_TargetNode = node;
+    }
+    return true;
+}
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-VCXProjectNode::VCXProjectNode( const AString & projectOutput,
-                                const Array< AString > & projectBasePaths,
-                                const Dependencies & paths,
-                                const Array< AString > & pathsToExclude,
-                                const Array< AString > & patternToExclude,
-                                const Array< AString > & files,
-                                const Array< AString > & filesToExclude,
-                                const AString & rootNamespace,
-                                const AString & projectGuid,
-                                const AString & defaultLanguage,
-                                const AString & applicationEnvironment,
-                                const bool projectSccEntrySAK,
-                                const Array< VSProjectConfig > & configs,
-                                const Array< VSProjectFileType > & fileTypes,
-                                const Array< AString > & references,
-                                const Array< AString > & projectReferences )
-: FileNode( projectOutput, Node::FLAG_NONE )
-, m_ProjectBasePaths( projectBasePaths )
-, m_PathsToExclude( pathsToExclude )
-, m_PatternToExclude( patternToExclude )
-, m_Files( files )
-, m_FilesToExclude( filesToExclude )
-, m_RootNamespace( rootNamespace )
-, m_ProjectGuid( projectGuid )
-, m_DefaultLanguage( defaultLanguage )
-, m_ApplicationEnvironment( applicationEnvironment )
-, m_ProjectSccEntrySAK( projectSccEntrySAK )
-, m_Configs( configs )
-, m_FileTypes( fileTypes )
-, m_References( references )
-, m_ProjectReferences( projectReferences )
+VCXProjectNode::VCXProjectNode()
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    , m_ProjectSccEntrySAK( false )
 {
-    m_LastBuildTimeMs = 100; // higher default than a file node
     m_Type = Node::VCXPROJECT_NODE;
+    m_LastBuildTimeMs = 100; // higher default than a file node
 
-    // depend on the input nodes
-    m_StaticDependencies.Append( paths );
+    ProjectGeneratorBase::GetDefaultAllowedFileExtensions( m_ProjectAllowedFileExtensions );
+}
+
+// Initialize
+//------------------------------------------------------------------------------
+/*virtual*/ bool VCXProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+{
+    ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
+
+    Dependencies dirNodes( m_ProjectInputPaths.GetSize() );
+    if ( !Function::GetDirectoryListNodeList( nodeGraph, iter, function, m_ProjectInputPaths, m_ProjectInputPathsExclude, m_ProjectFilesToExclude, m_ProjectPatternToExclude, true, &m_ProjectAllowedFileExtensions, "ProjectInputPaths", dirNodes ) )
+    {
+        return false; // GetDirectoryListNodeList will have emitted an error
+    }
 
     // generate GUID if not specified
     if ( m_ProjectGuid.IsEmpty() )
@@ -79,6 +170,38 @@ VCXProjectNode::VCXProjectNode( const AString & projectOutput,
         relativePath.Replace( '\\', '/' );
         VSProjectGenerator::FormatDeterministicProjectGUID( m_ProjectGuid, relativePath );
     }
+
+    // Generate default configs if not specified
+    if ( m_ProjectConfigs.IsEmpty() )
+    {
+        // Generated configs will take any properties we've
+        // set at the project level as a default
+        VSProjectConfig config( m_BaseProjectConfig );
+
+        // make the configs
+        m_ProjectConfigs.SetCapacity( 4 );
+        config.m_Platform   = "Win32";
+        config.m_Config     = "Debug";
+        m_ProjectConfigs.Append( config );
+        config.m_Config     = "Release";
+        m_ProjectConfigs.Append( config );
+        config.m_Platform   = "x64";
+        m_ProjectConfigs.Append( config );
+        config.m_Config     = "Debug";
+        m_ProjectConfigs.Append( config );
+    }
+
+    // Resolve Target names to Node pointers for later use
+    if ( VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
+    {
+        return false; // Initialize will have emitted an error
+    }
+
+    // Store all dependencies
+    m_StaticDependencies.SetCapacity( dirNodes.GetSize() );
+    m_StaticDependencies.Append( dirNodes );
+
+    return true;
 }
 
 // DESTRUCTOR
@@ -100,27 +223,27 @@ VCXProjectNode::~VCXProjectNode() = default;
     pg.SetProjectSccEntrySAK( m_ProjectSccEntrySAK );
 
     // References
-    pg.SetReferences( m_References );
-    pg.SetProjectReferences( m_ProjectReferences );
+    pg.SetReferences( m_ProjectReferences );
+    pg.SetProjectReferences( m_ProjectProjectReferences );
 
     // files from directory listings
-    Array< FileIO::FileInfo * > files( 1024, true );
-    GetFiles( files );
-    for ( FileIO::FileInfo ** it=files.Begin(); it!=files.End(); ++it )
+    for ( const Dependency & staticDep : m_StaticDependencies )
     {
-        const AString & fileName = ( *it )->m_Name;
-        AddFile( pg, fileName );
+        DirectoryListNode * dirNode = staticDep.GetNode()->CastTo< DirectoryListNode >();
+        for ( const FileIO::FileInfo & fileInfo : dirNode->GetFiles() )
+        {
+            pg.AddFile( fileInfo.m_Name );
+        }
     }
 
     // files explicitly listed
-    for ( const AString * it=m_Files.Begin(); it!=m_Files.End(); ++it )
+    for ( const AString & fileName : m_ProjectFiles )
     {
-        const AString & fileName = ( *it );
         pg.AddFile( fileName );
     }
 
     // .vcxproj
-    const AString & project = pg.GenerateVCXProj( m_Name, m_Configs, m_FileTypes );
+    const AString & project = pg.GenerateVCXProj( m_Name, m_ProjectConfigs, m_ProjectFileTypes );
     if ( Save( project, m_Name ) == false )
     {
         return NODE_RESULT_FAILED; // Save will have emitted an error
@@ -136,22 +259,6 @@ VCXProjectNode::~VCXProjectNode() = default;
     }
 
     return NODE_RESULT_OK;
-}
-
-// AddFile
-//------------------------------------------------------------------------------
-void VCXProjectNode::AddFile( VSProjectGenerator & pg, const AString & fileName ) const
-{
-    const AString * const end = m_FilesToExclude.End();
-    for( const AString * it=m_FilesToExclude.Begin(); it!=end; ++it )
-    {
-        if ( fileName.EndsWithI( *it ) )
-        {
-            return; // file is ignored
-        }
-    }
-
-    pg.AddFile( fileName );
 }
 
 // Save
@@ -231,124 +338,11 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
     return true;
 }
 
-// Load
+// PostLoad
 //------------------------------------------------------------------------------
-/*static*/ Node * VCXProjectNode::Load( NodeGraph & nodeGraph, IOStream & stream )
+/*virtual*/ void VCXProjectNode::PostLoad( NodeGraph & nodeGraph )
 {
-    NODE_LOAD( AStackString<>,  name );
-    NODE_LOAD( Array< AString >, projectBasePaths );
-    NODE_LOAD_DEPS( 1,          staticDeps );
-    NODE_LOAD( Array< AString >, pathsToExclude );
-    NODE_LOAD( Array< AString >, patternToExclude );
-    NODE_LOAD( Array< AString >, files );
-    NODE_LOAD( Array< AString >, filesToExclude );
-    NODE_LOAD( AStackString<>, rootNamespace );
-    NODE_LOAD( AStackString<>, projectGuid );
-    NODE_LOAD( AStackString<>, defaultLanguage );
-    NODE_LOAD( AStackString<>, applicationEnvironment );
-    NODE_LOAD( bool, projectSccEntrySAK );
-    NODE_LOAD( Array< AString >, references );
-    NODE_LOAD( Array< AString >, projectReferences );
-
-    Array< VSProjectConfig > configs;
-    VSProjectConfig::Load( nodeGraph, stream, configs );
-
-    Array< VSProjectFileType > fileTypes;
-    VSProjectFileType::Load( stream, fileTypes );
-
-    VCXProjectNode * n = nodeGraph.CreateVCXProjectNode( name,
-                                 projectBasePaths,
-                                 staticDeps, // all static deps are DirectoryListNode
-                                 pathsToExclude,
-                                 patternToExclude,
-                                 files,
-                                 filesToExclude,
-                                 rootNamespace,
-                                 projectGuid,
-                                 defaultLanguage,
-                                 applicationEnvironment,
-                                 projectSccEntrySAK,
-                                 configs,
-                                 fileTypes,
-                                 references,
-                                 projectReferences );
-    return n;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void VCXProjectNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    NODE_SAVE( m_ProjectBasePaths );
-    NODE_SAVE_DEPS( m_StaticDependencies );
-    NODE_SAVE( m_PathsToExclude );
-    NODE_SAVE( m_PatternToExclude );
-    NODE_SAVE( m_Files );
-    NODE_SAVE( m_FilesToExclude );
-    NODE_SAVE( m_RootNamespace );
-    NODE_SAVE( m_ProjectGuid );
-    NODE_SAVE( m_DefaultLanguage );
-    NODE_SAVE( m_ApplicationEnvironment );
-    NODE_SAVE( m_ProjectSccEntrySAK );
-    NODE_SAVE( m_References );
-    NODE_SAVE( m_ProjectReferences );
-    VSProjectConfig::Save( stream, m_Configs );
-    VSProjectFileType::Save( stream, m_FileTypes );
-}
-
-// GetFiles
-//------------------------------------------------------------------------------
-void VCXProjectNode::GetFiles( Array< FileIO::FileInfo * > & files ) const
-{
-    // find all the directory lists
-    const Dependency * const sEnd = m_StaticDependencies.End();
-    for ( const Dependency * sIt = m_StaticDependencies.Begin(); sIt != sEnd; ++sIt )
-    {
-        DirectoryListNode * dirNode = sIt->GetNode()->CastTo< DirectoryListNode >();
-        const FileIO::FileInfo * const filesEnd = dirNode->GetFiles().End();
-
-        // filter files in the dir list
-        for ( FileIO::FileInfo * filesIt = dirNode->GetFiles().Begin(); filesIt != filesEnd; ++filesIt )
-        {
-            bool keep = true;
-
-            // filter excluded directories
-            if ( keep )
-            {
-                const AString * pit = m_PathsToExclude.Begin();
-                const AString * const pend = m_PathsToExclude.End();
-                for ( ; pit != pend; ++pit )
-                {
-                    if ( filesIt->m_Name.BeginsWithI( *pit ) )
-                    {
-                        keep = false;
-                        break;
-                    }
-                }
-            }
-
-            // filter excluded pattern
-            if ( keep )
-            {
-                const AString * pit = m_PatternToExclude.Begin();
-                const AString * const pend = m_PatternToExclude.End();
-                for ( ; pit != pend; ++pit )
-                {
-                    if ( PathUtils::IsWildcardMatch( pit->Get(), filesIt->m_Name.Get() ) )
-                    {
-                        keep = false;
-                        break;
-                    }
-                }
-            }
-
-            if ( keep )
-            {
-                files.Append( filesIt );
-            }
-        }
-    }
+    VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs );
 }
 
 //------------------------------------------------------------------------------

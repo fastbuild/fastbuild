@@ -305,10 +305,13 @@ void TestGraph::TestSerialization() const
 
     // load the config file and save the resulting db
     {
+        // Ensure we're creating the DB by parsing the BFF
+        EnsureFileDoesNotExist( AStackString<>( dbFile1 ) );
+
         FBuildOptions options;
         options.m_ConfigFile = "fbuild.bff";
         FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
         TEST_ASSERT( FileIO::FileExists( dbFile1 ) );
     }

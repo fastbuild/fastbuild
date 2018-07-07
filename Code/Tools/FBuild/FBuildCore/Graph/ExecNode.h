@@ -17,14 +17,13 @@ class ExecNode : public FileNode
     REFLECT_NODE_DECLARE( ExecNode )
 public:
     explicit ExecNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~ExecNode();
 
     static inline Node::Type GetTypeS() { return Node::EXEC_NODE; }
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 private:
+    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     const FileNode * GetExecutable() const { return m_StaticDependencies[0].GetNode()->CastTo< FileNode >(); }
@@ -47,6 +46,9 @@ private:
     bool                m_ExecUseStdOutAsOutput;
     bool                m_ExecInputPathRecurse;
     Array< AString >    m_PreBuildDependencyNames;
+
+    // Internal State
+    uint32_t            m_NumExecInputFiles;
 };
 
 //------------------------------------------------------------------------------

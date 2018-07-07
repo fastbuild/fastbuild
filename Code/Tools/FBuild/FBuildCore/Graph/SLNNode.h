@@ -43,7 +43,7 @@ class SolutionFolder : public Struct
     REFLECT_STRUCT_DECLARE( SolutionFolder )
 public:
     AString             m_Path;
-    Array< AString >    m_Projects;    
+    Array< AString >    m_Projects;
 };
 
 // SolutionDependency
@@ -52,8 +52,8 @@ class SolutionDependency : public Struct
 {
     REFLECT_STRUCT_DECLARE( SolutionDependency )
 public:
-    Array< AString >    m_Projects;    
-    Array< AString >    m_Dependencies;    
+    Array< AString >    m_Projects;
+    Array< AString >    m_Dependencies;
 };
 
 // SLNNode
@@ -63,26 +63,24 @@ class SLNNode : public FileNode
     REFLECT_NODE_DECLARE( SLNNode )
 public:
     SLNNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~SLNNode();
 
     static inline Node::Type GetTypeS() { return Node::SLN_NODE; }
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
     bool Save( const AString & content, const AString & fileName ) const;
 
-    bool                    GatherProject( NodeGraph & nodeGraph, 
-                                           const Function * function, 
+    bool                    GatherProject( NodeGraph & nodeGraph,
+                                           const Function * function,
                                            const BFFIterator & iter,
                                            const char * propertyName,
                                            const AString & projectName,
                                            Array< VCXProjectNode * > & inOutProjects ) const;
-    bool                    GatherProjects( NodeGraph & nodeGraph, 
-                                            const Function * function, 
+    bool                    GatherProjects( NodeGraph & nodeGraph,
+                                            const Function * function,
                                             const BFFIterator & iter,
                                             const char * propertyName,
                                             const Array< AString > & projectNames,
