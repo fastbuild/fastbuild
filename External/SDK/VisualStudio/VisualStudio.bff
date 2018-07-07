@@ -1,0 +1,68 @@
+// VisualStudio
+//------------------------------------------------------------------------------
+
+// Select desired Visual Studio version
+//------------------------------------------------------------------------------
+//#define USING_VS2013
+//#define USING_VS2015
+#define USING_VS2017
+
+// Activate
+//------------------------------------------------------------------------------
+#if USING_VS2013
+    #include "VS2013.bff"
+    .MSC_VER                            = .VS2013_MSC_VER
+    .ToolChain_VS_Windows_X86           = .ToolChain_VS2013_Windows_X86
+    .ToolChain_VS_Windows_X64           = .ToolChain_VS2013_Windows_X64
+    .VS_PATH                            = .VS_2013_PATH
+    .VS_PlatformToolset                 = .VS_2013_PlatformToolset
+#endif
+#if USING_VS2015
+    #include "VS2015.bff"
+    .MSC_VER                            = .VS2015_MSC_VER
+    .ToolChain_VS_Windows_X86           = .ToolChain_VS2015_Windows_X86
+    .ToolChain_VS_Windows_X64           = .ToolChain_VS2015_Windows_X64
+    .VS_PATH                            = .VS_2015_PATH
+    .VS_PlatformToolset                 = .VS_2015_PlatformToolset
+#endif
+#if USING_VS2017
+    #include "VS2017.bff"
+    .MSC_VER                            = .VS2017_MSC_VER
+    .ToolChain_VS_Windows_X86           = .ToolChain_VS2017_Windows_X86
+    .ToolChain_VS_Windows_X64           = .ToolChain_VS2017_Windows_X64
+    .VS_PATH                            = .VS_2017_PATH
+    .VS_PlatformToolset                 = .VS_2017_PlatformToolset
+#endif
+
+// Projects
+//--------------------------------------------------------------------------
+{
+    // Common
+    .ProjectBasePath                = '../External/SDK/VisualStudio/'
+    .ProjectInputPaths              = .ProjectBasePath
+    .ProjectAllowedFileExtensions   = '*.bff'
+
+    #if __WINDOWS__
+        // Visual Studio
+        VCXProject( 'VisualStudio-proj' )
+        {
+            .ProjectOutput                  = '../tmp/VisualStudio/Projects/VisualStudio.vcxproj'
+            .PlatformToolset                = .VS_PlatformToolset
+    
+            .ProjectX64Debug                = [ .Platform = 'x64' .Config = 'x64-Debug' ]
+            .ProjectX64Profile              = [ .Platform = 'x64' .Config = 'x64-Profile' ]
+            .ProjectX64Release              = [ .Platform = 'x64' .Config = 'x64-Release' ]
+            .ProjectX64ClangDebug           = [ .Platform = 'x64' .Config = 'x64Clang-Debug' ]
+            .ProjectX64ClangProfile         = [ .Platform = 'x64' .Config = 'x64Clang-Profile' ]
+            .ProjectX64ClangRelease         = [ .Platform = 'x64' .Config = 'x64Clang-Release' ]
+            .ProjectConfigs                 = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+                                                .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
+        }
+    #endif
+
+    #if __OSX__
+        // TODO: Add project
+    #endif
+}
+
+//------------------------------------------------------------------------------

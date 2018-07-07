@@ -1,0 +1,105 @@
+// Visual Studio 2017
+//------------------------------------------------------------------------------
+.VS2017_BasePath         = '../External/SDK/VisualStudio/2017/Community'
+.VS2017_Version          = '14.12.25827'
+
+// X86 Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-VS2017-x86' )
+{
+    .Root           = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x86'
+    .Executable = '$Root$/cl.exe'
+    .ExtraFiles = { '$Root$/c1.dll'
+                    '$Root$/c1xx.dll',
+                    '$Root$/c2.dll',
+                    '$Root$/../x64/msobj140.dll' // NOTE: Annoyingly not present in the same dir
+                    '$Root$/../x64/mspdb140.dll' // NOTE: Annoyingly not present in the same dir
+                    '$Root$/../x64/mspdbcore.dll'// NOTE: Annoyingly not present in the same dir
+                    '$Root$/../x64/mspdbsrv.exe' // NOTE: Annoyingly not present in the same dir
+                    '$Root$/../x64/mspft140.dll' // NOTE: Annoyingly not present in the same dir
+                    '$Root$/msvcp140.dll'
+                    '$Root$/vcruntime140.dll'
+                    '$Root$/1033/clui.dll'
+                  }
+}
+
+// X64 Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-VS2017-x64' )
+{
+    .Root       = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x64'
+    .Executable = '$Root$/cl.exe'
+    .ExtraFiles = { '$Root$/c1.dll'
+                    '$Root$/c1xx.dll',
+                    '$Root$/c2.dll',
+                    '$Root$/msobj140.dll'
+                    '$Root$/mspdb140.dll'
+                    '$Root$/mspdbcore.dll'
+                    '$Root$/mspdbsrv.exe'
+                    '$Root$/mspft140.dll'
+                    '$Root$/msvcp140.dll'
+                    '$Root$/vcruntime140.dll'
+                    '$Root$/1033/clui.dll'
+                  }
+}
+
+// X86 ToolChain for Windows
+//------------------------------------------------------------------------------
+.ToolChain_VS2017_Windows_X86 =
+[
+    .VSIncludePaths                 = ' -I"$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/include/"'
+                                    + ' /arch:SSE2'
+    .VSLibPaths                     = ' /LIBPATH:"$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/lib/x86"'
+
+    .CompilerOptions                = .VSIncludePaths
+    .CompilerOptionsC               = .VSIncludePaths
+    .CompilerOptionsPCH             = .VSIncludePaths
+    .CompilerOptionsDeoptimized     = .VSIncludePaths
+
+    .LinkerOptions                  = .VSLibPaths
+
+    .Compiler                       = 'Compiler-VS2017-X86'
+    .Librarian                      = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x86/lib.exe'
+    .Linker                         = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x86/link.exe'
+
+    .CRTLibs_Static                 = ' LIBCMT.LIB'
+                                    + ' libvcruntime.lib'
+                                    + ' libucrt.lib'
+]
+
+// X64 ToolChain for Windows
+//------------------------------------------------------------------------------
+.ToolChain_VS2017_Windows_X64 =
+[
+    .VSIncludePaths                 = ' -I"$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/include/"'
+    .VSLibPaths                     = ' /LIBPATH:"$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/lib/x64"'
+
+    .CompilerOptions                = .VSIncludePaths
+    .CompilerOptionsC               = .VSIncludePaths
+    .CompilerOptionsPCH             = .VSIncludePaths
+    .CompilerOptionsDeoptimized     = .VSIncludePaths
+
+    .LinkerOptions                  = .VSLibPaths
+
+    .Compiler                       = 'Compiler-VS2017-X64'
+    .Librarian                      = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x64/lib.exe'
+    .Linker                         = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x64/link.exe'
+
+    .CRTLibs_Static                 = ' LIBCMT.LIB'
+                                    + ' libvcruntime.lib'
+                                    + ' libucrt.lib'
+]
+
+// PATH environment variable
+//------------------------------------------------------------------------------
+.VS_2017_PATH                       = '$VS2017_BasePath$/Common7/IDE/;$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x64'
+
+// Platform Toolset for Project Generation
+//------------------------------------------------------------------------------
+.VS_2017_PlatformToolset            = 'v141'
+
+// _MSC_VER
+//------------------------------------------------------------------------------
+.VS2017_MSC_VER                     = '1910'
+
+//------------------------------------------------------------------------------
