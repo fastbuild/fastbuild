@@ -179,7 +179,11 @@ public:
     {
         // Determine age bucket
         const uint64_t age = currentTime - info.m_LastWriteTime;
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+        const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)1000000000 );
+#else
         const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
+#endif
         uint32_t ageInDays = (uint32_t)( age / oneDay );
         if ( ageInDays >= 30 )
         {
