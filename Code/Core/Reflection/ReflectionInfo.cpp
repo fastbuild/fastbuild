@@ -210,10 +210,24 @@ void ReflectionInfo::AddPropertyInternal( PropertyType type, uint32_t offset, co
 
 // AddMetaData
 //------------------------------------------------------------------------------
+void ReflectionInfo::AddMetaData( MetaNone )
+{
+    ASSERT( m_MetaDataChain == nullptr );
+}
+
+// AddMetaData
+//------------------------------------------------------------------------------
 void ReflectionInfo::AddMetaData( IMetaData & metaDataChain )
 {
     ASSERT( m_MetaDataChain == nullptr );
     m_MetaDataChain = &metaDataChain;
+}
+
+// AddPropertyMetaData
+//------------------------------------------------------------------------------
+void ReflectionInfo::AddPropertyMetaData( MetaNone )
+{
+    m_Properties.Top()->AddMetaData( nullptr );
 }
 
 // AddPropertyMetaData
