@@ -12,7 +12,10 @@
 #include "Core/Mem/Mem.h"
 #include "Core/Profile/Profile.h"
 
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+
 #include "lz4.h"
+#include "lz4hc.h"
 
 #include <memory.h>
 
@@ -52,7 +55,7 @@ bool Compressor::IsValidData( const void * data, size_t dataSize ) const
 
 // Compress
 //------------------------------------------------------------------------------
-bool Compressor::Compress( const void * data, size_t dataSize )
+bool Compressor::Compress( const void * data, size_t dataSize, bool useMaxCompression )
 {
     PROFILE_FUNCTION
 
@@ -63,8 +66,17 @@ bool Compressor::Compress( const void * data, size_t dataSize )
     const int worstCaseSize = LZ4_compressBound( (int)dataSize );
     AutoPtr< char > output( (char *)ALLOC( (size_t)worstCaseSize ) );
 
+    int compressedSize;
+
     // do compression
-    const int compressedSize = LZ4_compress_default( (const char*)data, output.Get(), (int)dataSize, worstCaseSize);
+    if ( useMaxCompression )
+    {
+        compressedSize = LZ4_compress_HC( (const char*)data, output.Get(), (int)dataSize, worstCaseSize, LZ4HC_CLEVEL_MAX );
+    }
+    else
+    {
+        compressedSize = LZ4_compress_default( (const char*)data, output.Get(), (int)dataSize, worstCaseSize );
+    }
 
     // did the compression yield any benefit?
     const bool compressed = ( compressedSize < (int)dataSize );

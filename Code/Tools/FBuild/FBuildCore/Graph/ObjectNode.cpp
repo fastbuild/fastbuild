@@ -469,7 +469,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     {
         // compress job data
         Compressor c;
-        c.Compress( job->GetData(), job->GetDataSize() );
+        const bool useMaxCompression = false; // favor speed instead of size
+        c.Compress( job->GetData(), job->GetDataSize(), useMaxCompression );
         size_t compressedSize = c.GetResultSize();
         job->OwnData( c.ReleaseResult(), compressedSize, true );
 
@@ -1317,7 +1318,7 @@ void ObjectNode::WriteToCache( Job * job )
         {
             // try to compress
             Compressor c;
-            c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize() );
+            c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize(), FBuild::Get().GetOptions().m_UseMaxCompressionForCache );
             const void * data = c.GetResult();
             const size_t dataSize = c.GetResultSize();
 

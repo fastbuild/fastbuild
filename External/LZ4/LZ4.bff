@@ -50,6 +50,7 @@
             // Input - Only build specific files we use
 	        .CompilerInputFiles         = { 
                                             '$LZ4BasePath$\lz4.c'
+                                            '$LZ4BasePath$\lz4hc.c'
                                             '$LZ4BasePath$\xxhash.c'
                                           }
 

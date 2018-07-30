@@ -99,7 +99,8 @@ void ToolManifestFile::StoreCompressedContent( const void * uncompressedData, co
 {
     m_UncompressedContentSize = uncompressedDataSize;
     Compressor c;
-    c.Compress( uncompressedData, m_UncompressedContentSize );
+    const bool useMaxCompression = false;
+    c.Compress( uncompressedData, m_UncompressedContentSize, useMaxCompression );
     m_CompressedContentSize = (uint32_t)c.GetResultSize();
     m_CompressedContent = c.ReleaseResult();
 }

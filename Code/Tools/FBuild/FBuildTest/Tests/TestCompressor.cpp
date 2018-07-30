@@ -86,7 +86,8 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 
     // compress
     Compressor c;
-    const bool compressed = c.Compress( data, size );
+    const bool useMaxCompression = false;
+    const bool compressed = c.Compress( data, size, useMaxCompression );
     TEST_ASSERT( compressed == shouldCompress );
     const size_t compressedSize = c.GetResultSize();
     if ( expectedCompressedSize > 0 )
@@ -138,7 +139,8 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 
     // compress the data to obtain size
     Compressor comp;
-    comp.Compress( data.Get(), dataSize );
+    const bool useMaxCompression = false;
+    comp.Compress( data.Get(), dataSize, useMaxCompression );
     size_t compressedSize = comp.GetResultSize();
     AutoPtr< char > compressedData( (char *)ALLOC( compressedSize ) );
     memcpy( compressedData.Get(), comp.GetResult(), compressedSize );
@@ -165,7 +167,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     while ( t.GetElapsed() < TIME_TO_REPEAT )
     {
         Compressor c;
-        c.Compress( data.Get(), dataSize );
+        c.Compress( data.Get(), dataSize, useMaxCompression );
         TEST_ASSERT( c.GetResultSize() == compressedSize );
         ++numRepeats;
     }
