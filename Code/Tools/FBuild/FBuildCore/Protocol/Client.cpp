@@ -582,9 +582,11 @@ void Client::LookForWorkers()
 
                         ss->m_ConnectionDelayTimer.Start();  // reset time
 
+                        DIST_INFO( "Connecting to: %s\n", ss->m_RemoteName.Get() );
                         const ConnectionInfo * ci = Connect( ss->m_RemoteName, m_Port, 2000 ); // 2000ms connection timeout
                         if ( ci == nullptr )
                         {
+                            DIST_INFO( " - connection: %s (FAILED)\n", ss->m_RemoteName.Get() );
                             if ( ss->m_ConnectionRetryIntervalSec == 0 )
                             {
                                 ss->m_ConnectionRetryIntervalSec = 5;  // next retry is in >= 5 seconds
@@ -613,7 +615,7 @@ void Client::LookForWorkers()
                         }
                         else
                         {
-                            DIST_INFO( "Connected: %s\n", ss->m_RemoteName.Get() );
+                            DIST_INFO( " - connection: %s (OK)\n", ss->m_RemoteName.Get() );
                             uint32_t numJobsAvailable = 0;
                             uint32_t numJobsAvailableForWorker = 0;
                             if ( JobQueue::IsValid() )
