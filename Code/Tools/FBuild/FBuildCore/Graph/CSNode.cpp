@@ -18,6 +18,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Env/Env.h"
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -188,7 +189,8 @@ CSNode::~CSNode() = default;
             return NODE_RESULT_FAILED;
         }
 
-        FLOG_ERROR( "Failed to spawn process to build '%s'", GetName().Get() );
+        FLOG_ERROR( "Failed to spawn '%s' process (error 0x%x) to build '%s'\n",
+            GetCompiler()->GetExecutable().Get(), Env::GetLastErr(), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
 
@@ -228,7 +230,7 @@ CSNode::~CSNode() = default;
     return NODE_RESULT_OK;
 
 failed:
-    FLOG_ERROR( "Failed to build Object (error %i) '%s'", result, GetName().Get() );
+    FLOG_ERROR( "Failed to build Object (error 0x%x) '%s'", result, GetName().Get() );
 
     return NODE_RESULT_FAILED;
 }

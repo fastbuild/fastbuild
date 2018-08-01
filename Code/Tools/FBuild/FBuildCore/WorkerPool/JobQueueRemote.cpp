@@ -25,13 +25,19 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads ) :
+JobQueueRemote::JobQueueRemote(
+        uint32_t numWorkerThreads,
+        const bool sandboxEnabled,
+        const AString & obfuscatedSandboxTmp ) :
     m_PendingJobs( 1024, true ),
     m_CompletedJobs( 1024, true ),
     m_CompletedJobsFailed( 1024, true ),
     m_Workers( numWorkerThreads, false )
 {
-    WorkerThread::InitTmpDir( true ); // remote == true
+    WorkerThread::InitTmpDir(
+        sandboxEnabled,
+        obfuscatedSandboxTmp,
+        true ); // remote == true
 
     for ( uint32_t i=0; i<numWorkerThreads; ++i )
     {
@@ -277,11 +283,10 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 {
     Timer timer; // track how long the item takes
 
-    ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
-
+    Node * node = job->GetNode();
     if ( job->IsLocal() )
     {
-        FLOG_MONITOR( "START_JOB local \"%s\" \n", job->GetNode()->GetName().Get() );
+        FLOG_MONITOR( "START_JOB local \"%s\" \n", node->GetName().Get() );
     }
 
     // remote tasks must output to a tmp file
@@ -306,18 +311,33 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         return Node::NODE_RESULT_FAILED;
     }
 
-    // Delete any left over PDB from a previous run (to be sure we have a clean pdb)
-    if ( node->IsUsingPDB() && ( job->IsLocal() == false ) )
+    Node::Type nodeType = node->GetType();
+    switch ( nodeType )
     {
-        AStackString<> pdbName;
-        node->GetPDBName( pdbName );
-        FileIO::FileDelete( pdbName.Get() );
+        case Node::OBJECT_NODE:
+            {
+                ObjectNode * on = node->CastTo< ObjectNode >();
+                // Delete any left over PDB from a previous run (to be sure we have a clean pdb)
+                if ( on->IsUsingPDB() && ( job->IsLocal() == false ) )
+                {
+                    AStackString<> pdbName;
+                    on->GetPDBName( pdbName );
+                    FileIO::FileDelete( pdbName.Get() );
+                }
+            }
+            break;
+        case Node::TEST_NODE:
+            // no PDB to delete
+            break;
+        default:
+            ASSERT( false );
+            break;
     }
 
     Node::BuildResult result;
     {
         PROFILE_SECTION( racingRemoteJob ? "RACE" : "LOCAL" );
-        result = ((Node *)node )->DoBuild2( job, racingRemoteJob );
+        result = node->DoBuild2( job, racingRemoteJob );
     }
 
     // Ignore result if job was cancelled
@@ -384,12 +404,26 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         // Cleanup obj file
         FileIO::FileDelete( node->GetName().Get() );
 
-        // Cleanup PDB file
-        if ( node->IsUsingPDB() )
+        switch ( nodeType )
         {
-            AStackString<> pdbName;
-            node->GetPDBName( pdbName );
-            FileIO::FileDelete( pdbName.Get() );
+            case Node::OBJECT_NODE:
+                {
+                    ObjectNode * on = node->CastTo< ObjectNode >();
+                    // Cleanup PDB file
+                    if ( on->IsUsingPDB() )
+                    {
+                        AStackString<> pdbName;
+                        on->GetPDBName( pdbName );
+                        FileIO::FileDelete( pdbName.Get() );
+                    }
+                }
+                break;
+            case Node::TEST_NODE:
+                // no PDB to cleanup
+                break;
+            default:
+                ASSERT( false );
+                break;
         }
     }
 
@@ -414,8 +448,24 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 //------------------------------------------------------------------------------
 /*static*/ bool JobQueueRemote::ReadResults( Job * job )
 {
-    const ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
-    const bool includePDB = (  node->IsUsingPDB() && ( job->IsLocal() == false ) );
+    const Node * node = job->GetNode();
+    Node::Type nodeType = node->GetType();
+    bool includePDB = false;
+    switch ( nodeType )
+    {
+        case Node::OBJECT_NODE:
+            {
+                ObjectNode * on = node->CastTo< ObjectNode >();
+                includePDB = (  on->IsUsingPDB() && ( job->IsLocal() == false ) );
+            }
+            break;
+        case Node::TEST_NODE:
+            // no PDB to include
+            break;
+        default:
+            ASSERT( false );
+            break;
+    }
 
     // main object
     FileStream fs;
@@ -431,16 +481,30 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     // pdb file if present
     FileStream fs2;
     AStackString<> pdbName;
-    if ( includePDB )
+    switch ( nodeType )
     {
-        node->GetPDBName( pdbName );
-        if ( fs2.Open( pdbName.Get() ) == false )
-        {
-            job->Error( "File missing despite success: '%s'", pdbName.Get() );
-            FLOG_ERROR( "File missing despite success: '%s'", pdbName.Get() );
-            return false;
-        }
-        size2 = (uint32_t)fs2.GetFileSize();
+        case Node::OBJECT_NODE:
+            {
+                ObjectNode * on = node->CastTo< ObjectNode >();
+                if ( includePDB )
+                {
+                    on->GetPDBName( pdbName );
+                    if ( fs2.Open( pdbName.Get() ) == false )
+                    {
+                        job->Error( "File missing despite success: '%s'", pdbName.Get() );
+                        FLOG_ERROR( "File missing despite success: '%s'", pdbName.Get() );
+                        return false;
+                    }
+                    size2 = (uint32_t)fs2.GetFileSize();
+                }
+            }
+            break;
+        case Node::TEST_NODE:
+            // no PDB to include
+            break;
+        default:
+            ASSERT( false );
+            break;
     }
 
     // calc memory required

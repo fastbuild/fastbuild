@@ -161,7 +161,7 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
     #error Unknown platform
 #endif
 
-    FSDEBUG( DEBUGSPAM( "Open file error: %d - '%s' on %x\n", GetLastError(), fileName, Thread::GetCurrentThreadId() ); )
+    FSDEBUG( DEBUGSPAM( "Open file error 0x%x - '%s' on %x\n", GetLastError(), fileName, Thread::GetCurrentThreadId() ); )
     m_Handle = INVALID_HANDLE_VALUE;
     return false;
 }

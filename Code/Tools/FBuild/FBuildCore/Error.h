@@ -201,6 +201,15 @@ public:
                                                        const Function * function,
                                                        const AString & badCompilerFamily );
 
+    // 1600-1699 : Worker errors
+    //------------------------------------------------------------------------------
+    static void Error_1600_FileVersionTooOldOrTooNew( const BFFIterator & iter,
+                                                       const Function * function,
+                                                       const uint32_t expectedFileVersion );
+    static void Error_1601_WorkModeUnrecognized( const BFFIterator & iter,
+                                                       const Function * function,
+                                                       const AString & badWorkMode );
+
 private:
     static void FormatError( const BFFIterator & iter,
                              uint32_t errNum,

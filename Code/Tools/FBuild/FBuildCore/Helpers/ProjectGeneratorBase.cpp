@@ -206,7 +206,7 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
     // are not necessarily a single file)
     if ( Node::EnsurePathExistsForFile( fileName ) == false )
     {
-        FLOG_ERROR( "%s - Invalid path for '%s' (error: %u)", generatorId, fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "%s - Invalid path for '%s' (error 0x%x)", generatorId, fileName.Get(), Env::GetLastErr() );
         return false;
     }
 
@@ -214,12 +214,12 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
     FileStream f;
     if ( !f.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
     {
-        FLOG_ERROR( "%s - Failed to open '%s' for write (error: %u)", generatorId, fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "%s - Failed to open '%s' for write (error 0x%x)", generatorId, fileName.Get(), Env::GetLastErr() );
         return false;
     }
     if ( f.Write( content.Get(), content.GetLength() ) != content.GetLength() )
     {
-        FLOG_ERROR( "%s - Error writing to '%s' (error: %u)", generatorId, fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "%s - Error writing to '%s' (error 0x%x)", generatorId, fileName.Get(), Env::GetLastErr() );
         return false;
     }
     f.Close();

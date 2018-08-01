@@ -317,7 +317,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
     // is not a "file" node)
     if ( EnsurePathExistsForFile( fileName ) == false )
     {
-        FLOG_ERROR( "VCXProject - Invalid path for '%s' (error: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "VCXProject - Invalid path for '%s' (error 0x%x)", fileName.Get(), Env::GetLastErr() );
         return false;
     }
 
@@ -325,12 +325,12 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
     FileStream f;
     if ( !f.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
     {
-        FLOG_ERROR( "VCXProject - Failed to open '%s' for write (error: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "VCXProject - Failed to open '%s' for write (error 0x%x)", fileName.Get(), Env::GetLastErr() );
         return false;
     }
     if ( f.Write( content.Get(), content.GetLength() ) != content.GetLength() )
     {
-        FLOG_ERROR( "VCXProject - Error writing to '%s' (error: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "VCXProject - Error writing to '%s' (error 0x%x)", fileName.Get(), Env::GetLastErr() );
         return false;
     }
     f.Close();

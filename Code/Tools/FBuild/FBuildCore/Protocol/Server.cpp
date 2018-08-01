@@ -17,6 +17,7 @@
 #include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
@@ -26,11 +27,36 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Server::Server( uint32_t numThreadsInJobQueue )
+Server::Server( const Options & serverOptions )
     : m_ShouldExit( false )
     , m_ClientList( 32, true )
 {
-    m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
+    m_WorkerTags = serverOptions.m_WorkerTags;
+
+    AStackString<> obfuscatedSandboxTmp;
+    if ( serverOptions.m_SandboxEnabled )
+    {
+        AStackString<> workingDir;
+        FileIO::GetCurrentDir( workingDir );
+        PathUtils::GetObfuscatedSandboxTmp(
+            serverOptions.m_SandboxEnabled,
+            workingDir,
+            serverOptions.m_SandboxTmp,
+            obfuscatedSandboxTmp );
+        // add sandbox tag if not already added
+        // allows for the unit test case, where Server is directly constructed
+        Tag sandboxTag;
+        Node::GetSandboxTag( sandboxTag );
+        Tags removedTags;  // pass empty container, since only adding
+        Tags addedTags;
+        addedTags.Append( sandboxTag );
+        m_WorkerTags.ApplyChanges( removedTags, addedTags );
+    }
+
+    m_JobQueueRemote = FNEW( JobQueueRemote(
+        serverOptions.m_NumThreadsInJobQueue ? serverOptions.m_NumThreadsInJobQueue : Env::GetNumProcessors(),
+        serverOptions.m_SandboxEnabled,
+        obfuscatedSandboxTmp ) );
 
     m_Thread = Thread::CreateThread( ThreadFuncStatic,
                                      "Server",
@@ -92,7 +118,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
             bool synching = ( *it )->GetSynchronizationStatus( synchDone, synchTotal );
             if ( synching )
             {
-                statusStr.Format( "Synchronizing Compiler %2.1f / %2.1f MiB\n",
+                statusStr.Format( "Synchronizing file(s) %2.1f / %2.1f MiB\n",
                                     (float)synchDone / (float)MEGABYTE,
                                     (float)synchTotal / (float)MEGABYTE );
                 return true;
@@ -156,8 +182,9 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     ASSERT( iter );
     m_ClientList.Erase( iter );
 
-    // because we cancelled manifest syncrhonization, we need to check if other
+    // because we cancelled manifest synchronization, we need to check if other
     // connections are waiting for the same manifest
+    Array< ToolManifest * > stillNeededManifests( 0, true );
     {
         ClientState ** it = m_ClientList.Begin();
         const ClientState * const * end = m_ClientList.End();
@@ -174,6 +201,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
                 if ( cancelledManifests.Find( jMan ) )
                 {
                     RequestMissingFiles( otherCS->m_Connection, jMan );
+                    stillNeededManifests.Append( jMan );
                 }
             }
         }
@@ -184,10 +212,29 @@ bool Server::IsSynchingTool( AString & statusStr ) const
     FREE( (void *)( cs->m_CurrentMessage ) );
 
     // delete any jobs where we were waiting on Tool synchronization
-    const Job * const * end = cs->m_WaitingJobs.End();
-    for ( Job ** it=cs->m_WaitingJobs.Begin(); it!=end; ++it )
     {
-        delete *it;
+        const Job * const * end = cs->m_WaitingJobs.End();
+        for ( Job ** it=cs->m_WaitingJobs.Begin(); it!=end; ++it )
+        {
+            delete *it;
+        }
+    }
+
+    // run Cleanup() on no longer needed manifests
+    {
+        MutexHolder manifestMH( m_ToolManifestsMutex );
+        const ToolManifest * const * end = m_Tools.End();
+        ToolManifest ** it = m_Tools.Begin();
+        while ( it != end )
+        {
+            // if synchronizing from connection that was just disconnected...
+            ToolManifest * tm = *it;
+            if ( !stillNeededManifests.Find( tm ) )
+            {
+                tm->Cleanup();
+            }
+            ++it;
+        }
     }
 
     FDELETE cs;
@@ -664,8 +711,17 @@ void Server::SendServerStatus()
         }
         cs->m_StatusTimer.Start();
 
+        MemoryStream ms;
+        Tags removedTags;
+        Tags addedTags;
+        cs->m_WorkerTagsSent.GetChanges( m_WorkerTags, removedTags, addedTags );
+        removedTags.Write( ms );
+        addedTags.Write( ms );
+        // update the tag cache
+        cs->m_WorkerTagsSent = m_WorkerTags;
+
         Protocol::MsgServerStatus msg;
-        msg.Send( cs->m_Connection );
+        msg.Send( cs->m_Connection, ms );
     }
 }
 

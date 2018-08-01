@@ -13,7 +13,7 @@ Settings
 }
 
 // Common settings
-.CompilerOutputPath         = '$StandardOutputBase$/Test/TestDistributed/RemoteRaceWinRemote/'
+.CompilerOutputPath         = '$StandardOutputBase$/Test/Distributed/RemoteRaceWinRemote/'
 .CompilerOptions            + ' "-ITools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceWinRemote"'
 
 // ObjectList

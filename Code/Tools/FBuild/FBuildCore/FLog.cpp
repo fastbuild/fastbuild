@@ -9,6 +9,7 @@
 
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 
 #include "Core/Env/Types.h"
 #include "Core/FileIO/FileStream.h"
@@ -125,6 +126,21 @@ static FileStream * g_MonitorFileStream = nullptr;
     Output( "Warning:", buffer.Get() );
 }
 
+// ErrorString
+//------------------------------------------------------------------------------
+/*static*/ void FLog::ErrorString( const char * message )
+{
+    // we prevent output here, rather than where the macros is inserted
+    // as an error being output is not the normal code path, and a check
+    // before calling this function would bloat the code
+    if ( FLog::ShowErrors() == false )
+    {
+        return;
+    }
+
+    Output( "Error:", message );
+}
+
 // Error
 //------------------------------------------------------------------------------
 /*static*/ void FLog::Error( const char * formatString, ... )
@@ -192,7 +208,14 @@ static FileStream * g_MonitorFileStream = nullptr;
         //  - it's not uniquified per instance
         //  - we already have a .fbuild.tmp folder we should use
         AStackString<> fullPath;
-        FBuild::GetTempDir( fullPath );
+        if ( FBuild::Get().GetSettings()->GetSandboxEnabled() )
+        {
+            fullPath = FBuild::Get().GetSettings()->GetObfuscatedSandboxTmp();
+        }
+        else
+        {
+            FBuild::GetTempDir( fullPath );
+        }
         fullPath += "FastBuild/FastBuildLog.log";
 
         ASSERT( g_MonitorFileStream == nullptr );

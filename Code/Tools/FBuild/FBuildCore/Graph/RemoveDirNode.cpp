@@ -107,7 +107,7 @@ RemoveDirNode::~RemoveDirNode() = default;
             // remove the file
             if ( FileIO::FileDelete( srcFile.Get() ) == false )
             {
-                FLOG_ERROR( "Remove failed (error %i) '%s'", Env::GetLastErr(), srcFile.Get() );
+                FLOG_ERROR( "Remove failed (error 0x%x) '%s'", Env::GetLastErr(), srcFile.Get() );
                 return NODE_RESULT_FAILED; // remove failed
             }
 

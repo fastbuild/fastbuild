@@ -18,9 +18,11 @@
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThreadRemote.h"
+#include "Tools/FBuild/FBuildCore/Graph/WorkerSettingsNode.h"
 
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
 #include "Core/Profile/Profile.h"
@@ -32,7 +34,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
+Worker::Worker( const AString & args )
     : m_MainWindow( nullptr )
     , m_ConnectionPool( nullptr )
     , m_NetworkStartupHelper( nullptr )
@@ -44,8 +46,22 @@ Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
     #endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
+}
+
+// Initialize
+//------------------------------------------------------------------------------
+void Worker::Initialize( void * hInstance, const bool consoleMode )
+{
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
-    m_ConnectionPool = FNEW( Server );
+
+    Server::Options serverOptions;
+    serverOptions.m_NumThreadsInJobQueue = 0;
+    serverOptions.m_SandboxEnabled = m_WorkerSettings->GetSandboxEnabled();
+    serverOptions.m_SandboxTmp = m_WorkerSettings->GetSandboxTmp();
+    serverOptions.m_WorkerTags = m_WorkerSettings->GetWorkerTags();
+
+    m_ConnectionPool = FNEW( Server ( serverOptions ) );
+
     if ( consoleMode == true )
     {
         #if __WINDOWS__
@@ -120,17 +136,58 @@ int Worker::Work()
     // We just create this folder whether it's needed or not
     {
         AStackString<> tmpPath;
-        VERIFY( FBuild::GetTempDir( tmpPath ) );
-        #if defined( __WINDOWS__ )
-            tmpPath += ".fbuild.tmp\\target\\include";
-        #else
-            tmpPath += "_fbuild.tmp/target/include";
-        #endif
-        if ( !FileIO::EnsurePathExists( tmpPath ) )
+        if ( m_WorkerSettings->GetSandboxEnabled() )
         {
-            ErrorMessage( "Failed to initialize tmp folder.  Error: 0x%x", Env::GetLastErr() );
-            return -2;
+            if ( !FileIO::EnsurePathExists( m_WorkerSettings->GetSandboxTmp() ) )
+            {
+                ErrorMessage( "Failed to create tmp folder %s (error 0x%x)", m_WorkerSettings->GetSandboxTmp().Get(), Env::GetLastErr() );
+                return -2;
+            }
+            tmpPath = m_WorkerSettings->GetObfuscatedSandboxTmp();
+            PathUtils::EnsureTrailingSlash( tmpPath );
         }
+        else
+        {
+            VERIFY( FBuild::GetTempDir( tmpPath ) );
+        #if defined( __WINDOWS__ )
+            tmpPath += ".fbuild.tmp\\";
+        #else
+            tmpPath += "_fbuild.tmp/";
+        #endif
+        }
+        #if defined( __WINDOWS__ )
+            tmpPath += "target\\include";
+        #else
+            tmpPath += "target/include";
+        #endif
+
+        if ( m_WorkerSettings->GetSandboxEnabled() )
+        {
+            AStackString<> errorMsg;
+            if ( !FileIO::SetLowIntegrity(
+                m_WorkerSettings->GetSandboxTmp(), errorMsg ) )  // pass in root sandbox tmp dir, so we can secure it
+            {
+                ErrorMessageString( errorMsg.Get() );
+                return -2;
+            }
+            if ( !FileIO::EnsurePathExists( tmpPath ) )
+            {
+                // print the root sandbox tmp dir, not the obfuscated dir
+                // so we can hide the obfuscated dir from other processes
+                ErrorMessage( "Failed to create sandbox dir under %s (error 0x%x)",
+                    m_WorkerSettings->GetSandboxTmp().Get(), Env::GetLastErr() );
+                return -2;
+            }
+        }
+        else
+        {
+            if ( !FileIO::EnsurePathExists( tmpPath ) )
+            {
+                ErrorMessage( "Failed to create tmp folder %s (error 0x%x)", tmpPath.Get(), Env::GetLastErr() );
+                return -2;
+            }
+        }
+
         #if defined( __WINDOWS__ )
             tmpPath += "\\.lock";
         #else
@@ -138,7 +195,7 @@ int Worker::Work()
         #endif
         if ( !m_TargetIncludeFolderLock.Open( tmpPath.Get(), FileStream::WRITE_ONLY ) )
         {
-            ErrorMessage( "Failed to lock tmp folder.  Error: 0x%x", Env::GetLastErr() );
+            ErrorMessage( "Failed to lock tmp folder (error 0x%x)", Env::GetLastErr() );
             return -2;
         }
     }
@@ -172,7 +229,7 @@ int Worker::Work()
     // the application MUST NOT try to update the UI from this point on
     m_MainWindow->SetAllowQuit();
 
-    m_WorkerBrokerage.SetAvailability( false );
+    m_WorkerBrokerage.SetUnavailable();
 
     return 0;
 }
@@ -198,7 +255,14 @@ bool Worker::HasEnoughDiskSpace()
 
         // Check available disk space of temp path
         AStackString<> tmpPath;
-        VERIFY( FBuild::GetTempDir( tmpPath ) );
+        if ( m_WorkerSettings->GetSandboxEnabled() )
+        {
+            tmpPath = m_WorkerSettings->GetObfuscatedSandboxTmp();
+        }
+        else
+        {
+            VERIFY( FBuild::GetTempDir( tmpPath ) );
+        }
         BOOL result = GetDiskFreeSpaceExA( tmpPath.Get(), (PULARGE_INTEGER)&freeBytesAvailable, (PULARGE_INTEGER)&totalNumberOfBytes, (PULARGE_INTEGER)&totalNumberOfFreeBytes );
         if ( result && ( freeBytesAvailable >= MIN_DISK_SPACE ) )
         {
@@ -225,9 +289,9 @@ void Worker::UpdateAvailability()
 
     WorkerSettings & ws = WorkerSettings::Get();
     uint32_t numCPUsToUse = ws.GetNumCPUsToUse();
-    switch( ws.GetMode() )
+    switch( ws.GetWorkMode() )
     {
-        case WorkerSettings::WHEN_IDLE:
+        case WorkerSettingsNode::WHEN_IDLE:
         {
             if ( m_IdleDetection.IsIdle() == false )
             {
@@ -235,11 +299,11 @@ void Worker::UpdateAvailability()
             }
             break;
         }
-        case WorkerSettings::DEDICATED:
+        case WorkerSettingsNode::DEDICATED:
         {
             break; // use all allocated cpus
         }
-        case WorkerSettings::DISABLED:
+        case WorkerSettingsNode::DISABLED:
         {
             numCPUsToUse = 0;
             break;
@@ -253,8 +317,16 @@ void Worker::UpdateAvailability()
     }
 
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
-
-    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
+    
+    if ( numCPUsToUse > 0 )
+    {
+        m_WorkerBrokerage.SetAvailable( ws.GetWorkerTags() );
+    }
+    else
+    {
+        // to avoid doing a lot of network file I/O when going idle and not idle,
+        // don't set unavailable here
+    }
 }
 
 // UpdateUI
@@ -402,6 +474,29 @@ void Worker::StatusMessage( const char * fmtString, ... ) const
     OUTPUT( "%s", buffer.Get() );
 }
 
+// ErrorMessageString
+//------------------------------------------------------------------------------
+void Worker::ErrorMessageString( const char * message ) const
+{
+    if ( InConsoleMode() )
+    {
+        // Forward to console
+        StatusMessage( "%s", message );
+        return;
+    }
+
+    // Display interactive Message Box
+    #if defined( __WINDOWS__ )
+        ::MessageBox( nullptr, message, "FBuild Worker", MB_OK );
+    #elif defined( __APPLE__ )
+        // TODO:MAC Implement ErrorMessageString for non-console mode
+    #elif defined( __LINUX__ )
+        // TODO:LINUX Implement ErrorMessageString for non-console mode
+    #else
+        #error Unknown Platform
+    #endif
+}
+
 // ErrorMessage
 //------------------------------------------------------------------------------
 void Worker::ErrorMessage( const char * fmtString, ... ) const
@@ -413,23 +508,7 @@ void Worker::ErrorMessage( const char * fmtString, ... ) const
     buffer.VFormat( fmtString, args );
     va_end( args );
 
-    if ( InConsoleMode() )
-    {
-        // Forward to console
-        StatusMessage( "%s", buffer.Get() );
-        return;
-    }
-
-    // Display interactive Message Box
-    #if defined( __WINDOWS__ )
-        ::MessageBox( nullptr, buffer.Get(), "FBuild Worker", MB_OK );
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement ErrorMessage for non-console mode
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ErrorMessage for non-console mode
-    #else
-        #error Unknown Platform
-    #endif
+    ErrorMessageString( buffer.Get() );
 }
 
 //------------------------------------------------------------------------------

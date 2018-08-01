@@ -214,7 +214,7 @@ LinkerNode::~LinkerNode() = default;
                 return NODE_RESULT_FAILED;
             }
 
-            FLOG_ERROR( "Failed to spawn process '%s' for %s creation for '%s'", m_Linker.Get(), GetDLLOrExe(), GetName().Get() );
+            FLOG_ERROR( "Failed to spawn '%s' process (error 0x%x) for %s creation to build '%s'\n", m_Linker.Get(), Env::GetLastErr(), GetDLLOrExe(), GetName().Get() );
             return NODE_RESULT_FAILED;
         }
 
@@ -269,7 +269,7 @@ LinkerNode::~LinkerNode() = default;
             }
 
             // some other (genuine) linker failure
-            FLOG_ERROR( "Failed to build %s (error %i) '%s'", GetDLLOrExe(), result, GetName().Get() );
+            FLOG_ERROR( "Failed to build %s (error 0x%x) '%s'", GetDLLOrExe(), result, GetName().Get() );
             return NODE_RESULT_FAILED;
         }
         else
@@ -302,7 +302,7 @@ LinkerNode::~LinkerNode() = default;
                 return NODE_RESULT_FAILED;
             }
 
-            FLOG_ERROR( "Failed to spawn process '%s' for '%s' stamping of '%s'", linkerStampExe->GetName().Get(), GetDLLOrExe(), GetName().Get() );
+            FLOG_ERROR( "Failed to spawn '%s' process (error 0x%x) for '%s' stamping of '%s'\n", linkerStampExe->GetName().Get(), Env::GetLastErr(), GetDLLOrExe(), GetName().Get() );
             return NODE_RESULT_FAILED;
         }
 
@@ -326,7 +326,7 @@ LinkerNode::~LinkerNode() = default;
         {
             if ( memOut.Get() ) { FLOG_ERROR_DIRECT( memOut.Get() ); }
             if ( memErr.Get() ) { FLOG_ERROR_DIRECT( memErr.Get() ); }
-            FLOG_ERROR( "Failed to stamp %s '%s' (error %i - '%s')", GetDLLOrExe(), GetName().Get(), result, m_LinkerStampExe.Get() );
+            FLOG_ERROR( "Failed to stamp %s '%s' (error 0x%x - '%s')", GetDLLOrExe(), GetName().Get(), result, m_LinkerStampExe.Get() );
             return NODE_RESULT_FAILED;
         }
 
@@ -452,7 +452,7 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
                 Args::StripQuotes( valueStart, valueEnd, value );
 
                 AStackString<> cleanValue;
-                NodeGraph::CleanPath( value, cleanValue, false );
+                NodeGraph::CleanPath( value, cleanValue, false );  // don't makeFullPath
 
                 fullArgs += token[0]; // reuse whichever prefix, / or -
                 fullArgs += "LIBPATH:\"";
@@ -935,10 +935,10 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 // GetOtherLibraries
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::GetOtherLibraries( NodeGraph & nodeGraph,
-                                               const BFFIterator & iter,
-                                               const Function * function,
-                                               const AString & args,
-                                               Dependencies & otherLibraries,
+                                    const BFFIterator & iter,
+                                    const Function * function,
+                                    const AString & args,
+                                    Dependencies & otherLibraries,
                                                bool msvc )
 {
     // split to individual tokens
@@ -956,7 +956,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // extract lib path from system if present
     AStackString< 1024 > libVar;
     FBuild::Get().GetLibEnvVar( libVar );
-    libVar.Tokenize( envLibPaths, ';' );
+        libVar.Tokenize( envLibPaths, ';' );
 
     const AString * const end = tokens.End();
     for ( const AString * it = tokens.Begin(); it != end; ++it )
@@ -1139,11 +1139,11 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 // GetOtherLibrary
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::GetOtherLibrary( NodeGraph & nodeGraph,
-                                             const BFFIterator & iter,
-                                             const Function * function,
-                                             Dependencies & libs,
-                                             const AString & path,
-                                             const AString & lib,
+                                  const BFFIterator & iter,
+                                  const Function * function,
+                                  Dependencies & libs,
+                                  const AString & path,
+                                  const AString & lib,
                                              bool & found )
 {
     found = false;

@@ -83,10 +83,12 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
 //------------------------------------------------------------------------------
 Job * JobSubQueue::RemoveJob()
 {
+    Job * retJob = nullptr;
+
     // lock-free early out if there are no jobs
     if ( m_Count == 0 )
     {
-        return nullptr;
+        return retJob;
     }
 
     // lock to remove job
@@ -95,33 +97,70 @@ Job * JobSubQueue::RemoveJob()
     // possible that job has been removed between job count check and mutex lock
     if ( m_Jobs.IsEmpty() )
     {
-        return nullptr;
+        return retJob;
     }
 
-    ASSERT( m_Count );
-    --m_Count;
+    retJob = m_Jobs.Top();
+    if ( retJob )
+    {
+        ASSERT( m_Count );
+        --m_Count;
 
-    Job * job = m_Jobs.Top();
-    m_Jobs.Pop();
+        m_Jobs.Pop();
+    }
+    return retJob;
+}
 
-    return job;
+// DeleteJobs
+//------------------------------------------------------------------------------
+void JobSubQueue::DeleteJobs()
+{
+    // lock-free early out if there are no jobs
+    if ( m_Count == 0 )
+    {
+        return;
+    }
+
+    // lock to remove job
+    MutexHolder mh( m_Mutex );
+
+    // possible that job has been removed between job count check and mutex lock
+    if ( m_Jobs.IsEmpty() )
+    {
+        return;
+    }
+
+    for ( size_t i=0; i<m_Count; ++i )
+    {
+        FDELETE m_Jobs[ i ];
+    }
+    m_Jobs.Clear();
+    m_Count = 0;
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueue::JobQueue( uint32_t numWorkerThreads ) :
-    m_NumLocalJobsActive( 0 ),
-    m_DistributableJobs_Available( 1024, true ),
-    m_DistributableJobs_InProgress( 1024, true ),
-    m_CompletedJobs( 1024, true ),
-    m_CompletedJobsFailed( 1024, true ),
-    m_CompletedJobs2( 1024, true ),
-    m_CompletedJobsFailed2( 1024, true ),
-    m_Workers( numWorkerThreads, false )
+JobQueue::JobQueue( const uint32_t numWorkerThreads,
+    const bool sandboxEnabled,
+    const AString & obfuscatedSandboxTmp,
+    const Tags & localWorkerTags ) :
+m_NumRemoteWorkers( 0 ),
+m_NumLocalJobsActive( 0 ),
+m_DistributableJobs_Available( 1024, true ),
+m_DistributableJobs_InProgress( 1024, true ),
+m_CompletedJobs( 1024, true ),
+m_CompletedJobsFailed( 1024, true ),
+m_CompletedJobs2( 1024, true ),
+m_CompletedJobsFailed2( 1024, true ),
+m_Workers( numWorkerThreads, false ),
+m_RetryingWorkers( true ),  // begin with retrying of workers
+m_LocalWorkerTags( localWorkerTags )
 {
     PROFILE_FUNCTION
 
-    WorkerThread::InitTmpDir();
+    WorkerThread::InitTmpDir(
+        sandboxEnabled,
+        obfuscatedSandboxTmp );
 
     for ( uint32_t i=0; i<numWorkerThreads; ++i )
     {
@@ -142,10 +181,7 @@ JobQueue::~JobQueue()
     SignalStopWorkers();
 
     // delete incomplete jobs
-    while ( Job * job = m_LocalJobs_Available.RemoveJob() )
-    {
-        FDELETE job;
-    }
+    m_LocalJobs_Available.DeleteJobs();
 
     // wait for workers to finish - ok if they stopped before this
     const size_t numWorkerThreads = m_Workers.GetSize();
@@ -153,6 +189,18 @@ JobQueue::~JobQueue()
     {
         m_Workers[ i ]->WaitForStop();
         FDELETE m_Workers[ i ];
+    }
+
+    {
+        MutexHolder m( m_DistributedJobsMutex );
+        // we may have some distributable jobs that could not be built,
+        // so delete them here before checking mem usage below
+        const size_t numJobsAvailable = m_DistributableJobs_Available.GetSize();
+        for ( size_t i=0; i<numJobsAvailable; ++i )
+        {
+            FDELETE m_DistributableJobs_Available[ i ];
+        }
+        m_DistributableJobs_Available.Clear();
     }
 
     ASSERT( m_CompletedJobs.IsEmpty() );
@@ -190,12 +238,162 @@ bool JobQueue::HaveWorkersStopped() const
     return true;
 }
 
-// GetNumDistributableJobsAvailable
+// SetRetryingWorkers
 //------------------------------------------------------------------------------
-size_t JobQueue::GetNumDistributableJobsAvailable() const
+void JobQueue::SetRetryingWorkers(
+    const size_t numRemoteWorkers, const bool retryingWorkers )
+{
+    m_NumRemoteWorkers = numRemoteWorkers;
+    m_RetryingWorkers = retryingWorkers;
+}
+
+// GetDistributableJobWorkerTags
+//------------------------------------------------------------------------------
+void JobQueue::GetDistributableJobWorkerTags(
+    Array< Tags > & requiredTagsPerJob ) const
 {
     MutexHolder m( m_DistributedJobsMutex );
-    return m_DistributableJobs_Available.GetSize();
+
+    const size_t numJobsAvailable = m_DistributableJobs_Available.GetSize();
+    for ( size_t i=0; i<numJobsAvailable; ++i )
+    {
+        Job * job = m_DistributableJobs_Available[ i ];
+        if ( job )
+        {
+            Node * node = job->GetNode();
+            if ( node )
+            {
+                requiredTagsPerJob.Append( node->GetRequiredWorkerTags() );
+            }
+        }
+    }
+}
+
+// GetNumDistributableJobsAvailable
+//------------------------------------------------------------------------------
+void JobQueue::GetNumDistributableJobsAvailable(
+    const Tags & workerTags,
+    uint32_t & numJobsAvailable,
+    uint32_t & numJobsAvailableForWorker ) const
+{
+    MutexHolder m( m_DistributedJobsMutex );
+
+    numJobsAvailable = (uint32_t)m_DistributableJobs_Available.GetSize();
+    numJobsAvailableForWorker = 0;
+    for ( size_t i=0; i<numJobsAvailable; ++i )
+    {
+        Job * job = m_DistributableJobs_Available[ i ];
+        if ( job )
+        {
+            job = GetJobForWorker( job, workerTags );
+            if ( job )
+            {
+                ++numJobsAvailableForWorker;
+            }
+        }
+    }
+}
+
+// CanBuildOnWorker
+//------------------------------------------------------------------------------
+bool JobQueue::CanBuildOnWorker( const Node * node, const Tags & workerTags )
+{
+    bool canBuildOnWorker = false;
+    if ( workerTags.IsValid() )
+    {
+        // check if the worker can do the job
+        const AString & workerName = workerTags.GetWorkerName();
+        size_t foundIndex = 0;
+        const WorkerRecords & workerRecords = node->GetWorkerRecords();
+        if ( workerRecords.Find( workerName, foundIndex ) )
+        {
+            const bool includeLocal = true;
+            canBuildOnWorker = workerRecords.CanBuildJob( foundIndex, includeLocal );
+        }
+        else
+        {
+            const Tags & requiredWorkerTags = node->GetRequiredWorkerTags();
+            canBuildOnWorker = workerTags.MatchesAll( requiredWorkerTags );
+            node->UpdateWorkerRecord( workerName, canBuildOnWorker );
+        }
+    }
+    return canBuildOnWorker;
+}
+
+// GetJobForWorker
+//------------------------------------------------------------------------------
+Job * JobQueue::GetJobForWorker(
+    Job * jobToCheck, const Tags & workerTags )
+{
+    Job * retJob = nullptr;
+    if ( jobToCheck )
+    {
+        Node* node = jobToCheck->GetNode();
+        // not building here, so don't set error
+        // some other worker may pick up the job and build it
+        if ( CanBuildOnWorker( node, workerTags ) )
+        {
+            retJob = jobToCheck;
+        }
+    }
+    return retJob;
+}
+
+// CheckUnmatchedJob
+//------------------------------------------------------------------------------
+void JobQueue::CheckUnmatchedJob( Job * unmatchedJob, bool & errored )
+{
+    errored = false;
+    if ( unmatchedJob )
+    {
+        // check worker records
+        // check if we have no workers with the required tags
+        const Node * node = unmatchedJob->GetNode();
+        bool doChecks = false;
+        bool canBuildJob = false;
+        const bool distributableJob = unmatchedJob->GetDistributionState() == Job::DIST_AVAILABLE;
+        if ( distributableJob )
+        {
+            // if distributable job, only check workers if no longer retrying them
+            doChecks = !m_RetryingWorkers;  // if we are no longer retrying workers
+            if ( doChecks )
+            {
+                const WorkerRecords & workerRecords = node->GetWorkerRecords();
+                const bool includeLocal = !FBuild::Get().GetOptions().m_NoLocalConsumptionOfRemoteJobs;
+                const size_t numLocalWorkers = includeLocal ? 1 : 0;
+                // if all workers have records
+                if ( workerRecords.GetNumLocalWorkers() >= numLocalWorkers &&
+                     workerRecords.GetNumRemoteWorkers() >= m_NumRemoteWorkers )
+                {
+                    canBuildJob = workerRecords.CanBuildJob( includeLocal );  // can any worker build the job
+                }
+                else
+                {
+                    // not all workers have records, so can't check canBuildJob yet
+                    doChecks = false;
+                }
+            }
+        }
+        else
+        {
+            // local job, so only consider local worker and check worker immediately
+            doChecks = true;
+            // ignore m_NoLocalConsumptionOfRemoteJobs, since localhost worker is available to attempt preprocessor steps of compile nodes
+            canBuildJob = CanBuildOnWorker( node, m_LocalWorkerTags );
+        }
+        if ( doChecks && !canBuildJob )
+        {
+            // no worker to build the node, emit error
+            const Tags & requiredWorkerTags = node->GetRequiredWorkerTags();
+            AStackString<> noWorkerError;
+            requiredWorkerTags.GetNoWorkerFoundError(
+                distributableJob,
+                node->GetName(),
+                noWorkerError );
+            FLOG_ERROR_STRING( noWorkerError.Get() );
+            errored = true;
+        }
+    }
 }
 
 // GetJobStats
@@ -276,35 +474,97 @@ void JobQueue::QueueDistributableJob( Job * job )
 
 // GetDistributableJobToProcess
 //------------------------------------------------------------------------------
-Job * JobQueue::GetDistributableJobToProcess( bool remote )
+Job * JobQueue::GetDistributableJobToProcess(
+    const Tags & workerTags, const bool remote, bool & errored )
+{
+    Job * retJob = nullptr;
+
+    MutexHolder m( m_DistributedJobsMutex );
+
+    if ( !m_DistributableJobs_Available.IsEmpty() )
+    {
+        // building jobs in the order they are queued
+        // loop until we can get a job for this worker or no more available jobs
+        const size_t numJobsAvailable = m_DistributableJobs_Available.GetSize();
+        for ( size_t i=0; i<numJobsAvailable; ++i )
+        {
+            Job * availableJob = m_DistributableJobs_Available[ i ];
+            if ( availableJob )
+            {
+                Job * jobForWorker = GetJobForWorker( availableJob, workerTags );
+                if ( jobForWorker )
+                {
+                    m_DistributableJobs_Available.EraseIndex( i );
+
+                    ASSERT( jobForWorker->GetDistributionState() == Job::DIST_AVAILABLE );
+
+                    // Tag job as in-use
+                    jobForWorker->SetDistributionState( remote ? Job::DIST_BUILDING_REMOTELY : Job::DIST_BUILDING_LOCALLY );
+                    m_DistributableJobs_InProgress.Append( jobForWorker );
+
+                    retJob = jobForWorker;
+                    // erased a job, so break
+                    break;
+                }
+                else
+                {
+                    // only check this for local case
+                    // since only want one thread checking it
+                    if ( !remote )
+                    {
+                        CheckUnmatchedJob( availableJob, errored );
+                        if ( errored )
+                        {
+                            // since errored, remove job from available list
+                            m_DistributableJobs_Available.EraseIndex( i );
+                            FDELETE availableJob;
+                            // erased a job, so break
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return retJob;
+}
+
+// CheckUnmatchedJobs
+//------------------------------------------------------------------------------
+void JobQueue::CheckUnmatchedJobs( bool & errored )
 {
     MutexHolder m( m_DistributedJobsMutex );
 
-    if ( m_DistributableJobs_Available.IsEmpty() )
+    if ( !m_DistributableJobs_Available.IsEmpty() )
     {
-        return nullptr;
+        // loop until we fail or have checked every job
+        const size_t numJobsAvailable = m_DistributableJobs_Available.GetSize();
+        for ( size_t i=0; i<numJobsAvailable; ++i )
+        {
+            Job * unmatchedJob = m_DistributableJobs_Available[ i ];
+            CheckUnmatchedJob( unmatchedJob, errored );
+            if ( errored )
+            {
+                // since errored, remove job from available list
+                m_DistributableJobs_Available.EraseIndex( i );
+                FDELETE unmatchedJob;
+                // erased a job, so break
+                break;
+            }
+        }
     }
-
-    // building jobs in the order they are queued
-    Job * job = m_DistributableJobs_Available[ 0 ];
-    m_DistributableJobs_Available.PopFront();
-
-    ASSERT( job->GetDistributionState() == Job::DIST_AVAILABLE );
-
-    // Tag job as in-use
-    job->SetDistributionState( remote ? Job::DIST_BUILDING_REMOTELY : Job::DIST_BUILDING_LOCALLY );
-    m_DistributableJobs_InProgress.Append( job );
-    return job;
 }
 
 // GetDistributableJobToRace
 //------------------------------------------------------------------------------
-Job * JobQueue::GetDistributableJobToRace()
+Job * JobQueue::GetDistributableJobToRace( const Tags & workerTags )
 {
+    Job * retJob = nullptr;
+    
     MutexHolder m( m_DistributedJobsMutex );
     if ( m_DistributableJobs_InProgress.IsEmpty() )
     {
-        return nullptr;
+        return retJob;
     }
 
     // take newest job, which is least likely to finish first
@@ -312,18 +572,24 @@ Job * JobQueue::GetDistributableJobToRace()
     const int32_t numJobs = (int32_t)m_DistributableJobs_InProgress.GetSize();
     for ( int32_t i = ( numJobs - 1 ); i >= 0; --i )
     {
-        Job * job = m_DistributableJobs_InProgress[i];
-
-        // Don't Race jobs already building locally
-        const Job::DistributionState distState = job->GetDistributionState();
-        if ( distState == Job::DIST_BUILDING_REMOTELY )
+        Job * inProgressJob = m_DistributableJobs_InProgress[i];
+        if ( inProgressJob )
         {
-            job->SetDistributionState( Job::DIST_RACING );
-            return job;
+            // Don't Race jobs already building locally
+            const Job::DistributionState distState = inProgressJob->GetDistributionState();
+            if ( distState == Job::DIST_BUILDING_REMOTELY )
+            {
+                inProgressJob = GetJobForWorker( inProgressJob, workerTags );
+                if ( inProgressJob )
+                {
+                    inProgressJob->SetDistributionState( Job::DIST_RACING );
+                    retJob = inProgressJob;
+                    break;
+                }
+            }
         }
     }
-
-    return nullptr; // No job found to race (all were local or races already)
+    return retJob;
 }
 
 // OnReturnRemoteJob
@@ -436,6 +702,47 @@ void JobQueue::ReturnUnfinishedDistributableJob( Job * job )
 
     // Signal local threads that new work is available
     m_WorkerThreadSemaphore.Signal();
+}
+ 
+// UpdateWorkerRecords
+//------------------------------------------------------------------------------
+void JobQueue::UpdateWorkerRecords( const Tags & workerTags )
+{
+    if ( workerTags.IsValid() )
+    {
+        MutexHolder m( m_DistributedJobsMutex );
+
+        const size_t numJobsAvailable = m_DistributableJobs_Available.GetSize();
+        for ( size_t i=0; i<numJobsAvailable; ++i )
+        {
+            Job * job = m_DistributableJobs_Available[ i ];
+            if ( job )
+            {
+                Node * node = job->GetNode();
+                const Tags & requiredWorkerTags = node->GetRequiredWorkerTags();
+                const bool canBuildOnWorker = workerTags.MatchesAll( requiredWorkerTags );
+                node->UpdateWorkerRecord( workerTags.GetWorkerName(), canBuildOnWorker );
+            }
+        }
+    }
+}
+
+// RemoveWorkerRecords
+//------------------------------------------------------------------------------
+void JobQueue::RemoveWorkerRecords( const AString & workerName )
+{
+    MutexHolder m( m_DistributedJobsMutex );
+
+    const size_t numJobsAvailable = m_DistributableJobs_Available.GetSize();
+    for ( size_t i=0; i<numJobsAvailable; ++i )
+    {
+        Job * job = m_DistributableJobs_Available[ i ];
+        if ( job )
+        {
+            Node * node = job->GetNode();
+            node->RemoveWorkerRecord( workerName );
+        }
+    }
 }
 
 // FinalizeCompletedJobs (Main Thread)
@@ -653,7 +960,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     bool nodeRelevantToMonitorLog = false;
 
-    const AString & nodeName = job->GetNode()->GetName();
+    const AString & nodeName = node->GetName();
 
     if ( ( node->GetType() == Node::OBJECT_NODE ) ||
          ( node->GetType() == Node::EXE_NODE ) ||

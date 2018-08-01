@@ -26,6 +26,7 @@
 #include "FunctionUnity.h"
 #include "FunctionUsing.h"
 #include "FunctionVCXProject.h"
+#include "FunctionWorkerSettings.h"
 #include "FunctionXCodeProject.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
@@ -130,6 +131,7 @@ Function::~Function() = default;
     FNEW( FunctionUsing );
     FNEW( FunctionVCXProject );
     FNEW( FunctionObjectList );
+    FNEW( FunctionWorkerSettings );
     FNEW( FunctionXCodeProject );
 }
 
@@ -321,7 +323,7 @@ Function::~Function() = default;
     // If alias was used for name, we're done
     if ( aliasUsedForName )
     {
-        return true;
+    return true;
     }
 
     // handle alias creation
@@ -475,15 +477,15 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
 // GetDirectoryNodeList
 //------------------------------------------------------------------------------
 /*static*/ bool Function::GetDirectoryListNodeList( NodeGraph & nodeGraph,
-                                                    const BFFIterator & iter,
+                                         const BFFIterator & iter,
                                                     const Function * function,
-                                                    const Array< AString > & paths,
-                                                    const Array< AString > & excludePaths,
-                                                    const Array< AString > & filesToExclude,
-                                                    const Array< AString > & excludePatterns,
-                                                    bool recurse,
-                                                    const Array< AString > * patterns,
-                                                    const char * inputVarName,
+                                         const Array< AString > & paths,
+                                         const Array< AString > & excludePaths,
+                                         const Array< AString > & filesToExclude,
+                                         const Array< AString > & excludePatterns,
+                                         bool recurse,
+                                         const Array< AString > * patterns,
+                                         const char * inputVarName,
                                                     Dependencies & nodes )
 {
     // Handle special case of excluded files beginning with ../
@@ -494,7 +496,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
     for ( const AString& file : filesToExclude )
     {
         AStackString<> cleanPath;
-        NodeGraph::CleanPath( file, cleanPath, false );
+        NodeGraph::CleanPath( file, cleanPath, false );  // don't makeFullPath
         if ( cleanPath.BeginsWith( ".." ) )
         {
             NodeGraph::CleanPath( cleanPath );
@@ -617,10 +619,10 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
 // GetFileNode
 //------------------------------------------------------------------------------
 /*static*/ bool Function::GetFileNode( NodeGraph & nodeGraph,
-                                       const BFFIterator & iter,
+                            const BFFIterator & iter,
                                        const Function * function,
-                                       const AString & file,
-                                       const char * inputVarName,
+                            const AString & file,
+                            const char * inputVarName,
                                        Dependencies & nodes )
 {
     // get node for the dir we depend on
@@ -642,10 +644,10 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
 // GetFileNodes
 //------------------------------------------------------------------------------
 /*static*/ bool Function::GetFileNodes( NodeGraph & nodeGraph,
-                                        const BFFIterator & iter,
+                             const BFFIterator & iter,
                                         const Function * function,
-                                        const Array< AString > & files,
-                                        const char * inputVarName,
+                             const Array< AString > & files,
+                             const char * inputVarName,
                                         Dependencies & nodes )
 {
     const AString * const  end = files.End();
@@ -663,10 +665,10 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
 // GetObjectListNodes
 //------------------------------------------------------------------------------
 /*static*/ bool Function::GetObjectListNodes( NodeGraph & nodeGraph,
-                                              const BFFIterator & iter,
+                                   const BFFIterator & iter,
                                               const Function * function,
-                                              const Array< AString > & objectLists,
-                                              const char * inputVarName,
+                                   const Array< AString > & objectLists,
+                                   const char * inputVarName,
                                               Dependencies & nodes )
 {
     const AString * const  end = objectLists.End();

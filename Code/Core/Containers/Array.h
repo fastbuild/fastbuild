@@ -20,7 +20,7 @@ public:
     explicit Array( const Array< T > & other );
     explicit Array( const T * otherBegin, const T * otherEnd );
     explicit Array( size_t initialCapacity, bool resizeable = false );
-    ~Array();
+    virtual ~Array();
 
     void Destruct();
 
@@ -29,8 +29,10 @@ public:
     typedef const T *   ConstIter;
     Iter        Begin() const   { return m_Begin; }
     Iter        End() const     { return m_End; }
-    inline T &          operator [] ( size_t index )        { ASSERT( index < GetSize() ); return m_Begin[ index ]; }
-    inline const T &    operator [] ( size_t index ) const  { ASSERT( index < GetSize() ); return m_Begin[ index ]; }
+    inline T &  Get( size_t index ) { ASSERT( index < GetSize() ); return m_Begin[ index ]; }
+    inline const T & Get( size_t index ) const { ASSERT( index < GetSize() ); return m_Begin[ index ]; }
+    inline T &          operator [] ( size_t index )        { return Get( index ); }
+    inline const T &    operator [] ( size_t index ) const  { return Get( index ); }
     inline T &          Top()       { ASSERT( m_Begin < m_End ); return m_End[ -1 ]; }
     inline const T &    Top() const { ASSERT( m_Begin < m_End ); return m_End[ -1 ]; }
 
@@ -76,6 +78,11 @@ public:
     inline void EraseIndex( size_t index ) { Erase( m_Begin + index ); }
 
     Array & operator = ( const Array< T > & other );
+
+    template < class U >
+    bool operator == ( const Array< U > & other ) const;
+    template < class U >
+    inline bool operator != ( const Array< U > & other ) const { return !(*this == other ); }
 
     // query state
     inline bool     IsAtCapacity() const    { return ( m_End == m_MaxEnd ); }
@@ -536,6 +543,29 @@ template < class T >
 void Array< T >::Deallocate( T * ptr ) const
 {
     FREE( ptr );
+}
+
+// operator == (const Array< U > &)
+//------------------------------------------------------------------------------
+template < class T >
+template < class U >
+bool Array< T >::operator == ( const Array< U > & other ) const
+{
+    bool equal = false;
+    const size_t thisSize = GetSize();
+    if ( thisSize == other.GetSize() )
+    {
+        equal = true;  // first assume true
+        for ( size_t i = 0; i < thisSize; ++i )
+        {
+            if ( Get( i ) != other.Get( i ) )
+            {
+                equal = false;
+                break;
+            }
+        }
+    }
+    return equal;
 }
 
 //------------------------------------------------------------------------------

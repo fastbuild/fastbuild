@@ -5,6 +5,9 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Singleton.h"
+#include "Core/Containers/Tags.h"
+#include "Core/Strings/AString.h"
+#include "Tools/FBuild/FBuildCore/Graph/WorkerSettingsNode.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -17,30 +20,38 @@ public:
     explicit WorkerSettings();
     ~WorkerSettings();
 
-    // Worker Mode
-    enum Mode
-    {
-        DISABLED        = 0, // Don't work for anyone
-        WHEN_IDLE       = 1, // Work when others when idle
-        DEDICATED       = 2  // Work for others always
-    };
-    inline Mode GetMode() const { return m_Mode; }
-    void SetMode( Mode m );
+    inline WorkerSettingsNode::WorkMode GetWorkMode() const { return m_WorkerSettingsNode->GetWorkMode(); }
+    void SetWorkMode( const WorkerSettingsNode::WorkMode m );
 
     // CPU Usage limits
-    inline uint32_t GetNumCPUsToUse() const { return m_NumCPUsToUse; }
-    void SetNumCPUsToUse( uint32_t c );
+    inline uint32_t GetNumCPUsToUse() const { return m_WorkerSettingsNode->GetNumCPUsToUse(); }
+    void SetNumCPUsToUse( const uint32_t c );
 
     // Start minimzed
-    void SetStartMinimized( bool startMinimized );
-    inline bool GetStartMinimzed() { return m_StartMinimized; }
+    inline bool GetStartMinimized() { return m_WorkerSettingsNode->GetStartMinimized(); }
+    void SetStartMinimized( const bool startMinimized );
+
+    inline bool GetSandboxEnabled() { return m_WorkerSettingsNode->GetSandboxEnabled(); }
+    void SetSandboxEnabled( const bool sandboxEnabled );
+    inline const AString & GetSandboxExe() const { return m_WorkerSettingsNode->GetSandboxExe(); }
+    void SetSandboxExe( const AString & path );
+    inline const AString & GetAbsSandboxExe() const { return m_WorkerSettingsNode->GetAbsSandboxExe(); }
+    inline const AString & GetSandboxArgs() const { return m_WorkerSettingsNode->GetSandboxArgs(); }
+    void SetSandboxArgs( const AString & args );
+    inline const AString & GetSandboxTmp() const { return m_WorkerSettingsNode->GetSandboxTmp(); }
+    inline const AString & GetObfuscatedSandboxTmp() const
+        { return m_WorkerSettingsNode->GetObfuscatedSandboxTmp(); }
+    void SetSandboxTmp( const AString & path );
+    
+    inline const Tags & GetWorkerTags() const { return m_WorkerSettingsNode->GetWorkerTags(); }
+    void ApplyWorkerTags( const Tags & workerTags );
 
     void Load();
     void Save();
 private:
-    Mode        m_Mode;
-    uint32_t    m_NumCPUsToUse;
-    bool        m_StartMinimized;
+    NodeGraph * m_NodeGraph;
+    WorkerSettingsNode * m_WorkerSettingsNode;
+    bool m_WorkerSettingsNodeOwned;
 };
 
 //------------------------------------------------------------------------------

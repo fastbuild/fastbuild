@@ -322,12 +322,12 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     FileStream f;
     if ( !f.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
     {
-        FLOG_ERROR( "SLN - Failed to open '%s' for write (error: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "SLN - Failed to open '%s' for write (error 0x%x)", fileName.Get(), Env::GetLastErr() );
         return false;
     }
     if ( f.Write( content.Get(), content.GetLength() ) != content.GetLength() )
     {
-        FLOG_ERROR( "SLN - Error writing to '%s' (error: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "SLN - Error writing to '%s' (error 0x%x)", fileName.Get(), Env::GetLastErr() );
         return false;
     }
     f.Close();

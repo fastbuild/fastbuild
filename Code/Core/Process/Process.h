@@ -7,6 +7,10 @@
 #include "Core/Env/Types.h"
 #include "Core/Containers/AutoPtr.h"
 
+#if defined( __WINDOWS__ )
+    #include <windows.h>
+#endif
+
 // Process
 //------------------------------------------------------------------------------
 class Process

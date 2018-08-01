@@ -137,7 +137,7 @@ bool TCPConnectionPool::Listen( uint16_t port )
     TCPSocket sockfd = socket( AF_INET, SOCK_STREAM, 0 );
     if ( sockfd == INVALID_SOCKET )
     {
-        TCPDEBUG( "Create socket failed (Listen): %i\n", GetLastError() );
+        TCPDEBUG( "Create socket failed (Listen) (error 0x%x)\n", GetLastError() );
         return false;
     }
 
@@ -146,7 +146,7 @@ bool TCPConnectionPool::Listen( uint16_t port )
     int ret = setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof( yes ) );
     if ( ret != 0 )
     {
-        TCPDEBUG( "setsockopt failed: %i\n", GetLastError() );
+        TCPDEBUG( "setsockopt failed (error 0x%x)\n", GetLastError() );
         CloseSocket( sockfd );
         return false;
     }
@@ -166,7 +166,7 @@ bool TCPConnectionPool::Listen( uint16_t port )
     // bind
     if ( bind( sockfd, (struct sockaddr *)&addrInfo, sizeof( addrInfo ) ) != 0 )
     {
-        TCPDEBUG( "Bind failed: %i\n", GetLastError() );
+        TCPDEBUG( "Bind failed (error 0x%x)\n", GetLastError() );
         CloseSocket( sockfd );
         return false;
     }
@@ -216,7 +216,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
     // outright failure?
     if ( sockfd == INVALID_SOCKET )
     {
-        TCPDEBUG( "Create socket failed (Connect): %i\n", GetLastError() );
+        TCPDEBUG( "Create socket failed (Connect) (error 0x%x)\n", GetLastError() );
         return nullptr;
     }
 
@@ -258,7 +258,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             #ifdef TCPCONNECTION_DEBUG
                 AStackString<> host;
                 GetAddressAsString( hostIP, host );
-                TCPDEBUG( "connect() failed: %i (host:%s port:%u)\n", GetLastError(), host.Get(), port );
+                TCPDEBUG( "connect() failed (error 0x%x) (host:%s port:%u)\n", GetLastError(), host.Get(), port );
             #endif
             CloseSocket( sockfd );
             return nullptr;
@@ -291,7 +291,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             #ifdef TCPCONNECTION_DEBUG
                 AStackString<> host;
                 GetAddressAsString( hostIP, host );
-                TCPDEBUG( "select() after connect() failed: %i (host:%s port:%u)\n", GetLastError(), host.Get(), port );
+                TCPDEBUG( "select() after connect() failed (error 0x%x) (host:%s port:%u)\n", GetLastError(), host.Get(), port );
             #endif
             CloseSocket( sockfd );
             return nullptr;
@@ -334,7 +334,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             #ifdef TCPCONNECTION_DEBUG
                 AStackString<> host;
                 GetAddressAsString( hostIP, host );
-                TCPDEBUG( "select() after connect() error: %i (host:%s port:%u)\n", GetLastError(), host.Get(), port );
+                TCPDEBUG( "select() after connect() error 0x%x (host:%s port:%u)\n", GetLastError(), host.Get(), port );
             #endif
             CloseSocket( sockfd );
             return nullptr;
@@ -534,7 +534,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
                 continue;
             }
             // error
-            TCPDEBUG( "send error A.  Send: %i (Error: %i) (%x)\n", sent, GetLastError(), connection->m_Socket );
+            TCPDEBUG( "send error A.  Send: %i (error 0x%x) (%x)\n", sent, GetLastError(), connection->m_Socket );
             Disconnect( connection );
             sendOK = false;
             break;
@@ -604,7 +604,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
                 Thread::Sleep( 1 );
                 continue;
             }
-            TCPDEBUG( "recv error A.  Read: %i (Error: %i) (%x)\n", numBytes, GetLastError(), ci->m_Socket );
+            TCPDEBUG( "recv error A.  Read: %i (error 0x%x) (%x)\n", numBytes, GetLastError(), ci->m_Socket );
             return false;
         }
         bytesToRead -= numBytes;
@@ -635,7 +635,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
                 Thread::Sleep( 1 );
                 continue;
             }
-            TCPDEBUG( "recv error B.  Read: %i (Error: %i) (%x)\n", numBytes, GetLastError(), ci->m_Socket );
+            TCPDEBUG( "recv error B.  Read: %i (error 0x%x) (%x)\n", numBytes, GetLastError(), ci->m_Socket );
             FreeBuffer( buffer );
             return false;
         }
@@ -795,7 +795,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         // handle errors or socket shutdown
         if ( newSocket == INVALID_SOCKET )
         {
-            TCPDEBUG( "accept failed: %i\n", GetLastError() );
+            TCPDEBUG( "accept failed (error 0x%x)\n", GetLastError() );
             break;
         }
 
@@ -967,7 +967,7 @@ bool TCPConnectionPool::DisableNagle( TCPSocket sockfd )
     const int ret = setsockopt( sockfd, IPPROTO_TCP, TCP_NODELAY, (const char *)&disableNagle, sizeof( disableNagle ) );
     if ( ret != 0 )
     {
-        TCPDEBUG( "setsockopt TCP_NODELAY failed: %i\n", GetLastError() );
+        TCPDEBUG( "setsockopt TCP_NODELAY failed (error 0x%x)\n", GetLastError() );
         CloseSocket( sockfd );
         return false;
     }
@@ -989,7 +989,7 @@ bool TCPConnectionPool::SetBufferSizes( TCPSocket socket )
         int ret = setsockopt( socket, SOL_SOCKET, SO_RCVBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
         if ( ret != 0 )
         {
-            TCPDEBUG( "setsockopt SO_RCVBUF failed: %i\n", GetLastError() );
+            TCPDEBUG( "setsockopt SO_RCVBUF failed (error 0x%x)\n", GetLastError() );
             CloseSocket( socket );
             return false;
         }
@@ -1000,7 +1000,7 @@ bool TCPConnectionPool::SetBufferSizes( TCPSocket socket )
         int ret = setsockopt( socket, SOL_SOCKET, SO_SNDBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
         if ( ret != 0 )
         {
-            TCPDEBUG( "setsockopt SO_SNDBUF failed: %i\n", GetLastError() );
+            TCPDEBUG( "setsockopt SO_SNDBUF failed (error 0x%x)\n", GetLastError() );
             CloseSocket( socket );
             return false;
         }

@@ -158,7 +158,7 @@ void WorkerWindow::UIUpdateThread()
         m_ModeDropDown->AddItem( "Disabled" );
         m_ModeDropDown->AddItem( "Work For Others When Idle" );
         m_ModeDropDown->AddItem( "Work For Others Always" );
-        m_ModeDropDown->SetSelectedItem( WorkerSettings::Get().GetMode() );
+        m_ModeDropDown->SetSelectedItem( WorkerSettings::Get().GetWorkMode() );
 
         // Mode label
         m_ModeLabel = FNEW( OSLabel( this ) );
@@ -187,6 +187,49 @@ void WorkerWindow::UIUpdateThread()
         m_ResourcesLabel->SetFont( m_Font );
         m_ResourcesLabel->Init( 305, 7, 45, 15, "Using:" );
 
+        Tags tags = WorkerSettings::Get().GetWorkerTags();
+        tags.Sort();  // sort for GUI
+        const size_t numTags = tags.GetSize();
+        // x position and width apply to both the tags drop down and tags none label below,
+        // since we display either one or the other at runtime, in the same UI space
+        int32_t tagsControlXPos = 545;
+        int32_t tagsControlWidth = 120;
+        if ( numTags > 0 )
+        {
+            // Tags drop down
+            m_TagsDropDown = FNEW( OSDropDown( this ) );
+            m_TagsDropDown->SetFont( m_Font );
+            m_TagsDropDown->Init( tagsControlXPos, 3, tagsControlWidth, 200 );
+            for ( size_t i=0; i<numTags; ++i )
+            {
+                const Tag & tag = tags.Get( i );
+                AStackString<> tagString;
+                tag.ToString( tagString );
+                m_TagsDropDown->AddItem( tagString.Get() );
+            }
+            // The tags drop down only displays tags;
+            // its selection does not mean anything.
+            // But set the selection to the first tag here,
+            // so the user can see at a glance, at least one tag
+            // without having to drop down the control.
+            m_TagsDropDown->SetSelectedItem( 0 );
+            m_TagsNoneLabel = nullptr;
+        }
+        else
+        {
+            // rather than an empty combo box, show a None label
+            // Tags None label
+            m_TagsNoneLabel = FNEW( OSLabel( this ) );
+            m_TagsNoneLabel->SetFont( m_Font );
+            m_TagsNoneLabel->Init( tagsControlXPos, 7, tagsControlWidth, 15, "None" );
+            m_TagsDropDown = nullptr;
+        }
+
+        // Tags label
+        m_TagsLabel = FNEW( OSLabel( this ) );
+        m_TagsLabel->SetFont( m_Font );
+        m_TagsLabel->Init( 505, 7, 35, 15, "Tags:" );
+
         // splitter
         {
             int xPos = 0;
@@ -200,11 +243,15 @@ void WorkerWindow::UIUpdateThread()
         m_Menu = CreatePopupMenu();
         AppendMenu( m_Menu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT( "Exit" ) );
 
-        // Display the window and minimize it if needed
-        if ( WorkerSettings::Get().GetStartMinimzed() )
+        // Display the window, and minimize it
+        // - we do this so the user can see the application has run
+        ShowWindow( (HWND)GetHandle(), SW_SHOW );
+        UpdateWindow( (HWND)GetHandle() );
+        ShowWindow( (HWND)GetHandle(), SW_SHOW ); // First call can be ignored
+        if ( WorkerSettings::Get().GetStartMinimized() )
         {
-            UpdateWindow( (HWND)GetHandle() );
-            ToggleMinimized(); // minimze
+            ToggleMinimized(); // minimize
+            // don't save here, since first load
         }
         else
         {
@@ -240,6 +287,9 @@ void WorkerWindow::UIUpdateThread()
 
         // clean up UI resources
         DestroyWindow( m_Splitter );
+        FDELETE( m_TagsLabel );
+        FDELETE( m_TagsNoneLabel );
+        FDELETE( m_TagsDropDown );
         FDELETE( m_ResourcesLabel );
         FDELETE( m_ResourcesDropDown );
         FDELETE( m_ModeLabel );
@@ -264,6 +314,7 @@ void WorkerWindow::UIUpdateThread()
 {
     // Override minimize
     ToggleMinimized();
+    WorkerSettings::Get().Save();
     return true; // Stop window minimizing (since we already handled it)
 }
 
@@ -273,6 +324,7 @@ void WorkerWindow::UIUpdateThread()
 {
     // Override close to minimize
     ToggleMinimized();
+    WorkerSettings::Get().Save();
     return true; // Stop window closeing (since we already handled it)
 }
 
@@ -282,6 +334,7 @@ void WorkerWindow::UIUpdateThread()
 /*virtual*/ bool WorkerWindow::OnTrayIconLeftClick()
 {
     ToggleMinimized();
+    WorkerSettings::Get().Save();
     return true; // Handled
 }
 
@@ -316,16 +369,26 @@ void WorkerWindow::UIUpdateThread()
 //------------------------------------------------------------------------------
 /*virtual*/ void WorkerWindow::OnDropDownSelectionChanged( OSDropDown * dropDown )
 {
+    bool somethingChanged = false;
     const size_t index = dropDown->GetSelectedItem();
     if ( dropDown == m_ModeDropDown )
     {
-        WorkerSettings::Get().SetMode( (WorkerSettings::Mode)index );
+        WorkerSettings::Get().SetWorkMode( (WorkerSettingsNode::WorkMode)index );
+        somethingChanged = true;
     }
     else if ( dropDown == m_ResourcesDropDown )
     {
         WorkerSettings::Get().SetNumCPUsToUse( (uint32_t)index + 1 );
+        somethingChanged = true;
     }
-    WorkerSettings::Get().Save();
+    else if ( dropDown == m_TagsDropDown )
+    {
+        // nothing to do here (read only)
+    }
+    if ( somethingChanged )
+    {
+        WorkerSettings::Get().Save();
+    }
 }
 
 // ToggleMinimized
@@ -359,7 +422,6 @@ void WorkerWindow::ToggleMinimized()
     minimized = !minimized;
 
     WorkerSettings::Get().SetStartMinimized( minimized );
-    WorkerSettings::Get().Save();
 }
 
 //------------------------------------------------------------------------------
