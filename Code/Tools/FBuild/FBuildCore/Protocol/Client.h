@@ -99,7 +99,7 @@ private:
     static void GetWorkerChanges(
                             const Array< AString > & previousWorkers,
                             const Array< AString > & currentWorkers,
-                            Array< AString > & removedWorkers, Array< AString > & addedWorkers );
+                            Array< AString > & addedWorkers );
     void        ExcludeWorker( Client::ServerState & ss, Array< AString > & newlyExcludedWorkers );
     void        HandleExcludedWorkers( const Array< AString > & newlyExcludedWorkers );
     bool        UpdateServerList( const Array< AString > & removedWorkers, const Array< AString > & addedWorkers );
