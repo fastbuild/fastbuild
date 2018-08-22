@@ -952,7 +952,7 @@ void NodeGraph::AddNode( Node * node )
 
 // Build
 //------------------------------------------------------------------------------
-void NodeGraph::DoBuildPass( Node * nodeToBuild )
+/*static*/ void NodeGraph::DoBuildPass( NodeGraph * ng, Node * nodeToBuild )
 {
     PROFILE_FUNCTION
 
@@ -979,7 +979,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
             }
             if ( n->GetState() != Node::BUILDING )
             {
-                BuildRecurse( n, 0 );
+                BuildRecurse( ng, n, 0 );
 
                 // check for nodes that become up-to-date immediately (trivial build)
                 if ( n->GetState() == Node::UP_TO_DATE )
@@ -1000,7 +1000,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
     {
         if ( nodeToBuild->GetState() < Node::BUILDING )
         {
-            BuildRecurse( nodeToBuild, 0 );
+            BuildRecurse( ng, nodeToBuild, 0 );
         }
     }
 
@@ -1010,7 +1010,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 
 // BuildRecurse
 //------------------------------------------------------------------------------
-void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
+/*static*/ void NodeGraph::BuildRecurse( NodeGraph * ng, Node * nodeToBuild, uint32_t cost )
 {
     ASSERT( nodeToBuild );
 
@@ -1024,7 +1024,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     if ( nodeToBuild->GetState() == Node::NOT_PROCESSED )
     {
         // all static deps done?
-        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
+        bool allDependenciesUpToDate = CheckDependencies( ng, nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
             return; // not ready or failed
@@ -1041,7 +1041,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     if ( nodeToBuild->GetState() == Node::PRE_DEPS_READY )
     {
         // all static deps done?
-        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
+        bool allDependenciesUpToDate = CheckDependencies( ng, nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
             return; // not ready or failed
@@ -1056,11 +1056,14 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     if ( nodeToBuild->GetState() != Node::DYNAMIC_DEPS_DONE )
     {
         // static deps ready, update dynamic deps
-        bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
-        if ( nodeToBuild->DoDynamicDependencies( *this, forceClean ) == false )
+        if ( ng != nullptr )
         {
-            nodeToBuild->SetState( Node::FAILED );
-            return;
+            bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
+            if ( nodeToBuild->DoDynamicDependencies( *ng, forceClean ) == false )
+            {
+                nodeToBuild->SetState( Node::FAILED );
+                return;
+            }
         }
 
         nodeToBuild->SetState( Node::DYNAMIC_DEPS_DONE );
@@ -1071,7 +1074,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     // dynamic deps
     {
         // all static deps done?
-        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
+        bool allDependenciesUpToDate = CheckDependencies( ng, nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
             return; // not ready or failed
@@ -1095,7 +1098,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
 // CheckDependencies
 //------------------------------------------------------------------------------
-bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost )
+/*static*/ bool NodeGraph::CheckDependencies( NodeGraph * ng, Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost )
 {
     ASSERT( nodeToBuild->GetType() != Node::PROXY_NODE );
 
@@ -1123,7 +1126,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
                 // prevent multiple recursions in this pass
                 n->SetBuildPassTag( passTag );
 
-                BuildRecurse( n, cost );
+                BuildRecurse( ng, n, cost );
             }
         }
 

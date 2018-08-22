@@ -66,6 +66,18 @@ Client::~Client()
     ShutdownAllConnections();
 
     Thread::CloseHandle( m_Thread );
+
+    MutexHolder mh( m_ServerListMutex );
+    const size_t numServers = m_ServerList.GetSize();
+    for ( size_t i=0; i<numServers; ++i )
+    {
+        ServerState & ss = m_ServerList[ i ];
+        if (ss.m_Connection != nullptr)
+        {
+            ss.m_Connection->SetUserData( nullptr );
+        }
+    }
+    m_ServerList.Clear();
 }
 
 //------------------------------------------------------------------------------
@@ -329,8 +341,15 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
         return;
     }
 
+    AStackString<> workerName;
+    ServerState * ss = (ServerState *)connection->GetUserData();
+    if (ss != nullptr)
+    {
+        workerName = ss->m_RemoteName;
+    }
+
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u)\n",
-                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
+                workerName.Get(),
                 (uint32_t)msg.GetType(),
                 msg.GetSize() );
 }
@@ -344,8 +363,15 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
         return;
     }
 
+    AStackString<> workerName;
+    ServerState * ss = (ServerState *)connection->GetUserData();
+    if (ss != nullptr)
+    {
+        workerName = ss->m_RemoteName;
+    }
+
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u, Payload: %u)\n",
-                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
+                workerName.Get(),
                 (uint32_t)msg.GetType(),
                 msg.GetSize(),
                 (uint32_t)memoryStream.GetSize() );
@@ -360,80 +386,81 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     MutexHolder mh( m_ServerListMutex );
 
     ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    // are we expecting a msg, or the payload for a msg?
-    void * payload = nullptr;
-    size_t payloadSize = 0;
-    if ( ss->m_CurrentMessage == nullptr )
+    if (ss != nullptr)
     {
-        // message
-        ss->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
-        if ( ss->m_CurrentMessage->HasPayload() )
+        // are we expecting a msg, or the payload for a msg?
+        void * payload = nullptr;
+        size_t payloadSize = 0;
+        if ( ss->m_CurrentMessage == nullptr )
         {
-            return;
+            // message
+            ss->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
+            if ( ss->m_CurrentMessage->HasPayload() )
+            {
+                return;
+            }
         }
+        else
+        {
+            // payload
+            ASSERT( ss->m_CurrentMessage->HasPayload() );
+            payload = data;
+            payloadSize = size;
+        }
+
+        // determine message type
+        const Protocol::IMessage * imsg = ss->m_CurrentMessage;
+        Protocol::MessageType messageType = imsg->GetType();
+
+        PROTOCOL_DEBUG( "Server -> Client : %u (%s)\n", messageType, GetProtocolMessageDebugName( messageType ) );
+
+        switch ( messageType )
+        {
+            case Protocol::MSG_REQUEST_JOB:
+            {
+                const Protocol::MsgRequestJob * msg = static_cast< const Protocol::MsgRequestJob * >( imsg );
+                Process( connection, msg );
+                break;
+            }
+            case Protocol::MSG_JOB_RESULT:
+            {
+                const Protocol::MsgJobResult * msg = static_cast< const Protocol::MsgJobResult * >( imsg );
+                Process( connection, msg, payload, payloadSize );
+                break;
+            }
+            case Protocol::MSG_REQUEST_MANIFEST:
+            {
+                const Protocol::MsgRequestManifest * msg = static_cast< const Protocol::MsgRequestManifest * >( imsg );
+                Process( connection, msg );
+                break;
+            }
+            case Protocol::MSG_REQUEST_FILE:
+            {
+                const Protocol::MsgRequestFile * msg = static_cast< const Protocol::MsgRequestFile * >( imsg );
+                Process( connection, msg );
+                break;
+            }
+            case Protocol::MSG_SERVER_STATUS:
+            {
+                const Protocol::MsgServerStatus * msg = static_cast< const Protocol::MsgServerStatus * >( imsg );
+                Process( connection, msg );
+                break;
+            }
+            default:
+            {
+                // unknown message type
+                ASSERT( false ); // this indicates a protocol bug
+                DIST_INFO( "Protocol Error: %s\n", ss->m_RemoteName.Get() );
+                Disconnect( connection );
+                break;
+            }
+        }
+
+        // free everything
+        FREE( (void *)( ss->m_CurrentMessage ) );
+        FREE( payload );
+        ss->m_CurrentMessage = nullptr;
     }
-    else
-    {
-        // payload
-        ASSERT( ss->m_CurrentMessage->HasPayload() );
-        payload = data;
-        payloadSize = size;
-    }
-
-    // determine message type
-    const Protocol::IMessage * imsg = ss->m_CurrentMessage;
-    Protocol::MessageType messageType = imsg->GetType();
-
-    PROTOCOL_DEBUG( "Server -> Client : %u (%s)\n", messageType, GetProtocolMessageDebugName( messageType ) );
-
-    switch ( messageType )
-    {
-        case Protocol::MSG_REQUEST_JOB:
-        {
-            const Protocol::MsgRequestJob * msg = static_cast< const Protocol::MsgRequestJob * >( imsg );
-            Process( connection, msg );
-            break;
-        }
-        case Protocol::MSG_JOB_RESULT:
-        {
-            const Protocol::MsgJobResult * msg = static_cast< const Protocol::MsgJobResult * >( imsg );
-            Process( connection, msg, payload, payloadSize );
-            break;
-        }
-        case Protocol::MSG_REQUEST_MANIFEST:
-        {
-            const Protocol::MsgRequestManifest * msg = static_cast< const Protocol::MsgRequestManifest * >( imsg );
-            Process( connection, msg );
-            break;
-        }
-        case Protocol::MSG_REQUEST_FILE:
-        {
-            const Protocol::MsgRequestFile * msg = static_cast< const Protocol::MsgRequestFile * >( imsg );
-            Process( connection, msg );
-            break;
-        }
-        case Protocol::MSG_SERVER_STATUS:
-        {
-            const Protocol::MsgServerStatus * msg = static_cast< const Protocol::MsgServerStatus * >( imsg );
-            Process( connection, msg );
-            break;
-        }
-        default:
-        {
-            // unknown message type
-            ASSERT( false ); // this indicates a protocol bug
-            DIST_INFO( "Protocol Error: %s\n", ss->m_RemoteName.Get() );
-            Disconnect( connection );
-            break;
-        }
-    }
-
-    // free everything
-    FREE( (void *)( ss->m_CurrentMessage ) );
-    FREE( payload );
-    ss->m_CurrentMessage = nullptr;
 }
 
 // Process( MsgRequestJob )
@@ -448,36 +475,36 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     }
 
     ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    // no jobs for blacklisted workers
-    if ( ss->m_Blacklisted )
+    if (ss != nullptr)
     {
+        // no jobs for blacklisted workers
+        if ( ss->m_Blacklisted )
+        {
+            MutexHolder mh( ss->m_Mutex );
+            Protocol::MsgNoJobAvailable msg;
+            SendMessageInternal( connection, msg );
+            return;
+        }
+
+        Job * job = JobQueue::Get().GetDistributableJobToProcess( true );
+        if ( job == nullptr )
+        {
+            PROFILE_SECTION( "NoJob" )
+            // tell the client we don't have anything right now
+            // (we completed or gave away the job already)
+            MutexHolder mh( ss->m_Mutex );
+            Protocol::MsgNoJobAvailable msg;
+            SendMessageInternal( connection, msg );
+            return;
+        }
+
+        // send the job to the client
+        MemoryStream stream;
+        job->Serialize( stream );
+
         MutexHolder mh( ss->m_Mutex );
-        Protocol::MsgNoJobAvailable msg;
-        SendMessageInternal( connection, msg );
-        return;
-    }
 
-    Job * job = JobQueue::Get().GetDistributableJobToProcess( true );
-    if ( job == nullptr )
-    {
-        PROFILE_SECTION( "NoJob" )
-        // tell the client we don't have anything right now
-        // (we completed or gave away the job already)
-        MutexHolder mh( ss->m_Mutex );
-        Protocol::MsgNoJobAvailable msg;
-        SendMessageInternal( connection, msg );
-        return;
-    }
-
-    // send the job to the client
-    MemoryStream stream;
-    job->Serialize( stream );
-
-    MutexHolder mh( ss->m_Mutex );
-
-    ss->m_Jobs.Append( job ); // Track in-flight job
+        ss->m_Jobs.Append( job ); // Track in-flight job
 
     // if tool is explicity specified, get the id of the tool manifest
     Node * n = job->GetNode()->CastTo< ObjectNode >()->GetCompiler();
@@ -485,14 +512,15 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     uint64_t toolId = manifest.GetToolId();
     ASSERT( toolId );
 
-    // output to signify remote start
-    FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
-    FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
+        // output to signify remote start
+        FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
+        FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
 
-    {
-        PROFILE_SECTION( "SendJob" )
-        Protocol::MsgJob msg( toolId );
-        SendMessageInternal( connection, msg, stream );
+        {
+            PROFILE_SECTION( "SendJob" )
+            Protocol::MsgJob msg( toolId );
+            SendMessageInternal( connection, msg, stream );
+        }
     }
 }
 
@@ -504,174 +532,175 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
     // find server
     ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    ConstMemoryStream ms( payload, payloadSize );
-
-    uint32_t jobId = 0;
-    ms.Read( jobId );
-
-    AStackString<> name;
-    ms.Read( name );
-
-    bool result = false;
-    ms.Read( result );
-
-    bool systemError = false;
-    ms.Read( systemError );
-
-    Array< AString > messages;
-    ms.Read( messages );
-
-    uint32_t buildTime;
-    ms.Read( buildTime );
-
-    // get result data (built data or errors if failed)
-    uint32_t size = 0;
-    ms.Read( size );
-    const void * data = (const char *)ms.GetData() + ms.Tell();
-
+    if (ss != nullptr)
     {
-        MutexHolder mh( ss->m_Mutex );
-        VERIFY( ss->m_Jobs.FindDerefAndErase( jobId ) );
-    }
+        AStackString<> workerName( ss->m_RemoteName );
 
-    // Has the job been cancelled in the interim?
-    // (Due to a Race by the main thread for example)
-    Job * job = JobQueue::Get().OnReturnRemoteJob( jobId );
-    if ( job == nullptr )
-    {
-        // don't save result as we were cancelled
-        return;
-    }
+        ConstMemoryStream ms( payload, payloadSize );
 
-    DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
-                                          job->GetNode()->GetName().Get(),
-                                          job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
+        uint32_t jobId = 0;
+        ms.Read( jobId );
 
-    job->SetMessages( messages );
+        AStackString<> name;
+        ms.Read( name );
 
-    if ( result == true )
-    {
-        // built ok - serialize to disc
+        bool result = false;
+        ms.Read( result );
+
+        bool systemError = false;
+        ms.Read( systemError );
+
+        Array< AString > messages;
+        ms.Read( messages );
+
+        uint32_t buildTime;
+        ms.Read( buildTime );
+
+        // get result data (built data or errors if failed)
+        uint32_t size = 0;
+        ms.Read( size );
+        const void * data = (const char *)ms.GetData() + ms.Tell();
+
+        {
+            MutexHolder mh( ss->m_Mutex );
+            VERIFY( ss->m_Jobs.FindDerefAndErase( jobId ) );
+        }
+
+        // Has the job been cancelled in the interim?
+        // (Due to a Race by the main thread for example)
+        Job * job = JobQueue::Get().OnReturnRemoteJob( jobId );
+        if ( job == nullptr )
+        {
+            // don't save result as we were cancelled
+            return;
+        }
+
+        DIST_INFO( "Got Result: %s - %s%s\n", workerName.Get(),
+                                              job->GetNode()->GetName().Get(),
+                                              job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
+
+        job->SetMessages( messages );
+
+        if ( result == true )
+        {
+            // built ok - serialize to disc
 
         ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
         const AString & nodeName = objectNode->GetName();
-        if ( Node::EnsurePathExistsForFile( nodeName ) == false )
-        {
-            FLOG_ERROR( "Failed to create path for '%s'", nodeName.Get() );
-            result = false;
-        }
-        else
-        {
-            const ObjectNode * on = job->GetNode()->CastTo< ObjectNode >();
-            const uint32_t firstFileSize = *(uint32_t *)data;
-            const uint32_t secondFileSize = on->IsUsingPDB() ? *(uint32_t *)( (const char *)data + sizeof( uint32_t ) + firstFileSize ) : 0;
-
-            result = WriteFileToDisk( nodeName, (const char *)data + sizeof( uint32_t ), firstFileSize );
-            if ( result && on->IsUsingPDB() )
+            if ( Node::EnsurePathExistsForFile( nodeName ) == false )
             {
-                data = (const void *)( (const char *)data + sizeof( uint32_t ) + firstFileSize );
-                ASSERT( ( firstFileSize + secondFileSize + ( sizeof( uint32_t ) * 2 ) ) == size );
-
-                AStackString<> pdbName;
-                on->GetPDBName( pdbName );
-                result = WriteFileToDisk( pdbName, (const char *)data + sizeof( uint32_t ), secondFileSize );
-            }
-
-            if ( result == true )
-            {
-                // record build time
-                FileNode * f = (FileNode *)job->GetNode();
-                f->m_Stamp = FileIO::GetFileLastWriteTime( nodeName );
-
-                // record time taken to build
-                f->SetLastBuildTime( buildTime );
-                f->SetStatFlag(Node::STATS_BUILT);
-                f->SetStatFlag(Node::STATS_BUILT_REMOTE);
-
-                // commit to cache?
-                if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
-                        objectNode->ShouldUseCache() )
-                {
-                    objectNode->WriteToCache( job );
-                }
+                FLOG_ERROR( "Failed to create path for '%s'", nodeName.Get() );
+                result = false;
             }
             else
             {
-                ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
+            const ObjectNode * on = job->GetNode()->CastTo< ObjectNode >();
+                const uint32_t firstFileSize = *(uint32_t *)data;
+            const uint32_t secondFileSize = on->IsUsingPDB() ? *(uint32_t *)( (const char *)data + sizeof( uint32_t ) + firstFileSize ) : 0;
+
+                result = WriteFileToDisk( nodeName, (const char *)data + sizeof( uint32_t ), firstFileSize );
+                            if ( result && on->IsUsingPDB() )
+                            {
+                                data = (const void *)( (const char *)data + sizeof( uint32_t ) + firstFileSize );
+                                ASSERT( ( firstFileSize + secondFileSize + ( sizeof( uint32_t ) * 2 ) ) == size );
+
+                                AStackString<> pdbName;
+                                on->GetPDBName( pdbName );
+                                result = WriteFileToDisk( pdbName, (const char *)data + sizeof( uint32_t ), secondFileSize );
+                            }
+
+                if ( result == true )
+                {
+                    // record build time
+                    FileNode * f = (FileNode *)job->GetNode();
+                    f->m_Stamp = FileIO::GetFileLastWriteTime( nodeName );
+
+                    // record time taken to build
+                    f->SetLastBuildTime( buildTime );
+                    f->SetStatFlag(Node::STATS_BUILT);
+                    f->SetStatFlag(Node::STATS_BUILT_REMOTE);
+
+                    // commit to cache?
+                            if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
+                        objectNode->ShouldUseCache() )
+                            {
+                    objectNode->WriteToCache( job );
+                    }
+                }
+                else
+                {
+                    ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
+                }
             }
         }
-    }
-    else
-    {
-        ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
-
-        // failed - build list of errors
-        const AString & nodeName = job->GetNode()->GetName();
-        AStackString< 8192 > failureOutput;
-        failureOutput.Format( "PROBLEM: %s\n", nodeName.Get() );
-        for ( const AString * it = messages.Begin(); it != messages.End(); ++it )
+        else
         {
-            failureOutput += *it;
-        }
+            ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
 
-        // was it a system error?
-        if ( systemError )
-        {
-            // blacklist misbehaving worker
-            ss->m_Blacklisted = true;
-
-            // take note of failure of job
-            job->OnSystemError();
-
-            // debugging message
-            const size_t workerIndex = ( ss - m_ServerList.Begin() );
-            const AString & workerName = m_WorkerList[ workerIndex ];
-            FLOG_INFO( "Remote System Failure!\n"
-                       " - Blacklisted Worker: %s\n"
-                       " - Node              : %s\n"
-                       " - Job Error Count   : %u / %u\n",
-                       workerName.Get(),
-                       job->GetNode()->GetName().Get(),
-                       job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT
-                      );
-
-            // should we retry on another worker?
-            if ( job->GetSystemErrorCount() < SYSTEM_ERROR_ATTEMPT_COUNT )
+            // failed - build list of errors
+            const AString & nodeName = job->GetNode()->GetName();
+            AStackString< 8192 > failureOutput;
+            failureOutput.Format( "PROBLEM: %s\n", nodeName.Get() );
+            for ( const AString * it = messages.Begin(); it != messages.End(); ++it )
             {
-                // re-queue job which will be re-attempted on another worker
-                JobQueue::Get().ReturnUnfinishedDistributableJob( job );
-                return;
+                failureOutput += *it;
             }
 
-            // failed too many times on different workers, add info about this to
-            // error output
+            // was it a system error?
+            if ( systemError )
+            {
+                // blacklist misbehaving worker
+                ss->m_Blacklisted = true;
+
+                // take note of failure of job
+                job->OnSystemError();
+
+                // debugging message
+                FLOG_INFO( "Remote System Failure!\n"
+                           " - Blacklisted Worker: %s\n"
+                           " - Node              : %s\n"
+                           " - Job Error Count   : %u / %u\n",
+                           workerName.Get(),
+                           job->GetNode()->GetName().Get(),
+                           job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT
+                          );
+
+                // should we retry on another worker?
+                if ( job->GetSystemErrorCount() < SYSTEM_ERROR_ATTEMPT_COUNT )
+                {
+                // re-queue job which will be re-attempted on another worker
+                    JobQueue::Get().ReturnUnfinishedDistributableJob( job );
+                return;
+                }
+
+                    // failed too many times on different workers, add info about this to
+                    // error output
             AStackString<> tmp;
             tmp.Format( "FBuild: Error: Task failed on %u different workers\n", (uint32_t)SYSTEM_ERROR_ATTEMPT_COUNT );
-            if ( failureOutput.EndsWith( '\n' ) == false )
-            {
-                failureOutput += '\n';
+                if ( failureOutput.EndsWith( '\n' ) == false )
+                {
+                    failureOutput += '\n';
+                }
+                failureOutput += tmp;
             }
-            failureOutput += tmp;
+
+            Node::DumpOutput( nullptr, failureOutput.Get(), failureOutput.GetLength(), nullptr );
         }
 
-        Node::DumpOutput( nullptr, failureOutput.Get(), failureOutput.GetLength(), nullptr );
+        if ( FLog::IsMonitorEnabled() )
+        {
+            AStackString<> msgBuffer;
+            job->GetMessagesForMonitorLog( msgBuffer );
+
+            FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
+                          result ? "SUCCESS" : "ERROR",
+                          workerName.Get(),
+                          job->GetNode()->GetName().Get(),
+                          msgBuffer.Get() );
+        }
+
+        JobQueue::Get().FinishedProcessingJob( job, result, true ); // remote job
     }
-
-    if ( FLog::IsMonitorEnabled() )
-    {
-        AStackString<> msgBuffer;
-        job->GetMessagesForMonitorLog( msgBuffer );
-
-        FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
-                      result ? "SUCCESS" : "ERROR",
-                      ss->m_RemoteName.Get(),
-                      job->GetNode()->GetName().Get(),
-                      msgBuffer.Get() );
-    }
-
-    JobQueue::Get().FinishedProcessingJob( job, result, true ); // remote job
 }
 
 // Process( MsgRequestManifest )
@@ -747,10 +776,11 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgServ
 
     // find server
     ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    MutexHolder mh( ss->m_Mutex );
-    ss->m_StatusTimer.Start();
+    if (ss != nullptr)
+    {
+        MutexHolder mh( ss->m_Mutex );
+        ss->m_StatusTimer.Start();
+    }
 }
 
 // FindManifest
@@ -758,20 +788,21 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgServ
 const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const
 {
     ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    MutexHolder mh( ss->m_Mutex );
-
-    for ( Job ** it = ss->m_Jobs.Begin();
-          it != ss->m_Jobs.End();
-          ++it )
+    if (ss != nullptr)
     {
-        Node * n = ( *it )->GetNode()->CastTo< ObjectNode >()->GetCompiler();
-        const ToolManifest & m = n->CastTo< CompilerNode >()->GetManifest();
-        if ( m.GetToolId() == toolId )
+        MutexHolder mh( ss->m_Mutex );
+
+        for ( Job ** it = ss->m_Jobs.Begin();
+              it != ss->m_Jobs.End();
+              ++it )
         {
-            // found a job with the same toolid
-            return &m;
+            Node * n = ( *it )->GetNode()->CastTo< ObjectNode >()->GetCompiler();
+            const ToolManifest & m = n->CastTo< CompilerNode >()->GetManifest();
+            if ( m.GetToolId() == toolId )
+            {
+                // found a job with the same toolid
+                return &m;
+            }
         }
     }
 

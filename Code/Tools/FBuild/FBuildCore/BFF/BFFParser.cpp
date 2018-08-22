@@ -790,7 +790,12 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
     AStackString<> includeToUse;
     if (PathUtils::IsFullPath(include) == false)
     {
-        AStackString<> fileName( iter.GetFileName() );
+        AStackString<> fileName;
+        const char * iterName = iter.GetFileName();
+        if ( iterName )
+        {
+            fileName += iterName;
+        }
         const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
         lastSlash = lastSlash ? lastSlash : fileName.FindLast( OTHER_SLASH );
         lastSlash = lastSlash ? ( lastSlash + 1 ): fileName.Get(); // file only, truncate to empty

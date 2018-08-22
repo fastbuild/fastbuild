@@ -286,31 +286,44 @@ ObjectNode::~ObjectNode()
 
 // Finalize
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectNode::Finalize( NodeGraph & nodeGraph )
+/*virtual*/ bool ObjectNode::Finalize( NodeGraph * nodeGraph )
 {
     ASSERT( Thread::IsMainThread() );
-
-    // convert includes to nodes
+    
+    bool success = true;
+    const size_t includesCount = m_Includes.GetSize();
+    
     m_DynamicDependencies.Clear();
-    m_DynamicDependencies.SetCapacity( m_Includes.GetSize() );
-    for ( Array< AString >::ConstIter it = m_Includes.Begin();
-            it != m_Includes.End();
-            it++ )
+    if ( includesCount > 0 )
     {
-        Node * fn = nodeGraph.FindNode( *it );
-        if ( fn == nullptr )
+        if ( nodeGraph != nullptr )
         {
-            fn = nodeGraph.CreateFileNode( *it );
+            // convert includes to nodes
+            m_DynamicDependencies.SetCapacity( includesCount );
+            for ( Array< AString >::ConstIter it = m_Includes.Begin();
+                    it != m_Includes.End();
+                    it++ )
+            {
+                Node * fn = nodeGraph->FindNode( *it );
+                if ( fn == nullptr )
+                {
+                    fn = nodeGraph->CreateFileNode( *it );
+                }
+                else if ( fn->IsAFile() == false )
+                {
+                    FLOG_ERROR( "'%s' is not a FileNode (type: %s)", fn->GetName().Get(), fn->GetTypeName() );
+                    return false;
+                }
+                m_DynamicDependencies.Append( Dependency( fn ) );
+            }
         }
-        else if ( fn->IsAFile() == false )
+        else
         {
-            FLOG_ERROR( "'%s' is not a FileNode (type: %s)", fn->GetName().Get(), fn->GetTypeName() );
-            return false;
+            // no graph on which to call FindNode()
+            success = false;
         }
-        m_DynamicDependencies.Append( Dependency( fn ) );
     }
-
-    return true;
+    return success;
 }
 
 // DoBuildMSCL_NoCache

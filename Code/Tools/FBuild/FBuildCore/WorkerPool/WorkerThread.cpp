@@ -176,46 +176,52 @@ void WorkerThread::WaitForStop()
     }
 
     // no local job, see if we can do one from the remote queue
-    if ( FBuild::Get().GetOptions().m_NoLocalConsumptionOfRemoteJobs == false )
+    if ( FBuild::IsValid() )
     {
-        job = JobQueue::IsValid() ? JobQueue::Get().GetDistributableJobToProcess( false ) : nullptr;
-        if ( job != nullptr )
+        if ( FBuild::Get().GetOptions().m_NoLocalConsumptionOfRemoteJobs == false )
         {
-            // process the work
-            Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
-
-            if ( result == Node::NODE_RESULT_FAILED )
+            job = JobQueue::IsValid() ? JobQueue::Get().GetDistributableJobToProcess( false ) : nullptr;
+            if ( job != nullptr )
             {
-                FBuild::OnBuildError();
+                // process the work
+                Node::BuildResult result = JobQueueRemote::DoBuild( job, false );
+
+                if ( result == Node::NODE_RESULT_FAILED )
+                {
+                    FBuild::OnBuildError();
+                }
+
+                JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job
+
+                return true; // did some work
             }
-
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job
-
-            return true; // did some work
         }
     }
 
     // race remote jobs
-    if ( FBuild::Get().GetOptions().m_AllowLocalRace )
+    if ( FBuild::IsValid() )
     {
-        job = JobQueue::IsValid() ? JobQueue::Get().GetDistributableJobToRace() : nullptr;
-        if ( job != nullptr )
+        if ( FBuild::Get().GetOptions().m_AllowLocalRace )
         {
-            // process the work
-            Node::BuildResult result = JobQueueRemote::DoBuild( job, true );
-
-            if ( result == Node::NODE_RESULT_FAILED )
+            job = JobQueue::IsValid() ? JobQueue::Get().GetDistributableJobToRace() : nullptr;
+            if ( job != nullptr )
             {
-                // Ignore error if cancelling due to a remote race win
-                if ( job->GetDistributionState() != Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+                // process the work
+                Node::BuildResult result = JobQueueRemote::DoBuild( job, true );
+
+                if ( result == Node::NODE_RESULT_FAILED )
                 {
-                    FBuild::OnBuildError();
+                    // Ignore error if cancelling due to a remote race win
+                    if ( job->GetDistributionState() != Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
+                    {
+                        FBuild::OnBuildError();
+                    }
                 }
+
+                JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job
+
+                return true; // did some work
             }
-
-            JobQueue::Get().FinishedProcessingJob( job, ( result != Node::NODE_RESULT_FAILED ), true ); // returning a remote job
-
-            return true; // did some work
         }
     }
 

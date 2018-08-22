@@ -282,7 +282,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 
 // Finalize
 //------------------------------------------------------------------------------
-/*virtual*/ bool Node::Finalize( NodeGraph & )
+/*virtual*/ bool Node::Finalize( NodeGraph * )
 {
     // most nodes have nothing to do
     return true;

@@ -237,6 +237,11 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
 {
     ASSERT( !targets.IsEmpty() );
 
+    if ( m_DependencyGraph == nullptr )
+    {
+        return false;
+    }
+
     // Get the nodes for all the targets
     const size_t numTargets = targets.GetSize();
     for ( size_t i=0; i<numTargets; ++i )
@@ -311,6 +316,11 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
     PROFILE_FUNCTION
 
+    if ( m_DependencyGraph == nullptr )
+    {
+        return false;
+    }
+
     FLOG_INFO( "Saving DepGraph '%s'", nodeGraphDBFile );
 
     Timer t;
@@ -368,7 +378,10 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 //------------------------------------------------------------------------------
 void FBuild::SaveDependencyGraph( IOStream & stream, const char* nodeGraphDBFile ) const
 {
-    m_DependencyGraph->Save( stream, nodeGraphDBFile );
+    if ( m_DependencyGraph != nullptr )
+    {
+        m_DependencyGraph->Save( stream, nodeGraphDBFile );
+    }
 }
 
 // Build
@@ -388,6 +401,7 @@ bool FBuild::Build( Node * nodeToBuild )
     m_LastProgressCalcTime = 0.0f;
     m_SmoothedProgressCurrent = 0.0f;
     m_SmoothedProgressTarget = 0.0f;
+
     FLog::StartBuild();
 
     // create worker dir for main thread build case
@@ -402,12 +416,12 @@ bool FBuild::Build( Node * nodeToBuild )
     for ( ;; )
     {
         // process completed jobs
-        m_JobQueue->FinalizeCompletedJobs( *m_DependencyGraph );
+        m_JobQueue->FinalizeCompletedJobs( m_DependencyGraph );
 
         if ( !stopping )
         {
             // do a sweep of the graph to create more jobs
-            m_DependencyGraph->DoBuildPass( nodeToBuild );
+            NodeGraph::DoBuildPass( m_DependencyGraph, nodeToBuild );
         }
 
         if ( m_Options.m_NumWorkerThreads == 0 )
@@ -467,7 +481,7 @@ bool FBuild::Build( Node * nodeToBuild )
     }
 
     // wrap up/free any jobs that come from the last build pass
-    m_JobQueue->FinalizeCompletedJobs( *m_DependencyGraph );
+    m_JobQueue->FinalizeCompletedJobs( m_DependencyGraph );
 
     FDELETE m_JobQueue;
     m_JobQueue = nullptr;
@@ -625,6 +639,12 @@ void FBuild::UpdateBuildStatus( const Node * node )
         FBuildStats & bs = m_BuildStats;
         bs.m_NodeTimeProgressms = 0;
         bs.m_NodeTimeTotalms = 0;
+
+        if ( m_DependencyGraph == nullptr )
+        {
+            return;
+        }
+
         m_DependencyGraph->UpdateBuildStatus( node, bs.m_NodeTimeProgressms, bs.m_NodeTimeTotalms );
         m_LastProgressCalcTime = m_Timer.GetElapsed();
 
@@ -682,6 +702,11 @@ void FBuild::GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint
 //------------------------------------------------------------------------------
 void FBuild::DisplayTargetList() const
 {
+    if ( m_DependencyGraph == nullptr )
+    {
+        return;
+    }
+
     OUTPUT( "FBuild: List of available targets\n" );
     const size_t totalNodes = m_DependencyGraph->GetNodeCount();
     for ( size_t i = 0; i < totalNodes; ++i )
@@ -732,6 +757,11 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
     }
 
     OUTPUT( "FBuild: Dependency database\n" );
+
+    if ( m_DependencyGraph == nullptr )
+    {
+        return false;
+    }
 
     m_DependencyGraph->Display( deps );
     return true;

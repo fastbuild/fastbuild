@@ -120,7 +120,7 @@ public:
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
     SettingsNode * CreateSettingsNode( const AString & name );
 
-    void DoBuildPass( Node * nodeToBuild );
+    static void DoBuildPass( NodeGraph * ng, Node * nodeToBuild );
 
     static void CleanPath( AString & name, bool makeFullPath = true );
     static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
@@ -143,8 +143,8 @@ private:
 
     void AddNode( Node * node );
 
-    void BuildRecurse( Node * nodeToBuild, uint32_t cost );
-    bool CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost );
+    static void BuildRecurse( NodeGraph * ng, Node * nodeToBuild, uint32_t cost );
+    static bool CheckDependencies( NodeGraph * ng, Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost );
     static void UpdateBuildStatusRecurse( const Node * node,
                                           uint32_t & nodesBuiltTime,
                                           uint32_t & totalNodeTime );

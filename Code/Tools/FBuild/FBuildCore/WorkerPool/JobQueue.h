@@ -33,9 +33,10 @@ public:
 
     // jobs consumed by workers
     Job * RemoveJob();
+    
 private:
-    uint32_t    m_Count;    // access the current count
-    Mutex       m_Mutex;    // lock to add/remove jobs
+    uint32_t       m_Count;    // access the current count
+    Mutex          m_Mutex;    // lock to add/remove jobs
     Array< Job * > m_Jobs;  // Sorted, most expensive at end
 };
 
@@ -50,7 +51,7 @@ public:
     // main thread calls these
     void AddJobToBatch( Node * node );  // Add new job to the staging queue
     void FlushJobBatch();               // Sort and flush the staging queue
-    void FinalizeCompletedJobs( NodeGraph & nodeGraph );
+    void FinalizeCompletedJobs( NodeGraph * nodeGraph );
     void MainThreadWait( uint32_t maxWaitMS );
 
     // main thread can be signalled

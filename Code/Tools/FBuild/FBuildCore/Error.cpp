@@ -641,7 +641,12 @@ void Error::FormatError( const BFFIterator & iter,
     iter.GetPosInfo( line, column, lineStart );
 
     // convert to full path and '/'->'\' cleanup
-    const AStackString<> fileName( iter.GetFileName() );
+    AStackString<> fileName;
+    const char * iterName = iter.GetFileName();
+    if ( iterName )
+    {
+        fileName += iterName;
+    }
     AStackString<> fullPath;
     NodeGraph::CleanPath( fileName, fullPath );
 
