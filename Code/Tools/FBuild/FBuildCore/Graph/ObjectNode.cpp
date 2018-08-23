@@ -1161,7 +1161,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
                 if ( timeSetOK == false )
                 {
                     cache->FreeMemory( cacheData, cacheDataSize );
-                    FLOG_ERROR( "Failed to set timestamp on file after cache hit '%s' (%u)", fileNames[ i ].Get(), Env::GetLastErr() );
+                    FLOG_ERROR( "Failed to set timestamp on file after cache hit '%s' (error %i)", fileNames[ i ].Get(), Env::GetLastErr() );
                     return false;
                 }
             }
@@ -2051,7 +2051,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     tmpDirectory.AppendFormat( "%08X%c", sourceNameHash, NATIVE_SLASH );
     if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
     {
-        job->Error( "Failed to create temp directory '%s' to build '%s' (error %u)", tmpDirectory.Get(), GetName().Get(), Env::GetLastErr() );
+        job->Error( "Failed to create temp directory '%s' to build '%s' (error %i)", tmpDirectory.Get(), GetName().Get(), Env::GetLastErr() );
         job->OnSystemError();
         return NODE_RESULT_FAILED;
     }
@@ -2064,14 +2064,14 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         // Try again
         if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
         {
-            job->Error( "Failed to create temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr() );
-            job->OnSystemError();
-            return NODE_RESULT_FAILED;
+            job->Error( "Failed to create temp file '%s' to build '%s' (error %i)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr() );
+        job->OnSystemError();
+        return NODE_RESULT_FAILED;
         }
     }
     if ( tmpFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
     {
-        job->Error( "Failed to write to temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr() );
+        job->Error( "Failed to write to temp file '%s' to build '%s' (error %i)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr() );
         job->OnSystemError();
         return NODE_RESULT_FAILED;
     }

@@ -14,6 +14,7 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
+#include "Core/Env/Env.h"
 
 #include <memory.h>
 #include <stdio.h>
@@ -246,6 +247,7 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
     Process p;
     if ( !p.Spawn( options.m_ProgramName.Get(), argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
     {
+        FLOG_ERROR( "Failed to spawn intermediate '%s' wrapper process (error %i)\n", options.m_ProgramName.Get(), Env::GetLastErr() );
         return FBUILD_FAILED_TO_SPAWN_WRAPPER;
     }
 
@@ -283,6 +285,7 @@ int WrapperIntermediateProcess( const FBuildOptions & options )
     Process p;
     if ( !p.Spawn( options.m_ProgramName.Get(), argsCopy.Get(), options.GetWorkingDir().Get(), nullptr, true ) ) // true = forward output to our tty
     {
+        FLOG_ERROR( "Failed to spawn final '%s' wrapper process (error %i)\n", options.m_ProgramName.Get(), Env::GetLastErr() );
         return FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL;
     }
 

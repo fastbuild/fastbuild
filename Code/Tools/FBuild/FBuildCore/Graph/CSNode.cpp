@@ -15,6 +15,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
+#include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
@@ -188,7 +189,8 @@ CSNode::~CSNode() = default;
             return NODE_RESULT_FAILED;
         }
 
-        FLOG_ERROR( "Failed to spawn process to build '%s'", GetName().Get() );
+        FLOG_ERROR( "Failed to spawn '%s' process (error %i) to build '%s'\n",
+            GetCompiler()->GetExecutable().Get(), Env::GetLastErr(), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
 

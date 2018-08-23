@@ -118,7 +118,7 @@ Process::~Process()
        }
        else
        {
-           //OUTPUT( "Unable to kill process 0x%x. Last Error: %u", processID, GetLastError() );
+           //OUTPUT( "Unable to kill process 0x%x. Last Error %i", processID, GetLastError() );
        }
    }
 #endif

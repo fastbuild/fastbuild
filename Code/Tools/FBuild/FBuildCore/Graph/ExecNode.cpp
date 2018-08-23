@@ -13,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 
+#include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/Conversions.h"
@@ -178,7 +179,8 @@ ExecNode::~ExecNode() = default;
             return NODE_RESULT_FAILED;
         }
 
-        FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
+        FLOG_ERROR( "Failed to spawn '%s' process (error %i) to build '%s'\n",
+            GetExecutable()->GetName().Get(), Env::GetLastErr(), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
 

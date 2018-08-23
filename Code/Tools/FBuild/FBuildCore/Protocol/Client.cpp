@@ -794,7 +794,7 @@ bool Client::WriteFileToDisk( const AString & fileName, const char * data, const
 
         if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
         {
-            FLOG_ERROR( "Failed to create file '%s' (Err: %u)", fileName.Get(), Env::GetLastErr() );
+            FLOG_ERROR( "Failed to create file '%s' (error %i)", fileName.Get(), Env::GetLastErr() );
             return false;
         }
     }
@@ -802,7 +802,7 @@ bool Client::WriteFileToDisk( const AString & fileName, const char * data, const
     // Write the contents
     if ( fs.WriteBuffer( data, dataSize ) != dataSize )
     {
-        FLOG_ERROR( "Failed to write file '%s' (Err: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to write file '%s' (error %i)", fileName.Get(), Env::GetLastErr() );
         return false;
     }
 

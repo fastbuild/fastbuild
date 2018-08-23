@@ -138,7 +138,7 @@ int Worker::Work()
         #endif
         if ( !m_TargetIncludeFolderLock.Open( tmpPath.Get(), FileStream::WRITE_ONLY ) )
         {
-            ErrorMessage( "Failed to lock tmp folder.  Error: 0x%x", Env::GetLastErr() );
+            ErrorMessage( "Failed to lock tmp folder (error %i)", Env::GetLastErr() );
             return -2;
         }
     }

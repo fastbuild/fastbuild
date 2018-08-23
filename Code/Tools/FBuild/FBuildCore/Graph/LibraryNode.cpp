@@ -28,6 +28,7 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Env/Env.h"
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -175,7 +176,8 @@ LibraryNode::~LibraryNode() = default;
             return NODE_RESULT_FAILED;
         }
 
-        FLOG_ERROR( "Failed to spawn process for Library creation for '%s'", GetName().Get() );
+        FLOG_ERROR( "Failed to spawn '%s' process (error %i) for Library creation for '%s'\n",
+            GetLibrarian()->GetName().Get(), Env::GetLastErr(), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
 

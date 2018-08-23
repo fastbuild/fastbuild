@@ -161,7 +161,7 @@ int MainCommon( const AString & args, void * hInstance )
             if ( t.GetElapsed() > 5.0f )
             {
                 AStackString<> msg;
-                msg.Format( "Failed to make sub-process copy - error: %u (0x%x)\n\nSrc: %s\nDst: %s\n", Env::GetLastErr(), Env::GetLastErr(), exeName.Get(), exeNameCopy.Get() );
+                msg.Format( "Failed to make sub-process copy (error %i)\n\nSrc: %s\nDst: %s\n", Env::GetLastErr(), exeName.Get(), exeNameCopy.Get() );
                 ShowMsgBox( msg.Get() );
                 return -2;
             }

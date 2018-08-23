@@ -214,7 +214,7 @@ LinkerNode::~LinkerNode() = default;
                 return NODE_RESULT_FAILED;
             }
 
-            FLOG_ERROR( "Failed to spawn process '%s' for %s creation for '%s'", m_Linker.Get(), GetDLLOrExe(), GetName().Get() );
+            FLOG_ERROR( "Failed to spawn '%s' process (error %i) for %s creation to build '%s'\n", m_Linker.Get(), Env::GetLastErr(), GetDLLOrExe(), GetName().Get() );
             return NODE_RESULT_FAILED;
         }
 
@@ -302,7 +302,7 @@ LinkerNode::~LinkerNode() = default;
                 return NODE_RESULT_FAILED;
             }
 
-            FLOG_ERROR( "Failed to spawn process '%s' for '%s' stamping of '%s'", linkerStampExe->GetName().Get(), GetDLLOrExe(), GetName().Get() );
+            FLOG_ERROR( "Failed to spawn '%s' process (error %i) for '%s' stamping of '%s'\n", linkerStampExe->GetName().Get(), Env::GetLastErr(), GetDLLOrExe(), GetName().Get() );
             return NODE_RESULT_FAILED;
         }
 

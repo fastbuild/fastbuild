@@ -289,7 +289,7 @@
                                                        const AString & include,
                                                        uint32_t errorCode )
 {
-    FormatError( iter, 1033u, nullptr, "Error reading include '%s' (Error: %u).",
+    FormatError( iter, 1033u, nullptr, "Error reading include '%s' (error %i).",
                                        include.Get(),
                                        errorCode );
 }
