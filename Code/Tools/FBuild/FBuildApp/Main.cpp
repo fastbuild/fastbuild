@@ -13,7 +13,9 @@
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Time/Time.h"
 #include "Core/Tracing/Tracing.h"
+#include "Core/Env/Env.h"
 
 #include <memory.h>
 #include <stdio.h>
@@ -211,18 +213,11 @@ int Main(int argc, char * argv[])
     }
 
     // final line of output - status of build
-    float totalBuildTime = t.GetElapsed();
-    uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
-    totalBuildTime -= ( minutes * 60.0f );
-    float seconds = totalBuildTime;
-    if ( minutes > 0 )
-    {
-        FLOG_BUILD( "Time: %um %05.3fs\n", minutes, seconds );
-    }
-    else
-    {
-        FLOG_BUILD( "Time: %05.3fs\n", seconds );
-    }
+    AStackString<> timeString;
+    const float totalBuildTime = t.GetElapsed();
+    const bool outputFractionalDigits = true;
+    Time::FormatTime( totalBuildTime, outputFractionalDigits, timeString );
+    FLOG_BUILD( "Time: %s\n", timeString.Get() );
 
     ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
     return ( result == true ) ? FBUILD_OK : FBUILD_BUILD_FAILED;

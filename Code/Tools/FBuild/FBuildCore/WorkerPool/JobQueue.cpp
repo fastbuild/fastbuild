@@ -83,10 +83,12 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
 //------------------------------------------------------------------------------
 Job * JobSubQueue::RemoveJob()
 {
+    Job * retJob = nullptr;
+
     // lock-free early out if there are no jobs
     if ( m_Count == 0 )
     {
-        return nullptr;
+        return retJob;
     }
 
     // lock to remove job
@@ -95,29 +97,58 @@ Job * JobSubQueue::RemoveJob()
     // possible that job has been removed between job count check and mutex lock
     if ( m_Jobs.IsEmpty() )
     {
-        return nullptr;
+        return retJob;
     }
 
-    ASSERT( m_Count );
-    --m_Count;
+    retJob = m_Jobs.Top();
+    if ( retJob )
+    {
+        ASSERT( m_Count );
+        --m_Count;
 
-    Job * job = m_Jobs.Top();
-    m_Jobs.Pop();
+        m_Jobs.Pop();
+    }
+    return retJob;
+}
 
-    return job;
+// DeleteJobs
+//------------------------------------------------------------------------------
+void JobSubQueue::DeleteJobs()
+{
+    // lock-free early out if there are no jobs
+    if ( m_Count == 0 )
+    {
+        return;
+    }
+
+    // lock to remove job
+    MutexHolder mh( m_Mutex );
+
+    // possible that job has been removed between job count check and mutex lock
+    if ( m_Jobs.IsEmpty() )
+    {
+        return;
+    }
+
+    for ( size_t i=0; i<m_Count; ++i )
+    {
+        FDELETE m_Jobs[ i ];
+    }
+    m_Jobs.Clear();
+    m_Count = 0;
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueue::JobQueue( uint32_t numWorkerThreads ) :
-    m_NumLocalJobsActive( 0 ),
-    m_DistributableJobs_Available( 1024, true ),
-    m_DistributableJobs_InProgress( 1024, true ),
-    m_CompletedJobs( 1024, true ),
-    m_CompletedJobsFailed( 1024, true ),
-    m_CompletedJobs2( 1024, true ),
-    m_CompletedJobsFailed2( 1024, true ),
-    m_Workers( numWorkerThreads, false )
+JobQueue::JobQueue( const uint32_t numWorkerThreads ) :
+m_NumLocalJobsActive( 0 ),
+m_DistributableJobs_Available( 1024, true ),
+m_DistributableJobs_InProgress( 1024, true ),
+m_CompletedJobs( 1024, true ),
+m_CompletedJobsFailed( 1024, true ),
+m_CompletedJobs2( 1024, true ),
+m_CompletedJobsFailed2( 1024, true ),
+m_Workers( numWorkerThreads, false )
 {
     PROFILE_FUNCTION
 
@@ -142,10 +173,7 @@ JobQueue::~JobQueue()
     SignalStopWorkers();
 
     // delete incomplete jobs
-    while ( Job * job = m_LocalJobs_Available.RemoveJob() )
-    {
-        FDELETE job;
-    }
+    m_LocalJobs_Available.DeleteJobs();
 
     // wait for workers to finish - ok if they stopped before this
     const size_t numWorkerThreads = m_Workers.GetSize();
@@ -192,10 +220,22 @@ bool JobQueue::HaveWorkersStopped() const
 
 // GetNumDistributableJobsAvailable
 //------------------------------------------------------------------------------
-size_t JobQueue::GetNumDistributableJobsAvailable() const
+void JobQueue::GetNumDistributableJobsAvailable(
+    uint32_t & numJobsAvailable,
+    uint32_t & numJobsAvailableForWorker ) const
 {
     MutexHolder m( m_DistributedJobsMutex );
-    return m_DistributableJobs_Available.GetSize();
+
+    numJobsAvailable = (uint32_t)m_DistributableJobs_Available.GetSize();
+    numJobsAvailableForWorker = 0;
+    for ( size_t i=0; i<numJobsAvailable; ++i )
+    {
+        Job * job = m_DistributableJobs_Available[ i ];
+        if ( job )
+        {
+            ++numJobsAvailableForWorker;
+        }
+    }
 }
 
 // GetJobStats

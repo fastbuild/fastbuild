@@ -189,32 +189,13 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         }
     }
 
-    //
     // create the connection management system if we might need it
     if ( m_Options.m_AllowDistributed )
     {
-        Array< AString > workers;
-        if ( m_Settings->GetWorkerList().IsEmpty() )
-        {
-            // check for workers through brokerage
-            // TODO:C This could be moved out of the main code path
-            m_WorkerBrokerage.FindWorkers( workers );
-        }
-        else
-        {
-            workers = m_Settings->GetWorkerList();
-        }
-
-        if ( workers.IsEmpty() )
-        {
-            FLOG_WARN( "No workers available - Distributed compilation disabled" );
-            m_Options.m_AllowDistributed = false;
-        }
-        else
-        {
-            OUTPUT( "Distributed Compilation : %u Workers in pool\n", (uint32_t)workers.GetSize() );
-            m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
-        }
+        m_Client = FNEW( Client(
+            m_Settings->GetWorkerList(), m_Options.m_DistributionPort, 
+            m_Settings->GetWorkerListRefreshLimitSec(), m_Settings->GetWorkerConnectionRetryLimitSec(),
+            m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
     }
 
     return true;

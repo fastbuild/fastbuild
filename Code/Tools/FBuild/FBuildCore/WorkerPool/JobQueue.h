@@ -33,9 +33,11 @@ public:
 
     // jobs consumed by workers
     Job * RemoveJob();
+    void  DeleteJobs();
+    
 private:
-    uint32_t    m_Count;    // access the current count
-    Mutex       m_Mutex;    // lock to add/remove jobs
+    uint32_t       m_Count;    // access the current count
+    Mutex          m_Mutex;    // lock to add/remove jobs
     Array< Job * > m_Jobs;  // Sorted, most expensive at end
 };
 
@@ -61,7 +63,9 @@ public:
     bool HaveWorkersStopped() const;
 
     // access state
-    size_t GetNumDistributableJobsAvailable() const;
+    void GetNumDistributableJobsAvailable(
+        uint32_t & numJobsAvailable,
+        uint32_t & numJobsAvailableForWorker ) const;
 
     void GetJobStats( uint32_t & numJobs, uint32_t & numJobsActive,
                       uint32_t & numJobsDist, uint32_t & numJobsDistActive ) const;
@@ -69,19 +73,22 @@ public:
 private:
     // worker threads call these
     friend class WorkerThread;
-    void        WorkerThreadWait( uint32_t maxWaitMS );
-    Job *       GetJobToProcess();
-    Job *       GetDistributableJobToRace();
+    void         WorkerThreadWait( uint32_t maxWaitMS );
+    Job *        GetJobToProcess();
+    Job *        GetDistributableJobToRace( );
     static Node::BuildResult DoBuild( Job * job );
-    void        FinishedProcessingJob( Job * job, bool result, bool wasARemoteJob );
+    void         FinishedProcessingJob( Job * job, bool result, bool wasARemoteJob );
 
-    void        QueueDistributableJob( Job * job );
+    void         QueueDistributableJob( Job * job );
 
     // client side of protocol consumes jobs via this interface
     friend class Client;
-    Job *       GetDistributableJobToProcess( bool remote );
-    Job *       OnReturnRemoteJob( uint32_t jobId );
-    void        ReturnUnfinishedDistributableJob( Job * job );
+    Job * GetDistributableJobToProcess( const bool remote );
+    void  CheckUnmatchedJobs( bool & errored );
+    Job * OnReturnRemoteJob( uint32_t jobId );
+    void  ReturnUnfinishedDistributableJob( Job * job );
+    void  UpdateWorkerRecords();
+    void  RemoveWorkerRecords( const AString & workerName );
 
     // Semaphore to manage work
     Semaphore           m_WorkerThreadSemaphore;

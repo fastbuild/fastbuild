@@ -19,19 +19,40 @@ public:
     ~WorkerBrokerage();
 
     // client interface
-    void FindWorkers( Array< AString > & workerList );
+    void FindWorkers(
+        const Array< AString > & excludedWorkers,
+        Array< AString > & workers );
 
-    // server interface
-    void SetAvailability( bool available );
+    const AString & GetBrokerageRoot() const { return m_BrokerageRoot; }
+
+        // server interface
+    void SetAvailable();
+    void SetUnavailable();
 private:
-    void Init();
+    class BrokerageRecord
+    {
+        public:
+            inline explicit BrokerageRecord() {}
+            inline virtual ~BrokerageRecord() = default;
 
-    AString             m_BrokerageRoot;
-    bool                m_Availability;
-    bool                m_Initialized;
-    AString             m_HostName;
-    AString             m_BrokerageFilePath;
-    Timer               m_TimerLastUpdate;      // Throttle network access
+            AString         m_DirPath;
+            AString         m_FilePath;
+    };
+
+    void Init();
+    void ListDirContents( const AString & path, Array< AString > & contents ) const;
+    void GetRootWorkers(
+        const Array< AString > & excludedWorkers,
+        Array< AString > & rootWorkersToInclude ) const;
+    void SetBrokerageRecord();
+    void RemoveBrokerageFile();
+    
+    AString                m_BrokerageRoot;
+    bool                   m_Availability;
+    bool                   m_Initialized;
+    AString                m_HostName;
+    BrokerageRecord        m_BrokerageRecord;
+    Timer                  m_TimerLastUpdate;      // Throttle network access
 };
 
 //------------------------------------------------------------------------------

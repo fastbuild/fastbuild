@@ -172,7 +172,7 @@ int Worker::Work()
     // the application MUST NOT try to update the UI from this point on
     m_MainWindow->SetAllowQuit();
 
-    m_WorkerBrokerage.SetAvailability( false );
+    m_WorkerBrokerage.SetUnavailable();
 
     return 0;
 }
@@ -253,8 +253,16 @@ void Worker::UpdateAvailability()
     }
 
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
-
-    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
+    
+    if ( numCPUsToUse > 0 )
+    {
+        m_WorkerBrokerage.SetAvailable();
+    }
+    else
+    {
+        // to avoid doing a lot of network file I/O when going idle and not idle,
+        // don't set unavailable here
+    }
 }
 
 // UpdateUI

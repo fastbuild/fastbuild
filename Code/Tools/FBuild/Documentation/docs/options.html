@@ -241,10 +241,9 @@ situations, in order to improve performance:</p>
     <li>When blocked on remote work</li>
 </ul>
 <p>This option prevents local consumption of distributable jobs in all these cases. This will generally
-result in slower builds and may even prevent the build completing entirely. As such, this options should
-generally only be used for troubleshooting.</p>
-<p>Additionally, this option disabled use of the cache.</p>
-<p><b>NOTE:</b> This option can prevent builds from completing (if no workers are available for example).</p>
+result in slower builds. Builds may not have the necessary workers and so may hang until the WorkerListRefreshLimit has been reached. As such, this option should generally only be used for troubleshooting.</p>
+<p>Additionally, this option disables use of the cache.</p>
+<p><b>NOTE:</b> This option can result in hung builds that timeout after WorkerListRefreshLimit has been reached, if for example no workers are available.</p>
 <p><b>NOTE:</b> This option will generally degrade build performance.</p>
 </div>
 
