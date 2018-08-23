@@ -33,6 +33,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/WorkerSettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
@@ -77,6 +78,7 @@
     "RemoveDir",
     "XCodeProj",
     "Settings",
+    "WorkerSettings",
 };
 
 // Custom MetaData
@@ -309,29 +311,30 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 {
     switch ( nodeType )
     {
-        case Node::PROXY_NODE:          ASSERT( false ); return nullptr;
-        case Node::COPY_FILE_NODE:      return nodeGraph.CreateCopyFileNode( name );
-        case Node::DIRECTORY_LIST_NODE: return nodeGraph.CreateDirectoryListNode( name );
-        case Node::EXEC_NODE:           return nodeGraph.CreateExecNode( name );
-        case Node::FILE_NODE:           return nodeGraph.CreateFileNode( name );
-        case Node::LIBRARY_NODE:        return nodeGraph.CreateLibraryNode( name );
-        case Node::OBJECT_NODE:         return nodeGraph.CreateObjectNode( name );
-        case Node::ALIAS_NODE:          return nodeGraph.CreateAliasNode( name );
-        case Node::EXE_NODE:            return nodeGraph.CreateExeNode( name );
-        case Node::CS_NODE:             return nodeGraph.CreateCSNode( name );
-        case Node::UNITY_NODE:          return nodeGraph.CreateUnityNode( name );
-        case Node::TEST_NODE:           return nodeGraph.CreateTestNode( name );
-        case Node::COMPILER_NODE:       return nodeGraph.CreateCompilerNode( name );
-        case Node::DLL_NODE:            return nodeGraph.CreateDLLNode( name );
-        case Node::VCXPROJECT_NODE:     return nodeGraph.CreateVCXProjectNode( name );
-        case Node::OBJECT_LIST_NODE:    return nodeGraph.CreateObjectListNode( name );
-        case Node::COPY_DIR_NODE:       return nodeGraph.CreateCopyDirNode( name );
-        case Node::SLN_NODE:            return nodeGraph.CreateSLNNode( name );
-        case Node::REMOVE_DIR_NODE:     return nodeGraph.CreateRemoveDirNode( name );
-        case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
-        case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
-        case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
-        default:                        ASSERT( false ); return nullptr;
+        case Node::PROXY_NODE:           ASSERT( false ); return nullptr;
+        case Node::COPY_FILE_NODE:       return nodeGraph.CreateCopyFileNode( name );
+        case Node::DIRECTORY_LIST_NODE:  return nodeGraph.CreateDirectoryListNode( name );
+        case Node::EXEC_NODE:            return nodeGraph.CreateExecNode( name );
+        case Node::FILE_NODE:            return nodeGraph.CreateFileNode( name );
+        case Node::LIBRARY_NODE:         return nodeGraph.CreateLibraryNode( name );
+        case Node::OBJECT_NODE:          return nodeGraph.CreateObjectNode( name );
+        case Node::ALIAS_NODE:           return nodeGraph.CreateAliasNode( name );
+        case Node::EXE_NODE:             return nodeGraph.CreateExeNode( name );
+        case Node::CS_NODE:              return nodeGraph.CreateCSNode( name );
+        case Node::UNITY_NODE:           return nodeGraph.CreateUnityNode( name );
+        case Node::TEST_NODE:            return nodeGraph.CreateTestNode( name );
+        case Node::COMPILER_NODE:        return nodeGraph.CreateCompilerNode( name );
+        case Node::DLL_NODE:             return nodeGraph.CreateDLLNode( name );
+        case Node::VCXPROJECT_NODE:      return nodeGraph.CreateVCXProjectNode( name );
+        case Node::OBJECT_LIST_NODE:     return nodeGraph.CreateObjectListNode( name );
+        case Node::COPY_DIR_NODE:        return nodeGraph.CreateCopyDirNode( name );
+        case Node::SLN_NODE:             return nodeGraph.CreateSLNNode( name );
+        case Node::REMOVE_DIR_NODE:      return nodeGraph.CreateRemoveDirNode( name );
+        case Node::XCODEPROJECT_NODE:    return nodeGraph.CreateXCodeProjectNode( name );
+        case Node::SETTINGS_NODE:        return nodeGraph.CreateSettingsNode( name );
+        case Node::WORKER_SETTINGS_NODE: return nodeGraph.CreateWorkerSettingsNode( name );
+        case Node::NUM_NODE_TYPES:       ASSERT( false ); return nullptr;
+        default:                         ASSERT( false ); return nullptr;
     }
 }
 
@@ -430,6 +433,132 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     // Properties
     const ReflectionInfo * const ri = node->GetReflectionInfoV();
     Serialize( stream, node, *ri );
+}
+
+// GetIndentSpaces
+//------------------------------------------------------------------------------
+/*virtual*/ void Node::GetIndentSpaces(
+    const uint32_t indentLevel,
+    AString & spaces ) const
+{
+    AStackString<> oneIndent( "    " );  // 4 spaces
+    for ( uint32_t i = 0; i < indentLevel; ++i )
+    {
+        spaces.Append( oneIndent );
+    }
+}
+
+// WriteBFFProperty
+//------------------------------------------------------------------------------
+/*virtual*/ void Node::WriteBFFProperty(
+    const ReflectedProperty & property,
+    const void * base,
+    const bool includeKey,
+    IOStream & stream,
+    uint32_t & indentLevel ) const
+{
+    AStackString<> indentedStr;
+    GetIndentSpaces( indentLevel, indentedStr );
+    if ( includeKey )
+    {
+        AStackString<> key;
+        const char * name = property.GetName();
+        key.Format( ".%s = ", name );
+        indentedStr.Append( key );
+    }
+    stream.WriteBuffer( indentedStr.Get(), indentedStr.GetLength() );
+    if ( property.IsArray() )
+    {
+        AStackString<> openArray( "{\n" );
+        stream.WriteBuffer( openArray.Get(), openArray.GetLength() );
+        ++indentLevel;
+
+        // get access to the array
+        void * arrayAddr = (void *)((size_t)base + property.GetOffset() );
+        Array< void * > * array = static_cast< Array< void * > * >( arrayAddr );
+
+        // get access to the array data
+        size_t arrayDataBegin = (size_t)array->Begin();
+        size_t arrayDataEnd = (size_t)array->End();
+
+        // determine the number of elements
+        const size_t arrayElementSize = property.GetPropertySize();
+        size_t numElements = ( arrayDataEnd - arrayDataBegin ) / arrayElementSize;
+        ASSERT( ( ( arrayDataEnd - arrayDataBegin ) % arrayElementSize ) == 0 ); // Sanity check
+
+        // write each element
+        for ( size_t i=0; i<numElements; ++i )
+        {
+            // create a temp ReflectedProperty for the element
+            const size_t offset( i * arrayElementSize );
+            ReflectedProperty arrayElement( "element", (uint32_t)offset, property.GetType(), false );
+            const bool arrayIncludeKey = false;
+            WriteBFFProperty( arrayElement, (void *)arrayDataBegin, arrayIncludeKey, stream, indentLevel );
+            AStackString<> elementSuffix;
+            if ( i < numElements - 1 )  // if not last element
+            {
+                AStackString<> comma( "," );
+                elementSuffix.Append( comma );
+            }
+            AStackString<> newline( "\n" );
+            elementSuffix.Append( newline );
+            stream.WriteBuffer( elementSuffix.Get(), elementSuffix.GetLength() );
+        }
+        AStackString<> indentedCloseArray;
+        GetIndentSpaces( indentLevel, indentedCloseArray );
+        AStackString<> closeArray( "}" );
+        indentedCloseArray.Append( closeArray );
+        stream.WriteBuffer( indentedCloseArray.Get(), indentedCloseArray.GetLength() );
+        --indentLevel;
+    }
+    else
+    {
+        AStackString<> value;
+        property.ToString( base, value );
+        AStackString<> formattedValue;
+        const PropertyType pt = property.GetType();
+        switch ( pt )
+        {
+            case PT_ASTRING:
+            {
+                formattedValue.Format( "'%s'", value.Get() );
+                break;
+            }
+            default:
+            {
+                formattedValue.Assign( value );
+                break;
+            }
+        }
+        stream.WriteBuffer( formattedValue.Get(), formattedValue.GetLength() );
+    }
+}
+
+// SaveBFF
+//------------------------------------------------------------------------------
+/*virtual*/ void Node::SaveBFF( IOStream & stream ) const
+{
+    const ReflectionInfo * const ri = GetReflectionInfoV();
+    if ( ri )
+    {
+        AStackString<> name( GetName() );
+        stream.WriteBuffer( name.Get(), name.GetLength() );
+        AStackString<> newline( "\n" );
+        stream.WriteBuffer( newline.Get(), newline.GetLength() );
+        AStackString<> openSettings( "{\n" );
+        stream.WriteBuffer( openSettings.Get(), openSettings.GetLength() );
+        uint32_t indentLevel = 1;  // start with one indent
+        const ReflectionIter end = ri->End();
+        for ( ReflectionIter it = ri->Begin(); it != end; ++it )
+        {
+            const ReflectedProperty & property = *it;
+            const bool includeKey = true;
+            WriteBFFProperty( property, this, includeKey, stream, indentLevel );
+            stream.WriteBuffer( newline.Get(), newline.GetLength() );
+        }
+        AStackString<> closeSettings( "}\n" );
+        stream.WriteBuffer( closeSettings.Get(), closeSettings.GetLength() );
+    }
 }
 
 // LoadRemote

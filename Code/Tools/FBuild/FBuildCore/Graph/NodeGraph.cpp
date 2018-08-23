@@ -32,6 +32,7 @@
 #include "TestNode.h"
 #include "UnityNode.h"
 #include "VCXProjectNode.h"
+#include "WorkerSettingsNode.h"
 #include "XCodeProjectNode.h"
 
 // Core
@@ -916,6 +917,18 @@ SettingsNode * NodeGraph::CreateSettingsNode( const AString & name )
     return node;
 }
 
+// CreateWorkerSettingsNode
+//------------------------------------------------------------------------------
+WorkerSettingsNode * NodeGraph::CreateWorkerSettingsNode( const AString & name )
+{
+    ASSERT( Thread::IsMainThread() );
+
+    WorkerSettingsNode * node = FNEW( WorkerSettingsNode() );
+    node->SetName( name );
+    AddNode( node );
+    return node;
+}
+
 // AddNode
 //------------------------------------------------------------------------------
 void NodeGraph::AddNode( Node * node )
@@ -1195,27 +1208,34 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     bool isFullPath = PathUtils::IsFullPath( name );
     if ( !isFullPath && makeFullPath )
     {
-        // make a full path by prepending working dir
-        const AString & workingDir = FBuild::Get().GetWorkingDir();
+        if ( FBuild::IsValid() )
+        {
+            // make a full path by prepending working dir
+            const AString & workingDir = FBuild::Get().GetWorkingDir();
 
-        // we're making the assumption that we don't need to clean the workingDir
-        ASSERT( workingDir.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
-        ASSERT( workingDir.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
+            // we're making the assumption that we don't need to clean the workingDir
+            ASSERT( workingDir.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
+            ASSERT( workingDir.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
 
-        // build the start of the path
-        cleanPath = workingDir;
-        cleanPath += NATIVE_SLASH;
+            // build the start of the path
+            cleanPath = workingDir;
+            cleanPath += NATIVE_SLASH;
 
-        // concatenate
-        uint32_t len = cleanPath.GetLength();
+            // concatenate
+            uint32_t len = cleanPath.GetLength();
 
-        // make sure the dest will be big enough for the extra stuff
-        cleanPath.SetLength( cleanPath.GetLength() + name.GetLength() );
+            // make sure the dest will be big enough for the extra stuff
+            cleanPath.SetLength( cleanPath.GetLength() + name.GetLength() );
 
-        // set the output (which maybe a newly allocated ptr)
-        dst = cleanPath.Get() + len;
+            // set the output (which maybe a newly allocated ptr)
+            dst = cleanPath.Get() + len;
 
-        isFullPath = true;
+            isFullPath = true;
+        }
+        else
+        {
+            dst = cleanPath.Get();
+        }
     }
     else
     {

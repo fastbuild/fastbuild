@@ -65,7 +65,7 @@ bool BFFParser::Parse( const char * dataWithSentinel,
     // data should be 1 bytes larger than size, with a sentinel
     ASSERT( dataWithSentinel[ sizeExcludingSentinel ] == '\000' );
 
-    if ( FBuild::IsValid() ) // cope with null for unit tests
+    if ( FBuild::IsValid() ) // cope with null for unit tests and fbuildworker cases
     {
         // NOTE: filename may or may not be clean already - ok to do twice
         AStackString<> fileNameClean;

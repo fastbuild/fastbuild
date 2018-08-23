@@ -18,9 +18,11 @@
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThreadRemote.h"
+#include "Tools/FBuild/FBuildCore/Graph/WorkerSettingsNode.h"
 
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
 #include "Core/Profile/Profile.h"
@@ -225,9 +227,9 @@ void Worker::UpdateAvailability()
 
     WorkerSettings & ws = WorkerSettings::Get();
     uint32_t numCPUsToUse = ws.GetNumCPUsToUse();
-    switch( ws.GetMode() )
+    switch( ws.GetWorkMode() )
     {
-        case WorkerSettings::WHEN_IDLE:
+        case WorkerSettingsNode::WHEN_IDLE:
         {
             if ( m_IdleDetection.IsIdle() == false )
             {
@@ -235,11 +237,11 @@ void Worker::UpdateAvailability()
             }
             break;
         }
-        case WorkerSettings::DEDICATED:
+        case WorkerSettingsNode::DEDICATED:
         {
             break; // use all allocated cpus
         }
-        case WorkerSettings::DISABLED:
+        case WorkerSettingsNode::DISABLED:
         {
             numCPUsToUse = 0;
             break;

@@ -37,6 +37,7 @@ class SLNNode;
 class TestNode;
 class UnityNode;
 class VCXProjectNode;
+class WorkerSettingsNode;
 class XCodeProjectNode;
 
 // NodeGraphHeader
@@ -53,7 +54,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 116 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 117 };
 
     bool IsValid() const
     {
@@ -119,11 +120,12 @@ public:
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
     SettingsNode * CreateSettingsNode( const AString & name );
+    WorkerSettingsNode * CreateWorkerSettingsNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );
 
-    static void CleanPath( AString & name, bool makeFullPath = true );
-    static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
+    static void CleanPath( AString & name, const bool makeFullPath = true );
+    static void CleanPath( const AString & name, AString & cleanPath, const bool makeFullPath = true );
     #if defined( ASSERTS_ENABLED )
         static bool IsCleanPath( const AString & path );
     #endif

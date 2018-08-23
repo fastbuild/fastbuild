@@ -7,8 +7,12 @@
 
 // Core
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
+
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // system
 #if defined( __WINDOWS__ )
@@ -17,49 +21,52 @@
 
 // Other
 //------------------------------------------------------------------------------
-#define FBUILDWORKER_SETTINGS_MIN_VERSION ( 1 )     // Oldest compatible version
-#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 2 ) // Current version
+#define SETTINGS_FILENAME ".settings"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 WorkerSettings::WorkerSettings()
-    : m_Mode( WHEN_IDLE )
-    , m_NumCPUsToUse( 1 )
-    , m_StartMinimized( false )
+    : m_NodeGraph( nullptr )
+, m_WorkerSettingsNode( nullptr )
+, m_WorkerSettingsNodeOwned( false )
 {
-    // half CPUs available to use by default
-    uint32_t numCPUs = Env::GetNumProcessors();
-    m_NumCPUsToUse = Math::Max< uint32_t >( 1, numCPUs / 2 );
-
+    // populate functions, needed by NodeGraph::Initialize()
+    Function::Create();
+    
+    // load the settings file
     Load();
-
-    // handle CPU downgrade
-    m_NumCPUsToUse = Math::Min( Env::GetNumProcessors(), m_NumCPUsToUse );
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-WorkerSettings::~WorkerSettings() = default;
-
-// SetMode
-//------------------------------------------------------------------------------
-void WorkerSettings::SetMode( Mode m )
+WorkerSettings::~WorkerSettings()
 {
-    m_Mode = m;
+    if ( m_WorkerSettingsNodeOwned )
+    {
+        FDELETE( m_WorkerSettingsNode );
+    }
+    FDELETE( m_NodeGraph );
+}
+
+// SetWorkMode
+//------------------------------------------------------------------------------
+void WorkerSettings::SetWorkMode( const WorkerSettingsNode::WorkMode m )
+{
+    m_WorkerSettingsNode->SetWorkMode( m );
 }
 
 // SetNumCPUsToUse
 //------------------------------------------------------------------------------
-void WorkerSettings::SetNumCPUsToUse( uint32_t c )
+void WorkerSettings::SetNumCPUsToUse( const uint32_t c )
 {
-    m_NumCPUsToUse = c;
+    m_WorkerSettingsNode->SetNumCPUsToUse( c );
 }
 
 // SetStartMinimized
 //------------------------------------------------------------------------------
-void WorkerSettings::SetStartMinimized( bool startMinimized )
+void WorkerSettings::SetStartMinimized( const bool startMinimized )
 {
-    m_StartMinimized = startMinimized;
+    m_WorkerSettingsNode->SetStartMinimized( startMinimized );
 }
 
 // Load
@@ -68,25 +75,51 @@ void WorkerSettings::Load()
 {
     AStackString<> settingsPath;
     Env::GetExePath( settingsPath );
-    settingsPath += ".settings";
+    settingsPath += SETTINGS_FILENAME;
 
-    FileStream f;
-    if ( f.Open( settingsPath.Get(), FileStream::READ_ONLY ) )
+    bool createFile = false;
+    if ( FileIO::FileExists( settingsPath.Get() ) )
     {
-        char header[ 4 ] = { 0 };
-        f.Read( &header, 4 );
-        if ( ( header[ 3 ] < FBUILDWORKER_SETTINGS_MIN_VERSION ) ||
-             ( header[ 3 ] > FBUILDWORKER_SETTINGS_CURRENT_VERSION ) )
-        {
-            return; // version is too old, or newer, and cannot be read
-        }
+        // pass in dummy db path
+        // we don't create this file, but NodeGraph::Initialize() needs some path
+        AStackString<> settingsDBPath( SETTINGS_FILENAME );
+        AStackString<> dbSuffix( ".db" );
+        settingsDBPath.Append( dbSuffix );
 
-        // settings
-        uint32_t mode;
-        f.Read( mode );
-        m_Mode = (Mode)mode;
-        f.Read( m_NumCPUsToUse );
-        f.Read( m_StartMinimized );
+        // delete any previous node graph
+        FDELETE( m_NodeGraph );
+        m_NodeGraph = NodeGraph::Initialize( settingsPath.Get(), settingsDBPath.Get() );
+        if ( m_NodeGraph )
+        {
+            AStackString<> name( WORKER_SETTINGS_NODE_NAME );
+            Node * n = m_NodeGraph->FindNode( name );
+            if ( n )
+            {
+                if ( m_WorkerSettingsNodeOwned )
+                {
+                    // delete any previous owned node
+                    FDELETE( m_WorkerSettingsNode );
+                    m_WorkerSettingsNodeOwned = false;
+                }
+                m_WorkerSettingsNode = n->CastTo< WorkerSettingsNode >();
+            }
+        }
+    }
+    else
+    {
+        // no settings file, so create one
+        // this way, the user can fill it in with their own custom settings
+        createFile = true;
+    }
+    if ( !m_WorkerSettingsNode )
+    {
+        m_WorkerSettingsNode = FNEW ( WorkerSettingsNode() );
+        m_WorkerSettingsNodeOwned = true;
+    }
+    if ( createFile && m_WorkerSettingsNode )
+    {
+        // save only after having created a valid m_WorkerSettingsNode
+        Save();
     }
 }
 
@@ -96,37 +129,33 @@ void WorkerSettings::Save()
 {
     AStackString<> settingsPath;
     Env::GetExePath( settingsPath );
-    settingsPath += ".settings";
+    settingsPath += SETTINGS_FILENAME;
 
-    FileStream f;
-    if ( f.Open( settingsPath.Get(), FileStream::WRITE_ONLY ) )
+    if ( FileIO::GetReadOnly( settingsPath.Get() ) )
     {
-        bool ok = true;
-
-        // header
-        ok &= ( f.Write( "FWS", 3 ) == 3 );
-        ok &= ( f.Write( uint8_t( FBUILDWORKER_SETTINGS_CURRENT_VERSION ) ) == 1 );
-
-        // settings
-        ok &= f.Write( (uint32_t)m_Mode );
-        ok &= f.Write( m_NumCPUsToUse );
-        ok &= f.Write( m_StartMinimized );
-
-        if ( ok )
+        // silently skip saving, since user may want to have a
+        // .settings file, that does not change
+    }
+    else
+    {
+        FileStream f;
+        if ( f.Open( settingsPath.Get(), FileStream::WRITE_ONLY ) )
         {
-            return;
+            m_WorkerSettingsNode->SaveBFF( f );
+        }
+        else
+        {
+        #if defined( __WINDOWS__ )
+            MessageBox( nullptr, "Failed to save .settings file.", "FBuildWorker", MB_OK );
+        #elif defined( __APPLE__ )
+            // TODO:MAC Implement ShowMessageBox
+        #elif defined( __LINUX__ )
+            // TODO:LINUX Implement ShowMessageBox
+        #else
+            #error Unknown Platform
+        #endif
         }
     }
-
-    #if defined( __WINDOWS__ )
-        MessageBox( nullptr, "Failed to save settings.", "FBuildWorker", MB_OK );
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement ShowMessageBox
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ShowMessageBox
-    #else
-        #error Unknown Platform
-    #endif
 }
 
 //------------------------------------------------------------------------------

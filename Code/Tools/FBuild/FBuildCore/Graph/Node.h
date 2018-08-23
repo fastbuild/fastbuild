@@ -73,6 +73,7 @@ public:
         REMOVE_DIR_NODE     = 18,
         XCODEPROJECT_NODE   = 19,
         SETTINGS_NODE       = 20,
+        WORKER_SETTINGS_NODE = 21,
         // Make sure you update 's_NodeTypeNames' in the cpp
         NUM_NODE_TYPES      // leave this last
     };
@@ -146,6 +147,7 @@ public:
     static Node *   Load( NodeGraph & nodeGraph, IOStream & stream );
     static void     Save( IOStream & stream, const Node * node );
     virtual void    PostLoad( NodeGraph & nodeGraph ); // TODO:C Eliminate the need for this function
+    virtual void    SaveBFF( IOStream & stream ) const;
 
     static Node *   LoadRemote( IOStream & stream );
     static void     SaveRemote( IOStream & stream, const Node * node );
@@ -195,6 +197,15 @@ protected:
     void ReplaceDummyName( const AString & newName );
 
     virtual void SaveRemote( IOStream & stream ) const;
+    virtual void GetIndentSpaces(
+        const uint32_t indentLevel,
+        AString & spaces ) const;
+    virtual void WriteBFFProperty(
+        const ReflectedProperty & property,
+        const void * base,
+        const bool includeKey,
+        IOStream & stream,
+        uint32_t & indentLevel ) const;
 
     inline uint32_t GetControlFlags() const { return m_ControlFlags; }
 

@@ -5,7 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 // FBuild
-#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
+#include "Tools/FBuild/FBuildCore/Graph/WorkerSettingsNode.h"
 
 // Core
 #include "Core/Env/Types.h"
@@ -30,10 +30,12 @@ public:
     #endif
 
     // resource usage
-    bool m_OverrideCPUAllocation;
-    uint32_t m_CPUAllocation;
-    bool m_OverrideWorkMode;
-    WorkerSettings::Mode m_WorkMode;
+    bool                         m_OverrideCPUAllocation;
+    uint32_t                     m_CPUAllocation;
+    bool                         m_OverrideWorkMode;
+    WorkerSettingsNode::WorkMode m_WorkMode;
+    bool                         m_OverrideStartMinimized;
+    bool                         m_StartMinimized;
 
     // Console mode
     bool m_ConsoleMode;

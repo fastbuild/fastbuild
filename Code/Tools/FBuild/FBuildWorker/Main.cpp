@@ -13,6 +13,7 @@
 #include "Core/Process/SystemMutex.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
 
 // system
 #if defined( __WINDOWS__ )
@@ -128,15 +129,35 @@ int MainCommon( const AString & args, void * hInstance )
     // start the worker and wait for it to be closed
     int ret;
     {
+        // construct worker
         Worker worker( hInstance, args, options.m_ConsoleMode );
+
+        // before initializing worker, set initial worker settings
+        bool anyOverrides = false;
+        WorkerSettings & workerSettings = WorkerSettings::Get();
         if ( options.m_OverrideCPUAllocation )
         {
-            WorkerSettings::Get().SetNumCPUsToUse( options.m_CPUAllocation );
+            workerSettings.SetNumCPUsToUse( options.m_CPUAllocation );
+            anyOverrides = true;
         }
         if ( options.m_OverrideWorkMode )
         {
-            WorkerSettings::Get().SetMode( options.m_WorkMode );
+            workerSettings.SetWorkMode( options.m_WorkMode );
+            anyOverrides = true;
         }
+        if ( options.m_OverrideStartMinimized )
+        {
+            workerSettings.SetStartMinimized( options.m_StartMinimized );
+            anyOverrides = true;
+        }
+
+        if ( anyOverrides )
+        {
+            // save our state out to the .settings file
+            workerSettings.Save();
+        }
+
+        // do work
         ret = worker.Work();
     }
 

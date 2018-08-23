@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FBuildWorker .settings file format</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>WorkerSettings</h1>
+    <div id='workersettings' class='newsitemheader'>
+      WorkerSettings
+    </div>
+    <div class='newsitembody'>
+      <p>
+FBuildWorker .settings file format. Describes the settings for the FBuildWorker.
+      </p>
+<div class='code'>WorkerSettings
+{
+  // General
+  .FileVersion                      // Version of this worker .settings file
+  .WorkMode                         // (optional) Worker work mode, default: 'when idle'
+                                    //            'disabled' means do not run jobs
+                                    //            'when idle' means only run jobs when cpus idle
+                                    //            'dedicated' means run jobs when received
+
+  .NumCPUsToUse                     // (optional) Number of CPUs for worker to use
+                                    //            default: half of the available cpus
+
+  .StartMinimized                   // (optional) Start worker minimized, default: false
+}
+</div>
+    </div>
+
+  <script>generateFooter()</script>
+</body>
+</html>

@@ -690,28 +690,29 @@ void FBuild::DisplayTargetList() const
         bool displayName = false;
         switch ( node->GetType() )
         {
-            case Node::PROXY_NODE:          ASSERT( false ); break;
-            case Node::COPY_FILE_NODE:      break;
-            case Node::DIRECTORY_LIST_NODE: break;
-            case Node::EXEC_NODE:           break;
-            case Node::FILE_NODE:           break;
-            case Node::LIBRARY_NODE:        break;
-            case Node::OBJECT_NODE:         break;
-            case Node::ALIAS_NODE:          displayName = true; break;
-            case Node::EXE_NODE:            break;
-            case Node::CS_NODE:             break;
-            case Node::UNITY_NODE:          displayName = true; break;
-            case Node::TEST_NODE:           break;
-            case Node::COMPILER_NODE:       break;
-            case Node::DLL_NODE:            break;
-            case Node::VCXPROJECT_NODE:     break;
-            case Node::OBJECT_LIST_NODE:    displayName = true; break;
-            case Node::COPY_DIR_NODE:       break;
-            case Node::SLN_NODE:            break;
-            case Node::REMOVE_DIR_NODE:     break;
-            case Node::XCODEPROJECT_NODE:   break;
-            case Node::SETTINGS_NODE:       break;
-            case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
+            case Node::PROXY_NODE:           ASSERT( false ); break;
+            case Node::COPY_FILE_NODE:       break;
+            case Node::DIRECTORY_LIST_NODE:  break;
+            case Node::EXEC_NODE:            break;
+            case Node::FILE_NODE:            break;
+            case Node::LIBRARY_NODE:         break;
+            case Node::OBJECT_NODE:          break;
+            case Node::ALIAS_NODE:           displayName = true; break;
+            case Node::EXE_NODE:             break;
+            case Node::CS_NODE:              break;
+            case Node::UNITY_NODE:           displayName = true; break;
+            case Node::TEST_NODE:            break;
+            case Node::COMPILER_NODE:        break;
+            case Node::DLL_NODE:             break;
+            case Node::VCXPROJECT_NODE:      break;
+            case Node::OBJECT_LIST_NODE:     displayName = true; break;
+            case Node::COPY_DIR_NODE:        break;
+            case Node::SLN_NODE:             break;
+            case Node::REMOVE_DIR_NODE:      break;
+            case Node::XCODEPROJECT_NODE:    break;
+            case Node::SETTINGS_NODE:        break;
+            case Node::WORKER_SETTINGS_NODE: break;
+            case Node::NUM_NODE_TYPES:       ASSERT( false ); break;
         }
         if ( displayName )
         {

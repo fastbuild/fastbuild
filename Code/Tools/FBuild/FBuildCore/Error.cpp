@@ -619,6 +619,24 @@
     FormatError( iter, 1501u, function, ".CompilerFamily '%s' is unrecognized.", badCompilerFamily.Get() );
 }
 
+// Error_1600_WorkModeUnrecognized
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1600_FileVersionTooOldOrTooNew( const BFFIterator & iter,
+                                                              const Function * function,
+                                                              const uint32_t expectedFileVersion )
+{
+    FormatError( iter, 1600u, function, ".settings file .FileVersion is too old or too new, expected %d.", expectedFileVersion );
+}
+
+// Error_1601_WorkModeUnrecognized
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1601_WorkModeUnrecognized( const BFFIterator & iter,
+                                                              const Function * function,
+                                                              const AString & badWorkMode )
+{
+    FormatError( iter, 1601u, function, ".WorkMode '%s' is unrecognized.", badWorkMode.Get() );
+}
+
 // FormatError
 //------------------------------------------------------------------------------
 void Error::FormatError( const BFFIterator & iter,

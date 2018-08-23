@@ -158,7 +158,7 @@ void WorkerWindow::UIUpdateThread()
         m_ModeDropDown->AddItem( "Disabled" );
         m_ModeDropDown->AddItem( "Work For Others When Idle" );
         m_ModeDropDown->AddItem( "Work For Others Always" );
-        m_ModeDropDown->SetSelectedItem( WorkerSettings::Get().GetMode() );
+        m_ModeDropDown->SetSelectedItem( WorkerSettings::Get().GetWorkMode() );
 
         // Mode label
         m_ModeLabel = FNEW( OSLabel( this ) );
@@ -200,11 +200,15 @@ void WorkerWindow::UIUpdateThread()
         m_Menu = CreatePopupMenu();
         AppendMenu( m_Menu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT( "Exit" ) );
 
-        // Display the window and minimize it if needed
-        if ( WorkerSettings::Get().GetStartMinimzed() )
+        // Display the window, and minimize it
+        // - we do this so the user can see the application has run
+        ShowWindow( (HWND)GetHandle(), SW_SHOW );
+        UpdateWindow( (HWND)GetHandle() );
+        ShowWindow( (HWND)GetHandle(), SW_SHOW ); // First call can be ignored
+        if ( WorkerSettings::Get().GetStartMinimized() )
         {
-            UpdateWindow( (HWND)GetHandle() );
-            ToggleMinimized(); // minimze
+            ToggleMinimized(); // minimize
+            // don't save here, since first load
         }
         else
         {
@@ -264,6 +268,7 @@ void WorkerWindow::UIUpdateThread()
 {
     // Override minimize
     ToggleMinimized();
+    WorkerSettings::Get().Save();
     return true; // Stop window minimizing (since we already handled it)
 }
 
@@ -273,6 +278,7 @@ void WorkerWindow::UIUpdateThread()
 {
     // Override close to minimize
     ToggleMinimized();
+    WorkerSettings::Get().Save();
     return true; // Stop window closeing (since we already handled it)
 }
 
@@ -282,6 +288,7 @@ void WorkerWindow::UIUpdateThread()
 /*virtual*/ bool WorkerWindow::OnTrayIconLeftClick()
 {
     ToggleMinimized();
+    WorkerSettings::Get().Save();
     return true; // Handled
 }
 
@@ -316,16 +323,22 @@ void WorkerWindow::UIUpdateThread()
 //------------------------------------------------------------------------------
 /*virtual*/ void WorkerWindow::OnDropDownSelectionChanged( OSDropDown * dropDown )
 {
+    bool somethingChanged = false;
     const size_t index = dropDown->GetSelectedItem();
     if ( dropDown == m_ModeDropDown )
     {
-        WorkerSettings::Get().SetMode( (WorkerSettings::Mode)index );
+        WorkerSettings::Get().SetWorkMode( (WorkerSettingsNode::WorkMode)index );
+        somethingChanged = true;
     }
     else if ( dropDown == m_ResourcesDropDown )
     {
         WorkerSettings::Get().SetNumCPUsToUse( (uint32_t)index + 1 );
+        somethingChanged = true;
     }
-    WorkerSettings::Get().Save();
+    if ( somethingChanged )
+    {
+        WorkerSettings::Get().Save();
+    }
 }
 
 // ToggleMinimized
@@ -359,7 +372,6 @@ void WorkerWindow::ToggleMinimized()
     minimized = !minimized;
 
     WorkerSettings::Get().SetStartMinimized( minimized );
-    WorkerSettings::Get().Save();
 }
 
 //------------------------------------------------------------------------------

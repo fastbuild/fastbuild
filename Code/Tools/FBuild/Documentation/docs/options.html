@@ -163,6 +163,14 @@
     <td>Control worker availability.</td>
   </tr>
   <tr>
+    <td><a href="#min">-min</a></td>
+    <td>Start minimized.</td>
+  </tr>
+  <tr>
+    <td><a href="#nomin">-nomin</a></td>
+    <td>Don't start minimized.</td>
+  </tr>
+  <tr>
     <td><a href="#nosubprocess">-nosubprocess</a></td>
     <td>Don't spawn as a sub-process.</td>
   </tr>
@@ -436,6 +444,21 @@ runs in UI-less mode)</p>
 </table>
 </p>
 <p>NOTE: The newly overridden options will be saved and used on subsequent restarts of the worker.</p>
+</div>
+
+    <div class='newsitemheader' id="min">-min</div>
+    <div class='newsitembody'>
+<p>Start minimized.</p>
+<p>FBuildWorker will start minimized.</p>
+<p>You may alternatively set this value via the StartMinimized field in your worker .settings file.
+<p>By default, FBuildWorker does not start minimized.</p>
+</div>
+
+    <div class='newsitemheader' id="nomin">-nomin</div>
+    <div class='newsitembody'>
+<p>Don't start minimized.</p>
+<p>Use this option if you have set the StartMinimized field in your worker .settings file to true and want to
+disable it for this run of FBuildWorker.</p>
 </div>
 
     <div class='newsitemheader' id="nosubprocess">-nosubprocess</div>

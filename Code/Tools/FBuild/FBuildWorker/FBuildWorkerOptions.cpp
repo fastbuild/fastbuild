@@ -27,7 +27,9 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_OverrideCPUAllocation( false ),
     m_CPUAllocation( 0 ),
     m_OverrideWorkMode( false ),
-    m_WorkMode( WorkerSettings::WHEN_IDLE ),
+    m_WorkMode( WorkerSettingsNode::WHEN_IDLE ),
+    m_OverrideStartMinimized( false ),
+    m_StartMinimized( false ),
     m_ConsoleMode( false )
 {
     #ifndef __WINDOWS__
@@ -87,19 +89,19 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         }
         else if ( token == "-mode=disabled" )
         {
-            m_WorkMode = WorkerSettings::DISABLED;
+            m_WorkMode = WorkerSettingsNode::DISABLED;
             m_OverrideWorkMode = true;
             continue;
         }
         else if ( token == "-mode=idle" )
         {
-            m_WorkMode = WorkerSettings::WHEN_IDLE;
+            m_WorkMode = WorkerSettingsNode::WHEN_IDLE;
             m_OverrideWorkMode = true;
             continue;
         }
         else if ( token == "-mode=dedicated" )
         {
-            m_WorkMode = WorkerSettings::DEDICATED;
+            m_WorkMode = WorkerSettingsNode::DEDICATED;
             m_OverrideWorkMode = true;
             continue;
         }
@@ -115,6 +117,18 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
                 continue;
             }
         #endif
+        else if ( token == "-min" )
+        {
+            m_StartMinimized = true;
+            m_OverrideStartMinimized = true;
+            continue;
+        }
+        else if ( token == "-nomin" )
+        {
+            m_StartMinimized = false;
+            m_OverrideStartMinimized = true;
+            continue;
+        }
 
         ShowUsageError();
         return false;
@@ -141,6 +155,27 @@ void FBuildWorkerOptions::ShowUsageError()
                        "                disabled : Don't accept any work.\n"
                        "                idle : Accept work when PC is idle.\n"
                        "                dedicated : Accept work always.\n"
+                       "\n"
+                       "-min : Start minimized.\n"
+                       "-nomin : Don't start minimized.\n"
+                       "\n"
+                       "-sandbox : Enable work execution sandbox.\n"
+                       "-nosandbox : Disable work execution sandbox.\n"
+                       "\n"
+                       "-sandboxexe=path : Set sandbox executable.\n"
+                       "                Example relative path : winc.exe\n"
+                       "                Example absolute path : \"C:\\fastbuild_data\\bin\\win64\\winc.exe\"\n"
+                       "\n"
+                       " -sandboxargs=args : Set sandbox args.\n"
+                       "                Example args : \"--affinity 1 --memory 10485760\"\n"
+                       "\n"
+                       "-sandboxtmp=path : Set sandbox tmp dir.\n"
+                       "                Example relative path : sandbox\n"
+                       "                Example absolute path : \"C:\\ProgramData\\fbuild\\sandbox\"\n"
+                       "\n"
+                       "-Ttag : Set a worker tag.\n"
+                       "                You may specify one or more -Ttag entries.\n"
+                       "                Example : -TTopDownMemory -TOS=Win-7-64\n"
                        "\n"
                        #if defined( __WINDOWS__ )
                        "-nosubprocess : Don't spawn a sub-process worker copy.\n";
