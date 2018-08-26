@@ -534,7 +534,10 @@
             // create this level
             if ( DirectoryCreate( pathCopy ) == false )
             {
-                return false; // something went wrong
+                // something went wrong, but continue
+                // so we handle the case where
+                // multiple processes or threads are racing
+                // to create the same dir
             }
         }
         *slash = NATIVE_SLASH; // put back the slash
