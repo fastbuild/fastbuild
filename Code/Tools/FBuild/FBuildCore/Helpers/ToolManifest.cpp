@@ -61,13 +61,7 @@ ToolManifestFile::ToolManifestFile( const AString & name, uint64_t stamp, uint32
 ToolManifestFile::~ToolManifestFile()
 {
     FREE( m_CompressedContent );
-    // release file lock
-    if ( m_FileLock )
-    {
-        FDELETE( m_FileLock );
-        m_FileLock = nullptr;
-    }
-    m_SyncState = NOT_SYNCHRONIZED;
+    FDELETE( m_FileLock );
 }
 
 // StoreCompressedContent (File)
