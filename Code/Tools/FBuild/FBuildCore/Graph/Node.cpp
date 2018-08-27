@@ -38,6 +38,8 @@
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
 
 // Core
 #include "Core/Containers/Array.h"
@@ -262,6 +264,105 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     // nothing needs building
     FLOG_INFO( "Up-To-Date '%s'", GetName().Get() );
     return false;
+}
+
+// GetSandboxEnabled
+//------------------------------------------------------------------------------
+/*static*/ bool Node::GetSandboxEnabled()
+{
+    if ( FBuild::IsValid() )
+    {
+        return FBuild::Get().GetSettings()->GetSandboxEnabled();
+    }
+    else
+    {
+        return WorkerSettings::Get().GetSandboxEnabled();
+    }
+}
+
+// GetAbsSandboxExe
+//------------------------------------------------------------------------------
+/*static*/ const AString & Node::GetAbsSandboxExe()
+{
+    if ( FBuild::IsValid() )
+    {
+        return FBuild::Get().GetSettings()->GetAbsSandboxExe();
+    }
+    else
+    {
+        return WorkerSettings::Get().GetAbsSandboxExe();
+    }
+}
+
+// GetSandboxArgs
+//------------------------------------------------------------------------------
+/*static*/ const AString & Node::GetSandboxArgs()
+{
+    if ( FBuild::IsValid() )
+    {
+        return FBuild::Get().GetSettings()->GetSandboxArgs();
+    }
+    else
+    {
+        return WorkerSettings::Get().GetSandboxArgs();
+    }
+}
+
+// GetObfuscatedSandboxTmp
+//------------------------------------------------------------------------------
+/*static*/ const AString & Node::GetObfuscatedSandboxTmp()
+{
+    if ( FBuild::IsValid() )
+    {
+        return FBuild::Get().GetSettings()->GetObfuscatedSandboxTmp();
+    }
+    else
+    {
+        return WorkerSettings::Get().GetObfuscatedSandboxTmp();
+    }
+}
+
+// GetSandboxTmpFile
+//------------------------------------------------------------------------------
+/*static*/ void Node::GetSandboxTmpFile( const AString & basePath, const AString & filePath, AString & sandboxTmpFile )
+{
+    // get sandbox dir ( temp file dir is sandbox dir )
+    AStackString<> tempFileDir;
+    WorkerThread::GetTempFileDirectory( tempFileDir );
+    AStackString<> fileName;
+    if ( filePath.BeginsWith( tempFileDir ) )  // already in sandbox dir
+    {
+        sandboxTmpFile = filePath;
+    }
+    else  // not in sandbox dir
+    {
+        if ( filePath.BeginsWith( basePath ) )
+        {
+            // preserve sub dirs below base path
+            // and append filename
+            fileName += filePath.Get() + basePath.GetLength() + 1;
+        }
+        else
+        {
+            // append filename
+            fileName += filePath.FindLast( NATIVE_SLASH ) + 1;
+        }
+        sandboxTmpFile = tempFileDir;
+        sandboxTmpFile.AppendFormat( "%c%s", NATIVE_SLASH, fileName.Get() );
+    }
+}
+
+// HideSandboxTmpInString
+//------------------------------------------------------------------------------
+/*static*/ void Node::HideSandboxTmpInString( AString & stringToChange )
+{
+    if ( GetSandboxEnabled() )
+    {
+        // hide sandbox tmp dir in output; we want to keep the dir secret from other processes, since it is low integrity
+        AStackString<> hiddenString("<HiddenSandboxDir>");
+        hiddenString += NATIVE_SLASH;
+        stringToChange.Replace( GetObfuscatedSandboxTmp().Get(), hiddenString.Get() );
+    }
 }
 
 // DoBuild

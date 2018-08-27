@@ -25,13 +25,19 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueueRemote::JobQueueRemote( uint32_t numWorkerThreads ) :
+JobQueueRemote::JobQueueRemote(
+        uint32_t numWorkerThreads,
+        const bool sandboxEnabled,
+        const AString & obfuscatedSandboxTmp ) :
     m_PendingJobs( 1024, true ),
     m_CompletedJobs( 1024, true ),
     m_CompletedJobsFailed( 1024, true ),
     m_Workers( numWorkerThreads, false )
 {
-    WorkerThread::InitTmpDir( true ); // remote == true
+    WorkerThread::InitTmpDir(
+        sandboxEnabled,
+        obfuscatedSandboxTmp,
+        true ); // remote == true
 
     for ( uint32_t i=0; i<numWorkerThreads; ++i )
     {

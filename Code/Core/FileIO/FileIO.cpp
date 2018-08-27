@@ -9,6 +9,7 @@
 #include "FileStream.h"
 
 // Core
+#include "Core/Env/Env.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
@@ -17,7 +18,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Aclapi.h>
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <dirent.h>
@@ -243,7 +244,8 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetFiles( const AString & path,
                                   const AString & wildCard,
-                                  bool recurse,
+                                  const bool recurse,
+                                  const bool includeDirs,
                                   Array< AString > * results )
 {
     ASSERT( results );
@@ -254,11 +256,11 @@
         // make a copy of the path as it will be modified during recursion
         AStackString< 256 > pathCopy( path );
         PathUtils::EnsureTrailingSlash( pathCopy );
-        GetFilesRecurse( pathCopy, wildCard, results );
+        GetFilesRecurse( pathCopy, wildCard, includeDirs, results );
     }
     else
     {
-        GetFilesNoRecurse( path.Get(), wildCard.Get(), results );
+        GetFilesNoRecurse( path.Get(), wildCard.Get(), includeDirs, results );
     }
 
     return ( results->GetSize() != oldSize );
@@ -732,10 +734,67 @@
     }
 #endif
 
+#if defined( __WINDOWS__ )
+// IsShortcutDir
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::IsShortcutDir(
+    const WIN32_FIND_DATA & findData )
+{
+    // shortcut dirs are . and ..
+    return ( findData.cFileName[ 0 ] == '.' &&
+         ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) );
+}
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+// IsShortcutDir
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::IsShortcutDir( const dirent * entry )
+{
+    // shortcut dirs are . and ..
+    bool isShortcutDir = false;
+    if ( entry->d_name[ 0 ] == '.' )
+    {
+        if ( ( entry->d_name[ 1 ] == 0 ) ||
+             ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
+        {
+            isShortcutDir = true;;
+        }
+    }
+    return isShortcutDir;
+}
+#endif
+
+#if defined( __WINDOWS__ )
+// IncludeFileObjectInResults
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::IncludeFileObjectInResults(
+    const WIN32_FIND_DATA & findData,
+    const bool includeDirs )
+{
+    bool includeFileObject = true;  // first assume true
+    if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+    {
+        if ( includeDirs )
+        {
+            // ignore . and ..
+            if ( IsShortcutDir( findData ) )
+            {
+                includeFileObject = false;
+            }
+        }
+        else
+        {
+            includeFileObject = false;
+        }
+    }
+    return includeFileObject;
+}
+#endif
+
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurse( AString & pathCopy,
                                          const AString & wildCard,
+                                         const bool includeDirs,
                                          Array< AString > * results )
 {
     const uint32_t baseLength = pathCopy.GetLength();
@@ -758,8 +817,7 @@
                 // ignore magic '.' and '..' folders
                 // (don't need to check length of name, as all names are at least 1 char
                 // which means index 0 and 1 are valid to access)
-                if ( findData.cFileName[ 0 ] == '.' &&
-                     ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
+                if ( IsShortcutDir( findData ) )
                 {
                     continue;
                 }
@@ -767,7 +825,7 @@
                 pathCopy.SetLength( baseLength );
                 pathCopy += findData.cFileName;
                 pathCopy += NATIVE_SLASH;
-                GetFilesRecurse( pathCopy, wildCard, results );
+                GetFilesRecurse( pathCopy, wildCard, includeDirs, results );
             }
         }
         while ( FindNextFile( hFind, &findData ) != 0 );
@@ -784,7 +842,7 @@
 
         do
         {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            if ( !IncludeFileObjectInResults( findData, includeDirs ) )
             {
                 continue;
             }
@@ -843,13 +901,9 @@
             if ( isDir )
             {
                 // ignore . and ..
-                if ( entry->d_name[ 0 ] == '.' )
+                if ( IsShortcutDir( entry ) )
                 {
-                    if ( ( entry->d_name[ 1 ] == 0 ) ||
-                         ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
-                    {
-                        continue;
-                    }
+                    continue;
                 }
 
                 // regular dir
@@ -857,7 +911,11 @@
                 pathCopy += entry->d_name;
                 pathCopy += NATIVE_SLASH;
                 GetFilesRecurse( pathCopy, wildCard, results );
-                continue;
+
+                if ( !includeDirs )
+                {
+                    continue;
+                }
             }
 
             // file - does it match wildcard?
@@ -878,6 +936,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesNoRecurse( const char * path,
                                            const char * wildCard,
+                                           const bool includeDirs,
                                            Array< AString > * results )
 {
     AStackString< 256 > pathCopy( path );
@@ -896,7 +955,7 @@
 
         do
         {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            if ( !IncludeFileObjectInResults( findData, includeDirs ) )
             {
                 continue;
             }
@@ -952,9 +1011,8 @@
             }
 
             // dir?
-            if ( isDir )
+            if ( isDir && !includeDirs )
             {
-                // ignore dirs
                 continue;
             }
 
@@ -971,7 +1029,6 @@
         #error Unknown platform
     #endif
 }
-
 
 // GetFilesRecurse
 //------------------------------------------------------------------------------
@@ -1336,6 +1393,411 @@ bool FileIO::FileInfo::IsReadOnly() const
     }
 
     return false;
+}
+
+// ContainsValidDirChars
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::ContainsValidDirChars( const AString & string, AString & errorMsg )
+{
+    // so dirs can be valid on all OSes, compare against superset of all OSes invalid dir chars
+
+    bool valid = true;  // first assume true
+    errorMsg.Clear();
+    
+    // Mac OS X dirs cannot start with a period
+    const char periodChar = '.';
+    if ( string.BeginsWith( periodChar ) )
+    {
+        errorMsg += string;
+        errorMsg += " cannot start with a period";
+        valid = false;
+    }
+
+    // keep checking, so we show user all invalid chars found
+    AStackString<> invalidChars( ":/\\,[]{}()!;\"'*?<>|" );
+    AStackString<> invalidCharsFound;
+    const size_t numInvalidChars = invalidChars.GetLength();
+    for ( size_t i = 0; i < numInvalidChars; ++i )
+    {
+        if ( string.Find( invalidChars[ i ] ) )
+        {
+            if ( !invalidCharsFound.Find( invalidChars[ i ] ) )
+            {
+                invalidCharsFound += invalidChars[ i ];
+            }
+            valid = false;
+            // don't break here, since want to show user all invalid chars found
+        }
+    }
+    if ( !invalidCharsFound.IsEmpty() )
+    {
+        if ( errorMsg.IsEmpty() )
+        {
+            errorMsg += string;
+            errorMsg += " ";
+        }
+        else
+        {
+            errorMsg += " and ";
+        }
+        errorMsg += "cannot contain chars ";
+        errorMsg += invalidCharsFound;
+    }
+    return valid;
+}
+
+#if defined( __WINDOWS__ )
+// CheckAndSetPermissions
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::CheckAndSetPermissions(
+    const HANDLE hDir,
+    const PSID pUsersSID,
+    const PSID pLowLabelSID,
+    const BYTE lowLabelAceFlags,
+    const DWORD usersDirAllowMask,
+    const DWORD usersDirDenyMask,
+    const DWORD usersChildAllowMask,
+    const DWORD usersChildDenyMask,
+    const BOOL setPermissions,
+    PACL & pDACL,
+    BOOL & hasDesiredUsersDirPermissions,
+    BOOL & hasDesiredUsersChildPermissions,
+    BOOL & hasLowIntegrityPermission )
+{
+    // Check and set permissions on a dir
+    bool success = false;
+    hasDesiredUsersDirPermissions = false;
+    hasDesiredUsersChildPermissions = false;
+    hasLowIntegrityPermission = false;
+    PACL pSACL = NULL;
+    PSECURITY_DESCRIPTOR pSD = NULL;
+    success = ::GetSecurityInfo( hDir, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
+        DACL_SECURITY_INFORMATION | LABEL_SECURITY_INFORMATION, NULL, NULL, &pDACL, &pSACL, &pSD ) == ERROR_SUCCESS;
+    if ( success )
+    {
+        if ( pDACL )
+        {
+            ACL_SIZE_INFORMATION aclSizeInfo;
+            ::ZeroMemory( &aclSizeInfo, sizeof( aclSizeInfo ) );
+            success = ::GetAclInformation(
+                pDACL,
+                &aclSizeInfo,
+                sizeof( aclSizeInfo ),
+                AclSizeInformation ) == TRUE;
+            // check if have built-in users permissions
+            if ( success )
+            {
+                hasDesiredUsersDirPermissions = true;   // start with true and mark false, if any false in loop below
+                hasDesiredUsersChildPermissions = true; // start with true and mark false, if any false in loop below
+                BOOL anyUsersDirPermissions = false;
+                BOOL anyUsersChildPermissions = false;
+                PACCESS_ALLOWED_ACE aceItem;
+                for ( DWORD aceIndex = 0; aceIndex < aclSizeInfo.AceCount; ++aceIndex )
+                {
+                    success = ::GetAce(pDACL, aceIndex, (LPVOID*)&aceItem ) == TRUE;
+                    if ( success )
+                    {
+                        if ( aceItem->Header.AceType == ACCESS_ALLOWED_ACE_TYPE )
+                        {
+                            PSID sSID = (SID*)&( aceItem->SidStart );
+                            if ( ::EqualSid( sSID, pUsersSID ) )
+                            {
+                                if ( aceItem->Header.AceFlags == NO_INHERITANCE )  // dir case
+                                {
+                                    anyUsersDirPermissions = true;
+                                    if ( aceItem->Mask != ( usersDirAllowMask & ~usersDirDenyMask ) )
+                                    {
+                                        if ( setPermissions )
+                                        {
+                                            aceItem->Mask = usersDirAllowMask & ~usersDirDenyMask;
+                                        }
+                                        else
+                                        {
+                                            hasDesiredUsersDirPermissions = false;
+                                        }
+                                    }
+                                    // don't break here, since want to check all aces
+                                }
+                                else  // any inheritance flags (children case)
+                                {
+                                    anyUsersChildPermissions = true;
+                                    if ( ! ( aceItem->Header.AceFlags & INHERIT_ONLY_ACE &&
+                                        aceItem->Mask == ( usersChildAllowMask & ~usersChildDenyMask ) ) )
+                                    {
+                                        if ( setPermissions )
+                                        {
+                                            // specifying INHERIT_ONLY_ACE, so that only the children get the child permissions, not the dir
+                                            aceItem->Header.AceFlags = aceItem->Header.AceFlags | INHERIT_ONLY_ACE;
+                                            aceItem->Mask = usersChildAllowMask & ~usersChildDenyMask;
+                                        }
+                                        else
+                                        {
+                                            hasDesiredUsersChildPermissions = false;
+                                        }
+                                    }
+                                    // don't break here, since want to check all aces
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                hasDesiredUsersDirPermissions = anyUsersDirPermissions && hasDesiredUsersDirPermissions;
+                hasDesiredUsersChildPermissions = anyUsersChildPermissions && hasDesiredUsersChildPermissions;
+            }
+        }
+        if ( pSACL )
+        {
+            ACL_SIZE_INFORMATION aclSizeInfo;
+            ::ZeroMemory( &aclSizeInfo, sizeof( aclSizeInfo ) );
+            success = ::GetAclInformation(
+                pSACL,
+                &aclSizeInfo,
+                sizeof( aclSizeInfo ),
+                AclSizeInformation ) == TRUE;
+            // check if have low integrity permission
+            if ( success )
+            {
+                PACCESS_ALLOWED_ACE aceItem;
+                for ( DWORD aceIndex = 0; aceIndex < aclSizeInfo.AceCount; ++aceIndex )
+                {
+                    success = ::GetAce( pSACL, aceIndex, (LPVOID*)&aceItem ) == TRUE;
+                    if ( success )
+                    {
+                        if ( aceItem->Header.AceType == SYSTEM_MANDATORY_LABEL_ACE_TYPE )
+                        {
+                            PSID sSID = (SID*)&( aceItem->SidStart );
+                            if ( ::EqualSid( sSID, pLowLabelSID ) )
+                            {
+                                if ( aceItem->Header.AceFlags == lowLabelAceFlags )
+                                {
+                                    hasLowIntegrityPermission = true;
+                                }
+                                else if ( setPermissions )
+                                {
+                                    aceItem->Header.AceFlags = lowLabelAceFlags;
+                                    hasLowIntegrityPermission = true;
+                                }
+                            }
+                            // don't break here, since want to check all aces
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // pDACL, pSACL, and pSD do not need clearing
+    return success;
+}
+#endif  // Windows
+
+// SetLowIntegrity
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::SetLowIntegrity( const AString & rootSandboxPath, AString & errorMsg )
+{
+    bool success = false;
+#if defined( __WINDOWS__ )
+    const DWORD usersDirAllowMask = FILE_ALL_ACCESS;
+    // for security, don't allow users in the built-in users group to list the working dir
+    // low integrity client code should create a guid-named dir under the working dir
+    // to hide its files from other low integrity code and other users
+    const DWORD usersDirDenyMask = FILE_LIST_DIRECTORY | WRITE_DAC | WRITE_OWNER;
+    const DWORD usersChildAllowMask = FILE_ALL_ACCESS;
+    const DWORD usersChildDenyMask = WRITE_DAC | WRITE_OWNER;
+
+    // Set permissions to allow low integrity code to access a dir and its children
+    // from https://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/ca60b920-e351-4cd6-aa40-b2bf149ad226
+    // from https://stackoverflow.com/questions/690780/how-to-create-directory-with-all-rights-granted-to-everyone
+    // open dir for reading permissions
+    HANDLE hDir = ::CreateFile( rootSandboxPath.Get(),
+        READ_CONTROL,
+        0,
+        NULL,
+        OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS,  // allow dir to be opened by CreateFile
+        0 );
+    success = hDir != INVALID_HANDLE_VALUE;
+    if ( success )
+    {
+        // get SACL for low integrity user
+        DWORD sidSize = SECURITY_MAX_SID_SIZE;
+        PSID pLowLabelSID = NULL;
+        PACL pLowLabelSACL = NULL;
+        // set so that the dir and its children get the low integrity permission
+        const BYTE lowLabelAceFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE;
+
+        success = ( pLowLabelSID = ::LocalAlloc( LMEM_FIXED, sidSize ) ) != nullptr;
+        if ( success )
+        {
+            success = ::CreateWellKnownSid( WinLowLabelSid, 0, pLowLabelSID, &sidSize ) == TRUE;
+            if ( success )
+            {
+                success = ( pLowLabelSACL = (PACL)::LocalAlloc( LPTR, sidSize += sizeof( ACL ) + sizeof( ACE_HEADER ) + sizeof( ACCESS_MASK) ) ) != nullptr;
+                if ( success )
+                {
+                    success = ::InitializeAcl( pLowLabelSACL, sidSize, ACL_REVISION) == TRUE;
+                    if ( success )
+                    {
+                        success = ::AddMandatoryAce( pLowLabelSACL, ACL_REVISION, lowLabelAceFlags, 0, pLowLabelSID ) == TRUE;
+                    }
+                }
+            }
+        }
+
+        // get the built-in users group,
+        // since the low integrity user is in this group
+        sidSize = SECURITY_MAX_SID_SIZE;
+        PSID pUsersSID = NULL;
+        success = ( pUsersSID = ::LocalAlloc( LMEM_FIXED, sidSize ) ) != nullptr;
+        if ( success )
+        {
+            success = ::CreateWellKnownSid( WinBuiltinUsersSid, 0, pUsersSID, &sidSize ) == TRUE;
+        }
+
+        // check if the dir already has the desired permissions
+        // this is so can open the dir for read access
+        // and not need write access to it if the permissions are already set
+        BOOL hasDesiredUsersDirPermissions = false;
+        BOOL hasDesiredUsersChildPermissions = false;
+        BOOL hasLowIntegrityPermission = false;
+        if ( success )
+        {
+            PACL pDACL = NULL;
+            const BOOL setPermissions = false;  // check only
+            success = CheckAndSetPermissions(
+                hDir,
+                pUsersSID,
+                pLowLabelSID,
+                lowLabelAceFlags,
+                usersDirAllowMask,
+                usersDirDenyMask,
+                usersChildAllowMask,
+                usersChildDenyMask,
+                setPermissions,
+                pDACL,
+                hasDesiredUsersDirPermissions,
+                hasDesiredUsersChildPermissions,
+                hasLowIntegrityPermission );
+        }
+        const BOOL hasDesiredPermissions =
+            hasDesiredUsersDirPermissions &&
+            hasDesiredUsersChildPermissions &&
+            hasLowIntegrityPermission;
+        ::CloseHandle( hDir );
+        hDir = INVALID_HANDLE_VALUE;
+        if ( success && !hasDesiredPermissions )
+        {
+            // open dir for setting permissions
+            hDir = ::CreateFile( rootSandboxPath.Get(),
+                READ_CONTROL | WRITE_DAC | WRITE_OWNER,
+                0,
+                NULL,
+                OPEN_EXISTING,
+                FILE_FLAG_BACKUP_SEMANTICS,  // allow dir to be opened by CreateFile
+                0 );
+            success = hDir != INVALID_HANDLE_VALUE;
+            if ( success )
+            {
+                PACL pDACL = NULL;
+                const BOOL setPermissions = true;  // set the permissions
+                success = CheckAndSetPermissions(
+                    hDir,
+                    pUsersSID,
+                    pLowLabelSID,
+                    lowLabelAceFlags,
+                    usersDirAllowMask,
+                    usersDirDenyMask,
+                    usersChildAllowMask,
+                    usersChildDenyMask,
+                    setPermissions,
+                    pDACL,
+                    hasDesiredUsersDirPermissions,
+                    hasDesiredUsersChildPermissions,
+                    hasLowIntegrityPermission );
+
+                PACL daclToUse = pDACL;
+                PACL daclToClear = NULL;  // pDACL does not need clearing
+                if ( success )
+                {
+                    if ( !hasDesiredUsersDirPermissions || !hasDesiredUsersChildPermissions )
+                    {
+                        // build-in users group was not in existing permissions,
+                        // so add it
+                        DWORD numEa = 1;
+                        if ( !hasDesiredUsersDirPermissions && !hasDesiredUsersChildPermissions )
+                        {
+                            numEa = 2;
+                        }
+                        EXPLICIT_ACCESS* ea = (EXPLICIT_ACCESS*)::LocalAlloc( LPTR, sizeof( EXPLICIT_ACCESS ) * numEa );
+                        DWORD eaIndex = 0;
+                        if ( ea && !hasDesiredUsersDirPermissions )
+                        {
+                            ea[ eaIndex ].grfAccessMode = GRANT_ACCESS;
+                            ea[ eaIndex ].grfAccessPermissions = usersDirAllowMask & ~usersDirDenyMask;
+                            ea[ eaIndex ].grfInheritance = NO_INHERITANCE;  // permissions only for the dir
+                            ea[ eaIndex ].Trustee.pMultipleTrustee = NULL;
+                            ea[ eaIndex ].Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+                            ea[ eaIndex ].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+                            ea[ eaIndex ].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+                            ea[ eaIndex ].Trustee.ptstrName = (LPTSTR)pUsersSID;
+                            ++eaIndex;
+                        }
+                        if ( ea && !hasDesiredUsersChildPermissions )
+                        {
+                            // specifying INHERIT_ONLY_ACE, so that only the children get the child permissions, not the dir
+                            const BYTE childAceFlags = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE | INHERIT_ONLY_ACE;
+                            ea[ eaIndex ].grfAccessMode = GRANT_ACCESS;
+                            ea[ eaIndex ].grfAccessPermissions = usersChildAllowMask & ~usersChildDenyMask;
+                            ea[ eaIndex ].grfInheritance = childAceFlags;
+                            ea[ eaIndex ].Trustee.pMultipleTrustee = NULL;
+                            ea[ eaIndex ].Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+                            ea[ eaIndex ].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+                            ea[ eaIndex ].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+                            ea[ eaIndex ].Trustee.ptstrName = (LPTSTR)pUsersSID;
+                        }
+
+                        PACL pAdditionsDACL = NULL;
+                        success = ::SetEntriesInAcl( numEa, ea, pDACL, &pAdditionsDACL ) == ERROR_SUCCESS;
+                        ::LocalFree( ea );
+                        daclToUse = pAdditionsDACL;
+                        daclToClear = pAdditionsDACL;  // needs clearing since SetEntriesInAcl allocs
+                    }
+                    if ( success )
+                    {
+                        success = ::SetSecurityInfo(
+                            hDir, SE_FILE_OBJECT,
+                            DACL_SECURITY_INFORMATION | LABEL_SECURITY_INFORMATION |
+                            PROTECTED_DACL_SECURITY_INFORMATION,  // replace DACL with our own
+                            NULL, NULL, daclToUse, pLowLabelSACL ) == ERROR_SUCCESS;
+                    }
+                }
+                if ( daclToClear )
+                {
+                    ::LocalFree( daclToClear );
+                }
+                ::CloseHandle( hDir );
+            }
+        }
+        ::LocalFree( pUsersSID );
+        ::LocalFree( pLowLabelSACL );
+        ::LocalFree( pLowLabelSID );
+    }
+    if ( !success)
+    {
+        errorMsg.Format( "Failed to set permissions on dir %s (error %i)", rootSandboxPath.Get(), Env::GetLastErr() );
+    }
+#else  // not Windows
+    // @TODO: add permission setting code for Mac and Linux sandbox
+    errorMsg += "Mac and Linux sandbox logic is not yet implemented";
+#endif
+    return success;
 }
 
 //------------------------------------------------------------------------------

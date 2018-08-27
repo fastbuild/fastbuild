@@ -13,6 +13,8 @@
 //------------------------------------------------------------------------------
 class FileStream;
 
+#define CORE_PHRASE "core_"
+
 // WorkerThread
 //------------------------------------------------------------------------------
 class WorkerThread
@@ -22,7 +24,10 @@ public:
     void Init();
     virtual ~WorkerThread();
 
-    static void InitTmpDir( bool remote = false );
+    static void InitTmpDir(
+        const bool sandboxEnabled,
+        const AString & obfuscatedSandboxTmp,
+        bool remote = false );
 
     inline void Stop()              { m_ShouldExit = true; }
     inline bool HasExited() const   { return m_Exited; }

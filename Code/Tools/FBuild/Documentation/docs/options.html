@@ -103,6 +103,26 @@
     <td>Output a report at build termination.</td>
   </tr>
   <tr>
+    <td><a href="#sandbox">-sandbox</a></td>
+    <td>Enable local worker execution sandbox.</td>
+  </tr>
+  <tr>
+    <td><a href="#nosandbox">-nosandbox</a></td>
+    <td>Disable local worker execution sandbox.</td>
+  </tr>
+  <tr>
+    <td><a href="#sandboxexe">-sandboxexe [path]</a></td>
+    <td>Set local sandbox executable.</td>
+  </tr>
+  <tr>
+    <td><a href="#sandboxargs">-sandboxargs [args]</a></td>
+    <td>Set local sandbox args.</td>
+  </tr>
+  <tr>
+    <td><a href="#sandboxtmp">-sandboxtmp [path]</a></td>
+    <td>Set local sandbox tmp dir.</td>
+  </tr>
+  <tr>
     <td><a href="#showcmds">-showcmds</a></td>
     <td>Show command lines used to launch external processes.</td>
   </tr>
@@ -161,6 +181,34 @@
   <tr>
     <td><a href="#mode">-mode=[disabled|idle|dedicated]</a></td>
     <td>Control worker availability.</td>
+  </tr>
+  <tr>
+    <td><a href="#min">-min</a></td>
+    <td>Start minimized.</td>
+  </tr>
+  <tr>
+    <td><a href="#nomin">-nomin</a></td>
+    <td>Don't start minimized.</td>
+  </tr>
+  <tr>
+    <td><a href="#worker-sandbox">-sandbox</a></td>
+    <td>Enable worker execution sandbox.</td>
+  </tr>
+  <tr>
+    <td><a href="#worker-nosandbox">-nosandbox</a></td>
+    <td>Disable worker execution sandbox.</td>
+  </tr>
+  <tr>
+    <td><a href="#worker-sandboxexe">-sandboxexe [path]</a></td>
+    <td>Set worker sandbox executable.</td>
+  </tr>
+  <tr>
+    <td><a href="#worker-sandboxargs">-sandboxargs [args]</a></td>
+    <td>Set worker sandbox args.</td>
+  </tr>
+  <tr>
+    <td><a href="#worker-sandboxtmp">-sandboxtmp [path]</a></td>
+    <td>Set worker sandbox tmp dir.</td>
   </tr>
   <tr>
     <td><a href="#nosubprocess">-nosubprocess</a></td>
@@ -329,6 +377,61 @@ suppressed.</p>
 <p>NOTE: This option will lengthen the total build time, depending on the complexity of the build.</p>
 </div>
 
+    <div class='newsitemheader' id="sandbox">-sandbox</div>
+    <div class='newsitembody'>
+<p>Enable local worker execution sandbox.</p>
+<p>FBuild will run local compile and test jobs in a process sandbox, that you specify via the -sandboxexe option.</p>
+<p>Use this option to improve security and/or customize local build execution.</p>
+<p>You may alternatively set this value via the SandboxEnabled field in your Settings node.
+<p>By default, this option is disabled.</p>
+<p>NOTE: This option will lengthen the total build time, depending on the sandbox exe you use.
+Typically, 20 milliseconds per call.</p>
+</div>
+
+    <div class='newsitemheader' id="nosandbox">-nosandbox</div>
+    <div class='newsitembody'>
+<p>Disable local worker execution sandbox.</p>
+<p>Use this option if you have set the SandboxEnabled field in your Settings node to true and want to
+disable it for this run of FBuild.</p>
+</div>
+
+    <div class='newsitemheader' id="sandboxexe">-sandboxexe [path]</div>
+    <div class='newsitembody'>
+<p>Set local sandbox executable.</p>
+<p>If sandbox is enabled, FBuild will run local compile and test jobs through this sandbox exe.</p>
+<p>
+<table>
+  <tr><th width=150>Type</th><th>Example path</th></tr>
+  <tr><td>Relative path</td><td>winc.exe</td></tr>
+  <tr><td>Absolute path</td><td>"C:\fastbuild_data\bin\win64\winc.exe"</td></tr>
+</table></p>
+<p>You may alternatively set this value via the SandboxExe field in your Settings node.</p>
+<p>By default, this option is an empty string.</p>
+</div>
+
+    <div class='newsitemheader' id="sandboxargs">-sandboxargs [args]</div>
+    <div class='newsitembody'>
+<p>Set local sandbox args.</p>
+<p>If sandbox is enabled, FBuild will pass these args to the sandbox exe when running it.</p>
+<p>Example args : "--affinity 1 --memory 10485760"</p>
+<p>You may alternatively set this value via the SandboxArgs in your Settings node.</p>
+<p>By default, this option is an empty string.</p>
+</div>
+
+    <div class='newsitemheader' id="sandboxtmp">-sandboxtmp [path]</div>
+    <div class='newsitembody'>
+<p>Set local sandbox tmp dir.</p>
+<p>If sandbox is enabled, FBuild will use this tmp dir for local compile and test job tmp files, examples:</p>
+<p>
+<table>
+  <tr><th width=150>Type</th><th>Example path</th></tr>
+  <tr><td>Relative path</td><td>sandbox</td></tr>
+  <tr><td>Absolute path</td><td>"C:\ProgramData\fbuild\sandbox"</td></tr>
+</table></p>
+<p>You may alternatively set this value via the SandboxTmp field in your Settings node.</p>
+<p>By default, this option is a dir called sandbox, in your working dir.</p>
+</div>
+
     <div class='newsitemheader' id="showcmds">-showcmds</div>
     <div class='newsitembody'>
 <p>Displays the full command lines passed to external tools as they are invoked.</p>
@@ -436,6 +539,69 @@ runs in UI-less mode)</p>
 </table>
 </p>
 <p>NOTE: The newly overridden options will be saved and used on subsequent restarts of the worker.</p>
+</div>
+
+    <div class='newsitemheader' id="min">-min</div>
+    <div class='newsitembody'>
+<p>Start minimized.</p>
+<p>FBuildWorker will start minimized.</p>
+<p>By default, FBuildWorker does not start minimized.</p>
+</div>
+
+    <div class='newsitemheader' id="nomin">-nomin</div>
+    <div class='newsitembody'>
+<p>Don't start minimized.</p>
+<p>Use this option to start the worker with its GUI visible.</p>
+</div>
+
+    <div class='newsitemheader' id="worker-sandbox">-sandbox</div>
+    <div class='newsitembody'>
+<p>Enable worker execution sandbox.</p>
+<p>FBuildWorker will run compile and test jobs it receives in a process sandbox, that you specify via the -sandboxexe option.</p>
+<p>Use this option to improve security and/or customize worker build execution.</p>
+<p>By default, this option is disabled.</p>
+<p>NOTE: This option will lengthen the total build time, depending on the sandbox exe you use.
+Typically, 20 milliseconds per call.</p>
+</div>
+
+    <div class='newsitemheader' id="worker-nosandbox">-nosandbox</div>
+    <div class='newsitembody'>
+<p>Disable worker execution sandbox.</p>
+<p>Use this option to not run execution in a sandbox.</p>
+</div>
+
+    <div class='newsitemheader' id="worker-sandboxexe">-sandboxexe [path]</div>
+    <div class='newsitembody'>
+<p>Set worker sandbox executable.</p>
+<p>If sandbox is enabled, FBuildWorker will run compile and test jobs it receives through this sandbox exe.</p>
+<p>
+<table>
+  <tr><th width=150>Type</th><th>Example path</th></tr>
+  <tr><td>Relative path</td><td>winc.exe</td></tr>
+  <tr><td>Absolute path</td><td>"C:\fastbuild_data\bin\win64\winc.exe"</td></tr>
+</table></p>
+<p>By default, this option is an empty string.</p>
+</div>
+
+    <div class='newsitemheader' id="worker-sandboxargs">-sandboxargs [args]</div>
+    <div class='newsitembody'>
+<p>Set worker sandbox args.</p>
+<p>If sandbox is enabled, FBuildWorker will pass these args to the sandbox exe when running it.</p>
+<p>Example args : "--affinity 1 --memory 10485760"</p>
+<p>By default, this option is an empty string.</p>
+</div>
+
+    <div class='newsitemheader' id="worker-sandboxtmp">-sandboxtmp [path]</div>
+    <div class='newsitembody'>
+<p>Set worker sandbox tmp dir.</p>
+<p>If sandbox is enabled, FBuildWorker will use this tmp dir for compile and test job tmp files, examples:</p>
+<p>
+<table>
+  <tr><th width=150>Type</th><th>Example path</th></tr>
+  <tr><td>Relative path</td><td>sandbox</td></tr>
+  <tr><td>Absolute path</td><td>"C:\ProgramData\fbuild\sandbox"</td></tr>
+</table></p>
+<p>By default, this option is a dir called sandbox, in your working dir.</p>
 </div>
 
     <div class='newsitemheader' id="nosubprocess">-nosubprocess</div>

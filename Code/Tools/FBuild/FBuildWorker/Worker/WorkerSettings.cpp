@@ -8,7 +8,6 @@
 // Core
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileStream.h"
-#include "Core/Strings/AStackString.h"
 
 // system
 #if defined( __WINDOWS__ )
@@ -23,43 +22,75 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 WorkerSettings::WorkerSettings()
-    : m_Mode( WHEN_IDLE )
-    , m_NumCPUsToUse( 1 )
-    , m_StartMinimized( false )
+: m_Mode( WorkerSettings::WHEN_IDLE )
+, m_NumCPUsToUse( 1 )
+, m_StartMinimized( false )
+, m_SandboxEnabled( false )
 {
     // half CPUs available to use by default
     uint32_t numCPUs = Env::GetNumProcessors();
     m_NumCPUsToUse = Math::Max< uint32_t >( 1, numCPUs / 2 );
 
-    Load();
-
     // handle CPU downgrade
     m_NumCPUsToUse = Math::Min( Env::GetNumProcessors(), m_NumCPUsToUse );
+
+    // load the settings file
+    Load();
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-WorkerSettings::~WorkerSettings() = default;
+WorkerSettings::~WorkerSettings()
+{
+}
 
-// SetMode
+// SetWorkMode
 //------------------------------------------------------------------------------
-void WorkerSettings::SetMode( Mode m )
+void WorkerSettings::SetMode( const WorkerSettings::Mode m )
 {
     m_Mode = m;
 }
 
 // SetNumCPUsToUse
 //------------------------------------------------------------------------------
-void WorkerSettings::SetNumCPUsToUse( uint32_t c )
+void WorkerSettings::SetNumCPUsToUse( const uint32_t c )
 {
     m_NumCPUsToUse = c;
 }
 
 // SetStartMinimized
 //------------------------------------------------------------------------------
-void WorkerSettings::SetStartMinimized( bool startMinimized )
+void WorkerSettings::SetStartMinimized( const bool startMinimized )
 {
     m_StartMinimized = startMinimized;
+}
+
+// SetSandboxEnabled
+//------------------------------------------------------------------------------
+void WorkerSettings::SetSandboxEnabled( const bool sandboxEnabled )
+{
+    m_SandboxEnabled = sandboxEnabled;
+}
+
+// SetSandboxExe
+//------------------------------------------------------------------------------
+void WorkerSettings::SetSandboxExe( const AString & path )
+{
+    m_SandboxExe = path;
+}
+
+// SetSandboxArgs
+//------------------------------------------------------------------------------
+void WorkerSettings::SetSandboxArgs( const AString & args )
+{
+    m_SandboxArgs = args;
+}
+
+// SetSandboxTmp
+//------------------------------------------------------------------------------
+void WorkerSettings::SetSandboxTmp( const AString & path )
+{
+    m_SandboxTmp = path;
 }
 
 // Load

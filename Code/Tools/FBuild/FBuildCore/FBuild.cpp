@@ -22,6 +22,7 @@
 #include "Protocol/Client.h"
 #include "Protocol/Protocol.h"
 #include "WorkerPool/JobQueue.h"
+#include "WorkerPool/WorkerBrokerage.h"
 #include "WorkerPool/WorkerThread.h"
 
 #include "Core/Env/Assert.h"
@@ -63,6 +64,8 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_LastProgressCalcTime( 0.0f )
     , m_SmoothedProgressCurrent( 0.0f )
     , m_SmoothedProgressTarget( 0.0f )
+    , m_BaseEnvironmentString( nullptr )
+    , m_BaseEnvironmentStringSize( 0 )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
     , m_ImportedEnvironmentVars( 0, true )
@@ -107,6 +110,7 @@ FBuild::~FBuild()
     FDELETE m_DependencyGraph;
     FDELETE m_Client;
     FREE( m_EnvironmentString );
+    FREE( m_BaseEnvironmentString );
 
     if ( m_Cache )
     {
@@ -167,6 +171,91 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     // default instance if needed.
     const Node * settingsNode = m_DependencyGraph->FindNode( AStackString<>( "$$Settings$$" ) );
     m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : m_DependencyGraph->CreateSettingsNode( AStackString<>( "$$Settings$$" ) ); // Create a default
+
+    if ( m_Options.m_OverrideSandboxEnabled )
+    {
+        m_Settings->SetSandboxEnabled( m_Options.m_SandboxEnabled );
+    }
+    else
+    {
+        m_Options.m_SandboxEnabled = m_Settings->GetSandboxEnabled();
+    }
+
+    if ( m_Options.m_OverrideSandboxExe )
+    {
+        m_Settings->SetSandboxExe( m_Options.m_SandboxExe );
+    }
+    else
+    {
+        m_Options.m_SandboxExe = m_Settings->GetSandboxExe();
+    }
+
+    if ( m_Options.m_OverrideSandboxArgs )
+    {
+        m_Settings->SetSandboxArgs( m_Options.m_SandboxArgs );
+    }
+    else
+    {
+        m_Options.m_SandboxArgs = m_Settings->GetSandboxArgs();
+    }
+
+    if ( m_Options.m_OverrideSandboxTmp )
+    {
+        m_Settings->SetSandboxTmp( m_Options.m_SandboxTmp );
+        m_Settings->SetObfuscatedSandboxTmp( m_Options.GetObfuscatedSandboxTmp() );
+    }
+    else
+    {
+        m_Options.m_SandboxTmp = m_Settings->GetSandboxTmp();
+        m_Options.m_ObfuscatedSandboxTmp = m_Settings->GetObfuscatedSandboxTmp();
+    }
+
+    AStackString<> errorMsg;
+    const bool sandboxEnabled = m_Settings->GetSandboxEnabled();
+
+    // error check settings
+    if ( sandboxEnabled )
+    {
+        const AString & absSandboxExe = m_Settings->GetAbsSandboxExe();
+        if ( absSandboxExe.IsEmpty() || m_Settings->GetSandboxTmp().IsEmpty() )
+        {
+            errorMsg.Clear();
+            errorMsg += "To enable the sandbox, please specify a non-empty sandbox exe ";
+            errorMsg += "and a non-empty sandbox tmp in either your ";
+            errorMsg += "Settings node or via the command line -sandboxexe and -sandboxtmp args\n";
+            FLOG_ERROR_STRING( errorMsg.Get() );
+            return false;
+        }
+        if ( !absSandboxExe.IsEmpty() && !FileIO::FileExists( absSandboxExe.Get() ) )
+        {
+            FLOG_ERROR( "sandbox executable '%s' was not found on disk\n", absSandboxExe.Get() );
+            return false;
+        }
+
+        if ( !FileIO::EnsurePathExists( m_Settings->GetSandboxTmp() ) )
+        {
+            FLOG_ERROR( "Failed to create tmp dir %s (error %i)", m_Settings->GetSandboxTmp().Get(), Env::GetLastErr() );
+        }
+        
+        errorMsg.Clear();
+        if ( !FileIO::SetLowIntegrity(
+              m_Settings->GetSandboxTmp(), errorMsg ) )  // pass in root sandbox tmp dir, so we can secure it
+        {
+            FLOG_ERROR_STRING( errorMsg.Get() );
+            return false;
+        }
+
+        const AString & obfuscatedSandboxTmp = m_Settings->GetObfuscatedSandboxTmp();
+        if ( !FileIO::EnsurePathExists( obfuscatedSandboxTmp ) )
+        {
+            // print the root sandbox tmp dir, not the obfuscated dir
+            // so we can hide the obfuscated dir from other processes
+            FLOG_ERROR( "Failed to create sandbox dir under %s (error %i)", m_Settings->GetSandboxTmp().Get(), Env::GetLastErr() );
+            return false;
+        }
+
+        CoerceEnvironment( obfuscatedSandboxTmp );
+    }
 
     // if the cache is enabled, make sure the path is set and accessible
     if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite || m_Options.m_CacheInfo || m_Options.m_CacheTrim )
@@ -381,7 +470,11 @@ bool FBuild::Build( Node * nodeToBuild )
     s_AbortBuild = false; // allow multiple runs in same process
 
     // create worker threads
-    m_JobQueue = FNEW( JobQueue( m_Options.m_NumWorkerThreads ) );
+    // get values from options here, since some tests call Build() without calling Initialize()
+    m_JobQueue = FNEW( JobQueue( 
+        m_Options.m_NumWorkerThreads,
+        m_Options.m_SandboxEnabled,
+        m_Options.GetObfuscatedSandboxTmp() ) );
 
     m_Timer.Start();
     m_LastProgressOutputTime = 0.0f;
@@ -496,11 +589,69 @@ bool FBuild::Build( Node * nodeToBuild )
 //------------------------------------------------------------------------------
 void FBuild::SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar )
 {
+    FREE( m_BaseEnvironmentString );
+    // plus one, since incoming envString has null and need one more for double null terminator
+    m_BaseEnvironmentString = (char *)ALLOC( size + 1 );
+    m_BaseEnvironmentStringSize = size;
+    AString::Copy( envString, m_BaseEnvironmentString, size );
+
     FREE( m_EnvironmentString );
+    // plus one, since incoming envString has null and need one more for double null terminator
     m_EnvironmentString = (char *)ALLOC( size + 1 );
     m_EnvironmentStringSize = size;
     AString::Copy( envString, m_EnvironmentString, size );
+
     m_LibEnvVar = libEnvVar;
+}
+
+// CoerceEnvironment
+//------------------------------------------------------------------------------
+void FBuild::CoerceEnvironment( const AString & obfuscatedSandboxTmp )
+{
+    bool searching = true;
+    // split existing environment string by null char separator
+    const char* p = m_EnvironmentString;
+    uint32_t baseEnvSize = 0;
+    Array< AString > baseEnvVars;
+    do
+    {
+        AStackString<> envVar( p );
+        uint32_t envVarSize = envVar.GetLength();
+        if ( envVarSize > 0 )
+        {
+            ++envVarSize;  // add one for null separator
+            p += envVarSize;
+            // skip TMP= in the base env, so we can use the sandbox tmp below
+            if ( !envVar.Find( "TMP=" ) )
+            {
+                baseEnvSize += envVarSize;
+                baseEnvVars.Append ( envVar );
+            }
+        }
+        else
+        {
+            searching = false;
+        }
+    } while ( searching );
+
+    AStackString<> tmpVar( "TMP=" );
+    tmpVar.Append( obfuscatedSandboxTmp );
+    const uint32_t tmpVarSize = tmpVar.GetLength() + 1;  // add one for null separator
+    const uint32_t envSize = baseEnvSize + tmpVarSize;
+    FREE( m_EnvironmentString );
+    // plus one, since incoming envString has null and need one more for double null terminator
+    m_EnvironmentString = (char *)ALLOC( envSize + 1 );
+    m_EnvironmentStringSize = envSize;
+
+    uint32_t destOffset = 0;
+    const size_t numEnvVars = baseEnvVars.GetSize();
+    for ( size_t i=0; i<numEnvVars; ++i )
+    {
+        const uint32_t copyLength = baseEnvVars[ i ].GetLength() + 1;  // add one for null separator
+        AString::Copy( baseEnvVars[ i ].Get(), m_EnvironmentString + destOffset, copyLength );
+        destOffset += copyLength;
+    }
+    AString::Copy( tmpVar.Get(), m_EnvironmentString + destOffset, tmpVarSize );
 }
 
 // ImportEnvironmentVar
@@ -558,7 +709,7 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
 void FBuild::GetLibEnvVar( AString & value ) const
 {
     // has environment been overridden in BFF?
-    if ( m_EnvironmentString )
+    if ( m_BaseEnvironmentString )
     {
         // use overridden LIB path (which maybe empty)
         value = m_LibEnvVar;

@@ -9,6 +9,7 @@
 #include "FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 
 // Core
 #include "Core/Env/Env.h"
@@ -307,6 +308,48 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 #endif
                 continue;
             }
+            else if ( thisArg == "-sandbox" )
+            {
+                m_SandboxEnabled = true;
+                m_OverrideSandboxEnabled = true;
+                continue;
+            }
+            else if ( thisArg == "-nosandbox" )
+            {
+                m_SandboxEnabled = false;
+                m_OverrideSandboxEnabled = true;
+                continue;
+            }
+            else if ( thisArg.BeginsWith( "-sandboxexe=" ) )
+            {
+                AStackString<> sandboxExe( thisArg.Get() + 12 );
+                Args::StripQuotes(
+                    sandboxExe.Get(),
+                    sandboxExe.Get() + sandboxExe.GetLength(),
+                    m_SandboxExe );
+                m_OverrideSandboxExe = true;
+                continue;
+            }
+            else if ( thisArg.BeginsWith( "-sandboxargs=" ) )
+            {
+                AStackString<> sandboxArgs( thisArg.Get() + 13 );
+                Args::StripQuotes(
+                    sandboxArgs.Get(),
+                    sandboxArgs.Get() + sandboxArgs.GetLength(),
+                    m_SandboxArgs );
+                m_OverrideSandboxArgs = true;
+                continue;
+            }
+            else if ( thisArg.BeginsWith( "-sandboxtmp=" ) )
+            {
+                AStackString<> sandboxTmp( thisArg.Get() + 12 );
+                Args::StripQuotes(
+                    sandboxTmp.Get(),
+                    sandboxTmp.Get() + sandboxTmp.GetLength(),
+                    m_SandboxTmp );
+                m_OverrideSandboxTmp = true;
+                continue;
+            }
 
             // can't use FLOG_ERROR as FLog is not initialized
             OUTPUT( "FBuild: Error: Unknown argument '%s'\n", thisArg.Get() );
@@ -456,6 +499,32 @@ void FBuildOptions::SetWorkingDir( const AString & path )
     m_SharedMemoryName.Format( "FASTBuildSharedMemory_%08x", m_WorkingDirHash );
 }
 
+// FBuildOptions::GetObfuscatedSandboxTmp
+//------------------------------------------------------------------------------
+const AString & FBuildOptions::GetObfuscatedSandboxTmp() const
+{
+    if ( m_SandboxEnabled && !m_SandboxTmp.IsEmpty())
+    {
+        if ( m_ObfuscatedSandboxTmp.IsEmpty() )
+        {
+            PathUtils::GetObfuscatedSandboxTmp(
+                m_SandboxEnabled,
+                GetWorkingDir(),
+                m_SandboxTmp,
+                m_ObfuscatedSandboxTmp );
+        }
+        else
+        {
+            // use cached m_ObfuscatedSandboxTmp value
+        }
+    }
+    else
+    {
+        m_ObfuscatedSandboxTmp.Clear();
+    }
+    return m_ObfuscatedSandboxTmp;
+}
+
 // DisplayHelp
 //------------------------------------------------------------------------------
 void FBuildOptions::DisplayHelp( const AString & programName ) const
@@ -494,6 +563,16 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -quiet         Don't show build output.\n"
             " -report        Ouput a detailed report.html at the end of the build.\n"
             "                This will lengthen the total build time.\n"
+            " -sandbox : Enable local worker execution sandbox.\n"
+            " -nosandbox : Disable local worker execution sandbox.\n"
+            " -sandboxexe=path : Set local sandbox executable.\n"
+            "                Example relative path : winc.exe\n"
+            "                Example absolute path : \"C:\\fastbuild_data\\bin\\win64\\winc.exe\"\n"
+            " -sandboxargs=args : Set local sandbox args.\n"
+            "                Example args : \"--affinity 1 --memory 10485760\"\n"
+            " -sandboxtmp=path : Set local sandbox tmp dir.\n"
+            "                Example relative path : sandbox\n"
+            "                Example absolute path : \"C:\\ProgramData\\fbuild\\sandbox\"\n"
             " -showcmds      Show command lines used to launch external processes.\n"
             " -showdeps      Show known dependency tree for specified targets.\n"
             " -showtargets   Display list of primary build targets.\n"

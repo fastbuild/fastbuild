@@ -130,6 +130,14 @@ public:
     // each node must specify if it outputs a file
     virtual bool IsAFile() const = 0;
 
+    static bool GetSandboxEnabled();
+    static const AString & GetAbsSandboxExe();
+    static const AString & GetSandboxArgs();
+    static const AString & GetObfuscatedSandboxTmp();
+    static void GetSandboxTmpFile( const AString & basePath, const AString & filePath,
+                    AString & sandboxTmpFile );
+    static void HideSandboxTmpInString( AString & stringToChange );
+
     inline State GetState() const { return m_State; }
 
     inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
@@ -174,6 +182,8 @@ public:
         inline void MarkAsSaved() const { m_IsSaved = true; }
     #endif
 
+    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
+
 protected:
     friend class FBuild;
     friend struct FBuildStats;
@@ -187,7 +197,6 @@ protected:
     friend class WorkerThread;
 
     inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
-    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
     inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
     void SetName( const AString & name );

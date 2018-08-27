@@ -53,7 +53,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 116 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 117 };
 
     bool IsValid() const
     {
@@ -122,8 +122,8 @@ public:
 
     void DoBuildPass( Node * nodeToBuild );
 
-    static void CleanPath( AString & name, bool makeFullPath = true );
-    static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
+    static void CleanPath( AString & name, const bool makeFullPath = true );
+    static void CleanPath( const AString & name, AString & cleanPath, const bool makeFullPath = true );
     #if defined( ASSERTS_ENABLED )
         static bool IsCleanPath( const AString & path );
     #endif

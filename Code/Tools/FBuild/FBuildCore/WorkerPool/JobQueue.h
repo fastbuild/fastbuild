@@ -44,7 +44,9 @@ private:
 class JobQueue : public Singleton< JobQueue >
 {
 public:
-    explicit JobQueue( uint32_t numWorkerThreads );
+    explicit JobQueue( const uint32_t numWorkerThreads,
+        const bool sandboxEnabled,
+        const AString & obfuscatedSandboxTmp );
     ~JobQueue();
 
     // main thread calls these

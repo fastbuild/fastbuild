@@ -26,11 +26,22 @@ public:
     virtual bool IsAFile() const override;
 
     // Access to settings
-    const AString &                     GetCachePath() const;
-    const AString &                     GetCachePluginDLL() const;
-    inline const Array< AString > &     GetWorkerList() const { return m_Workers; }
-    uint32_t                            GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
-    uint32_t                            GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
+    const AString &        GetCachePath() const;
+    const AString &        GetCachePluginDLL() const;
+    inline const Array< AString > & GetWorkerList() const { return m_Workers; }
+    uint32_t               GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
+    uint32_t               GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
+    bool                   GetSandboxEnabled() const { return m_SandboxEnabled; }
+    void                   SetSandboxEnabled( const bool sandboxEnabled );
+    inline const AString & GetSandboxExe() const { return m_SandboxExe; }
+    void                   SetSandboxExe( const AString & path );
+    const AString &        GetAbsSandboxExe() const;
+    inline const AString & GetSandboxArgs() const { return m_SandboxArgs; }
+    void                   SetSandboxArgs( const AString & args );
+    inline const AString & GetSandboxTmp() const { return m_SandboxTmp; }
+    void                   SetSandboxTmp( const AString & path );
+    const AString &        GetObfuscatedSandboxTmp() const;
+    void                   SetObfuscatedSandboxTmp( const AString & obfuscatedSandboxTmp );
 
 private:
     //virtual BuildResult DoBuild( Job * job ) override;
@@ -42,12 +53,19 @@ private:
 
     // Exposed settings
     //friend class FunctionSettings;
-    Array< AString  >   m_Environment;
-    AString             m_CachePath;
-    AString             m_CachePluginDLL;
-    Array< AString  >   m_Workers;
-    uint32_t            m_WorkerConnectionLimit;
-    uint32_t            m_DistributableJobMemoryLimitMiB;
+    Array< AString  > m_Environment;
+    AString           m_CachePath;
+    AString           m_CachePluginDLL;
+    Array< AString  > m_Workers;
+    uint32_t          m_WorkerConnectionLimit;
+    uint32_t          m_DistributableJobMemoryLimitMiB;
+    bool              m_SandboxEnabled;
+    AString           m_SandboxExe;
+    AString           m_SandboxArgs;
+    AString           m_SandboxTmp;
+    
+    mutable AString   m_AbsSandboxExe;
+    mutable AString   m_ObfuscatedSandboxTmp;
 };
 
 //------------------------------------------------------------------------------

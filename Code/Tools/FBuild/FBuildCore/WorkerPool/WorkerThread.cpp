@@ -58,24 +58,52 @@ WorkerThread::~WorkerThread()
 
 // InitTmpDir
 //------------------------------------------------------------------------------
-/*static*/ void WorkerThread::InitTmpDir( bool remote )
+/*static*/ void WorkerThread::InitTmpDir(
+    const bool sandboxEnabled,
+    const AString & obfuscatedSandboxTmp,
+    bool remote )
 {
     PROFILE_FUNCTION
 
-    VERIFY( FBuild::GetTempDir( s_TmpRoot ) );
+    if ( sandboxEnabled )
+    {
+        if ( !obfuscatedSandboxTmp.IsEmpty() )
+        {
+            s_TmpRoot = obfuscatedSandboxTmp;
+            PathUtils::EnsureTrailingSlash( s_TmpRoot );
+        }
+    }
+    else
+    {
+        VERIFY( FBuild::GetTempDir( s_TmpRoot ) );
     #if defined( __WINDOWS__ )
         s_TmpRoot += ".fbuild.tmp\\";
     #else
         s_TmpRoot += "_fbuild.tmp/";
     #endif
+    }
 
-    // use the working dir hash to uniquify the path
-    AStackString<> buffer;
-    const uint32_t workingDirHash = remote ? 0 : FBuild::Get().GetOptions().GetWorkingDirHash();
-    buffer.Format( "0x%08x", workingDirHash );
-    s_TmpRoot += buffer;
+    if ( remote )
+    {
+        s_TmpRoot += "0";
+    }
+    else
+    {
+        const AString & workingDir = FBuild::Get().GetOptions().GetWorkingDir();
+        if ( s_TmpRoot.BeginsWith( workingDir ) )
+        {
+            s_TmpRoot += "0";
+        }
+        else
+        {
+            // use the working dir hash to uniquify the path
+            AStackString<> buffer;
+            const uint32_t workingDirHash = FBuild::Get().GetOptions().GetWorkingDirHash();
+            buffer.Format( "0x%08x", workingDirHash );
+            s_TmpRoot += buffer;
+        }
+    }
     s_TmpRoot += NATIVE_SLASH;
-
     VERIFY( FileIO::EnsurePathExists( s_TmpRoot ) );
 }
 
@@ -233,7 +261,7 @@ void WorkerThread::WaitForStop()
     // (for the main thread, this will be 0 which is OK)
     const uint32_t threadIndex = WorkerThread::GetThreadIndex();
 
-    tmpFileDirectory.Format( "%score_%u%c", s_TmpRoot.Get(), threadIndex, NATIVE_SLASH );
+    tmpFileDirectory.Format( "%s%s%u", s_TmpRoot.Get(), CORE_PHRASE, threadIndex );
 }
 
 // CreateTempFile
@@ -244,7 +272,7 @@ void WorkerThread::WaitForStop()
     ASSERT( fileName );
 
     GetTempFileDirectory( tmpFileName );
-    tmpFileName += fileName;
+    tmpFileName.AppendFormat( "%c%s", NATIVE_SLASH, fileName );
 }
 
 // CreateTempFile

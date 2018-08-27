@@ -22,7 +22,10 @@ class WorkerThread;
 class JobQueueRemote : public Singleton< JobQueueRemote >
 {
 public:
-    explicit JobQueueRemote( uint32_t numWorkerThreads );
+    explicit JobQueueRemote(
+        uint32_t numWorkerThreads,
+        const bool sandboxEnabled,
+        const AString & obfuscatedSandboxTmp );
     ~JobQueueRemote();
 
     // main thread calls these

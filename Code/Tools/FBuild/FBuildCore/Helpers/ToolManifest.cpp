@@ -129,7 +129,7 @@ bool ToolManifest::Generate( const AString& mainExecutableRoot, const Dependenci
 
         // file name & sub-path (relative to remote folder)
         AStackString<> relativePath;
-        GetRelativePath( m_MainExecutableRootPath, f.m_Name, relativePath );
+        PathUtils::GetRelativePath( m_MainExecutableRootPath, f.m_Name, relativePath );
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
@@ -252,15 +252,23 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
     // PATH=
     AStackString<> basePath;
     GetRemotePath( basePath );
+    PathUtils::EnsureTrailingSlash( basePath );
     AStackString<> paths;
     paths.Format( "PATH=%s", basePath.Get() );
 
     #if defined( __WINDOWS__ )
         // TMP=
-        AStackString<> normalTmp;
-        Env::GetEnvVariable( "TMP", normalTmp );
-        AStackString<> tmp;
-        tmp.Format( "TMP=%s", normalTmp.Get() );
+        AStackString<> tmpVar( "TMP=" );
+        if ( Node::GetSandboxEnabled() )
+        {
+            tmpVar += Node::GetObfuscatedSandboxTmp();
+        }
+        else
+        {
+            AStackString<> tmpFolder;
+            Env::GetEnvVariable( "TMP", tmpFolder );
+            tmpVar += tmpFolder;
+        }
 
         // SystemRoot=
         AStackString<> sysRoot( "SystemRoot=C:\\Windows" );
@@ -269,7 +277,7 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
     // Calculate the length of the full environment string
     size_t len( paths.GetLength() + 1 );
     #if defined( __WINDOWS__ )
-        len += ( tmp.GetLength() + 1 );
+        len += ( tmpVar.GetLength() + 1 );
         len += ( sysRoot.GetLength() + 1 );
     #endif
 
@@ -297,8 +305,8 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
     mem += ( paths.GetLength() + 1 ); // including null
 
     #if defined( __WINDOWS__ )
-        AString::Copy( tmp.Get(), mem, tmp.GetLength() + 1 ); // including null
-        mem += ( tmp.GetLength() + 1 ); // including null
+        AString::Copy( tmpVar.Get(), mem, tmpVar.GetLength() + 1 ); // including null
+        mem += ( tmpVar.GetLength() + 1 ); // including null
 
         AString::Copy( sysRoot.Get(), mem, sysRoot.GetLength() + 1 ); // including null
         mem += ( sysRoot.GetLength() + 1 ); // including null
@@ -474,34 +482,17 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
     return true; // file stored ok
 }
 
-// GetRelativePath
-//------------------------------------------------------------------------------
-/*static*/ void ToolManifest::GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath )
-{
-    if ( otherFile.BeginsWithI( root ) )
-    {
-        // file is in sub dir on master machine, so store with same relative location
-        otherFileRelativePath = ( otherFile.Get() + root.GetLength() );
-    }
-    else
-    {
-        // file is in some completely other directory, so put in same place as exe
-        const char * lastSlash = otherFile.FindLast( NATIVE_SLASH );
-        otherFileRelativePath = ( lastSlash ? lastSlash + 1 : otherFile.Get() );
-    }
-}
-
 // GetRemoteFilePath
 //------------------------------------------------------------------------------
 void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) const
 {
     // Get base directory
     GetRemotePath( remotePath );
-    ASSERT( remotePath.EndsWith( NATIVE_SLASH ) );
+    PathUtils::EnsureTrailingSlash( remotePath );
     
     // Get relative path for file and append
     AStackString<> relativePath;
-    GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].m_Name, relativePath );
+    PathUtils::GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].m_Name, relativePath );
     remotePath += relativePath;
 }
 
@@ -509,14 +500,28 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
 //------------------------------------------------------------------------------
 void ToolManifest::GetRemotePath( AString & path ) const
 {
-    VERIFY( FBuild::GetTempDir( path ) );
-    AStackString<> subDir;
+    if ( Node::GetSandboxEnabled() )
+    {
+        path = Node::GetObfuscatedSandboxTmp();
+    }
+    else
+    {
+        VERIFY( FBuild::GetTempDir( path ) );
+        AStackString<> subDir1;
     #if defined( __WINDOWS__ )
-        subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016" PRIx64 "\\", m_ToolId );
+        subDir1.Assign( ".fbuild.tmp\\" );
     #else
-        subDir.Format( "_fbuild.tmp/worker/toolchain.%016" PRIx64 "/", m_ToolId );
+        subDir1.Assign( "_fbuild.tmp/" );
     #endif
-    path += subDir;
+        path += subDir1;
+    }
+    AStackString<> subDir2;
+    #if defined( __WINDOWS__ )
+        subDir2.Format( "worker\\toolchain.%016" PRIx64, m_ToolId );
+    #else
+        subDir2.Format( "worker/toolchain.%016" PRIx64, m_ToolId );
+    #endif
+    path += subDir2;
 }
 
 // AddFile

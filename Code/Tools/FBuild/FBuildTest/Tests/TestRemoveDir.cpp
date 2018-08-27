@@ -69,7 +69,12 @@ void TestRemoveDir::RemoveDir() const
 
     // Check file are there
     Array< AString > files;
-    FileIO::GetFiles( AStackString<>( pathA ), AStackString<>( "*" ), true, &files );
+    FileIO::GetFiles(
+        AStackString<>( pathA ),
+        AStackString<>( "*" ),
+        true,
+        false,  // includeDirs
+        &files );
     TEST_ASSERT( files.GetSize() == 2 );
 
     // build (via alias)
@@ -77,7 +82,12 @@ void TestRemoveDir::RemoveDir() const
 
     // Check files are NOT there
     files.Clear();
-    FileIO::GetFiles( AStackString<>( pathA ), AStackString<>( "*" ), true, &files );
+    FileIO::GetFiles(
+        AStackString<>( pathA ),
+        AStackString<>( "*" ),
+        true,
+        false,  // includeDirs
+        &files );
     TEST_ASSERT( files.GetSize() == 0 );
 
     // Check stats
