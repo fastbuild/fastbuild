@@ -26,6 +26,7 @@ public:
     ToolManifestFile();
     explicit ToolManifestFile( const AString & name, uint64_t stamp, uint32_t hash, uint32_t size );
     ~ToolManifestFile();
+    void Release();
 
     enum SyncState
     {
@@ -58,7 +59,10 @@ public:
     explicit ToolManifest( uint64_t toolId );
     ~ToolManifest();
 
-    bool Generate( const AString & mainExecutableRoot, const Dependencies & dependencies, const Array<AString>& customEnvironmentVariables );
+    bool Generate( const AString & mainExecutableRoot,
+        const Dependencies & dependencies, 
+        const Array<AString>& customEnvironmentVariables,
+        bool deleteRemoteFilesWhenDone = false );
 
     inline uint64_t GetToolId() const { return m_ToolId; }
     inline uint64_t GetTimeStamp() const { return m_TimeStamp; }
@@ -90,6 +94,7 @@ public:
     const char *    GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
 
     static void     GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
+    void Cleanup();
 private:
     bool            AddFile( const AString & fileName, const uint64_t timeStamp );
     bool            LoadFile( const AString & fileName, void * & content, uint32_t & contentSize ) const;
@@ -107,6 +112,10 @@ private:
     bool            m_Synchronized;
     const char *    m_RemoteEnvironmentString;
     void *          m_UserData;
+    bool            m_DeleteRemoteFilesWhenDone;
+
+    // Not serialized
+    bool            m_Remote;
 };
 
 //------------------------------------------------------------------------------

@@ -58,8 +58,21 @@ ToolManifestFile::ToolManifestFile( const AString & name, uint64_t stamp, uint32
 //------------------------------------------------------------------------------
 ToolManifestFile::~ToolManifestFile()
 {
+    Release();
     FREE( m_Content );
-    FDELETE( m_FileLock );
+}
+
+// Release (File)
+//------------------------------------------------------------------------------
+void ToolManifestFile::Release()
+{
+    // release file lock
+    if ( m_FileLock )
+    {
+        FDELETE( m_FileLock );
+        m_FileLock = nullptr;
+    }
+    m_SyncState = NOT_SYNCHRONIZED;
 }
 
 // CONSTRUCTOR
@@ -71,6 +84,8 @@ ToolManifest::ToolManifest()
     , m_Synchronized( false )
     , m_RemoteEnvironmentString( nullptr )
     , m_UserData( nullptr )
+    , m_DeleteRemoteFilesWhenDone( false )
+    , m_Remote( false )
 {
 }
 
@@ -83,6 +98,8 @@ ToolManifest::ToolManifest( uint64_t toolId )
     , m_Synchronized( false )
     , m_RemoteEnvironmentString( nullptr )
     , m_UserData( nullptr )
+    , m_DeleteRemoteFilesWhenDone ( false )
+    , m_Remote( false )
 {
 }
 
@@ -95,10 +112,14 @@ ToolManifest::~ToolManifest()
 
 // Generate
 //------------------------------------------------------------------------------
-bool ToolManifest::Generate( const AString& mainExecutableRoot, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables )
+bool ToolManifest::Generate( const AString& mainExecutableRoot, 
+    const Dependencies & dependencies, 
+    const Array<AString> & customEnvironmentVariables,
+    bool deleteRemoteFilesWhenDone )
 {
     m_MainExecutableRootPath = mainExecutableRoot;
     m_CustomEnvironmentVariables = customEnvironmentVariables;
+    m_DeleteRemoteFilesWhenDone = deleteRemoteFilesWhenDone;
     m_Files.Clear();
     m_TimeStamp = 0;
     m_Files.SetCapacity( 1 + dependencies.GetSize() );
@@ -172,6 +193,8 @@ void ToolManifest::SerializeForRemote( IOStream & ms ) const
     {
         ms.Write( m_CustomEnvironmentVariables[ i ] );
     }
+
+    ms.Write( m_DeleteRemoteFilesWhenDone );
 }
 
 // DeserializeFromRemote
@@ -211,6 +234,10 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         ms.Read( envVar );
         m_CustomEnvironmentVariables.Append( envVar );
     }
+
+    ms.Read( m_DeleteRemoteFilesWhenDone );
+
+    m_Remote = true;
 
     // determine if any files are remaining from a previous run
     size_t numFilesAlreadySynchronized = 0;
@@ -517,6 +544,55 @@ void ToolManifest::GetRemotePath( AString & path ) const
         subDir.Format( "_fbuild.tmp/worker/toolchain.%016" PRIx64 "/", m_ToolId );
     #endif
     path += subDir;
+}
+
+// Cleanup
+//------------------------------------------------------------------------------
+void ToolManifest::Cleanup()
+{
+    
+    if ( m_DeleteRemoteFilesWhenDone &&  // if delete requested
+          m_Remote )  // only ever delete remote files
+    {
+        MutexHolder mh( m_Mutex );
+
+        // loop over files
+        const size_t numFiles = m_Files.GetSize();
+        Array< AString > remoteDirs( numFiles, false );
+        for ( size_t i=0; i<numFiles; ++i )
+        {
+            AStackString<> remoteFilePath;
+            GetRemoteFilePath( (uint32_t)i, remoteFilePath );
+            if ( !remoteFilePath.IsEmpty() )
+            {
+                // get the dir of the file
+                const char * lastSlash = remoteFilePath.FindLast( NATIVE_SLASH );
+                if ( ( lastSlash != nullptr ) && ( lastSlash != remoteFilePath.Get() ) )
+                {
+                    remoteDirs.Append(AString::GetEmpty());
+                    remoteDirs.Top().Assign( remoteFilePath.Get(), lastSlash );
+                }
+                // release the file lock
+                m_Files[ i ].Release();
+                // delete the file
+                FileIO::FileDelete( remoteFilePath.Get() );
+            }
+        }
+        
+        // delete the directories
+        for ( size_t i=0; i<numFiles; ++i )
+        {
+            // cleanup temp directory
+            const AString & remoteDir = remoteDirs[ i ];
+            if ( !remoteDir.IsEmpty() )
+            {
+                FileIO::DirectoryDelete( remoteDir );
+            }
+        }
+
+        // mark the manifest as not synchronized
+        m_Synchronized = false;
+    }
 }
 
 // AddFile

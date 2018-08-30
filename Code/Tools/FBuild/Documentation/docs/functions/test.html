@@ -20,27 +20,36 @@ Defines the execution of an executable as a test.</p>
 <div class='code'>Test( alias )      // (optional) Alias
 {
   // Options
-  .TestExecutable          // The executable file to run that will execute the tests
-  .TestOutput              // Output file for captured test output
+  .TestExecutable             // The executable file to run that will execute the tests
+  .TestOutput                 // Output file for captured test output
+  .ExtraFiles                 // (optional) Additional files (usually dlls) required by the test exe.
 
   // Additional inputs
-  .TestInput               // (optional) Input file(s) to pass to executable
-  .TestInputPath           // (optional) Path to find files in
-  .TestInputPattern        // (optional) Pattern(s) to use when finding files (default *.*)
-  .TestInputPathRecurse    // (optional) Recurse into dirs when finding files (default true)
-  .TestInputExcludePath    // (optional) Path(s) to exclude
-  .TestInputExcludedFiles  // (optional) File(s) to exclude from compilation (partial, root-relative of full path)
-  .TestInputExcludePattern // (optional) Pattern(s) to exclude
+  .TestInput                  // (optional) Input file(s) to pass to executable
+  .TestInputPath              // (optional) Path to find files in
+  .TestInputPattern           // (optional) Pattern(s) to use when finding files (default *.*)
+  .TestInputPathRecurse       // (optional) Recurse into dirs when finding files (default true)
+  .TestInputExcludePath       // (optional) Path(s) to exclude
+  .TestInputExcludedFiles     // (optional) File(s) to exclude from compilation
+                              //            (partial, root-relative of full path)
+  .TestInputExcludePattern    // (optional) Pattern(s) to exclude
 
   // Other
-  .TestArguments           // (optional) Arguments to pass to test executable
-  .TestWorkingDir          // (optional) Working dir for test execution
-  .TestTimeOut             // (optional) TimeOut (in seconds) for test (default: 0, no timeout)
-  .TestAlwaysShowOutput    // (optional) Show output of tests even when they don't fail (default: false)
+  .TestArguments              // (optional) Arguments to pass to test executable
+  .TestWorkingDir             // (optional) Working dir for test execution
+  .TestTimeOut                // (optional) TimeOut (in seconds) for test (default: 0, no timeout)
+  .TestAlwaysShowOutput       // (optional) Show output of tests even when they don't fail (default: false)
 
    // Additional options
-  .PreBuildDependencies    // (optional) Force targets to be built before this Test (Rarely needed,
-                           // but useful when Test relies on externally generated files).
+  .PreBuildDependencies       // (optional) Force targets to be built before this Test (Rarely needed,
+                              // but useful when Test relies on externally generated files).
+
+  .AllowDistribution          // (optional) Allow distributed running of the test exe (if available)
+                              //            default: true
+  .ExecutableRootPath         // (optional) Override default path for executable distribution
+  .CustomEnvironmentVariables // (optional) Environment variables to set on remote host
+  .DeleteRemoteFilesWhenDone  // (optional) Delete remote cache files associated with test exe, when
+                              //            test exe finishes on remote worker, default: true
 }
 </div>
     </div>
@@ -64,7 +73,23 @@ Defines the execution of an executable as a test.</p>
       <p><b>.TestOutput</b> - String - (Required)</p>
       <p>Output file for captured test output.</p>
       <p>When executing tests, FASTBuild will capture standard output channels of the executable and write them to this file when done.</p>
-      <hr>
+      <p><hr></p>
+
+	<p><b>.ExtraFiles</b> - String/ArrayOfStrings - (Optional)</p>
+	<p>For distributed test exe running, the specified files will also be synchronized to the remote machine.
+	The relative location of the source files controls how they will be mirrored on the remote machine.  Files in 'ExtraFiles' in the same directory or in sub-directories under the primary 'Executable' will be placed in the same relative location on the remote machine.  
+	'ExtraFiles' in other folders will be placed at the same level as the executable.
+	<p>
+	<div class='code'>// Path behaviour example
+Test( 'Test' )
+{
+  .TestExecutable =   'C:\test\test.exe'         // dest: test.exe
+  .ExtraFiles     = { 'C:\test\subdir\test.dll'  // dest: subdir/test.exe
+                      'C:\cruntime\mvscrt.dll'   // dest: msvcrt.dll
+}</div>
+	</p>
+      <p><hr></p>
+
       <p><b>.TestArguments</b> - String - (Optional)</p>
       <p>Arguments to pass to test executable.</p>
       <hr>
@@ -87,6 +112,28 @@ Defines the execution of an executable as a test.</p>
 	  <p>One or more nodes which must be built before this test is executed.</p>
 	  <p>The .PreBuildDependencies option ensures the specified targets are up-to-date before the
 	  Test() is executed.</p>
+  	<p><hr></p>
+
+	<p><b>.AllowDistribution</b> - Boolean - (Optional)</p>
+	<p>For test exes where distributed running is supported, said feature can be disabled.<p>
+  	<p><hr></p>
+
+	<p><b>.ExecutableRootPath</b> - String - (Optional)</p>
+	<p>When a test exe is distributed the .TestExecutable, TestInput files, and .ExtraFiles hierarchy are replicated on the remote machine as documented above (see .ExtraFiles).
+    The base path for this replication can be overriden by setting the .ExectuableRootPath property, allowing more flexibility in how the file
+    hierarchy is replicated on the remote host.<p>
+    <p><hr></p>
+   
+    <p><b>.CustomEnvironmentVariables</b> - String or ArrayOfStrings - (Optional)</p>
+    <p>When running the test exe on a remote host, a clean environment is used. If needed, environment variables can be set.<p>
+    <p><hr></p>
+
+	<p><b>.DeleteRemoteFilesWhenDone</b> - Boolean - (Optional)</p>
+	<p>Delete remote cache files associated with test exe, when test exe finishes on remote worker.</p>
+    <p>This is so we don't end up with many unique instances of test exes and their files,
+    <p>cached on the remote workers.</p>
+  	<p><hr></p>
+
     </div>
 
     <div class='newsitemheader'>

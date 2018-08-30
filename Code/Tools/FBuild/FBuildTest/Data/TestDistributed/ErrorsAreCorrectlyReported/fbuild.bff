@@ -13,7 +13,7 @@ Settings
 }
 
 // Common settings
-.CompilerOutputPath         = '$StandardOutputBase$/Test/TestDistributed/ErrorsAreCorrectlyReported/'
+.CompilerOutputPath         = '$StandardOutputBase$/Test/Distributed/ErrorsAreCorrectlyReported/'
 
 // MSVC
 //------------------------------------------------------------------------------

@@ -92,7 +92,7 @@ bool Server::IsSynchingTool( AString & statusStr ) const
             bool synching = ( *it )->GetSynchronizationStatus( synchDone, synchTotal );
             if ( synching )
             {
-                statusStr.Format( "Synchronizing Compiler %2.1f / %2.1f MiB\n",
+                statusStr.Format( "Synchronizing file(s) %2.1f / %2.1f MiB\n",
                                     (float)synchDone / (float)MEGABYTE,
                                     (float)synchTotal / (float)MEGABYTE );
                 return true;
