@@ -118,7 +118,7 @@ FBuild::~FBuild()
     ASSERT( !m_OldWorkingDir.IsEmpty() );
     if ( !FileIO::SetCurrentDir( m_OldWorkingDir ) )
     {
-        FLOG_ERROR( "Failed to restore working dir: '%s' (error: %u)", m_OldWorkingDir.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to restore working dir: '%s' (error %i)", m_OldWorkingDir.Get(), Env::GetLastErr() );
     }
 }
 
@@ -131,7 +131,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     // handle working dir
     if ( !FileIO::SetCurrentDir( m_Options.GetWorkingDir() ) )
     {
-        FLOG_ERROR( "Failed to set working dir: '%s' (error: %u)", m_Options.GetWorkingDir().Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to set working dir: '%s' (error %i)", m_Options.GetWorkingDir().Get(), Env::GetLastErr() );
         return false;
     }
 
@@ -168,6 +168,25 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     const Node * settingsNode = m_DependencyGraph->FindNode( AStackString<>( "$$Settings$$" ) );
     m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : m_DependencyGraph->CreateSettingsNode( AStackString<>( "$$Settings$$" ) ); // Create a default
 
+    if ( m_Options.m_OverrideLocalWorkerTags )
+    {
+        // merge, so that user can define most tags in settings and override only a few in options
+        m_Settings->ApplyLocalWorkerTags( m_Options.m_LocalWorkerTags );
+    }
+    // overwrite options tags with the computed settings tags
+    m_Options.m_LocalWorkerTags = m_Settings->GetLocalWorkerTags();
+
+    // remote workers store their tag keys and values
+    // as dir names on the shared network drive, so
+    // tag keys and values must contain valid dir chars
+    // for consistency, make local workers follow the same char requirements
+    AStackString<> errorMsg;
+    if ( !m_Options.m_LocalWorkerTags.ContainsValidDirChars( errorMsg ) )
+    {
+        FLOG_ERROR_STRING( errorMsg.Get() );
+        return false;
+    }
+
     // if the cache is enabled, make sure the path is set and accessible
     if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite || m_Options.m_CacheInfo || m_Options.m_CacheTrim )
     {
@@ -189,35 +208,27 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         }
     }
 
-    //
     // create the connection management system if we might need it
     if ( m_Options.m_AllowDistributed )
     {
-        Array< AString > workers;
-        if ( m_Settings->GetWorkerList().IsEmpty() )
-        {
-            // check for workers through brokerage
-            // TODO:C This could be moved out of the main code path
-            m_WorkerBrokerage.FindWorkers( workers );
-        }
-        else
-        {
-            workers = m_Settings->GetWorkerList();
-        }
-
-        if ( workers.IsEmpty() )
-        {
-            FLOG_WARN( "No workers available - Distributed compilation disabled" );
-            m_Options.m_AllowDistributed = false;
-        }
-        else
-        {
-            OUTPUT( "Distributed Compilation : %u Workers in pool\n", (uint32_t)workers.GetSize() );
-            m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
-        }
+        m_Client = FNEW( Client(
+            m_Settings->GetWorkerList(), m_Options.m_DistributionPort, 
+            m_Settings->GetWorkerListRefreshLimitSec(), m_Settings->GetWorkerConnectionRetryLimitSec(),
+            m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
     }
 
     return true;
+}
+
+// GetGraph();
+//------------------------------------------------------------------------------
+NodeGraph * FBuild::GetGraph()
+{
+    if ( m_DependencyGraph == nullptr )
+    {
+        m_DependencyGraph = FNEW( NodeGraph );
+    }
+    return m_DependencyGraph;
 }
 
 // Build
@@ -236,6 +247,11 @@ bool FBuild::Build( const AString & target )
 bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const
 {
     ASSERT( !targets.IsEmpty() );
+
+    if ( m_DependencyGraph == nullptr )
+    {
+        return false;
+    }
 
     // Get the nodes for all the targets
     const size_t numTargets = targets.GetSize();
@@ -311,6 +327,11 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
     PROFILE_FUNCTION
 
+    if ( m_DependencyGraph == nullptr )
+    {
+        return false;
+    }
+
     FLOG_INFO( "Saving DepGraph '%s'", nodeGraphDBFile );
 
     Timer t;
@@ -356,7 +377,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
     // rename tmp file
     if ( FileIO::FileMove( tmpFileName, AStackString<>( nodeGraphDBFile ) ) == false )
     {
-        FLOG_ERROR( "Failed to rename temp DB file '%s' (%i)", tmpFileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to rename temp DB file '%s' (error %i)", tmpFileName.Get(), Env::GetLastErr() );
         return false;
     }
 
@@ -368,7 +389,10 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 //------------------------------------------------------------------------------
 void FBuild::SaveDependencyGraph( IOStream & stream, const char* nodeGraphDBFile ) const
 {
-    m_DependencyGraph->Save( stream, nodeGraphDBFile );
+    if ( m_DependencyGraph != nullptr )
+    {
+        m_DependencyGraph->Save( stream, nodeGraphDBFile );
+    }
 }
 
 // Build
@@ -381,7 +405,10 @@ bool FBuild::Build( Node * nodeToBuild )
     s_AbortBuild = false; // allow multiple runs in same process
 
     // create worker threads
-    m_JobQueue = FNEW( JobQueue( m_Options.m_NumWorkerThreads ) );
+    // get values from options here, since some tests call Build() without calling Initialize()
+    m_JobQueue = FNEW( JobQueue( 
+        m_Options.m_NumWorkerThreads,
+        m_Options.m_LocalWorkerTags ) );
 
     m_Timer.Start();
     m_LastProgressOutputTime = 0.0f;
@@ -397,6 +424,11 @@ bool FBuild::Build( Node * nodeToBuild )
     }
 
     bool stopping( false );
+
+    if ( m_DependencyGraph == nullptr )
+    {
+        return false;
+    }
 
     // keep doing build passes until completed/failed
     for ( ;; )
@@ -497,9 +529,11 @@ bool FBuild::Build( Node * nodeToBuild )
 void FBuild::SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar )
 {
     FREE( m_EnvironmentString );
+    // plus one, since incoming envString has null and need one more for double null terminator
     m_EnvironmentString = (char *)ALLOC( size + 1 );
     m_EnvironmentStringSize = size;
     AString::Copy( envString, m_EnvironmentString, size );
+
     m_LibEnvVar = libEnvVar;
 }
 
@@ -625,6 +659,12 @@ void FBuild::UpdateBuildStatus( const Node * node )
         FBuildStats & bs = m_BuildStats;
         bs.m_NodeTimeProgressms = 0;
         bs.m_NodeTimeTotalms = 0;
+
+        if ( m_DependencyGraph == nullptr )
+        {
+            return;
+        }
+
         m_DependencyGraph->UpdateBuildStatus( node, bs.m_NodeTimeProgressms, bs.m_NodeTimeTotalms );
         m_LastProgressCalcTime = m_Timer.GetElapsed();
 
@@ -682,6 +722,11 @@ void FBuild::GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint
 //------------------------------------------------------------------------------
 void FBuild::DisplayTargetList() const
 {
+    if ( m_DependencyGraph == nullptr )
+    {
+        return;
+    }
+
     OUTPUT( "FBuild: List of available targets\n" );
     const size_t totalNodes = m_DependencyGraph->GetNodeCount();
     for ( size_t i = 0; i < totalNodes; ++i )
@@ -690,28 +735,28 @@ void FBuild::DisplayTargetList() const
         bool displayName = false;
         switch ( node->GetType() )
         {
-            case Node::PROXY_NODE:          ASSERT( false ); break;
-            case Node::COPY_FILE_NODE:      break;
-            case Node::DIRECTORY_LIST_NODE: break;
-            case Node::EXEC_NODE:           break;
-            case Node::FILE_NODE:           break;
-            case Node::LIBRARY_NODE:        break;
-            case Node::OBJECT_NODE:         break;
-            case Node::ALIAS_NODE:          displayName = true; break;
-            case Node::EXE_NODE:            break;
-            case Node::CS_NODE:             break;
-            case Node::UNITY_NODE:          displayName = true; break;
-            case Node::TEST_NODE:           break;
-            case Node::COMPILER_NODE:       break;
-            case Node::DLL_NODE:            break;
-            case Node::VCXPROJECT_NODE:     break;
-            case Node::OBJECT_LIST_NODE:    displayName = true; break;
-            case Node::COPY_DIR_NODE:       break;
-            case Node::SLN_NODE:            break;
-            case Node::REMOVE_DIR_NODE:     break;
-            case Node::XCODEPROJECT_NODE:   break;
-            case Node::SETTINGS_NODE:       break;
-            case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
+            case Node::PROXY_NODE:           ASSERT( false ); break;
+            case Node::COPY_FILE_NODE:       break;
+            case Node::DIRECTORY_LIST_NODE:  break;
+            case Node::EXEC_NODE:            break;
+            case Node::FILE_NODE:            break;
+            case Node::LIBRARY_NODE:         break;
+            case Node::OBJECT_NODE:          break;
+            case Node::ALIAS_NODE:           displayName = true; break;
+            case Node::EXE_NODE:             break;
+            case Node::CS_NODE:              break;
+            case Node::UNITY_NODE:           displayName = true; break;
+            case Node::TEST_NODE:            break;
+            case Node::COMPILER_NODE:        break;
+            case Node::DLL_NODE:             break;
+            case Node::VCXPROJECT_NODE:      break;
+            case Node::OBJECT_LIST_NODE:     displayName = true; break;
+            case Node::COPY_DIR_NODE:        break;
+            case Node::SLN_NODE:             break;
+            case Node::REMOVE_DIR_NODE:      break;
+            case Node::XCODEPROJECT_NODE:    break;
+            case Node::SETTINGS_NODE:        break;
+            case Node::NUM_NODE_TYPES:       ASSERT( false ); break;
         }
         if ( displayName )
         {
@@ -732,6 +777,11 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
     }
 
     OUTPUT( "FBuild: Dependency database\n" );
+
+    if ( m_DependencyGraph == nullptr )
+    {
+        return false;
+    }
 
     m_DependencyGraph->Display( deps );
     return true;

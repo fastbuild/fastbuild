@@ -119,8 +119,18 @@ void TestProjectGeneration::Test() const
 
     // files
     Array< AString > files;
-    FileIO::GetFiles( baseDir, AStackString<>( "*.cpp" ), true, &files );
-    FileIO::GetFiles( baseDir, AStackString<>( "*.h" ), true, &files );
+    FileIO::GetFiles(
+        baseDir,
+        AStackString<>( "*.cpp" ),
+        true,  // recurse
+        false,  // includeDirs
+        &files );
+    FileIO::GetFiles(
+        baseDir,
+        AStackString<>( "*.h" ),
+        true,  // recurse
+        false,  // includeDirs
+        &files );
     pg.AddFiles( files );
 
     // fileTypes
@@ -264,7 +274,12 @@ void TestProjectGeneration::TestFunction_Speed() const
 
     // files
     Array< AString > files;
-    FileIO::GetFiles( baseDir, AStackString<>( "*" ), true, &files );
+    FileIO::GetFiles(
+        baseDir,
+        AStackString<>( "*" ),
+        true,  // recurse
+        false,  // includeDirs
+        &files );
     pg.AddFiles( files );
 
     Array< VSProjectFileType > fileTypes;
@@ -284,7 +299,7 @@ void TestProjectGeneration::TestFunction_Speed() const
         Timer t;
         for ( size_t i = 0; i < 5; ++i )
         {
-            pg.GenerateVCXProj( projectFileName, configs, fileTypes );
+        pg.GenerateVCXProj( projectFileName, configs, fileTypes );
         }
         float time = t.GetElapsed();
         OUTPUT( "Gen vcxproj        : %2.3fs\n", time );
@@ -293,7 +308,7 @@ void TestProjectGeneration::TestFunction_Speed() const
         Timer t;
         for ( size_t i = 0; i < 5; ++i )
         {
-            pg.GenerateVCXProjFilters( projectFileName );
+        pg.GenerateVCXProjFilters( projectFileName );
         }
         float time = t.GetElapsed();
         OUTPUT( "Gen vcxproj.filters: %2.3fs\n", time );

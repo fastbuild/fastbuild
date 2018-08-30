@@ -206,15 +206,17 @@ void TestGraph::TestNodeTypes() const
 void TestGraph::SingleFileNode() const
 {
     FBuild fb;
-    NodeGraph ng;
+    NodeGraph * ng = fb.GetGraph();
+    TEST_ASSERT( ng != nullptr );
 
     // make sure a node of the name we are going to use doesn't exist
     const AStackString<> testFileName( "SimpleLibrary/library.cpp" );
-    TEST_ASSERT( ng.FindNode( testFileName ) == nullptr );
+    TEST_ASSERT( ng->FindNode( testFileName ) == nullptr );
 
     // create the node, and make sure we can access it by name
-    FileNode * node = ng.CreateFileNode( testFileName );
-    TEST_ASSERT( ng.FindNode( testFileName ) == node );
+    FileNode * node = ng->CreateFileNode( testFileName );
+    TEST_ASSERT( node != nullptr );
+    TEST_ASSERT( ng->FindNode( testFileName ) == node );
 
     TEST_ASSERT( fb.Build( node ) );
 }
@@ -228,11 +230,13 @@ void TestGraph::SingleFileNodeMissing() const
     options.m_ShowErrors = false;
 
     FBuild fb( options );
-    NodeGraph ng;
+    NodeGraph * ng = fb.GetGraph();
+    TEST_ASSERT( ng != nullptr );
 
     // make a node for a file that does not exist
     const AStackString<> testFileName( "ThisFileDoesNotExist.cpp" );
-    FileNode * node = ng.CreateFileNode( testFileName );
+    FileNode * node = ng->CreateFileNode( testFileName );
+    TEST_ASSERT( node != nullptr );
 
     // make sure build still passes
     // a missing file is not an error.  it would need to be required by something
@@ -245,7 +249,8 @@ void TestGraph::SingleFileNodeMissing() const
 void TestGraph::TestDirectoryListNode() const
 {
     FBuild fb;
-    NodeGraph ng;
+    NodeGraph * ng = fb.GetGraph();
+    TEST_ASSERT( ng != nullptr );
 
     // Generate a valid DirectoryListNode name
     AStackString<> name;
@@ -265,12 +270,12 @@ void TestGraph::TestDirectoryListNode() const
                                    name );
 
     // create the node, and make sure we can access it by name
-    DirectoryListNode * node = ng.CreateDirectoryListNode( name );
+    DirectoryListNode * node = ng->CreateDirectoryListNode( name );
     node->m_Path = testFolder;
     node->m_Patterns = patterns;
     BFFIterator iter;
-    TEST_ASSERT( node->Initialize( ng, iter, nullptr ) );
-    TEST_ASSERT( ng.FindNode( name ) == node );
+    TEST_ASSERT( node->Initialize( *ng, iter, nullptr ) );
+    TEST_ASSERT( ng->FindNode( name ) == node );
 
     TEST_ASSERT( fb.Build( node ) );
 
@@ -635,7 +640,7 @@ void TestGraph::DBLocationChanged() const
         TEST_ASSERT( fBuild.Initialize() );
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
 
-        // Copy the DB
+    // Copy the DB
         AStackString<> dbPath2( dbFile2 );
         dbPath2.SetLength( (uint32_t)( dbPath2.FindLast( FORWARD_SLASH ) - dbPath2.Get() ) );
         TEST_ASSERT( FileIO::EnsurePathExists( dbPath2 ) );

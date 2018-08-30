@@ -125,6 +125,21 @@ static FileStream * g_MonitorFileStream = nullptr;
     Output( "Warning:", buffer.Get() );
 }
 
+// ErrorString
+//------------------------------------------------------------------------------
+/*static*/ void FLog::ErrorString( const char * message )
+{
+    // we prevent output here, rather than where the macros is inserted
+    // as an error being output is not the normal code path, and a check
+    // before calling this function would bloat the code
+    if ( FLog::ShowErrors() == false )
+    {
+        return;
+    }
+
+    Output( "Error:", message );
+}
+
 // Error
 //------------------------------------------------------------------------------
 /*static*/ void FLog::Error( const char * formatString, ... )

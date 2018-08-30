@@ -9,6 +9,7 @@
 #include "FileStream.h"
 
 // Core
+#include "Core/Env/Env.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
@@ -16,9 +17,6 @@
 #include "Core/Time/Timer.h"
 
 // system
-#if defined( __WINDOWS__ )
-    #include <windows.h>
-#endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <dirent.h>
     #include <errno.h>
@@ -243,7 +241,8 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetFiles( const AString & path,
                                   const AString & wildCard,
-                                  bool recurse,
+                                  const bool recurse,
+                                  const bool includeDirs,
                                   Array< AString > * results )
 {
     ASSERT( results );
@@ -254,11 +253,11 @@
         // make a copy of the path as it will be modified during recursion
         AStackString< 256 > pathCopy( path );
         PathUtils::EnsureTrailingSlash( pathCopy );
-        GetFilesRecurse( pathCopy, wildCard, results );
+        GetFilesRecurse( pathCopy, wildCard, includeDirs, results );
     }
     else
     {
-        GetFilesNoRecurse( path.Get(), wildCard.Get(), results );
+        GetFilesNoRecurse( path.Get(), wildCard.Get(), includeDirs, results );
     }
 
     return ( results->GetSize() != oldSize );
@@ -534,7 +533,10 @@
             // create this level
             if ( DirectoryCreate( pathCopy ) == false )
             {
-                return false; // something went wrong
+                // something went wrong, but continue
+                // this is so we handle the case where
+                // multiple processes or threads are racing
+                // to create the same dir
             }
         }
         *slash = NATIVE_SLASH; // put back the slash
@@ -732,10 +734,67 @@
     }
 #endif
 
+#if defined( __WINDOWS__ )
+// IsShortcutDir
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::IsShortcutDir(
+    const WIN32_FIND_DATA & findData )
+{
+    // shortcut dirs are . and ..
+    return ( findData.cFileName[ 0 ] == '.' &&
+         ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) );
+}
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+// IsShortcutDir
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::IsShortcutDir( const dirent * entry )
+{
+    // shortcut dirs are . and ..
+    bool isShortcutDir = false;
+    if ( entry->d_name[ 0 ] == '.' )
+    {
+        if ( ( entry->d_name[ 1 ] == 0 ) ||
+             ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
+        {
+            isShortcutDir = true;;
+        }
+    }
+    return isShortcutDir;
+}
+#endif
+
+#if defined( __WINDOWS__ )
+// IncludeFileObjectInResults
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::IncludeFileObjectInResults(
+    const WIN32_FIND_DATA & findData,
+    const bool includeDirs )
+{
+    bool includeFileObject = true;  // first assume true
+    if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+    {
+        if ( includeDirs )
+        {
+            // ignore . and ..
+            if ( IsShortcutDir( findData ) )
+            {
+                includeFileObject = false;
+            }
+        }
+        else
+        {
+            includeFileObject = false;
+        }
+    }
+    return includeFileObject;
+}
+#endif
+
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurse( AString & pathCopy,
                                          const AString & wildCard,
+                                         const bool includeDirs,
                                          Array< AString > * results )
 {
     const uint32_t baseLength = pathCopy.GetLength();
@@ -758,8 +817,7 @@
                 // ignore magic '.' and '..' folders
                 // (don't need to check length of name, as all names are at least 1 char
                 // which means index 0 and 1 are valid to access)
-                if ( findData.cFileName[ 0 ] == '.' &&
-                     ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
+                if ( IsShortcutDir( findData ) )
                 {
                     continue;
                 }
@@ -767,7 +825,7 @@
                 pathCopy.SetLength( baseLength );
                 pathCopy += findData.cFileName;
                 pathCopy += NATIVE_SLASH;
-                GetFilesRecurse( pathCopy, wildCard, results );
+                GetFilesRecurse( pathCopy, wildCard, includeDirs, results );
             }
         }
         while ( FindNextFile( hFind, &findData ) != 0 );
@@ -784,7 +842,7 @@
 
         do
         {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            if ( !IncludeFileObjectInResults( findData, includeDirs ) )
             {
                 continue;
             }
@@ -843,13 +901,9 @@
             if ( isDir )
             {
                 // ignore . and ..
-                if ( entry->d_name[ 0 ] == '.' )
+                if ( IsShortcutDir( entry ) )
                 {
-                    if ( ( entry->d_name[ 1 ] == 0 ) ||
-                         ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
-                    {
-                        continue;
-                    }
+                    continue;
                 }
 
                 // regular dir
@@ -857,7 +911,11 @@
                 pathCopy += entry->d_name;
                 pathCopy += NATIVE_SLASH;
                 GetFilesRecurse( pathCopy, wildCard, results );
-                continue;
+
+                if ( !includeDirs )
+                {
+                    continue;
+                }
             }
 
             // file - does it match wildcard?
@@ -878,6 +936,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesNoRecurse( const char * path,
                                            const char * wildCard,
+                                           const bool includeDirs,
                                            Array< AString > * results )
 {
     AStackString< 256 > pathCopy( path );
@@ -896,7 +955,7 @@
 
         do
         {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            if ( !IncludeFileObjectInResults( findData, includeDirs ) )
             {
                 continue;
             }
@@ -952,9 +1011,8 @@
             }
 
             // dir?
-            if ( isDir )
+            if ( isDir && !includeDirs )
             {
-                // ignore dirs
                 continue;
             }
 
@@ -999,8 +1057,7 @@
                 // ignore magic '.' and '..' folders
                 // (don't need to check length of name, as all names are at least 1 char
                 // which means index 0 and 1 are valid to access)
-                if ( findData.cFileName[ 0 ] == '.' &&
-                    ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
+                if ( IsShortcutDir( findData ) )
                 {
                     continue;
                 }
@@ -1093,13 +1150,9 @@
             if ( isDir )
             {
                 // ignore . and ..
-                if ( entry->d_name[ 0 ] == '.' )
+                if ( IsShortcutDir( entry ) )
                 {
-                    if ( ( entry->d_name[ 1 ] == 0 ) ||
-                         ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
-                    {
-                        continue;
-                    }
+                    continue;
                 }
 
                 // regular dir
@@ -1336,6 +1389,57 @@ bool FileIO::FileInfo::IsReadOnly() const
     }
 
     return false;
+}
+
+// ContainsValidDirChars
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::ContainsValidDirChars( const AString & string, AString & errorMsg )
+{
+    // so dirs can be valid on all OSes, compare against superset of all OSes invalid dir chars
+
+    bool valid = true;  // first assume true
+    errorMsg.Clear();
+    
+    // Mac OS X dirs cannot start with a period
+    const char periodChar = '.';
+    if ( string.BeginsWith( periodChar ) )
+    {
+        errorMsg += string;
+        errorMsg += " cannot start with a period";
+        valid = false;
+    }
+
+    // keep checking, so we show user all invalid chars found
+    AStackString<> invalidChars( ":/\\,[]{}()!;\"'*?<>|" );
+    AStackString<> invalidCharsFound;
+    const size_t numInvalidChars = invalidChars.GetLength();
+    for ( size_t i = 0; i < numInvalidChars; ++i )
+    {
+        if ( string.Find( invalidChars[ i ] ) )
+        {
+            if ( !invalidCharsFound.Find( invalidChars[ i ] ) )
+            {
+                invalidCharsFound += invalidChars[ i ];
+            }
+            valid = false;
+            // don't break here, since want to show user all invalid chars found
+        }
+    }
+    if ( !invalidCharsFound.IsEmpty() )
+    {
+        if ( errorMsg.IsEmpty() )
+        {
+            errorMsg += string;
+            errorMsg += " ";
+        }
+        else
+        {
+            errorMsg += " and ";
+        }
+        errorMsg += "cannot contain chars ";
+        errorMsg += invalidCharsFound;
+    }
+    return valid;
 }
 
 //------------------------------------------------------------------------------

@@ -6,6 +6,8 @@
 //------------------------------------------------------------------------------
 #include "Node.h"
 
+#include "Core/Containers/Tags.h"
+
 // Forward Declarations
 //------------------------------------------------------------------------------
 class BFFIterator;
@@ -26,11 +28,15 @@ public:
     virtual bool IsAFile() const override;
 
     // Access to settings
-    const AString &                     GetCachePath() const;
-    const AString &                     GetCachePluginDLL() const;
-    inline const Array< AString > &     GetWorkerList() const { return m_Workers; }
-    uint32_t                            GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
-    uint32_t                            GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
+    const AString &        GetCachePath() const;
+    const AString &        GetCachePluginDLL() const;
+    inline const Array< AString > & GetWorkerList() const { return m_Workers; }
+    int32_t                GetWorkerListRefreshLimitSec() const { return m_WorkerListRefreshLimitSec; }
+    int32_t                GetWorkerConnectionRetryLimitSec() const { return m_WorkerConnectionRetryLimitSec; }
+    uint32_t               GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
+    const Tags &           GetLocalWorkerTags() const;
+    void                   ApplyLocalWorkerTags( const Tags & localWorkerTags );
+    uint32_t               GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
 
 private:
     //virtual BuildResult DoBuild( Job * job ) override;
@@ -42,12 +48,18 @@ private:
 
     // Exposed settings
     //friend class FunctionSettings;
-    Array< AString  >   m_Environment;
-    AString             m_CachePath;
-    AString             m_CachePluginDLL;
-    Array< AString  >   m_Workers;
-    uint32_t            m_WorkerConnectionLimit;
-    uint32_t            m_DistributableJobMemoryLimitMiB;
+    Array< AString  > m_Environment;
+    AString           m_CachePath;
+    AString           m_CachePluginDLL;
+    Array< AString  > m_Workers;
+    int32_t           m_WorkerListRefreshLimitSec;
+    int32_t           m_WorkerConnectionRetryLimitSec;
+    uint32_t          m_WorkerConnectionLimit;
+    Array< AString  > m_BaseLocalWorkerTagStrings;
+    uint32_t          m_DistributableJobMemoryLimitMiB;
+
+    mutable Tags      m_BaseLocalWorkerTags;
+    mutable Tags      m_LocalWorkerTags;
 };
 
 //------------------------------------------------------------------------------

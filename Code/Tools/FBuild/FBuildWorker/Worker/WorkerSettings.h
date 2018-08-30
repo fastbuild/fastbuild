@@ -5,6 +5,8 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Singleton.h"
+#include "Core/Containers/Tags.h"
+#include "Core/Strings/AString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -35,12 +37,19 @@ public:
     void SetStartMinimized( bool startMinimized );
     inline bool GetStartMinimzed() { return m_StartMinimized; }
 
+    const Tags & GetWorkerTags() const;
+    void         ApplyWorkerTags( const Tags & workerTags );
+
     void Load();
     void Save();
 private:
-    Mode        m_Mode;
-    uint32_t    m_NumCPUsToUse;
-    bool        m_StartMinimized;
+    Mode             m_Mode;
+    uint32_t         m_NumCPUsToUse;
+    bool             m_StartMinimized;
+    Array< AString > m_BaseWorkerTagStrings;
+
+    mutable Tags     m_BaseWorkerTags;
+    mutable Tags     m_WorkerTags;
 };
 
 //------------------------------------------------------------------------------

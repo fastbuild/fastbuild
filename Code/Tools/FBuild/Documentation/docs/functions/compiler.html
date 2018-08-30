@@ -28,10 +28,15 @@ distribution, caching and more.
   .CompilerFamily               // (optional) Explicitly specify compiler type (default: auto)
   .AllowDistribution            // (optional) Allow distributed compilation (if available) (default: true)
   .ExecutableRootPath           // (optional) Override default path for executable distribution
-  .SimpleDistributionMode       // (optional) Allow distribution of otherwise unsuported "compilers" (default: false)
+  .SimpleDistributionMode       // (optional) Allow distribution of otherwise unsuported "compilers"
+                                //            (default: false)
   .CustomEnvironmentVariables   // (optional) Environment variables to set on remote host
-  .ClangRewriteIncludes         // (optional) Use Clang's -frewrite-includes option when preprocessing (default: true)
+  .ClangRewriteIncludes         // (optional) Use Clang's -frewrite-includes option when preprocessing
+                                //            (default: true)
   .VS2012EnumBugFix             // (optional) Enable work-around for bug in VS2012 compiler (default: false)
+  
+  .RequiredWorkerTags           // (optional) List of wildcard tags required to run this compiler
+                                //            default: empty list
 }
 </div>
     </div>
@@ -193,6 +198,19 @@ This results in very unintuitive compile errors.</p>
 	This work-around may be impractical if a large number of enums are affected, or if the enum(s) originate in system headers or
 	external code. In those cases the .VS2012EnumBugFix option can be enabled to insert the
 	additional whitespace at build-time.</p>
+
+  	<p><hr></p>
+
+	<p><b>.RequiredWorkerTags</b> - String or ArrayOfStrings - (Optional)</p>
+	<p><p>Specify the worker tags required for the compiler.</p>
+<p>This option allows you to run the compiler on only those workers that match the required tags.</p>
+<p>Each entry is a wildcard string of the form: key, !key, key=value, or !key=value</p>
+<p>Example list:</p>
+<p>{
+   'TopDownMemory',
+   'OS=Win-*-*'
+   }</p>
+
 </div>
 
 

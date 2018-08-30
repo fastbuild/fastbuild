@@ -9,6 +9,7 @@
 
 // Core
 #include "Core/Env/Types.h"
+#include "Core/Containers/Tags.h"
 
 // Forward Declaration
 //------------------------------------------------------------------------------
@@ -30,10 +31,14 @@ public:
     #endif
 
     // resource usage
-    bool m_OverrideCPUAllocation;
-    uint32_t m_CPUAllocation;
-    bool m_OverrideWorkMode;
+    bool                 m_OverrideCPUAllocation;
+    uint32_t             m_CPUAllocation;
+    bool                 m_OverrideWorkMode;
     WorkerSettings::Mode m_WorkMode;
+    bool                 m_OverrideStartMinimized;
+    bool                 m_StartMinimized;
+    bool                 m_OverrideWorkerTags;
+    Tags                 m_WorkerTags;
 
     // Console mode
     bool m_ConsoleMode;

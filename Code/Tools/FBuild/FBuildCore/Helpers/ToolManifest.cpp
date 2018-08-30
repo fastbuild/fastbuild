@@ -95,10 +95,16 @@ ToolManifest::~ToolManifest()
 
 // Generate
 //------------------------------------------------------------------------------
-bool ToolManifest::Generate( const AString& mainExecutableRoot, const Dependencies & dependencies, const Array<AString> & customEnvironmentVariables )
+bool ToolManifest::Generate( const AString& mainExecutableRoot, 
+    const Dependencies & dependencies, 
+    const Array<AString> & customEnvironmentVariables,
+    const Tags & requiredWorkerTags,
+    bool deleteRemoteFilesWhenDone )
 {
     m_MainExecutableRootPath = mainExecutableRoot;
     m_CustomEnvironmentVariables = customEnvironmentVariables;
+    m_RequiredWorkerTags = requiredWorkerTags;
+    m_DeleteRemoteFilesWhenDone = deleteRemoteFilesWhenDone;
     m_Files.Clear();
     m_TimeStamp = 0;
     m_Files.SetCapacity( 1 + dependencies.GetSize() );
@@ -129,7 +135,7 @@ bool ToolManifest::Generate( const AString& mainExecutableRoot, const Dependenci
 
         // file name & sub-path (relative to remote folder)
         AStackString<> relativePath;
-        GetRelativePath( m_MainExecutableRootPath, f.m_Name, relativePath );
+        PathUtils::GetRelativePath( m_MainExecutableRootPath, f.m_Name, relativePath );
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
@@ -172,6 +178,10 @@ void ToolManifest::SerializeForRemote( IOStream & ms ) const
     {
         ms.Write( m_CustomEnvironmentVariables[ i ] );
     }
+
+    m_RequiredWorkerTags.Write( ms );
+
+    ms.Write( m_DeleteRemoteFilesWhenDone );
 }
 
 // DeserializeFromRemote
@@ -211,6 +221,12 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         ms.Read( envVar );
         m_CustomEnvironmentVariables.Append( envVar );
     }
+
+    m_RequiredWorkerTags.Read( ms );
+
+    ms.Read( m_DeleteRemoteFilesWhenDone );
+
+    m_Remote = true;
 
     // determine if any files are remaining from a previous run
     size_t numFilesAlreadySynchronized = 0;
@@ -474,23 +490,6 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
     return true; // file stored ok
 }
 
-// GetRelativePath
-//------------------------------------------------------------------------------
-/*static*/ void ToolManifest::GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath )
-{
-    if ( otherFile.BeginsWithI( root ) )
-    {
-        // file is in sub dir on master machine, so store with same relative location
-        otherFileRelativePath = ( otherFile.Get() + root.GetLength() );
-    }
-    else
-    {
-        // file is in some completely other directory, so put in same place as exe
-        const char * lastSlash = otherFile.FindLast( NATIVE_SLASH );
-        otherFileRelativePath = ( lastSlash ? lastSlash + 1 : otherFile.Get() );
-    }
-}
-
 // GetRemoteFilePath
 //------------------------------------------------------------------------------
 void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) const
@@ -501,7 +500,7 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
     
     // Get relative path for file and append
     AStackString<> relativePath;
-    GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].m_Name, relativePath );
+    PathUtils::GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].m_Name, relativePath );
     remotePath += relativePath;
 }
 

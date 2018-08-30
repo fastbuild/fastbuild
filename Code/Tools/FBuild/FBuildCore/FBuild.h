@@ -39,6 +39,9 @@ public:
     // OR a previously saved NodeGraph DB (if available/matching the BFF)
     bool Initialize( const char * nodeGraphDBFile = nullptr );
 
+    // for graph tests to call
+    NodeGraph * GetGraph();
+
     // build a target
     bool Build( const AString & target );
     bool Build( const Array< AString > & targets );

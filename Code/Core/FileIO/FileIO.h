@@ -8,6 +8,10 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AString.h"
 
+#if defined( __WINDOWS__ )
+    #include <windows.h>
+#endif
+
 // Defines
 //------------------------------------------------------------------------------
 #define MAX_PATH 260
@@ -26,7 +30,8 @@ public:
     // directory listing
     static bool GetFiles( const AString & path,
                           const AString & wildCard,
-                          bool recurse,
+                          const bool recurse,
+                          const bool includeDirs,
                           Array< AString > * results );
     struct FileInfo
     {
@@ -68,12 +73,16 @@ public:
         FORCE_INLINE static void WorkAroundForWindowsFilePermissionProblem( const AString &, const uint32_t = 0, const uint32_t = 0 ) {}
     #endif
 
+    static bool ContainsValidDirChars( const AString & string, AString & errorMsg );
+
 private:
     static void GetFilesRecurse( AString & path,
                                  const AString & wildCard,
+                                 const bool includeDirs,
                                  Array< AString > * results );
     static void GetFilesNoRecurse( const char * path,
                                    const char * wildCard,
+                                   const bool includeDirs,
                                    Array< AString > * results );
     static void GetFilesRecurseEx( AString & path,
                                  const Array< AString > * patterns,
@@ -81,8 +90,16 @@ private:
     static void GetFilesNoRecurseEx( const char * path,
                                  const Array< AString > * patterns,
                                  Array< FileInfo > * results );
-    static bool IsMatch( const Array< AString > * patterns, const char * fileName );
-
+    static bool IsMatch( const Array< AString > * patterns,
+                                   const char * fileName );
+    #if defined( __WINDOWS__ )
+    static bool IsShortcutDir( const WIN32_FIND_DATA & findData );
+    static bool IncludeFileObjectInResults(
+                                 const WIN32_FIND_DATA & findData,
+                                 const bool includeDirs );
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+    static bool IsShortcutDir( const dirent * entry );
+    #endif
 };
 
 //------------------------------------------------------------------------------

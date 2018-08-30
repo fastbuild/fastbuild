@@ -17,6 +17,7 @@
 
 // Other
 //------------------------------------------------------------------------------
+#define SETTINGS_FILENAME ".settings"
 #define FBUILDWORKER_SETTINGS_MIN_VERSION ( 1 )     // Oldest compatible version
 #define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 2 ) // Current version
 
@@ -24,42 +25,78 @@
 //------------------------------------------------------------------------------
 WorkerSettings::WorkerSettings()
     : m_Mode( WHEN_IDLE )
-    , m_NumCPUsToUse( 1 )
-    , m_StartMinimized( false )
+, m_NumCPUsToUse( 1 )
+, m_StartMinimized( false )
 {
     // half CPUs available to use by default
     uint32_t numCPUs = Env::GetNumProcessors();
     m_NumCPUsToUse = Math::Max< uint32_t >( 1, numCPUs / 2 );
 
-    Load();
-
     // handle CPU downgrade
     m_NumCPUsToUse = Math::Min( Env::GetNumProcessors(), m_NumCPUsToUse );
+
+    // load the settings file
+    Load();
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-WorkerSettings::~WorkerSettings() = default;
+WorkerSettings::~WorkerSettings()
+{
+}
 
-// SetMode
+// SetWorkMode
 //------------------------------------------------------------------------------
-void WorkerSettings::SetMode( Mode m )
+void WorkerSettings::SetMode( const WorkerSettings::Mode m )
 {
     m_Mode = m;
 }
 
 // SetNumCPUsToUse
 //------------------------------------------------------------------------------
-void WorkerSettings::SetNumCPUsToUse( uint32_t c )
+void WorkerSettings::SetNumCPUsToUse( const uint32_t c )
 {
     m_NumCPUsToUse = c;
 }
 
 // SetStartMinimized
 //------------------------------------------------------------------------------
-void WorkerSettings::SetStartMinimized( bool startMinimized )
+void WorkerSettings::SetStartMinimized( const bool startMinimized )
 {
     m_StartMinimized = startMinimized;
+}
+
+// GetWorkerTags
+//------------------------------------------------------------------------------
+const Tags & WorkerSettings::GetWorkerTags() const
+{
+    if ( !m_WorkerTags.IsValid() )
+    {
+        const size_t numTags = m_BaseWorkerTagStrings.GetSize();
+        for ( size_t i=0; i<numTags; ++i )
+        {
+            m_BaseWorkerTags.ParseAndAddTag( m_BaseWorkerTagStrings.Get( i ) );
+        }
+        // always set valid, even if empty container
+        m_BaseWorkerTags.SetValid( true );
+        m_WorkerTags = m_BaseWorkerTags;
+    }
+    return m_WorkerTags;
+}
+
+// ApplyWorkerTags
+//------------------------------------------------------------------------------
+void WorkerSettings::ApplyWorkerTags( const Tags & workerTags )
+{
+    // ensure m_BaseWorkerTags is populated, before we apply changes to it
+    GetWorkerTags();
+
+    Tags removedTags;  // pass empty container, since only adding
+    m_BaseWorkerTags.ApplyChanges( removedTags, workerTags );
+    m_WorkerTags = m_BaseWorkerTags;
+
+    // update m_BaseWorkerTagStrings to match base changes
+    m_BaseWorkerTags.ToStringArray( m_BaseWorkerTagStrings );
 }
 
 // Load
@@ -87,6 +124,7 @@ void WorkerSettings::Load()
         m_Mode = (Mode)mode;
         f.Read( m_NumCPUsToUse );
         f.Read( m_StartMinimized );
+        f.Read( m_BaseWorkerTagStrings );
     }
 }
 
@@ -111,6 +149,7 @@ void WorkerSettings::Save()
         ok &= f.Write( (uint32_t)m_Mode );
         ok &= f.Write( m_NumCPUsToUse );
         ok &= f.Write( m_StartMinimized );
+        ok &= f.Write( m_BaseWorkerTagStrings );
 
         if ( ok )
         {

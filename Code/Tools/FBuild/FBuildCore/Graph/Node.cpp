@@ -38,6 +38,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
 
 // Core
 #include "Core/Containers/Array.h"
@@ -78,6 +79,7 @@
     "XCodeProj",
     "Settings",
 };
+/*static*/ const Tags Node::s_EmptyRequirementTags;
 
 // Custom MetaData
 //------------------------------------------------------------------------------
@@ -262,6 +264,58 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     // nothing needs building
     FLOG_INFO( "Up-To-Date '%s'", GetName().Get() );
     return false;
+}
+
+// EnsureCanBuild
+//------------------------------------------------------------------------------
+/*virtual*/ bool Node::EnsureCanBuild( Job * job ) const
+{
+    bool canBuild = true;  // first assume true
+    if ( job->IsLocal() )
+    {
+        // filter local jobs
+        if ( JobQueue::IsValid() )
+        {
+            bool errored = false;
+            JobQueue::Get().CheckUnmatchedJob( job, errored );
+            // CheckUnmatchedJob() above will emit error
+            canBuild = !errored;
+        }
+    }
+    else
+    {
+        // remote jobs are filtered in the Client methods, not here
+    }
+    return canBuild;
+}
+
+// GetRequiredWorkerTags
+//------------------------------------------------------------------------------
+/*virtual*/ const Tags & Node::GetRequiredWorkerTags() const
+{
+    return s_EmptyRequirementTags;
+}
+
+// GetWorkerRecords const
+//------------------------------------------------------------------------------
+/*virtual*/ const WorkerRecords & Node::GetWorkerRecords() const
+{
+    return m_WorkerRecords;
+}
+
+// UpdateWorkerRecord
+//------------------------------------------------------------------------------
+/*virtual*/ void Node::UpdateWorkerRecord(
+    const AString & workerName, const bool canBuildOnWorker ) const
+{
+    m_WorkerRecords.Update( workerName, canBuildOnWorker );
+}
+
+// RemoveWorkerRecord
+//------------------------------------------------------------------------------
+/*virtual*/ void Node::RemoveWorkerRecord( const AString & workerName ) const
+{
+    m_WorkerRecords.Remove( workerName );
 }
 
 // DoBuild

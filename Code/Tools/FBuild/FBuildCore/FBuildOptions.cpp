@@ -307,6 +307,13 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 #endif
                 continue;
             }
+            else if ( thisArg.BeginsWith( "-T" ) )
+            {
+                AStackString<> tagStr( thisArg.Get() + 2 );
+                m_LocalWorkerTags.ParseAndAddTag( tagStr );
+                m_OverrideLocalWorkerTags = true;
+                continue;
+            }
 
             // can't use FLOG_ERROR as FLog is not initialized
             OUTPUT( "FBuild: Error: Unknown argument '%s'\n", thisArg.Get() );
@@ -319,6 +326,9 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             m_Targets.Append( thisArg );
         }
     }
+
+    // always set valid, even if empty container
+    m_LocalWorkerTags.SetValid( true );
 
     if ( progressOptionSpecified == false )
     {
@@ -498,6 +508,9 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -showdeps      Show known dependency tree for specified targets.\n"
             " -showtargets   Display list of primary build targets.\n"
             " -summary       Show a summary at the end of the build.\n"
+            " -Ttag          Set a local worker tag.\n"
+            "                You may specify one or more -Ttag entries.\n"
+            "                Example : -TTopDownMemory -TOS=Win-7-64\n"
             " -verbose       Show detailed diagnostic information. This will slow\n"
             "                down building.\n"
             " -version       Print version and exit. No other work will be\n"

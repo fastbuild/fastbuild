@@ -25,7 +25,8 @@ class WorkerSettings;
 class Worker
 {
 public:
-    explicit Worker( void * hInstance, const AString & args, bool consoleMode );
+    explicit Worker( const AString & args );
+    void Initialize( void * hInstance, const bool consoleMode );
     ~Worker();
 
     int Work();
@@ -39,6 +40,7 @@ private:
     inline bool InConsoleMode() const { return ( m_MainWindow == nullptr ); }
 
     void StatusMessage( const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
+    void ErrorMessageString( const char * message ) const;
     void ErrorMessage( const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
 
     WorkerWindow        * m_MainWindow;

@@ -11,6 +11,7 @@ class Node;
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
+#include "Core/Containers/Tags.h"
 #include "Core/Env/Types.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Reflection/Object.h"
@@ -58,7 +59,11 @@ public:
     explicit ToolManifest( uint64_t toolId );
     ~ToolManifest();
 
-    bool Generate( const AString & mainExecutableRoot, const Dependencies & dependencies, const Array<AString>& customEnvironmentVariables );
+    bool Generate( const AString & mainExecutableRoot,
+        const Dependencies & dependencies, 
+        const Array<AString>& customEnvironmentVariables,
+        const Tags & requiredWorkerTags,
+        bool deleteRemoteFilesWhenDone = false );
 
     inline uint64_t GetToolId() const { return m_ToolId; }
     inline uint64_t GetTimeStamp() const { return m_TimeStamp; }
@@ -88,11 +93,11 @@ public:
     void            GetRemotePath( AString & path ) const;
     void            GetRemoteFilePath( uint32_t fileId, AString & exe ) const;
     const char *    GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
+    const Tags &    GetRequiredWorkerTags() const { return m_RequiredWorkerTags; }
 
-    static void     GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
 private:
     bool            AddFile( const AString & fileName, const uint64_t timeStamp );
-    bool            LoadFile( const AString & fileName, void * & content, uint32_t & contentSize ) const;
+    bool            LoadFile( const AString & fileName, void * & uncompressedContent, uint32_t & uncompressedContentSize ) const;
 
     mutable Mutex   m_Mutex;
 
@@ -106,7 +111,12 @@ private:
     // Internal state
     bool            m_Synchronized;
     const char *    m_RemoteEnvironmentString;
+    Tags            m_RequiredWorkerTags;
     void *          m_UserData;
+    bool            m_DeleteRemoteFilesWhenDone;
+
+    // Not serialized
+    bool            m_Remote;
 };
 
 //------------------------------------------------------------------------------

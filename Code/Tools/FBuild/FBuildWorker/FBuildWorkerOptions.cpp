@@ -28,6 +28,9 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_CPUAllocation( 0 ),
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
+    m_OverrideStartMinimized( false ),
+    m_StartMinimized( false ),
+    m_OverrideWorkerTags( false ),
     m_ConsoleMode( false )
 {
     #ifndef __WINDOWS__
@@ -115,10 +118,32 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
                 continue;
             }
         #endif
+        else if ( token == "-min" )
+        {
+            m_StartMinimized = true;
+            m_OverrideStartMinimized = true;
+            continue;
+        }
+        else if ( token == "-nomin" )
+        {
+            m_StartMinimized = false;
+            m_OverrideStartMinimized = true;
+            continue;
+        }
+        else if ( token.BeginsWith( "-T" ) )
+        {
+            AStackString<> tagStr( token.Get() + 2 );
+            m_WorkerTags.ParseAndAddTag( tagStr );
+            m_OverrideWorkerTags = true;
+            continue;
+        }
 
         ShowUsageError();
         return false;
     }
+
+    // always set valid, even if empty container
+    m_WorkerTags.SetValid( true );
 
     return true;
 }
@@ -141,6 +166,13 @@ void FBuildWorkerOptions::ShowUsageError()
                        "                disabled : Don't accept any work.\n"
                        "                idle : Accept work when PC is idle.\n"
                        "                dedicated : Accept work always.\n"
+                       "\n"
+                       "-min : Start minimized.\n"
+                       "-nomin : Don't start minimized.\n"
+                       "\n"
+                       "-Ttag : Set a worker tag.\n"
+                       "                You may specify one or more -Ttag entries.\n"
+                       "                Example : -TTopDownMemory -TOS=Win-7-64\n"
                        "\n"
                        #if defined( __WINDOWS__ )
                        "-nosubprocess : Don't spawn a sub-process worker copy.\n";

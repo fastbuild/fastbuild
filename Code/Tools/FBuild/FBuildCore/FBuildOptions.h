@@ -9,6 +9,7 @@
 
 // Core
 #include "Core/Env/Types.h"
+#include "Core/Containers/Tags.h"
 #include "Core/Strings/AString.h"
 
 // FBuildOptions
@@ -92,6 +93,9 @@ public:
     inline const AString & GetMainProcessMutexName() const      { return m_ProcessMutexName; }
     inline const AString & GetFinalProcessMutexName( ) const    { return m_FinalProcessMutexName; }
     inline const AString & GetSharedMemoryName() const          { return m_SharedMemoryName; }
+
+    bool    m_OverrideLocalWorkerTags = false;
+    Tags    m_LocalWorkerTags;
 
 private:
     void DisplayHelp( const AString & programName ) const;

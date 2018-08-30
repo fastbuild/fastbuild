@@ -55,23 +55,24 @@ public:
     const AString & GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->GetName(); }
 
 private:
-    bool InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
+    bool            InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
 
     virtual BuildResult DoBuild( Job * job ) override;
 
     // Exposed params
-    AString             m_Executable;
-    Array< AString >    m_ExtraFiles;
-    Array< AString >    m_CustomEnvironmentVariables;
+    AString          m_Executable;
+    Array< AString > m_ExtraFiles;
+    Array< AString > m_CustomEnvironmentVariables;
 
-    bool            m_AllowDistribution;
-    bool            m_VS2012EnumBugFix;
-    bool            m_ClangRewriteIncludes;
-    AString         m_ExecutableRootPath;
-    AString         m_CompilerFamilyString;
-    uint8_t         m_CompilerFamilyEnum;
-    bool            m_SimpleDistributionMode;
-    ToolManifest    m_Manifest;
+    bool             m_AllowDistribution;
+    bool             m_VS2012EnumBugFix;
+    bool             m_ClangRewriteIncludes;
+    AString          m_ExecutableRootPath;
+    AString          m_CompilerFamilyString;
+    Array< AString > m_RequiredWorkerTagStrings;
+    uint8_t          m_CompilerFamilyEnum;
+    bool             m_SimpleDistributionMode;
+    ToolManifest     m_Manifest;
 };
 
 //------------------------------------------------------------------------------

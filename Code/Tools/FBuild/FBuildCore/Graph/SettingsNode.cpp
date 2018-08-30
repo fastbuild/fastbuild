@@ -34,13 +34,20 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
+    REFLECT(        m_WorkerListRefreshLimitSec,      "WorkerListRefreshLimit",    MetaOptional() )
+    REFLECT(        m_WorkerConnectionRetryLimitSec,  "WorkerConnectionRetryLimit",    MetaOptional() )
+    REFLECT_ARRAY(  m_BaseLocalWorkerTagStrings,      "LocalWorkerTags",              MetaOptional() )
 REFLECT_END( SettingsNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
-, m_WorkerConnectionLimit( 15 )
+, m_WorkerListRefreshLimitSec( 300 )  // default: a maximum of 5 minutes refreshing the worker list,
+                                      // in case workers with specific tags are rebooting
+, m_WorkerConnectionRetryLimitSec( 300 )  // default: a maximum of 5 minutes retrying connections,
+                                          // in case workers with specific tags are rebooting
+, m_WorkerConnectionLimit( 15 )  // default: a maximum of 15 workers simultaneously connected
 , m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
 {
     // Cache path from environment
@@ -94,6 +101,41 @@ const AString & SettingsNode::GetCachePath() const
 const AString & SettingsNode::GetCachePluginDLL() const
 {
     return m_CachePluginDLL;
+}
+
+// GetLocalWorkerTags
+//------------------------------------------------------------------------------
+const Tags & SettingsNode::GetLocalWorkerTags() const
+{
+    if ( !m_LocalWorkerTags.IsValid() )
+    {
+        const size_t numTags = m_BaseLocalWorkerTagStrings.GetSize();
+        for ( size_t i=0; i<numTags; ++i )
+        {
+            m_BaseLocalWorkerTags.ParseAndAddTag( m_BaseLocalWorkerTagStrings.Get( i ) );
+        }
+        AStackString<> localWorkerName( LOCAL_WORKER_NAME );
+        m_BaseLocalWorkerTags.SetWorkerName( localWorkerName );
+        // always set valid, even if empty container
+        m_BaseLocalWorkerTags.SetValid( true );
+        m_LocalWorkerTags = m_BaseLocalWorkerTags;
+    }
+    return m_LocalWorkerTags;
+}
+
+// ApplyLocalWorkerTags
+//------------------------------------------------------------------------------
+void SettingsNode::ApplyLocalWorkerTags( const Tags & localWorkerTags )
+{
+    // ensure m_BaseLocalWorkerTags is populated, before we apply changes to it
+    GetLocalWorkerTags();
+
+    Tags removedTags;  // pass empty container, since only adding
+    m_BaseLocalWorkerTags.ApplyChanges( removedTags, localWorkerTags );
+    m_LocalWorkerTags = m_BaseLocalWorkerTags;
+
+    // update m_LocalWorkerTagStrings to match base changes
+    m_BaseLocalWorkerTags.ToStringArray( m_BaseLocalWorkerTagStrings );
 }
 
 // ProcessEnvironment

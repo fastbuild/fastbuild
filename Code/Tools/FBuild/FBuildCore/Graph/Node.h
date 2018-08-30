@@ -6,9 +6,11 @@
 //------------------------------------------------------------------------------
 // FBuild
 #include "Tools/FBuild/FBuildCore/Graph/Dependencies.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerRecords.h"
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Containers/Tags.h"
 #include "Core/Reflection/Object.h"
 #include "Core/Strings/AString.h"
 
@@ -129,6 +131,11 @@ public:
 
     // each node must specify if it outputs a file
     virtual bool IsAFile() const = 0;
+    virtual bool EnsureCanBuild( Job * job ) const;
+    virtual const Tags & GetRequiredWorkerTags() const;
+    virtual const WorkerRecords & GetWorkerRecords() const;
+    virtual void UpdateWorkerRecord( const AString & workerName, const bool canBuildOnWorker ) const;
+    virtual void RemoveWorkerRecord( const AString & workerName ) const;
 
     inline State GetState() const { return m_State; }
 
@@ -230,18 +237,19 @@ protected:
     AString m_Name;
 
     State m_State;
-    mutable uint32_t m_BuildPassTag; // prevent multiple recursions into the same node
-    uint32_t        m_ControlFlags;
-    mutable uint32_t        m_StatsFlags;
-    uint64_t        m_Stamp;
-    uint32_t        m_RecursiveCost;
+    mutable uint32_t      m_BuildPassTag; // prevent multiple recursions into the same node
+    uint32_t              m_ControlFlags;
+    mutable uint32_t      m_StatsFlags;
+    uint64_t              m_Stamp;
+    uint32_t              m_RecursiveCost;
     Type m_Type;
-    Node *          m_Next; // node map linked list pointer
-    uint32_t        m_NameCRC;
-    uint32_t m_LastBuildTimeMs; // time it took to do last known full build of this node
-    uint32_t m_ProcessingTime;  // time spent on this node
-    mutable uint32_t m_ProgressAccumulator;
-    uint32_t        m_Index;
+    Node *                m_Next; // node map linked list pointer
+    uint32_t              m_NameCRC;
+    uint32_t              m_LastBuildTimeMs; // time it took to do last known full build of this node
+    uint32_t              m_ProcessingTime;  // time spent on this node
+    mutable uint32_t      m_ProgressAccumulator;
+    uint32_t              m_Index;
+    mutable WorkerRecords m_WorkerRecords;
 
     Dependencies m_PreBuildDependencies;
     Dependencies m_StaticDependencies;
@@ -252,6 +260,7 @@ protected:
     #endif
 
     static const char * const s_NodeTypeNames[];
+    static const Tags         s_EmptyRequirementTags;
 };
 
 //------------------------------------------------------------------------------

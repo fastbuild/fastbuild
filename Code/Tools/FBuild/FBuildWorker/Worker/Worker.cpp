@@ -21,6 +21,7 @@
 
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
 #include "Core/Profile/Profile.h"
@@ -32,7 +33,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
+Worker::Worker( const AString & args )
     : m_MainWindow( nullptr )
     , m_ConnectionPool( nullptr )
     , m_NetworkStartupHelper( nullptr )
@@ -44,8 +45,20 @@ Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
     #endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
+}
+
+// Initialize
+//------------------------------------------------------------------------------
+void Worker::Initialize( void * hInstance, const bool consoleMode )
+{
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
-    m_ConnectionPool = FNEW( Server );
+
+    Server::Options serverOptions;
+    serverOptions.m_NumThreadsInJobQueue = 0;
+    serverOptions.m_WorkerTags = m_WorkerSettings->GetWorkerTags();
+
+    m_ConnectionPool = FNEW( Server ( serverOptions ) );
+
     if ( consoleMode == true )
     {
         #if __WINDOWS__
@@ -122,15 +135,22 @@ int Worker::Work()
         AStackString<> tmpPath;
         VERIFY( FBuild::GetTempDir( tmpPath ) );
         #if defined( __WINDOWS__ )
-            tmpPath += ".fbuild.tmp\\target\\include";
+            tmpPath += ".fbuild.tmp\\";
         #else
-            tmpPath += "_fbuild.tmp/target/include";
+            tmpPath += "_fbuild.tmp/";
         #endif
+        #if defined( __WINDOWS__ )
+            tmpPath += "target\\include";
+        #else
+            tmpPath += "target/include";
+        #endif
+
         if ( !FileIO::EnsurePathExists( tmpPath ) )
         {
-            ErrorMessage( "Failed to initialize tmp folder.  Error: 0x%x", Env::GetLastErr() );
+            ErrorMessage( "Failed to create tmp folder %s (error %i)", tmpPath.Get(), Env::GetLastErr() );
             return -2;
         }
+
         #if defined( __WINDOWS__ )
             tmpPath += "\\.lock";
         #else
@@ -138,7 +158,7 @@ int Worker::Work()
         #endif
         if ( !m_TargetIncludeFolderLock.Open( tmpPath.Get(), FileStream::WRITE_ONLY ) )
         {
-            ErrorMessage( "Failed to lock tmp folder.  Error: 0x%x", Env::GetLastErr() );
+            ErrorMessage( "Failed to lock tmp folder (error %i)", Env::GetLastErr() );
             return -2;
         }
     }
@@ -172,7 +192,7 @@ int Worker::Work()
     // the application MUST NOT try to update the UI from this point on
     m_MainWindow->SetAllowQuit();
 
-    m_WorkerBrokerage.SetAvailability( false );
+    m_WorkerBrokerage.SetUnavailable();
 
     return 0;
 }
@@ -253,8 +273,16 @@ void Worker::UpdateAvailability()
     }
 
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
-
-    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
+    
+    if ( numCPUsToUse > 0 )
+    {
+        m_WorkerBrokerage.SetAvailable( ws.GetWorkerTags() );
+    }
+    else
+    {
+        // to avoid doing a lot of network file I/O when going idle and not idle,
+        // don't set unavailable here
+    }
 }
 
 // UpdateUI
@@ -402,6 +430,29 @@ void Worker::StatusMessage( const char * fmtString, ... ) const
     OUTPUT( "%s", buffer.Get() );
 }
 
+// ErrorMessageString
+//------------------------------------------------------------------------------
+void Worker::ErrorMessageString( const char * message ) const
+{
+    if ( InConsoleMode() )
+    {
+        // Forward to console
+        StatusMessage( "%s", message );
+        return;
+    }
+
+    // Display interactive Message Box
+    #if defined( __WINDOWS__ )
+        ::MessageBox( nullptr, message, "FBuild Worker", MB_OK );
+    #elif defined( __APPLE__ )
+        // TODO:MAC Implement ErrorMessageString for non-console mode
+    #elif defined( __LINUX__ )
+        // TODO:LINUX Implement ErrorMessageString for non-console mode
+    #else
+        #error Unknown Platform
+    #endif
+}
+
 // ErrorMessage
 //------------------------------------------------------------------------------
 void Worker::ErrorMessage( const char * fmtString, ... ) const
@@ -413,23 +464,7 @@ void Worker::ErrorMessage( const char * fmtString, ... ) const
     buffer.VFormat( fmtString, args );
     va_end( args );
 
-    if ( InConsoleMode() )
-    {
-        // Forward to console
-        StatusMessage( "%s", buffer.Get() );
-        return;
-    }
-
-    // Display interactive Message Box
-    #if defined( __WINDOWS__ )
-        ::MessageBox( nullptr, buffer.Get(), "FBuild Worker", MB_OK );
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement ErrorMessage for non-console mode
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ErrorMessage for non-console mode
-    #else
-        #error Unknown Platform
-    #endif
+    ErrorMessageString( buffer.Get() );
 }
 
 //------------------------------------------------------------------------------
