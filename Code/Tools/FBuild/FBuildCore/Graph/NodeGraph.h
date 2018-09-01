@@ -31,6 +31,8 @@ class LinkerNode;
 class Node;
 class ObjectListNode;
 class ObjectNode;
+class ReflectionInfo;
+class ReflectedProperty;
 class RemoveDirNode;
 class SettingsNode;
 class SLNNode;
@@ -53,7 +55,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 116 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 117 };
 
     bool IsValid() const
     {
@@ -75,13 +77,13 @@ public:
     explicit NodeGraph();
     ~NodeGraph();
 
-    static NodeGraph * Initialize( const char * bffFile, const char * nodeGraphDBFile );
+    static NodeGraph * Initialize( const char * bffFile, const char * nodeGraphDBFile, bool forceMigration );
 
     enum class LoadResult
     {
-        MISSING,
+        MISSING_OR_INCOMPATIBLE,
         LOAD_ERROR,
-        OK_BFF_CHANGED,
+        OK_BFF_NEEDS_REPARSING,
         OK
     };
     NodeGraph::LoadResult Load( const char * nodeGraphDBFile );
@@ -95,6 +97,7 @@ public:
     Node * FindNodeExact( const AString & nodeName ) const;
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
+    const SettingsNode * GetSettings() const { return m_Settings; }
 
     void RegisterNode( Node * n );
 
@@ -174,6 +177,15 @@ private:
     static void DisplayRecurse( Node * node, Array< bool > & savedNodeFlags, uint32_t depth, AString & outBuffer );
     static void DisplayRecurse( const char * title, const Dependencies & dependencies, Array< bool > & savedNodeFlags, uint32_t depth, AString & outBuffer );
 
+    // DB Migration
+    void Migrate( const NodeGraph & oldNodeGraph );
+    void MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, const Node * oldNode );
+    void MigrateProperties( const void * oldBase, void * newBase, const ReflectionInfo * ri );
+    void MigrateProperty( const void * oldBase, void * newBase, const ReflectedProperty & property );
+    static bool AreNodesTheSame( const void * baseA, const void * baseB, const ReflectionInfo * ri );
+    static bool AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property );
+    static bool DoDependenciesMatch( const Dependencies & depsA, const Dependencies & depsB );
+
     enum { NODEMAP_TABLE_SIZE = 65536 };
     Node **         m_NodeMap;
     Array< Node * > m_AllNodes;
@@ -191,6 +203,8 @@ private:
         bool        m_Once;
     };
     Array< UsedFile > m_UsedFiles;
+
+    const SettingsNode * m_Settings;
 
     static uint32_t s_BuildPassTag;
 };
