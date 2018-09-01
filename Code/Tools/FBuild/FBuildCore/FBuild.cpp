@@ -176,8 +176,10 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     // if the cache is enabled, make sure the path is set and accessible
     if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite || m_Options.m_CacheInfo || m_Options.m_CacheTrim )
     {
-        if ( !settings->GetCachePluginDLL().IsEmpty() )
+        const bool useCachePluginDLL = !settings->GetCachePluginDLL().IsEmpty();
+        if ( useCachePluginDLL )
         {
+            OUTPUT( "Using cache plugin '%s'\n", settings->GetCachePluginDLL().Get() );
             m_Cache = FNEW( CachePlugin( settings->GetCachePluginDLL() ) );
         }
         else
@@ -185,12 +187,29 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             m_Cache = FNEW( Cache() );
         }
 
-        if ( m_Cache->Init( settings->GetCachePath(), settings->GetCachePathMountPoint() ) == false )
+        const AString& cachePath = settings->GetCachePath();
+        if ( m_Cache->Init( cachePath, settings->GetCachePathMountPoint() ) == false )
         {
             m_Options.m_UseCacheRead = false;
             m_Options.m_UseCacheWrite = false;
             FDELETE m_Cache;
             m_Cache = nullptr;
+
+            if ( useCachePluginDLL )
+                FLOG_WARN( "Cache plugin init failed - Caching disabled (Path '%s')", cachePath.Get() );
+        }
+        else
+        {
+            AStackString<> cacheUseLogMessage;
+            if( m_Options.m_UseCacheRead )
+                cacheUseLogMessage += "Read";
+            if ( m_Options.m_UseCacheWrite )
+                cacheUseLogMessage += "Write";
+            if ( m_Options.m_CacheInfo )
+                cacheUseLogMessage += "Info";
+            if ( m_Options.m_CacheTrim )
+                cacheUseLogMessage += "Trim";
+            OUTPUT( "Cache mode %s, path '%s'\n", cacheUseLogMessage.Get(), cachePath.Get() );
         }
     }
 
