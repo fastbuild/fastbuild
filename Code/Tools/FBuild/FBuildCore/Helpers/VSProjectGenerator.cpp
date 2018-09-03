@@ -531,10 +531,18 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
     // Find common sub-path
     const char * pathA = projectFolderPath.Get();
     const char * pathB = cleanFileName.Get();
-    while ( ( *pathA == *pathB ) && ( *pathA != '\0' ) )
+    const char * itA = pathA;
+    const char * itB = pathB;
+    while ( ( *itA == *itB ) && ( *itA != '\0' ) )
     {
-        pathA++;
-        pathB++;
+        const bool dirToken = ( ( *itA == '/' ) || ( *itA == '\\' ) );
+        itA++;
+        itB++;
+        if ( dirToken )
+        {
+            pathA = itA;
+            pathB = itB;
+        }
     }
     const bool hasCommonSubPath = ( pathA != projectFolderPath.Get() );
     if ( hasCommonSubPath == false )

@@ -36,6 +36,7 @@ private:
     void VCXProj_PerConfigOverrides() const;
     void VCXProj_HandleDuplicateFiles() const;
     void VCXProj_Folders() const;
+    void VCXProj_ProjectRelativePaths() const;
 
     // XCode
     void XCode() const;
@@ -59,6 +60,7 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( VCXProj_PerConfigOverrides )
     REGISTER_TEST( VCXProj_HandleDuplicateFiles )
     REGISTER_TEST( VCXProj_Folders )
+    REGISTER_TEST( VCXProj_ProjectRelativePaths )
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
 REGISTER_TESTS_END
@@ -675,6 +677,76 @@ void TestProjectGeneration::VCXProj_Folders() const
 
         // Ensure test has accounted for all paths
         TEST_ASSERT( filter.Find( "Filter Include=" ) == nullptr );
+    }
+}
+
+// VCXProj_ProjectRelativePaths
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
+{
+    // Overlapping input and output directories, with common substring in dir names
+    #if defined( __WINDOWS__ )
+        AStackString<> basePath       ( "C:\\MyProject\\ProjectSourceFiles\\" );
+        AStackString<> fileA          ( "C:\\MyProject\\ProjectSourceFiles\\File.cpp" );
+        AStackString<> fileB          ( "C:\\MyProject\\ProjectSourceFiles\\SubDir\\File.cpp" );
+        AStackString<> projectFileName( "C:\\MyProject\\Projects\\MyProject.vcxproj" );
+        //                                              ^     ^
+        //                                              \-----\-- NOTE partial overlap within dir name
+    #else
+        AStackString<> basePath       ( "/MyProject/ProjectSourceFiles/" );
+        AStackString<> fileA          ( "/MyProject/ProjectSourceFiles/File.cpp" );
+        AStackString<> fileB          ( "/MyProject/ProjectSourceFiles/SubDir/File.cpp" );
+        AStackString<> projectFileName( "/MyProject/Projects/MyProject.vcxproj" );
+        //                                          ^     ^
+        //                                          \-----\-- NOTE partial overlap within dir name
+    #endif
+
+    FBuild fb; // For CleanPath
+
+    VSProjectGenerator pg;
+
+    // Project name
+    AStackString<> name( "Project" );
+    AStackString<> guid;
+    VSProjectGenerator::FormatDeterministicProjectGUID( guid, name );
+    pg.SetProjectGuid( guid );
+
+    // Base dir
+    Array< AString > basePaths( 3, false );
+    basePaths.Append( basePath );
+    pg.SetBasePaths( basePaths );
+
+    // Platforms
+    Array< VSProjectConfig > configs;
+    VSProjectConfig cfg;
+    cfg.m_Platform = "Win32";
+    cfg.m_Config = "Debug";
+    configs.Append( cfg );
+
+    // Files
+    pg.AddFile( fileA );
+    pg.AddFile( fileB );
+
+    // Check vcxproj
+    {
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >() ) );
+        TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\File.cpp\" />", "" ) == 1 );
+        TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\SubDir\\File.cpp\" />", "" ) == 1 );
+        TEST_ASSERT( proj.FindI( "<CustomBuild " ) == nullptr );
+    }
+
+    // Check vcxproj.filters
+    {
+        AStackString<> filter( pg.GenerateVCXProjFilters( projectFileName ) );
+
+        // Should have an entry for each file
+        TEST_ASSERT( filter.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\File.cpp\">", "" ) == 1 );
+        TEST_ASSERT( filter.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\SubDir\\File.cpp\">", "" ) == 1 );
+        TEST_ASSERT( filter.FindI( "<CustomBuild " ) == nullptr );
+
+        // Ensure test has accounted for all paths - there should be no folders
+        TEST_ASSERT( filter.Replace( "<Filter Include=\"SubDir\">", "" ) == 1 );
+        TEST_ASSERT( filter.Find( "<Filter Include=" ) == nullptr );
     }
 }
 
