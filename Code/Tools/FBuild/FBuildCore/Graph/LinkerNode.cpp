@@ -246,6 +246,15 @@ LinkerNode::~LinkerNode() = default;
                     continue; // try again
                 }
 
+                // Did the linker encounter "fatal error LNK1136: invalid or corrupt file"?
+                // The MSVC toolchain (as of VS2017) seems to occasionally end up with a
+                // corrupt PDB file.
+                if ( result == 1136 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker corrupted the PDB (LNK1136), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
+
                 // Did the linker have an "unexpected PDB error" (LNK1318)?
                 // Example: "fatal error LNK1318: Unexpected PDB error; CORRUPT (13)"
                 // (The linker or mspdbsrv.exe (as of VS2017) seems to have bugs which cause the PDB
