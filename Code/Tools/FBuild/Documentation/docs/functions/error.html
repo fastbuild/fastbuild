@@ -34,16 +34,16 @@ Emits a custom error and halts BFF parsing.
   The following sample BFF:
   </p>
   <div class='code'>.RequiredFASTBuildVersion = 97
-If( ._FASTBUILD_VERSION_ == .RequiredFASTBuildVersion )
+If( ._FASTBUILD_VERSION_ < .RequiredFASTBuildVersion )
 {
-    Error( 'FASTBuild v0.97 is required (found $_FASTBUILD_VERSION_STRING_$)' );
+    Error( 'FASTBuild v0.97 or later is required (found $_FASTBUILD_VERSION_STRING_$)' );
 }</div>
 </p>
   <p>
   Will generate the following output if the version is as expected:
   </p>
-  <div class='output'>C:\Test\fbuild.bff(5,5): FASTBuild Error #1999 - Error() - User Error: FASTBuild v0.97 is required (found v0.96)
-    Error( 'FASTBuild v0.97 is required (found $_FASTBUILD_VERSION_STRING_$)' );
+  <div class='output'>C:\Test\fbuild.bff(5,5): FASTBuild Error #1999 - Error() - User Error: FASTBuild v0.97 or later is required (found v0.96)
+    Error( 'FASTBuild v0.97 or later is required (found $_FASTBUILD_VERSION_STRING_$)' );
     ^
     \--here</div>
 </div>
