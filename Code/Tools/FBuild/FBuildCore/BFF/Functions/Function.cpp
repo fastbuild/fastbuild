@@ -12,6 +12,7 @@
 #include "FunctionCopyDir.h"
 #include "FunctionCSAssembly.h"
 #include "FunctionDLL.h"
+#include "FunctionError.h"
 #include "FunctionExec.h"
 #include "FunctionExecutable.h"
 #include "FunctionForEach.h"
@@ -116,6 +117,7 @@ Function::~Function() = default;
     FNEW( FunctionCopyDir );
     FNEW( FunctionCSAssembly );
     FNEW( FunctionDLL );
+    FNEW( FunctionError );
     FNEW( FunctionExec );
     FNEW( FunctionExecutable );
     FNEW( FunctionForEach );

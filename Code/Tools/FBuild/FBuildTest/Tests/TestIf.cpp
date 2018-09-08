@@ -29,6 +29,7 @@ private:
     void IfSetFunctionFalse() const;
     void IfNotSetFunctionFalse() const;
     void IfFunctionBool() const;
+    void IfFunctionInt() const;
     void IfFunctionStringCompare() const;
     void UsageError_ExtraTokensAfterExpression() const;
     void UsageError_UnsupportedTypeForIn() const;
@@ -48,6 +49,7 @@ REGISTER_TESTS_BEGIN( TestIf )
     REGISTER_TEST( IfSetFunctionFalse )
     REGISTER_TEST( IfNotSetFunctionFalse )
     REGISTER_TEST( IfFunctionBool )
+    REGISTER_TEST( IfFunctionInt )
     REGISTER_TEST( IfFunctionStringCompare )
     REGISTER_TEST( UsageError_ExtraTokensAfterExpression )
     REGISTER_TEST( UsageError_UnsupportedTypeForIn )
@@ -122,6 +124,15 @@ void TestIf::IfNotSetFunctionFalse() const
 void TestIf::IfFunctionBool() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_boolean.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
+// IfFunctionInt
+//------------------------------------------------------------------------------
+void TestIf::IfFunctionInt() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_int.bff" );
     TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
     TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }

@@ -23,3 +23,23 @@ If (.String != .OtherStringB)
 {
     Print( "Success" )
 }
+
+// String compare
+.StringA = 'AAA'
+.StringB = 'BBB'
+If (.StringA > .StringB)
+{
+    Print( "Failure" )
+}
+If (.StringA >= .StringB)
+{
+    Print( "Failure" )
+}
+If (.StringB < .StringA)
+{
+    Print( "Failure" )
+}
+If (.StringB <= .StringA)
+{
+    Print( "Failure" )
+}
