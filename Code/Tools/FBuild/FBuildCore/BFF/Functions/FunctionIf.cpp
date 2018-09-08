@@ -62,9 +62,9 @@ FunctionIf::FunctionIf()
     }
 
     // Get first variable
-    const BFFIterator testVarNameBegin( pos );
-    const BFFVariable * testVar = GetVar( pos );
-    if ( testVar == nullptr )
+    const BFFIterator lhsVarNameBegin( pos );
+    const BFFVariable * lhsVar = GetVar( pos );
+    if ( lhsVar == nullptr )
     {
         return false; // GetVar will have emitted error
     }
@@ -72,7 +72,7 @@ FunctionIf::FunctionIf()
     // at end?
     if ( pos.GetCurrent() == functionHeaderStopToken->GetCurrent() )
     {
-        return HandleSimpleBooleanExpression( nodeGraph, functionBodyStartToken, functionBodyStopToken, testVarNameBegin, testVar, negated );
+        return HandleSimpleBooleanExpression( nodeGraph, functionBodyStartToken, functionBodyStopToken, lhsVarNameBegin, lhsVar, negated );
     }
 
     // check for optional "not" token
@@ -110,38 +110,45 @@ FunctionIf::FunctionIf()
         }
     }
 
-    const BFFIterator listVarNameBegin = pos;
-    const BFFVariable * listVar = GetVar( pos );
-    if ( listVar == nullptr )
+    const BFFIterator rhsVarNameBegin = pos;
+    const BFFVariable * rhsVar = GetVar( pos );
+    if ( rhsVar == nullptr )
     {
         return false; // GetVar will have emitted an error
     }
 
-    if ( foundEquals || foundNotEquals )
+    // Make sure there are no extraneous tokens
+    if ( pos.GetCurrent() != functionHeaderStopToken->GetCurrent() )
     {
-        return HandleSimpleCompare( nodeGraph, functionBodyStartToken, functionBodyStopToken, testVarNameBegin, testVar, listVarNameBegin, listVar, foundNotEquals );
-    }
-
-    // it can be of any supported type
-    if ( listVar->IsArrayOfStrings() == false )
-    {
-        Error::Error_1050_PropertyMustBeOfType( listVarNameBegin, this, listVar->GetName().Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
+        Error::Error_1002_MatchingClosingTokenNotFound(pos, this, ')');
         return false;
     }
 
-    const Array< AString > & listArray = listVar->GetArrayOfStrings();
+    if ( foundEquals || foundNotEquals )
+    {
+        return HandleSimpleCompare( nodeGraph, functionBodyStartToken, functionBodyStopToken, lhsVarNameBegin, lhsVar, rhsVarNameBegin, rhsVar, foundNotEquals );
+    }
+
+    // it can be of any supported type
+    if ( rhsVar->IsArrayOfStrings() == false )
+    {
+        Error::Error_1050_PropertyMustBeOfType( rhsVarNameBegin, this, rhsVar->GetName().Get(), rhsVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
+        return false;
+    }
+
+    const Array< AString > & listArray = rhsVar->GetArrayOfStrings();
 
     // now iterate over the first set of strings to see if any match the second set of strings
 
-    if ( testVar->IsString() )
+    if ( lhsVar->IsString() )
     {
         // Is string in array?
-        conditionSuccess = ( listArray.Find( testVar->GetString() ) != nullptr );
+        conditionSuccess = ( listArray.Find( lhsVar->GetString() ) != nullptr );
     }
-    else if ( testVar->IsArrayOfStrings() )
+    else if ( lhsVar->IsArrayOfStrings() )
     {
         // Is any string in array?
-        for ( const AString & testStr : testVar->GetArrayOfStrings() )
+        for ( const AString & testStr : lhsVar->GetArrayOfStrings() )
         {
             if ( listArray.Find( testStr ) )
             {
@@ -152,7 +159,7 @@ FunctionIf::FunctionIf()
     }
     else
     {
-        Error::Error_1050_PropertyMustBeOfType( testVarNameBegin, this, listVar->GetName().Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
+        Error::Error_1050_PropertyMustBeOfType( lhsVarNameBegin, this, lhsVar->GetName().Get(), lhsVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
         return false;
     }
 
