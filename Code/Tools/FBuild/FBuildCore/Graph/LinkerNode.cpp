@@ -463,6 +463,13 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
                 AStackString<> cleanValue;
                 NodeGraph::CleanPath( value, cleanValue, false );
 
+                // Remove trailing backslashes as they escape quotes
+                // causing a variety of confusing link errors
+                while ( cleanValue.EndsWith( '\\' ) )
+                {
+                    cleanValue.Trim( 0, 1 );
+                }
+
                 fullArgs += token[0]; // reuse whichever prefix, / or -
                 fullArgs += "LIBPATH:\"";
                 fullArgs += cleanValue;
