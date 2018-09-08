@@ -13,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
+#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 
 // Core
 #include "Core/Containers/AutoPtr.h"
@@ -2049,14 +2050,37 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 //------------------------------------------------------------------------------
 void BFFParser::CreateBuiltInVariables( BFFStackFrame & stackFrame )
 {
+    // Handle special case in tests
+    if ( FBuild::IsValid() == false )
+    {
+        return;
+    }
+
+    // TODO:B Add a mechanism to mark these variables as read-only
+
     // _WORKING_DIR_
-    if ( FBuild::IsValid() ) // Handle special case in tests
     {
         AStackString<> varName( "._WORKING_DIR_" );
         ASSERT( BFFStackFrame::GetVarAny( varName ) == nullptr );
         BFFStackFrame::SetVarString( varName, FBuild::Get().GetWorkingDir(), &stackFrame );
+    }
+
+    // _FASTBUILD_VERSION_STRING_
+    {
+        AStackString<> varName( "._FASTBUILD_VERSION_STRING_" );
+        ASSERT( BFFStackFrame::GetVarAny( varName ) == nullptr );
+        BFFStackFrame::SetVarString( varName, AStackString<>(FBUILD_VERSION_STRING), &stackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
+
+    // _FASTBUILD_VERSION_NUMBER_
+    {
+        AStackString<> varName( "._FASTBUILD_VERSION_" );
+        ASSERT( BFFStackFrame::GetVarAny( varName ) == nullptr );
+        BFFStackFrame::SetVarInt( varName, (int32_t)FBUILD_VERSION, &stackFrame );
+        // TODO:B Add a mechanism to mark variable as read-only
+    }
+    
 }
 
 //------------------------------------------------------------------------------
