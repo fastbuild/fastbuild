@@ -262,14 +262,14 @@ bool BFFParser::Parse( BFFIterator & iter )
 
         // store variable name
         name.Assign( varNameStart.GetCurrent(), varNameEnd.GetCurrent() );
-    }
 
-    ASSERT( name.GetLength() > 0 );
-    if ( parentScope )
-    {
-        // exchange '^' with '.'
-        ASSERT( BFF_DECLARE_VAR_PARENT == name[0] );
-        name[0] = BFF_DECLARE_VAR_INTERNAL;
+        ASSERT( name.GetLength() > 0 );
+        if ( parentScope )
+        {
+            // exchange '^' with '.'
+            ASSERT( BFF_DECLARE_VAR_PARENT == name[0] );
+            name[0] = BFF_DECLARE_VAR_INTERNAL;
+        }
     }
 
     return true;
