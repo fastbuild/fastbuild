@@ -117,16 +117,16 @@ NO_INLINE void SmallBlockAllocator::InitBuckets()
 //------------------------------------------------------------------------------
 void * SmallBlockAllocator::Alloc( size_t size, size_t align )
 {
-    // Check we can support allocation of this size
-    if ( size > BUCKET_MAX_ALLOC_SIZE )
-    {
-        return nullptr; // Too big
-    }
-
     // Lazy initialization of buckets to support static allocations
     if ( s_BucketMemoryStart == MEM_BUCKETS_NOT_INITIALIZED )
     {
         InitBuckets();
+    }
+
+    // Check we can support allocation of this size
+    if ( size > BUCKET_MAX_ALLOC_SIZE )
+    {
+        return nullptr; // Too big
     }
 
     // Handle 0 byte allocations

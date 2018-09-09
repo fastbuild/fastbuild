@@ -98,26 +98,28 @@ Job * JobSubQueue::RemoveJob()
         return nullptr;
     }
 
-    ASSERT( m_Count );
-    --m_Count;
+    Job * retJob = m_Jobs.Top();
+    if ( retJob )
+    {
+        ASSERT( m_Count );
+        --m_Count;
 
-    Job * job = m_Jobs.Top();
-    m_Jobs.Pop();
-
-    return job;
+        m_Jobs.Pop();
+    }
+    return retJob;
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 JobQueue::JobQueue( uint32_t numWorkerThreads ) :
-    m_NumLocalJobsActive( 0 ),
-    m_DistributableJobs_Available( 1024, true ),
-    m_DistributableJobs_InProgress( 1024, true ),
-    m_CompletedJobs( 1024, true ),
-    m_CompletedJobsFailed( 1024, true ),
-    m_CompletedJobs2( 1024, true ),
-    m_CompletedJobsFailed2( 1024, true ),
-    m_Workers( numWorkerThreads, false )
+m_NumLocalJobsActive( 0 ),
+m_DistributableJobs_Available( 1024, true ),
+m_DistributableJobs_InProgress( 1024, true ),
+m_CompletedJobs( 1024, true ),
+m_CompletedJobsFailed( 1024, true ),
+m_CompletedJobs2( 1024, true ),
+m_CompletedJobsFailed2( 1024, true ),
+m_Workers( numWorkerThreads, false )
 {
     PROFILE_FUNCTION
 
@@ -440,7 +442,7 @@ void JobQueue::ReturnUnfinishedDistributableJob( Job * job )
 
 // FinalizeCompletedJobs (Main Thread)
 //------------------------------------------------------------------------------
-void JobQueue::FinalizeCompletedJobs( NodeGraph & nodeGraph )
+void JobQueue::FinalizeCompletedJobs( NodeGraph * nodeGraph )
 {
     PROFILE_FUNCTION
 
@@ -546,7 +548,10 @@ void JobQueue::MainThreadWait( uint32_t maxWaitMS )
 void JobQueue::WorkerThreadWait( uint32_t maxWaitMS )
 {
     ASSERT( Thread::IsMainThread() == false );
-    ASSERT( FBuild::Get().GetOptions().m_NumWorkerThreads > 0 );
+    if (FBuild::IsValid())
+    {
+        ASSERT( FBuild::Get().GetOptions().m_NumWorkerThreads > 0 );
+    }
     m_WorkerThreadSemaphore.Wait( maxWaitMS );
 }
 

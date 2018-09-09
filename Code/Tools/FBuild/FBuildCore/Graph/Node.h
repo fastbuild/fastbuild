@@ -207,7 +207,7 @@ protected:
     virtual bool DetermineNeedToBuild( bool forceClean ) const;
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
-    virtual bool Finalize( NodeGraph & nodeGraph );
+    virtual bool Finalize( NodeGraph * nodeGraph );
 
     inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
     inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }

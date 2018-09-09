@@ -92,7 +92,7 @@ private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
-    virtual bool Finalize( NodeGraph & nodeGraph ) override;
+    virtual bool Finalize( NodeGraph * nodeGraph ) override;
 
     BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
     BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
