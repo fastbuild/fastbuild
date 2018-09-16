@@ -289,6 +289,7 @@ Function::~Function() = default;
     AStackString<> nameFromMetaData;
     if ( GetNameForNode( nodeGraph, funcStartIter, node->GetReflectionInfoV(), nameFromMetaData ) == false )
     {
+        FDELETE node;
         return false; // GetNameForNode will have emitted an error
     }
     const bool aliasUsedForName = nameFromMetaData.IsEmpty();
@@ -299,6 +300,7 @@ Function::~Function() = default;
     if ( nodeGraph.FindNode( name ) )
     {
         Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
+        FDELETE node;
         return false;
     }
 
