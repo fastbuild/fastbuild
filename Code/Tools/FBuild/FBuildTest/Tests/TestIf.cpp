@@ -1,0 +1,190 @@
+// TestIf.cpp
+//------------------------------------------------------------------------------
+
+// Includes
+//------------------------------------------------------------------------------
+#include "Tools/FBuild/FBuildTest/Tests/FBuildTest.h"
+
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+
+#include "Core/Containers/AutoPtr.h"
+#include "Core/Env/Env.h"
+#include "Core/FileIO/FileStream.h"
+
+// TestIf
+//------------------------------------------------------------------------------
+class TestIf : public FBuildTest
+{
+private:
+    DECLARE_TESTS
+
+    void IfFunctionTrue() const;
+    void IfNotFunctionTrue() const;
+    void IfSetFunctionTrue() const;
+    void IfNotSetFunctionTrue() const;
+    void IfFunctionFalse() const;
+    void IfNotFunctionFalse() const;
+    void IfSetFunctionFalse() const;
+    void IfNotSetFunctionFalse() const;
+    void IfFunctionBool() const;
+    void IfFunctionInt() const;
+    void IfFunctionStringCompare() const;
+    void UsageError_ExtraTokensAfterExpression() const;
+    void UsageError_UnsupportedTypeForIn() const;
+
+    void Parse( const char * fileName, bool expectFailure = false ) const;
+};
+
+// Register Tests
+//------------------------------------------------------------------------------
+REGISTER_TESTS_BEGIN( TestIf )
+    REGISTER_TEST( IfFunctionTrue )
+    REGISTER_TEST( IfNotFunctionTrue )
+    REGISTER_TEST( IfSetFunctionTrue )
+    REGISTER_TEST( IfNotSetFunctionTrue )
+    REGISTER_TEST( IfFunctionFalse )
+    REGISTER_TEST( IfNotFunctionFalse )
+    REGISTER_TEST( IfSetFunctionFalse )
+    REGISTER_TEST( IfNotSetFunctionFalse )
+    REGISTER_TEST( IfFunctionBool )
+    REGISTER_TEST( IfFunctionInt )
+    REGISTER_TEST( IfFunctionStringCompare )
+    REGISTER_TEST( UsageError_ExtraTokensAfterExpression )
+    REGISTER_TEST( UsageError_UnsupportedTypeForIn )
+REGISTER_TESTS_END
+
+// IfFunctionTrue
+//------------------------------------------------------------------------------
+void TestIf::IfFunctionTrue() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_true.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
+// IfNotFunctionTrue
+//------------------------------------------------------------------------------
+void TestIf::IfNotFunctionTrue() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_true.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
+// IfSetFunctionTrue
+//------------------------------------------------------------------------------
+void TestIf::IfSetFunctionTrue() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_set_function_true.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
+// IfNotSetFunctionTrue
+//------------------------------------------------------------------------------
+void TestIf::IfNotSetFunctionTrue() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_not_set_function_true.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
+// IfFunctionFalse
+//------------------------------------------------------------------------------
+void TestIf::IfFunctionFalse() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_false.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+}
+
+// IfNotFunctionFalse
+//------------------------------------------------------------------------------
+void TestIf::IfNotFunctionFalse() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_false.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+}
+
+// IfSetFunctionFalse
+//------------------------------------------------------------------------------
+void TestIf::IfSetFunctionFalse() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_set_function_false.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+}
+
+// IfNotSetFunctionFalse
+//------------------------------------------------------------------------------
+void TestIf::IfNotSetFunctionFalse() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_not_set_function_false.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+}
+
+// IfFunctionBool
+//------------------------------------------------------------------------------
+void TestIf::IfFunctionBool() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_boolean.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
+// IfFunctionInt
+//------------------------------------------------------------------------------
+void TestIf::IfFunctionInt() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_int.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
+// IfFunctionStringCompare
+//------------------------------------------------------------------------------
+void TestIf::IfFunctionStringCompare() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/if_function_stringcompare.bff" );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
+    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
+}
+
+// UsageError_ExtraTokensAfterExpression
+//------------------------------------------------------------------------------
+void TestIf::UsageError_ExtraTokensAfterExpression() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_extratokensafterexpression.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Matching closing token ) not found" ) );
+}
+
+// UsageError_UnsupportedTypeForIn
+//------------------------------------------------------------------------------
+void TestIf::UsageError_UnsupportedTypeForIn() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_unsupportedtypeforin.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Property '.Int' must be of type <ArrayOfStrings> or <String> (found <Int>" ) );
+}
+
+// Parse
+//------------------------------------------------------------------------------
+void TestIf::Parse( const char * fileName, bool expectFailure ) const
+{
+    FileStream f;
+    TEST_ASSERT( f.Open( fileName, FileStream::READ_ONLY ) );
+    uint32_t fileSize = (uint32_t)f.GetFileSize();
+    AutoPtr< char > mem( (char *)ALLOC( fileSize + 1 ) );
+    mem.Get()[ fileSize ] = '\000'; // parser requires sentinel
+    TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
+
+    FBuild fBuild;
+    NodeGraph ng;
+    BFFParser p( ng );
+    bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
+    if ( expectFailure )
+    {
+        TEST_ASSERT( parseResult == false ); // Make sure it failed as expected
+    }
+    else
+    {
+        TEST_ASSERT( parseResult == true );
+    }
+}
+
+//------------------------------------------------------------------------------

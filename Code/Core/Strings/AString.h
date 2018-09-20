@@ -79,6 +79,7 @@ public:
     inline bool EqualsI( const char * other ) const { return ( CompareI( other ) == 0 ); }
     inline bool EqualsI( const AString & other ) const { return ( CompareI( other ) == 0 ); }
     inline bool operator < ( const AString & other ) const { return ( Compare( other ) < 0 ); }
+    inline bool operator > ( const AString & other ) const { return ( Compare( other ) > 0 ); }
 
     inline bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
 

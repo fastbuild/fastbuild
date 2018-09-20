@@ -9,7 +9,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
-class DefaultDeletor;
 class Vec2;
 class Vec3;
 class Vec4;

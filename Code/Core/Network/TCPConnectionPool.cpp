@@ -863,7 +863,7 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
     // Spawn thread to handle socket
     Thread::ThreadHandle h = Thread::CreateThread( &ConnectionThreadWrapperFunction,
                                             "TCPConnection",
-                                            ( 32 * KILOBYTE ),
+                                            ( 64 * KILOBYTE ),
                                             ci ); // user data argument
     ASSERT( h != INVALID_THREAD_HANDLE );
     Thread::DetachThread( h );

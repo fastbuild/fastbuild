@@ -1,0 +1,34 @@
+
+//
+.IntA = 7
+.IntB = 100
+
+// Equality
+If (.IntA == .IntB)
+{
+    Print("Failure")
+}
+If (.IntA != .IntB)
+{
+    Print("Success")
+}
+
+// Less Than
+If (.IntB < .IntA)
+{
+    Print("Failure")
+}
+If (.IntB <= .IntA)
+{
+    Print("Failure")
+}
+
+// Greater Than
+If (.IntA > .IntB)
+{
+    Print("Failure")
+}
+If (.IntA >= .IntB)
+{
+    Print("Failure")
+}

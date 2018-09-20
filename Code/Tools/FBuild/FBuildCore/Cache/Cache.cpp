@@ -179,7 +179,11 @@ public:
     {
         // Determine age bucket
         const uint64_t age = currentTime - info.m_LastWriteTime;
-        const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
+        #if defined( __WINDOWS__ )
+            const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
+        #else
+            const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)1000000000 );
+        #endif
         uint32_t ageInDays = (uint32_t)( age / oneDay );
         if ( ageInDays >= 30 )
         {
