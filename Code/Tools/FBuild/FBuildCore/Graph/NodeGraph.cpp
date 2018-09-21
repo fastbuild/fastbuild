@@ -115,6 +115,7 @@ NodeGraph::~NodeGraph()
     switch ( res )
     {
         case LoadResult::MISSING_OR_INCOMPATIBLE:
+        case LoadResult::LOAD_ERROR:
         {
             // Create a fresh DB by parsing the BFF
             FDELETE( oldNG );
@@ -125,12 +126,6 @@ NodeGraph::~NodeGraph()
                 return nullptr; // ParseFromRoot will have emitted an error
             }
             return newNG;
-        }
-        case LoadResult::LOAD_ERROR:
-        {
-            // Corrupt DB or other fatal problem
-            FDELETE( oldNG );
-            return nullptr;
         }
         case LoadResult::OK_BFF_NEEDS_REPARSING:
         {
