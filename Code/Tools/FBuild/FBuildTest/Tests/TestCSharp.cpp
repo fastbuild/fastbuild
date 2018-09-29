@@ -21,10 +21,13 @@ private:
     // Tests
     void TestSingleFile() const;
     void TestSingleFile_NoRebuild() const;
+    void TestSingleFile_NoRebuild_BFFChange() const;
     void TestMultipleFiles() const;
     void TestMultipleFiles_NoRebuild() const;
+    void TestMultipleFiles_NoRebuild_BFFChange() const;
     void TestMultipleAssemblies() const;
     void TestMultipleAssemblies_NoRebuild() const;
+    void TestMultipleAssemblies_NoRebuild_BFFChange() const;
     void TestMixedAssemblyWithCPP() const;
 };
 
@@ -33,10 +36,13 @@ private:
 REGISTER_TESTS_BEGIN( TestCSharp )
     REGISTER_TEST( TestSingleFile )
     REGISTER_TEST( TestSingleFile_NoRebuild )
+    REGISTER_TEST( TestSingleFile_NoRebuild_BFFChange )
     REGISTER_TEST( TestMultipleFiles )
     REGISTER_TEST( TestMultipleFiles_NoRebuild )
+    REGISTER_TEST( TestMultipleFiles_NoRebuild_BFFChange )
     REGISTER_TEST( TestMultipleAssemblies )
     REGISTER_TEST( TestMultipleAssemblies_NoRebuild )
+    REGISTER_TEST( TestMultipleAssemblies_NoRebuild_BFFChange )
 //  REGISTER_TEST( TestMixedAssemblyWithCPP ) // TODO:A Enable
 REGISTER_TESTS_END
 
@@ -93,6 +99,31 @@ void TestCSharp::TestSingleFile_NoRebuild() const
     CheckStatsTotal( 4,     2 );
 }
 
+
+// TestSingleFile_NoRebuild_BFFChange
+//------------------------------------------------------------------------------
+void TestCSharp::TestSingleFile_NoRebuild_BFFChange() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest//Data/TestCSharp/csharp.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    options.m_ForceDBMigration_Debug = true;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpsingle.fdb" ) );
+
+    // Build it
+    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Single-Target" ) ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE); // Compiler rebuilds after migration
+    CheckStatsNode ( 1,     1,      Node::FILE_NODE );  // 1 cs file
+    CheckStatsNode ( 1,     0,      Node::CS_NODE );
+    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    CheckStatsTotal( 4,     3 );
+}
+
 // TestMultipleFiles
 //------------------------------------------------------------------------------
 void TestCSharp::TestMultipleFiles() const
@@ -145,6 +176,31 @@ void TestCSharp::TestMultipleFiles_NoRebuild() const
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsTotal( 7,     5 );
+}
+
+// TestMultipleFiles_NoRebuild_BFFChange
+//------------------------------------------------------------------------------
+void TestCSharp::TestMultipleFiles_NoRebuild_BFFChange() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    options.m_ForceDBMigration_Debug = true;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmulti.fdb" ) );
+
+    // Build it
+    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Multi-Target" ) ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
+    CheckStatsNode ( 1,     0,      Node::CS_NODE );
+    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
+    CheckStatsTotal( 7,     6 );
 }
 
 // TestMultipleAssemblies
@@ -204,6 +260,29 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild() const
     CheckStatsTotal( 8,     4 );
 }
 
+// TestMultipleAssemblies_NoRebuild_BFFChange
+//------------------------------------------------------------------------------
+void TestCSharp::TestMultipleAssemblies_NoRebuild_BFFChange() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCSharp/csharp.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    options.m_ForceDBMigration_Debug = true;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
+
+    // Build it
+    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyC" ) ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( 3,     3,      Node::FILE_NODE );  // 3x cs
+    CheckStatsNode ( 3,     0,      Node::CS_NODE );
+    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    CheckStatsTotal( 8,     5 );
+}
 
 // TestMixedAssemblyWithCPP
 //------------------------------------------------------------------------------

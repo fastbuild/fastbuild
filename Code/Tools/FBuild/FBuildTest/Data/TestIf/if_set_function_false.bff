@@ -1,0 +1,7 @@
+.DE = {'d', 'e'}
+.ABC = {'a', 'b', 'c'}
+
+If(.DE in .ABC)
+{
+    Print("Failure")
+}

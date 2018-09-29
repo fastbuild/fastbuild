@@ -85,7 +85,7 @@ WorkerWindow::~WorkerWindow()
 void WorkerWindow::SetStatus( const char * statusText )
 {
     AStackString< 512 > text;
-    text.Format( "FBuildWorker %s (%s) | \"%s\" | %s", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM, m_HostName.Get(), statusText );
+    text.Format( "FBuildWorker %s | \"%s\" | %s", FBUILD_VERSION_STRING, m_HostName.Get(), statusText );
     SetTitle( text.Get() );
 }
 
@@ -119,7 +119,9 @@ void WorkerWindow::UIUpdateThread()
         Init( x, y, w, h );
 
         // Create the tray icon
-        m_TrayIcon = FNEW( OSTrayIcon( this ) );
+        AStackString<> toolTip;
+        toolTip.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
+        m_TrayIcon = FNEW( OSTrayIcon( this, toolTip ) );
 
         // init windows common controls
         INITCOMMONCONTROLSEX icex; // Structure for control initialization.
@@ -206,9 +208,9 @@ void WorkerWindow::UIUpdateThread()
         }
         else
         {
-            ShowWindow( (HWND)GetHandle(), SW_SHOW );
+            ShowWindow( (HWND)GetHandle(), SW_SHOWNOACTIVATE );
             UpdateWindow( (HWND)GetHandle() );
-            ShowWindow( (HWND)GetHandle(), SW_SHOW ); // First call can be ignored
+            ShowWindow( (HWND)GetHandle(), SW_SHOWNOACTIVATE ); // First call can be ignored
         }
 
         SetStatus( "Idle" );

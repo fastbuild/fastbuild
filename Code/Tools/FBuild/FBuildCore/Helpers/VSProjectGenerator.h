@@ -12,6 +12,15 @@
 class VSProjectConfig;
 class VSProjectFileType;
 
+// VSProjectFilePair
+//------------------------------------------------------------------------------
+class VSProjectFilePair
+{
+public:
+    AString m_ProjectRelativePath;  // Paths to files are project-relatice
+    AString m_AbsolutePath;         // Folder structure is relative to BasePaths which can be outside of the project folder
+};
+
 // VSProjectGenerator
 //------------------------------------------------------------------------------
 class VSProjectGenerator
@@ -68,7 +77,7 @@ private:
 
     // intermediate data
     bool m_FilePathsCanonicalized;
-    Array< AString > m_Files;
+    Array< VSProjectFilePair > m_Files;
 
     // working buffer
     AString m_Tmp;

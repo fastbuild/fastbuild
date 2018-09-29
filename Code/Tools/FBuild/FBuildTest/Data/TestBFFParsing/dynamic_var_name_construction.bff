@@ -12,9 +12,29 @@
 
 // Assignment LHS
 {
-    .Var1       = 'Value'
+    .Var1       = 'OldValue'
     .Var2       = 'Var1'
     .'$Var2$'   = 'Value'
+    Print( .Var1 ) // Should print "Value"
+}
+
+// Assignment RHS from parent scope
+{
+    .Var1         = 'Value'
+    .Var2         = 'Var1'
+    {
+        .Var3     = ^'$Var2$'
+        Print( .Var3 ) // Should print "Value"
+    }
+}
+
+// Assignment LHS to parent scope
+{
+    .Var1         = 'OldValue'
+    .Var2         = 'Var1'
+    {
+        ^'$Var2$' = 'Value'
+    }
     Print( .Var1 ) // Should print "Value"
 }
 

@@ -129,7 +129,7 @@ bool ToolManifest::Generate( const AString& mainExecutableRoot, const Dependenci
 
         // file name & sub-path (relative to remote folder)
         AStackString<> relativePath;
-        GetRemoteFilePath( (uint32_t)i, relativePath, false ); // false = don't use full path
+        GetRelativePath( m_MainExecutableRootPath, f.m_Name, relativePath );
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
@@ -220,7 +220,7 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         GetRemoteFilePath( (uint32_t)i, localFile );
 
         // is this file already present?
-        AutoPtr< FileStream > fileStream( FNEW( FileStream ) );
+        AutoPtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
         FileStream & f = *( fileStream.Get() );
         if ( f.Open( localFile.Get() ) == false )
         {
@@ -448,7 +448,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
     #endif
 
     // open read-only
-    AutoPtr< FileStream > fileStream( FNEW( FileStream ) );
+    AutoPtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
     if ( fileStream.Get()->Open( fileName.Get(), FileStream::READ_ONLY ) == false )
     {
         return false; // FAILED
@@ -476,41 +476,33 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
 
 // GetRelativePath
 //------------------------------------------------------------------------------
-/*static*/ void ToolManifest::GetRelativePath( const AString & mainExe, const AString & otherFile, AString & otherFileRelativePath )
+/*static*/ void ToolManifest::GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath )
 {
-    // determine primary root
-    AStackString<> primaryPath( mainExe.Get(), mainExe.FindLast( NATIVE_SLASH ) + 1 ); // include backslash
-
-    if ( otherFile.BeginsWithI( primaryPath ) )
+    if ( otherFile.BeginsWithI( root ) )
     {
         // file is in sub dir on master machine, so store with same relative location
-        otherFileRelativePath += ( otherFile.Get() + primaryPath.GetLength() );
+        otherFileRelativePath = ( otherFile.Get() + root.GetLength() );
     }
     else
     {
         // file is in some completely other directory, so put in same place as exe
         const char * lastSlash = otherFile.FindLast( NATIVE_SLASH );
-        otherFileRelativePath += ( lastSlash ? lastSlash + 1 : otherFile.Get() );
+        otherFileRelativePath = ( lastSlash ? lastSlash + 1 : otherFile.Get() );
     }
 }
 
 // GetRemoteFilePath
 //------------------------------------------------------------------------------
-void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & exe, bool fullPath ) const
+void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) const
 {
-    // we'll store in the sub dir
-    if ( fullPath )
-    {
-        GetRemotePath( exe );
-    }
-    else
-    {
-        exe.Clear();
-    }
-
-    const ToolManifestFile & f = m_Files[ fileId ];
-
-    GetRelativePath( m_MainExecutableRootPath, f.m_Name, exe );
+    // Get base directory
+    GetRemotePath( remotePath );
+    ASSERT( remotePath.EndsWith( NATIVE_SLASH ) );
+    
+    // Get relative path for file and append
+    AStackString<> relativePath;
+    GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].m_Name, relativePath );
+    remotePath += relativePath;
 }
 
 // GetRemotePath

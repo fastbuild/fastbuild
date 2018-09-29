@@ -34,6 +34,7 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
+    REFLECT(        m_AllowDBMigration_Experimental, "AllowDBMigration_Experimental", MetaOptional() )
 REFLECT_END( SettingsNode )
 
 // CONSTRUCTOR
@@ -42,6 +43,7 @@ SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
 , m_WorkerConnectionLimit( 15 )
 , m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
+, m_AllowDBMigration_Experimental( false )
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );
