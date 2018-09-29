@@ -17,6 +17,7 @@
 class AString;
 class IMetaData;
 class Mat44;
+class MetaNone;
 class Object;
 class ReflectionInfo;
 class ReflectedProperty;
@@ -133,7 +134,9 @@ protected:
 
     void AddPropertyInternal( PropertyType type, uint32_t offset, const char * memberName, bool isArray );
 
+    void AddMetaData( MetaNone );
     void AddMetaData( IMetaData & metaDataChain );
+    void AddPropertyMetaData( MetaNone );
     void AddPropertyMetaData( IMetaData & metaDataChain );
 
     const ReflectedProperty * FindProperty( const char * name ) const;
