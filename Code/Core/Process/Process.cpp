@@ -18,7 +18,6 @@
 #include "Core/Tracing/Tracing.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
     #include <TlHelp32.h>
 #endif
 
@@ -72,55 +71,94 @@ Process::~Process()
     }
 }
 
+#if defined( __WINDOWS__ )
+// ConsiderPid
+//------------------------------------------------------------------------------
+bool Process::ConsiderPid( const uint32_t processID )
+{
+    return processID != 0 &&  // only follow valid processes
+           processID != GetCurrentProcessId();  // avoid killing ourself due to pid reuse
+}
+
+// GetProcessStartTime
+//------------------------------------------------------------------------------
+uint64_t Process::GetProcessStartTime( const HANDLE hProc )
+{
+    uint64_t startTime = 0;
+    if (hProc != NULL)
+    {
+        FILETIME lStartTime, lExitTime, lKernelTime, lUserTime;
+        BOOL lSuccess = GetProcessTimes(hProc, &lStartTime, &lExitTime, &lKernelTime, &lUserTime);
+        if (lSuccess)
+        {
+            startTime = ((uint64_t)lStartTime.dwHighDateTime << 32) + lStartTime.dwLowDateTime;
+            const uint64_t SECONDS_BETWEEN_1601_AND_1970 = 11644473600; 
+            startTime = (time_t)(((startTime) / 10000000) - SECONDS_BETWEEN_1601_AND_1970);
+        }
+    }
+    return startTime;
+}
+
 // KillProcessTreeInternal
 //------------------------------------------------------------------------------
-#if defined( __WINDOWS__ )
-   void Process::KillProcessTreeInternal( uint32_t processID )
-   {
-       PROCESSENTRY32 pe;
+void Process::KillProcessTreeInternal( const uint32_t processID, Array< uint32_t > & pidsSeen )
+{
+    // avoid cycles in process tree due to pid reuse
+    if (pidsSeen.Find(processID) == nullptr)
+    {
+        // append pid here so when we descend, it will be in pidsSeen
+        pidsSeen.Append(processID);
 
-       memset( &pe, 0, sizeof( PROCESSENTRY32) );
-       pe.dwSize = sizeof( PROCESSENTRY32 );
+        HANDLE hProc = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
+        if (hProc)
+        {
+            uint64_t processStartTime = GetProcessStartTime(hProc);
 
-       HANDLE hSnap = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, processID );
+            PROCESSENTRY32 pe;
 
-       if ( ::Process32First( hSnap, &pe ) )
-       {
-           BOOL canContinue = TRUE;
+            memset(&pe, 0, sizeof(PROCESSENTRY32));
+            pe.dwSize = sizeof(PROCESSENTRY32);
 
-           // kill child processes
-           while ( canContinue )
-           {
-               if ( pe.th32ParentProcessID == processID )
-               {
-                   // Recursion
-                   KillProcessTreeInternal( pe.th32ProcessID );
+            // loop through all processes
+            HANDLE hSnap = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
-                   HANDLE hChildProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, pe.th32ProcessID );
-
-                   if ( hChildProc )
-                   {
-                       ::TerminateProcess( hChildProc, 1 );
-                       ::CloseHandle( hChildProc );
-                   }
-               }
-               canContinue = ::Process32Next( hSnap, &pe );
-           }
-
-           // kill the main process
-           HANDLE hProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, processID );
-
-           if ( hProc )
-           {
-               ::TerminateProcess( hProc, 1 );
-               ::CloseHandle( hProc );
-           }
-       }
-       else
-       {
-           //OUTPUT( "Unable to kill process 0x%x. Last Error: %u", processID, GetLastError() );
-       }
-   }
+            if (::Process32First(hSnap, &pe))
+            {
+                BOOL canContinue = TRUE;
+                while (canContinue)
+                {
+                    // check if pe is one to consider
+                    // and is a child of this process
+                    if (ConsiderPid(pe.th32ProcessID) && pe.th32ParentProcessID == processID)
+                    {
+                        HANDLE hChildProc = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe.th32ProcessID);
+                        if (hChildProc)
+                        {
+                            uint64_t childStartTime = GetProcessStartTime(hChildProc);
+                            // compare start times, so we avoid killing child processes
+                            // of other processes, due to pid reuse
+                            // only kill processes that are children of this process
+                            if (childStartTime >= processStartTime)
+                            {
+                                // depth-first traversal (recursion), so we kill the
+                                // processes in bottom up order
+                                KillProcessTreeInternal(pe.th32ProcessID, pidsSeen);
+                                    
+                                // kill the child process
+                                ::TerminateProcess(hChildProc, 1);
+                            }
+                            ::CloseHandle(hChildProc);
+                        }
+                    }
+                    canContinue = ::Process32Next(hSnap, &pe);
+                }
+                // kill the process
+                ::TerminateProcess(hProc, 1);
+            }
+            ::CloseHandle(hProc);
+        }
+    }
+}
 #endif
 
 // KillProcessTree
@@ -128,7 +166,13 @@ Process::~Process()
 void Process::KillProcessTree()
 {
     #if defined( __WINDOWS__ )
-        KillProcessTreeInternal( GetProcessInfo().dwProcessId );
+        // check if pid is one to consider
+        const uint32_t pid = GetProcessInfo().dwProcessId;
+        if (ConsiderPid(pid))
+        {
+            Array< uint32_t > pidsSeen;
+            KillProcessTreeInternal(pid, pidsSeen);
+        }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         // TODO: Kill process tree if necessary?
         kill( m_ChildPID, SIGTERM );
