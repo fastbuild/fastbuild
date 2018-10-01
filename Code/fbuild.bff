@@ -256,6 +256,9 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                                 + ' -Wno-implicit-exception-spec-mismatch'
                             #endif
 
+                            // Disabled warnings
+                            + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
+
                             // Extra warnings
                             + ' -Wshadow'
 
