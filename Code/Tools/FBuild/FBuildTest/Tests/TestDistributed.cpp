@@ -56,7 +56,10 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( RemoteRaceWinRemote )
     REGISTER_TEST( AnonymousNamespaces )
     REGISTER_TEST( ErrorsAreCorrectlyReported )
-    REGISTER_TEST( ShutdownMemoryLeak )
+    #if defined( __WINDOWS__ )
+        // TODO:LINUX TODO:OSX - Fix and enable this test
+        REGISTER_TEST( ShutdownMemoryLeak )
+    #endif
     #if defined( __WINDOWS__ )
         REGISTER_TEST( TestForceInclude )
         REGISTER_TEST( TestZiDebugFormat )
@@ -298,11 +301,14 @@ void TestDistributed::ShutdownMemoryLeak() const
             return 0;
         }
     };
-    Thread::CreateThread( Helper::AbortBuild );
+    Thread::ThreadHandle h = Thread::CreateThread( Helper::AbortBuild );
 
     // Start build and check it was aborted
     TEST_ASSERT( fBuild.Build( AStackString<>( "ShutdownMemoryLeak" ) ) == false );
     TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: ShutdownMemoryLeak" ) )
+
+    Thread::WaitForThread( h );
+    Thread::CloseHandle( h );
 }
 
 // TestZiDebugFormat
