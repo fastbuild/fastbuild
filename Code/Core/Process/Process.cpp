@@ -18,6 +18,7 @@
 #include "Core/Tracing/Tracing.h"
 
 #if defined( __WINDOWS__ )
+    #include <windows.h>
     #include <TlHelp32.h>
 #endif
 
@@ -74,7 +75,7 @@ Process::~Process()
 // KillProcessTreeInternal
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void Process::KillProcessTreeInternal( const HANDLE hProc, const uint32_t processID, const uint64_t processCreationTime )
+    void Process::KillProcessTreeInternal( const void * hProc, const uint32_t processID, const uint64_t processCreationTime )
     {
         PROCESSENTRY32 pe;
 
@@ -102,6 +103,7 @@ Process::~Process()
                     const uint64_t childProcessCreationTime = GetProcessCreationTime( hChildProc );
                     if ( childProcessCreationTime < processCreationTime )
                     {
+                        ::CloseHandle( hChildProc );
                         continue; // Cannot be a child because it was created before the parent
                     }
 
@@ -120,14 +122,14 @@ Process::~Process()
         ::CloseHandle( hSnap );
 
         // kill this process on the way back up the recursion
-        ::TerminateProcess( hProc, 1 );
+        ::TerminateProcess( (HANDLE)hProc, 1 );
     }
 #endif
 
 // GetProcessStartTime
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    /*static*/ uint64_t Process::GetProcessCreationTime( const HANDLE hProc )
+    /*static*/ uint64_t Process::GetProcessCreationTime( const void * hProc )
     {
         if ( hProc == 0 )
         {
@@ -136,7 +138,7 @@ Process::~Process()
 
         // Get process start time
         FILETIME creationFileTime, unused;
-        VERIFY( GetProcessTimes( hProc, &creationFileTime, &unused, &unused, &unused ) );
+        VERIFY( GetProcessTimes( (HANDLE)hProc, &creationFileTime, &unused, &unused, &unused ) );
 
         // Return start time in a more convenient format
         const uint64_t childProcessCreationTime = ( (uint64_t)creationFileTime.dwHighDateTime << 32 ) | creationFileTime.dwLowDateTime;
