@@ -30,6 +30,7 @@ public:
 
     inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
     inline bool CanBeDistributed() const { return m_AllowDistribution; }
+    inline bool CanUseResponseFile() const { return m_AllowResponseFile; }
     #if defined( __WINDOWS__ )
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
     #endif
@@ -65,6 +66,7 @@ private:
     Array< AString >    m_CustomEnvironmentVariables;
 
     bool            m_AllowDistribution;
+    bool            m_AllowResponseFile;
     bool            m_VS2012EnumBugFix;
     bool            m_ClangRewriteIncludes;
     AString         m_ExecutableRootPath;

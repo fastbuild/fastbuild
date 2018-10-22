@@ -35,6 +35,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_Linker,                          "Linker",                       MetaFile() )
     REFLECT( m_LinkerOptions,                   "LinkerOptions",                MetaNone() )
     REFLECT( m_LinkerType,                      "LinkerType",                   MetaOptional() )
+    REFLECT( m_LinkerAllowResponseFile,         "LinkerAllowResponseFile",      MetaOptional() )
     REFLECT_ARRAY( m_Libraries,                 "Libraries",                    MetaFile() + MetaAllowNonFile() )
     REFLECT_ARRAY( m_LinkerAssemblyResources,   "LinkerAssemblyResources",      MetaOptional() + MetaFile() )
     REFLECT( m_LinkerLinkObjects,               "LinkerLinkObjects",            MetaOptional() )
@@ -54,6 +55,7 @@ REFLECT_END( LinkerNode )
 LinkerNode::LinkerNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_LinkerType( "auto" )
+    , m_LinkerAllowResponseFile( false )
 {
     m_LastBuildTimeMs = 20000; // Assume link times are fairly long by default
 }
@@ -906,11 +908,13 @@ void LinkerNode::EmitStampMessage() const
 //------------------------------------------------------------------------------
 bool LinkerNode::CanUseResponseFile() const
 {
+    bool canUseResponseFile = m_LinkerAllowResponseFile;
+    
     #if defined( __WINDOWS__ )
-        return ( GetFlag( LINK_FLAG_MSVC ) || GetFlag( LINK_FLAG_GCC ) || GetFlag( LINK_FLAG_SNC ) || GetFlag( LINK_FLAG_ORBIS_LD ) || GetFlag( LINK_FLAG_GREENHILLS_ELXR ) || GetFlag( LINK_FLAG_CODEWARRIOR_LD ) );
-    #else
-        return false;
+        canUseResponseFile = ( canUseResponseFile || GetFlag( LINK_FLAG_MSVC ) || GetFlag( LINK_FLAG_GCC ) || GetFlag( LINK_FLAG_SNC ) || GetFlag( LINK_FLAG_ORBIS_LD ) || GetFlag( LINK_FLAG_GREENHILLS_ELXR ) || GetFlag( LINK_FLAG_CODEWARRIOR_LD ) );
     #endif
+
+    return canUseResponseFile;
 }
 
 // GetImportLibName

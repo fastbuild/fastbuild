@@ -92,6 +92,7 @@ protected:
     Array< AString >    m_Libraries;
     Array< AString >    m_LinkerAssemblyResources;
     bool                m_LinkerLinkObjects             = false;
+    bool                m_LinkerAllowResponseFile;
     AString             m_LinkerStampExe;
     AString             m_LinkerStampExeArgs;
     Array< AString >    m_PreBuildDependencyNames;

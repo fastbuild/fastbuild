@@ -59,6 +59,7 @@ private:
     AString             m_LibrarianOptions;
     AString             m_LibrarianOutput;
     Array< AString >    m_LibrarianAdditionalInputs;
+    bool                m_LibrarianAllowResponseFile;
 
     // Internal State
     uint32_t            m_NumLibrarianAdditionalInputs  = 0;
