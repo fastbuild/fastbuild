@@ -49,7 +49,8 @@ public:
     static uint32_t GetCurrentId();
 private:
     #if defined( __WINDOWS__ )
-        void KillProcessTreeInternal( uint32_t processID );
+        void KillProcessTreeInternal( uint32_t processID, uint64_t processCreationTime );
+        static uint64_t GetProcessCreationTime( uint32_t processId );
         void Read( void * handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
         char * Read( void * handle, uint32_t * bytesRead );
         uint32_t Read( void * handle, char * outputBuffer, uint32_t outputBufferSize );

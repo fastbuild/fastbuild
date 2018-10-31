@@ -74,52 +74,75 @@ Process::~Process()
 // KillProcessTreeInternal
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-   void Process::KillProcessTreeInternal( uint32_t processID )
-   {
-       PROCESSENTRY32 pe;
+    void Process::KillProcessTreeInternal( uint32_t processID, uint64_t processCreationTime )
+    {
+        PROCESSENTRY32 pe;
 
-       memset( &pe, 0, sizeof( PROCESSENTRY32) );
-       pe.dwSize = sizeof( PROCESSENTRY32 );
+        memset( &pe, 0, sizeof( PROCESSENTRY32) );
+        pe.dwSize = sizeof( PROCESSENTRY32 );
 
-       HANDLE hSnap = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, processID );
+        HANDLE hSnap = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, processID );
 
-       if ( ::Process32First( hSnap, &pe ) )
-       {
-           BOOL canContinue = TRUE;
+        if ( ::Process32First( hSnap, &pe ) )
+        {
+            // find child processes
+            do
+            {
+                // Ignore any process that is not a child
+                if ( pe.th32ParentProcessID != processID )
+                {
+                    continue;
+                }
 
-           // kill child processes
-           while ( canContinue )
-           {
-               if ( pe.th32ParentProcessID == processID )
-               {
-                   // Recursion
-                   KillProcessTreeInternal( pe.th32ProcessID );
+                // Handle pid re-use by ensuring process started after parent
+                const uint32_t childProcessId = pe.th32ProcessID;
+                uint64_t childProcessCreationTime = GetProcessCreationTime( childProcessId );
+                if ( childProcessCreationTime < processCreationTime )
+                {
+                    continue; // Cannot be a child because it was created before the parent
+                }
 
-                   HANDLE hChildProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, pe.th32ProcessID );
+                // We should never see the main process because that's handled above
+                ASSERT( childProcessId != GetCurrentProcessId() );
 
-                   if ( hChildProc )
-                   {
-                       ::TerminateProcess( hChildProc, 1 );
-                       ::CloseHandle( hChildProc );
-                   }
-               }
-               canContinue = ::Process32Next( hSnap, &pe );
-           }
+                // Recursion
+                KillProcessTreeInternal( childProcessId, childProcessCreationTime );
+            }
+            while ( ::Process32Next( hSnap, &pe ) );
+        }
 
-           // kill the main process
-           HANDLE hProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, processID );
+        CloseHandle( hSnap );
 
-           if ( hProc )
-           {
-               ::TerminateProcess( hProc, 1 );
-               ::CloseHandle( hProc );
-           }
-       }
-       else
-       {
-           //OUTPUT( "Unable to kill process 0x%x. Last Error: %u", processID, GetLastError() );
-       }
-   }
+        // kill this process on the way back up the recursion
+        HANDLE hProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, processID );
+        if ( hProc )
+        {
+            ::TerminateProcess( hProc, 1 );
+            ::CloseHandle( hProc );
+        }
+    }
+#endif
+
+// GetProcessStartTime
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    /*static*/ uint64_t Process::GetProcessCreationTime( uint32_t processId )
+    {
+        HANDLE processHandle = ::OpenProcess( PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId );
+        if ( processHandle == nullptr )
+        {
+            return 0; // Likely due to lack of permissions
+        }
+
+        // Get process start time                                                                           : 
+        FILETIME creationFileTime, unused;
+        VERIFY( GetProcessTimes( processHandle, &creationFileTime, &unused, &unused, &unused ) );
+        ::CloseHandle( processHandle );
+
+        // Return start time in a more convenient format
+        const uint64_t childProcessCreationTime = ( (uint64_t)creationFileTime.dwHighDateTime << 32 ) | creationFileTime.dwLowDateTime;
+        return childProcessCreationTime;
+    }
 #endif
 
 // KillProcessTree
@@ -127,7 +150,7 @@ Process::~Process()
 void Process::KillProcessTree()
 {
     #if defined( __WINDOWS__ )
-        KillProcessTreeInternal( GetProcessInfo().dwProcessId );
+        KillProcessTreeInternal( GetProcessInfo().dwProcessId, GetProcessCreationTime( GetCurrentProcessId() ) );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         // TODO: Kill process tree if necessary?
         kill( m_ChildPID, SIGTERM );
