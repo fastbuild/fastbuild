@@ -193,11 +193,7 @@ bool Process::Spawn( const char * executable,
         sa.lpSecurityDescriptor = nullptr;
 
         m_SharingHandles = shareHandles;
-        
-        HANDLE stdOutWrite = INVALID_HANDLE_VALUE;
-        HANDLE stdErrWrite = INVALID_HANDLE_VALUE;
-        HANDLE stdInRead = INVALID_HANDLE_VALUE;
-        
+
         if ( m_RedirectHandles )
         {
             // create the pipes
@@ -209,31 +205,31 @@ bool Process::Spawn( const char * executable,
             }
             else
             {
-                if ( ! CreatePipe( &m_StdOutRead, &stdOutWrite, &sa, MEGABYTE ) )
-                {
-                    return false;
-                }
-                HANDLE tmp = INVALID_HANDLE_VALUE;
-                DuplicateHandle(GetCurrentProcess(),m_StdOutRead,GetCurrentProcess(),&tmp,0,FALSE,DUPLICATE_SAME_ACCESS);
-                CloseHandle(m_StdOutRead);
-                m_StdOutRead = tmp;
+                HANDLE stdOutWrite = INVALID_HANDLE_VALUE;
+                HANDLE stdErrWrite = INVALID_HANDLE_VALUE;
+                HANDLE stdInRead = INVALID_HANDLE_VALUE;
 
-                if ( ! CreatePipe( &m_StdErrRead, &stdErrWrite, &sa, MEGABYTE ) )
-                {
-                    VERIFY( CloseHandle( stdOutWrite ) );
-                    return false;
-                }
-                DuplicateHandle(GetCurrentProcess(),m_StdErrRead,GetCurrentProcess(),&tmp,0,FALSE,DUPLICATE_SAME_ACCESS);
-                CloseHandle(m_StdErrRead);
-                m_StdErrRead = tmp;
+                bool ok = true;
+                ok = ok && CreatePipe( &m_StdOutRead, &stdOutWrite, &sa, MEGABYTE );
+                ok = ok && CreatePipe( &m_StdErrRead, &stdErrWrite, &sa, MEGABYTE );
+                ok = ok && CreatePipe( &stdInRead, &m_StdInWrite, &sa, MEGABYTE );
 
-                if ( ! CreatePipe( &stdInRead, &m_StdInWrite, &sa, MEGABYTE ) )
+                // Handle failure
+                if ( !ok )
                 {
+                    if ( m_StdOutRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdOutRead ); }
+                    if ( m_StdErrRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdErrRead ); }
+                    if ( m_StdInWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdInWrite ); }
+                    if ( stdOutWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( stdOutWrite ); }
+                    if ( stdErrWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( stdErrWrite ); }
+                    if ( stdInRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( stdInRead ); }
                     return false;
                 }
-                DuplicateHandle(GetCurrentProcess(),m_StdInWrite,GetCurrentProcess(),&tmp,0,FALSE,DUPLICATE_SAME_ACCESS);
-                CloseHandle(m_StdInWrite);
-                m_StdInWrite = tmp;
+
+                // Prevent child inheriting handles, to avoid deadlocks
+                VERIFY( SetHandleInformation( m_StdOutRead, HANDLE_FLAG_INHERIT, 0 ) );
+                VERIFY( SetHandleInformation( m_StdErrRead , HANDLE_FLAG_INHERIT, 0 ) );
+                VERIFY( SetHandleInformation( m_StdInWrite, HANDLE_FLAG_INHERIT, 0 ) );
 
                 si.hStdOutput = stdOutWrite;
                 si.hStdError = stdErrWrite;
@@ -273,12 +269,12 @@ bool Process::Spawn( const char * executable,
 
         if ( m_RedirectHandles && !shareHandles )
         {
-            // free up handles so we don't hang on ReadFile after child process exits
-            CloseHandle(stdOutWrite);
-            CloseHandle(stdErrWrite);
-            CloseHandle(stdInRead);
+            // Close the "other" end of the pipes to avoid deadlocks
+            ::CloseHandle( si.hStdOutput );
+            ::CloseHandle( si.hStdError );
+            ::CloseHandle( si.hStdInput );
         }
-        
+
         m_Started = true;
         return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
@@ -478,8 +474,11 @@ int Process::WaitForExit()
         }
 
         // cleanup
-        VERIFY( CloseHandle( GetProcessInfo().hProcess ) );
-        VERIFY( CloseHandle( GetProcessInfo().hThread ) );
+        VERIFY( ::CloseHandle( m_StdOutRead ) );
+        VERIFY( ::CloseHandle( m_StdErrRead ) );
+        VERIFY( ::CloseHandle( m_StdInWrite ) ); 
+        VERIFY( ::CloseHandle( GetProcessInfo().hProcess ) );
+        VERIFY( ::CloseHandle( GetProcessInfo().hThread ) );
 
         return exitCode;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
@@ -535,8 +534,11 @@ void Process::Detach()
 
     #if defined( __WINDOWS__ )
         // cleanup
-        VERIFY( CloseHandle( GetProcessInfo().hProcess ) );
-        VERIFY( CloseHandle( GetProcessInfo().hThread ) );
+        VERIFY( ::CloseHandle( m_StdOutRead ) );
+        VERIFY( ::CloseHandle( m_StdErrRead ) );
+        VERIFY( ::CloseHandle( m_StdInWrite ) ); 
+        VERIFY( ::CloseHandle( GetProcessInfo().hProcess ) );
+        VERIFY( ::CloseHandle( GetProcessInfo().hThread ) );
     #elif defined( __APPLE__ )
         // TODO:MAC Implement Process
     #elif defined( __LINUX__ )
