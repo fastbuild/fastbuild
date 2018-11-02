@@ -228,7 +228,7 @@ bool Process::Spawn( const char * executable,
 
                 // Prevent child inheriting handles, to avoid deadlocks
                 VERIFY( SetHandleInformation( m_StdOutRead, HANDLE_FLAG_INHERIT, 0 ) );
-                VERIFY( SetHandleInformation( m_StdErrRead , HANDLE_FLAG_INHERIT, 0 ) );
+                VERIFY( SetHandleInformation( m_StdErrRead, HANDLE_FLAG_INHERIT, 0 ) );
                 VERIFY( SetHandleInformation( m_StdInWrite, HANDLE_FLAG_INHERIT, 0 ) );
 
                 si.hStdOutput = stdOutWrite;
