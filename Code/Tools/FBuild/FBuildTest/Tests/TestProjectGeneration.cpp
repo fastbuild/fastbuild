@@ -346,6 +346,7 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
     // Check
     bool definesOk = false;
     bool includesOk = false;
+    bool additionalOptionsOk = false;
     for ( const AString & token : tokens )
     {
         if ( token.Find( "NMakePreprocessorDefinitions" ) )
@@ -372,11 +373,18 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( token.Find( "Intellisense\\Include\\Quoted\\Slash\\Space\\Path" ) );
             includesOk = true;
         }
+        else if ( token.Find( "AdditionalOptions" ) )
+        {
+            TEST_ASSERT( token.Find( "-std:c++17" ) );
+            TEST_ASSERT( token.Find( "/std:c++14" ) );
+            TEST_ASSERT( token.Find( "/std:latest" ) );
+            additionalOptionsOk = true;
+        }
     }
     TEST_ASSERT( definesOk );
     TEST_ASSERT( includesOk );
+    TEST_ASSERT( additionalOptionsOk );
 }
-
 
 // XCodeProj_CodeSense_Check
 //------------------------------------------------------------------------------

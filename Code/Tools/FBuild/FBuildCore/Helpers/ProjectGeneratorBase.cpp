@@ -343,7 +343,8 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
                                                                   const char * option,
                                                                   const char * alternateOption,
                                                                   Array< AString > & outOptions,
-                                                                  bool escapeQuotes )
+                                                                  bool escapeQuotes,
+                                                                  bool keepFullOption )
 {
     ASSERT( option );
     Array< AString > tokens;
@@ -378,13 +379,27 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
         }
         else if ( token.BeginsWith( option ) )
         {
-            // use everything after token
-            optionBody.Assign( token.Get() + optionLen );
+            if ( keepFullOption )
+            {
+                optionBody = token;
+            }
+            else
+            {
+                // use everything after token
+                optionBody.Assign( token.Get() + optionLen );
+            }
         }
         else if ( alternateOption && token.BeginsWith( alternateOption ) )
         {
-            // use everything after token
-            optionBody.Assign( token.Get() + alternateOptionLen );
+            if ( keepFullOption )
+            {
+                optionBody = token;
+            }
+            else
+            {
+                // use everything after token
+                optionBody.Assign( token.Get() + alternateOptionLen );
+            }
         }
 
         // Strip quotes around body (e.g. -I"Folder/Folder")

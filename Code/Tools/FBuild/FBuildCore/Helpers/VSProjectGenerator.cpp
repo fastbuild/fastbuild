@@ -279,7 +279,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > defines;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, false );
+                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, false, false );
                     AStackString<> definesStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, nullptr, ";" );
                     WritePGItem( "NMakePreprocessorDefinitions", definesStr );
@@ -294,7 +294,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > includePaths;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false );
+                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false, false );
                     for ( AString & include : includePaths )
                     {
                         GetProjectRelativePath( projectBasePath, include, include );
@@ -310,7 +310,21 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "NMakeForcedIncludes",             cIt->m_ForcedIncludes );
             WritePGItem( "NMakeAssemblySearchPath",         cIt->m_AssemblySearchPath );
             WritePGItem( "NMakeForcedUsingAssemblies",      cIt->m_ForcedUsingAssemblies );
-            WritePGItem( "AdditionalOptions",               cIt->m_AdditionalOptions );
+            if ( cIt->m_AdditionalOptions.IsEmpty() == false )
+            {
+                WritePGItem( "AdditionalOptions",               cIt->m_AdditionalOptions );
+            }
+            else
+            {
+                if ( oln )
+                {
+                    Array< AString > additionalOptions;
+                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "-std", "/std", additionalOptions, false, true );
+                    AStackString<> additionalOptionsStr;
+                    ProjectGeneratorBase::ConcatIntellisenseOptions( additionalOptions, additionalOptionsStr, nullptr, " " );
+                    WritePGItem( "AdditionalOptions", additionalOptionsStr );
+                }
+            }
             WritePGItem( "Xbox360DebuggerCommand",          cIt->m_Xbox360DebuggerCommand );
             WritePGItem( "DebuggerFlavor",                  cIt->m_DebuggerFlavor );
             WritePGItem( "AumidOverride",                   cIt->m_AumidOverride );

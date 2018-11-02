@@ -38,7 +38,8 @@ public:
                                             const char * option,
                                             const char * alternateOption,
                                             Array< AString > & outOptions,
-                                            bool escapeQuotes );
+                                            bool escapeQuotes,
+                                            bool keepFullOption );
     static void ConcatIntellisenseOptions( const Array< AString > & tokens,
                                            AString & outTokenString,
                                            const char* preToken,
