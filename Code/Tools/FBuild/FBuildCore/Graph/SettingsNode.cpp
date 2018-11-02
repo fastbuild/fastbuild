@@ -83,11 +83,11 @@ SettingsNode::~SettingsNode() = default;
 //------------------------------------------------------------------------------
 const AString & SettingsNode::GetCachePath() const
 {
-	// Settings() bff option overrides environment variable
-	if ( m_CachePath.IsEmpty() == false )
-	{
-		return m_CachePath;
-	}
+    // Settings() bff option overrides environment variable
+    if ( m_CachePath.IsEmpty() == false )
+    {
+        return m_CachePath;
+    }
     return m_CachePathFromEnvVar;
 }
 
