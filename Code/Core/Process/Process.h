@@ -82,9 +82,8 @@ private:
 
     #if defined( __WINDOWS__ )
         void * m_StdOutRead;    // HANDLE
-        void * m_StdOutWrite;   // HANDLE
         void * m_StdErrRead;    // HANDLE
-        void * m_StdErrWrite;   // HANDLE
+        void * m_StdInWrite;   // HANDLE
     #endif
 
     #if defined( __LINUX__ ) || defined( __APPLE__ )
