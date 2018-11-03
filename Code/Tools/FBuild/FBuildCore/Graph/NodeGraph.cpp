@@ -2117,7 +2117,7 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
 // DoDependenciesMatch
 //------------------------------------------------------------------------------
 bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependencies & depsB )
-{    
+{
     if ( depsA.GetSize() != depsB.GetSize() )
     {
         return false;

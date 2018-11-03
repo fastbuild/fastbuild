@@ -588,13 +588,13 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
     cfg.m_Config = "Debug";
     configs.Append( cfg );
 
-    // Files 
+    // Files
     pg.AddFile( AStackString<>( "File.cpp" ) );
     pg.AddFile( AStackString<>( "file.cpp" ) );                 // Duplicate with case difference
     pg.AddFile( AStackString<>( "File.cpp" ) );                 // Exact duplicate
     pg.AddFile( AStackString<>( "../Code/File.cpp" ) );         // Duplicate with path difference
     pg.AddFile( AStackString<>( "../Dir/../Code/File.cpp" ) );  // Duplicate with path difference
-    
+
     AStackString<> projectFileName( "dummy.vcxproj" );
 
     // Check vcxproj

@@ -55,7 +55,7 @@ FunctionError::FunctionError()
     // Start parsing function header
     BFFIterator pos( *functionHeaderStartToken );
     ASSERT( *pos == BFFParser::BFF_FUNCTION_ARGS_OPEN );
-    pos++; // Skip opening 
+    pos++; // Skip opening
     pos.SkipWhiteSpace();
 
     // We expect a quoted string

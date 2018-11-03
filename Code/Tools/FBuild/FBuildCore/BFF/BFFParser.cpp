@@ -2080,7 +2080,7 @@ void BFFParser::CreateBuiltInVariables( BFFStackFrame & stackFrame )
         BFFStackFrame::SetVarInt( varName, (int32_t)FBUILD_VERSION, &stackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
-    
+
 }
 
 //------------------------------------------------------------------------------

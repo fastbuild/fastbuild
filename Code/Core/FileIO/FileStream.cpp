@@ -123,9 +123,9 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
         break;
     }
 #elif defined ( __APPLE__ ) || defined( __LINUX__ )
-    // Flags 
+    // Flags
     int32_t flags = O_CLOEXEC; // Ensure handles are not inherited by child processes
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // TODO:LINUX TODO:MAC Check these permissions 
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // TODO:LINUX TODO:MAC Check these permissions
     if ( ( fileMode & READ_ONLY ) != 0 )
     {
         flags |= O_RDONLY;

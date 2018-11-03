@@ -66,7 +66,7 @@ void VSProjectGenerator::AddFile( const AString & file )
     AStackString<> fileCopy( file );
     fileCopy.Replace( FORWARD_SLASH, BACK_SLASH );
     m_Files.SetSize( m_Files.GetSize() + 1 );
-    m_Files.Top().m_AbsolutePath = fileCopy; 
+    m_Files.Top().m_AbsolutePath = fileCopy;
 }
 
 // AddFiles
@@ -610,7 +610,7 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
             basePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
         }
     #endif
-    
+
     // Files
     if ( m_Files.IsEmpty() == false )
     {
@@ -650,7 +650,7 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         // we keep the sorted list in order to have more consistent behaviour
         uniqueFiles.Swap( m_Files );
     }
-   
+
     m_FilePathsCanonicalized = true;
 }
 

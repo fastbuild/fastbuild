@@ -482,7 +482,7 @@ int Process::WaitForExit()
         // cleanup
         VERIFY( ::CloseHandle( m_StdOutRead ) );
         VERIFY( ::CloseHandle( m_StdErrRead ) );
-        VERIFY( ::CloseHandle( m_StdInWrite ) ); 
+        VERIFY( ::CloseHandle( m_StdInWrite ) );
         VERIFY( ::CloseHandle( GetProcessInfo().hProcess ) );
         VERIFY( ::CloseHandle( GetProcessInfo().hThread ) );
 
@@ -542,7 +542,7 @@ void Process::Detach()
         // cleanup
         VERIFY( ::CloseHandle( m_StdOutRead ) );
         VERIFY( ::CloseHandle( m_StdErrRead ) );
-        VERIFY( ::CloseHandle( m_StdInWrite ) ); 
+        VERIFY( ::CloseHandle( m_StdInWrite ) );
         VERIFY( ::CloseHandle( GetProcessInfo().hProcess ) );
         VERIFY( ::CloseHandle( GetProcessInfo().hThread ) );
     #elif defined( __APPLE__ )
