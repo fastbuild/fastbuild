@@ -39,6 +39,10 @@ private:
     void VCXProj_ProjectRelativePaths() const;
     void VCXProj_ProjectRelativePaths2() const;
 
+    // Solution
+    void Solution_Empty() const;
+    void Solution_ProjectRelativePaths() const;
+
     // XCode
     void XCode() const;
 
@@ -63,6 +67,8 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( VCXProj_Folders )
     REGISTER_TEST( VCXProj_ProjectRelativePaths )
     REGISTER_TEST( VCXProj_ProjectRelativePaths2 )
+    REGISTER_TEST( Solution_Empty )
+    REGISTER_TEST( Solution_ProjectRelativePaths )
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
 REGISTER_TESTS_END
@@ -859,6 +865,75 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
         TEST_ASSERT( filter.Replace( "<Filter Include=\"Generated\\SubDir\">", "" ) == 1 );
         TEST_ASSERT( filter.Find( "<Filter Include=" ) == nullptr );
     }
+}
+
+// Solution_Empty
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_Empty() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_Empty/empty.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Empty/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( AStackString<>( "EmptySolution" ) ) );
+
+    // 
+    EnsureFileExists( solution );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::SLN_NODE );
+    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    CheckStatsTotal( 2,     2 );
+}
+
+// Solution_ProjectRelativePaths
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_ProjectRelativePaths() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_SolutionRelativePaths/SubDir2/solution.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_SolutionRelativePaths/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+
+    // 
+    EnsureFileExists( solution );
+
+    // Read the project into memory
+    FileStream f;
+    VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
+    AStackString<> solutionData;
+    solutionData.SetLength( (uint32_t)f.GetFileSize() );
+    VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
+
+    // Ensure the path to the project is relative and not absolute
+    TEST_ASSERT( solutionData.Find( "\"proj1\", \"..\\SubDir1\\proj1.vcxproj\"," ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::VCXPROJECT_NODE );
+    CheckStatsNode ( 1,     1,      Node::SLN_NODE );
+    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    CheckStatsTotal( 3,     3 );
 }
 
 // XCode

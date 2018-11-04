@@ -297,7 +297,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                     ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false, false );
                     for ( AString & include : includePaths )
                     {
-                        GetProjectRelativePath( projectBasePath, include, include );
+                        ProjectGeneratorBase::GetRelativePath( projectBasePath, include, include );
                         #if !defined( __WINDOWS__ )
                             include.Replace( '/', '\\' ); // Convert to Windows-style slashes
                         #endif
@@ -531,69 +531,6 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
     folder.Clear();
 }
 
-// GetProjectRelativePath
-//------------------------------------------------------------------------------
-/*static*/ void VSProjectGenerator::GetProjectRelativePath( const AString & projectFolderPath,
-                                                            const AString & fileName,
-                                                            AString & outRelativeFileName )
-{
-    AStackString<> cleanFileName;
-    #if !defined( __WINDOWS__ )
-        // Normally we keep all paths with native slashes, but in this case we
-        // have windows slashes, so convert to native for the relative check
-        AStackString<> pathCopy( fileName );
-        pathCopy.Replace( '\\', '/' );
-        NodeGraph::CleanPath( pathCopy, cleanFileName );
-    #else
-        NodeGraph::CleanPath( fileName, cleanFileName );
-    #endif
-
-    // Find common sub-path
-    const char * pathA = projectFolderPath.Get();
-    const char * pathB = cleanFileName.Get();
-    const char * itA = pathA;
-    const char * itB = pathB;
-    while ( ( *itA == *itB ) && ( *itA != '\0' ) )
-    {
-        const bool dirToken = ( ( *itA == '/' ) || ( *itA == '\\' ) );
-        itA++;
-        itB++;
-        if ( dirToken )
-        {
-            pathA = itA;
-            pathB = itB;
-        }
-    }
-    const bool hasCommonSubPath = ( pathA != projectFolderPath.Get() );
-    if ( hasCommonSubPath == false )
-    {
-        // No common sub-path, so use relative name
-        outRelativeFileName = cleanFileName;
-        return;
-    }
-
-    // Build relative path
-
-    // For every remaining dir in the project path, go up one directory
-    outRelativeFileName.Clear();
-    for (;;)
-    {
-        const char c = *pathA;
-        if ( c == 0 )
-        {
-            break;
-        }
-        if ( ( c == '/' ) || ( c == '\\' ) )
-        {
-            outRelativeFileName += "..\\";
-        }
-        ++pathA;
-    }
-
-    // Add remainder of source path relative to the common sub path
-    outRelativeFileName += pathB;
-}
-
 // CanonicalizeFilePaths
 //------------------------------------------------------------------------------
 void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath )
@@ -618,7 +555,7 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         Array< const VSProjectFilePair * > filePointers( m_Files.GetSize(), false );
         for ( VSProjectFilePair & filePathPair : m_Files )
         {
-            GetProjectRelativePath( projectBasePath, filePathPair.m_AbsolutePath, filePathPair.m_ProjectRelativePath );
+            ProjectGeneratorBase::GetRelativePath( projectBasePath, filePathPair.m_AbsolutePath, filePathPair.m_ProjectRelativePath );
             #if !defined( __WINDOWS__ )
                 filePathPair.m_ProjectRelativePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
             #endif

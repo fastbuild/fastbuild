@@ -45,12 +45,16 @@ public:
                                            const char* preToken,
                                            const char* postToken );
 
+    // Helpers
+    static void GetRelativePath( const AString & projectFolderPath,
+                                 const AString & fileName,
+                                 AString & outRelativeFileName );
 protected:
     // Helper to format some text
     void Write( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // Internal helpers
-    void        GetProjectRelativePath( const AString & fileName, AString & shortFileName ) const;
+    void        GetProjectRelativePath_Deprecated( const AString & fileName, AString & shortFileName ) const;
     uint32_t    GetFolderIndexFor( const AString & path );
 
     struct Folder

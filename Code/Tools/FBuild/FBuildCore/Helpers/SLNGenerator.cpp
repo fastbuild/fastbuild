@@ -9,6 +9,7 @@
 
 #include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
@@ -130,7 +131,8 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
                                     lastPeriod ? lastPeriod     : projectPath.GetEnd() );
 
         // make project path relative
-        projectPath.Replace( solutionBasePath.Get(), "" );
+		AStackString<> solutionRelativePath; 
+		ProjectGeneratorBase::GetRelativePath( solutionBasePath, projectPath, solutionRelativePath );
 
         // retrieve projectGuid
         AStackString<> projectGuid( (*it)->GetProjectGuid() );
@@ -144,7 +146,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
         }
 
         Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\r\n",
-               projectName.Get(), projectPath.Get(), projectGuid.Get() );
+               projectName.Get(), solutionRelativePath.Get(), projectGuid.Get() );
 
         // Manage dependencies
         Array< AString > dependencyGUIDs( 64, true );
