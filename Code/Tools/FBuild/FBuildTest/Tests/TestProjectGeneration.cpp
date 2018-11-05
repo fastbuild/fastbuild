@@ -41,7 +41,10 @@ private:
 
     // Solution
     void Solution_Empty() const;
-    void Solution_ProjectRelativePaths() const;
+    void Solution_SolutionRelativePaths() const;
+    void Solution_BuildAndDeploy_None() const;
+    void Solution_BuildAndDeploy_Project() const;
+    void Solution_BuildAndDeploy_PerSolutionConfig() const;
 
     // XCode
     void XCode() const;
@@ -68,7 +71,10 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( VCXProj_ProjectRelativePaths )
     REGISTER_TEST( VCXProj_ProjectRelativePaths2 )
     REGISTER_TEST( Solution_Empty )
-    REGISTER_TEST( Solution_ProjectRelativePaths )
+    REGISTER_TEST( Solution_SolutionRelativePaths )
+    REGISTER_TEST( Solution_BuildAndDeploy_None )
+    REGISTER_TEST( Solution_BuildAndDeploy_Project )
+    REGISTER_TEST( Solution_BuildAndDeploy_PerSolutionConfig )
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
 REGISTER_TESTS_END
@@ -896,9 +902,9 @@ void TestProjectGeneration::Solution_Empty() const
     CheckStatsTotal( 2,     2 );
 }
 
-// Solution_ProjectRelativePaths
+// Solution_SolutionRelativePaths
 //------------------------------------------------------------------------------
-void TestProjectGeneration::Solution_ProjectRelativePaths() const
+void TestProjectGeneration::Solution_SolutionRelativePaths() const
 {
     AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_SolutionRelativePaths/SubDir2/solution.sln" );
 
@@ -934,6 +940,126 @@ void TestProjectGeneration::Solution_ProjectRelativePaths() const
     CheckStatsNode ( 1,     1,      Node::SLN_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsTotal( 3,     3 );
+}
+
+// Solution_BuildAndDeploy_None
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_BuildAndDeploy_None() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_None/solution.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_BuildAndDeploy_None/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+
+    // 
+    EnsureFileExists( solution );
+
+    // Read the project into memory
+    FileStream f;
+    VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
+    AStackString<> solutionData;
+    solutionData.SetLength( (uint32_t)f.GetFileSize() );
+    VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
+
+    // Ensure no projects is set to Build or Deploy
+    TEST_ASSERT( solutionData.Find( ".Build" ) == nullptr );
+    TEST_ASSERT( solutionData.Find( ".Deploy" ) == nullptr );
+}
+
+// Solution_BuildAndDeploy_Project
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_BuildAndDeploy_Project() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_Project/solution.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_BuildAndDeploy_Project/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+
+    // 
+    EnsureFileExists( solution );
+
+    // Read the project into memory
+    FileStream f;
+    VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
+    AStackString<> solutionData;
+    solutionData.SetLength( (uint32_t)f.GetFileSize() );
+    VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
+
+    // Ensure one project is set to Build, for all 4 configs
+    TEST_ASSERT( solutionData.Replace( "Debug|x64.Build.0 = Debug|x64", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Debug|x86.Build.0 = Debug|Win32", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Release|x64.Build.0 = Release|x64", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Release|x86.Build.0 = Release|Win32", "" ) == 1 );
+
+    // Ensure one project is set to Deploy, for all 4 configs
+    TEST_ASSERT( solutionData.Replace( "Debug|x64.Deploy.0 = Debug|x64", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Debug|x86.Deploy.0 = Debug|Win32", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Release|x64.Deploy.0 = Release|x64", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Release|x86.Deploy.0 = Release|Win32", "" ) == 1 );
+
+    // Ensure no other unexpected Build/Deploy settings are written
+    TEST_ASSERT( solutionData.Find( ".Build." ) == nullptr );
+    TEST_ASSERT( solutionData.Find( ".Deploy." ) == nullptr );
+}
+
+// Solution_BuildAndDeploy_PerSolutionConfig
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_PerSolutionConfig/solution.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_BuildAndDeploy_PerSolutionConfig/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+
+    // 
+    EnsureFileExists( solution );
+
+    // Read the project into memory
+    FileStream f;
+    VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
+    AStackString<> solutionData;
+    solutionData.SetLength( (uint32_t)f.GetFileSize() );
+    VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
+
+    // Ensure one project is set to Build, only for one config
+    TEST_ASSERT( solutionData.Replace( "Debug|x86.Build.0 = Debug|Win32", "" ) == 1 );
+
+    // Ensure one project is set to Deploy, only for one config
+    TEST_ASSERT( solutionData.Replace( "Release|x64.Deploy.0 = Release|x64", "" ) == 1 );
+
+    // Ensure no other unexpected Build/Deploy settings are written
+    TEST_ASSERT( solutionData.Find( ".Build." ) == nullptr );
+    TEST_ASSERT( solutionData.Find( ".Deploy." ) == nullptr );
 }
 
 // XCode
