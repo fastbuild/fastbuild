@@ -162,15 +162,15 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         return false;
     }
 
-    const SettingsNode * settings = m_DependencyGraph->GetSettings();
+    SettingsNode * settings = m_DependencyGraph->GetSettings();
 
     if ( m_Options.m_OverrideLocalWorkerTags )
     {
         // merge, so that user can define most tags in settings and override only a few in options
-        m_Settings->ApplyLocalWorkerTags( m_Options.m_LocalWorkerTags );
+        settings->ApplyLocalWorkerTags( m_Options.m_LocalWorkerTags );
     }
     // overwrite options tags with the computed settings tags
-    m_Options.m_LocalWorkerTags = m_Settings->GetLocalWorkerTags();
+    m_Options.m_LocalWorkerTags = settings->GetLocalWorkerTags();
 
     // remote workers store their tag keys and values
     // as dir names on the shared network drive, so
@@ -208,9 +208,9 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     if ( m_Options.m_AllowDistributed )
     {
         m_Client = FNEW( Client(
-            m_Settings->GetWorkerList(), m_Options.m_DistributionPort, 
-            m_Settings->GetWorkerListRefreshLimitSec(), m_Settings->GetWorkerConnectionRetryLimitSec(),
-            m_Settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
+            settings->GetWorkerList(), m_Options.m_DistributionPort, 
+            settings->GetWorkerListRefreshLimitSec(), settings->GetWorkerConnectionRetryLimitSec(),
+            settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
     }
 
     return true;

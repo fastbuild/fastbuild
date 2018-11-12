@@ -172,7 +172,7 @@ void FBuildWorkerOptions::ShowUsageError()
                        "\n"
                        "-Ttag : Set a worker tag.\n"
                        "                You may specify one or more -Ttag entries.\n"
-                       "                Example : -TTopDownMemory -TOS=Win-7-64\n"
+                       "                Example : -TTopDownMemory -TTestHarness=TH1\n"
                        "\n"
                        #if defined( __WINDOWS__ )
                        "-nosubprocess : Don't spawn a sub-process worker copy.\n";

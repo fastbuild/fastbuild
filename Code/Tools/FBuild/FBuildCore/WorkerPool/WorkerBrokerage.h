@@ -27,9 +27,7 @@ public:
         const Array< AString > & excludedWorkers,
         Array< Array< AString > > & workers );
 
-    const AString & GetBrokerageRoot() const { return m_BrokerageRoot; }
-
-        // server interface
+    // server interface
     void SetAvailable( const Tags & workerTags );
     void SetUnavailable();
 private:

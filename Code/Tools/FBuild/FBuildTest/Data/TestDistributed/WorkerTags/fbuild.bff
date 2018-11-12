@@ -17,7 +17,7 @@ Settings
 // Tags and os values
 //------------------------------------------------------------------------------
 #if __WINDOWS__
-.OSTag = 'OS=Win-*-*'
+.OSTag = 'OS=Windows-*-*'
 .ExeExtension = '.exe'
 #endif
 

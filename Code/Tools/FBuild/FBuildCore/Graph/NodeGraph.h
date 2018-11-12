@@ -97,7 +97,7 @@ public:
     Node * FindNodeExact( const AString & nodeName ) const;
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
-    const SettingsNode * GetSettings() const { return m_Settings; }
+    SettingsNode * GetSettings() const { return m_Settings; }
 
     void RegisterNode( Node * n );
 
@@ -204,7 +204,7 @@ private:
     };
     Array< UsedFile > m_UsedFiles;
 
-    const SettingsNode * m_Settings;
+    SettingsNode * m_Settings;
 
     static uint32_t s_BuildPassTag;
 };

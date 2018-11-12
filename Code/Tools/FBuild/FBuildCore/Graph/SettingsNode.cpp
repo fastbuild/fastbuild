@@ -121,6 +121,7 @@ const Tags & SettingsNode::GetLocalWorkerTags() const
         // always set valid, even if empty container
         m_BaseLocalWorkerTags.SetValid( true );
         m_LocalWorkerTags = m_BaseLocalWorkerTags;
+        Node::AddAutomaticTags( m_LocalWorkerTags );
     }
     return m_LocalWorkerTags;
 }
@@ -135,6 +136,7 @@ void SettingsNode::ApplyLocalWorkerTags( const Tags & localWorkerTags )
     Tags removedTags;  // pass empty container, since only adding
     m_BaseLocalWorkerTags.ApplyChanges( removedTags, localWorkerTags );
     m_LocalWorkerTags = m_BaseLocalWorkerTags;
+    Node::AddAutomaticTags( m_LocalWorkerTags );
 
     // update m_LocalWorkerTagStrings to match base changes
     m_BaseLocalWorkerTags.ToStringArray( m_BaseLocalWorkerTagStrings );

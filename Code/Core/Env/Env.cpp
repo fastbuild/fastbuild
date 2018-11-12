@@ -34,6 +34,91 @@
     };
 #endif
 
+// GetPlatformBitness
+//------------------------------------------------------------------------------
+/*static*/ uint32_t Env::GetPlatformBitness()
+{
+    #if defined( __WINDOWS__ )
+        SYSTEM_INFO systemInfo;
+        ::GetNativeSystemInfo( &systemInfo );
+
+        if ( systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL )
+        {
+            return 32;
+        }
+        else
+        {
+            return 64;
+        }
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        // assume 64-bit
+        return 64;
+    #else
+        #error Unknown platform
+    #endif
+}
+
+// GetPlatformVersion
+//------------------------------------------------------------------------------
+/*static*/ void Env::GetPlatformVersion( AString & versionString )
+{
+    #if defined( __WINDOWS__ )
+        typedef LONG NTSTATUS;
+        #define STATUS_SUCCESS (0x00000000)
+
+        typedef NTSTATUS (WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
+
+        HMODULE hMod = ::GetModuleHandleW( L"ntdll.dll" );
+        if ( hMod )
+        {
+            RtlGetVersionPtr fxPtr = (RtlGetVersionPtr)::GetProcAddress( hMod, "RtlGetVersion" );
+            if ( fxPtr != nullptr )
+            {
+                RTL_OSVERSIONINFOW rovi;
+                ::RtlZeroMemory(&rovi, sizeof(RTL_OSVERSIONINFOW));
+                rovi.dwOSVersionInfoSize = sizeof( rovi );
+                if ( STATUS_SUCCESS == fxPtr(&rovi) )
+                {
+                    uint32_t versionNumber = 0;
+                    if (rovi.dwMajorVersion == 6 && rovi.dwMinorVersion == 1 )
+                    {
+                        // Windows 7
+                        versionNumber = 7;
+                    }
+                    else if (rovi.dwMajorVersion == 6 && rovi.dwMinorVersion > 1 )
+                    {
+                        // Windows 8
+                        versionNumber = 8;
+                    }
+                    else
+                    {
+                        versionNumber = rovi.dwMajorVersion;
+                    }
+
+                    const uint32_t BUFFER_SIZE( 4 );
+                    char versionBuffer[ BUFFER_SIZE ];
+                    sprintf_s( versionBuffer, BUFFER_SIZE, "%u", versionNumber );
+                    versionString = versionBuffer;
+                }
+            }
+        }
+    #elif defined( __LINUX__ )
+        // @TODO get the distribution name and version?
+        // for now, return the default "desktop" value below
+    #elif defined( __APPLE__ )
+        // @TODO get mac version
+        // for now, assume 10
+        versionString = "10";
+    #else
+        #error Unknown platform
+    #endif
+
+    if ( versionString.IsEmpty() )
+    {
+        versionString = "desktop";
+    }
+}
+
 // GetNumProcessors
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Env::GetNumProcessors()

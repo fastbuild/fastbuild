@@ -137,6 +137,8 @@ public:
     virtual void UpdateWorkerRecord( const AString & workerName, const bool canBuildOnWorker ) const;
     virtual void RemoveWorkerRecord( const AString & workerName ) const;
 
+    static void AddAutomaticTags( Tags & tags );
+
     inline State GetState() const { return m_State; }
 
     inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }

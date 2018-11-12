@@ -510,7 +510,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -summary       Show a summary at the end of the build.\n"
             " -Ttag          Set a local worker tag.\n"
             "                You may specify one or more -Ttag entries.\n"
-            "                Example : -TTopDownMemory -TOS=Win-7-64\n"
+            "                Example : -TTopDownMemory -TTestHarness=TH1\n"
             " -verbose       Show detailed diagnostic information. This will slow\n"
             "                down building.\n"
             " -version       Print version and exit. No other work will be\n"

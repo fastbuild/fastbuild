@@ -459,13 +459,6 @@ void TestDistributed::_WorkerTags( const bool remote, const bool clean )
     tagStrings.Append( AStackString<>( "CompileHarness=CH1" ) );
     tagStrings.Append( AStackString<>( "InstalledTesterA" ) );
     tagStrings.Append( AStackString<>( "TestHarness=TH1" ) );
-#if defined( __WINDOWS__ )
-    tagStrings.Append( AStackString<>( "OS=Win-7-64" ) );  // only used to match against Win-*-* in .bff file
-#elif defined ( __APPLE__ )
-    tagStrings.Append( AStackString<>( "OS=Mac-OSX-64" ) );  // only used to match against Mac-*-* in .bff file
-#elif defined ( __LINUX__ )
-    tagStrings.Append( AStackString<>( "OS=Linux-OpenSUSE42-64" ) );  // only used to match against Linux-*-* in .bff file
-#endif
     workerTags.ParseAndAddTags( tagStrings );
     workerTags.SetValid( true );
     helperOptions.m_ClientOptions.m_OverrideLocalWorkerTags = true;

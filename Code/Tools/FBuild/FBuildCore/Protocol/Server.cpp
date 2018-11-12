@@ -32,6 +32,7 @@ Server::Server( const Options & serverOptions )
     , m_ClientList( 32, true )
 {
     m_WorkerTags = serverOptions.m_WorkerTags;
+    Node::AddAutomaticTags( m_WorkerTags );
 
     m_JobQueueRemote = FNEW( JobQueueRemote(
         serverOptions.m_NumThreadsInJobQueue ? serverOptions.m_NumThreadsInJobQueue : Env::GetNumProcessors() ) );

@@ -42,6 +42,7 @@
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -316,6 +317,41 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 /*virtual*/ void Node::RemoveWorkerRecord( const AString & workerName ) const
 {
     m_WorkerRecords.Remove( workerName );
+}
+
+// AddAutomaticTags
+//------------------------------------------------------------------------------
+/*static*/ void Node::AddAutomaticTags( Tags & tags )
+{
+    AStackString<> osKey( "OS" );
+    AStackString<> osValueSep( "-" );
+
+    AStackString<> osVersion;
+    Env::GetPlatformVersion( osVersion );
+
+    const uint32_t BUFFER_SIZE( 4 );
+    char bitnessBuffer[ BUFFER_SIZE ];
+    #if defined( __APPLE__ ) || defined( __LINUX__ )
+        sprintf( bitnessBuffer,
+    #else
+        sprintf_s( bitnessBuffer, BUFFER_SIZE,
+    #endif
+            "%u", Env::GetPlatformBitness() );
+
+    AStackString<> osValue( Env::GetPlatformName() );
+    osValue += osValueSep;
+    osValue += osVersion;
+    osValue += osValueSep;
+    osValue += bitnessBuffer;
+
+    Tags addedTags;
+    Tag osTag;
+    osTag.SetKey( osKey );
+    osTag.SetValue( osValue );
+    addedTags.Append( osTag );
+
+    Tags removedTags;  // pass empty container, since only adding
+    tags.ApplyChanges( removedTags, addedTags );
 }
 
 // DoBuild
