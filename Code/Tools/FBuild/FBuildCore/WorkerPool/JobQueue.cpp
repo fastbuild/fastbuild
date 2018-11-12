@@ -187,6 +187,7 @@ JobQueue::~JobQueue()
         FDELETE m_Workers[ i ];
     }
 
+    // free locally available distributed jobs
     {
         MutexHolder m( m_DistributedJobsMutex );
         // we may have some distributable jobs that could not be built,

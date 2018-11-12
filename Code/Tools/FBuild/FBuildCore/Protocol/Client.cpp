@@ -1126,13 +1126,16 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                 job->OnSystemError();
 
                 // debugging message
-                FLOG_INFO( "Remote System Failure!\n"
+                DIST_INFO( "Remote System Failure!\n"
                            " - Blacklisted Worker: %s\n"
                            " - Node              : %s\n"
-                           " - Job Error Count   : %u / %u\n",
+                           " - Job Error Count   : %u / %u\n"
+                           " - Details           :\n"
+                           "%s",
                            workerName.Get(),
                            job->GetNode()->GetName().Get(),
-                           job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT
+                           job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT,
+                           failureOutput.Get()
                           );
 
                 // should we retry on another worker?

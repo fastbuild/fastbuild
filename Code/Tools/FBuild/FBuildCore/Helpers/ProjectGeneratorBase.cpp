@@ -37,9 +37,13 @@ ProjectGeneratorBase::ProjectGeneratorBase()
 //------------------------------------------------------------------------------
 ProjectGeneratorBase::~ProjectGeneratorBase() = default;
 
-// GetProjectRelativePath
+// GetProjectRelativePath_Deprecated
 //------------------------------------------------------------------------------
-void ProjectGeneratorBase::GetProjectRelativePath( const AString & fileName, AString & shortFileName ) const
+//
+// This function assumes that projects are in sub-directories relative to the base path
+// which isn't always the case
+//
+void ProjectGeneratorBase::GetProjectRelativePath_Deprecated( const AString & fileName, AString & shortFileName ) const
 {
     // Find the best (longest) matching Base Path
     const AString * bestPath = &AString::GetEmpty();
@@ -103,7 +107,7 @@ void ProjectGeneratorBase::AddFile( const AString & fileName )
 {
     // Handle BasePath
     AStackString<> shortFileName;
-    GetProjectRelativePath( fileName, shortFileName );
+    GetProjectRelativePath_Deprecated( fileName, shortFileName );
 
     // Find existing folder
     const uint32_t folderIndex = GetFolderIndexFor( shortFileName );
@@ -343,7 +347,8 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
                                                                   const char * option,
                                                                   const char * alternateOption,
                                                                   Array< AString > & outOptions,
-                                                                  bool escapeQuotes )
+                                                                  bool escapeQuotes,
+                                                                  bool keepFullOption )
 {
     ASSERT( option );
     Array< AString > tokens;
@@ -378,13 +383,27 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
         }
         else if ( token.BeginsWith( option ) )
         {
-            // use everything after token
-            optionBody.Assign( token.Get() + optionLen );
+            if ( keepFullOption )
+            {
+                optionBody = token;
+            }
+            else
+            {
+                // use everything after token
+                optionBody.Assign( token.Get() + optionLen );
+            }
         }
         else if ( alternateOption && token.BeginsWith( alternateOption ) )
         {
-            // use everything after token
-            optionBody.Assign( token.Get() + alternateOptionLen );
+            if ( keepFullOption )
+            {
+                optionBody = token;
+            }
+            else
+            {
+                // use everything after token
+                optionBody.Assign( token.Get() + alternateOptionLen );
+            }
         }
 
         // Strip quotes around body (e.g. -I"Folder/Folder")
@@ -424,6 +443,69 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
             outTokenString += postToken;
         }
     }
+}
+
+// GetRelativePath
+//------------------------------------------------------------------------------
+/*static*/ void ProjectGeneratorBase::GetRelativePath( const AString & basePath,
+                                                       const AString & fileName,
+                                                       AString & outRelativeFileName )
+{
+    AStackString<> cleanFileName;
+    #if !defined( __WINDOWS__ )
+        // Normally we keep all paths with native slashes, but in this case we
+        // have windows slashes, so convert to native for the relative check
+        AStackString<> pathCopy( fileName );
+        pathCopy.Replace( '\\', '/' );
+        NodeGraph::CleanPath( pathCopy, cleanFileName );
+    #else
+        NodeGraph::CleanPath( fileName, cleanFileName );
+    #endif
+
+    // Find common sub-path
+    const char * pathA = basePath.Get();
+    const char * pathB = cleanFileName.Get();
+    const char * itA = pathA;
+    const char * itB = pathB;
+    while ( ( *itA == *itB ) && ( *itA != '\0' ) )
+    {
+        const bool dirToken = ( ( *itA == '/' ) || ( *itA == '\\' ) );
+        itA++;
+        itB++;
+        if ( dirToken )
+        {
+            pathA = itA;
+            pathB = itB;
+        }
+    }
+    const bool hasCommonSubPath = ( pathA != basePath.Get() );
+    if ( hasCommonSubPath == false )
+    {
+        // No common sub-path, so use relative name
+        outRelativeFileName = cleanFileName;
+        return;
+    }
+
+    // Build relative path
+
+    // For every remaining dir in the project path, go up one directory
+    outRelativeFileName.Clear();
+    for ( ;; )
+    {
+        const char c = *pathA;
+        if ( c == 0 )
+        {
+            break;
+        }
+        if ( ( c == '/' ) || ( c == '\\' ) )
+        {
+            outRelativeFileName += "..\\";
+        }
+        ++pathA;
+    }
+
+    // Add remainder of source path relative to the common sub path
+    outRelativeFileName += pathB;
 }
 
 //------------------------------------------------------------------------------

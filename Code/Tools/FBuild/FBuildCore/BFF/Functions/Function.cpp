@@ -12,6 +12,7 @@
 #include "FunctionCopyDir.h"
 #include "FunctionCSAssembly.h"
 #include "FunctionDLL.h"
+#include "FunctionError.h"
 #include "FunctionExec.h"
 #include "FunctionExecutable.h"
 #include "FunctionForEach.h"
@@ -116,6 +117,7 @@ Function::~Function() = default;
     FNEW( FunctionCopyDir );
     FNEW( FunctionCSAssembly );
     FNEW( FunctionDLL );
+    FNEW( FunctionError );
     FNEW( FunctionExec );
     FNEW( FunctionExecutable );
     FNEW( FunctionForEach );
@@ -287,6 +289,7 @@ Function::~Function() = default;
     AStackString<> nameFromMetaData;
     if ( GetNameForNode( nodeGraph, funcStartIter, node->GetReflectionInfoV(), nameFromMetaData ) == false )
     {
+        FDELETE node;
         return false; // GetNameForNode will have emitted an error
     }
     const bool aliasUsedForName = nameFromMetaData.IsEmpty();
@@ -297,6 +300,7 @@ Function::~Function() = default;
     if ( nodeGraph.FindNode( name ) )
     {
         Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
+        FDELETE node;
         return false;
     }
 

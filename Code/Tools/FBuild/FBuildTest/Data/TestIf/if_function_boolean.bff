@@ -1,0 +1,36 @@
+
+// Check true
+.Bool = true
+If (.Bool)
+{
+    Print( "Success" )
+}
+If (!.Bool)
+{
+    Print( "Failure" )
+}
+
+// Check false
+.Bool = false
+If (!.Bool)
+{
+    Print( "Success" )
+}
+
+If (.Bool)
+{
+    Print( "Failure" )
+}
+
+// Comparison
+.Bool = true
+.True = true
+.False = false
+If (.Bool == .False)
+{
+    Print( "Failure" )
+}
+If (.Bool != .True)
+{
+    Print( "Failure" )
+}

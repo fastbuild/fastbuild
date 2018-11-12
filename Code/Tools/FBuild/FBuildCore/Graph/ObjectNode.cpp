@@ -838,16 +838,16 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 //------------------------------------------------------------------------------
 /*static*/ Node * ObjectNode::LoadRemote( IOStream & stream )
 {
-    AStackString<> name; 
-    AStackString<> sourceFile; 
-    uint32_t flags; 
-    AStackString<> compilerArgs; 
+    AStackString<> name;
+    AStackString<> sourceFile;
+    uint32_t flags;
+    AStackString<> compilerArgs;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||
          ( stream.Read( flags ) == false ) ||
          ( stream.Read( compilerArgs ) == false ) )
     {
-        return nullptr; 
+        return nullptr;
     }
 
     NodeProxy * srcFile = FNEW( NodeProxy( sourceFile ) );

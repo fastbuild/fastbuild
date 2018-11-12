@@ -46,6 +46,7 @@
 #include "Core/Mem/Mem.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/LevenshteinDistance.h"
 #include "Core/Tracing/Tracing.h"
@@ -65,6 +66,7 @@ NodeGraph::NodeGraph()
 : m_AllNodes( 1024, true )
 , m_NextNodeIndex( 0 )
 , m_UsedFiles( 16, true )
+, m_Settings( nullptr )
 {
     m_NodeMap = FNEW_ARRAY( Node *[NODEMAP_TABLE_SIZE] );
     memset( m_NodeMap, 0, sizeof( Node * ) * NODEMAP_TABLE_SIZE );
@@ -87,7 +89,8 @@ NodeGraph::~NodeGraph()
 // Initialize
 //------------------------------------------------------------------------------
 /* static*/ NodeGraph * NodeGraph::Initialize( const char * bffFile,
-                                               const char * nodeGraphDBFile )
+                                               const char * nodeGraphDBFile,
+                                               bool forceMigration )
 {
     PROFILE_FUNCTION
 
@@ -98,10 +101,20 @@ NodeGraph::~NodeGraph()
     NodeGraph * oldNG = FNEW( NodeGraph );
     LoadResult res = oldNG->Load( nodeGraphDBFile );
 
+    // Tests can force us to do a migration even if the DB didn't change
+    if ( forceMigration )
+    {
+        // If migration can't be forced, then the test won't function as expected
+        // so we want to catch that failure.
+        ASSERT( ( res == LoadResult::OK ) || ( res == LoadResult::OK_BFF_NEEDS_REPARSING ) );
+
+        res = LoadResult::OK_BFF_NEEDS_REPARSING; // forces migration
+    }
+
     // What happened?
     switch ( res )
     {
-        case LoadResult::MISSING:
+        case LoadResult::MISSING_OR_INCOMPATIBLE:
         {
             // Create a fresh DB by parsing the BFF
             FDELETE( oldNG );
@@ -119,7 +132,7 @@ NodeGraph::~NodeGraph()
             FDELETE( oldNG );
             return nullptr;
         }
-        case LoadResult::OK_BFF_CHANGED:
+        case LoadResult::OK_BFF_NEEDS_REPARSING:
         {
             // Create a fresh DB by parsing the modified BFF
             NodeGraph * newNG = FNEW( NodeGraph );
@@ -130,7 +143,12 @@ NodeGraph::~NodeGraph()
                 return nullptr;
             }
 
-            // TODO: Migrate old DB info to new DB
+            // Migrate old DB info to new DB
+            const SettingsNode * settings = newNG->GetSettings();
+            if ( settings->GetAllowDBMigration_Experimental() || forceMigration ) // TODO:B Remove when feature no longer experimental
+            {
+                newNG->Migrate( *oldNG );
+            }
             FDELETE( oldNG );
 
             return newNG;
@@ -176,7 +194,16 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
     // re-parse the BFF from scratch, clean build will result
     BFFParser bffParser( *this );
     data.Get()[ size ] = '\0'; // data passed to parser must be NULL terminated
-    return bffParser.Parse( data.Get(), size, bffFile, rootBFFTimeStamp, rootBFFDataHash ); // pass size excluding sentinel
+    const bool ok = bffParser.Parse( data.Get(), size, bffFile, rootBFFTimeStamp, rootBFFDataHash ); // pass size excluding sentinel
+    if ( ok )
+    {
+        // Store a pointer to the SettingsNode as defined by the BFF, or create a
+        // default instance if needed.
+        const AStackString<> settingsNodeName( "$$Settings$$" );
+        const Node * settingsNode = FindNode( settingsNodeName );
+        m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : CreateSettingsNode( settingsNodeName ); // Create a default
+    }
+    return ok;
 }
 
 // Load
@@ -187,7 +214,7 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
     FileStream fs;
     if ( fs.Open( nodeGraphDBFile, FileStream::READ_ONLY ) == false )
     {
-        return LoadResult::MISSING;
+        return LoadResult::MISSING_OR_INCOMPATIBLE;
     }
 
     // Read it into memory to avoid lots of tiny disk accesses
@@ -218,8 +245,11 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
     if ( !compatibleDB )
     {
         FLOG_WARN( "Database version has changed (clean build will occur)." );
-        return LoadResult::OK_BFF_CHANGED;
+        return LoadResult::MISSING_OR_INCOMPATIBLE;
     }
+
+    // Take not of whether we need to reparse
+    bool bffNeedsReparsing = false;
 
     // check if any files used have changed
     for ( size_t i=0; i<usedFiles.GetSize(); ++i )
@@ -234,8 +264,12 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         FileStream fs;
         if ( fs.Open( fileName.Get(), FileStream::READ_ONLY ) == false )
         {
-            FLOG_INFO( "BFF file '%s' missing or unopenable (reparsing will occur).", fileName.Get() );
-            return LoadResult::OK_BFF_CHANGED; // not opening the file is not an error, it could be not needed anymore
+            if ( !bffNeedsReparsing )
+            {
+                FLOG_INFO( "BFF file '%s' missing or unopenable (reparsing will occur).", fileName.Get() );
+                bffNeedsReparsing = true;
+            }
+            continue; // not opening the file is not an error, it could be not needed anymore
         }
 
         const size_t size = (size_t)fs.GetFileSize();
@@ -253,8 +287,12 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
             continue;
         }
 
-        FLOG_WARN( "BFF file '%s' has changed (reparsing will occur).", fileName.Get() );
-        return LoadResult::OK_BFF_CHANGED;
+        // Tell used reparsing will occur (Warn only about the first file)
+        if ( !bffNeedsReparsing )
+        {
+            FLOG_WARN( "BFF file '%s' has changed (reparsing will occur).", fileName.Get() );
+            bffNeedsReparsing = true;
+        }
     }
 
     m_UsedFiles = usedFiles;
@@ -310,15 +348,21 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
             bool optional = ( savedVarHash == 0 ); // a hash of 0 means the env var was missing when it was evaluated
             if ( FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, importedVarHash ) == false )
             {
-                // make sure the user knows why some things might re-build
-                FLOG_WARN( "'%s' Environment variable was not found - BFF will be re-parsed\n", varName.Get() );
-                return LoadResult::OK_BFF_CHANGED;
+                // make sure the user knows why some things might re-build (only the first thing warns)
+                if ( !bffNeedsReparsing )
+                {
+                    FLOG_WARN( "'%s' Environment variable was not found - BFF will be re-parsed\n", varName.Get() );
+                    bffNeedsReparsing = true;
+                }
             }
             if ( importedVarHash != savedVarHash )
             {
-                // make sure the user knows why some things might re-build
-                FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", varName.Get() );
-                return LoadResult::OK_BFF_CHANGED;
+                // make sure the user knows why some things might re-build (only the first thing warns)
+                if ( !bffNeedsReparsing )
+                {
+                    FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", varName.Get() );
+                    bffNeedsReparsing = true;
+                }
             }
         }
     }
@@ -335,9 +379,12 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         const uint32_t libEnvVarHash = ( envStringSize > 0 ) ? xxHash::Calc32( libEnvVar ) : GetLibEnvVarHash();
         if ( libEnvVarHashInDB != libEnvVarHash )
         {
-            // make sure the user knows why some things might re-build
-            FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", "LIB" );
-            return LoadResult::OK_BFF_CHANGED;
+            // make sure the user knows why some things might re-build (only the first thing warns)
+            if ( !bffNeedsReparsing )
+            {
+                FLOG_WARN( "'%s' Environment variable has changed - BFF will be re-parsed\n", "LIB" );
+                bffNeedsReparsing = true;
+            }
         }
     }
 
@@ -365,6 +412,14 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
     {
         ASSERT( m_AllNodes[ i ] ); // each node was loaded
         ASSERT( m_AllNodes[ i ]->GetIndex() == i ); // index was correctly persisted
+    }
+
+    m_Settings = FindNode( AStackString<>( "$$Settings$$" ) )->CastTo< SettingsNode >();
+    ASSERT( m_Settings );
+
+    if ( bffNeedsReparsing )
+    {
+        return LoadResult::OK_BFF_NEEDS_REPARSING;
     }
 
     // Everything OK - propagate global settings
@@ -1515,5 +1570,440 @@ uint32_t NodeGraph::GetLibEnvVarHash() const
         return ( path == clean );
     }
 #endif
+
+// Migrate
+//------------------------------------------------------------------------------
+void NodeGraph::Migrate( const NodeGraph & oldNodeGraph )
+{
+    PROFILE_FUNCTION
+
+    s_BuildPassTag++;
+
+    // NOTE: m_AllNodes can change during recursion, so we must take care to
+    // iterate by index (array might move due to resizing). Any newly added
+    // nodes will already be traversed so we only need to check the original
+    // range here
+    const size_t numNodes = m_AllNodes.GetSize();
+    for ( size_t i=0; i<numNodes; ++i )
+    {
+        Node & newNode = *m_AllNodes[ i ];
+        MigrateNode( oldNodeGraph, newNode, nullptr );
+    }
+}
+
+// MigrateNode
+//------------------------------------------------------------------------------
+void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, const Node * oldNodeHint )
+{
+    // Prevent visiting the same node twice
+    if ( newNode.GetBuildPassTag() == s_BuildPassTag )
+    {
+        return;
+    }
+    newNode.SetBuildPassTag( s_BuildPassTag );
+
+    // FileNodes (inputs to the build) build every time so don't need migration
+    if ( newNode.GetType() == Node::FILE_NODE )
+    {
+        return;
+    }
+
+    // Get the matching node in the old DB
+    const Node * oldNode;
+    if ( oldNodeHint )
+    {
+        // Use the node passed in (if calling code already knows it saves us a lookup)
+        oldNode = oldNodeHint;
+        ASSERT( oldNode == oldNodeGraph.FindNodeInternal( newNode.GetName() ) );
+    }
+    else
+    {
+        // Find the old node
+        oldNode = oldNodeGraph.FindNodeInternal( newNode.GetName() );
+        if ( oldNode == nullptr )
+        {
+            // The newNode has no equivalent in the old DB.
+            // This is either:
+            //  - a brand new target defined in the bff
+            //  - an existing target that has never been built
+            return;
+        }
+    }
+
+    // Has the node changed type?
+    const ReflectionInfo * oldNodeRI = oldNode->GetReflectionInfoV();
+    const ReflectionInfo * newNodeRI = newNode.GetReflectionInfoV();
+    if ( oldNodeRI != newNodeRI )
+    {
+        // The newNode has changed type (the build rule has changed)
+        return;
+    }
+
+    // Have the properties on the node changed?
+    if ( AreNodesTheSame( oldNode, &newNode, newNodeRI ) == false )
+    {
+        // Properties have changed. We need to rebuild with the new
+        // properties.
+        return;
+    }
+
+    // PreBuildDependencies
+    if ( DoDependenciesMatch( oldNode->m_PreBuildDependencies, newNode.m_PreBuildDependencies ) == false )
+    {
+        return;
+    }
+
+    // StaticDependencies
+    if ( DoDependenciesMatch( oldNode->m_StaticDependencies, newNode.m_StaticDependencies ) == false )
+    {
+        return;
+    }
+
+    // Migrate Dynamic Dependencies
+    {
+        // New node should have no dynamic dependencies
+        ASSERT( newNode.m_DynamicDependencies.GetSize() == 0 );
+        const Array< Dependency > & oldDeps = oldNode->m_DynamicDependencies;
+        Array< Dependency > newDeps( oldDeps.GetSize() );
+        for ( const Dependency & oldDep : oldDeps )
+        {
+            // See if the depenceny already exists in the new DB
+            Node * oldDepNode = oldDep.GetNode();
+            Node * newDepNode = FindNodeInternal( oldDepNode->GetName() );
+
+            // If the dependency exists, but has changed type, then dependencies
+            // cannot be transferred.
+            if ( newDepNode && ( newDepNode->GetType() != oldDepNode->GetType() ) )
+            {
+                return; // No point trying the remaining deps as node will need rebuilding anyway
+            }
+            if ( newDepNode )
+            {
+                newDeps.Append( Dependency( newDepNode, oldDep.IsWeak() ) );
+            }
+            else
+            {
+                // Create the dependency
+                newDepNode = Node::CreateNode( *this, oldDepNode->GetType(), oldDepNode->GetName() );
+                newDeps.Append( Dependency( newDepNode, oldDep.IsWeak() ) );
+
+                // Early out for FileNode (no properties and doesn't need Initialization)
+                if ( oldDepNode->GetType() == Node::FILE_NODE )
+                {
+                    continue;
+                }
+
+                // Transfer all the properties
+                MigrateProperties( (const void *)oldDepNode, (void *)newDepNode, newDepNode->GetReflectionInfoV() );
+
+                // Initialize the new node
+                VERIFY( newDepNode->Initialize( *this, BFFIterator(), nullptr ) );
+
+                // Continue recursing
+                MigrateNode( oldNodeGraph, *newDepNode, oldDepNode );
+            }
+        }
+        if ( newDeps.IsEmpty() == false )
+        {
+            newNode.m_DynamicDependencies.Append( newDeps );
+        }
+    }
+
+    // If we get here, then everything about the node is unchanged from the
+    // old DB to the new DB, so we can transfer the stamp. This will prevent
+    // the node rebuilding as (with this stamp set) it's in the same state as
+    // it was in the original db. If an external factor necessitates a rebuild
+    // (like the output being deleted off disk or one of the dependencies rebuilding)
+    // the build will still trigger as expected
+    newNode.m_Stamp = oldNode->m_Stamp;
+
+    // Transfer previous build costs used for progress estimates
+    newNode.m_LastBuildTimeMs = oldNode->m_LastBuildTimeMs;
+}
+
+// MigrateProperties
+//------------------------------------------------------------------------------
+void NodeGraph::MigrateProperties( const void * oldBase, void * newBase, const ReflectionInfo * ri )
+{
+    // Are all properties the same?
+    do
+    {
+        const ReflectionIter end = ri->End();
+        for ( ReflectionIter it = ri->Begin(); it != end; ++it )
+        {
+            MigrateProperty( oldBase, newBase, *it );
+        }
+
+        // Traverse into parent class (if there is one)
+        ri = ri->GetSuperClass();
+    }
+    while( ri );
+}
+
+// MigrateProperty
+//------------------------------------------------------------------------------
+void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const ReflectedProperty & property )
+{
+    switch ( property.GetType() )
+    {
+        case PropertyType::PT_ASTRING:
+        {
+            if ( property.IsArray() )
+            {
+                const Array< AString > * stringsOld = property.GetPtrToArray<AString>( oldBase );
+                Array< AString > * stringsNew = property.GetPtrToArray<AString>( newBase );
+                *stringsNew = *stringsOld;
+            }
+            else
+            {
+                const AString * stringOld = property.GetPtrToProperty<AString>( oldBase );
+                AString * stringNew = property.GetPtrToProperty<AString>( newBase );
+                *stringNew = *stringOld;
+            }
+            break;
+        }
+        case PT_UINT8:
+        {
+            ASSERT( property.IsArray() == false );
+
+            const uint8_t * u8Old = property.GetPtrToProperty<uint8_t>( oldBase );
+            uint8_t * u8New = property.GetPtrToProperty<uint8_t>( newBase );
+            *u8New = *u8Old;
+            break;
+        }
+        case PT_INT32:
+        {
+            ASSERT( property.IsArray() == false );
+            const int32_t * i32Old = property.GetPtrToProperty<int32_t>( oldBase );
+            int32_t * i32New = property.GetPtrToProperty<int32_t>( newBase );
+            *i32New = *i32Old;
+            break;
+        }
+        case PT_UINT32:
+        {
+            ASSERT( property.IsArray() == false );
+            const uint32_t * u32Old = property.GetPtrToProperty<uint32_t>( oldBase );
+            uint32_t * u32New = property.GetPtrToProperty<uint32_t>( newBase );
+            *u32New = *u32Old;
+            break;
+        }
+        case PT_UINT64:
+        {
+            ASSERT( property.IsArray() == false );
+            const uint64_t * u64Old = property.GetPtrToProperty<uint64_t>( oldBase );
+            uint64_t * u64New = property.GetPtrToProperty<uint64_t>( newBase );
+            *u64New = *u64Old;
+            break;
+        }
+        case PT_BOOL:
+        {
+            ASSERT( property.IsArray() == false );
+            const bool * bOld = property.GetPtrToProperty<bool>( oldBase );
+            bool * bNew = property.GetPtrToProperty<bool>( newBase );
+            *bNew = *bOld;
+            break;
+        }
+        case PT_STRUCT:
+        {
+            const ReflectedPropertyStruct & propertyStruct = static_cast<const ReflectedPropertyStruct &>( property );
+            if ( property.IsArray() )
+            {
+                const uint32_t numElements = (uint32_t)propertyStruct.GetArraySize( oldBase );
+                propertyStruct.ResizeArrayOfStruct( newBase, numElements );
+                for ( uint32_t i=0; i<numElements; ++i )
+                {
+                    MigrateProperties( propertyStruct.GetStructInArray( oldBase, i ), propertyStruct.GetStructInArray( newBase, i ), propertyStruct.GetStructReflectionInfo() );
+                }
+            }
+            else
+            {
+                MigrateProperties( propertyStruct.GetStructBase( oldBase ), propertyStruct.GetStructBase( newBase ), propertyStruct.GetStructReflectionInfo() );
+            }
+            break;
+        }
+        default: ASSERT( false ); // Unhandled
+    }
+}
+
+// AreNodesTheSame
+//------------------------------------------------------------------------------
+/*static*/ bool NodeGraph::AreNodesTheSame( const void * baseA, const void * baseB, const ReflectionInfo * ri )
+{
+    // Are all properties the same?
+    do
+    {
+        const ReflectionIter end = ri->End();
+        for ( ReflectionIter it = ri->Begin(); it != end; ++it )
+        {
+            // Is this property the same?
+            if ( AreNodesTheSame( baseA, baseB, *it ) == false )
+            {
+                return false;
+            }
+        }
+
+        // Traverse into parent class (if there is one)
+        ri = ri->GetSuperClass();
+    }
+    while( ri );
+
+    return true;
+}
+
+// AreNodesTheSame
+//------------------------------------------------------------------------------
+/*static*/ bool NodeGraph::AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property )
+{
+    switch ( property.GetType() )
+    {
+        case PropertyType::PT_ASTRING:
+        {
+            if ( property.IsArray() )
+            {
+                const Array< AString > * stringsA = property.GetPtrToArray<AString>( baseA );
+                const Array< AString > * stringsB = property.GetPtrToArray<AString>( baseB );
+                if ( stringsA->GetSize() != stringsB->GetSize() )
+                {
+                    return false;
+                }
+                const size_t numStrings = stringsA->GetSize();
+                for ( size_t i=0; i<numStrings; ++i )
+                {
+                    if ( (*stringsA)[ i ] != (*stringsB)[ i ] )
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                const AString * stringA = property.GetPtrToProperty<AString>( baseA );
+                const AString * stringB = property.GetPtrToProperty<AString>( baseB );
+                if ( *stringA != *stringB )
+                {
+                    return false;
+                }
+            }
+            break;
+        }
+        case PT_UINT8:
+        {
+            ASSERT( property.IsArray() == false );
+
+            const uint8_t * u8A = property.GetPtrToProperty<uint8_t>( baseA );
+            const uint8_t * u8B = property.GetPtrToProperty<uint8_t>( baseB );
+            if ( *u8A != *u8B )
+            {
+                return false;
+            }
+            break;
+        }
+        case PT_INT32:
+        {
+            ASSERT( property.IsArray() == false );
+            const int32_t * i32A = property.GetPtrToProperty<int32_t>( baseA );
+            const int32_t * i32B = property.GetPtrToProperty<int32_t>( baseB );
+            if ( *i32A != *i32B )
+            {
+                return false;
+            }
+            break;
+        }
+        case PT_UINT32:
+        {
+            ASSERT( property.IsArray() == false );
+
+            const uint32_t * u32A = property.GetPtrToProperty<uint32_t>( baseA );
+            const uint32_t * u32B = property.GetPtrToProperty<uint32_t>( baseB );
+            if ( *u32A != *u32B )
+            {
+                return false;
+            }
+            break;
+        }
+        case PT_UINT64:
+        {
+            ASSERT( property.IsArray() == false );
+
+            const uint64_t * u64A = property.GetPtrToProperty<uint64_t>( baseA );
+            const uint64_t * u64B = property.GetPtrToProperty<uint64_t>( baseB );
+            if ( *u64A != *u64B )
+            {
+                return false;
+            }
+            break;
+        }
+        case PT_BOOL:
+        {
+            ASSERT( property.IsArray() == false );
+
+            const bool * bA = property.GetPtrToProperty<bool>( baseA );
+            const bool * bB = property.GetPtrToProperty<bool>( baseB );
+            if ( *bA != *bB )
+            {
+                return false;
+            }
+            break;
+        }
+        case PT_STRUCT:
+        {
+            const ReflectedPropertyStruct & propertyStruct = static_cast<const ReflectedPropertyStruct &>( property );
+            if ( property.IsArray() )
+            {
+                const uint32_t numElementsA = (uint32_t)propertyStruct.GetArraySize( baseA );
+                const uint32_t numElementsB = (uint32_t)propertyStruct.GetArraySize( baseB );
+                if ( numElementsA != numElementsB )
+                {
+                    return false;
+                }
+                for ( uint32_t i=0; i<numElementsA; ++i )
+                {
+                    if ( AreNodesTheSame( propertyStruct.GetStructInArray( baseA, i ), propertyStruct.GetStructInArray( baseB, i ), propertyStruct.GetStructReflectionInfo() ) == false )
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                if ( AreNodesTheSame( propertyStruct.GetStructBase( baseA ), propertyStruct.GetStructBase( baseB ), propertyStruct.GetStructReflectionInfo() ) == false )
+                {
+                    return false;
+                }
+            }
+            break;
+        }
+        default: ASSERT( false ); // Unhandled
+    }
+
+    return true;
+}
+
+// DoDependenciesMatch
+//------------------------------------------------------------------------------
+bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependencies & depsB )
+{
+    if ( depsA.GetSize() != depsB.GetSize() )
+    {
+        return false;
+    }
+
+    const size_t numDeps = depsA.GetSize();
+    for ( size_t i = 0; i<numDeps; ++i )
+    {
+        Node * nodeA = depsA[ i ].GetNode();
+        Node * nodeB = depsB[ i ].GetNode();
+        if ( nodeA->GetType() != nodeB->GetType() )
+        {
+            return false;
+        }
+        if ( nodeA->GetName() != nodeB->GetName() )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 //------------------------------------------------------------------------------

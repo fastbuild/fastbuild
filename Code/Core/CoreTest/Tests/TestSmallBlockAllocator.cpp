@@ -102,6 +102,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
         {
             bool timedOut;
             Thread::WaitForThread( info[ i ].m_ThreadHandle, 500 * 1000, timedOut );
+            Thread::CloseHandle( info[ i ].m_ThreadHandle );
             TEST_ASSERT( timedOut == false );
             time1 += info[ i ].m_TimeTaken;
         }
@@ -124,6 +125,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
         {
             bool timedOut;
             Thread::WaitForThread( info[ i ].m_ThreadHandle, 500 * 1000, timedOut );
+            Thread::CloseHandle( info[ i ].m_ThreadHandle );
             TEST_ASSERT( timedOut == false );
             time2 += info[ i ].m_TimeTaken;
         }

@@ -37,6 +37,7 @@ public:
     const Tags &           GetLocalWorkerTags() const;
     void                   ApplyLocalWorkerTags( const Tags & localWorkerTags );
     uint32_t               GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
+    bool                   GetAllowDBMigration_Experimental() const { return m_AllowDBMigration_Experimental; }
 
 private:
     //virtual BuildResult DoBuild( Job * job ) override;
@@ -57,6 +58,7 @@ private:
     uint32_t          m_WorkerConnectionLimit;
     Array< AString  > m_BaseLocalWorkerTagStrings;
     uint32_t          m_DistributableJobMemoryLimitMiB;
+    bool              m_AllowDBMigration_Experimental;
 
     mutable Tags      m_BaseLocalWorkerTags;
     mutable Tags      m_LocalWorkerTags;
