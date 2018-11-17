@@ -114,8 +114,8 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
                                     lastPeriod ? lastPeriod     : projectPath.GetEnd() );
 
         // make project path relative
-		AStackString<> solutionRelativePath; 
-		ProjectGeneratorBase::GetRelativePath( solutionBasePath, projectPath, solutionRelativePath );
+        AStackString<> solutionRelativePath;
+        ProjectGeneratorBase::GetRelativePath( solutionBasePath, projectPath, solutionRelativePath );
         #if !defined( __WINDOWS__ )
             solutionRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
         #endif

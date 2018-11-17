@@ -892,7 +892,7 @@ void TestProjectGeneration::Solution_Empty() const
     // do build
     TEST_ASSERT( fBuild.Build( AStackString<>( "EmptySolution" ) ) );
 
-    // 
+    //
     EnsureFileExists( solution );
 
     // Check stats
@@ -921,7 +921,7 @@ void TestProjectGeneration::Solution_SolutionRelativePaths() const
     // do build
     TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
 
-    // 
+    //
     EnsureFileExists( solution );
 
     // Read the project into memory
@@ -961,7 +961,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_None() const
     // do build
     TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
 
-    // 
+    //
     EnsureFileExists( solution );
 
     // Read the project into memory
@@ -995,7 +995,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_Project() const
     // do build
     TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
 
-    // 
+    //
     EnsureFileExists( solution );
 
     // Read the project into memory
@@ -1041,7 +1041,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
     // do build
     TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
 
-    // 
+    //
     EnsureFileExists( solution );
 
     // Read the project into memory
