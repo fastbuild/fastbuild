@@ -26,6 +26,7 @@
 #if defined( __APPLE__ ) || defined( __LINUX__ )
     #define INVALID_HANDLE_VALUE ( -1 )
 #endif
+#define FILESTREAM_READWRITE_SIZE ( 16 * MEGABYTE )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -193,7 +194,7 @@ bool FileStream::IsOpen() const
     do
     {
         uint64_t remaining = ( bytesToRead - totalBytesRead );
-        uint32_t tryToReadNow = ( remaining > MEGABYTE ) ? MEGABYTE : (uint32_t)remaining;
+        uint32_t tryToReadNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
         uint32_t bytesReadNow = 0;
         if ( FALSE == ReadFile( (HANDLE)m_Handle,                           // _In_         HANDLE hFile,
                                 (char *)buffer + (size_t)totalBytesRead,    // _Out_        LPVOID lpBuffer,
@@ -230,7 +231,7 @@ bool FileStream::IsOpen() const
     do
     {
         uint64_t remaining = ( bytesToWrite - totalBytesWritten );
-        uint32_t tryToWriteNow = ( remaining > MEGABYTE ) ? MEGABYTE : (uint32_t)remaining;
+        uint32_t tryToWriteNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
         uint32_t bytesWrittenNow = 0;
         if ( FALSE == WriteFile( (HANDLE)m_Handle,                              // _In_         HANDLE hFile,
                                  (char *)buffer + (size_t)totalBytesWritten,    // _In_         LPCVOID lpBuffer,
