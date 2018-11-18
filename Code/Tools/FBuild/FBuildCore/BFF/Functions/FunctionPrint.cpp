@@ -61,11 +61,11 @@ FunctionPrint::FunctionPrint()
 
         // a quoted string?
         const char c = *start;
-        if ( ( c == '"' ) || ( c == '\'' ) )
+        if ( start.IsAtString() )
         {
             // find end of string
             BFFIterator stop( start );
-            stop.SkipString( c );
+            stop.SkipString();
             ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
 
             // perform variable substitutions

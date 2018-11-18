@@ -59,8 +59,7 @@ FunctionError::FunctionError()
     pos.SkipWhiteSpace();
 
     // We expect a quoted string
-    const char c = *pos;
-    if ( ( c != '"' ) && ( c != '\'' ) )
+    if ( !pos.IsAtString() )
     {
         Error::Error_1001_MissingStringStartToken( pos, this );
         return false;
@@ -69,9 +68,9 @@ FunctionError::FunctionError()
     messageStart++; // Skip opening quote
 
     // Find end of string
-    pos.SkipString( c );
+    pos.SkipString();
     ASSERT( pos.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
-    ASSERT( ( *pos == '"' ) || ( *pos == '\'' ) );
+    ASSERT( pos.IsAtString() );
     const BFFIterator messageStop( pos );
 
     // Make sure there are no extraneous tokens

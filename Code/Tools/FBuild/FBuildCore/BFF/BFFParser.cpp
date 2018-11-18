@@ -194,11 +194,11 @@ bool BFFParser::Parse( BFFIterator & iter )
         return false;
     }
 
-    if ( *iter == '\'' || *iter == '"' )
+    if ( iter.IsAtString() )
     {
         // parse the string
         const BFFIterator openToken = iter;
-        iter.SkipString( *openToken );
+        iter.SkipString();
         if ( *iter != *openToken )
         {
             Error::Error_1002_MatchingClosingTokenNotFound( openToken, nullptr, *openToken );
@@ -368,7 +368,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
     char openToken = *iter;
     char closeToken = 0;
     bool ok = false;
-    if ( ( openToken == '"' ) || ( openToken == '\'' ) )
+    if ( iter.IsAtString() )
     {
         closeToken = openToken;
         ok = true;
@@ -526,7 +526,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
     else
     {
         ASSERT( ( openToken == '\'' ) || ( openToken == '"' ) );
-        iter.SkipString( closeToken );
+        iter.SkipString();
         if ( *iter == closeToken )
         {
             result = StoreVariableString( varName, openTokenPos, iter, operatorIter, frame );
@@ -1424,7 +1424,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
         }
 
         const char c = *iter;
-        if ( ( c == '"' ) || ( c == '\'' ) )
+        if ( iter.IsAtString() )
         {
             // a quoted string
 
@@ -1452,7 +1452,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
 
             // a string
             BFFIterator elementValueStart( iter );
-            iter.SkipString( c );
+            iter.SkipString();
             ASSERT( iter.GetCurrent() <= valueEnd.GetCurrent() ); // should not be in this function if string is not terminated
             elementValueStart++; // move to start of actual content
             AStackString< 2048 > elementValue;
