@@ -392,6 +392,9 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             + ' -Wno-#pragma-messages'
                             + ' -m64'                       // x86-64
 
+                            // Disabled warnings
+                            + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
+
                             // Fires on our new/delete operator (Clang bug?)
                             + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
     .CompilerOptionsC       = .CompilerOptions
