@@ -289,6 +289,9 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         AStackString<> tmp;
         tmp.Format( "TMP=%s", normalTmp.Get() );
 
+        // SystemDrive=
+        AStackString<> sysDrive( "SystemDrive=C:" );
+
         // SystemRoot=
         AStackString<> sysRoot( "SystemRoot=C:\\Windows" );
     #endif
@@ -297,6 +300,7 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
     size_t len( paths.GetLength() + 1 );
     #if defined( __WINDOWS__ )
         len += ( tmp.GetLength() + 1 );
+        len += ( sysDrive.GetLength() + 1 );
         len += ( sysRoot.GetLength() + 1 );
     #endif
 
@@ -326,6 +330,9 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
     #if defined( __WINDOWS__ )
         AString::Copy( tmp.Get(), mem, tmp.GetLength() + 1 ); // including null
         mem += ( tmp.GetLength() + 1 ); // including null
+
+        AString::Copy( sysDrive.Get(), mem, sysDrive.GetLength() + 1 ); // including null
+        mem += ( sysDrive.GetLength() + 1 ); // including null
 
         AString::Copy( sysRoot.Get(), mem, sysRoot.GetLength() + 1 ); // including null
         mem += ( sysRoot.GetLength() + 1 ); // including null
