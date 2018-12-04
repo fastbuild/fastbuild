@@ -352,7 +352,7 @@ void WorkerBrokerage::FindWorkers(
                                             // add found workers
                                             for ( size_t m=0; m<foundWorkers.GetSize(); ++m )
                                             {
-                                                const AString & foundWorker = foundWorkers.Get( l );
+                                                const AString & foundWorker = foundWorkers.Get( m );
                                                 if ( foundWorker.CompareI( m_HostName ) != 0 && 
                                                      !workersToAdd.Find( foundWorker ) && 
                                                      !excludedWorkers.Find( foundWorker ) )
