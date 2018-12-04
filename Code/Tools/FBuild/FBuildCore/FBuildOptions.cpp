@@ -319,6 +319,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 #endif
                 continue;
             }
+            else if (thisArg == "-nolocalrace")
+            {
+                m_AllowLocalRace = false;
+                continue;
+            }
 
             // can't use FLOG_ERROR as FLog is not initialized
             OUTPUT( "FBuild: Error: Unknown argument '%s'\n", thisArg.Get() );
