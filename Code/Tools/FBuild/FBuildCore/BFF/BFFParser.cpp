@@ -76,6 +76,8 @@ bool BFFParser::Parse( const char * dataWithSentinel,
 
     // parse it
     BFFIterator iter( dataWithSentinel, sizeExcludingSentinel, fileName, fileTimeStamp );
+    AStackString<> oldCurrentBFFDir;
+    bool result;
     if ( pushStackFrame )
     {
         BFFStackFrame stackFrame;
@@ -86,12 +88,18 @@ bool BFFParser::Parse( const char * dataWithSentinel,
             CreateBuiltInVariables( stackFrame );
         }
 
-        return Parse( iter );
+        SetBuiltInVariable_CurrentBFFDir_Push( fileName, oldCurrentBFFDir );
+        result = Parse( iter );
+        SetBuiltInVariable_CurrentBFFDir_Pop( oldCurrentBFFDir );
     }
     else
     {
-        return Parse( iter );
+        SetBuiltInVariable_CurrentBFFDir_Push( fileName, oldCurrentBFFDir );
+        result = Parse( iter );
+        SetBuiltInVariable_CurrentBFFDir_Pop( oldCurrentBFFDir );
     }
+
+    return result;
 }
 
 // Parse
@@ -2056,19 +2064,22 @@ void BFFParser::CreateBuiltInVariables( BFFStackFrame & stackFrame )
         return;
     }
 
+    ASSERT( s_Depth == 1 );
+
     // TODO:B Add a mechanism to mark these variables as read-only
 
     // _WORKING_DIR_
     {
         AStackString<> varName( "._WORKING_DIR_" );
-        ASSERT( BFFStackFrame::GetVarAny( varName ) == nullptr );
+        ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
         BFFStackFrame::SetVarString( varName, FBuild::Get().GetWorkingDir(), &stackFrame );
+        // TODO:B Add a mechanism to mark variable as read-only
     }
 
     // _FASTBUILD_VERSION_STRING_
     {
         AStackString<> varName( "._FASTBUILD_VERSION_STRING_" );
-        ASSERT( BFFStackFrame::GetVarAny( varName ) == nullptr );
+        ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
         BFFStackFrame::SetVarString( varName, AStackString<>(FBUILD_VERSION_STRING), &stackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
@@ -2076,11 +2087,64 @@ void BFFParser::CreateBuiltInVariables( BFFStackFrame & stackFrame )
     // _FASTBUILD_VERSION_NUMBER_
     {
         AStackString<> varName( "._FASTBUILD_VERSION_" );
-        ASSERT( BFFStackFrame::GetVarAny( varName ) == nullptr );
+        ASSERT( BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) ) == nullptr );
         BFFStackFrame::SetVarInt( varName, (int32_t)FBUILD_VERSION, &stackFrame );
         // TODO:B Add a mechanism to mark variable as read-only
     }
+}
 
+// SetBuiltInVariable_CurrentBFFDir_Push
+//------------------------------------------------------------------------------
+void BFFParser::SetBuiltInVariable_CurrentBFFDir_Push( const char * fileName,
+                                                       AString & outOldValue )
+{
+    // Handle special case in tests
+    if ( FBuild::IsValid() == false )
+    {
+        return;
+    }
+
+    const AStackString<> varName( "._CURRENT_BFF_DIR_" );
+
+    // Get old value and return it (so it can be restored later)
+    // We can't use the BFFStack to manage lifetime because an include doesn't
+    // push a new scope
+    const BFFVariable * oldVar = BFFStackFrame::GetVarAny( AStackString<>( varName.Get() + 1 ) );
+    outOldValue = oldVar ? oldVar->GetString() : AString::GetEmpty();
+
+    // Determine and set the current value
+
+    // Get absolute path to bff
+    AStackString<> fullPath( fileName );
+    NodeGraph::CleanPath( fullPath );
+
+    // Get path to bff relative to working dir
+    AStackString<> relativePath;
+    PathUtils::GetRelativePath( FBuild::Get().GetWorkingDir(), fullPath, relativePath );
+
+    // Get dir part only
+    const char * lastSlash = relativePath.FindLast( NATIVE_SLASH );
+    lastSlash = lastSlash ? lastSlash : relativePath.Get(); // handle no sub dirs
+    relativePath.SetLength( (uint32_t)( lastSlash - relativePath.Get() ) );
+
+    BFFStackFrame::SetVarString( varName, relativePath, BFFStackFrame::GetCurrent() );
+    // TODO:B Add a mechanism to mark variable as read-only
+}
+
+
+// SetBuiltInVariable_CurrentBFFDir_Pop
+//------------------------------------------------------------------------------
+void BFFParser::SetBuiltInVariable_CurrentBFFDir_Pop( const AString & oldValue )
+{
+    // Handle special case in tests
+    if ( FBuild::IsValid() == false )
+    {
+        return;
+    }
+
+    const AStackString<> varName( "._CURRENT_BFF_DIR_" );
+
+    BFFStackFrame::SetVarString( varName, oldValue, BFFStackFrame::GetCurrent() );
 }
 
 //------------------------------------------------------------------------------
