@@ -462,50 +462,7 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
         NodeGraph::CleanPath( fileName, cleanFileName );
     #endif
 
-    // Find common sub-path
-    const char * pathA = basePath.Get();
-    const char * pathB = cleanFileName.Get();
-    const char * itA = pathA;
-    const char * itB = pathB;
-    while ( ( *itA == *itB ) && ( *itA != '\0' ) )
-    {
-        const bool dirToken = ( ( *itA == '/' ) || ( *itA == '\\' ) );
-        itA++;
-        itB++;
-        if ( dirToken )
-        {
-            pathA = itA;
-            pathB = itB;
-        }
-    }
-    const bool hasCommonSubPath = ( pathA != basePath.Get() );
-    if ( hasCommonSubPath == false )
-    {
-        // No common sub-path, so use relative name
-        outRelativeFileName = cleanFileName;
-        return;
-    }
-
-    // Build relative path
-
-    // For every remaining dir in the project path, go up one directory
-    outRelativeFileName.Clear();
-    for ( ;; )
-    {
-        const char c = *pathA;
-        if ( c == 0 )
-        {
-            break;
-        }
-        if ( ( c == '/' ) || ( c == '\\' ) )
-        {
-            outRelativeFileName += "..\\";
-        }
-        ++pathA;
-    }
-
-    // Add remainder of source path relative to the common sub path
-    outRelativeFileName += pathB;
+    PathUtils::GetRelativePath( basePath, cleanFileName, outRelativeFileName );
 }
 
 //------------------------------------------------------------------------------

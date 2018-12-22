@@ -48,6 +48,9 @@ public:
     // Misc
     //----------------
     static void StripFileExtension( AString & filePath );
+    static void GetRelativePath( const AString & basePath,
+                                 const AString & fileName,
+                                 AString & outRelativeFileName );
 };
 
 //------------------------------------------------------------------------------
