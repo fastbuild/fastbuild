@@ -134,27 +134,16 @@ bool TCPConnectionPool::Listen( uint16_t port )
     ASSERT( m_ListenConnection == nullptr );
 
     // create the socket
-    TCPSocket sockfd = socket( AF_INET, SOCK_STREAM, 0 );
+    TCPSocket sockfd = CreateSocket();
     if ( sockfd == INVALID_SOCKET )
     {
-        TCPDEBUG( "Create socket failed (Listen): %i\n", GetLastError() );
         return false;
     }
 
-    // allow socket re-use
-    static const int yes = 1;
-    int ret = setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof( yes ) );
-    if ( ret != 0 )
-    {
-        TCPDEBUG( "setsockopt failed: %i\n", GetLastError() );
-        CloseSocket( sockfd );
-        return false;
-    }
-
-    if ( !DisableNagle( sockfd ) )
-    {
-        return false; // DisableNagle will close socket
-    }
+    // Configure socket
+    AllowSocketReuse( sockfd );     // Allow socket re-use
+    DisableSigPipe( sockfd );       // Prevent socket inheritence by child processes
+    DisableNagle( sockfd );         // Disable Nagle's algorithm
 
     // set up the listen params
     struct sockaddr_in addrInfo;
@@ -211,35 +200,17 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
     PROFILE_FUNCTION
 
     // create a socket
-    TCPSocket sockfd = socket( AF_INET, SOCK_STREAM, 0 );
-
-    // outright failure?
+    TCPSocket sockfd = CreateSocket();
     if ( sockfd == INVALID_SOCKET )
     {
-        TCPDEBUG( "Create socket failed (Connect): %i\n", GetLastError() );
-        return nullptr;
+        return nullptr; // outright failure?
     }
 
-    // Set send/recv buffer sizes
-    if ( !SetBufferSizes( sockfd ) )
-    {
-        return nullptr; // SetBufferSizes will close socket
-    }
-
-    if ( !DisableNagle( sockfd ) )
-    {
-        return nullptr; // DisableNagle will close socket
-    }
-
-    // set non-blocking
-    u_long nonBlocking = 1;
-    #if defined( __WINDOWS__ )
-        ioctlsocket( sockfd, FIONBIO, &nonBlocking );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        VERIFY( ioctl( sockfd, FIONBIO, &nonBlocking ) >= 0 );
-    #else
-        #error Unknown platform
-    #endif
+    // Configure socket
+    DisableSigPipe( sockfd );       // Prevent socket inheritence by child processes
+    DisableNagle( sockfd );         // Disable Nagle's algorithm
+    SetLargeBufferSizes( sockfd );  // Set large send/recv buffer sizes
+    SetNonBlocking( sockfd );       // Set non-blocking
 
     // setup destination address
     struct sockaddr_in destAddr;
@@ -711,15 +682,67 @@ int TCPConnectionPool::Select( TCPSocket socket,
 
 // Accept
 //------------------------------------------------------------------------------
-TCPSocket TCPConnectionPool::Accept( TCPSocket a_Socket,
-                                     struct sockaddr * a_Address,
-                                     int * a_AddressSize ) const
+TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
+                                     struct sockaddr * address,
+                                     int * addressSize ) const
 {
     #if defined( __WINDOWS__ )
-        return accept( a_Socket, a_Address, a_AddressSize );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return accept( a_Socket, a_Address, (unsigned int *)a_AddressSize );
+        // On Windows, handles are not inherited (SOCK_CLOEXEC is not needed/supported)
+        TCPSocket newSocket = accept( socket, address, addressSize );
+    #elif defined( __LINUX__ )
+        // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
+        TCPSocket newSocket = accept4( socket, address, (unsigned int *)addressSize, SOCK_CLOEXEC );
+    #elif defined( __APPLE__ )
+        // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
+        TCPSocket newSocket = accept( socket, address, (unsigned int *)addressSize );
     #endif
+
+    if ( newSocket == INVALID_SOCKET )
+    {
+        TCPDEBUG( "accept failed: %i\n", GetLastError() );
+        return newSocket;
+    }
+
+    #if defined( __APPLE__ )
+        // OS X does not support atomic setting of CLOEXEC: see notes in CreateSocket
+        VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
+    #endif
+
+    return newSocket;
+}
+
+// CreateSocket
+//------------------------------------------------------------------------------
+TCPSocket TCPConnectionPool::CreateSocket() const
+{
+    #if defined( __LINUX__ )
+        // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
+        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
+    #else
+        // On Windows, handles are not inherited (SOCK_CLOEXEC is not needed/supported)
+        // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
+        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+    #endif
+
+    // Failure?
+    if ( newSocket == INVALID_SOCKET )
+    {
+        TCPDEBUG( "Create socket failed (Connect): %i\n", GetLastError() );
+        return newSocket;
+    }
+
+    #if defined( __APPLE__ )
+        // OS X does not support atomic setting of CLOEXEC, which exposes
+        // us to race conditions if another thread is spawning a process.
+        // The best we can do is reduce the likelyhood of problems by immediately
+        // setting the flag after creation.
+        // In practice, the listen socket is the most problematic one to be
+        // inherited (as it can prevents re-use), but thankfully starting listening
+        // while spawning a process is not something we generally do.
+        VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
+    #endif
+
+    return newSocket;
 }
 
 // CreateThread
@@ -805,14 +828,11 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
             TCPDEBUG( "Connection accepted from %s : %i (%x)\n",  addr.Get(), ntohs( remoteAddrInfo.sin_port ), newSocket );
         #endif
 
-        // set non-blocking
-        SetNonBlocking( newSocket, true );
-
-        // Set send/recv buffer sizes
-        if ( !SetBufferSizes( newSocket ) )
-        {
-            break; // SetBufferSizes will close socket
-        }
+        // Configure socket
+        DisableSigPipe( newSocket );        // Prevent socket inheritence by child processes
+        DisableNagle( newSocket );          // Disable Nagle's algorithm
+        SetLargeBufferSizes( newSocket );   // Set send/recv buffer sizes
+        SetNonBlocking( newSocket );        // Set non-blocking
 
         // keep the new connected socket
         CreateConnectionThread( newSocket,
@@ -958,25 +978,63 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
     TCPDEBUG( "connection thread exited\n" );
 }
 
+// AllowSocketReuse
+//------------------------------------------------------------------------------
+void TCPConnectionPool::AllowSocketReuse( TCPSocket socket ) const
+{
+    static const int yes = 1;
+    int ret = setsockopt( socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof( yes ) );
+    if ( ret != 0 )
+    {
+        TCPDEBUG( "setsockopt SO_REUSEADDR failed: %i\n", GetLastError() );
+    }
+    #if defined( __APPLE__ )
+        // OS X changed the behavior or ADDR vs PORT, so we set both
+        ret = setsockopt( socket, SOL_SOCKET, SO_REUSEPORT, (const char *)&yes, sizeof( yes ) );
+        if ( ret != 0 )
+        {
+            TCPDEBUG( "setsockopt SO_REUSEADDR failed: %i\n", GetLastError() );
+        }
+    #endif
+}
+
 // DisableNagle
 //------------------------------------------------------------------------------
-bool TCPConnectionPool::DisableNagle( TCPSocket sockfd )
+void TCPConnectionPool::DisableNagle( TCPSocket socket ) const
 {
     // disable TCP nagle
     static const int disableNagle = 1;
-    const int ret = setsockopt( sockfd, IPPROTO_TCP, TCP_NODELAY, (const char *)&disableNagle, sizeof( disableNagle ) );
+    const int ret = setsockopt( socket, IPPROTO_TCP, TCP_NODELAY, (const char *)&disableNagle, sizeof( disableNagle ) );
     if ( ret != 0 )
     {
         TCPDEBUG( "setsockopt TCP_NODELAY failed: %i\n", GetLastError() );
-        CloseSocket( sockfd );
-        return false;
     }
-    return true;
 }
 
-// SetBufferSizes
+// DisableSigPipe
 //------------------------------------------------------------------------------
-bool TCPConnectionPool::SetBufferSizes( TCPSocket socket )
+void TCPConnectionPool::DisableSigPipe( TCPSocket socket ) const
+{
+    // We handle socket errors at the point of interacting with the socket
+    // We don't want the default behaviour of sig pipe errors in any arbitrary
+    // kernel function we might call
+
+    #if defined( __WINDOWS__ )
+        // Nothing to do on Windows
+        (void)socket;
+    #elif defined( __LINUX__ )
+        // We disable SIGPIPE system wide in NetworkStartupHelper
+        (void)socket;
+    #elif defined( __APPLE__ )
+        // Must be done on every socket on OSX
+        int nosigpipe = 1;
+        VERIFY( setsockopt( socket, SOL_SOCKET, SO_NOSIGPIPE, (void *)&nosigpipe, sizeof(int) ) == 0 );
+    #endif
+}
+
+// SetLargeBufferSizes
+//------------------------------------------------------------------------------
+void TCPConnectionPool::SetLargeBufferSizes( TCPSocket socket ) const
 {
     #if defined( __APPLE__ )
         const uint32_t bufferSize = ( 5 * 1024 * 1024 ); // larger values fail on OS X
@@ -990,8 +1048,6 @@ bool TCPConnectionPool::SetBufferSizes( TCPSocket socket )
         if ( ret != 0 )
         {
             TCPDEBUG( "setsockopt SO_RCVBUF failed: %i\n", GetLastError() );
-            CloseSocket( socket );
-            return false;
         }
     }
 
@@ -1001,24 +1057,19 @@ bool TCPConnectionPool::SetBufferSizes( TCPSocket socket )
         if ( ret != 0 )
         {
             TCPDEBUG( "setsockopt SO_SNDBUF failed: %i\n", GetLastError() );
-            CloseSocket( socket );
-            return false;
         }
     }
-
-    return true;
 }
 
+// SetNonBlocking
 //------------------------------------------------------------------------------
-void TCPConnectionPool::SetNonBlocking( TCPSocket socket, bool nonBlocking ) const
+void TCPConnectionPool::SetNonBlocking( TCPSocket socket ) const
 {
-    u_long optionValue = ( nonBlocking ? 1 : 0 );
+    u_long nonBlocking = 1;
     #if defined( __WINDOWS__ )
-        ioctlsocket( socket, FIONBIO, &optionValue );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        ioctl( socket, FIONBIO, &optionValue );
+        VERIFY( ioctlsocket( socket, FIONBIO, &nonBlocking ) == 0 );
     #else
-        #error Unknown platform
+        VERIFY( ioctl( socket, FIONBIO, &nonBlocking ) == 0 );
     #endif
 }
 

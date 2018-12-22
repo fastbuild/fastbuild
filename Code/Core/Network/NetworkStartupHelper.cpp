@@ -38,6 +38,7 @@ NetworkStartupHelper::NetworkStartupHelper()
 
     #if defined( __LINUX__ ) || defined( __OSX__ )
         // Disable SIGPIPE signals - we want to handle errors in the calling code
+        // On OS X, this doesn't actually work, so we must also disable per socket
         signal( SIGPIPE, SIG_IGN );
     #endif
 
