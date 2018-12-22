@@ -14,6 +14,7 @@
 // Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
@@ -294,7 +295,9 @@ void TestProjectGeneration::TestFunction_Speed() const
         fileTypes.Append( ft );
     }
 
-    AStackString<> projectFileName( "dummy.vcxproj" );
+    AStackString<> projectFileName;
+    projectFileName.Format( "%s//dummy.vcxproj", baseDir.Get() );
+    PathUtils::FixupFilePath( projectFileName );
 
     {
         Timer t;
@@ -601,13 +604,23 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
     configs.Append( cfg );
 
     // Files
-    pg.AddFile( AStackString<>( "File.cpp" ) );
-    pg.AddFile( AStackString<>( "file.cpp" ) );                 // Duplicate with case difference
-    pg.AddFile( AStackString<>( "File.cpp" ) );                 // Exact duplicate
-    pg.AddFile( AStackString<>( "../Code/File.cpp" ) );         // Duplicate with path difference
-    pg.AddFile( AStackString<>( "../Dir/../Code/File.cpp" ) );  // Duplicate with path difference
-
-    AStackString<> projectFileName( "dummy.vcxproj" );
+    // TODO:C This test adds paths that are not normalized, but project nodes
+    // should only be passing in normalized paths
+    #if defined( __WINDOWS__ )
+        pg.AddFile( AStackString<>( "C:\\Code\\File.cpp" ) );
+        pg.AddFile( AStackString<>( "C:\\Code\\file.cpp" ) );               // Duplicate with case difference
+        pg.AddFile( AStackString<>( "C:\\Code\\File.cpp" ) );               // Exact duplicate
+        pg.AddFile( AStackString<>( "C:\\Code\\../Code/File.cpp" ) );       // Duplicate with path difference
+        pg.AddFile( AStackString<>( "C:\\Code\\../Dir/../Code/File.cpp" ) );// Duplicate with path difference
+        AStackString<> projectFileName( "C:\\Code\\dummy.vcxproj" );
+    #else
+        pg.AddFile( AStackString<>( "/Code/File.cpp" ) );
+        pg.AddFile( AStackString<>( "/Code/file.cpp" ) );                   // Duplicate with case difference
+        pg.AddFile( AStackString<>( "/Code/File.cpp" ) );                   // Exact duplicate
+        pg.AddFile( AStackString<>( "/Code/../Code/File.cpp" ) );           // Duplicate with path difference
+        pg.AddFile( AStackString<>( "/Code/../Dir/../Code/File.cpp" ) );    // Duplicate with path difference
+        AStackString<> projectFileName( "/Code/dummy.vcxproj" );
+    #endif
 
     // Check vcxproj
     {
