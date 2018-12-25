@@ -22,6 +22,7 @@ Settings
     #else
         .CachePath      = "/tmp/.fbuild.cache"
     #endif
+    .AllowDBMigration_Experimental = true
 }
 
 //------------------------------------------------------------------------------
@@ -117,7 +118,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
     #if !USING_VS2013
-        .LinkerOptions                  = ' /DEBUG:FASTLINK' // VS2015 and later only
+        //.LinkerOptions                  = ' /DEBUG:FASTLINK' // VS2015 and later only
     #endif
 ]
 .Profile_Optimizations_MSVC =
@@ -255,6 +256,9 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                                 + ' -Wno-implicit-exception-spec-mismatch'
                             #endif
 
+                            // Disabled warnings
+                            + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
+
                             // Extra warnings
                             + ' -Wshadow'
 
@@ -388,6 +392,9 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             + ' -Wno-#pragma-messages'
                             + ' -m64'                       // x86-64
 
+                            // Disabled warnings
+                            + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
+
                             // Fires on our new/delete operator (Clang bug?)
                             + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
     .CompilerOptionsC       = .CompilerOptions
@@ -509,11 +516,6 @@ VCXProject( 'UpdateSolution-proj' )
                             .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux }
 .Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
-.ConfigsAll             = { .Configs_Windows_MSVC
-                            .Configs_Windows_Clang
-                            .Configs_Linux
-                            .Configs_OSX_Clang
-                          }
 #if __WINDOWS__
     .Configs    = .Configs_Windows_MSVC
                 + .Configs_Windows_Clang
@@ -524,6 +526,27 @@ VCXProject( 'UpdateSolution-proj' )
 #if __OSX__
     .Configs    = .Configs_OSX_Clang
 #endif
+
+.Targets_x64_Debug = {}
+.Targets_x64_Profile = {}
+.Targets_x64_Release = {}
+.Targets_x64Clang_Debug = {}
+.Targets_x64Clang_Profile = {}
+.Targets_x64Clang_Release = {}
+
+.Targets_x64Linux_Debug = {}
+.Targets_x64Linux_Profile = {}
+.Targets_x64Linux_Release = {}
+.Targets_x64Linux_ASan = {}
+.Targets_x64ClangLinux_Debug = {}
+.Targets_x64ClangLinux_Profile = {}
+.Targets_x64ClangLinux_Release = {}
+.Targets_x64ClangLinux_ASan = {}
+.Targets_x64ClangLinux_MSan = {}
+
+.Targets_x64OSX_Debug = {}
+.Targets_x64OSX_Profile = {}
+.Targets_x64OSX_Release = {}
 
 // External
 #include "..\External\LZ4\LZ4.bff"
@@ -547,25 +570,11 @@ VCXProject( 'UpdateSolution-proj' )
 
 // Aliases : All-$Platform$-$Config$
 //------------------------------------------------------------------------------
-ForEach( .Config in .ConfigsAll )
+ForEach( .Config in .Configs )
 {
     Using( .Config )
 
-    Alias( 'All-$Platform$-$Config$' )
-    {
-        .Targets        = { // tests
-                            'CoreTest-$Platform$-$Config$',
-                            'FBuildTest-$Platform$-$Config$',
-                            // executables
-                            'FBuildApp-$Platform$-$Config$',
-                            'FBuildWorker-$Platform$-$Config$'
-                          }
-#if __LINUX__
-        .Targets        + { // libFuzzer targets
-                            'BFFFuzzer-$Platform$-$Config$'
-                          }
-#endif
-    }
+    Alias( 'All-$Platform$-$Config$' ) { .Targets = .'Targets_$Platform$_$Config$' }
 }
 
 // Aliases : All-$Platform$

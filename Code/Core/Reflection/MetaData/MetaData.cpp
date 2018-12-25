@@ -37,19 +37,6 @@ IMetaData & operator + ( IMetaData & a, IMetaData & b )
     return a;
 }
 
-// No MetaData
-//------------------------------------------------------------------------------
-IMetaData & MetaNone()
-{
-    // We have to return by reference to be able to implement the chainign + operator
-    // but everything is managed as a ptr internally so this is ok
-    IMetaData * md = nullptr;
-    PRAGMA_DISABLE_PUSH_MSVC( 6011 ); // null deref is deliberate
-    IMetaData& mdRef = *md;
-    PRAGMA_DISABLE_POP_MSVC
-    return mdRef;
-}
-
 // Basic MetaData Types
 //------------------------------------------------------------------------------
 

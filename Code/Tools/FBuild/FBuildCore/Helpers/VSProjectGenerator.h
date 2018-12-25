@@ -12,6 +12,15 @@
 class VSProjectConfig;
 class VSProjectFileType;
 
+// VSProjectFilePair
+//------------------------------------------------------------------------------
+class VSProjectFilePair
+{
+public:
+    AString m_ProjectRelativePath;  // Paths to files are project-relatice
+    AString m_AbsolutePath;         // Folder structure is relative to BasePaths which can be outside of the project folder
+};
+
 // VSProjectGenerator
 //------------------------------------------------------------------------------
 class VSProjectGenerator
@@ -48,10 +57,6 @@ private:
     void WritePGItem( const char * xmlTag, const AString & value );
 
     void GetFolderPath( const AString & fileName, AString & folder ) const;
-    static void GetProjectRelativePath( const AString & projectFolderPath,
-                                        const AString & fileName,
-                                        AString & outRelativeFileName );
-
     void CanonicalizeFilePaths( const AString & projectBasePath );
 
     // project details
@@ -68,7 +73,7 @@ private:
 
     // intermediate data
     bool m_FilePathsCanonicalized;
-    Array< AString > m_Files;
+    Array< VSProjectFilePair > m_Files;
 
     // working buffer
     AString m_Tmp;

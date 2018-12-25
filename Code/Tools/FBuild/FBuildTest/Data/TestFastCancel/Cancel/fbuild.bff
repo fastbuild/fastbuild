@@ -1,0 +1,35 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    // Standard settings
+}
+
+// Compile and link a test executable
+ObjectList( 'Cancel-Obj' )
+{
+    .CompilerInputPath      = 'Tools/FBuild/FBuildTest/Data/TestFastCancel/Cancel/'
+    .CompilerInputPattern   = '*.cpp'
+    .CompilerOutputPath     = '$Out$/Test/TestFastCancel/Cancel/'
+}
+Executable( 'Cancel-Exe' )
+{
+    .Libraries              = 'Cancel-Obj'
+    #if __WINDOWS__
+        .LinkerOptions      + ' kernel32.lib'
+                            + ' libcpmt.lib'
+                            + ' User32.lib'
+                            + .CRTLibs_Static
+    #endif
+    .LinkerOutput           = '$Out$/Test/TestFastCancel/Cancel/FBuildTestCancel.exe'
+}
+
+// Run the test executable
+Exec( 'Cancel' )
+{
+    .ExecExecutable         = 'Cancel-Exe'
+    .ExecArguments          = '1' // First process in hierarchy
+    .ExecOutput             = '$Out$/Test/TestFastCancel/Cancel/FBuildTestCancel.exe.output'
+    .ExecUseStdOutAsOutput  = true // Write log to file so our helper doesn't need to do file IO
+}
