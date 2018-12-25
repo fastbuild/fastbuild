@@ -51,10 +51,13 @@ Compiler( 'Compiler-VS2017-x64' )
                                     + ' /arch:SSE2'
     .VSLibPaths                     = ' /LIBPATH:"$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/lib/x86"'
 
-    .CompilerOptions                = .VSIncludePaths
-    .CompilerOptionsC               = .VSIncludePaths
-    .CompilerOptionsPCH             = .VSIncludePaths
-    .CompilerOptionsDeoptimized     = .VSIncludePaths
+    .CompilerOptionsCommon          = .VSIncludePaths
+                                    + ' /diagnostics:caret' // Use improved warning/error messages
+
+    .CompilerOptions                = .CompilerOptionsCommon
+    .CompilerOptionsC               = .CompilerOptionsCommon
+    .CompilerOptionsPCH             = .CompilerOptionsCommon
+    .CompilerOptionsDeoptimized     = .CompilerOptionsCommon
 
     .LinkerOptions                  = .VSLibPaths
 
@@ -74,10 +77,13 @@ Compiler( 'Compiler-VS2017-x64' )
     .VSIncludePaths                 = ' -I"$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/include/"'
     .VSLibPaths                     = ' /LIBPATH:"$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/lib/x64"'
 
-    .CompilerOptions                = .VSIncludePaths
-    .CompilerOptionsC               = .VSIncludePaths
-    .CompilerOptionsPCH             = .VSIncludePaths
-    .CompilerOptionsDeoptimized     = .VSIncludePaths
+    .CompilerOptionsCommon          = .VSIncludePaths
+                                    + ' /diagnostics:caret' // Use improved warning/error messages
+
+    .CompilerOptions                = .CompilerOptionsCommon
+    .CompilerOptionsC               = .CompilerOptionsCommon
+    .CompilerOptionsPCH             = .CompilerOptionsCommon
+    .CompilerOptionsDeoptimized     = .CompilerOptionsCommon
 
     .LinkerOptions                  = .VSLibPaths
 

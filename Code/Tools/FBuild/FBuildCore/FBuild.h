@@ -58,7 +58,7 @@ public:
 
     inline const SettingsNode * GetSettings() const { return m_DependencyGraph->GetSettings(); }
 
-    void GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD,
+    void GetCacheFileName( uint64_t preprocessedSourceKey, uint32_t commandLineKey, uint64_t toolChainKey, uint64_t pchKey,
                            AString & path ) const;
 
     void SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar );

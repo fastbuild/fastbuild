@@ -540,9 +540,9 @@ void Process::Detach()
 
     #if defined( __WINDOWS__ )
         // cleanup
-        VERIFY( ::CloseHandle( m_StdOutRead ) );
-        VERIFY( ::CloseHandle( m_StdErrRead ) );
-        VERIFY( ::CloseHandle( m_StdInWrite ) );
+        if ( m_StdOutRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdOutRead ); }
+        if ( m_StdErrRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdErrRead ); }
+        if ( m_StdInWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdInWrite ); }
         VERIFY( ::CloseHandle( GetProcessInfo().hProcess ) );
         VERIFY( ::CloseHandle( GetProcessInfo().hThread ) );
     #elif defined( __APPLE__ )

@@ -130,7 +130,6 @@ public:
     bool            EndsWith( const char * string ) const;
     bool            EndsWith( const AString & string ) const;
 
-    bool            EndsWithI( const char c ) const;
     bool            EndsWithI( const char * other ) const;
     bool            EndsWithI( const AString & other ) const;
 
@@ -138,7 +137,6 @@ public:
     bool            BeginsWith( const char * string ) const;
     bool            BeginsWith( const AString & string ) const;
 
-    bool            BeginsWithI( const char c ) const;
     bool            BeginsWithI( const char * string ) const;
     bool            BeginsWithI( const AString & string ) const;
 
