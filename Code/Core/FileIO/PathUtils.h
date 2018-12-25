@@ -48,16 +48,16 @@ public:
     // Misc
     //----------------
     static void StripFileExtension( AString & filePath );
+    static void GetRelativePath( const AString & basePath,
+                                 const AString & fileName,
+                                 AString & outRelativeFileName,
+                                 const bool rebaseFile = true );
     static void CleanPath(
         const AString & workingDir, const AString & name,
         AString & fullPath, const bool makeFullPath = true );
     static void GetPathGivenWorkingDir(
         const AString & workingDir, const AString & path,
         AString & resultPath );
-    static void GetRelativePath(
-        const AString & root, const AString & otherFile,
-        AString & otherFileRelativePath,
-        const bool rebaseFile = true );
     static void GetObfuscatedSandboxTmp(
         const bool sandboxEnabled, const AString & workingDir,
         const AString & sandboxTmp, AString & obfuscatedSandboxTmp );

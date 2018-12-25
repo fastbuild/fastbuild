@@ -58,16 +58,6 @@ private:
     void FrozenVariable_Nested() const;
     void DynamicVarNameConstruction() const;
     void OperatorMinus() const;
-    void IfFunctionTrue() const;
-    void IfNotFunctionTrue() const;
-    void IfSetFunctionTrue() const;
-    void IfNotSetFunctionTrue() const;
-    void IfFunctionFalse() const;
-    void IfNotFunctionFalse() const;
-    void IfSetFunctionFalse() const;
-    void IfNotSetFunctionFalse() const;
-    void IfFunctionBool() const;
-    void IfFunctionStringCompare() const;
     void BuiltInVariables() const;
     void CyclicDependency() const;
 
@@ -115,16 +105,6 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( FrozenVariable_Nested )
     REGISTER_TEST( DynamicVarNameConstruction )
     REGISTER_TEST( OperatorMinus )
-    REGISTER_TEST( IfFunctionTrue )
-    REGISTER_TEST( IfNotFunctionTrue )
-    REGISTER_TEST( IfSetFunctionTrue )
-    REGISTER_TEST( IfNotSetFunctionTrue )
-    REGISTER_TEST( IfFunctionFalse )
-    REGISTER_TEST( IfNotFunctionFalse )
-    REGISTER_TEST( IfSetFunctionFalse )
-    REGISTER_TEST( IfNotSetFunctionFalse )
-    REGISTER_TEST( IfFunctionBool )
-    REGISTER_TEST( IfFunctionStringCompare )
     REGISTER_TEST( BuiltInVariables )
     REGISTER_TEST( CyclicDependency )
 REGISTER_TESTS_END
@@ -445,88 +425,6 @@ void TestBFFParsing::DynamicVarNameConstruction() const
 void TestBFFParsing::OperatorMinus() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/operator_minus.bff" );
-}
-
-// IfFunctionTrue
-//------------------------------------------------------------------------------
-void TestBFFParsing::IfFunctionTrue() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_function_true.bff" );
-    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
-}
-
-// IfNotFunctionTrue
-//------------------------------------------------------------------------------
-void TestBFFParsing::IfNotFunctionTrue() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_function_true.bff" );
-    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
-}
-
-// IfSetFunctionTrue
-//------------------------------------------------------------------------------
-void TestBFFParsing::IfSetFunctionTrue() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_set_function_true.bff" );
-    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
-}
-
-// IfNotSetFunctionTrue
-//------------------------------------------------------------------------------
-void TestBFFParsing::IfNotSetFunctionTrue() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_not_set_function_true.bff" );
-    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
-}
-
-// IfFunctionFalse
-//------------------------------------------------------------------------------
-void TestBFFParsing::IfFunctionFalse() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_function_false.bff" );
-    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
-}
-
-// IfNotFunctionFalse
-//------------------------------------------------------------------------------
-void TestBFFParsing::IfNotFunctionFalse() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_function_false.bff" );
-    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
-}
-
-// IfSetFunctionFalse
-//------------------------------------------------------------------------------
-void TestBFFParsing::IfSetFunctionFalse() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_set_function_false.bff" );
-    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
-}
-
-// IfNotSetFunctionFalse
-//------------------------------------------------------------------------------
-void TestBFFParsing::IfNotSetFunctionFalse() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_not_set_function_false.bff" );
-    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
-}
-
-// IfFunctionBool
-//------------------------------------------------------------------------------
-void TestBFFParsing::IfFunctionBool() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_function_boolean.bff" );
-    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
-    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
-}
-
-// IfFunctionStringCompare
-//------------------------------------------------------------------------------
-void TestBFFParsing::IfFunctionStringCompare() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_function_stringcompare.bff" );
-    TEST_ASSERT( GetRecordedOutput().Find( "Failure" ) == nullptr );
-    TEST_ASSERT( GetRecordedOutput().Find( "Success" ) );
 }
 
 // BuiltInVariables

@@ -28,9 +28,9 @@
 class FileAscendingCompareIDeref
 {
 public:
-    inline bool operator () ( const AString * a, const AString * b ) const
+    inline bool operator () ( const VSProjectFilePair * a, const VSProjectFilePair * b ) const
     {
-        return ( a->CompareI( *b ) < 0 );
+        return ( a->m_ProjectRelativePath.CompareI( b->m_ProjectRelativePath ) < 0 );
     }
 };
 
@@ -65,7 +65,8 @@ void VSProjectGenerator::AddFile( const AString & file )
     // ensure slash consistency which we rely on later
     AStackString<> fileCopy( file );
     fileCopy.Replace( FORWARD_SLASH, BACK_SLASH );
-    m_Files.Append( fileCopy );
+    m_Files.SetSize( m_Files.GetSize() + 1 );
+    m_Files.Top().m_AbsolutePath = fileCopy;
 }
 
 // AddFiles
@@ -129,8 +130,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     // files
     {
         Write("  <ItemGroup>\n" );
-        for ( const AString & fileName : m_Files )
+        for ( const VSProjectFilePair & filePathPair : m_Files )
         {
+            const AString & fileName = filePathPair.m_ProjectRelativePath;
+
             const char * fileType = nullptr;
             const VSProjectFileType * const end = fileTypes.End();
             for ( const VSProjectFileType * it=fileTypes.Begin(); it!=end; ++it )
@@ -276,7 +279,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > defines;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, false );
+                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, false, false );
                     AStackString<> definesStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, nullptr, ";" );
                     WritePGItem( "NMakePreprocessorDefinitions", definesStr );
@@ -291,10 +294,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > includePaths;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false );
+                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false, false );
                     for ( AString & include : includePaths )
                     {
-                        GetProjectRelativePath( projectBasePath, include, include );
+                        ProjectGeneratorBase::GetRelativePath( projectBasePath, include, include );
                         #if !defined( __WINDOWS__ )
                             include.Replace( '/', '\\' ); // Convert to Windows-style slashes
                         #endif
@@ -307,7 +310,21 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "NMakeForcedIncludes",             cIt->m_ForcedIncludes );
             WritePGItem( "NMakeAssemblySearchPath",         cIt->m_AssemblySearchPath );
             WritePGItem( "NMakeForcedUsingAssemblies",      cIt->m_ForcedUsingAssemblies );
-            WritePGItem( "AdditionalOptions",               cIt->m_AdditionalOptions );
+            if ( cIt->m_AdditionalOptions.IsEmpty() == false )
+            {
+                WritePGItem( "AdditionalOptions",               cIt->m_AdditionalOptions );
+            }
+            else
+            {
+                if ( oln )
+                {
+                    Array< AString > additionalOptions;
+                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "-std", "/std", additionalOptions, false, true );
+                    AStackString<> additionalOptionsStr;
+                    ProjectGeneratorBase::ConcatIntellisenseOptions( additionalOptions, additionalOptionsStr, nullptr, " " );
+                    WritePGItem( "AdditionalOptions", additionalOptionsStr );
+                }
+            }
             WritePGItem( "Xbox360DebuggerCommand",          cIt->m_Xbox360DebuggerCommand );
             WritePGItem( "DebuggerFlavor",                  cIt->m_DebuggerFlavor );
             WritePGItem( "AumidOverride",                   cIt->m_AumidOverride );
@@ -385,13 +402,16 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
     {
         AStackString<> lastFolder;
         Write( "  <ItemGroup>\n" );
-        for ( const AString & fileName : m_Files )
+        for ( const VSProjectFilePair & filePathPair : m_Files )
         {
-            // get folder part, relative to base dir
+            // File reference (which VS uses to load from disk) is project-relative
+            Write( "    <CustomBuild Include=\"%s\">\n", filePathPair.m_ProjectRelativePath.Get() );
+
+            // get folder part, relative to base dir(s)
+            const AString & fileName = filePathPair.m_AbsolutePath;
             AStackString<> folder;
             GetFolderPath( fileName, folder );
 
-            Write( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
             if ( !folder.IsEmpty() )
             {
                 Write( "      <Filter>%s</Filter>\n", folder.Get() );
@@ -511,61 +531,6 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
     folder.Clear();
 }
 
-// GetProjectRelativePath
-//------------------------------------------------------------------------------
-/*static*/ void VSProjectGenerator::GetProjectRelativePath( const AString & projectFolderPath,
-                                                            const AString & fileName,
-                                                            AString & outRelativeFileName )
-{
-    AStackString<> cleanFileName;
-    #if !defined( __WINDOWS__ )
-        // Normally we keep all paths with native slashes, but in this case we
-        // have windows slashes, so convert to native for the relative check
-        AStackString<> pathCopy( fileName );
-        pathCopy.Replace( '\\', '/' );
-        NodeGraph::CleanPath( pathCopy, cleanFileName );
-    #else
-        NodeGraph::CleanPath( fileName, cleanFileName );
-    #endif
-
-    // Find common sub-path
-    const char * pathA = projectFolderPath.Get();
-    const char * pathB = cleanFileName.Get();
-    while ( ( *pathA == *pathB ) && ( *pathA != '\0' ) )
-    {
-        pathA++;
-        pathB++;
-    }
-    const bool hasCommonSubPath = ( pathA != projectFolderPath.Get() );
-    if ( hasCommonSubPath == false )
-    {
-        // No common sub-path, so use relative name
-        outRelativeFileName = cleanFileName;
-        return;
-    }
-
-    // Build relative path
-
-    // For every remaining dir in the project path, go up one directory
-    outRelativeFileName.Clear();
-    for (;;)
-    {
-        const char c = *pathA;
-        if ( c == 0 )
-        {
-            break;
-        }
-        if ( ( c == '/' ) || ( c == '\\' ) )
-        {
-            outRelativeFileName += "..\\";
-        }
-        ++pathA;
-    }
-
-    // Add remainder of source path relative to the common sub path
-    outRelativeFileName += pathB;
-}
-
 // CanonicalizeFilePaths
 //------------------------------------------------------------------------------
 void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath )
@@ -575,27 +540,26 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         return;
     }
 
-    // Base Paths
-    for ( AString & basePath : m_BasePaths )
-    {
-        GetProjectRelativePath( projectBasePath, basePath, basePath );
-        #if !defined( __WINDOWS__ )
+    // Base Paths are retained as absolute paths
+    #if !defined( __WINDOWS__ )
+        for ( AString & basePath : m_BasePaths )
+        {
             basePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
-        #endif
-    }
-    
+        }
+    #endif
+
     // Files
     if ( m_Files.IsEmpty() == false )
     {
         // Canonicalize and make all paths relative to project
-        Array< const AString * > filePointers( m_Files.GetSize(), false );
-        for ( AString & file : m_Files )
+        Array< const VSProjectFilePair * > filePointers( m_Files.GetSize(), false );
+        for ( VSProjectFilePair & filePathPair : m_Files )
         {
-            GetProjectRelativePath( projectBasePath, file, file );
+            ProjectGeneratorBase::GetRelativePath( projectBasePath, filePathPair.m_AbsolutePath, filePathPair.m_ProjectRelativePath );
             #if !defined( __WINDOWS__ )
-                file.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
+                filePathPair.m_ProjectRelativePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
             #endif
-            filePointers.Append( &file );
+            filePointers.Append( &filePathPair );
         }
 
         // Sort filenames to allow finding de-duplication
@@ -603,14 +567,14 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         filePointers.Sort( sorter );
 
         // Find unique files
-        Array< AString > uniqueFiles( m_Files.GetSize(), false );
-        const AString * prev = filePointers[ 0 ];
+        Array< VSProjectFilePair > uniqueFiles( m_Files.GetSize(), false );
+        const VSProjectFilePair * prev = filePointers[ 0 ];
         uniqueFiles.Append( *filePointers[ 0 ] );
         size_t numFiles = m_Files.GetSize();
         for ( size_t i=1; i<numFiles; ++i )
         {
-            const AString * current = filePointers[ i ];
-            if ( current->EqualsI( *prev ) )
+            const VSProjectFilePair * current = filePointers[ i ];
+            if ( current->m_ProjectRelativePath.EqualsI( prev->m_ProjectRelativePath ) )
             {
                 continue;
             }
@@ -623,7 +587,7 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         // we keep the sorted list in order to have more consistent behaviour
         uniqueFiles.Swap( m_Files );
     }
-   
+
     m_FilePathsCanonicalized = true;
 }
 

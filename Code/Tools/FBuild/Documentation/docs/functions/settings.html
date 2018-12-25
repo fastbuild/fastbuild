@@ -33,6 +33,11 @@ Defines global FASTBuild settings.
   .DistributableJobMemoryLimitMiB   // (optional) Limit memory used locally to prep jobs
                                     //            default: 2048 (1024 for X86)
 
+  // Experimental features
+  .AllowDBMigration_Experimental    // (optional) Migrate build state when bff changes to avoid rebuilds (default: false)
+                                    // This enables what will eventually be standard behaviour
+                                    // WARNING: This feature is experimental.
+
   // Sandbox
   .SandboxEnabled                   // (optional) Enable local worker execution sandbox, default: false
   .SandboxExe                       // (optional) Local sandbox executable, default: empty string
@@ -42,6 +47,7 @@ Defines global FASTBuild settings.
   .SandboxTmp                       // (optional) Local sandbox tmp dir, default: 'sandbox'
                                     //            For now, FBuild only sets low integrity
                                     //            permissions for the dir on Windows systems.
+
 }
 </div>
     </div>

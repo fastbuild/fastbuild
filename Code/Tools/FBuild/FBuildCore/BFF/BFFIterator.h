@@ -39,7 +39,7 @@ public:
     char operator *() const { return ( m_Pos < m_MaxPos ) ? *m_Pos : 0; }
     void SkipWhiteSpace();
     void SkipComment();
-    void SkipString( char quote );
+    void SkipString();
     void SkipWhiteSpaceAndComments();
     void SkipVariableName();
     void SkipFunctionName();
@@ -60,6 +60,7 @@ public:
     }
 
     bool IsAtComment() const;
+    bool IsAtString() const;
     bool IsAtWhitespace() const;
     bool IsAtValidVariableNameCharacter() const;
     bool IsAtValidFunctionNameCharacter() const;

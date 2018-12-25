@@ -49,7 +49,10 @@ public:
     static uint32_t GetCurrentId();
 private:
     #if defined( __WINDOWS__ )
-        void KillProcessTreeInternal( uint32_t processID );
+        void KillProcessTreeInternal( const void * hProc, // HANDLE
+                                      const uint32_t processID,
+                                      const uint64_t processCreationTime );
+        static uint64_t GetProcessCreationTime( const void * hProc ); // HANDLE
         void Read( void * handle, AutoPtr< char > & buffer, uint32_t & sizeSoFar, uint32_t & bufferSize );
         char * Read( void * handle, uint32_t * bytesRead );
         uint32_t Read( void * handle, char * outputBuffer, uint32_t outputBufferSize );
@@ -81,9 +84,8 @@ private:
 
     #if defined( __WINDOWS__ )
         void * m_StdOutRead;    // HANDLE
-        void * m_StdOutWrite;   // HANDLE
         void * m_StdErrRead;    // HANDLE
-        void * m_StdErrWrite;   // HANDLE
+        void * m_StdInWrite;    // HANDLE
     #endif
 
     #if defined( __LINUX__ ) || defined( __APPLE__ )

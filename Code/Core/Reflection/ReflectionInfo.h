@@ -17,6 +17,7 @@
 class AString;
 class IMetaData;
 class Mat44;
+class MetaNone;
 class Object;
 class ReflectionInfo;
 class ReflectedProperty;
@@ -109,31 +110,20 @@ protected:
     void SetTypeName( const char * typeName );
 
     // basic types
-    template< class T >
-    NO_INLINE void AddProperty( T * memberOffset,   const char * memberName )
-    {
-        PropertyType type = GetPropertyType( memberOffset );
-        AddPropertyInternal( type, (uint32_t)( (size_t)memberOffset ), memberName, false );
-    }
+    void AddProperty( uint32_t offset, const char * memberName, PropertyType type );
 
     // struct
-    void AddPropertyStruct( void * memberOffset, const char * memberName, const ReflectionInfo * structInfo );
+    void AddPropertyStruct( uint32_t offset, const char * memberName, const ReflectionInfo * structInfo );
 
     // array
-    template< class T >
-    NO_INLINE void AddPropertyArray( Array< T > * memberOffset, const char * memberName )
-    {
-        T * fakeElement( nullptr );
-        PropertyType type = GetPropertyType( fakeElement );
-        AddPropertyInternal( type, (uint32_t)( (size_t)memberOffset ), memberName, true );
-    }
+    void AddPropertyArray( uint32_t offset, const char * memberName, PropertyType type );
 
     // array of struct
-    void AddPropertyArrayOfStruct( void * memberOffset, const char * memberName, const ReflectionInfo * structInfo );
+    void AddPropertyArrayOfStruct( uint32_t offset, const char * memberName, const ReflectionInfo * structInfo );
 
-    void AddPropertyInternal( PropertyType type, uint32_t offset, const char * memberName, bool isArray );
-
+    void AddMetaData( const MetaNone & metaNone );
     void AddMetaData( IMetaData & metaDataChain );
+    void AddPropertyMetaData( const MetaNone & metaNone );
     void AddPropertyMetaData( IMetaData & metaDataChain );
 
     const ReflectedProperty * FindProperty( const char * name ) const;

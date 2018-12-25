@@ -28,17 +28,14 @@
     return false;
 }
 
-// IsfullPath
+// IsFullPath
 //------------------------------------------------------------------------------
 /*static*/ bool PathUtils::IsFullPath( const AString & path )
 {
     #if defined( __WINDOWS__ )
-        // full paths on Windows are in X: format
-        if ( path.GetLength() >= 2 )
-        {
-            return ( path[ 1 ] == ':' );
-        }
-        return false;
+        // full paths on Windows have a drive letter and colon, or are unc
+        return ( ( path.GetLength() >= 2 && path[ 1 ] == ':' ) || 
+                       path.BeginsWith( NATIVE_DOUBLE_SLASH ) );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         // full paths on Linux/OSX/IOS begin with a slash
         return path.BeginsWith( NATIVE_SLASH );
@@ -193,6 +190,86 @@
     if (lastDot)
     {
         filePath.SetLength( (uint32_t)( lastDot - filePath.Get() ) );
+    }
+}
+
+// GetRelativePath
+//------------------------------------------------------------------------------
+/*static*/ void PathUtils::GetRelativePath( const AString & basePath,
+                                            const AString & fileName,
+                                            AString & outRelativeFileName,
+                                            const bool rebaseFile )
+{
+    // Makes no sense to call with empty basePath
+    ASSERT( basePath.IsEmpty() == false );
+
+    // Can only determine relative paths if both are of the same scope
+    ASSERT( IsFullPath( basePath ) == IsFullPath( fileName ) );
+
+    // Handle base paths which are not slash terminated
+    if ( basePath.EndsWith( NATIVE_SLASH ) == false )
+    {
+        AStackString<> basePathCopy( basePath );
+        basePathCopy += NATIVE_SLASH;
+        GetRelativePath( basePathCopy, fileName, outRelativeFileName, rebaseFile );
+        return;
+    }
+
+    // Find common sub-path
+    const char * pathA = basePath.Get();
+    const char * pathB = fileName.Get();
+    const char * itA = pathA;
+    const char * itB = pathB;
+    while ( ( *itA == *itB ) && ( *itA != '\0' ) )
+    {
+        const bool dirToken = ( ( *itA == '/' ) || ( *itA == '\\' ) );
+        itA++;
+        itB++;
+        if ( dirToken )
+        {
+            pathA = itA;
+            pathB = itB;
+        }
+    }
+    const bool hasCommonSubPath = ( pathA != basePath.Get() );
+    if ( hasCommonSubPath )
+    {
+        // Build relative path
+
+        // For every remaining dir in the project path, go up one directory
+        outRelativeFileName.Clear();
+        for ( ;; )
+        {
+            const char c = *pathA;
+            if ( c == 0 )
+            {
+                break;
+            }
+            if ( ( c == '/' ) || ( c == '\\' ) )
+            {
+                outRelativeFileName += "..";
+                outRelativeFileName += NATIVE_SLASH;
+            }
+            ++pathA;
+        }
+
+        // Add remainder of source path relative to the common sub path
+        outRelativeFileName += pathB;
+    }
+    else
+    {
+        // No common sub-path
+        if ( rebaseFile )
+        {
+            // file is in some completely other directory, so put in root of basePath
+            const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
+            outRelativeFileName = ( lastSlash ? lastSlash + 1 : fileName.Get() );
+        }
+        else
+        {
+            // not rebasing file, so use fileName as-is
+            outRelativeFileName = fileName;
+        }
     }
 }
 
@@ -360,50 +437,6 @@
     {
         // use original path
         resultPath = path;
-    }
-}
-
-// GetRelativePath
-//------------------------------------------------------------------------------
-/*static*/ void PathUtils::GetRelativePath(
-    const AString & root, const AString & otherFile,
-    AString & otherFileRelativePath,
-    const bool rebaseFile )
-{
-    bool useSubDir = false;
-    if ( !root.IsEmpty() )
-    {
-        AStackString<> mutableRoot( root );
-        EnsureTrailingSlash( mutableRoot );
-        useSubDir = otherFile.BeginsWithI( mutableRoot );
-        if ( useSubDir )
-        {
-            // file is in sub dir, put in otherFileRelativePath but use sub dir relative location
-            otherFileRelativePath = otherFile.Get() + mutableRoot.GetLength();
-        }
-    }
-    if ( !useSubDir )
-    {
-        if ( rebaseFile )
-        {
-            // file is in some completely other directory, so put in root of otherFileRelativePath
-            const char * lastSlash = otherFile.FindLast( NATIVE_SLASH );
-            otherFileRelativePath = ( lastSlash ? lastSlash + 1 : otherFile.Get() );
-        }
-        else
-        {
-            // not rebasing file, so return original path
-            otherFileRelativePath = otherFile;
-        }
-    }
-    if ( !IsFullPath( otherFileRelativePath ) &&     // if relative path and
-         !otherFileRelativePath.BeginsWith( "." ) )  // does not start with a dot
-    {
-        // prepend dot and slash, to make relative
-        AStackString<> newRelPath( "." );
-        newRelPath += NATIVE_SLASH;
-        newRelPath += otherFileRelativePath;
-        otherFileRelativePath = newRelPath;
     }
 }
 

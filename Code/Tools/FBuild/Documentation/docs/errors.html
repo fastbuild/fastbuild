@@ -12,14 +12,16 @@
 
 <h1>Error Reference</h1>
 <h2>Categories</h2>
-<ul>
-  <li><a href='#1000'>1000 - 1099</a> General Parsing Errors</li>
-  <li><a href='#1100'>1100 - 1199</a> Function Parameter Errors</li>
-  <li><a href='#1200'>1200 - 1299</a> ForEach Specific Errors</li>
-  <li><a href='#1300'>1300 - 1399</a> Library Specific Errors</li>
-  <li><a href='#1400'>1400 - 1499</a> Copy Specific Errors</li>
-  <li><a href='#1500'>1500 - 1599</a> Compiler Specific Errors</li>
-</ul>
+<table>
+  <tr><th width=100>Range</th>                  <th width=200>Description</th></tr>
+  <tr><td><a href='#1000'>1000 - 1099</a></td>  <td>General Parsing Errors</td></tr>
+  <tr><td><a href='#1100'>1100 - 1199</a></td>  <td>Function Parameter Errors</td></tr>
+  <tr><td><a href='#1200'>1200 - 1299</a></td>  <td>ForEach Specific Errors</td></tr>
+  <tr><td><a href='#1300'>1300 - 1399</a></td>  <td>Library Specific Errors</td></tr>
+  <tr><td><a href='#1400'>1400 - 1499</a></td>  <td>Copy Specific Errors</td></tr>
+  <tr><td><a href='#1500'>1500 - 1599</a></td>  <td>Compiler Specific Errors</td></tr>
+  <tr><td><a href='#1999'>1999</a></td>         <td>User Defined Error</td></tr>
+</table>
 <h2 id='1000'>1001 - 1099 : General Parsing Errors</h2>
 <!--------------- 1001 --------------->
     <div class='newsitemheader'>1001 - Missing string start token " or '.</div>
@@ -1139,6 +1141,25 @@ Compiler( 'compiler' )
 \--here
 </div>
 </div>
+
+
+
+<h2 id='1999'>1999 : User Defined Error</h2>
+<!--------------- 1999 --------------->
+    <div class='newsitemheader'>1999 - User Error: '%s'</div>
+    <div class='newsitembody'>
+Use of the Error() function will result in a User Defined Error.
+<h4>Example Config:</h4>
+<div class='code'>Error( 'custom message' )
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1,1): FASTBuild Error #1999 - Error() - User Error: custom message
+Error( 'custom message' )
+^
+\--here
+</div>
+</div>
+
 
   <script>generateFooter()</script>
 </body>

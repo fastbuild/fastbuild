@@ -16,7 +16,7 @@ IMetaData & operator + ( IMetaData & a, IMetaData & b );
 
 // No MetaData
 //------------------------------------------------------------------------------
-IMetaData & MetaNone();
+class MetaNone {};
 
 // Basic MetaData Types
 //------------------------------------------------------------------------------

@@ -1,0 +1,14 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers        = { "127.0.0.1" }
+}
+
+ObjectList( "ShutdownMemoryLeak" )
+{
+    .CompilerInputPath      = 'Tools/FBuild/FBuildTest/Data/TestDistributed/ShutdownMemoryLeak/'
+    .CompilerInputPattern   = '*.cpp'
+    .CompilerOutputPath     = '$Out$/Test/Distributed/ShutdownMemoryLeak/'
+}

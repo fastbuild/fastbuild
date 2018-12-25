@@ -1,0 +1,7 @@
+.D = 'd'
+.ABC = {'a', 'b', 'c'}
+
+If(.D not in .ABC)
+{
+    Print("Success")
+}

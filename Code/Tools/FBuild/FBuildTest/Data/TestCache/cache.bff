@@ -9,7 +9,7 @@ Settings {} // use Standard Environment
 ObjectList( 'ObjectList' )
 {
     .CompilerInputFiles =
-    { 
+    {
         '$TestRoot$/Data/TestCache/a.cpp'
         '$TestRoot$/Data/TestCache/b.cpp'
     }

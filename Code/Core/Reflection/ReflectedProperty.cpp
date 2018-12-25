@@ -451,6 +451,7 @@ bool ReflectedProperty::FromString( const AString & buffer, Mat44 * value )
 void ReflectedProperty::AddMetaData( const IMetaData * metaDataChain )
 {
     ASSERT( m_MetaDataChain == nullptr );
+    ASSERT( metaDataChain );
     m_MetaDataChain = metaDataChain;
 }
 

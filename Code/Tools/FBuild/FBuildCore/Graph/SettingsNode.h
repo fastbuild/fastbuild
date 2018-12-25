@@ -31,6 +31,7 @@ public:
     inline const Array< AString > & GetWorkerList() const { return m_Workers; }
     uint32_t               GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
     uint32_t               GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
+    bool                   GetAllowDBMigration_Experimental() const { return m_AllowDBMigration_Experimental; }
     bool                   GetSandboxEnabled() const { return m_SandboxEnabled; }
     void                   SetSandboxEnabled( const bool sandboxEnabled );
     inline const AString & GetSandboxExe() const { return m_SandboxExe; }
@@ -59,6 +60,7 @@ private:
     Array< AString  > m_Workers;
     uint32_t          m_WorkerConnectionLimit;
     uint32_t          m_DistributableJobMemoryLimitMiB;
+    bool              m_AllowDBMigration_Experimental;
     bool              m_SandboxEnabled;
     AString           m_SandboxExe;
     AString           m_SandboxArgs;
