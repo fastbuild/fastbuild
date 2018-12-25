@@ -335,6 +335,7 @@ bool FunctionIf::HandleSimpleCompare( NodeGraph & nodeGraph,
             case Operator::OP_GREATER_THAN_OR_EQUAL:
             {
                 Error::Error_1034_OperationNotSupported( rhsVarIter, lhsVar->GetType(), rhsVar->GetType(), operatorIter );
+                return false;
             }
 
             // Logic error

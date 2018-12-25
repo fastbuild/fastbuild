@@ -498,7 +498,7 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
     // Get base directory
     GetRemotePath( remotePath );
     ASSERT( remotePath.EndsWith( NATIVE_SLASH ) );
-    
+
     // Get relative path for file and append
     AStackString<> relativePath;
     GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].m_Name, relativePath );

@@ -118,7 +118,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
     #if !USING_VS2013
-        .LinkerOptions                  = ' /DEBUG:FASTLINK' // VS2015 and later only
+        //.LinkerOptions                  = ' /DEBUG:FASTLINK' // VS2015 and later only
     #endif
 ]
 .Profile_Optimizations_MSVC =
@@ -256,6 +256,9 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                                 + ' -Wno-implicit-exception-spec-mismatch'
                             #endif
 
+                            // Disabled warnings
+                            + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
+
                             // Extra warnings
                             + ' -Wshadow'
 
@@ -388,6 +391,9 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             + ' -Wextra'
                             + ' -Wno-#pragma-messages'
                             + ' -m64'                       // x86-64
+
+                            // Disabled warnings
+                            + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
 
                             // Fires on our new/delete operator (Clang bug?)
                             + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]

@@ -26,6 +26,7 @@
 #if defined( __APPLE__ ) || defined( __LINUX__ )
     #define INVALID_HANDLE_VALUE ( -1 )
 #endif
+#define FILESTREAM_READWRITE_SIZE ( 16 * MEGABYTE )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -123,9 +124,9 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
         break;
     }
 #elif defined ( __APPLE__ ) || defined( __LINUX__ )
-    // Flags 
+    // Flags
     int32_t flags = O_CLOEXEC; // Ensure handles are not inherited by child processes
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // TODO:LINUX TODO:MAC Check these permissions 
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // TODO:LINUX TODO:MAC Check these permissions
     if ( ( fileMode & READ_ONLY ) != 0 )
     {
         flags |= O_RDONLY;
@@ -193,7 +194,7 @@ bool FileStream::IsOpen() const
     do
     {
         uint64_t remaining = ( bytesToRead - totalBytesRead );
-        uint32_t tryToReadNow = ( remaining > MEGABYTE ) ? MEGABYTE : (uint32_t)remaining;
+        uint32_t tryToReadNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
         uint32_t bytesReadNow = 0;
         if ( FALSE == ReadFile( (HANDLE)m_Handle,                           // _In_         HANDLE hFile,
                                 (char *)buffer + (size_t)totalBytesRead,    // _Out_        LPVOID lpBuffer,
@@ -230,7 +231,7 @@ bool FileStream::IsOpen() const
     do
     {
         uint64_t remaining = ( bytesToWrite - totalBytesWritten );
-        uint32_t tryToWriteNow = ( remaining > MEGABYTE ) ? MEGABYTE : (uint32_t)remaining;
+        uint32_t tryToWriteNow = ( remaining > FILESTREAM_READWRITE_SIZE ) ? FILESTREAM_READWRITE_SIZE : (uint32_t)remaining;
         uint32_t bytesWrittenNow = 0;
         if ( FALSE == WriteFile( (HANDLE)m_Handle,                              // _In_         HANDLE hFile,
                                  (char *)buffer + (size_t)totalBytesWritten,    // _In_         LPCVOID lpBuffer,

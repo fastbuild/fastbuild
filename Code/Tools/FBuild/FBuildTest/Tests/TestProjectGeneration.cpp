@@ -14,6 +14,7 @@
 // Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
@@ -39,6 +40,13 @@ private:
     void VCXProj_ProjectRelativePaths() const;
     void VCXProj_ProjectRelativePaths2() const;
 
+    // Solution
+    void Solution_Empty() const;
+    void Solution_SolutionRelativePaths() const;
+    void Solution_BuildAndDeploy_None() const;
+    void Solution_BuildAndDeploy_Project() const;
+    void Solution_BuildAndDeploy_PerSolutionConfig() const;
+
     // XCode
     void XCode() const;
 
@@ -63,6 +71,11 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( VCXProj_Folders )
     REGISTER_TEST( VCXProj_ProjectRelativePaths )
     REGISTER_TEST( VCXProj_ProjectRelativePaths2 )
+    REGISTER_TEST( Solution_Empty )
+    REGISTER_TEST( Solution_SolutionRelativePaths )
+    REGISTER_TEST( Solution_BuildAndDeploy_None )
+    REGISTER_TEST( Solution_BuildAndDeploy_Project )
+    REGISTER_TEST( Solution_BuildAndDeploy_PerSolutionConfig )
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
 REGISTER_TESTS_END
@@ -282,7 +295,9 @@ void TestProjectGeneration::TestFunction_Speed() const
         fileTypes.Append( ft );
     }
 
-    AStackString<> projectFileName( "dummy.vcxproj" );
+    AStackString<> projectFileName;
+    projectFileName.Format( "%s//dummy.vcxproj", baseDir.Get() );
+    PathUtils::FixupFilePath( projectFileName );
 
     {
         Timer t;
@@ -346,6 +361,7 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
     // Check
     bool definesOk = false;
     bool includesOk = false;
+    bool additionalOptionsOk = false;
     for ( const AString & token : tokens )
     {
         if ( token.Find( "NMakePreprocessorDefinitions" ) )
@@ -372,11 +388,18 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( token.Find( "Intellisense\\Include\\Quoted\\Slash\\Space\\Path" ) );
             includesOk = true;
         }
+        else if ( token.Find( "AdditionalOptions" ) )
+        {
+            TEST_ASSERT( token.Find( "-std:c++17" ) );
+            TEST_ASSERT( token.Find( "/std:c++14" ) );
+            TEST_ASSERT( token.Find( "/std:latest" ) );
+            additionalOptionsOk = true;
+        }
     }
     TEST_ASSERT( definesOk );
     TEST_ASSERT( includesOk );
+    TEST_ASSERT( additionalOptionsOk );
 }
-
 
 // XCodeProj_CodeSense_Check
 //------------------------------------------------------------------------------
@@ -580,14 +603,24 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
     cfg.m_Config = "Debug";
     configs.Append( cfg );
 
-    // Files 
-    pg.AddFile( AStackString<>( "File.cpp" ) );
-    pg.AddFile( AStackString<>( "file.cpp" ) );                 // Duplicate with case difference
-    pg.AddFile( AStackString<>( "File.cpp" ) );                 // Exact duplicate
-    pg.AddFile( AStackString<>( "../Code/File.cpp" ) );         // Duplicate with path difference
-    pg.AddFile( AStackString<>( "../Dir/../Code/File.cpp" ) );  // Duplicate with path difference
-    
-    AStackString<> projectFileName( "dummy.vcxproj" );
+    // Files
+    // TODO:C This test adds paths that are not normalized, but project nodes
+    // should only be passing in normalized paths
+    #if defined( __WINDOWS__ )
+        pg.AddFile( AStackString<>( "C:\\Code\\File.cpp" ) );
+        pg.AddFile( AStackString<>( "C:\\Code\\file.cpp" ) );               // Duplicate with case difference
+        pg.AddFile( AStackString<>( "C:\\Code\\File.cpp" ) );               // Exact duplicate
+        pg.AddFile( AStackString<>( "C:\\Code\\../Code/File.cpp" ) );       // Duplicate with path difference
+        pg.AddFile( AStackString<>( "C:\\Code\\../Dir/../Code/File.cpp" ) );// Duplicate with path difference
+        AStackString<> projectFileName( "C:\\Code\\dummy.vcxproj" );
+    #else
+        pg.AddFile( AStackString<>( "/Code/File.cpp" ) );
+        pg.AddFile( AStackString<>( "/Code/file.cpp" ) );                   // Duplicate with case difference
+        pg.AddFile( AStackString<>( "/Code/File.cpp" ) );                   // Exact duplicate
+        pg.AddFile( AStackString<>( "/Code/../Code/File.cpp" ) );           // Duplicate with path difference
+        pg.AddFile( AStackString<>( "/Code/../Dir/../Code/File.cpp" ) );    // Duplicate with path difference
+        AStackString<> projectFileName( "/Code/dummy.vcxproj" );
+    #endif
 
     // Check vcxproj
     {
@@ -851,6 +884,195 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
         TEST_ASSERT( filter.Replace( "<Filter Include=\"Generated\\SubDir\">", "" ) == 1 );
         TEST_ASSERT( filter.Find( "<Filter Include=" ) == nullptr );
     }
+}
+
+// Solution_Empty
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_Empty() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_Empty/empty.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Empty/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( AStackString<>( "EmptySolution" ) ) );
+
+    //
+    EnsureFileExists( solution );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::SLN_NODE );
+    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    CheckStatsTotal( 2,     2 );
+}
+
+// Solution_SolutionRelativePaths
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_SolutionRelativePaths() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_SolutionRelativePaths/SubDir2/solution.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_SolutionRelativePaths/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+
+    //
+    EnsureFileExists( solution );
+
+    // Read the project into memory
+    FileStream f;
+    VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
+    AStackString<> solutionData;
+    solutionData.SetLength( (uint32_t)f.GetFileSize() );
+    VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
+
+    // Ensure the path to the project is relative and not absolute
+    TEST_ASSERT( solutionData.Find( "\"proj1\", \"..\\SubDir1\\proj1.vcxproj\"," ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::VCXPROJECT_NODE );
+    CheckStatsNode ( 1,     1,      Node::SLN_NODE );
+    CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
+    CheckStatsTotal( 3,     3 );
+}
+
+// Solution_BuildAndDeploy_None
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_BuildAndDeploy_None() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_None/solution.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_BuildAndDeploy_None/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+
+    //
+    EnsureFileExists( solution );
+
+    // Read the project into memory
+    FileStream f;
+    VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
+    AStackString<> solutionData;
+    solutionData.SetLength( (uint32_t)f.GetFileSize() );
+    VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
+
+    // Ensure no projects is set to Build or Deploy
+    TEST_ASSERT( solutionData.Find( ".Build" ) == nullptr );
+    TEST_ASSERT( solutionData.Find( ".Deploy" ) == nullptr );
+}
+
+// Solution_BuildAndDeploy_Project
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_BuildAndDeploy_Project() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_Project/solution.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_BuildAndDeploy_Project/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+
+    //
+    EnsureFileExists( solution );
+
+    // Read the project into memory
+    FileStream f;
+    VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
+    AStackString<> solutionData;
+    solutionData.SetLength( (uint32_t)f.GetFileSize() );
+    VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
+
+    // Ensure one project is set to Build, for all 4 configs
+    TEST_ASSERT( solutionData.Replace( "Debug|x64.Build.0 = Debug|x64", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Debug|x86.Build.0 = Debug|Win32", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Release|x64.Build.0 = Release|x64", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Release|x86.Build.0 = Release|Win32", "" ) == 1 );
+
+    // Ensure one project is set to Deploy, for all 4 configs
+    TEST_ASSERT( solutionData.Replace( "Debug|x64.Deploy.0 = Debug|x64", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Debug|x86.Deploy.0 = Debug|Win32", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Release|x64.Deploy.0 = Release|x64", "" ) == 1 );
+    TEST_ASSERT( solutionData.Replace( "Release|x86.Deploy.0 = Release|Win32", "" ) == 1 );
+
+    // Ensure no other unexpected Build/Deploy settings are written
+    TEST_ASSERT( solutionData.Find( ".Build." ) == nullptr );
+    TEST_ASSERT( solutionData.Find( ".Deploy." ) == nullptr );
+}
+
+// Solution_BuildAndDeploy_PerSolutionConfig
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_BuildAndDeploy_PerSolutionConfig/solution.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_BuildAndDeploy_PerSolutionConfig/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+
+    //
+    EnsureFileExists( solution );
+
+    // Read the project into memory
+    FileStream f;
+    VERIFY( f.Open( solution.Get(), FileStream::READ_ONLY ) );
+    AStackString<> solutionData;
+    solutionData.SetLength( (uint32_t)f.GetFileSize() );
+    VERIFY( f.ReadBuffer( solutionData.Get(), solutionData.GetLength() ) == solutionData.GetLength() );
+
+    // Ensure one project is set to Build, only for one config
+    TEST_ASSERT( solutionData.Replace( "Debug|x86.Build.0 = Debug|Win32", "" ) == 1 );
+
+    // Ensure one project is set to Deploy, only for one config
+    TEST_ASSERT( solutionData.Replace( "Release|x64.Deploy.0 = Release|x64", "" ) == 1 );
+
+    // Ensure no other unexpected Build/Deploy settings are written
+    TEST_ASSERT( solutionData.Find( ".Build." ) == nullptr );
+    TEST_ASSERT( solutionData.Find( ".Deploy." ) == nullptr );
 }
 
 // XCode

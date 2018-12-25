@@ -208,7 +208,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         }
         else
         {
-            OUTPUT( "Distributed Compilation : %u Workers in pool\n", (uint32_t)workers.GetSize() );
+            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRoot().Get() );
             m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
         }
     }
@@ -661,17 +661,6 @@ void FBuild::UpdateBuildStatus( const Node * node )
 /*static*/ const char * FBuild::GetDefaultBFFFileName()
 {
     return "fbuild.bff";
-}
-
-// GetCacheFileName
-//------------------------------------------------------------------------------
-void FBuild::GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD, AString & path ) const
-{
-    // cache version - bump if cache format is changed
-    static const int cacheVersion( 9 );
-
-    // format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC-32A2B04375A2D7DE.7
-    path.Format( "%016" PRIX64 "_%08X_%016" PRIX64 "-%016" PRIX64 ".%u", keyA, keyB, keyC, keyD, cacheVersion );
 }
 
 // DisplayTargetList
