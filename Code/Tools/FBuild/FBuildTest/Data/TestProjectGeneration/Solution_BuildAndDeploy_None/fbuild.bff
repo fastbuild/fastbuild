@@ -1,0 +1,17 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// A Project
+VCXProject( 'Proj1' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_BuildAndDeploy_None\proj.vcxproj'
+}
+
+// A solution using that project, with NO Build and Deploy projects set
+VSSolution( 'Solution' )
+{
+    .SolutionProjects               = { 'Proj1' }
+    .SolutionOutput                 = "$Out$\Test\ProjectGeneration\Solution_BuildAndDeploy_None\solution.sln"
+}

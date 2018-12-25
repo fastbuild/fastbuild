@@ -289,7 +289,7 @@
                                                        const AString & include,
                                                        uint32_t errorCode )
 {
-    FormatError( iter, 1033u, nullptr, "Error reading include '%s' (Error: %u).",
+    FormatError( iter, 1033u, nullptr, "Error reading include '%s' (error %i).",
                                        include.Get(),
                                        errorCode );
 }
@@ -369,7 +369,14 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1042_UnknownOperator( const BFFIterator & iter, const AString & operatorName )
 {
-    FormatError( iter, 1042u, nullptr, "Unknown operator '%s'.", operatorName.Get() );
+    if ( operatorName.IsEmpty() )
+    {
+        FormatError( iter, 1042u, nullptr, "Unknown operator." );
+    }
+    else
+    {
+        FormatError( iter, 1042u, nullptr, "Unknown operator '%s'.", operatorName.Get() );
+    }
 }
 
 // Error_1043_CyclicDependencyDetected
@@ -637,6 +644,15 @@
     FormatError( iter, 1601u, function, ".WorkMode '%s' is unrecognized.", badWorkMode.Get() );
 }
 
+// Error_1999_UserError
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1999_UserError( const BFFIterator & iter,
+                                             const Function * function,
+                                             const AString & errorMessage )
+{
+    FormatError( iter, 1999u, function, "User Error: %s", errorMessage.Get() );
+}
+
 // FormatError
 //------------------------------------------------------------------------------
 void Error::FormatError( const BFFIterator & iter,
@@ -659,7 +675,7 @@ void Error::FormatError( const BFFIterator & iter,
     iter.GetPosInfo( line, column, lineStart );
 
     // convert to full path and '/'->'\' cleanup
-    const AStackString<> fileName( iter.GetFileName() );
+    AStackString<> fileName( iter.GetFileName() );
     AStackString<> fullPath;
     NodeGraph::CleanPath( fileName, fullPath );
 

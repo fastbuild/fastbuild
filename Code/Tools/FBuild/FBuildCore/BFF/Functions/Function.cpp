@@ -12,6 +12,7 @@
 #include "FunctionCopyDir.h"
 #include "FunctionCSAssembly.h"
 #include "FunctionDLL.h"
+#include "FunctionError.h"
 #include "FunctionExec.h"
 #include "FunctionExecutable.h"
 #include "FunctionForEach.h"
@@ -117,6 +118,7 @@ Function::~Function() = default;
     FNEW( FunctionCopyDir );
     FNEW( FunctionCSAssembly );
     FNEW( FunctionDLL );
+    FNEW( FunctionError );
     FNEW( FunctionExec );
     FNEW( FunctionExecutable );
     FNEW( FunctionForEach );
@@ -204,14 +206,13 @@ Function::~Function() = default;
         ASSERT( *start == BFFParser::BFF_FUNCTION_ARGS_OPEN );
         start++;
         start.SkipWhiteSpace();
-        const char c = *start;
-        if ( ( c != '"' ) && ( c != '\'' ) )
+        if ( !start.IsAtString() )
         {
             Error::Error_1001_MissingStringStartToken( start, this );
             return false;
         }
         BFFIterator stop( start );
-        stop.SkipString( c );
+        stop.SkipString();
         ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
         if ( start.GetDistTo( stop ) <= 1 )
         {
@@ -289,6 +290,7 @@ Function::~Function() = default;
     AStackString<> nameFromMetaData;
     if ( GetNameForNode( nodeGraph, funcStartIter, node->GetReflectionInfoV(), nameFromMetaData ) == false )
     {
+        FDELETE node;
         return false; // GetNameForNode will have emitted an error
     }
     const bool aliasUsedForName = nameFromMetaData.IsEmpty();
@@ -299,6 +301,7 @@ Function::~Function() = default;
     if ( nodeGraph.FindNode( name ) )
     {
         Error::Error_1100_AlreadyDefined( funcStartIter, this, name );
+        FDELETE node;
         return false;
     }
 

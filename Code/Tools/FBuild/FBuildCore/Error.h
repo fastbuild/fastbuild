@@ -210,6 +210,12 @@ public:
                                                        const Function * function,
                                                        const AString & badWorkMode );
 
+    // 1900-1999 : User-generate errors
+    //------------------------------------------------------------------------------
+    static void Error_1999_UserError( const BFFIterator & iter,
+                                      const Function * function,
+                                      const AString & errorMessage );
+
 private:
     static void FormatError( const BFFIterator & iter,
                              uint32_t errNum,

@@ -78,22 +78,20 @@ public:
 //------------------------------------------------------------------------------
 /*virtual*/ bool Cache::Publish( const AString & cacheId, const void * data, size_t dataSize )
 {
-    AStackString<> cacheFileName;
-    GetCacheFileName( cacheId, cacheFileName );
+    AStackString<> fullPath;
+    GetFullPathForCacheEntry( cacheId, fullPath );
 
     // make sure the cache output path exists
-    const char * lastSlash = cacheFileName.FindLast( NATIVE_SLASH );
-    AStackString<> cachePath( cacheFileName.Get(), lastSlash );
-    if ( !FileIO::EnsurePathExists( cachePath ) )
+    if ( !FileIO::EnsurePathExistsForFile( fullPath ) )
     {
         return false;
     }
 
     // open output cache (tmp) file
-    AStackString<> cacheFileTmpName( cacheFileName );
-    cacheFileTmpName += ".tmp";
+    AStackString<> fullPathTmp( fullPath );
+    fullPathTmp+= ".tmp";
     FileStream cacheTmpFile;
-    if( !cacheTmpFile.Open( cacheFileTmpName.Get(), FileStream::WRITE_ONLY ) )
+    if( !cacheTmpFile.Open( fullPathTmp.Get(), FileStream::WRITE_ONLY ) )
     {
         return false;
     }
@@ -105,21 +103,21 @@ public:
     if ( !cacheTmpWriteOk )
     {
         // failed to write to cache tmp file
-        FileIO::FileDelete( cacheFileTmpName.Get() ); // try to cleanup failure
+        FileIO::FileDelete( fullPathTmp.Get() ); // try to cleanup failure
         return false;
     }
 
     // rename tmp file to real file
-    if ( FileIO::FileMove( cacheFileTmpName, cacheFileName ) == false )
+    if ( FileIO::FileMove( fullPathTmp, fullPath ) == false )
     {
         // try to delete (possibly) existing file
-        FileIO::FileDelete( cacheFileName.Get() );
+        FileIO::FileDelete( fullPath.Get() );
 
         // try rename again
-        if ( FileIO::FileMove( cacheFileTmpName, cacheFileName ) == false )
+        if ( FileIO::FileMove( fullPathTmp, fullPath ) == false )
         {
             // problem renaming file
-            FileIO::FileDelete( cacheFileTmpName.Get() ); // try to cleanup tmp file
+            FileIO::FileDelete( fullPathTmp.Get() ); // try to cleanup tmp file
             return false;
         }
     }
@@ -134,11 +132,11 @@ public:
     data = nullptr;
     dataSize = 0;
 
-    AStackString<> cacheFileName;
-    GetCacheFileName( cacheId, cacheFileName );
+    AStackString<> fullPath;
+    GetFullPathForCacheEntry( cacheId, fullPath );
 
     FileStream cacheFile;
-    if ( cacheFile.Open( cacheFileName.Get(), FileStream::READ_ONLY ) )
+    if ( cacheFile.Open( fullPath.Get(), FileStream::READ_ONLY ) )
     {
         const size_t cacheFileSize = (size_t)cacheFile.GetFileSize();
         AutoPtr< char > mem( (char *)ALLOC( cacheFileSize ) );
@@ -179,7 +177,11 @@ public:
     {
         // Determine age bucket
         const uint64_t age = currentTime - info.m_LastWriteTime;
-        const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
+        #if defined( __WINDOWS__ )
+            const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
+        #else
+            const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)1000000000 );
+        #endif
         uint32_t ageInDays = (uint32_t)( age / oneDay );
         if ( ageInDays >= 30 )
         {
@@ -345,19 +347,20 @@ void Cache::GetCacheFiles( bool showProgress,
     }
 }
 
-// GetCacheFileName
+// GetFullPathForCacheEntry
 //------------------------------------------------------------------------------
-void Cache::GetCacheFileName( const AString & cacheId, AString & path ) const
+void Cache::GetFullPathForCacheEntry( const AString & cacheId,
+                                      AString & outFullPath ) const
 {
-    // format example: N:\\fbuild.cache\\23\\77\\2377DE32_FED872A1_AB62FEAA23498AAC.3
-    path.Format( "%s%c%c%c%c%c%c%s", m_CachePath.Get(),
-                                       cacheId[ 0 ],
-                                       cacheId[ 1 ],
-                                       NATIVE_SLASH,
-                                       cacheId[ 2 ],
-                                       cacheId[ 3 ],
-                                       NATIVE_SLASH,
-                                       cacheId.Get() );
+    // format example: N:\\fbuild.cache\\AA\\BB\\<ABCD.......>
+    outFullPath.Format( "%s%c%c%c%c%c%c%s", m_CachePath.Get(),
+                                            cacheId[ 0 ],
+                                            cacheId[ 1 ],
+                                            NATIVE_SLASH,
+                                            cacheId[ 2 ],
+                                            cacheId[ 3 ],
+                                            NATIVE_SLASH,
+                                            cacheId.Get() );
 }
 
 //------------------------------------------------------------------------------

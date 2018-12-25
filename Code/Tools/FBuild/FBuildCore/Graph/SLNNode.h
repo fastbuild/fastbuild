@@ -17,12 +17,27 @@
 //------------------------------------------------------------------------------
 class VCXProjectNode;
 
+// SolutionConfigBase
+//------------------------------------------------------------------------------
+class SolutionConfigBase : public Struct
+{
+    REFLECT_STRUCT_DECLARE( SolutionConfigBase )
+public:
+    Array< AString > m_SolutionBuildProjects;
+    Array< AString > m_SolutionDeployProjects;
+};
+
 // SolutionConfig
 //------------------------------------------------------------------------------
-class SolutionConfig : public Struct
+class SolutionConfig : public SolutionConfigBase
 {
     REFLECT_STRUCT_DECLARE( SolutionConfig )
 public:
+    SolutionConfig() = default;
+    explicit SolutionConfig( const SolutionConfigBase & baseConfig )
+        : SolutionConfigBase( baseConfig )
+    {}
+
     AString m_SolutionPlatform;
     AString m_SolutionConfig;
     AString m_Platform;
@@ -88,12 +103,12 @@ private:
 
     // Reflected
     Array< AString >            m_SolutionProjects;
-    Array< AString >            m_SolutionBuildProjects;
     AString                     m_SolutionVisualStudioVersion;
     AString                     m_SolutionMinimumVisualStudioVersion;
     Array< SolutionConfig >     m_SolutionConfigs;
     Array< SolutionFolder >     m_SolutionFolders;
     Array< SolutionDependency > m_SolutionDependencies;
+    SolutionConfigBase          m_BaseSolutionConfig;
 };
 
 //------------------------------------------------------------------------------

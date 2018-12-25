@@ -212,7 +212,7 @@ bool FunctionObjectList::CheckMSVCPCHFlags( const BFFIterator & iter,
 
 // GetExtraOutputPaths
 //------------------------------------------------------------------------------
-void FunctionObjectList::GetExtraOutputPaths( const AString & args, AString & pdbPath, AString & asmPath ) const
+void FunctionObjectList::GetExtraOutputPaths( const AString & args, AString & pdbPath, AString & asmPath )
 {
     // split to individual tokens
     Array< AString > tokens;
@@ -237,7 +237,7 @@ void FunctionObjectList::GetExtraOutputPaths( const AString & args, AString & pd
 
 // GetExtraOutputPath
 //------------------------------------------------------------------------------
-void FunctionObjectList::GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path ) const
+/*static*/ void FunctionObjectList::GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path )
 {
     const char * bodyStart = it->Get() + strlen( option ) + 1; // +1 for - or /
     const char * bodyEnd = it->GetEnd();
@@ -259,14 +259,19 @@ void FunctionObjectList::GetExtraOutputPath( const AString * it, const AString *
     // Strip quotes
     Args::StripQuotes( bodyStart, bodyEnd, path );
 
-    // If it's not already a path (i.e. includes filename.ext) then
-    // truncate to just the path
-    const char * lastSlash = path.FindLast( '\\' );
-    lastSlash = lastSlash ? lastSlash : path.FindLast( '/' );
-    lastSlash  = lastSlash ? lastSlash : path.Get(); // no slash, means it's just a filename
-    if ( lastSlash != ( path.GetEnd() - 1 ) )
+    // Normalize path
+    if ( PathUtils::IsFolderPath( path ) )
     {
-        path.SetLength( uint32_t(lastSlash - path.Get()) );
+        PathUtils::FixupFolderPath( path );
+    }
+    else
+    {
+        PathUtils::FixupFilePath( path );
+
+        // truncate to just the path    
+        const char * lastSlash = path.FindLast( NATIVE_SLASH );
+        lastSlash  = lastSlash ? lastSlash : path.Get(); // no slash, means it's just a filename
+        path.SetLength( uint32_t( lastSlash - path.Get() ) );
     }
 }
 

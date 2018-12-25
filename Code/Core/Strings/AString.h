@@ -79,6 +79,7 @@ public:
     inline bool EqualsI( const char * other ) const { return ( CompareI( other ) == 0 ); }
     inline bool EqualsI( const AString & other ) const { return ( CompareI( other ) == 0 ); }
     inline bool operator < ( const AString & other ) const { return ( Compare( other ) < 0 ); }
+    inline bool operator > ( const AString & other ) const { return ( Compare( other ) > 0 ); }
 
     inline bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
 
@@ -129,7 +130,6 @@ public:
     bool            EndsWith( const char * string ) const;
     bool            EndsWith( const AString & string ) const;
 
-    bool            EndsWithI( const char c ) const;
     bool            EndsWithI( const char * other ) const;
     bool            EndsWithI( const AString & other ) const;
 
@@ -137,7 +137,6 @@ public:
     bool            BeginsWith( const char * string ) const;
     bool            BeginsWith( const AString & string ) const;
 
-    bool            BeginsWithI( const char c ) const;
     bool            BeginsWithI( const char * string ) const;
     bool            BeginsWithI( const AString & string ) const;
 

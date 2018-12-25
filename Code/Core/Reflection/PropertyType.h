@@ -9,7 +9,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
-class DefaultDeletor;
 class Vec2;
 class Vec3;
 class Vec4;
@@ -17,6 +16,7 @@ class Mat44;
 class RefObject;
 template< class T > class Ref;
 template< class T > class WeakRef;
+template< class T > class Array;
 
 // PropertyType
 //------------------------------------------------------------------------------
@@ -62,6 +62,11 @@ template < class T >
 inline PropertyType GetPropertyType( const Ref< T > * ) { return PT_REF; }
 template < class T >
 inline PropertyType GetPropertyType( const WeakRef< T > * ) { return PT_WEAKREF; }
+template < class T >
+inline PropertyType GetPropertyArrayType( const Array< T > * )
+{
+    return GetPropertyType( static_cast< T * >( nullptr ) );
+}
 
 PropertyType GetPropertyTypeFromString( const AString & propertyType );
 
