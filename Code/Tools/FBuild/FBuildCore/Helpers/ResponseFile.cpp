@@ -88,8 +88,14 @@ bool ResponseFile::CreateInternal( const AString & contents )
                          | FileStream::TEMP;            // avoid flush to disk if possible
     if ( !m_File.Open( m_ResponseFilePath.Get(), flags ) )
     {
-        FLOG_ERROR( "Failed to create response file '%s'", m_ResponseFilePath.Get() );
-        return false; // user must handle error
+        FileIO::WorkAroundForWindowsFilePermissionProblem( m_ResponseFilePath, flags, 5 ); // 5s max wait
+
+        // Retry
+        if ( !m_File.Open( m_ResponseFilePath.Get(), flags ) )
+        {
+            FLOG_ERROR( "Failed to create response file '%s'", m_ResponseFilePath.Get() );
+            return false; // user must handle error
+        }
     }
 
     bool ok = ( m_File.Write( contents.Get(), contents.GetLength() ) == contents.GetLength() );
@@ -99,6 +105,8 @@ bool ResponseFile::CreateInternal( const AString & contents )
     }
 
     m_File.Close(); // must be closed so MSVC link.exe can open it
+
+    FileIO::WorkAroundForWindowsFilePermissionProblem( m_ResponseFilePath );
 
     return ok;
 }

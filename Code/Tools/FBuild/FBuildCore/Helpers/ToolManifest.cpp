@@ -220,7 +220,7 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         GetRemoteFilePath( (uint32_t)i, localFile );
 
         // is this file already present?
-        AutoPtr< FileStream > fileStream( FNEW( FileStream ) );
+        AutoPtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
         FileStream & f = *( fileStream.Get() );
         if ( f.Open( localFile.Get() ) == false )
         {
@@ -448,7 +448,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
     #endif
 
     // open read-only
-    AutoPtr< FileStream > fileStream( FNEW( FileStream ) );
+    AutoPtr< FileStream, DeleteDeletor > fileStream( FNEW( FileStream ) );
     if ( fileStream.Get()->Open( fileName.Get(), FileStream::READ_ONLY ) == false )
     {
         return false; // FAILED
@@ -498,7 +498,7 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
     // Get base directory
     GetRemotePath( remotePath );
     ASSERT( remotePath.EndsWith( NATIVE_SLASH ) );
-    
+
     // Get relative path for file and append
     AStackString<> relativePath;
     GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].m_Name, relativePath );

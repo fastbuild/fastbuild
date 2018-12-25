@@ -53,6 +53,7 @@ public:
     static bool DirectoryCreate( const AString & path );
     static bool DirectoryExists( const AString & path );
     static bool EnsurePathExists( const AString & path );
+    static bool EnsurePathExistsForFile( const AString & name );
 
     static uint64_t GetFileLastWriteTime( const AString & fileName );
     static bool     SetFileLastWriteTime( const AString & fileName, uint64_t fileTime );

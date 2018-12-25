@@ -183,6 +183,19 @@ JobQueue::~JobQueue()
         FDELETE m_Workers[ i ];
     }
 
+    // free locally available distributed jobs
+    {
+        MutexHolder m( m_DistributedJobsMutex );
+        // we may have some distributable jobs that could not be built,
+        // so delete them here before checking mem usage below
+        const size_t numJobsAvailable = m_DistributableJobs_Available.GetSize();
+        for ( size_t i=0; i<numJobsAvailable; ++i )
+        {
+            FDELETE m_DistributableJobs_Available[ i ];
+        }
+        m_DistributableJobs_Available.Clear();
+    }
+
     ASSERT( m_CompletedJobs.IsEmpty() );
     ASSERT( m_CompletedJobsFailed.IsEmpty() );
     ASSERT( Job::GetTotalLocalDataMemoryUsage() == 0 );

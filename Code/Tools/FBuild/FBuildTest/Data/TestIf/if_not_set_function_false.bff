@@ -1,0 +1,7 @@
+.AD = {'a', 'd'}
+.ABC = {'a', 'b', 'c'}
+
+If(.AD not in .ABC)
+{
+    Print("Failure")
+}

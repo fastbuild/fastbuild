@@ -8,6 +8,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 
 #include "Core/FileIO/FileIO.h"
@@ -32,6 +33,7 @@ private:
     void RemoteRaceWinRemote();
     void AnonymousNamespaces();
     void ErrorsAreCorrectlyReported() const;
+    void ShutdownMemoryLeak() const;
     void TestForceInclude() const;
     void TestZiDebugFormat() const;
     void TestZiDebugFormat_Local() const;
@@ -54,6 +56,10 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( RemoteRaceWinRemote )
     REGISTER_TEST( AnonymousNamespaces )
     REGISTER_TEST( ErrorsAreCorrectlyReported )
+    #if defined( __WINDOWS__ )
+        // TODO:LINUX TODO:OSX - Fix and enable this test
+        REGISTER_TEST( ShutdownMemoryLeak )
+    #endif
     #if defined( __WINDOWS__ )
         REGISTER_TEST( TestForceInclude )
         REGISTER_TEST( TestZiDebugFormat )
@@ -251,6 +257,58 @@ void TestDistributed::ErrorsAreCorrectlyReported() const
             TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
         }
     #endif
+}
+
+// ShutdownMemoryLeak
+//------------------------------------------------------------------------------
+void TestDistributed::ShutdownMemoryLeak() const
+{
+    // Ensure clean shutdown (no leaks) if the build is aborted and there are
+    // available distributable jobs
+    //
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ShutdownMemoryLeak/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
+
+    // Init
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // NOTE: No remote server created so jobs stay in m_DistributableJobs_Available queue
+
+    // Create thread that will abort build to simulate Crtl+C or other external stop
+    class Helper
+    {
+    public:
+        static uint32_t AbortBuild( void * )
+        {
+            // Wait until some distribtued jobs are available
+            Timer t;
+            while ( Job::GetTotalLocalDataMemoryUsage() == 0 )
+            {
+                Thread::Sleep( 1 );
+                TEST_ASSERT( t.GetElapsed() < 5.0f ); // Ensure test doesn't hang if broken
+            }
+
+            // Abort the build
+            FBuild::Get().AbortBuild();
+            return 0;
+        }
+    };
+    Thread::ThreadHandle h = Thread::CreateThread( Helper::AbortBuild );
+
+    // Start build and check it was aborted
+    TEST_ASSERT( fBuild.Build( AStackString<>( "ShutdownMemoryLeak" ) ) == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: ShutdownMemoryLeak" ) )
+
+    Thread::WaitForThread( h );
+    Thread::CloseHandle( h );
 }
 
 // TestZiDebugFormat

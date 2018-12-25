@@ -167,10 +167,29 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_FixupErrorPaths = true;
                 continue;
             }
+            else if ( thisArg == "-forceremote" )
+            {
+                m_AllowDistributed = true;
+                m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+                m_AllowLocalRace = false;
+                m_UseCacheRead = false;
+                m_UseCacheWrite = false;
+                continue;
+            }
             else if ( thisArg == "-help" )
             {
                 DisplayHelp( programName );
                 return OPTIONS_OK_AND_QUIT; // exit app
+            }
+            else if ( ( thisArg == "-ide" ) || ( thisArg == "-vs" ) )
+            {
+                m_ShowProgress = false;
+                progressOptionSpecified = true;
+                #if defined( __WINDOWS__ )
+                    m_FixupErrorPaths = true;
+                    m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
+                #endif
+                continue;
             }
             else if ( thisArg.BeginsWith( "-j" ) &&
                       sscanf( thisArg.Get(), "-j%u", &m_NumWorkerThreads ) == 1 )
@@ -181,6 +200,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                     continue; // 'numWorkers' will contain value now
                 }
             }
+            else if ( thisArg == "-monitor" )
+            {
+                m_EnableMonitor = true;
+                continue;
+            }
             else if ( thisArg == "-nooutputbuffering" )
             {
                 // this doesn't do anything any more
@@ -190,17 +214,6 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-noprogress" )
             {
                 m_ShowProgress = false;
-                progressOptionSpecified = true;
-                continue;
-            }
-            else if ( thisArg == "-nounity" )
-            {
-                m_NoUnity = true;
-                continue;
-            }
-            else if ( thisArg == "-progress" )
-            {
-                m_ShowProgress = true;
                 progressOptionSpecified = true;
                 continue;
             }
@@ -215,18 +228,26 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_NoSummaryOnError = true;
                 continue;
             }
+            else if ( thisArg == "-nounity" )
+            {
+                m_NoUnity = true;
+                continue;
+            }
+            else if ( thisArg == "-progress" )
+            {
+                m_ShowProgress = true;
+                progressOptionSpecified = true;
+                continue;
+            }
+            else if ( thisArg == "-quiet" )
+            {
+                m_ShowBuildCommands = false;
+                m_ShowInfo = false;
+                continue;
+            }
             else if ( thisArg == "-report" )
             {
                 m_GenerateReport = true;
-                continue;
-            }
-            else if ( thisArg == "-forceremote" )
-            {
-                m_AllowDistributed = true;
-                m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
-                m_AllowLocalRace = false;
-                m_UseCacheRead = false;
-                m_UseCacheWrite = false;
                 continue;
             }
             else if ( thisArg == "-showcmds" )
@@ -260,30 +281,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 DisplayVersion();
                 return OPTIONS_OK_AND_QUIT; // exit app
             }
-            else if ( ( thisArg == "-ide" ) || ( thisArg == "-vs" ) )
-            {
-                m_ShowProgress = false;
-                progressOptionSpecified = true;
-                #if defined( __WINDOWS__ )
-                    m_FixupErrorPaths = true;
-                    m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
-                #endif
-                continue;
-            }
-            else if ( thisArg == "-quiet" )
-            {
-                m_ShowBuildCommands = false;
-                m_ShowInfo = false;
-                continue;
-            }
+            // -vs : see -ide
             else if ( thisArg == "-wait" )
             {
                 m_WaitMode = true;
-                continue;
-            }
-            else if ( thisArg == "-monitor" )
-            {
-                m_EnableMonitor = true;
                 continue;
             }
             else if ( thisArg == "-wrapper")
@@ -293,14 +294,14 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 #endif
                 continue;
             }
-            else if ( thisArg == "-wrapperintermediate")
+            else if ( thisArg == "-wrapperintermediate") // Internal use only
             {
                 #if defined( __WINDOWS__ )
                     m_WrapperMode = WRAPPER_MODE_INTERMEDIATE_PROCESS;
                 #endif
                 continue;
             }
-            else if ( thisArg == "-wrapperfinal")
+            else if ( thisArg == "-wrapperfinal") // Internal use only
             {
                 #if defined( __WINDOWS__ )
                     m_WrapperMode = WRAPPER_MODE_FINAL_PROCESS;
@@ -485,12 +486,13 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             "                -wrapper (Windows)\n"
             " -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
             "                default of hardware thread count.\n"
+            " -monitor       Emit a machine-readable file while building.\n"
             " -noprogress    Don't show the progress bar while building.\n"
             " -nounity       [Experimental] Build files individually instead of in Unity.\n"
-            " -progress      Show the progress bar while building, even if stdout is redirected.\n"
             " -nostoponerror Don't stop building on first error. Try to build as much\n"
             "                as possible.\n"
             " -nosummaryonerror Hide the summary if the build fails. Implies -summary.\n"
+            " -progress      Show the progress bar while building, even if stdout is redirected.\n"
             " -quiet         Don't show build output.\n"
             " -report        Ouput a detailed report.html at the end of the build.\n"
             "                This will lengthen the total build time.\n"

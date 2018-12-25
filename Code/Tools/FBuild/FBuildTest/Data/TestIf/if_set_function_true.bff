@@ -1,0 +1,7 @@
+.AB = {'a', 'b'}
+.ABC = {'a', 'b', 'c'}
+
+If(.AB in .ABC)
+{
+    Print("Success")
+}

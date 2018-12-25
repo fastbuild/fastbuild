@@ -454,7 +454,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
             // Defines
             {
                 Array< AString > defines;
-                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, true );
+                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, true, false );
                 AStackString<> definesStr;
                 ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, "\t\t\t\t\t\"", "\",\n" );
                 Write( "\t\t\t\tGCC_PREPROCESSOR_DEFINITIONS = (\n" );
@@ -474,7 +474,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
             // User Include Paths
             {
                 Array< AString > includePaths;
-                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, true );
+                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, true, false );
                 for ( AString & include : includePaths )
                 {
                     AStackString<> fullIncludePath;

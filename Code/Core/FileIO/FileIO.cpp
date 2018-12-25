@@ -541,6 +541,18 @@
     return true;
 }
 
+// EnsurePathExistsForFile
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::EnsurePathExistsForFile( const AString & name )
+{
+    const char * lastSlashA = name.FindLast( NATIVE_SLASH );
+    const char * lastSlashB = name.FindLast( OTHER_SLASH );
+    const char * lastSlash = lastSlashA > lastSlashB ? lastSlashA : lastSlashB;
+    ASSERT( lastSlash ); // Caller must pass something valid
+    AStackString<> pathOnly( name.Get(), lastSlash );
+    return EnsurePathExists( pathOnly );
+}
+
 // GetFileLastWriteTime
 //------------------------------------------------------------------------------
 /*static*/ uint64_t FileIO::GetFileLastWriteTime( const AString & fileName )

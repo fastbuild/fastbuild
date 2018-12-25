@@ -34,6 +34,7 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
+    REFLECT(        m_AllowDBMigration_Experimental, "AllowDBMigration_Experimental", MetaOptional() )
     REFLECT(        m_WorkerListRefreshLimitSec,      "WorkerListRefreshLimit",    MetaOptional() )
     REFLECT(        m_WorkerConnectionRetryLimitSec,  "WorkerConnectionRetryLimit",    MetaOptional() )
 REFLECT_END( SettingsNode )
@@ -42,12 +43,13 @@ REFLECT_END( SettingsNode )
 //------------------------------------------------------------------------------
 SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
+, m_WorkerConnectionLimit( 15 )  // default: a maximum of 15 workers simultaneously connected
+, m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
+, m_AllowDBMigration_Experimental( false )
 , m_WorkerListRefreshLimitSec( 300 )  // default: a maximum of 5 minutes refreshing the worker list,
                                       // in case workers are rebooting
 , m_WorkerConnectionRetryLimitSec( 300 )  // default: a maximum of 5 minutes retrying connections,
                                           // in case workers are rebooting
-, m_WorkerConnectionLimit( 15 )  // default: a maximum of 15 workers simultaneously connected
-, m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );
@@ -87,12 +89,12 @@ SettingsNode::~SettingsNode() = default;
 //------------------------------------------------------------------------------
 const AString & SettingsNode::GetCachePath() const
 {
-    // Environment variable takes priority
-    if ( m_CachePathFromEnvVar.IsEmpty() == false )
+    // Settings() bff option overrides environment variable
+    if ( m_CachePath.IsEmpty() == false )
     {
-        return m_CachePathFromEnvVar;
+        return m_CachePath;
     }
-    return m_CachePath;
+    return m_CachePathFromEnvVar;
 }
 
 // GetCachePluginDLL

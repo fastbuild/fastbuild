@@ -20,8 +20,10 @@ private:
     void TestParseBFF() const;
     void TestBuildLib() const;
     void TestBuildLib_NoRebuild() const;
+    void TestBuildLib_NoRebuild_BFFChange() const;
     void TestLibMerge() const;
     void TestLibMerge_NoRebuild() const;
+    void TestLibMerge_NoRebuild_BFFChange() const;
 
     const char * GetBuildLibDBFileName() const { return "../tmp/Test/BuildAndLinkLibrary/buildlib.fdb"; }
     const char * GetMergeLibDBFileName() const { return "../tmp/Test/BuildAndLinkLibrary/mergelib.fdb"; }
@@ -33,8 +35,10 @@ REGISTER_TESTS_BEGIN( TestBuildAndLinkLibrary )
     REGISTER_TEST( TestParseBFF )
     REGISTER_TEST( TestBuildLib )
     REGISTER_TEST( TestBuildLib_NoRebuild )
+    REGISTER_TEST( TestBuildLib_NoRebuild_BFFChange )
     REGISTER_TEST( TestLibMerge )
     REGISTER_TEST( TestLibMerge_NoRebuild )
+    REGISTER_TEST( TestLibMerge_NoRebuild_BFFChange )
 REGISTER_TESTS_END
 
 // TestStackFramesEmpty
@@ -120,6 +124,33 @@ void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild() const
     CheckStatsTotal( 13,    8 );
 }
 
+// TestBuildLib_NoRebuild_BFFChange
+//------------------------------------------------------------------------------
+void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild_BFFChange() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    options.m_ForceDBMigration_Debug = true;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( GetBuildLibDBFileName() ) );
+
+    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/test.lib" );
+
+    // Build
+    TEST_ASSERT( fBuild.Build( lib ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode ( 7,     7,      Node::FILE_NODE ); // 3 cpps + 3 headers + librarian
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( 3,     0,      Node::OBJECT_NODE );
+    CheckStatsNode ( 1,     0,      Node::LIBRARY_NODE );
+    CheckStatsTotal( 13,    9 );
+}
+
 // TestLibMerge
 //------------------------------------------------------------------------------
 void TestBuildAndLinkLibrary::TestLibMerge() const
@@ -176,6 +207,33 @@ void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild() const
     CheckStatsNode ( 3,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 3,     0,      Node::LIBRARY_NODE ); // 2 libs + merge lib
     CheckStatsTotal( 15,    7 );
+}
+
+// TestLibMerge_NoRebuild_BFFChange
+//------------------------------------------------------------------------------
+void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild_BFFChange() const
+{
+    FBuildOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/fbuild.bff";
+    options.m_ShowSummary = true; // required to generate stats for node count checks
+    options.m_ForceDBMigration_Debug = true;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize( GetMergeLibDBFileName() ) );
+
+    const AStackString<> lib( "../tmp/Test/BuildAndLinkLibrary/merged.lib" );
+
+    // Build
+    TEST_ASSERT( fBuild.Build( lib ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 7,     7,      Node::FILE_NODE ); // 3 cpps + 3 headers + librarian
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE ); // Compiler rebuils after migration
+    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
+    CheckStatsNode ( 3,     0,      Node::OBJECT_NODE );
+    CheckStatsNode ( 3,     0,      Node::LIBRARY_NODE ); // 2 libs + merge lib
+    CheckStatsTotal( 15,    8 );
 }
 
 //------------------------------------------------------------------------------

@@ -1,0 +1,8 @@
+//
+// Make sure an error is reported
+//
+.String = 'A'
+.String2 = 'B'
+If(.String == .String2 and some invalid stuff)
+{
+}

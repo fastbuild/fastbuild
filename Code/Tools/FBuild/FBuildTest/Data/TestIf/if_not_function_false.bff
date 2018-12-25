@@ -1,0 +1,7 @@
+.A = 'a'
+.ABC = {'a', 'b', 'c'}
+
+If(.A not in .ABC)
+{
+    Print("Failure")
+}
