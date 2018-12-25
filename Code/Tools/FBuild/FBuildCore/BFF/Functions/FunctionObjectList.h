@@ -35,8 +35,10 @@ protected:
                                const AString & pchOutputFile,
                                const char * compilerOutputExtension,
                                AString & pchObjectName ) const;
-    void    GetExtraOutputPaths( const AString & args, AString & pdbPath, AString & asmPath ) const;
-    void    GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path ) const;
+
+    friend class TestObjectList;
+    static void GetExtraOutputPaths( const AString & args, AString & pdbPath, AString & asmPath );
+    static void GetExtraOutputPath( const AString * it, const AString * end, const char * option, AString & path );
 };
 
 //------------------------------------------------------------------------------

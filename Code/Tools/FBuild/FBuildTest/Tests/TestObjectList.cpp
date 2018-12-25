@@ -7,6 +7,7 @@
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Core/Strings/AStackString.h"
 
 // TestObjectList
@@ -19,8 +20,9 @@ private:
     // Tests
     void TestExcludedFiles() const;
     void CompilerInputFilesRoot() const;
+    void ExtraOutputFolders_PathExtraction() const;
     #if defined( __WINDOWS__ )
-        void ExtraOutputFolders() const;
+        void ExtraOutputFolders_Build() const;
     #endif
 };
 
@@ -29,8 +31,9 @@ private:
 REGISTER_TESTS_BEGIN( TestObjectList )
     REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
     REGISTER_TEST( CompilerInputFilesRoot )
+    REGISTER_TEST( ExtraOutputFolders_PathExtraction )
     #if defined( __WINDOWS__ )
-        REGISTER_TEST( ExtraOutputFolders )
+        REGISTER_TEST( ExtraOutputFolders_Build )
     #endif
 REGISTER_TESTS_END
 
@@ -82,10 +85,32 @@ void TestObjectList::CompilerInputFilesRoot() const
     TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
 }
 
-// ExtraOutputFolders
+// ExtraOutputFolders_PathExtraction
+//------------------------------------------------------------------------------
+void TestObjectList::ExtraOutputFolders_PathExtraction() const
+{
+    // Check that these cases are handled:
+    // - mixed slashes
+    // - ../
+    // - double //
+    AStackString<> args( " /FdTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//pdb/file.pdb"
+                         " /FaTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//asm/file.asm" );
+
+    // Getthe paths
+    AStackString<> pdbPath, asmPath;
+    FunctionObjectList::GetExtraOutputPaths( args, pdbPath, asmPath );
+
+    // Check that the entire span is correctly captured
+    TEST_ASSERT( pdbPath.BeginsWith( "Tools" ) );
+    TEST_ASSERT( pdbPath.EndsWith( "pdb" ) && !pdbPath.EndsWith( ".pdb" ));
+    TEST_ASSERT( asmPath.BeginsWith( "Tools" ) );
+    TEST_ASSERT( asmPath.EndsWith( "asm" ) && !pdbPath.EndsWith( ".asm" ));
+}
+
+// ExtraOutputFolders_Build
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestObjectList::ExtraOutputFolders() const
+    void TestObjectList::ExtraOutputFolders_Build() const
     {
         FBuildTestOptions options;
         options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ExtraOutputPaths/fbuild.bff";
