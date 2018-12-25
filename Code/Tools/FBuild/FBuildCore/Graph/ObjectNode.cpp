@@ -1052,7 +1052,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     PROFILE_FUNCTION
 
-    // hash the pre-processed intput data
+    // hash the pre-processed input data
     ASSERT( job->GetData() );
     const uint64_t preprocessedSourceKey = xxHash::Calc64( job->GetData(), job->GetDataSize() );
 
@@ -1080,7 +1080,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     }
 
     AStackString<> cacheName;
-    FBuild::Get().GetCacheFileName( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
+    ICache::GetCacheId( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
     job->SetCacheName(cacheName);
 
     return job->GetCacheName();
