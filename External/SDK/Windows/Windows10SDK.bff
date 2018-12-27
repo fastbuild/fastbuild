@@ -16,8 +16,6 @@
                                 + ' -DWIN32'
                                 + ' -D_WIN32'
                                 + ' -D__WINDOWS__'
-                                + ' -D_CRT_SECURE_NO_WARNINGS'            // don't warn about unsafe functions - TODO:C Fix warnings and remove
-                                + ' -D_WINSOCK_DEPRECATED_NO_WARNINGS'    // don't warn about deprecated winsock functions - TODO:C Update API use
 
 // Windows 10 SDK
 //------------------------------------------------------------------------------

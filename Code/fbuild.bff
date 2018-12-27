@@ -249,6 +249,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
                             + ' -Wno-unknown-pragmas'           // unknown pragma ignored [-Wunknown-pragmas]
                             + ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
+                            + ' -Wno-invalid-token-paste'       // pasting formed '"Use ""ADDRINFOEXW"', an invalid preprocessing token [-Winvalid-token-paste]
                             + ' -Wno-expansion-to-defined'      // macro expansion producing 'defined' has undefined behavior [-Wexpansion-to-defined]
                             + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
                             + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
@@ -256,6 +257,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             #if USING_VS2013
                                 + ' -Wno-implicit-exception-spec-mismatch'
                             #endif
+                            + ' -Wno-deprecated-declarations' // Clang doesn't respect pragmas disabling warning in stdio.h
 
                             // Disabled warnings
                             + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types

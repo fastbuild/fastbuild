@@ -96,8 +96,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-cachetrim" )
             {
                 const int sizeIndex = ( i + 1 );
+                PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
                 if ( ( sizeIndex >= argc ) ||
-                     ( sscanf( argv[ sizeIndex ], "%u", &m_CacheTrim ) ) != 1 )
+                     ( sscanf( argv[ sizeIndex ], "%u", &m_CacheTrim ) ) != 1 ) // TODO:C Consider using sscanf_s
+                PRAGMA_DISABLE_POP_MSVC // 4996
                 {
                     OUTPUT( "FBuild: Error: Missing or bad <sizeMiB> for '-cachetrim' argument\n" );
                     OUTPUT( "Try \"%s -help\"\n", programName.Get() );
@@ -191,8 +193,10 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 #endif
                 continue;
             }
+            PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
             else if ( thisArg.BeginsWith( "-j" ) &&
-                      sscanf( thisArg.Get(), "-j%u", &m_NumWorkerThreads ) == 1 )
+                      sscanf( thisArg.Get(), "-j%u", &m_NumWorkerThreads ) == 1 ) // TODO:C Consider using sscanf_s
+            PRAGMA_DISABLE_POP_MSVC // 4996
             {
                 // only accept within sensible range
                 if ( m_NumWorkerThreads <= 256 )
