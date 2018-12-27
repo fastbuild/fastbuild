@@ -153,6 +153,7 @@ public:
     bool Deserialize( NodeGraph & nodeGraph, IOStream & stream );
 
     static bool EnsurePathExistsForFile( const AString & name );
+    static bool DoPreBuildFileDeletion( const AString & fileName );
 
     inline uint64_t GetStamp() const { return m_Stamp; }
 

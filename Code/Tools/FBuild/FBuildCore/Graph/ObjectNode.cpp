@@ -212,23 +212,15 @@ ObjectNode::~ObjectNode()
     // Delete previous file(s) if doing a clean build
     if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
     {
-        if ( FileIO::FileExists( GetName().Get() ) )
+        if ( DoPreBuildFileDeletion( GetName() ) == false )
         {
-            if ( FileIO::FileDelete( GetName().Get() ) == false )
-            {
-                FLOG_ERROR( "Failed to delete file before build '%s'", GetName().Get() );
-                return NODE_RESULT_FAILED;
-            }
+            return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
         }
         if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
         {
-            if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
+            if ( DoPreBuildFileDeletion( m_PCHObjectFileName ) == false )
             {
-                if ( FileIO::FileDelete( m_PCHObjectFileName.Get() ) == false )
-                {
-                    FLOG_ERROR( "Failed to delete file before build '%s'", m_PCHObjectFileName.Get() );
-                    return NODE_RESULT_FAILED;
-                }
+                return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
             }
         }
     }
