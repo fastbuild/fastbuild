@@ -196,9 +196,10 @@ Function::~Function() = default;
 {
     m_AliasForFunction.Clear();
     if ( AcceptsHeader() &&
-         functionHeaderStartToken && functionHeaderStopToken &&
-         ( functionHeaderStartToken->GetDistTo( *functionHeaderStopToken ) > 1 ) )
+         functionHeaderStartToken && functionHeaderStopToken )
     {
+        ASSERT( *functionHeaderStartToken < *functionHeaderStopToken );
+
         // find opening quote
         BFFIterator start( *functionHeaderStartToken );
         ASSERT( *start == BFFParser::BFF_FUNCTION_ARGS_OPEN );
