@@ -27,6 +27,7 @@ public:
 
     // Access to settings
     const AString &                     GetCachePath() const;
+    bool                                GetCachePathMustBeMountPoint() const { return m_CachePathMustBeMountPoint; }
     const AString &                     GetCachePluginDLL() const;
     inline const Array< AString > &     GetWorkerList() const { return m_Workers; }
     uint32_t                            GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
@@ -49,6 +50,7 @@ private:
     Array< AString  >   m_Workers;
     uint32_t            m_WorkerConnectionLimit;
     uint32_t            m_DistributableJobMemoryLimitMiB;
+    bool                m_CachePathMustBeMountPoint;
     bool                m_AllowDBMigration_Experimental;
 };
 

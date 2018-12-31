@@ -36,6 +36,8 @@ ApplicationEnvironment
 AssemblySearchPath
 AumidOverride
 CachePath
+CachePathMustBeMountPoint
+CachePluginDLL
 Compiler
 CompilerFamily
 CompilerForceUsing

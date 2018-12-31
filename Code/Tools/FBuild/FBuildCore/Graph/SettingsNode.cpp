@@ -30,6 +30,7 @@
 REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
     REFLECT(        m_CachePath,                "CachePath",                MetaOptional() )
+    REFLECT(        m_CachePathMustBeMountPoint,"CachePathMustBeMountPoint",    MetaOptional() )
     REFLECT(        m_CachePluginDLL,           "CachePluginDLL",           MetaOptional() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
@@ -43,6 +44,7 @@ SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
 , m_WorkerConnectionLimit( 15 )
 , m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
+, m_CachePathMustBeMountPoint( false )
 , m_AllowDBMigration_Experimental( false )
 {
     // Cache path from environment

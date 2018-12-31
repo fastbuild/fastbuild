@@ -52,12 +52,28 @@ public:
 
 // Init
 //------------------------------------------------------------------------------
-/*virtual*/ bool Cache::Init( const AString & cachePath )
+/*virtual*/ bool Cache::Init( const AString & cachePath, bool cachePathMustBeMountPoint )
 {
     PROFILE_FUNCTION
 
     m_CachePath = cachePath;
     PathUtils::EnsureTrailingSlash( m_CachePath );
+
+    // Check cache mount point if option is enabled
+    #if defined( __WINDOWS__ )
+        (void)cachePathMustBeMountPoint; // Not supported on Windows
+    #else
+        if ( cachePathMustBeMountPoint )
+        {
+            if ( FileIO::GetDirectoryIsMountPoint( cachePath ) == false )
+            {
+                FLOG_WARN( "CachePath is not a mount point - Caching disabled (Path '%s')", m_CachePath.Get() );
+                return false;
+            }
+            return true;
+        }
+    #endif
+
     if ( FileIO::EnsurePathExists( m_CachePath ) )
     {
         return true;
