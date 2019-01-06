@@ -602,6 +602,12 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                 ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
             }
         }
+
+        // get list of messages during remote work 
+        AStackString<> msgBuffer;
+        job->GetMessagesForLog(msgBuffer);
+        
+        Node::DumpOutput( nullptr, msgBuffer.Get(), msgBuffer.GetLength(), nullptr );
     }
     else
     {
