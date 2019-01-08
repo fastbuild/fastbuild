@@ -1178,7 +1178,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     NodeGraph::CleanPath( potentialNodeName, potentialNodeNameClean );
 
     // see if a node already exists
-    Node * node = nodeGraph.FindNode( potentialNodeNameClean );
+    Node * node = nodeGraph.FindNodeExact( potentialNodeNameClean );
     if ( node )
     {
         // aliases not supported - must point to something that provides a file
