@@ -9,6 +9,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+template< class T > class Array;
 class AString;
 
 // Env
@@ -37,6 +38,7 @@ public:
     static bool IsStdOutRedirected();
 
     static uint32_t GetLastErr();
+    static char * AllocEnvironmentString( const Array< AString > & environment );
 };
 
 // GetPlatform
