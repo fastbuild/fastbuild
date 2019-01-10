@@ -212,23 +212,15 @@ ObjectNode::~ObjectNode()
     // Delete previous file(s) if doing a clean build
     if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
     {
-        if ( FileIO::FileExists( GetName().Get() ) )
+        if ( DoPreBuildFileDeletion( GetName() ) == false )
         {
-            if ( FileIO::FileDelete( GetName().Get() ) == false )
-            {
-                FLOG_ERROR( "Failed to delete file before build '%s'", GetName().Get() );
-                return NODE_RESULT_FAILED;
-            }
+            return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
         }
         if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
         {
-            if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
+            if ( DoPreBuildFileDeletion( m_PCHObjectFileName ) == false )
             {
-                if ( FileIO::FileDelete( m_PCHObjectFileName.Get() ) == false )
-                {
-                    FLOG_ERROR( "Failed to delete file before build '%s'", m_PCHObjectFileName.Get() );
-                    return NODE_RESULT_FAILED;
-                }
+                return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
             }
         }
     }
@@ -757,16 +749,16 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 //------------------------------------------------------------------------------
 /*static*/ Node * ObjectNode::LoadRemote( IOStream & stream )
 {
-    AStackString<> name; 
-    AStackString<> sourceFile; 
-    uint32_t flags; 
-    AStackString<> compilerArgs; 
+    AStackString<> name;
+    AStackString<> sourceFile;
+    uint32_t flags;
+    AStackString<> compilerArgs;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||
          ( stream.Read( flags ) == false ) ||
          ( stream.Read( compilerArgs ) == false ) )
     {
-        return nullptr; 
+        return nullptr;
     }
 
     NodeProxy * srcFile = FNEW( NodeProxy( sourceFile ) );
@@ -1052,35 +1044,35 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
     PROFILE_FUNCTION
 
-    // hash the pre-processed intput data
+    // hash the pre-processed input data
     ASSERT( job->GetData() );
-    uint64_t a = xxHash::Calc64( job->GetData(), job->GetDataSize() );
+    const uint64_t preprocessedSourceKey = xxHash::Calc64( job->GetData(), job->GetDataSize() );
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
-    uint32_t b;
+    uint32_t commandLineKey;
     {
         Args args;
         const bool useDeoptimization = false;
         const bool showIncludes = false;
         const bool finalize = false; // Don't write args to reponse file
         BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, finalize );
-        b = xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
+        commandLineKey = xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
     }
 
     // ToolChain hash
-    uint64_t c = GetCompiler()->CastTo< CompilerNode >()->GetManifest().GetToolId();
+    const uint64_t toolChainKey = GetCompiler()->CastTo< CompilerNode >()->GetManifest().GetToolId();
 
     // PCH dependency
-    uint64_t d = 0;
+    uint64_t pchKey = 0;
     if ( GetFlag( FLAG_USING_PCH ) && GetFlag( FLAG_MSVC ) )
     {
-        d = GetPrecompiledHeader()->m_PCHCacheKey;
-        ASSERT( d != 0 ); // Should not be in here if PCH is not cached
+        pchKey = GetPrecompiledHeader()->m_PCHCacheKey;
+        ASSERT( pchKey != 0 ); // Should not be in here if PCH is not cached
     }
 
     AStackString<> cacheName;
-    FBuild::Get().GetCacheFileName( a, b, c, d, cacheName );
+    ICache::GetCacheId( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
     job->SetCacheName(cacheName);
 
     return job->GetCacheName();

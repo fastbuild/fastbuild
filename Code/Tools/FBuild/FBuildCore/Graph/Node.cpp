@@ -303,6 +303,29 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     return true;
 }
 
+// DoPreBuildFileDeletion
+//------------------------------------------------------------------------------
+/*static*/ bool Node::DoPreBuildFileDeletion( const AString & fileName )
+{
+    // Try to delete the file.
+    if ( FileIO::FileDelete( fileName.Get() ) )
+    {
+        return true; // File deleted ok
+    }
+
+    // The common case is that the file exists (which is why we don't check to
+    // see before deleting it above). If it failed to delete, we must now work
+    // out if it's because it didn't exist or because of an actual problem.
+    if ( FileIO::FileExists( fileName.Get() ) == false )
+    {
+        return true; // File didn't exist in the first place
+    }
+
+    // Couldn't delete the file
+    FLOG_ERROR( "Failed to delete file before build '%s'", fileName.Get() );
+    return false;
+}
+
 // CreateNode
 //------------------------------------------------------------------------------
 /*static*/ Node * Node::CreateNode( NodeGraph & nodeGraph, Node::Type nodeType, const AString & name )
@@ -921,8 +944,10 @@ void Node::ReplaceDummyName( const AString & newName )
 
     // are last two tokens numbers?
     int row, column;
-    if ( ( sscanf( tokens[ numTokens - 1 ].Get(), "%i", &column ) != 1 ) ||
-         ( sscanf( tokens[ numTokens - 2 ].Get(), "%i", &row ) != 1 ) )
+    PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+    if ( ( sscanf( tokens[ numTokens - 1 ].Get(), "%i", &column ) != 1 ) || // TODO:C Consider using sscanf_s
+         ( sscanf( tokens[ numTokens - 2 ].Get(), "%i", &row ) != 1 ) ) // TODO:C Consider using sscanf_s
+    PRAGMA_DISABLE_POP_MSVC // 4996
     {
         return; // failed to extract numbers where we expected them
     }

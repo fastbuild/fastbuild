@@ -25,6 +25,9 @@ Settings {}
                         + ' -I "Intellisense/Include/Quoted/Space/Path"'
                         + ' -I"Intellisense/Include/Quoted/Slash/Path"'
                         + ' -I "Intellisense/Include/Quoted/Slash/Space/Path"'
+                        + ' -std:c++17'
+                        + ' /std:c++14'
+                        + ' /std:latest'
 
 // ObjectList
 //------------------------------------------------------------------------------

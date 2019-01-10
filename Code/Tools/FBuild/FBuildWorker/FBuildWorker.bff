@@ -4,25 +4,6 @@
     .ProjectName        = 'FBuildWorker'
     .ProjectPath        = 'Tools\FBuild\FBuildWorker'
 
-    // Unity
-    //--------------------------------------------------------------------------
-    Unity( '$ProjectName$-Unity' )
-    {
-        .UnityInputPath             = '$ProjectPath$\'
-        .UnityOutputPath            = '$UnityOutputBase$\$ProjectPath$\'
-    }
-
-    // Windows Resources
-    //--------------------------------------------------------------------------
-    ObjectList( '$ProjectName$-Res' )
-    {
-        .Compiler                   = 'ResourceCompiler'
-        .CompilerOutputExtension    = '.res'
-        .CompilerOptions            = '/nologo /fo"%2" "%1"'
-        .CompilerInputFiles         = 'Tools\FBuild\FBuildWorker\MainWindowResource.rc'
-        .CompilerOutputPath         = '$OutputBase$\Tools\FBuild\FBuildWorker\'
-    }
-
     // Executable
     //--------------------------------------------------------------------------
     ForEach( .Config in .Configs )
@@ -30,16 +11,35 @@
         Using( .Config )
         .OutputBase + '\$Platform$-$Config$'
 
+        // Windows Resources
+        //--------------------------------------------------------------------------
+        ObjectList( '$ProjectName$-Res-$Platform$-$Config$' )
+        {
+            .Compiler                   = 'ResourceCompiler'
+            .CompilerOutputExtension    = '.res'
+            .CompilerOptions            = '/nologo /fo"%2" "%1"'
+            .CompilerInputFiles         = 'Tools/FBuild/FBuildWorker/MainWindowResource.rc'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
+        }
+
+        // Unity
+        //--------------------------------------------------------------------------
+        Unity( '$ProjectName$-Unity-$Platform$-$Config$' )
+        {
+            .UnityInputPath             = '$ProjectPath$/'
+            .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+        }
+
         // Library
         //--------------------------------------------------------------------------
         ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
             // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity'
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$Config$'
 
             // Output
-            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
 
         // Executable
@@ -54,9 +54,13 @@
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }
                                         #if __WINDOWS__
-                                            + 'FBuildWorker-Res'
+                                            + 'FBuildWorker-Res-$Platform$-$Config$'
                                         #endif
-            .LinkerOutput               = '$OutputBase$/$ProjectPath$/$ProjectName$$ExeExtension$'
+            #if __LINUX__
+                .LinkerOutput               = '$OutputBase$/$ProjectPath$/fbuildworker$ExeExtension$' // NOTE: lower case
+            #else
+                .LinkerOutput               = '$OutputBase$/$ProjectPath$/FBuildWorker$ExeExtension$'
+            #endif
             #if __WINDOWS__
                 .LinkerOptions              + ' /SUBSYSTEM:WINDOWS'
                                             + ' kernel32.lib'
@@ -72,6 +76,7 @@
             #endif
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
+        ^'Targets_$Platform$_$Config$' + { '$ProjectName$-$Platform$-$Config$' }
     }
 
     // Aliases

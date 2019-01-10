@@ -22,6 +22,7 @@ Settings
     #else
         .CachePath      = "/tmp/.fbuild.cache"
     #endif
+    .AllowDBMigration_Experimental = true
 }
 
 //------------------------------------------------------------------------------
@@ -60,6 +61,14 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .CompilerOptionsPCH             = .CompilerOptions
 
     .Config                         = 'Debug'
+
+    #if !BUILDING_FROM_TESTS
+        // Build writable files (Perforce "Open for edit") outside of Unity
+        // to improve iteration times.
+        // - Only in Debug as this impacts performance (inlining)
+        // - Only when not building from tests (FASTBuild building itself)
+        .UnityInputIsolateWritableFiles = true
+    #endif
 ]
 .Profile_Config =
 [
@@ -116,9 +125,6 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR- /analyze'
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsPCH             = .CompilerOptions
-    #if !USING_VS2013
-        .LinkerOptions                  = ' /DEBUG:FASTLINK' // VS2015 and later only
-    #endif
 ]
 .Profile_Optimizations_MSVC =
 [
@@ -129,9 +135,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 ]
 .Release_Optimizations_MSVC =
 [
-    // Same as Profile, but enable FASTBUILD_DEOPTIMIZE_OBJECT token
     Using( .Profile_Optimizations_MSVC )
-    .DeoptimizeWritableFilesWithToken = true
     .CompilerOptionsDeoptimized     = .CompilerOptions
                                     - ' /Ox'
                                     + ' /Od'
@@ -154,9 +158,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 ]
 .Release_Optimizations =
 [
-    // Same as Profile, but enable FASTBUILD_DEOPTIMIZE_OBJECT token
     Using( .Profile_Optimizations )
-    .DeoptimizeWritableFilesWithToken = true
     .CompilerOptionsDeoptimized     = .CompilerOptions
                                     - ' -O2'
                                     + ' -O0'
@@ -247,6 +249,7 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
                             + ' -Wno-unknown-pragmas'           // unknown pragma ignored [-Wunknown-pragmas]
                             + ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
+                            + ' -Wno-invalid-token-paste'       // pasting formed '"Use ""ADDRINFOEXW"', an invalid preprocessing token [-Winvalid-token-paste]
                             + ' -Wno-expansion-to-defined'      // macro expansion producing 'defined' has undefined behavior [-Wexpansion-to-defined]
                             + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
                             + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
@@ -254,6 +257,10 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             #if USING_VS2013
                                 + ' -Wno-implicit-exception-spec-mismatch'
                             #endif
+                            + ' -Wno-deprecated-declarations' // Clang doesn't respect pragmas disabling warning in stdio.h
+
+                            // Disabled warnings
+                            + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
 
                             // Extra warnings
                             + ' -Wshadow'
@@ -388,6 +395,9 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                             + ' -Wno-#pragma-messages'
                             + ' -m64'                       // x86-64
 
+                            // Disabled warnings
+                            + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
+
                             // Fires on our new/delete operator (Clang bug?)
                             + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
     .CompilerOptionsC       = .CompilerOptions
@@ -428,31 +438,15 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 #endif
 
 //------------------------------------------------------------------------------
-// Unity/Blob files (shared across configs)
-//------------------------------------------------------------------------------
-#if !BUILDING_FROM_TESTS
-    .UnityInputIsolateWritableFiles = true
-#endif
-#if __WINDOWS__
-    .UnityOutputBase = '$OutputBase$\Unity-Windows'
-#endif
-#if __LINUX__
-    .UnityOutputBase = '$OutputBase$\Unity-Linux'
-#endif
-#if __OSX__
-    .UnityOutputBase = '$OutputBase$\Unity-OSX'
-#endif
-
-//------------------------------------------------------------------------------
 // VisualStudio Project Generation
 //------------------------------------------------------------------------------
 .ProjectCommon =
 [
     .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache ^$(ProjectName)-^$(Configuration)'
     .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean ^$(ProjectName)-^$(Configuration)'
-    .OutputDirectory            = '^$(SolutionDir)\..\tmp2'
-    .IntermediateDirectory      = '^$(SolutionDir)\..\tmp2'
-    .BuildLogFile               = '^$(SolutionDir)\..\tmp2\^$(ProjectName)-^$(Configuration).log'
+    .OutputDirectory            = '^$(SolutionDir)\Temp'
+    .IntermediateDirectory      = '^$(SolutionDir)\Temp'
+    .BuildLogFile               = '^$(SolutionDir)\Temp\^$(ProjectName)-^$(Configuration).log'
     .Platform                   = 'x64'
     .PlatformToolset            = '$VS_PlatformToolset$'
 ]
@@ -509,11 +503,6 @@ VCXProject( 'UpdateSolution-proj' )
                             .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux }
 .Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 
-.ConfigsAll             = { .Configs_Windows_MSVC
-                            .Configs_Windows_Clang
-                            .Configs_Linux
-                            .Configs_OSX_Clang
-                          }
 #if __WINDOWS__
     .Configs    = .Configs_Windows_MSVC
                 + .Configs_Windows_Clang
@@ -524,6 +513,27 @@ VCXProject( 'UpdateSolution-proj' )
 #if __OSX__
     .Configs    = .Configs_OSX_Clang
 #endif
+
+.Targets_x64_Debug = {}
+.Targets_x64_Profile = {}
+.Targets_x64_Release = {}
+.Targets_x64Clang_Debug = {}
+.Targets_x64Clang_Profile = {}
+.Targets_x64Clang_Release = {}
+
+.Targets_x64Linux_Debug = {}
+.Targets_x64Linux_Profile = {}
+.Targets_x64Linux_Release = {}
+.Targets_x64Linux_ASan = {}
+.Targets_x64ClangLinux_Debug = {}
+.Targets_x64ClangLinux_Profile = {}
+.Targets_x64ClangLinux_Release = {}
+.Targets_x64ClangLinux_ASan = {}
+.Targets_x64ClangLinux_MSan = {}
+
+.Targets_x64OSX_Debug = {}
+.Targets_x64OSX_Profile = {}
+.Targets_x64OSX_Release = {}
 
 // External
 #include "..\External\LZ4\LZ4.bff"
@@ -547,25 +557,11 @@ VCXProject( 'UpdateSolution-proj' )
 
 // Aliases : All-$Platform$-$Config$
 //------------------------------------------------------------------------------
-ForEach( .Config in .ConfigsAll )
+ForEach( .Config in .Configs )
 {
     Using( .Config )
 
-    Alias( 'All-$Platform$-$Config$' )
-    {
-        .Targets        = { // tests
-                            'CoreTest-$Platform$-$Config$',
-                            'FBuildTest-$Platform$-$Config$',
-                            // executables
-                            'FBuildApp-$Platform$-$Config$',
-                            'FBuildWorker-$Platform$-$Config$'
-                          }
-#if __LINUX__
-        .Targets        + { // libFuzzer targets
-                            'BFFFuzzer-$Platform$-$Config$'
-                          }
-#endif
-    }
+    Alias( 'All-$Platform$-$Config$' ) { .Targets = .'Targets_$Platform$_$Config$' }
 }
 
 // Aliases : All-$Platform$

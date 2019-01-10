@@ -64,7 +64,15 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 200642 ); // Ensure we're actually changing the data
+    const uint32_t numReplaces = 200642;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     Timer t;
 
@@ -127,7 +135,15 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 326 ); // Ensure we're actually changing the data
+    const uint32_t numReplaces = 326;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     Timer t;
 
@@ -198,7 +214,15 @@ void TestIncludeParser::TestMSVC_ShowIncludesWithWarnings() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 8 ); // Ensure we're actually changing the data
+    const uint32_t numReplaces = 8;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     const AString * buffers[2] = { &mem, &mem2 };
     for ( const AString * buffer : buffers )
@@ -230,11 +254,15 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    #if defined( __WINDOWS__ )
-        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 32600 ); // Ensure we're actually changing the data
-    #else
-        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == 32600 ); // Ensure we're actually changing the data
-    #endif
+    const uint32_t numReplaces = 32600;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     Timer t;
 
@@ -276,11 +304,15 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    #if defined( __WINDOWS__ )
-        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 29979 ); // Ensure we're actually changing the data
-    #else
-        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == 29979 ); // Ensure we're actually changing the data
-    #endif
+    const uint32_t numReplaces = 29979;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     Timer t;
 
@@ -321,11 +353,15 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    #if defined( __WINDOWS__ )
-        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 76778 ); // Ensure we're actually changing the data
-    #else
-        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == 76778 ); // Ensure we're actually changing the data
-    #endif
+    const uint32_t numReplaces = 76778;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     Timer t;
 

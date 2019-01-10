@@ -28,7 +28,12 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_STRUCT_BEGIN_BASE( SolutionConfig )
+REFLECT_STRUCT_BEGIN_BASE( SolutionConfigBase )
+    REFLECT_ARRAY(  m_SolutionBuildProjects,                "SolutionBuildProject",                     MetaInheritFromOwner() + MetaOptional() + MetaFile() ) // "SolutionBuildProject" for backwards compat
+    REFLECT_ARRAY(  m_SolutionDeployProjects,               "SolutionDeployProjects",                   MetaInheritFromOwner() + MetaOptional() + MetaFile() )
+REFLECT_END( SolutionConfigBase )
+
+REFLECT_STRUCT_BEGIN( SolutionConfig, SolutionConfigBase, MetaNone() )
     REFLECT(        m_SolutionPlatform,                     "SolutionPlatform",                         MetaOptional() )
     REFLECT(        m_SolutionConfig,                       "SolutionConfig",                           MetaOptional() )
     REFLECT(        m_Platform,                             "Platform",                                 MetaNone() )
@@ -47,12 +52,14 @@ REFLECT_END( SolutionDependency )
 
 REFLECT_NODE_BEGIN( SLNNode, Node, MetaName( "SolutionOutput" ) + MetaFile() )
     REFLECT_ARRAY(  m_SolutionProjects,                     "SolutionProjects",                         MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_SolutionBuildProjects,                "SolutionBuildProject",                     MetaOptional() + MetaFile() ) // "SolutionBuildProject" for backwards compat
     REFLECT(        m_SolutionVisualStudioVersion,          "SolutionVisualStudioVersion",              MetaOptional() )
     REFLECT(        m_SolutionMinimumVisualStudioVersion,   "SolutionMinimumVisualStudioVersion",       MetaOptional() )
     REFLECT_ARRAY_OF_STRUCT( m_SolutionConfigs,             "SolutionConfigs",      SolutionConfig,     MetaOptional() )
     REFLECT_ARRAY_OF_STRUCT( m_SolutionFolders,             "SolutionFolders",      SolutionFolder,     MetaOptional() )
     REFLECT_ARRAY_OF_STRUCT( m_SolutionDependencies,        "SolutionDependencies", SolutionDependency, MetaOptional() )
+
+    // Base Project Config settings
+    REFLECT_STRUCT( m_BaseSolutionConfig,                   "BaseSolutionConfig",   SolutionConfigBase, MetaEmbedMembers() )
 REFLECT_END( SLNNode )
 
 // VCXProjectNodeComp
@@ -83,11 +90,21 @@ SLNNode::SLNNode()
     // Create default SolutionConfigs if not specified
     if ( m_SolutionConfigs.IsEmpty() )
     {
-        m_SolutionConfigs.SetSize( 4 );
-        m_SolutionConfigs[ 0 ].m_Platform = "Win32";    m_SolutionConfigs[ 0 ].m_Config = "Debug";
-        m_SolutionConfigs[ 1 ].m_Platform = "Win32";    m_SolutionConfigs[ 1 ].m_Config = "Release";
-        m_SolutionConfigs[ 2 ].m_Platform = "x64";      m_SolutionConfigs[ 2 ].m_Config = "Debug";
-        m_SolutionConfigs[ 3 ].m_Platform = "x64";      m_SolutionConfigs[ 3 ].m_Config = "Release";
+        // Generated configs will take any properties we've
+        // set at the solution level as a default
+        SolutionConfig config( m_BaseSolutionConfig );
+
+        m_SolutionConfigs.SetCapacity( 4 );
+        config.m_Platform = "Win32";
+        config.m_Config = "Debug";
+        m_SolutionConfigs.Append( config );
+        config.m_Config = "Release";
+        m_SolutionConfigs.Append( config );
+        config.m_Platform = "x64";
+        config.m_Config = "Debug";
+        m_SolutionConfigs.Append( config );
+        config.m_Config = "Release";
+        m_SolutionConfigs.Append( config );
     }
 
     // Auto-populate SolutionPlatform and SolutionConfig
@@ -173,19 +190,30 @@ SLNNode::SLNNode()
     // SolutionDependencies
     for ( SolutionDependency & solutionDependency : m_SolutionDependencies )
     {
-        if ( !GatherProjects( nodeGraph, function, iter, "SolutionDependencies", solutionDependency.m_Projects, projects ) )
+        if ( !GatherProjects( nodeGraph, function, iter, "Projects", solutionDependency.m_Projects, projects ) )
         {
             return false; // MergeProjects will have emitted an error
         }
-        if ( !GatherProjects( nodeGraph, function, iter, "SolutionDependencies", solutionDependency.m_Dependencies, projects ) )
+        if ( !GatherProjects( nodeGraph, function, iter, "Dependencies", solutionDependency.m_Dependencies, projects ) )
         {
             return false; // MergeProjects will have emitted an error
         }
     }
-    // SolutionBuildProjects
-    if ( !GatherProjects( nodeGraph, function, iter, "SolutionBuildProject", m_SolutionBuildProjects, projects ) )
+
+    // SolutionConfigs
+    for ( SolutionConfig & solutionConfig : m_SolutionConfigs )
     {
-        return false; // MergeProjects will have emitted an error
+        // SolutionBuildProjects
+        if ( !GatherProjects( nodeGraph, function, iter, "SolutionBuildProject", solutionConfig.m_SolutionBuildProjects, projects ) )
+        {
+            return false; // MergeProjects will have emitted an error
+        }
+
+        // SolutionDeployProjects
+        if ( !GatherProjects( nodeGraph, function, iter, "SolutionDeployProjects", solutionConfig.m_SolutionDeployProjects, projects ) )
+        {
+            return false; // MergeProjects will have emitted an error
+        }
     }
 
     // Sort projects by name (like Visual Studio)
@@ -250,14 +278,13 @@ SLNNode::~SLNNode() = default;
     }
 
     // .sln solution file
-    const AString & sln = sg.GenerateSLN(   m_Name,
-                                            m_SolutionBuildProjects,
-                                            m_SolutionVisualStudioVersion,
-                                            m_SolutionMinimumVisualStudioVersion,
-                                            m_SolutionConfigs,
-                                            projects,
-                                            m_SolutionDependencies,
-                                            m_SolutionFolders );
+    const AString & sln = sg.GenerateSLN( m_Name,
+                                          m_SolutionVisualStudioVersion,
+                                          m_SolutionMinimumVisualStudioVersion,
+                                          m_SolutionConfigs,
+                                          projects,
+                                          m_SolutionDependencies,
+                                          m_SolutionFolders );
     if ( Save( sln, m_Name ) == false )
     {
         return NODE_RESULT_FAILED; // Save will have emitted an error

@@ -4,14 +4,6 @@
     .ProjectName        = 'FBuildApp'
     .ProjectPath        = 'Tools\FBuild\FBuildApp'
 
-    // Unity
-    //--------------------------------------------------------------------------
-    Unity( '$ProjectName$-Unity' )
-    {
-        .UnityInputPath             = '$ProjectPath$\'
-        .UnityOutputPath            = '$UnityOutputBase$\$ProjectPath$\'
-    }
-
     // Executable
     //--------------------------------------------------------------------------
     ForEach( .Config in .Configs )
@@ -19,19 +11,28 @@
         Using( .Config )
         .OutputBase + '\$Platform$-$Config$'
 
+        // Unity
+        //--------------------------------------------------------------------------
+        Unity( '$ProjectName$-Unity-$Platform$-$Config$' )
+        {
+            .UnityInputPath             = '$ProjectPath$/'
+            .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+        }
+
         // Library
         //--------------------------------------------------------------------------
         ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
             // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity'
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$Config$'
 
             // Output
-            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
 
         // Executable
+        //--------------------------------------------------------------------------
         Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
         {
             .Libraries                  = {
@@ -40,7 +41,11 @@
                                             'Core-Lib-$Platform$-$Config$',
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }
-            .LinkerOutput               = '$OutputBase$/$ProjectPath$/FBuild$ExeExtension$'
+            #if __LINUX__
+                .LinkerOutput               = '$OutputBase$/$ProjectPath$/fbuild$ExeExtension$' // NOTE: lower case
+            #else
+                .LinkerOutput               = '$OutputBase$/$ProjectPath$/FBuild$ExeExtension$'
+            #endif
             #if __WINDOWS__
                 .LinkerOptions              + ' /SUBSYSTEM:CONSOLE'
                                             + ' kernel32.lib'
@@ -53,6 +58,7 @@
             #endif
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
+        ^'Targets_$Platform$_$Config$' + { '$ProjectName$-$Platform$-$Config$' }
     }
 
     // Aliases

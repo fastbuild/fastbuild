@@ -1,0 +1,23 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Two Projects
+VCXProject( 'Proj1' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_BuildAndDeploy_Project\proj1.vcxproj'
+}
+VCXProject( 'Proj2' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_BuildAndDeploy_Project\proj2.vcxproj'
+}
+
+// A solution using that project, with NO Build and Deploy projects set
+VSSolution( 'Solution' )
+{
+    .SolutionProjects               = { 'Proj1', 'Proj2' }
+    .SolutionBuildProject           = 'Proj1'
+    .SolutionDeployProjects         = 'Proj2'
+    .SolutionOutput                 = "$Out$\Test\ProjectGeneration\Solution_BuildAndDeploy_Project\solution.sln"
+}

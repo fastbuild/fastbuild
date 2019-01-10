@@ -164,7 +164,10 @@ LinkerNode::~LinkerNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult LinkerNode::DoBuild( Job * job )
 {
-    DoPreLinkCleanup();
+    if ( DoPreLinkCleanup() == false )
+    {
+        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+    }
 
     // Make sure the implib output directory exists
     if (m_ImportLibName.IsEmpty() == false)
@@ -243,6 +246,15 @@ LinkerNode::~LinkerNode() = default;
                 if ( result == 1000 )
                 {
                     FLOG_WARN( "FBuild: Warning: Linker crashed (LNK1000), retrying '%s'", GetName().Get() );
+                    continue; // try again
+                }
+
+                // Did the linker encounter "fatal error LNK1136: invalid or corrupt file"?
+                // The MSVC toolchain (as of VS2017) seems to occasionally end up with a
+                // corrupt PDB file.
+                if ( result == 1136 )
+                {
+                    FLOG_WARN( "FBuild: Warning: Linker corrupted the PDB (LNK1136), retrying '%s'", GetName().Get() );
                     continue; // try again
                 }
 
@@ -342,12 +354,12 @@ LinkerNode::~LinkerNode() = default;
 
 // DoPreLinkCleanup
 //------------------------------------------------------------------------------
-void LinkerNode::DoPreLinkCleanup() const
+bool LinkerNode::DoPreLinkCleanup() const
 {
     // only for Microsoft compilers
     if ( GetFlag( LINK_FLAG_MSVC ) == false )
     {
-        return;
+        return true;
     }
 
     bool deleteFiles = false;
@@ -376,20 +388,21 @@ void LinkerNode::DoPreLinkCleanup() const
 
     if ( deleteFiles )
     {
-        // output file
-        FileIO::FileDelete( GetName().Get() );
-
         // .ilk
         const char * lastDot = GetName().FindLast( '.' );
         AStackString<> ilkName( GetName().Get(), lastDot ? lastDot : GetName().GetEnd() );
         ilkName += ".ilk";
-        FileIO::FileDelete( ilkName.Get() );
 
         // .pdb - TODO: Handle manually specified /PDB
         AStackString<> pdbName( GetName().Get(), lastDot ? lastDot : GetName().GetEnd() );
         pdbName += ".pdb";
-        FileIO::FileDelete( pdbName.Get() );
+
+        return ( DoPreBuildFileDeletion( GetName() ) && // output file
+                 DoPreBuildFileDeletion( ilkName ) &&   // .ilk
+                 DoPreBuildFileDeletion( pdbName ) );   // .pdb
     }
+
+    return true;
 }
 
 // BuildArgs
@@ -453,6 +466,13 @@ bool LinkerNode::BuildArgs( Args & fullArgs ) const
 
                 AStackString<> cleanValue;
                 NodeGraph::CleanPath( value, cleanValue, false );
+
+                // Remove trailing backslashes as they escape quotes
+                // causing a variety of confusing link errors
+                while ( cleanValue.EndsWith( '\\' ) )
+                {
+                    cleanValue.Trim( 0, 1 );
+                }
 
                 fullArgs += token[0]; // reuse whichever prefix, / or -
                 fullArgs += "LIBPATH:\"";
@@ -711,17 +731,17 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
 
             if ( IsStartOfLinkerArg_MSVC( token, "OPT" ) )
             {
-                if ( token.FindI( "REF" ) )
+                if ( token.FindI( "REF" ) && ( token.FindI( "NOREF" ) == nullptr ) )
                 {
                     optREFFlag = true;
                 }
 
-                if ( token.FindI( "ICF" ) )
+                if ( token.FindI( "ICF" ) && ( token.FindI( "NOICF" ) == nullptr ) )
                 {
                     optICFFlag = true;
                 }
 
-                if ( token.FindI( "LBR" ) )
+                if ( token.FindI( "LBR" ) && ( token.FindI( "NOLBR" ) == nullptr ) )
                 {
                     optLBRFlag = true;
                 }
@@ -1158,7 +1178,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     NodeGraph::CleanPath( potentialNodeName, potentialNodeNameClean );
 
     // see if a node already exists
-    Node * node = nodeGraph.FindNode( potentialNodeNameClean );
+    Node * node = nodeGraph.FindNodeExact( potentialNodeNameClean );
     if ( node )
     {
         // aliases not supported - must point to something that provides a file

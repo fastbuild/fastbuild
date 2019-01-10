@@ -1,0 +1,17 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// A Project in one directory
+VCXProject( 'Proj1' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_SolutionRelativePaths\SubDir1\proj1.vcxproj'
+}
+
+// A solution in another directory (that is in an alternate hierarchy to the project)
+VSSolution( 'Solution' )
+{
+    .SolutionProjects               = { 'Proj1' }
+    .SolutionOutput                 = "$Out$\Test\ProjectGeneration\Solution_SolutionRelativePaths\SubDir2\solution.sln"
+}

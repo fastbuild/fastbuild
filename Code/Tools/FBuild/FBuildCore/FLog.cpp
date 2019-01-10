@@ -193,18 +193,30 @@ static FileStream * g_MonitorFileStream = nullptr;
         //  - we already have a .fbuild.tmp folder we should use
         AStackString<> fullPath;
         FBuild::GetTempDir( fullPath );
-        fullPath += "FastBuild/FastBuildLog.log";
-
-        ASSERT( g_MonitorFileStream == nullptr );
-        MutexHolder lock( g_MonitorMutex );
-        g_MonitorFileStream = new FileStream();
-        if ( g_MonitorFileStream->Open( fullPath.Get(), FileStream::WRITE_ONLY ) == false )
+        fullPath += "FastBuild";
+        if ( FileIO::DirectoryCreate( fullPath ) )
         {
-            delete g_MonitorFileStream;
-            g_MonitorFileStream = nullptr;
-        }
+            fullPath += "/FastBuildLog.log";
 
-        Monitor( "START_BUILD %u %u\n", FBUILD_MONITOR_VERSION, Process::GetCurrentId() );
+            ASSERT( g_MonitorFileStream == nullptr );
+            MutexHolder lock( g_MonitorMutex );
+            g_MonitorFileStream = new FileStream();
+            if ( g_MonitorFileStream->Open( fullPath.Get(), FileStream::WRITE_ONLY ) )
+            {
+                Monitor( "START_BUILD %u %u\n", FBUILD_MONITOR_VERSION, Process::GetCurrentId() );
+            }
+            else
+            {
+                Error( "Couldn't open monitor file for write at %s", fullPath.Get() );
+
+                delete g_MonitorFileStream;
+                g_MonitorFileStream = nullptr;
+            }
+        }
+        else
+        {
+            Error( "Couldn't create directory for monitor file at %s", fullPath.Get() );
+        }
     }
 
     Tracing::AddCallbackOutput( &TracingOutputCallback );
