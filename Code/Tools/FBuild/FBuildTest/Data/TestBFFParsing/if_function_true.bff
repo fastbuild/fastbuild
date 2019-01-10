@@ -1,7 +1,0 @@
-.A = 'a'
-.ABC = {'a', 'b', 'c'}
-
-If(.A in .ABC)
-{
-    Print("Success")
-}
