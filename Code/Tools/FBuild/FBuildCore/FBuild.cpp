@@ -176,7 +176,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             m_Cache = FNEW( Cache() );
         }
 
-        if ( m_Cache->Init( settings->GetCachePath(), settings->GetCachePathMustBeMountPoint() ) == false )
+        if ( m_Cache->Init( settings->GetCachePath(), settings->GetCachePathMountPoint() ) == false )
         {
             m_Options.m_UseCacheRead = false;
             m_Options.m_UseCacheWrite = false;
