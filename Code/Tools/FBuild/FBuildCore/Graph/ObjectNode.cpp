@@ -1554,6 +1554,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue; // skip this token in both cases
                 }
             }
+            if ( isGCC || isClang )
+            {
+                // Remove isysroot, which may not exist on a distributed system, and
+                // should only be used for include paths, which have already been
+                // processed.
+                if ( StripTokenWithArg( "-isysroot", token, i ) )
+                {
+                    continue; // skip this token in both cases
+                }
+            }
             if ( isGCC || isClang || isVBCC || isOrbisWavePsslc )
             {
                 // Remove forced includes so they aren't forced twice
