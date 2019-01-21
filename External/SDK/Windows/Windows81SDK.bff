@@ -3,7 +3,11 @@
 
 // Root Paths
 //------------------------------------------------------------------------------
-.Windows81_SDKBasePath          = '../External/SDK/Windows/8.1'
+#if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
+    .Windows81_SDKBasePath          = '$_CURRENT_BFF_DIR_$/8.1'
+#else
+    .Windows81_SDKBasePath          = '../External/SDK/Windows/8.1'
+#endif
 
 // Defines
 //------------------------------------------------------------------------------
@@ -11,8 +15,6 @@
                                 + ' -DWIN32'
                                 + ' -D_WIN32'
                                 + ' -D__WINDOWS__'
-                                + ' -D_CRT_SECURE_NO_WARNINGS'            // don't warn about unsafe functions - TODO:C Fix warnings and remove
-                                + ' -D_WINSOCK_DEPRECATED_NO_WARNINGS'    // don't warn about deprecated winsock functions - TODO:C Update API use
 
 // Windows 8.1 SDK
 //------------------------------------------------------------------------------

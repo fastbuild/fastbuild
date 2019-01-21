@@ -329,7 +329,9 @@ void Report::CreateOverview( const FBuildStats & stats )
     time_t rawtime;
     struct tm * timeinfo;
     time( &rawtime );
-    timeinfo = localtime( &rawtime );
+    PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+    timeinfo = localtime( &rawtime ); // TODO:C Consider using localtime_s
+    PRAGMA_DISABLE_POP_MSVC // 4996
     char timeBuffer[ 256 ];
     // Mon 1-Jan-2000 - 18:01:15
     VERIFY( strftime( timeBuffer, 256, "%a %d-%b-%Y - %H:%M:%S", timeinfo ) > 0 );

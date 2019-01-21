@@ -52,7 +52,9 @@
     PROFILE_FUNCTION
 
     // see if string it already in ip4 format
-    uint32_t ip = inet_addr( hostName.Get() );
+    PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // Deprecated...
+    uint32_t ip = inet_addr( hostName.Get() ); // TODO:C Consider using inet_pton()
+    PRAGMA_DISABLE_POP_MSVC // 4996
     if ( ip != INADDR_NONE )
     {
         return ip;

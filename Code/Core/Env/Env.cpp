@@ -362,7 +362,9 @@ void Env::GetExePath( AString & output )
             return true; // Redirected to a pipe that is not related to Cygwin/MSYS
         }
         int nChars = 0;
-        if ( ( swscanf( p, L"%*llx-pty%*d-to-master%n", &nChars ) == 0 ) && ( nChars > 0 ) )
+        PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+        if ( ( swscanf( p, L"%*llx-pty%*d-to-master%n", &nChars ) == 0 ) && ( nChars > 0 ) ) // TODO:C Consider using swscanf_s
+        PRAGMA_DISABLE_POP_MSVC // 4996
         {
             return false; // Pipe name matches the pattern, stdout is forwarded to a terminal by Cygwin/MSYS
         }

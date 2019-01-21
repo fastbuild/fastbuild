@@ -1,6 +1,7 @@
 //
 // Functionality commmon to multiple tests
 //
+#define BUILDING_FROM_TESTS // Control some behavior in shared bff files
 
 //==============================================================================
 // Visual Studio
@@ -35,7 +36,11 @@
 //==============================================================================
 // Clang
 //==============================================================================
-.ClangPath              = '../External/SDK/ClangForWindows/3.4' // TODO:B Make this use the same config as fbuild itself
+#if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
+    .ClangPath              = '$_CURRENT_BFF_DIR_$/../../../../../External/SDK/ClangForWindows/3.4' // TODO:B Make this use the same config as fbuild itself
+#else
+    .ClangPath              = '../External/SDK/ClangForWindows/3.4' // TODO:B Make this use the same config as fbuild itself
+#endif
 //.ClangPath            = 'C:\Program Files (x86)\LLVM'
 .WindowsClangToolChain =
 [
@@ -130,7 +135,11 @@
 //==============================================================================
 // Standard Environment
 //==============================================================================
-.StandardOutputBase         = '../tmp'
+#if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
+    .StandardOutputBase         = '$_CURRENT_BFF_DIR_$/../../../../../tmp'
+#else
+    .StandardOutputBase         = '../tmp'
+#endif
 .StandardEnvironment =
 [
     #if __WINDOWS__

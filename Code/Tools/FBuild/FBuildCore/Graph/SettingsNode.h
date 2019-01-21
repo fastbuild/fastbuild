@@ -28,16 +28,17 @@ public:
     virtual bool IsAFile() const override;
 
     // Access to settings
-    const AString &        GetCachePath() const;
-    const AString &        GetCachePluginDLL() const;
+    const AString &                 GetCachePath() const;
+    const AString &                 GetCachePathMountPoint() const;
+    const AString &                 GetCachePluginDLL() const;
     inline const Array< AString > & GetWorkerList() const { return m_Workers; }
-    int32_t                GetWorkerListRefreshLimitSec() const { return m_WorkerListRefreshLimitSec; }
-    int32_t                GetWorkerConnectionRetryLimitSec() const { return m_WorkerConnectionRetryLimitSec; }
-    uint32_t               GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
-    const Tags &           GetLocalWorkerTags() const;
-    void                   ApplyLocalWorkerTags( const Tags & localWorkerTags );
-    uint32_t               GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
-    bool                   GetAllowDBMigration_Experimental() const { return m_AllowDBMigration_Experimental; }
+    int32_t                         GetWorkerListRefreshLimitSec() const { return m_WorkerListRefreshLimitSec; }
+    int32_t                         GetWorkerConnectionRetryLimitSec() const { return m_WorkerConnectionRetryLimitSec; }
+    uint32_t                        GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
+    const Tags &                    GetLocalWorkerTags() const;
+    void                            ApplyLocalWorkerTags( const Tags & localWorkerTags );
+    uint32_t                        GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
+    bool                            GetAllowDBMigration_Experimental() const { return m_AllowDBMigration_Experimental; }
 
 private:
     //virtual BuildResult DoBuild( Job * job ) override;
@@ -45,20 +46,23 @@ private:
     void ProcessEnvironment( const Array< AString > & envStrings ) const;
 
     // Settings from environment variables
-    AString             m_CachePathFromEnvVar;
+    AString           m_CachePathFromEnvVar;
+    AString           m_CachePathMountPointFromEnvVar;
 
     // Exposed settings
     //friend class FunctionSettings;
     Array< AString  > m_Environment;
     AString           m_CachePath;
+    AString           m_CachePathMountPoint;
     AString           m_CachePluginDLL;
     Array< AString  > m_Workers;
-    int32_t           m_WorkerListRefreshLimitSec;
-    int32_t           m_WorkerConnectionRetryLimitSec;
     uint32_t          m_WorkerConnectionLimit;
-    Array< AString  > m_BaseLocalWorkerTagStrings;
     uint32_t          m_DistributableJobMemoryLimitMiB;
     bool              m_AllowDBMigration_Experimental;
+
+    int32_t           m_WorkerListRefreshLimitSec;
+    int32_t           m_WorkerConnectionRetryLimitSec;
+    Array< AString  > m_BaseLocalWorkerTagStrings;
 
     mutable Tags      m_BaseLocalWorkerTags;
     mutable Tags      m_LocalWorkerTags;

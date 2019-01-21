@@ -164,7 +164,10 @@ LinkerNode::~LinkerNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult LinkerNode::DoBuild( Job * job )
 {
-    DoPreLinkCleanup();
+    if ( DoPreLinkCleanup() == false )
+    {
+        return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
+    }
 
     // Make sure the implib output directory exists
     if (m_ImportLibName.IsEmpty() == false)
@@ -351,12 +354,12 @@ LinkerNode::~LinkerNode() = default;
 
 // DoPreLinkCleanup
 //------------------------------------------------------------------------------
-void LinkerNode::DoPreLinkCleanup() const
+bool LinkerNode::DoPreLinkCleanup() const
 {
     // only for Microsoft compilers
     if ( GetFlag( LINK_FLAG_MSVC ) == false )
     {
-        return;
+        return true;
     }
 
     bool deleteFiles = false;
@@ -385,20 +388,21 @@ void LinkerNode::DoPreLinkCleanup() const
 
     if ( deleteFiles )
     {
-        // output file
-        FileIO::FileDelete( GetName().Get() );
-
         // .ilk
         const char * lastDot = GetName().FindLast( '.' );
         AStackString<> ilkName( GetName().Get(), lastDot ? lastDot : GetName().GetEnd() );
         ilkName += ".ilk";
-        FileIO::FileDelete( ilkName.Get() );
 
         // .pdb - TODO: Handle manually specified /PDB
         AStackString<> pdbName( GetName().Get(), lastDot ? lastDot : GetName().GetEnd() );
         pdbName += ".pdb";
-        FileIO::FileDelete( pdbName.Get() );
+
+        return ( DoPreBuildFileDeletion( GetName() ) && // output file
+                 DoPreBuildFileDeletion( ilkName ) &&   // .ilk
+                 DoPreBuildFileDeletion( pdbName ) );   // .pdb
     }
+
+    return true;
 }
 
 // BuildArgs
@@ -1174,7 +1178,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     NodeGraph::CleanPath( potentialNodeName, potentialNodeNameClean );
 
     // see if a node already exists
-    Node * node = nodeGraph.FindNode( potentialNodeNameClean );
+    Node * node = nodeGraph.FindNodeExact( potentialNodeNameClean );
     if ( node )
     {
         // aliases not supported - must point to something that provides a file
