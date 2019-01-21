@@ -45,13 +45,13 @@ REFLECT_END( SettingsNode )
 //------------------------------------------------------------------------------
 SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
+, m_WorkerConnectionLimit( 15 )  // default: a maximum of 15 workers simultaneously connected
+, m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
+, m_AllowDBMigration_Experimental( false )
 , m_WorkerListRefreshLimitSec( 300 )  // default: a maximum of 5 minutes refreshing the worker list,
                                       // in case workers with specific tags are rebooting
 , m_WorkerConnectionRetryLimitSec( 300 )  // default: a maximum of 5 minutes retrying connections,
                                           // in case workers with specific tags are rebooting
-, m_WorkerConnectionLimit( 15 )  // default: a maximum of 15 workers simultaneously connected
-, m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
-, m_AllowDBMigration_Experimental( false )
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );
@@ -144,15 +144,17 @@ const Tags & SettingsNode::GetLocalWorkerTags() const
 //------------------------------------------------------------------------------
 void SettingsNode::ApplyLocalWorkerTags( const Tags & localWorkerTags )
 {
-    // ensure m_BaseLocalWorkerTags is populated, before we apply changes to it
-    GetLocalWorkerTags();
-
-    Tags removedTags;  // pass empty container, since only adding
-    m_BaseLocalWorkerTags.ApplyChanges( removedTags, localWorkerTags );
+    // command line args override settings;
+    // so set tags here, don't merge them
+    m_BaseLocalWorkerTags = localWorkerTags;
+    AStackString<> localWorkerName( LOCAL_WORKER_NAME );
+    m_BaseLocalWorkerTags.SetWorkerName( localWorkerName );
+    // always set valid, even if empty container
+    m_BaseLocalWorkerTags.SetValid( true );
     m_LocalWorkerTags = m_BaseLocalWorkerTags;
     Node::AddAutomaticTags( m_LocalWorkerTags );
 
-    // update m_LocalWorkerTagStrings to match base changes
+    // update m_BaseLocalWorkerTagStrings to match base changes
     m_BaseLocalWorkerTags.ToStringArray( m_BaseLocalWorkerTagStrings );
 }
 

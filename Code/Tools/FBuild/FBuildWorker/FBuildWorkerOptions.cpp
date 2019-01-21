@@ -135,7 +135,15 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         else if ( token.BeginsWith( "-T" ) )
         {
             AStackString<> tagStr( token.Get() + 2 );
-            m_WorkerTags.ParseAndAddTag( tagStr );
+            if ( tagStr.GetLength() > 0 )
+            {
+                m_WorkerTags.ParseAndAddTag( tagStr );
+            }
+            else
+            {
+                // -T by itself means clear the user's tags
+                m_WorkerTags.Clear();
+            }
             m_OverrideWorkerTags = true;
             continue;
         }
@@ -175,6 +183,7 @@ void FBuildWorkerOptions::ShowUsageError()
                        "-Ttag : Set a worker tag.\n"
                        "                You may specify one or more -Ttag entries.\n"
                        "                Example : -TTopDownMemory -TTestHarness=TH1\n"
+                       "                To clear your tags, specify -T\n"
                        "\n"
                        #if defined( __WINDOWS__ )
                        "-nosubprocess : Don't spawn a sub-process worker copy.\n";

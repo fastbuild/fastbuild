@@ -315,7 +315,15 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg.BeginsWith( "-T" ) )
             {
                 AStackString<> tagStr( thisArg.Get() + 2 );
-                m_LocalWorkerTags.ParseAndAddTag( tagStr );
+                if ( tagStr.GetLength() > 0 )
+                {
+                    m_LocalWorkerTags.ParseAndAddTag( tagStr );
+                }
+                else
+                {
+                    // -T by itself means clear the user's tags
+                    m_LocalWorkerTags.Clear();
+                }
                 m_OverrideLocalWorkerTags = true;
                 continue;
             }
@@ -517,6 +525,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -Ttag          Set a local worker tag.\n"
             "                You may specify one or more -Ttag entries.\n"
             "                Example : -TTopDownMemory -TTestHarness=TH1\n"
+            "                To clear your tags, specify -T\n"
             " -verbose       Show detailed diagnostic information. This will slow\n"
             "                down building.\n"
             " -version       Print version and exit. No other work will be\n"
