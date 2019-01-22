@@ -98,10 +98,13 @@ void TestFastCancel::Cancel() const
     Thread::WaitForThread( h );
     Thread::CloseHandle( h );
 
+    // wait for the OS to release the mutexes
+    Thread::Sleep( 10 );
+
     // Ensure that processes were killed
     for ( SystemMutex & mutex : mutexes )
     {
-        // We should immediately be able to acquire each lock
+        // We should be able to acquire each lock
         TEST_ASSERT( mutex.TryLock() );
     }
 }
