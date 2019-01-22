@@ -10,6 +10,7 @@
 #include "Core/Containers/Array.h"
 #include "Core/Env/Env.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Tracing/Tracing.h"
 
 // system
 #include <stdio.h>
@@ -97,6 +98,18 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         {
             m_WorkMode = WorkerSettings::WHEN_IDLE;
             m_OverrideWorkMode = true;
+            continue;
+        }
+        else if ( token == "-brokerage" )
+        {
+            const AString * nextIt = (it + 1);
+            if (nextIt == end)
+            {
+                OUTPUT("FBuild: Error: Missing <path> for '-brokerage' argument\n");
+                break;
+            }
+            m_BrokeragePath = *nextIt;
+            it++; // skip extra arg we've consumed
             continue;
         }
         else if ( token == "-mode=dedicated" )

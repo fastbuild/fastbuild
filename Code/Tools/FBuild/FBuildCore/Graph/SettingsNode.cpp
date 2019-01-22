@@ -29,6 +29,7 @@
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
+    REFLECT(        m_BrokeragePath,            "BrokeragePath",            MetaOptional() )
     REFLECT(        m_CachePath,                "CachePath",                MetaOptional() )
     REFLECT(        m_CachePathMountPoint,      "CachePathMountPoint",      MetaOptional() )
     REFLECT(        m_CachePluginDLL,           "CachePluginDLL",           MetaOptional() )
@@ -81,16 +82,23 @@ SettingsNode::~SettingsNode() = default;
     return false;
 }
 
+// GetBrokeragePath
+//------------------------------------------------------------------------------
+const AString & SettingsNode::GetBrokeragePath() const
+{
+    return m_BrokeragePath;
+}
+
 // GetCachePath
 //------------------------------------------------------------------------------
 const AString & SettingsNode::GetCachePath() const
 {
-    // Settings() bff option overrides environment variable
-    if ( m_CachePath.IsEmpty() == false )
+    // Environment variable takes priority
+    if ( m_CachePathFromEnvVar.IsEmpty() == false )
     {
-        return m_CachePath;
+        return m_CachePathFromEnvVar;
     }
-    return m_CachePathFromEnvVar;
+    return m_CachePath;
 }
 
 // GetCachePathMountPoint
@@ -98,12 +106,13 @@ const AString & SettingsNode::GetCachePath() const
 const AString & SettingsNode::GetCachePathMountPoint() const
 {
     // Settings() bff option overrides environment variable
-    if ( m_CachePathMountPoint.IsEmpty() == false )
+    if (m_CachePathMountPoint.IsEmpty() == false)
     {
         return m_CachePathMountPoint;
     }
     return m_CachePathMountPointFromEnvVar;
 }
+
 
 // GetCachePluginDLL
 //------------------------------------------------------------------------------

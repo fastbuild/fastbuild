@@ -9,10 +9,7 @@
 
 // Core
 #include "Core/Env/Types.h"
-
-// Forward Declaration
-//------------------------------------------------------------------------------
-class AString;
+#include "Core/Strings/AString.h"
 
 // FBuildWorkerOptions
 //------------------------------------------------------------------------------
@@ -37,6 +34,8 @@ public:
 
     // Console mode
     bool m_ConsoleMode;
+
+    AString m_BrokeragePath;
 
 private:
     void ShowUsageError();

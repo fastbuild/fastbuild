@@ -141,6 +141,25 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Args += '"';
                 continue;
             }
+            else if (thisArg == "-brokerage")
+            {
+                int pathIndex = (i + 1);
+                if (pathIndex >= argc)
+                {
+                    OUTPUT("FBuild: Error: Missing <path> for '-brokerage' argument\n");
+                    OUTPUT("Try \"%s -help\"\n", programName.Get());
+                    return OPTIONS_ERROR;
+                }
+                m_BrokeragePath = argv[pathIndex];
+                i++; // skip extra arg we've consumed
+
+                // add to args we might pass to subprocess
+                m_Args += ' ';
+                m_Args += '"'; // surround brokerage path with quotes to avoid problems with spaces in the path
+                m_Args += m_BrokeragePath;
+                m_Args += '"';
+                continue;
+            }
             #ifdef DEBUG
                 else if ( thisArg == "-debug" )
                 {
