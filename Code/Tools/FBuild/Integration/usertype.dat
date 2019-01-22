@@ -60,6 +60,7 @@ DefaultLanguage
 Dest
 Dependencies
 Environment
+ExecAlways
 ExecArguments
 ExecExecutable
 ExecInput
