@@ -309,13 +309,17 @@ bool Process::Spawn( const char * executable,
 
             char** words = expResult.we_wordv;
             unsigned int wordCount = expResult.we_wordc;
+
+            // Set capacity here to avoid reallocation while appending
+            splitArgs.SetCapacity(wordCount);
+            argVector.SetCapacity(wordCount + 1); // + 1 for the nullptr terminator
+
             for ( unsigned int wordIndex = 0; wordIndex < wordCount; ++wordIndex )
             {
                 // Make a copy of the string and stick it in splitArgs, as the strings allocated
                 // by wordexp will be freed when we leave this scope.
                 splitArgs.Append( AString( words[wordIndex] ) );
-                AString& argString = splitArgs.Top();
-                argVector.Append( argString.Get() );
+                argVector.Append( splitArgs.Top().Get() );
             }
 
             wordfree( &expResult );
