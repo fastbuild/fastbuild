@@ -48,11 +48,10 @@
 										+ .LZ4CompilerOptions
 
 			// Output
-			.CompilerOutputPath			= '$OutputBase$/$ProjectName$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
+			.CompilerOutputPath			= '$OutputBase$/External/$ProjectName$/'
+            .LibrarianOutput            = '$OutputBase$/External/$ProjectName$/$ProjectName$$LibExtension$'
 		}
 		Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-		^'Targets_$Platform$_$Config$' + { '$ProjectName$-$Platform$-$Config$' }
 	}
 
 	// Aliases

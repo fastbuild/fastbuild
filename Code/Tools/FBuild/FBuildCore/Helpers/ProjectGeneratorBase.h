@@ -27,6 +27,8 @@ public:
     void AddConfig( const AString & name, const Node * targetNode );
 
     static bool WriteIfDifferent( const char * generatorId, const AString & content, const AString & fileName );
+    static bool WriteIfMissing( const char * generatorId, const AString & content, const AString & fileName );
+    static bool WriteToDisk( const char * generatorId, const AString & content, const AString & fileName );
 
     static void GetDefaultAllowedFileExtensions( Array< AString > & extensions );
     static void FixupAllowedFileExtensions( Array< AString > & extensions );
@@ -62,12 +64,16 @@ protected:
         AString             m_Path;     // Project Base Path(s) relative
         Array< uint32_t >   m_Files;    // Indices into m_Files
         Array< uint32_t >   m_Folders;  // Indices into m_Folders
+
+        bool operator < (const Folder& other) const { return m_Path < other.m_Path; }
     };
     struct File
     {
         AString     m_Name;         // Project Base Path(s) relative
         AString     m_FullPath;     // Full path
         uint32_t    m_FolderIndex;  // Index into m_Folders
+        
+        bool operator < (const File& other) const { return m_FullPath < other.m_FullPath; }
     };
     struct Config
     {

@@ -16,9 +16,9 @@
 
     <div class='newsitembody'>
 
-<table width=700>
+<table width=900>
   <tr>
-    <th width=150 align=left>Env Var</th>
+    <th width=350 align=left>Env Var</th>
     <th align=left>Purpose</th>
   </tr>
   <tr>
@@ -32,6 +32,10 @@
   <tr>
     <td><a href="#FASTBUILD_CACHE_PATH">FASTBUILD_CACHE_PATH</a></td>
     <td>Set the location of the cache.</td>
+  </tr> 
+  <tr>
+    <td><a href="#FASTBUILD_CACHE_PATH_MOUNT_POINT">FASTBUILD_CACHE_PATH_MOUNT_POINT</a></td>
+    <td>Set the path to be verified as a mount point. (OSX &amp; Linux)</td>
   </tr> 
   <tr>
     <td><a href="#FASTBUILD_CACHE_MODE">FASTBUILD_CACHE_MODE</a></td>
@@ -58,6 +62,13 @@ The location of the brokerage path can be set via the FASTBUILD_BROKERAGE_PATH.<
     <div class='newsitemheader' id="FASTBUILD_CACHE_PATH">FASTBUILD_CACHE_PATH</div>
     <div class='newsitembody'>The location of the FASTBuild cache can be set via the
 FASTBUILD_CACHE_PATH environment variable instead of via the .CachePath option
+in the <a href="functions/settings.html">Settings</a> function.
+<p></p>
+</div>
+
+    <div class='newsitemheader' id="FASTBUILD_CACHE_PATH_MOUNT_POINT">FASTBUILD_CACHE_PATH_MOUNT_POINT</div>
+    <div class='newsitembody'>The location of the FASTBuild cache mount point for OSX and Linux can be set via the
+FASTBUILD_CACHE_PATH_MOUNT_POINT environment variable instead of via the .CachePathMountPoint option
 in the <a href="functions/settings.html">Settings</a> function.
 <p></p>
 </div>

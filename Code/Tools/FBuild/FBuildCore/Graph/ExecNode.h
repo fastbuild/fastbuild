@@ -24,6 +24,7 @@ public:
 
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
+    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     const FileNode * GetExecutable() const { return m_StaticDependencies[0].GetNode()->CastTo< FileNode >(); }
@@ -44,6 +45,7 @@ private:
     AString             m_ExecWorkingDir;
     int32_t             m_ExecReturnCode;
     bool                m_ExecUseStdOutAsOutput;
+    bool                m_ExecAlways;
     bool                m_ExecInputPathRecurse;
     Array< AString >    m_PreBuildDependencyNames;
 

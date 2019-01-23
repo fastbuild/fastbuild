@@ -38,7 +38,11 @@
 //--------------------------------------------------------------------------
 {
     // Common
-    .ProjectBasePath                = '../External/SDK/VisualStudio/'
+    #if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
+        .ProjectBasePath                = '$_CURRENT_BFF_DIR_$/'
+    #else
+        .ProjectBasePath                = '../External/SDK/VisualStudio/'
+    #endif
     .ProjectInputPaths              = .ProjectBasePath
     .ProjectAllowedFileExtensions   = '*.bff'
 
@@ -46,7 +50,11 @@
         // Visual Studio
         VCXProject( 'VisualStudio-proj' )
         {
-            .ProjectOutput                  = '../tmp/VisualStudio/Projects/VisualStudio.vcxproj'
+            #if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
+                .ProjectOutput                  = '$_CURRENT_BFF_DIR_$/../../../tmp/VisualStudio/Projects/VisualStudio.vcxproj'
+            #else
+                .ProjectOutput                  = '../tmp/VisualStudio/Projects/VisualStudio.vcxproj'
+            #endif
             .PlatformToolset                = .VS_PlatformToolset
     
             .ProjectX64Debug                = [ .Platform = 'x64' .Config = 'x64-Debug' ]

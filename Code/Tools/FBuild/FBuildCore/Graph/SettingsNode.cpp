@@ -31,6 +31,7 @@
 REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
     REFLECT(        m_CachePath,                "CachePath",                MetaOptional() )
+    REFLECT(        m_CachePathMountPoint,      "CachePathMountPoint",      MetaOptional() )
     REFLECT(        m_CachePluginDLL,           "CachePluginDLL",           MetaOptional() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
@@ -53,6 +54,7 @@ SettingsNode::SettingsNode()
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );
+    Env::GetEnvVariable( "FASTBUILD_CACHE_PATH_MOUNT_POINT", m_CachePathMountPointFromEnvVar );
 
     m_SandboxTmp += "sandbox";  // use relative path, for the default path
 }
@@ -97,6 +99,18 @@ const AString & SettingsNode::GetCachePath() const
         return m_CachePath;
     }
     return m_CachePathFromEnvVar;
+}
+
+// GetCachePathMountPoint
+//------------------------------------------------------------------------------
+const AString & SettingsNode::GetCachePathMountPoint() const
+{
+    // Settings() bff option overrides environment variable
+    if ( m_CachePathMountPoint.IsEmpty() == false )
+    {
+        return m_CachePathMountPoint;
+    }
+    return m_CachePathMountPointFromEnvVar;
 }
 
 // GetCachePluginDLL

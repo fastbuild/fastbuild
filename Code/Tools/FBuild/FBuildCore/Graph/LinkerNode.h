@@ -49,7 +49,7 @@ protected:
 
     virtual BuildResult DoBuild( Job * job ) override;
 
-    void DoPreLinkCleanup() const;
+    bool DoPreLinkCleanup() const;
 
     bool BuildArgs( Args & fullArgs ) const;
     void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
