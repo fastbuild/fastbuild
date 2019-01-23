@@ -103,7 +103,8 @@ Executable( "DummySandboxExe" )
     #endif
     .Libraries          = { 'DummySandboxExe-Lib' }
     #if __WINDOWS__
-    .LinkerOptions      + ' kernel32.lib'
+    .LinkerOptions      + ' Advapi32.lib'
+                        + ' kernel32.lib'
                         + .CRTLibs_Static
     #endif
     .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/Sandbox/dummysandbox$ExeExtension$'
