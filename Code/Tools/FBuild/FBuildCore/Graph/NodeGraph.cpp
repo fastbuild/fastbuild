@@ -1340,7 +1340,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
                 if ( nextChar == '.' )
                 {
                     nextChar = *( src + 2 );
-                    if ( ( nextChar == NATIVE_SLASH ) || ( nextChar == OTHER_SLASH ) )
+                    if ( ( nextChar == NATIVE_SLASH ) || ( nextChar == OTHER_SLASH ) || ( nextChar == '\0' ) )
                     {
                         src+=2; // skip .. and slashes
                         while ( ( *src == NATIVE_SLASH ) || ( *src == OTHER_SLASH ) )
