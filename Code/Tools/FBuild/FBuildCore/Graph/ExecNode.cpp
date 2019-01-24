@@ -159,6 +159,7 @@ ExecNode::~ExecNode() = default;
 {
     if ( m_ExecAlways )
     {
+        FLOG_INFO( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
         return true;
     }
     return Node::DetermineNeedToBuild( forceClean );
