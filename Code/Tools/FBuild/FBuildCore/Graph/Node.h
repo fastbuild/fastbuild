@@ -278,5 +278,6 @@ IMetaData & MetaAllowNonFile();
 IMetaData & MetaAllowNonFile( const Node::Type limitToType );
 IMetaData & MetaEmbedMembers();
 IMetaData & MetaInheritFromOwner();
+IMetaData & MetaIgnoreForComparison();
 
 //------------------------------------------------------------------------------

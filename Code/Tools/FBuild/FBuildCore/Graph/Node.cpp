@@ -37,6 +37,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_IgnoreForComparison.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
@@ -100,6 +101,10 @@ IMetaData & MetaEmbedMembers()
 IMetaData & MetaInheritFromOwner()
 {
     return *FNEW( Meta_InheritFromOwner() );
+}
+IMetaData & MetaIgnoreForComparison()
+{
+    return *FNEW( Meta_IgnoreForComparison() );
 }
 
 // Reflection

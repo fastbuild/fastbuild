@@ -51,6 +51,8 @@
 #include "Core/Strings/LevenshteinDistance.h"
 #include "Core/Tracing/Tracing.h"
 
+#include "MetaData/Meta_IgnoreForComparison.h"
+
 #include <string.h>
 
 // Defines
@@ -1989,6 +1991,10 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
 //------------------------------------------------------------------------------
 /*static*/ bool NodeGraph::AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property )
 {
+    if( property.HasMetaData< Meta_IgnoreForComparison >() )
+    {
+      return true;
+    }
     switch ( property.GetType() )
     {
         case PropertyType::PT_ASTRING:
