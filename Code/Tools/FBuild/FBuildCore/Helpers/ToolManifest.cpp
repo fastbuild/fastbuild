@@ -64,17 +64,6 @@ ToolManifestFile::~ToolManifestFile()
     FDELETE( m_FileLock );
 }
 
-// StoreCompressedContent (File)
-//------------------------------------------------------------------------------
-void ToolManifestFile::StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const
-{
-    m_UncompressedContentSize = uncompressedDataSize;
-    Compressor c;
-    c.Compress( uncompressedData, m_UncompressedContentSize );
-    m_CompressedContentSize = (uint32_t)c.GetResultSize();
-    m_CompressedContent = c.ReleaseResult();
-}
-
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 ToolManifest::ToolManifest()
@@ -104,6 +93,17 @@ ToolManifest::ToolManifest( uint64_t toolId )
 ToolManifest::~ToolManifest()
 {
     FREE( (void *)m_RemoteEnvironmentString );
+}
+
+// StoreCompressedContent (File)
+//------------------------------------------------------------------------------
+void ToolManifestFile::StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const
+{
+    m_UncompressedContentSize = uncompressedDataSize;
+    Compressor c;
+    c.Compress( uncompressedData, m_UncompressedContentSize );
+    m_CompressedContentSize = (uint32_t)c.GetResultSize();
+    m_CompressedContent = c.ReleaseResult();
 }
 
 // Generate
@@ -415,7 +415,7 @@ const void * ToolManifest::GetFileData( uint32_t fileId, size_t & dataSize ) con
         // store compressed file content (take ownership of data)
         f.StoreCompressedContent( uncompressedContent, uncompressedContentSize );
         // free unused uncompressed data
-        FREE(uncompressedContent);
+        FREE( uncompressedContent );
     }
     dataSize = f.m_CompressedContentSize;
     return f.m_CompressedContent;
@@ -442,7 +442,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
     Compressor c;
     if ( c.IsValidData( data, dataSize ) == false )
     {
-        FLOG_WARN( "Invalid data received for fileId %d", fileId );
+        FLOG_WARN( "Invalid data received for fileId %u", fileId );
         return false;
     }
     c.Decompress( data );
@@ -539,7 +539,7 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
 //------------------------------------------------------------------------------
 void ToolManifest::GetRemotePath( AString & path ) const
 {
-        VERIFY( FBuild::GetTempDir( path ) );
+    VERIFY( FBuild::GetTempDir( path ) );
     AStackString<> subDir;
     #if defined( __WINDOWS__ )
         subDir.Format( ".fbuild.tmp\\worker\\toolchain.%016" PRIx64 "\\", m_ToolId );
@@ -568,7 +568,7 @@ bool ToolManifest::AddFile( const AString & fileName, const uint64_t timeStamp )
     // store compressed file content (take ownership of data)
     f.StoreCompressedContent( uncompressedContent, uncompressedContentSize );
     // free unused uncompressed data
-    FREE(uncompressedContent);
+    FREE( uncompressedContent );
 
     return true;
 }

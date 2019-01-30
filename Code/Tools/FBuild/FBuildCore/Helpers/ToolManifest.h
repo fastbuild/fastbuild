@@ -43,7 +43,6 @@ public:
     mutable uint32_t m_CompressedContentSize = 0;
 
     // "local" members
-    const Node *     m_Node = nullptr;
     mutable void *   m_CompressedContent = nullptr;
 
     // "remote" members
