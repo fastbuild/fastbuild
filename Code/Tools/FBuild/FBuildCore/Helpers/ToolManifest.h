@@ -27,6 +27,7 @@ public:
     ToolManifestFile();
     explicit ToolManifestFile( const AString & name, uint64_t stamp, uint32_t hash, uint32_t size );
     ~ToolManifestFile();
+    void StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const;
 
     enum SyncState
     {
@@ -36,13 +37,14 @@ public:
     };
 
     // common members
-    AString         m_Name;
-    uint64_t        m_TimeStamp     = 0;
-    uint32_t        m_Hash          = 0;
-    mutable uint32_t m_ContentSize  = 0;
+    AString          m_Name;
+    uint64_t         m_TimeStamp     = 0;
+    uint32_t         m_Hash          = 0;
+    mutable uint32_t m_UncompressedContentSize = 0;
+    mutable uint32_t m_CompressedContentSize = 0;
 
     // "local" members
-    mutable void *  m_Content       = nullptr;
+    mutable void *   m_CompressedContent = nullptr;
 
     // "remote" members
     SyncState       m_SyncState     = NOT_SYNCHRONIZED;
