@@ -168,7 +168,7 @@ void WorkerWindow::UIUpdateThread()
         // Resources drop down
         m_ResourcesDropDown = FNEW( OSDropDown( this ) );
         m_ResourcesDropDown->SetFont( m_Font );
-        m_ResourcesDropDown->Init( 350, 3, 150, 200 );
+        m_ResourcesDropDown->Init( 350, 3, 135, 200 );
         {
             // add items
             uint32_t numProcessors = Env::GetNumProcessors();
@@ -192,27 +192,37 @@ void WorkerWindow::UIUpdateThread()
         const size_t numTags = tags.GetSize();
         // x position and width apply to both the tags drop down and tags none label below,
         // since we display either one or the other at runtime, in the same UI space
-        int32_t tagsControlXPos = 545;
-        int32_t tagsControlWidth = 120;
+        int32_t tagsControlXPos = 530;
+        int32_t tagsControlWidth = 150;
         if ( numTags > 0 )
         {
             // Tags drop down
             m_TagsDropDown = FNEW( OSDropDown( this ) );
             m_TagsDropDown->SetFont( m_Font );
             m_TagsDropDown->Init( tagsControlXPos, 3, tagsControlWidth, 200 );
+            // The tags drop down only displays tags;
+            // its selection does not mean anything.
+            // So the user can see the first private pool tag,
+            // without dropping down the list, select it by default
+            int tagIndexToSelect = -1;
             for ( size_t i=0; i<numTags; ++i )
             {
                 const Tag & tag = tags.Get( i );
+                if ( tagIndexToSelect < 0 &&
+                     tag.IsPrivatePoolTag() )
+                {
+                    tagIndexToSelect = (int)i;
+                }
                 AStackString<> tagString;
                 tag.ToString( tagString );
                 m_TagsDropDown->AddItem( tagString.Get() );
             }
-            // The tags drop down only displays tags;
-            // its selection does not mean anything.
-            // But set the selection to the first tag here,
-            // so the user can see at a glance, at least one tag
-            // without having to drop down the control.
-            m_TagsDropDown->SetSelectedItem( 0 );
+            // if no private tags, then select the first tag in the list
+            if ( tagIndexToSelect < 0 )
+            {
+                tagIndexToSelect = 0;
+            }
+            m_TagsDropDown->SetSelectedItem( tagIndexToSelect );
             m_TagsNoneLabel = nullptr;
         }
         else
@@ -228,7 +238,7 @@ void WorkerWindow::UIUpdateThread()
         // Tags label
         m_TagsLabel = FNEW( OSLabel( this ) );
         m_TagsLabel->SetFont( m_Font );
-        m_TagsLabel->Init( 505, 7, 35, 15, "Tags:" );
+        m_TagsLabel->Init( 490, 7, 35, 15, "Tags:" );
 
         // splitter
         {

@@ -30,6 +30,9 @@ public:
 
 protected:
     OSFont *    m_Font;
+    #if defined( __WINDOWS__ )
+        size_t m_LongestItemLength;
+    #endif
 };
 
 //------------------------------------------------------------------------------

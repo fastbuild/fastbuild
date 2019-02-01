@@ -89,6 +89,32 @@ private:
     void CalcWorkerIntersection(
         const Array< AString > & workersToAdd,
         Array< AString > & workersForJob ) const;
+    void GetWorkersToConsider(
+        const bool privatePool,
+        const bool firstTag,
+        const Array< AString > & workersForJob,
+        const Array< AString > & excludedWorkers,
+        bool & rootWorkersValid,
+        Array< AString > & rootWorkers,
+        Array< AString > & workersToConsider ) const;
+    void HandleFoundKey(
+        const bool privatePool,
+        const bool firstTag,
+        const Tag & requiredWorkerTag,
+        const Array< AString > & excludedWorkers,
+        const TagCache * foundTagCache,
+        bool & rootWorkersValid,
+        Array< AString > & rootWorkers,
+        Array< WorkerCache > & workersCache,
+        Array< AString > & workersForJob ) const;
+    void HandleNotFoundKey(
+        const bool privatePool,
+        const bool firstTag,
+        const Tag & requiredWorkerTag,
+        const Array< AString > & excludedWorkers,
+        bool & rootWorkersValid,
+        Array< AString > & rootWorkers,
+        Array< AString > & workersForJob ) const;
     void GetBrokerageRecordsFromTags(
         const Tags & workerTags,
         Array<BrokerageRecord> & brokerageRecords ) const;

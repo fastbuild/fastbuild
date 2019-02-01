@@ -13,6 +13,8 @@
 #define TAG_DELIMITER               "="
 #define TAG_NOT_OPERATOR            "!"
 #define TAG_NOT_OPERATOR_DIR_PREFIX "not_"
+#define TAG_PRIVATE_POOL_PREFIX     "private_"
+#define TAG_TRUE_VALUE              "true"
 
 // Tag
 //------------------------------------------------------------------------------
@@ -21,6 +23,7 @@ class Tag
     public:
         inline explicit Tag() : m_KeyInverted( false ), m_ValueInverted( false ) {}
 
+        inline bool  IsPrivatePoolTag() const;
         inline bool  GetKeyInverted() const;
         inline const AString & GetKey() const;
         inline void  SetKey( const AString & keyString );
@@ -61,6 +64,7 @@ class Tags
         inline size_t GetSize() const;
         inline bool  IsValid() const;
         inline bool  IsEmpty() const;
+        inline bool  ContainsPrivatePoolTag() const;
         inline void  SetValid( const bool isValid );
         inline Tag & Get( size_t index );
         inline const Tag & Get( size_t index ) const;
@@ -98,6 +102,15 @@ class Tags
         Array< Tag > m_Tags;
         bool         m_IsValid;
 };
+
+// IsPrivatePoolTag
+//------------------------------------------------------------------------------
+bool Tag::IsPrivatePoolTag() const
+{
+    // use case insensitive compare, since keys are used as dir names
+    return GetKey().BeginsWithI( TAG_PRIVATE_POOL_PREFIX ) &&
+           !GetKeyInverted();
+}
 
 // GetKeyInverted (Tag)
 //------------------------------------------------------------------------------
@@ -200,12 +213,14 @@ bool Tag::Matches( const Tag & tag ) const
     bool valueMatches = false;
     // wildcard match the key and the value,
     // since tag could have non-empty m_Key but empty m_Value
-    keyMatches = GetKey().Matches( tag.GetKey().Get() );
+    // use case insensitive compare, since keys are used as dir names
+    keyMatches = GetKey().MatchesI( tag.GetKey().Get() );
     if ( keyMatches )
     {
         if ( checkValue )
         {
-            valueMatches = GetValue().Matches( tag.GetValue().Get() );
+            // use case insensitive compare, since values are used as dir names
+            valueMatches = GetValue().MatchesI( tag.GetValue().Get() );
         }
     }
     if ( tag.GetKeyInverted() )
@@ -296,34 +311,35 @@ bool Tag::ContainsValidDirChars( AString & errorMsg ) const
 void Tag::ToDirNameArray( Array< AString > & dirNameArray ) const
 {
     dirNameArray.Clear();  // clear array, so we can populate it
-    AStackString<> dirName;
     // for an inverted key and an empty value,
     // don't include the key in the output array
     // since absence from the array denotes this state
     const bool appendKey = ! ( m_KeyInverted && m_Value.IsEmpty() );
     if ( appendKey )
     {
-        dirName += m_Key;
-        dirNameArray.Append( dirName );
-    }
-
-    if ( appendKey && !m_Value.IsEmpty() )
-    {
-        dirName.Clear();
-        // propagate key inverted to value inverted
-        // in a double inversion, the inversions cancel each other out
-        // so XOR the inversion bools
-        const bool valueInverted = ( ( m_KeyInverted ? 1 : 0 ) ^ ( m_ValueInverted ? 1 : 0 ) ) == 1;
-        if ( valueInverted )
+        dirNameArray.Append( m_Key );
+        AStackString<> valueDirName;
+        if ( m_Value.IsEmpty() )
         {
-            dirName += TAG_NOT_OPERATOR_DIR_PREFIX;
+            valueDirName += TAG_TRUE_VALUE;
         }
         else
         {
-            // no inversion
+            // propagate key inverted to value inverted
+            // in a double inversion, the inversions cancel each other out
+            // so XOR the inversion bools
+            const bool valueInverted = ( ( m_KeyInverted ? 1 : 0 ) ^ ( m_ValueInverted ? 1 : 0 ) ) == 1;
+            if ( valueInverted )
+            {
+                valueDirName += TAG_NOT_OPERATOR_DIR_PREFIX;
+            }
+            else
+            {
+                // no inversion
+            }
+            valueDirName += m_Value;
         }
-        dirName += m_Value;
-        dirNameArray.Append( dirName );
+        dirNameArray.Append( valueDirName );
     }
 }
 
@@ -352,9 +368,11 @@ void Tag::Write( IOStream & stream ) const
 bool Tag::operator == ( const Tag & other ) const
 {
     return ( m_KeyInverted == other.m_KeyInverted &&
-                 m_ValueInverted == other.m_ValueInverted &&
-                 m_Key == other.m_Key &&
-                 m_Value == other.m_Value );
+             m_ValueInverted == other.m_ValueInverted &&
+             // use case insensitive compare, since keys are used as dir names
+             m_Key.EqualsI( other.m_Key ) &&
+             // use case insensitive compare, since values are used as dir names
+             m_Value.EqualsI( other.m_Value ) );
 }
 
 // operator < (const Tag &) (Tag)
@@ -396,6 +414,22 @@ bool Tags::IsValid() const
 bool Tags::IsEmpty() const
 {
     return m_Tags.IsEmpty();
+}
+
+// ContainsPrivatePoolTag
+//------------------------------------------------------------------------------
+bool Tags::ContainsPrivatePoolTag() const
+{
+    bool containsPrivatePoolTag = false;
+    for ( size_t i=0; i<m_Tags.GetSize(); ++i )
+    {
+        if ( m_Tags.Get( i ).IsPrivatePoolTag() )
+        {
+            containsPrivatePoolTag = true;
+            break;
+        }
+    }
+    return containsPrivatePoolTag;
 }
 
 // SetValid (Tags)
@@ -496,7 +530,8 @@ bool Tags::FindKey( const char * key, size_t & foundIndex ) const
     for ( size_t i=0; i<numExistingTags; ++i )
     {
         const Tag & existingTag = Get( i );
-        if ( existingTag.GetKey().Equals( key ) )
+        // use case insensitive compare, since keys are used as dir names
+        if ( existingTag.GetKey().EqualsI( key ) )
         {
             foundKey = true;
             foundIndex = i;
@@ -523,9 +558,21 @@ bool Tags::MatchesAll( const Tags & searchTags ) const
             const Tag & existingTag = Get( j );
             if ( searchKeyInverted )
             {
-                // match against all existing tags
-                matches = matches && existingTag.Matches( searchTag );
-                // don't break here, since checking all
+                // match against all existing tags with same key
+                // use case insensitive compare, since keys are used as dir names
+                if ( existingTag.GetKey().EqualsI( searchTag.GetKey() ) )
+                {
+                    matches = matches && existingTag.Matches( searchTag );
+                    if ( !matches )
+                    {
+                        // does not match, so break out of inner loop
+                        break;
+                    }
+                }
+                else
+                {
+                    // continue searching
+                }
             }
             else  // search key not inverted
             {
@@ -698,7 +745,8 @@ void Tags::GetChanges( const Tags & currentTags,
             const Tag & previousTag = Get( foundIndex );
             if ( previousTag.GetKeyInverted() != currentTag.GetKeyInverted() ||
                  previousTag.GetValueInverted() != currentTag.GetValueInverted() ||
-                 previousTag.GetValue() != currentTag.GetValue() )
+                 // use case insensitive compare, since values are used as dir names
+                 !previousTag.GetValue().EqualsI( currentTag.GetValue() ) )
             {
                 // values differ, so mark as added
                 addedTags.Append( currentTag );
@@ -749,7 +797,8 @@ bool Tags::ApplyChanges(
             Tag & existingTag = Get( foundIndex );
             if ( existingTag.GetKeyInverted() != addedTag.GetKeyInverted() ||
                  existingTag.GetValueInverted() != addedTag.GetValueInverted() ||
-                 existingTag.GetValue() != addedTag.GetValue() )
+                 // use case insensitive compare, since values are used as dir names
+                 !existingTag.GetValue().EqualsI( addedTag.GetValue() ) )
             {
                 existingTag = addedTag;
                 anyChangesApplied = true;
@@ -833,8 +882,9 @@ void Tags::ToArgsString( AString & string ) const
 //------------------------------------------------------------------------------
 bool Tags::operator == ( const Tags & other ) const
 {
-    return ( m_WorkerName == other.m_WorkerName &&
-                 m_Tags == other.m_Tags );
+    return ( // use case insensitive compare, since worker names are used as file names
+             m_WorkerName.EqualsI( other.m_WorkerName ) &&
+             m_Tags == other.m_Tags );
 }
 
 //------------------------------------------------------------------------------

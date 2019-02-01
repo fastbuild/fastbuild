@@ -28,7 +28,7 @@ class TCPConnectionPool;
 namespace Protocol
 {
     enum { PROTOCOL_PORT = 31264 }; // Arbitrarily chosen port
-    enum { PROTOCOL_VERSION = 18 };
+    enum { PROTOCOL_VERSION = 19 };
 
     enum { SERVER_STATUS_FREQUENCY_MS = 1000 }; // frequency of server status updates to client
     enum { SERVER_STATUS_TIMEOUT_MS = 30000 };  // server is dead if time elapses between updates

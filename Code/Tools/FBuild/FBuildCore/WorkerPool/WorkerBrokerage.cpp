@@ -12,6 +12,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
+#include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -33,22 +34,25 @@ WorkerBrokerage::WorkerBrokerage()
 //------------------------------------------------------------------------------
 bool WorkerBrokerage::BrokerageRecord::operator == ( const BrokerageRecord & other ) const
 {
-    return ( m_DirPath == other.m_DirPath &&
-                 m_FilePath == other.m_FilePath );
+    // use case insensitive compare, since dir and file names
+    return ( m_DirPath.EqualsI( other.m_DirPath ) &&
+             m_FilePath.EqualsI( other.m_FilePath ) );
 }
 
 // operator == (const AString &)
 //------------------------------------------------------------------------------
 bool WorkerBrokerage::TagCache::operator == ( const AString & other ) const
 {
-    return m_Key == other;  // only compare against key, not tags
+    // use case insensitive compare, since keys are used as dir names
+    return m_Key.EqualsI( other );  // only compare against key, not tags
 }
 
 // operator == (const AString &)
 //------------------------------------------------------------------------------
 bool WorkerBrokerage::WorkerCache::operator == ( const AString & other ) const
 {
-    return m_Key == other;  // only compare against key, not workers
+    // use case insensitive compare, since keys are used as dir names
+    return m_Key.EqualsI( other );  // only compare against key, not workers
 }
 
 // Init
@@ -137,6 +141,7 @@ void WorkerBrokerage::AddRootWorkers(
     for ( size_t i=0; i<rootWorkers.GetSize(); ++i )
     {
         const AString & rootWorker = rootWorkers.Get( i );
+        // use case insensitive compare, since hostnames are used as dir names
         if ( rootWorker.CompareI( m_HostName ) != 0 &&
               !excludedWorkers.Find( rootWorker ) )
         {
@@ -170,14 +175,23 @@ void WorkerBrokerage::GetTagCache(
         {
             const AString & tagDir = tagDirs.Get( i );
             AStackString<> valueToUse;
-            if ( tagDir.BeginsWith( TAG_NOT_OPERATOR_DIR_PREFIX ) )
+            // use case insensitive compare, since values are used as dir names
+            if ( !tagDir.EqualsI( TAG_TRUE_VALUE ) )
             {
-                valueToUse = TAG_NOT_OPERATOR;
-                valueToUse += ( tagDir.Get() + strlen( TAG_NOT_OPERATOR_DIR_PREFIX ) );
+                // use case insensitive compare, since values are used as dir names
+                if ( tagDir.BeginsWithI( TAG_NOT_OPERATOR_DIR_PREFIX ) )
+                {
+                    valueToUse = TAG_NOT_OPERATOR;
+                    valueToUse += ( tagDir.Get() + strlen( TAG_NOT_OPERATOR_DIR_PREFIX ) );
+                }
+                else
+                {
+                    valueToUse = tagDir;
+                }
             }
             else
             {
-                valueToUse = tagDir;
+                // use empty valueToUse
             }
             Tag tag;
             tag.SetKey( key );
@@ -242,6 +256,173 @@ void WorkerBrokerage::CalcWorkerIntersection(
     }
 }
 
+// GetWorkersToConsider
+//------------------------------------------------------------------------------
+void WorkerBrokerage::GetWorkersToConsider(
+    const bool privatePool,
+    const bool firstTag,
+    const Array< AString > & workersForJob,
+    const Array< AString > & excludedWorkers,
+    bool & rootWorkersValid,
+    Array< AString > & rootWorkers,
+    Array< AString > & workersToConsider ) const
+{
+    if ( privatePool )
+    {
+        if ( firstTag )
+        {
+            // should never get here, we expect FASTBuild
+            // to place the first private pool tag first in this tag list
+            // so that we can use the current workersForJob below
+            ASSERT( false );
+        }
+        else
+        {
+            // use current workersForJob
+            // since private pool workers are not listed in root folder
+            workersToConsider = workersForJob;
+        }
+    }
+    else
+    {
+        // use the general pool workers
+        // they are listed in the root folder
+        AddRootWorkers(
+            excludedWorkers,
+            rootWorkersValid,
+            rootWorkers,
+            workersToConsider );
+    }
+}
+
+// HandleFoundKey
+//------------------------------------------------------------------------------
+void WorkerBrokerage::HandleFoundKey(
+    const bool privatePool,
+    const bool firstTag,
+    const Tag & requiredWorkerTag,
+    const Array< AString > & excludedWorkers,
+    const TagCache * foundTagCache,
+    bool & rootWorkersValid,
+    Array< AString > & rootWorkers,
+    Array< WorkerCache > & workersCache,
+    Array< AString > & workersForJob ) const
+{
+    Array< AString> workersToAdd;
+    const Tags & foundTags = foundTagCache->m_Tags;
+    for ( size_t i=0; i<foundTags.GetSize(); ++i )
+    {
+        const Tag & foundTag = foundTags.Get( i );
+        if ( ( requiredWorkerTag.GetKeyInverted() &&
+               requiredWorkerTag.GetValue().IsEmpty()
+             ) || foundTag.Matches( requiredWorkerTag ) )
+        {
+            Array< AString > dirNameArray;
+            foundTag.ToDirNameArray( dirNameArray );
+            AStackString<> workerCacheKey;
+            for ( size_t j=0; j<dirNameArray.GetSize(); ++j )
+            {
+                workerCacheKey += dirNameArray.Get( j );
+            }
+            const WorkerCache * foundWorkerCache = nullptr;
+            GetWorkersCache( workerCacheKey, dirNameArray, workersCache, foundWorkerCache);
+            if ( foundWorkerCache != nullptr )
+            {
+                const Array< AString > & foundWorkers = foundWorkerCache->m_Workers;
+                if ( requiredWorkerTag.GetKeyInverted() && requiredWorkerTag.GetValue().IsEmpty() )
+                {
+                    Array< AString > workersToConsider;
+                    GetWorkersToConsider(
+                        privatePool,
+                        firstTag,
+                        workersForJob,
+                        excludedWorkers,
+                        rootWorkersValid,
+                        rootWorkers,
+                        workersToConsider );
+                    // add root workers that are not in the found list ( computes inversion )
+                    for ( size_t j=0; j<workersToConsider.GetSize(); ++j )
+                    {
+                        const AString & rootWorkerToAdd = workersToConsider.Get( j );
+                        if ( !foundWorkers.Find( rootWorkerToAdd ) )
+                        {
+                            if ( !workersToAdd.Find( rootWorkerToAdd ) )
+                            {
+                                workersToAdd.Append( rootWorkerToAdd );
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // add found workers
+                    for ( size_t j=0; j<foundWorkers.GetSize(); ++j )
+                    {
+                        const AString & foundWorker = foundWorkers.Get( j );
+                        // use case insensitive compare, since hostnames are used as dir names
+                        if ( foundWorker.CompareI( m_HostName ) != 0 && 
+                             !workersToAdd.Find( foundWorker ) && 
+                             !excludedWorkers.Find( foundWorker ) )
+                        {
+                            workersToAdd.Append( foundWorker );
+                        }
+                    }
+                }
+            }
+        }
+        if ( firstTag )
+        {
+            // add workers for job
+            workersForJob.Append( workersToAdd );
+        }
+        else  // if subsequent required tag for this job
+        {
+            // calc intersection of previous worker list with the worker list for this tag
+            CalcWorkerIntersection( workersToAdd, workersForJob );
+        }
+    }
+}
+
+// HandleNotFoundKey
+//------------------------------------------------------------------------------
+void WorkerBrokerage::HandleNotFoundKey(
+    const bool privatePool,
+    const bool firstTag,
+    const Tag & requiredWorkerTag,
+    const Array< AString > & excludedWorkers,
+    bool & rootWorkersValid,
+    Array< AString > & rootWorkers,
+    Array< AString > & workersForJob ) const
+{
+    if ( requiredWorkerTag.GetKeyInverted() &&
+         requiredWorkerTag.GetValue().IsEmpty() )
+    {
+        Array< AString > workersToConsider;
+        GetWorkersToConsider(
+            privatePool,
+            firstTag,
+            workersForJob,
+            excludedWorkers,
+            rootWorkersValid,
+            rootWorkers,
+            workersToConsider );
+        if ( firstTag )
+        {
+            workersForJob = workersToConsider;
+        }
+        else
+        {
+            // calc intersection of previous worker list with the workers to consider
+            CalcWorkerIntersection( workersToConsider, workersForJob );
+        }
+    }
+    else
+    {
+        // no matching key for required tag, so no match for this job
+        workersForJob.Clear();
+    }
+}
+
 // FindWorkers
 //------------------------------------------------------------------------------
 void WorkerBrokerage::FindWorkers(
@@ -269,153 +450,105 @@ void WorkerBrokerage::FindWorkers(
     for ( size_t i=0; i<requiredWorkerTagsList.GetSize(); ++i )
     {
         Array< AString > workersForJob;
-        const Tags & requiredWorkerTags = requiredWorkerTagsList.Get( i );
-        if ( requiredWorkerTags.IsEmpty() )  // job has no required tags
+        const Tags & jobRequiredTags = requiredWorkerTagsList.Get( i );
+        Tags requiredWorkerTags;
+        bool privatePool = false;
+        for ( size_t j=0; j<jobRequiredTags.GetSize(); ++j )
         {
-            AddRootWorkers(
-                excludedWorkers,
-                rootWorkersValid,
-                rootWorkers,
-                workersForJob );
-            workers.Append( workersForJob );
-        }
-        else  // job has required tags
-        {
-            // loop over each tag
-            for ( size_t j=0; j<requiredWorkerTags.GetSize(); ++j )
+            const Tag & jobRequiredTag = jobRequiredTags.Get( j );
+            if ( jobRequiredTag.IsPrivatePoolTag() )
             {
-                const Tag & requiredWorkerTag = requiredWorkerTags.Get( j );
-                // loop over each dir name
-                if ( !rootTagDirsValid )
+                // place the first private pool tag first in the list;
+                // this is so we can use the list as the base list for
+                // later calculations, instead of the root folder list.
+                // We can't use the root folder list because private pool
+                // workers are not listed in it.
+                requiredWorkerTags.Append( jobRequiredTag );
+                privatePool = true;
+                break;
+            }
+        }
+        if ( privatePool )
+        {
+            // add remaining tags
+            for ( size_t j=0; j<jobRequiredTags.GetSize(); ++j )
+            {
+                const Tag & jobRequiredTag = jobRequiredTags.Get( j );
+                // if not the first one we added above
+                if ( jobRequiredTag != requiredWorkerTags.Get( 0 ) )
                 {
-                    const bool includeDirs = true;  // include dirs ( tag dirs )
-                    ListDirContents( m_TagsRoot, includeDirs, rootTagDirs );
-                    rootTagDirsValid = true;
-                }
-                bool foundKey = false;
-                for ( size_t k=0; k<rootTagDirs.GetSize(); ++k )
-                {
-                    const AString & keyDirName = rootTagDirs.Get( k );
-                    if ( keyDirName.Matches( requiredWorkerTag.GetKey().Get() ) )
-                    {
-                        foundKey = true;
-                        const TagCache * foundTagCache = nullptr;
-                        GetTagCache( keyDirName, tagsCache, foundTagCache );
-                        if ( foundTagCache != nullptr )
-                        {
-                            Array< AString> workersToAdd;
-                            const Tags & foundTags = foundTagCache->m_Tags;
-                            for ( size_t l=0; l<foundTags.GetSize(); ++l )
-                            {
-                                const Tag & foundTag = foundTags.Get( l );
-                                if ( ( requiredWorkerTag.GetKeyInverted() && requiredWorkerTag.GetValue().IsEmpty() ) || 
-                                     foundTag.Matches( requiredWorkerTag ) )
-                                {
-                                    Array< AString > dirNameArray;
-                                    foundTag.ToDirNameArray( dirNameArray );
-                                    AStackString<> workerCacheKey;
-                                    for ( size_t m=0; m<dirNameArray.GetSize(); ++m )
-                                    {
-                                        workerCacheKey += dirNameArray.Get( m );
-                                    }
-                                    const WorkerCache * foundWorkerCache = nullptr;
-                                    GetWorkersCache( workerCacheKey, dirNameArray, workersCache, foundWorkerCache);
-                                    if ( foundWorkerCache != nullptr )
-                                    {
-                                        const Array< AString > & foundWorkers = foundWorkerCache->m_Workers;
-                                        if ( requiredWorkerTag.GetKeyInverted() && requiredWorkerTag.GetValue().IsEmpty() )
-                                        {
-                                            if ( j == 0 )  // if first required tag for this job
-                                            {
-                                                // add root workers that are not in the found list ( computes inversion )
-                                                Array< AString > rootWorkersToAdd;
-                                                AddRootWorkers(
-                                                    excludedWorkers,
-                                                    rootWorkersValid,
-                                                    rootWorkers,
-                                                    rootWorkersToAdd );
-                                                for ( size_t m=0; m<rootWorkersToAdd.GetSize(); ++m )
-                                                {
-                                                    const AString & rootWorkerToAdd = rootWorkersToAdd.Get( m );
-                                                    if ( !foundWorkers.Find( rootWorkerToAdd ) )
-                                                    {
-                                                        if ( !workersToAdd.Find( rootWorkerToAdd ) )
-                                                        {
-                                                            workersToAdd.Append( rootWorkerToAdd );
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        else
-                                        {
-                                            // add found workers
-                                            for ( size_t m=0; m<foundWorkers.GetSize(); ++m )
-                                            {
-                                                const AString & foundWorker = foundWorkers.Get( m );
-                                                if ( foundWorker.CompareI( m_HostName ) != 0 && 
-                                                     !workersToAdd.Find( foundWorker ) && 
-                                                     !excludedWorkers.Find( foundWorker ) )
-                                                {
-                                                    workersToAdd.Append( foundWorker );
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                if ( j == 0 )  // if first required tag for this job
-                                {
-                                    // add workers for job
-                                    workersForJob.Append( workersToAdd );
-                                }
-                                else  // if subsequent required tag for this job
-                                {
-                                    // calc intersection of previous worker list with the worker list for this tag
-                                    CalcWorkerIntersection( workersToAdd, workersForJob );
-                                }
-                            }
-                        }
-                    }
-                }
-                if ( !foundKey )
-                {
-                    if ( requiredWorkerTag.GetKeyInverted() && requiredWorkerTag.GetValue().IsEmpty() )
-                    {
-                        if ( j == 0 )  // if first required tag for this job
-                        {
-                            // add workers from root workers list
-                            AddRootWorkers(
-                                excludedWorkers,
-                                rootWorkersValid,
-                                rootWorkers,
-                                workersForJob );
-                        }
-                        else
-                        {
-                            Array< AString > rootWorkersToAdd;
-                            AddRootWorkers(
-                                excludedWorkers,
-                                rootWorkersValid,
-                                rootWorkers,
-                                rootWorkersToAdd );
-                            // calc intersection of previous worker list with the root workers to add
-                            CalcWorkerIntersection( rootWorkersToAdd, workersForJob );
-                        }
-                    }
-                    else
-                    {
-                        // no matching key for required tag, so no match for this job
-                        workersForJob.Clear();
-                    }
-                }
-                if ( workersForJob.IsEmpty() )
-                {
-                    // no workers match this required tag, so break out of checks for this job
-                    break;
+                    requiredWorkerTags.Append( jobRequiredTag );
                 }
             }
-            workers.Append( workersForJob );
         }
+        else
+        {
+            // use the job's tag order
+            requiredWorkerTags = jobRequiredTags;
+            // skip workers that have private pool tags
+            AStackString<> notPrivatePoolKey( TAG_NOT_OPERATOR );
+            notPrivatePoolKey += TAG_PRIVATE_POOL_PREFIX;
+            notPrivatePoolKey += "*";
+            Tag tag;
+            tag.SetKey( notPrivatePoolKey );
+            requiredWorkerTags.Append( tag );
+        }
+
+        // loop over each tag
+        for ( size_t j=0; j<requiredWorkerTags.GetSize(); ++j )
+        {
+            const bool firstTag = j == 0;  // if first required tag for this job
+            const Tag & requiredWorkerTag = requiredWorkerTags.Get( j );
+            // loop over each dir name
+            if ( !rootTagDirsValid )
+            {
+                const bool includeDirs = true;  // include dirs ( tag dirs )
+                ListDirContents( m_TagsRoot, includeDirs, rootTagDirs );
+                rootTagDirsValid = true;
+            }
+            bool foundKey = false;
+            for ( size_t k=0; k<rootTagDirs.GetSize(); ++k )
+            {
+                const AString & keyDirName = rootTagDirs.Get( k );
+                // use case insensitive compare, since keys are used as dir names
+                if ( keyDirName.MatchesI( requiredWorkerTag.GetKey().Get() ) )
+                {
+                    foundKey = true;
+                    const TagCache * foundTagCache = nullptr;
+                    GetTagCache( keyDirName, tagsCache, foundTagCache );
+                    if ( foundTagCache != nullptr )
+                    {
+                        HandleFoundKey(
+                            privatePool,
+                            firstTag,
+                            requiredWorkerTag,
+                            excludedWorkers,
+                            foundTagCache,
+                            rootWorkersValid,
+                            rootWorkers,
+                            workersCache,
+                            workersForJob );
+                    }
+                }
+            }
+            if ( !foundKey )
+            {
+                HandleNotFoundKey(
+                    privatePool,
+                    firstTag,
+                    requiredWorkerTag,
+                    excludedWorkers,
+                    rootWorkersValid,
+                    rootWorkers,
+                    workersForJob );
+            }
+            if ( workersForJob.IsEmpty() )
+            {
+                // no workers match this required tag, so break out of checks for this job
+                break;
+            }
+        }
+        workers.Append( workersForJob );
     }
 }
 
@@ -439,7 +572,8 @@ void WorkerBrokerage::GetBrokerageRecordsFromTags(
                 brokerageFileDir += NATIVE_SLASH;
                 brokerageFileDir += tagDirNames.Get( j );
             }
-            // include file path for the worker tag
+            // include one record for every worker tag
+            // will be searched for by client jobs that require tags
             AStackString<> brokerageFilePath( brokerageFileDir );
             brokerageFilePath += NATIVE_SLASH;
             brokerageFilePath += m_HostName;
@@ -459,20 +593,8 @@ void WorkerBrokerage::GetBrokerageRecordChanges(
     Array<BrokerageRecord> & removedBrokerageRecords,
     Array<BrokerageRecord> & addedBrokerageRecords ) const
 {
-    // include one record for every worker tag
-    // will be searched for by client jobs that require tags
     GetBrokerageRecordsFromTags( removedTags, removedBrokerageRecords );
     GetBrokerageRecordsFromTags( addedTags, addedBrokerageRecords);
-
-    // include a record for the brokerage root
-    // will be searched for by client jobs that require no tags
-    AStackString<> brokerageFilePath( m_BrokerageRoot );
-    brokerageFilePath += NATIVE_SLASH;
-    brokerageFilePath += m_HostName;
-    BrokerageRecord brokerageRecord;
-    brokerageRecord.m_DirPath = m_BrokerageRoot;
-    brokerageRecord.m_FilePath = brokerageFilePath;
-    addedBrokerageRecords.Append( brokerageRecord );
 }
 
 // ApplyBrokerageRecordChanges
@@ -521,7 +643,7 @@ void WorkerBrokerage::SetAvailable( const Tags & workerTags )
     {
         return;
     }
-    
+
     bool updateFiles = true;
     bool updateCache = true;
     Tags removedTags;
@@ -562,6 +684,26 @@ void WorkerBrokerage::SetAvailable( const Tags & workerTags )
                 removedBrokerageRecords, addedBrokerageRecords );
             // update cache members
             m_WorkerTags.ApplyChanges( removedTags, addedTags );
+
+            AStackString<> brokerageFilePath( m_BrokerageRoot );
+            brokerageFilePath += NATIVE_SLASH;
+            brokerageFilePath += m_HostName;
+            BrokerageRecord rootBrokerageRecord;
+            rootBrokerageRecord.m_DirPath = m_BrokerageRoot;
+            rootBrokerageRecord.m_FilePath = brokerageFilePath;
+            if ( m_WorkerTags.ContainsPrivatePoolTag() )
+            {
+                // private pool worker, so don't include worker in root folder
+                removedBrokerageRecords.Append( rootBrokerageRecord );
+            }
+            else
+            {
+                // include worker in the root folder
+                // it will be searched for by client jobs that
+                // do not require private pool tags
+                addedBrokerageRecords.Append( rootBrokerageRecord );
+            }
+
             ApplyBrokerageRecordChanges( removedBrokerageRecords, addedBrokerageRecords );
             // remove files for removed records
             RemoveBrokerageFiles( removedBrokerageRecords );

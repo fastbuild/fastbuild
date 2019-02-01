@@ -17,6 +17,7 @@
 #if defined( __WINDOWS__ )
     #include <CommCtrl.h>
     #include <Windows.h>
+    #include <stdlib.h>  // for abs()
 #endif
 
 // Defines
@@ -27,6 +28,9 @@
 OSDropDown::OSDropDown( OSWindow * parentWindow )
     : OSWidget( parentWindow )
     , m_Font( nullptr )
+    #if defined( __WINDOWS__ )
+        , m_LongestItemLength( 0 )
+    #endif
 {
 }
 
@@ -73,6 +77,24 @@ void OSDropDown::AddItem( const char * itemText )
 {
     #if defined( __WINDOWS__ )
         SendMessage( (HWND)m_Handle, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)itemText );
+
+        // auto-adjust drop down width to fit text
+        const size_t itemLength = strlen( itemText );
+        if ( itemLength > m_LongestItemLength )
+        {
+            m_LongestItemLength = itemLength;
+
+            HDC dc = GetDC( (HWND)m_Handle );
+            HANDLE oldFont = SelectObject( dc, m_Font->GetFont() );
+            RECT rect = { 0, 0, 0, 0 };
+            DrawText( dc, itemText, (int)itemLength, &rect, DT_CALCRECT | DT_NOPREFIX | DT_SINGLELINE );
+            SelectObject( dc, oldFont );
+            ReleaseDC( (HWND)m_Handle, dc );
+
+            // calculate width, add 4 pixel padding
+            const size_t textWidth = abs( rect.right - rect.left ) + 4;
+            SendMessage( (HWND)m_Handle, CB_SETDROPPEDWIDTH, textWidth, 0 );
+        }
     #else
         (void)itemText;
     #endif
