@@ -205,12 +205,14 @@ This results in very unintuitive compile errors.</p>
 	<p><p>Specify the worker tags required for the compiler.</p>
 <p>This option allows you to run the compiler on only those workers that match the required tags.</p>
 <p>Each entry is a wildcard string of the form: key, !key, key=value, or !key=value</p>
+<p>and can include * and ? chars</p>
 <p>Example list:</p>
 <p>{
    'TopDownMemory',
    'OS=Windows-*-*'
    }</p>
-
+<p>To run a job on workers in a private pool, include the pool's private_ tag</p>
+<p>Example entry: 'private_BuildFarm1'</p>
 </div>
 
 

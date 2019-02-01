@@ -376,6 +376,10 @@ suppressed.</p>
 <p>You may specify one or more -Ttag entries, where tag is a string you define.
 tag can be a key or key=value string.</p>
 <p>Example -Ttag entries : -TTopDownMemory -TTestHarness=TH1</p>
+<p>By default, workers are included in the general worker pool</p>
+<p>To place a worker in a private pool, add a tag with the private_ prefix</p>
+<p>Example: -Tprivate_BuildFarm1</p>
+<p>To run a job on workers in the private pool, include the tag in your RequiredWorkerTags</p>
 <p>To clear your tags, specify -T</p>
 <p>You may alternatively set local tags via the LocalWorkerTags field in your Settings node.</p>
 <p>By default, no tags are present except the OS tag</p>
@@ -510,6 +514,10 @@ runs in UI-less mode)</p>
 <p>You may specify one or more -Ttag entries, where tag is a string you define.
 tag can be a key or key=value string.</p>
 <p>Example -Ttag entries : -TTopDownMemory -TTestHarness=TH1</p>
+<p>By default, workers are included in the general worker pool</p>
+<p>To place a worker in a private pool, add a tag with the private_ prefix</p>
+<p>Example: -Tprivate_BuildFarm1</p>
+<p>To run a job on workers in the private pool, include the tag in your RequiredWorkerTags</p>
 <p>To clear your tags, specify -T</p>
 <p>By default, no tags are present except the OS tag</p>
 </div>
