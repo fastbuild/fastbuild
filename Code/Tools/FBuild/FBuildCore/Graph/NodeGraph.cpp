@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionSettings.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_IgnoreForComparison.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
 
 #include "AliasNode.h"
@@ -50,8 +51,6 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/LevenshteinDistance.h"
 #include "Core/Tracing/Tracing.h"
-
-#include "MetaData/Meta_IgnoreForComparison.h"
 
 #include <string.h>
 
@@ -1991,10 +1990,11 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
 //------------------------------------------------------------------------------
 /*static*/ bool NodeGraph::AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property )
 {
-    if( property.HasMetaData< Meta_IgnoreForComparison >() )
+    if ( property.HasMetaData< Meta_IgnoreForComparison >() )
     {
-      return true;
+        return true;
     }
+
     switch ( property.GetType() )
     {
         case PropertyType::PT_ASTRING:

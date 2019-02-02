@@ -27,6 +27,7 @@ private:
     // Tests
     void TestPCH() const;
     void TestPCH_NoRebuild() const;
+    void TestPCH_NoRebuild_BFFChange() const;
     void TestPCHWithCache() const;
     void TestPCHWithCache_NoRebuild() const;
     void PreventUselessCacheTraffic_MSVC() const;
@@ -49,6 +50,7 @@ private:
 REGISTER_TESTS_BEGIN( TestPrecompiledHeaders )
     REGISTER_TEST( TestPCH )
     REGISTER_TEST( TestPCH_NoRebuild )
+    REGISTER_TEST( TestPCH_NoRebuild_BFFChange )
     REGISTER_TEST( TestPCHWithCache )
     REGISTER_TEST( TestPCHWithCache_NoRebuild )
     REGISTER_TEST( CacheUniqueness )
@@ -145,6 +147,30 @@ void TestPrecompiledHeaders::TestPCH_NoRebuild() const
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::EXE_NODE );
     CheckStatsTotal( stats, 7+numF, 2+numF );
+}
+
+// TestPCH_NoRebuild_BFFChange
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::TestPCH_NoRebuild_BFFChange() const
+{
+    FBuildTestOptions options;
+    options.m_ForceDBMigration_Debug = true;
+    FBuildStats stats = Build( options );
+
+    // Check stats
+    //                      Seen,   Built,  Type
+    uint32_t numF = 4; // pch.h / slow.h / pchuser.cpp / linker exe
+    #if defined( __WINDOWS__ )
+        numF++; // pch.cpp
+    #endif
+    CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );  // cpp + pch cpp + pch .h
+    CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( stats, 2,      0,      Node::OBJECT_NODE );// obj + pch obj
+    CheckStatsNode ( stats, 1,      0,      Node::OBJECT_LIST_NODE );
+    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
+    CheckStatsNode ( stats, 1,      0,      Node::EXE_NODE );
+    CheckStatsTotal( stats, 7+numF, 3+numF );
 }
 
 // TestPCHWithCache
