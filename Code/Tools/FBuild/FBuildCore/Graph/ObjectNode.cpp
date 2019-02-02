@@ -305,6 +305,20 @@ ObjectNode::~ObjectNode()
     return true;
 }
 
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void ObjectNode::Migrate( const Node & oldNode )
+{
+    // Migrate Node level properties
+    Node::Migrate( oldNode );
+
+    // Migrate the PCHCacheKey if there is one. This special case property is
+    // lazily determined during a build, but needs to persist across migrations
+    // to prevent unnecessary rebuilds of object that depend on this one, if this
+    // is a precompiled header object.
+    m_PCHCacheKey = oldNode.CastTo< ObjectNode >()->m_PCHCacheKey;
+}
+
 // DoBuildMSCL_NoCache
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ObjectNode::DoBuildMSCL_NoCache( Job * job, bool useDeoptimization )

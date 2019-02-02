@@ -656,6 +656,17 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
     return true;
 }
 
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void Node::Migrate( const Node & oldNode )
+{
+    // Transfer the stamp used to detemine if the node has changed
+    m_Stamp = oldNode.m_Stamp;
+
+    // Transfer previous build costs used for progress estimates
+    m_LastBuildTimeMs = oldNode.m_LastBuildTimeMs;
+}
+
 // Deserialize
 //------------------------------------------------------------------------------
 /*static*/ bool Node::Deserialize( IOStream & stream, void * base, const ReflectedProperty & property )
