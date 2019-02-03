@@ -45,13 +45,13 @@
 .Librarian = "l"
 .LibrarianOptions = "%1 %2"
 
-Library; comment after function name
+Library(); comment after function name
 { ; comment after bracket
     ; comment in library
     .LibrarianOutput = "o"
 }; comment after bracket
 
-Library// comment after function name
+Library()// comment after function name
 { // comment after bracket
     // comment in library
     .LibrarianOutput = "ob"

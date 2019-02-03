@@ -205,25 +205,28 @@ Function::~Function() = default;
         ASSERT( *start == BFFParser::BFF_FUNCTION_ARGS_OPEN );
         start++;
         start.SkipWhiteSpace();
-        if ( !start.IsAtString() )
+        if ( start.IsAtString() )
+        {
+            BFFIterator stop( start );
+            stop.SkipString();
+            ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
+            if ( start.GetDistTo( stop ) <= 1 )
+            {
+                Error::Error_1003_EmptyStringNotAllowedInHeader( start, this );
+                return false;
+            }
+
+            // store alias name for use in Commit
+            start++; // skip past opening quote
+            if ( BFFParser::PerformVariableSubstitutions( start, stop, m_AliasForFunction ) == false )
+            {
+                return false; // substitution will have emitted an error
+            }
+        }
+        else if ( NeedsHeader() )
         {
             Error::Error_1001_MissingStringStartToken( start, this );
             return false;
-        }
-        BFFIterator stop( start );
-        stop.SkipString();
-        ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
-        if ( start.GetDistTo( stop ) <= 1 )
-        {
-            Error::Error_1003_EmptyStringNotAllowedInHeader( start, this );
-            return false;
-        }
-
-        // store alias name for use in Commit
-        start++; // skip past opening quote
-        if ( BFFParser::PerformVariableSubstitutions( start, stop, m_AliasForFunction ) == false )
-        {
-            return false; // substitution will have emitted an error
         }
     }
 
