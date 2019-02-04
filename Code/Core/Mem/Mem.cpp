@@ -13,6 +13,7 @@
 #include "Core/Mem/SmallBlockAllocator.h"
 
 #include <stdlib.h>
+#include <cstddef>
 
 // Defines
 //------------------------------------------------------------------------------
@@ -21,7 +22,7 @@
 //------------------------------------------------------------------------------
 void * Alloc( size_t size )
 {
-    return AllocFileLine( size, alignof( max_align_t ), "Unknown", 0 );
+    return AllocFileLine( size, alignof( std::max_align_t ), "Unknown", 0 );
 }
 
 // Alloc
@@ -35,7 +36,7 @@ void * Alloc( size_t size, size_t alignment )
 //------------------------------------------------------------------------------
 void * AllocFileLine( size_t size, const char * file, int line )
 {
-    return AllocFileLine( size, alignof( max_align_t ), file, line );
+    return AllocFileLine( size, alignof( std::max_align_t ), file, line );
 }
 
 // AllocFileLine
