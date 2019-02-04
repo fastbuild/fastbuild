@@ -232,6 +232,8 @@ protected:
     static bool Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri );
     static bool Deserialize( IOStream & stream, void * base, const ReflectedProperty & property );
 
+    virtual void Migrate( const Node & oldNode );
+
     bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,
                                                     const BFFIterator & iter,
                                                     const Function * function,
@@ -289,5 +291,6 @@ IMetaData & MetaAllowNonFile();
 IMetaData & MetaAllowNonFile( const Node::Type limitToType );
 IMetaData & MetaEmbedMembers();
 IMetaData & MetaInheritFromOwner();
+IMetaData & MetaIgnoreForComparison();
 
 //------------------------------------------------------------------------------

@@ -95,6 +95,8 @@ private:
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
     virtual bool Finalize( NodeGraph & nodeGraph ) override;
 
+    virtual void Migrate( const Node & oldNode ) override;
+
     BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization, const AString & workingDir, const AString & compiler );
     BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache,
         bool useSimpleDist, const AString & workingDir );

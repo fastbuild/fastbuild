@@ -205,61 +205,57 @@ TestNode::~TestNode() = default;
             uint32_t memOutSize = 0;
             uint32_t memErrSize = 0;
             bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut * 1000 );
-            if ( !timedOut )
+            int exitStatus = p.WaitForExit();
+            if ( !p.HasAborted() )
             {
-                int exitStatus = p.WaitForExit();
-                if ( !p.HasAborted() )
+                if ( ( timedOut == true ) || ( exitStatus != 0 ) || ( m_TestAlwaysShowOutput == true ) )
                 {
-                    // did the test fail?
-                    if ( exitStatus != 0 )
-                    {
-                        FLOG_ERROR( "Test failed (error %i) '%s'", exitStatus, m_TestExecutable.Get() );
-                        result = NODE_RESULT_FAILED;
-                    }
+                    // print the test output
+                    Node::DumpOutput( job, memOut.Get(), memOutSize );
+                    Node::DumpOutput( job, memErr.Get(), memErrSize );
+                }
 
-                    if ( ( exitStatus != 0 ) || ( m_TestAlwaysShowOutput == true ) )
-                    {
-                        // print the test output
-                        Node::DumpOutput( job, memOut.Get(), memOutSize );
-                        Node::DumpOutput( job, memErr.Get(), memErrSize );
-                    }
+                if ( timedOut == true )
+                {
+                    FLOG_ERROR( "Test timed out after %u s (%s)", m_TestTimeOut, m_TestExecutable.Get() );
+                    result = NODE_RESULT_FAILED;
+                }
+                else if ( exitStatus != 0 )
+                {
+                    FLOG_ERROR( "Test failed (error %i) '%s'", exitStatus, m_TestExecutable.Get() );
+                    result = NODE_RESULT_FAILED;
+                }
 
-                    // write the test output (saved for pass or fail)
-                    FileStream fs;
-                    if ( fs.Open( GetName().Get(), FileStream::WRITE_ONLY ) )
-                    {
-                        if ( ( memOut.Get() && ( fs.Write( memOut.Get(), memOutSize ) != memOutSize ) ) ||
-                             ( memErr.Get() && ( fs.Write( memErr.Get(), memErrSize ) != memErrSize ) ) )
-                        {
-                            AStackString<> outputName( GetName() );
-                            FLOG_ERROR( "Failed to write test output file '%s'", outputName.Get() );
-                            result = NODE_RESULT_FAILED;
-                        }
-                        fs.Close();
-                    }
-                    else
+                // write the test output (saved for pass or fail)
+                FileStream fs;
+                if ( fs.Open( GetName().Get(), FileStream::WRITE_ONLY ) )
+                {
+                    if ( ( memOut.Get() && ( fs.Write( memOut.Get(), memOutSize ) != memOutSize ) ) ||
+                         ( memErr.Get() && ( fs.Write( memErr.Get(), memErrSize ) != memErrSize ) ) )
                     {
                         AStackString<> outputName( GetName() );
-                        FLOG_ERROR( "Failed to open test output file '%s'", outputName.Get() );
+                        FLOG_ERROR( "Failed to write test output file '%s'", outputName.Get() );
                         result = NODE_RESULT_FAILED;
                     }
-
-                    if ( exitStatus == 0 )
-                    {
-                        // test passed
-                        // we only keep the "last modified" time of the test output for passed tests
-                        m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-                    }
+                    fs.Close();
                 }
                 else
                 {
-                    FLOG_ERROR( "Test unexpectedly aborted '%s'", m_TestExecutable.Get() );
+                    AStackString<> outputName( GetName() );
+                    FLOG_ERROR( "Failed to open test output file '%s'", outputName.Get() );
                     result = NODE_RESULT_FAILED;
+                }
+
+                if ( ( timedOut == false ) && ( exitStatus == 0 ) )
+                {
+                    // test passed
+                    // we only keep the "last modified" time of the test output for passed tests
+                    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
                 }
             }
             else
             {
-                FLOG_ERROR( "Test timed out after %u s (%s)", m_TestTimeOut, m_TestExecutable.Get() );
+                FLOG_ERROR( "Test unexpectedly aborted '%s'", m_TestExecutable.Get() );
                 result = NODE_RESULT_FAILED;
             }
         }

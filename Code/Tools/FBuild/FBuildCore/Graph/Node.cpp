@@ -35,6 +35,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_IgnoreForComparison.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
@@ -103,6 +104,10 @@ IMetaData & MetaEmbedMembers()
 IMetaData & MetaInheritFromOwner()
 {
     return *FNEW( Meta_InheritFromOwner() );
+}
+IMetaData & MetaIgnoreForComparison()
+{
+    return *FNEW( Meta_IgnoreForComparison() );
 }
 
 // Reflection
@@ -739,6 +744,17 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
     while ( currentRI );
 
     return true;
+}
+
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void Node::Migrate( const Node & oldNode )
+{
+    // Transfer the stamp used to detemine if the node has changed
+    m_Stamp = oldNode.m_Stamp;
+
+    // Transfer previous build costs used for progress estimates
+    m_LastBuildTimeMs = oldNode.m_LastBuildTimeMs;
 }
 
 // Deserialize
