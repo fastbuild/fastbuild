@@ -44,7 +44,7 @@
         static void InitBuckets();
 
         static const size_t BUCKET_MAX_ALLOC_SIZE = 256;
-        static const size_t BUCKET_ALIGNMENT = sizeof( void * );
+        static const size_t BUCKET_ALIGNMENT = alignof( max_align_t );
         static const size_t BUCKET_NUM_BUCKETS = ( BUCKET_MAX_ALLOC_SIZE / BUCKET_ALIGNMENT );
         static const size_t BUCKET_ADDRESSSPACE_SIZE = ( 200 * 1024 * 1024 );
         static const size_t BUCKET_NUM_PAGES = ( BUCKET_ADDRESSSPACE_SIZE / MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE );
