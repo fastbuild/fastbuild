@@ -410,7 +410,9 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
         }
         AStackString<> intAsString( startIntValue.GetCurrent(), iter.GetCurrent() );
         int i = 0;
-        if ( sscanf( intAsString.Get(), "%i", &i ) != 1 )
+        PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+        if ( sscanf( intAsString.Get(), "%i", &i ) != 1 ) // TODO:C Consider using sscanf_s
+        PRAGMA_DISABLE_POP_MSVC // 4996
         {
             Error::Error_1018_IntegerValueCouldNotBeParsed( startIntValue );
             return false;

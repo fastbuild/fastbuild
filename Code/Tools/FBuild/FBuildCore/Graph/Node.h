@@ -155,6 +155,7 @@ public:
     bool Deserialize( NodeGraph & nodeGraph, IOStream & stream );
 
     static bool EnsurePathExistsForFile( const AString & name );
+    static bool DoPreBuildFileDeletion( const AString & fileName );
 
     inline uint64_t GetStamp() const { return m_Stamp; }
 
@@ -233,6 +234,8 @@ protected:
     static bool Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri );
     static bool Deserialize( IOStream & stream, void * base, const ReflectedProperty & property );
 
+    virtual void Migrate( const Node & oldNode );
+
     bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,
                                                     const BFFIterator & iter,
                                                     const Function * function,
@@ -288,5 +291,6 @@ IMetaData & MetaAllowNonFile();
 IMetaData & MetaAllowNonFile( const Node::Type limitToType );
 IMetaData & MetaEmbedMembers();
 IMetaData & MetaInheritFromOwner();
+IMetaData & MetaIgnoreForComparison();
 
 //------------------------------------------------------------------------------

@@ -859,40 +859,6 @@ bool Function::GetStrings( const BFFIterator & iter, Array< AString > & strings,
     return true;
 }
 
-// GetFileNode
-//------------------------------------------------------------------------------
-bool Function::GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Node * & fileNode, const char * name, bool required ) const
-{
-    // get the string containing the node name
-    AStackString<> fileNodeName;
-    if ( GetString( iter, fileNodeName, name, required ) == false )
-    {
-        return false;
-    }
-
-    // handle not-present
-    if ( fileNodeName.IsEmpty() )
-    {
-        ASSERT( required == false ); // GetString should have managed required string
-        fileNode = nullptr;
-        return true;
-    }
-
-    // get/create the FileNode
-    Node * n = nodeGraph.FindNode( fileNodeName );
-    if ( n == nullptr )
-    {
-        n = nodeGraph.CreateFileNode( fileNodeName );
-    }
-    else if ( n->IsAFile() == false )
-    {
-        Error::Error_1103_NotAFile( iter, this, name, n->GetName(), n->GetType() );
-        return false;
-    }
-    fileNode = n;
-    return true;
-}
-
 // ProcessAlias
 //------------------------------------------------------------------------------
 bool Function::ProcessAlias( NodeGraph & nodeGraph, const BFFIterator & iter, Node * nodeToAlias ) const

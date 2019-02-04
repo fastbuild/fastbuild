@@ -51,6 +51,10 @@ public:
     static bool EnsurePathExists( const AString & path );
     static bool EnsurePathExistsForFile( const AString & name );
 
+    #if !defined( __WINDOWS__ )    
+        static bool GetDirectoryIsMountPoint( const AString & path );
+    #endif
+
     static uint64_t GetFileLastWriteTime( const AString & fileName );
     static bool     SetFileLastWriteTime( const AString & fileName, uint64_t fileTime );
 

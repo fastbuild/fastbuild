@@ -15,13 +15,14 @@
 					      ]
     .LZ4Options_x64Clang= [ 
                             .LZ4CompilerOptions = ' -Wno-shift-count-overflow'
+                                                + ' -O2'
 					      ]
     .LZ4Options_x64Linux= [ 
-                            .LZ4CompilerOptions = ''
+                            .LZ4CompilerOptions = ' -O2'
                           ]
     .LZ4Options_x64ClangLinux  = .LZ4Options_x64Linux
     .LZ4Options_x64OSX  = [ 
-                            .LZ4CompilerOptions = ''
+                            .LZ4CompilerOptions = ' -O2'
                           ]
 
 	// Library
@@ -46,13 +47,18 @@
 			.CompilerOptions			= .CompilerOptionsC
                                         + .LZ4IncludePaths
 										+ .LZ4CompilerOptions
+                                        #if __WINDOWS__
+                                            - ' /Od'
+                                            - ' /RTC1'
+                                        #else
+                                            - ' -O0'
+                                        #endif
 
 			// Output
-			.CompilerOutputPath			= '$OutputBase$/$ProjectName$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
+			.CompilerOutputPath			= '$OutputBase$/External/$ProjectName$/'
+            .LibrarianOutput            = '$OutputBase$/External/$ProjectName$/$ProjectName$$LibExtension$'
 		}
 		Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-		^'Targets_$Platform$_$Config$' + { '$ProjectName$-$Platform$-$Config$' }
 	}
 
 	// Aliases

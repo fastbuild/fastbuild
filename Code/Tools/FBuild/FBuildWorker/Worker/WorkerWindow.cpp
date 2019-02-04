@@ -282,6 +282,13 @@ void WorkerWindow::UIUpdateThread()
     return true; // Stop window closeing (since we already handled it)
 }
 
+// OnQuit
+//------------------------------------------------------------------------------
+/*virtual*/ bool WorkerWindow::OnQuit()
+{
+    SetWantToQuit();
+    return true; // Handled
+}
 
 // OnTrayIconLeftClick
 //------------------------------------------------------------------------------
