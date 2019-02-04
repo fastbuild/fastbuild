@@ -36,7 +36,7 @@ ApplicationEnvironment
 AssemblySearchPath
 AumidOverride
 CachePath
-CachePathMustBeMountPoint
+CachePathMountPoint
 CachePluginDLL
 Compiler
 CompilerFamily
@@ -60,6 +60,7 @@ DefaultLanguage
 Dest
 Dependencies
 Environment
+ExecAlways
 ExecArguments
 ExecExecutable
 ExecInput

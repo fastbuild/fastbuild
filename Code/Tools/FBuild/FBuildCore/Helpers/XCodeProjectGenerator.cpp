@@ -23,9 +23,9 @@ XCodeProjectGenerator::XCodeProjectGenerator() = default;
 //------------------------------------------------------------------------------
 XCodeProjectGenerator::~XCodeProjectGenerator() = default;
 
-// Generate
+// GeneratePBXProj
 //------------------------------------------------------------------------------
-const AString & XCodeProjectGenerator::Generate()
+const AString & XCodeProjectGenerator::GeneratePBXProj()
 {
     // preallocate to avoid re-allocations
     m_Tmp.SetReserved( MEGABYTE );
@@ -40,6 +40,38 @@ const AString & XCodeProjectGenerator::Generate()
     WriteBuildConfiguration();
     WriteConfigurationList();
     WriteFooter();
+
+    return m_Tmp;
+}
+
+// GenerateUserSchemeMangementPList
+//------------------------------------------------------------------------------
+const AString & XCodeProjectGenerator::GenerateUserSchemeMangementPList()
+{
+    // preallocate to avoid re-allocations
+    m_Tmp.SetReserved( MEGABYTE );
+    m_Tmp.SetLength( 0 );
+
+    // Header
+    m_Tmp = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+            "<plist version=\"1.0\">\n"
+            "<dict>\n"
+            "\t<key>SchemeUserState</key>\n"
+            "\t<dict>\n";
+
+    // Hide "doc" Schemes
+    m_Tmp.AppendFormat( "\t\t<key>%s-doc.xcscheme</key>\n"
+                        "\t\t<dict>\n"
+                        "\t\t\t<key>isShown</key>\n"
+                        "\t\t\t<false/>\n" // NOTE: isShown set to false
+                        "\t\t</dict>\n",
+                        m_ProjectName.Get() );
+
+    // Footer
+    m_Tmp += "\t</dict>\n"
+             "</dict>\n"
+             "</plist>\n";
 
     return m_Tmp;
 }
@@ -118,6 +150,9 @@ void XCodeProjectGenerator::WriteHeader()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteFiles()
 {
+    // Sort files so projects appear alphabetically in Scheme drop down menu.
+    m_Files.Sort();
+    
     const uint32_t numFiles = (uint32_t)m_Files.GetSize();
 
     // Files (PBXBuildFile)
@@ -173,7 +208,8 @@ void XCodeProjectGenerator::WriteFiles()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteFolders()
 {
-    // TODO:B Sort folders alphabetically
+    // Sort folders so they appear alphabetically in the Project Navigator.
+    m_Folders.Sort();
 
     // Folders
     Write( "\n" );

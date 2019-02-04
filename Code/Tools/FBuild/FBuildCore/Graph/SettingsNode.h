@@ -27,7 +27,7 @@ public:
 
     // Access to settings
     const AString &                     GetCachePath() const;
-    bool                                GetCachePathMustBeMountPoint() const { return m_CachePathMustBeMountPoint; }
+    const AString &                     GetCachePathMountPoint() const;
     const AString &                     GetCachePluginDLL() const;
     inline const Array< AString > &     GetWorkerList() const { return m_Workers; }
     uint32_t                            GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
@@ -41,16 +41,17 @@ private:
 
     // Settings from environment variables
     AString             m_CachePathFromEnvVar;
+    AString             m_CachePathMountPointFromEnvVar;
 
     // Exposed settings
     //friend class FunctionSettings;
     Array< AString  >   m_Environment;
     AString             m_CachePath;
+    AString             m_CachePathMountPoint;
     AString             m_CachePluginDLL;
     Array< AString  >   m_Workers;
     uint32_t            m_WorkerConnectionLimit;
     uint32_t            m_DistributableJobMemoryLimitMiB;
-    bool                m_CachePathMustBeMountPoint;
     bool                m_AllowDBMigration_Experimental;
 };
 

@@ -77,6 +77,15 @@
                     window->OnDropDownSelectionChanged( dropDown );
                     return 0;
                 }
+                break;
+            }
+            case WM_QUIT:
+            {
+                if ( window->OnQuit() )
+                {
+                    return 0; // Handled
+                }
+                break;
             }
             default:
             {
@@ -198,6 +207,13 @@ void OSWindow::SetTitle( const char * title )
 // OnClose
 //------------------------------------------------------------------------------
 /*virtual*/ bool OSWindow::OnClose()
+{
+    return false; // Not handled by child class
+}
+
+// OnQuit
+//------------------------------------------------------------------------------
+/*virtual*/ bool OSWindow::OnQuit()
 {
     return false; // Not handled by child class
 }

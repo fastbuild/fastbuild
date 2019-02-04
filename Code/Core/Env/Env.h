@@ -36,6 +36,7 @@ public:
     static void GetCmdLine( AString & cmdLine );
     static void GetExePath( AString & path );
     static bool IsStdOutRedirected();
+    static bool GetLocalUserName( AString & outUserName );
 
     static uint32_t GetLastErr();
     static char * AllocEnvironmentString( const Array< AString > & environment );

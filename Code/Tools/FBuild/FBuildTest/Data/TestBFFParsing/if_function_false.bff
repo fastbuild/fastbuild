@@ -1,7 +1,0 @@
-.D = 'd'
-.ABC = {'a', 'b', 'c'}
-
-If(.D in .ABC)
-{
-    Print("Failure")
-}

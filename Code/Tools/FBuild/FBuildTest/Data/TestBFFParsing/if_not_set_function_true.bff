@@ -1,7 +1,0 @@
-.DE = {'d', 'e'}
-.ABC = {'a', 'b', 'c'}
-
-If(.DE not in .ABC)
-{
-    Print("Success")
-}

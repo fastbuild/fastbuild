@@ -132,7 +132,7 @@ void * CachePlugin::GetFunction( const char * friendlyName, const char * mangled
 
 // Init
 //------------------------------------------------------------------------------
-/*virtual*/ bool CachePlugin::Init( const AString & cachePath, bool /*cachePathMustBeMountPoint*/ )
+/*virtual*/ bool CachePlugin::Init( const AString & cachePath, const AString & /*cachePathMountPoint*/ )
 {
     // ensure all functions were found
     if ( m_InitFunc && m_ShutdownFunc && m_PublishFunc && m_RetrieveFunc && m_FreeMemoryFunc )

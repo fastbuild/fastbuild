@@ -526,7 +526,7 @@ void FBuildOptions::DisplayVersion() const
         #define VERSION_CONFIG ""
     #endif
     OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
-            "Copyright 2012-2018 Franta Fulin - http://www.fastbuild.org\n" );
+            "Copyright 2012-2019 Franta Fulin - http://www.fastbuild.org\n" );
     #undef VERSION_CONFIG
 }
 

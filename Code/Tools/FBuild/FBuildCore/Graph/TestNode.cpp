@@ -187,11 +187,6 @@ TestNode::~TestNode() = default;
     uint32_t memOutSize = 0;
     uint32_t memErrSize = 0;
     bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut * 1000 );
-    if ( timedOut )
-    {
-        FLOG_ERROR( "Test timed out after %u s (%s)", m_TestTimeOut, m_TestExecutable.Get() );
-        return NODE_RESULT_FAILED;
-    }
 
     // Get result
     int result = p.WaitForExit();
@@ -200,11 +195,20 @@ TestNode::~TestNode() = default;
         return NODE_RESULT_FAILED;
     }
 
-    if ( ( result != 0 ) || ( m_TestAlwaysShowOutput == true ) )
+    if ( ( timedOut == true ) || ( result != 0 ) || ( m_TestAlwaysShowOutput == true ) )
     {
         // something went wrong, print details
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
+    }
+
+    if ( timedOut == true )
+    {
+        FLOG_ERROR( "Test timed out after %u s (%s)", m_TestTimeOut, m_TestExecutable.Get() );
+    }
+    else if ( result != 0 )
+    {
+        FLOG_ERROR( "Test failed (error %i) '%s'", result, GetName().Get() );
     }
 
     // write the test output (saved for pass or fail)
@@ -223,9 +227,8 @@ TestNode::~TestNode() = default;
     fs.Close();
 
     // did the test fail?
-    if ( result != 0 )
+    if ( ( timedOut == true ) || ( result != 0 ) )
     {
-        FLOG_ERROR( "Test failed (error %i) '%s'", result, GetName().Get() );
         return NODE_RESULT_FAILED;
     }
 

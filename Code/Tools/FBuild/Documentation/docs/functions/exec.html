@@ -34,6 +34,7 @@ The executable will be run if the outputfile is out of date (with respect to the
   .ExecWorkingDir         ; (optional) Working dir to set for executable
   .ExecReturnCode         ; (optional) Expected return code from executable (default 0)
   .ExecUseStdOutAsOutput  ; (optional) Write the standard output from the executable to the output file
+  .ExecAlways             ; (optional) Run the executable even if inputs have not changed
 
   ; Additional options
   .PreBuildDependencies   ; (optional) Force targets to be built before this Exec (Rarely needed,

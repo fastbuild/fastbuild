@@ -12,6 +12,7 @@
 #include "Core/Strings/AStackString.h"
 
 #if defined( __WINDOWS__ )
+    #include <Lmcons.h>
     #include <windows.h>
     #include <stdio.h>
 #endif
@@ -290,6 +291,24 @@ void Env::GetExePath( AString & output )
         return ( isatty( STDOUT_FILENO ) == 0 );
     #else
         #error Unknown platform
+    #endif
+}
+
+// GetUserName
+//------------------------------------------------------------------------------
+/*static*/ bool Env::GetLocalUserName( AString & outUserName )
+{
+    #if defined( __WINDOWS__ )
+        char userName[ UNLEN + 1 ];
+        DWORD bufferSize = sizeof(userName);
+        if ( ::GetUserNameA( userName, &bufferSize ) == FALSE )
+        {
+            return false;
+        }
+        outUserName = userName;
+        return true;
+    #else
+        return GetEnvVariable( "USER", outUserName );
     #endif
 }
 
