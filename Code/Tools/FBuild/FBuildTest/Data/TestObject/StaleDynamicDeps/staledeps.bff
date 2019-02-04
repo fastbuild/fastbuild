@@ -39,6 +39,7 @@ Unity( 'Unity' )
 ObjectList( 'CompileGeneratedFiles' )
 {
     .CompilerInputUnity         = 'Unity'
+    .CompilerOptions            + ' -I"."'
 }
 
 Alias( 'StaleDynamicDeps' )

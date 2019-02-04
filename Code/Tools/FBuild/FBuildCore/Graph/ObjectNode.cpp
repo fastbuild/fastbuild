@@ -69,7 +69,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_PrecompiledHeader,                   "PrecompiledHeader",                MetaHidden() )
     REFLECT( m_Flags,                               "Flags",                            MetaHidden() )
     REFLECT( m_PreprocessorFlags,                   "PreprocessorFlags",                MetaHidden() )
-    REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() )
+    REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
@@ -212,23 +212,15 @@ ObjectNode::~ObjectNode()
     // Delete previous file(s) if doing a clean build
     if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
     {
-        if ( FileIO::FileExists( GetName().Get() ) )
+        if ( DoPreBuildFileDeletion( GetName() ) == false )
         {
-            if ( FileIO::FileDelete( GetName().Get() ) == false )
-            {
-                FLOG_ERROR( "Failed to delete file before build '%s'", GetName().Get() );
-                return NODE_RESULT_FAILED;
-            }
+            return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
         }
         if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
         {
-            if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
+            if ( DoPreBuildFileDeletion( m_PCHObjectFileName ) == false )
             {
-                if ( FileIO::FileDelete( m_PCHObjectFileName.Get() ) == false )
-                {
-                    FLOG_ERROR( "Failed to delete file before build '%s'", m_PCHObjectFileName.Get() );
-                    return NODE_RESULT_FAILED;
-                }
+                return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
             }
         }
     }
@@ -311,6 +303,20 @@ ObjectNode::~ObjectNode()
     }
 
     return true;
+}
+
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void ObjectNode::Migrate( const Node & oldNode )
+{
+    // Migrate Node level properties
+    Node::Migrate( oldNode );
+
+    // Migrate the PCHCacheKey if there is one. This special case property is
+    // lazily determined during a build, but needs to persist across migrations
+    // to prevent unnecessary rebuilds of object that depend on this one, if this
+    // is a precompiled header object.
+    m_PCHCacheKey = oldNode.CastTo< ObjectNode >()->m_PCHCacheKey;
 }
 
 // DoBuildMSCL_NoCache
@@ -1558,6 +1564,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 // Clang requires -I options be stripped when compiling preprocessed code
                 // (it raises an error if we don't remove these)
                 if ( StripTokenWithArg( "-I", token, i ) )
+                {
+                    continue; // skip this token in both cases
+                }
+            }
+            if ( isGCC || isClang )
+            {
+                // Remove isysroot, which may not exist on a distributed system, and
+                // should only be used for include paths, which have already been
+                // processed.
+                if ( StripTokenWithArg( "-isysroot", token, i ) )
                 {
                     continue; // skip this token in both cases
                 }

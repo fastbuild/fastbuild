@@ -5,6 +5,8 @@
 //------------------------------------------------------------------------------
 #include "ICache.h"
 
+#include <Core/Strings/AString.h>
+
 // GetCacheId
 //------------------------------------------------------------------------------
 /*static*/ void ICache::GetCacheId( const uint64_t preprocessedSourceKey,

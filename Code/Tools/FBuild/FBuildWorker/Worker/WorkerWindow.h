@@ -56,6 +56,7 @@ private:
     // OSWindow events
     virtual bool OnClose() override;
     virtual bool OnMinimize() override;
+    virtual bool OnQuit() override;
     virtual bool OnTrayIconLeftClick() override;
     virtual bool OnTrayIconRightClick() override;
     virtual void OnDropDownSelectionChanged( OSDropDown * dropDown ) override;

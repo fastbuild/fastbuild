@@ -138,12 +138,16 @@ LibraryNode::~LibraryNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult LibraryNode::DoBuild( Job * job )
 {
-    // Delete previous file(s) if doing a clean build
-    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
+    // Delete library from previous build (if present) if:
+    // - A clean build is being triggered
+    // - A non-msvc librarian is used (librarians like ar can cause duplicate
+    //                                symbols because of how they update archives)
+    if ( FBuild::Get().GetOptions().m_ForceCleanBuild ||
+         ( GetFlag( Flag::LIB_FLAG_LIB ) == false ) )
     {
-        if ( FileIO::FileExists( GetName().Get() ) )
+        if ( DoPreBuildFileDeletion( GetName() ) == false )
         {
-            FileIO::FileDelete( GetName().Get() );
+            return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
         }
     }
 

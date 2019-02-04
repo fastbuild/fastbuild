@@ -11,6 +11,7 @@
 #include "Core/Strings/AStackString.h"
 
 #if defined( __WINDOWS__ )
+    #include <Lmcons.h>
     #include <windows.h>
     #include <stdio.h>
 #endif
@@ -277,7 +278,9 @@ void Env::GetExePath( AString & output )
             return true; // Redirected to a pipe that is not related to Cygwin/MSYS
         }
         int nChars = 0;
-        if ( ( swscanf( p, L"%*llx-pty%*d-to-master%n", &nChars ) == 0 ) && ( nChars > 0 ) )
+        PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+        if ( ( swscanf( p, L"%*llx-pty%*d-to-master%n", &nChars ) == 0 ) && ( nChars > 0 ) ) // TODO:C Consider using swscanf_s
+        PRAGMA_DISABLE_POP_MSVC // 4996
         {
             return false; // Pipe name matches the pattern, stdout is forwarded to a terminal by Cygwin/MSYS
         }
@@ -287,6 +290,24 @@ void Env::GetExePath( AString & output )
         return ( isatty( STDOUT_FILENO ) == 0 );
     #else
         #error Unknown platform
+    #endif
+}
+
+// GetUserName
+//------------------------------------------------------------------------------
+/*static*/ bool Env::GetLocalUserName( AString & outUserName )
+{
+    #if defined( __WINDOWS__ )
+        char userName[ UNLEN + 1 ];
+        DWORD bufferSize = sizeof(userName);
+        if ( ::GetUserNameA( userName, &bufferSize ) == FALSE )
+        {
+            return false;
+        }
+        outUserName = userName;
+        return true;
+    #else
+        return GetEnvVariable( "USER", outUserName );
     #endif
 }
 
