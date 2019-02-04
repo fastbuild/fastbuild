@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionSettings.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_IgnoreForComparison.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
 
 #include "AliasNode.h"
@@ -1340,7 +1341,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
                 if ( nextChar == '.' )
                 {
                     nextChar = *( src + 2 );
-                    if ( ( nextChar == NATIVE_SLASH ) || ( nextChar == OTHER_SLASH ) )
+                    if ( ( nextChar == NATIVE_SLASH ) || ( nextChar == OTHER_SLASH ) || ( nextChar == '\0' ) )
                     {
                         src+=2; // skip .. and slashes
                         while ( ( *src == NATIVE_SLASH ) || ( *src == OTHER_SLASH ) )
@@ -1845,15 +1846,9 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
     }
 
     // If we get here, then everything about the node is unchanged from the
-    // old DB to the new DB, so we can transfer the stamp. This will prevent
-    // the node rebuilding as (with this stamp set) it's in the same state as
-    // it was in the original db. If an external factor necessitates a rebuild
-    // (like the output being deleted off disk or one of the dependencies rebuilding)
-    // the build will still trigger as expected
-    newNode.m_Stamp = oldNode->m_Stamp;
-
-    // Transfer previous build costs used for progress estimates
-    newNode.m_LastBuildTimeMs = oldNode->m_LastBuildTimeMs;
+    // old DB to the new DB, so we can transfer the node's internal state. This
+    // will prevent the node rebuilding unnecessarily.
+    newNode.Migrate( *oldNode );
 }
 
 // MigrateProperties
@@ -1989,6 +1984,11 @@ void NodeGraph::MigrateProperty( const void * oldBase, void * newBase, const Ref
 //------------------------------------------------------------------------------
 /*static*/ bool NodeGraph::AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property )
 {
+    if ( property.HasMetaData< Meta_IgnoreForComparison >() )
+    {
+        return true;
+    }
+
     switch ( property.GetType() )
     {
         case PropertyType::PT_ASTRING:

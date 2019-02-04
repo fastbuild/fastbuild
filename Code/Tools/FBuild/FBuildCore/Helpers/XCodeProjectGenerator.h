@@ -23,7 +23,10 @@ public:
     inline void SetXCodeBuildToolArgs( const AString& buildToolArgs ) { m_XCodeBuildToolArgs = buildToolArgs; }
     inline void SetXCodeBuildWorkingDir( const AString& buildWorkingDir ){ m_XCodeBuildWorkingDir = buildWorkingDir; }
 
-    const AString & Generate();
+    // NOTE: These return pointers to shared storage. User must not hold
+    // refrences simultaneously.
+    const AString & GeneratePBXProj();
+    const AString & GenerateUserSchemeMangementPList();
 
 private:
     void WriteHeader();

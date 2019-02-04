@@ -35,6 +35,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
+#include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_IgnoreForComparison.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_InheritFromOwner.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_Name.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
@@ -100,6 +101,10 @@ IMetaData & MetaEmbedMembers()
 IMetaData & MetaInheritFromOwner()
 {
     return *FNEW( Meta_InheritFromOwner() );
+}
+IMetaData & MetaIgnoreForComparison()
+{
+    return *FNEW( Meta_IgnoreForComparison() );
 }
 
 // Reflection
@@ -301,6 +306,29 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         return false;
     }
     return true;
+}
+
+// DoPreBuildFileDeletion
+//------------------------------------------------------------------------------
+/*static*/ bool Node::DoPreBuildFileDeletion( const AString & fileName )
+{
+    // Try to delete the file.
+    if ( FileIO::FileDelete( fileName.Get() ) )
+    {
+        return true; // File deleted ok
+    }
+
+    // The common case is that the file exists (which is why we don't check to
+    // see before deleting it above). If it failed to delete, we must now work
+    // out if it's because it didn't exist or because of an actual problem.
+    if ( FileIO::FileExists( fileName.Get() ) == false )
+    {
+        return true; // File didn't exist in the first place
+    }
+
+    // Couldn't delete the file
+    FLOG_ERROR( "Failed to delete file before build '%s'", fileName.Get() );
+    return false;
 }
 
 // CreateNode
@@ -632,6 +660,17 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
     return true;
 }
 
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void Node::Migrate( const Node & oldNode )
+{
+    // Transfer the stamp used to detemine if the node has changed
+    m_Stamp = oldNode.m_Stamp;
+
+    // Transfer previous build costs used for progress estimates
+    m_LastBuildTimeMs = oldNode.m_LastBuildTimeMs;
+}
+
 // Deserialize
 //------------------------------------------------------------------------------
 /*static*/ bool Node::Deserialize( IOStream & stream, void * base, const ReflectedProperty & property )
@@ -925,8 +964,10 @@ void Node::ReplaceDummyName( const AString & newName )
 
     // are last two tokens numbers?
     int row, column;
-    if ( ( sscanf( tokens[ numTokens - 1 ].Get(), "%i", &column ) != 1 ) ||
-         ( sscanf( tokens[ numTokens - 2 ].Get(), "%i", &row ) != 1 ) )
+    PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+    if ( ( sscanf( tokens[ numTokens - 1 ].Get(), "%i", &column ) != 1 ) || // TODO:C Consider using sscanf_s
+         ( sscanf( tokens[ numTokens - 2 ].Get(), "%i", &row ) != 1 ) ) // TODO:C Consider using sscanf_s
+    PRAGMA_DISABLE_POP_MSVC // 4996
     {
         return; // failed to extract numbers where we expected them
     }

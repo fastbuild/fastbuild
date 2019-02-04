@@ -132,7 +132,6 @@ protected:
     // Helpers to get nodes
     bool GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, const char * name, Dependencies & nodes, bool required = false,
                       bool allowCopyDirNodes = false, bool allowUnityNodes = false, bool allowRemoveDirNodes = false, bool allowCompilerNodes = false ) const;
-    bool GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Node * & fileNode, const char * name, bool required = false ) const;
 
     // helpers to get properties
     bool GetString( const BFFIterator & iter, const BFFVariable * & var, const char * name, bool required = false ) const;

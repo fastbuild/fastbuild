@@ -34,6 +34,7 @@ REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
     REFLECT(        m_ExecWorkingDir,           "ExecWorkingDir",           MetaOptional() + MetaPath() )
     REFLECT(        m_ExecReturnCode,           "ExecReturnCode",           MetaOptional() )
     REFLECT(        m_ExecUseStdOutAsOutput,    "ExecUseStdOutAsOutput",    MetaOptional() )
+    REFLECT(        m_ExecAlways,               "ExecAlways",               MetaOptional() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
     // Internal State
@@ -46,6 +47,7 @@ ExecNode::ExecNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_ExecReturnCode( 0 )
     , m_ExecUseStdOutAsOutput( false )
+    , m_ExecAlways( false )
     , m_ExecInputPathRecurse( true )
 {
     m_Type = EXEC_NODE;
@@ -149,6 +151,18 @@ ExecNode::~ExecNode() = default;
     }
 
     return true;
+}
+
+// DetermineNeedToBuild
+//------------------------------------------------------------------------------
+/*virtual*/ bool ExecNode::DetermineNeedToBuild( bool forceClean ) const
+{
+    if ( m_ExecAlways )
+    {
+        FLOG_INFO( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
+        return true;
+    }
+    return Node::DetermineNeedToBuild( forceClean );
 }
 
 // DoBuild

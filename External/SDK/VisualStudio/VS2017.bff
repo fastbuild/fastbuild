@@ -1,6 +1,10 @@
 // Visual Studio 2017
 //------------------------------------------------------------------------------
-.VS2017_BasePath         = '../External/SDK/VisualStudio/2017/Community'
+#if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
+    .VS2017_BasePath         = '$_CURRENT_BFF_DIR_$/2017/Community'
+#else
+    .VS2017_BasePath         = '../External/SDK/VisualStudio/2017/Community'
+#endif
 .VS2017_Version          = '14.12.25827'
 
 // X86 Compiler

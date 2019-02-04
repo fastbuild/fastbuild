@@ -4,14 +4,6 @@
     .ProjectName        = 'BFFFuzzer'
     .ProjectPath        = 'Tools\FBuild\BFFFuzzer'
 
-    // Unity
-    //--------------------------------------------------------------------------
-    Unity( '$ProjectName$-Unity' )
-    {
-        .UnityInputPath             = '$ProjectPath$\'
-        .UnityOutputPath            = '$UnityOutputBase$\$ProjectPath$\'
-    }
-
     // Executable
     //--------------------------------------------------------------------------
     // These options are a valid for Clang < 6.0.0:
@@ -27,19 +19,28 @@
         Using( .Config )
         .OutputBase + '\$Platform$-$Config$'
 
+        // Unity
+        //--------------------------------------------------------------------------
+        Unity( '$ProjectName$-Unity-$Platform$-$Config$' )
+        {
+            .UnityInputPath             = '$ProjectPath$/'
+            .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+        }
+
         // Library
         //--------------------------------------------------------------------------
         ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
             // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity'
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$Config$'
 
             // Output
-            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
 
         // Executable
+        //--------------------------------------------------------------------------
         Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
         {
             .Libraries                  = {

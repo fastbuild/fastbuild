@@ -204,6 +204,26 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
         return true; // nothing to do.
     }
 
+    return WriteToDisk( generatorId, content, fileName ); // WriteToDisk will emit error if needed
+}
+
+// WriteIfMissing
+//------------------------------------------------------------------------------
+/*static*/ bool ProjectGeneratorBase::WriteIfMissing( const char * generatorId, const AString & content, const AString & fileName )
+{
+    // Do nothing if the file already exists
+    if ( FileIO::FileExists( fileName.Get() ) )
+    {
+        return true;
+    }
+
+    return WriteToDisk( generatorId, content, fileName ); // WriteToDisk will emit error if needed
+}
+
+// WriteToDisk
+//------------------------------------------------------------------------------
+/*static*/ bool ProjectGeneratorBase::WriteToDisk( const char * generatorId, const AString & content, const AString & fileName )
+{
     FLOG_BUILD( "%s: %s\n", generatorId, fileName.Get() );
 
     // ensure path exists (normally handled by framework, but Projects

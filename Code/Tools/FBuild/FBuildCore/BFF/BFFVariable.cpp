@@ -304,7 +304,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
         if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) &&
              ( srcType == BFFVariable::VAR_STRING) )
         {
-            uint32_t num = (uint32_t)(1 + other.GetArrayOfStrings().GetSize());
+            uint32_t num = (uint32_t)( 1 + varDst->GetArrayOfStrings().GetSize() );
             Array< AString > values(num, false);
             values.Append( varDst->GetArrayOfStrings() );
             values.Append( varSrc->GetString() );
