@@ -69,7 +69,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_PrecompiledHeader,                   "PrecompiledHeader",                MetaHidden() )
     REFLECT( m_Flags,                               "Flags",                            MetaHidden() )
     REFLECT( m_PreprocessorFlags,                   "PreprocessorFlags",                MetaHidden() )
-    REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() )
+    REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
@@ -312,6 +312,20 @@ ObjectNode::~ObjectNode()
     }
 
     return true;
+}
+
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void ObjectNode::Migrate( const Node & oldNode )
+{
+    // Migrate Node level properties
+    Node::Migrate( oldNode );
+
+    // Migrate the PCHCacheKey if there is one. This special case property is
+    // lazily determined during a build, but needs to persist across migrations
+    // to prevent unnecessary rebuilds of object that depend on this one, if this
+    // is a precompiled header object.
+    m_PCHCacheKey = oldNode.CastTo< ObjectNode >()->m_PCHCacheKey;
 }
 
 // DoBuildMSCL_NoCache
