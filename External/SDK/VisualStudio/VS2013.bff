@@ -1,10 +1,6 @@
 // Visual Studio 2013
 //------------------------------------------------------------------------------
-#if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
-    .VS2013_BasePath = '$_CURRENT_BFF_DIR_$/2013'
-#else
-    .VS2013_BasePath = '../External/SDK/VisualStudio/2013'
-#endif
+.VS2013_BasePath = '$_CURRENT_BFF_DIR_$/2013'
 
 // X86 Compiler
 //------------------------------------------------------------------------------

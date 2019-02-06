@@ -36,11 +36,7 @@
 //==============================================================================
 // Clang
 //==============================================================================
-#if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
-    .ClangPath              = '$_CURRENT_BFF_DIR_$/../../../../../External/SDK/ClangForWindows/3.4' // TODO:B Make this use the same config as fbuild itself
-#else
-    .ClangPath              = '../External/SDK/ClangForWindows/3.4' // TODO:B Make this use the same config as fbuild itself
-#endif
+.ClangPath              = '$_CURRENT_BFF_DIR_$/../../../../../External/SDK/ClangForWindows/3.4' // TODO:B Make this use the same config as fbuild itself
 //.ClangPath            = 'C:\Program Files (x86)\LLVM'
 .WindowsClangToolChain =
 [
@@ -135,11 +131,7 @@
 //==============================================================================
 // Standard Environment
 //==============================================================================
-#if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
-    .StandardOutputBase         = '$_CURRENT_BFF_DIR_$/../../../../../tmp'
-#else
-    .StandardOutputBase         = '../tmp'
-#endif
+.StandardOutputBase         = '$_CURRENT_BFF_DIR_$/../../../../../tmp'
 .StandardEnvironment =
 [
     #if __WINDOWS__

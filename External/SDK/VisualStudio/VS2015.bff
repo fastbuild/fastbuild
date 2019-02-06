@@ -1,10 +1,6 @@
 // Visual Studio 2015
 //------------------------------------------------------------------------------
-#if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
-    .VS2015_BasePath        = '$_CURRENT_BFF_DIR_$/2015'
-#else
-    .VS2015_BasePath        = '../External/SDK/VisualStudio/2015'
-#endif
+.VS2015_BasePath        = '$_CURRENT_BFF_DIR_$/2015'
 
 // X86 Compiler
 //------------------------------------------------------------------------------
