@@ -29,7 +29,6 @@ public:
 private:
     void WriteObject( const RefObject * object );
     void WriteStruct( const void * str, const ReflectionInfo * info );
-    void WriteRef( const void * base, const ReflectedProperty * property );
     void WriteArray( const void * base, const ReflectedProperty * property );
     void WriteArrayOfStruct( const void * base, const ReflectedProperty * property );
     void WriteProperties( const void * base, const ReflectionInfo * info );

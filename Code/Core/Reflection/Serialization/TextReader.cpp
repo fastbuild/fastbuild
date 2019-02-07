@@ -5,13 +5,7 @@
 //------------------------------------------------------------------------------
 #include "Core/PrecompiledHeader.h"
 #include "TextReader.h"
-#include "Core/Containers/Ref.h"
-#include "Core/Containers/WeakRef.h"
 #include "Core/FileIO/ConstMemoryStream.h"
-#include "Core/Math/Mat44.h"
-#include "Core/Math/Vec2.h"
-#include "Core/Math/Vec3.h"
-#include "Core/Math/Vec4.h"
 #include "Core/Reflection/Container.h"
 #include "Core/Reflection/Object.h"
 #include "Core/Reflection/PropertyType.h"
@@ -86,9 +80,6 @@ RefObject * TextReader::Read()
         ReflectionInfo::RegisterRootObject( obj );
     }
 
-    // ResolveWeakRefs
-    ResolveWeakRefs();
-
     // Init
     auto end = m_ObjectsToInit.End();
     for ( auto it=m_ObjectsToInit.Begin(); it!=end; ++it )
@@ -132,16 +123,6 @@ bool TextReader::ReadLines()
             continue;
         }
 
-        // ref?
-        if ( token == "ref" )
-        {
-            if ( !ReadRef() )
-            {
-                return false;
-            }
-            continue;
-        }
-
         // children?
         if ( token == "children" )
         {
@@ -171,15 +152,6 @@ bool TextReader::ReadLines()
         if ( pt != PT_NONE )
         {
             if ( !ReadProperty( pt ) )
-            {
-                return false;
-            }
-            continue;
-        }
-
-        if ( token == "weakRef" )
-        {
-            if ( !ReadWeakRef() )
             {
                 return false;
             }
@@ -377,108 +349,6 @@ bool TextReader::ReadStruct()
         #endif
         m_DeserializationStack.Append( sf );
     }
-
-    return true;
-}
-
-// ReadRef
-//------------------------------------------------------------------------------
-bool TextReader::ReadRef()
-{
-    // Name
-    AStackString<> name;
-    if ( !GetToken( name ) )
-    {
-        Error( "Missing ref name" );
-        return false;
-    }
-
-    AStackString<> value;
-    if ( !GetString( value ) )
-    {
-        Error( "Missing ref value" );
-        return false;
-    }
-
-    Ref< RefObject > ref;
-    if ( value != "null" )
-    {
-        ref = (RefObject *)ReflectionInfo::CreateObject( value );
-        if ( ref.Get() == nullptr )
-        {
-            Error( "Unable to create sub-object" );
-            ASSERT( false ); // TODO: Handle failure/skipping gracefully
-            return false;
-        }
-    }
-
-    const StackFrame & sf = m_DeserializationStack.Top();
-
-    if ( sf.m_ArrayProperty )
-    {
-        void * arrayBase = (void *)( (size_t)sf.m_Base + (size_t)sf.m_ArrayProperty->GetOffset() );
-        Array< Ref< RefObject > > *array = ( Array< Ref< RefObject > > *)( arrayBase );
-        array->Append( ref );
-    }
-    else
-    {
-        sf.m_Reflection->SetProperty( sf.m_Base, name.Get(), ref );
-    }
-
-    // do sub-object properties if needed
-    if ( ref.Get() )
-    {
-        StackFrame newFrame;
-        newFrame.m_Base = (void *)ref.Get();
-        newFrame.m_Reflection = ref->GetReflectionInfoV();
-        newFrame.m_ArrayProperty = nullptr;
-        #ifdef DEBUG
-            newFrame.m_RefObject = ref.Get();
-            newFrame.m_Struct = nullptr;
-        #endif
-        m_DeserializationStack.Append( newFrame );
-    }
-
-    return true;
-}
-
-// ReadWeakRef
-//------------------------------------------------------------------------------
-bool TextReader::ReadWeakRef()
-{
-    // Name
-    AStackString<> name;
-    if ( !GetToken( name ) )
-    {
-        Error( "Missing weakref name" );
-        return false;
-    }
-
-    AStackString<> value;
-    if ( !GetString( value ) )
-    {
-        Error( "Missing weakref value" );
-        return false;
-    }
-
-    const StackFrame & sf = m_DeserializationStack.Top();
-
-    // null weak refs can be taken care of right now
-    if ( value == "null" )
-    {
-        WeakRef< Object > nullWR;
-        sf.m_Reflection->SetProperty( sf.m_Base, name.Get(), nullWR );
-        return true;
-    }
-
-    // non-null WeakRefs must be deferred
-    // (since we might not have created the child object yet)
-    UnresolvedWeakRef u;
-    u.m_Base = sf.m_Base;
-    u.m_Reflection = sf.m_Reflection;
-    u.m_WeakRefName = name;
-    u.m_WeakRefValue = value;
-    m_UnresolvedWeakRefs.Append( u );
 
     return true;
 }
@@ -694,12 +564,6 @@ bool TextReader::ReadProperty( PropertyType propertyType )
         case PT_INT64:      ok = ReadPropertyFromString< int64_t >( base, p, value, isArray ); break;
         case PT_BOOL:       ok = ReadPropertyFromString< bool >( base, p, value, isArray ); break;
         case PT_ASTRING:    ok = ReadPropertyFromString< AString >( base, p, value, isArray ); break;
-        case PT_VEC2:       ok = ReadPropertyFromString< Vec2 >( base, p, value, isArray ); break;
-        case PT_VEC3:       ok = ReadPropertyFromString< Vec3 >( base, p, value, isArray ); break;
-        case PT_VEC4:       ok = ReadPropertyFromString< Vec4 >( base, p, value, isArray ); break;
-        case PT_MAT44:      ok = ReadPropertyFromString< Mat44 >( base, p, value, isArray ); break;
-        case PT_REF:        ASSERT( false ); return false; // Should not get here
-        case PT_WEAKREF:    ASSERT( false ); return false; // Should not get here
         case PT_STRUCT:     ASSERT( false ); return false; // Should not get here
     }
 
@@ -827,19 +691,6 @@ void TextReader::Error( const char * error ) const
     // TODO: Better error management
     (void)error;
     ASSERT( false );
-}
-
-// ResolveWeakRefs
-//------------------------------------------------------------------------------
-void TextReader::ResolveWeakRefs() const
-{
-    auto end = m_UnresolvedWeakRefs.End();
-    for ( auto it=m_UnresolvedWeakRefs.Begin(); it!=end; ++it )
-    {
-        const UnresolvedWeakRef & u = *it;
-        WeakRef< Object > weakRef( ReflectionInfo::FindObjectByScopedName( u.m_WeakRefValue ) );
-        u.m_Reflection->SetProperty( u.m_Base, u.m_WeakRefName.Get(), weakRef );
-    }
 }
 
 //------------------------------------------------------------------------------

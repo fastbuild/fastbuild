@@ -29,8 +29,6 @@ private:
     bool ReadLines();
     bool ReadObject();
     bool ReadStruct();
-    bool ReadRef();
-    bool ReadWeakRef();
     bool ReadArray();
     bool ReadArrayOfStruct();
     bool ReadChildren();
@@ -41,8 +39,6 @@ private:
     bool GetString( AString & string );
 
     void Error( const char * error ) const;
-
-    void ResolveWeakRefs() const;
 
     const char * m_Pos;
     const char * m_End;

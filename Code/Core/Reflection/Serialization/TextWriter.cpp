@@ -7,12 +7,7 @@
 
 #if defined( __WINDOWS__ )
 #include "TextWriter.h"
-#include "Core/Containers/Ref.h"
 #include "Core/FileIO/IOStream.h"
-#include "Core/Math/Mat44.h"
-#include "Core/Math/Vec2.h"
-#include "Core/Math/Vec3.h"
-#include "Core/Math/Vec4.h"
 #include "Core/Reflection/Object.h"
 #include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Reflection/RefObject.h"
@@ -85,22 +80,6 @@ void TextWriter::WriteStruct( const void * str, const ReflectionInfo * info )
     Write( "struct %s", structTypeStr );
 
     WriteProperties( str, info );
-}
-
-// WritePtr
-//------------------------------------------------------------------------------
-void TextWriter::WriteRef( const void * base, const ReflectedProperty * property )
-{
-    Ref< RefObject > ref;
-    property->GetProperty( base, &ref );
-    const RefObject * object( ref.Get() );
-    const ReflectionInfo * info( object ? object->GetReflectionInfoV() : nullptr );
-    const char * refTypeName = info ? info->GetTypeName() : "null";
-    Write( "%-6s %-16s %s", "ref", property->GetName(), refTypeName );
-    if ( object )
-    {
-        WriteProperties( object, info );
-    }
 }
 
 // WriteArray
@@ -215,10 +194,6 @@ void TextWriter::WriteProperties( const void * base, const ReflectionInfo * info
                 const void * structBase = str.GetStructBase( base );
                 const ReflectionInfo * structInfo = str.GetStructReflectionInfo();
                 WriteStruct( structBase, structInfo );
-            }
-            else if ( property.GetType() == PT_REF )
-            {
-                WriteRef( base, &property );
             }
             else
             {

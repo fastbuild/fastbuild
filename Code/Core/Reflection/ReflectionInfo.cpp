@@ -117,12 +117,6 @@ GETSET_PROPERTY( int32_t, int32_t )
 GETSET_PROPERTY( int64_t, int64_t )
 GETSET_PROPERTY( bool, bool )
 GETSET_PROPERTY( AString, const AString & )
-GETSET_PROPERTY( Vec2, const Vec2 & )
-GETSET_PROPERTY( Vec3, const Vec3 & )
-GETSET_PROPERTY( Vec4, const Vec4 & )
-GETSET_PROPERTY( Mat44, const Mat44 & )
-GETSET_PROPERTY( Ref< RefObject >, const Ref< RefObject > & )
-GETSET_PROPERTY( WeakRef< Object >, const WeakRef< Object > & )
 
 #define GETSET_PROPERTY_ARRAY( valueType ) \
     bool ReflectionInfo::GetProperty( void * object, const char * name, Array< valueType > * value ) const \

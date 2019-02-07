@@ -68,26 +68,6 @@ PropertyType GetPropertyTypeFromString( const AString & propertyType )
         return PT_ASTRING;
     }
 
-    if ( propertyType == "vec2" )
-    {
-        return PT_VEC2;
-    }
-
-    if ( propertyType == "vec3" )
-    {
-        return PT_VEC3;
-    }
-
-    if ( propertyType == "vec4" )
-    {
-        return PT_VEC4;
-    }
-
-    if ( propertyType == "mat44" )
-    {
-        return PT_MAT44;
-    }
-
     return PT_NONE;
 }
 
