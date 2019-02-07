@@ -293,9 +293,11 @@ bool Process::Spawn( const char * executable,
         VERIFY( pipe( stdErrPipeFDs ) == 0 );
 
         // Increase buffer sizes to reduce stalls
-        const int bufferSize = ( 1024 * 1024 );
-        VERIFY( fcntl( stdOutPipeFDs[ 1 ], F_SETPIPE_SZ, bufferSize ) == bufferSize );
-        VERIFY( fcntl( stdErrPipeFDs[ 1 ], F_SETPIPE_SZ, bufferSize ) == bufferSize );
+        #if defined( __LINUX__ )
+            const int bufferSize = ( 1024 * 1024 );
+            VERIFY( fcntl( stdOutPipeFDs[ 1 ], F_SETPIPE_SZ, bufferSize ) == bufferSize );
+            VERIFY( fcntl( stdErrPipeFDs[ 1 ], F_SETPIPE_SZ, bufferSize ) == bufferSize );
+        #endif
 
         // prepare args
         Array< AString > splitArgs( 64, true );
