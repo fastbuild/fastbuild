@@ -60,6 +60,7 @@ private:
     void OperatorMinus() const;
     void BuiltInVariables() const;
     void CyclicDependency() const;
+    void SelfAssignment() const;
 
     void Parse( const char * fileName, bool expectFailure = false ) const;
 };
@@ -107,6 +108,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( OperatorMinus )
     REGISTER_TEST( BuiltInVariables )
     REGISTER_TEST( CyclicDependency )
+    REGISTER_TEST( SelfAssignment )
 REGISTER_TESTS_END
 
 // Empty
@@ -445,6 +447,18 @@ void TestBFFParsing::CyclicDependency() const
     // Parsing should fail due to cyclic dependency
     TEST_ASSERT( fBuild.Initialize() == false );
     TEST_ASSERT( GetRecordedOutput().Find( "Cyclic dependency detected for node" ) );
+}
+
+// SelfAssignment
+//------------------------------------------------------------------------------
+void TestBFFParsing::SelfAssignment() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/self_assignment.bff";
+    FBuild fBuild( options );
+
+    TEST_ASSERT( fBuild.Initialize() == true );
+    TEST_ASSERT( GetRecordedOutput().Find( "FAILED" ) == false );
 }
 
 //------------------------------------------------------------------------------
