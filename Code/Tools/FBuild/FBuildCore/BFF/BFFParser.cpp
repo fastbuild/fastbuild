@@ -1739,6 +1739,14 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
             return false;
         }
     }
+    else
+    {
+        // self-assignment?
+        if ( varDst == varSrc )
+        {
+            return true;
+        }
+    }
 
     // if dst exists, types must match
     BFFVariable::VarType srcType = varSrc->GetType();
