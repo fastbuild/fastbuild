@@ -22,7 +22,11 @@
 //------------------------------------------------------------------------------
 void * Alloc( size_t size )
 {
+#if defined( __clang__ )
     return AllocFileLine( size, alignof( std::max_align_t ), "Unknown", 0 );
+#else
+    return AllocFileLine( size, sizeof( void * ), "Unknown", 0 );
+#endif
 }
 
 // Alloc
@@ -36,7 +40,11 @@ void * Alloc( size_t size, size_t alignment )
 //------------------------------------------------------------------------------
 void * AllocFileLine( size_t size, const char * file, int line )
 {
+#if defined( __clang__ )
     return AllocFileLine( size, alignof( std::max_align_t ), file, line );
+#else
+    return AllocFileLine( size, sizeof( void * ), file, line );
+#endif
 }
 
 // AllocFileLine

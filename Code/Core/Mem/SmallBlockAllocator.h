@@ -45,7 +45,11 @@
         static void InitBuckets();
 
         static const size_t BUCKET_MAX_ALLOC_SIZE = 256;
+#if defined( __clang__ )
         static const size_t BUCKET_ALIGNMENT = alignof( std::max_align_t );
+#else
+        static const size_t BUCKET_ALIGNMENT = sizeof( void * );
+#endif
         static const size_t BUCKET_NUM_BUCKETS = ( BUCKET_MAX_ALLOC_SIZE / BUCKET_ALIGNMENT );
         static const size_t BUCKET_ADDRESSSPACE_SIZE = ( 200 * 1024 * 1024 );
         static const size_t BUCKET_NUM_PAGES = ( BUCKET_ADDRESSSPACE_SIZE / MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE );
