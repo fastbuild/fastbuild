@@ -7,7 +7,6 @@
 #include "ReflectedProperty.h"
 #include "Core/Containers/Array.h"
 #include "Core/Math/CRC32.h"
-#include "Core/Reflection/Object.h"
 #include "Core/Reflection/PropertyType.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"

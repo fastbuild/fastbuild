@@ -1,16 +1,22 @@
-// BindReflection.cpp
+// Struct
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/PrecompiledHeader.h"
-#include "BindReflection.h"
+#include "Struct.h"
 
-// BindReflection_Core
+// Core
+#include "Core/Reflection/ReflectionInfo.h"
+
+// Struct_ReflectionInfo
 //------------------------------------------------------------------------------
-void BindReflection_Core()
+class Struct_ReflectionInfo : public ReflectionInfo
 {
-    BIND_REFLECTION( Object );
-}
+public:
+    explicit Struct_ReflectionInfo() { SetTypeName( "Struct" ); m_IsAbstract = true; }
+    virtual ~Struct_ReflectionInfo() = default;
+};
+Struct_ReflectionInfo g_Struct_ReflectionInfo;
 
 //------------------------------------------------------------------------------

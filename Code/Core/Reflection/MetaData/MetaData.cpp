@@ -14,7 +14,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( IMetaData, RefObject, MetaNone() )
+REFLECT_BEGIN( IMetaData, Object, MetaNone() )
 REFLECT_END( IMetaData )
 
 // CONSTRUCTOR

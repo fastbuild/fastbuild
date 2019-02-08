@@ -13,7 +13,8 @@ class Node;
 #include "Core/Containers/Array.h"
 #include "Core/Env/Types.h"
 #include "Core/Process/Mutex.h"
-#include "Core/Reflection/Object.h"
+#include "Core/Reflection/ReflectionMacros.h"
+#include "Core/Reflection/Struct.h"
 #include "Core/Strings/AString.h"
 
 

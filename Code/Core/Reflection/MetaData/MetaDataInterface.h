@@ -5,11 +5,11 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Reflection/ReflectionMacros.h"
-#include "Core/Reflection/RefObject.h"
+#include "Core/Reflection/Object.h"
 
 // IMetaData
 //------------------------------------------------------------------------------
-class IMetaData : public RefObject
+class IMetaData : public Object
 {
     REFLECT_DECLARE( IMetaData )
 public:
