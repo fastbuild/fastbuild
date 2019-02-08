@@ -458,7 +458,7 @@ void TestBFFParsing::SelfAssignment() const
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() == true );
-    TEST_ASSERT( GetRecordedOutput().Find( "FAILED" ) == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "FAILED" ) == nullptr );
 }
 
 //------------------------------------------------------------------------------
