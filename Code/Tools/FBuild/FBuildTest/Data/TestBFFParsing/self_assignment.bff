@@ -28,7 +28,7 @@
     .ArrayOfStrings = { 'StringA', 'StringB' }
     .ArrayOfStrings = .ArrayOfStrings
     .ExpectedValue1 = 'StringA'
-    .ExpectedValue2 = 'StringA'
+    .ExpectedValue2 = 'StringB'
     If( .ExpectedValue1 not in .ArrayOfStrings ) { Print( 'FAILED' ) }
     If( .ExpectedValue2 not in .ArrayOfStrings ) { Print( 'FAILED' ) }
 }
