@@ -48,15 +48,6 @@ public:
     Struct * CreateStruct() const;
     void SetArraySize( void * array, size_t size ) const;
 
-    // Loading by name
-    static Object * Load( const char * scopedName );
-
-    static void RegisterRootObject( Object * obj );
-    static Object * FindObjectByScopedName( const AString & scopedName );
-
-    // Save out definitions for all reflected objects
-    static bool WriteDefinitions();
-
     #define GETSET_PROPERTY( getValueType, setValueType ) \
         bool GetProperty( void * object, const char * name, getValueType * value ) const; \
         bool SetProperty( void * object, const char * name, setValueType value ) const;
@@ -129,7 +120,6 @@ protected:
     IMetaData * m_MetaDataChain;
 
     static ReflectionInfo * s_FirstReflectionInfo;
-    static Array< Object * > s_RootObjects;
 };
 
 //------------------------------------------------------------------------------

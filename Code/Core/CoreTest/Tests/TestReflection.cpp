@@ -13,8 +13,6 @@
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/Object.h"
 #include "Core/Reflection/ReflectedProperty.h"
-#include "Core/Reflection/Serialization/TextReader.h"
-#include "Core/Reflection/Serialization/TextWriter.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -36,7 +34,6 @@ private:
     DECLARE_TESTS
 
     void TestGetSet() const;
-    void TestSerialization() const;
     void TestInheritence() const;
     void MetaData() const;
 };
@@ -45,7 +42,6 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestReflection )
     REGISTER_TEST( TestGetSet )
-    REGISTER_TEST( TestSerialization )
     REGISTER_TEST( TestInheritence )
     REGISTER_TEST( MetaData )
 REGISTER_TESTS_END
@@ -176,52 +172,6 @@ void TestReflection::TestGetSet() const
     CHECK( "AString", m_AString, AString, AString( "hello" ) )
 
     #undef CHECK
-}
-
-// TestSerialization
-//------------------------------------------------------------------------------
-void TestReflection::TestSerialization() const
-{
-    #ifdef __WINDOWS__
-        TestObject o;
-        o.PopulateWithTestData();
-
-        MemoryStream stream;
-
-        TextWriter tw( stream );
-        tw.Write( &o );
-
-        const char * data = (const char *)stream.GetData();
-        DEBUGSPAM( "Stream1:\n%s", data );
-
-        // Create an object from the stream
-        ConstMemoryStream readStream( stream.GetData(), stream.GetSize() );
-        TextReader tr( readStream );
-        RefObject * obj = tr.Read();
-        TEST_ASSERT( obj );
-
-        // Serialize new object
-        MemoryStream stream2;
-        TextWriter tw2( stream2 );
-        tw2.Write( obj );
-
-        const char * data2 = (const char *)stream2.GetData();
-        DEBUGSPAM( "Stream2:\n%s", data2 );
-
-        // Check that streams are the same
-        bool streamsMatch = ( stream.GetSize() == stream2.GetSize() );
-        if ( streamsMatch )
-        {
-            streamsMatch = ( memcmp( data, data2, stream.GetSize() ) == 0 );
-        }
-        if ( !streamsMatch )
-        {
-            TEST_ASSERT( streamsMatch ); // Streams don't match
-        }
-
-        // Cleanup
-        FDELETE( obj );
-    #endif
 }
 
 // TestInheritence
