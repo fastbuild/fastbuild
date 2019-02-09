@@ -94,12 +94,11 @@ void TestGraph::TestNodeTypes() const
     TEST_ASSERT( fn->GetType() == Node::FILE_NODE);
     TEST_ASSERT( FileNode::GetTypeS() == Node::FILE_NODE);
 
-    CompilerNode * cn( nullptr );
     {
         #if defined( __WINDOWS__ )
-            cn = ng.CreateCompilerNode( AStackString<>( "c:\\cl.exe" ) );
+            CompilerNode * cn = ng.CreateCompilerNode( AStackString<>( "c:\\cl.exe" ) );
         #else
-            cn = ng.CreateCompilerNode( AStackString<>( "/usr/bin/gcc" ) );
+            CompilerNode * cn = ng.CreateCompilerNode( AStackString<>( "/usr/bin/gcc" ) );
         #endif
         TEST_ASSERT( cn->GetType() == Node::COMPILER_NODE );
         TEST_ASSERT( AStackString<>( "Compiler" ) == cn->GetTypeName() );

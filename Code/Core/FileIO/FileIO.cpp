@@ -443,7 +443,7 @@
             return true;
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        umask( 0 ); // disable default creation mask
+        umask( 0 ); // disable default creation mask // TODO:LINUX TODO:MAC Changes global program state; needs investigation
         mode_t mode = S_IRWXU | S_IRWXG | S_IRWXO; // TODO:LINUX TODO:MAC Check these permissions
         if ( mkdir( path.Get(), mode ) == 0 )
         {

@@ -217,10 +217,10 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
     }
 
     Node::Type nodeType = node->GetType();
-    Stats & stats = m_PerTypeStats[ nodeType ];
 
     if ( node->GetType() != Node::PROXY_NODE )
     {
+        Stats & stats = m_PerTypeStats[ nodeType ];
         stats.m_NumProcessed++;
 
         m_TotalLocalCPUTimeMS += node->GetProcessingTime();

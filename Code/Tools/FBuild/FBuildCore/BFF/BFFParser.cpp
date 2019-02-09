@@ -1750,7 +1750,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 
     // if dst exists, types must match
     BFFVariable::VarType srcType = varSrc->GetType();
-    BFFVariable::VarType dstType = BFFVariable::VAR_ANY;
+    BFFVariable::VarType dstType;
     if ( varDst )
     {
         dstType = varDst->GetType();

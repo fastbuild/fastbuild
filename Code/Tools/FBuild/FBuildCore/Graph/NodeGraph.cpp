@@ -1514,7 +1514,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
                     worstMinDistance = d;
                 }
             }
-            else if ( d < worstMinDistance )
+            else
             {
                 ASSERT( nodes.Top().m_Distance > d );
                 const size_t count = nodes.GetSize();

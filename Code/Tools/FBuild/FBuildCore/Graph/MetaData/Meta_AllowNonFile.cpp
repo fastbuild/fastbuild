@@ -18,9 +18,9 @@ Meta_AllowNonFile::Meta_AllowNonFile() = default;
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Meta_AllowNonFile::Meta_AllowNonFile( const Node::Type limitToType )
+    : m_LimitToTypeEnabled( true )
+    , m_LimitToType( limitToType )
 {
-    m_LimitToTypeEnabled = true;
-    m_LimitToType = limitToType;
 }
 
 // DESTRUCTOR

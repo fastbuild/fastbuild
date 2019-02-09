@@ -206,7 +206,7 @@ public:
 class TestHelper
 {
 public:
-    TestHelper( BaseNode * node ) : m_Node( node ) {}
+    explicit TestHelper( BaseNode * node ) : m_Node( node ) {}
     ~TestHelper() { delete m_Node; }
 
     NodeGraph           m_NodeGraph;

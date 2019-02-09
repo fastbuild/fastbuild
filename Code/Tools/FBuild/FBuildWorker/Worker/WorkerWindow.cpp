@@ -48,8 +48,16 @@ WorkerWindow::WorkerWindow( void * hInstance )
     : OSWindow( hInstance )
     , m_UIState( NOT_READY )
     , m_UIThreadHandle( INVALID_THREAD_HANDLE )
+    , m_TrayIcon( nullptr )
+    , m_Font( nullptr )
+    , m_ModeLabel( nullptr )
+    , m_ResourcesLabel( nullptr )
+    , m_ThreadList( nullptr )
+    , m_ModeDropDown( nullptr )
+    , m_ResourcesDropDown( nullptr )
     #if defined( __WINDOWS__ )
         , m_Menu( nullptr )
+        , m_Splitter( nullptr )
     #endif
 {
     // obtain host name
