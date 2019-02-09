@@ -14,7 +14,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Windows.h>
     #include <tlhelp32.h>
 #endif
 #if defined( __LINUX__ )

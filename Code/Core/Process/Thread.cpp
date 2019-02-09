@@ -12,7 +12,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Windows.h>
 #endif
 #if defined( __APPLE__ ) || defined( __LINUX__ )
     #include <errno.h>

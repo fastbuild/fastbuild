@@ -12,7 +12,7 @@
 
 #if defined( __WINDOWS__ )
     #include <Lmcons.h>
-    #include <windows.h>
+    #include <Windows.h>
     #include <stdio.h>
 #endif
 

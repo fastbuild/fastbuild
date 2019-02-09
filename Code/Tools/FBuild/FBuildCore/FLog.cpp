@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #if defined( __WINDOWS__ ) && defined( DEBUG )
-    #include <windows.h> // for OutputDebugStringA
+    #include <Windows.h> // for OutputDebugStringA
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     // TODO:LINUX TODO:MAC Clean up this _itoa_s mess

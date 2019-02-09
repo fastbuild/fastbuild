@@ -13,7 +13,7 @@
     #include <stdarg.h>
     #include <stdio.h>
     #if defined( __WINDOWS__ )
-        #include <windows.h>
+        #include <Windows.h>
     #endif
 #endif
 

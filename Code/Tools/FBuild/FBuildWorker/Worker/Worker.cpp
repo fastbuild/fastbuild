@@ -4,7 +4,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    #include <winsock2.h> // this must be here to avoid windows include order problems
+    #include <WinSock2.h> // this must be here to avoid windows include order problems
 #endif
 
 #include "Worker.h"

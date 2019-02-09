@@ -19,7 +19,7 @@
 // system
 #include <stdio.h> // for sscanf
 #if defined( __WINDOWS__ )
-    #include <windows.h> // for QueryDosDeviceA
+    #include <Windows.h> // for QueryDosDeviceA
 #endif
 
 // CONSTRUCTOR - FBuildOptions

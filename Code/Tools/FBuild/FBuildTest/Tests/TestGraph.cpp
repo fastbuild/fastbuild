@@ -32,7 +32,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Windows.h>
 #endif
 
 // TestGraph

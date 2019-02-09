@@ -10,7 +10,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Windows.h>
     #include "Core/Env/Assert.h"
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )

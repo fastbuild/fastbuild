@@ -15,7 +15,7 @@
 #include <stdarg.h>
 #if defined( __WINDOWS__ )
     #ifdef DEBUG
-        #include <windows.h> // for OutputDebugStringA
+        #include <Windows.h> // for OutputDebugStringA
     #endif
 #endif
 

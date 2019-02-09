@@ -15,7 +15,7 @@
 // system
 #include <stdio.h>
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Windows.h>
 #else
    #include <fcntl.h>
    #include <unistd.h>

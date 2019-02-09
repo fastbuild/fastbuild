@@ -18,7 +18,7 @@
 #include "Core/Tracing/Tracing.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Windows.h>
     #include <TlHelp32.h>
 #endif
 

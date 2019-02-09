@@ -10,7 +10,7 @@
 #include "Core/Strings/AString.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Windows.h>
 #elif defined(__LINUX__) || defined(__APPLE__)
     #include <fcntl.h>
     #include <unistd.h>

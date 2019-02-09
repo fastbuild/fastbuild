@@ -15,7 +15,7 @@
 
 #include <string.h>
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Windows.h>
 #endif
 
 // Static Data

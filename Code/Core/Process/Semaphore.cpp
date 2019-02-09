@@ -11,7 +11,7 @@
 #include "Core/Env/Assert.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Windows.h>
 #endif
 #if defined( __LINUX__ )
     #include <errno.h>

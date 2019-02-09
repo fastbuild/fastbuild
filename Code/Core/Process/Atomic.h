@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 #include "Core/Env/Types.h"
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include <Windows.h>
 #endif
 
 // 32bit

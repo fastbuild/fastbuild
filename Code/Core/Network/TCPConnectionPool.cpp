@@ -19,7 +19,7 @@
 // System
 #if defined( __WINDOWS__ )
     #include <winsock2.h>
-    #include <windows.h>
+    #include <Windows.h>
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
     #include <string.h>
     #include <errno.h>
