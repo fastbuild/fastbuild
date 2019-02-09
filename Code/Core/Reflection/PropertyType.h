@@ -9,7 +9,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
-class RefObject;
 template< class T > class Array;
 
 // PropertyType
@@ -47,7 +46,5 @@ inline PropertyType GetPropertyArrayType( const Array< T > * )
 {
     return GetPropertyType( static_cast< T * >( nullptr ) );
 }
-
-PropertyType GetPropertyTypeFromString( const AString & propertyType );
 
 //------------------------------------------------------------------------------

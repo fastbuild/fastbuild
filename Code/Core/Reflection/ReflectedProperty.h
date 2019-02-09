@@ -15,7 +15,6 @@ class AString;
 class IMetaData;
 class Object;
 class ReflectionInfo;
-class RefObject;
 class Struct;
 template< class T > class Array;
 
@@ -96,23 +95,6 @@ public:
 
     #undef GETSET_PROPERTY
     #undef GETSET_PROPERTY_ARRAY
-
-    #if defined( __WINDOWS__ )
-        inline const char * GetTypeString() const { return TypeToTypeString( GetType() ); }
-        void ToString( const void * object, AString & buffer ) const;
-    #endif
-    static bool FromString( const AString & buffer, float * value );
-    static bool FromString( const AString & buffer, uint8_t * value );
-    static bool FromString( const AString & buffer, uint16_t * value );
-    static bool FromString( const AString & buffer, uint32_t * value );
-    static bool FromString( const AString & buffer, uint64_t * value );
-    static bool FromString( const AString & buffer, int8_t * value );
-    static bool FromString( const AString & buffer, int16_t * value );
-    static bool FromString( const AString & buffer, int32_t * value );
-    static bool FromString( const AString & buffer, int64_t * value );
-    static bool FromString( const AString & buffer, bool * value );
-    static bool FromString( const AString & buffer, AString * value );
-    static const char * TypeToTypeString( PropertyType type );
 
     void AddMetaData( const IMetaData * metaDataChain );
 

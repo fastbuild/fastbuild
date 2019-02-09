@@ -262,7 +262,7 @@ const ReflectedProperty * ReflectionInfo::FindPropertyRecurse( uint32_t nameCRC 
 
 // CreateObject
 //------------------------------------------------------------------------------
-/*static*/ RefObject * ReflectionInfo::CreateObject( const AString & objectType )
+/*static*/ Object * ReflectionInfo::CreateObject( const AString & objectType )
 {
     const uint32_t objectTypeCRC = CRC32::Calc( objectType );
     const ReflectionInfo * ri = s_FirstReflectionInfo;
@@ -296,11 +296,11 @@ const ReflectedProperty * ReflectionInfo::FindPropertyRecurse( uint32_t nameCRC 
 
 // CreateObject
 //------------------------------------------------------------------------------
-RefObject * ReflectionInfo::CreateObject() const
+Object * ReflectionInfo::CreateObject() const
 {
     ASSERT( IsObject() );
     ASSERT( !IsAbstract() );
-    return (RefObject *)Create();
+    return (Object *)Create();
 }
 
 // CreateStruct

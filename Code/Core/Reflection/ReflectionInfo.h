@@ -17,7 +17,6 @@ class MetaNone;
 class Object;
 class ReflectionInfo;
 class ReflectedProperty;
-class RefObject;
 class Struct;
 
 // ReflectionInfo
@@ -42,9 +41,9 @@ public:
     const ReflectedProperty & GetReflectedProperty( uint32_t index ) const;
     const ReflectedProperty * GetReflectedProperty( const AString & propertyName ) const;
 
-    static RefObject * CreateObject( const AString & objectType );
+    static Object * CreateObject( const AString & objectType );
     static Struct * CreateStruct( const AString & structType );
-    RefObject * CreateObject() const;
+    Object * CreateObject() const;
     Struct * CreateStruct() const;
     void SetArraySize( void * array, size_t size ) const;
 
