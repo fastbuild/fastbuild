@@ -24,7 +24,7 @@ public:
 
     explicit UnityNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~UnityNode();
+    virtual ~UnityNode() override;
 
     static inline Node::Type GetTypeS() { return Node::UNITY_NODE; }
 

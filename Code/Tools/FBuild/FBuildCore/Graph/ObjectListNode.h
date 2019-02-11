@@ -24,7 +24,7 @@ class ObjectListNode : public Node
 public:
     ObjectListNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~ObjectListNode();
+    virtual ~ObjectListNode() override;
 
     static inline Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
 

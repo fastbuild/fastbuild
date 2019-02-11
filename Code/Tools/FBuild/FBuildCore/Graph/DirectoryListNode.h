@@ -17,7 +17,7 @@ class DirectoryListNode : public Node
 public:
     DirectoryListNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~DirectoryListNode();
+    virtual ~DirectoryListNode() override;
 
     const AString & GetPath() const { return m_Path; }
     const Array< FileIO::FileInfo > & GetFiles() const { return m_Files; }

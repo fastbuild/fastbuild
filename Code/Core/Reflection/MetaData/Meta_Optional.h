@@ -13,7 +13,7 @@ class Meta_Optional : public IMetaData
     REFLECT_DECLARE( Meta_Optional )
 public:
     explicit Meta_Optional();
-    virtual ~Meta_Optional();
+    virtual ~Meta_Optional() override;
 };
 
 //------------------------------------------------------------------------------

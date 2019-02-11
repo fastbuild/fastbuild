@@ -60,7 +60,6 @@ static const uint32_t g_CRC32Table[ 256 ] =
 #define UINT unsigned int
 #define RES unsigned int
 #define INT int
-#define INT_PTR unsigned int
 #define SIZE_T size_t
 #define DWORD unsigned int
 #define BYTE unsigned char

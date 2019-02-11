@@ -214,14 +214,14 @@ int Main(int argc, char * argv[])
     float totalBuildTime = t.GetElapsed();
     uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
     totalBuildTime -= ( minutes * 60.0f );
-    float seconds = totalBuildTime;
+    const float seconds = totalBuildTime;
     if ( minutes > 0 )
     {
-        FLOG_BUILD( "Time: %um %05.3fs\n", minutes, seconds );
+        FLOG_BUILD( "Time: %um %05.3fs\n", minutes, (double)seconds );
     }
     else
     {
-        FLOG_BUILD( "Time: %05.3fs\n", seconds );
+        FLOG_BUILD( "Time: %05.3fs\n", (double)seconds );
     }
 
     ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed

@@ -138,7 +138,7 @@ public:
                                    nullptr      // LPDWORD lpThreadId
                                  );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        #if __has_feature( address_sanitizer ) || __SANITIZE_ADDRESS__
+        #if __has_feature( address_sanitizer ) || defined( __SANITIZE_ADDRESS__ )
             // AddressSanitizer instruments objects created on the stack by inserting redzones around them.
             // This greatly increases the amount of stack space used by the program.
             // To account for that double the requested stack size for the thread.

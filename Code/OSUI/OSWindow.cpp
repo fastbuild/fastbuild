@@ -40,6 +40,7 @@
                         {
                             return 0; // Handled
                         }
+                        break;
                     }
                     case SC_CLOSE:
                     {
@@ -47,6 +48,7 @@
                         {
                             return 0; // Handled
                         }
+                        break;
                     }
                 }
                 break;
@@ -132,7 +134,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
 
         // Register Window class
         AStackString<> uniqueWindowClass;
-        uniqueWindowClass.Format( "windowClass_%p", this );
+        uniqueWindowClass.Format( "windowClass_%p", (void *)this );
 
         WNDCLASSEX wc;
         wc.cbSize           = sizeof(WNDCLASSEX);

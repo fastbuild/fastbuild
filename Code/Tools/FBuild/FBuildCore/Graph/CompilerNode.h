@@ -20,7 +20,7 @@ class CompilerNode : public Node
 public:
     explicit CompilerNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~CompilerNode();
+    virtual ~CompilerNode() override;
 
     virtual bool IsAFile() const override;
 

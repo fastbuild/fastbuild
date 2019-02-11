@@ -68,7 +68,7 @@ class ReflectionInfo;
             m_SuperClass = reinterpret_cast< const ReflectionInfo * >( &g_##baseClass##_ReflectionInfo ); \
             ADD_METADATA( metaData ) \
         } \
-        virtual ~className##_ReflectionInfo() \
+        virtual ~className##_ReflectionInfo() override\
         { \
             className::s_ReflectionInfo = nullptr; \
         }

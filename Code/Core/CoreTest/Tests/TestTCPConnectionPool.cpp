@@ -226,7 +226,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
         }
 
         const float speedMBs = ( float( totalSent ) / timer.GetElapsed() ) / float( 1024 * 1024 );
-        OUTPUT( "Speed: %2.1f MiB/s, SendSize: %u\n", speedMBs, (uint32_t)sendSize );
+        OUTPUT( "Speed: %2.1f MiB/s, SendSize: %u\n", (double)speedMBs, (uint32_t)sendSize );
 
         sendSize = ( sendSize * 2 ) + 33; // +33 to avoid powers of 2
     }

@@ -245,7 +245,7 @@ ObjectNode::~ObjectNode()
     }
 
     // Graphing the current amount of distributable jobs
-    FLOG_MONITOR( "GRAPH FASTBuild \"Distributable Jobs MemUsage\" MB %f\n", (float)Job::GetTotalLocalDataMemoryUsage() / (float)MEGABYTE );
+    FLOG_MONITOR( "GRAPH FASTBuild \"Distributable Jobs MemUsage\" MB %f\n", (double)( (float)Job::GetTotalLocalDataMemoryUsage() / (float)MEGABYTE ) );
 
     if ( usePreProcessor || useSimpleDist )
     {

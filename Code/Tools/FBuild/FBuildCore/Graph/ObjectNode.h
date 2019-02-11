@@ -33,7 +33,7 @@ public:
                          NodeProxy * srcFile,
                          const AString & compilerOptions,
                          uint32_t flags );
-    virtual ~ObjectNode();
+    virtual ~ObjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
 

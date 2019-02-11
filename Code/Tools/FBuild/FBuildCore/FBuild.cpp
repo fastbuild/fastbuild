@@ -356,7 +356,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
         return false;
     }
 
-    FLOG_INFO( "Saving DepGraph Complete in %2.3fs", t.GetElapsed() );
+    FLOG_INFO( "Saving DepGraph Complete in %2.3fs", (double)t.GetElapsed() );
     return true;
 }
 
@@ -651,7 +651,7 @@ void FBuild::UpdateBuildStatus( const Node * node )
         FLog::OutputProgress( timeNow, m_SmoothedProgressCurrent, numJobs, numJobsActive, numJobsDist, numJobsDistActive );
     }
 
-    FLOG_MONITOR( "PROGRESS_STATUS %f \n", m_SmoothedProgressCurrent );
+    FLOG_MONITOR( "PROGRESS_STATUS %f \n", (double)m_SmoothedProgressCurrent );
 
     m_LastProgressOutputTime = timeNow;
 }

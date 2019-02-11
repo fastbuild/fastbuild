@@ -34,7 +34,7 @@ class WorkerWindow : public OSWindow, public Singleton< WorkerWindow >
 {
 public:
     explicit WorkerWindow( void * hInstance );
-    ~WorkerWindow();
+    virtual ~WorkerWindow() override;
 
     void SetStatus( const char * statusText );
     void SetWorkerState( size_t index, const AString & hostName, const AString & status );

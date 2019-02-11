@@ -1059,6 +1059,7 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
             {
                 return PopulateArrayOfStructs( nodeGraph, iter, base, property, variable );
             }
+            break;
         }
         default:
         {

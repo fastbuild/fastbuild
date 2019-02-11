@@ -38,9 +38,7 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define ID_TRAY_APP_ICON                5000
 #define ID_TRAY_EXIT_CONTEXT_MENU_ITEM  3000
-
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -184,7 +182,7 @@ void WorkerWindow::UIUpdateThread()
             for ( uint32_t i=0; i<numProcessors; ++i )
             {
                 float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
-                buffer.Format( "%i CPUs (%2.1f%%)", ( i + 1 ), perc );
+                buffer.Format( "%i CPUs (%2.1f%%)", ( i + 1 ), (double)perc );
                 m_ResourcesDropDown->AddItem( buffer.Get() );
             }
         }

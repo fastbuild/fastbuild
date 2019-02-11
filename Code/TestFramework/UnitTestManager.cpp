@@ -160,11 +160,11 @@ bool UnitTestManager::RunTests( const char * testGroup )
             status = ( info.m_MemoryLeaks ) ? "FAIL (LEAKS)" : "FAIL";
         }
 
-        OUTPUT( "%12s : %5.3fs : %s\n", status, info.m_TimeTaken, info.m_TestName );
+        OUTPUT( "%12s : %5.3fs : %s\n", status, (double)info.m_TimeTaken, info.m_TestName );
         totalTime += info.m_TimeTaken;
     }
     OUTPUT( "------------------------------------------------------------\n" );
-    OUTPUT( "Passed: %u / %u (%u failures) in %2.3fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), totalTime );
+    OUTPUT( "Passed: %u / %u (%u failures) in %2.3fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), (double)totalTime );
     OUTPUT( "------------------------------------------------------------\n" );
 
     return ( s_NumTests == numPassed );
@@ -217,14 +217,14 @@ void UnitTestManager::TestEnd()
         if ( MemTracker::GetCurrentAllocationCount() != 0 )
         {
             info.m_MemoryLeaks = true;
-            OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, timeTaken );
+            OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
             MemTracker::DumpAllocations();
             TEST_ASSERT( false );
             return;
         }
     #endif
 
-    OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", info.m_TestName, timeTaken );
+    OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", info.m_TestName, (double)timeTaken );
     info.m_Passed = true;
 }
 

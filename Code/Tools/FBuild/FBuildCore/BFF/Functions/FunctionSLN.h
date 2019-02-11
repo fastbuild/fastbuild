@@ -16,7 +16,7 @@ class FunctionSLN : public Function
 {
 public:
     explicit         FunctionSLN();
-    inline virtual  ~FunctionSLN() = default;
+    inline virtual  ~FunctionSLN() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

@@ -245,8 +245,10 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         FD_ZERO( &write );
         FD_ZERO( &err );
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
         FD_SET( sockfd, &write );
         FD_SET( sockfd, &err );
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // 6319
 
         // check connection every 10ms
@@ -799,7 +801,9 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         fd_set set;
         FD_ZERO( &set );
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
         FD_SET( (uint32_t)ci->m_Socket, &set );
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // 6319
 
         // peek
@@ -926,7 +930,9 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         fd_set readSet;
         FD_ZERO( &readSet );
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
         FD_SET( (uint32_t)ci->m_Socket, &readSet );
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // C6319
 
         int num = Select( ci->m_Socket+1, &readSet, NULL, NULL, &timeout );
@@ -951,7 +957,9 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         }
         else
         {
+            PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" ) // TOBO:B : Investigate - code will never be executed [-Wunreachable-code]
             ASSERT( false && "Unexpected" );
+            PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wunreachable-code
         }
     }
 

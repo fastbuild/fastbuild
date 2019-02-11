@@ -62,7 +62,7 @@ void TestHash::CompareHashTimes_Large() const
         }
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "Sum64           : %2.3fs @ %6.3f GiB/s (sum: %016" PRIx64 ")\n", time, speed, sum );
+        OUTPUT( "Sum64           : %2.3fs @ %6.3f GiB/s (sum: %016" PRIx64 ")\n", (double)time, (double)speed, sum );
     }
 
 
@@ -79,7 +79,7 @@ void TestHash::CompareHashTimes_Large() const
         }
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "Sum32           : %2.3fs @ %6.3f GiB/s (sum: 0x%x)\n", time, speed, sum );
+        OUTPUT( "Sum32           : %2.3fs @ %6.3f GiB/s (sum: 0x%x)\n", (double)time, (double)speed, sum );
     }
 
     // xxHash32
@@ -88,7 +88,7 @@ void TestHash::CompareHashTimes_Large() const
         uint32_t crc = xxHash::Calc32( data.Get(), dataSize );
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "xxHash-32       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
+        OUTPUT( "xxHash-32       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", (double)time, (double)speed, crc );
     }
 
     // xxHash64
@@ -97,7 +97,7 @@ void TestHash::CompareHashTimes_Large() const
         uint64_t crc = xxHash::Calc64( data.Get(), dataSize );
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", time, speed, crc );
+        OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
     }
 
     // CRC32 - 8x8 slicing
@@ -106,7 +106,7 @@ void TestHash::CompareHashTimes_Large() const
         uint32_t crc = CRC32::Calc( data.Get(), dataSize );
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "CRC32 8x8       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
+        OUTPUT( "CRC32 8x8       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", (double)time, (double)speed, crc );
     }
 
     // CRC32 - "standard" algorithm
@@ -117,7 +117,7 @@ void TestHash::CompareHashTimes_Large() const
         crc = CRC32::Stop( crc );
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "CRC32           : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
+        OUTPUT( "CRC32           : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", (double)time, (double)speed, crc );
     }
 
     // CRC32Lower
@@ -126,7 +126,7 @@ void TestHash::CompareHashTimes_Large() const
         uint32_t crc = CRC32::CalcLower( data.Get(), dataSize );
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "CRC32Lower      : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
+        OUTPUT( "CRC32Lower      : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", (double)time, (double)speed, crc );
     }
 }
 
@@ -165,7 +165,7 @@ void TestHash::CompareHashTimes_Small() const
         }
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "xxHash-32       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
+        OUTPUT( "xxHash-32       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", (double)time, (double)speed, crc );
     }
 
     // xxHash - 64
@@ -181,7 +181,7 @@ void TestHash::CompareHashTimes_Small() const
         }
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", time, speed, crc );
+        OUTPUT( "xxHash-64       : %2.3fs @ %6.3f GiB/s (hash: %016" PRIx64 ")\n", (double)time, (double)speed, crc );
     }
 
     // CRC32 - 8x8 slicing
@@ -197,7 +197,7 @@ void TestHash::CompareHashTimes_Small() const
         }
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "CRC32 8x8       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
+        OUTPUT( "CRC32 8x8       : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", (double)time, (double)speed, crc );
     }
 
     // CRC32 - "standard" algorithm
@@ -216,7 +216,7 @@ void TestHash::CompareHashTimes_Small() const
         }
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "CRC32           : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
+        OUTPUT( "CRC32           : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", (double)time, (double)speed, crc );
     }
 
     // CRC32Lower
@@ -232,7 +232,7 @@ void TestHash::CompareHashTimes_Small() const
         }
         float time = t.GetElapsed();
         float speed = ( (float)dataSize / (float)( 1024 * 1024 * 1024 ) ) / time;
-        OUTPUT( "CRC32Lower      : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", time, speed, crc );
+        OUTPUT( "CRC32Lower      : %2.3fs @ %6.3f GiB/s (hash: 0x%x)\n", (double)time, (double)speed, crc );
     }
 }
 

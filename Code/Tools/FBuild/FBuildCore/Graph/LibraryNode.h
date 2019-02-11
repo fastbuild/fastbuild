@@ -24,7 +24,7 @@ class LibraryNode : public ObjectListNode
 public:
     LibraryNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~LibraryNode();
+    virtual ~LibraryNode() override;
 
     static inline Node::Type GetTypeS() { return Node::LIBRARY_NODE; }
 

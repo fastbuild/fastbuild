@@ -13,7 +13,7 @@ class MemoryStream : public IOStream
 public:
     explicit MemoryStream();
     explicit MemoryStream( size_t initialBufferSize, size_t minGrowth = 4096 );
-    ~MemoryStream();
+    virtual ~MemoryStream() override;
 
     // memory stream specific functions
     inline const void * GetData() const { return (void *)m_Begin; }

@@ -359,8 +359,13 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
         case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
         case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
-        default:                        ASSERT( false ); return nullptr;
     }
+
+    #if defined( __GNUC__ ) || defined( _MSC_VER )
+        // GCC and incorrectly reports reaching end of non-void function (as of GCC 7.3.0)
+        // MSVC incorrectly reports reaching end of non-void function (as of VS 2017)
+        return nullptr;
+    #endif
 }
 
 // Load

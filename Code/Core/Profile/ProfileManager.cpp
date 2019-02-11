@@ -248,7 +248,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
                                e.m_Id ? e.m_Id : "",
                                e.m_Id ? 'B' : 'E',
                                threadId,
-                               (uint64_t)( (double)e.m_TimeStamp * (double)Timer::GetFrequencyInvFloatMS() * 1000.0f ) );
+                               (uint64_t)( (double)e.m_TimeStamp * (double)Timer::GetFrequencyInvFloatMS() * 1000.0 ) );
 
                 g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
             }

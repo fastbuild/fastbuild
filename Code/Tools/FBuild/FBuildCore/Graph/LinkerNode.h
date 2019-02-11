@@ -19,7 +19,7 @@ class LinkerNode : public FileNode
 public:
     explicit LinkerNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~LinkerNode();
+    virtual ~LinkerNode() override;
 
     enum Flag
     {

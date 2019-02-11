@@ -18,7 +18,7 @@ class FunctionObjectList : public Function
 {
 public:
     explicit        FunctionObjectList();
-    inline virtual ~FunctionObjectList() = default;
+    inline virtual ~FunctionObjectList() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

@@ -20,10 +20,6 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
-// Defines
-//------------------------------------------------------------------------------
-#define SERVER_STATUS_SEND_FREQUENCY ( 1.0f )
-
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Server::Server( uint32_t numThreadsInJobQueue )
@@ -93,8 +89,8 @@ bool Server::IsSynchingTool( AString & statusStr ) const
             if ( synching )
             {
                 statusStr.Format( "Synchronizing Compiler %2.1f / %2.1f MiB\n",
-                                    (float)synchDone / (float)MEGABYTE,
-                                    (float)synchTotal / (float)MEGABYTE );
+                                    (double)( (float)synchDone / (float)MEGABYTE ),
+                                    (double)( (float)synchTotal / (float)MEGABYTE ) );
                 return true;
             }
         }

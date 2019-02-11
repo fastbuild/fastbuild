@@ -228,7 +228,7 @@ public:
                 graphBar += '*';
             }
         }
-        OUTPUT( " %2u%c        | %8u | %10" PRIu64 " | %5.1f %s\n", i, ( i == 29 ) ? '+' : ' ', num, size, sizePerc, graphBar.Get() );
+        OUTPUT( " %2u%c        | %8u | %10" PRIu64 " | %5.1f %s\n", i, ( i == 29 ) ? '+' : ' ', num, size, (double)sizePerc, graphBar.Get() );
     }
     OUTPUT( "================================================================================\n" );
     OUTPUT( " Total      | %8u | %10" PRIu64 " |\n", total.m_NumFiles, total.m_NumBytes / MEGABYTE );
