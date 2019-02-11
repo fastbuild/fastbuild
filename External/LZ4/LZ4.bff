@@ -15,6 +15,12 @@
 					      ]
     .LZ4Options_x64Clang= [ 
                             .LZ4CompilerOptions = ' -Wno-shift-count-overflow'
+                                                + ' -Wno-unused-macros'
+                                                + ' -Wno-unreachable-code'
+                                                + ' -Wno-sign-conversion'
+                                                + ' -Wno-covered-switch-default'
+                                                + ' -Wno-conversion'
+                                                + ' -Wno-missing-prototypes'
                                                 + ' -O2'
 					      ]
     .LZ4Options_x64Linux= [ 

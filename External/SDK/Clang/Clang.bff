@@ -1,0 +1,42 @@
+// Clang
+//------------------------------------------------------------------------------
+
+// Select desired Clang version
+//------------------------------------------------------------------------------
+#if __LINUX__
+    #define USING_CLANG_3
+    //#define USING_CLANG_6
+#endif
+#if __OSX__
+    #define USING_CLANG_8
+#endif
+#if __WINDOWS__
+    #define USING_CLANG_5
+    //#define USING_CLANG_7
+#endif
+
+// Activate
+//------------------------------------------------------------------------------
+#if__LINUX__
+    #if USING_CLANG_3
+        #include "Linux/Clang3.bff"
+    #endif
+    #if USING_CLANG_6
+        #include "Linux/Clang6.bff"
+    #endif
+#endif
+#if __OSX__
+    #if USING_CLANG_8
+        #include "OSX/Clang8.bff"
+    #endif
+#endif
+#if __WINDOWS__
+    #if USING_CLANG_5
+        #include "Windows/Clang5.bff"
+    #endif
+    #if USING_CLANG_7
+        #include "Windows/Clang7.bff"
+    #endif
+#endif
+
+//------------------------------------------------------------------------------

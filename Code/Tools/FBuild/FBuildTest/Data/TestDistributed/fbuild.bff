@@ -20,7 +20,8 @@ Library( "DistTestPCH" )
     #if __WINDOWS__
         .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestDistributed/PrecompiledHeader.cpp"
         .PCHOutputFile              = "$Out$/Test/Distributed/PrecompiledHeader.pch"
-        .PCHOptions                 = '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Fp"%2" /WX /W4 /nologo /c'
+        .PCHOptions                 = '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Fp"%2" /WX /W4 /nologo /c /fp:fast'
+
     #endif
     #if __LINUX__
         .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestDistributed/PrecompiledHeader.h"

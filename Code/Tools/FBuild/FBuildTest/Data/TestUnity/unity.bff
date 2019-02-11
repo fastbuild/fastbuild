@@ -25,7 +25,7 @@ Library( "Unity-Compiled" )
     #if __WINDOWS__
         .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestUnity/PrecompiledHeader.cpp"
         .PCHOutputFile              = "$Out$/Test/Unity/PrecompiledHeader.pch"
-        .PCHOptions                 = '%1 /Fo%2.obj /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /W4 /WX /c'
+        .PCHOptions                 = '%1 /Fo%2.obj /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /W4 /WX /c /fp:fast'
     #endif
     #if __LINUX__
         .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestUnity/PrecompiledHeader.h"

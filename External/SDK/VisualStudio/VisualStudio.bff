@@ -12,7 +12,6 @@
 #if USING_VS2013
     #include "VS2013.bff"
     .MSC_VER                            = .VS2013_MSC_VER
-    .ToolChain_VS_Windows_X86           = .ToolChain_VS2013_Windows_X86
     .ToolChain_VS_Windows_X64           = .ToolChain_VS2013_Windows_X64
     .VS_PATH                            = .VS_2013_PATH
     .VS_PlatformToolset                 = .VS_2013_PlatformToolset
@@ -20,7 +19,6 @@
 #if USING_VS2015
     #include "VS2015.bff"
     .MSC_VER                            = .VS2015_MSC_VER
-    .ToolChain_VS_Windows_X86           = .ToolChain_VS2015_Windows_X86
     .ToolChain_VS_Windows_X64           = .ToolChain_VS2015_Windows_X64
     .VS_PATH                            = .VS_2015_PATH
     .VS_PlatformToolset                 = .VS_2015_PlatformToolset
@@ -28,7 +26,6 @@
 #if USING_VS2017
     #include "VS2017.bff"
     .MSC_VER                            = .VS2017_MSC_VER
-    .ToolChain_VS_Windows_X86           = .ToolChain_VS2017_Windows_X86
     .ToolChain_VS_Windows_X64           = .ToolChain_VS2017_Windows_X64
     .VS_PATH                            = .VS_2017_PATH
     .VS_PlatformToolset                 = .VS_2017_PlatformToolset

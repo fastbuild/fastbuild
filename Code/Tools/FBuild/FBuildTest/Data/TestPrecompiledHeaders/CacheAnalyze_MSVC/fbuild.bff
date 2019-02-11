@@ -13,8 +13,8 @@ ObjectList( 'PCHTest-CacheAnalyze_MSVC-1' )
     // PCH
     .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
     .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch'
-    .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
-    .PCHOptions                 + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+    .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c /fp:fast'
+                                + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
                                 + ' /analyze'
 
     // PCH User
@@ -30,8 +30,8 @@ ObjectList( 'PCHTest-CacheAnalyze_MSVC-2' )
     // PCH
     .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
     .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch'
-    .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
-    .PCHOptions                 + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+    .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c /fp:fast'
+                                + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
                                 + ' /analyze'
 
     // PCH User

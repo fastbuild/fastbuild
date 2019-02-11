@@ -17,7 +17,7 @@ ForEach( .SubDir in .SubDirs )
         #if __WINDOWS__
             .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.cpp'
             .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/PrecompiledHeader.pch'
-            .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+            .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c /fp:fast'
         #else
             .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.h'
             .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/PrecompiledHeader.pch'

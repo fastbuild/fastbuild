@@ -13,7 +13,7 @@ ObjectList( "PCHTest-lib" )
     #if __WINDOWS__
         .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.cpp"
         .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/PrecompiledHeader.pch"
-        .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
+        .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c /fp:fast'
     #endif
     #if __LINUX__
         .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.h"
@@ -63,12 +63,13 @@ Executable( "PCHTest" )
 #if __WINDOWS__
     ObjectList( "PCHTestClang-Windows" )
     {
+        Using( .ToolChain_Clang_Windows )
+
         .PCHInputFile       = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.h"
         .PCHOutputFile      = "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
 
         .PCHOptions         = ' -c -x c++-header $PCHInputFile$ -o"$PCHOutputFile$"'
 
-        .Compiler           = 'Compiler-ClangForWindows-Dist'
         .CompilerOptions    = ' -c -g -include-pch "$PCHOutputFile$" %1 -o "%2" -integrated-as'
                             + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
 
