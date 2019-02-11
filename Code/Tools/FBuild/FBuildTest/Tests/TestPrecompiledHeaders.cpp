@@ -8,6 +8,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 
 #include "Core/FileIO/FileIO.h"
+#include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
 // TestPrecompiledHeaders
@@ -246,6 +247,15 @@ void TestPrecompiledHeaders::TestPCHWithCache_NoRebuild() const
 //------------------------------------------------------------------------------
 void TestPrecompiledHeaders::TestPCHWithCache_BFFChange() const
 {
+    #if defined( __OSX__ )
+        // HFS+ has surprisingly poor time resolution (1 second) which makes the
+        // ObjectListNode appear to not need rebuilding, because the tests complete
+        // so quickly. This work-around keeps our state consistent with other platforms
+        // (the actual thing we are primarily tests (the pchuser rebuild) is not impacted
+        // by this)
+        Thread::Sleep( 1100 );
+    #endif
+    
     // Delete the object that uses the PCH, but not the PCH obj itself
     // to ensure the object can be pulled from the cache after db migration
     // With the MSVC compiler, this ensures the PCHCacheKey is not lost
