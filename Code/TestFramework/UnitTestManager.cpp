@@ -25,6 +25,17 @@
 /*static*/ UnitTestManager * UnitTestManager::s_Instance = nullptr;
 /*static*/ UnitTest * UnitTestManager::s_FirstTest = nullptr;
 
+// OnAssert callback
+//------------------------------------------------------------------------------
+/*static*/
+#if defined( __WINDOWS__ )
+    __declspec(noreturn)
+#endif
+void OnAssert( const char * /*message*/ )
+{
+    throw "Assert Failed";
+}
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 UnitTestManager::UnitTestManager()
@@ -39,7 +50,7 @@ UnitTestManager::UnitTestManager()
     #ifdef ASSERTS_ENABLED
         if ( IsDebuggerAttached() == false )
         {
-            AssertHandler::SetThrowOnAssert( true );
+            AssertHandler::SetAssertCallback( OnAssert );
         }
     #endif
 }
@@ -51,7 +62,7 @@ UnitTestManager::~UnitTestManager()
     #ifdef ASSERTS_ENABLED
         if ( IsDebuggerAttached() == false )
         {
-            AssertHandler::SetThrowOnAssert( false );
+            AssertHandler::SetAssertCallback( nullptr );
         }
     #endif
 

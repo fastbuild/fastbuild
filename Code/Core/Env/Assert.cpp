@@ -20,7 +20,7 @@
 // Static
 //------------------------------------------------------------------------------
 #ifdef ASSERTS_ENABLED
-/*static*/ bool AssertHandler::s_ThrowOnAssert( false );
+    /*static*/ AssertHandler::AssertCallback * AssertHandler::s_AssertCallback( nullptr );
 #endif
 
 // NoReturn
@@ -72,9 +72,10 @@ bool IsDebuggerAttached()
             OutputDebugStringA( buffer );
         #endif
 
-        if ( s_ThrowOnAssert )
+        // Trigger user callback if needed. This may not return.
+        if ( s_AssertCallback )
         {
-            throw "AssertionFailed";
+            (*s_AssertCallback)( buffer );
         }
 
         if ( IsDebuggerAttached() == false )
