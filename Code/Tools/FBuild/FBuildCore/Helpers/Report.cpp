@@ -25,7 +25,7 @@
 
 // Globals
 //------------------------------------------------------------------------------
-uint32_t g_ReportNodeColors[Node::NUM_NODE_TYPES] = {
+uint32_t g_ReportNodeColors[] = {
                                   0x000000, // PROXY_NODE (never seen)
                                   0xFFFFFF, // COPY_FILE_NODE
                                   0xAAAAAA, // DIRECTORY_LIST_NODE
@@ -46,6 +46,7 @@ uint32_t g_ReportNodeColors[Node::NUM_NODE_TYPES] = {
                                   0xFF3030, // REMOVE_DIR_NODE
                                   0x77DDAA, // SLN_NODE
                                   0x77DDAA, // XCODEPROJECT_NODE
+                                  0x000000, // SETTINGS_NODE (never seen)
                                 };
 
 // CONSTRUCTOR
