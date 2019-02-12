@@ -60,7 +60,6 @@ Compiler( 'Compiler-Clang7' )
                                     #if USING_VS2013
                                         + ' -Wno-implicit-exception-spec-mismatch'
                                     #endif
-                                    + ' -Wno-deprecated-declarations' // Clang doesn't respect pragmas disabling warning in stdio.h
 
                                     // as of v7.0.1, these warnings fire inside system headers
                                     + ' -Wno-reserved-id-macro'         // macro name is a reserved identifier [-Wreserved-id-macro]
