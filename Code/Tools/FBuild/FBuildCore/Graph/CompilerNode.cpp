@@ -134,7 +134,7 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
         AStackString<> compiler( GetExecutable() );
         compiler.Replace( '/', '\\' );
         AStackString<> compilerWithoutVersion( compiler.Get() );
-        if ( const char* last = compiler.FindLast( '-' ) )
+        if ( const char * last = compiler.FindLast( '-' ) )
         {
             compilerWithoutVersion.Assign( compiler.Get(), last );
         }
