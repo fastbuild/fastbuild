@@ -229,9 +229,9 @@ void Env::GetExePath( AString & output )
     #endif
 }
 
-// IsStdOutRedirected
+// IsStdOutRedirectedInternal
 //------------------------------------------------------------------------------
-/*static*/ bool Env::IsStdOutRedirected()
+static bool IsStdOutRedirectedInternal()
 {
     #if defined( __WINDOWS__ )
         HANDLE h = GetStdHandle( STD_OUTPUT_HANDLE );
@@ -309,6 +309,31 @@ void Env::GetExePath( AString & output )
     #else
         return GetEnvVariable( "USER", outUserName );
     #endif
+}
+
+// IsStdOutRedirected
+//------------------------------------------------------------------------------
+/*static*/ bool Env::IsStdOutRedirected( const bool recheck )
+{
+    static volatile int32_t result = 0; // 0 - not checked, 1 - true, 2 - false
+    const int32_t the_result = result;
+    if ( recheck || ( the_result == 0 ) )
+    {
+        if ( IsStdOutRedirectedInternal() )
+        {
+            result = 1;
+            return true;
+        }
+        else
+        {
+            result = 2;
+            return false;
+        }
+    }
+    else
+    {
+        return ( the_result == 1 );
+    }
 }
 
 // GetLastErr
