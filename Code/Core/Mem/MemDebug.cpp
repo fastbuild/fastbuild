@@ -40,7 +40,6 @@ void MemDebug::FillMem( void * ptr, const size_t size, const uint32_t pattern )
                             (char)( ( pattern & 0x00FF0000 ) >> 16 ) };
         const char * b = bytes;
         char * cit = static_cast< char * >( static_cast< void * >( it ) );
-
         switch( remainder )
         {
             case 3: *cit = *b; ++cit; ++b;
