@@ -2021,9 +2021,9 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 
     FileStream tmpFile;
     AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
-    if (GetFlag( FLAG_GCC ))
+    if ( GetFlag( FLAG_GCC ) )
     {
-       fileName += ".i";
+        fileName += ".i";
     }
 
     void const * dataToWrite = job->GetData();
