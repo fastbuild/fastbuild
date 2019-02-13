@@ -133,6 +133,11 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
         // Normalize slashes to make logic consistent on all platforms
         AStackString<> compiler( GetExecutable() );
         compiler.Replace( '/', '\\' );
+        AStackString<> compilerWithoutVersion( compiler.Get() );
+        if ( const char* last = compiler.FindLast( '-' ) )
+        {
+            compilerWithoutVersion.Assign( compiler.Get(), last );
+        }
 
         // MSVC
         if ( compiler.EndsWithI( "\\cl.exe" ) ||
@@ -161,8 +166,10 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
         // GCC
         if ( compiler.EndsWithI( "gcc.exe" ) ||
              compiler.EndsWithI( "gcc" ) ||
+             compilerWithoutVersion.EndsWithI( "gcc" ) ||
              compiler.EndsWithI( "g++.exe" ) ||
              compiler.EndsWithI( "g++" ) ||
+             compilerWithoutVersion.EndsWithI( "g++" ) ||
              compiler.EndsWithI( "dcc.exe" ) || // WindRiver
              compiler.EndsWithI( "dcc" ) )      // WindRiver
         {
