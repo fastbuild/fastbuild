@@ -939,6 +939,13 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         flags |= ObjectNode::FLAG_CAN_BE_CACHED;
     }
 
+	// Custom simple compiler
+	if( compilerNode->SimpleDistributionMode() && compilerNode->SimpleDistributionAllowCache())
+	{
+		// Can cache objects
+		flags |= ObjectNode::FLAG_CAN_BE_CACHED;
+	}
+
     return flags;
 }
 

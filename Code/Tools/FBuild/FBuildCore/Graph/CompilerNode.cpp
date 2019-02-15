@@ -27,6 +27,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT( m_ClangRewriteIncludes, "ClangRewriteIncludes", MetaOptional() )
     REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
     REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
+	REFLECT( m_SimpleDistributionAllowCache, "SimpleDistributionAllowCache", MetaOptional())
     REFLECT( m_CompilerFamilyString,"CompilerFamily",       MetaOptional() )
 
     // Internal
@@ -44,6 +45,7 @@ CompilerNode::CompilerNode()
     , m_CompilerFamilyString( "auto" )
     , m_CompilerFamilyEnum( static_cast< uint8_t >( CUSTOM ) )
     , m_SimpleDistributionMode( false )
+	, m_SimpleDistributionAllowCache( false )
 {
 }
 
