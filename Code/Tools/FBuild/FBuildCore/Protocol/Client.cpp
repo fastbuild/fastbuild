@@ -222,7 +222,7 @@ void Client::LookForWorkers()
         else
         {
             DIST_INFO( " - connection: %s (OK)\n", m_WorkerList[ i ].Get() );
-            const uint32_t numJobsAvailable( JobQueue::IsValid() ? (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable() : 0 );
+            const uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
 
             ss.m_RemoteName = m_WorkerList[ i ];
             ss.m_Connection = ci; // success!
@@ -252,12 +252,6 @@ void Client::CommunicateJobAvailability()
     }
 
     m_StatusUpdateTimer.Start(); // reset time
-
-    // possible for job queue to not exist yet
-    if ( !JobQueue::IsValid() )
-    {
-        return;
-    }
 
     // has status changed since we last sent it?
     uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
@@ -441,11 +435,6 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequestJob * )
 {
     PROFILE_SECTION( "MsgRequestJob" )
-
-    if ( JobQueue::IsValid() == false )
-    {
-        return;
-    }
 
     ServerState * ss = (ServerState *)connection->GetUserData();
     ASSERT( ss );
