@@ -205,9 +205,9 @@ Function::~Function() = default;
         ASSERT( *start == BFFParser::BFF_FUNCTION_ARGS_OPEN );
         start++;
         start.SkipWhiteSpace();
+        BFFIterator stop( start );
         if ( start.IsAtString() )
         {
-            BFFIterator stop( start );
             stop.SkipString();
             ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
             if ( start.GetDistTo( stop ) <= 1 )
@@ -222,10 +222,20 @@ Function::~Function() = default;
             {
                 return false; // substitution will have emitted an error
             }
+
+            stop++; // skip closing quote for the next check
         }
         else if ( NeedsHeader() )
         {
             Error::Error_1001_MissingStringStartToken( start, this );
+            return false;
+        }
+
+        // make sure there are no extraneous tokens
+        stop.SkipWhiteSpaceAndComments();
+        if ( *stop != BFFParser::BFF_FUNCTION_ARGS_CLOSE )
+        {
+            Error::Error_1002_MatchingClosingTokenNotFound( stop, this, BFFParser::BFF_FUNCTION_ARGS_CLOSE );
             return false;
         }
     }
