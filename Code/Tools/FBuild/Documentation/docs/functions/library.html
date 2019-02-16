@@ -63,6 +63,10 @@ Builds a statically linked library.
   ; Additional options
   .PreBuildDependencies     ; (optional) Force targets to be built before this library (Rarely needed,
                             ; but useful when a library relies on generated code).
+
+  .Environment              ; (optional) Environment variables to use for local build
+                            ; If set, librarian uses this environment
+                            ; If not set, librarian uses .Environment from your Settings node
 }
 </div>
 <p><b>Build-Time Substitutions</b>

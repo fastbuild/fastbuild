@@ -9,6 +9,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+template< class T > class Array;
 class AString;
 
 // Env
@@ -38,6 +39,7 @@ public:
     static bool GetLocalUserName( AString & outUserName );
 
     static uint32_t GetLastErr();
+    static char * AllocEnvironmentString( const Array< AString > & environment );
 };
 
 // GetPlatform

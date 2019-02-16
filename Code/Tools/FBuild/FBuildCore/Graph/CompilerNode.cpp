@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+#include "Core/Env/Env.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
@@ -28,6 +29,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
     REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
     REFLECT( m_CompilerFamilyString,"CompilerFamily",       MetaOptional() )
+    REFLECT_ARRAY( m_Environment,   "Environment",          MetaOptional() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
@@ -44,6 +46,7 @@ CompilerNode::CompilerNode()
     , m_CompilerFamilyString( "auto" )
     , m_CompilerFamilyEnum( static_cast< uint8_t >( CUSTOM ) )
     , m_SimpleDistributionMode( false )
+    , m_EnvironmentString( nullptr )
 {
 }
 
@@ -304,7 +307,10 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-CompilerNode::~CompilerNode() = default;
+CompilerNode::~CompilerNode()
+{
+    FREE( (void *)m_EnvironmentString );
+}
 
 // DoBuild
 //------------------------------------------------------------------------------
@@ -317,6 +323,27 @@ CompilerNode::~CompilerNode() = default;
 
     m_Stamp = m_Manifest.GetTimeStamp();
     return Node::NODE_RESULT_OK;
+}
+
+// GetEnvironmentString
+//------------------------------------------------------------------------------
+const char * CompilerNode::GetEnvironmentString() const
+{
+    const size_t numEnvVars = m_Environment.GetSize();
+    if ( numEnvVars > 0 )
+    {
+        MutexHolder mh( m_Mutex );
+        if ( m_EnvironmentString == nullptr )
+        {
+            m_EnvironmentString = Env::AllocEnvironmentString( m_Environment );
+        }
+        return m_EnvironmentString;
+    }
+    else
+    {
+        // return build-wide environment
+        return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
+    }
 }
 
 //------------------------------------------------------------------------------

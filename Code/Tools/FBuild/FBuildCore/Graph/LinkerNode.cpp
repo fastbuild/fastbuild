@@ -41,6 +41,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_LinkerStampExe,                  "LinkerStampExe",               MetaOptional() + MetaFile() )
     REFLECT( m_LinkerStampExeArgs,              "LinkerStampExeArgs",           MetaOptional() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
 
     // Internal State
     REFLECT( m_Flags,                           "Flags",                        MetaHidden() )
@@ -54,6 +55,7 @@ REFLECT_END( LinkerNode )
 LinkerNode::LinkerNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_LinkerType( "auto" )
+    , m_EnvironmentString( nullptr )
 {
     m_LastBuildTimeMs = 20000; // Assume link times are fairly long by default
 }
@@ -158,7 +160,10 @@ LinkerNode::LinkerNode()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-LinkerNode::~LinkerNode() = default;
+LinkerNode::~LinkerNode()
+{
+    FREE( (void *)m_EnvironmentString );
+}
 
 // DoBuild
 //------------------------------------------------------------------------------
@@ -192,7 +197,7 @@ LinkerNode::~LinkerNode() = default;
     // use the exe launch dir as the working dir
     const char * workingDir = nullptr;
 
-    const char * environment = FBuild::Get().GetEnvironmentString();
+    const char * environment = GetEnvironmentString();
 
     EmitCompilationMessage( fullArgs );
 
@@ -1387,6 +1392,27 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // don't know how to handle this type of node
     Error::Error_1005_UnsupportedNodeType( iter, function, "Libraries", node->GetName(), node->GetType() );
     return false;
+}
+
+// GetEnvironmentString
+//------------------------------------------------------------------------------
+const char * LinkerNode::GetEnvironmentString() const
+{
+    const size_t numEnvVars = m_Environment.GetSize();
+    if ( numEnvVars > 0 )
+    {
+        MutexHolder mh( m_Mutex );
+        if ( m_EnvironmentString == nullptr )
+        {
+            m_EnvironmentString = Env::AllocEnvironmentString( m_Environment );
+        }
+        return m_EnvironmentString;
+    }
+    else
+    {
+        // return build-wide environment
+        return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
+    }
 }
 
 //------------------------------------------------------------------------------

@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FileNode.h"
+#include "Core/Process/Mutex.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ToolManifest.h"
 
 // Forward Declarations
@@ -51,27 +52,31 @@ public:
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 
-
-    const AString & GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->GetName(); }
+    const AString &    GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->GetName(); }
+    const char * GetEnvironmentString() const;
 
 private:
-    bool InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
+    bool            InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
 
     virtual BuildResult DoBuild( Job * job ) override;
 
-    // Exposed params
-    AString             m_Executable;
-    Array< AString >    m_ExtraFiles;
-    Array< AString >    m_CustomEnvironmentVariables;
+    mutable Mutex        m_Mutex;
 
-    bool            m_AllowDistribution;
-    bool            m_VS2012EnumBugFix;
-    bool            m_ClangRewriteIncludes;
-    AString         m_ExecutableRootPath;
-    AString         m_CompilerFamilyString;
-    uint8_t         m_CompilerFamilyEnum;
-    bool            m_SimpleDistributionMode;
-    ToolManifest    m_Manifest;
+    // Exposed params
+    AString              m_Executable;
+    Array< AString >     m_ExtraFiles;
+    Array< AString >     m_CustomEnvironmentVariables;
+
+    bool                 m_AllowDistribution;
+    bool                 m_VS2012EnumBugFix;
+    bool                 m_ClangRewriteIncludes;
+    AString              m_ExecutableRootPath;
+    AString              m_CompilerFamilyString;
+    Array< AString >     m_Environment;
+    uint8_t              m_CompilerFamilyEnum;
+    bool                 m_SimpleDistributionMode;
+    ToolManifest         m_Manifest;
+    mutable char *       m_EnvironmentString;
 };
 
 //------------------------------------------------------------------------------

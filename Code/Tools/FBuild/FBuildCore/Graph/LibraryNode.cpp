@@ -28,6 +28,7 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Env/Env.h"
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -39,12 +40,14 @@ REFLECT_NODE_BEGIN( LibraryNode, ObjectListNode, MetaName( "LibrarianOutput" ) +
 
     REFLECT( m_NumLibrarianAdditionalInputs,    "NumLibrarianAdditionalInputs", MetaHidden() )
     REFLECT( m_LibrarianFlags,                  "LibrarianFlags",               MetaHidden() )
+    REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
 REFLECT_END( LibraryNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 LibraryNode::LibraryNode()
-: ObjectListNode()
+    : ObjectListNode()
+    , m_EnvironmentString( nullptr )
 {
     m_Type = LIBRARY_NODE;
     m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved
@@ -104,7 +107,10 @@ LibraryNode::LibraryNode()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-LibraryNode::~LibraryNode() = default;
+LibraryNode::~LibraryNode()
+{
+    FREE( (void *)m_EnvironmentString );
+}
 
 // IsAFile
 //------------------------------------------------------------------------------
@@ -161,7 +167,7 @@ LibraryNode::~LibraryNode() = default;
     // use the exe launch dir as the working dir
     const char * workingDir = nullptr;
 
-    const char * environment = FBuild::Get().GetEnvironmentString();
+    const char * environment = GetEnvironmentString();
 
     EmitCompilationMessage( fullArgs );
 
@@ -389,6 +395,27 @@ bool LibraryNode::CanUseResponseFile() const
     #else
         return false;
     #endif
+}
+
+// GetEnvironmentString
+//------------------------------------------------------------------------------
+const char * LibraryNode::GetEnvironmentString() const
+{
+    const size_t numEnvVars = m_Environment.GetSize();
+    if ( numEnvVars > 0 )
+    {
+        MutexHolder mh( m_Mutex );
+        if ( m_EnvironmentString == nullptr )
+        {
+            m_EnvironmentString = Env::AllocEnvironmentString( m_Environment );
+        }
+        return m_EnvironmentString;
+    }
+    else
+    {
+        // return build-wide environment
+        return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
+    }
 }
 
 //------------------------------------------------------------------------------
