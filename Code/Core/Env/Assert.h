@@ -98,6 +98,12 @@ bool IsDebuggerAttached();
         } while ( false )                   \
         PRAGMA_DISABLE_POP_MSVC
 
+    #define ASSERTM( expression, ... )      \
+        do {                                \
+        PRAGMA_DISABLE_PUSH_MSVC(4127)      \
+        } while ( false )                   \
+        PRAGMA_DISABLE_POP_MSVC
+
     #define VERIFY( code )                  \
         do {                                \
             if ( code ) {}                  \
