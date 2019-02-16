@@ -540,13 +540,13 @@ The specified include file could not be opened.
 </div>
 
 <!--------------- 1033 --------------->
-    <div class='newsitemheader'>1033 - Error reading include '%s' (Error: %u).</div>
+    <div class='newsitemheader'>1033 - Error reading include. Error: %u (0x%x) File: '%s'".</div>
     <div class='newsitembody'>
 A read error occurred when reading the included file.
 <h4>Example Config:</h4>
 <div class='code'>#include "errorfile.bff"</div>
 <h4>Example Output:</h4>
-<div class='output'>c:\test\fbuild.bff(1):(11) FASTBuild Error #1033 - Error reading include 'errorfile.bff' (Error: 4).
+<div class='output'>c:\test\fbuild.bff(1):(11) FASTBuild Error #1033 - Error reading include. Error: 4 (0x04) File: 'errorfile.bff'
 #include "errorfile.bff"
           ^
           \--here

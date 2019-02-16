@@ -27,6 +27,7 @@
 
 // Core
 #include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -1191,7 +1192,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
                 if ( timeSetOK == false )
                 {
                     cache->FreeMemory( cacheData, cacheDataSize );
-                    FLOG_ERROR( "Failed to set timestamp on file after cache hit '%s' (%u)", fileNames[ i ].Get(), Env::GetLastErr() );
+                    FLOG_ERROR( "Failed to set timestamp after cache hit. Error: %s Target: '%s'", LAST_ERROR_STR, fileNames[ i ].Get() );
                     return false;
                 }
             }
@@ -2113,7 +2114,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     tmpDirectory.AppendFormat( "%08X%c", sourceNameHash, NATIVE_SLASH );
     if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
     {
-        job->Error( "Failed to create temp directory '%s' to build '%s' (error %u)", tmpDirectory.Get(), GetName().Get(), Env::GetLastErr() );
+        job->Error( "Failed to create temp directory. Error: %s TmpDir: '%s' Target: '%s'", LAST_ERROR_STR, tmpDirectory.Get(), GetName().Get() );
         job->OnSystemError();
         return NODE_RESULT_FAILED;
     }
@@ -2126,14 +2127,14 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         // Try again
         if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
         {
-            job->Error( "Failed to create temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr() );
+            job->Error( "Failed to create temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
             job->OnSystemError();
             return NODE_RESULT_FAILED;
         }
     }
     if ( tmpFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
     {
-        job->Error( "Failed to write to temp file '%s' to build '%s' (error %u)", tmpFileName.Get(), GetName().Get(), Env::GetLastErr() );
+        job->Error( "Failed to write to temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
         job->OnSystemError();
         return NODE_RESULT_FAILED;
     }
@@ -2247,7 +2248,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             return false;
         }
 
-        job->Error( "Failed to spawn process (error 0x%x) to build '%s'\n", Env::GetLastErr(), name.Get() );
+        job->Error( "Failed to spawn process. Error: %s Target: '%s'\n", LAST_ERROR_STR, name.Get() );
         job->OnSystemError();
         return false;
     }
@@ -2281,7 +2282,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             DumpOutput( job, m_Out.Get(), m_OutSize, name );
         }
 
-        job->Error( "Failed to build Object (error 0x%x) '%s'\n", m_Result, name.Get() );
+        job->Error( "Failed to build Object. Error: %s Target: '%s'\n", ERROR_STR( m_Result ), name.Get() );
 
         return false;
     }

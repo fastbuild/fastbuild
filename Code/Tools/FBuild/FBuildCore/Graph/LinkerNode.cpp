@@ -22,7 +22,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
-#include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Process.h"
@@ -285,7 +285,7 @@ LinkerNode::~LinkerNode()
             }
 
             // some other (genuine) linker failure
-            FLOG_ERROR( "Failed to build %s (error %i) '%s'", GetDLLOrExe(), result, GetName().Get() );
+            FLOG_ERROR( "Failed to build %s. Error: %s Target: '%s'", GetDLLOrExe(), ERROR_STR( result ), GetName().Get() );
             return NODE_RESULT_FAILED;
         }
         else
@@ -342,7 +342,7 @@ LinkerNode::~LinkerNode()
         {
             if ( memOut.Get() ) { FLOG_ERROR_DIRECT( memOut.Get() ); }
             if ( memErr.Get() ) { FLOG_ERROR_DIRECT( memErr.Get() ); }
-            FLOG_ERROR( "Failed to stamp %s '%s' (error %i - '%s')", GetDLLOrExe(), GetName().Get(), result, m_LinkerStampExe.Get() );
+            FLOG_ERROR( "Failed to stamp %s. Error: %s Target: '%s' StampExe: '%s'", GetDLLOrExe(), ERROR_STR( result ), GetName().Get(), m_LinkerStampExe.Get() );
             return NODE_RESULT_FAILED;
         }
 

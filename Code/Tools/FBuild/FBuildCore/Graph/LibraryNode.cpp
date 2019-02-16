@@ -23,6 +23,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -214,7 +215,7 @@ LibraryNode::~LibraryNode()
             job->ErrorPreformatted( memErr.Get() );
         }
 
-        FLOG_ERROR( "Failed to build Library (error %i) '%s'", result, GetName().Get() );
+        FLOG_ERROR( "Failed to build Library. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
     else

@@ -13,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/Conversions.h"
@@ -217,7 +218,7 @@ ExecNode::~ExecNode() = default;
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
 
-        FLOG_ERROR( "Execution failed (error %i) '%s'", result, GetName().Get() );
+        FLOG_ERROR( "Execution failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
 

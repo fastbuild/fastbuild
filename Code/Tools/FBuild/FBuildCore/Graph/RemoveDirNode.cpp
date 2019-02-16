@@ -13,7 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
-#include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/Strings/AStackString.h"
 
 // Reflection
@@ -107,7 +107,7 @@ RemoveDirNode::~RemoveDirNode() = default;
             // remove the file
             if ( FileIO::FileDelete( srcFile.Get() ) == false )
             {
-                FLOG_ERROR( "Remove failed (error %i) '%s'", Env::GetLastErr(), srcFile.Get() );
+                FLOG_ERROR( "Remove failed. Error: %s Target: '%s'", LAST_ERROR_STR, srcFile.Get() );
                 return NODE_RESULT_FAILED; // remove failed
             }
 

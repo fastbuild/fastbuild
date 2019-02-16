@@ -26,6 +26,7 @@
 
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -117,7 +118,7 @@ FBuild::~FBuild()
     ASSERT( !m_OldWorkingDir.IsEmpty() );
     if ( !FileIO::SetCurrentDir( m_OldWorkingDir ) )
     {
-        FLOG_ERROR( "Failed to restore working dir: '%s' (error: %u)", m_OldWorkingDir.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to restore working dir. Error: %s Dir: '%s'", LAST_ERROR_STR, m_OldWorkingDir.Get() );
     }
 }
 
@@ -130,7 +131,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     // handle working dir
     if ( !FileIO::SetCurrentDir( m_Options.GetWorkingDir() ) )
     {
-        FLOG_ERROR( "Failed to set working dir: '%s' (error: %u)", m_Options.GetWorkingDir().Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to set working dir. Error: %s Dir: '%s'", LAST_ERROR_STR, m_Options.GetWorkingDir().Get() );
         return false;
     }
 
@@ -352,7 +353,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
     // rename tmp file
     if ( FileIO::FileMove( tmpFileName, AStackString<>( nodeGraphDBFile ) ) == false )
     {
-        FLOG_ERROR( "Failed to rename temp DB file '%s' (%i)", tmpFileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to rename temp DB file. Error: %s TmpFile: '%s'", LAST_ERROR_STR, tmpFileName.Get() );
         return false;
     }
 

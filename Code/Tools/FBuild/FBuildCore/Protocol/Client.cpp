@@ -17,7 +17,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
 
-#include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -797,7 +797,7 @@ bool Client::WriteFileToDisk( const AString & fileName, const char * data, const
 
         if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
         {
-            FLOG_ERROR( "Failed to create file '%s' (Err: %u)", fileName.Get(), Env::GetLastErr() );
+            FLOG_ERROR( "Failed to create file. Error: %s File: '%s'", LAST_ERROR_STR, fileName.Get() );
             return false;
         }
     }
@@ -805,7 +805,7 @@ bool Client::WriteFileToDisk( const AString & fileName, const char * data, const
     // Write the contents
     if ( fs.WriteBuffer( data, dataSize ) != dataSize )
     {
-        FLOG_ERROR( "Failed to write file '%s' (Err: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to write file. Error: %s File: '%s'", LAST_ERROR_STR, fileName.Get() );
         return false;
     }
 

@@ -13,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/Conversions.h"
@@ -208,7 +209,7 @@ TestNode::~TestNode() = default;
     }
     else if ( result != 0 )
     {
-        FLOG_ERROR( "Test failed (error %i) '%s'", result, GetName().Get() );
+        FLOG_ERROR( "Test failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
     }
 
     // write the test output (saved for pass or fail)
