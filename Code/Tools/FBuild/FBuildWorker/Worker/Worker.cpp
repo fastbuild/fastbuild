@@ -32,10 +32,11 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
+Worker::Worker( void * hInstance, const AString & args, bool consoleMode, const AString& cmdlineBrokeragePath )
     : m_MainWindow( nullptr )
     , m_ConnectionPool( nullptr )
     , m_NetworkStartupHelper( nullptr )
+    , m_WorkerBrokerage( cmdlineBrokeragePath )
     , m_BaseArgs( args )
     , m_LastWriteTime( 0 )
     , m_RestartNeeded( false )

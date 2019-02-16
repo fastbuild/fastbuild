@@ -26,6 +26,7 @@ public:
     virtual bool IsAFile() const override;
 
     // Access to settings
+    const AString &                     GetBrokeragePath() const;
     const AString &                     GetCachePath() const;
     const AString &                     GetCachePathMountPoint() const;
     const AString &                     GetCachePluginDLL() const;
@@ -46,6 +47,7 @@ private:
     // Exposed settings
     //friend class FunctionSettings;
     Array< AString  >   m_Environment;
+    AString             m_BrokeragePath;
     AString             m_CachePath;
     AString             m_CachePathMountPoint;
     AString             m_CachePluginDLL;

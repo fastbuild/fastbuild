@@ -128,7 +128,7 @@ int MainCommon( const AString & args, void * hInstance )
     // start the worker and wait for it to be closed
     int ret;
     {
-        Worker worker( hInstance, args, options.m_ConsoleMode );
+        Worker worker( hInstance, args, options.m_ConsoleMode, options.m_BrokeragePath );
         if ( options.m_OverrideCPUAllocation )
         {
             WorkerSettings::Get().SetNumCPUsToUse( options.m_CPUAllocation );

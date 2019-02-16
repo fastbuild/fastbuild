@@ -62,6 +62,7 @@ FBuild::FBuild( const FBuildOptions & options )
     , m_LastProgressCalcTime( 0.0f )
     , m_SmoothedProgressCurrent( 0.0f )
     , m_SmoothedProgressTarget( 0.0f )
+    , m_WorkerBrokerage( options.m_BrokeragePath )
     , m_EnvironmentString( nullptr )
     , m_EnvironmentStringSize( 0 )
     , m_ImportedEnvironmentVars( 0, true )
@@ -194,7 +195,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         {
             // check for workers through brokerage
             // TODO:C This could be moved out of the main code path
-            m_WorkerBrokerage.FindWorkers( workers );
+            m_WorkerBrokerage.FindWorkers( workers, settings->GetBrokeragePath() );
         }
         else
         {

@@ -23,15 +23,16 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-WorkerBrokerage::WorkerBrokerage()
-    : m_Availability( false )
+WorkerBrokerage::WorkerBrokerage( const AString& cmdlineBrokeragePath )
+    : m_CmdlineBrokeragePath( cmdlineBrokeragePath )
+    , m_Availability( false )
     , m_Initialized( false )
 {
 }
 
 // Init
 //------------------------------------------------------------------------------
-void WorkerBrokerage::Init()
+void WorkerBrokerage::Init( const AString& settingsBrokeragePath /*= AString::GetEmpty()*/ )
 {
     PROFILE_FUNCTION
 
@@ -45,9 +46,16 @@ void WorkerBrokerage::Init()
     // brokerage path includes version to reduce unnecssary comms attempts
     uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
 
-    // root folder
+    // root folder - command line, then bff setting, then env var
     AStackString<> root;
-    if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", root ) )
+    if ( !m_CmdlineBrokeragePath.IsEmpty() )
+        root = m_CmdlineBrokeragePath;
+    else if ( !settingsBrokeragePath.IsEmpty() )
+        root = settingsBrokeragePath;
+    else if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", root ) )
+        ((void)0); // Nothing, root is populated
+
+    if (!root.IsEmpty())
     {
         // <path>/<group>/<version>/
         #if defined( __WINDOWS__ )
@@ -79,11 +87,11 @@ WorkerBrokerage::~WorkerBrokerage()
 
 // FindWorkers
 //------------------------------------------------------------------------------
-void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
+void WorkerBrokerage::FindWorkers( Array< AString > & workerList, const AString& settingsBrokeragePath )
 {
     PROFILE_FUNCTION
 
-    Init();
+    Init(settingsBrokeragePath);
 
     if ( m_BrokerageRoot.IsEmpty() )
     {

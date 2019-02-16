@@ -15,19 +15,20 @@
 class WorkerBrokerage
 {
 public:
-    WorkerBrokerage();
+    WorkerBrokerage( const AString& cmdlineBrokeragePath );
     ~WorkerBrokerage();
 
     inline const AString & GetBrokerageRoot() const { return m_BrokerageRoot; }
 
     // client interface
-    void FindWorkers( Array< AString > & workerList );
+    void FindWorkers( Array< AString > & workerList, const AString& settingsBrokeragePath );
 
     // server interface
     void SetAvailability( bool available );
 private:
-    void Init();
+    void Init( const AString& settingsBrokeragePath = AString::GetEmpty() );
 
+    AString             m_CmdlineBrokeragePath;
     AString             m_BrokerageRoot;
     bool                m_Availability;
     bool                m_Initialized;
