@@ -6,7 +6,6 @@
 //------------------------------------------------------------------------------
 #include "FileNode.h"
 #include "Core/Containers/Array.h"
-#include "Core/Process/Mutex.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -43,8 +42,7 @@ public:
     static bool IsLinkerArg_MSVC( const AString & token, const char * arg );
     static bool IsStartOfLinkerArg_MSVC( const AString & token, const char * arg );
 
-    static bool  IsStartOfLinkerArg( const AString & token, const char * arg );
-    const char * GetEnvironmentString() const;
+    static bool IsStartOfLinkerArg( const AString & token, const char * arg );
 
 protected:
     friend class TestLinker;
@@ -87,8 +85,6 @@ protected:
                               Node * node,
                               Dependencies & nodes );
 
-    mutable Mutex       m_Mutex;
-
     // Reflected
     AString             m_Linker;
     AString             m_LinkerOptions;
@@ -106,7 +102,7 @@ protected:
     uint32_t            m_AssemblyResourcesStartIndex   = 0;
     uint32_t            m_AssemblyResourcesNum          = 0;
     AString             m_ImportLibName;
-    mutable char *      m_EnvironmentString;
+    mutable const char * m_EnvironmentString            = nullptr;
 };
 
 //------------------------------------------------------------------------------

@@ -11,7 +11,6 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
-#include "Core/Env/Env.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
@@ -329,21 +328,7 @@ CompilerNode::~CompilerNode()
 //------------------------------------------------------------------------------
 const char * CompilerNode::GetEnvironmentString() const
 {
-    const size_t numEnvVars = m_Environment.GetSize();
-    if ( numEnvVars > 0 )
-    {
-        MutexHolder mh( m_Mutex );
-        if ( m_EnvironmentString == nullptr )
-        {
-            m_EnvironmentString = Env::AllocEnvironmentString( m_Environment );
-        }
-        return m_EnvironmentString;
-    }
-    else
-    {
-        // return build-wide environment
-        return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
-    }
+    return Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
 }
 
 //------------------------------------------------------------------------------

@@ -55,7 +55,6 @@ REFLECT_END( LinkerNode )
 LinkerNode::LinkerNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_LinkerType( "auto" )
-    , m_EnvironmentString( nullptr )
 {
     m_LastBuildTimeMs = 20000; // Assume link times are fairly long by default
 }
@@ -197,7 +196,7 @@ LinkerNode::~LinkerNode()
     // use the exe launch dir as the working dir
     const char * workingDir = nullptr;
 
-    const char * environment = GetEnvironmentString();
+    const char * environment = Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
 
     EmitCompilationMessage( fullArgs );
 
@@ -1392,27 +1391,6 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // don't know how to handle this type of node
     Error::Error_1005_UnsupportedNodeType( iter, function, "Libraries", node->GetName(), node->GetType() );
     return false;
-}
-
-// GetEnvironmentString
-//------------------------------------------------------------------------------
-const char * LinkerNode::GetEnvironmentString() const
-{
-    const size_t numEnvVars = m_Environment.GetSize();
-    if ( numEnvVars > 0 )
-    {
-        MutexHolder mh( m_Mutex );
-        if ( m_EnvironmentString == nullptr )
-        {
-            m_EnvironmentString = Env::AllocEnvironmentString( m_Environment );
-        }
-        return m_EnvironmentString;
-    }
-    else
-    {
-        // return build-wide environment
-        return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
-    }
 }
 
 //------------------------------------------------------------------------------

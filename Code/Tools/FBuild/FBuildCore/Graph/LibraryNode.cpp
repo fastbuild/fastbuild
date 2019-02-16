@@ -28,7 +28,6 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
-#include "Core/Env/Env.h"
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -46,8 +45,7 @@ REFLECT_END( LibraryNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 LibraryNode::LibraryNode()
-    : ObjectListNode()
-    , m_EnvironmentString( nullptr )
+: ObjectListNode()
 {
     m_Type = LIBRARY_NODE;
     m_LastBuildTimeMs = 10000; // TODO:C Reduce this when dynamic deps are saved
@@ -167,7 +165,7 @@ LibraryNode::~LibraryNode()
     // use the exe launch dir as the working dir
     const char * workingDir = nullptr;
 
-    const char * environment = GetEnvironmentString();
+    const char * environment = Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
 
     EmitCompilationMessage( fullArgs );
 
@@ -395,27 +393,6 @@ bool LibraryNode::CanUseResponseFile() const
     #else
         return false;
     #endif
-}
-
-// GetEnvironmentString
-//------------------------------------------------------------------------------
-const char * LibraryNode::GetEnvironmentString() const
-{
-    const size_t numEnvVars = m_Environment.GetSize();
-    if ( numEnvVars > 0 )
-    {
-        MutexHolder mh( m_Mutex );
-        if ( m_EnvironmentString == nullptr )
-        {
-            m_EnvironmentString = Env::AllocEnvironmentString( m_Environment );
-        }
-        return m_EnvironmentString;
-    }
-    else
-    {
-        // return build-wide environment
-        return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
-    }
 }
 
 //------------------------------------------------------------------------------

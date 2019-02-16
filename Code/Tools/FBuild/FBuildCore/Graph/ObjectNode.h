@@ -153,11 +153,11 @@ private:
 
         // start compilation
         bool SpawnCompiler( Job * job,
-            const AString & name,
-            const CompilerNode * compilerNode,
-            const AString & compiler,
-            const Args & fullArgs,
-            const char * workingDir = nullptr );
+                            const AString & name,
+                            const CompilerNode * compilerNode,
+                            const AString & compiler,
+                            const Args & fullArgs,
+                            const char * workingDir = nullptr );
 
         // determine overall result
         inline int                      GetResult() const { return m_Result; }

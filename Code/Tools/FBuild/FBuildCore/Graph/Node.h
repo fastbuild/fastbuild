@@ -231,6 +231,10 @@ protected:
                                                     const Function * function,
                                                     const Array< AString > & preBuildDependencyNames );
 
+    static const char * GetEnvironmentString( const Array< AString > & envVars,
+                                              const char * & inoutCachedEnvString );
+
+
     AString m_Name;
 
     State m_State;

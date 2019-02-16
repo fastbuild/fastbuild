@@ -6,7 +6,6 @@
 //------------------------------------------------------------------------------
 #include "ObjectListNode.h"
 #include "Core/Containers/Array.h"
-#include "Core/Process/Mutex.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -40,7 +39,6 @@ public:
         LIB_FLAG_WARNINGS_AS_ERRORS_MSVC = 0x10,
     };
     static uint32_t DetermineFlags( const AString & librarianName, const AString & args );
-    const char *    GetEnvironmentString() const;
 private:
     friend class FunctionLibrary;
 
@@ -56,8 +54,6 @@ private:
 
     bool CanUseResponseFile() const;
 
-    mutable Mutex       m_Mutex;
-
     // Exposed Properties
     AString             m_Librarian;
     AString             m_LibrarianOptions;
@@ -68,7 +64,7 @@ private:
     // Internal State
     uint32_t            m_NumLibrarianAdditionalInputs  = 0;
     uint32_t            m_LibrarianFlags                = 0;
-    mutable char *      m_EnvironmentString;
+    mutable const char * m_EnvironmentString            = nullptr;
 };
 
 //------------------------------------------------------------------------------
