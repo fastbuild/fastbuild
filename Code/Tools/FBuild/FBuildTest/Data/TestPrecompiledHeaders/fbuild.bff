@@ -67,9 +67,7 @@ Executable( "PCHTest" )
         .PCHInputFile       = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.h"
         .PCHOutputFile      = "$Out$\Test\PrecompiledHeaders\Clang-Windows\PrecompiledHeader.pch"
 
-        .PCHOptions         = ' -c -x c++-header $PCHInputFile$ -o"$PCHOutputFile$"'
-
-        .CompilerOptions    = ' -c -g -include-pch "$PCHOutputFile$" %1 -o "%2" -integrated-as'
+        .CompilerOptions    = ' -include-pch "$PCHOutputFile$" $CompilerOptions$'
                             + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
 
         .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders\PCHUser.cpp"

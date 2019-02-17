@@ -23,13 +23,11 @@
 //------------------------------------------------------------------------------
 #if USING_WINDOWS81_SDK
     #include "Windows81SDK.bff"
-    .WindowsSDK_X86             = .Windows81_SDK_X86
     .WindowsSDK_X64             = .Windows81_SDK_X64
     Alias( 'ResourceCompiler' ) { .Targets = 'ResourceCompiler-Windows81' }
 #endif
 #if USING_WINDOWS10_SDK
     #include "Windows10SDK.bff"
-    .WindowsSDK_X86             = .Windows10_SDK_X86
     .WindowsSDK_X64             = .Windows10_SDK_X64
     Alias( 'ResourceCompiler' ) { .Targets = 'ResourceCompiler-Windows10' }
 #endif

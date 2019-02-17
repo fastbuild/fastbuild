@@ -7,12 +7,7 @@
 Compiler( 'Compiler-Clang7' )
 {
     .Root                           = '$Clang7_BasePath$'
-    .Executable                     = '$Root$\bin\clang-cl.exe'
-    //.ExtraFiles                     = {
-    //                                    '$Root$\bin\msvcp140.dll'
-    //                                    '$Root$\bin\vcruntime140.dll'
-    //                                  }
-    .ClangRewriteIncludes           = false // TODO:B Fix FASTBuild so it doesn't add this when using clang-cl.exe
+    .Executable                     = '$Root$\bin\clang++.exe'
 }
 
 // ToolChain
@@ -29,18 +24,22 @@ Compiler( 'Compiler-Clang7' )
 
     // Compiler Options
     .Compiler                       = 'Compiler-Clang7'
-    .CommonCompilerOptions          = ' -o"%2" "%1" -c'
-                                    + ' /Z7'
-                                    + ' -m64'           // x86_64
+    .CommonCompilerOptions          = ' -c -g'
 
                                     // Include paths
                                     + ' -I"./"'
                                     + .VSIncludePaths
 
+                                    // x64
+                                    + ' -m64'
+
                                     // Enable warnings
                                     + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
                                     + ' -Wextra'
                                     + ' -Wshadow'
+
+                                    // No RTTI
+                                    + ' -fno-rtti'
 
                                     // MS compatibility
                                     + ' -fms-compatibility'
@@ -92,8 +91,9 @@ Compiler( 'Compiler-Clang7' )
                                     + ' -Wno-deprecated'                // definition of implicit copy assignment operator for '%s' is deprecated because it has a user-declared destructor [-Wdeprecated]
                                     + ' -Wno-switch-enum'               // %u enumeration values not explicitly handled in switch: '%s', '%s', '%s'... [-Wswitch-enum]
 
-    .CompilerOptions                = .CommonCompilerOptions
-    .CompilerOptionsC               = .CommonCompilerOptions
+    .CompilerOptions                = ' -o"%2" "%1" $CommonCompilerOptions$'
+    .CompilerOptionsC               = ' -x c -o"%2" "%1" $CommonCompilerOptions$'
+    .PCHOptions                     = ' -x c++-header "%1" -o"%2" $CommonCompilerOptions$'
 
     // Librarian
     .Librarian                      = '$Clang7_BasePath$\bin\llvm-ar.exe'
@@ -109,7 +109,7 @@ Compiler( 'Compiler-Clang7' )
     .ExeExtension                   = '.exe'
 
     // Exception Control
-    .UseExceptions                  = ' /EHsc' //' -fexceptions'
+    .UseExceptions                  = ' -fexceptions'
 ]
 
 //------------------------------------------------------------------------------

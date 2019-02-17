@@ -15,24 +15,6 @@
 
 // Windows 10 SDK
 //------------------------------------------------------------------------------
-.Windows10_SDK_X86 =
-[
-    .WindowsSDK_IncludePaths        = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
-                                    + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
-                                    + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
-
-    .CommonCompilerOptions          = .WindowsSDK_IncludePaths
-                                    + .WindowsSDK_Defines
-
-    .CompilerOptions                = .CommonCompilerOptions
-    .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsDeoptimized     = .CommonCompilerOptions
-
-    .LinkerOptions                  = ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/um/x86"'
-                                    + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/x86"'
-                                    + ' /MACHINE:X86'
-                                    + ' /LARGEADDRESSAWARE'
-]
 .Windows10_SDK_X64 =
 [
     .WindowsSDK_IncludePaths        = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'

@@ -14,10 +14,6 @@
 #if __WINDOWS__
     .VisualStudioToolChain_X64  = .ToolChain_VS_Windows_X64
                                 + .WindowsSDK_X64
-    .VisualStudioOptionsDebug =
-    [
-        .Defines            = ' /DDEBUG /D_DEBUG'
-    ]
 #endif
 
 //==============================================================================

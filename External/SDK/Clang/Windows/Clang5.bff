@@ -28,9 +28,7 @@ Compiler( 'Compiler-Clang5' )
 
     // Compiler Options
     .Compiler                       = 'Compiler-Clang5'
-    .CommonCompilerOptions          = ' -o"%2" "%1" -c -g'
-                                    + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
-                                    + ' -Wextra'                        // additional warnings
+    .CommonCompilerOptions          = ' -c -g'
 
                                     // includes
                                     + ' -I"./"'
@@ -38,6 +36,14 @@ Compiler( 'Compiler-Clang5' )
 
                                     // x64
                                     + ' -m64'
+
+                                    // Enable warnings
+                                    + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                                    + ' -Wextra'
+                                    + ' -Wshadow'
+
+                                    // No RTTI
+                                    + ' -fno-rtti'
 
                                     // MS compatibility
                                     + ' -fms-compatibility'
@@ -62,15 +68,9 @@ Compiler( 'Compiler-Clang5' )
                                     // Disabled warnings
                                     + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
 
-                                    // Extra warnings
-                                    + ' -Wshadow'
-
-                                    + ' -fno-rtti'
-
-    .CompilerOptionsC               = ' -x c'
-                                    + .CommonCompilerOptions
-    .CompilerOptions                = ' -std=c++11'                     // allow C++11 features
-                                    + .CommonCompilerOptions
+    .CompilerOptions                = ' -o"%2" "%1" $CommonCompilerOptions$'
+    .CompilerOptionsC               = ' -x c -o"%2" "%1" $CommonCompilerOptions$'
+    .PCHOptions                     = ' -x c++-header "%1" -o"%2" $CommonCompilerOptions$'
 
     // Librarian
     .Librarian                      = '$Clang5_BasePath$\bin\llvm-ar.exe'
