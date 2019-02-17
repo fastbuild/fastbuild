@@ -468,7 +468,7 @@ Alias( 'All+Tests' )
         .Folder_0_External =
         [
             .Path           = '0. External'
-            .Projects       = { 'LZ4-proj', 'VisualStudio-proj', 'Windows-proj' }
+            .Projects       = { 'Clang-proj', 'GCC-proj', 'LZ4-proj', 'VisualStudio-proj', 'Windows-proj' }
         ]
         .Folder_1_Test =
         [

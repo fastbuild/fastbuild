@@ -35,11 +35,10 @@ Compiler( 'Compiler-VS2017-x64' )
 
     // Compiler
     .Compiler                       = 'Compiler-VS2017-X64'
-    .CommonCompilerOptions          = ' "%1" /Z7 /nologo /c /W4 /WX'
+    .CommonCompilerOptions          = ' /Z7 /nologo /c /W4 /WX'
                                     + ' /Zc:inline'         // Remove unreferenced COMDATs at compile time (VS2013.2+)
                                     + ' /Zc:strictStrings'  // Require const only usage of string literals (VS2013+)
                                     + ' /fp:fast'
-                                    + ' /Fo"%2"'
                                     + ' /diagnostics:caret' // Use improved warning/error messages
 
                                     // Include Paths
@@ -59,9 +58,10 @@ Compiler( 'Compiler-VS2017-x64' )
                                     + ' /we4905' // wide string literal cast to 'LPSTR'
                                     + ' /we4906' // string literal cast to 'LPWSTR'
 
-    .CompilerOptions                = .CommonCompilerOptions
-    .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsDeoptimized     = .CommonCompilerOptions
+    .CompilerOptions                = ' $CommonCompilerOptions$ "%1" /Fo"%2"'
+    .CompilerOptionsC               = ' $CommonCompilerOptions$ "%1" /Fo"%2"'
+    .CompilerOptionsDeoptimized     = ' $CommonCompilerOptions$ "%1" /Fo"%2"'
+    .PCHOptions                     = ' $CommonCompilerOptions$ "%1" /Fo"%3" /Fp"%2" /Yc"PrecompiledHeader.h"'
 
     // Librarian
     .Librarian                      = '$VS2017_BasePath$/VC/Tools/MSVC/$VS2017_Version$/bin/Hostx64/x64/lib.exe'
