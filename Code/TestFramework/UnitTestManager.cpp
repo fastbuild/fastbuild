@@ -117,6 +117,9 @@ loop:
 //------------------------------------------------------------------------------
 bool UnitTestManager::RunTests( const char * testGroup )
 {
+    // Reset results so RunTests can be called multiple times
+    s_NumTests = 0;
+
     // check for compile time filter
     UnitTest * test = s_FirstTest;
     while ( test )
@@ -186,6 +189,7 @@ bool UnitTestManager::RunTests( const char * testGroup )
 void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
 {
     // record info for this test
+    ASSERT( s_NumTests < MAX_TESTS );
     TestInfo& info = s_TestInfos[ s_NumTests ];
     info.m_TestGroup = testGroup;
     info.m_TestName = testName;
