@@ -11,8 +11,8 @@
     #define USING_CLANG_8
 #endif
 #if __WINDOWS__
-    #define USING_CLANG_5
-    //#define USING_CLANG_7
+    //#define USING_CLANG_5
+    #define USING_CLANG_7
 #endif
 
 // Activate
