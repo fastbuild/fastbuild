@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Assert.h"
 #ifdef ASSERTS_ENABLED
     #include "Core/Env/Types.h"
@@ -12,9 +10,9 @@
     #include "Core/Strings/AStackString.h"
     #include <stdarg.h>
     #include <stdio.h>
-    #if defined( __WINDOWS__ )
-        #include <Windows.h>
-    #endif
+#endif
+#if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Static

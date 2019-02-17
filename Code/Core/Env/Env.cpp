@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Env.h"
 
 // Core
@@ -12,8 +10,8 @@
 #include "Core/Strings/AStackString.h"
 
 #if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h"
     #include <Lmcons.h>
-    #include <Windows.h>
     #include <stdio.h>
 #endif
 

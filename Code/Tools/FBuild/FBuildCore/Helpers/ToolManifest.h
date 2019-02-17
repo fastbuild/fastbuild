@@ -5,6 +5,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Dependencies;
+class FileStream;
 class IOStream;
 class Node;
 

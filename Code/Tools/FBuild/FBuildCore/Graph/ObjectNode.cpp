@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "ObjectNode.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"

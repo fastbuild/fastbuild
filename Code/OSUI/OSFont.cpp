@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "OSUI/PrecompiledHeader.h"
 #include "OSFont.h"
 
 // OSUI
@@ -11,6 +10,11 @@
 
 // Core
 #include "Core/Env/Assert.h"
+
+// System
+#if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h"
+#endif
 
 // Defines
 //------------------------------------------------------------------------------

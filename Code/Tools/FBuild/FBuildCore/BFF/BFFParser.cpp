@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "BFFParser.h"
 #include "BFFIterator.h"
 #include "BFFMacros.h"

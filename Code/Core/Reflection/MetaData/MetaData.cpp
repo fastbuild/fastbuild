@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
 #include "MetaData.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Reflection/MetaData/Meta_File.h"

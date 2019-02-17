@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
 #include "Object.h"
 #include "Core/Reflection/ReflectionInfo.h"
 

@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Thread.h"
 #include "Core/Env/Assert.h"
 #include "Core/Mem/Mem.h"
@@ -12,7 +10,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 #if defined( __APPLE__ ) || defined( __LINUX__ )
     #include <errno.h>

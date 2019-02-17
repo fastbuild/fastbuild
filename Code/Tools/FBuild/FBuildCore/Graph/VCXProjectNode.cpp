@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "VCXProjectNode.h"
 
 #include "Tools/FBuild/FBuildCore/Error.h"

@@ -60,7 +60,6 @@ Compiler( 'Compiler-VS2015-x64' )
 
     .CompilerOptions                = .CommonCompilerOptions
     .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsPCH             = .CommonCompilerOptions
     .CompilerOptionsDeoptimized     = .CommonCompilerOptions
 
     // Librarian

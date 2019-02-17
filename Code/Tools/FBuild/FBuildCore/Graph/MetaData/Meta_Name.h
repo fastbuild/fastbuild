@@ -6,6 +6,8 @@
 //------------------------------------------------------------------------------
 #include "Core/Reflection/MetaData/MetaDataInterface.h"
 
+#include "Core/Strings/AString.h"
+
 // Meta_Name
 //------------------------------------------------------------------------------
 class Meta_Name : public IMetaData

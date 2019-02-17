@@ -3,14 +3,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Timer.h"
 #include "Core/Env/Assert.h"
 
 // system
 #if defined( __WINDOWS__ )
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 #if defined( __APPLE__ )
     #include <mach/mach.h>

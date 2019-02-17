@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "FileStream.h"
 
 // Core
@@ -15,7 +13,7 @@
 // system
 #include <stdio.h>
 #if defined( __WINDOWS__ )
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #else
    #include <fcntl.h>
    #include <unistd.h>

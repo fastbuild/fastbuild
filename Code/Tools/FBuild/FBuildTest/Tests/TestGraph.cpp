@@ -30,11 +30,6 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 
-// system
-#if defined( __WINDOWS__ )
-    #include <Windows.h>
-#endif
-
 // TestGraph
 //------------------------------------------------------------------------------
 class TestGraph : public FBuildTest

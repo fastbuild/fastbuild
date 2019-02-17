@@ -33,7 +33,6 @@ Settings
 [
     .CompilerOptions                = ' -DDEBUG -DPROFILING_ENABLED'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 
     .Config                         = 'Debug'
 
@@ -49,7 +48,6 @@ Settings
 [
     .CompilerOptions                = ' -DRELEASE -DPROFILING_ENABLED'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 
     .Config                         = 'Profile'
 ]
@@ -57,7 +55,6 @@ Settings
 [
     .CompilerOptions                = ' -DRELEASE'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
     .CompilerOptionsDeoptimized     = .CompilerOptions
 
     .Config                         = 'Release'
@@ -67,7 +64,6 @@ Settings
     .CompilerOptions                = ' -DRELEASE'
                                     + ' -fsanitize=address -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=address'
 
     .Config                         = 'ASan'
@@ -77,7 +73,6 @@ Settings
     .CompilerOptions                = ' -DRELEASE'
                                     + ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=memory -L../External/MSan'
 
     .Config                         = 'MSan'
@@ -92,7 +87,6 @@ Settings
         .CompilerOptions                = ' -fsanitize-coverage=trace-pc-guard,trace-cmp'
     #endif
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 ]
 
 //------------------------------------------------------------------------------
@@ -102,13 +96,11 @@ Settings
 [
     .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR- /analyze'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 ]
 .Profile_Optimizations_MSVC =
 [
     .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /analyze /Zo'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' /OPT:REF,ICF'
 ]
 .Release_Optimizations_MSVC =
@@ -126,13 +118,11 @@ Settings
 [
     .CompilerOptions                = ' -O0'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 ]
 .Profile_Optimizations =
 [
     .CompilerOptions                = ' -O2'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 ]
 .Release_Optimizations =
 [

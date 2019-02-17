@@ -18,7 +18,7 @@
 #include <memory.h>
 #include <stdio.h>
 #if defined( __WINDOWS__ )
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Return Codes

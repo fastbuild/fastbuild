@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "ProfileManager.h"
 
 #ifdef PROFILING_ENABLED

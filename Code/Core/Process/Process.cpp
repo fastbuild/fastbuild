@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Process.h"
 
 #include "Core/Env/Assert.h"
@@ -18,7 +16,7 @@
 #include "Core/Tracing/Tracing.h"
 
 #if defined( __WINDOWS__ )
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
     #include <TlHelp32.h>
 #endif
 

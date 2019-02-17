@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -16,6 +14,9 @@
 
 // Core
 #include "Core/FileIO/PathUtils.h"
+
+// system
+#include <string.h> // for strlen - TODO:C Remove
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

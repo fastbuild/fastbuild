@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Client.h"
 
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"

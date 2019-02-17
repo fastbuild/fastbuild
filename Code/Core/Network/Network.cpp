@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Network.h"
 
 // Core
@@ -15,8 +13,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <Winsock2.h>
-    #include <ws2tcpip.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <arpa/inet.h>

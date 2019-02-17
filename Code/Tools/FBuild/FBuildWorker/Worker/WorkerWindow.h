@@ -15,7 +15,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
     #include <shellapi.h>
 #endif
 

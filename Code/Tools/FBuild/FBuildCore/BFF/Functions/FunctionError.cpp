@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FunctionError.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"

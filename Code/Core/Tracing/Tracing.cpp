@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Tracing.h"
 #include "Core/Env/Assert.h"
 
@@ -15,7 +13,7 @@
 #include <stdarg.h>
 #if defined( __WINDOWS__ )
     #ifdef DEBUG
-        #include <Windows.h> // for OutputDebugStringA
+        #include "Core/Env/WindowsHeader.h" // for OutputDebugStringA
     #endif
 #endif
 

@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 // FBuildCore
 #include "FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
@@ -12,6 +10,7 @@
 
 // Core
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Tracing/Tracing.h"
@@ -19,7 +18,7 @@
 // system
 #include <stdio.h> // for sscanf
 #if defined( __WINDOWS__ )
-    #include <Windows.h> // for QueryDosDeviceA
+    #include "Core/Env/WindowsHeader.h" // for QueryDosDeviceA
 #endif
 
 // CONSTRUCTOR - FBuildOptions

@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
 #include "ReflectionInfo.h"
 #include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/ConstMemoryStream.h"

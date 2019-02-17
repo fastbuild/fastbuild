@@ -5,7 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    #include <Windows.h> // TODO: Remove need for this
+    #include "Core/Env/WindowsHeader.h" // TODO: Remove need for this
     #include <Shellapi.h> // TODO: Remove need for this
 #endif
 

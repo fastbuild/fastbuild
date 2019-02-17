@@ -61,7 +61,6 @@ Compiler( 'Compiler-VS2017-x64' )
 
     .CompilerOptions                = .CommonCompilerOptions
     .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsPCH             = .CommonCompilerOptions
     .CompilerOptionsDeoptimized     = .CommonCompilerOptions
 
     // Librarian

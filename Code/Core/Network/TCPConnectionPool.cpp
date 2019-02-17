@@ -4,8 +4,6 @@
 //------------------------------------------------------------------------------
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "TCPConnectionPool.h"
 
 // Core
@@ -19,8 +17,7 @@
 
 // System
 #if defined( __WINDOWS__ )
-    #include <winsock2.h>
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
     #include <string.h>
     #include <errno.h>

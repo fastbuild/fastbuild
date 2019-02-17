@@ -3,14 +3,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FLog.h"
 
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 
 #include "Core/Env/Types.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Process.h"
@@ -22,7 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #if defined( __WINDOWS__ ) && defined( DEBUG )
-    #include <Windows.h> // for OutputDebugStringA
+    #include "Core/Env/WindowsHeader.h" // for OutputDebugStringA
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     // TODO:LINUX TODO:MAC Clean up this _itoa_s mess

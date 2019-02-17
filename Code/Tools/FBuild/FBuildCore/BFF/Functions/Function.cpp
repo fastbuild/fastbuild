@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Function.h"
 #include "FunctionAlias.h"
 #include "FunctionCompiler.h"

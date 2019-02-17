@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 // FBuildCore
 #include "ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -17,11 +15,14 @@
 // Core
 #include "Core/Containers/AutoPtr.h"
 #include "Core/Env/ErrorFormat.h"
+#include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
 // system
 #include <stdarg.h> // for va_args
+#include <string.h> // for memcmp
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "PathUtils.h"
 #include "Core/Strings/AStackString.h"
 

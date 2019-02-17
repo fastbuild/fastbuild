@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
 #include "ReflectedProperty.h"
 #include "Core/Containers/Array.h"
 #include "Core/Math/CRC32.h"
