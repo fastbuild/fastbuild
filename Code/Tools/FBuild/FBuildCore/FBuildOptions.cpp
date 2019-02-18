@@ -173,8 +173,6 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_AllowDistributed = true;
                 m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
                 m_AllowLocalRace = false;
-                m_UseCacheRead = false;
-                m_UseCacheWrite = false;
                 continue;
             }
             else if ( thisArg == "-help" )
