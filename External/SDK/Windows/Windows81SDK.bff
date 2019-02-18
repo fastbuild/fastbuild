@@ -19,6 +19,8 @@
     .WindowsSDK_IncludePaths        = ' -I"$Windows81_SDKBasePath$/include/um"'
                                     + ' -I"$Windows81_SDKBasePath$/include/shared"'
 
+    .WindowsDK_WinRTAssemblyPath    = '$Windows81_SDKBasePath$/References/CommonConfiguration/Neutral'
+
     .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
                                     + ' -DWIN64'
