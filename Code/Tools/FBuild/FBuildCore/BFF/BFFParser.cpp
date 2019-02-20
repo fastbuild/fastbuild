@@ -618,7 +618,6 @@ bool BFFParser::ParseFunction( BFFIterator & iter )
         functionArgsStopToken = iter;
         hasHeader = true;
         iter++; // skip over closing token
-        iter.SkipWhiteSpaceAndComments();
     }
 
     if ( func->NeedsHeader() && ( hasHeader == false ) )
@@ -626,6 +625,8 @@ bool BFFParser::ParseFunction( BFFIterator & iter )
         Error::Error_1023_FunctionRequiresAHeader( iter, func );
         return false;
     }
+
+    iter.SkipWhiteSpaceAndComments();
 
     // some functions have no body
     bool hasBody = false;

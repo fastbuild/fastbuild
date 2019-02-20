@@ -194,33 +194,47 @@ Function::~Function() = default;
 {
     m_AliasForFunction.Clear();
     if ( AcceptsHeader() &&
-         functionHeaderStartToken && functionHeaderStopToken &&
-         ( functionHeaderStartToken->GetDistTo( *functionHeaderStopToken ) > 1 ) )
+         functionHeaderStartToken && functionHeaderStopToken )
     {
+        ASSERT( *functionHeaderStartToken < *functionHeaderStopToken );
+
         // find opening quote
         BFFIterator start( *functionHeaderStartToken );
         ASSERT( *start == BFFParser::BFF_FUNCTION_ARGS_OPEN );
         start++;
         start.SkipWhiteSpace();
-        if ( !start.IsAtString() )
+        BFFIterator stop( start );
+        if ( start.IsAtString() )
+        {
+            stop.SkipString();
+            ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
+            if ( start.GetDistTo( stop ) <= 1 )
+            {
+                Error::Error_1003_EmptyStringNotAllowedInHeader( start, this );
+                return false;
+            }
+
+            // store alias name for use in Commit
+            start++; // skip past opening quote
+            if ( BFFParser::PerformVariableSubstitutions( start, stop, m_AliasForFunction ) == false )
+            {
+                return false; // substitution will have emitted an error
+            }
+
+            stop++; // skip closing quote for the next check
+        }
+        else if ( NeedsHeader() )
         {
             Error::Error_1001_MissingStringStartToken( start, this );
             return false;
         }
-        BFFIterator stop( start );
-        stop.SkipString();
-        ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
-        if ( start.GetDistTo( stop ) <= 1 )
-        {
-            Error::Error_1003_EmptyStringNotAllowedInHeader( start, this );
-            return false;
-        }
 
-        // store alias name for use in Commit
-        start++; // skip past opening quote
-        if ( BFFParser::PerformVariableSubstitutions( start, stop, m_AliasForFunction ) == false )
+        // make sure there are no extraneous tokens
+        stop.SkipWhiteSpaceAndComments();
+        if ( *stop != BFFParser::BFF_FUNCTION_ARGS_CLOSE )
         {
-            return false; // substitution will have emitted an error
+            Error::Error_1002_MatchingClosingTokenNotFound( stop, this, BFFParser::BFF_FUNCTION_ARGS_CLOSE );
+            return false;
         }
     }
 
