@@ -38,6 +38,7 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT( m_IsolateWritableFiles,    "UnityInputIsolateWritableFiles",       MetaOptional() )
     REFLECT( m_PrecompiledHeader,       "UnityPCH",                             MetaOptional() + MetaFile( true ) ) // relative
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_IsHidden,                "Hidden",                               MetaOptional() )
 REFLECT_END( UnityNode )
 
 // CONSTRUCTOR
@@ -58,6 +59,7 @@ UnityNode::UnityNode()
 , m_ExcludePatterns( 0, true )
 , m_IsolatedFiles( 0, true )
 , m_UnityFileNames( 0, true )
+, m_IsHidden( false )
 {
     m_InputPattern.Append( AStackString<>( "*.cpp" ) );
     m_LastBuildTimeMs = 100; // higher default than a file node

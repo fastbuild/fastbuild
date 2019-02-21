@@ -50,6 +50,8 @@ public:
     };
     inline const Array< FileAndOrigin > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
+    bool IsHidden() const { return m_IsHidden; }
+
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
@@ -78,6 +80,8 @@ private:
     // Temporary data
     Array< AString > m_UnityFileNames;
     Array< FileIO::FileInfo* > m_FilesInfo;
+
+    bool m_IsHidden;
 };
 
 //------------------------------------------------------------------------------

@@ -16,12 +16,14 @@
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( AliasNode, Node, MetaNone() )
     REFLECT_ARRAY( m_Targets,   "Targets",          MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_IsHidden,        "Hidden",           MetaOptional() )
 REFLECT_END( AliasNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 AliasNode::AliasNode()
 : Node( AString::GetEmpty(), Node::ALIAS_NODE, Node::FLAG_TRIVIAL_BUILD )
+, m_IsHidden( false )
 {
     m_LastBuildTimeMs = 1; // almost no work is done for this node
 }

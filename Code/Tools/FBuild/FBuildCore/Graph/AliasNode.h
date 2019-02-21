@@ -28,11 +28,13 @@ public:
 
     inline const Dependencies & GetAliasedNodes() const { return m_StaticDependencies; }
 
+    bool IsHidden() const { return m_IsHidden; }
 private:
     virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     Array< AString > m_Targets;
+    bool m_IsHidden;
 };
 
 //------------------------------------------------------------------------------

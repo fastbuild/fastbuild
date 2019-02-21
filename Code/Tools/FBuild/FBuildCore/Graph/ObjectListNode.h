@@ -39,6 +39,8 @@ public:
     CompilerNode * GetPreprocessor() const;
 
     inline const AString & GetCompilerOptions() const { return m_CompilerOptions; }
+
+    bool IsHidden() const { return m_IsHidden; }
 protected:
     friend class FunctionObjectList;
 
@@ -90,6 +92,7 @@ protected:
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;
     Array< AString >    m_PreBuildDependencyNames;
+    bool                m_IsHidden;
 
     // Internal State
     bool                m_UsingPrecompiledHeader            = false;
