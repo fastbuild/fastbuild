@@ -666,7 +666,7 @@ void FBuild::UpdateBuildStatus( const Node * node )
 
 // DisplayTargetList
 //------------------------------------------------------------------------------
-void FBuild::DisplayTargetList() const
+void FBuild::DisplayTargetList( bool showHidden ) const
 {
     OUTPUT( "FBuild: List of available targets\n" );
     const size_t totalNodes = m_DependencyGraph->GetNodeCount();
@@ -674,6 +674,7 @@ void FBuild::DisplayTargetList() const
     {
         Node * node = m_DependencyGraph->GetNodeByIndex( i );
         bool displayName = false;
+        bool hidden      = node->IsHidden();
         switch ( node->GetType() )
         {
             case Node::PROXY_NODE:          ASSERT( false ); break;
@@ -699,7 +700,7 @@ void FBuild::DisplayTargetList() const
             case Node::SETTINGS_NODE:       break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
-        if ( displayName )
+        if ( displayName && ( !hidden || ( hidden && showHidden ) ) )
         {
             OUTPUT( "\t%s\n", node->GetName().Get() );
         }
