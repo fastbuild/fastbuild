@@ -1,10 +1,10 @@
-// FunctionSLN
+// FunctionVSSolution
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
 // FBuild
-#include "FunctionSLN.h"
+#include "FunctionVSSolution.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
 
@@ -13,21 +13,21 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-FunctionSLN::FunctionSLN()
+FunctionVSSolution::FunctionVSSolution()
 : Function( "VSSolution" )
 {
 }
 
 // AcceptsHeader
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionSLN::AcceptsHeader() const
+/*virtual*/ bool FunctionVSSolution::AcceptsHeader() const
 {
     return true;
 }
 
 // CreateNode
 //------------------------------------------------------------------------------
-/*virtual*/ Node * FunctionSLN::CreateNode() const
+/*virtual*/ Node * FunctionVSSolution::CreateNode() const
 {
     return FNEW( SLNNode );
 }

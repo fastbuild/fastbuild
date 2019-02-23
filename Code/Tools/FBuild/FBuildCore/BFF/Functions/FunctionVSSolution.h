@@ -1,4 +1,4 @@
-// FunctionSLN
+// FunctionVSSolution
 //------------------------------------------------------------------------------
 #pragma once
 
@@ -10,13 +10,13 @@
 //------------------------------------------------------------------------------
 class BFFIterator;
 
-// FunctionSLN
+// FunctionVSSolution
 //------------------------------------------------------------------------------
-class FunctionSLN : public Function
+class FunctionVSSolution : public Function
 {
 public:
-    explicit         FunctionSLN();
-    inline virtual  ~FunctionSLN() override = default;
+    explicit         FunctionVSSolution();
+    inline virtual  ~FunctionVSSolution() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

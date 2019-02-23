@@ -20,11 +20,11 @@
 #include "FunctionPrint.h"
 #include "FunctionRemoveDir.h"
 #include "FunctionSettings.h"
-#include "FunctionSLN.h"
 #include "FunctionTest.h"
 #include "FunctionUnity.h"
 #include "FunctionUsing.h"
 #include "FunctionVCXProject.h"
+#include "FunctionVSSolution.h"
 #include "FunctionXCodeProject.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
@@ -121,15 +121,15 @@ Function::~Function() = default;
     FNEW( FunctionForEach );
     FNEW( FunctionIf );
     FNEW( FunctionLibrary );
+    FNEW( FunctionObjectList );
     FNEW( FunctionPrint );
     FNEW( FunctionRemoveDir );
     FNEW( FunctionSettings );
-    FNEW( FunctionSLN );
     FNEW( FunctionTest );
     FNEW( FunctionUnity );
     FNEW( FunctionUsing );
     FNEW( FunctionVCXProject );
-    FNEW( FunctionObjectList );
+    FNEW( FunctionVSSolution );
     FNEW( FunctionXCodeProject );
 }
 
