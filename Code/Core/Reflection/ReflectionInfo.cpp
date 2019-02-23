@@ -9,7 +9,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
-#include "Core/Math/CRC32.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Process/Process.h"
 #include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Strings/AString.h"
@@ -153,7 +153,7 @@ GETSET_PROPERTY_ARRAY( AString )
 void ReflectionInfo::SetTypeName( const char * typeName )
 {
     m_TypeName = typeName;
-    m_TypeNameCRC = CRC32::Calc( typeName, AString::StrLen( typeName ) );
+    m_TypeNameCRC = xxHash::Calc32( typeName, AString::StrLen( typeName ) );
 }
 
 // HasMetaDataInternal
@@ -236,7 +236,7 @@ void ReflectionInfo::AddPropertyMetaData( IMetaData & metaDataChain )
 //------------------------------------------------------------------------------
 const ReflectedProperty * ReflectionInfo::FindProperty( const char * name ) const
 {
-    const uint32_t nameCRC = CRC32::Calc( name, AString::StrLen( name ) );
+    const uint32_t nameCRC = xxHash::Calc32( name, AString::StrLen( name ) );
     return FindPropertyRecurse( nameCRC );
 }
 
@@ -263,7 +263,7 @@ const ReflectedProperty * ReflectionInfo::FindPropertyRecurse( uint32_t nameCRC 
 //------------------------------------------------------------------------------
 /*static*/ Object * ReflectionInfo::CreateObject( const AString & objectType )
 {
-    const uint32_t objectTypeCRC = CRC32::Calc( objectType );
+    const uint32_t objectTypeCRC = xxHash::Calc32( objectType );
     const ReflectionInfo * ri = s_FirstReflectionInfo;
     while ( ri )
     {
@@ -280,7 +280,7 @@ const ReflectedProperty * ReflectionInfo::FindPropertyRecurse( uint32_t nameCRC 
 //------------------------------------------------------------------------------
 /*static*/ Struct * ReflectionInfo::CreateStruct( const AString & structType )
 {
-    const uint32_t objectTypeCRC = CRC32::Calc( structType );
+    const uint32_t objectTypeCRC = xxHash::Calc32( structType );
     const ReflectionInfo * ri = s_FirstReflectionInfo;
     while ( ri )
     {

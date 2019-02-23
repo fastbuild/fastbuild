@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 #include "ReflectedProperty.h"
 #include "Core/Containers/Array.h"
-#include "Core/Math/CRC32.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Reflection/PropertyType.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
@@ -21,7 +21,7 @@
 //------------------------------------------------------------------------------
 ReflectedProperty::ReflectedProperty( const char * name, uint32_t offset, PropertyType type, bool isArray )
 {
-    m_NameCRC = CRC32::Calc( name, AString::StrLen( name ) );
+    m_NameCRC = xxHash::Calc32( name, AString::StrLen( name ) );
 
     ASSERT( offset < MAX_OFFSET );
     m_Offset = (uint16_t)offset;

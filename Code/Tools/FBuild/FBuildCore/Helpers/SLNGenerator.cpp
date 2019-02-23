@@ -13,7 +13,6 @@
 // Core
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Math/CRC32.h"
 #include "Core/Strings/AStackString.h"
 
 // system
