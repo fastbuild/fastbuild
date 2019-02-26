@@ -146,9 +146,17 @@ Node::~Node() = default;
     return true;
 }
 
+// DeterminePreBuildDynamicDependenciesNeedToBuild
+//------------------------------------------------------------------------------
+/*virtual*/ bool Node::DeterminePreBuildDynamicDependenciesNeedToBuild(bool UNUSED( forceClean )) const
+{
+	return false;
+}
+
+
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
-bool Node::DetermineNeedToBuild( bool forceClean ) const
+/*virtual*/ bool Node::DetermineNeedToBuild( bool forceClean ) const
 {
     if ( forceClean )
     {
@@ -270,6 +278,14 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     return false;
 }
 
+// DoPreBuildDynamicDependencies
+//------------------------------------------------------------------------------
+/*virtual*/ Node::BuildResult Node::DoPreBuildDynamicDependencies( Job * UNUSED( job ) )
+{
+    ASSERT( false ); // Derived class is missing implementation
+    return Node::NODE_RESULT_FAILED;
+}
+
 // DoBuild
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult Node::DoBuild( Job * UNUSED( job ) )
@@ -284,6 +300,14 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 {
     ASSERT( false ); // Derived class is missing implementation
     return Node::NODE_RESULT_FAILED;
+}
+
+// PreBuildDynamicDependenciesFinalize
+//------------------------------------------------------------------------------
+/*virtual*/ bool Node::PreBuildDynamicDependenciesFinalize(NodeGraph &)
+{
+	// most nodes have nothing to do
+	return true;
 }
 
 // Finalize

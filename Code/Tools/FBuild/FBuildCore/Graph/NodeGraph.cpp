@@ -563,6 +563,7 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
 
     // Dependencies
     SaveRecurse( stream, node->GetPreBuildDependencies(), savedNodeFlags );
+	SaveRecurse( stream, node->GetPreBuildDynamicDependencies(), savedNodeFlags);
     SaveRecurse( stream, node->GetStaticDependencies(), savedNodeFlags );
     SaveRecurse( stream, node->GetDynamicDependencies(), savedNodeFlags );
 
@@ -625,6 +626,7 @@ void NodeGraph::Display( const Dependencies & deps ) const
     if ( visited[ nodeIndex ] )
     {
         if ( node->GetPreBuildDependencies().GetSize() ||
+             node->GetPreBuildDynamicDependencies().GetSize() ||
              node->GetStaticDependencies().GetSize() ||
              node->GetDynamicDependencies().GetSize() )
         {
@@ -636,6 +638,7 @@ void NodeGraph::Display( const Dependencies & deps ) const
 
     // Dependencies
     DisplayRecurse( "PreBuild", node->GetPreBuildDependencies(), visited, depth, outBuffer );
+    DisplayRecurse( "PreBuildDynamic", node->GetPreBuildDynamicDependencies(), visited, depth, outBuffer );
     DisplayRecurse( "Static", node->GetStaticDependencies(), visited, depth, outBuffer );
     DisplayRecurse( "Dynamic", node->GetDynamicDependencies(), visited, depth, outBuffer );
 }
@@ -1031,7 +1034,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
                 upToDateCount++;
                 continue;
             }
-            if ( n->GetState() != Node::BUILDING )
+            if ( n->GetState() != Node::BUILDING && n->GetState() != Node::PRE_DYN_DEPS_BUILDING )
             {
                 BuildRecurse( n, 0 );
 
@@ -1070,6 +1073,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
     // already building, or queued to build?
     ASSERT( nodeToBuild->GetState() != Node::BUILDING );
+	ASSERT( nodeToBuild->GetState() != Node::PRE_DYN_DEPS_BUILDING );
 
     // accumulate recursive cost
     cost += nodeToBuild->GetLastBuildTime();
@@ -1077,7 +1081,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     // check pre-build dependencies
     if ( nodeToBuild->GetState() == Node::NOT_PROCESSED )
     {
-        // all static deps done?
+        // all pre build deps done?
         bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
@@ -1089,10 +1093,12 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
     ASSERT( ( nodeToBuild->GetState() == Node::PRE_DEPS_READY ) ||
             ( nodeToBuild->GetState() == Node::STATIC_DEPS_READY ) ||
+            ( nodeToBuild->GetState() == Node::PRE_DYN_DEPS_READY) ||
+            ( nodeToBuild->GetState() == Node::PRE_DYN_DEPS_DONE ) ||
             ( nodeToBuild->GetState() == Node::DYNAMIC_DEPS_DONE ) );
 
     // test static dependencies first
-    if ( nodeToBuild->GetState() == Node::PRE_DEPS_READY )
+    if ( nodeToBuild->GetState() == Node::PRE_DEPS_READY)
     {
         // all static deps done?
         bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
@@ -1104,10 +1110,57 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
         nodeToBuild->SetState( Node::STATIC_DEPS_READY );
     }
 
-    ASSERT( ( nodeToBuild->GetState() == Node::STATIC_DEPS_READY ) ||
+	ASSERT(( nodeToBuild->GetState() == Node::STATIC_DEPS_READY ) ||
+		   ( nodeToBuild->GetState() == Node::PRE_DYN_DEPS_READY ) ||
+           ( nodeToBuild->GetState() == Node::PRE_DYN_DEPS_DONE ) ||
+		   ( nodeToBuild->GetState() == Node::DYNAMIC_DEPS_DONE ));
+
+
+	// update pre-build dynamic dependencies
+	if (nodeToBuild->GetState() == Node::STATIC_DEPS_READY)
+	{
+		// update pre-build dynamic deps
+		bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
+		
+		if (nodeToBuild->DeterminePreBuildDynamicDependenciesNeedToBuild(forceClean))
+		{
+			// Put the node into the PRE_DYN_DEPS_READY state before queuing the job so that
+			// it goes through the right build steps
+			nodeToBuild->SetState(Node::PRE_DYN_DEPS_READY);
+
+			// Job will get queued and this node will not be re-evaluated until PRE_DYN_DEPS are DONE
+			nodeToBuild->m_RecursiveCost = cost;
+			JobQueue::Get().AddJobToBatch(nodeToBuild);
+			return;
+		}
+		else
+		{
+			// We are ready to check our pre build dynamic dependencies, since we didn't need to build.
+			nodeToBuild->SetState(Node::PRE_DYN_DEPS_READY);
+		}
+	}
+
+	ASSERT( ( nodeToBuild->GetState() == Node::PRE_DYN_DEPS_READY ) ||
+            ( nodeToBuild->GetState() == Node::PRE_DYN_DEPS_DONE ) ||
+            ( nodeToBuild->GetState() == Node::DYNAMIC_DEPS_DONE ));
+
+	// check pre-build dynamic dependencies
+	if (nodeToBuild->GetState() == Node::PRE_DYN_DEPS_READY)
+	{
+		// all pre build dynamic deps done?
+		bool allDependenciesUpToDate = CheckDependencies(nodeToBuild, nodeToBuild->GetPreBuildDynamicDependencies(), cost);
+		if (allDependenciesUpToDate == false)
+		{
+			return; // not ready or failed
+		}
+
+		nodeToBuild->SetState(Node::PRE_DYN_DEPS_DONE);
+	}
+
+    ASSERT( ( nodeToBuild->GetState() == Node::PRE_DYN_DEPS_DONE ) ||
             ( nodeToBuild->GetState() == Node::DYNAMIC_DEPS_DONE ) );
 
-    if ( nodeToBuild->GetState() != Node::DYNAMIC_DEPS_DONE )
+    if ( nodeToBuild->GetState() == Node::PRE_DYN_DEPS_DONE )
     {
         // static deps ready, update dynamic deps
         bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
@@ -1124,7 +1177,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
     // dynamic deps
     {
-        // all static deps done?
+        // all dynamic deps done?
         bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
@@ -1189,7 +1242,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
             continue;
         }
 
-        if ( state == Node::BUILDING )
+        if ( state == Node::BUILDING || state == Node::PRE_DYN_DEPS_BUILDING )
         {
             // ensure deepest traversal cost is kept
             if ( cost > nodeToBuild->m_RecursiveCost )
@@ -1487,14 +1540,14 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
             {
                 if ( d > node->GetName().GetLength() - fullPath.GetLength() )
                 {
-                    continue; // completly different <=> d deletions
+                    continue; // completely different <=> d deletions
                 }
             }
             else
             {
                 if ( d > fullPath.GetLength() - node->GetName().GetLength() )
                 {
-                    continue; // completly different <=> d deletions
+                    continue; // completely different <=> d deletions
                 }
             }
 
