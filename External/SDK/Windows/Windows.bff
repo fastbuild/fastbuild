@@ -2,21 +2,12 @@
 //------------------------------------------------------------------------------
 
 // Windows SDK version is chosen automatically depending on the Visual Studio version
-#if USING_VS2017
-    // 2017 uses Windows 10 SDK
-    #define USING_WINDOWS10_SDK
+#if USING_VS2013
+    // 2013 uses Windows 8.1 SDK
+    #define USING_WINDOWS81_SDK
 #else
-    #if USING_VS2015
-        // 2015 uses Windows 10 SDK
-        #define USING_WINDOWS10_SDK
-    #else
-        #if USING_VS2013
-            // 2013 uses Windows 8.1 SDK
-            #define USING_WINDOWS81_SDK
-        #else
-            #error Neither USING_VS2013, USING_VS2015 nor USING_VS2017 was defined
-        #endif
-    #endif
+    // 2015 and newer uses Windows 10 SDK
+    #define USING_WINDOWS10_SDK
 #endif
 
 // Activate
