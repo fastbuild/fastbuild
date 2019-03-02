@@ -104,7 +104,7 @@ public:
 
 //  Sleep
 //------------------------------------------------------------------------------
-/*static*/ void Thread::Sleep( int32_t ms )
+/*static*/ void Thread::Sleep( uint32_t ms )
 {
     PROFILE_FUNCTION
 
@@ -159,11 +159,11 @@ public:
 
 // WaitForThread
 //------------------------------------------------------------------------------
-/*static*/ int Thread::WaitForThread( ThreadHandle handle )
+/*static*/ int32_t Thread::WaitForThread( ThreadHandle handle )
 {
     #if defined( __WINDOWS__ )
         bool timedOut = true; // default is true to catch cases when timedOut wasn't set by WaitForThread()
-        int ret = WaitForThread( handle, INFINITE, timedOut );
+        int32_t ret = WaitForThread( handle, INFINITE, timedOut );
 
         if ( timedOut )
         {
@@ -188,7 +188,7 @@ public:
 
 // WaitForThread
 //------------------------------------------------------------------------------
-/*static*/ int Thread::WaitForThread( ThreadHandle handle, uint32_t timeoutMS, bool & timedOut )
+/*static*/ int32_t Thread::WaitForThread( ThreadHandle handle, uint32_t timeoutMS, bool & timedOut )
 {
     #if defined( __WINDOWS__ )
         // wait for thread to finish
@@ -213,7 +213,7 @@ public:
         if ( ::GetExitCodeThread( handle, (LPDWORD)&ret ) )
         {
             timedOut = false;
-            return ret;
+            return (int32_t)ret;
         }
         ASSERT( false ); // invalid thread handle
         timedOut = false;

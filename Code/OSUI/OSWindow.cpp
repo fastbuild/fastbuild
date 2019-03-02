@@ -155,7 +155,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
                                  nullptr,                   // LPCTSTR lpWindowName,
                                  WS_CAPTION | WS_SYSMENU,   // DWORD dwStyle,
                                  x, y,                      // int x, int y,
-                                 w, h,                      // int nWidth, int nHeight,
+                                 (int32_t)w, (int32_t)h,    // int nWidth, int nHeight,
                                  nullptr,                   // HWND hWndParent,
                                  nullptr,                   // HMENU hMenu,
                                  nullptr,                   // HINSTANCE hInstance,

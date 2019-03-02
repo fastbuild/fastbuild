@@ -31,7 +31,7 @@ FileStream g_ProfileEventLog;
 struct ProfileEvent
 {
     const char *    m_Id;
-    uint64_t        m_TimeStamp;
+    int64_t         m_TimeStamp;
 };
 
 // Per-Thread structure
@@ -102,7 +102,7 @@ void ProfileEventBuffer::Stop()
     if ( --currentDepth == 0 )
     {
         ProfileEvent * events = m_Begin;
-        ProfileManager::PushThreadEvents( events, m_Current-events, m_ThreadName );
+        ProfileManager::PushThreadEvents( events, (size_t)( m_Current - events ), m_ThreadName );
         m_Begin = nullptr;
         m_Current = nullptr;
         m_MaxEnd = nullptr;
@@ -119,7 +119,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
     if ( events )
     {
         // ProfileManager now owns the memory
-        ProfileManager::PushThreadEvents( events, m_Current-events, m_ThreadName );
+        ProfileManager::PushThreadEvents( events, (size_t)( m_Current - events ), m_ThreadName );
     }
 
     // allocate a fresh block

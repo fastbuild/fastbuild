@@ -243,12 +243,14 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         fd_set write, err;
         FD_ZERO( &write );
         FD_ZERO( &err );
+        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
         PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
         FD_SET( sockfd, &write );
         FD_SET( sockfd, &err );
         PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // 6319
+        PRAGMA_DISABLE_POP_MSVC // 4548
 
         // check connection every 10ms
         timeval pollingTimeout;
@@ -563,7 +565,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
     uint32_t bytesToRead = 4;
     while ( bytesToRead > 0 )
     {
-        int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, bytesToRead, 0 );
+        int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, (int32_t)bytesToRead, 0 );
         if ( numBytes <= 0 )
         {
             if ( WouldBlock() )
@@ -593,7 +595,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
     char * dest = (char *)buffer;
     while ( bytesRemaining > 0 )
     {
-        int numBytes = (int)recv( ci->m_Socket, dest, bytesRemaining, 0 );
+        int numBytes = (int)recv( ci->m_Socket, dest, (int32_t)bytesRemaining, 0 );
         if ( numBytes <= 0 )
         {
             if ( WouldBlock() )
@@ -799,11 +801,13 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         // (modified by the select() function, so we must recreate it)
         fd_set set;
         FD_ZERO( &set );
+        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
         PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
         FD_SET( (uint32_t)ci->m_Socket, &set );
         PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // 6319
+        PRAGMA_DISABLE_POP_MSVC // 4548
 
         // peek
         int num = Select( ci->m_Socket+1, &set, NULL, NULL, &timeout );
@@ -928,11 +932,13 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         // (modified by the select() function, so we must recreate it)
         fd_set readSet;
         FD_ZERO( &readSet );
+        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
         PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
         FD_SET( (uint32_t)ci->m_Socket, &readSet );
         PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // C6319
+        PRAGMA_DISABLE_POP_MSVC // 4548
 
         int num = Select( ci->m_Socket+1, &readSet, NULL, NULL, &timeout );
         if ( num == 0 )

@@ -1237,7 +1237,7 @@ test_match:
     {
         pos++;
     }
-    return ( pos - string );
+    return (size_t)( pos - string );
 }
 
 // StrNCmp

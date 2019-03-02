@@ -62,7 +62,7 @@ bool Compressor::Compress( const void * data, size_t dataSize )
 
     // allocate worst case output size for LZ4
     const int worstCaseSize = LZ4_compressBound( (int)dataSize );
-    AutoPtr< char > output( (char *)ALLOC( worstCaseSize ) );
+    AutoPtr< char > output( (char *)ALLOC( (size_t)worstCaseSize ) );
 
     // do compression
     const int compressedSize = LZ4_compress_default( (const char*)data, output.Get(), (int)dataSize, worstCaseSize);
@@ -74,7 +74,7 @@ bool Compressor::Compress( const void * data, size_t dataSize )
     {
         // trim memory usage to compressed size
         m_Result = ALLOC( compressedSize + sizeof( Header ) );
-        memcpy( (char *)m_Result + sizeof( Header ), output.Get(), compressedSize );
+        memcpy( (char *)m_Result + sizeof( Header ), output.Get(), (size_t)compressedSize );
         m_ResultSize = compressedSize + sizeof( Header );
     }
     else
@@ -87,7 +87,7 @@ bool Compressor::Compress( const void * data, size_t dataSize )
 
     // fill out header
     Header * header = (Header*)m_Result;
-    header->m_CompressionType = compressed ? 1 : 0;     // compression type
+    header->m_CompressionType = compressed ? 1u : 0u;   // compression type
     header->m_UncompressedSize = (uint32_t)dataSize;    // input size
     header->m_CompressedSize = compressed ? compressedSize : (uint32_t)dataSize;    // output size
 

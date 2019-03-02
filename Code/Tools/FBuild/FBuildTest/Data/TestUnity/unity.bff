@@ -43,6 +43,7 @@ Library( "Unity-Compiled" )
     #if __WINDOWS__
         .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
                             + ' /I"Tools/FBuild/FBuildTest/Data/TestUnity"'
+        .PCHOptions         + ' /I"Tools/FBuild/FBuildTest/Data/TestUnity"'
     #endif
     #if __LINUX__
         .CompilerOptions    + ' -Winvalid-pch -H'

@@ -1645,11 +1645,11 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                         StripTokenWithArg_MSVC( "I", token, i );
 
                         // Add full path include
-                        fullArgs.Append( token.Get(), start - token.Get() );
+                        fullArgs.Append( token.Get(), (size_t)( start - token.Get() ) );
                         fullArgs += job->GetRemoteSourceRoot();
                         fullArgs += '\\';
                         fullArgs += includePath;
-                        fullArgs.Append( end, token.GetEnd() - end );
+                        fullArgs.Append( end, (size_t)( token.GetEnd() - end ) );
                         fullArgs.AddDelimiter();
 
                         continue; // Include path has been replaced
@@ -1878,7 +1878,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 //------------------------------------------------------------------------------
 void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const
 {
-    const size_t startIndex = 2 + ( !m_PrecompiledHeader.IsEmpty() ? 1 : 0 ) + ( !m_Preprocessor.IsEmpty() ? 1 : 0 ); // Skip Compiler, InputFile, PCH and Preprocessor
+    const size_t startIndex = 2 + ( !m_PrecompiledHeader.IsEmpty() ? 1u : 0u ) + ( !m_Preprocessor.IsEmpty() ? 1u : 0u ); // Skip Compiler, InputFile, PCH and Preprocessor
     const size_t endIndex = m_StaticDependencies.GetSize();
     for ( size_t i=startIndex; i<endIndex; ++i )
     {
@@ -2029,7 +2029,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
             uint32_t enumIndex = 0;
             workBuffer = outputBuffer;
             char * writeDest = bufferCopy;
-            ptrdiff_t sizeLeftInSourceBuffer = outputBufferSize;
+            size_t sizeLeftInSourceBuffer = outputBufferSize;
             buggyEnum = nullptr;
             do
             {
@@ -2046,7 +2046,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
                 if ( buggyEnum != nullptr )
                 {
                     // Copy what's before the enum + the enum.
-                    ptrdiff_t sizeToCopy = buggyEnum - workBuffer;
+                    size_t sizeToCopy = (size_t)( buggyEnum - workBuffer );
                     sizeToCopy += ( sizeof( BUGGY_CODE ) - 1 );
                     memcpy( writeDest, workBuffer, sizeToCopy );
                     writeDest += sizeToCopy;

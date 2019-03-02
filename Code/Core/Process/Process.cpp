@@ -461,7 +461,7 @@ bool Process::IsRunning() const
 
 // WaitForExit
 //------------------------------------------------------------------------------
-int Process::WaitForExit()
+int32_t Process::WaitForExit()
 {
     ASSERT( m_Started );
     m_Started = false;
@@ -491,7 +491,7 @@ int Process::WaitForExit()
         VERIFY( ::CloseHandle( GetProcessInfo().hProcess ) );
         VERIFY( ::CloseHandle( GetProcessInfo().hThread ) );
 
-        return exitCode;
+        return (int32_t)exitCode;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         VERIFY( close( m_StdOutRead ) == 0 );
         VERIFY( close( m_StdErrRead ) == 0 );

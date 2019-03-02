@@ -30,6 +30,7 @@
     .CompilerOptions                = .CommonCompilerOptions
     .CompilerOptionsC               = .CommonCompilerOptions
     .CompilerOptionsDeoptimized     = .CommonCompilerOptions
+    .PCHOptions                     = .CommonCompilerOptions
 
     .LinkerOptions                  = ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/um/x64"'
                                     + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/x64"'

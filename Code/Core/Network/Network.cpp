@@ -119,7 +119,7 @@
     }
 
     // return result of resolution (could also have failed)
-    return returnCode;
+    return (uint32_t)returnCode;
 }
 
 // NameResolutionThreadFunc

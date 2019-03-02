@@ -52,7 +52,9 @@ class ReflectionInfo;
     const ReflectionInfo * className::s_ReflectionInfo( nullptr ); \
     const ReflectionInfo * className::GetReflectionInfoS() \
     { \
+        PRAGMA_DISABLE_PUSH_MSVC( 4946 ) \
         return reinterpret_cast< const ReflectionInfo * >( &g_##className##_ReflectionInfo ); \
+        PRAGMA_DISABLE_POP_MSVC \
     } \
     class className##_ReflectionInfo : public ReflectionInfo \
     { \

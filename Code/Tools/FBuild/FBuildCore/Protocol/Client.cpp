@@ -613,7 +613,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             job->OnSystemError();
 
             // debugging message
-            const size_t workerIndex = ( ss - m_ServerList.Begin() );
+            const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
             const AString & workerName = m_WorkerList[ workerIndex ];
             DIST_INFO( "Remote System Failure!\n"
                        " - Blacklisted Worker: %s\n"

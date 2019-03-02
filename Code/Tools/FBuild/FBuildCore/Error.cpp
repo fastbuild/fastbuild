@@ -683,7 +683,7 @@ void Error::FormatError( const BFFIterator & iter,
     }
 
     // if line is too crazy to be useful, don't print anything more
-    size_t lineLength = lineEnd.GetCurrent() - lineStart;
+    size_t lineLength = (size_t)( lineEnd.GetCurrent() - lineStart );
     if ( lineLength >= 256 )
     {
         return;

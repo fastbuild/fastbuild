@@ -323,7 +323,7 @@ Job * JobQueue::GetDistributableJobToRace()
     const int32_t numJobs = (int32_t)m_DistributableJobs_InProgress.GetSize();
     for ( int32_t i = ( numJobs - 1 ); i >= 0; --i )
     {
-        Job * job = m_DistributableJobs_InProgress[i];
+        Job * job = m_DistributableJobs_InProgress[ (size_t)i ];
 
         // Don't Race jobs already building locally
         const Job::DistributionState distState = job->GetDistributionState();

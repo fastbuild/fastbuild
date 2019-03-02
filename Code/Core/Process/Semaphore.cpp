@@ -66,7 +66,7 @@ void Semaphore::Signal( uint32_t num )
 {
     ASSERT( num ); // not valid to call with 0
     #if defined( __WINDOWS__ )
-        VERIFY( ReleaseSemaphore( m_Semaphore, (DWORD)num, nullptr ) );
+        VERIFY( ReleaseSemaphore( m_Semaphore, (LONG)num, nullptr ) );
     #else
         for ( size_t i=0; i<num; ++i )
         {

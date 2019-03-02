@@ -72,7 +72,7 @@
             a->m_Size = size;
             a->m_Next = s_AllocationHashTable[ hashIndex ];
             a->m_File = file;
-            a->m_Line = line;
+            a->m_Line = (uint32_t)line;
             static size_t breakOnSize = (size_t)-1;
             static uint32_t breakOnId = 0;
             if ( ( size == breakOnSize ) || ( a->m_Id == breakOnId ) )
@@ -176,11 +176,11 @@
         uint64_t numAllocs = 0;
 
         // for each leak, we'll print a view of the memory
-        unsigned char displayChar[256];
+        char displayChar[256];
         memset( displayChar, '.', sizeof( displayChar ) );
-        const unsigned char * okChars = (const unsigned char *)"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`1234567890-=!@#$^&*()_+[]{};:'\",<>/?|\\";
-        const unsigned char * ok = okChars;
-        for ( ;; ) { unsigned char c = *ok; if ( c == 0 ) break; displayChar[ c ] = c; ++ok; }
+        const char * okChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`1234567890-=!@#$^&*()_+[]{};:'\",<>/?|\\";
+        const char * ok = okChars;
+        for ( ;; ) { char c = *ok; if ( c == 0 ) break; displayChar[ (unsigned char)c ] = c; ++ok; }
 
         char memView[ 32 ] = { 0 };
 
@@ -200,8 +200,8 @@
                 const size_t num = Math::Min< size_t >( (size_t)size, 31 );
                 for ( uint32_t j=0; j<num; ++j )
                 {
-                    unsigned char c = *src;
-                    *dst = displayChar[ c ];
+                    char c = *src;
+                    *dst = displayChar[ (uint8_t)c ];
                     ++src;
                     ++dst;
                 }

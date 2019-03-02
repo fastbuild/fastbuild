@@ -26,6 +26,7 @@ Settings {}
         .CompilerOutputPath = '$OutPath$/'
         #if __WINDOWS__
             .CompilerOptions    + ' /EHsc'
+                                - ' /Wall'
         #endif
     }
 

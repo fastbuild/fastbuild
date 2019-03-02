@@ -27,9 +27,10 @@ ForEach( .SubDir in .SubDirs )
         .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/'
         .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/'
         .CompilerOptions            + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/"'
-        #if __WINDOWS__
+                                    #if __WINDOWS__
                                         + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
-        #endif
+                                    #endif
+        .PCHOptions                 + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/"'
     }
 }
 

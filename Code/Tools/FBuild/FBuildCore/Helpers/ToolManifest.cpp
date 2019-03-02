@@ -321,11 +321,11 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         const char * token = envVar.Find( "%1" );
         if ( token )
         {
-            AString::Copy( envVar.Get(), mem, ( token - envVar.Get() ) );   // Copy the data up to the token
+            AString::Copy( envVar.Get(), mem, (size_t)( token - envVar.Get() ) );   // Copy the data up to the token
             mem += ( token - envVar.Get() );
             AString::Copy( basePath.Get(), mem, basePath.GetLength() );     // Append the basePath instead of the token
             mem += basePath.GetLength();
-            AString::Copy( token + 2, mem, envVar.GetLength() - 2 - ( token - envVar.Get() ) + 1 ); // Append the trailing portion of the string.
+            AString::Copy( token + 2, mem, (size_t)( envVar.GetLength() - 2 - ( token - envVar.Get() ) + 1 ) ); // Append the trailing portion of the string.
             mem += ( envVar.GetLength() - 2 - ( token - envVar.Get() ) + 1 );
         }
         else

@@ -28,7 +28,7 @@
 
 // Windows resources
 #if defined( __WINDOWS__ )
-    #include "../resource.h"
+    #include "Tools/FBuild/FBuildWorker/resource.h"
 #endif
 
 // system
@@ -117,10 +117,10 @@ void WorkerWindow::UIUpdateThread()
 {
     #if defined( __WINDOWS__ )
         // center the window on screen
-        int w = 700;
-        int h = 300;
-        int x = GetSystemMetrics(SM_CXSCREEN)-w;
-        int y = 0;
+        uint32_t w = 700;
+        uint32_t h = 300;
+        int32_t x = ( GetSystemMetrics(SM_CXSCREEN) - (int32_t)w );
+        int32_t y = 0;
 
         Init( x, y, w, h );
 
@@ -140,7 +140,7 @@ void WorkerWindow::UIUpdateThread()
 
         // listview
         m_ThreadList = FNEW( OSListView( this ) );
-        m_ThreadList->Init( 0, 30, rcClient.right - rcClient.left, ( rcClient.bottom - rcClient.top ) - 30 );
+        m_ThreadList->Init( 0, 30, (uint32_t)( rcClient.right - rcClient.left) , (uint32_t)( ( rcClient.bottom - rcClient.top ) - 30 ) );
         m_ThreadList->AddColumn( "CPU", 0, 35 );
         m_ThreadList->AddColumn( "Host", 1, 100 );
         m_ThreadList->AddColumn( "Status", 2, 530 );
@@ -195,10 +195,10 @@ void WorkerWindow::UIUpdateThread()
 
         // splitter
         {
-            int xPos = 0;
-            int yPos = 27;
-            int width = w;
-            int height = 2;
+            int32_t xPos = 0;
+            int32_t yPos = 27;
+            int32_t width = (int32_t)w;
+            int32_t height = 2;
             m_Splitter = CreateWindowEx( WS_EX_TRANSPARENT, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_ETCHEDHORZ , xPos, yPos, width, height, (HWND)GetHandle(), NULL, (HINSTANCE)GetHInstance(), NULL );
         }
 
@@ -309,13 +309,14 @@ void WorkerWindow::UIUpdateThread()
         SetForegroundWindow( (HWND)m_Handle );
 
         // Show menu and block until hidden
-        UINT item = TrackPopupMenu( GetMenu(),
-                                    TPM_RETURNCMD | TPM_NONOTIFY,
-                                    curPoint.x,
-                                    curPoint.y,
-                                    0,
-                                    (HWND)m_Handle,
-                                    nullptr );
+        // NOTE: TPM_RETURNCMD makes this BOOL return actually a UINT
+        UINT item = (UINT)TrackPopupMenu( GetMenu(),
+                                          TPM_RETURNCMD | TPM_NONOTIFY,
+                                          curPoint.x,
+                                          curPoint.y,
+                                          0,
+                                          (HWND)m_Handle,
+                                          nullptr );
         if ( item == ID_TRAY_EXIT_CONTEXT_MENU_ITEM )
         {
             SetWantToQuit();

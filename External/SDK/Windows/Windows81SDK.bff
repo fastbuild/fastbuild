@@ -28,6 +28,7 @@
     .CompilerOptions                = .CommonCompilerOptions
     .CompilerOptionsC               = .CommonCompilerOptions
     .CompilerOptionsDeoptimized     = .CommonCompilerOptions
+    .PCHOptions                     = .CommonCompilerOptions
 
     .LinkerOptions                  = ' /LIBPATH:"$Windows81_SDKBasePath$/lib/winv6.3/um/x64"'
                                     + ' /MACHINE:X64'

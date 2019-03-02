@@ -139,7 +139,7 @@ bool FunctionObjectList::CheckMSVCPCHFlags( const BFFIterator & iter,
         {
             // Extract filename (and remove quotes if found)
             pchObjectName = token.Get() + 3;
-            pchObjectName.Trim( pchObjectName.BeginsWith( '"' ) ? 1 : 0, pchObjectName.EndsWith( '"' ) ? 1 : 0 );
+            pchObjectName.Trim( pchObjectName.BeginsWith( '"' ) ? 1u : 0u, pchObjectName.EndsWith( '"' ) ? 1u : 0u );
 
             // Auto-generate name?
             if ( pchObjectName == "%3" )

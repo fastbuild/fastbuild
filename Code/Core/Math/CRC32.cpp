@@ -149,7 +149,7 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
         uint8_t b = bytes[ i ];
         if ( ( b >= 'A' ) && ( b <= 'Z' ) )
         {
-            b = 'a' + ( b - 'A' );
+            b = (uint8_t)( 'a' + ( b - 'A' ) );
         }
         crc32 = ( crc32 >> 8 ) ^ g_CRC32Table[ ( crc32 ^ b ) & 0x000000FF ];
     }

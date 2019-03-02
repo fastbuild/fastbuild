@@ -13,7 +13,7 @@
 // Defines
 //------------------------------------------------------------------------------
 #define LAST_ERROR_STR      ErrorFormat( Env::GetLastErr() ).GetString()
-#define ERROR_STR( ... )    ErrorFormat( __VA_ARGS__ ).GetString()
+#define ERROR_STR( error )  ErrorFormat( (uint32_t)error ).GetString()
 
 // ErrorFormat
 //------------------------------------------------------------------------------
