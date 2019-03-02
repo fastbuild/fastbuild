@@ -72,7 +72,7 @@ protected:
         AString     m_Name;         // Project Base Path(s) relative
         AString     m_FullPath;     // Full path
         uint32_t    m_FolderIndex;  // Index into m_Folders
-        
+
         bool operator < (const File& other) const { return m_FullPath < other.m_FullPath; }
     };
     struct Config

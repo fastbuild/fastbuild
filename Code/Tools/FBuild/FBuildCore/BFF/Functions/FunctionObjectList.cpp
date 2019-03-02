@@ -269,7 +269,7 @@ void FunctionObjectList::GetExtraOutputPaths( const AString & args, AString & pd
     {
         PathUtils::FixupFilePath( path );
 
-        // truncate to just the path    
+        // truncate to just the path
         const char * lastSlash = path.FindLast( NATIVE_SLASH );
         lastSlash  = lastSlash ? lastSlash : path.Get(); // no slash, means it's just a filename
         path.SetLength( uint32_t( lastSlash - path.Get() ) );

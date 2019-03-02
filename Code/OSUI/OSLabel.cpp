@@ -43,7 +43,7 @@ void OSLabel::Init( int32_t x, int32_t y, uint32_t w, uint32_t h, const char * l
     #if defined( __WINDOWS__ )
         // Create control
         m_Handle = CreateWindowEx( WS_EX_TRANSPARENT,
-                                   "STATIC", 
+                                   "STATIC",
                                    "",
                                    WS_CHILD | WS_VISIBLE | SS_LEFT | WS_SYSMENU,
                                    x, y,

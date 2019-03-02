@@ -150,7 +150,7 @@ void XCodeProjectGenerator::WriteFiles()
 {
     // Sort files so projects appear alphabetically in Scheme drop down menu.
     m_Files.Sort();
-    
+
     const uint32_t numFiles = (uint32_t)m_Files.GetSize();
 
     // Files (PBXBuildFile)

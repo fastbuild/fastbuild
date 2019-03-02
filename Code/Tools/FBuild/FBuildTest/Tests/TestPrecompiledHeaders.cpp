@@ -255,7 +255,7 @@ void TestPrecompiledHeaders::TestPCHWithCache_BFFChange() const
         // by this)
         Thread::Sleep( 1100 );
     #endif
-    
+
     // Delete the object that uses the PCH, but not the PCH obj itself
     // to ensure the object can be pulled from the cache after db migration
     // With the MSVC compiler, this ensures the PCHCacheKey is not lost
