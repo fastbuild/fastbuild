@@ -1340,34 +1340,17 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
         if ( objectNode->GetFlag( ObjectNode::FLAG_CREATING_PCH ) )
         {
             // .pchast (precompiled headers only)
+
+            // Get file name start
+            ASSERT( PathUtils::IsFullPath( m_PCHObjectFileName ) ); // Something is terribly wrong
+
             AStackString<> pchASTFileName( m_PCHObjectFileName );
-            size_t newLength = 0;
-            const char * firstExtPos = nullptr;
-            const char * basePathPos = pchASTFileName.FindLast( NATIVE_SLASH );
-            if ( basePathPos )
+            if ( pchASTFileName.EndsWithI( ".obj" ) )
             {
-                AStackString<> astFilename( basePathPos + 1 );
-                firstExtPos = astFilename.Find( '.' ); // find first, so we remove all extensions
-                if ( firstExtPos )
-                {
-                    // base path + slash + base name of filename
-                    newLength = ( basePathPos - pchASTFileName.Get() ) + 1 + ( firstExtPos - astFilename.Get() );
-                }
+                pchASTFileName.SetLength( pchASTFileName.GetLength() - 4 );
             }
-            else
-            {
-                firstExtPos = pchASTFileName.Find( '.' ); // find first, so we remove all extensions
-                if ( firstExtPos )
-                {
-                    // first ext pos - start of file path
-                    newLength = firstExtPos - pchASTFileName.Get();
-                }
-            }
-            if ( firstExtPos )
-            {
-                pchASTFileName.SetLength( (uint32_t) newLength );
-            }
-            pchASTFileName += ".pchast";
+
+            pchASTFileName += "ast";
             outFileNames.Append( pchASTFileName );
         }
 
