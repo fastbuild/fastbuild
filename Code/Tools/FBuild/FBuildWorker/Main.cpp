@@ -141,8 +141,6 @@ int MainCommon( const AString & args, void * hInstance )
         ret = worker.Work();
     }
 
-    MEMTRACKER_DUMP_ALLOCATIONS
-
     return ret;
 }
 

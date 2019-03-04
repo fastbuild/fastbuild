@@ -46,6 +46,14 @@ ReflectionInfo::~ReflectionInfo()
     {
         delete *it;
     }
+
+    const IMetaData * md = m_MetaDataChain;
+    while ( md )
+    {
+        const IMetaData * next = md->GetNext();
+        FDELETE( md );
+        md = next;
+    }
 }
 
 // Begin

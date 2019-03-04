@@ -100,8 +100,6 @@
 //------------------------------------------------------------------------------
 /*static*/ void Tracing::Output( const char * message )
 {
-    PROFILE_FUNCTION
-
     // pass through callback if there is one
     for ( auto cb : s_CallbacksOutput )
     {

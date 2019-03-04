@@ -4,6 +4,13 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "MemTracker.h"
+#include "Core/Env/Types.h"
+
+#if defined( __WINDOWS__ )
+    PRAGMA_DISABLE_PUSH_MSVC( 4073 ) // initializers put in library initialization area
+    #pragma init_seg(lib)
+    PRAGMA_DISABLE_POP_MSVC
+#endif
 
 //------------------------------------------------------------------------------
 #if defined( MEMTRACKER_ENABLED )
@@ -16,6 +23,15 @@
 
     // system
     #include <memory.h> // for memset
+
+    // GlobalData
+    //------------------------------------------------------------------------------
+    class LeakDumper { public: ~LeakDumper() { MemTracker::DumpAllocations(); } };
+    #if defined( __WINDOWS__ )
+        static LeakDumper g_LeakDumper;
+    #else
+        static LeakDumper g_LeakDumper __attribute__((init_priority(101)));
+    #endif
 
     // Static Data
     //------------------------------------------------------------------------------
