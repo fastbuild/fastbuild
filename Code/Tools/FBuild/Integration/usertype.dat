@@ -67,6 +67,7 @@ CompilerOptions
 CompilerOptionsDeoptimized
 CompilerOutput
 CompilerOutputExtension
+CompilerOutputKeepBaseExtension
 CompilerOutputPath
 CompilerOutputPrefix
 CompilerReferences
