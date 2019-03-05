@@ -61,6 +61,7 @@ private:
     void BuiltInVariables() const;
     void CyclicDependency() const;
     void SelfAssignment() const;
+    void SelfAssignment2() const;
 
     void Parse( const char * fileName, bool expectFailure = false ) const;
 };
@@ -109,6 +110,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( BuiltInVariables )
     REGISTER_TEST( CyclicDependency )
     REGISTER_TEST( SelfAssignment )
+    REGISTER_TEST( SelfAssignment2 )
 REGISTER_TESTS_END
 
 // Empty
@@ -455,6 +457,20 @@ void TestBFFParsing::SelfAssignment() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/self_assignment.bff";
+    FBuild fBuild( options );
+
+    TEST_ASSERT( fBuild.Initialize() == true );
+    TEST_ASSERT( GetRecordedOutput().Find( "FAILED" ) == nullptr );
+}
+
+// SelfAssignment2
+//------------------------------------------------------------------------------
+void TestBFFParsing::SelfAssignment2() const
+{
+    // Check that self-assignment check doesn't prevent correct assignment when creating
+    // a variable with the same name as a higher level scope (shadowing)
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBFFParsing/self_assignment2.bff";
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() == true );

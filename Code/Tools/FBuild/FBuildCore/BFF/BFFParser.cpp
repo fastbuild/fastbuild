@@ -1744,7 +1744,15 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
         // self-assignment?
         if ( varDst == varSrc )
         {
-            return true;
+            // It's only self-assignment if the dstVar is at the same scope.
+            const BFFVariable * var = (dstFrame ? dstFrame : BFFStackFrame::GetCurrent())->GetLocalVar( dstName );
+            if ( var )
+            {
+                return true;
+            }
+
+            // If at a parent scope, continue to lower logic which will create the
+            // shadow copy at the current scope.
         }
     }
 
