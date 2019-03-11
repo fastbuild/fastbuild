@@ -77,6 +77,7 @@ Compiler( 'Compiler-Clang7' )
                                     + ' -Wno-constant-logical-operand'  // use of logical '&&' with constant operand [-Wconstant-logical-operand]
                                     + ' -Wno-sign-conversion'           // implicit conversion changes signedness : '%s' to '%s' [-Wsign-conversion]
                                     + ' -Wno-cast-align'                // cast from '%s' (aka '%s') to '%s' increases required alignment from 2 to 8 [-Wcast-align]
+                                    + ' -Wno-pragma-pack'               // the current #pragma pack aligment value is modified in the included file [-Wpragma-pack]
 
                                     // Disabled warnings that are not useful
                                     + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
