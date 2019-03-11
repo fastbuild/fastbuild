@@ -201,6 +201,7 @@ private:
     uint32_t            m_Flags                             = 0;
     uint32_t            m_PreprocessorFlags                 = 0;
     uint64_t            m_PCHCacheKey                       = 0;
+    uint64_t            m_LightCacheKey                     = 0;
 
     // Not serialized
     Array< AString >    m_Includes;

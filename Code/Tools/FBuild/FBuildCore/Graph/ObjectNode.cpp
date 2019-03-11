@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/Cache/ICache.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Cache/LightCache.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
@@ -389,6 +390,46 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
 
+    // Try to use the light cache if enabled
+    if ( useCache && GetCompiler()->GetUseLightCache() )
+    {
+        LightCache lc;
+        if ( lc.Hash( this, fullArgs.GetFinalArgs(), m_LightCacheKey, m_Includes ) == false )
+        {
+            // Light cache could not be used (can't parse includes)
+            if ( FBuild::Get().GetOptions().m_CacheVerbose )
+            {
+                FLOG_BUILD( " - Light cache cannot be used for '%s'\n", GetName().Get() );
+            }
+
+            // Fall through to generate preprocessed output for old style cache and distribution....
+        }
+        else
+        {
+            // LightCache hashing was successful
+
+            // Try retrieve from cache
+            if ( RetrieveFromCache( job ) )
+            {
+                return NODE_RESULT_OK_CACHE;
+            }
+
+            // Cache miss
+            const bool belowMemoryLimit = ( ( Job::GetTotalLocalDataMemoryUsage() / MEGABYTE ) < FBuild::Get().GetSettings()->GetDistributableJobMemoryLimitMiB() );
+            const bool canDistribute = belowMemoryLimit && GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
+            if ( canDistribute == false )
+            {
+                // can't distribute, so generating preprocessed output is useless
+                // so we directly compile from source as one-pass compilation is faster
+                const bool stealingRemoteJob = false; // never queued
+                const bool racingRemoteJob = false; // never queued
+                return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+            }
+
+            // Fall through to generate preprocessed output for distribution....
+        }
+    }
+
     if ( pass == PASS_PREPROCESSOR_ONLY )
     {
         if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization ) == false )
@@ -499,6 +540,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         }
 
         if ( GetFlag( FLAG_VBCC ) )
+        {
+            usePreProcessedOutput = false;
+        }
+
+        // We might not have preprocessed data if using the LightCache
+        if ( job->GetData() == nullptr )
         {
             usePreProcessedOutput = false;
         }
@@ -1082,8 +1129,8 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     PROFILE_FUNCTION
 
     // hash the pre-processed input data
-    ASSERT( job->GetData() );
-    const uint64_t preprocessedSourceKey = xxHash::Calc64( job->GetData(), job->GetDataSize() );
+    ASSERT( m_LightCacheKey || job->GetData() );
+    const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey : xxHash::Calc64( job->GetData(), job->GetDataSize() );
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)

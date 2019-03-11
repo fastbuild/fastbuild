@@ -18,6 +18,10 @@ private:
     void Write() const;
     void Read() const;
     void ReadWrite() const;
+
+    void WriteLight() const;
+    void ReadLight() const;
+    void ReadWriteLight() const;
 };
 
 // Register Tests
@@ -26,6 +30,9 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( Write )
     REGISTER_TEST( Read )
     REGISTER_TEST( ReadWrite )
+    REGISTER_TEST( WriteLight )
+    REGISTER_TEST( ReadLight )
+    REGISTER_TEST( ReadWriteLight )
 REGISTER_TESTS_END
 
 // Write
@@ -80,6 +87,70 @@ void TestCache::ReadWrite() const
     options.m_UseCacheWrite = true;
     options.m_CacheVerbose = true;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/cache.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+    // Ensure cache was written to
+    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+    TEST_ASSERT( objStats.m_NumCacheHits == 2 );
+    TEST_ASSERT( objStats.m_NumBuilt == 0 );
+}
+
+// WriteLight
+//------------------------------------------------------------------------------
+void TestCache::WriteLight() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheWrite = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+    // Ensure cache was written to
+    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+    TEST_ASSERT( objStats.m_NumCacheStores == 2 );
+    TEST_ASSERT( objStats.m_NumBuilt == 2 );
+}
+
+// ReadLight
+//------------------------------------------------------------------------------
+void TestCache::ReadLight() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheRead = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+    // Ensure cache was written to
+    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+    TEST_ASSERT( objStats.m_NumCacheHits == 2 );
+    TEST_ASSERT( objStats.m_NumBuilt == 0 );
+}
+
+// ReadWriteLight
+//------------------------------------------------------------------------------
+void TestCache::ReadWriteLight() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheRead = true;
+    options.m_UseCacheWrite = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );

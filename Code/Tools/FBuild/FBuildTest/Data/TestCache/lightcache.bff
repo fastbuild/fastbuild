@@ -1,0 +1,6 @@
+// LightCache
+//------------------------------------------------------------------------------
+
+// Same as the normal cache test, but with LightCache enabled
+.UseLightCache_Experimental = true
+#include "cache.bff"
