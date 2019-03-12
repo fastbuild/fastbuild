@@ -15,19 +15,19 @@ ForEach( .SubDir in .SubDirs )
     {
         // PCH
         #if __WINDOWS__
-            .PCHInputFile               = 'Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.cpp'
+            .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.cpp'
             .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/PrecompiledHeader.pch'
             .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
         #else
-            .PCHInputFile               = 'Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.h'
+            .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.h'
             .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/PrecompiledHeader.pch'
             .CompilerInputExcludedFiles = 'PrecompiledHeader.cpp' // Don't need cpp compiled on Linux/OS X
         #endif
 
         // PCH User
-        .CompilerInputPath          = 'Data/TestPrecompiledHeaders/CacheUniqueness2/'
+        .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/'
         .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/'
-        .CompilerOptions            + ' "-IData/TestPrecompiledHeaders/CacheUniqueness2/"'
+        .CompilerOptions            + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/"'
         #if __WINDOWS__
                                         + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
         #endif

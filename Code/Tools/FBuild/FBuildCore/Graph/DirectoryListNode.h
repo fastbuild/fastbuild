@@ -16,7 +16,7 @@ class DirectoryListNode : public Node
     REFLECT_NODE_DECLARE( DirectoryListNode )
 public:
     DirectoryListNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~DirectoryListNode();
 
     const AString & GetPath() const { return m_Path; }
@@ -33,9 +33,6 @@ public:
                             const Array< AString > & excludeFiles,
                             const Array< AString > & excludePatterns,
                             AString & result );
-
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;

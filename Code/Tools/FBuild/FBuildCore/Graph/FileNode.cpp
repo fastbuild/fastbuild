@@ -29,6 +29,14 @@ FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
     m_LastBuildTimeMs = 1; // very little work required
 }
 
+// Initialize
+//------------------------------------------------------------------------------
+/*virtual*/ bool FileNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*funcStartIter*/, const Function * /*function*/ )
+{
+    ASSERT( false ); // Should never get here
+    return false;
+}
+
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 FileNode::~FileNode() = default;
@@ -77,27 +85,6 @@ void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, cons
 
         Node::DumpOutput( job, mem.Get(), dataSize + msg.GetLength(), &exclusions );
     }
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * FileNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>,  fileName );
-
-    Node * n = nodeGraph.CreateFileNode( fileName );
-    ASSERT( n );
-    return n;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void FileNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    #if defined( DEBUG )
-        MarkAsSaved();
-    #endif
 }
 
 //------------------------------------------------------------------------------

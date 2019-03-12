@@ -45,7 +45,14 @@ ReflectionInfo::ReflectionInfo()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ReflectionInfo::~ReflectionInfo() = default;
+ReflectionInfo::~ReflectionInfo()
+{
+    auto end = m_Properties.End();
+    for ( auto it = m_Properties.Begin(); it != end; ++it )
+    {
+        delete *it;
+    }
+}
 
 // Begin
 //------------------------------------------------------------------------------
@@ -177,28 +184,43 @@ const IMetaData * ReflectionInfo::HasMetaDataInternal( const ReflectionInfo * ri
     return m_SuperClass ? m_SuperClass->HasMetaDataInternal( ri ) : nullptr;
 }
 
+// AddProperty
+//------------------------------------------------------------------------------
+void ReflectionInfo::AddProperty( uint32_t offset, const char * memberName, PropertyType type )
+{
+    ReflectedProperty * r = new ReflectedProperty( memberName, offset, type, false );
+    m_Properties.Append( r );
+}
+
 // AddPropertyStruct
 //------------------------------------------------------------------------------
-void ReflectionInfo::AddPropertyStruct( void * offset, const char * memberName, const ReflectionInfo * structInfo )
+void ReflectionInfo::AddPropertyStruct( uint32_t offset, const char * memberName, const ReflectionInfo * structInfo )
 {
-    ReflectedPropertyStruct * r = new ReflectedPropertyStruct( memberName, (uint32_t)( (size_t)offset ), structInfo );
+    ReflectedPropertyStruct * r = new ReflectedPropertyStruct( memberName, offset, structInfo );
+    m_Properties.Append( r );
+}
+
+// AddPropertyArray
+//------------------------------------------------------------------------------
+void ReflectionInfo::AddPropertyArray( uint32_t offset, const char * memberName, PropertyType type )
+{
+    ReflectedProperty * r = new ReflectedProperty( memberName, offset, type, true );
     m_Properties.Append( r );
 }
 
 // AddPropertyArrayOfStruct
 //------------------------------------------------------------------------------
-void ReflectionInfo::AddPropertyArrayOfStruct( void * memberOffset, const char * memberName, const ReflectionInfo * structInfo )
+void ReflectionInfo::AddPropertyArrayOfStruct( uint32_t offset, const char * memberName, const ReflectionInfo * structInfo )
 {
-    ReflectedPropertyStruct * r = new ReflectedPropertyStruct( memberName, (uint32_t)( (size_t)memberOffset ), structInfo, true );
+    ReflectedPropertyStruct * r = new ReflectedPropertyStruct( memberName, offset, structInfo, true );
     m_Properties.Append( r );
 }
 
-// AddPropertyInternal
+// AddMetaData
 //------------------------------------------------------------------------------
-void ReflectionInfo::AddPropertyInternal( PropertyType type, uint32_t offset, const char * memberName, bool isArray )
+void ReflectionInfo::AddMetaData( const MetaNone & /*metaNone*/ )
 {
-    ReflectedProperty * r = new ReflectedProperty( memberName, offset, type, isArray );
-    m_Properties.Append( r );
+    ASSERT( m_MetaDataChain == nullptr );
 }
 
 // AddMetaData
@@ -207,6 +229,12 @@ void ReflectionInfo::AddMetaData( IMetaData & metaDataChain )
 {
     ASSERT( m_MetaDataChain == nullptr );
     m_MetaDataChain = &metaDataChain;
+}
+
+// AddPropertyMetaData
+//------------------------------------------------------------------------------
+void ReflectionInfo::AddPropertyMetaData( const MetaNone & /*metaNone*/ )
+{
 }
 
 // AddPropertyMetaData

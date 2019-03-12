@@ -14,7 +14,7 @@ Settings
 
 // Common settings
 .CompilerOutputPath         = '$StandardOutputBase$/Test/TestDistributed/RemoteRaceWinRemote/'
-.CompilerOptions            + ' "-IData/TestDistributed/RemoteRaceWinRemote"'
+.CompilerOptions            + ' "-ITools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceWinRemote"'
 
 // ObjectList
 //------------------------------------------------------------------------------
@@ -22,12 +22,12 @@ ObjectList( 'RemoteRaceWinRemote-Fast' )
 {
     // An object that can't be distributed
     .AllowDistribution = false
-    .CompilerInputFiles     = 'Data/TestDistributed/RemoteRaceWinRemote/Fast.cpp'
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceWinRemote/Fast.cpp'
 }
 ObjectList( 'RemoteRaceWinRemote-Slow' )
 {
     // An object that can be distributed
-    .CompilerInputFiles     = 'Data/TestDistributed/RemoteRaceWinRemote/Slow.cpp'
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/RemoteRaceWinRemote/Slow.cpp'
 }
 Alias( 'RemoteRaceWinRemote' )
 {

@@ -50,7 +50,9 @@ Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
     {
         #if __WINDOWS__
             VERIFY( ::AllocConsole() );
-            (void)freopen("CONOUT$", "w", stdout);
+            PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+            (void)freopen("CONOUT$", "w", stdout); // TODO:C consider using freopen_s
+            PRAGMA_DISABLE_POP_MSVC // 4996
         #endif
     }
     else
@@ -65,7 +67,7 @@ Worker::Worker( void * hInstance, const AString & args, bool consoleMode )
     }
     m_BaseArgs.Replace( "-subprocess", "" );
 
-    StatusMessage( "FBuildWorker %s (%s)", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
+    StatusMessage( "FBuildWorker %s", FBUILD_VERSION_STRING );
 }
 
 // DESTRUCTOR
@@ -80,11 +82,27 @@ Worker::~Worker()
     if ( m_RestartNeeded )
     {
         Process p;
-        p.Spawn( m_BaseExeName.Get(),
-                 m_BaseArgs.Get(),
-                 nullptr,   // default workingDir
-                 nullptr ); // default env
-        p.Detach();
+        size_t tryCount = 10;
+        for ( ;; )
+        {
+            if ( p.Spawn( m_BaseExeName.Get(),
+                          m_BaseArgs.Get(),
+                          nullptr,      // default workingDir
+                          nullptr ) )   // default env
+            {
+                p.Detach();
+                break;
+            }
+
+            --tryCount;
+            if ( tryCount == 0 )
+            {
+                break;
+            }
+
+            // wait before trying again
+            Thread::Sleep( 1000 );
+        }
     }
 }
 

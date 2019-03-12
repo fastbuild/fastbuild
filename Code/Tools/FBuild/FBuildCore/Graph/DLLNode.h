@@ -22,7 +22,6 @@ public:
 
     static inline Node::Type GetTypeS() { return Node::DLL_NODE; }
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 };
 
 //------------------------------------------------------------------------------

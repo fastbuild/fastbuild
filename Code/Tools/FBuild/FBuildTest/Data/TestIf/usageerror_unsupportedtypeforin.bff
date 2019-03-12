@@ -1,0 +1,8 @@
+//
+// Make sure an the error correctly reports supported types
+//
+.Int = 1
+.ArrayOfStrings = { 'String', 'String' }
+If(.Int in .ArrayOfStrings)
+{
+}

@@ -1,0 +1,41 @@
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+
+// A simple compiler
+//--------------------
+ObjectList( "Compiler-Lib" )
+{
+    .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestCompiler/SimpleCompiler.cpp"
+    .CompilerOutputPath = "$Out$/Test/Compiler/"
+}
+
+Executable( "Compiler-Exe" )
+{
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' kernel32.lib'
+                            + .CRTLibs_Static
+    #endif
+    .LinkerOutput       = '$Out$/Test/Compiler/SimpleCompiler.exe'
+    .Libraries          = { "Compiler-Lib" }
+}
+
+Compiler( "SimpleCompiler" )
+{
+    .Executable = "Compiler-Exe"
+    .CompilerFamily = "custom"
+}
+
+// A simple exe
+//--------------------
+ObjectList( "ObjectList" )
+{
+    .Compiler           = 'SimpleCompiler'
+    .CompilerOptions    = '%1 %2'
+    .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestCompiler/exe.cpp"
+    .CompilerOutputPath = "$Out$/Test/Compiler/"
+}

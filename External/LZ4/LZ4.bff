@@ -1,180 +1,99 @@
 // LZ4
 //------------------------------------------------------------------------------
-.LZ4BasePath		= '../External/LZ4/lz4-1.7.4.2/lib'
-.LZ4_Windows_MSVC	= [ .LZ4IncludePaths	= ' /I"$LZ4BasePath$"'
-						.LZ4CompilerOptions	= ' /wd6237'	// (%s) is always zero.  <expression> is never evaluated and might have side effects.
-											+ ' /wd6239'	// (<non-zero constant> && <expression>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
-											+ ' /wd6262'	// Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
-											+ ' /wd6385'	// Reading invalid data from '%s':  the readable size is '%u' bytes, but '%u' bytes may be read.: Lines:
-											+ ' /wd28251'	// warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
-					  ]
-.LZ4_Windows_Clang	= [ .LZ4IncludePaths	= ' -I"$LZ4BasePath$"'
-						.LZ4CompilerOptions = ' -Wno-shift-count-overflow'
-					  ]
-.LZ4_Linux_GCC      = [ .LZ4IncludePaths    = ' "-I$LZ4BasePath$"'
-                        .LZ4CompilerOptions = ''
-                      ]
-.LZ4_OSX_Clang      = [ .LZ4IncludePaths    = ' "-I$LZ4BasePath$"'
-                        .LZ4CompilerOptions = ''
-                      ]
-
+.LZ4BasePath		= '../External/LZ4/lz4-1.8.2/lib'
+.LZ4IncludePaths	= ' "-I$LZ4BasePath$"'
 {
 	.ProjectName		= 'LZ4'
 	.ProjectPath		= '$LZ4BasePath$'
 
-	// Only build specific files
-	.CompilerInputFiles				= { '$LZ4BasePath$\lz4.c'
-                                        '$LZ4BasePath$\xxhash.c'
-    }
+    // Target/Compiler specific options
+    .LZ4Options_x64     = [ 
+                            .LZ4CompilerOptions	= ' /wd6239'	// (<non-zero constant> && <expression>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
+											    + ' /wd6262'	// Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
+											    + ' /wd6385'	// Reading invalid data from '%s':  the readable size is '%u' bytes, but '%u' bytes may be read.: Lines:
+											    + ' /wd28251'	// warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
+					      ]
+    .LZ4Options_x64Clang= [ 
+                            .LZ4CompilerOptions = ' -Wno-shift-count-overflow'
+					      ]
+    .LZ4Options_x64Linux= [ 
+                            .LZ4CompilerOptions = ''
+                          ]
+    .LZ4Options_x64ClangLinux  = .LZ4Options_x64Linux
+    .LZ4Options_x64OSX  = [ 
+                            .LZ4CompilerOptions = ''
+                          ]
 
-	// Windows (MSVC)
+	// Library
 	//--------------------------------------------------------------------------
-	ForEach( .Config in .Configs_Windows_MSVC )
+	ForEach( .Config in .Configs )
 	{
 		Using( .Config )
 		.OutputBase + '\$Platform$-$Config$'
 
-		Using( .LZ4_Windows_MSVC )
+		Using( ."LZ4Options_$Platform$" )
 
 		// Static Library
 		Library( '$ProjectName$-Lib-$Platform$-$Config$' )
 		{
+            // Input - Only build specific files we use
+	        .CompilerInputFiles         = { 
+                                            '$LZ4BasePath$\lz4.c'
+                                            '$LZ4BasePath$\xxhash.c'
+                                          }
+
+            // Options
 			.CompilerOptions			= .CompilerOptionsC
                                         + .LZ4IncludePaths
 										+ .LZ4CompilerOptions
 
 			// Output
-			.CompilerOutputPath			= '$OutputBase$\$ProjectName$\'
- 			.LibrarianOutput 			= '$OutputBase$\$ProjectName$\$ProjectName$.lib'
+			.CompilerOutputPath			= '$OutputBase$/External/$ProjectName$/'
+            .LibrarianOutput            = '$OutputBase$/External/$ProjectName$/$ProjectName$$LibExtension$'
 		}
 		Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
 	}
-
-	// Windows (Clang)
-	//--------------------------------------------------------------------------
-	ForEach( .Config in .Configs_Windows_Clang )
-	{
-		Using( .Config )
-		.OutputBase + '\$Platform$-$Config$'
-
-		Using( .LZ4_Windows_Clang )
-
-		// Static Library
-		Library( '$ProjectName$-Lib-$Platform$-$Config$' )
-		{
-            .CompilerOptions            = .CompilerOptionsC
-			                            + .LZ4IncludePaths
-										+ .LZ4CompilerOptions
-
-			// Output
-			.CompilerOutputPath			= '$OutputBase$\$ProjectName$\'
- 			.LibrarianOutput 			= '$OutputBase$\$ProjectName$\$ProjectName$.lib'
-		}
-		Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-	}
-	
-    // Linux (GCC)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Linux_GCC )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
-        Using( .LZ4_Linux_GCC )
-
-        // Static Library
-        Library( '$ProjectName$-Lib-$Platform$-$Config$' )
-        {
-            .CompilerOptions            = .CompilerOptionsC
-                                        + .LZ4IncludePaths
-                                        + .LZ4CompilerOptions
-
-            // Output
-            .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
-        }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-    }
-
-    // OSX (Clang)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_OSX_Clang )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
-        Using( .LZ4_Linux_GCC )
-
-        // Static Library
-        Library( '$ProjectName$-Lib-$Platform$-$Config$' )
-        {
-            .CompilerOptions            = .CompilerOptionsC
-                                        + .LZ4IncludePaths
-                                        + .LZ4CompilerOptions
-
-            // Output
-            .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
-        }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-    }
 
 	// Aliases
 	//--------------------------------------------------------------------------
-	// Per-Config
-	Alias( '$ProjectName$-Debug' )		{ .Targets = { '$ProjectName$-X86-Debug',   '$ProjectName$-X64-Debug', '$ProjectName$-X86Clang-Debug' } }
-	Alias( '$ProjectName$-Profile' )	{ .Targets = { '$ProjectName$-X86-Profile', '$ProjectName$-X64-Profile' } }
-	Alias( '$ProjectName$-Release' )	{ .Targets = { '$ProjectName$-X86-Release', '$ProjectName$-X64-Release' } }
-
-	// Per-Platform
-	Alias( '$ProjectName$-X86' )		{ .Targets = { '$ProjectName$-X86-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X86-Profile' } }
-	Alias( '$ProjectName$-X64' )		{ .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X64-Profile' } }
-	Alias( '$ProjectName$-X86Clang' )	{ .Targets = { '$ProjectName$-X86Clang-Debug' } }
-    Alias( '$ProjectName$-x64Linux' )   { .Targets = { '$ProjectName$-X64Linux-Debug', '$ProjectName$-X64Linux-Release', '$ProjectName$-X64Linux-Profile' } }
-    Alias( '$ProjectName$-x64OSX' )     { .Targets = { '$ProjectName$-X64OSX-Debug', '$ProjectName$-X64OSX-Release', '$ProjectName$-X64OSX-Profile' } }
-
-	// All
-	Alias( '$ProjectName$' )
-	{
-		.Targets = { '$ProjectName$-Debug', '$ProjectName$-Profile', '$ProjectName$-Release' }
-	}
+    #include "../../Code/gen_default_aliases.bff"
 
 	// Visual Studio Project Generation
 	//--------------------------------------------------------------------------
-	VCXProject( '$ProjectName$-proj' )
-	{
-		.ProjectOutput				= '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
-		.ProjectInputPaths			= '$ProjectPath$\'
-        .ProjectFiles               = '../External/LZ4/LZ4.bff'
-		.ProjectBasePath			= '$ProjectPath$\'
-
-		.ProjectX86Debug		= [ Using( .ProjectX86Debug )			.Target = '$ProjectName$-X86-Debug' ]
-		.ProjectX86Profile		= [ Using( .ProjectX86Profile )			.Target = '$ProjectName$-X86-Profile' ]
-		.ProjectX86Release		= [ Using( .ProjectX86Release )			.Target = '$ProjectName$-X86-Release' ]
-		.ProjectX64Debug		= [ Using( .ProjectX64Debug )			.Target = '$ProjectName$-X64-Debug' ]
-		.ProjectX64Profile		= [ Using( .ProjectX64Profile )			.Target = '$ProjectName$-X64-Profile' ]
-		.ProjectX64Release		= [ Using( .ProjectX64Release )			.Target = '$ProjectName$-X64-Release' ]
-		.ProjectX86ClangDebug	= [ Using( .ProjectX86ClangDebug )		.Target = '$ProjectName$-X86Clang-Debug' ]
-		.ProjectX86ClangProfile	= [ Using( .ProjectX86ClangProfile )	.Target = '$ProjectName$-X86Clang-Profile' ]
-		.ProjectX86ClangRelease	= [ Using( .ProjectX86ClangRelease )	.Target = '$ProjectName$-X86Clang-Release' ]
-		.ProjectConfigs			= { .ProjectX86Debug, .ProjectX86Profile, .ProjectX86Release,
-									.ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-									.ProjectX86ClangDebug, .ProjectX86ClangProfile, .ProjectX86ClangRelease }
-	}
+	#if __WINDOWS__
+		VCXProject( '$ProjectName$-proj' )
+		{
+			.ProjectOutput				= '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
+			.ProjectInputPaths			= '$ProjectPath$\'
+	        .ProjectFiles               = '../External/LZ4/LZ4.bff'
+			.ProjectBasePath			= '$ProjectPath$\'
 	
+			.ProjectX64Debug		= [ Using( .ProjectX64Debug )			.Target = '$ProjectName$-X64-Debug' ]
+			.ProjectX64Profile		= [ Using( .ProjectX64Profile )			.Target = '$ProjectName$-X64-Profile' ]
+			.ProjectX64Release		= [ Using( .ProjectX64Release )			.Target = '$ProjectName$-X64-Release' ]
+			.ProjectX64ClangDebug	= [ Using( .ProjectX64ClangDebug )		.Target = '$ProjectName$-X64Clang-Debug' ]
+			.ProjectX64ClangProfile	= [ Using( .ProjectX64ClangProfile )	.Target = '$ProjectName$-X64Clang-Profile' ]
+			.ProjectX64ClangRelease	= [ Using( .ProjectX64ClangRelease )	.Target = '$ProjectName$-X64Clang-Release' ]
+			.ProjectConfigs			= { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+										.ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
+		}
+	#endif
+
 	// XCode Project Generation
 	//--------------------------------------------------------------------------
-	XCodeProject( '$ProjectName$-xcodeproj' )
-	{
-		.ProjectOutput 				= '../tmp/XCode/Projects/0_External/$ProjectName$.xcodeproj/project.pbxproj'
-		.ProjectInputPaths			= '$ProjectPath$/'
-		.ProjectBasePath			= '$ProjectPath$/'
-
-		.XCodeBuildWorkingDir		= '../../../../Code/'
-		
-		.ProjectOSXDebug 		= [ .Config = 'Debug' 	.Target = '$ProjectName$-x64OSX-Debug' ]
-		.ProjectOSXProfile 		= [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
-		.ProjectOSXRelease 		= [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]		
-		.ProjectConfigs 		= { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }	
-	}	
+	#if __OSX__
+		XCodeProject( '$ProjectName$-xcodeproj' )
+		{
+			.ProjectOutput 				= '../tmp/XCode/Projects/0_External/$ProjectName$.xcodeproj/project.pbxproj'
+			.ProjectInputPaths			= '$ProjectPath$/'
+			.ProjectBasePath			= '$ProjectPath$/'
+	
+			.XCodeBuildWorkingDir		= '../../../../Code/'
+			
+			.ProjectOSXDebug 		= [ .Config = 'Debug' 	.Target = '$ProjectName$-x64OSX-Debug' ]
+			.ProjectOSXProfile 		= [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
+			.ProjectOSXRelease 		= [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]		
+			.ProjectConfigs 		= { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }	
+		}
+	#endif
 }

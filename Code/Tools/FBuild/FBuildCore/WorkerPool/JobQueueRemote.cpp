@@ -294,9 +294,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         WorkerThread::CreateTempFilePath( fileName, tmpFileName );
         node->ReplaceDummyName( tmpFileName );
 
-        #ifdef DEBUG
-            DEBUGSPAM( "REMOTE: %s (%s)\n", fileName, job->GetRemoteName().Get() );
-        #endif
+        //DEBUGSPAM( "REMOTE: %s (%s)\n", fileName, job->GetRemoteName().Get() );
     }
 
     ASSERT( node->IsAFile() );

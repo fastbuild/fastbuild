@@ -16,6 +16,6 @@ Settings {} // Activate standard settings
 //------------------------------------------------------------------------------
 ObjectList( 'TestFiles-Lib' )
 {
-    .CompilerInputFiles = { 'Data/TestCachePlugin/TestA.cpp' }
+    .CompilerInputFiles = { '$TestRoot$/Data/TestCachePlugin/TestA.cpp' }
     .CompilerOutputPath = '$Out$/Test/CachePlugin/'
 }

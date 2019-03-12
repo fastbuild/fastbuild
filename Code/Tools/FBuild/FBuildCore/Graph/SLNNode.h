@@ -17,37 +17,98 @@
 //------------------------------------------------------------------------------
 class VCXProjectNode;
 
+// SolutionConfigBase
+//------------------------------------------------------------------------------
+class SolutionConfigBase : public Struct
+{
+    REFLECT_STRUCT_DECLARE( SolutionConfigBase )
+public:
+    Array< AString > m_SolutionBuildProjects;
+    Array< AString > m_SolutionDeployProjects;
+};
+
+// SolutionConfig
+//------------------------------------------------------------------------------
+class SolutionConfig : public SolutionConfigBase
+{
+    REFLECT_STRUCT_DECLARE( SolutionConfig )
+public:
+    SolutionConfig() = default;
+    explicit SolutionConfig( const SolutionConfigBase & baseConfig )
+        : SolutionConfigBase( baseConfig )
+    {}
+
+    AString m_SolutionPlatform;
+    AString m_SolutionConfig;
+    AString m_Platform;
+    AString m_Config;
+
+    bool operator < ( const SolutionConfig & other ) const
+    {
+        const int32_t cmpConfig = m_Config.CompareI( other.m_Config );
+        return ( cmpConfig == 0 ) ? m_SolutionPlatform < other.m_SolutionPlatform
+                                  : cmpConfig < 0;
+    }
+};
+
+// SolutionFolder
+//------------------------------------------------------------------------------
+class SolutionFolder : public Struct
+{
+    REFLECT_STRUCT_DECLARE( SolutionFolder )
+public:
+    AString             m_Path;
+    Array< AString >    m_Projects;
+};
+
+// SolutionDependency
+//------------------------------------------------------------------------------
+class SolutionDependency : public Struct
+{
+    REFLECT_STRUCT_DECLARE( SolutionDependency )
+public:
+    Array< AString >    m_Projects;
+    Array< AString >    m_Dependencies;
+};
+
 // SLNNode
 //------------------------------------------------------------------------------
 class SLNNode : public FileNode
 {
+    REFLECT_NODE_DECLARE( SLNNode )
 public:
-    explicit SLNNode( const AString & solutionOutput,
-                      const AString & solutionBuildProject,
-                      const AString & solutionVisualStudioVersion,
-                      const AString & solutionMinimumVisualStudioVersion,
-                      const Array< VSProjectConfig > & configs,
-                      const Array< VCXProjectNode * > & projects,
-                      const Array< SLNDependency > & slnDeps,
-                      const Array< SLNSolutionFolder > & folders );
+    SLNNode();
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~SLNNode();
 
     static inline Node::Type GetTypeS() { return Node::SLN_NODE; }
 
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
     bool Save( const AString & content, const AString & fileName ) const;
 
-    AString m_SolutionBuildProject;
-    AString m_SolutionVisualStudioVersion;
-    AString m_SolutionMinimumVisualStudioVersion;
+    bool                    GatherProject( NodeGraph & nodeGraph,
+                                           const Function * function,
+                                           const BFFIterator & iter,
+                                           const char * propertyName,
+                                           const AString & projectName,
+                                           Array< VCXProjectNode * > & inOutProjects ) const;
+    bool                    GatherProjects( NodeGraph & nodeGraph,
+                                            const Function * function,
+                                            const BFFIterator & iter,
+                                            const char * propertyName,
+                                            const Array< AString > & projectNames,
+                                            Array< VCXProjectNode * > & inOutProjects ) const;
 
-    Array< VSProjectConfig > m_Configs;
-    Array< SLNDependency > m_SolutionDeps;
-    Array< SLNSolutionFolder > m_Folders;
+    // Reflected
+    Array< AString >            m_SolutionProjects;
+    AString                     m_SolutionVisualStudioVersion;
+    AString                     m_SolutionMinimumVisualStudioVersion;
+    Array< SolutionConfig >     m_SolutionConfigs;
+    Array< SolutionFolder >     m_SolutionFolders;
+    Array< SolutionDependency > m_SolutionDependencies;
+    SolutionConfigBase          m_BaseSolutionConfig;
 };
 
 //------------------------------------------------------------------------------

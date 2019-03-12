@@ -8,7 +8,14 @@
 
 // Placement new/delete
 //------------------------------------------------------------------------------
-#if defined( DEBUG )
+// Fill new and freed memory in Debug builds unless:
+//   * We are using MemorySanitizer, in which case it is better to not
+//     initialize allocated memory because doing so will hide uninitialized reads
+//     from MemorySanitizer.
+#if !defined( __has_feature )
+    #define __has_feature( ... ) 0
+#endif
+#if defined( DEBUG ) && !__has_feature( memory_sanitizer )
     #define MEM_DEBUG_ENABLED
 #endif
 #if defined( MEM_DEBUG_ENABLED )

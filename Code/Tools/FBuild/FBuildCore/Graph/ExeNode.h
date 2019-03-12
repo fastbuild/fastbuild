@@ -19,8 +19,6 @@ public:
     virtual ~ExeNode();
 
     static inline Node::Type GetTypeS() { return Node::EXE_NODE; }
-
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
 };
 
 //------------------------------------------------------------------------------

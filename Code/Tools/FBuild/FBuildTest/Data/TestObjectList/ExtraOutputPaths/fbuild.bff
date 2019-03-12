@@ -12,7 +12,7 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Common settings
-.CompilerInputPath          = "Data/TestObjectList/ExtraOutputPaths/"
+.CompilerInputPath          = "Tools/FBuild/FBuildTest/Data/TestObjectList/ExtraOutputPaths/"
 .CompilerOutputPath         = '$Out$/Test/ObjectList/ExtraOutputPaths/'
 
 //

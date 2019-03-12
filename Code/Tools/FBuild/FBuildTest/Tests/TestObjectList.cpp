@@ -7,6 +7,7 @@
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Core/Strings/AStackString.h"
 
 // TestObjectList
@@ -19,8 +20,9 @@ private:
     // Tests
     void TestExcludedFiles() const;
     void CompilerInputFilesRoot() const;
+    void ExtraOutputFolders_PathExtraction() const;
     #if defined( __WINDOWS__ )
-        void ExtraOutputFolders() const;
+        void ExtraOutputFolders_Build() const;
     #endif
 };
 
@@ -29,8 +31,9 @@ private:
 REGISTER_TESTS_BEGIN( TestObjectList )
     REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
     REGISTER_TEST( CompilerInputFilesRoot )
+    REGISTER_TEST( ExtraOutputFolders_PathExtraction )
     #if defined( __WINDOWS__ )
-        REGISTER_TEST( ExtraOutputFolders )
+        REGISTER_TEST( ExtraOutputFolders_Build )
     #endif
 REGISTER_TESTS_END
 
@@ -38,8 +41,8 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestObjectList::TestExcludedFiles() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestObjectList/Exclusions/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/Exclusions/fbuild.bff";
 
     {
         FBuild fBuild( options );
@@ -74,30 +77,52 @@ void TestObjectList::TestExcludedFiles() const
 //------------------------------------------------------------------------------
 void TestObjectList::CompilerInputFilesRoot() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestObjectList/CompilerInputFilesRoot/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/CompilerInputFilesRoot/fbuild.bff";
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
 }
 
-// ExtraOutputFolders
+// ExtraOutputFolders_PathExtraction
+//------------------------------------------------------------------------------
+void TestObjectList::ExtraOutputFolders_PathExtraction() const
+{
+    // Check that these cases are handled:
+    // - mixed slashes
+    // - ../
+    // - double //
+    AStackString<> args( " /FdTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//pdb/file.pdb"
+                         " /FaTools\\FBuild\\FBuildTest\\Data/../../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList//asm/file.asm" );
+
+    // Getthe paths
+    AStackString<> pdbPath, asmPath;
+    FunctionObjectList::GetExtraOutputPaths( args, pdbPath, asmPath );
+
+    // Check that the entire span is correctly captured
+    TEST_ASSERT( pdbPath.BeginsWith( "Tools" ) );
+    TEST_ASSERT( pdbPath.EndsWith( "pdb" ) && !pdbPath.EndsWith( ".pdb" ));
+    TEST_ASSERT( asmPath.BeginsWith( "Tools" ) );
+    TEST_ASSERT( asmPath.EndsWith( "asm" ) && !pdbPath.EndsWith( ".asm" ));
+}
+
+// ExtraOutputFolders_Build
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    void TestObjectList::ExtraOutputFolders() const
+    void TestObjectList::ExtraOutputFolders_Build() const
     {
-        FBuildOptions options;
-        options.m_ConfigFile = "Data/TestObjectList/ExtraOutputPaths/fbuild.bff";
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ExtraOutputPaths/fbuild.bff";
 
-        const char * objectListASMFile  = "../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/file.asm";
-        const char * objectListASMDir   = "../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/";
-        const char * objectListPDBFile  = "../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/file.pdb";
-        const char * objectListPDBDir   = "../../../../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/";
-        const char * libraryASMFile     = "../../../../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/file.asm";
-        const char * libraryASMDir      = "../../../../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/";
-        const char * libraryPDBFile     = "../../../../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/file.pdb";
-        const char * libraryPDBDir      = "../../../../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/";
+        const char * objectListASMFile  = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/file.asm";
+        const char * objectListASMDir   = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/asm/";
+        const char * objectListPDBFile  = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/file.pdb";
+        const char * objectListPDBDir   = "../tmp/Test/ObjectList/ExtraOutputPaths/ObjectList/pdb/";
+        const char * libraryASMFile     = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/file.asm";
+        const char * libraryASMDir      = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/asm/";
+        const char * libraryPDBFile     = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/file.pdb";
+        const char * libraryPDBDir      = "../tmp/Test/ObjectList/ExtraOutputPaths/Library/pdb/";
 
         // Cleanup from previous runs to ensure we're really testing folder creation
         EnsureFileDoesNotExist( objectListASMFile );
@@ -114,20 +139,20 @@ void TestObjectList::CompilerInputFilesRoot() const
             FBuild fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
             TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
-        }
 
-        EnsureFileExists( objectListASMFile );
-        EnsureFileExists( objectListPDBFile );
+            EnsureFileExists( objectListASMFile );
+            EnsureFileExists( objectListPDBFile );
+        }
 
         // Library
         {
             FBuild fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
             TEST_ASSERT( fBuild.Build( AStackString<>( "Library" ) ) );
-        }
 
-        EnsureFileExists( libraryASMFile );
-        EnsureFileExists( libraryPDBFile );
+            EnsureFileExists( libraryASMFile );
+            EnsureFileExists( libraryPDBFile );
+        }
     }
 #endif
 

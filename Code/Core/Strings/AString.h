@@ -79,6 +79,7 @@ public:
     inline bool EqualsI( const char * other ) const { return ( CompareI( other ) == 0 ); }
     inline bool EqualsI( const AString & other ) const { return ( CompareI( other ) == 0 ); }
     inline bool operator < ( const AString & other ) const { return ( Compare( other ) < 0 ); }
+    inline bool operator > ( const AString & other ) const { return ( Compare( other ) > 0 ); }
 
     inline bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
 
@@ -97,21 +98,45 @@ public:
     void Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim );
 
     // searching
-    const char *    Find( char c, const char * startPos = nullptr ) const;
-    char *          Find( char c, char * startPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->Find( c, startPos ) ); }
-    const char *    Find( const char * subString ) const;
-    char *          Find( const char * subString ) { return const_cast< char *>( ((const AString *)this)->Find( subString ) ); }
-    const char *    FindI( const char * subString ) const;
-    const char *    FindLast( char c ) const;
-    char *          FindLast( char c ) { return const_cast< char *>( ((const AString *)this)->FindLast( c ) ); }
+    const char *    Find( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          Find( char c, char * startPos = nullptr, char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->Find( c, startPos, endPos ) ); }
+    const char *    Find( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          Find( const char * subString, char * startPos = nullptr, char * endPos = nullptr ) { return const_cast<char *>( ((const AString *)this)->Find( subString, startPos, endPos ) ); }
+    const char *    Find( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          Find( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->Find( subString, startPos, endPos ) ); }
+
+    const char *    FindI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          FindI( char c, char * startPos = nullptr, char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindI( c, startPos, endPos ) ); }
+    const char *    FindI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          FindI( const char * subString, char * startPos = nullptr, char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindI( subString, startPos, endPos ) ); }
+    const char *    FindI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          FindI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindI( subString, startPos, endPos ) ); }
+
+    const char *    FindLast( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          FindLast( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindLast( c, startPos, endPos ) ); }
+    const char *    FindLast( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          FindLast( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindLast( subString, startPos, endPos ) ); }
+    const char *    FindLast( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          FindLast( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindLast( subString, startPos, endPos ) ); }
+
+    const char *    FindLastI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          FindLastI( char c, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindLastI( c, startPos, endPos ) ); }
+    const char *    FindLastI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          FindLastI( const char * subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindLastI( subString, startPos, endPos ) ); }
+    const char *    FindLastI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) const;
+    char *          FindLastI( const AString & subString, const char * startPos = nullptr, const char * endPos = nullptr ) { return const_cast< char *>( ((const AString *)this)->FindLastI( subString, startPos, endPos ) ); }
+
     bool            EndsWith( char c ) const;
     bool            EndsWith( const char * string ) const;
-    bool            EndsWith( const AString & other ) const;
+    bool            EndsWith( const AString & string ) const;
+
     bool            EndsWithI( const char * other ) const;
     bool            EndsWithI( const AString & other ) const;
+
     bool            BeginsWith( char c ) const;
     bool            BeginsWith( const char * string ) const;
     bool            BeginsWith( const AString & string ) const;
+
     bool            BeginsWithI( const char * string ) const;
     bool            BeginsWithI( const AString & string ) const;
 

@@ -15,8 +15,8 @@ Settings {} // use Standard Environment
 Copy( 'CopyFiles' )
 {
     .Source     = {
-                    'Data/TestUnity/a.cpp'
-                    'Data/TestUnity/b.cpp'
+                    'Tools/FBuild/FBuildTest/Data/TestUnity/a.cpp'
+                    'Tools/FBuild/FBuildTest/Data/TestUnity/b.cpp'
                   }
     .Dest       = '$OutputPath$/Input/'
 }
@@ -27,7 +27,6 @@ Unity( 'Unity' )
     .PreBuildDependencies           = 'CopyFiles'
 
     .UnityInputIsolateWritableFiles = true
-//  .UnityInputPath                 = '$OutputPath$/Input/'
 
     .UnityInputFiles                = {
                                         '$OutputPath$/Input/a.cpp'

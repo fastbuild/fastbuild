@@ -11,6 +11,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class AString;
 class OSWindow;
 
 // OSTrayIcon
@@ -18,7 +19,7 @@ class OSWindow;
 class OSTrayIcon
 {
 public:
-    explicit OSTrayIcon( OSWindow * parentWindow );
+    explicit OSTrayIcon( OSWindow * parentWindow, const AString & toolTip );
     ~OSTrayIcon();
 
     void ShowNotification( const char * msg );

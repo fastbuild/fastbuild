@@ -1,0 +1,11 @@
+
+// loop variables are frozen and should prevent modification
+
+.a = { '', 'X' }
+ForEach(.x in .a)
+{
+    ForEach(.y in .a)
+    {
+    }
+    ^a = { 'a', 'b', 'c' }
+}

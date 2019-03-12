@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../common.js"></script>
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - If</title>
+</head>
+<body>
+  <script>generateHeaderParent()</script>
+
+<h1>If</h1>
+    <div class='newsitemheader'>Summary</div>
+    <div class='newsitembody'>
+      <p>
+Allows conditional evaluation of config.
+      </p>
+      <p>
+The following types of expressions are supported:
+<ul>
+  <li>Boolean Values</li>
+  <li>Comparisons</li>
+  <li>Presence in ArrayOfStrings</li>
+</ul>
+<b>NOTE:</b> Precise syntax is currently limited. Only single expressions using previously defined variables are supported. More flexible syntax (literals and compound expressions) will be added in the future.
+      </p>
+    </div>
+
+
+    <div class='newsitemheader'>Boolean Values</div>
+    <div class='newsitembody'>
+      <p>
+Variables of type Boolean can be tested for their truth value.
+      </p>
+      <p>
+Examples:
+      </p>
+<div class='code'>If( .MyBoolean )
+{
+    // Evaluated if .MyBoolean == true
+}
+</div>
+<div class='code'>If( !.MyBoolean )
+{
+    // Evaluated if .MyBoolean == false
+}
+</div>
+</div>
+
+
+    <div class='newsitemheader'>Comparisons</div>
+    <div class='newsitembody'>
+      <p>
+Two variables of the same type can be compared by the following operators.
+<table>
+  <tr><th width=100>Operator</th>   <th width=200>Description</th>  <th width=70 align=center>String</th>   <th width=70 align=center>Int</th>  <th width=70 align=center>Bool</th> </tr>
+  <tr><td>==</td>                   <td>Equal</td>                  <td align=center>&#10004;</td>          <td align=center>&#10004;</td>      <td align=center>&#10004;</td>      </tr>
+  <tr><td>!=</td>                   <td>Not Equal</td>              <td align=center>&#10004;</td>          <td align=center>&#10004;</td>      <td align=center>&#10004;</td>      </tr>
+  <tr><td>&lt;</td>                 <td>Less Than</td>              <td align=center>&#10004;</td>          <td align=center>&#10004;</td>      <td></td>                           </tr>
+  <tr><td>&lt;=</td>                <td>Less Than Or Equal</td>     <td align=center>&#10004;</td>          <td align=center>&#10004;</td>      <td></td>                           </tr>
+  <tr><td>&gt;</td>                 <td>Greater Than</td>           <td align=center>&#10004;</td>          <td align=center>&#10004;</td>      <td></td>                           </tr>
+  <tr><td>&gt;=</td>                <td>Greater Than Or Equal</td>  <td align=center>&#10004;</td>          <td align=center>&#10004;</td>      <td></td>                           </tr>
+</table>
+      </p>
+      <p>
+Examples:
+      </p>
+<div class='code'>If( .StringA == .StringB )
+{
+    // Evaluated if strings are equal
+}
+</div>
+<div class='code'>If( .IntA >= .IntB )
+{
+    // Evaluated if first integer is greater than or equal to second integer
+}
+</div>
+<div class='code'>If( .BoolA != .BoolB )
+{
+    // Evaluated if booleans are not equal
+}
+</div>
+</div>
+
+
+    <div class='newsitemheader'>Presence in ArrayOfStrings</div>
+    <div class='newsitembody'>
+      <p>
+ArrayOfString variables can be checked for the presence of another String, using either a single String
+or another ArrayOfString.
+      </p>
+      <p>
+Examples:
+      </p>
+<div class='code'>If( .String in .ArrayOfStrings )
+{
+    // Evaluated if .StringA is found in .ArrayOfStrings
+}
+</div>
+<div class='code'>If( .StringA not in .ArrayOfStrings )
+{
+    // Evaluated if .StringA is not found in .ArrayOfStrings
+}
+</div>
+<div class='code'>If( .ArrayOfStrings1 in .ArrayOfStrings2 )
+{
+    // Evaluated if any String in .ArrayOfStrings1 is found in .ArrayOfStrings2
+}
+</div>
+<div class='code'>If( .ArrayOfStrings1 not in .ArrayOfStrings2 )
+{
+    // Evaluated if no String in .ArrayOfStrings1 is found in .ArrayOfStrings2
+}
+</div>
+</div>
+
+
+
+  <script>generateFooter()</script>
+</body>
+</html>

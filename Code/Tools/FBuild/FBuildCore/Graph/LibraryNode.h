@@ -23,15 +23,12 @@ class LibraryNode : public ObjectListNode
     REFLECT_NODE_DECLARE( LibraryNode )
 public:
     LibraryNode();
-    bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function );
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~LibraryNode();
 
     static inline Node::Type GetTypeS() { return Node::LIBRARY_NODE; }
 
     virtual bool IsAFile() const override;
-
-    static Node * Load( NodeGraph & nodeGraph, IOStream & stream );
-    virtual void Save( IOStream & stream ) const override;
 
     enum Flag
     {

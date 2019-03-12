@@ -15,7 +15,7 @@ Settings {}
 //------------------------------------------------------------------------------
 ObjectList( "Lib" )
 {
-    .CompilerInputFiles = 'Data/TestTest/Fail_ReturnCode/main.cpp'
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestTest/Fail_ReturnCode/main.cpp'
     .CompilerOutputPath = '$Out$/Test/Test/Fail_ReturnCode/'
 }
 

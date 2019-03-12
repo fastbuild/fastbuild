@@ -39,6 +39,13 @@ MemoryStream::~MemoryStream()
     FREE( m_Begin );
 }
 
+// Reset
+//------------------------------------------------------------------------------
+void MemoryStream::Reset()
+{
+    m_End = m_Begin;
+}
+
 // WriteBuffer
 //------------------------------------------------------------------------------
 uint64_t MemoryStream::WriteBuffer( IOStream & stream, uint64_t bytesToWrite )

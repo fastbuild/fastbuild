@@ -1,0 +1,6 @@
+//
+// Test that Error() halts parsing and emits a correctly formatted message
+//
+
+.String = 'Value'
+Error( "String value is '$String$'" )

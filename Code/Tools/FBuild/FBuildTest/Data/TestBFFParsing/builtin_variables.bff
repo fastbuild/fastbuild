@@ -1,0 +1,9 @@
+//
+// Check for presence of built-in variables
+//
+
+Print( '_WORKING_DIR_ = $_WORKING_DIR_$' )
+
+Print( '_FASTBUILD_VERSION_STRING_ = $_FASTBUILD_VERSION_STRING_$' )
+
+Print( '_FASTBUILD_VERSION_ = $_FASTBUILD_VERSION_$' )

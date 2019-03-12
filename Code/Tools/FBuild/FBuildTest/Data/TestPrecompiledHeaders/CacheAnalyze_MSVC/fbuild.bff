@@ -11,34 +11,34 @@ Settings {} // use Standard Environment
 ObjectList( 'PCHTest-CacheAnalyze_MSVC-1' )
 {
     // PCH
-    .PCHInputFile               = 'Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
+    .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
     .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch'
     .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
-    .PCHOptions                 + ' "/IData/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+    .PCHOptions                 + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
                                 + ' /analyze'
 
     // PCH User
-    .CompilerInputPath          = 'Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/'
+    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/'
     .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/'
     .CompilerOptions            + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
-                                + ' "/IData/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+                                + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
                                 + ' /analyze'
 }
 
 ObjectList( 'PCHTest-CacheAnalyze_MSVC-2' )
 {
     // PCH
-    .PCHInputFile               = 'Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
+    .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
     .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch'
     .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
-    .PCHOptions                 + ' "/IData/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+    .PCHOptions                 + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
                                 + ' /analyze'
 
     // PCH User
-    .CompilerInputPath          = 'Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/'
+    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/'
     .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/'
     .CompilerOptions            + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
-                                + ' "/IData/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+                                + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
                                 + ' /analyze'
 }
 

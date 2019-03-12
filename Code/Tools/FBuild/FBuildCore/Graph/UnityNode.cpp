@@ -67,7 +67,7 @@ UnityNode::UnityNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool UnityNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool UnityNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -76,19 +76,19 @@ bool UnityNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, con
     }
 
     Dependencies dirNodes( m_InputPaths.GetSize() );
-    if ( !function->GetDirectoryListNodeList( nodeGraph, iter, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_ExcludePatterns, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
+    if ( !Function::GetDirectoryListNodeList( nodeGraph, iter, function, m_InputPaths, m_PathsToExclude, m_FilesToExclude, m_ExcludePatterns, m_InputPathRecurse, &m_InputPattern, "UnityInputPath", dirNodes ) )
     {
         return false; // GetDirectoryListNodeList will have emitted an error
     }
 
     Dependencies fileNodes( m_Files.GetSize() );
-    if ( !function->GetFileNodes( nodeGraph, iter, m_Files, "UnityInputFiles", fileNodes ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_Files, "UnityInputFiles", fileNodes ) )
     {
         return false; // GetFileNodes will have emitted an error
     }
 
     Dependencies objectListNodes( m_ObjectLists.GetSize() );
-    if ( !function->GetObjectListNodes( nodeGraph, iter, m_ObjectLists, "UnityInputObjectLists", objectListNodes ) )
+    if ( !Function::GetObjectListNodes( nodeGraph, iter, function, m_ObjectLists, "UnityInputObjectLists", objectListNodes ) )
     {
         return false; // GetObjectListNodes will have emitted an error
     }
@@ -149,6 +149,8 @@ UnityNode::~UnityNode()
 
     size_t index = 0;
 
+    const bool noUnity = FBuild::Get().GetOptions().m_NoUnity;
+
     AString output;
     output.SetReserved( 32 * 1024 );
 
@@ -189,13 +191,19 @@ UnityNode::~UnityNode()
             filesInThisUnity.Append( files[index ] );
 
             // files which are modified (writable) can optionally be excluded from the unity
+            bool isolate = noUnity;
             if ( m_IsolateWritableFiles )
             {
                 // is the file writable?
                 if ( files[ index ].IsReadOnly() == false )
                 {
-                    numIsolated++;
+                    isolate = true;
                 }
+            }
+
+            if ( isolate )
+            {
+                numIsolated++;
             }
 
             // count the file, whether we wrote it or not, to keep unity files stable
@@ -209,17 +217,21 @@ UnityNode::~UnityNode()
         for ( const FileAndOrigin * file = filesInThisUnity.Begin(); file != end; ++file )
         {
             // files which are modified (writable) can optionally be excluded from the unity
-            bool isolateThisFile = false;
+            bool isolateThisFile = noUnity;
             if ( m_IsolateWritableFiles && ( ( m_MaxIsolatedFiles == 0 ) || ( numIsolated <= m_MaxIsolatedFiles ) ) )
             {
                 // is the file writable?
                 if ( file->IsReadOnly() == false )
                 {
-                    // disable compilation of this file (comment it out)
-                    m_IsolatedFiles.Append( *file );
-                    numFilesActuallyIsolatedInThisUnity++;
                     isolateThisFile = true;
                 }
+            }
+
+            if ( isolateThisFile )
+            {
+                // disable compilation of this file (comment it out)
+                m_IsolatedFiles.Append( *file );
+                numFilesActuallyIsolatedInThisUnity++;
             }
 
             // write pragma showing cpp file being compiled to assist resolving compilation errors
@@ -240,7 +252,10 @@ UnityNode::~UnityNode()
             // write include
             if ( isolateThisFile )
             {
-                output += "//";
+                output += "//"; // TODO:C Do this only for "real" isolation (not -nounity)
+                                // (this would reduce rebuilds, but currently doensn't work
+                                //  because the generated unity.cpp changing is critical
+                                //  to triggering the rebuild when switching -nounity on/off)
             }
             output += "#include \"";
             output += file->GetName();
@@ -339,30 +354,6 @@ UnityNode::~UnityNode()
     ASSERT( numFilesWritten == numFiles );
 
     return NODE_RESULT_OK;
-}
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * UnityNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>,  name );
-
-    UnityNode * un = nodeGraph.CreateUnityNode( name );
-
-    if ( un->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return un;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void UnityNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
 }
 
 // GetFiles

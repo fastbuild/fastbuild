@@ -369,7 +369,21 @@
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1042_UnknownOperator( const BFFIterator & iter, const AString & operatorName )
 {
-    FormatError( iter, 1042u, nullptr, "Unknown operator '%s'.", operatorName.Get() );
+    if ( operatorName.IsEmpty() )
+    {
+        FormatError( iter, 1042u, nullptr, "Unknown operator." );
+    }
+    else
+    {
+        FormatError( iter, 1042u, nullptr, "Unknown operator '%s'.", operatorName.Get() );
+    }
+}
+
+// Error_1043_CyclicDependencyDetected
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1043_CyclicDependencyDetected( const BFFIterator & iter, const AString & nodeName )
+{
+    FormatError( iter, 1043u, nullptr, "Cyclic dependency detected for node '%s'.", nodeName.Get() );
 }
 
 // Error_1050_PropertyMustBeString
@@ -540,6 +554,14 @@
                                        expectedSize );
 }
 
+// Error_1254_UnrecognizedOperator
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1254_UnrecognizedOperator( const BFFIterator & iter,
+                                                        const Function * function )
+{
+    FormatError( iter, 1254u, function, "Unrecognized operator." );
+}
+
 // Error_1300_MissingPCHArgs
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1300_MissingPCHArgs( const BFFIterator & iter,
@@ -602,6 +624,15 @@
                                                               const AString & badCompilerFamily )
 {
     FormatError( iter, 1501u, function, ".CompilerFamily '%s' is unrecognized.", badCompilerFamily.Get() );
+}
+
+// Error_1999_UserError
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1999_UserError( const BFFIterator & iter,
+                                             const Function * function,
+                                             const AString & errorMessage )
+{
+    FormatError( iter, 1999u, function, "User Error: %s", errorMessage.Get() );
 }
 
 // FormatError

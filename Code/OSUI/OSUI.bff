@@ -3,118 +3,38 @@
 {
     .ProjectName        = 'OSUI'
     .ProjectPath        = 'OSUI'
-    .PCHName            = 'PrecompiledHeader'
 
-    // Unity
+    // Library
     //--------------------------------------------------------------------------
-    {
-        // Common options
-        .UnityInputPath             = '$ProjectPath$\'
-        .UnityOutputPath            = '$OutputBase$\Unity\$ProjectPath$\'
-
-        // Windows
-        Unity( '$ProjectName$-Unity-Windows' )
-        {
-            .UnityPCH               = '$ProjectPath$\$PCHName$.h'
-        }
-
-        // Linux
-        Unity( '$ProjectName$-Unity-Linux' )
-        {
-            // No PCH
-        }
-
-        // OSX
-        Unity( '$ProjectName$-Unity-OSX' )
-        {
-            // No PCH
-        }
-    }
-
-    // Windows (MSVC)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Windows_MSVC )
+    ForEach( .Config in .Configs )
     {
         Using( .Config )
         .OutputBase + '\$Platform$-$Config$'
 
-        // Static Library
-        Library( '$ProjectName$-Lib-$Platform$-$Config$' )
+        // Unity
+        //--------------------------------------------------------------------------
+        Unity( '$ProjectName$-Unity-$Platform$-$Config$' )
         {
-            // Precompiled Header Creation/Use
-            .PCHInputFile               = '$ProjectPath$\$PCHName$.cpp'
-            .PCHOutputFile              = '$OutputBase$\$ProjectName$\$PCHName$.pch'
-            .PCHOptions                 + ' /Yc"$ProjectPath$\$PCHName$.h"'
-            .CompilerOptions            + ' /Yu"$ProjectPath$\$PCHName$.h" /Fp"$PCHOutputFile$"'
-
-            // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity-Windows'
-
-            // Output
-            .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.lib'
+            .UnityInputPath             = '$ProjectPath$/'
+            .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
         }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-    }
 
-    // Windows (Clang)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Windows_Clang )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
-        // Static Library
+        // Library
+        //--------------------------------------------------------------------------
         Library( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
             // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity-Windows'
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$Config$'
+
+            // Extra Compiler Options
+            .CompilerOptions            + .LZ4IncludePaths
 
             // Output
-            .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.lib'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-    }
-
-    // Linux (GCC)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_Linux_GCC )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
-        // Static Library
-        Library( '$ProjectName$-Lib-$Platform$-$Config$' )
-        {
-            // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity-Linux'
-
-            // Output
-            .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
-        }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-    }
-
-    // OSX (Clang)
-    //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs_OSX_Clang )
-    {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
-
-        // Static Library
-        Library( '$ProjectName$-Lib-$Platform$-$Config$' )
-        {
-            // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity-OSX'
-
-            // Output
-            .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
-            .LibrarianOutput            = '$OutputBase$\$ProjectName$\$ProjectName$.a'
-        }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
+        ^'Targets_$Platform$_$Config$' + { '$ProjectName$-$Platform$-$Config$' }
     }
 
     // Aliases
@@ -123,23 +43,39 @@
 
     // Visual Studio Project Generation
     //--------------------------------------------------------------------------
-    VCXProject( '$ProjectName$-proj' )
-    {
-        .ProjectOutput              = '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
-        .ProjectInputPaths          = '$ProjectPath$\'
-        .ProjectBasePath            = '$ProjectPath$\'
+    #if __WINDOWS__
+        VCXProject( '$ProjectName$-proj' )
+        {
+            .ProjectOutput              = '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
+            .ProjectInputPaths          = '$ProjectPath$\'
+            .ProjectBasePath            = '$ProjectPath$\'
 
-        .ProjectX86Debug        = [ Using( .ProjectX86Debug )           .Target = '$ProjectName$-X86-Debug' ]
-        .ProjectX86Profile      = [ Using( .ProjectX86Profile )         .Target = '$ProjectName$-X86-Profile' ]
-        .ProjectX86Release      = [ Using( .ProjectX86Release )         .Target = '$ProjectName$-X86-Release' ]
-        .ProjectX64Debug        = [ Using( .ProjectX64Debug )           .Target = '$ProjectName$-X64-Debug' ]
-        .ProjectX64Profile      = [ Using( .ProjectX64Profile )         .Target = '$ProjectName$-X64-Profile' ]
-        .ProjectX64Release      = [ Using( .ProjectX64Release )         .Target = '$ProjectName$-X64-Release' ]
-        .ProjectX86ClangDebug   = [ Using( .ProjectX86ClangDebug )      .Target = '$ProjectName$-X86Clang-Debug' ]
-        .ProjectX86ClangProfile = [ Using( .ProjectX86ClangProfile )    .Target = '$ProjectName$-X86Clang-Profile' ]
-        .ProjectX86ClangRelease = [ Using( .ProjectX86ClangRelease )    .Target = '$ProjectName$-X86Clang-Release' ]
-        .ProjectConfigs         = { .ProjectX86Debug, .ProjectX86Profile, .ProjectX86Release,
-                                    .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-                                    .ProjectX86ClangDebug, .ProjectX86ClangProfile, .ProjectX86ClangRelease }
-    }
+            .ProjectX64Debug        = [ Using( .ProjectX64Debug )           .Target = '$ProjectName$-X64-Debug' ]
+            .ProjectX64Profile      = [ Using( .ProjectX64Profile )         .Target = '$ProjectName$-X64-Profile' ]
+            .ProjectX64Release      = [ Using( .ProjectX64Release )         .Target = '$ProjectName$-X64-Release' ]
+            .ProjectX64ClangDebug   = [ Using( .ProjectX64ClangDebug )      .Target = '$ProjectName$-X64Clang-Debug' ]
+            .ProjectX64ClangProfile = [ Using( .ProjectX64ClangProfile )    .Target = '$ProjectName$-X64Clang-Profile' ]
+            .ProjectX64ClangRelease = [ Using( .ProjectX64ClangRelease )    .Target = '$ProjectName$-X64Clang-Release' ]
+            .ProjectConfigs         = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+                                        .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
+        }
+    #endif
+
+    // XCode Project Generation
+    //--------------------------------------------------------------------------
+    #if __OSX__
+        XCodeProject( '$ProjectName$-xcodeproj' )
+        {
+            .ProjectOutput              = '../tmp/XCode/Projects/2_Libs/$ProjectName$.xcodeproj/project.pbxproj'
+            .ProjectInputPaths          = '$ProjectPath$/'
+            .ProjectBasePath            = '$ProjectPath$/'
+
+            .XCodeBuildWorkingDir       = '../../../../Code/'
+
+            .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = '$ProjectName$-x64OSX-Debug' ]
+            .ProjectOSXProfile      = [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
+            .ProjectOSXRelease      = [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]
+            .ProjectConfigs         = { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }
+        }
+   #endif
 }

@@ -79,6 +79,10 @@
     <td>Explicitly set local worker thread count.</td>
   </tr>
   <tr>
+    <td><a href="#monitor">-monitor</a></td>
+    <td>Output a machine readable file for use by 3rd party tools.</td>
+  </tr>
+  <tr>
     <td><a href="#noprogress">-noprogress</a></td>
     <td>Don't show the progress bar while building.</td>
   </tr>
@@ -89,6 +93,14 @@
   <tr>
     <td><a href="#nosummaryonerror">-nosummaryonerror</a></td>
     <td>Don't print the -summary output if there is an error.</td>
+  </tr>
+  <tr>
+    <td><a href="#nounity">-nounity</a></td>
+    <td>[Experimental] Individually build all files normally built in Unity.</td>
+  </tr>
+  <tr>
+    <td><a href="#progress">-progress</a></td>
+    <td>Show the build progress bar even if it would otherwise be disabled.</td>
   </tr>
   <tr>
     <td><a href="#quiet">-quiet</a></td>
@@ -213,9 +225,9 @@ specified instead.</p>
 <p>Print detailed information about distributed compilation. This can help when investigating connectivity issues. Activates -dist if not already specified.</p>
 </div>
 
-    <td>[Experimental] Active fast cancellation on build failure.</td>
     <div class='newsitemheader' id="fastcancel">-fastcancel</div>
     <div class='newsitembody'>
+<p><b>[Experimental]</b> Activate fast cancellation on build failure.</p>
 <p>Normally, when a build fails, FASTBuild will stop spawning new tasks, but will allow any other concurrently running processes to complete. In some cases, these tasks can
 take a long time to complete. When activated, the -fastcancel option will allow FASTBuild to instead terminate those concurrent jobs.</p>
 </div>
@@ -278,6 +290,13 @@ should occur on the same thread.  This can be useful for build process debugging
 of FASTBuild to distribute work efficiently.</p>
 </div>
 
+    <div class='newsitemheader' id="monitor">-monitor</div>
+    <div class='newsitembody'>
+<p>Output a machine readable file for use by 3rd party tools.</p>
+<p>A machine readable file is written to %TEMP%/FastBuild/FastBuildLog.log and updated throughout the build. This file
+can be monitored by 3rd party applications to provide enhanced visualization of the build state.</p>
+</div>
+
     <div class='newsitemheader' id="noprogress">-noprogress</div>
     <div class='newsitembody'>
 <p>Suppresses the progress bar that is normally shown while compiling.</p>
@@ -298,6 +317,21 @@ useful if you want to see as many errors as possible in your compilation output.
 <p>NOTE: When specifying -nosummaryonerror, -summary is implied if not already specified.</p>
 </div>
 
+    <div class='newsitemheader' id="nounity">-nounity</div>
+    <div class='newsitembody'>
+<p><b>[Experimental]</b> Individually build all files normally in Unity.</p>
+<p>NOTE: When alternating between specifying -nounity and not, libraries may not relink when they should. The resulting
+executables are valid, but may contain the previous unity objects instead of the loose objects</p>
+</div>
+
+    <div class='newsitemheader' id="progress">-progress</div>
+    <div class='newsitembody'>
+<p>Show the build progress bar even if it would otherwise be disabled.</p>
+<p>FASTBuild shows a build progress bar unless it detects that the stdout has been redirected (indicating that
+it's not being run from a command prompt). You can override this behavior and force the progress bar to be enabled
+using -progress.</p>
+</div>
+
     <div class='newsitemheader' id="quiet">-quiet</div>
     <div class='newsitembody'>
 <p>Don't show build output. Information about which items are being built and the overall state of the build will be
@@ -306,7 +340,7 @@ suppressed.</p>
 
     <div class='newsitemheader' id="report">-report</div>
     <div class='newsitembody'>
-<p>Ouput a detailed report at the end of the build.  The report is written to report.html in the current directory.</p>
+<p>Output a detailed report at the end of the build.  The report is written to report.html in the current directory.</p>
 <p>The build report contains details of:
 <ul>
   <li>The build environment (version, cmd line used etc.)</li>

@@ -22,10 +22,10 @@ Settings {}
 
     ObjectList( "Exec-Lib" )
     {
-        .CompilerInputFiles = 'Data/TestExec/exec.cpp'
+        .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestExec/exec.cpp'
         .CompilerOutputPath = '$OutPath$/'
         #if __WINDOWS__
-            .CompilerOptions    + ' $VisualStudioIncludePaths$ /EHsc'
+            .CompilerOptions    + ' /EHsc'
         #endif
     }
 
@@ -33,12 +33,9 @@ Settings {}
     {
         .LinkerOutput       = .LinkerOutputFile
         #if __WINDOWS__
-            .LinkerOptions      = '/WX /NODEFAULTLIB /NOLOGO /OUT:%2 %1 /MACHINE:X86'
-                                + .WindowsLibPaths
-                                + ' /LIBPATH:"$VisualStudioPath$\VC\lib"'
-                                + ' kernel32.lib'
-                                + ' libcmt.lib'
+            .LinkerOptions      + ' kernel32.lib'
                                 + ' libcpmt.lib'
+                                + .CRTLibs_Static
         #endif
         .Libraries          = { "Exec-Lib" }
     }

@@ -1,0 +1,19 @@
+//
+// Multiple Implicit Compilers
+//
+// Ensure that implicitly created Compiler() objects work if we references the same file multiple times
+//------------------------------------------------------------------------------
+
+// Satisfy ObjectList with dummy params
+.CompilerOptions    = '-c %1 %2'
+.CompilerOutputPath = '/'
+
+ObjectList( 'ObjList1')
+{
+    .Compiler = 'cl.exe' // Implicitly created Compiler (first reference should create it)
+}
+
+ObjectList( 'ObjList2' )
+{
+    .Compiler = 'cl.exe' // Implicitly created Compiler (second reference should refer to it)
+}

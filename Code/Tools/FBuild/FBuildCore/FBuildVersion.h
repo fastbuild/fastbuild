@@ -4,19 +4,14 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define FBUILD_VERSION_STRING "v0.95"
+#define FBUILD_VERSION_STRING "v0.97"
+#define FBUILD_VERSION (uint32_t)97
 #if defined( __WINDOWS__ )
-    #ifdef WIN64
-        #define FBUILD_VERSION_PLATFORM "x64"
-    #else
-        #define FBUILD_VERSION_PLATFORM "x86"
-    #endif
-#elif defined( __APPLE__ ) || defined( __LINUX__ )
-    #ifdef __x86_64__
-        #define FBUILD_VERSION_PLATFORM "x64"
-    #else
-        #define FBUILD_VERSION_PLATFORM "x86"
-    #endif
+    #define FBUILD_VERSION_PLATFORM "Windows"
+#elif defined( __APPLE__ )
+    #define FBUILD_VERSION_PLATFORM "OSX"
+#elif defined( __LINUX__ )
+    #define FBUILD_VERSION_PLATFORM "Linux"
 #else
     #error Unknown platform
 #endif

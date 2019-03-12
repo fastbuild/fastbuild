@@ -30,10 +30,12 @@
 REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
     REFLECT(        m_CachePath,                "CachePath",                MetaOptional() )
+    REFLECT(        m_CachePathMountPoint,      "CachePathMountPoint",      MetaOptional() )
     REFLECT(        m_CachePluginDLL,           "CachePluginDLL",           MetaOptional() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
+    REFLECT(        m_AllowDBMigration_Experimental, "AllowDBMigration_Experimental", MetaOptional() )
 REFLECT_END( SettingsNode )
 
 // CONSTRUCTOR
@@ -42,14 +44,16 @@ SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
 , m_WorkerConnectionLimit( 15 )
 , m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
+, m_AllowDBMigration_Experimental( false )
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );
+    Env::GetEnvVariable( "FASTBUILD_CACHE_PATH_MOUNT_POINT", m_CachePathMountPointFromEnvVar );
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
 {
     // using a cache plugin?
     if ( m_CachePluginDLL.IsEmpty() == false )
@@ -77,39 +81,28 @@ SettingsNode::~SettingsNode() = default;
     return false;
 }
 
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * SettingsNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    SettingsNode * node = nodeGraph.CreateSettingsNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void SettingsNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-}
-
 // GetCachePath
 //------------------------------------------------------------------------------
 const AString & SettingsNode::GetCachePath() const
 {
-    // Environment variable takes priority
-    if ( m_CachePathFromEnvVar.IsEmpty() == false )
+    // Settings() bff option overrides environment variable
+    if ( m_CachePath.IsEmpty() == false )
     {
-        return m_CachePathFromEnvVar;
+        return m_CachePath;
     }
-    return m_CachePath;
+    return m_CachePathFromEnvVar;
+}
+
+// GetCachePathMountPoint
+//------------------------------------------------------------------------------
+const AString & SettingsNode::GetCachePathMountPoint() const
+{
+    // Settings() bff option overrides environment variable
+    if ( m_CachePathMountPoint.IsEmpty() == false )
+    {
+        return m_CachePathMountPoint;
+    }
+    return m_CachePathMountPointFromEnvVar;
 }
 
 // GetCachePluginDLL

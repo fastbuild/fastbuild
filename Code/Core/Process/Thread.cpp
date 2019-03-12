@@ -20,6 +20,10 @@
     #include <unistd.h>
 #endif
 
+#if !defined( __has_feature )
+    #define __has_feature( ... ) 0
+#endif
+
 // Debug Structure for thread name setting
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
@@ -134,6 +138,12 @@ public:
                                    nullptr      // LPDWORD lpThreadId
                                  );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        #if __has_feature( address_sanitizer ) || __SANITIZE_ADDRESS__
+            // AddressSanitizer instruments objects created on the stack by inserting redzones around them.
+            // This greatly increases the amount of stack space used by the program.
+            // To account for that double the requested stack size for the thread.
+            stackSize *= 2;
+        #endif
         pthread_t h;
         pthread_attr_t threadAttr;
         VERIFY( pthread_attr_init( &threadAttr ) == 0 );
@@ -147,6 +157,35 @@ public:
     ASSERT( h != nullptr );
 
     return (Thread::ThreadHandle)h;
+}
+
+// WaitForThread
+//------------------------------------------------------------------------------
+/*static*/ int Thread::WaitForThread( ThreadHandle handle )
+{
+    #if defined( __WINDOWS__ )
+        bool timedOut = true; // default is true to catch cases when timedOut wasn't set by WaitForThread()
+        int ret = WaitForThread( handle, INFINITE, timedOut );
+
+        if ( timedOut )
+        {
+            // something is wrong - we were waiting an INFINITE time
+            ASSERT( false );
+            return 0;
+        }
+
+        return ret;
+    #elif defined( __APPLE__ ) || defined( __LINUX__ )
+        void * ret;
+        if ( pthread_join( (pthread_t)handle, &ret ) == 0 )
+        {
+            return (int)( (size_t)ret );
+        }
+        ASSERT( false ); // usage failure
+        return 0;
+    #else
+        #error Unknown platform
+    #endif
 }
 
 // WaitForThread
@@ -184,13 +223,7 @@ public:
     #elif defined( __APPLE__ )
         timedOut = false;
         (void)timeoutMS; // TODO:MAC Implement timeout support
-        void * ret;
-        if ( pthread_join( (pthread_t)handle, &ret ) == 0 )
-        {
-            return (int)( (size_t)ret );
-        }
-        ASSERT( false ); // usage failure
-        return 0;
+        return WaitForThread( handle );
     #elif defined( __LINUX__ )
         // timeout is specified in absolute time
         // - get current time
@@ -225,6 +258,19 @@ public:
         ASSERT( false ); // a non-timeout error indicates usage failure
         timedOut = false;
         return 0;
+    #else
+        #error Unknown platform
+    #endif
+}
+
+// DetachThread
+//------------------------------------------------------------------------------
+/*static*/ void Thread::DetachThread( ThreadHandle handle )
+{
+    #if defined( __WINDOWS__ )
+        (void)handle; // Nothing to do
+    #elif defined( __APPLE__ ) || defined(__LINUX__)
+        VERIFY( pthread_detach( (pthread_t)handle ) == 0 );
     #else
         #error Unknown platform
     #endif

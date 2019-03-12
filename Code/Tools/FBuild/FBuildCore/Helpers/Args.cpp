@@ -112,7 +112,7 @@ bool Args::Finalize( const AString & exe, const AString & nodeNameForError, bool
         const uint32_t totalLen = ( argLen + exeLen + extraLen );
 
         // Small enough?
-        if ( totalLen <= argLimit )
+        if ( totalLen < argLimit )
         {
             #if defined( ASSERTS_ENABLED )
                 m_Finalized = true;

@@ -40,7 +40,6 @@ Client::Client( const Array< AString > & workerList,
                 bool detailedLogging )
     : m_WorkerList( workerList )
     , m_ShouldExit( false )
-    , m_Exited( false )
     , m_DetailedLogging( detailedLogging )
     , m_WorkerConnectionLimit( workerConnectionLimit )
     , m_Port( port )
@@ -62,10 +61,7 @@ Client::~Client()
     SetShuttingDown();
 
     m_ShouldExit = true;
-    while ( m_Exited == false )
-    {
-        Thread::Sleep( 1 );
-    }
+    Thread::WaitForThread( m_Thread );
 
     ShutdownAllConnections();
 
@@ -149,8 +145,6 @@ void Client::ThreadFunc()
             break;
         }
     }
-
-    m_Exited = true;
 }
 
 // LookForWorkers
@@ -218,17 +212,18 @@ void Client::LookForWorkers()
             continue;
         }
 
-        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], m_Port, 2000 ); // 2000ms connection timeout
+        DIST_INFO( "Connecting to: %s\n", m_WorkerList[ i ].Get() );
+        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], m_Port, 2000, &ss ); // 2000ms connection timeout
         if ( ci == nullptr )
         {
+            DIST_INFO( " - connection: %s (FAILED)\n", m_WorkerList[ i ].Get() );
             ss.m_DelayTimer.Start(); // reset connection attempt delay
         }
         else
         {
-            DIST_INFO( "Connected: %s\n", m_WorkerList[ i ].Get() );
+            DIST_INFO( " - connection: %s (OK)\n", m_WorkerList[ i ].Get() );
             const uint32_t numJobsAvailable( JobQueue::IsValid() ? (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable() : 0 );
 
-            ci->SetUserData( &ss );
             ss.m_RemoteName = m_WorkerList[ i ];
             ss.m_Connection = ci; // success!
             ss.m_NumJobsAvailable = numJobsAvailable;
@@ -554,6 +549,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                                           job->GetNode()->GetName().Get(),
                                           job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
 
+    job->SetMessages( messages );
+
     if ( result == true )
     {
         // built ok - serialize to disc
@@ -631,13 +628,16 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             // debugging message
             const size_t workerIndex = ( ss - m_ServerList.Begin() );
             const AString & workerName = m_WorkerList[ workerIndex ];
-            FLOG_INFO( "Remote System Failure!\n"
+            DIST_INFO( "Remote System Failure!\n"
                        " - Blacklisted Worker: %s\n"
                        " - Node              : %s\n"
-                       " - Job Error Count   : %u / %u\n",
+                       " - Job Error Count   : %u / %u\n"
+                       " - Details           :\n"
+                       "%s",
                        workerName.Get(),
                        job->GetNode()->GetName().Get(),
-                       job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT
+                       job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT,
+                       failureOutput.Get()
                       );
 
             // should we retry on another worker?
@@ -697,7 +697,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     }
 
     MemoryStream ms;
-    manifest->Serialize( ms );
+    manifest->SerializeForRemote( ms );
 
     // Send manifest to worker
     Protocol::MsgManifest resultMsg( toolId );
@@ -791,7 +791,9 @@ bool Client::WriteFileToDisk( const AString & fileName, const char * data, const
     {
         // On Windows, we can occasionally fail to open the file with error 1224 (ERROR_USER_MAPPED_FILE), due to
         // things like anti-virus etc. Simply retry if that happens
-        FileIO::WorkAroundForWindowsFilePermissionProblem( fileName );
+        // Also, when a <LOCAL RACE> occurs, the local compilation process might not have exited at this point
+        // (we call ::TerminateProcess, which is async),which can cause failure below, because the file is still locked.
+        FileIO::WorkAroundForWindowsFilePermissionProblem( fileName, FileStream::WRITE_ONLY, 15 ); // 15 secs max wait
 
         if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
         {

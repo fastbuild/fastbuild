@@ -66,8 +66,8 @@ public:
     // manage connections
     bool Listen( uint16_t port );
     void StopListening();
-    const ConnectionInfo * Connect( const AString & host, uint16_t port, uint32_t timeout = 2000 );
-    const ConnectionInfo * Connect( uint32_t hostIP, uint16_t port, uint32_t timeout = 2000 );
+    const ConnectionInfo * Connect( const AString & host, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
+    const ConnectionInfo * Connect( uint32_t hostIP, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
     void Disconnect( const ConnectionInfo * ci );
     void SetShuttingDown() { m_ShuttingDown = true; }
 
@@ -82,7 +82,7 @@ public:
     static void GetAddressAsString( uint32_t addr, AString & address );
 
 protected:
-    // network events - NOTE: these happen in another thread!
+    // network events - NOTE: these happen in another thread! (but never at the same time)
     virtual void OnReceive( const ConnectionInfo *, void * /*data*/, uint32_t /*size*/, bool & /*keepMemory*/ ) {}
     virtual void OnConnected( const ConnectionInfo * ) {}
     virtual void OnDisconnected( const ConnectionInfo * ) {}
@@ -107,6 +107,7 @@ private:
     TCPSocket   Accept( TCPSocket socket,
                         struct sockaddr * address,
                         int * addressSize ) const;
+    TCPSocket   CreateSocket() const;
 
     struct SendBuffer
     {
@@ -119,14 +120,16 @@ private:
     void                CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port );
     static uint32_t     ListenThreadWrapperFunction( void * data );
     void                ListenThreadFunction( ConnectionInfo * ci );
-    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port );
+    ConnectionInfo *    CreateConnectionThread( TCPSocket socket, uint32_t host, uint16_t port, void * userData = nullptr );
     static uint32_t     ConnectionThreadWrapperFunction( void * data );
     void                ConnectionThreadFunction( ConnectionInfo * ci );
 
     // internal helpers
-    bool                DisableNagle( TCPSocket sockfd );
-    bool                SetBufferSizes( TCPSocket socket );
-    void                SetNonBlocking( TCPSocket socket, bool nonBlocking ) const;
+    void                AllowSocketReuse( TCPSocket socket ) const;
+    void                DisableNagle( TCPSocket socket ) const;
+    void                DisableSigPipe( TCPSocket socket ) const;
+    void                SetLargeBufferSizes( TCPSocket socket ) const;
+    void                SetNonBlocking( TCPSocket socket ) const;
 
     // listen socket related info
     ConnectionInfo *            m_ListenConnection;

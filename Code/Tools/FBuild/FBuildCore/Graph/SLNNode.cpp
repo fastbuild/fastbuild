@@ -7,6 +7,7 @@
 
 #include "SLNNode.h"
 
+#include "Tools/FBuild/FBuildCore/Error.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -25,33 +26,237 @@
 // system
 #include <string.h> // for memcmp
 
+// Reflection
+//------------------------------------------------------------------------------
+REFLECT_STRUCT_BEGIN_BASE( SolutionConfigBase )
+    REFLECT_ARRAY(  m_SolutionBuildProjects,                "SolutionBuildProject",                     MetaInheritFromOwner() + MetaOptional() + MetaFile() ) // "SolutionBuildProject" for backwards compat
+    REFLECT_ARRAY(  m_SolutionDeployProjects,               "SolutionDeployProjects",                   MetaInheritFromOwner() + MetaOptional() + MetaFile() )
+REFLECT_END( SolutionConfigBase )
+
+REFLECT_STRUCT_BEGIN( SolutionConfig, SolutionConfigBase, MetaNone() )
+    REFLECT(        m_SolutionPlatform,                     "SolutionPlatform",                         MetaOptional() )
+    REFLECT(        m_SolutionConfig,                       "SolutionConfig",                           MetaOptional() )
+    REFLECT(        m_Platform,                             "Platform",                                 MetaNone() )
+    REFLECT(        m_Config,                               "Config",                                   MetaNone() )
+REFLECT_END( SolutionConfig )
+
+REFLECT_STRUCT_BEGIN_BASE( SolutionFolder )
+    REFLECT(        m_Path,                                 "Path",                                     MetaNone() )
+    REFLECT_ARRAY(  m_Projects,                             "Projects",                                 MetaFile() )
+REFLECT_END( SolutionFolder )
+
+REFLECT_STRUCT_BEGIN_BASE( SolutionDependency )
+    REFLECT_ARRAY(  m_Projects,                             "Projects",                                 MetaFile() )
+    REFLECT_ARRAY(  m_Dependencies,                         "Dependencies",                             MetaFile() )
+REFLECT_END( SolutionDependency )
+
+REFLECT_NODE_BEGIN( SLNNode, Node, MetaName( "SolutionOutput" ) + MetaFile() )
+    REFLECT_ARRAY(  m_SolutionProjects,                     "SolutionProjects",                         MetaOptional() + MetaFile() )
+    REFLECT(        m_SolutionVisualStudioVersion,          "SolutionVisualStudioVersion",              MetaOptional() )
+    REFLECT(        m_SolutionMinimumVisualStudioVersion,   "SolutionMinimumVisualStudioVersion",       MetaOptional() )
+    REFLECT_ARRAY_OF_STRUCT( m_SolutionConfigs,             "SolutionConfigs",      SolutionConfig,     MetaOptional() )
+    REFLECT_ARRAY_OF_STRUCT( m_SolutionFolders,             "SolutionFolders",      SolutionFolder,     MetaOptional() )
+    REFLECT_ARRAY_OF_STRUCT( m_SolutionDependencies,        "SolutionDependencies", SolutionDependency, MetaOptional() )
+
+    // Base Project Config settings
+    REFLECT_STRUCT( m_BaseSolutionConfig,                   "BaseSolutionConfig",   SolutionConfigBase, MetaEmbedMembers() )
+REFLECT_END( SLNNode )
+
+// VCXProjectNodeComp
+//------------------------------------------------------------------------------
+struct VCXProjectNodeComp
+{
+    bool operator ()( const VCXProjectNode * a, const VCXProjectNode * b ) const
+    {
+        return ( a->GetName() < b->GetName() );
+    }
+};
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-SLNNode::SLNNode( const AString & solutionOuput,
-                  const AString & solutionBuildProject,
-                  const AString & solutionVisualStudioVersion,
-                  const AString & solutionMinimumVisualStudioVersion,
-                  const Array< VSProjectConfig > & configs,
-                  const Array< VCXProjectNode * > & projects,
-                  const Array< SLNDependency > & slnDeps,
-                  const Array< SLNSolutionFolder > & folders )
-: FileNode( solutionOuput, Node::FLAG_NONE )
-, m_SolutionBuildProject( solutionBuildProject )
-, m_SolutionVisualStudioVersion( solutionVisualStudioVersion )
-, m_SolutionMinimumVisualStudioVersion( solutionMinimumVisualStudioVersion )
-, m_Configs( configs )
-, m_SolutionDeps( slnDeps )
-, m_Folders( folders )
+SLNNode::SLNNode()
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
 {
     m_LastBuildTimeMs = 100; // higher default than a file node
     m_Type = Node::SLN_NODE;
+}
 
-    // depend on the input nodes
-    VCXProjectNode * const * projectsEnd = projects.End();
-    for( VCXProjectNode ** it = projects.Begin() ; it != projectsEnd ; ++it )
+// Initialize
+//------------------------------------------------------------------------------
+/*virtual*/ bool SLNNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+{
+    // Solution Configs
+    //------------------------------------------------------------------------------
+    // Create default SolutionConfigs if not specified
+    if ( m_SolutionConfigs.IsEmpty() )
     {
-        m_StaticDependencies.Append( Dependency( *it ) );
+        // Generated configs will take any properties we've
+        // set at the solution level as a default
+        SolutionConfig config( m_BaseSolutionConfig );
+
+        m_SolutionConfigs.SetCapacity( 4 );
+        config.m_Platform = "Win32";
+        config.m_Config = "Debug";
+        m_SolutionConfigs.Append( config );
+        config.m_Config = "Release";
+        m_SolutionConfigs.Append( config );
+        config.m_Platform = "x64";
+        config.m_Config = "Debug";
+        m_SolutionConfigs.Append( config );
+        config.m_Config = "Release";
+        m_SolutionConfigs.Append( config );
     }
+
+    // Auto-populate SolutionPlatform and SolutionConfig
+    for ( SolutionConfig & solutionConfig : m_SolutionConfigs )
+    {
+        // SolutionConfig is the same as Config if not specified
+        if ( solutionConfig.m_SolutionConfig.IsEmpty() )
+        {
+            solutionConfig.m_SolutionConfig = solutionConfig.m_Config;
+        }
+        // SolutionPlatform is the same as Platform if not specified
+        if ( solutionConfig.m_SolutionPlatform.IsEmpty() )
+        {
+            solutionConfig.m_SolutionPlatform = solutionConfig.m_Platform;
+        }
+
+        // Handle inconsistency between "Win32" and "x86" for SolutionPlatform
+        //  - i.e. for 64bits, Platform and SolutionPlatform are both "x64"
+        //         but for 32 bits, Platform is "Win32" while SolutionPlatform is "x86"
+        if ( solutionConfig.m_SolutionPlatform.MatchesI( "Win32" ) )
+        {
+             solutionConfig.m_SolutionPlatform = "x86";
+        }
+    }
+
+    // sort project configs by config and by platform (like Visual Studio)
+    m_SolutionConfigs.Sort();
+
+    // Canonicalize SolutionFolder paths
+    for ( SolutionFolder & solutionFolder : m_SolutionFolders )
+    {
+        solutionFolder.m_Path.Replace( FORWARD_SLASH, BACK_SLASH ); // Always use Windows-style
+        if ( solutionFolder.m_Path.EndsWith( BACK_SLASH ) )
+        {
+            solutionFolder.m_Path.Trim( 0, 1 ); // Remove trailing slash
+        }
+    }
+
+    // Collapse duplicate SolutionFolders
+    Array< SolutionFolder > collapsedFolders;
+    for ( SolutionFolder & folder : m_SolutionFolders )
+    {
+        // Have we already seen this folder?
+        SolutionFolder * found = nullptr;
+        for ( SolutionFolder & collapsedFolder : collapsedFolders )
+        {
+            if ( collapsedFolder.m_Path == folder.m_Path )
+            {
+                found = &collapsedFolder;
+                break;
+            }
+        }
+
+        if ( found )
+        {
+            // Merge list of projects
+            found->m_Projects.Append( folder.m_Projects );
+        }
+        else
+        {
+            // Add new entry
+            collapsedFolders.Append( SolutionFolder( folder ) );
+        }
+    }
+    m_SolutionFolders.Swap( collapsedFolders );
+
+    // Gather all Project references and canonicalize project names
+    //------------------------------------------------------------------------------
+    Array< VCXProjectNode * > projects( m_SolutionProjects.GetSize(), true );
+    // SolutionProjects
+    if ( !GatherProjects( nodeGraph, function, iter, ".SolutionProjects", m_SolutionProjects, projects ) )
+    {
+        return false; // MergeProjects will have emitted an error
+    }
+    // SolutionFolders
+    for ( SolutionFolder & solutionFolder : m_SolutionFolders )
+    {
+        if ( !GatherProjects( nodeGraph, function, iter, "SolutionFolders", solutionFolder.m_Projects, projects ) )
+        {
+            return false; // MergeProjects will have emitted an error
+        }
+    }
+    // SolutionDependencies
+    for ( SolutionDependency & solutionDependency : m_SolutionDependencies )
+    {
+        if ( !GatherProjects( nodeGraph, function, iter, "Projects", solutionDependency.m_Projects, projects ) )
+        {
+            return false; // MergeProjects will have emitted an error
+        }
+        if ( !GatherProjects( nodeGraph, function, iter, "Dependencies", solutionDependency.m_Dependencies, projects ) )
+        {
+            return false; // MergeProjects will have emitted an error
+        }
+    }
+
+    // SolutionConfigs
+    for ( SolutionConfig & solutionConfig : m_SolutionConfigs )
+    {
+        // SolutionBuildProjects
+        if ( !GatherProjects( nodeGraph, function, iter, "SolutionBuildProject", solutionConfig.m_SolutionBuildProjects, projects ) )
+        {
+            return false; // MergeProjects will have emitted an error
+        }
+
+        // SolutionDeployProjects
+        if ( !GatherProjects( nodeGraph, function, iter, "SolutionDeployProjects", solutionConfig.m_SolutionDeployProjects, projects ) )
+        {
+            return false; // MergeProjects will have emitted an error
+        }
+    }
+
+    // Sort projects by name (like Visual Studio)
+    projects.Sort( VCXProjectNodeComp() );
+
+    // Check Project Configurations
+    //------------------------------------------------------------------------------
+    for ( const VCXProjectNode * project : projects )
+    {
+        // check that this Project contains all .SolutionConfigs
+        for ( const SolutionConfig & solutionConfig : m_SolutionConfigs )
+        {
+            bool containsConfig = false;
+            for ( const VSProjectConfig & projectConfig : project->GetConfigs() )
+            {
+                if ( ( projectConfig.m_Platform == solutionConfig.m_Platform ) &&
+                     ( projectConfig.m_Config == solutionConfig.m_Config ) )
+                {
+                    containsConfig = true;
+                    break;
+                }
+            }
+
+            if ( containsConfig == false )
+            {
+                // TODO: specific error message "ProjectConfigNotFound"
+                AStackString<> configName;
+                configName.Format( "%s|%s", solutionConfig.m_Platform.Get(), solutionConfig.m_Config.Get() );
+                Error::Error_1104_TargetNotDefined( iter, function, configName.Get(), project->GetName() );
+                return false;
+            }
+        }
+    }
+
+    // Manage dependencies
+    //------------------------------------------------------------------------------
+    m_StaticDependencies.SetCapacity( projects.GetSize() );
+    for ( VCXProjectNode * project : projects )
+    {
+        m_StaticDependencies.Append( Dependency( project ) );
+    }
+
+    return true;
 }
 
 // DESTRUCTOR
@@ -73,14 +278,13 @@ SLNNode::~SLNNode() = default;
     }
 
     // .sln solution file
-    const AString & sln = sg.GenerateSLN(   m_Name,
-                                            m_SolutionBuildProject,
-                                            m_SolutionVisualStudioVersion,
-                                            m_SolutionMinimumVisualStudioVersion,
-                                            m_Configs,
-                                            projects,
-                                            m_SolutionDeps,
-                                            m_Folders );
+    const AString & sln = sg.GenerateSLN( m_Name,
+                                          m_SolutionVisualStudioVersion,
+                                          m_SolutionMinimumVisualStudioVersion,
+                                          m_SolutionConfigs,
+                                          projects,
+                                          m_SolutionDependencies,
+                                          m_SolutionFolders );
     if ( Save( sln, m_Name ) == false )
     {
         return NODE_RESULT_FAILED; // Save will have emitted an error
@@ -158,55 +362,56 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
     return true;
 }
 
-// Load
+// GatherProject
 //------------------------------------------------------------------------------
-/*static*/ Node * SLNNode::Load( NodeGraph & nodeGraph, IOStream & stream )
+bool SLNNode::GatherProject( NodeGraph & nodeGraph,
+                             const Function * function,
+                             const BFFIterator & iter,
+                             const char * propertyName,
+                             const AString & projectName,
+                             Array< VCXProjectNode * > & inOutProjects ) const
 {
-    NODE_LOAD( AStackString<>,  name );
-    NODE_LOAD( AStackString<>,  buildProject );
-    NODE_LOAD( AStackString<>,  visualStudioVersion );
-    NODE_LOAD( AStackString<>,  minimumVisualStudioVersion );
-    NODE_LOAD_DEPS( 1,          staticDeps );
-
-    Array< VSProjectConfig > configs;
-    VSProjectConfig::Load( nodeGraph, stream, configs );
-
-    Array< SLNSolutionFolder > folders;
-    SLNSolutionFolder::Load( stream, folders );
-
-    Array< SLNDependency > slnDeps;
-    SLNDependency::Load( stream, slnDeps );
-
-    Array< VCXProjectNode * > projects( staticDeps.GetSize(), false );
-    const Dependency * const end = staticDeps.End();
-    for ( const Dependency * it = staticDeps.Begin() ; it != end ; ++it )
+    // Get associated project file
+    Node * node = nodeGraph.FindNode( projectName );
+    if ( node == nullptr )
     {
-        projects.Append( it->GetNode()->CastTo< VCXProjectNode >() );
+        Error::Error_1104_TargetNotDefined( iter, function, propertyName, projectName );
+        return nullptr;
+    }
+    if ( node->GetType() != Node::VCXPROJECT_NODE )
+    {
+        // don't know how to handle this type of node
+        Error::Error_1005_UnsupportedNodeType( iter, function, propertyName, node->GetName(), node->GetType() );
+        return nullptr;
+    }
+    VCXProjectNode * projectNode = node->CastTo< VCXProjectNode >();
+
+    // Add to project list if not already there
+    if ( inOutProjects.Find( projectNode ) == nullptr )
+    {
+        inOutProjects.Append( projectNode );
     }
 
-    SLNNode * n = nodeGraph.CreateSLNNode( name,
-                                           buildProject,
-                                           visualStudioVersion,
-                                           minimumVisualStudioVersion,
-                                           configs,
-                                           projects,
-                                           slnDeps,
-                                           folders );
-    return n;
+    return true;
 }
 
-// Save
+// GatherProjects
 //------------------------------------------------------------------------------
-/*virtual*/ void SLNNode::Save( IOStream & stream ) const
+bool SLNNode::GatherProjects( NodeGraph & nodeGraph,
+                              const Function * function,
+                              const BFFIterator & iter,
+                              const char * propertyName,
+                              const Array< AString > & projectNames,
+                              Array< VCXProjectNode * > & inOutProjects ) const
 {
-    NODE_SAVE( m_Name );
-    NODE_SAVE( m_SolutionBuildProject );
-    NODE_SAVE( m_SolutionVisualStudioVersion );
-    NODE_SAVE( m_SolutionMinimumVisualStudioVersion );
-    NODE_SAVE_DEPS( m_StaticDependencies );
-    VSProjectConfig::Save( stream, m_Configs );
-    SLNSolutionFolder::Save( stream, m_Folders );
-    SLNDependency::Save( stream, m_SolutionDeps );
+    for ( const AString & projectName : projectNames )
+    {
+        if ( GatherProject( nodeGraph, function, iter, propertyName, projectName, inOutProjects ) == false )
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 //------------------------------------------------------------------------------

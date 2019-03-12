@@ -18,7 +18,7 @@ Settings {}
 ObjectList( 'ObjectList' )
 {
     // Specify root so .obj/.o filenames dont' conflict
-    .CompilerInputFilesRoot     = 'Data/TestObjectList/CompilerInputFilesRoot'
+    .CompilerInputFilesRoot     = 'Tools/FBuild/FBuildTest/Data/TestObjectList/CompilerInputFilesRoot'
 
     .CompilerInputFiles         = {
                                     '$CompilerInputFilesRoot$/A/file.cpp'

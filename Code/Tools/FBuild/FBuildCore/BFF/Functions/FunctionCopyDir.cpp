@@ -27,23 +27,11 @@ FunctionCopyDir::FunctionCopyDir()
     return true;
 }
 
-// Commit
+// CreateNode
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionCopyDir::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ Node * FunctionCopyDir::CreateNode() const
 {
-    CopyDirNode * copyDirNode = nodeGraph.CreateCopyDirNode( m_AliasForFunction );
-
-    if ( !PopulateProperties( nodeGraph, funcStartIter, copyDirNode ) )
-    {
-        return false;
-    }
-
-    if ( !copyDirNode->Initialize( nodeGraph, funcStartIter, this ) )
-    {
-        return false;
-    }
-
-    return true;
+    return FNEW( CopyDirNode );
 }
 
 //------------------------------------------------------------------------------

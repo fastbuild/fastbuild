@@ -48,18 +48,17 @@ void TestRemoveDir::CreateNode() const
 //------------------------------------------------------------------------------
 void TestRemoveDir::RemoveDir() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestRemoveDir/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestRemoveDir/fbuild.bff";
     options.m_ForceCleanBuild = true;
-    options.m_ShowSummary = true; // required to generate stats for node count checks
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
     // Create folders and put files in them
-    const char * pathA = "../../../../tmp/Test/RemoveDir/";
-    const char * fileA = "../../../../tmp/Test/RemoveDir/File";
-    const char * pathB = "../../../../tmp/Test/RemoveDir/SubDir/";
-    const char * fileB = "../../../../tmp/Test/RemoveDir/SubDir/File";
+    const char * pathA = "../tmp/Test/RemoveDir/";
+    const char * fileA = "../tmp/Test/RemoveDir/File";
+    const char * pathB = "../tmp/Test/RemoveDir/SubDir/";
+    const char * fileB = "../tmp/Test/RemoveDir/SubDir/File";
     TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( pathA ) ) );
     TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( pathB ) ) );
     FileStream f;

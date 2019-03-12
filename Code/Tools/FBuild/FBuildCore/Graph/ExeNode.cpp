@@ -7,12 +7,6 @@
 
 #include "ExeNode.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-
-#include "Core/FileIO/IOStream.h"
-#include "Core/Strings/AStackString.h"
-
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ExeNode, LinkerNode, MetaNone() )
@@ -29,21 +23,5 @@ ExeNode::ExeNode()
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 ExeNode::~ExeNode() = default;
-
-// Load
-//------------------------------------------------------------------------------
-/*static*/ Node * ExeNode::Load( NodeGraph & nodeGraph, IOStream & stream )
-{
-    NODE_LOAD( AStackString<>, name );
-
-    ExeNode * node = nodeGraph.CreateExeNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    return node;
-}
 
 //------------------------------------------------------------------------------

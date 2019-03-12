@@ -7,6 +7,9 @@
 #include "TestFramework/UnitTest.h"
 
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
+#include "Tools/FBuild/FBuildCore/FBuildOptions.h"
+
+#include "Core/Process/Mutex.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -17,8 +20,10 @@ struct FBuildStats;
 class FBuildTest : public UnitTest
 {
 protected:
+    FBuildTest();
+
     virtual void PreTest() const override;
-    virtual void PostTest() const override;
+    virtual void PostTest( bool pased ) const override;
 
     // helpers to clear and check for generated files
     void EnsureFileDoesNotExist( const char * fileName ) const;
@@ -37,12 +42,23 @@ protected:
     void CheckStatsTotal( size_t numSeen, size_t numBuilt ) const;
 
     // other helpers
-    void GetCodeDir( AString & codeDir ) const;
+    static void GetCodeDir( AString & codeDir );
 
     const AString & GetRecordedOutput() const { return s_RecordedOutput; }
 private:
+    mutable AString m_OriginalWorkingDir;
+    static bool s_DebuggerAttached;
     static bool LoggingCallback( const char * message );
+    static Mutex s_OutputMutex;
     static AString s_RecordedOutput;
+};
+
+// FBuildTestOptions
+//------------------------------------------------------------------------------
+class FBuildTestOptions : public FBuildOptions
+{
+public:
+    FBuildTestOptions();
 };
 
 //------------------------------------------------------------------------------

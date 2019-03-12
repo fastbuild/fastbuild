@@ -40,7 +40,7 @@
         m_DLL = ::LoadLibrary( dllName.Get() );
         if ( !m_DLL )
         {
-            FLOG_WARN( "Cache plugin '%s' load failed (0x%x).", dllName.Get(), ::GetLastError() );
+            FLOG_WARN( "Cache plugin '%s' load failed (0x%x).", dllName.Get(), (uint32_t)::GetLastError() );
             return;
         }
 
@@ -91,12 +91,12 @@ void * CachePlugin::GetFunction( const char * friendlyName, const char * mangled
 {
     #if defined( __WINDOWS__ )
         ASSERT( m_DLL );
-        void * func = ::GetProcAddress( (HMODULE)m_DLL, mangledName );
+        FARPROC func = ::GetProcAddress( (HMODULE)m_DLL, mangledName );
         if ( !func && !optional )
         {
             FLOG_WARN( "Missing CachePluginDLL function '%s' (Mangled: %s)", friendlyName, mangledName );
         }
-        return func;
+        return reinterpret_cast<void*>( func );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         (void)mangledName;
         (void)optional;
@@ -132,7 +132,7 @@ void * CachePlugin::GetFunction( const char * friendlyName, const char * mangled
 
 // Init
 //------------------------------------------------------------------------------
-/*virtual*/ bool CachePlugin::Init( const AString & cachePath )
+/*virtual*/ bool CachePlugin::Init( const AString & cachePath, const AString & /*cachePathMountPoint*/ )
 {
     // ensure all functions were found
     if ( m_InitFunc && m_ShutdownFunc && m_PublishFunc && m_RetrieveFunc && m_FreeMemoryFunc )

@@ -155,6 +155,19 @@ JobQueue::~JobQueue()
         FDELETE m_Workers[ i ];
     }
 
+    // free locally available distributed jobs
+    {
+        MutexHolder m( m_DistributedJobsMutex );
+        // we may have some distributable jobs that could not be built,
+        // so delete them here before checking mem usage below
+        const size_t numJobsAvailable = m_DistributableJobs_Available.GetSize();
+        for ( size_t i=0; i<numJobsAvailable; ++i )
+        {
+            FDELETE m_DistributableJobs_Available[ i ];
+        }
+        m_DistributableJobs_Available.Clear();
+    }
+
     ASSERT( m_CompletedJobs.IsEmpty() );
     ASSERT( m_CompletedJobsFailed.IsEmpty() );
     ASSERT( Job::GetTotalLocalDataMemoryUsage() == 0 );
@@ -668,7 +681,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
 
     // make sure the output path exists for files
     // (but don't bother for input files)
-    const bool isOutputFile = node->IsAFile() && ( node->GetType() != Node::FILE_NODE ) && ( node->GetType() != Node::COMPILER_NODE );
+    const bool isOutputFile = node->IsAFile() && ( node->GetType() != Node::FILE_NODE );
     if ( isOutputFile )
     {
         if ( Node::EnsurePathExistsForFile( node->GetName() ) == false )

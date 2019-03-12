@@ -22,16 +22,18 @@ private:
     DECLARE_TESTS
 
     // Helpers
-    FBuildStats BuildGenerate( FBuildOptions options = FBuildOptions(), bool useDB = true ) const;
+    FBuildStats BuildGenerate( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
     const char * GetTestGenerateDBFileName() const { return "../../../../tmp/Test/Unity/generate.fdb"; }
-    FBuildStats BuildCompile( FBuildOptions options = FBuildOptions(), bool useDB = true ) const;
+    FBuildStats BuildCompile( FBuildTestOptions options = FBuildTestOptions(), bool useDB = true, bool forceMigration = false ) const;
     const char * GetTestCompileDBFileName() const { return "../../../../tmp/Test/Unity/compile.fdb"; }
 
     // Tests
     void TestGenerate() const;
     void TestGenerate_NoRebuild() const;
+    void TestGenerate_NoRebuild_BFFChange() const;
     void TestCompile() const;
     void TestCompile_NoRebuild() const;
+    void TestCompile_NoRebuild_BFFChange() const;
     void TestGenerateFromExplicitList() const;
     void TestExcludedFiles() const;
     void IsolateFromUnity_Regression() const;
@@ -42,8 +44,10 @@ private:
 REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( TestGenerate )           // clean build of unity files
     REGISTER_TEST( TestGenerate_NoRebuild ) // check nothing rebuilds
+    REGISTER_TEST( TestGenerate_NoRebuild_BFFChange ) // check nothing rebuilds after a BFF change
     REGISTER_TEST( TestCompile )            // compile a library using unity inputs
     REGISTER_TEST( TestCompile_NoRebuild )  // check nothing rebuilds
+    REGISTER_TEST( TestCompile_NoRebuild_BFFChange )  // check nothing rebuilds after a BFF change
     REGISTER_TEST( TestGenerateFromExplicitList ) // create a unity with manually provided files
     REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
     REGISTER_TEST( IsolateFromUnity_Regression )
@@ -51,10 +55,11 @@ REGISTER_TESTS_END
 
 // BuildGenerate
 //------------------------------------------------------------------------------
-FBuildStats TestUnity::BuildGenerate( FBuildOptions options, bool useDB ) const
+FBuildStats TestUnity::BuildGenerate( FBuildTestOptions options, bool useDB, bool forceMigration ) const
 {
-    options.m_ConfigFile = "Data/TestUnity/unity.bff";
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/unity.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
+    options.m_ForceDBMigration_Debug = forceMigration;
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestGenerateDBFileName() : nullptr ) );
@@ -70,17 +75,17 @@ FBuildStats TestUnity::BuildGenerate( FBuildOptions options, bool useDB ) const
 //------------------------------------------------------------------------------
 void TestUnity::TestGenerate() const
 {
-    FBuildOptions options;
+    FBuildTestOptions options;
     options.m_ShowSummary = true; // required to generate stats for node count checks
     options.m_ForceCleanBuild = true;
 
-    EnsureFileDoesNotExist( "../../../../tmp/Test/Unity/Unity1.cpp" );
-    EnsureFileDoesNotExist( "../../../../tmp/Test/Unity/Unity2.cpp" );
+    EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity1.cpp" );
+    EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity2.cpp" );
 
     FBuildStats stats = BuildGenerate( options, false ); // don't use DB
 
-    EnsureFileExists( "../../../../tmp/Test/Unity/Unity1.cpp" );
-    EnsureFileExists( "../../../../tmp/Test/Unity/Unity2.cpp" );
+    EnsureFileExists( "../tmp/Test/Unity/Unity1.cpp" );
+    EnsureFileExists( "../tmp/Test/Unity/Unity2.cpp" );
 
     // Check stats
     //                      Seen,   Built,  Type
@@ -93,8 +98,8 @@ void TestUnity::TestGenerate() const
 //------------------------------------------------------------------------------
 void TestUnity::TestGenerate_NoRebuild() const
 {
-    AStackString<> unity1( "../../../../tmp/Test/Unity/Unity1.cpp" );
-    AStackString<> unity2( "../../../../tmp/Test/Unity/Unity2.cpp" );
+    AStackString<> unity1( "../tmp/Test/Unity/Unity1.cpp" );
+    AStackString<> unity2( "../tmp/Test/Unity/Unity2.cpp" );
 
     EnsureFileExists( unity1 );
     EnsureFileExists( unity2 );
@@ -127,12 +132,48 @@ void TestUnity::TestGenerate_NoRebuild() const
     CheckStatsTotal( stats, 2,      2 );
 }
 
+// TestGenerate_NoRebuild_BFFChange
+//------------------------------------------------------------------------------
+void TestUnity::TestGenerate_NoRebuild_BFFChange() const
+{
+    AStackString<> unity1( "../tmp/Test/Unity/Unity1.cpp" );
+    AStackString<> unity2( "../tmp/Test/Unity/Unity2.cpp" );
+
+    EnsureFileExists( unity1 );
+    EnsureFileExists( unity2 );
+
+    // Unity must be "built" every time, but it only writes files when they change
+    // so record the time before and after
+    uint64_t dateTime1 = FileIO::GetFileLastWriteTime( unity1 );
+    uint64_t dateTime2 = FileIO::GetFileLastWriteTime( unity2 );
+
+    // NTFS file resolution is 100ns, so sleep long enough to ensure
+    // an invalid write would modify the time
+    Thread::Sleep( 1 ); // 1ms
+
+    FBuildTestOptions options;
+    const bool useDB = true;
+    const bool forceMigration = true;
+    FBuildStats stats = BuildGenerate( options, useDB, forceMigration );
+
+    // Make sure files have not been changed
+    TEST_ASSERT( dateTime1 == FileIO::GetFileLastWriteTime( unity1 ) );
+    TEST_ASSERT( dateTime2 == FileIO::GetFileLastWriteTime( unity2 ) );
+
+    // Check stats
+    //                      Seen,   Built,  Type
+    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
+    CheckStatsTotal( stats, 2,      2 );
+}
+
 // BuildCompile
 //------------------------------------------------------------------------------
-FBuildStats TestUnity::BuildCompile( FBuildOptions options, bool useDB ) const
+FBuildStats TestUnity::BuildCompile( FBuildTestOptions options, bool useDB, bool forceMigration ) const
 {
-    options.m_ConfigFile = "Data/TestUnity/unity.bff";
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/unity.bff";
     options.m_ShowSummary = true; // required to generate stats for node count checks
+    options.m_ForceDBMigration_Debug = forceMigration;
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestCompileDBFileName() : nullptr ) );
@@ -148,15 +189,15 @@ FBuildStats TestUnity::BuildCompile( FBuildOptions options, bool useDB ) const
 //------------------------------------------------------------------------------
 void TestUnity::TestCompile() const
 {
-    FBuildOptions options;
+    FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
     options.m_ShowSummary = true; // required to generate stats for node count checks
 
-    EnsureFileDoesNotExist( "../../../../tmp/Test/Unity/Unity.lib" );
+    EnsureFileDoesNotExist( "../tmp/Test/Unity/Unity.lib" );
 
     FBuildStats stats = BuildCompile( options, false ); // don't use DB
 
-    EnsureFileExists( "../../../../tmp/Test/Unity/Unity.lib" );
+    EnsureFileExists( "../tmp/Test/Unity/Unity.lib" );
 
     // Check stats
     //                      Seen,   Built,  Type
@@ -196,13 +237,38 @@ void TestUnity::TestCompile_NoRebuild() const
     CheckStatsTotal( stats, 8+numF, 3+numF );
 }
 
+
+// TestCompile_NoRebuild_BFFChange
+//------------------------------------------------------------------------------
+void TestUnity::TestCompile_NoRebuild_BFFChange() const
+{
+    FBuildTestOptions options;
+    const bool useDB = true;
+    const bool forceMigration = true;
+    FBuildStats stats = BuildCompile( options, useDB, forceMigration );
+
+    // Check stats
+    //                      Seen,   Built,  Type
+    uint32_t numF = 10; // pch + 2x generated unity files + 6 source cpp files
+    #if defined( __WINDOWS__ )
+        numF++; // pch.cpp
+    #endif
+    CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
+    CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
+    CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );
+    CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
+    CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
+    CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
+    CheckStatsTotal( stats, 8+numF, 4+numF );
+}
+
 // TestGenerateFromExplicitList
 //------------------------------------------------------------------------------
 void TestUnity::TestGenerateFromExplicitList() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestUnity/unity.bff";
-    options.m_ShowSummary = true; // required to generate stats for node count checks
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/unity.bff";
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
@@ -219,8 +285,8 @@ void TestUnity::TestGenerateFromExplicitList() const
 //------------------------------------------------------------------------------
 void TestUnity::TestExcludedFiles() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestUnity/Exclusions/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/Exclusions/fbuild.bff";
 
     {
         FBuild fBuild( options );
@@ -260,8 +326,8 @@ void TestUnity::IsolateFromUnity_Regression() const
     // - UnityInputIsolateWritableFiles was enabled
     // - the files were writable
 
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestUnity/IsolateFromUnity/fbuild.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/IsolateFromUnity/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( AStackString<>( "Compile" ) ) );

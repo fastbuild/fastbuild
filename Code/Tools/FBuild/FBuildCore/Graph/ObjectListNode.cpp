@@ -29,12 +29,13 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
-    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() )
+    REFLECT( m_Compiler,                            "Compiler",                         MetaFile() + MetaAllowNonFile() )
     REFLECT( m_CompilerOptions,                     "CompilerOptions",                  MetaNone() )
     REFLECT( m_CompilerOptionsDeoptimized,          "CompilerOptionsDeoptimized",       MetaOptional() )
     REFLECT( m_CompilerOutputPath,                  "CompilerOutputPath",               MetaPath() )
     REFLECT( m_CompilerOutputPrefix,                "CompilerOutputPrefix",             MetaOptional() )
     REFLECT( m_CompilerOutputExtension,             "CompilerOutputExtension",          MetaOptional() )
+    REFLECT( m_CompilerInputAllowNoFiles,           "CompilerInputAllowNoFiles",        MetaOptional() )
     REFLECT_ARRAY( m_CompilerInputPath,             "CompilerInputPath",                MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_CompilerInputPattern,          "CompilerInputPattern",             MetaOptional() )
     REFLECT( m_CompilerInputPathRecurse,            "CompilerInputPathRecurse",         MetaOptional() )
@@ -54,11 +55,12 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_PCHOutputFile,                       "PCHOutputFile",                    MetaOptional() + MetaFile() )
     REFLECT( m_PCHOptions,                          "PCHOptions",                       MetaOptional() )
     // Preprocessor
-    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() )
+    REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,       "PreBuildDependencies",             MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
     // Internal State
+    REFLECT( m_UsingPrecompiledHeader,              "UsingPrecompiledHeader",           MetaHidden() )
     REFLECT( m_ExtraPDBPath,                        "ExtraPDBPath",                     MetaHidden() )
     REFLECT( m_ExtraASMPath,                        "ExtraASMPath",                     MetaHidden() )
     REFLECT( m_ObjectListInputStartIndex,           "ObjectListInputStartIndex",        MetaHidden() )
@@ -79,7 +81,7 @@ ObjectListNode::ObjectListNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -88,9 +90,8 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
     }
 
     // .Compiler
-    // TODO:C move GetCompilerNode into ObjectListNode
     CompilerNode * compilerNode( nullptr );
-    if ( !((FunctionObjectList *)function)->GetCompilerNode( nodeGraph, iter, m_Compiler, compilerNode ) )
+    if ( !Function::GetCompilerNode( nodeGraph, iter, function, m_Compiler, compilerNode ) )
     {
         return false; // GetCompilerNode will have emitted an error
     }
@@ -99,7 +100,7 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
     // (ObjectListNode doesn't need to depend on this, but we want to check it so that
     //  we can raise errors during parsing instead of during the build when ObjectNode might be created)
     Dependencies compilerForceUsing;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerForceUsing, ".CompilerForceUsing", compilerForceUsing ) )
     {
         return false; // GetFileNode will have emitted an error
     }
@@ -113,6 +114,7 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
 
     // .PCHInputFile
     const bool usingPCH = ( m_PCHInputFile.IsEmpty() == false );
+    Node * precompiledHeader = nullptr;
     if ( usingPCH )
     {
         // .PCHOutput and .PCHOptions are required is .PCHInputFile is set
@@ -141,11 +143,12 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
             return false;
         }
 
-        m_PrecompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
-        if ( m_PrecompiledHeader == nullptr )
+        precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
+        if ( precompiledHeader == nullptr )
         {
             return false; // CreateObjectNode will have emitted an error
         }
+        m_UsingPrecompiledHeader = true;
     }
 
     // .CompilerOptions
@@ -166,7 +169,7 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
     if ( m_Preprocessor.IsEmpty() == false )
     {
         // get the preprocessor executable
-        if ( ((FunctionObjectList *)function)->GetCompilerNode( nodeGraph, iter, m_Preprocessor, preprocessorNode ) == false )
+        if ( Function::GetCompilerNode( nodeGraph, iter, function, m_Preprocessor, preprocessorNode ) == false )
         {
             return false; // GetCompilerNode will have emitted an error
         }
@@ -194,8 +197,9 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
 
     // .CompilerInputPath
     Dependencies compilerInputPath;
-    if ( !function->GetDirectoryListNodeList( nodeGraph,
+    if ( !Function::GetDirectoryListNodeList( nodeGraph,
                                               iter,
+                                              function,
                                               m_CompilerInputPath,
                                               m_CompilerInputExcludePath,
                                               m_CompilerInputExcludedFiles,
@@ -211,7 +215,7 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
 
     // .CompilerInputFiles
     Dependencies compilerInputFiles;
-    if ( !function->GetFileNodes( nodeGraph, iter, m_CompilerInputFiles, "CompilerInputFiles", compilerInputFiles ) )
+    if ( !Function::GetFileNodes( nodeGraph, iter, function, m_CompilerInputFiles, "CompilerInputFiles", compilerInputFiles ) )
     {
         return false; // GetFileNode will have emitted an error
     }
@@ -221,15 +225,15 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
     ((FunctionObjectList *)function)->GetExtraOutputPaths( m_CompilerOptions, m_ExtraPDBPath, m_ExtraASMPath );
 
     // Store dependencies
-    m_StaticDependencies.SetCapacity( m_StaticDependencies.GetSize() + 1 + ( preprocessorNode ? 1 : 0 ) + ( m_PrecompiledHeader ? 1 : 0 ) + compilerInputPath.GetSize() + m_NumCompilerInputUnity + m_NumCompilerInputFiles );
+    m_StaticDependencies.SetCapacity( m_StaticDependencies.GetSize() + 1 + ( preprocessorNode ? 1 : 0 ) + ( precompiledHeader ? 1 : 0 ) + compilerInputPath.GetSize() + m_NumCompilerInputUnity + m_NumCompilerInputFiles );
     m_StaticDependencies.Append( Dependency( compilerNode ) );
     if ( preprocessorNode )
     {
         m_StaticDependencies.Append( Dependency( preprocessorNode ) );
     }
-    if ( m_PrecompiledHeader )
+    if ( precompiledHeader )
     {
-        m_StaticDependencies.Append( Dependency( m_PrecompiledHeader ) );
+        m_StaticDependencies.Append( Dependency( precompiledHeader ) );
     }
     m_StaticDependencies.Append( compilerInputPath );
     m_StaticDependencies.Append( compilerInputUnity );
@@ -237,7 +241,7 @@ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter
     //m_StaticDependencies.Append( compilerForceUsing ); // NOTE: Deliberately not depending on this
 
     // Take note of how many things are not to be treated as inputs (the compiler and preprocessor)
-    m_ObjectListInputStartIndex += ( 1 + ( preprocessorNode ? 1 : 0 ) + ( m_PrecompiledHeader ? 1 : 0 ) );
+    m_ObjectListInputStartIndex += ( 1 + ( preprocessorNode ? 1 : 0 ) + ( precompiledHeader ? 1 : 0 ) );
     m_ObjectListInputEndIndex = (uint32_t)m_StaticDependencies.GetSize();
 
     return true;
@@ -267,9 +271,9 @@ ObjectListNode::~ObjectListNode() = default;
         // On Windows, with MSVC we compile a cpp file to generate the PCH
         // Filter here to ensure that doesn't get compiled twice
         Node * pchCPP = nullptr;
-        if ( m_PrecompiledHeader && m_PrecompiledHeader->IsMSVC() )
+        if ( m_UsingPrecompiledHeader && GetPrecompiledHeader()->IsMSVC() )
         {
-            pchCPP = m_PrecompiledHeader->GetPrecompiledHeaderCPPFile();
+            pchCPP = GetPrecompiledHeader()->GetPrecompiledHeaderCPPFile();
         }
     #endif
 
@@ -389,9 +393,9 @@ ObjectListNode::~ObjectListNode() = default;
     // any symbols in the PCH's .obj are also linked, when either:
     // a) we are a static library
     // b) a DLL or executable links our .obj files
-    if ( m_PrecompiledHeader )
+    if ( m_UsingPrecompiledHeader )
     {
-        m_DynamicDependencies.Append( Dependency( m_PrecompiledHeader ) );
+        m_DynamicDependencies.Append( Dependency( GetPrecompiledHeader() ) );
     }
 
     return true;
@@ -407,7 +411,7 @@ ObjectListNode::~ObjectListNode() = default;
     }
 
     // make sure we have something to build!
-    if ( m_DynamicDependencies.GetSize() == 0 )
+    if ( ( m_DynamicDependencies.GetSize() == 0 ) && ( m_CompilerInputAllowNoFiles == false ) )
     {
         FLOG_ERROR( "No files found to build '%s'", GetName().Get() );
         return false;
@@ -699,7 +703,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_AllowCaching = m_AllowCaching;
     node->m_CompilerForceUsing = m_CompilerForceUsing;
     node->m_PreBuildDependencyNames = m_PreBuildDependencyNames;
-    node->m_PrecompiledHeader = m_PrecompiledHeader;
+    node->m_PrecompiledHeader = m_UsingPrecompiledHeader ? GetPrecompiledHeader()->GetName() : AString::GetEmpty();
     node->m_Preprocessor = preprocessor;
     node->m_PreprocessorOptions = preprocessorOptions;
     node->m_Flags = flags;
@@ -713,35 +717,13 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     return node;
 }
 
-// Load
+// GetPrecompiledHeader
 //------------------------------------------------------------------------------
-/*static*/ Node * ObjectListNode::Load( NodeGraph & nodeGraph, IOStream & stream )
+ObjectNode * ObjectListNode::GetPrecompiledHeader() const
 {
-    NODE_LOAD( AStackString<>, name );
-
-    ObjectListNode * node = nodeGraph.CreateObjectListNode( name );
-
-    if ( node->Deserialize( nodeGraph, stream ) == false )
-    {
-        return nullptr;
-    }
-
-    // TODO:C Handle through normal serialization
-    NODE_LOAD_NODE_LINK( Node, precompiledHeader );
-    node->m_PrecompiledHeader = precompiledHeader ? precompiledHeader->CastTo< ObjectNode >() : nullptr;
-
-    return node;
-}
-
-// Save
-//------------------------------------------------------------------------------
-/*virtual*/ void ObjectListNode::Save( IOStream & stream ) const
-{
-    NODE_SAVE( m_Name );
-    Node::Serialize( stream );
-
-    // TODO:C Handle through normal serialization
-    NODE_SAVE_NODE_LINK( m_PrecompiledHeader );
+    ASSERT( m_UsingPrecompiledHeader );
+    // Precompiled header stored just before inputs
+    return m_StaticDependencies[ m_ObjectListInputStartIndex - 1 ].GetNode()->CastTo< ObjectNode >();
 }
 
 // GetObjExtension

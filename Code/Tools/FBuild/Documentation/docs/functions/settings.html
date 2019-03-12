@@ -25,12 +25,18 @@ Defines global FASTBuild settings.
   
   // Caching
   .CachePath                        // (optional) Path to cache location
+  .CachePathMountPoint              // (optional) Require that path be a mount point (OSX &amp; Linux only)
   .CachePluginDLL                   // (optional) User plugin to manage cache back-end
   
   // Distribution
   .Workers                          // (optional) Fixed list of workers if not using automatic discovery
   .WorkerConnectionLimit            // (optional) Limit number of connected workers (default: 15)
-  .DistributableJobMemoryLimitMiB   // (optional) Limit memory used locally to prep jobs (default: 2048 (1024 for X86))
+  .DistributableJobMemoryLimitMiB   // (optional) Limit memory used locally to prep jobs (default: 2048)
+  
+  // Experimental features
+  .AllowDBMigration_Experimental    // (optional) Migrate build state when bff changes to avoid rebuilds (default: false)
+                                    // This enables what will eventually be standard behaviour
+                                    // WARNING: This feature is experimental.
 }
 </div>
     </div>

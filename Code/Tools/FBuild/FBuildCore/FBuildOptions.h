@@ -54,6 +54,7 @@ public:
     bool        m_WaitMode                          = false;
     bool        m_DisplayTargetList                 = false;
     bool        m_DisplayDependencyDB               = false;
+    bool        m_NoUnity                           = false;
 
     // Cache
     bool        m_UseCacheRead                      = false;
@@ -80,9 +81,10 @@ public:
     bool        m_GenerateReport                    = false;
     bool        m_EnableMonitor                     = false;
 
-    // DB saving
+    // DB loading/saving
     bool        m_SaveDBOnCompletion                = false;
     bool        m_FixupErrorPaths                   = false;
+    bool        m_ForceDBMigration_Debug            = false; // Force migration even if bff has not changed (for tests)
 
     uint32_t    m_NumWorkerThreads                  = 0; // True default detected in constructor
     AString     m_ConfigFile;

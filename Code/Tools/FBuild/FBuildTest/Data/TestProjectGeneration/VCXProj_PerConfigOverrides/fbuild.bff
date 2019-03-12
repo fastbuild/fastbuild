@@ -1,0 +1,26 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+VCXProject( 'PerConfigOverrides' )
+{
+    .ProjectOutput              = '$Out$/Test/ProjectGeneration/VCXProj_PerConfigOverrides/PerConfigOverrides.vcxproj'
+
+    // Set some project level defaults
+    .ProjectBuildCommand        = 'BASE_BUILD_COMMAND'      // This will be overridden in the config
+    .ProjectRebuildCommand      = 'BASE_REBUILD_COMMAND'    // This will be inherited
+
+    .Config =
+    [
+        .Platform                       = 'Win32'
+        .Config                         = 'Debug'
+
+        // Override an option
+        .ProjectBuildCommand            = 'OVERRIDDEN_BUILD_COMMAND'
+
+        // Option set only in config
+        .ProjectCleanCommand            = 'CONFIG_CLEAN_COMMAND'
+    ]
+    .ProjectConfigs                     = { .Config }
+}

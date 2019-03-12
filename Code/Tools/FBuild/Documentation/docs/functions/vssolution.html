@@ -25,7 +25,6 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
   .SolutionOutput                     // Path to Solution file to be generated
   .SolutionProjects                   // (optional) Project(s) to include in Solution
   .SolutionConfigs                    // (optional) Solution configurations (see below)
-  .SolutionBuildProject               // (optional) Project set to build when "Build Solution" is selected
   
   // Folders
   .SolutionFolders                    // (optional) Folders to organize projects (see below)
@@ -36,6 +35,8 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
   // Version Info  
   .SolutionVisualStudioVersion        // (optional) Version of Solution (default "14.0.22823.1" VS2015 RC)
   .SolutionMinimumVisualStudioVersion // (optional) Min version of Solution (default "10.0.40219.1" VS2010 Express)
+
+  // Additional configuration options - see below
 }
 
 // SolutionConfigs - structs in the following format
@@ -45,6 +46,8 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
   .Config                             // Config(s) (default "Debug", "Release")
   .SolutionConfig                     // (optional) Solution Config
   .SolutionPlatform                   // (optional) Solution Platform
+
+  // Additional configuration options - see below
 ]
 
 // SolutionFolders - structs in the following format
@@ -60,6 +63,11 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
   .Projects                           // Project(s) to specify dependencies for
   .Dependencies                       // Project(s) the above projects depend on
 ]
+
+// Additional Configuration options
+//---------------------------------
+.SolutionBuildProject               // (optional) Project(s) set to build when "Build Solution" is selected
+.SolutionDeployProjects             // (optional) Project(s) set deploy
 </div>
     </div>
 
@@ -131,12 +139,6 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
   .SolutionConfig   = 'Debug'
   .SolutionPlatform = 'Win32-OpenGL'
 ]</div>
-      <hr>
-      
-      <p><b>.SolutionBuildProject</b> - String - (Optional)</p>
-      <p>The root project which will be compiled when a Solution Build is performed.</p>
-      <div class='code'>.SolutionBuildProject = 'Exe-proj'</div> 
-      <p>If not specified, no project will be active in a Solution Build.</p>
          
       </p>
     </div>
@@ -213,6 +215,25 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
         
       </p>
     </div>
+
+
+<div class='newsitemheader'>Additional Configuration Options</div>
+<div class='newsitembody'>
+    <p>Various options can be specified at either the Solution or SolutionConfig level.
+Options defined at the SolutionConfig level will override those set at the Solution level.</p>
+      <hr> 
+
+      <p><b>SolutionBuildProject</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Projects which will build when solution is built. Generally, only one project should be specified.</p>
+      Example:
+<div class='code'>.SolutionBuildProjects = 'Project' // A previously defined vcxproject</div>
+<hr>
+
+      <p><b>SolutionDeployProjects</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>Projects in the solution to be deployed.</p>
+      Example:
+<div class='code'>.SolutionDeployProjects = 'Project' // A previously defined vcxproject</div>
+<hr>
     
   <script>generateFooter()</script>
 </body>

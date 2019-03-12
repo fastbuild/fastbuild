@@ -85,6 +85,11 @@ private:
     bool StoreVariableBool( const AString & name, bool value, BFFStackFrame * frame );
     bool StoreVariableInt( const AString & name, int value, BFFStackFrame * frame );
     bool StoreVariableToVariable( const AString & dstName, BFFIterator & iter, const BFFIterator & operatorIter, BFFStackFrame * dstFrame );
+
+    void CreateBuiltInVariables( BFFStackFrame & stackFrame );
+    void SetBuiltInVariable_CurrentBFFDir_Push( const char * fileName, AString & outOldValue );
+    void SetBuiltInVariable_CurrentBFFDir_Pop( const AString & oldValue );
+
     // store the last seen variable
     bool m_SeenAVariable;
     AStackString< MAX_VARIABLE_NAME_LENGTH > m_LastVarName;

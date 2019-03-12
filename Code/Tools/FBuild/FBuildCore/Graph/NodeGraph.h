@@ -31,6 +31,8 @@ class LinkerNode;
 class Node;
 class ObjectListNode;
 class ObjectNode;
+class ReflectionInfo;
+class ReflectedProperty;
 class RemoveDirNode;
 class SettingsNode;
 class SLNNode;
@@ -53,7 +55,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 105 };
+    enum { NODE_GRAPH_CURRENT_VERSION = 120 };
 
     bool IsValid() const
     {
@@ -75,13 +77,13 @@ public:
     explicit NodeGraph();
     ~NodeGraph();
 
-    static NodeGraph * Initialize( const char * bffFile, const char * nodeGraphDBFile );
+    static NodeGraph * Initialize( const char * bffFile, const char * nodeGraphDBFile, bool forceMigration );
 
     enum class LoadResult
     {
-        MISSING,
+        MISSING_OR_INCOMPATIBLE,
         LOAD_ERROR,
-        OK_BFF_CHANGED,
+        OK_BFF_NEEDS_REPARSING,
         OK
     };
     NodeGraph::LoadResult Load( const char * nodeGraphDBFile );
@@ -92,8 +94,12 @@ public:
 
     // access existing nodes
     Node * FindNode( const AString & nodeName ) const;
+    Node * FindNodeExact( const AString & nodeName ) const;
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
+    const SettingsNode * GetSettings() const { return m_Settings; }
+
+    void RegisterNode( Node * n );
 
     // create new nodes
     CopyFileNode * CreateCopyFileNode( const AString & dstFileName );
@@ -110,39 +116,17 @@ public:
     UnityNode * CreateUnityNode( const AString & unityName );
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );
-    CompilerNode * CreateCompilerNode( const AString & executable );
-    VCXProjectNode * CreateVCXProjectNode( const AString & projectOutput,
-                                           const Array< AString > & projectBasePaths,
-                                           const Dependencies & paths,
-                                           const Array< AString > & pathsToExclude,
-                                           const Array< AString > & files,
-                                           const Array< AString > & filesToExclude,
-                                           const Array< AString > & patternToExclude,
-                                           const AString & rootNamespace,
-                                           const AString & projectGuid,
-                                           const AString & defaultLanguage,
-                                           const AString & applicationEnvironment,
-                                           const bool projectSccEntrySAK,
-                                           const Array< VSProjectConfig > & configs,
-                                           const Array< VSProjectFileType > & fileTypes,
-                                           const Array< AString > & references,
-                                           const Array< AString > & projectReferences );
-    SLNNode * CreateSLNNode(    const AString & solutionOutput,
-                                const AString & solutionBuildProject,
-                                const AString & solutionVisualStudioVersion,
-                                const AString & solutionMinimumVisualStudioVersion,
-                                const Array< VSProjectConfig > & configs,
-                                const Array< VCXProjectNode * > & projects,
-                                const Array< SLNDependency > & slnDeps,
-                                const Array< SLNSolutionFolder > & folders );
+    CompilerNode * CreateCompilerNode( const AString & name );
+    VCXProjectNode * CreateVCXProjectNode( const AString & name );
+    SLNNode * CreateSLNNode( const AString & name );
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
     SettingsNode * CreateSettingsNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );
 
-    static void CleanPath( AString & name );
-    static void CleanPath( const AString & name, AString & fullPath );
+    static void CleanPath( AString & name, bool makeFullPath = true );
+    static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
     #if defined( ASSERTS_ENABLED )
         static bool IsCleanPath( const AString & path );
     #endif
@@ -193,6 +177,15 @@ private:
     static void DisplayRecurse( Node * node, Array< bool > & savedNodeFlags, uint32_t depth, AString & outBuffer );
     static void DisplayRecurse( const char * title, const Dependencies & dependencies, Array< bool > & savedNodeFlags, uint32_t depth, AString & outBuffer );
 
+    // DB Migration
+    void Migrate( const NodeGraph & oldNodeGraph );
+    void MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, const Node * oldNode );
+    void MigrateProperties( const void * oldBase, void * newBase, const ReflectionInfo * ri );
+    void MigrateProperty( const void * oldBase, void * newBase, const ReflectedProperty & property );
+    static bool AreNodesTheSame( const void * baseA, const void * baseB, const ReflectionInfo * ri );
+    static bool AreNodesTheSame( const void * baseA, const void * baseB, const ReflectedProperty & property );
+    static bool DoDependenciesMatch( const Dependencies & depsA, const Dependencies & depsB );
+
     enum { NODEMAP_TABLE_SIZE = 65536 };
     Node **         m_NodeMap;
     Array< Node * > m_AllNodes;
@@ -210,6 +203,8 @@ private:
         bool        m_Once;
     };
     Array< UsedFile > m_UsedFiles;
+
+    const SettingsNode * m_Settings;
 
     static uint32_t s_BuildPassTag;
 };

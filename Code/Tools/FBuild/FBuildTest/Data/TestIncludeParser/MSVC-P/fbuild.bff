@@ -11,7 +11,7 @@ ObjectList( 'MSVC-P' )
     // MSVC option to write preprocessed output to file
     .CompilerOptions        + ' /P'
 
-    .CompilerInputFiles     = { 'Data/TestIncludeParser/MSVC-P/test.cpp' }
+    .CompilerInputFiles     = { 'Tools/FBuild/FBuildTest/Data/TestIncludeParser/MSVC-P/test.cpp' }
     .CompilerOutputPath     = "$Out$/Test/IncludeParser/MSVC-P/"
 
     // USe the /Fi option to make sure the Compiler and FASTBuild agree on the output location

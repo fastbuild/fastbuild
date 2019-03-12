@@ -1,5 +1,4 @@
 # FASTBuild
-External/SDK
 *.exe
 *.fdb
 *.log
@@ -13,6 +12,7 @@ External/SDK
 tmp/
 ftmp/
 bin/
+profile.json
 
 # Temp files
 *.bak

@@ -15,7 +15,7 @@ Settings {}
 //------------------------------------------------------------------------------
 ObjectList( "Exe-Lib" )
 {
-    .CompilerInputFiles = 'Data/TestTest/test_timeout.cpp'
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestTest/test_timeout.cpp'
     .CompilerOutputPath = '$Out$/Test/Test/'
 }
 

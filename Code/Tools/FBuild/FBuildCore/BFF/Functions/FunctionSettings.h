@@ -17,6 +17,7 @@ public:
 protected:
     virtual bool IsUnique() const override;
     virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
+    virtual Node * CreateNode() const override;
 };
 
 //------------------------------------------------------------------------------

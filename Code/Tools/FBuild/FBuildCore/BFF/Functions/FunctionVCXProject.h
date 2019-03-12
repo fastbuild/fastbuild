@@ -20,10 +20,7 @@ public:
 
 protected:
     virtual bool AcceptsHeader() const override;
-
-    virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const override;
-
-    bool GetStringFromStruct( const BFFVariable * s, const char * name, AString & result ) const;
+    virtual Node * CreateNode() const override;
 };
 
 //------------------------------------------------------------------------------

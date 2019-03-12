@@ -36,8 +36,8 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestAlias::MissingAliasTarget() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestAlias/alias.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/alias.bff";
     options.m_ForceCleanBuild = true;
 
     // Parsing of BFF should be ok
@@ -54,8 +54,8 @@ void TestAlias::ReflectionAliasResolution() const
 {
     // FAIL Case 1: An Alias to >1 item
     {
-        FBuildOptions options;
-        options.m_ConfigFile = "Data/TestAlias/Reflection/bad_string.bff";
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/bad_string.bff";
 
         // Parsing of BFF should FAIL
         FBuild fBuild( options );
@@ -64,8 +64,8 @@ void TestAlias::ReflectionAliasResolution() const
 
     // FAIL Case 2: An Alias to >1 item (indirectly via another alias)
     {
-        FBuildOptions options;
-        options.m_ConfigFile = "Data/TestAlias/Reflection/bad_string_recurse.bff";
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/bad_string_recurse.bff";
 
         // Parsing of BFF should FAIL
         FBuild fBuild( options );
@@ -74,8 +74,8 @@ void TestAlias::ReflectionAliasResolution() const
 
     // OK Case 1: An alias to single item
     {
-        FBuildOptions options;
-        options.m_ConfigFile = "Data/TestAlias/Reflection/ok_string.bff";
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/ok_string.bff";
 
         // Parsing of BFF should FAIL
         FBuild fBuild( options );
@@ -84,8 +84,8 @@ void TestAlias::ReflectionAliasResolution() const
 
     // OK Case 2: An alias to single item (indirectly via another alias)
     {
-        FBuildOptions options;
-        options.m_ConfigFile = "Data/TestAlias/Reflection/ok_string_recurse.bff";
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/ok_string_recurse.bff";
 
         // Parsing of BFF should FAIL
         FBuild fBuild( options );
@@ -97,8 +97,8 @@ void TestAlias::ReflectionAliasResolution() const
 //------------------------------------------------------------------------------
 void TestAlias::NonFileNodes() const
 {
-    FBuildOptions options;
-    options.m_ConfigFile = "Data/TestAlias/Reflection/ok_to_non_filenode.bff";
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestAlias/Reflection/ok_to_non_filenode.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 }

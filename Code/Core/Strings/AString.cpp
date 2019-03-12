@@ -53,7 +53,7 @@ AString::AString( const AString & string )
     uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
     m_Contents = (char *)ALLOC( reserved + 1 );
     SetReserved( reserved, true );
-    Copy( string.Get(), m_Contents, len ); // copy handles terminator
+    Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
 }
 
 // CONSTRUCTOR (const char *)
@@ -380,7 +380,7 @@ void AString::Assign( const AString & string )
         // didn't resize then the passed in string is empty too
         return;
     }
-    Copy( string.Get(), m_Contents, len ); // handles terminator
+    Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
     m_Length = len;
 }
 
@@ -481,7 +481,7 @@ AString & AString::operator += ( const AString & string )
             Grow( newLen );
         }
 
-        Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator
+        Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator (NOTE: Using suffixLen to support embedded nuls)
         m_Length += suffixLen;
     }
     return *this;
@@ -658,7 +658,7 @@ uint32_t AString::Replace( const char * from, const char * to, uint32_t maxRepla
 
 // Find
 //------------------------------------------------------------------------------
-const char * AString::Find( char c, const char * startPos ) const
+const char * AString::Find( char c, const char * startPos, const char * endPos ) const
 {
     // if startPos is provided, validate it
     // (deliberately allow startPos to point one past end of string)
@@ -666,7 +666,11 @@ const char * AString::Find( char c, const char * startPos ) const
     ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
 
     const char * pos = startPos ? startPos : m_Contents;
-    const char * end = m_Contents + m_Length;
+    const char * end = endPos ? endPos : m_Contents + m_Length;
+
+    ASSERT( end >= pos );
+    ASSERT( end <= m_Contents + GetLength() );
+
     while ( pos < end )
     {
         if ( *pos == c )
@@ -680,12 +684,22 @@ const char * AString::Find( char c, const char * startPos ) const
 
 // Find
 //------------------------------------------------------------------------------
-const char * AString::Find( const char * subString ) const
+const char * AString::Find( const char * subString, const char * startPos, const char * endPos ) const
 {
-    size_t subStrLen = StrLen( subString );
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
 
-    const char * pos = m_Contents;
-    const char * end = pos + m_Length - subStrLen;
+    const size_t subStrLen = StrLen( subString );
+
+    const char * pos = startPos ? startPos : m_Contents;
+    const char * end = endPos ? endPos : m_Contents + m_Length;
+    ASSERT( end >= pos );
+    end -= subStrLen;
+
+    ASSERT( end <= m_Contents + GetLength() );
+
     while ( pos <= end )
     {
         if ( StrNCmp( pos, subString, subStrLen ) == 0 )
@@ -697,14 +711,90 @@ const char * AString::Find( const char * subString ) const
     return nullptr;
 }
 
+// Find
+//------------------------------------------------------------------------------
+const char * AString::Find( const AString & subString, const char * startPos, const char * endPos ) const
+{
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+
+    const size_t subStrLen = subString.GetLength();
+
+    const char * pos = startPos ? startPos : m_Contents;
+    const char * end = endPos ? endPos : m_Contents + m_Length;
+    ASSERT( end >= pos );
+    end -= subStrLen;
+
+    ASSERT( end <= m_Contents + GetLength() );
+
+    while ( pos <= end )
+    {
+        if ( StrNCmp( pos, subString.Get(), subStrLen ) == 0 )
+        {
+            return pos;
+        }
+        ++pos;
+    }
+    return nullptr;
+}
+
 // FindI
 //------------------------------------------------------------------------------
-const char * AString::FindI( const char * subString ) const
+const char * AString::FindI( char c, const char * startPos, const char * endPos ) const
 {
-    size_t subStrLen = StrLen( subString );
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( (startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( (startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
 
-    const char * pos = m_Contents;
-    const char * end = pos + m_Length - subStrLen;
+    const char * pos = startPos ? startPos : m_Contents;
+    const char * end = endPos ? endPos : m_Contents + m_Length;
+
+    ASSERT( end >= pos );
+    ASSERT( end <= m_Contents + GetLength() );
+
+    char a1 = c;
+    if ( ( a1 >= 'A' ) && ( a1 <= 'Z' ) )
+    {
+        a1 = 'a' + ( a1 - 'A' );
+    }
+
+    while ( pos < end )
+    {
+        char b1 = *pos;
+        if ( ( b1 >= 'A' ) && ( b1 <= 'Z' ) )
+        {
+            b1 = 'a' + ( b1 - 'A' );
+        }
+        if ( a1 == b1 )
+        {
+            return pos;
+        }
+        ++pos;
+    }
+    return nullptr;
+}
+
+// FindI
+//------------------------------------------------------------------------------
+const char * AString::FindI( const char * subString, const char * startPos, const char * endPos ) const
+{
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+
+    const size_t subStrLen = StrLen( subString );
+
+    const char * pos = startPos ? startPos : m_Contents;
+    const char * end = endPos ? endPos : m_Contents + m_Length;
+    ASSERT( end >= pos );
+    end -= subStrLen;
+
+    ASSERT( end <= m_Contents + GetLength() );
+
     while ( pos <= end )
     {
         if ( StrNCmpI( pos, subString, subStrLen ) == 0 )
@@ -716,14 +806,187 @@ const char * AString::FindI( const char * subString ) const
     return nullptr;
 }
 
+// FindI
+//------------------------------------------------------------------------------
+const char * AString::FindI( const AString & subString, const char * startPos, const char * endPos ) const
+{
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+
+    const size_t subStrLen = subString.GetLength();
+
+    const char * pos = startPos ? startPos : m_Contents;
+    const char * end = endPos ? endPos : m_Contents + m_Length;
+    ASSERT( end >= pos );
+    end -= subStrLen;
+
+    ASSERT( end <= m_Contents + GetLength() );
+
+    while ( pos <= end )
+    {
+        if ( StrNCmpI( pos, subString.Get(), subStrLen ) == 0 )
+        {
+            return pos;
+        }
+        pos++;
+    }
+    return nullptr;
+}
+
 // FindLast
 //------------------------------------------------------------------------------
-const char * AString::FindLast( char c ) const
+const char * AString::FindLast( char c, const char * startPos, const char * endPos ) const
 {
-    const char * pos = m_Contents + m_Length - 1;
-    while ( pos >= m_Contents )
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+
+    const char * pos = startPos ? startPos : ( m_Contents + m_Length - 1 );
+    const char * end = endPos ? endPos : m_Contents;
+    while ( pos >= end )
     {
         if ( *pos == c )
+        {
+            return pos;
+        }
+        pos--;
+    }
+    return nullptr;
+}
+
+// FindLast
+//------------------------------------------------------------------------------
+const char * AString::FindLast( const char * subString, const char * startPos, const char * endPos ) const
+{
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+
+    const size_t subStrLen = StrLen( subString );
+
+    const char * pos = startPos ? startPos : ( m_Contents + m_Length - subStrLen );
+    const char * end = endPos ? endPos : m_Contents;
+    ASSERT( ( end <= pos ) && ( end >= m_Contents ) );
+
+    while ( pos >= end )
+    {
+        if ( StrNCmp( pos, subString, subStrLen ) == 0 )
+        {
+            return pos;
+        }
+        pos--;
+    }
+    return nullptr;
+}
+
+// FindLast
+//------------------------------------------------------------------------------
+const char * AString::FindLast( const AString & subString, const char * startPos, const char * endPos ) const
+{
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+
+    const size_t subStrLen = subString.GetLength();
+
+    const char * pos = startPos ? startPos : ( m_Contents + m_Length - subStrLen );
+    const char * end = endPos ? endPos : m_Contents;
+    ASSERT( ( end <= pos ) && ( end >= m_Contents ) );
+
+    while ( pos >= end )
+    {
+        if ( StrNCmp( pos, subString.Get(), subStrLen ) == 0 )
+        {
+            return pos;
+        }
+        pos--;
+    }
+    return nullptr;
+}
+
+// FindLastI
+//------------------------------------------------------------------------------
+const char * AString::FindLastI( char c, const char * startPos, const char * endPos ) const
+{
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+
+    const char * pos = startPos ? startPos : ( m_Contents + m_Length - 1 );
+    const char * end = endPos ? endPos : m_Contents;
+
+    char a1 = c;
+    if ( ( a1 >= 'A' ) && ( a1 <= 'Z' ) )
+    {
+        a1 = 'a' + ( a1 - 'A' );
+    }
+
+    while ( pos >= end )
+    {
+        char b1 = *pos;
+        if ( ( b1 >= 'A' ) && ( b1 <= 'Z' ) )
+        {
+            b1 = 'a' + ( b1 - 'A' );
+        }
+        if ( a1 == b1 )
+        {
+            return pos;
+        }
+        pos--;
+    }
+    return nullptr;
+}
+
+// FindLastI
+//------------------------------------------------------------------------------
+const char * AString::FindLastI( const char * subString, const char * startPos, const char * endPos ) const
+{
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+
+    const size_t subStrLen = StrLen( subString );
+
+    const char * pos = startPos ? startPos : ( m_Contents + m_Length - subStrLen );
+    const char * end = endPos ? endPos : m_Contents;
+    ASSERT( ( end <= pos ) && ( end >= m_Contents ) );
+
+    while ( pos >= end )
+    {
+        if ( StrNCmpI( pos, subString, subStrLen ) == 0 )
+        {
+            return pos;
+        }
+        pos--;
+    }
+    return nullptr;
+}
+
+// FindLastI
+//------------------------------------------------------------------------------
+const char * AString::FindLastI( const AString & subString, const char * startPos, const char * endPos ) const
+{
+    // if startPos is provided, validate it
+    // (deliberately allow startPos to point one past end of string)
+    ASSERT( ( startPos == nullptr ) || ( startPos >= m_Contents ) );
+    ASSERT( ( startPos == nullptr ) || ( startPos <= m_Contents + GetLength() ) );
+
+    const size_t subStrLen = subString.GetLength();
+
+    const char * pos = startPos ? startPos : ( m_Contents + m_Length - subStrLen );
+    const char * end = endPos ? endPos : m_Contents;
+    ASSERT( ( end <= pos ) && ( end >= m_Contents ) );
+
+    while ( pos >= end )
+    {
+        if ( StrNCmpI( pos, subString.Get(), subStrLen ) == 0 )
         {
             return pos;
         }

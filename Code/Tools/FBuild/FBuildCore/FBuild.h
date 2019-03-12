@@ -5,7 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
-
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Helpers/FBuildStats.h"
 #include "WorkerPool/WorkerBrokerage.h"
 
@@ -25,7 +25,6 @@ class IOStream;
 class JobQueue;
 class Node;
 class NodeGraph;
-class SettingsNode;
 
 // FBuild
 //------------------------------------------------------------------------------
@@ -54,10 +53,7 @@ public:
 
     static const char * GetDefaultBFFFileName();
 
-    inline const SettingsNode * GetSettings() const { return m_Settings; }
-
-    void GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD,
-                           AString & path ) const;
+    inline const SettingsNode * GetSettings() const { return m_DependencyGraph->GetSettings(); }
 
     void SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar );
     inline const char * GetEnvironmentString() const            { return m_EnvironmentString; }
@@ -121,8 +117,6 @@ private:
 
     AString m_DependencyGraphFile;
     ICache * m_Cache;
-
-    SettingsNode * m_Settings;
 
     Timer m_Timer;
     float m_LastProgressOutputTime;
