@@ -12,6 +12,8 @@
 											    + ' /wd6262'	// Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
 											    + ' /wd6385'	// Reading invalid data from '%s':  the readable size is '%u' bytes, but '%u' bytes may be read.: Lines:
 											    + ' /wd28251'	// warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
+
+                                                + ' -O2'        // Compile with optimizations even in debug to improve performance
 					      ]
     .LZ4Options_x64Clang= [ 
                             .LZ4CompilerOptions = ' -Wno-shift-count-overflow'
@@ -21,14 +23,15 @@
                                                 + ' -Wno-covered-switch-default'
                                                 + ' -Wno-conversion'
                                                 + ' -Wno-missing-prototypes'
-                                                + ' -O2'
+
+                                                + ' -O2'        // Compile with optimizations even in debug to improve performance
 					      ]
     .LZ4Options_x64Linux= [ 
-                            .LZ4CompilerOptions = ' -O2'
+                            .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
     .LZ4Options_x64ClangLinux  = .LZ4Options_x64Linux
     .LZ4Options_x64OSX  = [ 
-                            .LZ4CompilerOptions = ' -O2'
+                            .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
 
 	// Library
@@ -53,6 +56,8 @@
 			.CompilerOptions			= .CompilerOptionsC
                                         + .LZ4IncludePaths
 										+ .LZ4CompilerOptions
+
+                                        // Remove flags that disable opimizations
                                         #if __WINDOWS__
                                             - ' /Od'
                                             - ' /RTC1'
