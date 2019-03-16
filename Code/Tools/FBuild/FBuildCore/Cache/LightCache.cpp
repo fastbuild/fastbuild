@@ -32,6 +32,7 @@ LightCache::LightCache()
     : m_IncludePaths( 32, true )
     , m_IncludeStack( 32, true )
     , m_UniqueIncludes( 1024, true )
+    , m_ProblemParsing( false )
     , m_FileExistsCache( 1024, true )
 {
     static_assert( sizeof( m_XXHashState ) == sizeof( XXH64_state_t ), "Mismatched size" );
@@ -67,17 +68,12 @@ bool LightCache::Hash( ObjectNode * node,
     	includePath += NATIVE_SLASH;
     }
 
-    const AString & rootFileName = node->GetSourceFile()->GetName();
-    FileStream rootFile;
-    if ( rootFile.Open( rootFileName.Get(), FileStream::READ_ONLY ) == false )
-    {
-        return false;
-    }
 
     // Prepare the hash stream
     XXH64_reset( (XXH64_state_t *)m_XXHashState, 0 ); // seed = 0
 
-    bool result = Hash( rootFileName, rootFile );
+    const AString & rootFileName = node->GetSourceFile()->GetName();
+    ProcessIncludeFromFullPath( rootFileName );
 
     // Finalize the hash
     outSourceHash = XXH64_digest( (const XXH64_state_t *)m_XXHashState );
@@ -85,12 +81,13 @@ bool LightCache::Hash( ObjectNode * node,
     // Give includes to caller
     outIncludes.Swap( m_UniqueIncludes );
 
+    const bool result = ( m_ProblemParsing == false );
     return result;
 }
 
 // Hash
 //------------------------------------------------------------------------------
-bool LightCache::Hash( const AString& fileName, FileStream & f )
+void LightCache::Hash( const AString& fileName, FileStream & f )
 {
 	// Get the canonical path to the file and early out if we already saw it
     // TODO:C We could avoid this work if we canonicalized the paths earlier
@@ -103,7 +100,7 @@ bool LightCache::Hash( const AString& fileName, FileStream & f )
     //   b) "../file.h"
 	if ( m_UniqueIncludes.Find( fullPath ) )
 	{
-        return true;
+        return;
     }
 	m_UniqueIncludes.Append( fullPath );
 
@@ -113,21 +110,20 @@ bool LightCache::Hash( const AString& fileName, FileStream & f )
     fileContents.SetLength( (uint32_t)fileSize );
     if ( f.Read( fileContents.Get(), fileSize ) != fileSize )
     {
-        return false;
+        m_ProblemParsing = true;
+        return;
     }
 	f.Close();
 
 	// process it
 	m_IncludeStack.Append( fullPath );
-	bool result = ProcessFile( fileContents );
+	ProcessFile( fileContents );
 	m_IncludeStack.Pop();
-
-	return result;
 }
 
 // ProcessFile
 //------------------------------------------------------------------------------
-bool LightCache::ProcessFile( const AString & fileContents )
+void LightCache::ProcessFile( const AString & fileContents )
 {
     // Update the hash stream for the file contents
     XXH64_update( (XXH64_state_t *)m_XXHashState, fileContents.Get(), fileContents.GetLength() );
@@ -163,8 +159,9 @@ bool LightCache::ProcessFile( const AString & fileContents )
 				SkipWhitespace( pos );
 				if ( ( *pos != '"' ) && ( *pos != '<' ) )
 				{
-					// TODO:A We encountered an include we can't handle (using a macro for the path for example)
-					return false;
+					// We encountered an include we can't handle (using a macro for the path for example)
+                    m_ProblemParsing = true;
+					return;
 				}
 				const bool angleBracketForm = ( *pos == '<' );
 				++pos;
@@ -175,6 +172,10 @@ bool LightCache::ProcessFile( const AString & fileContents )
 
 				// Recurse
                 ProcessInclude( include, angleBracketForm );
+                if ( m_ProblemParsing )
+                {
+                    return; // Abort parsing
+                }
 
 				SkipToEndOfLine( pos );
 				SkipLineEnd( pos );
@@ -228,14 +229,19 @@ bool LightCache::ProcessFile( const AString & fileContents )
 		SkipToEndOfLine( pos );
 		SkipLineEnd( pos );
 	}
-
-    return true;
 }
 
 // ProcessInclude
 //------------------------------------------------------------------------------
 void LightCache::ProcessInclude( const AString & include, bool angleBracketForm )
 {
+    // Handle full paths
+    if ( PathUtils::IsFullPath( include ) )
+    {
+        ProcessIncludeFromFullPath( include );
+        return;
+    }
+
 	// From MSDN: http://msdn.microsoft.com/en-us/library/36k2cdd4.aspx
 
 	// #include "file.h"
@@ -271,13 +277,29 @@ void LightCache::ProcessInclude( const AString & include, bool angleBracketForm 
 		// 2. When compiling occurs on the command line, along the paths that are specified by the INCLUDE environment variable.
 		//ASSERT( false ); // TODO: Implement
 	}
-	
+
 	// Include not found. This is ok because:
     // a) The file might not be needed. If the include is within an inactive part of the file
     //    such as a comment or ifdef'd for example. If compilation succeeds, the file should
     //    not be part of our dependencies anyway, so this is ok.
     // b) The files is genuinely missing, in which case compilation will fail. If compilation
     //    fails then we won't bake the dependencies with the missing file, so this is ok.
+}
+
+// ProcessIncludeFromFullPath
+//------------------------------------------------------------------------------
+void LightCache::ProcessIncludeFromFullPath( const AString & include )
+{
+    FileStream f;
+
+    // Check if the files exists/open it if needed
+	if ( FileExists( include, f ) )
+	{
+        if ( f.IsOpen() )
+        {
+			Hash( include, f );
+        }
+	}
 }
 
 // ProcessIncludeFromIncludeStack
@@ -299,13 +321,15 @@ bool LightCache::ProcessIncludeFromIncludeStack( const AString & include )
 		possibleIncludePath.SetLength( (uint32_t)( lastSlash - possibleIncludePath.Get() ) + 1 );
 		possibleIncludePath += include;
 
+        // Check if the files exists/open it if needed
 		if ( FileExists( possibleIncludePath, f ) )
 		{
             if ( f.IsOpen() )
-            {
-    			return Hash( possibleIncludePath, f );
+    		{
+                // File is being seen for the first time, so we must parse it
+    			Hash( possibleIncludePath, f );
             }
-            return true;
+            return true; // file found
 		}	
 	}
 
@@ -328,18 +352,15 @@ bool LightCache::ProcessIncludeFromIncludePath( const AString & include )
 		if ( FileExists( possibleIncludePath, f ) )
 		{
             if ( f.IsOpen() )
-            {
+    		{
                 // File is being seen for the first time, so we must parse it
-    			return Hash( possibleIncludePath, f );
+    			Hash( possibleIncludePath, f );
             }
-
-            // File exists, but we've seen it before so there is nothing further to do
-            return true;
+            return true; // file found
 		}	
 	}
 
-    // File does not exist
-	return false;
+	return false; // not found
 }
 
 // FileExists 

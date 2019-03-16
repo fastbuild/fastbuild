@@ -101,7 +101,7 @@ public:
     bool CacheOutputInfo() const;
     bool CacheTrim() const;
 
-private:
+protected:
     bool GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const;
 
     void UpdateBuildStatus( const Node * node );

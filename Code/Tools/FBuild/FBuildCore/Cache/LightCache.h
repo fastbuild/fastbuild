@@ -28,9 +28,10 @@ public:
                Array< AString > & outIncludes ); // Discovered dependencies
 
 protected:
-    bool Hash( const AString & fileName, FileStream & f );
-    bool ProcessFile( const AString & fileContents );
+    void Hash( const AString & fileName, FileStream & f );
+    void ProcessFile( const AString & fileContents );
     void ProcessInclude( const AString & include, bool angleBracketForm );
+    void ProcessIncludeFromFullPath( const AString & include );
     bool ProcessIncludeFromIncludeStack( const AString & include );
     bool ProcessIncludeFromIncludePath( const AString & include );
     bool FileExists( const AString & fileName, FileStream & outFileStream );
@@ -44,6 +45,7 @@ protected:
     Array< AString > m_IncludePaths;            // Paths to search for includes (from -I etc)
     Array< AString > m_IncludeStack;            // Stack of includes, for file relative checks
     Array< AString > m_UniqueIncludes;          // Final list of uniquely seen includes
+    bool m_ProblemParsing;                      // Did we encounter some code we couldn't parse?
 
     // Cache header search to speed up include searches
     struct FileExistsCacheEntry

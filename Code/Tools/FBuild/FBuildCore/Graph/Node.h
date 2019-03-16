@@ -176,6 +176,10 @@ public:
         inline void MarkAsSaved() const { m_IsSaved = true; }
     #endif
 
+    inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
+    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
+    inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
+
 protected:
     friend class FBuild;
     friend struct FBuildStats;
@@ -187,10 +191,6 @@ protected:
     friend class Report;
     friend class VSProjectConfig; // TODO:C Remove this
     friend class WorkerThread;
-
-    inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
-    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
-    inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
     void SetName( const AString & name );
 
