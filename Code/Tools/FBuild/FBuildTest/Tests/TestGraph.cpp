@@ -709,7 +709,7 @@ void TestGraph::BFFDirtied() const
     // Load from dirtied BFF
     {
         FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
 
         // Ensure user was informed of reparsing trigger
         TEST_ASSERT( GetRecordedOutput().Find( "has changed (reparsing will occur)" ) );

@@ -147,7 +147,13 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         {
             m_DependencyGraphFile.SetLength( m_DependencyGraphFile.GetLength() - 4 );
         }
-        m_DependencyGraphFile += ".fdb";
+        #if defined( __WINDOWS__ )
+            m_DependencyGraphFile += ".windows.fdb";
+        #elif defined( __OSX__ )
+            m_DependencyGraphFile += ".osx.fdb";
+        #elif defined( __LINUX )
+            m_DependencyGraphFile += ".linux.fdb";
+        #endif
     }
 
     SmallBlockAllocator::SetSingleThreadedMode( true );
