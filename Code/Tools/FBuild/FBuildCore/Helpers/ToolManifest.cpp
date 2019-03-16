@@ -562,9 +562,15 @@ bool ToolManifest::AddFile( const AString & fileName, const uint64_t timeStamp )
     const uint32_t hash = xxHash::Calc32( uncompressedContent, uncompressedContentSize );
     m_Files.Append( ToolManifestFile( fileName, timeStamp, hash, uncompressedContentSize ) );
 
-    ToolManifestFile & f = m_Files.Top();
-    // store compressed file content (take ownership of data)
-    f.StoreCompressedContent( uncompressedContent, uncompressedContentSize );
+    // Compress and keep the data if we are in distributed mode (this saves us
+    // having to re-load the data later on)
+    if (FBuild::Get().GetOptions().m_AllowDistributed)
+    {
+        ToolManifestFile & f = m_Files.Top();
+        // store compressed file content (take ownership of data)
+        f.StoreCompressedContent( uncompressedContent, uncompressedContentSize );
+    }
+
     // free unused uncompressed data
     FREE( uncompressedContent );
 
