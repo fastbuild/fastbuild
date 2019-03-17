@@ -2387,7 +2387,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         {
             // But we need to determine if it's actually an out of space
             // (rather than some compile error with missing file(s))
-            // These error code have been observed in the wild
+            // These error codes have been observed in the wild
             if ( stdOut )
             {
                 if ( strstr( stdOut, "C1082" ) ||
@@ -2397,6 +2397,26 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     job->OnSystemError();
                     return;
                 }
+            }
+
+            // Windows temp directories can have problems failing to open temp files
+            // resulting in 'C1083: Cannot open compiler intermediate file:'
+            // It uses the same C1083 error as a mising include C1083, but since we flatten
+            // includes on the host this should never occur remotely other than in this context.
+            if ( stdOut && strstr( stdOut, "C1083" ) )
+            {
+                job->OnSystemError();
+                return;
+            }
+
+            // The MSVC compiler can fail with "compiler is out of heap space" even if
+            // using the 64bit toolchain. This failure can be intermittent and not
+            // repeatable with the same code on a different machine, so we don't want it
+            // to fail the build.
+            if ( stdOut && strstr( stdOut, "C1060" ) )
+            {
+                job->OnSystemError();
+                return;
             }
 
             // If the compiler crashed (Internal Compiler Error), treat this
