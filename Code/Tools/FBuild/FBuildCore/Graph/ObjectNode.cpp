@@ -1333,13 +1333,16 @@ void ObjectNode::WriteToCache( Job * job )
                     m_PCHCacheKey = xxHash::Calc64( data, dataSize );
                 }
 
+                uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
+                AddCachingTime(cachingTime);
+
                 // Output
                 if ( FBuild::Get().GetOptions().m_CacheVerbose )
                 {
                     AStackString<> output;
                     output.Format( "Obj: %s\n"
                                    " - Cache Store: %u ms '%s'\n",
-                                   GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+                                   GetName().Get(), cachingTime, cacheFileName.Get() );
                     if ( m_PCHCacheKey != 0 )
                     {
                         output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
