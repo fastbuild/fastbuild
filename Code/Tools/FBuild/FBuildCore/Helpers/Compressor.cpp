@@ -57,7 +57,6 @@ bool Compressor::Compress( const void * data, size_t dataSize )
     PROFILE_FUNCTION
 
     ASSERT( data );
-    ASSERT( ( (size_t)data % 4 ) == 0 ); // input must be 4 byte aligned
     ASSERT( m_Result == nullptr );
 
     // allocate worst case output size for LZ4
@@ -101,7 +100,6 @@ void Compressor::Decompress( const void * data )
     PROFILE_FUNCTION
 
     ASSERT( data );
-    ASSERT( ( (size_t)data % 4 ) == 0 ); // output must be 4 byte aligned
     ASSERT( m_Result == nullptr );
 
     const Header * header = (const Header *)data;
