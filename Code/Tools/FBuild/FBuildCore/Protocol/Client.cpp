@@ -131,12 +131,6 @@ void Client::ThreadFunc()
             break;
         }
 
-        CheckForTimeouts();
-        if ( m_ShouldExit )
-        {
-            break;
-        }
-
         Thread::Sleep( 1 );
         if ( m_ShouldExit )
         {
@@ -225,7 +219,6 @@ void Client::LookForWorkers()
             ss.m_RemoteName = m_WorkerList[ i ];
             ss.m_Connection = ci; // success!
             ss.m_NumJobsAvailable = numJobsAvailable;
-            ss.m_StatusTimer.Start();
 
             // send connection msg
             Protocol::MsgConnection msg( numJobsAvailable );
@@ -280,35 +273,6 @@ void Client::CommunicateJobAvailability()
             }
         }
         ++it;
-    }
-}
-
-// CheckForTimeouts
-//------------------------------------------------------------------------------
-void Client::CheckForTimeouts()
-{
-    PROFILE_FUNCTION
-
-    MutexHolder mh( m_ServerListMutex );
-
-    // update each server to know how many jobs we have now
-    const ServerState * const end = m_ServerList.End();
-    for ( ServerState * it = m_ServerList.Begin(); it != end; ++it )
-    {
-        ServerState & ss = *it;
-        MutexHolder ssMH( ss.m_Mutex );
-        if ( ss.m_Connection )
-        {
-            if ( ss.m_StatusTimer.GetElapsedMS() >= Protocol::SERVER_STATUS_TIMEOUT_MS )
-            {
-                DIST_INFO( "Timed out: %s\n", ss.m_RemoteName.Get() );
-                Disconnect( ss.m_Connection );
-            }
-        }
-        else
-        {
-            ASSERT( ss.m_Jobs.IsEmpty() );
-        }
     }
 }
 
@@ -403,12 +367,6 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
         case Protocol::MSG_REQUEST_FILE:
         {
             const Protocol::MsgRequestFile * msg = static_cast< const Protocol::MsgRequestFile * >( imsg );
-            Process( connection, msg );
-            break;
-        }
-        case Protocol::MSG_SERVER_STATUS:
-        {
-            const Protocol::MsgServerStatus * msg = static_cast< const Protocol::MsgServerStatus * >( imsg );
             Process( connection, msg );
             break;
         }
@@ -725,22 +683,6 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     // Send file to worker
     Protocol::MsgFile resultMsg( toolId, fileId );
     resultMsg.Send( connection, ms );
-}
-
-// Process ( MsgServerStatus )
-//------------------------------------------------------------------------------
-void Client::Process( const ConnectionInfo * connection, const Protocol::MsgServerStatus * msg )
-{
-    PROFILE_SECTION( "MsgServerStatus" )
-
-    (void)msg;
-
-    // find server
-    ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    MutexHolder mh( ss->m_Mutex );
-    ss->m_StatusTimer.Start();
 }
 
 // FindManifest

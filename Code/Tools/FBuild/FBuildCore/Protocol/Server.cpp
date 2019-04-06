@@ -290,6 +290,16 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
         return;
     }
 
+    // Check for matching platform
+    if (msg->GetPlatform() != Env::GetPlatform())
+    {
+        AStackString<> remoteAddr;
+        TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
+        FLOG_WARN( "Disconnecting '%s' (%s) due to mismatched platform\n", remoteAddr.Get(), msg->GetHostName() );
+        Disconnect( connection );
+        return;
+    }
+
     // take note of initial status of client
     ClientState * cs = (ClientState *)connection->GetUserData();
     cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
@@ -505,8 +515,6 @@ void Server::ThreadFunc()
 
         FindNeedyClients();
 
-        SendServerStatus();
-
         JobQueueRemote::Get().MainThreadWait( 100 );
     }
 }
@@ -635,30 +643,6 @@ void Server::FinalizeCompletedJobs()
         }
 
         FDELETE job;
-    }
-}
-
-// SendServerStatus
-//------------------------------------------------------------------------------
-void Server::SendServerStatus()
-{
-    PROFILE_FUNCTION
-
-    MutexHolder mh( m_ClientListMutex );
-
-    const ClientState * const * end = m_ClientList.End();
-    for ( ClientState ** it = m_ClientList.Begin(); it !=  end; ++it )
-    {
-        ClientState * cs = *it;
-        MutexHolder mh2( cs->m_Mutex );
-        if ( cs->m_StatusTimer.GetElapsedMS() < Protocol::SERVER_STATUS_FREQUENCY_MS )
-        {
-            continue;
-        }
-        cs->m_StatusTimer.Start();
-
-        Protocol::MsgServerStatus msg;
-        msg.Send( cs->m_Connection );
     }
 }
 

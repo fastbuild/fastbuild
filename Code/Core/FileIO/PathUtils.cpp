@@ -42,7 +42,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool PathUtils::ArePathsEqual(const AString & cleanPathA, const AString & cleanPathB)
 {
-    #if defined( __LINUX__ ) || defined( __IOS__ )
+    #if defined( __LINUX__ )
         // Case Sensitive
         return ( cleanPathA == cleanPathB );
     #endif

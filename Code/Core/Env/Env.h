@@ -17,10 +17,9 @@ class AString;
 class Env
 {
 public:
-    enum Platform
+    enum Platform : uint8_t
     {
         WINDOWS,
-        IOS,
         OSX,
         LINUX
     };
@@ -48,8 +47,6 @@ public:
 {
     #if defined( __WINDOWS__ )
         return Env::WINDOWS;
-    #elif defined( __IOS__ )
-        return Env::IOS;
     #elif defined( __OSX__ )
         return Env::OSX;
     #elif defined( __LINUX__ )
@@ -64,7 +61,6 @@ public:
     switch ( platform )
     {
         case Env::WINDOWS:  return "Windows";
-        case Env::IOS:      return "IOS";
         case Env::OSX:      return "OSX";
         case Env::LINUX:    return "Linux";
     }
