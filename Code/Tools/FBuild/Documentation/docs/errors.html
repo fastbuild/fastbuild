@@ -1155,7 +1155,24 @@ Compiler( 'compiler' )
 \--here
 </div>
 </div>
-
+<!--------------- 1502 --------------->
+    <div class='newsitemheader'>1502 - LightCache only compatible with MSVC Compiler.</div>
+    <div class='newsitembody'>
+The LightCache is currently only supported when using the MSVC Compiler. This error will be generated if using any other compiler.
+<h4>Example Config:</h4>
+<div class='code'>Compiler( 'compiler' )
+{
+  .Executable 	= 'gcc'
+  .UseLightCache_Experimental = true
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1,1): FASTBuild Error #1502 - Compiler() - LightCache only compatible with MSVC Compiler.
+Compiler( 'compiler' )
+^
+\--here
+</div>
+</div>
 
 
 <h2 id='1999'>1999 : User Defined Error</h2>

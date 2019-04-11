@@ -625,6 +625,14 @@
     FormatError( iter, 1501u, function, ".CompilerFamily '%s' is unrecognized.", badCompilerFamily.Get() );
 }
 
+// Error_1502_LightCacheIncompatibleWithCompiler
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1502_LightCacheIncompatibleWithCompiler( const BFFIterator & iter,
+                                                                       const Function * function )
+{
+    FormatError( iter, 1502u, function, "LightCache only compatible with MSVC Compiler." );
+}
+
 // Error_1999_UserError
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1999_UserError( const BFFIterator & iter,

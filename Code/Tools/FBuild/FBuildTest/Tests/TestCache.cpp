@@ -21,6 +21,7 @@ private:
     void ReadWrite() const;
 
     void LightCache_IncludeUsingMacro() const;
+    void LightCache_CyclicInclude() const;
 };
 
 // Register Tests
@@ -29,7 +30,10 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( Write )
     REGISTER_TEST( Read )
     REGISTER_TEST( ReadWrite )
-    REGISTER_TEST( LightCache_IncludeUsingMacro )
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( LightCache_IncludeUsingMacro )
+        REGISTER_TEST( LightCache_CyclicInclude )
+    #endif
 REGISTER_TESTS_END
 
 // Write
@@ -55,38 +59,40 @@ void TestCache::Write() const
 
         // Ensure cache was written to
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheStores == 2 );
-        TEST_ASSERT( objStats.m_NumBuilt == 2 );
+        TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumProcessed );
+        TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed );
 
         numDepsA = fBuild.GetRecursiveDependencyCount( "ObjectList" );
         TEST_ASSERT( numDepsA > 0 );
     }
 
     // Light cache
-    size_t numDepsB = 0;
-    {
-        PROFILE_SECTION( "Light" )
+    #if defined( __WINDOWS__ )
+        size_t numDepsB = 0;
+        {
+            PROFILE_SECTION( "Light" )
 
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
+            options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
 
-        FBuildForTest fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+            TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
 
-        // Ensure cache was written to
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheStores == 2 );
-        TEST_ASSERT( objStats.m_NumBuilt == 2 );
+            // Ensure cache was written to
+            const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+            TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumProcessed );
+            TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed );
 
-        numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
-        TEST_ASSERT( numDepsB > 0 );
-    }
+            numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
+            TEST_ASSERT( numDepsB > 0 );
+        }
 
-    TEST_ASSERT( numDepsB >= numDepsA );
+        TEST_ASSERT( numDepsB >= numDepsA );
 
-    // Ensure LightCache did not fail
-    TEST_ASSERT( GetRecordedOutput().Find( "Light cache cannot be used for" ) == nullptr );
+        // Ensure LightCache did not fail
+        TEST_ASSERT( GetRecordedOutput().Find( "Light cache cannot be used for" ) == nullptr );
+    #endif
 }
 
 // Read
@@ -112,7 +118,7 @@ void TestCache::Read() const
 
         // Ensure cache was written to
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
+        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
         TEST_ASSERT( objStats.m_NumBuilt == 0 );
 
         numDepsA = fBuild.GetRecursiveDependencyCount( "ObjectList" );
@@ -120,30 +126,32 @@ void TestCache::Read() const
     }
 
     // Light cache
-    size_t numDepsB = 0;
-    {
-        PROFILE_SECTION( "Light" )
+    #if defined( __WINDOWS__ )
+        size_t numDepsB = 0;
+        {
+            PROFILE_SECTION( "Light" )
 
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
+            options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
 
-        FBuildForTest fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+            TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
 
-        // Ensure cache was written to
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
-        TEST_ASSERT( objStats.m_NumBuilt == 0 );
+            // Ensure cache was written to
+            const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+            TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
+            TEST_ASSERT( objStats.m_NumBuilt == 0 );
 
-        numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
-        TEST_ASSERT( numDepsB > 0 );
-    }
+            numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
+            TEST_ASSERT( numDepsB > 0 );
+        }
 
-    TEST_ASSERT( numDepsB >= numDepsA );
+        TEST_ASSERT( numDepsB >= numDepsA );
 
-    // Ensure LightCache did not fail
-    TEST_ASSERT( GetRecordedOutput().Find( "Light cache cannot be used for" ) == nullptr );
+        // Ensure LightCache did not fail
+        TEST_ASSERT( GetRecordedOutput().Find( "Light cache cannot be used for" ) == nullptr );
+    #endif
 }
 
 // ReadWrite
@@ -169,7 +177,7 @@ void TestCache::ReadWrite() const
 
         // Ensure cache was written to
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
+        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
         TEST_ASSERT( objStats.m_NumBuilt == 0 );
 
         numDepsA = fBuild.GetRecursiveDependencyCount( "ObjectList" );
@@ -177,30 +185,32 @@ void TestCache::ReadWrite() const
     }
 
     // Light cache
-    size_t numDepsB = 0;
-    {
-        PROFILE_SECTION( "Light" )
+    #if defined( __WINDOWS__ )
+        size_t numDepsB = 0;
+        {
+            PROFILE_SECTION( "Light" )
 
-        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
+            options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/lightcache.bff";
 
-        FBuildForTest fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
+            FBuildForTest fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+            TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
 
-        // Ensure cache was written to
-        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
-        TEST_ASSERT( objStats.m_NumCacheHits == 2 );
-        TEST_ASSERT( objStats.m_NumBuilt == 0 );
+            // Ensure cache was written to
+            const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+            TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
+            TEST_ASSERT( objStats.m_NumBuilt == 0 );
 
-        numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
-        TEST_ASSERT( numDepsB > 0 );
-    }
+            numDepsB = fBuild.GetRecursiveDependencyCount( "ObjectList" );
+            TEST_ASSERT( numDepsB > 0 );
+        }
 
-    TEST_ASSERT( numDepsB >= numDepsA );
+        TEST_ASSERT( numDepsB >= numDepsA );
 
-    // Ensure LightCache did not fail
-    TEST_ASSERT( GetRecordedOutput().Find( "Light cache cannot be used for" ) == nullptr );
+        // Ensure LightCache did not fail
+        TEST_ASSERT( GetRecordedOutput().Find( "Light cache cannot be used for" ) == nullptr );
+    #endif
 }
 
 // LightCache_IncludeUsingMacro
@@ -224,6 +234,44 @@ void TestCache::LightCache_IncludeUsingMacro() const
     // Ensure cache we fell back to normal caching
     const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
     TEST_ASSERT( objStats.m_NumCacheStores == 1 );
+}
+
+// LightCache_CyclicInclude
+//------------------------------------------------------------------------------
+void TestCache::LightCache_CyclicInclude() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheWrite = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_CyclicInclude/fbuild.bff";
+
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+        // Ensure cache we fell back to normal caching
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumProcessed );
+        TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed );
+    }
+
+    {
+        options.m_UseCacheWrite = false;
+        options.m_UseCacheRead = true;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+        // Ensure cache we fell back to normal caching
+        const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
+        TEST_ASSERT( objStats.m_NumBuilt == 0 );
+    }
 }
 
 //------------------------------------------------------------------------------

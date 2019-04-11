@@ -12,6 +12,7 @@
 #include "Cache/ICache.h"
 #include "Cache/Cache.h"
 #include "Cache/CachePlugin.h"
+#include "Cache/LightCache.h"
 #include "Graph/Node.h"
 #include "Graph/NodeGraph.h"
 #include "Graph/NodeProxy.h"
@@ -118,6 +119,8 @@ FBuild::~FBuild()
     {
         FLOG_ERROR( "Failed to restore working dir. Error: %s Dir: '%s'", LAST_ERROR_STR, m_OldWorkingDir.Get() );
     }
+
+    LightCache::ClearCachedFiles();
 }
 
 // Initialize

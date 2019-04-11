@@ -9,33 +9,77 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
+#include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
-#if defined( __WINDOWS__ )
-    #include "Core/Env/WindowsHeader.h"
-#endif
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
+#include "Core/Process/Mutex.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
-// External
-#define XXH_STATIC_LINKING_ONLY
-#include "xxhash.h"
-#undef XXH_STATIC_LINKING_ONLY
+// IncludedFile
+//------------------------------------------------------------------------------
+class IncludedFile
+{
+public:
+    class Include
+    {
+    public:
+        Include( const AString & include, bool angleBracketForm )
+            : m_Include( include )
+            , m_AngleBracketForm( angleBracketForm )
+        {}
+
+        AString                     m_Include;
+        bool                        m_AngleBracketForm;
+    };
+
+    uint64_t                        m_FileNameHash;
+    AString                         m_FileName;
+    bool                            m_Exists;
+    uint64_t                        m_ContentHash;
+    Array< Include >                m_Includes;
+
+    inline bool operator == ( const AString & fileName ) const      { return ( m_FileName == fileName ); }
+    inline bool operator == ( const IncludedFile & other ) const    { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
+    inline bool operator <  ( const IncludedFile & other ) const    { return ( m_FileName < other.m_FileName ); }
+};
+
+// IncludedFileBucket
+//------------------------------------------------------------------------------
+class IncludedFileBucket
+{
+public:
+    IncludedFileBucket()
+        : m_Mutex()
+        , m_Files( 1024, true )
+    {}
+    void Destruct()
+    {
+        for ( IncludedFile * file : m_Files )
+        {
+            FDELETE file;
+        }
+        m_Files.Destruct();
+    }
+
+    Mutex                   m_Mutex;
+    Array< IncludedFile * > m_Files;
+};
+#define LIGHTCACHE_NUM_BUCKETS 128
+static IncludedFileBucket g_AllIncludedFiles[ LIGHTCACHE_NUM_BUCKETS ]; 
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 LightCache::LightCache()
     : m_IncludePaths( 32, true )
+    , m_AllIncludedFiles( 2048, true )
     , m_IncludeStack( 32, true )
-    , m_UniqueIncludes( 1024, true )
     , m_ProblemParsing( false )
-    , m_FileExistsCache( 1024, true )
 {
-    static_assert( sizeof( m_XXHashState ) == sizeof( XXH64_state_t ), "Mismatched size" );
 }
 
 // DESTRUCTOR
@@ -68,41 +112,53 @@ bool LightCache::Hash( ObjectNode * node,
     	includePath += NATIVE_SLASH;
     }
 
-
-    // Prepare the hash stream
-    XXH64_reset( (XXH64_state_t *)m_XXHashState, 0 ); // seed = 0
-
     const AString & rootFileName = node->GetSourceFile()->GetName();
-    ProcessIncludeFromFullPath( rootFileName );
+    const IncludedFile * includedFile = ProcessInclude( rootFileName, false );
 
-    // Finalize the hash
-    outSourceHash = XXH64_digest( (const XXH64_state_t *)m_XXHashState );
+    // Handle missing root file
+    if ( includedFile == nullptr )
+    {
+        outSourceHash = 0;
+        return false;
+    }
 
-    // Give includes to caller
-    outIncludes.Swap( m_UniqueIncludes );
+    // Was there a problem during parsing? (Some construct we don't know how to handle for example)
+    if ( m_ProblemParsing )
+    {
+        outSourceHash = 0;
+        return false;
+    }
 
-    const bool result = ( m_ProblemParsing == false );
-    return result;
+    // Create final hash and return includes
+    const size_t numIncludes = m_AllIncludedFiles.GetSize();
+    Array< uint64_t > hashes( numIncludes * 2, false );
+    outIncludes.SetCapacity( numIncludes );
+    for ( const IncludedFile * file : m_AllIncludedFiles )
+    {
+        hashes.Append( file->m_FileNameHash ); // Filename can change compilation result
+        hashes.Append( file->m_ContentHash );
+        outIncludes.Append( file->m_FileName );
+    }
+    outSourceHash = xxHash::Calc64( hashes.Begin(), hashes.GetSize() * sizeof( uint64_t ) );
+
+    return true;
+}
+
+// ClearCachedFiles
+//------------------------------------------------------------------------------
+/*static*/ void LightCache::ClearCachedFiles()
+{
+    for ( IncludedFileBucket & bucket : g_AllIncludedFiles )
+    {
+        bucket.Destruct();
+    }
 }
 
 // Hash
 //------------------------------------------------------------------------------
-void LightCache::Hash( const AString& fileName, FileStream & f )
+void LightCache::Hash( IncludedFile * file, FileStream & f )
 {
-	// Get the canonical path to the file and early out if we already saw it
-    // TODO:C We could avoid this work if we canonicalized the paths earlier
-	AStackString<> fullPath;
-    NodeGraph::CleanPath( fileName, fullPath );
-
-	// Have we seen this path before?
-    // - We can end up in the same final file via multiple different include mechanisms
-    //   a) -I path + "file.h"
-    //   b) "../file.h"
-	if ( m_UniqueIncludes.Find( fullPath ) )
-	{
-        return;
-    }
-	m_UniqueIncludes.Append( fullPath );
+    ASSERT( f.IsOpen() );
 
 	// Read all contents
 	const size_t fileSize = f.GetFileSize();
@@ -115,18 +171,9 @@ void LightCache::Hash( const AString& fileName, FileStream & f )
     }
 	f.Close();
 
-	// process it
-	m_IncludeStack.Append( fullPath );
-	ProcessFile( fileContents );
-	m_IncludeStack.Pop();
-}
 
-// ProcessFile
-//------------------------------------------------------------------------------
-void LightCache::ProcessFile( const AString & fileContents )
-{
-    // Update the hash stream for the file contents
-    XXH64_update( (XXH64_state_t *)m_XXHashState, fileContents.Get(), fileContents.GetLength() );
+    // Store hash of file
+    file->m_ContentHash = xxHash::Calc64( fileContents );
 
 	const char * pos = fileContents.Get();
 	for (;;)
@@ -161,7 +208,7 @@ void LightCache::ProcessFile( const AString & fileContents )
 				{
 					// We encountered an include we can't handle (using a macro for the path for example)
                     m_ProblemParsing = true;
-					return;
+                    return;
 				}
 				const bool angleBracketForm = ( *pos == '<' );
 				++pos;
@@ -170,12 +217,7 @@ void LightCache::ProcessFile( const AString & fileContents )
 				const char * includeEnd = pos;
 				AStackString<> include( includeStart, includeEnd );
 
-				// Recurse
-                ProcessInclude( include, angleBracketForm );
-                if ( m_ProblemParsing )
-                {
-                    return; // Abort parsing
-                }
+                file->m_Includes.Append( IncludedFile::Include{ include, angleBracketForm } );
 
 				SkipToEndOfLine( pos );
 				SkipLineEnd( pos );
@@ -233,50 +275,82 @@ void LightCache::ProcessFile( const AString & fileContents )
 
 // ProcessInclude
 //------------------------------------------------------------------------------
-void LightCache::ProcessInclude( const AString & include, bool angleBracketForm )
+const IncludedFile * LightCache::ProcessInclude( const AString & include, bool angleBracketForm )
 {
+    bool cyclic = false;
+    const IncludedFile * file = nullptr;
+
     // Handle full paths
     if ( PathUtils::IsFullPath( include ) )
     {
-        ProcessIncludeFromFullPath( include );
-        return;
+        file = ProcessIncludeFromFullPath( include, cyclic );
+    }
+    else
+    {
+	    // From MSDN: http://msdn.microsoft.com/en-us/library/36k2cdd4.aspx
+
+	    if ( angleBracketForm )
+	    {
+    	    // #include <file.h>
+
+		    // 1. Along the path that's specified by each /I compiler option.
+		    file = ProcessIncludeFromIncludePath( include, cyclic );
+
+		    // 2. When compiling occurs on the command line, along the paths that are specified by the INCLUDE environment variable.
+            //if ( file == nullptr )
+            //{
+    		//    ASSERT( false ); // TODO: Implement
+            //}
+	    }
+        else
+	    {
+    	    // #include "file.h"
+
+		    // 1. In the same directory as the file that contains the #include statement.
+		    // 2. In the directories of the currently opened include files, in the reverse order in which they were opened. The search begins in the directory of the parent include file and continues upward through the directories of any grandparent include files.
+            file = ProcessIncludeFromIncludeStack( include, cyclic );
+
+		    // 3. Along the path that's specified by each /I compiler option.
+            if ( file == nullptr )
+            {
+    	        file = ProcessIncludeFromIncludePath( include, cyclic );
+		    }
+
+		    // 4. Along the paths that are specified by the INCLUDE environment variable.
+            //if ( file == nullptr )
+            //{
+    		//    ASSERT( false ); // TODO: Implement
+            //}
+	    }
     }
 
-	// From MSDN: http://msdn.microsoft.com/en-us/library/36k2cdd4.aspx
+    if ( file )
+    {
+        // Avoid recursing into files we've already seen
+        if ( cyclic )
+        {
+            return file;
+        }
 
-	// #include "file.h"
-	if ( !angleBracketForm )
-	{
-		// 1. In the same directory as the file that contains the #include statement.
-		// 2. In the directories of the currently opened include files, in the reverse order in which they were opened. The search begins in the directory of the parent include file and continues upward through the directories of any grandparent include files.
-		if ( ProcessIncludeFromIncludeStack( include ) )
-		{
-			return;
-		}
+        // Have we already seen this file before?
+        if ( m_AllIncludedFiles.FindDeref( *file ) )
+        {
+            return file;
+        }
 
-		// 3. Along the path that's specified by each /I compiler option.
-		if ( ProcessIncludeFromIncludePath( include ) )
-		{
-			return;
-		}
+        // Take note of this included file 
+        m_AllIncludedFiles.Append( file );
 
-		// 4. Along the paths that are specified by the INCLUDE environment variable.
-		// TODO: Implement
-		//ASSERT( false );
-	}
+        // Recurse
+        m_IncludeStack.Append( file );
+        for ( const IncludedFile::Include & inc : file->m_Includes )
+        {
+            ProcessInclude( inc.m_Include, inc.m_AngleBracketForm );
+        }
+        m_IncludeStack.Pop();
 
-	// #include <file.h>
-	if ( angleBracketForm )
-	{
-		// 1. Along the path that's specified by each /I compiler option.
-		if ( ProcessIncludeFromIncludePath( include ) )
-		{
-			return;
-		}
-
-		// 2. When compiling occurs on the command line, along the paths that are specified by the INCLUDE environment variable.
-		//ASSERT( false ); // TODO: Implement
-	}
+        return file;
+    }
 
 	// Include not found. This is ok because:
     // a) The file might not be needed. If the include is within an inactive part of the file
@@ -284,34 +358,38 @@ void LightCache::ProcessInclude( const AString & include, bool angleBracketForm 
     //    not be part of our dependencies anyway, so this is ok.
     // b) The files is genuinely missing, in which case compilation will fail. If compilation
     //    fails then we won't bake the dependencies with the missing file, so this is ok.
+    return nullptr;
 }
 
 // ProcessIncludeFromFullPath
 //------------------------------------------------------------------------------
-void LightCache::ProcessIncludeFromFullPath( const AString & include )
+const IncludedFile * LightCache::ProcessIncludeFromFullPath( const AString & include, bool & outCyclic )
 {
-    FileStream f;
+    outCyclic = false;
 
-    // Check if the files exists/open it if needed
-	if ( FileExists( include, f ) )
-	{
-        if ( f.IsOpen() )
-        {
-			Hash( include, f );
-        }
-	}
+    // Handle cyclic includes
+    const IncludedFile ** found = m_IncludeStack.FindDeref( include );
+    if ( found )
+    {
+        outCyclic = true;
+        return *found;
+    }
+
+    const IncludedFile * file = FileExists( include );
+    ASSERT( file );
+    return file;
 }
 
 // ProcessIncludeFromIncludeStack
 //------------------------------------------------------------------------------
-bool LightCache::ProcessIncludeFromIncludeStack( const AString & include )
+const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString & include, bool & outCyclic )
 {
-    FileStream f;
+    outCyclic = false;
 
 	const int stackSize = (int)m_IncludeStack.GetSize();
 	for ( int i=( stackSize - 1 ); i >=0; --i )
 	{
-		AStackString<> possibleIncludePath( m_IncludeStack[ i ] );
+		AStackString<> possibleIncludePath( m_IncludeStack[ i ]->m_FileName );
 		const char * lastFwdSlash = possibleIncludePath.FindLast( '/' );
 		const char * lastBackSlash = possibleIncludePath.FindLast( '\\' );
 		const char * lastSlash = ( lastFwdSlash > lastBackSlash ) ? lastFwdSlash : lastBackSlash;
@@ -319,28 +397,38 @@ bool LightCache::ProcessIncludeFromIncludeStack( const AString & include )
 
 		// truncate to slash (keep slash)
 		possibleIncludePath.SetLength( (uint32_t)( lastSlash - possibleIncludePath.Get() ) + 1 );
+
 		possibleIncludePath += include;
 
-        // Check if the files exists/open it if needed
-		if ( FileExists( possibleIncludePath, f ) )
-		{
-            if ( f.IsOpen() )
-    		{
-                // File is being seen for the first time, so we must parse it
-    			Hash( possibleIncludePath, f );
-            }
-            return true; // file found
-		}	
+        NodeGraph::CleanPath( possibleIncludePath );
+
+        // Handle cyclic includes
+        const IncludedFile ** found = m_IncludeStack.FindDeref( possibleIncludePath );
+        if ( found )
+        {
+            outCyclic = true;
+            return *found;
+        }
+
+        const IncludedFile * file = FileExists( possibleIncludePath );
+        ASSERT( file );
+        if ( file->m_Exists )
+        {
+            return file;
+        }
+
+        // Try the next level of include stack
+        // TODO: Could optimize out extra checks if path is the same
 	}
 
-	return false; // not found
+	return nullptr; // not found
 }
 
 // ProcessIncludeFromIncludePath
 //------------------------------------------------------------------------------
-bool LightCache::ProcessIncludeFromIncludePath( const AString & include )
+const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & include, bool & outCyclic )
 {
-    FileStream f;
+    outCyclic = false;
 
     AStackString<> possibleIncludePath;
 	for ( const AString & includePath : m_IncludePaths )
@@ -348,36 +436,76 @@ bool LightCache::ProcessIncludeFromIncludePath( const AString & include )
 		possibleIncludePath = includePath;
 		possibleIncludePath += include;
 
-        // Check if the files exists/open it if needed
-		if ( FileExists( possibleIncludePath, f ) )
-		{
-            if ( f.IsOpen() )
-    		{
-                // File is being seen for the first time, so we must parse it
-    			Hash( possibleIncludePath, f );
-            }
-            return true; // file found
-		}	
+        NodeGraph::CleanPath( possibleIncludePath );
+
+        // Handle cyclic includes
+        if ( m_IncludeStack.FindDeref( possibleIncludePath ) )
+        {
+            outCyclic = true;
+            return nullptr;
+        }
+
+        const IncludedFile * file = FileExists( possibleIncludePath );
+        ASSERT( file );
+        if ( file->m_Exists )
+        {
+            return file;
+        }
+
+        // Try the next include path...
 	}
 
-	return false; // not found
+	return nullptr; // not found
 }
 
 // FileExists 
 //------------------------------------------------------------------------------
-bool LightCache::FileExists( const AString & fileName, FileStream & outFileStream )
+const IncludedFile * LightCache::FileExists( const AString & fileName )
 {
-    const uint32_t hash = xxHash::Calc32( fileName );
-    const FileExistsCacheEntry * entry = m_FileExistsCache.Find( hash );
-    if ( entry )
+    const uint64_t fileNameHash = xxHash::Calc64( fileName );
+    const uint64_t bucketIndex = fileNameHash % LIGHTCACHE_NUM_BUCKETS;
+    IncludedFileBucket & bucket = g_AllIncludedFiles[ bucketIndex ];
+
+    // Retrieve from shared cache
     {
-        return entry->m_Exists;
+        MutexHolder mh( bucket.m_Mutex );
+        IncludedFile ** found = bucket.m_Files.FindDeref( fileName );
+        if ( found )
+        {
+            return *found; // File previously handled so we can re-use the result
+        }
     }
 
-    const bool exists = ( outFileStream.Open( fileName.Get(), FileStream::READ_ONLY ) );
+    // A newly seen file
+    IncludedFile * newFile = FNEW( IncludedFile() );
+    newFile->m_FileNameHash = fileNameHash;
+    newFile->m_FileName = fileName;
+    newFile->m_Exists = false;
+    newFile->m_ContentHash = 0;
 
-    m_FileExistsCache.Append( FileExistsCacheEntry{ hash, exists } );
-    return exists;
+    // Try to open the new file
+    FileStream f;
+    if ( f.Open( fileName.Get() ) == false )
+    {
+        {
+            // Store to shared cache
+            MutexHolder mh( bucket.m_Mutex );
+            bucket.m_Files.Append( newFile );
+        }
+        return newFile;
+    }
+
+    // File exists - parse it
+    newFile->m_Exists = true;
+    Hash( newFile, f );
+
+    {
+        // Store to shared cache
+        MutexHolder mh( bucket.m_Mutex );
+        bucket.m_Files.Append( newFile );
+    }
+
+    return newFile;
 }
 
 // SkipWhitepspace

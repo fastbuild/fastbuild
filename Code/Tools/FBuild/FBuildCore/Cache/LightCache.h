@@ -6,12 +6,14 @@
 //------------------------------------------------------------------------------
 // Core
 #include <Core/Containers/Array.h>
+#include <Core/Process/Mutex.h>
 #include <Core/Strings/AString.h>
 
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
 class FileStream;
+class IncludedFile;
 class ObjectNode;
 
 // LightCache
@@ -27,14 +29,15 @@ public:
                uint64_t & outSourceHash,         // Resulting hash of source code
                Array< AString > & outIncludes ); // Discovered dependencies
 
+    static void ClearCachedFiles();
+
 protected:
-    void Hash( const AString & fileName, FileStream & f );
-    void ProcessFile( const AString & fileContents );
-    void ProcessInclude( const AString & include, bool angleBracketForm );
-    void ProcessIncludeFromFullPath( const AString & include );
-    bool ProcessIncludeFromIncludeStack( const AString & include );
-    bool ProcessIncludeFromIncludePath( const AString & include );
-    bool FileExists( const AString & fileName, FileStream & outFileStream );
+    void                    Hash( IncludedFile * file, FileStream & f );
+    const IncludedFile *    ProcessInclude( const AString & include, bool angleBracketForm );
+    const IncludedFile *    ProcessIncludeFromFullPath( const AString & include, bool & outCyclic );
+    const IncludedFile *    ProcessIncludeFromIncludeStack( const AString & include, bool & outCyclic );
+    const IncludedFile *    ProcessIncludeFromIncludePath( const AString & include, bool & outCyclic );
+    const IncludedFile *    FileExists( const AString & fileName );
 
     void SkipWhitespace( const char * & pos ) const;
     bool IsAtEndOfLine( const char * pos ) const;
@@ -42,23 +45,10 @@ protected:
     void SkipToEndOfLine( const char * & pos ) const;
     void SkipToEndOfQuotedString( const char * & pos ) const;
 
-    Array< AString > m_IncludePaths;            // Paths to search for includes (from -I etc)
-    Array< AString > m_IncludeStack;            // Stack of includes, for file relative checks
-    Array< AString > m_UniqueIncludes;          // Final list of uniquely seen includes
-    bool m_ProblemParsing;                      // Did we encounter some code we couldn't parse?
-
-    // Cache header search to speed up include searches
-    struct FileExistsCacheEntry
-    {
-        inline bool operator == ( uint32_t pathHash ) const { return m_PathHash == pathHash; }
-
-        uint32_t    m_PathHash;                 // Hash of path to file
-        bool        m_Exists;                   // Whether the files exists
-    };
-    Array< FileExistsCacheEntry > m_FileExistsCache;
-
-    // Hash of all source files to feed into cache key
-    uint64_t m_XXHashState[ 11 ]; // Avoid including xxHash header
+    Array< AString >                m_IncludePaths;             // Paths to search for includes (from -I etc)
+    Array< const IncludedFile * >   m_AllIncludedFiles;         // List of files seen during parsing
+    Array< const IncludedFile * >   m_IncludeStack;             // Stack of includes, for file relative checks
+    bool                            m_ProblemParsing;           // Did we encounter some code we couldn't parse?
 };
 
 //------------------------------------------------------------------------------

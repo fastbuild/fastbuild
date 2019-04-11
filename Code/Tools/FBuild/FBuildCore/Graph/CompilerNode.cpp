@@ -115,7 +115,21 @@ CompilerNode::CompilerNode()
     m_StaticDependencies.Append( compilerExeFile );
     m_StaticDependencies.Append( extraFiles );
 
-    return InitializeCompilerFamily( iter, function );
+    if (InitializeCompilerFamily( iter, function ) == false)
+    {
+        return false;
+    }
+    
+    // The LightCache is only compatible with MSVC for now
+    // - GCC/Clang can be supported when built in include paths can be extracted
+    //   and -nostdinc/-nostdinc++ is handled
+    if ( m_UseLightCache && ( m_CompilerFamilyEnum != MSVC ) )
+    {
+        Error::Error_1502_LightCacheIncompatibleWithCompiler( iter, function );
+        return false;
+    }
+
+    return true;
 }
 
 // IsAFile
