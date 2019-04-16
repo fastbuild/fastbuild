@@ -62,6 +62,7 @@ public:
         FLAG_STATIC_ANALYSIS_MSVC = 0x200000,
         FLAG_ORBIS_WAVE_PSSLC   =   0x400000,
         FLAG_DIAGNOSTICS_COLOR_AUTO = 0x800000,
+        FLAG_FXC                =   0x1000000,
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,
@@ -142,6 +143,7 @@ private:
     bool ShouldUseCache() const;
     bool CanUseResponseFile() const;
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
+    bool GetFXCPreprocessedOutput( ConstMemoryStream & outStream ) const;
 
     friend class FunctionObjectList;
 
