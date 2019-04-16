@@ -210,7 +210,7 @@ ObjectNode::~ObjectNode()
     bool useCache = ShouldUseCache();
     bool useDist = GetFlag( FLAG_CAN_BE_DISTRIBUTED ) && m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
     bool useSimpleDist = GetCompiler()->SimpleDistributionMode();
-    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( ObjectNode::FLAG_VBCC ) || GetFlag( FLAG_ORBIS_WAVE_PSSLC ) );
+    bool usePreProcessor = !useSimpleDist && ( useCache || useDist || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( ObjectNode::FLAG_VBCC ) || GetFlag( FLAG_ORBIS_WAVE_PSSLC ) || GetFlag( FLAG_FXC ) );
     if ( GetDedicatedPreprocessor() )
     {
         usePreProcessor = true;
@@ -773,15 +773,19 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
         CIncludeParser parser;
         bool msvcStyle;
+        bool fxcStyle;
         if ( GetDedicatedPreprocessor() != nullptr )
         {
             msvcStyle = GetPreprocessorFlag( FLAG_MSVC ) || GetPreprocessorFlag( FLAG_CUDA_NVCC );
+            fxcStyle = GetPreprocessorFlag( FLAG_FXC );
         }
         else
         {
             msvcStyle = GetFlag( FLAG_MSVC ) || GetFlag( FLAG_CUDA_NVCC );
+            fxcStyle = GetFlag( FLAG_FXC );
         }
         bool result = msvcStyle ? parser.ParseMSCL_Preprocessed( output, outputSize )
+                    : fxcStyle  ? parser.ParseFXC_Output( output, outputSize )
                                 : parser.ParseGCC_Preprocessed( output, outputSize );
         if ( result == false )
         {
@@ -789,11 +793,18 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             return false;
         }
 
+        // TODO(krolli): Replace job data with contents of preprocessed file?
+
         // record that we have a list of includes
         // (we need a flag because we can't use the array size
         // as a determinator, because the file might not include anything)
         m_Includes.Clear();
         parser.SwapIncludes( m_Includes );
+        if (fxcStyle)
+        {
+            // compiled source file is not mentioned in output of FXC, so add it manually.
+            m_Includes.Append( GetSourceFile()->GetName() );
+        }
     }
 
     FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
@@ -852,6 +863,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         case CompilerNode::CompilerFamily::QT_RCC:          flags |= FLAG_QT_RCC;           break;
         case CompilerNode::CompilerFamily::VBCC:            flags |= FLAG_VBCC;             break;
         case CompilerNode::CompilerFamily::ORBIS_WAVE_PSSLC:flags |= FLAG_ORBIS_WAVE_PSSLC; break;
+        case CompilerNode::CompilerFamily::FXC:             flags |= FLAG_FXC;              break;
     }
 
     // Check MS compiler options
@@ -1582,6 +1594,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     const bool isQtRCC          = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_QT_RCC ) : GetFlag( FLAG_QT_RCC );
     const bool isVBCC           = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_VBCC ) : GetFlag( FLAG_VBCC );
     const bool isOrbisWavePsslc = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_ORBIS_WAVE_PSSLC) : GetFlag(FLAG_ORBIS_WAVE_PSSLC);
+    const bool isFxc            = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_FXC ) : GetFlag( FLAG_FXC );
 
     const bool forceColoredDiagnostics = ( ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_DIAGNOSTICS_COLOR_AUTO ) : GetFlag( FLAG_DIAGNOSTICS_COLOR_AUTO ) ) && ( Env::IsStdOutRedirected() == false );
 
@@ -1614,6 +1627,19 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 // remove --output (or alias -o) so dependency list goes to stdout
                 if ( StripTokenWithArg( "--output", token, i ) ||
                      StripTokenWithArg( "-o", token, i ) )
+                {
+                    continue;
+                }
+            }
+            else if ( isFxc )
+            {
+                // We need to strip certain fxc flags to avoid 'cannot preprocess to file and
+                // compile at the same time' error. Following list might not be complete.
+                // fxc allows args specified both with and without space ("/Fo<arg>" and "/Fo <arg>"
+                // both work. This is not handled correctly by StripTokenWithArg_MSVC().
+                // TODO(krolli): Should there be another StripTokenWithArg version for this?
+                if ( StripTokenWithArg_MSVC( "Fo", token, i ) ||
+                     StripTokenWithArg_MSVC( "T", token, i ) )
                 {
                     continue;
                 }
@@ -1917,6 +1943,17 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         {
             fullArgs += " --list"; // List used resources
         }
+        else if ( isFxc )
+        {
+            // /Vi = display details about the include process
+            // /P <file> = preprocess to file (must be used alone)
+            // We can't rely on parsing preprocessed output, since paths there are always relative
+            // to file that does the including, which means parser would have to keep track of
+            // include stack, but preprocessed output doesn't have enough information for that.
+            AStackString<> preprocessedFile;
+            preprocessedFile.Format( " /Vi /P \"%s.i\"", m_Name.Get() );
+            fullArgs += preprocessedFile; // Must specify destination file.
+        }
         else
         {
             ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA || isVBCC || isOrbisWavePsslc );
@@ -2191,6 +2228,15 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 
     Node * sourceFile = GetSourceFile();
     uint32_t sourceNameHash = xxHash::Calc32( sourceFile->GetName().Get(), sourceFile->GetName().GetLength() );
+
+    if ( GetFlag( FLAG_FXC ) ) // TODO(krolli): Is this valid for distributed jobs running on remote?
+    {
+        // Use preprocessing output file directly instead of writing a new one.
+        tmpFileName = m_Name;
+        tmpFileName.Append( ".i", 2 );
+        tmpDirectory.Assign( tmpFileName.Get(), tmpFileName.FindLast( NATIVE_SLASH ) + 1 );
+        return true;
+    }
 
     FileStream tmpFile;
     AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
@@ -2680,7 +2726,7 @@ bool ObjectNode::CanUseResponseFile() const
 {
     #if defined( __WINDOWS__ )
         // Generally only windows applications support response files (to overcome Windows command line limits)
-        return ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
+        return ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) || GetFlag( FLAG_FXC ) );
     #else
         return false;
     #endif
@@ -2696,6 +2742,41 @@ bool ObjectNode::GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) cons
     lastDot = lastDot ? lastDot : sourceFileName.GetEnd();
     AStackString<> preprocessedFile( sourceFileName.Get(), lastDot );
     preprocessedFile += ".i";
+
+    // Try to open the file
+    FileStream f;
+    if ( !f.Open( preprocessedFile.Get(), FileStream::READ_ONLY ) )
+    {
+        FLOG_ERROR( "Failed to open preprocessed file '%s'", preprocessedFile.Get() );
+        return false;
+    }
+
+    // Allocate memory
+    const size_t memSize = (size_t)f.GetFileSize();
+    char * mem = (char *)ALLOC( memSize + 1 ); // +1 so we can null terminate
+    outStream.Replace( mem, memSize, true ); // true = outStream now owns memory
+
+    // Read contents
+    if ( (size_t)f.ReadBuffer( mem, memSize ) != memSize )
+    {
+        FLOG_ERROR( "Failed to read preprocessed file '%s'", preprocessedFile.Get() );
+        return false;
+    }
+    mem[ memSize ] = 0; // null terminate text buffer for parsing convenience
+
+    return true;
+}
+
+// GetFXCPreprocessedOutput
+//------------------------------------------------------------------------------
+bool ObjectNode::GetFXCPreprocessedOutput( ConstMemoryStream & outStream ) const
+{
+    // Filename matches the destination file, but with .i extension appended (see BuildArgs()).
+    AStackString<> preprocessedFile;
+    preprocessedFile.Assign(m_Name);
+    preprocessedFile.Append(".i", 2);
+
+    // TODO(krolli): Following is duplicate of GetVBCCPreprocessedOutput(). Is it worth refactoring?
 
     // Try to open the file
     FileStream f;

@@ -253,6 +253,14 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
             return true;
         }
 
+        // Microsoft Direct3D Shader Compiler
+        if ( compiler.EndsWithI( "fxc.exe" ) ||
+             compiler.EndsWithI( "fxc" ) )
+        {
+            m_CompilerFamilyEnum = FXC;
+            return true;
+        }
+
         // Auto-detect failed
         Error::Error_1500_CompilerDetectionFailed( iter, function, compiler );
         return false;
@@ -312,6 +320,11 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
     if ( m_CompilerFamilyString.EqualsI( "orbis-wave-psslc" ) )
     {
         m_CompilerFamilyEnum = ORBIS_WAVE_PSSLC;
+        return true;
+    }
+    if ( m_CompilerFamilyString.EqualsI( "fxc" ) )
+    {
+        m_CompilerFamilyEnum = FXC;
         return true;
     }
 
