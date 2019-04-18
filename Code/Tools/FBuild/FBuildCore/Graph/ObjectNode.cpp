@@ -1866,7 +1866,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         }
         else
         {
-            ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA || isVBCC );
+            ASSERT( isGCC || isSNC || isClang || isCWWii || isGHWiiU || isCUDA || isVBCC || isOrbisWavePsslc );
             fullArgs += "-E"; // run pre-processor only
 
             // Ensure unused defines declared in the PCH but not used
