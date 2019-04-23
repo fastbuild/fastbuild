@@ -191,6 +191,7 @@ protected:
     friend class Report;
     friend class VSProjectConfig; // TODO:C Remove this
     friend class WorkerThread;
+    friend class CompilationDatabase;
 
     void SetName( const AString & name );
 

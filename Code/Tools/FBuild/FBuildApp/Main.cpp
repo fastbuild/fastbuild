@@ -192,6 +192,10 @@ int Main(int argc, char * argv[])
     {
         result = fBuild.DisplayDependencyDB( options.m_Targets );
     }
+    else if ( options.m_GenerateCompilationDatabase )
+    {
+        result = fBuild.GenerateCompilationDatabase( options.m_Targets );
+    }
     else if ( options.m_CacheInfo )
     {
         result = fBuild.CacheOutputInfo();
