@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "CompilationDatabase.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -19,13 +17,16 @@
 // Core
 #include "Core/Strings/AStackString.h"
 
+// system
+#include <string.h> // for memset
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CompilationDatabase::CompilationDatabase()
 : m_Output( 4 * 1024 * 1024 )
 {
     m_DirectoryEscaped = FBuild::Get().GetWorkingDir();
-    m_DirectoryEscaped.JSONEscape();
+    JSONEscape( m_DirectoryEscaped );
 }
 
 // DESTRUCTOR
@@ -122,7 +123,7 @@ void CompilationDatabase::HandleObjectListNode( ObjectListNode * node )
     const bool isMSVC = ( compiler->GetCompilerFamily() == CompilerNode::MSVC );
 
     ctx.m_CompilerEscaped = compiler->GetExecutable();
-    ctx.m_CompilerEscaped.JSONEscape();
+    JSONEscape( ctx.m_CompilerEscaped );
 
     // Prepare arguments: tokenize, remove problematic arguments, remove extra quoting and escape.
     node->GetCompilerOptions().Tokenize( ctx.m_ArgumentsEscaped );
@@ -137,8 +138,8 @@ void CompilationDatabase::HandleObjectListNode( ObjectListNode * node )
             ctx.m_ArgumentsEscaped.EraseIndex( i-- );
             continue;
         }
-        argument.Unquote();
-        argument.JSONEscape();
+        Unquote( argument );
+        JSONEscape( argument );
     }
 
     node->EnumerateInputFiles( &CompilationDatabase::HandleInputFile, &ctx );
@@ -158,11 +159,11 @@ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AStr
 {
     AStackString<> inputFileEscaped;
     inputFileEscaped = inputFile;
-    inputFileEscaped.JSONEscape();
+    JSONEscape( inputFileEscaped );
 
     AStackString<> outputFileEscaped;
     ctx->m_ObjectListNode->GetObjectFileName( inputFile, baseDir, outputFileEscaped );
-    outputFileEscaped.JSONEscape();
+    JSONEscape( outputFileEscaped );
 
     m_Output += "  {\n    \"directory\": \"";
     m_Output += m_DirectoryEscaped;
@@ -211,5 +212,91 @@ void CompilationDatabase::HandleInputFile( const AString & inputFile, const AStr
     }
     m_Output += "]\n  },\n";
 }
+
+
+// JSONEscape
+//------------------------------------------------------------------------------
+/*static*/ void CompilationDatabase::JSONEscape( AString & string )
+{
+    // Build result in a temporary buffer
+    AStackString< 8192 > temp;
+
+    const char * end = string.GetEnd();
+    for ( const char * pos = string.Get(); pos != end; ++pos )
+    {
+        const char c = *pos;
+
+        // congrol character?
+        if ( c <= 0x1F )
+        {
+            // escape with backslash if possible
+            if ( c == '\b' ) { temp += "\\b"; continue; }
+            if ( c == '\t' ) { temp += "\\t"; continue; }
+            if ( c == '\n' ) { temp += "\\n"; continue; }
+            if ( c == '\f' ) { temp += "\\f"; continue; }
+            if ( c == '\r' ) { temp += "\\r"; continue; }
+
+            // escape with codepoint
+            temp.AppendFormat( "\\u%04X", c );
+            continue;
+        }
+        else if ( c == '\"' )
+        {
+            // escape quotes
+            temp += "\\\"";
+            continue;
+        }
+        else if ( c == '\\' )
+        {
+            // escape backslashes
+            temp += "\\\\";
+            continue;
+        }
+
+        // char does not need escpaing
+        temp += c;
+    }
+
+    // store final result
+    string = temp;
+}
+
+// Unquote
+//------------------------------------------------------------------------------
+/*static*/ void CompilationDatabase::Unquote( AString & string )
+{
+    const char * src = string.Get();
+    const char * end = string.GetEnd();
+    char * dst = string.Get();
+
+    char quoteChar = 0;
+    for ( ; src < end; ++src )
+    {
+        const char c = *src;
+        if ( ( c == '"' ) || ( c == '\'' ) )
+        {
+            if ( quoteChar == 0 )
+            {
+                // opening quote, ignore it
+                quoteChar = c;
+                continue;
+            }
+            else if ( quoteChar == c )
+            {
+                // closing quote, ignore it
+                quoteChar = 0;
+                continue;
+            }
+            else
+            {
+                // quote of the 'other' type - consider as part of token
+            }
+        }
+        *dst++ = c;
+    }
+
+    string.SetLength( (uint32_t)( dst - string.Get() ) );
+}
+
 
 //------------------------------------------------------------------------------

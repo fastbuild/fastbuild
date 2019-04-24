@@ -38,8 +38,6 @@ private:
     void PatternMatchI() const;
     void Replace() const;
     void Trim() const;
-    void JSONEscape() const;
-    void Unquote() const;
 };
 
 // Register Tests
@@ -65,8 +63,6 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( PatternMatchI )
     REGISTER_TEST( Replace )
     REGISTER_TEST( Trim )
-    REGISTER_TEST( JSONEscape )
-    REGISTER_TEST( Unquote )
 REGISTER_TESTS_END
 
 // AStringConstructors
@@ -740,53 +736,6 @@ void TestAString::Trim() const
         TEST_ASSERT( test.GetLength() == 5 );
         TEST_ASSERT( test  == "Hello" );
     }
-}
-
-// JSONEscape
-//------------------------------------------------------------------------------
-void TestAString::JSONEscape() const
-{
-    #define CHECK_JSONESCAPE( str, result ) \
-    { \
-        AStackString<> string( str ); \
-        string.JSONEscape(); \
-        TEST_ASSERT( string == result ); \
-    }
-
-    CHECK_JSONESCAPE( "", "" )
-    CHECK_JSONESCAPE( "foo", "foo" )
-    CHECK_JSONESCAPE( "\"bar\"", "\\\"bar\\\"" )
-    CHECK_JSONESCAPE( "first\\second\\third", "first\\\\second\\\\third" )
-    CHECK_JSONESCAPE( "\b \t \n \f \r \\ \"", "\\b \\t \\n \\f \\r \\\\ \\\"" )
-    CHECK_JSONESCAPE( "\x01 \x0B \x14 \x1E", "\\u0001 \\u000B \\u0014 \\u001E" )
-
-    #undef CHECK_JSONESCAPE
-}
-
-// Unquote
-//------------------------------------------------------------------------------
-void TestAString::Unquote() const
-{
-    #define CHECK_UNQUOTE( str, result ) \
-    { \
-        AStackString<> string( str ); \
-        string.Unquote(); \
-        TEST_ASSERT( string == result ); \
-    }
-
-    CHECK_UNQUOTE( "", "" )
-    CHECK_UNQUOTE( "\"\"", "" )
-    CHECK_UNQUOTE( "''", "" )
-    CHECK_UNQUOTE( "\"foo\"", "foo" )
-    CHECK_UNQUOTE( "'foo'", "foo" )
-    CHECK_UNQUOTE( "f\"o\"o", "foo" )
-    CHECK_UNQUOTE( "f'o'o", "foo" )
-    CHECK_UNQUOTE( "\"''\"", "''" )
-    CHECK_UNQUOTE( "'\"\"'", "\"\"" )
-    CHECK_UNQUOTE( "\"foo\"_\"bar\"", "foo_bar" )
-    CHECK_UNQUOTE( "'foo'_'bar'", "foo_bar" )
-
-    #undef CHECK_UNQUOTE
 }
 
 //------------------------------------------------------------------------------

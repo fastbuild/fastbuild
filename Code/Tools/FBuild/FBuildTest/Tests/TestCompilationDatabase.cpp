@@ -22,6 +22,8 @@ class TestCompilationDatabase : public FBuildTest
 private:
     DECLARE_TESTS
 
+    void JSONEscape() const;
+    void Unquote() const;
     void TestObjectListInputFile() const;
     void TestObjectListInputPath() const;
     void TestUnityInputFile() const;
@@ -34,11 +36,69 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestCompilationDatabase )
+    REGISTER_TEST( JSONEscape )
+    REGISTER_TEST( Unquote )
     REGISTER_TEST( TestObjectListInputFile )
     REGISTER_TEST( TestObjectListInputPath )
     REGISTER_TEST( TestUnityInputFile )
     REGISTER_TEST( TestUnityInputPath )
 REGISTER_TESTS_END
+
+// TestCompilationDatabase
+//------------------------------------------------------------------------------
+class CompilationDatabaseTestWrapper : public CompilationDatabase
+{
+public:
+    static void JSONEscape( AString & string ) { CompilationDatabase::JSONEscape( string ); }
+    static void Unquote( AString & string )    { CompilationDatabase::Unquote( string ); }
+};
+
+// JSONEscape
+//------------------------------------------------------------------------------
+void TestCompilationDatabase::JSONEscape() const
+{
+    #define CHECK_JSONESCAPE( str, result ) \
+    { \
+        AStackString<> string( str ); \
+        CompilationDatabaseTestWrapper::JSONEscape( string ); \
+        TEST_ASSERT( string == result ); \
+    }
+
+    CHECK_JSONESCAPE( "", "" )
+    CHECK_JSONESCAPE( "foo", "foo" )
+    CHECK_JSONESCAPE( "\"bar\"", "\\\"bar\\\"" )
+    CHECK_JSONESCAPE( "first\\second\\third", "first\\\\second\\\\third" )
+    CHECK_JSONESCAPE( "\b \t \n \f \r \\ \"", "\\b \\t \\n \\f \\r \\\\ \\\"" )
+    CHECK_JSONESCAPE( "\x01 \x0B \x14 \x1E", "\\u0001 \\u000B \\u0014 \\u001E" )
+
+    #undef CHECK_JSONESCAPE
+}
+
+// Unquote
+//------------------------------------------------------------------------------
+void TestCompilationDatabase::Unquote() const
+{
+    #define CHECK_UNQUOTE( str, result ) \
+    { \
+        AStackString<> string( str ); \
+        CompilationDatabaseTestWrapper::Unquote( string ); \
+        TEST_ASSERT( string == result ); \
+    }
+
+    CHECK_UNQUOTE( "", "" )
+    CHECK_UNQUOTE( "\"\"", "" )
+    CHECK_UNQUOTE( "''", "" )
+    CHECK_UNQUOTE( "\"foo\"", "foo" )
+    CHECK_UNQUOTE( "'foo'", "foo" )
+    CHECK_UNQUOTE( "f\"o\"o", "foo" )
+    CHECK_UNQUOTE( "f'o'o", "foo" )
+    CHECK_UNQUOTE( "\"''\"", "''" )
+    CHECK_UNQUOTE( "'\"\"'", "\"\"" )
+    CHECK_UNQUOTE( "\"foo\"_\"bar\"", "foo_bar" )
+    CHECK_UNQUOTE( "'foo'_'bar'", "foo_bar" )
+
+    #undef CHECK_UNQUOTE
+}
 
 // TestObjectListInputFile
 //------------------------------------------------------------------------------
@@ -154,10 +214,10 @@ void TestCompilationDatabase::DoTest( const char * bffFile, const char * target,
     AStackString<> slash;
     slash = NATIVE_SLASH_STR;
 
-    workDir.JSONEscape();
-    testDir.JSONEscape();
-    outDir.JSONEscape();
-    slash.JSONEscape();
+    CompilationDatabaseTestWrapper::JSONEscape( workDir );
+    CompilationDatabaseTestWrapper::JSONEscape( testDir );
+    CompilationDatabaseTestWrapper::JSONEscape( outDir );
+    CompilationDatabaseTestWrapper::JSONEscape( slash );
 
     result.Replace( "{WORKDIR}", workDir.Get() );
     result.Replace( "{TESTDIR}", testDir.Get() );
