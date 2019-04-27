@@ -97,7 +97,7 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 
     // decompress
     Compressor d;
-    d.Decompress( compressedMem );
+    TEST_ASSERT( d.Decompress( compressedMem ) );
     const size_t decompressedSize = d.GetResultSize();
     TEST_ASSERT( decompressedSize == size );
     TEST_ASSERT( memcmp( data, d.GetResult(), size ) == 0 );
@@ -147,7 +147,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 
     // decompress to check we get original data back
     Compressor decomp;
-    decomp.Decompress( compressedData.Get() );
+    TEST_ASSERT( decomp.Decompress( compressedData.Get() ) );
     size_t uncompressedSize = decomp.GetResultSize();
     TEST_ASSERT( uncompressedSize == dataSize );
     for ( size_t i=0; i<uncompressedSize; ++i )
@@ -179,7 +179,7 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     while ( t2.GetElapsed() < TIME_TO_REPEAT )
     {
         Compressor d;
-        d.Decompress( compressedData.Get() );
+        TEST_ASSERT( d.Decompress( compressedData.Get() ) );
         TEST_ASSERT( d.GetResultSize() == dataSize );
         ++numRepeats;
     }

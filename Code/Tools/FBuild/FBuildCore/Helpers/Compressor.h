@@ -17,7 +17,7 @@ public:
     bool IsValidData( const void * data, size_t dataSize ) const;
 
     bool Compress( const void * data, size_t dataSize );
-    void Decompress( const void * data );
+    bool Decompress( const void * data );
 
     const void *    GetResult() const       { return m_Result; }
     size_t          GetResultSize() const   { return m_ResultSize; }
