@@ -1208,10 +1208,14 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             Compressor c;
             if ( c.IsValidData( cacheData, cacheDataSize ) == false )
             {
-                FLOG_WARN( "Cache returned invalid data for '%s'", m_Name.Get() );
+                FLOG_WARN( "Cache returned invalid data (header) for '%s'", m_Name.Get() );
                 return false;
             }
-            c.Decompress( cacheData );
+            if ( c.Decompress( cacheData ) == false )
+            {
+                FLOG_WARN( "Cache returned invalid data (payload) for '%s'", m_Name.Get() );
+                return false;
+            }
             const void * data = c.GetResult();
             const size_t dataSize = c.GetResultSize();
 
@@ -2200,7 +2204,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     Compressor c; // scoped here so we can access decompression buffer
     if ( job->IsDataCompressed() )
     {
-        c.Decompress( dataToWrite );
+        VERIFY( c.Decompress( dataToWrite ) );
         dataToWrite = c.GetResult();
         dataToWriteSize = c.GetResultSize();
     }

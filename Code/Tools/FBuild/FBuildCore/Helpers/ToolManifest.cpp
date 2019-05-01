@@ -443,7 +443,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
         FLOG_WARN( "Invalid data received for fileId %u", fileId );
         return false;
     }
-    c.Decompress( data );
+    VERIFY( c.Decompress( data ) );
     const void * uncompressedData = c.GetResult();
     const size_t uncompressedDataSize = c.GetResultSize();
 

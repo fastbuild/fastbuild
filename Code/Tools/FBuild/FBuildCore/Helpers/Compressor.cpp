@@ -95,7 +95,7 @@ bool Compressor::Compress( const void * data, size_t dataSize )
 
 // Decompress
 //------------------------------------------------------------------------------
-void Compressor::Decompress( const void * data )
+bool Compressor::Decompress( const void * data )
 {
     PROFILE_FUNCTION
 
@@ -110,7 +110,7 @@ void Compressor::Decompress( const void * data )
         m_Result = ALLOC( header->m_UncompressedSize );
         memcpy( m_Result, (char *)data + sizeof( Header ), header->m_UncompressedSize );
         m_ResultSize = header->m_UncompressedSize;
-        return;
+        return true;
     }
     ASSERT( header->m_CompressionType == 1 );
 
@@ -123,8 +123,17 @@ void Compressor::Decompress( const void * data )
     const char * compressedData = ( (const char *)data + sizeof( Header ) );
 
     // decompress
-    const int compressedSize = LZ4_decompress_fast( compressedData, (char *)m_Result, (int)uncompressedSize);
-    ASSERT( compressedSize == (int)header->m_CompressedSize ); (void)compressedSize;
+    const int bytesDecompressed = LZ4_decompress_safe( compressedData, (char *)m_Result, (int)header->m_CompressedSize, (int)uncompressedSize);
+    if ( bytesDecompressed == (int)uncompressedSize )
+    {
+        return true;
+    }
+
+    // Data is corrupt
+    FREE( m_Result );
+    m_Result = nullptr;
+    m_ResultSize = 0;
+    return false;
 }
 
 //------------------------------------------------------------------------------

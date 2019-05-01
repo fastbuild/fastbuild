@@ -17,6 +17,7 @@
 #include "Graph/NodeGraph.h"
 #include "Graph/NodeProxy.h"
 #include "Graph/SettingsNode.h"
+#include "Helpers/CompilationDatabase.h"
 #include "Helpers/Report.h"
 #include "Protocol/Client.h"
 #include "Protocol/Protocol.h"
@@ -732,6 +733,34 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
     return true;
 }
 
+// GenerateCompilationDatabase
+//------------------------------------------------------------------------------
+bool FBuild::GenerateCompilationDatabase( const Array< AString > & targets ) const
+{
+    Dependencies deps;
+    if ( !GetTargets( targets, deps ) )
+    {
+        return false; // GetTargets will have emitted an error
+    }
+
+    CompilationDatabase compdb;
+    const AString & result = compdb.Generate( *m_DependencyGraph, deps );
+
+    FileStream fs;
+    if ( fs.Open( "compile_commands.json", FileStream::WRITE_ONLY ) == false )
+    {
+        FLOG_ERROR( "Failed to open compile_commands.json" );
+        return false;
+    }
+    if ( fs.Write( result.Get(), result.GetLength() ) != result.GetLength() )
+    {
+        FLOG_ERROR( "Failed to write to compile_commands.json" );
+        return false;
+    }
+    fs.Close();
+
+    return true;
+}
 
 // GetTempDir
 //------------------------------------------------------------------------------

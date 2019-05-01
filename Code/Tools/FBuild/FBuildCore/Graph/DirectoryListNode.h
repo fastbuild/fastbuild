@@ -37,6 +37,8 @@ public:
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
+    friend class CompilationDatabase; // For DoBuild - TODO:C This is not ideal
+
     // Reflected Properties
     friend class Function; // TODO:C Remove
     friend class TestGraph; // TODO:C Remove

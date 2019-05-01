@@ -50,6 +50,8 @@ public:
     };
     inline const Array< FileAndOrigin > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
+    void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
+
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 
