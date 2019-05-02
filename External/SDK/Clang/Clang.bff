@@ -4,8 +4,8 @@
 // Select desired Clang version
 //------------------------------------------------------------------------------
 #if __LINUX__
-    #define USING_CLANG_3
-    //#define USING_CLANG_6
+    //#define USING_CLANG_3
+    #define USING_CLANG_6
 #endif
 #if __OSX__
     #define USING_CLANG_8

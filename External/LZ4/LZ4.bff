@@ -26,7 +26,9 @@
                                                 + ' -O2'        // Compile with optimizations even in debug to improve performance
 					      ]
     .LZ4Options_x64Linux= [ 
-                            .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
+                            .LZ4CompilerOptions = ' -Wno-implicit-fallthrough'
+
+                                                + ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
     .LZ4Options_x64ClangLinux  = .LZ4Options_x64Linux
     .LZ4Options_x64OSX  = [ 
