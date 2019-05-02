@@ -54,7 +54,6 @@ private:
 
     void            FindNeedyClients();
     void            FinalizeCompletedJobs();
-    void            SendServerStatus();
     void            CheckWaitingJobs( const ToolManifest * manifest );
 
     void            RequestMissingFiles( const ConnectionInfo * connection, ToolManifest * manifest ) const;

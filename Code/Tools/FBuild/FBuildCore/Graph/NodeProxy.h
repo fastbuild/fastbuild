@@ -13,7 +13,7 @@ class NodeProxy : public Node
 public:
     explicit NodeProxy( const AString & name );
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & funcStartIter, const Function * function ) override;
-    virtual ~NodeProxy();
+    virtual ~NodeProxy() override;
 
     virtual bool IsAFile() const override;
 

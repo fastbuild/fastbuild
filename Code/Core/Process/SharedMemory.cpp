@@ -3,14 +3,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "SharedMemory.h"
 #include "Core/Env/Assert.h"
 #include "Core/Strings/AString.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #elif defined(__LINUX__) || defined(__APPLE__)
     #include <fcntl.h>
     #include <unistd.h>

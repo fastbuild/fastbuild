@@ -51,7 +51,7 @@ public:
     static bool EnsurePathExists( const AString & path );
     static bool EnsurePathExistsForFile( const AString & name );
 
-    #if !defined( __WINDOWS__ )    
+    #if !defined( __WINDOWS__ )
         static bool GetDirectoryIsMountPoint( const AString & path );
     #endif
 

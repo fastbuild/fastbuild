@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "CompilerNode.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -28,6 +26,8 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
     REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
     REFLECT( m_CompilerFamilyString,"CompilerFamily",       MetaOptional() )
+    REFLECT_ARRAY( m_Environment,   "Environment",          MetaOptional() )
+    REFLECT( m_UseLightCache,       "UseLightCache_Experimental", MetaOptional() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
@@ -44,6 +44,8 @@ CompilerNode::CompilerNode()
     , m_CompilerFamilyString( "auto" )
     , m_CompilerFamilyEnum( static_cast< uint8_t >( CUSTOM ) )
     , m_SimpleDistributionMode( false )
+    , m_UseLightCache( false )
+    , m_EnvironmentString( nullptr )
 {
 }
 
@@ -113,7 +115,21 @@ CompilerNode::CompilerNode()
     m_StaticDependencies.Append( compilerExeFile );
     m_StaticDependencies.Append( extraFiles );
 
-    return InitializeCompilerFamily( iter, function );
+    if (InitializeCompilerFamily( iter, function ) == false)
+    {
+        return false;
+    }
+    
+    // The LightCache is only compatible with MSVC for now
+    // - GCC/Clang can be supported when built in include paths can be extracted
+    //   and -nostdinc/-nostdinc++ is handled
+    if ( m_UseLightCache && ( m_CompilerFamilyEnum != MSVC ) )
+    {
+        Error::Error_1502_LightCacheIncompatibleWithCompiler( iter, function );
+        return false;
+    }
+
+    return true;
 }
 
 // IsAFile
@@ -133,6 +149,11 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
         // Normalize slashes to make logic consistent on all platforms
         AStackString<> compiler( GetExecutable() );
         compiler.Replace( '/', '\\' );
+        AStackString<> compilerWithoutVersion( compiler.Get() );
+        if ( const char * last = compiler.FindLast( '-' ) )
+        {
+            compilerWithoutVersion.Assign( compiler.Get(), last );
+        }
 
         // MSVC
         if ( compiler.EndsWithI( "\\cl.exe" ) ||
@@ -161,8 +182,10 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
         // GCC
         if ( compiler.EndsWithI( "gcc.exe" ) ||
              compiler.EndsWithI( "gcc" ) ||
+             compilerWithoutVersion.EndsWithI( "gcc" ) ||
              compiler.EndsWithI( "g++.exe" ) ||
              compiler.EndsWithI( "g++" ) ||
+             compilerWithoutVersion.EndsWithI( "g++" ) ||
              compiler.EndsWithI( "dcc.exe" ) || // WindRiver
              compiler.EndsWithI( "dcc" ) )      // WindRiver
         {
@@ -297,7 +320,10 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-CompilerNode::~CompilerNode() = default;
+CompilerNode::~CompilerNode()
+{
+    FREE( (void *)m_EnvironmentString );
+}
 
 // DoBuild
 //------------------------------------------------------------------------------
@@ -310,6 +336,13 @@ CompilerNode::~CompilerNode() = default;
 
     m_Stamp = m_Manifest.GetTimeStamp();
     return Node::NODE_RESULT_OK;
+}
+
+// GetEnvironmentString
+//------------------------------------------------------------------------------
+const char * CompilerNode::GetEnvironmentString() const
+{
+    return Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
 }
 
 //------------------------------------------------------------------------------

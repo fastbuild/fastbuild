@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Process.h"
 
 #include "Core/Env/Assert.h"
@@ -18,7 +16,7 @@
 #include "Core/Tracing/Tracing.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
     #include <TlHelp32.h>
 #endif
 
@@ -292,6 +290,13 @@ bool Process::Spawn( const char * executable,
         VERIFY( pipe( stdOutPipeFDs ) == 0 );
         VERIFY( pipe( stdErrPipeFDs ) == 0 );
 
+        // Increase buffer sizes to reduce stalls
+        #if defined( __LINUX__ )
+            const int bufferSize = ( 1024 * 1024 );
+            VERIFY( fcntl( stdOutPipeFDs[ 1 ], F_SETPIPE_SZ, bufferSize ) == bufferSize );
+            VERIFY( fcntl( stdErrPipeFDs[ 1 ], F_SETPIPE_SZ, bufferSize ) == bufferSize );
+        #endif
+
         // prepare args
         Array< AString > splitArgs( 64, true );
         Array< const char * > argVector( 64, true );
@@ -456,7 +461,7 @@ bool Process::IsRunning() const
 
 // WaitForExit
 //------------------------------------------------------------------------------
-int Process::WaitForExit()
+int32_t Process::WaitForExit()
 {
     ASSERT( m_Started );
     m_Started = false;
@@ -486,7 +491,7 @@ int Process::WaitForExit()
         VERIFY( ::CloseHandle( GetProcessInfo().hProcess ) );
         VERIFY( ::CloseHandle( GetProcessInfo().hThread ) );
 
-        return exitCode;
+        return (int32_t)exitCode;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         VERIFY( close( m_StdOutRead ) == 0 );
         VERIFY( close( m_StdErrRead ) == 0 );
@@ -625,8 +630,16 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
                 }
 
                 // no data available, but process is still going, so wait
-                // TODO:C Replace this sleep with event-based wait
-                Thread::Sleep( 15 );
+                #if defined( __OSX__ )
+                    // On OSX there seems to be no way to set the pipe bufffer
+                    // size so we must instead wake up frequently to avoid the
+                    // writer being blocked.
+                    Thread::Sleep( 2 );
+                #else
+                    // TODO:C Investigate waiting on an event when process terminates
+                    // to reduce overall process spawn time
+                    Thread::Sleep( 8 );
+                #endif
                 continue;
             }
         #endif

@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "CIncludeParser.h"
 
 #include "Tools/FBuild/FBuildCore/FLog.h"
@@ -364,7 +362,7 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
     #endif
 
     // quick check
-    uint32_t crc1 = xxHash::Calc32( begin, end - begin );
+    uint32_t crc1 = xxHash::Calc32( begin, (size_t)( end - begin ) );
     if ( crc1 == m_LastCRC1 )
     {
         return;

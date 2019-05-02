@@ -19,7 +19,7 @@ class CopyFileNode : public FileNode
 public:
     explicit CopyFileNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~CopyFileNode();
+    virtual ~CopyFileNode() override;
 
     static inline Node::Type GetTypeS() { return Node::COPY_FILE_NODE; }
 

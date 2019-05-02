@@ -33,7 +33,7 @@ public:
                          NodeProxy * srcFile,
                          const AString & compilerOptions,
                          uint32_t flags );
-    virtual ~ObjectNode();
+    virtual ~ObjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
 
@@ -60,7 +60,8 @@ public:
         FLAG_WARNINGS_AS_ERRORS_MSVC    = 0x80000,
         FLAG_VBCC               =   0x100000,
         FLAG_STATIC_ANALYSIS_MSVC = 0x200000,
-        FLAG_ORBIS_WAVE_PSSLC   =   0x400000
+        FLAG_ORBIS_WAVE_PSSLC   =   0x400000,
+        FLAG_DIAGNOSTICS_COLOR_AUTO = 0x800000,
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,
@@ -93,6 +94,8 @@ private:
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
     virtual bool Finalize( NodeGraph & nodeGraph ) override;
+
+    virtual void Migrate( const Node & oldNode ) override;
 
     BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
     BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
@@ -149,7 +152,12 @@ private:
         ~CompileHelper();
 
         // start compilation
-        bool SpawnCompiler( Job * job, const AString & name, const AString & compiler, const Args & fullArgs, const char * workingDir = nullptr );
+        bool SpawnCompiler( Job * job,
+                            const AString & name,
+                            const CompilerNode * compilerNode,
+                            const AString & compiler,
+                            const Args & fullArgs,
+                            const char * workingDir = nullptr );
 
         // determine overall result
         inline int                      GetResult() const { return m_Result; }
@@ -193,6 +201,7 @@ private:
     uint32_t            m_Flags                             = 0;
     uint32_t            m_PreprocessorFlags                 = 0;
     uint64_t            m_PCHCacheKey                       = 0;
+    uint64_t            m_LightCacheKey                     = 0;
 
     // Not serialized
     Array< AString >    m_Includes;

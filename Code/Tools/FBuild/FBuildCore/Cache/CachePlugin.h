@@ -17,7 +17,7 @@ class CachePlugin : public ICache
 {
 public:
     explicit CachePlugin( const AString & dllName );
-    virtual ~CachePlugin();
+    virtual ~CachePlugin() override;
 
     virtual bool Init( const AString & cachePath, const AString & cachePathMountPoint ) override;
     virtual void Shutdown() override;

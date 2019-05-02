@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="common.js"></script>
 
 <html>
 <head>
@@ -8,8 +7,22 @@
 <title>FASTBuild - Command Line Options Reference</title>
 </head>
 <body>
-  <script>generateHeader()</script>
-
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
 
 <h1>Command Line Options</h1>
 
@@ -41,6 +54,10 @@
   <tr>
     <td><a href="#clean">-clean</a></td>
     <td>Force a clean build.</td>
+  </tr>
+  <tr>
+    <td><a href="#compdb">-compdb</a></td>
+    <td>Generate JSON compilation database for the specified targets.</td>
   </tr>
   <tr>
     <td><a href="#config">-config [path]</a></td>
@@ -207,6 +224,11 @@ information and performance metrics. This can be used to assist troubleshooting.
     <div class='newsitemheader' id="clean">-clean</div>
     <div class='newsitembody'>
 <p>Force a clean build.  The build configuration file is re-parsed and all exsiting dependency information is discarded.  A build is performed as if building for the first time with no built files present.</p>
+</div>
+
+    <div class='newsitemheader' id="compdb">-compdb</div>
+    <div class='newsitembody'>
+<p>Instead of building specified targets generate a <a href="https://clang.llvm.org/docs/JSONCompilationDatabase.html">JSON compilation database</a> for them. Resulting compilation database will include entries for all source files from ObjectList and Library nodes that are dependencies of the specified targets.</p>
 </div>
 
     <div class='newsitemheader' id="config">-config [path]</div>
@@ -469,6 +491,6 @@ runs in UI-less mode)</p>
 </div>
 
 
-  <script>generateFooter()</script>
+    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
 </body>
 </html>

@@ -17,7 +17,7 @@ class WorkerThreadRemote : public WorkerThread
 {
 public:
     explicit WorkerThreadRemote( uint32_t threadIndex );
-    virtual ~WorkerThreadRemote();
+    virtual ~WorkerThreadRemote() override;
 
     void GetStatus( AString & hostName, AString & status, bool & isIdle ) const;
 
@@ -25,7 +25,7 @@ public:
     static void     SetNumCPUsToUse( uint32_t c ) { s_NumCPUsToUse = c; }
     static uint32_t GetNumCPUsToUse() { return s_NumCPUsToUse; }
 private:
-    virtual void Main();
+    virtual void Main() override;
 
     bool IsEnabled() const;
 

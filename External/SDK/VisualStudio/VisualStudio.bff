@@ -6,13 +6,13 @@
 //#define USING_VS2013
 //#define USING_VS2015
 #define USING_VS2017
+//#define USING_VS2019
 
 // Activate
 //------------------------------------------------------------------------------
 #if USING_VS2013
     #include "VS2013.bff"
     .MSC_VER                            = .VS2013_MSC_VER
-    .ToolChain_VS_Windows_X86           = .ToolChain_VS2013_Windows_X86
     .ToolChain_VS_Windows_X64           = .ToolChain_VS2013_Windows_X64
     .VS_PATH                            = .VS_2013_PATH
     .VS_PlatformToolset                 = .VS_2013_PlatformToolset
@@ -20,7 +20,6 @@
 #if USING_VS2015
     #include "VS2015.bff"
     .MSC_VER                            = .VS2015_MSC_VER
-    .ToolChain_VS_Windows_X86           = .ToolChain_VS2015_Windows_X86
     .ToolChain_VS_Windows_X64           = .ToolChain_VS2015_Windows_X64
     .VS_PATH                            = .VS_2015_PATH
     .VS_PlatformToolset                 = .VS_2015_PlatformToolset
@@ -28,21 +27,23 @@
 #if USING_VS2017
     #include "VS2017.bff"
     .MSC_VER                            = .VS2017_MSC_VER
-    .ToolChain_VS_Windows_X86           = .ToolChain_VS2017_Windows_X86
     .ToolChain_VS_Windows_X64           = .ToolChain_VS2017_Windows_X64
     .VS_PATH                            = .VS_2017_PATH
     .VS_PlatformToolset                 = .VS_2017_PlatformToolset
+#endif
+#if USING_VS2019
+    #include "VS2019.bff"
+    .MSC_VER                            = .VS2019_MSC_VER
+    .ToolChain_VS_Windows_X64           = .ToolChain_VS2019_Windows_X64
+    .VS_PATH                            = .VS_2019_PATH
+    .VS_PlatformToolset                 = .VS_2019_PlatformToolset
 #endif
 
 // Projects
 //--------------------------------------------------------------------------
 {
     // Common
-    #if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
-        .ProjectBasePath                = '$_CURRENT_BFF_DIR_$/'
-    #else
-        .ProjectBasePath                = '../External/SDK/VisualStudio/'
-    #endif
+    .ProjectBasePath                = '$_CURRENT_BFF_DIR_$/'
     .ProjectInputPaths              = .ProjectBasePath
     .ProjectAllowedFileExtensions   = '*.bff'
 
@@ -50,11 +51,7 @@
         // Visual Studio
         VCXProject( 'VisualStudio-proj' )
         {
-            #if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
-                .ProjectOutput                  = '$_CURRENT_BFF_DIR_$/../../../tmp/VisualStudio/Projects/VisualStudio.vcxproj'
-            #else
-                .ProjectOutput                  = '../tmp/VisualStudio/Projects/VisualStudio.vcxproj'
-            #endif
+            .ProjectOutput                  = '$_CURRENT_BFF_DIR_$/../../../tmp/VisualStudio/Projects/VisualStudio.vcxproj'
             .PlatformToolset                = .VS_PlatformToolset
     
             .ProjectX64Debug                = [ .Platform = 'x64' .Config = 'x64-Debug' ]

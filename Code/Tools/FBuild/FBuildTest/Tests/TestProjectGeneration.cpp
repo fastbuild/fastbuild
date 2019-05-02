@@ -306,7 +306,7 @@ void TestProjectGeneration::TestFunction_Speed() const
             pg.GenerateVCXProj( projectFileName, configs, fileTypes );
         }
         float time = t.GetElapsed();
-        OUTPUT( "Gen vcxproj        : %2.3fs\n", time );
+        OUTPUT( "Gen vcxproj        : %2.3fs\n", (double)time );
     }
     {
         Timer t;
@@ -315,7 +315,7 @@ void TestProjectGeneration::TestFunction_Speed() const
             pg.GenerateVCXProjFilters( projectFileName );
         }
         float time = t.GetElapsed();
-        OUTPUT( "Gen vcxproj.filters: %2.3fs\n", time );
+        OUTPUT( "Gen vcxproj.filters: %2.3fs\n", (double)time );
     }
 }
 

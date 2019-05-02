@@ -3,11 +3,7 @@
 
 // Root Paths
 //------------------------------------------------------------------------------
-#if BUILDING_FROM_TESTS // TODO: Remove ifdef when v0.97 is released
-    .Windows81_SDKBasePath          = '$_CURRENT_BFF_DIR_$/8.1'
-#else
-    .Windows81_SDKBasePath          = '../External/SDK/Windows/8.1'
-#endif
+.Windows81_SDKBasePath          = '$_CURRENT_BFF_DIR_$/8.1'
 
 // Defines
 //------------------------------------------------------------------------------
@@ -18,27 +14,12 @@
 
 // Windows 8.1 SDK
 //------------------------------------------------------------------------------
-.Windows81_SDK_X86 =
-[
-    .WindowsSDK_IncludePaths        = ' -I"$Windows81_SDKBasePath$/include/um"'
-                                    + ' -I"$Windows81_SDKBasePath$/include/shared"'
-
-    .CommonCompilerOptions          = .WindowsSDK_IncludePaths
-                                    + .WindowsSDK_Defines
-
-    .CompilerOptions                = .CommonCompilerOptions
-    .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsPCH             = .CommonCompilerOptions
-    .CompilerOptionsDeoptimized     = .CommonCompilerOptions
-
-    .LinkerOptions                  = ' /LIBPATH:"$Windows81_SDKBasePath$/lib/winv6.3/um/x86"'
-                                    + ' /MACHINE:X86'
-                                    + ' /LARGEADDRESSAWARE'
-]
 .Windows81_SDK_X64 =
 [
     .WindowsSDK_IncludePaths        = ' -I"$Windows81_SDKBasePath$/include/um"'
                                     + ' -I"$Windows81_SDKBasePath$/include/shared"'
+
+    .WindowsDK_WinRTAssemblyPath    = '$Windows81_SDKBasePath$/References/CommonConfiguration/Neutral'
 
     .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
@@ -46,8 +27,8 @@
 
     .CompilerOptions                = .CommonCompilerOptions
     .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsPCH             = .CommonCompilerOptions
     .CompilerOptionsDeoptimized     = .CommonCompilerOptions
+    .PCHOptions                     = .CommonCompilerOptions
 
     .LinkerOptions                  = ' /LIBPATH:"$Windows81_SDKBasePath$/lib/winv6.3/um/x64"'
                                     + ' /MACHINE:X64'

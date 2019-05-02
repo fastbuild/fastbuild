@@ -13,7 +13,7 @@ class Meta_EmbedMembers : public IMetaData
     REFLECT_DECLARE( Meta_EmbedMembers )
 public:
     explicit Meta_EmbedMembers();
-    virtual ~Meta_EmbedMembers();
+    virtual ~Meta_EmbedMembers() override;
 };
 
 //------------------------------------------------------------------------------

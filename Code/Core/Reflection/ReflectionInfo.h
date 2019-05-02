@@ -5,27 +5,19 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
-#include "Core/Containers/Ref.h"
-#include "Core/Containers/WeakRef.h"
 #include "Core/Env/Types.h"
 #include "Core/Reflection/ReflectionIter.h"
-//#include "Core/Reflection/RefObject.h"
 #include "Core/Reflection/PropertyType.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
 class IMetaData;
-class Mat44;
 class MetaNone;
 class Object;
 class ReflectionInfo;
 class ReflectedProperty;
-class RefObject;
 class Struct;
-class Vec2;
-class Vec3;
-class Vec4;
 
 // ReflectionInfo
 //------------------------------------------------------------------------------
@@ -49,20 +41,11 @@ public:
     const ReflectedProperty & GetReflectedProperty( uint32_t index ) const;
     const ReflectedProperty * GetReflectedProperty( const AString & propertyName ) const;
 
-    static RefObject * CreateObject( const AString & objectType );
+    static Object * CreateObject( const AString & objectType );
     static Struct * CreateStruct( const AString & structType );
-    RefObject * CreateObject() const;
+    Object * CreateObject() const;
     Struct * CreateStruct() const;
     void SetArraySize( void * array, size_t size ) const;
-
-    // Loading by name
-    static Object * Load( const char * scopedName );
-
-    static void RegisterRootObject( Object * obj );
-    static Object * FindObjectByScopedName( const AString & scopedName );
-
-    // Save out definitions for all reflected objects
-    static bool WriteDefinitions();
 
     #define GETSET_PROPERTY( getValueType, setValueType ) \
         bool GetProperty( void * object, const char * name, getValueType * value ) const; \
@@ -79,12 +62,6 @@ public:
     GETSET_PROPERTY( int64_t, int64_t )
     GETSET_PROPERTY( bool, bool )
     GETSET_PROPERTY( AString, const AString & )
-    GETSET_PROPERTY( Vec2, const Vec2 & )
-    GETSET_PROPERTY( Vec3, const Vec3 & )
-    GETSET_PROPERTY( Vec4, const Vec4 & )
-    GETSET_PROPERTY( Mat44, const Mat44 & )
-    GETSET_PROPERTY( Ref< RefObject >, const Ref< RefObject > & )
-    GETSET_PROPERTY( WeakRef< Object >, const WeakRef< Object > & )
 
     #define GETSET_PROPERTY_ARRAY( valueType ) \
         bool GetProperty( void * object, const char * name, Array< valueType > * value ) const; \
@@ -142,7 +119,6 @@ protected:
     IMetaData * m_MetaDataChain;
 
     static ReflectionInfo * s_FirstReflectionInfo;
-    static Array< Object * > s_RootObjects;
 };
 
 //------------------------------------------------------------------------------

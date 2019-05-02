@@ -44,6 +44,7 @@ public:
     // Events for derived classes to respond to
     virtual bool OnMinimize();
     virtual bool OnClose();
+    virtual bool OnQuit();
     virtual bool OnTrayIconLeftClick();
     virtual bool OnTrayIconRightClick();
     virtual void OnDropDownSelectionChanged( OSDropDown * dropDown );

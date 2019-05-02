@@ -9,6 +9,7 @@
 
 // Macros
 //------------------------------------------------------------------------------
+PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wgnu-zero-variadic-macro-arguments" ) // token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
 #define FLOG_INFO( fmtString, ... )                 \
     do {                                            \
         if ( FLog::ShowInfo() )                     \
@@ -69,6 +70,8 @@
     PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
     } while ( false );                              \
     PRAGMA_DISABLE_POP_MSVC
+
+PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wgnu-zero-variadic-macro-arguments
 
 // FLog class
 //------------------------------------------------------------------------------

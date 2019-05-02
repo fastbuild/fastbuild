@@ -61,6 +61,7 @@ public:
 
     void DisplayTargetList() const;
     bool DisplayDependencyDB( const Array< AString > & targets ) const;
+    bool GenerateCompilationDatabase( const Array< AString > & targets ) const;
 
     class EnvironmentVarAndHash
     {
@@ -101,7 +102,7 @@ public:
     bool CacheOutputInfo() const;
     bool CacheTrim() const;
 
-private:
+protected:
     bool GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const;
 
     void UpdateBuildStatus( const Node * node );

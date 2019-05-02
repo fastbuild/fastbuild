@@ -8,44 +8,35 @@ Settings {} // use Standard Environment
 //
 // PCH + PCH User, both using /analyze
 //
-ObjectList( 'PCHTest-CacheAnalyze_MSVC-1' )
+.Test1 = [ .Name = '1'  .SubDir = '1'               .PCHName  = 'PrecompiledHeader.pch' ]
+.Test2 = [ .Name = '2'  .SubDir = '2'               .PCHName  = 'PrecompiledHeader.pch' ]
+.Test3 = [ .Name = '3'  .SubDir = '3\With.Period'   .PCHName  = 'PrecompiledHeader.pch' ]
+.Test4 = [ .Name = '4'  .SubDir = '4'               .PCHName  = 'PrecompiledHeaderWith.Period.pch' ]
+.Test5 = [ .Name = '5'  .SubDir = '5'               .PCHName  = 'PrecompiledHeader.otherext' ]
+.Tests = { .Test1, .Test2, .Test3, .Test4, .Test5 }
+.TestTargets    = {}
+ForEach( .Test in .Tests )
 {
-    // PCH
-    .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
-    .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/PrecompiledHeader.pch'
-    .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
-    .PCHOptions                 + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
-                                + ' /analyze'
+    Using( .Test )
+    ObjectList( 'PCHTest-CacheAnalyze_MSVC-$Name$' )
+    {
+        // PCH
+        .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
+        .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/$SubDir$/$PCHName$'
+        .PCHOptions                 + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+                                    + ' /analyze'
 
-    // PCH User
-    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/'
-    .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/1/'
-    .CompilerOptions            + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
-                                + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
-                                + ' /analyze'
-}
-
-ObjectList( 'PCHTest-CacheAnalyze_MSVC-2' )
-{
-    // PCH
-    .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/PrecompiledHeader.cpp'
-    .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/PrecompiledHeader.pch'
-    .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
-    .PCHOptions                 + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
-                                + ' /analyze'
-
-    // PCH User
-    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/'
-    .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/2/'
-    .CompilerOptions            + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
-                                + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
-                                + ' /analyze'
+        // PCH User
+        .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/'
+        .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheAnalyze_MSVC/$SubDir$/'
+        .CompilerOptions            + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+                                    + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheAnalyze_MSVC/"'
+                                    + ' /analyze'
+    }
+    ^TestTargets                    + 'PCHTest-CacheAnalyze_MSVC-$Name$'
 }
 
 Alias( 'PCHTest-CacheAnalyze_MSVC' )
 {
-    .Targets    = {
-                    'PCHTest-CacheAnalyze_MSVC-1'
-                    'PCHTest-CacheAnalyze_MSVC-2'
-                  }
+    .Targets    = .TestTargets
 }

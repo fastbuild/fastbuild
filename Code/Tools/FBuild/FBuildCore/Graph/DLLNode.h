@@ -16,7 +16,7 @@ class DLLNode : public LinkerNode
     REFLECT_NODE_DECLARE( DLLNode )
 public:
     explicit DLLNode();
-    virtual ~DLLNode();
+    virtual ~DLLNode() override;
 
     void GetImportLibName( AString & importLibName ) const;
 

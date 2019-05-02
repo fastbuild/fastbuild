@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Error.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
@@ -12,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+#include "Core/Env/ErrorFormat.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -289,9 +288,9 @@
                                                        const AString & include,
                                                        uint32_t errorCode )
 {
-    FormatError( iter, 1033u, nullptr, "Error reading include '%s' (Error: %u).",
-                                       include.Get(),
-                                       errorCode );
+    FormatError( iter, 1033u, nullptr, "Error reading include. Error: %s File: '%s'",
+                                       ERROR_STR( errorCode ),
+                                       include.Get() );
 }
 
 // Error_1034_OperationNotSupported
@@ -626,6 +625,14 @@
     FormatError( iter, 1501u, function, ".CompilerFamily '%s' is unrecognized.", badCompilerFamily.Get() );
 }
 
+// Error_1502_LightCacheIncompatibleWithCompiler
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1502_LightCacheIncompatibleWithCompiler( const BFFIterator & iter,
+                                                                       const Function * function )
+{
+    FormatError( iter, 1502u, function, "LightCache only compatible with MSVC Compiler." );
+}
+
 // Error_1999_UserError
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1999_UserError( const BFFIterator & iter,
@@ -684,7 +691,7 @@ void Error::FormatError( const BFFIterator & iter,
     }
 
     // if line is too crazy to be useful, don't print anything more
-    size_t lineLength = lineEnd.GetCurrent() - lineStart;
+    size_t lineLength = (size_t)( lineEnd.GetCurrent() - lineStart );
     if ( lineLength >= 256 )
     {
         return;

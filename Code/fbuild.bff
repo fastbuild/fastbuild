@@ -4,9 +4,10 @@
 //------------------------------------------------------------------------------
 // Windows Platform
 //------------------------------------------------------------------------------
+#include "../External/SDK/GCC/GCC.bff"
 #include "../External/SDK/VisualStudio/VisualStudio.bff"
+#include "../External/SDK/Clang/Clang.bff"
 #include "../External/SDK/Windows/Windows.bff"
-.ClangBasePath      = '../External/SDK/ClangForWindows/5.0.1'
 
 //------------------------------------------------------------------------------
 // Settings
@@ -26,39 +27,12 @@ Settings
 }
 
 //------------------------------------------------------------------------------
-// Clang
-//------------------------------------------------------------------------------
-Compiler( 'Compiler-x64Clang' )
-{
-    .Root       = '$ClangBasePath$'
-    .Executable = '$Root$\bin\clang++.exe'
-    .ExtraFiles = {
-                    '$Root$\bin\msvcp140.dll'
-                    '$Root$\bin\vcruntime140.dll'
-                  }
-}
-Compiler( 'Compiler-x64-Linux' )
-{
-    .Executable     = '/usr/bin/gcc'
-    .ExtraFiles     = {
-                        '/usr/bin/as'
-                        '/usr/lib/gcc/x86_64-linux-gnu/4.9/cc1'
-                        '/usr/lib/gcc/x86_64-linux-gnu/4.9/cc1plus'
-                      }
-}
-Compiler( 'Compiler-x64Clang-LinuxOSX' )
-{
-    .Executable = '/usr/bin/clang++'
-}
-
-//------------------------------------------------------------------------------
 // Config Defines
 //------------------------------------------------------------------------------
 .Debug_Config =
 [
     .CompilerOptions                = ' -DDEBUG -DPROFILING_ENABLED'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 
     .Config                         = 'Debug'
 
@@ -74,7 +48,6 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 [
     .CompilerOptions                = ' -DRELEASE -DPROFILING_ENABLED'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 
     .Config                         = 'Profile'
 ]
@@ -82,7 +55,6 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 [
     .CompilerOptions                = ' -DRELEASE'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
     .CompilerOptionsDeoptimized     = .CompilerOptions
 
     .Config                         = 'Release'
@@ -92,7 +64,6 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .CompilerOptions                = ' -DRELEASE'
                                     + ' -fsanitize=address -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=address'
 
     .Config                         = 'ASan'
@@ -102,19 +73,20 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
     .CompilerOptions                = ' -DRELEASE'
                                     + ' -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=memory -L../External/MSan'
 
     .Config                         = 'MSan'
 ]
 .Fuzzer_Config =
 [
-    // These options are valid for Clang < 6.0.0:
-    .CompilerOptions                = ' -fsanitize-coverage=trace-pc-guard,trace-cmp'
-    // These options are valid for Clang >= 6.0.0:
-    // .CompilerOptions                = ' -fsanitize=fuzzer-no-link'
+    #if USING_CLANG_6
+        // These options are valid for Clang >= 6.0.0:
+        .CompilerOptions                = ' -fsanitize=fuzzer-no-link'
+    #else
+        // These options are valid for Clang < 6.0.0:
+        .CompilerOptions                = ' -fsanitize-coverage=trace-pc-guard,trace-cmp'
+    #endif
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 ]
 
 //------------------------------------------------------------------------------
@@ -124,13 +96,11 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 [
     .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR- /analyze'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 ]
 .Profile_Optimizations_MSVC =
 [
     .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /analyze /Zo'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
     .LinkerOptions                  = ' /OPT:REF,ICF'
 ]
 .Release_Optimizations_MSVC =
@@ -148,13 +118,11 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
 [
     .CompilerOptions                = ' -O0'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 ]
 .Profile_Optimizations =
 [
     .CompilerOptions                = ' -O2'
     .CompilerOptionsC               = .CompilerOptions
-    .CompilerOptionsPCH             = .CompilerOptions
 ]
 .Release_Optimizations =
 [
@@ -164,269 +132,99 @@ Compiler( 'Compiler-x64Clang-LinuxOSX' )
                                     + ' -O0'
 ]
 
-//------------------------------------------------------------------------------
-// Configurations
-//------------------------------------------------------------------------------
-.MSVCBaseConfig =
-[
-    .AdditionalWarnings     = ' /we4062' // enumerator 'identifier' in a switch of enum 'enumeration' is not handled
-                            + ' /we4263' // 'function' : member function does not override any base class virtual member function
-                            + ' /we4265' // 'class': class has virtual functions, but destructor is not virtual
-                            + ' /we4296' // 'operator': expression is always false
-                            + ' /we4555' // expression has no effect; expected expression with side-effect
-                            + ' /we4619' // #pragma warning : there is no warning number 'number'
-                            + ' /we4640' // 'instance' : construction of local static object is not thread-safe
-                            + ' /we4826' // Conversion from 'type1 ' to 'type_2' is sign-extended. This may cause unexpected runtime behavior.
-                            + ' /we4836' // nonstandard extension used : 'type' : local types or unnamed types cannot be used as template arguments
-                            + ' /we4905' // wide string literal cast to 'LPSTR'
-                            + ' /we4906' // string literal cast to 'LPWSTR'
-
-    .CompilerOptions        = '"%1" /Z7 /nologo /c /W4 /WX'
-                            + ' /Zc:inline'         // Remove unreferenced COMDATs at compile time (VS2013.2+)
-                            + ' /Zc:strictStrings'  // Require const only usage of string literals (VS2013+)
-                            + .AdditionalWarnings
-                            + ' /fp:fast'
-                            + ' /Fo"%2"'
-                            + ' /I"./"'
-    .CompilerOptionsC       = .CompilerOptions
-    .LibrarianOptions       = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
-    .LinkerOptions          = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
-
-    .LibExtension           = '.lib'
-    .ExeExtension           = '.exe'
-
-    .UseExceptions          = ' /EHsc'
-]
-
 // X64
 //------------------------------------------------------------------------------
-.X64BaseConfig =
-[
-    Using( .MSVCBaseConfig )
-    .Platform               = 'x64'
-]
-.X64BaseConfig              + .WindowsSDK_X64
-                            + .ToolChain_VS_Windows_X64
-.X64DebugConfig             = .X64BaseConfig
-                            + .Debug_Config
-                            + .Debug_Optimizations_MSVC
-.X64ReleaseConfig           = .X64BaseConfig
-                            + .Release_Config
-                            + .Release_Optimizations_MSVC
-.X64ProfileConfig           = .X64BaseConfig
-                            + .Profile_Config
-                            + .Profile_Optimizations_MSVC
+#if __WINDOWS__
+    .X64BaseConfig              = .ToolChain_VS_Windows_X64
+                                + .WindowsSDK_X64
+    .X64DebugConfig             = .X64BaseConfig
+                                + .Debug_Config
+                                + .Debug_Optimizations_MSVC
+    .X64ReleaseConfig           = .X64BaseConfig
+                                + .Release_Config
+                                + .Release_Optimizations_MSVC
+    .X64ProfileConfig           = .X64BaseConfig
+                                + .Profile_Config
+                                + .Profile_Optimizations_MSVC
+#endif
 
 // X64 Clang
 //------------------------------------------------------------------------------
-.X64ClangBaseConfig =
-[
-    Using( .ToolChain_VS_Windows_X64 )
-
-    // Override compiler & librarian with Clang toolchain
-    .ToolsBasePath          = '$ClangBasePath$'
-    .Compiler               = 'Compiler-x64Clang'
-    .Librarian              = '$ToolsBasePath$\bin\llvm-ar.exe'
-
-    .BaseCompilerOptions    = '-o"%2" "%1" -c -g'
-                            + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
-                            + ' -Wextra'                        // additional warnings
-
-                            // includes
-                            + ' -I"./"'
-                            + .VSIncludePaths
-
-                            // x64
-                            + ' -m64'
-
-                            // MS compatibility
-                            + ' -fms-compatibility'
-                            + ' -fms-extensions'
-                            + ' -fmsc-version=$MSC_VER$'
-                            + ' -Xclang -flto-visibility-public-std' // LTO visibility matches MSVC behaviour
-
-                            // as of v5.0.1, these warnings fire inside system headers
-                            + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
-                            + ' -Wno-unknown-pragmas'           // unknown pragma ignored [-Wunknown-pragmas]
-                            + ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
-                            + ' -Wno-invalid-token-paste'       // pasting formed '"Use ""ADDRINFOEXW"', an invalid preprocessing token [-Winvalid-token-paste]
-                            + ' -Wno-expansion-to-defined'      // macro expansion producing 'defined' has undefined behavior [-Wexpansion-to-defined]
-                            + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
-                            + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
-                            + ' -Wno-int-to-void-pointer-cast'  // cast to 'void *' from smaller integer type 'unsigned long' [-Wint-to-void-pointer-cast]
-                            #if USING_VS2013
-                                + ' -Wno-implicit-exception-spec-mismatch'
-                            #endif
-                            + ' -Wno-deprecated-declarations' // Clang doesn't respect pragmas disabling warning in stdio.h
-
-                            // Disabled warnings
-                            + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
-
-                            // Extra warnings
-                            + ' -Wshadow'
-
-                            + ' -fno-rtti'
-
-    .CompilerOptionsC       = '-x c '
-                            + .BaseCompilerOptions
-                            - ' /arch:SSE2'
-    .CompilerOptions        = '-std=c++11 '                     // allow C++11 features
-                            + .BaseCompilerOptions
-                            - ' /arch:SSE2'
-
-    .LibrarianOptions       = 'rc "%2" "%1"' // NOTE: output must come first
-    .LinkerOptions          = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
-                            + .VSLibPaths
-
-    .LibExtension           = '.a'
-    .ExeExtension           = '.exe'
-
-    .Platform               = 'x64Clang'
-
-    .UseExceptions          = ' -fexceptions'
-]
-.X64ClangBaseConfig         + .WindowsSDK_X64
-.X64ClangDebugConfig        = .X64ClangBaseConfig
-                            + .Debug_Config
-                            + .Debug_Optimizations
-.X64ClangReleaseConfig      = .X64ClangBaseConfig
-                            + .Release_Config
-                            + .Release_Optimizations
-.X64ClangProfileConfig      = .X64ClangBaseConfig
-                            + .Profile_Config
-                            + .Profile_Optimizations
+#if __WINDOWS__
+    .X64ClangBaseConfig         = .ToolChain_Clang_Windows
+                                + .WindowsSDK_X64
+    .X64ClangDebugConfig        = .X64ClangBaseConfig
+                                + .Debug_Config
+                                + .Debug_Optimizations
+    .X64ClangReleaseConfig      = .X64ClangBaseConfig
+                                + .Release_Config
+                                + .Release_Optimizations
+    .X64ClangProfileConfig      = .X64ClangBaseConfig
+                                + .Profile_Config
+                                + .Profile_Optimizations
+#endif
 
 // Linux
 //------------------------------------------------------------------------------
-.LinuxBaseConfig =
-[
-    .Librarian              = '/usr/bin/ar'
+#if __LINUX__
+    .LinuxCompatibilityOptions =
+    [
+                                // Compatibility with older glibc (must be first!)
+        .CommonCompilerOptions  = ' -include Core/Env/glibc_compat.h'
+        .CompilerOptions        = .CommonCompilerOptions
+        .CompilerOptionsC       = .CommonCompilerOptions
+    ]
 
-    .BaseCompilerOptions    = ''
-
-                            // Compatibility with older glibc (must be first!)
-                            + ' -include Core/Env/glibc_compat.h'
-
-                            + ' -o "%2" "%1" -c -g'
-                            + ' -I./'
-                            + ' -D__LINUX__'
-                            + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
-                            + ' -Wextra'
-                            + ' -m64'                           // x86-64
-
-    .CompilerOptionsC       = '-x c '
-                            + .BaseCompilerOptions
-    .CompilerOptions        = '-std=c++11 '                     // allow C++11 features
-                            + .BaseCompilerOptions
-
-                            // Disabled warnings
-                            + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
-
-                            // Additional warnings
-                            + ' -Wshadow'
-
-    .LinkerOptions          = '"%1" -o "%2"'
-
-    .LibrarianOptions       = 'rcs "%2" "%1"'
-
-    .LibExtension           = '.a'
-    .ExeExtension           = ''
-
-    .UseExceptions          = ' -fexceptions'
-]
-.X64BaseConfig_Linux =
-[
-    Using( .LinuxBaseConfig )
-    .Platform               = 'x64Linux'
-    .Compiler               = 'Compiler-x64-Linux'
-    .Linker                 = '/usr/bin/g++'
-]
-.X64DebugConfig_Linux       = .X64BaseConfig_Linux
-                            + .Debug_Config
-                            + .Debug_Optimizations
-.X64ReleaseConfig_Linux     = .X64BaseConfig_Linux
-                            + .Release_Config
-                            + .Release_Optimizations
-.X64ProfileConfig_Linux     = .X64BaseConfig_Linux
-                            + .Profile_Config
-                            + .Profile_Optimizations
-.X64ASanConfig_Linux        = .X64BaseConfig_Linux
-                            + .ASan_Config
-                            + .Release_Optimizations
-.X64ClangBaseConfig_Linux =
-[
-    Using( .LinuxBaseConfig )
-    .Platform               = 'x64ClangLinux'
-    .Compiler               = 'Compiler-x64Clang-LinuxOSX'
-    .Linker                 = '/usr/bin/clang++'
-]
-.X64ClangDebugConfig_Linux  = .X64ClangBaseConfig_Linux
-                            + .Debug_Config
-                            + .Debug_Optimizations
-.X64ClangReleaseConfig_Linux = .X64ClangBaseConfig_Linux
-                            + .Release_Config
-                            + .Release_Optimizations
-.X64ClangProfileConfig_Linux = .X64ClangBaseConfig_Linux
-                            + .Profile_Config
-                            + .Profile_Optimizations
-.X64ClangASanConfig_Linux   = .X64ClangBaseConfig_Linux
-                            + .ASan_Config
-                            + .Fuzzer_Config
-                            + .Release_Optimizations
-.X64ClangMSanConfig_Linux   = .X64ClangBaseConfig_Linux
-                            + .MSan_Config
-                            + .Fuzzer_Config
-                            + .Release_Optimizations
+    // GCC
+    .X64BaseConfig_Linux        = .LinuxCompatibilityOptions // Must be first
+                                + .ToolChain_GCC_Linux
+    .X64DebugConfig_Linux       = .X64BaseConfig_Linux
+                                + .Debug_Config
+                                + .Debug_Optimizations
+    .X64ReleaseConfig_Linux     = .X64BaseConfig_Linux
+                                + .Release_Config
+                                + .Release_Optimizations
+    .X64ProfileConfig_Linux     = .X64BaseConfig_Linux
+                                + .Profile_Config
+                                + .Profile_Optimizations
+    .X64ASanConfig_Linux        = .X64BaseConfig_Linux
+                                + .ASan_Config
+                                + .Release_Optimizations
+    // Clang
+    .X64ClangBaseConfig_Linux   = .LinuxCompatibilityOptions // Must be first
+                                + .ToolChain_Clang_Linux
+    .X64ClangDebugConfig_Linux  = .X64ClangBaseConfig_Linux
+                                + .Debug_Config
+                                + .Debug_Optimizations
+    .X64ClangReleaseConfig_Linux = .X64ClangBaseConfig_Linux
+                                + .Release_Config
+                                + .Release_Optimizations
+    .X64ClangProfileConfig_Linux = .X64ClangBaseConfig_Linux
+                                + .Profile_Config
+                                + .Profile_Optimizations
+    .X64ClangASanConfig_Linux   = .X64ClangBaseConfig_Linux
+                                + .ASan_Config
+                                + .Fuzzer_Config
+                                + .Release_Optimizations
+    .X64ClangMSanConfig_Linux   = .X64ClangBaseConfig_Linux
+                                + .MSan_Config
+                                + .Fuzzer_Config
+                                + .Release_Optimizations
+#endif
 
 // OSX
 //------------------------------------------------------------------------------
-.OSXBaseConfig =
-[
-    .Compiler               = 'Compiler-x64Clang-LinuxOSX'
-    .Librarian              = '/usr/bin/ar'
-    .Linker                 = '/usr/bin/g++'
-
-    .CompilerOptions        = '-x c++ -o "%2" "%1" -c -g'
-                            + ' -I./'
-                            + ' -D__APPLE__'
-                            + ' -D__OSX__'
-                            + ' -Wall -Werror -Wfatal-errors'       // warnings as errors
-                            + ' -Wextra'
-                            + ' -Wno-#pragma-messages'
-                            + ' -m64'                       // x86-64
-
-                            // Disabled warnings
-                            + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
-
-                            // Fires on our new/delete operator (Clang bug?)
-                            + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
-    .CompilerOptionsC       = .CompilerOptions
-    .CompilerOptions        + ' -std=c++11'                 // allow C++11 features
-
-    .CompilerOutputExtension= '.o'
-    .LinkerOptions          = '"%1" -o "%2" -g'
-
-    .LibrarianOptions       = 'rcs "%2" "%1"'
-
-    .LibExtension           = '.a'
-    .ExeExtension           = ''
-
-    .UseExceptions          = ' -fexceptions'
-]
-.X64BaseConfig_OSX =
-[
-    Using( .OSXBaseConfig )
-    .Platform               = 'x64OSX'
-]
-.X64DebugConfig_OSX         = .X64BaseConfig_OSX
-                            + .Debug_Config
-                            + .Debug_Optimizations
-.X64ReleaseConfig_OSX       = .X64BaseConfig_OSX
-                            + .Release_Config
-                            + .Release_Optimizations
-.X64ProfileConfig_OSX       = .X64BaseConfig_OSX
-                            + .Profile_Config
-                            + .Profile_Optimizations
+#if __OSX__
+    .X64DebugConfig_OSX         = .ToolChain_Clang_OSX
+                                + .Debug_Config
+                                + .Debug_Optimizations
+    .X64ReleaseConfig_OSX       = .ToolChain_Clang_OSX
+                                + .Release_Config
+                                + .Release_Optimizations
+    .X64ProfileConfig_OSX       = .ToolChain_Clang_OSX
+                                + .Profile_Config
+                                + .Profile_Optimizations
+#endif
 
 //------------------------------------------------------------------------------
 //
@@ -495,23 +293,22 @@ VCXProject( 'UpdateSolution-proj' )
 
 // Configurations
 //------------------------------------------------------------------------------
-.Configs_Windows_MSVC   = { .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig }
-.Configs_Windows_Clang  = { .X64ClangDebugConfig, .X64ClangProfileConfig, .X64ClangReleaseConfig }
-.Configs_Linux          = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
-                            .X64ASanConfig_Linux,
-                            .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
-                            .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux }
-.Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
-
 #if __WINDOWS__
-    .Configs    = .Configs_Windows_MSVC
-                + .Configs_Windows_Clang
+    .Configs_Windows_MSVC   = { .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig }
+    .Configs_Windows_Clang  = { .X64ClangDebugConfig, .X64ClangProfileConfig, .X64ClangReleaseConfig }
+    .Configs                = .Configs_Windows_MSVC
+                            + .Configs_Windows_Clang
 #endif
 #if __LINUX__
-    .Configs    = .Configs_Linux
+    .Configs_Linux          = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
+                                .X64ASanConfig_Linux,
+                                .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
+                                .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux }
+    .Configs                = .Configs_Linux
 #endif
 #if __OSX__
-    .Configs    = .Configs_OSX_Clang
+    .Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
+    .Configs                = .Configs_OSX_Clang
 #endif
 
 .Targets_x64_Debug = {}
@@ -570,7 +367,10 @@ ForEach( .Config in .Configs )
 .PlatformConfigs_x64           = { 'Debug', 'Profile', 'Release' }
 .PlatformConfigs_x64Clang      = { 'Debug', 'Profile', 'Release' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan' }
-.PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release', 'ASan', 'MSan' }
+.PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release' }
+#if USING_CLANG_6
+                               + { 'ASan', 'MSan' }
+#endif
 .PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
 ForEach( .Platform in .Platforms )
 {
@@ -668,7 +468,7 @@ Alias( 'All+Tests' )
         .Folder_0_External =
         [
             .Path           = '0. External'
-            .Projects       = { 'LZ4-proj', 'VisualStudio-proj', 'Windows-proj' }
+            .Projects       = { 'Clang-proj', 'GCC-proj', 'LZ4-proj', 'VisualStudio-proj', 'Windows-proj' }
         ]
         .Folder_1_Test =
         [

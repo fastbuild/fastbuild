@@ -16,6 +16,7 @@ ObjectList( 'CPPGeneratorCompile' )
 {
     #if __WINDOWS__
         .CompilerOptions    + ' /MT'
+                            + '  -D"_CRT_SECURE_NO_WARNINGS"' // don't warn about fopen etc usage
     #endif
     .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestObject/StaleDynamicDeps/CPPGeneratorMain.cpp'
     .CompilerOuputExtension = '.cpp'

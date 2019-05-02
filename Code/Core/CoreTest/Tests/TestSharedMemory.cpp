@@ -62,12 +62,12 @@ void TestSharedMemory::CreateAccessDestroy() const
     if(pid == 0)
     {
         SharedMemory shm;
-        shm.Open(sharedMemoryName.Get(), sizeof(unsigned int));
-        unsigned int* magic = static_cast<unsigned int*>(shm.GetPtr());
+        shm.Open( sharedMemoryName.Get(), sizeof(uint32_t) );
+        volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
 
         // Asserts raise an exception when running unit tests : forked process
         // will not exit cleanly and it will be ASSERTed in the parent process.
-        TEST_ASSERT(magic != nullptr);
+        TEST_ASSERT( magic != nullptr );
 
         // Wait for parent to write magic
         while ( *magic != 0xBEEFBEEF )
@@ -83,8 +83,8 @@ void TestSharedMemory::CreateAccessDestroy() const
     else
     {
         SharedMemory shm;
-        shm.Create(sharedMemoryName.Get(), sizeof(unsigned int));
-        unsigned int* magic = static_cast<unsigned int*>(shm.GetPtr());
+        shm.Create( sharedMemoryName.Get(), sizeof(uint32_t) );
+        volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
         TEST_ASSERT( magic );
 
         // Signal child

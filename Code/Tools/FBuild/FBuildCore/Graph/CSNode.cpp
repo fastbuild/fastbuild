@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "CSNode.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -15,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ResponseFile.h"
 
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
@@ -228,7 +227,7 @@ CSNode::~CSNode() = default;
     return NODE_RESULT_OK;
 
 failed:
-    FLOG_ERROR( "Failed to build Object (error %i) '%s'", result, GetName().Get() );
+    FLOG_ERROR( "Failed to build Object. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
 
     return NODE_RESULT_FAILED;
 }

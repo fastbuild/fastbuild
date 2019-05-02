@@ -13,18 +13,14 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AString.h"
 
-// system
-#if defined( __WINDOWS__ )
-    #include <windows.h>
-    #include <shellapi.h>
-#endif
-
 // Forward Declaration
 //------------------------------------------------------------------------------
 class OSDropDown;
 class OSFont;
 class OSLabel;
 class OSListView;
+class OSMenu;
+class OSSplitter;
 class OSTrayIcon;
 class OSWindow;
 
@@ -34,14 +30,12 @@ class WorkerWindow : public OSWindow, public Singleton< WorkerWindow >
 {
 public:
     explicit WorkerWindow( void * hInstance );
-    ~WorkerWindow();
+    virtual ~WorkerWindow() override;
 
     void SetStatus( const char * statusText );
     void SetWorkerState( size_t index, const AString & hostName, const AString & status );
 
-    #if defined( __WINDOWS__ )
-        HMENU GetMenu() const { return m_Menu; }
-    #endif
+    const OSMenu * GetMenu() const { return m_Menu; }
 
     bool WantToQuit() const { return ( m_UIState == WANT_TO_QUIT ); }
     void SetWantToQuit() { m_UIState = WANT_TO_QUIT; }
@@ -56,6 +50,7 @@ private:
     // OSWindow events
     virtual bool OnClose() override;
     virtual bool OnMinimize() override;
+    virtual bool OnQuit() override;
     virtual bool OnTrayIconLeftClick() override;
     virtual bool OnTrayIconRightClick() override;
     virtual void OnDropDownSelectionChanged( OSDropDown * dropDown ) override;
@@ -82,16 +77,8 @@ private:
     OSListView *        m_ThreadList;
     OSDropDown *        m_ModeDropDown;
     OSDropDown *        m_ResourcesDropDown;
-
-    // properties of the window
-    #if defined( __WINDOWS__ )
-        HMENU           m_Menu;             // right-click context menu
-    #endif
-
-    // sub items of the window
-    #if defined( __WINDOWS__ )
-        HWND            m_Splitter;
-    #endif
+    OSSplitter *        m_Splitter;
+    OSMenu *            m_Menu;
 
     AString         m_HostName;
 };

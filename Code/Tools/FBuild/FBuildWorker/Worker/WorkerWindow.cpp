@@ -16,6 +16,8 @@
 #include "OSUI/OSFont.h"
 #include "OSUI/OSLabel.h"
 #include "OSUI/OSListView.h"
+#include "OSUI/OSMenu.h"
+#include "OSUI/OSSplitter.h"
 #include "OSUI/OSTrayIcon.h"
 #include "OSUI/OSWindow.h"
 
@@ -26,21 +28,8 @@
 #include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
 
-// Windows resources
-#if defined( __WINDOWS__ )
-    #include "../resource.h"
-#endif
-
-// system
-#if defined( __WINDOWS__ )
-    #include <commctrl.h>
-#endif
-
 // Defines
 //------------------------------------------------------------------------------
-#define ID_TRAY_APP_ICON                5000
-#define ID_TRAY_EXIT_CONTEXT_MENU_ITEM  3000
-
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -48,9 +37,15 @@ WorkerWindow::WorkerWindow( void * hInstance )
     : OSWindow( hInstance )
     , m_UIState( NOT_READY )
     , m_UIThreadHandle( INVALID_THREAD_HANDLE )
-    #if defined( __WINDOWS__ )
-        , m_Menu( nullptr )
-    #endif
+    , m_TrayIcon( nullptr )
+    , m_Font( nullptr )
+    , m_ModeLabel( nullptr )
+    , m_ResourcesLabel( nullptr )
+    , m_ThreadList( nullptr )
+    , m_ModeDropDown( nullptr )
+    , m_ResourcesDropDown( nullptr )
+    , m_Splitter( nullptr )
+    , m_Menu( nullptr )
 {
     // obtain host name
     Network::GetHostName(m_HostName);
@@ -111,10 +106,10 @@ void WorkerWindow::UIUpdateThread()
 {
     #if defined( __WINDOWS__ )
         // center the window on screen
-        int w = 700;
-        int h = 300;
-        int x = GetSystemMetrics(SM_CXSCREEN)-w;
-        int y = 0;
+        uint32_t w = 700;
+        uint32_t h = 300;
+        int32_t x = ( GetSystemMetrics(SM_CXSCREEN) - (int32_t)w );
+        int32_t y = 0;
 
         Init( x, y, w, h );
 
@@ -123,18 +118,13 @@ void WorkerWindow::UIUpdateThread()
         toolTip.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
         m_TrayIcon = FNEW( OSTrayIcon( this, toolTip ) );
 
-        // init windows common controls
-        INITCOMMONCONTROLSEX icex; // Structure for control initialization.
-        icex.dwICC = ICC_LISTVIEW_CLASSES;
-        InitCommonControlsEx(&icex);
-
         // get main window dimensions for positioning/sizing child controls
         RECT rcClient; // The parent window's client area.
         GetClientRect( (HWND)GetHandle(), &rcClient );
 
         // listview
         m_ThreadList = FNEW( OSListView( this ) );
-        m_ThreadList->Init( 0, 30, rcClient.right - rcClient.left, ( rcClient.bottom - rcClient.top ) - 30 );
+        m_ThreadList->Init( 0, 30, (uint32_t)( rcClient.right - rcClient.left) , (uint32_t)( ( rcClient.bottom - rcClient.top ) - 30 ) );
         m_ThreadList->AddColumn( "CPU", 0, 35 );
         m_ThreadList->AddColumn( "Host", 1, 100 );
         m_ThreadList->AddColumn( "Status", 2, 530 );
@@ -176,7 +166,7 @@ void WorkerWindow::UIUpdateThread()
             for ( uint32_t i=0; i<numProcessors; ++i )
             {
                 float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
-                buffer.Format( "%i CPUs (%2.1f%%)", ( i + 1 ), perc );
+                buffer.Format( "%i CPUs (%2.1f%%)", ( i + 1 ), (double)perc );
                 m_ResourcesDropDown->AddItem( buffer.Get() );
             }
         }
@@ -188,17 +178,13 @@ void WorkerWindow::UIUpdateThread()
         m_ResourcesLabel->Init( 305, 7, 45, 15, "Using:" );
 
         // splitter
-        {
-            int xPos = 0;
-            int yPos = 27;
-            int width = w;
-            int height = 2;
-            m_Splitter = CreateWindowEx( WS_EX_TRANSPARENT, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_ETCHEDHORZ , xPos, yPos, width, height, (HWND)GetHandle(), NULL, (HINSTANCE)GetHInstance(), NULL );
-        }
+        m_Splitter = FNEW( OSSplitter( this ) );
+        m_Splitter->Init( 0, 27, w, 2u );
 
         // popup menu for tray icon
-        m_Menu = CreatePopupMenu();
-        AppendMenu( m_Menu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT( "Exit" ) );
+        m_Menu = FNEW( OSMenu( this ) );
+        m_Menu->Init();
+        m_Menu->AddItem( "Exit" );
 
         // Display the window and minimize it if needed
         if ( WorkerSettings::Get().GetStartMinimzed() )
@@ -239,13 +225,13 @@ void WorkerWindow::UIUpdateThread()
         } while ( m_UIState < ALLOWED_TO_QUIT );
 
         // clean up UI resources
-        DestroyWindow( m_Splitter );
+        FDELETE( m_Splitter );
         FDELETE( m_ResourcesLabel );
         FDELETE( m_ResourcesDropDown );
         FDELETE( m_ModeLabel );
         FDELETE( m_ModeDropDown );
         FDELETE( m_ThreadList );
-        DestroyMenu( m_Menu );
+        FDELETE( m_Menu );
         FDELETE( m_Font );
         FDELETE( m_TrayIcon );
 
@@ -276,6 +262,13 @@ void WorkerWindow::UIUpdateThread()
     return true; // Stop window closeing (since we already handled it)
 }
 
+// OnQuit
+//------------------------------------------------------------------------------
+/*virtual*/ bool WorkerWindow::OnQuit()
+{
+    SetWantToQuit();
+    return true; // Handled
+}
 
 // OnTrayIconLeftClick
 //------------------------------------------------------------------------------
@@ -289,25 +282,11 @@ void WorkerWindow::UIUpdateThread()
 //------------------------------------------------------------------------------
 /*virtual*/ bool WorkerWindow::OnTrayIconRightClick()
 {
-    #if defined( __WINDOWS__ )
-        // display popup menu at mouse position
-        POINT curPoint ;
-        GetCursorPos( &curPoint ) ;
-        SetForegroundWindow( (HWND)m_Handle );
-
-        // Show menu and block until hidden
-        UINT item = TrackPopupMenu( GetMenu(),
-                                    TPM_RETURNCMD | TPM_NONOTIFY,
-                                    curPoint.x,
-                                    curPoint.y,
-                                    0,
-                                    (HWND)m_Handle,
-                                    nullptr );
-        if ( item == ID_TRAY_EXIT_CONTEXT_MENU_ITEM )
-        {
-            SetWantToQuit();
-        }
-    #endif
+    uint32_t index;
+    if ( m_Menu->ShowAndWaitForSelection( index ) )
+    {
+        SetWantToQuit();
+    }
 
     return true; // Handled
 }

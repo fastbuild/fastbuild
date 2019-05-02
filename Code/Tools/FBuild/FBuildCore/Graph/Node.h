@@ -9,7 +9,8 @@
 
 // Core
 #include "Core/Containers/Array.h"
-#include "Core/Reflection/Object.h"
+#include "Core/Reflection/ReflectionMacros.h"
+#include "Core/Reflection/Struct.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
@@ -175,6 +176,10 @@ public:
         inline void MarkAsSaved() const { m_IsSaved = true; }
     #endif
 
+    inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
+    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
+    inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
+
 protected:
     friend class FBuild;
     friend struct FBuildStats;
@@ -186,10 +191,7 @@ protected:
     friend class Report;
     friend class VSProjectConfig; // TODO:C Remove this
     friend class WorkerThread;
-
-    inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
-    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
-    inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
+    friend class CompilationDatabase;
 
     void SetName( const AString & name );
 
@@ -223,10 +225,16 @@ protected:
     static bool Deserialize( IOStream & stream, void * base, const ReflectionInfo & ri );
     static bool Deserialize( IOStream & stream, void * base, const ReflectedProperty & property );
 
+    virtual void Migrate( const Node & oldNode );
+
     bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,
                                                     const BFFIterator & iter,
                                                     const Function * function,
                                                     const Array< AString > & preBuildDependencyNames );
+
+    static const char * GetEnvironmentString( const Array< AString > & envVars,
+                                              const char * & inoutCachedEnvString );
+
 
     AString m_Name;
 
@@ -278,5 +286,6 @@ IMetaData & MetaAllowNonFile();
 IMetaData & MetaAllowNonFile( const Node::Type limitToType );
 IMetaData & MetaEmbedMembers();
 IMetaData & MetaInheritFromOwner();
+IMetaData & MetaIgnoreForComparison();
 
 //------------------------------------------------------------------------------

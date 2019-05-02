@@ -14,7 +14,7 @@
 // system
 #include <stdio.h>
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // FBuildWorkerOptions (CONSTRUCTOR)
@@ -58,7 +58,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         }
         else if ( token.BeginsWith( "-cpus=" ) )
         {
-            int32_t numCPUs = Env::GetNumProcessors();
+            int32_t numCPUs = (int32_t)Env::GetNumProcessors();
             int32_t num( 0 );
             PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
             if ( sscanf( token.Get() + 6, "%i", &num ) == 1 ) // TODO:C consider sscanf_s
@@ -67,19 +67,19 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
                 if ( token.EndsWith( '%' ) )
                 {
                     num = (int32_t)( numCPUs * (float)num / 100.0f );
-                    m_CPUAllocation = Math::Clamp( num, 1, numCPUs );
+                    m_CPUAllocation = (uint32_t)Math::Clamp( num, 1, numCPUs );
                     m_OverrideCPUAllocation = true;
                     continue;
                 }
                 else if ( num > 0 )
                 {
-                    m_CPUAllocation = Math::Clamp( num, 1, numCPUs );
+                    m_CPUAllocation = (uint32_t)Math::Clamp( num, 1, numCPUs );
                     m_OverrideCPUAllocation = true;
                     continue;
                 }
                 else if ( num < 0 )
                 {
-                    m_CPUAllocation = Math::Clamp( ( numCPUs + num ), 1, numCPUs );
+                    m_CPUAllocation = (uint32_t)Math::Clamp( ( numCPUs + num ), 1, numCPUs );
                     m_OverrideCPUAllocation = true;
                     continue;
                 }

@@ -7,6 +7,7 @@
 #include "Worker/Worker.h"
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Mem/MemTracker.h"
 #include "Core/Process/Process.h"
@@ -16,7 +17,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Global Data
@@ -140,8 +141,6 @@ int MainCommon( const AString & args, void * hInstance )
         ret = worker.Work();
     }
 
-    MEMTRACKER_DUMP_ALLOCATIONS
-
     return ret;
 }
 
@@ -161,7 +160,7 @@ int MainCommon( const AString & args, void * hInstance )
             if ( t.GetElapsed() > 5.0f )
             {
                 AStackString<> msg;
-                msg.Format( "Failed to make sub-process copy - error: %u (0x%x)\n\nSrc: %s\nDst: %s\n", Env::GetLastErr(), Env::GetLastErr(), exeName.Get(), exeNameCopy.Get() );
+                msg.Format( "Failed to make sub-process copy. Error: %s\n\nSrc: %s\nDst: %s\n", LAST_ERROR_STR, exeName.Get(), exeNameCopy.Get() );
                 ShowMsgBox( msg.Get() );
                 return -2;
             }

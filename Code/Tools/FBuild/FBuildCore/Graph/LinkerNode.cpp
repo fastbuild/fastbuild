@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "LinkerNode.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
@@ -22,7 +20,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
-#include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Process.h"
@@ -41,6 +39,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_LinkerStampExe,                  "LinkerStampExe",               MetaOptional() + MetaFile() )
     REFLECT( m_LinkerStampExeArgs,              "LinkerStampExeArgs",           MetaOptional() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
 
     // Internal State
     REFLECT( m_Flags,                           "Flags",                        MetaHidden() )
@@ -158,7 +157,10 @@ LinkerNode::LinkerNode()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-LinkerNode::~LinkerNode() = default;
+LinkerNode::~LinkerNode()
+{
+    FREE( (void *)m_EnvironmentString );
+}
 
 // DoBuild
 //------------------------------------------------------------------------------
@@ -192,7 +194,7 @@ LinkerNode::~LinkerNode() = default;
     // use the exe launch dir as the working dir
     const char * workingDir = nullptr;
 
-    const char * environment = FBuild::Get().GetEnvironmentString();
+    const char * environment = Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
 
     EmitCompilationMessage( fullArgs );
 
@@ -281,7 +283,7 @@ LinkerNode::~LinkerNode() = default;
             }
 
             // some other (genuine) linker failure
-            FLOG_ERROR( "Failed to build %s (error %i) '%s'", GetDLLOrExe(), result, GetName().Get() );
+            FLOG_ERROR( "Failed to build %s. Error: %s Target: '%s'", GetDLLOrExe(), ERROR_STR( result ), GetName().Get() );
             return NODE_RESULT_FAILED;
         }
         else
@@ -338,7 +340,7 @@ LinkerNode::~LinkerNode() = default;
         {
             if ( memOut.Get() ) { FLOG_ERROR_DIRECT( memOut.Get() ); }
             if ( memErr.Get() ) { FLOG_ERROR_DIRECT( memErr.Get() ); }
-            FLOG_ERROR( "Failed to stamp %s '%s' (error %i - '%s')", GetDLLOrExe(), GetName().Get(), result, m_LinkerStampExe.Get() );
+            FLOG_ERROR( "Failed to stamp %s. Error: %s Target: '%s' StampExe: '%s'", GetDLLOrExe(), ERROR_STR( result ), GetName().Get(), m_LinkerStampExe.Get() );
             return NODE_RESULT_FAILED;
         }
 
@@ -786,7 +788,8 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
         for ( const AString * it=tokens.Begin(); it!=end; ++it )
         {
             const AString & token = *it;
-            if ( ( token == "-shared" ) || ( token == "-dynamiclib" ) || ( token == "--oformat=prx" ) )
+            if ( ( token == "-shared" ) || ( token == "-dynamiclib" ) || ( token == "--oformat=prx" ) ||
+                 ( token.BeginsWith( "-Wl" ) && token.Find( "--oformat=prx" ) ) )
             {
                 flags |= LinkerNode::LINK_FLAG_DLL;
                 continue;

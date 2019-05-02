@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "CRC32.h"
 
 #include "Core/Math/Conversions.h"
@@ -60,7 +58,6 @@ static const uint32_t g_CRC32Table[ 256 ] =
 #define UINT unsigned int
 #define RES unsigned int
 #define INT int
-#define INT_PTR unsigned int
 #define SIZE_T size_t
 #define DWORD unsigned int
 #define BYTE unsigned char
@@ -152,7 +149,7 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
         uint8_t b = bytes[ i ];
         if ( ( b >= 'A' ) && ( b <= 'Z' ) )
         {
-            b = 'a' + ( b - 'A' );
+            b = (uint8_t)( 'a' + ( b - 'A' ) );
         }
         crc32 = ( crc32 >> 8 ) ^ g_CRC32Table[ ( crc32 ^ b ) & 0x000000FF ];
     }

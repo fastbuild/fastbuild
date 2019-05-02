@@ -3,10 +3,9 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Protocol.h"
 
+#include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Network/TCPConnectionPool.h"
@@ -103,7 +102,9 @@ Protocol::MsgConnection::MsgConnection( uint32_t numJobsAvailable )
     : Protocol::IMessage( Protocol::MSG_CONNECTION, sizeof( MsgConnection ), false )
     , m_ProtocolVersion( PROTOCOL_VERSION )
     , m_NumJobsAvailable( numJobsAvailable )
+    , m_Platform(Env::GetPlatform())
 {
+    memset( m_Padding2, 0, sizeof( m_Padding2 ) );
     memset( m_HostName, 0, sizeof( m_HostName ) );
     if ( ::gethostname( m_HostName, 64 ) != 0 )
     {
@@ -172,28 +173,18 @@ Protocol::MsgManifest::MsgManifest( uint64_t toolId )
 //------------------------------------------------------------------------------
 Protocol::MsgRequestFile::MsgRequestFile( uint64_t toolId, uint32_t fileId )
     : Protocol::IMessage( Protocol::MSG_REQUEST_FILE, sizeof( MsgRequestFile ), false )
-    , m_ToolId( toolId )
     , m_FileId( fileId )
+    , m_ToolId( toolId )
 {
-    memset( m_Padding2, 0, sizeof( m_Padding2 ) );
-    memset( m_Padding3, 0, sizeof( m_Padding3 ) );
 }
 
 // MsgFile
 //------------------------------------------------------------------------------
 Protocol::MsgFile::MsgFile( uint64_t toolId, uint32_t fileId )
     : Protocol::IMessage( Protocol::MSG_FILE, sizeof( MsgFile ), true )
-    , m_ToolId( toolId )
     , m_FileId( fileId )
+    , m_ToolId( toolId )
 {
-    memset( m_Padding2, 0, sizeof( m_Padding2 ) );
-    memset( m_Padding3, 0, sizeof( m_Padding3 ) );
 }
-
-// MsgServerStatus
-//------------------------------------------------------------------------------
-Protocol::MsgServerStatus::MsgServerStatus()
-    : Protocol::IMessage( Protocol::MSG_SERVER_STATUS, sizeof( MsgServerStatus ), false )
-{}
 
 //------------------------------------------------------------------------------
