@@ -207,6 +207,7 @@ UnityNumFiles
 UnityOutputPath
 UnityOutputPattern
 UnityPCH
+UseLightCache_Experimental
 VS2012EnumBugFix
 WorkerConnectionLimit
 Workers

@@ -4,8 +4,8 @@
 // Select desired GCC version
 //------------------------------------------------------------------------------
 #if __LINUX__
-    #define USING_GCC_4
-    //#define USING_GCC_7
+    //#define USING_GCC_4
+    #define USING_GCC_7
 #endif
 
 // Activate
