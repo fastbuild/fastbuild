@@ -10,6 +10,8 @@
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Network/TCPConnectionPool.h"
 
+// system
+#include <memory.h> // for memset
 #if defined( __APPLE__ ) || defined( __LINUX__ )
     #include <unistd.h> // for ::gethostname
 #endif
