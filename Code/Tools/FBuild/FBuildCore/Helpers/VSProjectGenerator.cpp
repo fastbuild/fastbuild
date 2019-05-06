@@ -63,7 +63,7 @@ void VSProjectGenerator::AddFile( const AString & file )
     // ensure slash consistency which we rely on later
     AStackString<> fileCopy( file );
     fileCopy.Replace( FORWARD_SLASH, BACK_SLASH );
-    m_Files.SetSize( m_Files.GetSize() + 1 );
+    m_Files.Append( VSProjectFilePair() );
     m_Files.Top().m_AbsolutePath = fileCopy;
 }
 
