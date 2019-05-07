@@ -106,6 +106,7 @@ FileType
 FilesToExclude
 ForcedIncludes
 ForcedUsingAssemblies
+Hidden
 IncludeSearchPath
 IntermediateDirectory
 LayoutDir
