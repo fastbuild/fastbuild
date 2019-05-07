@@ -14,6 +14,7 @@
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <errno.h>
     #include <sys/file.h>
+    #include <fcntl.h>
     #include <unistd.h>
 #endif
 
