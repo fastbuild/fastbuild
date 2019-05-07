@@ -137,7 +137,11 @@
   </tr>
   <tr>
     <td><a href="#showtargets">-showtargets</a></td>
-    <td>Show primary targets defined in build configuration.</td>
+    <td>Show primary build targets, excluding those marked "Hidden".</td>
+  </tr>
+  <tr>
+    <td><a href="#showalltargets">-showalltargets</a></td>
+    <td>Show primary build targets, including those marked "Hidden".</td>
   </tr>
   <tr>
     <td><a href="#summary">-summary</a></td>
@@ -395,7 +399,15 @@ i.e. dependencies that would be discovered during the next build will not be sho
 
     <div class='newsitemheader' id="showtargets">-showtargets</div>
     <div class='newsitembody'>
-<p>Displays the list of targets defined in the bff configuration file.</p>
+<p>Displays the list of targets defined in the bff configuration file, excluding
+those which have the .Hidden property set.</p>
+<p></p>
+</div>
+
+    <div class='newsitemheader' id="showalltargets">-showalltargets</div>
+    <div class='newsitembody'>
+<p>Displays the list of targets defined in the bff configuration file, including
+those which have the .Hidden property set.</p>
 <p></p>
 </div>
 

@@ -270,8 +270,9 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 m_GenerateCompilationDatabase = true;
             }
-            else if ( thisArg == "-showhidden" )
+            else if ( thisArg == "-showalltargets" )
             {
+                m_DisplayTargetList = true;
                 m_ShowHiddenTargets = true;
                 continue;
             }
@@ -509,8 +510,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             "                This will lengthen the total build time.\n"
             " -showcmds      Show command lines used to launch external processes.\n"
             " -showdeps      Show known dependency tree for specified targets.\n"
-            " -showtargets   Display list of primary build targets. Doesn't show hidden targets by default.\n"
-            " -showhidden    Show hidden targets. Should be used with -showtargets switch. No-op otherwise.\n"
+            " -showtargets   Display list of primary targets, excluding those marked \"Hidden\".\n"
+            " -showalltargets Display list of primary targets, including those marked \"Hidden\".\n"
             " -summary       Show a summary at the end of the build.\n"
             " -verbose       Show detailed diagnostic information. This will slow\n"
             "                down building.\n"

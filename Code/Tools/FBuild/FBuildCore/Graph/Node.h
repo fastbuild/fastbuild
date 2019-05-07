@@ -253,6 +253,7 @@ protected:
     uint32_t m_ProcessingTime;  // time spent on this node
     mutable uint32_t m_ProgressAccumulator;
     uint32_t        m_Index;
+    bool            m_Hidden;
 
     Dependencies m_PreBuildDependencies;
     Dependencies m_StaticDependencies;
@@ -261,8 +262,6 @@ protected:
     #if defined( DEBUG )
         mutable bool    m_IsSaved = false; // Help catch serialization errors
     #endif
-
-    bool m_Hidden;
 
     static const char * const s_NodeTypeNames[];
 };
