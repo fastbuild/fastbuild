@@ -53,6 +53,7 @@ public:
     bool        m_FastCancel                        = false;
     bool        m_WaitMode                          = false;
     bool        m_DisplayTargetList                 = false;
+    bool        m_ShowHiddenTargets                 = false;
     bool        m_DisplayDependencyDB               = false;
     bool        m_GenerateCompilationDatabase       = false;
     bool        m_NoUnity                           = false;

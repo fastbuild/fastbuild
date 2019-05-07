@@ -128,6 +128,7 @@ Node::Node( const AString & name, Type type, uint32_t controlFlags )
     , m_ProcessingTime( 0 )
     , m_ProgressAccumulator( 0 )
     , m_Index( INVALID_NODE_INDEX )
+    , m_Hidden( false )
 {
     SetName( name );
 
