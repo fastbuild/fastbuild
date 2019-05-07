@@ -170,6 +170,8 @@ public:
 
     const AString & GetName() const { return m_Name; }
 
+    bool IsHidden() const { return m_Hidden; }
+
     #if defined( DEBUG )
         // Help catch serialization errors
         inline bool IsSaved() const     { return m_IsSaved; }
@@ -259,6 +261,8 @@ protected:
     #if defined( DEBUG )
         mutable bool    m_IsSaved = false; // Help catch serialization errors
     #endif
+
+    bool m_Hidden;
 
     static const char * const s_NodeTypeNames[];
 };

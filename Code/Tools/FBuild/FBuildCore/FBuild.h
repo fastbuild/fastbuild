@@ -59,7 +59,7 @@ public:
     inline const char * GetEnvironmentString() const            { return m_EnvironmentString; }
     inline uint32_t     GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
 
-    void DisplayTargetList() const;
+    void DisplayTargetList( bool showHidden ) const;
     bool DisplayDependencyDB( const Array< AString > & targets ) const;
     bool GenerateCompilationDatabase( const Array< AString > & targets ) const;
 

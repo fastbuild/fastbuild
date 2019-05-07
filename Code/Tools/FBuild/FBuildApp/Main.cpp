@@ -182,7 +182,7 @@ int Main(int argc, char * argv[])
 
     if ( options.m_DisplayTargetList )
     {
-        fBuild.DisplayTargetList();
+        fBuild.DisplayTargetList( options.m_ShowHiddenTargets );
         ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
         return FBUILD_OK;
     }
