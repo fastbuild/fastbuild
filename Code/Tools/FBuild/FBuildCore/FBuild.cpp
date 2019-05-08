@@ -155,7 +155,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             m_DependencyGraphFile += ".windows.fdb";
         #elif defined( __OSX__ )
             m_DependencyGraphFile += ".osx.fdb";
-        #elif defined( __LINUX )
+        #elif defined( __LINUX__ )
             m_DependencyGraphFile += ".linux.fdb";
         #endif
     }
