@@ -804,7 +804,7 @@ bool FBuild::CacheOutputInfo() const
         return m_Cache->OutputInfo( m_Options.m_ShowProgress );
     }
 
-    OUTPUT( "- Cache not configured" );
+    OUTPUT( "- Cache not configured\n" );
     return false;
 }
 
@@ -818,7 +818,7 @@ bool FBuild::CacheTrim() const
         return m_Cache->Trim( m_Options.m_ShowProgress, m_Options.m_CacheTrim );
     }
 
-    OUTPUT( "- Cache not configured" );
+    OUTPUT( "- Cache not configured\n" );
     return false;
 }
 
