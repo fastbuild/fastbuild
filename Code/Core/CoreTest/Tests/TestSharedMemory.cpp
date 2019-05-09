@@ -55,33 +55,45 @@ void TestSharedMemory::CreateAccessDestroy() const
     #endif
 
     int pid = fork();
-
-    Timer t;
-    t.Start();
-
     if(pid == 0)
     {
-        SharedMemory shm;
-        shm.Open( sharedMemoryName.Get(), sizeof(uint32_t) );
-        volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
-
-        // Asserts raise an exception when running unit tests : forked process
-        // will not exit cleanly and it will be ASSERTed in the parent process.
-        TEST_ASSERT( magic != nullptr );
-
-        // Wait for parent to write magic
-        while ( *magic != 0xBEEFBEEF )
+        try
         {
-            Thread::Sleep( 1 );
-            TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check timeout
-        }
+            Timer t;
+            t.Start();
 
-        // Write reponse magic
-        *magic = 0xB0AFB0AF;
-        _exit(0);
+            SharedMemory shm;
+            shm.Open( sharedMemoryName.Get(), sizeof(uint32_t) );
+            volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
+
+            // Asserts raise an exception when running unit tests : forked process
+            // will not exit cleanly and it will be ASSERTed in the parent process.
+            TEST_ASSERT( magic != nullptr );
+
+            // Wait for parent to write magic
+            while ( *magic != 0xBEEFBEEF )
+            {
+                Thread::Sleep( 1 );
+                TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check timeout
+            }
+
+            // Write reponse magic
+            *magic = 0xB0AFB0AF;
+            _exit(0);
+        }
+        catch (...)
+        {
+            // We don't want to unwind the stack and return from this function.
+            // Doing so will result in running all subsequent tests in the
+            // forked process and duplicated output in stdout at the end.
+            _exit(1);
+        }
     }
     else
     {
+        Timer t;
+        t.Start();
+
         SharedMemory shm;
         shm.Create( sharedMemoryName.Get(), sizeof(uint32_t) );
         volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
@@ -91,10 +103,9 @@ void TestSharedMemory::CreateAccessDestroy() const
         *magic = 0xBEEFBEEF;
 
         // Wait for response from child
-        while ( *magic != 0xB0AFB0AF )
+        while ( *magic != 0xB0AFB0AF && t.GetElapsed() < 10.0f )
         {
             Thread::Sleep( 1 );
-            TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check timeout
         }
 
         int status;
