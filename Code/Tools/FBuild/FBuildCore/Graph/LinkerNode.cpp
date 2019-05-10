@@ -1359,6 +1359,14 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
         return true;
     }
 
+    // a directory copy?
+    if (node->GetType() == Node::COPY_DIR_NODE)
+    {
+        // depend on copy - will use input at build time
+        nodes.Append(Dependency(node));
+        return true;
+    }
+
     // an external executable?
     if ( node->GetType() == Node::EXEC_NODE )
     {
