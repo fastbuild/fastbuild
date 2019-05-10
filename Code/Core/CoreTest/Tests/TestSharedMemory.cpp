@@ -18,6 +18,10 @@
     #include <unistd.h>
 #endif
 
+#if !defined( __has_feature )
+    #define __has_feature( ... ) 0
+#endif
+
 // TestSharedMemory
 //------------------------------------------------------------------------------
 class TestSharedMemory : public UnitTest
@@ -43,8 +47,15 @@ void TestSharedMemory::CreateAccessDestroy() const
     // TODO:WINDOWS Test SharedMemory (without fork, so).
 #elif defined(__LINUX__) || defined(__APPLE__)
     AStackString<> sharedMemoryName( "FBuild_SHM_Test_" );
+    #if defined( __clang__ )
+        sharedMemoryName += "Clang";
+    #endif
     sharedMemoryName += (sizeof(void*) == 8) ? "64_" : "32_";
-    #if defined( DEBUG )
+    #if __has_feature( address_sanitizer ) || defined( __SANITIZE_ADDRESS__ )
+        sharedMemoryName += "ASan";
+    #elif __has_feature( memory_sanitizer )
+        sharedMemoryName += "MSan";
+    #elif defined( DEBUG )
         sharedMemoryName += "Debug";
     #elif defined( RELEASE )
         #if defined( PROFILING_ENABLED )
