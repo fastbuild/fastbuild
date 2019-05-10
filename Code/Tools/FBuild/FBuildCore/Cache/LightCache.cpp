@@ -223,6 +223,12 @@ void LightCache::Hash( IncludedFile * file, FileStream & f )
 				SkipLineEnd( pos );
 				continue;
 			}
+            else if ( AString::StrNCmp( pos, "import", 6 ) == 0 )
+            {
+                // We encountered an import directive, we can't handle them.
+                m_ProblemParsing = true;
+                return;
+            }
 		}
 
 		// block comments

@@ -22,6 +22,7 @@ private:
 
     void LightCache_IncludeUsingMacro() const;
     void LightCache_CyclicInclude() const;
+    void LightCache_ImportDirective() const;
 };
 
 // Register Tests
@@ -33,6 +34,7 @@ REGISTER_TESTS_BEGIN( TestCache )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( LightCache_IncludeUsingMacro )
         REGISTER_TEST( LightCache_CyclicInclude )
+        REGISTER_TEST( LightCache_ImportDirective )
     #endif
 REGISTER_TESTS_END
 
@@ -272,6 +274,29 @@ void TestCache::LightCache_CyclicInclude() const
         TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed );
         TEST_ASSERT( objStats.m_NumBuilt == 0 );
     }
+}
+
+// LightCache_ImportDirective
+//------------------------------------------------------------------------------
+void TestCache::LightCache_ImportDirective() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheWrite = true;
+    options.m_CacheVerbose = true;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/LightCache_ImportDirective/fbuild.bff";
+
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+    // Ensure we detected that we could not use the LightCache
+    TEST_ASSERT( GetRecordedOutput().Find( "Light cache cannot be used for" ) );
+
+    // Ensure cache we fell back to normal caching
+    const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
+    TEST_ASSERT( objStats.m_NumCacheStores == 1 );
 }
 
 //------------------------------------------------------------------------------
