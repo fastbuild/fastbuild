@@ -22,6 +22,9 @@ public:
 
     void * GetPtr() const { return m_Memory; }
 private:
+    friend class TestSharedMemory;
+    void Unmap(); // Used in unit tests
+
     void * m_Memory;
     #if defined( __WINDOWS__)
         void * m_MapFile;

@@ -54,6 +54,11 @@ void TestSharedMemory::CreateAccessDestroy() const
         #endif
     #endif
 
+    // Create shared memory before forking to ensure that it will exist by the time forked process will try to open it.
+    SharedMemory shmHolder;
+    shmHolder.Create( sharedMemoryName.Get(), sizeof(uint32_t) );
+    shmHolder.Unmap();
+
     int pid = fork();
     if(pid == 0)
     {
@@ -95,7 +100,7 @@ void TestSharedMemory::CreateAccessDestroy() const
         t.Start();
 
         SharedMemory shm;
-        shm.Create( sharedMemoryName.Get(), sizeof(uint32_t) );
+        shm.Open( sharedMemoryName.Get(), sizeof(uint32_t) );
         volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
         TEST_ASSERT( magic );
 

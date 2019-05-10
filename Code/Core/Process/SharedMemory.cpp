@@ -74,21 +74,13 @@ SharedMemory::SharedMemory()
 //------------------------------------------------------------------------------
 SharedMemory::~SharedMemory()
 {
+    Unmap();
     #if defined( __WINDOWS__ )
-        if ( m_Memory )
-        {
-            UnmapViewOfFile( m_Memory );
-        }
         if ( m_MapFile )
         {
             CloseHandle( m_MapFile );
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        if( m_Memory )
-        {
-            ASSERT( m_Length > 0 );
-            munmap( m_Memory, m_Length );
-        }
         if( m_MapFile != -1 )
         {
             close( m_MapFile );
@@ -149,6 +141,28 @@ void SharedMemory::Open( const char * name, unsigned int size )
         m_Length = size;
     #else
         #error
+    #endif
+}
+
+// Unmap
+//------------------------------------------------------------------------------
+void SharedMemory::Unmap()
+{
+    #if defined( __WINDOWS__ )
+        if ( m_Memory )
+        {
+            UnmapViewOfFile( m_Memory );
+            m_Memory = nullptr;
+        }
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        if ( m_Memory )
+        {
+            ASSERT( m_Length > 0 );
+            munmap( m_Memory, m_Length );
+            m_Memory = nullptr;
+        }
+    #else
+        #error Unknown Platform
     #endif
 }
 
