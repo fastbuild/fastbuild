@@ -117,7 +117,7 @@ int Main(int argc, char * argv[])
         {
             if ( options.m_WaitMode == false )
             {
-                OUTPUT( "FBuild: Error: Another instance of FASTBuild is already running in '%s'.", options.GetWorkingDir().Get() );
+                OUTPUT( "FBuild: Error: Another instance of FASTBuild is already running in '%s'.\n", options.GetWorkingDir().Get() );
                 return FBUILD_ALREADY_RUNNING;
             }
 
