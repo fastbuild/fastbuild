@@ -1,7 +1,7 @@
 // LZ4
 //------------------------------------------------------------------------------
 .LZ4BasePath        = '../External/LZ4/lz4-1.9.1/lib'
-.LZ4IncludePaths    = ' "-I$LZ4BasePath$"'
+.LZ4IncludePaths    = ' -I$LZ4BasePath$'
 {
     .ProjectName        = 'LZ4'
     .ProjectPath        = '$LZ4BasePath$'
