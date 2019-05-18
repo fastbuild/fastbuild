@@ -464,6 +464,8 @@ Alias( 'All+Tests' )
         .SolutionBuildProject = 'All-proj'
         .SolutionConfigs    = .ProjectConfigs
 
+        .SolutionVisualStudioVersion = '$VS_SolutionVersion$'
+
         // Work around for Visual Studio F5 behaviour up-to-date check
         .Deps               = [
                                 .Projects = { 'CoreTest-proj', 'FBuildTest-proj', 'FBuildApp-proj', 'FBuildWorker-proj' }
