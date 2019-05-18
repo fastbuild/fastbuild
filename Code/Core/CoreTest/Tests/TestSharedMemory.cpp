@@ -71,7 +71,7 @@ void TestSharedMemory::CreateAccessDestroy() const
     shmHolder.Unmap();
 
     int pid = fork();
-    if(pid == 0)
+    if ( pid == 0 )
     {
         try
         {
@@ -119,7 +119,7 @@ void TestSharedMemory::CreateAccessDestroy() const
         *magic = 0xBEEFBEEF;
 
         // Wait for response from child
-        while ( *magic != 0xB0AFB0AF && t.GetElapsed() < 10.0f )
+        while ( ( *magic != 0xB0AFB0AF ) && ( t.GetElapsed() < 10.0f ) )
         {
             Thread::Sleep( 1 );
         }
