@@ -43,7 +43,10 @@ bool PosixMapMemory( const char* name,
         *mapFile = shm_open( portableName.Get(),
                              O_RDWR | (create ? O_CREAT : 0),
                              S_IWUSR | S_IRUSR );
-        ASSERT( *mapFile != -1 );
+        if ( *mapFile == -1 )
+        {
+            return false;
+        }
 
         if( create )
         {
