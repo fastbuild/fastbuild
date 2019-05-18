@@ -18,6 +18,10 @@
     #include <unistd.h>
 #endif
 
+#if !defined( __has_feature )
+    #define __has_feature( ... ) 0
+#endif
+
 // TestSharedMemory
 //------------------------------------------------------------------------------
 class TestSharedMemory : public UnitTest
@@ -43,8 +47,15 @@ void TestSharedMemory::CreateAccessDestroy() const
     // TODO:WINDOWS Test SharedMemory (without fork, so).
 #elif defined(__LINUX__) || defined(__APPLE__)
     AStackString<> sharedMemoryName( "FBuild_SHM_Test_" );
+    #if defined( __clang__ )
+        sharedMemoryName += "Clang";
+    #endif
     sharedMemoryName += (sizeof(void*) == 8) ? "64_" : "32_";
-    #if defined( DEBUG )
+    #if __has_feature( address_sanitizer ) || defined( __SANITIZE_ADDRESS__ )
+        sharedMemoryName += "ASan";
+    #elif __has_feature( memory_sanitizer )
+        sharedMemoryName += "MSan";
+    #elif defined( DEBUG )
         sharedMemoryName += "Debug";
     #elif defined( RELEASE )
         #if defined( PROFILING_ENABLED )
@@ -54,36 +65,53 @@ void TestSharedMemory::CreateAccessDestroy() const
         #endif
     #endif
 
+    // Create shared memory before forking to ensure that it will exist by the time forked process will try to open it.
+    SharedMemory shmHolder;
+    shmHolder.Create( sharedMemoryName.Get(), sizeof(uint32_t) );
+    shmHolder.Unmap();
+
     int pid = fork();
-
-    Timer t;
-    t.Start();
-
     if(pid == 0)
     {
-        SharedMemory shm;
-        shm.Open( sharedMemoryName.Get(), sizeof(uint32_t) );
-        volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
-
-        // Asserts raise an exception when running unit tests : forked process
-        // will not exit cleanly and it will be ASSERTed in the parent process.
-        TEST_ASSERT( magic != nullptr );
-
-        // Wait for parent to write magic
-        while ( *magic != 0xBEEFBEEF )
+        try
         {
-            Thread::Sleep( 1 );
-            TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check timeout
-        }
+            Timer t;
+            t.Start();
 
-        // Write reponse magic
-        *magic = 0xB0AFB0AF;
-        _exit(0);
+            SharedMemory shm;
+            shm.Open( sharedMemoryName.Get(), sizeof(uint32_t) );
+            volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
+
+            // Asserts raise an exception when running unit tests : forked process
+            // will not exit cleanly and it will be ASSERTed in the parent process.
+            TEST_ASSERT( magic != nullptr );
+
+            // Wait for parent to write magic
+            while ( *magic != 0xBEEFBEEF )
+            {
+                Thread::Sleep( 1 );
+                TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check timeout
+            }
+
+            // Write reponse magic
+            *magic = 0xB0AFB0AF;
+            _exit(0);
+        }
+        catch (...)
+        {
+            // We don't want to unwind the stack and return from this function.
+            // Doing so will result in running all subsequent tests in the
+            // forked process and duplicated output in stdout at the end.
+            _exit(1);
+        }
     }
     else
     {
+        Timer t;
+        t.Start();
+
         SharedMemory shm;
-        shm.Create( sharedMemoryName.Get(), sizeof(uint32_t) );
+        shm.Open( sharedMemoryName.Get(), sizeof(uint32_t) );
         volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
         TEST_ASSERT( magic );
 
@@ -91,10 +119,9 @@ void TestSharedMemory::CreateAccessDestroy() const
         *magic = 0xBEEFBEEF;
 
         // Wait for response from child
-        while ( *magic != 0xB0AFB0AF )
+        while ( *magic != 0xB0AFB0AF && t.GetElapsed() < 10.0f )
         {
             Thread::Sleep( 1 );
-            TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check timeout
         }
 
         int status;
