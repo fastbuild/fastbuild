@@ -42,7 +42,7 @@ private:
         uint64_t    m_LastTime;
     };
 
-    bool IsIdleInternal(float &idleCurrent);
+    bool IsIdleInternal( float & idleCurrent );
 
     static void GetSystemTotalCPUUsage( uint64_t & outIdleTime,
                                         uint64_t & outKernTime,

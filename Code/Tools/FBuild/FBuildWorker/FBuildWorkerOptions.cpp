@@ -105,7 +105,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_OverrideWorkMode = true;
             continue;
         }
-        else if (token == "-mode=proportional")
+        else if ( token == "-mode=proportional" )
         {
             m_WorkMode = WorkerSettings::PROPORTIONAL;
             m_OverrideWorkMode = true;

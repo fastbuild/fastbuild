@@ -240,7 +240,7 @@ void Worker::UpdateAvailability()
         }
         case WorkerSettings::PROPORTIONAL:
         {
-            if ( m_IdleDetection.IsIdleFloat() >= 0.0f && m_IdleDetection.IsIdleFloat() <= 1.0f )
+            if ( ( m_IdleDetection.IsIdleFloat() >= 0.0f ) && ( m_IdleDetection.IsIdleFloat() <= 1.0f ) )
             {
                 numCPUsToUse = uint32_t(numCPUsToUse * m_IdleDetection.IsIdleFloat());
             }

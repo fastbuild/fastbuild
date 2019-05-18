@@ -61,7 +61,7 @@ IdleDetection::~IdleDetection() = default;
 void IdleDetection::Update()
 {
     // apply smoothing based on current "idle" state
-    if ( IsIdleInternal(m_IsIdleCurrent) )
+    if ( IsIdleInternal( m_IsIdleCurrent ) )
     {
         ++m_IdleSmoother;
     }
@@ -69,7 +69,7 @@ void IdleDetection::Update()
     {
         m_IdleSmoother -= 2; // become non-idle more quickly than we become idle
     }
-    m_IdleSmoother = Math::Clamp(m_IdleSmoother, 0, 10);
+    m_IdleSmoother = Math::Clamp( m_IdleSmoother, 0, 10 );
 
     // change state only when at extreme of either end of scale
     if ( m_IdleSmoother == 10 ) // 5 secs (called every ~500ms)
@@ -81,7 +81,7 @@ void IdleDetection::Update()
         m_IsIdle = false;
     }
 
-    // separate smoothing for idle float values. They behave in different way.
+    // separate smoothing for idle float values. They behave differently.
     if ( m_IsIdleCurrent >= m_IsIdleFloat )
     {
         ++m_IdleFloatSmoother;
@@ -90,10 +90,10 @@ void IdleDetection::Update()
     {
         m_IdleFloatSmoother -= 2; // become non-idle more quickly than we become idle
     }
-    m_IdleFloatSmoother = Math::Clamp(m_IdleFloatSmoother, 0, 10);
+    m_IdleFloatSmoother = Math::Clamp( m_IdleFloatSmoother, 0, 10 );
 
     // change state only when at extreme of either end of scale
-    if ( m_IdleFloatSmoother == 10 || m_IdleFloatSmoother == 0 ) // 5 secs (called every ~500ms)
+    if ( (m_IdleFloatSmoother == 10 )|| ( m_IdleFloatSmoother == 0 ) ) // 5 secs (called every ~500ms)
     {
         m_IsIdleFloat = m_IsIdleCurrent;
     }
@@ -101,7 +101,7 @@ void IdleDetection::Update()
 
 //
 //------------------------------------------------------------------------------
-bool IdleDetection::IsIdleInternal(float &idleCurrent)
+bool IdleDetection::IsIdleInternal( float & idleCurrent )
 {
     // determine total cpu time (including idle)
     uint64_t systemTime = 0;
@@ -164,7 +164,7 @@ bool IdleDetection::IsIdleInternal(float &idleCurrent)
         m_Timer.Start();
     }
 
-    idleCurrent = ( 1.0f - ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) * 0.01f) );
+    idleCurrent = ( 1.0f - ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) * 0.01f ) );
     return ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) < IDLE_DETECTION_THRESHOLD_PERCENT );
 }
 
