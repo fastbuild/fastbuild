@@ -1,0 +1,60 @@
+// GCC
+//------------------------------------------------------------------------------
+
+// Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-GCC' )
+{
+    .Executable                     = 'GXX_BINARY'
+    .ExtraFiles                     = {
+                                        '/usr/bin/as'
+                                        'CC1_BINARY'
+                                        'CC1PLUS_BINARY'
+                                      }
+    .CompilerFamily                 = 'gcc' // Specify compiler family explicitly because binary name may change at any moment
+}
+
+// ToolChain
+//------------------------------------------------------------------------------
+.ToolChain_GCC_Linux =
+[
+    .Platform                       = 'x64Linux'
+
+    // Compiler Options
+    .Compiler                       = 'Compiler-GCC'
+    .CommonCompilerOptions          = ' -o "%2" "%1"'   // Input/Output
+                                    + ' -c'             // Compile only
+                                    + ' -g'             // Generate debug info
+                                    + ' -m64'           // x86_64
+                                    + ' -D__LINUX__'    // Platform define
+                                    + ' -ffreestanding' // prevent extra magic includes like stdc-predefs.h
+
+                                    // Include paths
+                                    + ' -I./'
+
+                                    // Enable warnings
+                                    + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                                    + ' -Wextra'
+                                    + ' -Wshadow'
+
+    .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
+                                    + ' -Wno-invalid-offsetof' // we get the offset of members in non-POD types
+    .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
+
+    // Librarian
+    .Librarian                      = '/usr/bin/ar'
+    .LibrarianOptions               = 'rcs "%2" "%1"'
+
+    // Linker
+    .Linker                         = 'GXX_BINARY'
+    .LinkerOptions                  = '"%1" -o "%2"'
+
+    // File Extensions
+    .LibExtension                   = '.a'
+    .ExeExtension                   = ''
+
+    // Exception Control
+    .UseExceptions                  = ' -fexceptions'
+]
+
+//------------------------------------------------------------------------------
