@@ -144,10 +144,11 @@ void WorkerWindow::UIUpdateThread()
         // Mode drop down
         m_ModeDropDown = FNEW( OSDropDown( this ) );
         m_ModeDropDown->SetFont( m_Font );
-        m_ModeDropDown->Init( 100, 3, 200, 200 );
+        m_ModeDropDown->Init( 100, 3, 230, 200 );
         m_ModeDropDown->AddItem( "Disabled" );
         m_ModeDropDown->AddItem( "Work For Others When Idle" );
         m_ModeDropDown->AddItem( "Work For Others Always" );
+        m_ModeDropDown->AddItem( "Work For Others Proportional" );
         m_ModeDropDown->SetSelectedItem( WorkerSettings::Get().GetMode() );
 
         // Mode label
@@ -158,7 +159,7 @@ void WorkerWindow::UIUpdateThread()
         // Resources drop down
         m_ResourcesDropDown = FNEW( OSDropDown( this ) );
         m_ResourcesDropDown->SetFont( m_Font );
-        m_ResourcesDropDown->Init( 350, 3, 150, 200 );
+        m_ResourcesDropDown->Init( 380, 3, 150, 200 );
         {
             // add items
             uint32_t numProcessors = Env::GetNumProcessors();
@@ -175,7 +176,7 @@ void WorkerWindow::UIUpdateThread()
         // Resources label
         m_ResourcesLabel = FNEW( OSLabel( this ) );
         m_ResourcesLabel->SetFont( m_Font );
-        m_ResourcesLabel->Init( 305, 7, 45, 15, "Using:" );
+        m_ResourcesLabel->Init( 335, 7, 45, 15, "Using:" );
 
         // splitter
         m_Splitter = FNEW( OSSplitter( this ) );

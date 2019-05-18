@@ -114,7 +114,7 @@ void WorkerSettings::Save()
 
         // header
         ok &= ( f.Write( "FWS", 3 ) == 3 );
-        ok &= ( f.Write( uint8_t( FBUILDWORKER_SETTINGS_CURRENT_VERSION ) ) == 1 );
+        ok &= ( f.Write( uint8_t( FBUILDWORKER_SETTINGS_CURRENT_VERSION ) ) );
 
         // settings
         ok &= f.Write( (uint32_t)m_Mode );

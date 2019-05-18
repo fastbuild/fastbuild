@@ -2,6 +2,9 @@
 //------------------------------------------------------------------------------
 .VS2017_BasePath         = '$_CURRENT_BFF_DIR_$/2017/Community'
 .VS2017_Version          = '14.16.27023'
+#if CI_BUILD
+    .VS2017_BasePath     = 'C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools'
+#endif
 
 // X64 Compiler
 //------------------------------------------------------------------------------
