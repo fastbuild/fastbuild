@@ -106,11 +106,17 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_OverrideWorkMode = true;
             continue;
         }
-        else if (token.BeginsWith("-minfreememory="))
+        else if ( token == "-mode=proportional" )
         {
-            uint32_t num(0);
-            PRAGMA_DISABLE_PUSH_MSVC(4996) // This function or variable may be unsafe...
-            if (sscanf(token.Get() + 15, "%u", &num) == 1)
+            m_WorkMode = WorkerSettings::PROPORTIONAL;
+            m_OverrideWorkMode = true;
+            continue;
+        }
+        else if ( token.BeginsWith( "-minfreememory=" ) )
+        {
+            uint32_t num( 0 );
+            PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+            if ( sscanf( token.Get() + 15, "%u", &num ) == 1 )
             PRAGMA_DISABLE_POP_MSVC // 4996
             {
                 m_MinimumFreeMemoryInMB = num;
@@ -151,10 +157,11 @@ void FBuildWorkerOptions::ShowUsageError()
                        "                -n : NUMBER_OF_PROCESSORS-n.\n"
                        "                n% : % of NUMBER_OF_PROCESSORS.\n"
                        "\n"
-                       "-mode=[disabled|idle|dedicated] : Set work mode.\n"
+                       "-mode=[disabled|idle|dedicated|proportional] : Set work mode.\n"
                        "                disabled : Don't accept any work.\n"
                        "                idle : Accept work when PC is idle.\n"
                        "                dedicated : Accept work always.\n"
+                       "                proportional : Accept work proportional to free CPU.\n"
                        "\n"
                        #if defined( __WINDOWS__ )
                        "-nosubprocess : Don't spawn a sub-process worker copy.\n";

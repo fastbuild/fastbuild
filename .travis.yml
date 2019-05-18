@@ -1,0 +1,172 @@
+language: cpp
+
+matrix:
+  include:
+    # Linux, default compilers
+    - os: linux
+    # OSX, default compilers
+    - os: osx
+      compiler: clang
+    # Windows, we expect MSVC 14.16.27023 to be installed.
+    - os: windows
+    # Linux, latest supported compilers
+    - os: linux
+      env: GCC=gcc-8 CLANG=clang-8
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-8
+          packages:
+            - gcc-8
+            - g++-8
+            - clang-8
+    # Linux, AddressSanitizer
+    - os: linux
+      env: CFG=asan CLANG=clang-8
+      # Use latest clang when building with sanitizers.
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-8
+          packages:
+            - clang-8
+            - llvm-8 # for llvm-symbolizer
+      sudo: true # LeakSanitizer doesn't work inside Travis containers, see https://github.com/travis-ci/travis-ci/issues/9033.
+    # Linux, MemorySanitizer
+    - os: linux
+      env: CFG=msan CLANG=clang-8
+      # Use latest clang when building with sanitizers.
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-8
+          packages:
+            - clang-8
+            - llvm-8 # for llvm-symbolizer
+  allow_failures:
+    - env: CFG=asan CLANG=clang-8
+    - env: CFG=msan CLANG=clang-8
+  fast_finish: true
+
+install:
+  # Download and unpack archive for a release version.
+  - DL_VER=0.98
+  - |
+    case "${TRAVIS_OS_NAME}" in
+    linux)   FN=FASTBuild-Linux-x64-v${DL_VER}.zip   FBUILD=fbuild ;;
+    osx)     FN=FASTBuild-OSX-x64-v${DL_VER}.zip     FBUILD=FBuild ;;
+    windows) FN=FASTBuild-Windows-x64-v${DL_VER}.zip FBUILD=FBuild.exe ;;
+    esac
+  - wget http://fastbuild.org/downloads/v${DL_VER}/${FN}
+  - unzip ${FN}
+  - chmod +x ./${FBUILD}
+  # Set up some variables for convenience.
+  - |
+    case "${TRAVIS_OS_NAME}" in
+    linux)   NCPU=$(nproc) ;;
+    osx)     NCPU=$(sysctl -n hw.ncpu) ;;
+    windows) NCPU=${NUMBER_OF_PROCESSORS} ;;
+    esac
+  - FBUILD_CMD="../${FBUILD} -j${NCPU} -noprogress"
+  - GCC=${GCC:-gcc}
+  - GXX=${GCC/gcc/g++}
+  - CLANG=${CLANG:-clang}
+  - CLANGXX=${CLANG/clang/clang++}
+  # On Linux/OSX print paths to binaries for the installed compilers.
+  # On Windows check that all tools are present at paths we expect, if not then try to find them on the disk and fail the build.
+  - |
+    case "${TRAVIS_OS_NAME}" in
+    linux)
+      for x in ${GCC} ${GXX} $(${GCC} -print-prog-name=cc1) $(${GCC} -print-prog-name=cc1plus) ${CLANG} ${CLANGXX}; do
+        echo $x; which $x && readlink -f $(which $x)
+        echo
+      done
+      true # These commands are purely informational, don't fail the build if they fail.
+      ;;
+    osx)
+      for x in ${CLANG} ${CLANGXX}; do
+        echo $x; which $x
+        echo
+      done
+      true # These commands are purely informational, don't fail the build if they fail.
+      ;;
+    windows)
+      SUCCESS=true
+      if [[ ! -f 'C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\bin\Hostx64\x64\cl.exe' ]]; then
+        find 'C:\Program Files (x86)' 'C:\Program Files' -iname cl.exe
+        SUCCESS=false
+      fi
+      if [[ ! -f 'C:\Program Files (x86)\Windows Kits\10\Bin\10.0.17134.0\x64\RC.exe' ]]; then
+        find 'C:\Program Files (x86)' 'C:\Program Files' -iname rc.exe
+        SUCCESS=false
+      fi
+      if [[ ! -f 'C:\Program Files\LLVM\bin\clang++.exe' ]]; then
+        find 'C:\Program Files' -iname clang++.exe
+        SUCCESS=false
+      fi
+      if [[ ! -f 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe' ]]; then
+        find 'C:\Windows' -iname csc.exe
+        SUCCESS=false
+      fi
+      ${SUCCESS}
+    ;;
+    esac
+
+script:
+  - cd Code
+  # Inject a #define into root configs to activate CI logic.
+  - |
+    sed -i -e "1i\\
+    #define CI_BUILD
+    " fbuild.bff Tools/FBuild/FBuildTest/Data/testcommon.bff
+  # Put full paths to GCC binaries into config files.
+  - |
+    case "${TRAVIS_OS_NAME}" in
+    linux)
+      sed -i -e "
+      s:GCC_BINARY:$(which ${GCC}):
+      s:GXX_BINARY:$(which ${GXX}):
+      s:CC1_BINARY:$(${GCC} -print-prog-name=cc1):
+      s:CC1PLUS_BINARY:$(${GCC} -print-prog-name=cc1plus):
+      " ../External/SDK/GCC/Linux/GCC_CI.bff
+      ;;
+    esac
+  # Put full paths to Clang binaries into config files.
+  - |
+    case "${TRAVIS_OS_NAME}" in
+    linux|osx)
+      sed -i -e "
+      s:CLANG_BINARY:$(which ${CLANG}):
+      s:CLANGXX_BINARY:$(which ${CLANGXX}):
+      " ../External/SDK/Clang/{Linux,OSX}/Clang_CI.bff
+      ;;
+    esac
+  # Run tests in the selected configuration.
+  - |
+    case "${TRAVIS_OS_NAME}:${CFG}" in
+      linux:|osx:|windows:)
+        ${FBUILD_CMD} Tests
+        ;;
+      linux:asan)
+        ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-ASan
+        ;;
+      linux:msan)
+        ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-MSan
+        ;;
+    esac
+  # Check non-unity build.
+  - |
+    case "${TRAVIS_OS_NAME}:${CFG}" in
+      linux:)
+        ${FBUILD_CMD} -nounity -clean All-x64{,Clang}Linux-Debug
+        ;;
+      osx:)
+        ${FBUILD_CMD} -nounity -clean All-x64OSX-Debug
+        ;;
+      windows:)
+        ${FBUILD_CMD} -nounity -clean All-x64{,Clang}-Debug
+        ;;
+    esac

@@ -285,6 +285,18 @@ void Worker::UpdateAvailability()
             }
             break;
         }
+        case WorkerSettings::PROPORTIONAL:
+        {
+            if ( ( m_IdleDetection.IsIdleFloat() >= 0.0f ) && ( m_IdleDetection.IsIdleFloat() <= 1.0f ) )
+            {
+                numCPUsToUse = uint32_t(numCPUsToUse * m_IdleDetection.IsIdleFloat());
+            }
+            else
+            {
+                numCPUsToUse = 0;
+            }
+            break;
+        }
         case WorkerSettings::DEDICATED:
         {
             break; // use all allocated cpus
