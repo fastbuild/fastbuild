@@ -12,6 +12,7 @@
 #include <Core/Process/Thread.h>
 #include <Core/Strings/AStackString.h>
 #include <Core/Time/Timer.h>
+#include <Core/Tracing/Tracing.h>
 
 #if defined(__LINUX__) || defined(__APPLE__)
     #include <sys/types.h>
@@ -53,6 +54,11 @@ void TestSharedMemory::CreateAccessDestroy() const
     int pid = fork();
     if ( pid == 0 )
     {
+        // We don't want the child to interact with the test framework
+        #if defined( ASSERTS_ENABLED )
+            AssertHandler::SetAssertCallback( nullptr );
+        #endif
+
         Timer t;
         t.Start();
 
@@ -111,9 +117,12 @@ void TestSharedMemory::CreateAccessDestroy() const
 
         // Check return result
         int status;
-        TEST_ASSERT(-1 != wait(&status));
-        TEST_ASSERT(WIFEXITED(status) && WEXITSTATUS(status) == 0);
-        
+        TEST_ASSERT( -1 != wait( &status ) );
+        TEST_ASSERT( WIFEXITED( status ) && "Child process didn't terminate cleanly" );
+        const auto exitStatus = WEXITSTATUS( status );
+        OUTPUT( "Child exit status: %u", (uint32_t)exitStatus );
+        TEST_ASSERT( ( exitStatus == 0 ) && "Non-zero exit status from forked child" );
+
         // Check expected value from child
         TEST_ASSERT(*magic == 0xB0AFB0AF);
     }
