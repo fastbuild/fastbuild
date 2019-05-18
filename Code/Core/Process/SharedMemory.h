@@ -18,7 +18,7 @@ public:
     ~SharedMemory();
 
     void Create( const char * name, unsigned int size );
-    void Open( const char * name, unsigned int size );
+    bool Open( const char * name, unsigned int size );
 
     void * GetPtr() const { return m_Memory; }
 private:

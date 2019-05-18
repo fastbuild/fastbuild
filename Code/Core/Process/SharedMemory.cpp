@@ -19,7 +19,7 @@
 #if defined(__LINUX__) || defined(__APPLE__)
 namespace
 {
-void PosixMapMemory( const char* name,
+bool PosixMapMemory( const char* name,
                      size_t length,
                      bool create,
                      int * mapFile,
@@ -51,7 +51,7 @@ void PosixMapMemory( const char* name,
         }
 
         *memory = mmap( nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, *mapFile, 0 );
-        ASSERT( *memory != MAP_FAILED );
+        return ( *memory != MAP_FAILED );
 }
 }
 #endif
@@ -122,7 +122,7 @@ void SharedMemory::Create( const char * name, unsigned int size )
 
 // Open
 //------------------------------------------------------------------------------
-void SharedMemory::Open( const char * name, unsigned int size )
+bool SharedMemory::Open( const char * name, unsigned int size )
 {
     #if defined( __WINDOWS__ )
         m_MapFile = OpenFileMappingA( FILE_MAP_ALL_ACCESS,  // read/write access
@@ -136,9 +136,11 @@ void SharedMemory::Open( const char * name, unsigned int size )
                                       0,                    // DWORD dwFileOffsetLow
                                       size );
         }
+        return ( ( m_Memory != nullptr ) && ( m_MapFile != nullptr ) );
     #elif defined( __APPLE__ ) || defined(__LINUX__)
-        PosixMapMemory(name, size, false, &m_MapFile, &m_Memory, m_Name);
+        const bool result = PosixMapMemory(name, size, false, &m_MapFile, &m_Memory, m_Name);
         m_Length = size;
+        return result;
     #else
         #error
     #endif
