@@ -34,7 +34,10 @@ IdleDetection::IdleDetection()
     : m_CPUUsageFASTBuild( 0.0f )
     , m_CPUUsageTotal( 0.0f )
     , m_IsIdle( false )
+    , m_IsIdleFloat ( 0.0f )
+    , m_IsIdleCurrent ( 0.0f )
     , m_IdleSmoother( 0 )
+    , m_IdleFloatSmoother ( 0 )
     , m_ProcessesInOurHierarchy( 32, true )
     , m_LastTimeIdle( 0 )
     , m_LastTimeBusy( 0 )
@@ -58,7 +61,7 @@ IdleDetection::~IdleDetection() = default;
 void IdleDetection::Update()
 {
     // apply smoothing based on current "idle" state
-    if ( IsIdleInternal() )
+    if ( IsIdleInternal(m_IsIdleCurrent) )
     {
         ++m_IdleSmoother;
     }
@@ -66,7 +69,7 @@ void IdleDetection::Update()
     {
         m_IdleSmoother -= 2; // become non-idle more quickly than we become idle
     }
-    m_IdleSmoother = Math::Clamp(m_IdleSmoother, 0, 50);
+    m_IdleSmoother = Math::Clamp(m_IdleSmoother, 0, 10);
 
     // change state only when at extreme of either end of scale
     if ( m_IdleSmoother == 10 ) // 5 secs (called every ~500ms)
@@ -77,11 +80,28 @@ void IdleDetection::Update()
     {
         m_IsIdle = false;
     }
+
+    // separate smoothing for idle float values. They behave in different way.
+    if ( m_IsIdleCurrent >= m_IsIdleFloat )
+    {
+        ++m_IdleFloatSmoother;
+    }
+    else
+    {
+        m_IdleFloatSmoother -= 2; // become non-idle more quickly than we become idle
+    }
+    m_IdleFloatSmoother = Math::Clamp(m_IdleFloatSmoother, 0, 10);
+
+    // change state only when at extreme of either end of scale
+    if ( m_IdleFloatSmoother == 10 || m_IdleFloatSmoother == 0 ) // 5 secs (called every ~500ms)
+    {
+        m_IsIdleFloat = m_IsIdleCurrent;
+    }
 }
 
 //
 //------------------------------------------------------------------------------
-bool IdleDetection::IsIdleInternal()
+bool IdleDetection::IsIdleInternal(float &idleCurrent)
 {
     // determine total cpu time (including idle)
     uint64_t systemTime = 0;
@@ -106,6 +126,7 @@ bool IdleDetection::IsIdleInternal()
     // check to know acurately what the cpu use of FASTBuild is
     if ( m_CPUUsageTotal < IDLE_DETECTION_THRESHOLD_PERCENT )
     {
+        idleCurrent = 1.0f;
         return true;
     }
 
@@ -143,6 +164,7 @@ bool IdleDetection::IsIdleInternal()
         m_Timer.Start();
     }
 
+    idleCurrent = ( 1.0f - ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) * 0.01f) );
     return ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) < IDLE_DETECTION_THRESHOLD_PERCENT );
 }
 
