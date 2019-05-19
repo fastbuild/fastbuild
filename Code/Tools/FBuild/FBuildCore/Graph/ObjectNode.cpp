@@ -1185,7 +1185,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         size_t cacheDataSize( 0 );
         if ( cache->Retrieve( cacheFileName, cacheData, cacheDataSize ) )
         {
-            uint32_t retrieveTime = uint32_t(t.GetElapsedMS());
+            const uint32_t retrieveTime = uint32_t( t.GetElapsedMS() );
 
             // Hash the PCH result if we will need it later
             uint64_t pchKey = 0;
@@ -1194,7 +1194,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
                 pchKey = xxHash::Calc64( cacheData, cacheDataSize );
             }
 
-            uint32_t startDecompress = uint32_t(t.GetElapsedMS());
+            const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
 
             // do decompression
             Compressor c;
@@ -1211,7 +1211,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             const void * data = c.GetResult();
             const size_t dataSize = c.GetResultSize();
 
-            uint32_t stopDecompress = uint32_t(t.GetElapsedMS());
+            const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
 
             MultiBuffer buffer( data, dataSize );
 
