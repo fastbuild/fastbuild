@@ -2394,7 +2394,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // These error codes have been observed in the wild
             if ( stdOut )
             {
-                if ( strstr( stdOut, "C1082" ) ||
+                if ( ( strstr(stdOut, "C1060" ) && strstr( stdOut, "C1076" ) == nullptr && strstr( stdOut, "C3859" ) == nullptr ) || // C1060=compiler is out of heap space. Only consider that this is a system error(out of ram) if C1076 and C3959 are not present(see msdn)
+                     strstr( stdOut, "C1082" ) ||
                      strstr( stdOut, "C1085" ) ||
                      strstr( stdOut, "C1088" ) )
                 {
