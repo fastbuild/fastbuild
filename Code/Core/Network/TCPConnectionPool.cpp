@@ -308,14 +308,18 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             #ifdef TCPCONNECTION_DEBUG
                 AStackString<> host;
                 GetAddressAsString( hostIP, host );
-                const int lastNetworkError = GetLastNetworkError();
+                const int lastNetworkError = GetLastNetworkError(); // NOTE: Get error before call to getsockopt
 
-                int error = 0;
+                int32_t error = 0;
                 socklen_t size = sizeof(error);
-                if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size) != SOCKET_ERROR)
+                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) != SOCKET_ERROR )
+                {
                     TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i, SO_ERROR %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet, error );
+                }
                 else
+                {
                     TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet );
+                }
             #endif
             CloseSocket( sockfd );
             return nullptr;
