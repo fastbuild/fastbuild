@@ -79,7 +79,7 @@
                 .ExtractDebugInfo           = 'objcopy --only-keep-debug $LinkerOutput$ $LinkerOutput$.debug'
                 .StripDebugInfo             = 'objcopy --strip-debug $LinkerOutput$'
                 .AddDebugLink               = 'objcopy --add-gnu-debuglink $LinkerOutput$.debug $LinkerOutput$'
-                .LinkerStampExeArgs         = '-c "$ExtractDebugInfo$ && $StripDebugInfo$ && $AddDebugLink$"'                
+                .LinkerStampExeArgs         = '-c "$ExtractDebugInfo$ && $StripDebugInfo$ && $AddDebugLink$"'
             #endif
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
