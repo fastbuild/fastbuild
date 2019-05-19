@@ -255,7 +255,17 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
 
     // the intermediate process will exit immediately after launching the final
     // process
-    p.WaitForExit();
+    int result = p.WaitForExit();
+    if ( result == FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL )
+    {
+        OUTPUT( "FBuild: Error: Intermediate process failed to spawn the final process.\n" );
+        return result;
+    }
+    else if ( result != FBUILD_OK )
+    {
+        OUTPUT( "FBuild: Error: Intermediate process failed (%i).\n", result );
+        return result;
+    }
 
     // wait for final process to signal as started
     while ( sd->Started == false )
