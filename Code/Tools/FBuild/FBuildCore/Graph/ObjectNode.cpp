@@ -1185,12 +1185,16 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         size_t cacheDataSize( 0 );
         if ( cache->Retrieve( cacheFileName, cacheData, cacheDataSize ) )
         {
+            uint32_t retrieveTime = uint32_t(t.GetElapsedMS());
+
             // Hash the PCH result if we will need it later
             uint64_t pchKey = 0;
             if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
             {
                 pchKey = xxHash::Calc64( cacheData, cacheDataSize );
             }
+
+            uint32_t startDecompress = uint32_t(t.GetElapsedMS());
 
             // do decompression
             Compressor c;
@@ -1206,6 +1210,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             }
             const void * data = c.GetResult();
             const size_t dataSize = c.GetResultSize();
+
+            uint32_t stopDecompress = uint32_t(t.GetElapsedMS());
 
             MultiBuffer buffer( data, dataSize );
 
@@ -1259,7 +1265,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
-                output.AppendFormat( " - Cache Hit: %u ms '%s'\n", uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
             }
             FLOG_BUILD_DIRECT( output.Get() );
 
