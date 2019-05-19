@@ -106,6 +106,12 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_OverrideWorkMode = true;
             continue;
         }
+        else if ( token == "-mode=proportional" )
+        {
+            m_WorkMode = WorkerSettings::PROPORTIONAL;
+            m_OverrideWorkMode = true;
+            continue;
+        }
         else if ( token == "-allowbrokerclean" )
         {
             m_AllowBrokerClean = true;
@@ -145,10 +151,11 @@ void FBuildWorkerOptions::ShowUsageError()
                        "                -n : NUMBER_OF_PROCESSORS-n.\n"
                        "                n% : % of NUMBER_OF_PROCESSORS.\n"
                        "\n"
-                       "-mode=[disabled|idle|dedicated] : Set work mode.\n"
+                       "-mode=[disabled|idle|dedicated|proportional] : Set work mode.\n"
                        "                disabled : Don't accept any work.\n"
                        "                idle : Accept work when PC is idle.\n"
                        "                dedicated : Accept work always.\n"
+                       "                proportional : Accept work proportional to free CPU.\n"
                        "\n"
                        "-allowbrokerclean : Allow FastBuildWorker to clean the broker folder\n"
                        "\n"

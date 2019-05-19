@@ -21,8 +21,9 @@ public:
     enum Mode
     {
         DISABLED        = 0, // Don't work for anyone
-        WHEN_IDLE       = 1, // Work when others when idle
-        DEDICATED       = 2  // Work for others always
+        WHEN_IDLE       = 1, // Work for others when idle
+        DEDICATED       = 2, // Work for others always
+        PROPORTIONAL    = 3  // Work for others proportional to free CPU
     };
     inline Mode GetMode() const { return m_Mode; }
     void SetMode( Mode m );

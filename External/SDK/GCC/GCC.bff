@@ -11,11 +11,15 @@
 // Activate
 //------------------------------------------------------------------------------
 #if__LINUX__
-    #if USING_GCC_4
-        #include "Linux/GCC4.bff"
-    #endif
-    #if USING_GCC_7
-        #include "Linux/GCC7.bff"
+    #if CI_BUILD
+        #include "Linux/GCC_CI.bff"
+    #else
+        #if USING_GCC_4
+            #include "Linux/GCC4.bff"
+        #endif
+        #if USING_GCC_7
+            #include "Linux/GCC7.bff"
+        #endif
     #endif
 #endif
 

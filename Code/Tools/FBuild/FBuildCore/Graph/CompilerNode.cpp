@@ -119,7 +119,7 @@ CompilerNode::CompilerNode()
     {
         return false;
     }
-    
+
     // The LightCache is only compatible with MSVC for now
     // - GCC/Clang can be supported when built in include paths can be extracted
     //   and -nostdinc/-nostdinc++ is handled

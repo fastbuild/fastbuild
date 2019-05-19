@@ -876,7 +876,7 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     #elif defined( __LINUX__ )
         return ::getpid();
     #elif defined( __OSX__ )
-        return 0; // TODO: Implement GetCurrentId()
+        return ::getpid();
     #endif
 }
 
