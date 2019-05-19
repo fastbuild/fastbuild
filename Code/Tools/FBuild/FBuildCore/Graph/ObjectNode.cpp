@@ -2394,8 +2394,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // These error codes have been observed in the wild
             if ( stdOut )
             {
-                if ( ( strstr(stdOut, "C1060" ) && strstr( stdOut, "C1076" ) == nullptr && strstr( stdOut, "C3859" ) == nullptr ) || // C1060=compiler is out of heap space. Only consider that this is a system error(out of ram) if C1076 and C3959 are not present(see msdn)
-                     strstr( stdOut, "C1082" ) ||
+                if ( strstr( stdOut, "C1082" ) ||
                      strstr( stdOut, "C1085" ) ||
                      strstr( stdOut, "C1088" ) )
                 {
@@ -2420,8 +2419,18 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // to fail the build.
             if ( stdOut && strstr( stdOut, "C1060" ) )
             {
-                job->OnSystemError();
-                return;
+                // If either of these are present
+                //  - C1076 : compiler limit : internal heap limit reached; use /Zm to specify a higher limit
+                //  - C3859 : virtual memory range for PCH exceeded; please recompile with a command line option of '-Zmvalue' or greater
+                // then the issue is related to compiler settings.
+                // If they are not present, it's a system error, possibly caused by system resource
+                // exhaustion on the remote machine
+                if ( ( strstr( stdOut, "C1076" ) == nullptr ) && 
+                     ( strstr( stdOut, "C3859" ) == nullptr ) )
+                {
+                    job->OnSystemError();
+                    return;
+                }
             }
 
             // If the compiler crashed (Internal Compiler Error), treat this
