@@ -3,19 +3,18 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "SystemMutex.h"
 #include "Core/Strings/AStackString.h"
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
     #include "Core/Env/Assert.h"
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <errno.h>
     #include <sys/file.h>
+    #include <fcntl.h>
     #include <unistd.h>
 #endif
 
@@ -62,7 +61,7 @@ bool SystemMutex::TryLock()
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         AStackString<> tempFileName;
         tempFileName.Format( "/tmp/%s.lock", m_Name.Get());
-        int handle = open( tempFileName.Get(), O_CREAT | O_RDWR, 0666 );
+        int handle = open( tempFileName.Get(), O_CREAT | O_RDWR | O_CLOEXEC, 0666 );
         if ( handle < 0 )
         {
             ASSERT( false ); // unexpected problem

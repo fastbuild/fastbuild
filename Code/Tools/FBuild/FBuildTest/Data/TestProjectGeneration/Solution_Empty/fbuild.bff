@@ -1,0 +1,9 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+VSSolution( 'EmptySolution' )
+{
+    .SolutionOutput                 = "$Out$\Test\ProjectGeneration\Solution_Empty\empty.sln"
+}

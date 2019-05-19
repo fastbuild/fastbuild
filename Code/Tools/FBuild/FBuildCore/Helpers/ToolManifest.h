@@ -5,6 +5,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Dependencies;
+class FileStream;
 class IOStream;
 class Node;
 
@@ -13,7 +14,8 @@ class Node;
 #include "Core/Containers/Array.h"
 #include "Core/Env/Types.h"
 #include "Core/Process/Mutex.h"
-#include "Core/Reflection/Object.h"
+#include "Core/Reflection/ReflectionMacros.h"
+#include "Core/Reflection/Struct.h"
 #include "Core/Strings/AString.h"
 
 
@@ -26,6 +28,7 @@ public:
     ToolManifestFile();
     explicit ToolManifestFile( const AString & name, uint64_t stamp, uint32_t hash, uint32_t size );
     ~ToolManifestFile();
+    void StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const;
 
     enum SyncState
     {
@@ -35,13 +38,14 @@ public:
     };
 
     // common members
-    AString         m_Name;
-    uint64_t        m_TimeStamp     = 0;
-    uint32_t        m_Hash          = 0;
-    mutable uint32_t m_ContentSize  = 0;
+    AString          m_Name;
+    uint64_t         m_TimeStamp     = 0;
+    uint32_t         m_Hash          = 0;
+    mutable uint32_t m_UncompressedContentSize = 0;
+    mutable uint32_t m_CompressedContentSize = 0;
 
     // "local" members
-    mutable void *  m_Content       = nullptr;
+    mutable void *   m_CompressedContent = nullptr;
 
     // "remote" members
     SyncState       m_SyncState     = NOT_SYNCHRONIZED;
@@ -92,7 +96,7 @@ public:
     static void     GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
 private:
     bool            AddFile( const AString & fileName, const uint64_t timeStamp );
-    bool            LoadFile( const AString & fileName, void * & content, uint32_t & contentSize ) const;
+    bool            LoadFile( const AString & fileName, void * & uncompressedContent, uint32_t & uncompressedContentSize ) const;
 
     mutable Mutex   m_Mutex;
 

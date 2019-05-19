@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
@@ -26,17 +24,14 @@
     return false;
 }
 
-// IsfullPath
+// IsFullPath
 //------------------------------------------------------------------------------
 /*static*/ bool PathUtils::IsFullPath( const AString & path )
 {
     #if defined( __WINDOWS__ )
-        // full paths on Windows are in X: format
-        if ( path.GetLength() >= 2 )
-        {
-            return ( path[ 1 ] == ':' );
-        }
-        return false;
+        // full paths on Windows have a drive letter and colon, or are unc
+        return ( ( path.GetLength() >= 2 && path[ 1 ] == ':' ) ||
+                 path.BeginsWith( NATIVE_DOUBLE_SLASH ) );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         // full paths on Linux/OSX/IOS begin with a slash
         return path.BeginsWith( NATIVE_SLASH );
@@ -47,7 +42,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool PathUtils::ArePathsEqual(const AString & cleanPathA, const AString & cleanPathB)
 {
-    #if defined( __LINUX__ ) || defined( __IOS__ )
+    #if defined( __LINUX__ )
         // Case Sensitive
         return ( cleanPathA == cleanPathB );
     #endif
@@ -192,6 +187,73 @@
     {
         filePath.SetLength( (uint32_t)( lastDot - filePath.Get() ) );
     }
+}
+
+// GetRelativePath
+//------------------------------------------------------------------------------
+/*static*/ void PathUtils::GetRelativePath( const AString & basePath,
+                                            const AString & fileName,
+                                            AString & outRelativeFileName )
+{
+    // Makes no sense to call with empty basePath
+    ASSERT( basePath.IsEmpty() == false );
+
+    // Can only determine relative paths if both are of the same scope
+    ASSERT( IsFullPath( basePath ) == IsFullPath( fileName ) );
+
+    // Handle base paths which are not slash terminated
+    if ( basePath.EndsWith( NATIVE_SLASH ) == false )
+    {
+        AStackString<> basePathCopy( basePath );
+        basePathCopy += NATIVE_SLASH;
+        GetRelativePath( basePathCopy, fileName, outRelativeFileName );
+        return;
+    }
+
+    // Find common sub-path
+    const char * pathA = basePath.Get();
+    const char * pathB = fileName.Get();
+    const char * itA = pathA;
+    const char * itB = pathB;
+    while ( ( *itA == *itB ) && ( *itA != '\0' ) )
+    {
+        const bool dirToken = ( ( *itA == '/' ) || ( *itA == '\\' ) );
+        itA++;
+        itB++;
+        if ( dirToken )
+        {
+            pathA = itA;
+            pathB = itB;
+        }
+    }
+    const bool hasCommonSubPath = ( pathA != basePath.Get() );
+    if ( hasCommonSubPath == false )
+    {
+        // No common sub-path, so use fileName as-is
+        outRelativeFileName = fileName;
+        return;
+    }
+
+    // Build relative path
+
+    // For every remaining dir in the project path, go up one directory
+    outRelativeFileName.Clear();
+    for ( ;; )
+    {
+        const char c = *pathA;
+        if ( c == 0 )
+        {
+            break;
+        }
+        if ( ( c == '/' ) || ( c == '\\' ) )
+        {
+            outRelativeFileName += "..\\";
+        }
+        ++pathA;
+    }
+
+    // Add remainder of source path relative to the common sub path
+    outRelativeFileName += pathB;
 }
 
 //------------------------------------------------------------------------------

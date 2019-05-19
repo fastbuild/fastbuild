@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "ExecNode.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
@@ -13,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Math/Conversions.h"
@@ -34,6 +33,7 @@ REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
     REFLECT(        m_ExecWorkingDir,           "ExecWorkingDir",           MetaOptional() + MetaPath() )
     REFLECT(        m_ExecReturnCode,           "ExecReturnCode",           MetaOptional() )
     REFLECT(        m_ExecUseStdOutAsOutput,    "ExecUseStdOutAsOutput",    MetaOptional() )
+    REFLECT(        m_ExecAlways,               "ExecAlways",               MetaOptional() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
 
     // Internal State
@@ -46,6 +46,7 @@ ExecNode::ExecNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_ExecReturnCode( 0 )
     , m_ExecUseStdOutAsOutput( false )
+    , m_ExecAlways( false )
     , m_ExecInputPathRecurse( true )
 {
     m_Type = EXEC_NODE;
@@ -151,6 +152,18 @@ ExecNode::~ExecNode() = default;
     return true;
 }
 
+// DetermineNeedToBuild
+//------------------------------------------------------------------------------
+/*virtual*/ bool ExecNode::DetermineNeedToBuild( bool forceClean ) const
+{
+    if ( m_ExecAlways )
+    {
+        FLOG_INFO( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
+        return true;
+    }
+    return Node::DetermineNeedToBuild( forceClean );
+}
+
 // DoBuild
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ExecNode::DoBuild( Job * job )
@@ -203,7 +216,7 @@ ExecNode::~ExecNode() = default;
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
 
-        FLOG_ERROR( "Execution failed (error %i) '%s'", result, GetName().Get() );
+        FLOG_ERROR( "Execution failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
 

@@ -14,7 +14,7 @@ class OSWindow;
 class OSWidget
 {
 public:
-    OSWidget( OSWindow * parentWindow );
+    explicit OSWidget( OSWindow * parentWindow );
     virtual ~OSWidget();
 
     void Init();

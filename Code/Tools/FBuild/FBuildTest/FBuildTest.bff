@@ -4,17 +4,6 @@
     .ProjectName        = 'FBuildTest'
     .ProjectPath        = 'Tools\FBuild\FBuildTest'
 
-    // Unity
-    //--------------------------------------------------------------------------
-    Unity( '$ProjectName$-Unity' )
-    {
-        .UnityInputPath             = '$ProjectPath$\'
-        .UnityOutputPath            = '$UnityOutputBase$\$ProjectPath$\'
-
-        // Ignore test data (some of which is code)
-        .UnityInputExcludePath      = 'Tools\FBuild\FBuildTest\Data\'
-    }
-
     // Executable
     //--------------------------------------------------------------------------
     ForEach( .Config in .Configs )
@@ -22,19 +11,28 @@
         Using( .Config )
         .OutputBase + '\$Platform$-$Config$'
 
+        // Unity
+        //--------------------------------------------------------------------------
+        Unity( '$ProjectName$-Unity-$Platform$-$Config$' )
+        {
+            .UnityInputPath             = '$ProjectPath$/'
+            .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+            .UnityInputExcludePath      = 'Tools/FBuild/FBuildTest/Data/' // Ignore test data (some of which is code)
+        }
+
         // Library
         //--------------------------------------------------------------------------
         ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
             // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity'
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$Config$'
 
             // Extra Compiler Options
             .CompilerOptions            + .UseExceptions // Test framework uses exceptions
 
             // Output
-            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
 
         // Executable
@@ -51,6 +49,7 @@
             .LinkerOutput               = '$OutputBase$/$ProjectPath$/$ProjectName$$ExeExtension$'
             #if __WINDOWS__
                 .LinkerOptions              + ' /SUBSYSTEM:CONSOLE'
+                                            + ' Advapi32.lib'
                                             + ' kernel32.lib'
                                             + ' Ws2_32.lib'
                                             + ' User32.lib'
@@ -71,6 +70,13 @@
             .TestOutput                     = "$OutputBase$/$ProjectPath$/TestOutput.txt"
             .TestWorkingDir                 = 'Tools/FBuild/FBuildTest'
             .TestTimeOut                    = 300
+            #if CI_BUILD
+                #if __WINDOWS__
+                    // Compilation on Travis's Windows nodes is significantly slower than on Linux/OSX.
+                    // So the tests need more time to complete succefully.
+                    .TestTimeOut            = 900
+                #endif
+            #endif
         }
     }
 

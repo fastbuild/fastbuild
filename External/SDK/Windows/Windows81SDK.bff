@@ -3,7 +3,7 @@
 
 // Root Paths
 //------------------------------------------------------------------------------
-.Windows81_SDKBasePath          = '../External/SDK/Windows/8.1'
+.Windows81_SDKBasePath          = '$_CURRENT_BFF_DIR_$/8.1'
 
 // Defines
 //------------------------------------------------------------------------------
@@ -11,32 +11,15 @@
                                 + ' -DWIN32'
                                 + ' -D_WIN32'
                                 + ' -D__WINDOWS__'
-                                + ' -D_CRT_SECURE_NO_WARNINGS'            // don't warn about unsafe functions - TODO:C Fix warnings and remove
-                                + ' -D_WINSOCK_DEPRECATED_NO_WARNINGS'    // don't warn about deprecated winsock functions - TODO:C Update API use
 
 // Windows 8.1 SDK
 //------------------------------------------------------------------------------
-.Windows81_SDK_X86 =
-[
-    .WindowsSDK_IncludePaths        = ' -I"$Windows81_SDKBasePath$/include/um"'
-                                    + ' -I"$Windows81_SDKBasePath$/include/shared"'
-
-    .CommonCompilerOptions          = .WindowsSDK_IncludePaths
-                                    + .WindowsSDK_Defines
-
-    .CompilerOptions                = .CommonCompilerOptions
-    .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsPCH             = .CommonCompilerOptions
-    .CompilerOptionsDeoptimized     = .CommonCompilerOptions
-
-    .LinkerOptions                  = ' /LIBPATH:"$Windows81_SDKBasePath$/lib/winv6.3/um/x86"'
-                                    + ' /MACHINE:X86'
-                                    + ' /LARGEADDRESSAWARE'
-]
 .Windows81_SDK_X64 =
 [
     .WindowsSDK_IncludePaths        = ' -I"$Windows81_SDKBasePath$/include/um"'
                                     + ' -I"$Windows81_SDKBasePath$/include/shared"'
+
+    .WindowsDK_WinRTAssemblyPath    = '$Windows81_SDKBasePath$/References/CommonConfiguration/Neutral'
 
     .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
@@ -44,8 +27,8 @@
 
     .CompilerOptions                = .CommonCompilerOptions
     .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsPCH             = .CommonCompilerOptions
     .CompilerOptionsDeoptimized     = .CommonCompilerOptions
+    .PCHOptions                     = .CommonCompilerOptions
 
     .LinkerOptions                  = ' /LIBPATH:"$Windows81_SDKBasePath$/lib/winv6.3/um/x64"'
                                     + ' /MACHINE:X64'

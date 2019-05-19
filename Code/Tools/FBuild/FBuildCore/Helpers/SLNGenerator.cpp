@@ -3,18 +3,16 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "SLNGenerator.h"
 
 #include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
-#include "Core/Math/CRC32.h"
 #include "Core/Strings/AStackString.h"
 
 // system
@@ -31,7 +29,6 @@ SLNGenerator::~SLNGenerator() = default;
 // GenerateVCXProj
 //------------------------------------------------------------------------------
 const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
-                                           const Array< AString > & solutionBuildProjects,
                                            const AString & solutionVisualStudioVersion,
                                            const AString & solutionMinimumVisualStudioVersion,
                                            const Array< SolutionConfig > & solutionConfigs,
@@ -47,18 +44,16 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
     const char * lastSlash = solutionFile.FindLast( NATIVE_SLASH );
     AStackString<> solutionBasePath( solutionFile.Get(), lastSlash ? lastSlash + 1 : solutionFile.Get() );
 
-    Array< AString > solutionBuildProjectGuids;
-    Array< AString > projectGuids( projects.GetSize(), false );
     Array< AString > solutionProjectsToFolder( projects.GetSize(), true );
     Array< AString > solutionFolderPaths( solutionFolders.GetSize(), true );
 
     // construct sln file
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
-    WriteProjectListings( solutionBasePath, solutionBuildProjects, projects, solutionFolders, solutionDependencies, solutionBuildProjectGuids, projectGuids, solutionProjectsToFolder );
+    WriteProjectListings( solutionBasePath, projects, solutionFolders, solutionDependencies, solutionProjectsToFolder );
     WriteSolutionFolderListings( solutionFolders, solutionFolderPaths );
     Write( "Global\r\n" );
     WriteSolutionConfigurationPlatforms( solutionConfigs );
-    WriteProjectConfigurationPlatforms( solutionBuildProjectGuids, solutionConfigs, projectGuids );
+    WriteProjectConfigurationPlatforms( solutionConfigs, projects );
     WriteNestedProjects( solutionProjectsToFolder, solutionFolderPaths );
     WriteFooter();
 
@@ -97,12 +92,9 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 // WriteProjectListings
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
-                                         const Array< AString > & solutionBuildProjects,
                                          const Array< VCXProjectNode * > & projects,
                                          const Array< SolutionFolder > & solutionFolders,
                                          const Array< SolutionDependency > & solutionDependencies,
-                                         Array< AString > & solutionBuildProjectGuids,
-                                         Array< AString > & projectGuids,
                                          Array< AString > & solutionProjectsToFolder )
 {
     // Project Listings
@@ -110,17 +102,6 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
     VCXProjectNode ** const projectsEnd = projects.End();
     for( VCXProjectNode ** it = projects.Begin() ; it != projectsEnd ; ++it )
     {
-        // Is project active in solution build?
-        bool projectIsActive = false;
-        for ( const AString & solutionBuildProject : solutionBuildProjects )
-        {
-            if ( solutionBuildProject.EqualsI( (*it)->GetName() ) )
-            {
-                projectIsActive = true;
-                break;
-            }
-        }
-
         AStackString<> projectPath( (*it)->GetName() );
 
         // get project base name only
@@ -130,7 +111,11 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
                                     lastPeriod ? lastPeriod     : projectPath.GetEnd() );
 
         // make project path relative
-        projectPath.Replace( solutionBasePath.Get(), "" );
+        AStackString<> solutionRelativePath;
+        ProjectGeneratorBase::GetRelativePath( solutionBasePath, projectPath, solutionRelativePath );
+        #if !defined( __WINDOWS__ )
+            solutionRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
+        #endif
 
         // retrieve projectGuid
         AStackString<> projectGuid( (*it)->GetProjectGuid() );
@@ -138,13 +123,8 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
         // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
         projectGuid.ToUpper();
 
-        if ( projectIsActive )
-        {
-            solutionBuildProjectGuids.Append( projectGuid );
-        }
-
         Write( "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"%s\", \"%s\", \"%s\"\r\n",
-               projectName.Get(), projectPath.Get(), projectGuid.Get() );
+               projectName.Get(), solutionRelativePath.Get(), projectGuid.Get() );
 
         // Manage dependencies
         Array< AString > dependencyGUIDs( 64, true );
@@ -182,8 +162,6 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
 
         Write( "EndProject\r\n" );
 
-        projectGuids.Append( projectGuid );
-
         // check if this project is in a solution folder
         for ( const SolutionFolder & solutionFolder : solutionFolders )
         {
@@ -205,7 +183,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
     }
 }
 
-// WriteSolutionConfigs
+// WriteSolutionFolderListings
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteSolutionFolderListings( const Array< SolutionFolder > & solutionFolders,
                                                 Array< AString > & solutionFolderPaths )
@@ -275,34 +253,61 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
 
 // WriteProjectConfigurationPlatforms
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteProjectConfigurationPlatforms( const Array< AString > & solutionBuildProjectGuids,
-                                                       const Array< SolutionConfig > & solutionConfigs,
-                                                       const Array< AString > & projectGuids )
+void SLNGenerator::WriteProjectConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs,
+                                                       const Array< VCXProjectNode * > & projects )
 {
     Write( "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n" );
 
     // Solution Configuration Mappings to Projects
-    const AString * const projectGuidsEnd = projectGuids.End();
-    for( const AString * it = projectGuids.Begin() ; it != projectGuidsEnd ; ++it )
+    for( const VCXProjectNode * project : projects )
     {
-        // only one project active in the solution build
-        const bool projectIsActive = ( solutionBuildProjectGuids.Find( *it ) != nullptr );
+        AStackString<> projectGuid( project->GetProjectGuid() );
+        projectGuid.ToUpper();
 
-        const SolutionConfig * const solutionConfigsEnd = solutionConfigs.End();
-        for( const SolutionConfig * it2 = solutionConfigs.Begin() ; it2 != solutionConfigsEnd ; ++it2 )
+        for( const SolutionConfig & solutionConfig : solutionConfigs )
         {
             Write( "\t\t%s.%s|%s.ActiveCfg = %s|%s\r\n",
-                   it->Get(),
-                   it2->m_SolutionConfig.Get(), it2->m_SolutionPlatform.Get(),
-                   it2->m_Config.Get(), it2->m_Platform.Get() );
+                   projectGuid.Get(),
+                   solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
+                   solutionConfig.m_Config.Get(), solutionConfig.m_Platform.Get() );
+
+            // Is project active in solution build?
+            bool projectIsActive = false;
+            for ( const AString & solutionBuildProject : solutionConfig.m_SolutionBuildProjects )
+            {
+                if ( solutionBuildProject.EqualsI( project->GetName() ) )
+                {
+                    projectIsActive = true;
+                    break;
+                }
+            }
+
+            // Is project marked for deploy?
+            bool projectDeployEnabled = false;
+            for ( const AString & solutionDeployProject : solutionConfig.m_SolutionDeployProjects )
+            {
+                if ( solutionDeployProject.EqualsI( project->GetName() ) )
+                {
+                    projectDeployEnabled = true;
+                    break;
+                }
+            }
 
             if ( projectIsActive )
             {
-                Write(  "\t\t%s.%s|%s.Build.0 = %s|%s\r\n",
-                        it->Get(),
-                        it2->m_SolutionConfig.Get(), it2->m_SolutionPlatform.Get(),
-                        it2->m_Config.Get(), it2->m_Platform.Get() );
+                Write( "\t\t%s.%s|%s.Build.0 = %s|%s\r\n",
+                       projectGuid.Get(),
+                       solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
+                       solutionConfig.m_Config.Get(), solutionConfig.m_Platform.Get() );
             }
+            if ( projectDeployEnabled )
+            {
+                Write( "\t\t%s.%s|%s.Deploy.0 = %s|%s\r\n",
+                       projectGuid.Get(),
+                       solutionConfig.m_SolutionConfig.Get(), solutionConfig.m_SolutionPlatform.Get(),
+                       solutionConfig.m_Config.Get(), solutionConfig.m_Platform.Get() );
+            }
+
         }
     }
 

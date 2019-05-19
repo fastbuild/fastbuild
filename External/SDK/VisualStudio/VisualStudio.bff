@@ -6,39 +6,48 @@
 //#define USING_VS2013
 //#define USING_VS2015
 #define USING_VS2017
+//#define USING_VS2019
 
 // Activate
 //------------------------------------------------------------------------------
 #if USING_VS2013
     #include "VS2013.bff"
     .MSC_VER                            = .VS2013_MSC_VER
-    .ToolChain_VS_Windows_X86           = .ToolChain_VS2013_Windows_X86
     .ToolChain_VS_Windows_X64           = .ToolChain_VS2013_Windows_X64
     .VS_PATH                            = .VS_2013_PATH
     .VS_PlatformToolset                 = .VS_2013_PlatformToolset
+    .VS_SolutionVersion                 = '2013'
 #endif
 #if USING_VS2015
     #include "VS2015.bff"
     .MSC_VER                            = .VS2015_MSC_VER
-    .ToolChain_VS_Windows_X86           = .ToolChain_VS2015_Windows_X86
     .ToolChain_VS_Windows_X64           = .ToolChain_VS2015_Windows_X64
     .VS_PATH                            = .VS_2015_PATH
     .VS_PlatformToolset                 = .VS_2015_PlatformToolset
+    .VS_SolutionVersion                 = '14'
 #endif
 #if USING_VS2017
     #include "VS2017.bff"
     .MSC_VER                            = .VS2017_MSC_VER
-    .ToolChain_VS_Windows_X86           = .ToolChain_VS2017_Windows_X86
     .ToolChain_VS_Windows_X64           = .ToolChain_VS2017_Windows_X64
     .VS_PATH                            = .VS_2017_PATH
     .VS_PlatformToolset                 = .VS_2017_PlatformToolset
+    .VS_SolutionVersion                 = '15'
+#endif
+#if USING_VS2019
+    #include "VS2019.bff"
+    .MSC_VER                            = .VS2019_MSC_VER
+    .ToolChain_VS_Windows_X64           = .ToolChain_VS2019_Windows_X64
+    .VS_PATH                            = .VS_2019_PATH
+    .VS_PlatformToolset                 = .VS_2019_PlatformToolset
+    .VS_SolutionVersion                 = '16'
 #endif
 
 // Projects
 //--------------------------------------------------------------------------
 {
     // Common
-    .ProjectBasePath                = '../External/SDK/VisualStudio/'
+    .ProjectBasePath                = '$_CURRENT_BFF_DIR_$/'
     .ProjectInputPaths              = .ProjectBasePath
     .ProjectAllowedFileExtensions   = '*.bff'
 
@@ -46,7 +55,7 @@
         // Visual Studio
         VCXProject( 'VisualStudio-proj' )
         {
-            .ProjectOutput                  = '../tmp/VisualStudio/Projects/VisualStudio.vcxproj'
+            .ProjectOutput                  = '$_CURRENT_BFF_DIR_$/../../../tmp/VisualStudio/Projects/VisualStudio.vcxproj'
             .PlatformToolset                = .VS_PlatformToolset
     
             .ProjectX64Debug                = [ .Platform = 'x64' .Config = 'x64-Debug' ]

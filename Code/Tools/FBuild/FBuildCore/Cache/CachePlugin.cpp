@@ -3,24 +3,19 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "CachePlugin.h"
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
-#include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/Mem/Mem.h"
-#include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 #if defined(__LINUX__) || defined(__APPLE__)
@@ -40,7 +35,7 @@
         m_DLL = ::LoadLibrary( dllName.Get() );
         if ( !m_DLL )
         {
-            FLOG_WARN( "Cache plugin '%s' load failed (0x%x).", dllName.Get(), (uint32_t)::GetLastError() );
+            FLOG_WARN( "Cache plugin load failed. Error: %s Plugin: %s", LAST_ERROR_STR, dllName.Get() );
             return;
         }
 
@@ -66,7 +61,7 @@
         m_DLL = dlopen(dllName.Get(), RTLD_NOW);
         if ( !m_DLL )
         {
-            FLOG_WARN( "Cache plugin '%s' load failed (%s).", dllName.Get(), dlerror() );
+            FLOG_WARN( "Cache plugin load failed. Error: %s '%s' Plugin: %s", LAST_ERROR_STR, dlerror(), dllName.Get() );
             return;
         }
         m_InitFunc       = (CacheInitFunc)          GetFunction( "CacheInit" );
@@ -132,7 +127,7 @@ void * CachePlugin::GetFunction( const char * friendlyName, const char * mangled
 
 // Init
 //------------------------------------------------------------------------------
-/*virtual*/ bool CachePlugin::Init( const AString & cachePath )
+/*virtual*/ bool CachePlugin::Init( const AString & cachePath, const AString & /*cachePathMountPoint*/ )
 {
     // ensure all functions were found
     if ( m_InitFunc && m_ShutdownFunc && m_PublishFunc && m_RetrieveFunc && m_FreeMemoryFunc )

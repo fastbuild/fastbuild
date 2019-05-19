@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FBuild.h"
 
 #include "FLog.h"
@@ -14,10 +12,12 @@
 #include "Cache/ICache.h"
 #include "Cache/Cache.h"
 #include "Cache/CachePlugin.h"
+#include "Cache/LightCache.h"
 #include "Graph/Node.h"
 #include "Graph/NodeGraph.h"
 #include "Graph/NodeProxy.h"
 #include "Graph/SettingsNode.h"
+#include "Helpers/CompilationDatabase.h"
 #include "Helpers/Report.h"
 #include "Protocol/Client.h"
 #include "Protocol/Protocol.h"
@@ -26,6 +26,7 @@
 
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -117,8 +118,10 @@ FBuild::~FBuild()
     ASSERT( !m_OldWorkingDir.IsEmpty() );
     if ( !FileIO::SetCurrentDir( m_OldWorkingDir ) )
     {
-        FLOG_ERROR( "Failed to restore working dir: '%s' (error: %u)", m_OldWorkingDir.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to restore working dir. Error: %s Dir: '%s'", LAST_ERROR_STR, m_OldWorkingDir.Get() );
     }
+
+    LightCache::ClearCachedFiles();
 }
 
 // Initialize
@@ -130,7 +133,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
     // handle working dir
     if ( !FileIO::SetCurrentDir( m_Options.GetWorkingDir() ) )
     {
-        FLOG_ERROR( "Failed to set working dir: '%s' (error: %u)", m_Options.GetWorkingDir().Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to set working dir. Error: %s Dir: '%s'", LAST_ERROR_STR, m_Options.GetWorkingDir().Get() );
         return false;
     }
 
@@ -148,7 +151,13 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         {
             m_DependencyGraphFile.SetLength( m_DependencyGraphFile.GetLength() - 4 );
         }
-        m_DependencyGraphFile += ".fdb";
+        #if defined( __WINDOWS__ )
+            m_DependencyGraphFile += ".windows.fdb";
+        #elif defined( __OSX__ )
+            m_DependencyGraphFile += ".osx.fdb";
+        #elif defined( __LINUX__ )
+            m_DependencyGraphFile += ".linux.fdb";
+        #endif
     }
 
     SmallBlockAllocator::SetSingleThreadedMode( true );
@@ -176,40 +185,12 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             m_Cache = FNEW( Cache() );
         }
 
-        if ( m_Cache->Init( settings->GetCachePath() ) == false )
+        if ( m_Cache->Init( settings->GetCachePath(), settings->GetCachePathMountPoint() ) == false )
         {
             m_Options.m_UseCacheRead = false;
             m_Options.m_UseCacheWrite = false;
             FDELETE m_Cache;
             m_Cache = nullptr;
-        }
-    }
-
-    //
-    // create the connection management system if we might need it
-    if ( m_Options.m_AllowDistributed )
-    {
-        Array< AString > workers;
-        if ( settings->GetWorkerList().IsEmpty() )
-        {
-            // check for workers through brokerage
-            // TODO:C This could be moved out of the main code path
-            m_WorkerBrokerage.FindWorkers( workers );
-        }
-        else
-        {
-            workers = settings->GetWorkerList();
-        }
-
-        if ( workers.IsEmpty() )
-        {
-            FLOG_WARN( "No workers available - Distributed compilation disabled" );
-            m_Options.m_AllowDistributed = false;
-        }
-        else
-        {
-            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRoot().Get() );
-            m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
         }
     }
 
@@ -352,11 +333,11 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
     // rename tmp file
     if ( FileIO::FileMove( tmpFileName, AStackString<>( nodeGraphDBFile ) ) == false )
     {
-        FLOG_ERROR( "Failed to rename temp DB file '%s' (%i)", tmpFileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to rename temp DB file. Error: %s TmpFile: '%s'", LAST_ERROR_STR, tmpFileName.Get() );
         return false;
     }
 
-    FLOG_INFO( "Saving DepGraph Complete in %2.3fs", t.GetElapsed() );
+    FLOG_INFO( "Saving DepGraph Complete in %2.3fs", (double)t.GetElapsed() );
     return true;
 }
 
@@ -378,6 +359,36 @@ bool FBuild::Build( Node * nodeToBuild )
 
     // create worker threads
     m_JobQueue = FNEW( JobQueue( m_Options.m_NumWorkerThreads ) );
+
+    // create the connection management system if needed
+    // (must be after JobQueue is created)
+    if ( m_Options.m_AllowDistributed )
+    {
+        const SettingsNode * settings = m_DependencyGraph->GetSettings();
+
+        Array< AString > workers;
+        if ( settings->GetWorkerList().IsEmpty() )
+        {
+            // check for workers through brokerage
+            // TODO:C This could be moved out of the main code path
+            m_WorkerBrokerage.FindWorkers( workers );
+        }
+        else
+        {
+            workers = settings->GetWorkerList();
+        }
+
+        if ( workers.IsEmpty() )
+        {
+            FLOG_WARN( "No workers available - Distributed compilation disabled" );
+            m_Options.m_AllowDistributed = false;
+        }
+        else
+        {
+            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRoot().Get() );
+            m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
+        }
+    }
 
     m_Timer.Start();
     m_LastProgressOutputTime = 0.0f;
@@ -651,7 +662,7 @@ void FBuild::UpdateBuildStatus( const Node * node )
         FLog::OutputProgress( timeNow, m_SmoothedProgressCurrent, numJobs, numJobsActive, numJobsDist, numJobsDistActive );
     }
 
-    FLOG_MONITOR( "PROGRESS_STATUS %f \n", m_SmoothedProgressCurrent );
+    FLOG_MONITOR( "PROGRESS_STATUS %f \n", (double)m_SmoothedProgressCurrent );
 
     m_LastProgressOutputTime = timeNow;
 }
@@ -663,20 +674,9 @@ void FBuild::UpdateBuildStatus( const Node * node )
     return "fbuild.bff";
 }
 
-// GetCacheFileName
-//------------------------------------------------------------------------------
-void FBuild::GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD, AString & path ) const
-{
-    // cache version - bump if cache format is changed
-    static const int cacheVersion( 9 );
-
-    // format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC-32A2B04375A2D7DE.7
-    path.Format( "%016" PRIX64 "_%08X_%016" PRIX64 "-%016" PRIX64 ".%u", keyA, keyB, keyC, keyD, cacheVersion );
-}
-
 // DisplayTargetList
 //------------------------------------------------------------------------------
-void FBuild::DisplayTargetList() const
+void FBuild::DisplayTargetList( bool showHidden ) const
 {
     OUTPUT( "FBuild: List of available targets\n" );
     const size_t totalNodes = m_DependencyGraph->GetNodeCount();
@@ -684,6 +684,7 @@ void FBuild::DisplayTargetList() const
     {
         Node * node = m_DependencyGraph->GetNodeByIndex( i );
         bool displayName = false;
+        bool hidden = node->IsHidden();
         switch ( node->GetType() )
         {
             case Node::PROXY_NODE:          ASSERT( false ); break;
@@ -693,15 +694,15 @@ void FBuild::DisplayTargetList() const
             case Node::FILE_NODE:           break;
             case Node::LIBRARY_NODE:        break;
             case Node::OBJECT_NODE:         break;
-            case Node::ALIAS_NODE:          displayName = true; break;
+            case Node::ALIAS_NODE:          displayName = true; hidden = node->IsHidden(); break;
             case Node::EXE_NODE:            break;
             case Node::CS_NODE:             break;
-            case Node::UNITY_NODE:          displayName = true; break;
+            case Node::UNITY_NODE:          displayName = true; hidden = node->IsHidden(); break;
             case Node::TEST_NODE:           break;
             case Node::COMPILER_NODE:       break;
             case Node::DLL_NODE:            break;
             case Node::VCXPROJECT_NODE:     break;
-            case Node::OBJECT_LIST_NODE:    displayName = true; break;
+            case Node::OBJECT_LIST_NODE:    displayName = true; hidden = node->IsHidden(); break;
             case Node::COPY_DIR_NODE:       break;
             case Node::SLN_NODE:            break;
             case Node::REMOVE_DIR_NODE:     break;
@@ -709,7 +710,7 @@ void FBuild::DisplayTargetList() const
             case Node::SETTINGS_NODE:       break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
-        if ( displayName )
+        if ( displayName && ( !hidden || ( hidden && showHidden ) ) )
         {
             OUTPUT( "\t%s\n", node->GetName().Get() );
         }
@@ -733,34 +734,64 @@ bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
     return true;
 }
 
+// GenerateCompilationDatabase
+//------------------------------------------------------------------------------
+bool FBuild::GenerateCompilationDatabase( const Array< AString > & targets ) const
+{
+    Dependencies deps;
+    if ( !GetTargets( targets, deps ) )
+    {
+        return false; // GetTargets will have emitted an error
+    }
+
+    CompilationDatabase compdb;
+    const AString & result = compdb.Generate( *m_DependencyGraph, deps );
+
+    FileStream fs;
+    if ( fs.Open( "compile_commands.json", FileStream::WRITE_ONLY ) == false )
+    {
+        FLOG_ERROR( "Failed to open compile_commands.json" );
+        return false;
+    }
+    if ( fs.Write( result.Get(), result.GetLength() ) != result.GetLength() )
+    {
+        FLOG_ERROR( "Failed to write to compile_commands.json" );
+        return false;
+    }
+    fs.Close();
+
+    return true;
+}
 
 // GetTempDir
 //------------------------------------------------------------------------------
 /*static*/ bool FBuild::GetTempDir( AString & outTempDir )
 {
-    #if defined( __WINDOWS__ )
+    #if defined( __WINDOWS__ ) || defined( __LINUX__ ) || defined( __APPLE__ )
         // Check for override environment variable
         if ( Env::GetEnvVariable( "FASTBUILD_TEMP_PATH", outTempDir ) )
         {
             // Ensure env var was slash terminated
-            const bool slashTerminated = ( outTempDir.EndsWith( '/' ) || outTempDir.EndsWith( '\\' ) );
-            if ( !slashTerminated )
-            {
-                outTempDir += '\\';
-            }
+            #if defined( __WINDOWS__ )
+                const bool slashTerminated = ( outTempDir.EndsWith( '/' ) || outTempDir.EndsWith( '\\' ) );
+                if ( !slashTerminated )
+                {
+                    outTempDir += '\\';
+                }
+            #else
+                const bool slashTerminated = outTempDir.EndsWith( '/' );
+                if ( !slashTerminated )
+                {
+                    outTempDir += '/';
+                }
+            #endif
 
             return true;
         }
-
-        // Use regular system temp path
-        return FileIO::GetTempDir( outTempDir );
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        outTempDir = "/tmp/";
-        return true;
-    #else
-        #error Unknown platform
-        return false;
     #endif
+
+    // Use regular system temp path
+    return FileIO::GetTempDir( outTempDir );
 }
 
 // CacheOutputInfo
@@ -773,7 +804,7 @@ bool FBuild::CacheOutputInfo() const
         return m_Cache->OutputInfo( m_Options.m_ShowProgress );
     }
 
-    OUTPUT( "- Cache not configured" );
+    OUTPUT( "- Cache not configured\n" );
     return false;
 }
 
@@ -787,7 +818,7 @@ bool FBuild::CacheTrim() const
         return m_Cache->Trim( m_Options.m_ShowProgress, m_Options.m_CacheTrim );
     }
 
-    OUTPUT( "- Cache not configured" );
+    OUTPUT( "- Cache not configured\n" );
     return false;
 }
 

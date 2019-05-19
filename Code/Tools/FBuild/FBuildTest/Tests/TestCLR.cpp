@@ -185,7 +185,7 @@ void TestCLR::TestCLRToCPPBridge() const
         FBuildTestOptions options;
         options.m_ForceCleanBuild = true;
 
-        FBuildStats stats = Build( options, true, "BridgeTest-Exe" );
+        Build( options, true, "BridgeTest-Exe" );
 
         Process p;
         p.Spawn( "../tmp/Test/CLR/Bridge/Bridge.exe", nullptr, nullptr, nullptr );

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="common.js"></script>
 
 <html>
 <head>
@@ -8,7 +7,22 @@
 <title>FASTBuild - Environment Variables</title>
 </head>
 <body>
-  <script>generateHeader()</script>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
 
 <h1>Environment Variables</h1>
 
@@ -16,9 +30,9 @@
 
     <div class='newsitembody'>
 
-<table width=700>
+<table width=900>
   <tr>
-    <th width=150 align=left>Env Var</th>
+    <th width=350 align=left>Env Var</th>
     <th align=left>Purpose</th>
   </tr>
   <tr>
@@ -32,6 +46,10 @@
   <tr>
     <td><a href="#FASTBUILD_CACHE_PATH">FASTBUILD_CACHE_PATH</a></td>
     <td>Set the location of the cache.</td>
+  </tr> 
+  <tr>
+    <td><a href="#FASTBUILD_CACHE_PATH_MOUNT_POINT">FASTBUILD_CACHE_PATH_MOUNT_POINT</a></td>
+    <td>Set the path to be verified as a mount point. (OSX &amp; Linux)</td>
   </tr> 
   <tr>
     <td><a href="#FASTBUILD_CACHE_MODE">FASTBUILD_CACHE_MODE</a></td>
@@ -62,6 +80,13 @@ in the <a href="functions/settings.html">Settings</a> function.
 <p></p>
 </div>
 
+    <div class='newsitemheader' id="FASTBUILD_CACHE_PATH_MOUNT_POINT">FASTBUILD_CACHE_PATH_MOUNT_POINT</div>
+    <div class='newsitembody'>The location of the FASTBuild cache mount point for OSX and Linux can be set via the
+FASTBUILD_CACHE_PATH_MOUNT_POINT environment variable instead of via the .CachePathMountPoint option
+in the <a href="functions/settings.html">Settings</a> function.
+<p></p>
+</div>
+
     <div class='newsitemheader' id="FASTBUILD_CACHE_MODE">FASTBUILD_CACHE_MODE</div>
     <div class='newsitembody'>The cache mode can be set via the FASTBUILD_CACHE_MODE
 environment variable, instead of via the command line <a href="options.html#cache">-cache</a> options.
@@ -69,6 +94,6 @@ environment variable, instead of via the command line <a href="options.html#cach
 </div>
 
 
-  <script>generateFooter()</script>
+    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
 </body>
 </html>

@@ -37,20 +37,18 @@ static uint32_t CancelHelperThread( void * )
     Timer t;
 
     // Wait for spawned processes to own all mutexes
-    SystemMutex mutexes[] =
-    {
-        SystemMutex{ "FASTBuildFastCancelTest1" },
-        SystemMutex{ "FASTBuildFastCancelTest2" },
-        SystemMutex{ "FASTBuildFastCancelTest3" },
-        SystemMutex{ "FASTBuildFastCancelTest4" }
-    };
-    for ( SystemMutex & mutex : mutexes )
+    SystemMutex mutex1( "FASTBuildFastCancelTest1" );
+    SystemMutex mutex2( "FASTBuildFastCancelTest2" );
+    SystemMutex mutex3( "FASTBuildFastCancelTest3" );
+    SystemMutex mutex4( "FASTBuildFastCancelTest4" );
+    SystemMutex* mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
+    for ( SystemMutex * mutex : mutexes )
     {
         // if we acquired the lock, the child process is not yet spawned
-        while ( mutex.TryLock() == true )
+        while ( mutex->TryLock() == true )
         {
             // unlock so child can acquire
-            mutex.Unlock();
+            mutex->Unlock();
 
             // Wait before trying again
             Thread::Sleep( 10 );
@@ -80,13 +78,11 @@ void TestFastCancel::Cancel() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // We'll coordinate processes with these
-    SystemMutex mutexes[4] =
-    {
-        SystemMutex{ "FASTBuildFastCancelTest1" },
-        SystemMutex{ "FASTBuildFastCancelTest2" },
-        SystemMutex{ "FASTBuildFastCancelTest3" },
-        SystemMutex{ "FASTBuildFastCancelTest4" }
-    };
+    SystemMutex mutex1( "FASTBuildFastCancelTest1" );
+    SystemMutex mutex2( "FASTBuildFastCancelTest2" );
+    SystemMutex mutex3( "FASTBuildFastCancelTest3" );
+    SystemMutex mutex4( "FASTBuildFastCancelTest4" );
+    SystemMutex* mutexes[] = { &mutex1, &mutex2, &mutex3, &mutex4 };
 
     // Create thread that will abort build once all processes are spawned
     Thread::ThreadHandle h = Thread::CreateThread( CancelHelperThread );
@@ -99,10 +95,20 @@ void TestFastCancel::Cancel() const
     Thread::CloseHandle( h );
 
     // Ensure that processes were killed
-    for ( SystemMutex & mutex : mutexes )
+    for ( SystemMutex * mutex : mutexes )
     {
-        // We should immediately be able to acquire each lock
-        TEST_ASSERT( mutex.TryLock() );
+        // We should be able to acquire each lock
+        // Allow for delays in the mutex being freed as the process was terminated
+        uint32_t tryCount = 0;
+        while ( mutex->TryLock() == false )
+        {
+            // Ensure if test is broken that it fails sensibly
+            tryCount++;
+            ASSERT( tryCount < 100 );
+
+            // Wait and try again
+            Thread::Sleep( 10 );
+        }
     }
 }
 

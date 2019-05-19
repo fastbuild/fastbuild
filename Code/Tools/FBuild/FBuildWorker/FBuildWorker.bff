@@ -2,44 +2,44 @@
 //------------------------------------------------------------------------------
 {
     .ProjectName        = 'FBuildWorker'
-    .ProjectPath        = 'Tools\FBuild\FBuildWorker'
-
-    // Unity
-    //--------------------------------------------------------------------------
-    Unity( '$ProjectName$-Unity' )
-    {
-        .UnityInputPath             = '$ProjectPath$\'
-        .UnityOutputPath            = '$UnityOutputBase$\$ProjectPath$\'
-    }
-
-    // Windows Resources
-    //--------------------------------------------------------------------------
-    ObjectList( '$ProjectName$-Res' )
-    {
-        .Compiler                   = 'ResourceCompiler'
-        .CompilerOutputExtension    = '.res'
-        .CompilerOptions            = '/nologo /fo"%2" "%1"'
-        .CompilerInputFiles         = 'Tools\FBuild\FBuildWorker\MainWindowResource.rc'
-        .CompilerOutputPath         = '$OutputBase$\Tools\FBuild\FBuildWorker\'
-    }
+    .ProjectPath        = 'Tools/FBuild/FBuildWorker'
 
     // Executable
     //--------------------------------------------------------------------------
     ForEach( .Config in .Configs )
     {
         Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
+        .OutputBase + '/$Platform$-$Config$'
+
+        // Windows Resources
+        //--------------------------------------------------------------------------
+        ObjectList( '$ProjectName$-Res-$Platform$-$Config$' )
+        {
+            .Compiler                   = 'ResourceCompiler'
+            .CompilerOutputExtension    = '.res'
+            .CompilerOptions            = '/nologo /fo"%2" "%1"'
+            .CompilerInputFiles         = 'Tools/FBuild/FBuildWorker/MainWindowResource.rc'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
+        }
+
+        // Unity
+        //--------------------------------------------------------------------------
+        Unity( '$ProjectName$-Unity-$Platform$-$Config$' )
+        {
+            .UnityInputPath             = '$ProjectPath$/'
+            .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+        }
 
         // Library
         //--------------------------------------------------------------------------
         ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
             // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity'
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$Config$'
 
             // Output
-            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
 
         // Executable
@@ -54,11 +54,16 @@
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }
                                         #if __WINDOWS__
-                                            + 'FBuildWorker-Res'
+                                            + 'FBuildWorker-Res-$Platform$-$Config$'
                                         #endif
-            .LinkerOutput               = '$OutputBase$/$ProjectPath$/$ProjectName$$ExeExtension$'
+            #if __LINUX__
+                .LinkerOutput               = '$OutputBase$/$ProjectPath$/fbuildworker$ExeExtension$' // NOTE: lower case
+            #else
+                .LinkerOutput               = '$OutputBase$/$ProjectPath$/FBuildWorker$ExeExtension$'
+            #endif
             #if __WINDOWS__
                 .LinkerOptions              + ' /SUBSYSTEM:WINDOWS'
+                                            + ' Advapi32.lib'
                                             + ' kernel32.lib'
                                             + ' Ws2_32.lib'
                                             + ' User32.lib'
@@ -69,6 +74,12 @@
             #endif
             #if __LINUX__
                 .LinkerOptions              + ' -pthread -ldl -lrt'
+
+                .LinkerStampExe             = '/bin/bash'
+                .ExtractDebugInfo           = 'objcopy --only-keep-debug $LinkerOutput$ $LinkerOutput$.debug'
+                .StripDebugInfo             = 'objcopy --strip-debug $LinkerOutput$'
+                .AddDebugLink               = 'objcopy --add-gnu-debuglink $LinkerOutput$.debug $LinkerOutput$'
+                .LinkerStampExeArgs         = '-c "$ExtractDebugInfo$ && $StripDebugInfo$ && $AddDebugLink$"'
             #endif
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }

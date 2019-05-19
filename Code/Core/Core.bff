@@ -4,15 +4,6 @@
     .ProjectName        = 'Core'
     .ProjectPath        = 'Core'
 
-    // Unity
-    //--------------------------------------------------------------------------
-    Unity( '$ProjectName$-Unity' )
-    {
-        .UnityInputPath             = '$ProjectPath$\'
-        .UnityOutputPath            = '$UnityOutputBase$\$ProjectPath$\'
-        .UnityInputExcludePath      = '$ProjectPath$\CoreTest\' // Exclude Tests
-    }
-
     // Library
     //--------------------------------------------------------------------------
     ForEach( .Config in .Configs )
@@ -20,15 +11,30 @@
         Using( .Config )
         .OutputBase + '\$Platform$-$Config$'
 
-        // Static Library
+        // MemTracker is built by iteself to control init order
+        .MemTrackerFile                 = 'Core/Mem/MemTracker.cpp'
+
+        // Unity
+        //--------------------------------------------------------------------------
+        Unity( '$ProjectName$-Unity-$Platform$-$Config$' )
+        {
+            .UnityInputPath             = '$ProjectPath$/'
+            .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+            .UnityInputExcludePath      = '$ProjectPath$/CoreTest/' // Exclude Tests
+            .UnityInputExcludedFiles    = .MemTrackerFile
+        }
+
+        // Library
+        //--------------------------------------------------------------------------
         Library( '$ProjectName$-Lib-$Platform$-$Config$' )
         {
-            // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity'
+            // Input
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$Config$'
+            .CompilerInputFiles         = .MemTrackerFile
 
             // Output
-            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectName$/$ProjectName$$LibExtension$'
+            .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
         ^'Targets_$Platform$_$Config$' + { '$ProjectName$-$Platform$-$Config$' }

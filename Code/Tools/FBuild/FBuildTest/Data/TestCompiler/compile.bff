@@ -11,6 +11,9 @@ ObjectList( "Compiler-Lib" )
 {
     .CompilerInputFiles = "Tools/FBuild/FBuildTest/Data/TestCompiler/SimpleCompiler.cpp"
     .CompilerOutputPath = "$Out$/Test/Compiler/"
+    #if __WINDOWS__
+        .CompilerOptions    + ' -D"_CRT_SECURE_NO_WARNINGS"' // don't warn about unsafe fopen
+    #endif
 }
 
 Executable( "Compiler-Exe" )

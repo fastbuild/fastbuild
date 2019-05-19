@@ -3,8 +3,12 @@
 
 // Root Paths
 //------------------------------------------------------------------------------
-.Windows10_SDKBasePath          = '../External/SDK/Windows/10'
-.Windows10_SDKVersion           = '10.0.14393.0'
+.Windows10_SDKBasePath          = '$_CURRENT_BFF_DIR_$/10'
+.Windows10_SDKVersion           = '10.0.17763.0'
+#if CI_BUILD
+    .Windows10_SDKBasePath      = 'C:\Program Files (x86)\Windows Kits/10'
+    .Windows10_SDKVersion       = '10.0.17134.0'
+#endif
 
 // Defines
 //------------------------------------------------------------------------------
@@ -12,35 +16,16 @@
                                 + ' -DWIN32'
                                 + ' -D_WIN32'
                                 + ' -D__WINDOWS__'
-                                + ' -D_CRT_SECURE_NO_WARNINGS'            // don't warn about unsafe functions - TODO:C Fix warnings and remove
-                                + ' -D_WINSOCK_DEPRECATED_NO_WARNINGS'    // don't warn about deprecated winsock functions - TODO:C Update API use
 
 // Windows 10 SDK
 //------------------------------------------------------------------------------
-.Windows10_SDK_X86 =
-[
-    .WindowsSDK_IncludePaths        = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
-                                    + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
-                                    + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
-
-    .CommonCompilerOptions          = .WindowsSDK_IncludePaths
-                                    + .WindowsSDK_Defines
-
-    .CompilerOptions                = .CommonCompilerOptions
-    .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsPCH             = .CommonCompilerOptions
-    .CompilerOptionsDeoptimized     = .CommonCompilerOptions
-
-    .LinkerOptions                  = ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/um/x86"'
-                                    + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/x86"'
-                                    + ' /MACHINE:X86'
-                                    + ' /LARGEADDRESSAWARE'
-]
 .Windows10_SDK_X64 =
 [
     .WindowsSDK_IncludePaths        = ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/ucrt"'
                                     + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/um"'
                                     + ' "-I$Windows10_SDKBasePath$/Include/$Windows10_SDKVersion$/shared"'
+
+    .WindowsDK_WinRTAssemblyPath    = '$Windows10_SDKBasePath$/UnionMetadata/$Windows10_SDKVersion$/'
 
     .CommonCompilerOptions          = .WindowsSDK_IncludePaths
                                     + .WindowsSDK_Defines
@@ -48,8 +33,8 @@
 
     .CompilerOptions                = .CommonCompilerOptions
     .CompilerOptionsC               = .CommonCompilerOptions
-    .CompilerOptionsPCH             = .CommonCompilerOptions
     .CompilerOptionsDeoptimized     = .CommonCompilerOptions
+    .PCHOptions                     = .CommonCompilerOptions
 
     .LinkerOptions                  = ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/um/x64"'
                                     + ' /LIBPATH:"$Windows10_SDKBasePath$/Lib/$Windows10_SDKVersion$/ucrt/x64"'
@@ -57,7 +42,7 @@
 ]
 Compiler( 'ResourceCompiler-Windows10' )
 {
-    .Executable                 = '$Windows10_SDKBasePath$/Bin/x86/RC.exe'
+    .Executable                 = '$Windows10_SDKBasePath$/Bin/$Windows10_SDKVersion$/x64/RC.exe'
     .CompilerFamily             = 'custom'
 }
 

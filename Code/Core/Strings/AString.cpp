@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "AString.h"
 #include "AStackString.h"
 #include "Core/Math/Conversions.h"
@@ -53,7 +51,7 @@ AString::AString( const AString & string )
     uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
     m_Contents = (char *)ALLOC( reserved + 1 );
     SetReserved( reserved, true );
-    Copy( string.Get(), m_Contents, len ); // copy handles terminator
+    Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
 }
 
 // CONSTRUCTOR (const char *)
@@ -380,7 +378,7 @@ void AString::Assign( const AString & string )
         // didn't resize then the passed in string is empty too
         return;
     }
-    Copy( string.Get(), m_Contents, len ); // handles terminator
+    Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
     m_Length = len;
 }
 
@@ -481,7 +479,7 @@ AString & AString::operator += ( const AString & string )
             Grow( newLen );
         }
 
-        Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator
+        Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator (NOTE: Using suffixLen to support embedded nuls)
         m_Length += suffixLen;
     }
     return *this;
@@ -1239,7 +1237,7 @@ test_match:
     {
         pos++;
     }
-    return ( pos - string );
+    return (size_t)( pos - string );
 }
 
 // StrNCmp

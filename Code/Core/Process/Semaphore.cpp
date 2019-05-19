@@ -3,15 +3,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Semaphore.h"
 
 // Core
 #include "Core/Env/Assert.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 #if defined( __LINUX__ )
     #include <errno.h>
@@ -68,7 +66,7 @@ void Semaphore::Signal( uint32_t num )
 {
     ASSERT( num ); // not valid to call with 0
     #if defined( __WINDOWS__ )
-        VERIFY( ReleaseSemaphore( m_Semaphore, (DWORD)num, nullptr ) );
+        VERIFY( ReleaseSemaphore( m_Semaphore, (LONG)num, nullptr ) );
     #else
         for ( size_t i=0; i<num; ++i )
         {

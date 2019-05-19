@@ -1,0 +1,6 @@
+// LightCache
+//------------------------------------------------------------------------------
+
+// Same as the normal cache test, but with LightCache enabled
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+#include "cache.bff"

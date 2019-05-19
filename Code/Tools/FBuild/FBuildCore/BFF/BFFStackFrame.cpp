@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "BFFStackFrame.h"
 #include "BFFVariable.h"
 #include "Core/Mem/Mem.h"
@@ -303,13 +301,15 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 
 // GetVarAny
 //------------------------------------------------------------------------------
-/*static*/ const BFFVariable * BFFStackFrame::GetVarAny( const AString & name )
+/*static*/ const BFFVariable * BFFStackFrame::GetVarAny( const AString & nameOnly )
 {
+    ASSERT( nameOnly.BeginsWith( '.' ) == false ); // Should not include . : TODO:C Resolve the inconsistency
+
     // we shouldn't be calling this if there aren't any stack frames
     ASSERT( s_StackHead );
 
     // recurse up the stack
-    return s_StackHead->GetVariableRecurse( name, BFFVariable::VAR_ANY );
+    return s_StackHead->GetVariableRecurse( nameOnly, BFFVariable::VAR_ANY );
 }
 
 // GetVariableRecurse
@@ -317,6 +317,8 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & nameOnly,
                                                  BFFVariable::VarType type ) const
 {
+    ASSERT( nameOnly.BeginsWith( '.' ) == false ); // Should not include . : TODO:C Resolve the inconsistency
+
     // look at this scope level
     Array< BFFVariable * >::Iter i = m_Variables.Begin();
     Array< BFFVariable * >::Iter end = m_Variables.End();

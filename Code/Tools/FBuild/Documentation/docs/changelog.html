@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="common.js"></script>
 
 <html>
 <head>
@@ -8,10 +7,182 @@
 <title>FASTBuild - Change Log</title>
 </head>
 <body>
-  <script>generateHeader()</script>
-
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
 
 <h1>Changelog</h1>
+
+
+<div class='newsitemheader'>
+    v0.98&nbsp;<font color='#bbbbbb'>(29-Apr-2019)</font>
+</div>
+<div class='newsitembody'>
+    Notes
+	<ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Distributed compilation protocol version changed : please update workers</li>
+    </ul>
+    New
+    <ul>
+        <li>.UseLightCache_Experimental mode on Compiler() can be used for massively accelerated caching</li>
+        <li>-compdb option can create a JSON Compilation Database (Thanks to dummyunit)</li>
+    </ul>
+    Fixes
+    <ul>
+        <li>Distributed Compilation:</li>
+        <ul>
+            <li>Fix race condition resulting in crash when a local race is won (Thanks to dummyunit, Sam Hocevar & Lambert Clara)</li>
+            <li>Prevent rare crash during startup when using distributed compilation</li>
+        </ul>
+        <li>BFF Parsing:</li>
+        <ul>
+            <li>Variable self-assignment is handled correctly during bff parsing (Thanks to dummyunit)</li>
+            <li>Fix inconsistent parsing of bff function headers without args (Thanks to dummyunit)</li>
+        </ul>
+        <li>[OSX][Linux] FASTBUILD_CACHE_PATH env var is respected on OSX and Linux (Thanks to Damian Szuberski)</li>
+        <li>GCC is corrently detected for when version specific exe is referenced (Thanks to Damian Szuberski)</li>
+        <li>Strip -isysroot when compiling preprocessed output; should only be used during preprocessing (Thanks to Nick Edwards)</li>
+        <li>Paths terminated with .. are correctly canonicalized (Thanks to Yaroslav Kovtun)</li>
+        <li>DLL() detects dll when a library is configured via -Wl,--oformat=prx (Thanks to jfr2)</li>
+        <li>Precompiled headers are migrated when using AllowDBMigration_Experimental (Thanks to Yaroslav Kovtun)</li>
+        <li>MSVC precompiled header users are retrievable from cache after DB migration using AllowDBMigration_Experimental</li>
+        <li>[Windows] UNC paths are respected in some places they were not (Thanks to Brian Burgin)</li>
+        <li>MSVC .pchast is correctly cached when folder name contains a period (Thanks to Brian Burgin)</li>
+        <li>MSVC .pchast is correctly cached when filename contains a period</li>
+    </ul>
+	Improvements
+	<ul>
+        <li>Distributed Compilation:</li>
+        <ul>
+            <li>FBuildWorker responds to quite notifications (Thanks to Brian Burgin)</li>
+            <li>Compiler files sent for distributed compilation are compressed (Thanks to Brian Burgin)</li>
+            <li>-forceremote no longer modifies caching options</li>
+            <li>Remote MSVC out of heap space is automatically retried</li>
+            <li>Remote MSVC failing to write compiler tmp file is automatically retried</li>
+            <li>Remove worker timeout mechanism which could cause unnecessary disconnections under heavy network load</li>
+            <li>Workers will reject connections from mismatched platforms</li>
+        </ul>
+        <li>BFF Parsing:</li>
+        <ul>
+            <li>Non-bff parsing error formats standardized (Thanks to Brian Burgin)</li>
+        </ul>
+        <li>Project Generation:</li>
+        <ul>
+            <li>XCode schemes appear alphabetically</li>
+            <li>XCode project folders appear alphabetically</li>
+            <li>XCode "doc" schemes are hidden by default</li>
+        </ul>
+        <li>[Linux][OSX] Significantly improve compile times by fixing process output capture (Thanks to Yaroslav Kovtun)</li>
+        <li>Improve resilience against corrupt files in the network cache</li>
+        <li>Exec() can be made to run every time with new .ExecAlways property</li>
+        <li>Test will print test output if a test times out to assist triage (Thanks to dummyunit)</li>
+        <li>.i extension is used for preprocessed files when using gcc (Thanks to Damian Szuberski)</li>
+        <li>Colored output from Clang and GCC is supported (Thanks to dummyunit)</li>
+        <li>.Environment can be set per Compiler, Library, Executable and DLL (Thanks to Brian Burgin)</li>
+        <li>.CompilerOutputKeepBaseExtension can be set on ObjectList if extension is needed to uniquify (Thanks to Yaroslav Kovtun)</li>
+        <li>The .fdb  is uniquified per-platform to allow filesystem shared between operating systems/VMs</li>
+        <li>Improve compression speed slightly (Upgrade to LZ4)</li>
+	</ul>
+</div>
+
+
+<div class='newsitemheader'>
+    v0.97&nbsp;<font color='#bbbbbb'>(9-Jan-2019)</font>
+</div>
+<div class='newsitembody'>
+    Notes
+	<ul>
+        <li>DB Version Changed : clean build will occur</li>
+    </ul>
+    New
+    <ul>
+        <li>[Experimental] .AllowDBMigration_Experimental (Settings) allows retention of build state across BFF changes</li>
+        <li>[OSX][Linux] Settings() .CachePathMountPoint option allows enforcing of cache mount validity</li>
+        <li>_CURRENT_BFF_DIR_ is defined containing path to the bff being parsed</li>
+        <li>Error() function allows user errors to be emitted during BFF parsing (Error 1999)</li>
+    </ul>
+    Fixes
+    <ul>
+        <li>Distributed Compilation:</li>
+        <ul>
+            <li>Fix occasional build failure with error 0x1 when a distributed race is won</li>
+            <li>[OSX][Linux] Sockets are not inheritable by child processes</li>
+            <li>[OSX] Sockets don't trigger spurious SIG_PIPE errors</li>
+            <li>[OSX] Port reuse updated for OS X behavior change (SO_REUSEADDR vs SO_REUSEPORT)</li>
+            <li>Nagle's algorithm is disabled for return connection from server->client</li>
+            <li>Fix -distverbose stack overflow when remote worker is blacklisted (and possibly in other situations)</li>
+            <li>Fix file handle leak on IO error transferring compiler files (Thanks to dummyunit)</li>
+            <li>Remote system failure info is shown when -distverbose is used</li>
+        </ul>
+        <li>BFF Parsing:</li>
+        <ul>
+            <li>If() error correctly reports type when lhs is unsupported for operator "in"</li>
+            <li>If() reports an error if extraneous text is found after a valid expression</li>
+        </ul>
+        <li>Project Generation:</li>
+        <ul>
+            <li>VCXProject files correctly pathed for project in sub-directory of BasePath</li>
+            <li>VCXProject generation correctly handles files and folders with common sub-strings (Thanks to Jeremy Moore)</li>
+            <li>Solution() errors in .Projects or .Dependencies print the correct property name in the error</li>
+            <li>Solution() paths to .vcxproject are relative even when .vcxproject is not in a sub-directory (Thanks to Chris Helvig)</li>
+        </ul>        
+        <li>Prevent duplicate symbols in libraries when using ar.exe in some situations</li>
+        <li>Emit error when failing to delete .exe/.dll/.pdb/.ilk</li>
+        <li>Folders are created for .asm and .pdb files when paths contain inconsistent slashes</li>
+        <li>Add missing -monitor option to cmd line usage info</li>
+        <li>Add missing -monitor and -progress option documentation</li>
+        <li>[OSX][Linux] .lock files are no longer inherited by child processes, preventing "FASTBuild is already running" messages</li>
+        <li>Fix incremental link when NOREF, NOICF or NOLBR options are used on cmd line (Thanks to Lambert Clara)</li>
+        <li>[Windows] Prevent deadlock if Ctrl+C is used to terminate certain tools like Clang (Thanks to Brian Burgin)</li>
+        <li>Settings() .CachePath takes precedence over environment variable as intended</li>
+        <li>[OSX][Linux] Child processes no longer inherit file handles, avoiding issues like .lock files being held incorrectly</li>
+        <li>Linker removes bad trailing slashes from LIBPATH that would escape quotes</li>
+        <li>-monitor works if build is started before monitor application has ever been run (Thanks to Lambert Clara)</li>
+        <li>[Linux][OSX] -cacheinfo age is correctly calculated (Thanks to Yaroslav Kovtun)</li>
+        <li>Fixed typo in options documentation for -report (Thanks to Brian Burgin)</li>
+    </ul>
+	Improvements
+	<ul>
+        <li>Distributed Compilation:</li>
+        <ul>
+            <li>Remote failure details are shown when -distverbose is used</li>
+            <li>Brokerage path shown as part of "Workers Found" message (Thanks to Lambert Clara)</li>
+        </ul>
+        <li>BFF Parsing:</li>
+        <ul>
+            <li>If() supports operator >, <, >= and <=</li>
+            <li>If() supports integers in comparisson syntax</li>
+            <li>Add _FASTBUILD_VERSION_ and _FASTBUILD_VERSION_STRING_ built-in variables</li>
+            <li>If() Documentation lists all currently supported syntax and operators</li>
+            <li>Small speedup to bff parsing when parsing Linker (Executable/DLL) nodes (Thanks to dummyunit)</li>
+            <li>Small optimization to BFF parsing, avoiding memory allocations appending strings to arrays (Thanks to dummyunit)</li>
+        </ul>
+        <li>Project Generation:</li>
+        <ul>
+            <li>Solution() generates solutions with paths to projects using Windows style slashes on Linux and OSX</li>
+            <li>Solution() "deploy" project scan be set via SolutionDeployProjects</li>
+            <li>Solution() "build" and "deploy" projects can be set per SolutionConfiguration</li>
+            <li>Intellisense AdditionalOptions are auto-populated for /std: option</li>
+        </ul>
+        <li>Improve IO performance on local disk and SMB shares</li>
+        <li>Work around Windows file system permission problems when creating response files</li>
+        <li>FASTBuild detects MSVC linker error LNK1136 (pdb corruption) and retries linking</li>
+	</ul>
+</div>
 
 
 <div class='newsitemheader'>
@@ -89,7 +260,7 @@
             <li>.SolutionBuildProject doesn't need to be specified redundantly in .SolutionProjects</li>
             <li>VSSolution() .SolutionBuildProject supports multiple projects for increased flexibility</li>
         </ul>
-        <li>Upgrade Zstd compression to v1.8.2 for improved cache and distribution performance</li>
+        <li>Upgrade LZ4 compression to v1.8.2 for improved cache and distribution performance</li>
         <li>Compiler() can reference executables compiled by FASTBuild (Thanks to gkoreman)</li>
         <li>Orbis-wave-psslc is auto-detected as a supported compiler (Thanks to gkoreman)</li>
         <li>BFF parsing speed improved ~5%</li>
@@ -1551,6 +1722,6 @@ Fixes
     </div>
 
 
-  <script>generateFooter()</script>
+    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
 </body>
 </html>

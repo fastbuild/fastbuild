@@ -66,9 +66,9 @@ void TestSmallBlockAllocator::SingleThreaded() const
     float time3 = AllocateFromSmallBlockAllocator( allocSizes, repeatCount, false ); // Thread-safe = false
 
     // output
-    OUTPUT( "System (malloc)                            : %2.3fs - %u allocs @ %u allocs/sec\n", time1, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time1 ) );
-    OUTPUT( "SmallBlockAllocator                        : %2.3fs - %u allocs @ %u allocs/sec\n", time2, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time2 ) );
-    OUTPUT( "SmallBlockAllocator (Single-Threaded mode) : %2.3fs - %u allocs @ %u allocs/sec\n", time3, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time3 ) );
+    OUTPUT( "System (malloc)                            : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time1, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time1 ) );
+    OUTPUT( "SmallBlockAllocator                        : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time2, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time2 ) );
+    OUTPUT( "SmallBlockAllocator (Single-Threaded mode) : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time3, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time3 ) );
 }
 
 // MultiThreaded
@@ -102,6 +102,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
         {
             bool timedOut;
             Thread::WaitForThread( info[ i ].m_ThreadHandle, 500 * 1000, timedOut );
+            Thread::CloseHandle( info[ i ].m_ThreadHandle );
             TEST_ASSERT( timedOut == false );
             time1 += info[ i ].m_TimeTaken;
         }
@@ -124,14 +125,15 @@ void TestSmallBlockAllocator::MultiThreaded() const
         {
             bool timedOut;
             Thread::WaitForThread( info[ i ].m_ThreadHandle, 500 * 1000, timedOut );
+            Thread::CloseHandle( info[ i ].m_ThreadHandle );
             TEST_ASSERT( timedOut == false );
             time2 += info[ i ].m_TimeTaken;
         }
     }
 
     // output
-    OUTPUT( "System (malloc)        : %2.3fs - %u allocs @ %u allocs/sec\n", time1, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time1 ) );
-    OUTPUT( "SmallBlockAllocator    : %2.3fs - %u allocs @ %u allocs/sec\n", time2, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time2 ) );
+    OUTPUT( "System (malloc)        : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time1, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time1 ) );
+    OUTPUT( "SmallBlockAllocator    : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time2, ( numAllocs * repeatCount ), (uint32_t)( float( numAllocs * repeatCount ) / time2 ) );
 }
 
 // GetRandomAllocSizes

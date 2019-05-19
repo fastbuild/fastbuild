@@ -19,7 +19,7 @@ class LinkerNode : public FileNode
 public:
     explicit LinkerNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~LinkerNode();
+    virtual ~LinkerNode() override;
 
     enum Flag
     {
@@ -49,7 +49,7 @@ protected:
 
     virtual BuildResult DoBuild( Job * job ) override;
 
-    void DoPreLinkCleanup() const;
+    bool DoPreLinkCleanup() const;
 
     bool BuildArgs( Args & fullArgs ) const;
     void GetInputFiles( Args & fullArgs, const AString & pre, const AString & post ) const;
@@ -96,12 +96,14 @@ protected:
     AString             m_LinkerStampExe;
     AString             m_LinkerStampExeArgs;
     Array< AString >    m_PreBuildDependencyNames;
+    Array< AString >    m_Environment;
 
     // Internal State
     uint32_t            m_Flags                         = 0;
     uint32_t            m_AssemblyResourcesStartIndex   = 0;
     uint32_t            m_AssemblyResourcesNum          = 0;
     AString             m_ImportLibName;
+    mutable const char * m_EnvironmentString            = nullptr;
 };
 
 //------------------------------------------------------------------------------

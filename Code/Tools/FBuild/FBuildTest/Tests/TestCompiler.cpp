@@ -148,7 +148,7 @@ void TestCompiler::BuildCompiler_Implicit_NoRebuild() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
 }
 
 // BuildCompiler_Implicit_BFFChange
@@ -169,7 +169,7 @@ void TestCompiler::BuildCompiler_Implicit_BFFChange() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE );
+    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
 }
 
 // ConflictingFiles1

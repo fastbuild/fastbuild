@@ -25,7 +25,6 @@ Library( "Unity-Compiled" )
     #if __WINDOWS__
         .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestUnity/PrecompiledHeader.cpp"
         .PCHOutputFile              = "$Out$/Test/Unity/PrecompiledHeader.pch"
-        .PCHOptions                 = '%1 /Fo%2.obj /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /W4 /WX /c'
     #endif
     #if __LINUX__
         .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestUnity/PrecompiledHeader.h"
@@ -44,6 +43,7 @@ Library( "Unity-Compiled" )
     #if __WINDOWS__
         .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
                             + ' /I"Tools/FBuild/FBuildTest/Data/TestUnity"'
+        .PCHOptions         + ' /I"Tools/FBuild/FBuildTest/Data/TestUnity"'
     #endif
     #if __LINUX__
         .CompilerOptions    + ' -Winvalid-pch -H'

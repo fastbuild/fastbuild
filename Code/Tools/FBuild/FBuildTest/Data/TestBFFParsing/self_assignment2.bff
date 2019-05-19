@@ -1,0 +1,18 @@
+
+.ExpectedValue = 'String'
+
+.ConfigA = [ .Config = .ExpectedValue ]
+.ConfigList = {}
+{
+    Using( .ConfigA )
+    .ConfigB  = [ .Config = .Config ] // Ensure struct member is created even though it shadows parent var
+    ^ConfigList  + .ConfigB
+}
+ForEach( .C in .ConfigList )
+{
+    Using( .C )
+    If ( .Config != .ExpectedValue )
+    {
+        Error( 'FAILED' )
+    }
+}

@@ -12,7 +12,7 @@ class FunctionPrint : public Function
 {
 public:
     explicit        FunctionPrint();
-    inline virtual ~FunctionPrint() = default;
+    inline virtual ~FunctionPrint() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

@@ -2,34 +2,23 @@
 //------------------------------------------------------------------------------
 
 // Windows SDK version is chosen automatically depending on the Visual Studio version
-#if USING_VS2017
-    // 2017 uses Windows 10 SDK
-    #define USING_WINDOWS10_SDK
+#if USING_VS2013
+    // 2013 uses Windows 8.1 SDK
+    #define USING_WINDOWS81_SDK
 #else
-    #if USING_VS2015
-        // 2015 uses Windows 10 SDK
-        #define USING_WINDOWS10_SDK
-    #else
-        #if USING_VS2013
-            // 2013 uses Windows 8.1 SDK
-            #define USING_WINDOWS81_SDK
-        #else
-            #error Neither USING_VS2013, USING_VS2015 nor USING_VS2017 was defined
-        #endif
-    #endif
+    // 2015 and newer uses Windows 10 SDK
+    #define USING_WINDOWS10_SDK
 #endif
 
 // Activate
 //------------------------------------------------------------------------------
 #if USING_WINDOWS81_SDK
     #include "Windows81SDK.bff"
-    .WindowsSDK_X86             = .Windows81_SDK_X86
     .WindowsSDK_X64             = .Windows81_SDK_X64
     Alias( 'ResourceCompiler' ) { .Targets = 'ResourceCompiler-Windows81' }
 #endif
 #if USING_WINDOWS10_SDK
     #include "Windows10SDK.bff"
-    .WindowsSDK_X86             = .Windows10_SDK_X86
     .WindowsSDK_X64             = .Windows10_SDK_X64
     Alias( 'ResourceCompiler' ) { .Targets = 'ResourceCompiler-Windows10' }
 #endif
@@ -38,7 +27,7 @@
 //--------------------------------------------------------------------------
 {
     // Common
-    .ProjectBasePath                = '../External/SDK/Windows/'
+    .ProjectBasePath                = '$_CURRENT_BFF_DIR_$/'
     .ProjectInputPaths              = .ProjectBasePath
     .ProjectAllowedFileExtensions   = '*.bff'
 
@@ -46,7 +35,7 @@
         // Visual Studio
         VCXProject( 'Windows-proj' )
         {
-            .ProjectOutput                  = '../tmp/VisualStudio/Projects/Windows.vcxproj'
+            .ProjectOutput                  = '$_CURRENT_BFF_DIR_$/../../../tmp/VisualStudio/Projects/Windows.vcxproj'
             .PlatformToolset                = .VS_PlatformToolset
     
             .ProjectX64Debug                = [ .Platform = 'x64' .Config = 'x64-Debug' ]

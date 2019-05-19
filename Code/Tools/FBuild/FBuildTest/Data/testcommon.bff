@@ -1,135 +1,56 @@
 //
 // Functionality commmon to multiple tests
 //
+#define BUILDING_FROM_TESTS // Control some behavior in shared bff files
 
 //==============================================================================
 // Visual Studio
 //==============================================================================
-#include  "../../../../../External/SDK/VisualStudio/VisualStudio.bff"
-#include  "../../../../../External/SDK/Windows/Windows.bff"
+#include "../../../../../External/SDK/GCC/GCC.bff"
+#include "../../../../../External/SDK/VisualStudio/VisualStudio.bff"
+#include "../../../../../External/SDK/Clang/Clang.bff"
+#include "../../../../../External/SDK/Windows/Windows.bff"
 
-.VisualStudioBase =
-[
-    .BaseCompilerOptions= ' "%1" /Fo"%2" /c /Z7 /W4 /WX /nologo'
-                        + ' /D"WIN32_LEAN_AND_MEAN" /D_WIN32 /DWIN32 /D__WINDOWS__'
-                        + ' /D"_CRT_SECURE_NO_WARNINGS"' // don't warn about unsafe functions
-                        + ' /D"_WINSOCK_DEPRECATED_NO_WARNINGS"' // don't warn about deprecated winsock functions
-
-    .CompilerOptionsC   = .BaseCompilerOptions
-    .CompilerOptions    = .BaseCompilerOptions
-
-    .LibrarianOptions   = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1"'
-    .LinkerOptions      = '/NODEFAULTLIB /WX /NOLOGO /OUT:"%2" "%1" /DEBUG'
-]
-.VisualStudioToolChain_X86  = .VisualStudioBase
-                            + .ToolChain_VS_Windows_X86
-                            + .WindowsSDK_X86
-.VisualStudioToolChain_X64  = .VisualStudioBase
-                            + .ToolChain_VS_Windows_X64
-                            + .WindowsSDK_X64
-.VisualStudioOptionsDebug =
-[
-    .Defines            = ' /DDEBUG /D_DEBUG'
-]
-
-//==============================================================================
-// Clang
-//==============================================================================
-.ClangPath              = '../External/SDK/ClangForWindows/3.4' // TODO:B Make this use the same config as fbuild itself
-//.ClangPath            = 'C:\Program Files (x86)\LLVM'
-.WindowsClangToolChain =
-[
-    .Compiler           = 'Compiler-ClangForWindows-Dist'
-    Compiler( 'Compiler-ClangForWindows-Dist' )
-    {
-        .Executable     = '$ClangPath$/bin/clang++.exe'
-    }
-    .CompilerOptions    = '-c -g %1 -o "%2" -integrated-as'
-                        + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
-                        + ' -Wextra'                        // additional warnings
-]
+#if __WINDOWS__
+    .VisualStudioToolChain_X64  = .ToolChain_VS_Windows_X64
+                                + .WindowsSDK_X64
+#endif
 
 //==============================================================================
 // Linux GCC
 //==============================================================================
-.LinuxGCCToolChain =
-[
-    .Compiler           = 'Compiler-GCC-Dist'
-    Compiler( 'Compiler-GCC-Dist' )
-    {
-        .Executable     = '/usr/bin/gcc'
-        .ExtraFiles     = {
-                            '/usr/bin/as'
-                            '/usr/lib/gcc/x86_64-linux-gnu/4.9/cc1plus'
-                          }
-    }
-    .CompilerDist       = 'Compiler-GCC-Dist'
-    .Librarian          = '/usr/bin/ar'
-    .Linker             = '/usr/bin/g++'
+#if __LINUX__
+    .LinuxGCCToolChain =
+    [
+        Using( .ToolChain_GCC_Linux )
 
-    .BaseCompilerOptions= ' -o "%2" "%1" -c -g'
-                        + ' -I./'
-                        + ' -D__LINUX__'
-                        + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
-                        + ' -Wextra'                        // additional warnings
-                        + ' -ffreestanding'                 // prevent extra magic includes like stdc-predefs.h
-
-    .CompilerOptionsC   = .BaseCompilerOptions
-    .CompilerOptions    = .BaseCompilerOptions
-                        + ' -std=c++11'                     // allow C++11 features
-                        + ' -Wno-invalid-offsetof'          // allow offset of members in non-POD types
-    .PCHOptions         = '-x c++-header'
-                        + .BaseCompilerOptions
-                        + ' -std=c++11'                     // allow C++11 features
-                        + ' -Wno-invalid-offsetof'          // allow offset of members in non-POD types
-
-    .LinkerOptions      = '"%1" -o "%2"'
-
-    .LibrarianOptions   = 'rcs "%2" "%1"'
-]
+        // TODO: Move this to ToolChain
+        .PCHOptions         = '-x c++-header'
+                            + .CompilerOptions
+                            + ' -std=c++11'                     // allow C++11 features
+                            + ' -Wno-invalid-offsetof'          // allow offset of members in non-POD types
+    ]
+#endif
 
 //==============================================================================
 // OSX Clang
 //==============================================================================
-.OSXClangToolChain =
-[
-    .Compiler           = 'Compiler-Clang-Dist'
-    Compiler( 'Compiler-Clang-Dist' )
-    {
-        .Executable     = '/usr/bin/clang++'
-    }
-    .CompilerDist       = 'Compiler-Clang-Dist'
-    .Librarian          = '/usr/bin/ar'
-    .Linker             = '/usr/bin/g++'
+#if__OSX__
+    .OSXClangToolChain =
+    [
+        Using( .ToolChain_Clang_OSX )
 
-    .BaseCompilerOptions= ' -o "%2" "%1" -c -g'
-                        + ' -I./'
-                        + ' -D__APPLE__'
-                        + ' -D__OSX__'
-                        + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
-                        + ' -Wno-#pragma-messages'
-
-                        // Fires on our new/delete operator (Clang bug?)
-                        + ' -Wno-implicit-exception-spec-mismatch' // function previously declared with an explicit exception specification redeclared with an implicit exception specification [-Wimplicit-exception-spec-mismatch]
-
-    .CompilerOptionsC   = ' -x c'
-                        + .BaseCompilerOptions
-    .CompilerOptions    = ' -x c++'
-                        + .BaseCompilerOptions
-                        + ' -std=c++11'                     // allow C++11 features
-    .PCHOptions         = ' -x c++-header'
-                        + .BaseCompilerOptions
-                        + ' -std=c++11'
-
-    .LinkerOptions      = '"%1" -o "%2"'
-
-    .LibrarianOptions   = 'rcs "%2" "%1"'
-]
+        // TODO: Move this to ToolChain
+        .PCHOptions         = ' -x c++-header'
+                            + .CommonCompilerOptions
+                            + ' -std=c++11'
+    ]
+#endif
 
 //==============================================================================
 // Standard Environment
 //==============================================================================
-.StandardOutputBase         = '../tmp'
+.StandardOutputBase         = '$_CURRENT_BFF_DIR_$/../../../../../tmp'
 .StandardEnvironment =
 [
     #if __WINDOWS__
@@ -138,7 +59,7 @@
                                 'TMP=$TMP$',
                                 'SystemRoot=C:\Windows' }
         .CachePath          = '$TMP$\.fbuild.cache'
-        Using( .VisualStudioToolChain_X86 )
+        Using( .VisualStudioToolChain_X64 )
     #endif
     #if __LINUX__
         .CachePath          = '/tmp/.fbuild.cache'

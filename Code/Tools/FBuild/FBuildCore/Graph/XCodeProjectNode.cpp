@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "XCodeProjectNode.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -15,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/XCodeProjectGenerator.h"
 
+#include "Core/Env/Env.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
@@ -220,10 +219,43 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     }
 
     // Generate project.pbxproj file
-    const AString & output = g.Generate();
-    if ( ProjectGeneratorBase::WriteIfDifferent( "XCodeProj", output, m_Name ) == false )
     {
-        return Node::NODE_RESULT_FAILED; // WriteIfDifferent will have emitted an error
+        const AString & output = g.GeneratePBXProj();
+        if ( ProjectGeneratorBase::WriteIfDifferent( "XCodeProj", output, m_Name ) == false )
+        {
+            return Node::NODE_RESULT_FAILED; // WriteIfDifferent will have emitted an error
+        }
+    }
+
+    // Generate user-specific xcschememanagement.plist
+    {
+        // Get folder containing project.pbxproj
+        const char * projectFolderSlash = m_Name.FindLast( NATIVE_SLASH );
+        ASSERT( projectFolderSlash );
+        const AStackString<> folder( m_Name.Get(), projectFolderSlash );
+
+        // Get the user name
+        AStackString<> userName;
+        if ( Env::GetLocalUserName( userName ) == false )
+        {
+            FLOG_ERROR( "Failed to determine username for '%s'", m_Name.Get() );
+            return Node::NODE_RESULT_FAILED;
+        }
+
+        // Create the plist
+        const AString & output = g.GenerateUserSchemeMangementPList();
+
+        // Write to disk if different
+        AStackString<> plist;
+        #if defined( __WINDOWS__ )
+            plist.Format( "%s\\xcuserdata\\%s.xcuserdatad\\xcschemes\\xcschememanagement.plist", folder.Get(), userName.Get() );
+        #else
+            plist.Format( "%s/xcuserdata/%s.xcuserdatad/xcschemes/xcschememanagement.plist", folder.Get(), userName.Get() );
+        #endif
+        if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, plist ) == false )
+        {
+            return Node::NODE_RESULT_FAILED; // WriteIfMissing will have emitted an error
+        }
     }
 
     return Node::NODE_RESULT_OK;

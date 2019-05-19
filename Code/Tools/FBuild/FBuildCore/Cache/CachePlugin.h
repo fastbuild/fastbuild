@@ -17,15 +17,15 @@ class CachePlugin : public ICache
 {
 public:
     explicit CachePlugin( const AString & dllName );
-    virtual ~CachePlugin();
+    virtual ~CachePlugin() override;
 
-    virtual bool Init( const AString & cachePath );
-    virtual void Shutdown();
-    virtual bool Publish( const AString & cacheId, const void * data, size_t dataSize );
-    virtual bool Retrieve( const AString & cacheId, void * & data, size_t & dataSize );
-    virtual void FreeMemory( void * data, size_t dataSize );
-    virtual bool OutputInfo( bool showProgress );
-    virtual bool Trim( bool showProgress, uint32_t sizeMiB );
+    virtual bool Init( const AString & cachePath, const AString & cachePathMountPoint ) override;
+    virtual void Shutdown() override;
+    virtual bool Publish( const AString & cacheId, const void * data, size_t dataSize ) override;
+    virtual bool Retrieve( const AString & cacheId, void * & data, size_t & dataSize ) override;
+    virtual void FreeMemory( void * data, size_t dataSize ) override;
+    virtual bool OutputInfo( bool showProgress ) override;
+    virtual bool Trim( bool showProgress, uint32_t sizeMiB ) override;
 private:
     void * GetFunction( const char * friendlyName, const char * mangledName = nullptr, bool optional = false ) const;
 

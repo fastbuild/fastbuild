@@ -24,7 +24,7 @@ public:
 
     explicit UnityNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~UnityNode();
+    virtual ~UnityNode() override;
 
     static inline Node::Type GetTypeS() { return Node::UNITY_NODE; }
 
@@ -49,6 +49,8 @@ public:
         DirectoryListNode *     m_DirListOrigin;
     };
     inline const Array< FileAndOrigin > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
+
+    void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;

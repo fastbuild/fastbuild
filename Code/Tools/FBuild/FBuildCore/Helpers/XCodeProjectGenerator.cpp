@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "XCodeProjectGenerator.h"
 
 // FBuildCore
@@ -23,13 +21,16 @@ XCodeProjectGenerator::XCodeProjectGenerator() = default;
 //------------------------------------------------------------------------------
 XCodeProjectGenerator::~XCodeProjectGenerator() = default;
 
-// Generate
+// GeneratePBXProj
 //------------------------------------------------------------------------------
-const AString & XCodeProjectGenerator::Generate()
+const AString & XCodeProjectGenerator::GeneratePBXProj()
 {
     // preallocate to avoid re-allocations
     m_Tmp.SetReserved( MEGABYTE );
     m_Tmp.SetLength( 0 );
+
+    // Sort for Scheme drop down menu and Project Navigator
+    ProjectGeneratorBase::SortFilesAndFolders();
 
     WriteHeader();
     WriteFiles();
@@ -40,6 +41,38 @@ const AString & XCodeProjectGenerator::Generate()
     WriteBuildConfiguration();
     WriteConfigurationList();
     WriteFooter();
+
+    return m_Tmp;
+}
+
+// GenerateUserSchemeMangementPList
+//------------------------------------------------------------------------------
+const AString & XCodeProjectGenerator::GenerateUserSchemeMangementPList()
+{
+    // preallocate to avoid re-allocations
+    m_Tmp.SetReserved( MEGABYTE );
+    m_Tmp.SetLength( 0 );
+
+    // Header
+    m_Tmp = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+            "<plist version=\"1.0\">\n"
+            "<dict>\n"
+            "\t<key>SchemeUserState</key>\n"
+            "\t<dict>\n";
+
+    // Hide "doc" Schemes
+    m_Tmp.AppendFormat( "\t\t<key>%s-doc.xcscheme</key>\n"
+                        "\t\t<dict>\n"
+                        "\t\t\t<key>isShown</key>\n"
+                        "\t\t\t<false/>\n" // NOTE: isShown set to false
+                        "\t\t</dict>\n",
+                        m_ProjectName.Get() );
+
+    // Footer
+    m_Tmp += "\t</dict>\n"
+             "</dict>\n"
+             "</plist>\n";
 
     return m_Tmp;
 }
@@ -118,53 +151,47 @@ void XCodeProjectGenerator::WriteHeader()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteFiles()
 {
-    const uint32_t numFiles = (uint32_t)m_Files.GetSize();
-
     // Files (PBXBuildFile)
     Write( "\n" );
     Write( "/* Begin PBXBuildFile section */\n" );
-    for ( uint32_t fileIndex=0; fileIndex<numFiles; ++fileIndex )
+    for ( const File * file : m_Files )
     {
-        const File & file = m_Files[ fileIndex ];
-
         // Get just the filename part from the full path
-        const char * shortName = file.m_Name.FindLast( NATIVE_SLASH );
-        shortName = shortName ? ( shortName + 1 ) : file.m_Name.Get();
+        const char * shortName = file->m_Name.FindLast( NATIVE_SLASH );
+        shortName = shortName ? ( shortName + 1 ) : file->m_Name.Get();
 
         const char * shortFolderName = "TODO"; // TODO:
 
         Write( "\t\t1111111100000000%08X /* %s in %s */ = {isa = PBXBuildFile; fileRef = 1111111111111111%08X /* %s */; };\n",
-                    fileIndex, shortName, shortFolderName, fileIndex, shortName );
+                    file->m_SortedIndex, shortName, shortFolderName, file->m_SortedIndex, shortName );
     }
     Write( "/* End PBXBuildFile section */\n" );
 
     // Files (PBXFileReference)
     Write( "\n" );
     Write( "/* Begin PBXFileReference section */\n" );
-    for ( uint32_t fileIndex=0; fileIndex<numFiles; ++fileIndex )
+    for ( const File * file : m_Files )
     {
-        const File & file = m_Files[ fileIndex ];
-
         // Get just the filename part from the full path
-        const char * shortName = file.m_Name.FindLast( NATIVE_SLASH );
-        shortName = shortName ? ( shortName + 1 ) : file.m_Name.Get();
+        const char * shortName = file->m_Name.FindLast( NATIVE_SLASH );
+        shortName = shortName ? ( shortName + 1 ) : file->m_Name.Get();
 
         // work out file type based on extension
         // TODO: What is the definitive list of these?
         const char * lastKnownFileType = "sourcecode.cpp.cpp";
         const char * fileEncoding = " fileEncoding = 4;";
-        if ( file.m_Name.EndsWithI( ".h" ) )
+        if ( file->m_Name.EndsWithI( ".h" ) )
         {
             lastKnownFileType = "sourcecode.c.h";
         }
-        else if ( file.m_Name.EndsWithI( ".xcodeproj" ))
+        else if ( file->m_Name.EndsWithI( ".xcodeproj" ))
         {
             lastKnownFileType = "wrapper.pb-project";
             fileEncoding = "";
         }
 
         Write( "\t\t1111111111111111%08X /* %s */ = {isa = PBXFileReference;%s lastKnownFileType = %s; name = %s; path = %s; sourceTree = \"<group>\"; };\n",
-                    fileIndex, shortName, fileEncoding, lastKnownFileType, shortName, file.m_FullPath.Get() );
+                    file->m_SortedIndex, shortName, fileEncoding, lastKnownFileType, shortName, file->m_FullPath.Get() );
     }
     Write( "/* End PBXFileReference section */\n" );
 }
@@ -173,23 +200,19 @@ void XCodeProjectGenerator::WriteFiles()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteFolders()
 {
-    // TODO:B Sort folders alphabetically
-
     // Folders
     Write( "\n" );
     Write( "/* Begin PBXGroup section */\n" );
-    uint32_t folderIndex = 0;
-    for ( const Folder & folder : m_Folders )
+    for ( const Folder * folder : m_Folders )
     {
         AStackString<> pbxGroupGUID;
-        GetGUID_PBXGroup( folderIndex, pbxGroupGUID );
-        ++folderIndex;
+        GetGUID_PBXGroup( folder->m_SortedIndex, pbxGroupGUID );
 
         const char * folderName = nullptr; // root folder is unnamed
-        if ( folder.m_Path.IsEmpty() == false )
+        if ( folder->m_Path.IsEmpty() == false )
         {
-            folderName = folder.m_Path.FindLast( NATIVE_SLASH );
-            folderName = folderName ? ( folderName + 1 ) : folder.m_Path.Get();
+            folderName = folder->m_Path.FindLast( NATIVE_SLASH );
+            folderName = folderName ? ( folderName + 1 ) : folder->m_Path.Get();
         }
 
         Write( "\t\t%s /* %s */ = {\n"
@@ -198,23 +221,21 @@ void XCodeProjectGenerator::WriteFolders()
                pbxGroupGUID.Get(), folderName ? folderName : "" );
 
         // Child Files
-        for ( const uint32_t fileIndex : folder.m_Files )
+        for ( const File * file : folder->m_Files )
         {
-            const File & file = m_Files[ fileIndex ];
-            const char * shortName = file.m_Name.FindLast( NATIVE_SLASH );
-            shortName = shortName ? ( shortName + 1 ) : file.m_Name.Get();
+            const char * shortName = file->m_Name.FindLast( NATIVE_SLASH );
+            shortName = shortName ? ( shortName + 1 ) : file->m_Name.Get();
             Write( "\t\t\t\t1111111111111111%08X /* %s */,\n",
-                fileIndex, shortName );
+                   file->m_SortedIndex, shortName );
         }
 
         // Child Folders
-        for ( const uint32_t childFolderIndex : folder.m_Folders )
+        for ( const Folder * childFolder : folder->m_Folders )
         {
-            const Folder & childFolder = m_Folders[ childFolderIndex ];
-            const char * shortName = childFolder.m_Path.FindLast( NATIVE_SLASH );
-            shortName = shortName ? ( shortName + 1 ) : childFolder.m_Path.Get();
+            const char * shortName = childFolder->m_Path.FindLast( NATIVE_SLASH );
+            shortName = shortName ? ( shortName + 1 ) : childFolder->m_Path.Get();
             AStackString<> pbxGroupGUIDChild;
-            GetGUID_PBXGroup( childFolderIndex, pbxGroupGUIDChild );
+            GetGUID_PBXGroup( childFolder->m_SortedIndex, pbxGroupGUIDChild );
             Write( "\t\t\t\t%s /* %s */,\n", pbxGroupGUIDChild.Get(), shortName );
         }
 
@@ -362,18 +383,16 @@ void XCodeProjectGenerator::WritePBXSourcesBuildPhase()
            /*"\t\t\tbuildActionMask = 2147483647;\n"*/ ); // TODO: What is this for?
 
     Write( "\t\t\tfiles = (\n" );
-    for ( uint32_t fileIndex=0; fileIndex<m_Files.GetSize(); ++fileIndex )
+    for ( const File * file : m_Files )
     {
-        const File & file = m_Files[ fileIndex ];
-
         // Get just the filename part from the full path
-        const char * shortName = file.m_Name.FindLast( NATIVE_SLASH );
-        shortName = shortName ? ( shortName + 1 ) : file.m_Name.Get();
+        const char * shortName = file->m_Name.FindLast( NATIVE_SLASH );
+        shortName = shortName ? ( shortName + 1 ) : file->m_Name.Get();
 
         const char * shortFolderName = "TODO"; // TODO:
 
         Write( "\t\t\t\t1111111100000000%08x /* %s in %s */,\n",
-                    fileIndex, shortName, shortFolderName );
+               file->m_SortedIndex, shortName, shortFolderName );
     }
     Write( "\t\t\t);\n" );
 
@@ -454,7 +473,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
             // Defines
             {
                 Array< AString > defines;
-                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, true );
+                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, true, false );
                 AStackString<> definesStr;
                 ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, "\t\t\t\t\t\"", "\",\n" );
                 Write( "\t\t\t\tGCC_PREPROCESSOR_DEFINITIONS = (\n" );
@@ -474,7 +493,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
             // User Include Paths
             {
                 Array< AString > includePaths;
-                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, true );
+                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, true, false );
                 for ( AString & include : includePaths )
                 {
                     AStackString<> fullIncludePath;

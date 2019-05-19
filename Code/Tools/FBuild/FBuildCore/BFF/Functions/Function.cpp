@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Function.h"
 #include "FunctionAlias.h"
 #include "FunctionCompiler.h"
@@ -22,11 +20,11 @@
 #include "FunctionPrint.h"
 #include "FunctionRemoveDir.h"
 #include "FunctionSettings.h"
-#include "FunctionSLN.h"
 #include "FunctionTest.h"
 #include "FunctionUnity.h"
 #include "FunctionUsing.h"
 #include "FunctionVCXProject.h"
+#include "FunctionVSSolution.h"
 #include "FunctionXCodeProject.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
@@ -123,15 +121,15 @@ Function::~Function() = default;
     FNEW( FunctionForEach );
     FNEW( FunctionIf );
     FNEW( FunctionLibrary );
+    FNEW( FunctionObjectList );
     FNEW( FunctionPrint );
     FNEW( FunctionRemoveDir );
     FNEW( FunctionSettings );
-    FNEW( FunctionSLN );
     FNEW( FunctionTest );
     FNEW( FunctionUnity );
     FNEW( FunctionUsing );
     FNEW( FunctionVCXProject );
-    FNEW( FunctionObjectList );
+    FNEW( FunctionVSSolution );
     FNEW( FunctionXCodeProject );
 }
 
@@ -196,34 +194,47 @@ Function::~Function() = default;
 {
     m_AliasForFunction.Clear();
     if ( AcceptsHeader() &&
-         functionHeaderStartToken && functionHeaderStopToken &&
-         ( functionHeaderStartToken->GetDistTo( *functionHeaderStopToken ) > 1 ) )
+         functionHeaderStartToken && functionHeaderStopToken )
     {
+        ASSERT( *functionHeaderStartToken < *functionHeaderStopToken );
+
         // find opening quote
         BFFIterator start( *functionHeaderStartToken );
         ASSERT( *start == BFFParser::BFF_FUNCTION_ARGS_OPEN );
         start++;
         start.SkipWhiteSpace();
-        const char c = *start;
-        if ( ( c != '"' ) && ( c != '\'' ) )
+        BFFIterator stop( start );
+        if ( start.IsAtString() )
+        {
+            stop.SkipString();
+            ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
+            if ( start.GetDistTo( stop ) <= 1 )
+            {
+                Error::Error_1003_EmptyStringNotAllowedInHeader( start, this );
+                return false;
+            }
+
+            // store alias name for use in Commit
+            start++; // skip past opening quote
+            if ( BFFParser::PerformVariableSubstitutions( start, stop, m_AliasForFunction ) == false )
+            {
+                return false; // substitution will have emitted an error
+            }
+
+            stop++; // skip closing quote for the next check
+        }
+        else if ( NeedsHeader() )
         {
             Error::Error_1001_MissingStringStartToken( start, this );
             return false;
         }
-        BFFIterator stop( start );
-        stop.SkipString( c );
-        ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
-        if ( start.GetDistTo( stop ) <= 1 )
-        {
-            Error::Error_1003_EmptyStringNotAllowedInHeader( start, this );
-            return false;
-        }
 
-        // store alias name for use in Commit
-        start++; // skip past opening quote
-        if ( BFFParser::PerformVariableSubstitutions( start, stop, m_AliasForFunction ) == false )
+        // make sure there are no extraneous tokens
+        stop.SkipWhiteSpaceAndComments();
+        if ( *stop != BFFParser::BFF_FUNCTION_ARGS_CLOSE )
         {
-            return false; // substitution will have emitted an error
+            Error::Error_1002_MatchingClosingTokenNotFound( stop, this, BFFParser::BFF_FUNCTION_ARGS_CLOSE );
+            return false;
         }
     }
 
@@ -858,40 +869,6 @@ bool Function::GetStrings( const BFFIterator & iter, Array< AString > & strings,
     return true;
 }
 
-// GetFileNode
-//------------------------------------------------------------------------------
-bool Function::GetFileNode( NodeGraph & nodeGraph, const BFFIterator & iter, Node * & fileNode, const char * name, bool required ) const
-{
-    // get the string containing the node name
-    AStackString<> fileNodeName;
-    if ( GetString( iter, fileNodeName, name, required ) == false )
-    {
-        return false;
-    }
-
-    // handle not-present
-    if ( fileNodeName.IsEmpty() )
-    {
-        ASSERT( required == false ); // GetString should have managed required string
-        fileNode = nullptr;
-        return true;
-    }
-
-    // get/create the FileNode
-    Node * n = nodeGraph.FindNode( fileNodeName );
-    if ( n == nullptr )
-    {
-        n = nodeGraph.CreateFileNode( fileNodeName );
-    }
-    else if ( n->IsAFile() == false )
-    {
-        Error::Error_1103_NotAFile( iter, this, name, n->GetName(), n->GetType() );
-        return false;
-    }
-    fileNode = n;
-    return true;
-}
-
 // ProcessAlias
 //------------------------------------------------------------------------------
 bool Function::ProcessAlias( NodeGraph & nodeGraph, const BFFIterator & iter, Node * nodeToAlias ) const
@@ -1094,6 +1071,7 @@ bool Function::PopulateProperty( NodeGraph & nodeGraph,
             {
                 return PopulateArrayOfStructs( nodeGraph, iter, base, property, variable );
             }
+            break;
         }
         default:
         {

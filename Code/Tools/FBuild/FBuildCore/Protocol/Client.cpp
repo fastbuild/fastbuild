@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Client.h"
 
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
@@ -17,7 +15,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
 
-#include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -133,12 +131,6 @@ void Client::ThreadFunc()
             break;
         }
 
-        CheckForTimeouts();
-        if ( m_ShouldExit )
-        {
-            break;
-        }
-
         Thread::Sleep( 1 );
         if ( m_ShouldExit )
         {
@@ -222,12 +214,11 @@ void Client::LookForWorkers()
         else
         {
             DIST_INFO( " - connection: %s (OK)\n", m_WorkerList[ i ].Get() );
-            const uint32_t numJobsAvailable( JobQueue::IsValid() ? (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable() : 0 );
+            const uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
 
             ss.m_RemoteName = m_WorkerList[ i ];
             ss.m_Connection = ci; // success!
             ss.m_NumJobsAvailable = numJobsAvailable;
-            ss.m_StatusTimer.Start();
 
             // send connection msg
             Protocol::MsgConnection msg( numJobsAvailable );
@@ -252,12 +243,6 @@ void Client::CommunicateJobAvailability()
     }
 
     m_StatusUpdateTimer.Start(); // reset time
-
-    // possible for job queue to not exist yet
-    if ( !JobQueue::IsValid() )
-    {
-        return;
-    }
 
     // has status changed since we last sent it?
     uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
@@ -288,35 +273,6 @@ void Client::CommunicateJobAvailability()
             }
         }
         ++it;
-    }
-}
-
-// CheckForTimeouts
-//------------------------------------------------------------------------------
-void Client::CheckForTimeouts()
-{
-    PROFILE_FUNCTION
-
-    MutexHolder mh( m_ServerListMutex );
-
-    // update each server to know how many jobs we have now
-    const ServerState * const end = m_ServerList.End();
-    for ( ServerState * it = m_ServerList.Begin(); it != end; ++it )
-    {
-        ServerState & ss = *it;
-        MutexHolder ssMH( ss.m_Mutex );
-        if ( ss.m_Connection )
-        {
-            if ( ss.m_StatusTimer.GetElapsedMS() >= Protocol::SERVER_STATUS_TIMEOUT_MS )
-            {
-                DIST_INFO( "Timed out: %s\n", ss.m_RemoteName.Get() );
-                Disconnect( ss.m_Connection );
-            }
-        }
-        else
-        {
-            ASSERT( ss.m_Jobs.IsEmpty() );
-        }
     }
 }
 
@@ -414,12 +370,6 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
             Process( connection, msg );
             break;
         }
-        case Protocol::MSG_SERVER_STATUS:
-        {
-            const Protocol::MsgServerStatus * msg = static_cast< const Protocol::MsgServerStatus * >( imsg );
-            Process( connection, msg );
-            break;
-        }
         default:
         {
             // unknown message type
@@ -441,11 +391,6 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
 void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequestJob * )
 {
     PROFILE_SECTION( "MsgRequestJob" )
-
-    if ( JobQueue::IsValid() == false )
-    {
-        return;
-    }
 
     ServerState * ss = (ServerState *)connection->GetUserData();
     ASSERT( ss );
@@ -626,7 +571,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             job->OnSystemError();
 
             // debugging message
-            const size_t workerIndex = ( ss - m_ServerList.Begin() );
+            const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
             const AString & workerName = m_WorkerList[ workerIndex ];
             DIST_INFO( "Remote System Failure!\n"
                        " - Blacklisted Worker: %s\n"
@@ -740,22 +685,6 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     resultMsg.Send( connection, ms );
 }
 
-// Process ( MsgServerStatus )
-//------------------------------------------------------------------------------
-void Client::Process( const ConnectionInfo * connection, const Protocol::MsgServerStatus * msg )
-{
-    PROFILE_SECTION( "MsgServerStatus" )
-
-    (void)msg;
-
-    // find server
-    ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    MutexHolder mh( ss->m_Mutex );
-    ss->m_StatusTimer.Start();
-}
-
 // FindManifest
 //------------------------------------------------------------------------------
 const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const
@@ -797,7 +726,7 @@ bool Client::WriteFileToDisk( const AString & fileName, const char * data, const
 
         if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
         {
-            FLOG_ERROR( "Failed to create file '%s' (Err: %u)", fileName.Get(), Env::GetLastErr() );
+            FLOG_ERROR( "Failed to create file. Error: %s File: '%s'", LAST_ERROR_STR, fileName.Get() );
             return false;
         }
     }
@@ -805,7 +734,7 @@ bool Client::WriteFileToDisk( const AString & fileName, const char * data, const
     // Write the contents
     if ( fs.WriteBuffer( data, dataSize ) != dataSize )
     {
-        FLOG_ERROR( "Failed to write file '%s' (Err: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "Failed to write file. Error: %s File: '%s'", LAST_ERROR_STR, fileName.Get() );
         return false;
     }
 

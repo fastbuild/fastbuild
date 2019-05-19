@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 // FBuildCore
 #include "ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -16,12 +14,15 @@
 
 // Core
 #include "Core/Containers/AutoPtr.h"
-#include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
+#include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
 // system
 #include <stdarg.h> // for va_args
+#include <string.h> // for memcmp
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -29,17 +30,31 @@ ProjectGeneratorBase::ProjectGeneratorBase()
     : m_Folders( 128, true )
     , m_Files( 4096, true )
 {
-    Folder rootFolder;
-    m_Folders.Append( rootFolder );
+    m_RootFolder = FNEW( Folder );
+    m_Folders.Append( m_RootFolder );
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-ProjectGeneratorBase::~ProjectGeneratorBase() = default;
+ProjectGeneratorBase::~ProjectGeneratorBase()
+{
+    for ( File * file : m_Files )
+    {
+        FDELETE file;
+    }
+    for ( Folder * folder : m_Folders )
+    {
+        FDELETE folder;
+    }
+}
 
-// GetProjectRelativePath
+// GetProjectRelativePath_Deprecated
 //------------------------------------------------------------------------------
-void ProjectGeneratorBase::GetProjectRelativePath( const AString & fileName, AString & shortFileName ) const
+//
+// This function assumes that projects are in sub-directories relative to the base path
+// which isn't always the case
+//
+void ProjectGeneratorBase::GetProjectRelativePath_Deprecated( const AString & fileName, AString & shortFileName ) const
 {
     // Find the best (longest) matching Base Path
     const AString * bestPath = &AString::GetEmpty();
@@ -61,40 +76,61 @@ void ProjectGeneratorBase::GetProjectRelativePath( const AString & fileName, ASt
     shortFileName = fileName.Get() + bestPath->GetLength();
 }
 
-// GetFolderIndexFor
+// GetFolderFor
 //------------------------------------------------------------------------------
-uint32_t ProjectGeneratorBase::GetFolderIndexFor( const AString & path )
+ProjectGeneratorBase::Folder * ProjectGeneratorBase::GetFolderFor( const AString & path )
 {
     // Get the path exluding the file file or dir
     const char * lastSlash = path.FindLast( NATIVE_SLASH );
     if ( ( lastSlash == nullptr ) || ( lastSlash == path.Get() ) )
     {
-        return 0; // no sub-path: put it in the root
+        return m_RootFolder; // no sub-path: put it in the root
     }
 
     // Search for existing folder
     AStackString<> folderPath( path.Get(), lastSlash );
-    for ( const Folder& folder : m_Folders )
+    for ( Folder * folder : m_Folders )
     {
-        if ( folder.m_Path == folderPath )
+        if ( folder->m_Path == folderPath )
         {
-            return (uint32_t)( &folder - m_Folders.Begin() ); // Found existing
+            return folder; // Found existing
         }
     }
 
     // Add new folder(s) recursively
-    const uint32_t parentFolderIndex = GetFolderIndexFor( folderPath );
+    Folder * parentFolder = GetFolderFor( folderPath );
 
     // Create new folder
-    Folder f;
-    f.m_Path = folderPath;
-    m_Folders.Append( f );
-    const uint32_t folderIndex = (uint32_t)( m_Folders.GetSize() - 1 );
+    Folder * newFolder = FNEW( Folder );
+    newFolder->m_Path = folderPath;
+    m_Folders.Append( newFolder );
 
     // Add to parent folder
-    m_Folders[ parentFolderIndex ].m_Folders.Append( folderIndex );
+    parentFolder->m_Folders.Append( newFolder );
 
-    return folderIndex;
+    return newFolder;
+}
+
+// SortFilesAndFolders
+//------------------------------------------------------------------------------
+void  ProjectGeneratorBase::SortFilesAndFolders()
+{
+    // Sort files and bake final indices
+    m_Files.SortDeref();
+    for ( uint32_t index = 0; index < m_Files.GetSize(); ++index )
+    {
+        m_Files[ index ]->m_SortedIndex = index;
+    }
+
+    // Sort folders and bake final indices
+    m_Folders.SortDeref();
+    for ( uint32_t index = 0; index < m_Folders.GetSize(); ++index )
+    {
+        m_Folders[ index ]->m_SortedIndex = index;
+
+        // Sort child folders as well
+        m_Folders[ index ]->m_Folders.SortDeref();
+    }
 }
 
 // AddFile
@@ -103,21 +139,20 @@ void ProjectGeneratorBase::AddFile( const AString & fileName )
 {
     // Handle BasePath
     AStackString<> shortFileName;
-    GetProjectRelativePath( fileName, shortFileName );
+    GetProjectRelativePath_Deprecated( fileName, shortFileName );
 
     // Find existing folder
-    const uint32_t folderIndex = GetFolderIndexFor( shortFileName );
+    Folder * folder = GetFolderFor( shortFileName );
 
     // Add file
-    File file;
-    file.m_Name = shortFileName;
-    file.m_FullPath = fileName;
-    file.m_FolderIndex = folderIndex;
-    m_Files.Append( file );
-    const uint32_t fileIndex = (uint32_t)( m_Files.GetSize() - 1 );
+    File * newFile = FNEW( File );
+    newFile->m_Name = shortFileName;
+    newFile->m_FullPath = fileName;
+    newFile->m_Folder = folder;
+    m_Files.Append( newFile );
 
     // Add file to folder
-    m_Folders[ folderIndex ].m_Files.Append( fileIndex );
+    folder->m_Files.Append( newFile );
 }
 
 // Write
@@ -200,13 +235,33 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
         return true; // nothing to do.
     }
 
+    return WriteToDisk( generatorId, content, fileName ); // WriteToDisk will emit error if needed
+}
+
+// WriteIfMissing
+//------------------------------------------------------------------------------
+/*static*/ bool ProjectGeneratorBase::WriteIfMissing( const char * generatorId, const AString & content, const AString & fileName )
+{
+    // Do nothing if the file already exists
+    if ( FileIO::FileExists( fileName.Get() ) )
+    {
+        return true;
+    }
+
+    return WriteToDisk( generatorId, content, fileName ); // WriteToDisk will emit error if needed
+}
+
+// WriteToDisk
+//------------------------------------------------------------------------------
+/*static*/ bool ProjectGeneratorBase::WriteToDisk( const char * generatorId, const AString & content, const AString & fileName )
+{
     FLOG_BUILD( "%s: %s\n", generatorId, fileName.Get() );
 
     // ensure path exists (normally handled by framework, but Projects
     // are not necessarily a single file)
     if ( Node::EnsurePathExistsForFile( fileName ) == false )
     {
-        FLOG_ERROR( "%s - Invalid path for '%s' (error: %u)", generatorId, fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "%s - Invalid path. Error: %s Target: '%s'", generatorId, LAST_ERROR_STR, fileName.Get() );
         return false;
     }
 
@@ -214,12 +269,12 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
     FileStream f;
     if ( !f.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
     {
-        FLOG_ERROR( "%s - Failed to open '%s' for write (error: %u)", generatorId, fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "%s - Failed to open file for write. Error: %s Target: '%s'", generatorId, LAST_ERROR_STR, fileName.Get() );
         return false;
     }
     if ( f.Write( content.Get(), content.GetLength() ) != content.GetLength() )
     {
-        FLOG_ERROR( "%s - Error writing to '%s' (error: %u)", generatorId, fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "%s - Error writing file. Error: %s Target: '%s'", generatorId, LAST_ERROR_STR, fileName.Get() );
         return false;
     }
     f.Close();
@@ -343,7 +398,8 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
                                                                   const char * option,
                                                                   const char * alternateOption,
                                                                   Array< AString > & outOptions,
-                                                                  bool escapeQuotes )
+                                                                  bool escapeQuotes,
+                                                                  bool keepFullOption )
 {
     ASSERT( option );
     Array< AString > tokens;
@@ -378,13 +434,27 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
         }
         else if ( token.BeginsWith( option ) )
         {
-            // use everything after token
-            optionBody.Assign( token.Get() + optionLen );
+            if ( keepFullOption )
+            {
+                optionBody = token;
+            }
+            else
+            {
+                // use everything after token
+                optionBody.Assign( token.Get() + optionLen );
+            }
         }
         else if ( alternateOption && token.BeginsWith( alternateOption ) )
         {
-            // use everything after token
-            optionBody.Assign( token.Get() + alternateOptionLen );
+            if ( keepFullOption )
+            {
+                optionBody = token;
+            }
+            else
+            {
+                // use everything after token
+                optionBody.Assign( token.Get() + alternateOptionLen );
+            }
         }
 
         // Strip quotes around body (e.g. -I"Folder/Folder")
@@ -424,6 +494,26 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
             outTokenString += postToken;
         }
     }
+}
+
+// GetRelativePath
+//------------------------------------------------------------------------------
+/*static*/ void ProjectGeneratorBase::GetRelativePath( const AString & basePath,
+                                                       const AString & fileName,
+                                                       AString & outRelativeFileName )
+{
+    AStackString<> cleanFileName;
+    #if !defined( __WINDOWS__ )
+        // Normally we keep all paths with native slashes, but in this case we
+        // have windows slashes, so convert to native for the relative check
+        AStackString<> pathCopy( fileName );
+        pathCopy.Replace( '\\', '/' );
+        NodeGraph::CleanPath( pathCopy, cleanFileName );
+    #else
+        NodeGraph::CleanPath( fileName, cleanFileName );
+    #endif
+
+    PathUtils::GetRelativePath( basePath, cleanFileName, outRelativeFileName );
 }
 
 //------------------------------------------------------------------------------

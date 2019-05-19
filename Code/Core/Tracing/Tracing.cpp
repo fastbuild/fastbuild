@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Tracing.h"
 #include "Core/Env/Assert.h"
 
@@ -15,7 +13,7 @@
 #include <stdarg.h>
 #if defined( __WINDOWS__ )
     #ifdef DEBUG
-        #include <windows.h> // for OutputDebugStringA
+        #include "Core/Env/WindowsHeader.h" // for OutputDebugStringA
     #endif
 #endif
 
@@ -102,8 +100,6 @@
 //------------------------------------------------------------------------------
 /*static*/ void Tracing::Output( const char * message )
 {
-    PROFILE_FUNCTION
-
     // pass through callback if there is one
     for ( auto cb : s_CallbacksOutput )
     {
