@@ -220,7 +220,6 @@ void Client::LookForWorkers()
             ss.m_RemoteName = m_WorkerList[ i ];
             ss.m_Connection = ci; // success!
             ss.m_NumJobsAvailable = numJobsAvailable;
-            ss.m_StatusTimer.Start();
 
             // send connection msg
             Protocol::MsgConnection msg( numJobsAvailable );
@@ -756,7 +755,6 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgServ
     if (ss != nullptr)
     {
         MutexHolder mh( ss->m_Mutex );
-        ss->m_StatusTimer.Start();
     }
 }
 
