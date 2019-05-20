@@ -49,6 +49,8 @@ namespace Protocol
         MSG_REQUEST_FILE        = 9, // Server -> Client : Ask client for a file
         MSG_FILE                = 10,// Server <- Client : Send a requested file
 
+        MSG_SERVER_STATUS       = 11,// Server -> Client : Send status / keep connection alive
+
         NUM_MESSAGES            // leave last
     };
 };
