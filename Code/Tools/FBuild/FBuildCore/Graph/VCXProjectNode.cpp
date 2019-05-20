@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "VCXProjectNode.h"
 
 #include "Tools/FBuild/FBuildCore/Error.h"
@@ -18,7 +16,7 @@
 
 // Core
 #include "Core/Containers/AutoPtr.h"
-#include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -317,7 +315,7 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
     // is not a "file" node)
     if ( EnsurePathExistsForFile( fileName ) == false )
     {
-        FLOG_ERROR( "VCXProject - Invalid path for '%s' (error: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "VCXProject - Invalid path. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
         return false;
     }
 
@@ -325,12 +323,12 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
     FileStream f;
     if ( !f.Open( fileName.Get(), FileStream::WRITE_ONLY ) )
     {
-        FLOG_ERROR( "VCXProject - Failed to open '%s' for write (error: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "VCXProject - Failed to open file. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
         return false;
     }
     if ( f.Write( content.Get(), content.GetLength() ) != content.GetLength() )
     {
-        FLOG_ERROR( "VCXProject - Error writing to '%s' (error: %u)", fileName.Get(), Env::GetLastErr() );
+        FLOG_ERROR( "VCXProject - Error writing file. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
         return false;
     }
     f.Close();

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="common.js"></script>
 
 <html>
 <head>
@@ -8,8 +7,22 @@
 <title>FASTBuild - Syntax Guide</title>
 </head>
 <body>
-  <script>generateHeader()</script>
-
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
 
 <h1>Syntax Guide</h1>
 
@@ -30,7 +43,7 @@ Details of the FASTBuild configuration file syntax can be grouped into 4 categor
 <b>Directives</b>
 <ul>
   <li><a href='#define'>#define / #undef</a></li>
-  <li><a href='#if'>#if / #endif</a></li>
+  <li><a href='#if'>#if / #else / #endif</a></li>
   <li><a href='#import'>#import</a></li>
   <li><a href='#include'>#include</a></li>
   <li><a href='#once'>#once</a></li>
@@ -120,20 +133,25 @@ Examples:
  </div>
 
     <div class='newsitemheader' id='if'>
-      #if / #endif
+      #if / #else / #endif
     </div>
     <div class='newsitembody'>
 <p>
-The #if / #endif directive pair allows parts of a bff configuration file to be applied conditionally,
-depending on previous #define declarations. The #if directive can be negated using the ! operator.
-<br>
+#if / #else / #endif directives allow parts of a bff configuration file to be applied conditionally,
+depending on previous #define declarations.
 </p>
 Examples:
-<div class='code'>#if __WINDOWS__
-	.CompilerOptions = '/c "%1" /Fo"%2"' 
+<div class='code'>#if USE_MSVC
+    .CompilerOptions = '/c "%1" /Fo"%2"' 
+#else
+    .CompilerOptions = '-c "%1" -o "%2"' 
 #endif
-#if !__WINDOWS__
-	.CompilerOptions = '-c "%1" -o "%2"' 
+</div>
+<p>
+An if can be inverted with the ! operator:</p>
+Examples:
+<div class='code'>#if !__WINDOWS__
+    #define USE_CLANG
 #endif
 </div>
 <p>The following pre-defined (and reserved) symbols are available for use:</p>
@@ -219,7 +237,7 @@ Examples:
     </div>
     <div class='newsitembody'>
 <p>
-Variable declarations begin with a period followed by a contiguous block of alphanumeric characters.  Variable names are case insensitive. Four variable types are supported (String, Integer, Boolean and Array). Variable types are implied by their declaration.
+Variable declarations begin with a period followed by a contiguous block of alphanumeric characters.  Variable names are case sensitive. Four variable types are supported (String, Integer, Boolean and Array). Variable types are implied by their declaration.
 </p>
 Examples:
 <div class='code'>.MyString = "hello"
@@ -469,6 +487,6 @@ properties they can be used on).  For details, see the <a href='functions.html'>
 </div>
 
 
-  <script>generateFooter()</script>
+    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
 </body>
 </html>

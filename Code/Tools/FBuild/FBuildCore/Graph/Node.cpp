@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Node.h"
 #include "FileNode.h"
 
@@ -42,10 +40,12 @@
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/CRC32.h"
+#include "Core/Process/Mutex.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Strings/AStackString.h"
@@ -79,6 +79,7 @@
     "XCodeProj",
     "Settings",
 };
+static Mutex g_NodeEnvStringMutex;
 
 // Custom MetaData
 //------------------------------------------------------------------------------
@@ -127,6 +128,7 @@ Node::Node( const AString & name, Type type, uint32_t controlFlags )
     , m_ProcessingTime( 0 )
     , m_ProgressAccumulator( 0 )
     , m_Index( INVALID_NODE_INDEX )
+    , m_Hidden( false )
 {
     SetName( name );
 
@@ -359,8 +361,13 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
         case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
         case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
         case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
-        default:                        ASSERT( false ); return nullptr;
     }
+
+    #if defined( __GNUC__ ) || defined( _MSC_VER )
+        // GCC and incorrectly reports reaching end of non-void function (as of GCC 7.3.0)
+        // MSVC incorrectly reports reaching end of non-void function (as of VS 2017)
+        return nullptr;
+    #endif
 }
 
 // Load
@@ -1091,6 +1098,34 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFItera
     }
 
     return true;
+}
+
+// GetEnvironmentString
+//------------------------------------------------------------------------------
+/*static*/ const char * Node::GetEnvironmentString( const Array< AString > & envVars,
+                                                    const char * & inoutCachedEnvString )
+{
+    // If we've previously built a custom env string, use it
+    if ( inoutCachedEnvString )
+    {
+        return inoutCachedEnvString;
+    }
+
+    // Do we need a custom env string?
+    if ( envVars.IsEmpty() )
+    {
+        // No - return build-wide environment
+        return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
+    }
+
+    // More than one caller could be retrieving the same env string
+    // in some cases. For simplicity, we protect in all cases even
+    // if we could avoid it as the mutex will not be heavily constested.
+    MutexHolder mh( g_NodeEnvStringMutex );
+
+    // Caller owns thr memory
+    inoutCachedEnvString = Env::AllocEnvironmentString( envVars );
+    return inoutCachedEnvString;
 }
 
 //------------------------------------------------------------------------------

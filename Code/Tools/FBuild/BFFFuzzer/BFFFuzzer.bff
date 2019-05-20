@@ -1,17 +1,21 @@
 // BFFFuzzer
 //------------------------------------------------------------------------------
+#if __LINUX__
 {
     .ProjectName        = 'BFFFuzzer'
     .ProjectPath        = 'Tools\FBuild\BFFFuzzer'
 
     // Executable
     //--------------------------------------------------------------------------
-    // These options are a valid for Clang < 6.0.0:
-    .ExtraLinkerOptions_ASan = ' -lFuzzer'
-    .ExtraLinkerOptions_MSan = ' -lFuzzer -nodefaultlibs -Wl,-Bstatic -lc++ -Wl,-Bdynamic -lc++abi -lunwind -lpthread -lc -lrt -ldl -lm'
-    // These options are valid for Clang >= 6.0.0:
-    // .ExtraLinkerOptions_ASan = ' -fsanitize=fuzzer'
-    // .ExtraLinkerOptions_MSan = ' -lFuzzer -nodefaultlibs -Wl,-Bstatic -lc++ -Wl,-Bdynamic -lc++abi -lunwind -lpthread -lc -lrt -ldl -lm'
+    #if USING_CLANG_6
+        // These options are valid for Clang >= 6.0.0:
+        .ExtraLinkerOptions_ASan = ' -fsanitize=fuzzer'
+        .ExtraLinkerOptions_MSan = ' -lFuzzer -nodefaultlibs -Wl,-Bstatic -lc++ -Wl,-Bdynamic -lc++abi -lunwind -lpthread -lc -lrt -ldl -lm'
+    #else
+        // These options are a valid for Clang < 6.0.0:
+        .ExtraLinkerOptions_ASan = ' -lFuzzer'
+        .ExtraLinkerOptions_MSan = ' -lFuzzer -nodefaultlibs -Wl,-Bstatic -lc++ -Wl,-Bdynamic -lc++abi -lunwind -lpthread -lc -lrt -ldl -lm'
+    #endif
 
     .MyConfigs = { .X64ClangASanConfig_Linux , .X64ClangMSanConfig_Linux }
     ForEach( .Config in .MyConfigs )
@@ -60,11 +64,10 @@
     // Aliases
     //--------------------------------------------------------------------------
     // Per-Config
-#if __LINUX__
     Alias( '$ProjectName$-ASan' )            { .Targets = { '$ProjectName$-X64ClangLinux-ASan' } }
     Alias( '$ProjectName$-MSan' )            { .Targets = { '$ProjectName$-X64ClangLinux-MSan' } }
-#endif
 
     // Per-Platform
     Alias( '$ProjectName$-X64ClangLinux' )   { .Targets = { '$ProjectName$-X64ClangLinux-ASan' , '$ProjectName$-X64ClangLinux-MSan' } }
 }
+#endif

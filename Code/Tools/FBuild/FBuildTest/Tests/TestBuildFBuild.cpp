@@ -177,7 +177,7 @@ void TestBuildFBuild::DBSavePerformance() const
     }
 
     const float time = ( t.GetElapsed() * 1000.0f ) / 100.0f;
-    OUTPUT( "DB Save Time: %2.3f ms\n", time);
+    OUTPUT( "DB Save Time: %2.3f ms\n", (double)time );
 }
 
 //------------------------------------------------------------------------------

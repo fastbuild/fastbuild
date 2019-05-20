@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "UnityNode.h"
 #include "DirectoryListNode.h"
 
@@ -40,6 +38,7 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT( m_IsolateWritableFiles,    "UnityInputIsolateWritableFiles",       MetaOptional() )
     REFLECT( m_PrecompiledHeader,       "UnityPCH",                             MetaOptional() + MetaFile( true ) ) // relative
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Hidden,                  "Hidden",                               MetaOptional() )
 REFLECT_END( UnityNode )
 
 // CONSTRUCTOR
@@ -446,6 +445,42 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
     }
 
     return ok;
+}
+
+
+// EnumerateInputFiles
+//------------------------------------------------------------------------------
+void UnityNode::EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const
+{
+    for ( const Dependency & dep : m_StaticDependencies )
+    {
+        const Node * node = dep.GetNode();
+
+        if ( node->GetType() == Node::DIRECTORY_LIST_NODE )
+        {
+            const DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
+
+            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            for ( const FileIO::FileInfo & fi : files )
+            {
+                callback( fi.m_Name, dln->GetPath(), userData );
+            }
+        }
+        else if ( node->GetType() == Node::OBJECT_LIST_NODE )
+        {
+            const ObjectListNode * oln = node->CastTo< ObjectListNode >();
+
+            oln->EnumerateInputFiles( callback, userData );
+        }
+        else if ( node->IsAFile() )
+        {
+            callback( node->GetName(), AString::GetEmpty(), userData );
+        }
+        else
+        {
+            ASSERT( false ); // unexpected node type
+        }
+    }
 }
 
 //------------------------------------------------------------------------------

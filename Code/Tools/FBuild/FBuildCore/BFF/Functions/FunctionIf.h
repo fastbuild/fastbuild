@@ -12,7 +12,7 @@ class FunctionIf : public Function
 {
 public:
     explicit        FunctionIf();
-    inline virtual ~FunctionIf() = default;
+    inline virtual ~FunctionIf() override = default;
 
     virtual bool AcceptsHeader() const override;
     virtual bool NeedsHeader() const override;

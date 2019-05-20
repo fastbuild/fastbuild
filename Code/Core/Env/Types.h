@@ -149,4 +149,12 @@ typedef signed int          int32_t;
     #define PRAGMA_DISABLE_PUSH_CLANG( w )
     #define PRAGMA_DISABLE_POP_CLANG
 #endif
+#if defined( __WINDOWS__ ) && defined( __clang__ )
+    #define PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( w ) PRAGMA_DISABLE_PUSH_CLANG( w )
+    #define PRAGMA_DISABLE_POP_CLANG_WINDOWS PRAGMA_DISABLE_POP_CLANG
+#else
+    #define PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( w )
+    #define PRAGMA_DISABLE_POP_CLANG_WINDOWS
+#endif
+
 //------------------------------------------------------------------------------

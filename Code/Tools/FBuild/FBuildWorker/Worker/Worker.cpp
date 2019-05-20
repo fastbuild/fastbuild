@@ -4,7 +4,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    #include <winsock2.h> // this must be here to avoid windows include order problems
+    #include <WinSock2.h> // this must be here to avoid windows include order problems
 #endif
 
 #include "Worker.h"
@@ -20,6 +20,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThreadRemote.h"
 
 #include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
@@ -130,7 +131,7 @@ int Worker::Work()
         #endif
         if ( !FileIO::EnsurePathExists( tmpPath ) )
         {
-            ErrorMessage( "Failed to initialize tmp folder.  Error: 0x%x", Env::GetLastErr() );
+            ErrorMessage( "Failed to initialize tmp folder. Error: %s", LAST_ERROR_STR );
             return -2;
         }
         #if defined( __WINDOWS__ )
@@ -140,7 +141,7 @@ int Worker::Work()
         #endif
         if ( !m_TargetIncludeFolderLock.Open( tmpPath.Get(), FileStream::WRITE_ONLY ) )
         {
-            ErrorMessage( "Failed to lock tmp folder.  Error: 0x%x", Env::GetLastErr() );
+            ErrorMessage( "Failed to lock tmp folder. Error: %s", LAST_ERROR_STR );
             return -2;
         }
     }
@@ -232,6 +233,18 @@ void Worker::UpdateAvailability()
         case WorkerSettings::WHEN_IDLE:
         {
             if ( m_IdleDetection.IsIdle() == false )
+            {
+                numCPUsToUse = 0;
+            }
+            break;
+        }
+        case WorkerSettings::PROPORTIONAL:
+        {
+            if ( ( m_IdleDetection.IsIdleFloat() >= 0.0f ) && ( m_IdleDetection.IsIdleFloat() <= 1.0f ) )
+            {
+                numCPUsToUse = uint32_t(numCPUsToUse * m_IdleDetection.IsIdleFloat());
+            }
+            else
             {
                 numCPUsToUse = 0;
             }

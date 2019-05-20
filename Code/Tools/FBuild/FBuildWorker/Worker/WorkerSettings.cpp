@@ -12,13 +12,13 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Other
 //------------------------------------------------------------------------------
 #define FBUILDWORKER_SETTINGS_MIN_VERSION ( 1 )     // Oldest compatible version
-#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 2 ) // Current version
+#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 3 ) // Current version
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ void WorkerSettings::Save()
 
         // header
         ok &= ( f.Write( "FWS", 3 ) == 3 );
-        ok &= ( f.Write( uint8_t( FBUILDWORKER_SETTINGS_CURRENT_VERSION ) ) == 1 );
+        ok &= ( f.Write( uint8_t( FBUILDWORKER_SETTINGS_CURRENT_VERSION ) ) );
 
         // settings
         ok &= f.Write( (uint32_t)m_Mode );

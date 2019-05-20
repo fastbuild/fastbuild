@@ -29,7 +29,7 @@ ObjectList( 'ErrorsAreCorrectlyReported-Clang' )
 {
     // Clang
     #if __WINDOWS__
-        Using( .WindowsClangToolChain )
+        Using( .ToolChain_Clang_Windows )
     #endif
     #if __OSX__
         // TODO:B Enable test for OSX

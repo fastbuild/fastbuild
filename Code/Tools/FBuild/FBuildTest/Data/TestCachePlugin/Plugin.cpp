@@ -13,7 +13,7 @@
 #define CACHEPLUGIN_DLL_EXPORT
 #endif
 
-#include "../../../FBuildCore/Cache/CachePluginInterface.h"
+#include "Tools/FBuild/FBuildCore/Cache/CachePluginInterface.h"
 
 // CacheInit
 //------------------------------------------------------------------------------

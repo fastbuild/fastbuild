@@ -92,7 +92,7 @@ class VCXProjectNode : public FileNode
 public:
     VCXProjectNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~VCXProjectNode();
+    virtual ~VCXProjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::VCXPROJECT_NODE; }
 

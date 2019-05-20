@@ -24,7 +24,7 @@ class LibraryNode : public ObjectListNode
 public:
     LibraryNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~LibraryNode();
+    virtual ~LibraryNode() override;
 
     static inline Node::Type GetTypeS() { return Node::LIBRARY_NODE; }
 
@@ -59,10 +59,12 @@ private:
     AString             m_LibrarianOptions;
     AString             m_LibrarianOutput;
     Array< AString >    m_LibrarianAdditionalInputs;
+    Array< AString >    m_Environment;
 
     // Internal State
     uint32_t            m_NumLibrarianAdditionalInputs  = 0;
     uint32_t            m_LibrarianFlags                = 0;
+    mutable const char * m_EnvironmentString            = nullptr;
 };
 
 //------------------------------------------------------------------------------

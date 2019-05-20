@@ -19,7 +19,7 @@ public:
     // Allow only the specific type of non-file node
     explicit Meta_AllowNonFile( const Node::Type limitToType );
 
-    virtual ~Meta_AllowNonFile();
+    virtual ~Meta_AllowNonFile() override;
 
     inline bool IsLimitedToType() const { return m_LimitToTypeEnabled; }
     inline Node::Type GetLimitedType() const { return m_LimitToType; }

@@ -79,7 +79,7 @@ class SLNNode : public FileNode
 public:
     SLNNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~SLNNode();
+    virtual ~SLNNode() override;
 
     static inline Node::Type GetTypeS() { return Node::SLN_NODE; }
 

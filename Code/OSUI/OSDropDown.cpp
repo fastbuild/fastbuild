@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "OSUI/PrecompiledHeader.h"
 #include "OSDropDown.h"
 
 // OSUI
@@ -15,8 +14,8 @@
 
 // system
 #if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h" // Must be before CommCtrl
     #include <CommCtrl.h>
-    #include <Windows.h>
 #endif
 
 // Defines
@@ -49,7 +48,7 @@ void OSDropDown::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
                                   "ComboBox",
                                   CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
                                   x, y,
-                                  w, h,
+                                  (int32_t)w, (int32_t)h,
                                   (HWND)m_Parent->GetHandle(),
                                   nullptr,
                                   nullptr, // TODO: ??? m_HInstance

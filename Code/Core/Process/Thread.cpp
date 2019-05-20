@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Thread.h"
 #include "Core/Env/Assert.h"
 #include "Core/Mem/Mem.h"
@@ -12,7 +10,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 #if defined( __APPLE__ ) || defined( __LINUX__ )
     #include <errno.h>
@@ -106,7 +104,7 @@ public:
 
 //  Sleep
 //------------------------------------------------------------------------------
-/*static*/ void Thread::Sleep( int32_t ms )
+/*static*/ void Thread::Sleep( uint32_t ms )
 {
     PROFILE_FUNCTION
 
@@ -138,7 +136,7 @@ public:
                                    nullptr      // LPDWORD lpThreadId
                                  );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        #if __has_feature( address_sanitizer ) || __SANITIZE_ADDRESS__
+        #if __has_feature( address_sanitizer ) || defined( __SANITIZE_ADDRESS__ )
             // AddressSanitizer instruments objects created on the stack by inserting redzones around them.
             // This greatly increases the amount of stack space used by the program.
             // To account for that double the requested stack size for the thread.
@@ -161,11 +159,11 @@ public:
 
 // WaitForThread
 //------------------------------------------------------------------------------
-/*static*/ int Thread::WaitForThread( ThreadHandle handle )
+/*static*/ int32_t Thread::WaitForThread( ThreadHandle handle )
 {
     #if defined( __WINDOWS__ )
         bool timedOut = true; // default is true to catch cases when timedOut wasn't set by WaitForThread()
-        int ret = WaitForThread( handle, INFINITE, timedOut );
+        int32_t ret = WaitForThread( handle, INFINITE, timedOut );
 
         if ( timedOut )
         {
@@ -190,7 +188,7 @@ public:
 
 // WaitForThread
 //------------------------------------------------------------------------------
-/*static*/ int Thread::WaitForThread( ThreadHandle handle, uint32_t timeoutMS, bool & timedOut )
+/*static*/ int32_t Thread::WaitForThread( ThreadHandle handle, uint32_t timeoutMS, bool & timedOut )
 {
     #if defined( __WINDOWS__ )
         // wait for thread to finish
@@ -215,7 +213,7 @@ public:
         if ( ::GetExitCodeThread( handle, (LPDWORD)&ret ) )
         {
             timedOut = false;
-            return ret;
+            return (int32_t)ret;
         }
         ASSERT( false ); // invalid thread handle
         timedOut = false;

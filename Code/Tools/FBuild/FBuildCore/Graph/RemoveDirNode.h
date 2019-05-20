@@ -17,7 +17,7 @@ class RemoveDirNode : public Node
 public:
     explicit RemoveDirNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~RemoveDirNode();
+    virtual ~RemoveDirNode() override;
 
     static inline Node::Type GetTypeS() { return Node::REMOVE_DIR_NODE; }
     virtual bool IsAFile() const override;

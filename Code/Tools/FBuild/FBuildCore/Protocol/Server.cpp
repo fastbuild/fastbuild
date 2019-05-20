@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Server.h"
 #include "Protocol.h"
 
@@ -19,10 +17,6 @@
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
-
-// Defines
-//------------------------------------------------------------------------------
-#define SERVER_STATUS_SEND_FREQUENCY ( 1.0f )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -296,6 +290,16 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
         return;
     }
 
+    // Check for matching platform
+    if (msg->GetPlatform() != Env::GetPlatform())
+    {
+        AStackString<> remoteAddr;
+        TCPConnectionPool::GetAddressAsString( connection->GetRemoteAddress(), remoteAddr );
+        FLOG_WARN( "Disconnecting '%s' (%s) due to mismatched platform\n", remoteAddr.Get(), msg->GetHostName() );
+        Disconnect( connection );
+        return;
+    }
+
     // take note of initial status of client
     ClientState * cs = (ClientState *)connection->GetUserData();
     cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
@@ -469,12 +473,12 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
         int32_t numJobs = (int32_t)cs->m_WaitingJobs.GetSize();
         for ( int32_t i=( numJobs -1 ); i >= 0; --i )
         {
-            Job * job = cs->m_WaitingJobs[ i ];
+            Job * job = cs->m_WaitingJobs[ (size_t)i ];
             ToolManifest * manifestForThisJob = job->GetToolManifest();
             ASSERT( manifestForThisJob );
             if ( manifestForThisJob == manifest )
             {
-                cs->m_WaitingJobs.EraseIndex( i );
+                cs->m_WaitingJobs.EraseIndex( (size_t)i );
                 JobQueueRemote::Get().QueueJob( job );
                 PROTOCOL_DEBUG( "Server: Job %x can now be started\n", job );
                 #ifdef ASSERTS_ENABLED
@@ -547,8 +551,7 @@ void Server::FindNeedyClients()
         MutexHolder mh2( cs->m_Mutex );
 
         // any jobs requested or in progress reduce the available count
-        int reservedJobs = cs->m_NumJobsRequested +
-                              cs->m_NumJobsActive;
+        int32_t reservedJobs = (int32_t)( cs->m_NumJobsRequested + cs->m_NumJobsActive );
         availableJobs -= reservedJobs;
         if ( availableJobs <= 0 )
         {

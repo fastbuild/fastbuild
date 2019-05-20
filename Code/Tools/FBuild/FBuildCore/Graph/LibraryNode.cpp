@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "LibraryNode.h"
 #include "DirectoryListNode.h"
 #include "UnityNode.h"
@@ -23,6 +21,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -39,6 +38,7 @@ REFLECT_NODE_BEGIN( LibraryNode, ObjectListNode, MetaName( "LibrarianOutput" ) +
 
     REFLECT( m_NumLibrarianAdditionalInputs,    "NumLibrarianAdditionalInputs", MetaHidden() )
     REFLECT( m_LibrarianFlags,                  "LibrarianFlags",               MetaHidden() )
+    REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
 REFLECT_END( LibraryNode )
 
 // CONSTRUCTOR
@@ -104,7 +104,10 @@ LibraryNode::LibraryNode()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-LibraryNode::~LibraryNode() = default;
+LibraryNode::~LibraryNode()
+{
+    FREE( (void *)m_EnvironmentString );
+}
 
 // IsAFile
 //------------------------------------------------------------------------------
@@ -161,7 +164,7 @@ LibraryNode::~LibraryNode() = default;
     // use the exe launch dir as the working dir
     const char * workingDir = nullptr;
 
-    const char * environment = FBuild::Get().GetEnvironmentString();
+    const char * environment = Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
 
     EmitCompilationMessage( fullArgs );
 
@@ -210,7 +213,7 @@ LibraryNode::~LibraryNode() = default;
             job->ErrorPreformatted( memErr.Get() );
         }
 
-        FLOG_ERROR( "Failed to build Library (error %i) '%s'", result, GetName().Get() );
+        FLOG_ERROR( "Failed to build Library. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
     else

@@ -11,7 +11,7 @@ class FileStream : public IOStream
 {
 public:
     explicit FileStream();
-    ~FileStream();
+    virtual ~FileStream() override;
 
     enum FileMode
     {

@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -16,6 +14,9 @@
 
 // Core
 #include "Core/FileIO/PathUtils.h"
+
+// system
+#include <string.h> // for strlen - TODO:C Remove
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -138,7 +139,7 @@ bool FunctionObjectList::CheckMSVCPCHFlags( const BFFIterator & iter,
         {
             // Extract filename (and remove quotes if found)
             pchObjectName = token.Get() + 3;
-            pchObjectName.Trim( pchObjectName.BeginsWith( '"' ) ? 1 : 0, pchObjectName.EndsWith( '"' ) ? 1 : 0 );
+            pchObjectName.Trim( pchObjectName.BeginsWith( '"' ) ? 1u : 0u, pchObjectName.EndsWith( '"' ) ? 1u : 0u );
 
             // Auto-generate name?
             if ( pchObjectName == "%3" )
@@ -268,7 +269,7 @@ void FunctionObjectList::GetExtraOutputPaths( const AString & args, AString & pd
     {
         PathUtils::FixupFilePath( path );
 
-        // truncate to just the path    
+        // truncate to just the path
         const char * lastSlash = path.FindLast( NATIVE_SLASH );
         lastSlash  = lastSlash ? lastSlash : path.Get(); // no slash, means it's just a filename
         path.SetLength( uint32_t( lastSlash - path.Get() ) );
