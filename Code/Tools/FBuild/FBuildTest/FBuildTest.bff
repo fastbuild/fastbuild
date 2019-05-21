@@ -71,11 +71,9 @@
             .TestWorkingDir                 = 'Tools/FBuild/FBuildTest'
             .TestTimeOut                    = 300
             #if CI_BUILD
-                #if __WINDOWS__
-                    // Compilation on Travis's Windows nodes is significantly slower than on Linux/OSX.
-                    // So the tests need more time to complete succefully.
-                    .TestTimeOut            = 900
-                #endif
+                // Compilation on TravisCI VMs is significantly slower
+                // so the tests need more time to complete succesfully.
+                .TestTimeOut            = 900
             #endif
         }
     }
