@@ -71,6 +71,22 @@ Client::~Client()
     ShutdownAllConnections();
 
     Thread::CloseHandle( m_Thread );
+
+    MutexHolder mh( m_ServerListMutex );
+    const size_t numServers = m_ServerList.GetSize();
+    for ( size_t i=0; i<numServers; ++i )
+    {
+        ServerState * const ss = m_ServerList[ i ];
+        if ( ss )
+        {
+            if (ss->m_Connection != nullptr)
+            {
+                ss->m_Connection->SetUserData( nullptr );
+            }
+            FDELETE ss;
+        }
+    }
+    m_ServerList.Clear();
 }
 
 //------------------------------------------------------------------------------
