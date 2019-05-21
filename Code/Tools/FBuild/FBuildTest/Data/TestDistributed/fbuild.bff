@@ -20,7 +20,6 @@ Library( "DistTestPCH" )
     #if __WINDOWS__
         .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestDistributed/PrecompiledHeader.cpp"
         .PCHOutputFile              = "$Out$/Test/Distributed/PrecompiledHeader.pch"
-        .PCHOptions                 = '%1 /Fo"%3" /Yc"PrecompiledHeader.h" /Fp"%2" /WX /W4 /nologo /c'
     #endif
     #if __LINUX__
         .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestDistributed/PrecompiledHeader.h"
@@ -38,7 +37,9 @@ Library( "DistTestPCH" )
     .CompilerInputPattern = "*_pch.cpp"
     .CompilerOutputPath = "$Out$\Test\Distributed\"
     #if __WINDOWS__
-        .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$" /I"."'
+        .CompilerOptions    + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+                            + ' /I"."'
+        .PCHOptions         + ' /I"."'
     #endif
     #if __LINUX__
         .CompilerOptions    + ' -Winvalid-pch -H'

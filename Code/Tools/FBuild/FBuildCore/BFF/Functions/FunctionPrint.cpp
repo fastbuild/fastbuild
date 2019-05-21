@@ -3,11 +3,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FunctionPrint.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 
@@ -147,7 +146,7 @@ FunctionPrint::FunctionPrint()
         }
         case BFFVariable::VAR_BOOL:
         {
-            FLOG_BUILD( "%s = %s\n", var.GetName().Get(), var.GetBool() ? "true" : "false" );
+            FLOG_BUILD( "%s = %s\n", var.GetName().Get(), var.GetBool() ? BFF_KEYWORD_TRUE : BFF_KEYWORD_FALSE );
             break;
         }
         case BFFVariable::VAR_ARRAY_OF_STRINGS:

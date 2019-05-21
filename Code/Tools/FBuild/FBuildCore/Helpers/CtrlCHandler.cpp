@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
 #include "CtrlCHandler.h"
 
 // FBuild
@@ -14,7 +13,7 @@
 
 // System
 #if defined( __WINDOWS__ )
-    #include "Windows.h"
+    #include "Core/Env/WindowsHeader.h"
 #elif defined( __LINUX__ ) || defined( __OSX__ )
     #include <signal.h>
 #endif

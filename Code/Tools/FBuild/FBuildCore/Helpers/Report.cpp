@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Report.h"
 
 // FBuild
@@ -26,7 +24,7 @@
 
 // Globals
 //------------------------------------------------------------------------------
-uint32_t g_ReportNodeColors[Node::NUM_NODE_TYPES] = {
+uint32_t g_ReportNodeColors[] = {
                                   0x000000, // PROXY_NODE (never seen)
                                   0xFFFFFF, // COPY_FILE_NODE
                                   0xAAAAAA, // DIRECTORY_LIST_NODE
@@ -47,6 +45,7 @@ uint32_t g_ReportNodeColors[Node::NUM_NODE_TYPES] = {
                                   0xFF3030, // REMOVE_DIR_NODE
                                   0x77DDAA, // SLN_NODE
                                   0x77DDAA, // XCODEPROJECT_NODE
+                                  0x000000, // SETTINGS_NODE (never seen)
                                 };
 
 // CONSTRUCTOR
@@ -323,7 +322,7 @@ void Report::CreateOverview( const FBuildStats & stats )
     float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / (double)1000 );
     Time::FormatTime( totalLocalCPUInSeconds, outputFractionalDigits, buffer );
     float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
-    Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), localRatio );
+    Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)localRatio );
 
     // version info
     Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
@@ -430,10 +429,10 @@ void Report::DoCacheStats( const FBuildStats & stats )
                                        : "<tr><td>%s</td><td>%u</td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u</td></tr>\n",
                         libraryName,
                         items,
-                        outOfDateItems, outOfDateItemsPerc,
-                        cItems, cItemsPerc,
-                        cHits, cHitsPerc,
-                        cMisses, cMissesPerc,
+                        outOfDateItems, (double)outOfDateItemsPerc,
+                        cItems, (double)cItemsPerc,
+                        cHits, (double)cHitsPerc,
+                        cMisses, (double)cMissesPerc,
                         cStores  );
             numOutput++;
         }
@@ -502,7 +501,7 @@ void Report::DoCPUTimeByType( const FBuildStats & stats )
 
         Write( "<tr><td>%s</td><td>%2.3fs</td><td>%u</td><td>%u</td>",
                     typeName,
-                    value,
+                    (double)value,
                     processed,
                     built );
         if ( type == Node::OBJECT_NODE )
@@ -550,7 +549,7 @@ void Report::DoCPUTimeByItem( const FBuildStats & stats )
         }
 
         Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td>%s</td></tr>\n"
-                                   : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n", time, type, name );
+                                   : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, name );
         numOutput++;
     }
 
@@ -618,7 +617,7 @@ void Report::DoCPUTimeByLibrary()
         const char * name = ls.library->GetName().Get();
         Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%2.3fs</td><td style=\"width:50px;\">%2.1f</td><td style=\"width:70px;\">%u</td><td style=\"width:50px;\">%s</td><td>%s</td></tr>\n"
                                    : "<tr><td>%2.3fs</td><td>%2.1f</td><td>%u</td><td>%s</td><td>%s</td></tr>\n",
-                                        time, perc, objCount, type, name );
+                                        (double)time, (double)perc, objCount, type, name );
         numOutput++;
     }
 
@@ -740,7 +739,7 @@ void Report::DoPieChart( const Array< PieItem > & items, const char * units )
         {
             Write( "," );
         }
-        buffer.Format( "%2.3f", items[ i ].value );
+        buffer.Format( "%2.3f", (double)( items[ i ].value ) );
         Write( "%s", buffer.Get() );
     }
     Write( "];\n" );

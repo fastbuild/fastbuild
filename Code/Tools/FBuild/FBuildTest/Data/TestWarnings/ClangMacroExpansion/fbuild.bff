@@ -10,13 +10,13 @@ Settings {}
 
 // Using Clang
 #if __WINDOWS__
-    Using( .WindowsClangToolChain )
+    Using( .ToolChain_Clang_Windows )
 #endif
 #if __OSX__
     Using( .OSXClangToolChain )
 #endif
 #if __LINUX__
-    // Not testing on Linux for now
+    // Not testing on Linux for now - TODO:B Enable test
 #endif
 
 // Common settings

@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "JobQueueRemote.h"
 #include "Job.h"
 #include "WorkerThreadRemote.h"
@@ -15,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
 // Core
+#include "Core/Env/ErrorFormat.h"
 #include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -461,8 +460,8 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     // read first file
     if ( fs.Read( mem.Get() + sizeof( uint32_t ), size ) != size )
     {
-        job->Error( "File read error for '%s'", node->GetName().Get() );
-        FLOG_ERROR( "File read error for '%s'", node->GetName().Get() );
+        job->Error( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, node->GetName().Get() );
+        FLOG_ERROR( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, node->GetName().Get() );
         return false;
     }
 
@@ -474,8 +473,8 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         // read second file
         if ( fs2.Read( mem.Get() + sizeof( uint32_t ) + size + sizeof( uint32_t ), size2 ) != size2 )
         {
-            job->Error( "File read error for '%s'", pdbName.Get() );
-            FLOG_ERROR( "File read error for '%s'", pdbName.Get() );
+            job->Error( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, pdbName.Get() );
+            FLOG_ERROR( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, pdbName.Get() );
             return false;
         }
     }

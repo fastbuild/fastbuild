@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 #include "Core/Env/Types.h"
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // 32bit
@@ -14,7 +14,7 @@
 inline int32_t AtomicInc32( volatile int32_t * i )
 {
     #if defined( __WINDOWS__ )
-        return InterlockedIncrement( (volatile uint32_t *)i );
+        return (int32_t)InterlockedIncrement( (volatile uint32_t *)i );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         return __sync_add_and_fetch( i, 1 );
     #endif
@@ -30,7 +30,7 @@ inline uint32_t AtomicIncU32( volatile uint32_t * i )
 inline int32_t AtomicDec32( volatile int32_t * i )
 {
     #if defined( __WINDOWS__ )
-        return InterlockedDecrement( (volatile uint32_t *)i );
+        return (int32_t)InterlockedDecrement( (volatile uint32_t *)i );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         return __sync_sub_and_fetch( i, 1 );
     #endif
@@ -73,7 +73,7 @@ inline int64_t AtomicInc64( volatile int64_t * i )
 inline uint64_t AtomicIncU64( volatile uint64_t * i )
 {
     #if defined( __WINDOWS__ )
-        return InterlockedIncrement64( (volatile int64_t *)i );
+        return (uint64_t)InterlockedIncrement64( (volatile int64_t *)i );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         return __sync_add_and_fetch( i, 1 );
     #endif
@@ -89,7 +89,7 @@ inline int64_t AtomicDec64( volatile int64_t * i )
 inline uint64_t AtomicDecU64( volatile uint64_t * i )
 {
     #if defined( __WINDOWS__ )
-        return InterlockedDecrement64( (volatile int64_t *)i );
+        return (uint64_t)InterlockedDecrement64( (volatile int64_t *)i );
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         return __sync_sub_and_fetch( i, 1 );
     #endif

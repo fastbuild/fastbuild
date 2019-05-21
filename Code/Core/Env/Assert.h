@@ -71,9 +71,11 @@ bool IsDebuggerAttached();
     class AssertHandler
     {
     public:
-        static void SetThrowOnAssert( bool throwOnAssert )
+        typedef void AssertCallback( const char * mesage );
+
+        static void SetAssertCallback( AssertCallback * callback )
         {
-            s_ThrowOnAssert = throwOnAssert;
+            s_AssertCallback = callback;
         }
         static bool Failure( const char * message,
                              const char * file,
@@ -84,13 +86,19 @@ bool IsDebuggerAttached();
                               const char * msgFormat,
                               ... ) FORMAT_STRING( 4, 5 ) NORETURN_CLANG_ANALYZER;
 
-        static bool s_ThrowOnAssert;
+        static AssertCallback * s_AssertCallback;
     };
 
 // RELEASE
 //------------------------------------------------------------------------------
 #elif defined ( RELEASE )
     #define ASSERT( expression )            \
+        do {                                \
+        PRAGMA_DISABLE_PUSH_MSVC(4127)      \
+        } while ( false )                   \
+        PRAGMA_DISABLE_POP_MSVC
+
+    #define ASSERTM( expression, ... )      \
         do {                                \
         PRAGMA_DISABLE_PUSH_MSVC(4127)      \
         } while ( false )                   \

@@ -70,6 +70,11 @@
             .TestOutput                     = "$OutputBase$/$ProjectPath$/TestOutput.txt"
             .TestWorkingDir                 = 'Tools/FBuild/FBuildTest'
             .TestTimeOut                    = 300
+            #if CI_BUILD
+                // Compilation on TravisCI VMs is significantly slower
+                // so the tests need more time to complete succesfully.
+                .TestTimeOut            = 900
+            #endif
         }
     }
 

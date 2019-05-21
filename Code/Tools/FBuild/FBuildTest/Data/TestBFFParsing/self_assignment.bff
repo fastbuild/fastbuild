@@ -1,0 +1,45 @@
+
+// String
+{
+    .String = 'Hello'
+    .String = .String
+    .ExpectedValue = 'Hello'
+    If( .String != .ExpectedValue ) { Print( 'FAILED' ) }
+}
+
+// Int
+{
+    .Int = 7
+    .Int = .Int
+    .ExpectedValue = 7
+    If( .Int != .ExpectedValue ) { Print( 'FAILED' ) }
+}
+
+// Bool
+{
+    .Bool = true
+    .Bool = .Bool
+    .ExpectedValue = true
+    If( .Bool != .ExpectedValue ) { Print( 'FAILED' ) }
+}
+
+// Array
+{
+    .ArrayOfStrings = { 'StringA', 'StringB' }
+    .ArrayOfStrings = .ArrayOfStrings
+    .ExpectedValue1 = 'StringA'
+    .ExpectedValue2 = 'StringB'
+    If( .ExpectedValue1 not in .ArrayOfStrings ) { Print( 'FAILED' ) }
+    If( .ExpectedValue2 not in .ArrayOfStrings ) { Print( 'FAILED' ) }
+}
+
+// Struct
+{
+    .Struct = [ .Value = 99 ]
+    .Struct = .Struct
+    {
+        Using( .Struct )
+        .ExpectedValue = 99
+        If( .Value != .ExpectedValue ) { Print( 'FAILED' ) }
+    }
+}

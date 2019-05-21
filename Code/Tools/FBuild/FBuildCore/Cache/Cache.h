@@ -14,7 +14,7 @@ class Cache : public ICache
 {
 public:
     explicit Cache();
-    virtual ~Cache();
+    virtual ~Cache() override;
 
     virtual bool Init( const AString & cachePath, const AString & cachePathMountPoint ) override;
     virtual void Shutdown() override;

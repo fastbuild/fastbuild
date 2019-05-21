@@ -79,8 +79,8 @@ public:
 
     // query state
     inline bool     IsAtCapacity() const    { return ( m_End == m_MaxEnd ); }
-    inline size_t   GetCapacity() const     { return ( m_MaxEnd - m_Begin ); }
-    inline size_t   GetSize() const         { return ( m_End - m_Begin ); }
+    inline size_t   GetCapacity() const     { return (size_t)( m_MaxEnd - m_Begin ); }
+    inline size_t   GetSize() const         { return (size_t)( m_End - m_Begin ); }
     inline bool     IsEmpty() const         { return ( m_Begin == m_End ); }
 
 private:
@@ -123,7 +123,7 @@ Array< T >::Array( const Array< T > & other )
 template < class T >
 Array< T >::Array( const T * otherBegin, const T * otherEnd )
 {
-    const size_t size = ( otherEnd - otherBegin );
+    const size_t size = (size_t)( otherEnd - otherBegin );
     INPLACE_NEW (this) Array( size, true );
     Append( otherBegin, otherEnd );
 }

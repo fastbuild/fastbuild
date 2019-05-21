@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "AString.h"
 #include "AStackString.h"
 #include "Core/Math/Conversions.h"
@@ -1239,7 +1237,7 @@ test_match:
     {
         pos++;
     }
-    return ( pos - string );
+    return (size_t)( pos - string );
 }
 
 // StrNCmp

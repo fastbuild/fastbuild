@@ -96,7 +96,7 @@ private:
     bool        HandleRead( ConnectionInfo * ci );
 
     // platform specific abstraction
-    int         GetLastError() const;
+    int         GetLastNetworkError() const;
     bool        WouldBlock() const;
     int         CloseSocket( TCPSocket socket ) const;
     int         Select( TCPSocket maxSocketPlusOne,

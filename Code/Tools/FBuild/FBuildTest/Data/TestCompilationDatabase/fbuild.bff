@@ -1,0 +1,50 @@
+//
+// CompilationDatabase
+//
+//------------------------------------------------------------------------------
+
+#include "../testcommon.bff"
+
+.InDir = '$TestRoot$/Data/TestCompilationDatabase'
+.OutDir = '$StandardOutputBase$/Test/CompilationDatabase'
+
+// Use fake compiler to make checking of the result easier
+.Compiler = '$TestRoot$/Data/TestCompilationDatabase/clang'
+
+// Use constant output extension to make checking of the result easier
+.CompilerOutputExtension = '.result'
+
+.CompilerOptions = '-c -I"path with spaces" -D^'STRING_DEFINE="foobar"^' "%1" -o "%2"'
+
+.CompilerOutputPath = .OutDir
+.UnityOutputPath = .OutDir // unused
+
+ObjectList( 'ObjectList_InputFile' )
+{
+    .CompilerInputFiles = '$InDir$/file.cpp'
+}
+
+ObjectList( 'ObjectList_InputPath' )
+{
+    .CompilerInputPath = '$InDir$/dir'
+}
+
+Unity( 'Unity_InputFile' )
+{
+    .UnityInputFiles = '$InDir$/file.cpp'
+}
+
+ObjectList( 'ObjectList_UnityInputFile' )
+{
+    .CompilerInputUnity = 'Unity_InputFile'
+}
+
+Unity( 'Unity_InputPath' )
+{
+    .UnityInputPath = '$InDir$/dir'
+}
+
+ObjectList( 'ObjectList_UnityInputPath' )
+{
+    .CompilerInputUnity = 'Unity_InputPath'
+}

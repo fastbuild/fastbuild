@@ -3,10 +3,9 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "BFFParser.h"
 #include "BFFIterator.h"
+#include "BFFKeywords.h"
 #include "BFFMacros.h"
 #include "BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -457,12 +456,12 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
 
         bool value = false; // just to silence C4701 from MSVC
         ok = false;
-        if ( iter.ParseExactString( "true" ) )
+        if ( iter.ParseExactString( BFF_KEYWORD_TRUE ) )
         {
             value = true;
             ok = true;
         }
-        else if ( iter.ParseExactString( "false" ) )
+        else if ( iter.ParseExactString( BFF_KEYWORD_FALSE ) )
         {
             value = false;
             ok = true;
@@ -620,7 +619,6 @@ bool BFFParser::ParseFunction( BFFIterator & iter )
         functionArgsStopToken = iter;
         hasHeader = true;
         iter++; // skip over closing token
-        iter.SkipWhiteSpaceAndComments();
     }
 
     if ( func->NeedsHeader() && ( hasHeader == false ) )
@@ -628,6 +626,8 @@ bool BFFParser::ParseFunction( BFFIterator & iter )
         Error::Error_1023_FunctionRequiresAHeader( iter, func );
         return false;
     }
+
+    iter.SkipWhiteSpaceAndComments();
 
     // some functions have no body
     bool hasBody = false;
@@ -719,36 +719,36 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 
     // determine directive
     AStackString< MAX_DIRECTIVE_NAME_LENGTH > directive( directiveStartIter.GetCurrent(), directiveEndIter.GetCurrent() );
-    if ( directive == "include" )
+    if ( directive == BFF_KEYWORD_INCLUDE )
     {
         return ParseIncludeDirective( iter );
     }
-    else if ( directive == "once" )
+    else if ( directive == BFF_KEYWORD_ONCE )
     {
         m_NodeGraph.SetCurrentFileAsOneUse();
         return true;
     }
-    else if ( directive == "define" )
+    else if ( directive == BFF_KEYWORD_DEFINE )
     {
         return ParseDefineDirective( iter );
     }
-    else if ( directive == "undef" )
+    else if ( directive == BFF_KEYWORD_UNDEF )
     {
         return ParseUndefDirective( iter );
     }
-    else if ( directive == "if" )
+    else if ( directive == BFF_KEYWORD_IF )
     {
         return ParseIfDirective( directiveStart, iter );
     }
-    else if ( directive == "else" )
+    else if ( directive == BFF_KEYWORD_ELSE )
     {
         return ParseElseDirective( directiveStartIter );
     }
-    else if ( directive == "endif" )
+    else if ( directive == BFF_KEYWORD_ENDIF )
     {
         return ParseEndIfDirective( directiveStartIter );
     }
-    else if ( directive == "import" )
+    else if ( directive == BFF_KEYWORD_IMPORT )
     {
         return ParseImportDirective( directiveStart, iter );
     }
@@ -772,7 +772,7 @@ bool BFFParser::ParseIncludeDirective( BFFIterator & iter )
     // we expect a " quoted string
     if ( *iter != '"' )
     {
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter, AStackString<>( "include" ), '"' );
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter, AStackString<>( BFF_KEYWORD_INCLUDE ), '"' );
         return false;
     }
 
@@ -1024,7 +1024,7 @@ bool BFFParser::ParseIfCondition( const BFFIterator & directiveStart, BFFIterato
     // #if operators (e.g. exists) and only parse them as operators if we find a brace.
     if ( *iter == BFF_FUNCTION_ARGS_OPEN )
     {
-        if ( variableOrOperator == "exists" )
+        if ( variableOrOperator == BFF_KEYWORD_EXISTS )
         {
             return ParseIfExistsCondition( iter, result );
         }
@@ -1128,15 +1128,15 @@ bool BFFParser::ParseToEndIf( BFFIterator & directiveIter, BFFIterator & iter, b
             }
             const BFFIterator directiveNameEnd( iter );
             AStackString<> directiveName( directiveNameStart.GetCurrent(), directiveNameEnd.GetCurrent() );
-            if ( directiveName == "endif" )
+            if ( directiveName == BFF_KEYWORD_ENDIF )
             {
                 --depth;
             }
-            else if ( directiveName == "if" )
+            else if ( directiveName == BFF_KEYWORD_IF )
             {
                 ++depth;
             }
-            else if ( ( depth == 1 ) && ( directiveName == "else" ) )
+            else if ( ( depth == 1 ) && ( directiveName == BFF_KEYWORD_ELSE ) )
             {
                 if ( allowElse == false )
                 {
@@ -1739,10 +1739,26 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
             return false;
         }
     }
+    else
+    {
+        // self-assignment?
+        if ( varDst == varSrc )
+        {
+            // It's only self-assignment if the dstVar is at the same scope.
+            const BFFVariable * var = (dstFrame ? dstFrame : BFFStackFrame::GetCurrent())->GetLocalVar( dstName );
+            if ( var )
+            {
+                return true;
+            }
+
+            // If at a parent scope, continue to lower logic which will create the
+            // shadow copy at the current scope.
+        }
+    }
 
     // if dst exists, types must match
     BFFVariable::VarType srcType = varSrc->GetType();
-    BFFVariable::VarType dstType = BFFVariable::VAR_ANY;
+    BFFVariable::VarType dstType;
     if ( varDst )
     {
         dstType = varDst->GetType();
@@ -2026,7 +2042,7 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
                 }
                 if ( var->IsBool() == true )
                 {
-                    output += ( ( var->GetBool() ) ? "true" : "false" );
+                    output += ( ( var->GetBool() ) ? BFF_KEYWORD_TRUE : BFF_KEYWORD_FALSE );
                 }
                 else if ( var->IsInt() == true )
                 {

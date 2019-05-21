@@ -5,21 +5,14 @@
 //------------------------------------------------------------------------------
 #include <TestFramework/UnitTest.h>
 
-#include "Core/Containers/Ref.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
-#include "Core/Math/Mat44.h"
-#include "Core/Math/Vec2.h"
-#include "Core/Math/Vec3.h"
-#include "Core/Math/Vec4.h"
 #include "Core/Reflection/BindReflection.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
 #include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
 #include "Core/Reflection/Object.h"
 #include "Core/Reflection/ReflectedProperty.h"
-#include "Core/Reflection/Serialization/TextReader.h"
-#include "Core/Reflection/Serialization/TextWriter.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -41,7 +34,6 @@ private:
     DECLARE_TESTS
 
     void TestGetSet() const;
-    void TestSerialization() const;
     void TestInheritence() const;
     void MetaData() const;
 };
@@ -50,7 +42,6 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestReflection )
     REGISTER_TEST( TestGetSet )
-    REGISTER_TEST( TestSerialization )
     REGISTER_TEST( TestInheritence )
     REGISTER_TEST( MetaData )
 REGISTER_TESTS_END
@@ -88,13 +79,10 @@ public:
         , m_Int64( 0 )
         , m_Bool( false)
         , m_AString( "" )
-        , m_Vec2( 0.0f, 0.0f )
-        , m_Vec3( 0.0f, 0.0f, 0.0f )
-        , m_Vec4( 0.0f, 0.0f, 0.0f, 0.0f )
     {
     }
 
-    void PopulateWithTestData( bool addChildRef = true )
+    void PopulateWithTestData()
     {
         m_Float = 99.0f;
         m_UInt8 = 42;
@@ -107,17 +95,6 @@ public:
         m_Int64 = 100000000000001;
         m_Bool = true;
         m_AString =  "Test string.";
-        m_Vec2 = Vec2( -1.0f, -2.0f );
-        m_Vec3 = Vec3( -3.0f, -4.0f, -5.0f );
-        m_Vec4 = Vec4( -6.0f, -7.0f, -8.0f, -9.0f );
-
-        if ( addChildRef )
-        {
-            m_Ref2 = (TestObject *)ReflectionInfo::CreateObject( AStackString<>( "TestObject" ) );
-            m_Ref2->PopulateWithTestData( false );
-        }
-
-        m_Mat44.MakeIdentity();
 
         m_FloatArray.Append( 111.0f );
         m_FloatArray.Append( 222.0f );
@@ -141,12 +118,6 @@ private: // ensure reflection can set private members
     int64_t     m_Int64;
     bool        m_Bool;
     AString     m_AString;
-    Vec2        m_Vec2;
-    Vec3        m_Vec3;
-    Vec4        m_Vec4;
-    Mat44       m_Mat44;
-    Ref< TestObject > m_Ref;
-    Ref< TestObject > m_Ref2;
 
     TestStruct  m_TestStruct;
 
@@ -167,12 +138,6 @@ REFLECT_BEGIN( TestObject, Object, MetaNone() )
     REFLECT( m_Int64,   "Int64",    MetaNone() )
     REFLECT( m_Bool,    "Bool",     MetaNone() )
     REFLECT( m_AString, "AString",  MetaNone() )
-    REFLECT( m_Vec2,    "Vec2",     MetaNone() )
-    REFLECT( m_Vec3,    "Vec3",     MetaNone() )
-    REFLECT( m_Vec4,    "Vec4",     MetaNone() )
-    REFLECT( m_Mat44,   "Mat44",    MetaNone() )
-    REFLECT( m_Ref,     "Ref",      MetaNone() )
-    REFLECT( m_Ref2,    "Ref2",     MetaNone() )
     REFLECT_STRUCT( m_TestStruct,   "TestStruct",   TestStruct, MetaNone() )
     REFLECT_ARRAY( m_FloatArray, "FloatArray", MetaNone() )
     REFLECT_ARRAY_OF_STRUCT( m_StructArray, "StructArray", TestStruct, MetaNone() )
@@ -205,70 +170,8 @@ void TestReflection::TestGetSet() const
     CHECK( "Int64", m_Int64, int64_t, 0x7765432112345678 )
     CHECK( "Bool", m_Bool, bool, true )
     CHECK( "AString", m_AString, AString, AString( "hello" ) )
-    CHECK( "Vec2", m_Vec2, Vec2, Vec2( 1.0f, 2.0f ) )
-    CHECK( "Vec3", m_Vec3, Vec3, Vec3( 3.0f, 4.0f, 5.0f ) )
-    CHECK( "Vec4", m_Vec4, Vec4, Vec4( 6.0f, 7.0f, 8.0f, 9.0f ) )
-    Mat44 m;
-    m.MakeRotationX( 3.141f / 3.0f );
-    CHECK( "Mat44", m_Mat44, Mat44, m )
-
-    {
-        TestObject * obj = (TestObject *)ReflectionInfo::CreateObject( AStackString<>( "TestObject" ) );
-        Ref< RefObject > ref( obj );
-        TEST_ASSERT( info->SetProperty( &o, "Ref2", ref ) );
-        TEST_ASSERT( o.m_Ref2.Get() == obj );
-        Ref< RefObject > v;
-        TEST_ASSERT( info->GetProperty( &o, "Ref2", &v ) );
-        TEST_ASSERT( v.Get() == obj );
-    }
 
     #undef CHECK
-}
-
-// TestSerialization
-//------------------------------------------------------------------------------
-void TestReflection::TestSerialization() const
-{
-    #ifdef __WINDOWS__
-        TestObject o;
-        o.PopulateWithTestData();
-
-        MemoryStream stream;
-
-        TextWriter tw( stream );
-        tw.Write( &o );
-
-        const char * data = (const char *)stream.GetData();
-        DEBUGSPAM( "Stream1:\n%s", data );
-
-        // Create an object from the stream
-        ConstMemoryStream readStream( stream.GetData(), stream.GetSize() );
-        TextReader tr( readStream );
-        RefObject * obj = tr.Read();
-        TEST_ASSERT( obj );
-
-        // Serialize new object
-        MemoryStream stream2;
-        TextWriter tw2( stream2 );
-        tw2.Write( obj );
-
-        const char * data2 = (const char *)stream2.GetData();
-        DEBUGSPAM( "Stream2:\n%s", data2 );
-
-        // Check that streams are the same
-        bool streamsMatch = ( stream.GetSize() == stream2.GetSize() );
-        if ( streamsMatch )
-        {
-            streamsMatch = ( memcmp( data, data2, stream.GetSize() ) == 0 );
-        }
-        if ( !streamsMatch )
-        {
-            TEST_ASSERT( streamsMatch ); // Streams don't match
-        }
-
-        // Cleanup
-        FDELETE( obj );
-    #endif
 }
 
 // TestInheritence

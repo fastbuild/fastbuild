@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="common.js"></script>
 
 <html>
 <head>
@@ -8,7 +7,22 @@
 <title>FASTBuild - Error Reference</title>
 </head>
 <body>
-  <script>generateHeader()</script>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
 
 <h1>Error Reference</h1>
 <h2>Categories</h2>
@@ -540,13 +554,13 @@ The specified include file could not be opened.
 </div>
 
 <!--------------- 1033 --------------->
-    <div class='newsitemheader'>1033 - Error reading include '%s' (Error: %u).</div>
+    <div class='newsitemheader'>1033 - Error reading include. Error: %u (0x%x) File: '%s'".</div>
     <div class='newsitembody'>
 A read error occurred when reading the included file.
 <h4>Example Config:</h4>
 <div class='code'>#include "errorfile.bff"</div>
 <h4>Example Output:</h4>
-<div class='output'>c:\test\fbuild.bff(1):(11) FASTBuild Error #1033 - Error reading include 'errorfile.bff' (Error: 4).
+<div class='output'>c:\test\fbuild.bff(1):(11) FASTBuild Error #1033 - Error reading include. Error: 4 (0x04) File: 'errorfile.bff'
 #include "errorfile.bff"
           ^
           \--here
@@ -1141,7 +1155,24 @@ Compiler( 'compiler' )
 \--here
 </div>
 </div>
-
+<!--------------- 1502 --------------->
+    <div class='newsitemheader'>1502 - LightCache only compatible with MSVC Compiler.</div>
+    <div class='newsitembody'>
+The LightCache is currently only supported when using the MSVC Compiler. This error will be generated if using any other compiler.
+<h4>Example Config:</h4>
+<div class='code'>Compiler( 'compiler' )
+{
+  .Executable 	= 'gcc'
+  .UseLightCache_Experimental = true
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1,1): FASTBuild Error #1502 - Compiler() - LightCache only compatible with MSVC Compiler.
+Compiler( 'compiler' )
+^
+\--here
+</div>
+</div>
 
 
 <h2 id='1999'>1999 : User Defined Error</h2>
@@ -1161,6 +1192,6 @@ Error( 'custom message' )
 </div>
 
 
-  <script>generateFooter()</script>
+    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
 </body>
 </html>

@@ -58,8 +58,9 @@ public:
     inline const char * GetEnvironmentString() const            { return m_EnvironmentString; }
     inline uint32_t     GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
 
-    void DisplayTargetList() const;
+    void DisplayTargetList( bool showHidden ) const;
     bool DisplayDependencyDB( const Array< AString > & targets ) const;
+    bool GenerateCompilationDatabase( const Array< AString > & targets ) const;
 
     class EnvironmentVarAndHash
     {
@@ -100,7 +101,7 @@ public:
     bool CacheOutputInfo() const;
     bool CacheTrim() const;
 
-private:
+protected:
     bool GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const;
 
     void UpdateBuildStatus( const Node * node );

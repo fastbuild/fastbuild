@@ -22,7 +22,6 @@ namespace Protocol
     class MsgRequestJob;
     class MsgRequestManifest;
     class MsgRequestFile;
-    class MsgServerStatus;
 }
 class ToolManifest;
 
@@ -75,7 +74,6 @@ private:
     void Process( const ConnectionInfo * connection, const Protocol::MsgJobResult *, const void * payload, size_t payloadSize );
     void Process( const ConnectionInfo * connection, const Protocol::MsgRequestManifest * msg );
     void Process( const ConnectionInfo * connection, const Protocol::MsgRequestFile * msg );
-    void Process( const ConnectionInfo * connection, const Protocol::MsgServerStatus * msg );
 
     const ToolManifest * FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const;
     bool WriteFileToDisk( const AString & fileName, const char * data, const uint32_t dataSize ) const;
@@ -102,7 +100,6 @@ private:
     void        OutputNumWorkers();
     void        LookForWorkers();
     void        CommunicateJobAvailability();
-    void        CheckForTimeouts();
 
     // More verbose name to avoid conflict with windows.h SendMessage
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg );

@@ -20,7 +20,7 @@
 #include <memory.h>
 #include <stdio.h>
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Return Codes
@@ -119,7 +119,7 @@ int Main(int argc, char * argv[])
         {
             if ( options.m_WaitMode == false )
             {
-                OUTPUT( "FBuild: Error: Another instance of FASTBuild is already running in '%s'.", options.GetWorkingDir().Get() );
+                OUTPUT( "FBuild: Error: Another instance of FASTBuild is already running in '%s'.\n", options.GetWorkingDir().Get() );
                 return FBUILD_ALREADY_RUNNING;
             }
 
@@ -184,7 +184,7 @@ int Main(int argc, char * argv[])
 
     if ( options.m_DisplayTargetList )
     {
-        fBuild.DisplayTargetList();
+        fBuild.DisplayTargetList( options.m_ShowHiddenTargets );
         ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed
         return FBUILD_OK;
     }
@@ -193,6 +193,10 @@ int Main(int argc, char * argv[])
     if ( options.m_DisplayDependencyDB )
     {
         result = fBuild.DisplayDependencyDB( options.m_Targets );
+    }
+    else if ( options.m_GenerateCompilationDatabase )
+    {
+        result = fBuild.GenerateCompilationDatabase( options.m_Targets );
     }
     else if ( options.m_CacheInfo )
     {
@@ -246,7 +250,17 @@ int WrapperMainProcess( const AString & args, const FBuildOptions & options, Sys
 
     // the intermediate process will exit immediately after launching the final
     // process
-    p.WaitForExit();
+    const int32_t result = p.WaitForExit();
+    if ( result == FBUILD_FAILED_TO_SPAWN_WRAPPER_FINAL )
+    {
+        OUTPUT( "FBuild: Error: Intermediate process failed to spawn the final process.\n" );
+        return result;
+    }
+    else if ( result != FBUILD_OK )
+    {
+        OUTPUT( "FBuild: Error: Intermediate process failed (%i).\n", result );
+        return result;
+    }
 
     // wait for final process to signal as started
     while ( sd->Started == false )

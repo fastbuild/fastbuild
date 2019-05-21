@@ -12,7 +12,7 @@ class FunctionSettings : public Function
 {
 public:
     explicit        FunctionSettings();
-    inline virtual ~FunctionSettings() = default;
+    inline virtual ~FunctionSettings() override = default;
 
 protected:
     virtual bool IsUnique() const override;
