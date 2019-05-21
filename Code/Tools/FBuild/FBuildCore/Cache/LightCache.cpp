@@ -161,10 +161,10 @@ void LightCache::Hash( IncludedFile * file, FileStream & f )
     ASSERT( f.IsOpen() );
 
     // Read all contents
-    const size_t fileSize = f.GetFileSize();
+    const uint64_t fileSize = f.GetFileSize();
     AString fileContents;
     fileContents.SetLength( (uint32_t)fileSize );
-    if ( f.Read( fileContents.Get(), fileSize ) != fileSize )
+    if ( f.Read( fileContents.Get(), (size_t)fileSize ) != fileSize )
     {
         m_ProblemParsing = true;
         return;

@@ -62,7 +62,6 @@ TestNode::TestNode()
     , m_DeleteRemoteFilesWhenDone( true )
     , m_TestInputPathRecurse( true )
     , m_NumTestInputFiles ( 0 )
-    , m_Remote( false )
 {
     m_Type = Node::TEST_NODE;
 }
@@ -83,7 +82,6 @@ TestNode::TestNode( const AString & objectName, const AString & testExecutable,
     , m_DeleteRemoteFilesWhenDone( deleteRemoteFilesWhenDone )
     , m_TestInputPathRecurse( true )
     , m_NumTestInputFiles ( 0 )
-    , m_Remote( true )
 {
     m_Type = Node::TEST_NODE;
 }
@@ -338,7 +336,7 @@ Node::BuildResult TestNode::DoBuildCommon( Job * job,
             }
             else if ( exitStatus != 0 )
             {
-                FLOG_ERROR( "Test failed (error %i) '%s'", exitStatus, m_TestExecutable.Get() );
+                FLOG_ERROR( "Test failed Error: %s '%s'", ERROR_STR(exitStatus), m_TestExecutable.Get() );
                 result = NODE_RESULT_FAILED;
             }
 
@@ -385,8 +383,8 @@ Node::BuildResult TestNode::DoBuildCommon( Job * job,
         }
         else
         {
-            FLOG_ERROR( "Failed to spawn '%s' process (error %i)\n",
-                spawnExe.Get(), Env::GetLastErr() );
+            FLOG_ERROR( "Failed to spawn '%s' process Error: %s\n",
+                spawnExe.Get(), LAST_ERROR_STR );
         }
         result = NODE_RESULT_FAILED;
     }

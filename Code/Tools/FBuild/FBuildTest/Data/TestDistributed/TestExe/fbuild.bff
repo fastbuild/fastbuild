@@ -28,7 +28,7 @@ Settings
 #endif
 
 #if __WINDOWS__
-Using( .WindowsClangToolChain )
+Using( .ToolChain_Clang_Windows )
 #endif
 
 #if __OSX__

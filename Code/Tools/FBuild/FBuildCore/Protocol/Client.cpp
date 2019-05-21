@@ -371,12 +371,6 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
             Process( connection, msg );
             break;
         }
-        case Protocol::MSG_SERVER_STATUS:
-        {
-            const Protocol::MsgServerStatus * msg = static_cast< const Protocol::MsgServerStatus * >( imsg );
-            Process( connection, msg );
-            break;
-        }
         default:
         {
             // unknown message type
@@ -740,22 +734,6 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     // Send file to worker
     Protocol::MsgFile resultMsg( toolId, fileId );
     resultMsg.Send( connection, ms );
-}
-
-// Process ( MsgServerStatus )
-//------------------------------------------------------------------------------
-void Client::Process( const ConnectionInfo * connection, const Protocol::MsgServerStatus * msg )
-{
-    PROFILE_SECTION( "MsgServerStatus" )
-
-    (void)msg;
-
-    // find server
-    ServerState * ss = (ServerState *)connection->GetUserData();
-    if (ss != nullptr)
-    {
-        MutexHolder mh( ss->m_Mutex );
-    }
 }
 
 // FindManifest

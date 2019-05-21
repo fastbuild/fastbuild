@@ -68,7 +68,6 @@ private:
     // Not serialized
     bool             m_TestInputPathRecurse;
     uint32_t         m_NumTestInputFiles;
-    bool             m_Remote;
 };
 
 //------------------------------------------------------------------------------
