@@ -162,7 +162,7 @@ void WorkerBrokerage::SetAvailable()
     {
         return;
     }
-    
+
     bool updateFiles = true;
     if ( m_Availability )
     {
