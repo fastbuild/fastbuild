@@ -215,15 +215,6 @@ namespace Protocol
         uint64_t m_ToolId;
     };
     static_assert( sizeof( MsgFile ) == sizeof( IMessage ) + 12, "MsgFile message has incorrect size" );
-
-    // MsgServerStatus
-    //------------------------------------------------------------------------------
-    class MsgServerStatus : public IMessage
-    {
-    public:
-        MsgServerStatus();
-    };
-    static_assert( sizeof( MsgServerStatus ) == sizeof( IMessage ), "MsgServerStatus message has incorrect size" );
 };
 
 //------------------------------------------------------------------------------
