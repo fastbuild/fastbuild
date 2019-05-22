@@ -64,7 +64,7 @@ void WorkerBrokerage::Init()
         return;
     }
 
-    // brokerage path includes version to reduce unnecssary comms attempts
+    // brokerage path includes version to reduce unnecessary comms attempts
     uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
 
     // root dir
