@@ -221,7 +221,7 @@ TestNode::~TestNode() = default;
                 }
                 else if ( exitStatus != 0 )
                 {
-                    FLOG_ERROR( "Test failed (error %i) '%s'", exitStatus, m_TestExecutable.Get() );
+                    FLOG_ERROR( "Test failed Error: %s '%s'", ERROR_STR(exitStatus), m_TestExecutable.Get() );
                     result = NODE_RESULT_FAILED;
                 }
 
@@ -266,8 +266,8 @@ TestNode::~TestNode() = default;
             }
             else
             {
-                FLOG_ERROR( "Failed to spawn '%s' process (error %i)\n",
-                    spawnExe.Get(), Env::GetLastErr() );
+                FLOG_ERROR( "Failed to spawn '%s' process Error: %s\n",
+                    spawnExe.Get(), LAST_ERROR_STR );
             }
             result = NODE_RESULT_FAILED;
         }

@@ -90,7 +90,7 @@ public:
 
     const char * GetObjExtension() const;
 private:
-    const AString & GetSpecificCompiler( const bool useDedicatedPreprocessor ) const;
+    const CompilerNode * GetSpecificCompiler( const bool useDedicatedPreprocessor ) const;
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
@@ -162,8 +162,11 @@ private:
         ~CompileHelper();
 
         // start compilation
-        bool SpawnCompiler( Job * job, const AString & name,
-            const AString & workingDir, const AString & compiler,
+        bool SpawnCompiler( Job * job,
+            const AString & name,
+            const AString & workingDir,
+            const CompilerNode * compilerNode,
+            const AString & compiler,
             const Args & fullArgs );
 
         // determine overall result
