@@ -202,17 +202,19 @@ void TestGraph::SingleFileNode() const
     FBuild fb;
     NodeGraph * ng = fb.GetGraph();
     TEST_ASSERT( ng != nullptr );
+    if ( ng != nullptr)
+    {
+        // make sure a node of the name we are going to use doesn't exist
+        const AStackString<> testFileName( "SimpleLibrary/library.cpp" );
+        TEST_ASSERT( ng->FindNode( testFileName ) == nullptr );
 
-    // make sure a node of the name we are going to use doesn't exist
-    const AStackString<> testFileName( "SimpleLibrary/library.cpp" );
-    TEST_ASSERT( ng->FindNode( testFileName ) == nullptr );
+        // create the node, and make sure we can access it by name
+        FileNode * node = ng->CreateFileNode( testFileName );
+        TEST_ASSERT( node != nullptr );
+        TEST_ASSERT( ng->FindNode( testFileName ) == node );
 
-    // create the node, and make sure we can access it by name
-    FileNode * node = ng->CreateFileNode( testFileName );
-    TEST_ASSERT( node != nullptr );
-    TEST_ASSERT( ng->FindNode( testFileName ) == node );
-
-    TEST_ASSERT( fb.Build( node ) );
+        TEST_ASSERT( fb.Build( node ) );
+    }
 }
 
 // FileNode
@@ -226,16 +228,19 @@ void TestGraph::SingleFileNodeMissing() const
     FBuild fb( options );
     NodeGraph * ng = fb.GetGraph();
     TEST_ASSERT( ng != nullptr );
+    if ( ng != nullptr)
+    {
 
-    // make a node for a file that does not exist
-    const AStackString<> testFileName( "ThisFileDoesNotExist.cpp" );
-    FileNode * node = ng->CreateFileNode( testFileName );
-    TEST_ASSERT( node != nullptr );
+        // make a node for a file that does not exist
+        const AStackString<> testFileName( "ThisFileDoesNotExist.cpp" );
+        FileNode * node = ng->CreateFileNode( testFileName );
+        TEST_ASSERT( node != nullptr );
 
-    // make sure build still passes
-    // a missing file is not an error.  it would need to be required by something
-    // (like an objectNode which would handle the failure itself)
-    TEST_ASSERT( fb.Build( node ) == true );
+        // make sure build still passes
+        // a missing file is not an error.  it would need to be required by something
+        // (like an objectNode which would handle the failure itself)
+        TEST_ASSERT( fb.Build( node ) == true );
+    }
 }
 
 // TestDirectoryListNode
@@ -245,53 +250,56 @@ void TestGraph::TestDirectoryListNode() const
     FBuild fb;
     NodeGraph * ng = fb.GetGraph();
     TEST_ASSERT( ng != nullptr );
-
-    // Generate a valid DirectoryListNode name
-    AStackString<> name;
-    #if defined( __WINDOWS__ )
-        const AStackString<> testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
-    #else
-        const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
-    #endif
-    Array< AString > patterns;
-    patterns.Append( AStackString<>( "library.*" ) );
-    DirectoryListNode::FormatName( testFolder,
-                                   &patterns,
-                                   true, // recursive
-                                   Array< AString >(), // excludePaths,
-                                   Array< AString >(), // excludeFiles,
-                                   Array< AString >(), // excludePatterns,
-                                   name );
-
-    // create the node, and make sure we can access it by name
-    DirectoryListNode * node = ng->CreateDirectoryListNode( name );
-    node->m_Path = testFolder;
-    node->m_Patterns = patterns;
-    BFFIterator iter;
-    TEST_ASSERT( node->Initialize( *ng, iter, nullptr ) );
-    TEST_ASSERT( ng->FindNode( name ) == node );
-
-    TEST_ASSERT( fb.Build( node ) );
-
-    // make sure we got the expected results
-    TEST_ASSERT( node->GetFiles().GetSize() == 2 );
-    #if defined( __WINDOWS__ )
-        const char * fileName1 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.cpp";
-        const char * fileName2 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.o";
-    #else
-        const char * fileName1 = "Data/TestGraph/library.cpp";
-        const char * fileName2 = "Data/TestGraph/library.o";
-    #endif
-
-    // returned order depends on file system
-    if ( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName1 ) )
+    if ( ng != nullptr)
     {
-        TEST_ASSERT( node->GetFiles()[ 1 ].m_Name.EndsWith( fileName2 ) );
-    }
-    else
-    {
-        TEST_ASSERT( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName2 ) );
-        TEST_ASSERT( node->GetFiles()[ 1 ].m_Name.EndsWith( fileName1 ) );
+
+        // Generate a valid DirectoryListNode name
+        AStackString<> name;
+        #if defined( __WINDOWS__ )
+            const AStackString<> testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
+        #else
+            const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
+        #endif
+        Array< AString > patterns;
+        patterns.Append( AStackString<>( "library.*" ) );
+        DirectoryListNode::FormatName( testFolder,
+                                       &patterns,
+                                       true, // recursive
+                                       Array< AString >(), // excludePaths,
+                                       Array< AString >(), // excludeFiles,
+                                       Array< AString >(), // excludePatterns,
+                                       name );
+
+        // create the node, and make sure we can access it by name
+        DirectoryListNode * node = ng->CreateDirectoryListNode( name );
+        node->m_Path = testFolder;
+        node->m_Patterns = patterns;
+        BFFIterator iter;
+        TEST_ASSERT( node->Initialize( *ng, iter, nullptr ) );
+        TEST_ASSERT( ng->FindNode( name ) == node );
+
+        TEST_ASSERT( fb.Build( node ) );
+
+        // make sure we got the expected results
+        TEST_ASSERT( node->GetFiles().GetSize() == 2 );
+        #if defined( __WINDOWS__ )
+            const char * fileName1 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.cpp";
+            const char * fileName2 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.o";
+        #else
+            const char * fileName1 = "Data/TestGraph/library.cpp";
+            const char * fileName2 = "Data/TestGraph/library.o";
+        #endif
+
+        // returned order depends on file system
+        if ( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName1 ) )
+        {
+            TEST_ASSERT( node->GetFiles()[ 1 ].m_Name.EndsWith( fileName2 ) );
+        }
+        else
+        {
+            TEST_ASSERT( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName2 ) );
+            TEST_ASSERT( node->GetFiles()[ 1 ].m_Name.EndsWith( fileName1 ) );
+        }
     }
 }
 
