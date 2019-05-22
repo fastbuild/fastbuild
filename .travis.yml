@@ -126,7 +126,7 @@ script:
   - |
     case "${TRAVIS_OS_NAME}" in
     linux)
-      grep -r -l GXX_BINARY ../*.bff | xargs sed -i -e "
+      grep -r -l --include \*.bff GXX_BINARY .. | xargs sed -i -e "
       s:GCC_BINARY:$(which ${GCC}):
       s:GXX_BINARY:$(which ${GXX}):
       s:CC1_BINARY:$(${GCC} -print-prog-name=cc1):
@@ -138,7 +138,7 @@ script:
   - |
     case "${TRAVIS_OS_NAME}" in
     linux|osx)
-      grep -r -l CLANGXX_BINARY ../*.bff | xargs sed -i -e "
+      grep -r -l --include \*.bff CLANGXX_BINARY .. | xargs sed -i -e "
       s:CLANG_BINARY:$(which ${CLANG}):
       s:CLANGXX_BINARY:$(which ${CLANGXX}):
       "
