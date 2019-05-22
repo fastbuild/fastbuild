@@ -126,22 +126,22 @@ script:
   - |
     case "${TRAVIS_OS_NAME}" in
     linux)
-      sed -i -e "
+      grep -r -l GXX_BINARY ../*.bff | xargs sed -i -e "
       s:GCC_BINARY:$(which ${GCC}):
       s:GXX_BINARY:$(which ${GXX}):
       s:CC1_BINARY:$(${GCC} -print-prog-name=cc1):
       s:CC1PLUS_BINARY:$(${GCC} -print-prog-name=cc1plus):
-      " ../*.bff
+      "
       ;;
     esac
   # Put full paths to Clang binaries into config files.
   - |
     case "${TRAVIS_OS_NAME}" in
     linux|osx)
-      sed -i -e "
+      grep -r -l CLANGXX_BINARY ../*.bff | xargs sed -i -e "
       s:CLANG_BINARY:$(which ${CLANG}):
       s:CLANGXX_BINARY:$(which ${CLANGXX}):
-      " ../*.bff
+      "
       ;;
     esac
   # Run tests in the selected configuration.
