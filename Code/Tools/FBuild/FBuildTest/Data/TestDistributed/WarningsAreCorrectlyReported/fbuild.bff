@@ -1,0 +1,47 @@
+//
+// Distributed/ErrorsAreReportedCorrectly
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers = { "127.0.0.1" }
+}
+
+// Common settings
+.CompilerOutputPath         = '$StandardOutputBase$/Test/TestDistributed/ErrorsAreCorrectlyReported/'
+
+// MSVC
+//------------------------------------------------------------------------------
+ObjectList( 'WarningsAreCorrectlyReported-MSVC' )
+{
+    .CompilerOptions        - ' /WX' // Disable warnings as error so compilation passes
+
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/Warning.cpp'
+    .CompilerOutputPath     + 'MSVC/'
+}
+
+// Clang
+//------------------------------------------------------------------------------
+ObjectList( 'WarningsAreCorrectlyReported-Clang' )
+{
+    // Clang
+    #if __WINDOWS__
+        Using( .ToolChain_Clang_Windows )
+
+        .CompilerOptions        - ' -Werror' // Disable warnings as error so compilation passes
+    #endif
+    #if __OSX__
+        // TODO:B Enable test for OSX
+    #endif
+    #if __LINUX__
+        // TODO:B Enable test for Linux
+    #endif
+
+    .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/Warning.cpp'
+    .CompilerOutputPath     + 'Clang/'
+}
