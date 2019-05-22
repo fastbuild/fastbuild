@@ -251,7 +251,8 @@ ObjectNode::~ObjectNode()
     GetWorkingDir( job, workingDir );
 
     const bool useDedicatedPreprocessor = false;
-    const AString & specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
+    const CompilerNode * specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
+    const AString & specificCompilerExe = specificCompiler ? specificCompiler->GetExecutable() : AString::GetEmpty();
 
     if ( usePreProcessor || useSimpleDist )
     {
@@ -260,15 +261,15 @@ ObjectNode::~ObjectNode()
 
     if ( GetFlag( FLAG_MSVC ) )
     {
-        return DoBuildMSCL_NoCache( job, useDeoptimization, workingDir, specificCompiler );
+        return DoBuildMSCL_NoCache( job, useDeoptimization, workingDir, specificCompilerExe );
     }
 
     if ( GetFlag( FLAG_QT_RCC ))
     {
-        return DoBuild_QtRCC( job, workingDir, specificCompiler );
+        return DoBuild_QtRCC( job, workingDir, specificCompilerExe );
     }
 
-    return DoBuildOther( job, useDeoptimization, workingDir, specificCompiler );
+    return DoBuildOther( job, useDeoptimization, workingDir, specificCompilerExe );
 }
 
 // DoBuild_Remote
@@ -349,7 +350,7 @@ ObjectNode::~ObjectNode()
     // spawn the process
     CompileHelper ch;
     if ( !ch.SpawnCompiler( job, GetName(), workingDir,
-        compiler, m_Name, fullArgs ) ) // use response file for MSVC
+        GetCompiler(), compiler, m_Name, fullArgs ) ) // use response file for MSVC
     {
         return NODE_RESULT_FAILED; // SpawnCompiler has logged error
     }
@@ -424,7 +425,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor(
             // LightCache hashing was successful
 
             // Try retrieve from cache
-            if ( RetrieveFromCache( job ) )
+            if ( RetrieveFromCache( job, workingDir ) )
             {
                 return NODE_RESULT_OK_CACHE;
             }
@@ -438,7 +439,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor(
                 // so we directly compile from source as one-pass compilation is faster
                 const bool stealingRemoteJob = false; // never queued
                 const bool racingRemoteJob = false; // never queued
-                return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+                return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, workingDir );
             }
 
             // Fall through to generate preprocessed output for distribution....
@@ -675,7 +676,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job, const AString & workingD
 
         CompileHelper ch;
         if ( !ch.SpawnCompiler( job, GetName(), workingDir,
-             compiler, m_Name, fullArgs ) )
+             GetCompiler(), compiler, m_Name, fullArgs ) )
         {
             return NODE_RESULT_FAILED; // compile has logged error
         }
@@ -719,7 +720,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job, const AString & workingD
 
         CompileHelper ch;
         if ( !ch.SpawnCompiler( job, GetName(), workingDir,
-             compiler, m_Name, fullArgs ) )
+             GetCompiler(), compiler, m_Name, fullArgs ) )
         {
             return NODE_RESULT_FAILED; // compile has logged error
         }
@@ -751,7 +752,7 @@ Node::BuildResult ObjectNode::DoBuildOther(
     // spawn the process
     CompileHelper ch;
     if ( !ch.SpawnCompiler( job, GetName(), workingDir,
-         compiler, m_Name, fullArgs ) )
+         GetCompiler(), compiler, m_Name, fullArgs ) )
     {
         return NODE_RESULT_FAILED; // compile has logged error
     }
@@ -1488,9 +1489,9 @@ void ObjectNode::GetWorkingDir( const Job * job, AString & workingDir ) const
 
 // GetSpecificCompiler
 //------------------------------------------------------------------------------
-const AString & ObjectNode::GetSpecificCompiler( const bool useDedicatedPreprocessor ) const
+const CompilerNode * ObjectNode::GetSpecificCompiler( const bool useDedicatedPreprocessor ) const
 {
-    return useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable() : GetCompiler() ? GetCompiler()->GetExecutable() : AString::GetEmpty();
+    return useDedicatedPreprocessor ? GetDedicatedPreprocessor() : GetCompiler();
 }
 
 // EmitCompilationMessage
@@ -2091,15 +2092,16 @@ bool ObjectNode::BuildPreprocessedOutput(
     const Args & fullArgs, Job * job, bool useDeoptimization, const AString & workingDir ) const
 {
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
-    const AString & specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
+    const CompilerNode * specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
+    const AString & specificCompilerExe = specificCompiler ? specificCompiler->GetExecutable() : AString::GetEmpty();
     EmitCompilationMessage( fullArgs, useDeoptimization, workingDir,
-        specificCompiler, false, false );
+        specificCompilerExe, false, false );
 
     // spawn the process
     CompileHelper ch( false ); // don't handle output (we'll do that)
     // TODO:A Add checks in BuildArgs for length of dedicated preprocessor
     if ( !ch.SpawnCompiler( job, GetName(),
-         workingDir, specificCompiler, m_Name, fullArgs ) )
+         workingDir, specificCompiler, specificCompilerExe, m_Name, fullArgs ) )
     {
         // only output errors in failure case
         // (as preprocessed output goes to stdout, normal logging is pushed to
@@ -2136,9 +2138,10 @@ bool ObjectNode::LoadStaticSourceFileForDistribution(
     // PreProcessing for SimpleDistribution is just loading the source file
 
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
-    const AString & specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
+    const CompilerNode * specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
+    const AString & specificCompilerExe = specificCompiler ? specificCompiler->GetExecutable() : AString::GetEmpty();
     EmitCompilationMessage(fullArgs, useDeoptimization, workingDir,
-        specificCompiler, false, false );
+        specificCompilerExe, false, false );
 
     const AString & fileName = job->GetNode()->CastTo<ObjectNode>()->GetSourceFile()->CastTo<FileNode>()->GetName();
 
@@ -2355,7 +2358,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs, const AStri
     // spawn the process
     CompileHelper ch( true, job->GetAbortFlagPointer() );
     if ( !ch.SpawnCompiler( job, GetName(), workingDir,
-         compiler, m_Name, fullArgs ) )
+         GetCompiler(), compiler, m_Name, fullArgs ) )
     {
         // did spawn fail, or did we spawn and fail to compile?
         if ( ch.GetResult() != 0 )

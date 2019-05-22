@@ -28,7 +28,7 @@ Settings
 #endif
 
 #if __WINDOWS__
-Using( .WindowsClangToolChain )
+Using( .ToolChain_Clang_Windows )
 #endif
 
 #if __OSX__
@@ -51,13 +51,15 @@ ObjectList( "DummySandboxExe-Lib" )
 #if __WINDOWS__
     Using( .VisualStudioToolChain_X64 )
 #endif
-    .CompilerInputFiles = { './Tools/FBuild/FBuildTest/Data/TestDistributed/Sandbox/dummysandbox.cpp'
+    .CompilerInputFiles = { './Tools/FBuild/FBuildTest/Data/TestDistributed/WorkerTags/dummysandbox.cpp'
                             './Core/Env/Env.cpp'
+                            './Core/Env/ErrorFormat.cpp'
                             './Core/Mem/Mem.cpp'
                             './Core/Mem/MemPoolBlock.cpp'
                             './Core/Mem/SmallBlockAllocator.cpp'
                             './Core/Process/Mutex.cpp'
                             './Core/Process/Process.cpp'
+                            './Core/Process/Thread.cpp'
                             './Core/Strings/AString.cpp'
                             './Core/Time/Timer.cpp'
                           }

@@ -7,7 +7,11 @@
 
 #include "Core/Process/Process.h"
 #if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h"
     #include <Bcrypt.h>
+#else
+    #include <fcntl.h>
+    #include <unistd.h>
 #endif
 #include <time.h>
 
@@ -32,7 +36,6 @@ uint32_t Random::GetRand()
 //------------------------------------------------------------------------------
 /*static*/ bool Random::GetCryptRandom( uint32_t ( & randomInts )[ 2 ] )
 {
-    bool success = false;
     #if defined( __WINDOWS__ )
         HRESULT hr = BCryptGenRandom(
                 NULL, 
@@ -40,11 +43,25 @@ uint32_t Random::GetRand()
                 sizeof( randomInts ), 
                 BCRYPT_USE_SYSTEM_PREFERRED_RNG
                 );
-        success = SUCCEEDED(hr);
+        bool success = SUCCEEDED(hr);
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        GetRand( randomInts[ 0 ] );
-        GetRand( randomInts[ 1 ] );
-        success = true;
+        int32_t devRandom = open( "/dev/urandom", O_RDONLY | O_CLOEXEC );
+        bool success = true;
+        for ( uint32_t randomIntIndex = 0; randomIntIndex < 2; ++randomIntIndex )
+        {
+            int32_t randnum;
+            success = success &&
+                      devRandom != -1 &&
+                      read( devRandom, &randnum, sizeof randnum ) == sizeof randnum;
+            if ( success )
+            {
+                randomInts[ randomIntIndex ] = randnum;
+            }
+        }
+        if ( devRandom != -1 )
+        {
+            close( devRandom );
+        }
     #else
         #error Unknown platform
     #endif

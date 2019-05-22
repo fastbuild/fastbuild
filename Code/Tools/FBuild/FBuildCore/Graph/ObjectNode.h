@@ -93,7 +93,7 @@ public:
 
     const char * GetObjExtension() const;
 private:
-    const AString & GetSpecificCompiler( const bool useDedicatedPreprocessor ) const;
+    const CompilerNode * GetSpecificCompiler( const bool useDedicatedPreprocessor ) const;
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;

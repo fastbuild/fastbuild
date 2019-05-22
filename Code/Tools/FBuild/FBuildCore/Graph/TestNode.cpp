@@ -264,7 +264,7 @@ TestNode::~TestNode() = default;
             }
             else if ( exitStatus != 0 )
             {
-                FLOG_ERROR( "Test failed (error %i) '%s'", exitStatus, m_TestExecutable.Get() );
+                    FLOG_ERROR( "Test failed Error: %s '%s'", ERROR_STR(exitStatus), m_TestExecutable.Get() );
                 result = NODE_RESULT_FAILED;
             }
 
@@ -317,13 +317,13 @@ TestNode::~TestNode() = default;
             AStackString<> outputName( GetName() );
             // hide sandbox tmp dir in output; we want to keep the dir secret from other processes, since it is low integrity
             HideSandboxTmpInString( outputName );
-            FLOG_ERROR( "Failed to spawn '%s' process (error %i) to run '%s'\n",
-                spawnExe.Get(), Env::GetLastErr(), outputName.Get() );
+                FLOG_ERROR( "Failed to spawn '%s' process Error: %s to run '%s'\n",
+                    spawnExe.Get(), LAST_ERROR_STR, outputName.Get() );
         }
         else
         {
-            FLOG_ERROR( "Failed to spawn '%s' process (error %i)\n",
-                spawnExe.Get(), Env::GetLastErr() );
+            FLOG_ERROR( "Failed to spawn '%s' process Error: %s\n",
+                spawnExe.Get(), LAST_ERROR_STR );
         }
         result = NODE_RESULT_FAILED;
     }

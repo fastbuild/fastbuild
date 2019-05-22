@@ -14,6 +14,7 @@
 
 #include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Profile/Profile.h"

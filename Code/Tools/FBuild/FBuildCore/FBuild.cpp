@@ -175,54 +175,54 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         return false;
     }
 
-    const SettingsNode * settings = m_DependencyGraph->GetSettings();
+    SettingsNode * settings = m_DependencyGraph->GetSettings();
 
     if ( m_Options.m_OverrideSandboxEnabled )
     {
-        m_Settings->SetSandboxEnabled( m_Options.m_SandboxEnabled );
+        settings->SetSandboxEnabled( m_Options.m_SandboxEnabled );
     }
     else
     {
-        m_Options.m_SandboxEnabled = m_Settings->GetSandboxEnabled();
+        m_Options.m_SandboxEnabled = settings->GetSandboxEnabled();
     }
 
     if ( m_Options.m_OverrideSandboxExe )
     {
-        m_Settings->SetSandboxExe( m_Options.m_SandboxExe );
+        settings->SetSandboxExe( m_Options.m_SandboxExe );
     }
     else
     {
-        m_Options.m_SandboxExe = m_Settings->GetSandboxExe();
+        m_Options.m_SandboxExe = settings->GetSandboxExe();
     }
 
     if ( m_Options.m_OverrideSandboxArgs )
     {
-        m_Settings->SetSandboxArgs( m_Options.m_SandboxArgs );
+        settings->SetSandboxArgs( m_Options.m_SandboxArgs );
     }
     else
     {
-        m_Options.m_SandboxArgs = m_Settings->GetSandboxArgs();
+        m_Options.m_SandboxArgs = settings->GetSandboxArgs();
     }
 
     if ( m_Options.m_OverrideSandboxTmp )
     {
-        m_Settings->SetSandboxTmp( m_Options.m_SandboxTmp );
-        m_Settings->SetObfuscatedSandboxTmp( m_Options.GetObfuscatedSandboxTmp() );
+        settings->SetSandboxTmp( m_Options.m_SandboxTmp );
+        settings->SetObfuscatedSandboxTmp( m_Options.GetObfuscatedSandboxTmp() );
     }
     else
     {
-        m_Options.m_SandboxTmp = m_Settings->GetSandboxTmp();
-        m_Options.m_ObfuscatedSandboxTmp = m_Settings->GetObfuscatedSandboxTmp();
+        m_Options.m_SandboxTmp = settings->GetSandboxTmp();
+        m_Options.m_ObfuscatedSandboxTmp = settings->GetObfuscatedSandboxTmp();
     }
 
     AStackString<> errorMsg;
-    const bool sandboxEnabled = m_Settings->GetSandboxEnabled();
+    const bool sandboxEnabled = settings->GetSandboxEnabled();
 
     // error check settings
     if ( sandboxEnabled )
     {
-        const AString & absSandboxExe = m_Settings->GetAbsSandboxExe();
-        if ( absSandboxExe.IsEmpty() || m_Settings->GetSandboxTmp().IsEmpty() )
+        const AString & absSandboxExe = settings->GetAbsSandboxExe();
+        if ( absSandboxExe.IsEmpty() || settings->GetSandboxTmp().IsEmpty() )
         {
             errorMsg.Clear();
             errorMsg += "To enable the sandbox, please specify a non-empty sandbox exe ";
@@ -237,25 +237,25 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             return false;
         }
 
-        if ( !FileIO::EnsurePathExists( m_Settings->GetSandboxTmp() ) )
+        if ( !FileIO::EnsurePathExists( settings->GetSandboxTmp() ) )
         {
-            FLOG_ERROR( "Failed to create tmp dir %s (error %i)", m_Settings->GetSandboxTmp().Get(), Env::GetLastErr() );
+            FLOG_ERROR( "Failed to create tmp dir %s (error %i)", settings->GetSandboxTmp().Get(), Env::GetLastErr() );
         }
         
         errorMsg.Clear();
         if ( !FileIO::SetLowIntegrity(
-              m_Settings->GetSandboxTmp(), errorMsg ) )  // pass in root sandbox tmp dir, so we can secure it
+              settings->GetSandboxTmp(), errorMsg ) )  // pass in root sandbox tmp dir, so we can secure it
         {
             FLOG_ERROR_STRING( errorMsg.Get() );
             return false;
         }
 
-        const AString & obfuscatedSandboxTmp = m_Settings->GetObfuscatedSandboxTmp();
+        const AString & obfuscatedSandboxTmp = settings->GetObfuscatedSandboxTmp();
         if ( !FileIO::EnsurePathExists( obfuscatedSandboxTmp ) )
         {
             // print the root sandbox tmp dir, not the obfuscated dir
             // so we can hide the obfuscated dir from other processes
-            FLOG_ERROR( "Failed to create sandbox dir under %s (error %i)", m_Settings->GetSandboxTmp().Get(), Env::GetLastErr() );
+            FLOG_ERROR( "Failed to create sandbox dir under %s (error %i)", settings->GetSandboxTmp().Get(), Env::GetLastErr() );
             return false;
         }
 

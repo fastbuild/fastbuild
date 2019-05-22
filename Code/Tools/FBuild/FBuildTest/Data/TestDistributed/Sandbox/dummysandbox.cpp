@@ -2,12 +2,30 @@
 // dummy sandbox exe that runs a subprocess
 //
 #include "Core/Process/Process.h"
-#include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/Strings/AStackString.h"
 #include <stdio.h>
 #include <string.h>
 
-int main(int argc, char** argv)
+void strcat_safe(
+    char * dest, const char * src, const size_t maxLength )
+{
+#if defined( __WINDOWS__ )
+    strcat_s(dest, maxLength, src);
+#else
+    if ( dest && src )
+    {
+        // find end of existing string
+        char *end = static_cast<char*>( memchr( dest, '\0', maxLength ) );
+        if ( end != 0 )
+        {
+            strncat( end, src, maxLength - (end - dest) - 1 );
+        }
+    }
+#endif
+}
+
+int main( int argc, char** argv )
 {
     const char * appName = nullptr;
     if ( argc > 0 )
@@ -29,7 +47,8 @@ int main(int argc, char** argv)
 
     const char * cmd = argv[1];
     
-    char * cmdArgs = new char[1024];
+    const size_t maxChars = 4096;
+    char * cmdArgs = new char[maxChars];
     cmdArgs[ 0 ] = '\0';  // terminate string
     if ( argc > 2 )  // if cmd has args
     {
@@ -40,16 +59,16 @@ int main(int argc, char** argv)
             char * spacePos = strstr( argv[ i ], " " );
             if ( spacePos != nullptr )
             {
-                strcat( cmdArgs, "\"");
-                strcat( cmdArgs, argv[ i ] );
-                strcat( cmdArgs, "\"");
+                strcat_safe( cmdArgs, "\"", maxChars );
+                strcat_safe( cmdArgs, argv[ i ], maxChars );
+                strcat_safe( cmdArgs, "\"", maxChars );
             }
             else  // no spaces, so add arg as-is
             {
-                strcat( cmdArgs, argv[ i ] );
+                strcat_safe( cmdArgs, argv[ i ], maxChars );
             }
             // include a space between each arg
-            strcat( cmdArgs, " ");
+            strcat_safe( cmdArgs, " ", maxChars );
         }
     }
 
@@ -63,8 +82,8 @@ int main(int argc, char** argv)
             return 2;
         }
 
-        printf( "%s failed to spawn child '%s' process (error %i)\n",
-                appName, cmd, Env::GetLastErr() );
+        printf( "%s failed to spawn child '%s' process Error: %s\n",
+                appName, cmd, LAST_ERROR_STR );
         return 3;
     }
 
