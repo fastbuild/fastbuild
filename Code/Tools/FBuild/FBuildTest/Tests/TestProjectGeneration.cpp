@@ -15,6 +15,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/Random.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
@@ -289,14 +290,27 @@ void TestProjectGeneration::TestFunction_Speed() const
     cfg.m_Platform = "x64";     cfg.m_Config = "Profile";   configs.Append( cfg );
     cfg.m_Platform = "x64";     cfg.m_Config = "Release";   configs.Append( cfg );
 
-    // files
-    Array< AString > files;
-    FileIO::GetFiles(
-        baseDir,
-        AStackString<>( "*" ),
-        true,
-        false,  // includeDirs
-        &files );
+    // Generate a large list of files
+    Random r( 1234567 ); // Deterministic seed
+    const size_t numFiles = 5000;
+    const size_t maxSubDirDepth = 8;
+    Array< AString > files( numFiles, false );
+    for ( size_t i = 0; i < numFiles; ++i )
+    {
+        AStackString<> fileName( baseDir );
+
+        // Add to different sub-directories
+        const size_t subDirDepth = r.GetRandIndex( maxSubDirDepth );
+        for ( size_t j = 0; j < subDirDepth; ++j )
+        {
+            fileName.AppendFormat( "%02x/", r.GetRand() & 0xFF );
+        }
+
+        // Unique file name
+        fileName.AppendFormat( "%08x.cpp", (uint32_t)i );
+
+        files.Append( fileName );
+    }
     pg.AddFiles( files );
 
     Array< VSProjectFileType > fileTypes;
@@ -321,7 +335,7 @@ void TestProjectGeneration::TestFunction_Speed() const
             pg.GenerateVCXProj( projectFileName, configs, fileTypes );
         }
         float time = t.GetElapsed();
-        OUTPUT( "Gen vcxproj        : %2.3fs\n", time );
+        OUTPUT( "Gen vcxproj        : %2.3fs\n", (double)time );
     }
     {
         Timer t;
@@ -330,7 +344,7 @@ void TestProjectGeneration::TestFunction_Speed() const
             pg.GenerateVCXProjFilters( projectFileName );
         }
         float time = t.GetElapsed();
-        OUTPUT( "Gen vcxproj.filters: %2.3fs\n", time );
+        OUTPUT( "Gen vcxproj.filters: %2.3fs\n", (double)time );
     }
 }
 

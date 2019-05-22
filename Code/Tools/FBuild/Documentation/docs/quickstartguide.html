@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="common.js"></script>
 
 <html>
 <head>
@@ -8,7 +7,22 @@
 <title>FASTBuild - Quick Start Guide</title>
 </head>
 <body>
-  <script>generateHeader()</script>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
 
 
     <h1>Quick Start Guide</h1>
@@ -32,13 +46,13 @@ NOTE: This guide glosses over a lot of the subtle details of the configuration l
     </div>
     <div class='newsitembody'>
 <p>
-FASTBuild is a stand alone executable that does not need to be installed.  It can be placed anywhere on your system. It simply needs to be in the path you wish to compile from. Simply unpack the "fbuild.exe" of your choice (64bit or 32bit) anywhere you like, and ensure it's in the environment path, or the current directory for the command prompt.
+FASTBuild is a stand alone executable that does not need to be installed.  It can be placed anywhere on your system. It simply needs to be in the path you wish to compile from. Simply unpack the "fbuild.exe" for your platform anywhere you like, and ensure it's in the environment path, or the current directory for the command prompt.
 </p>
 <p>
 To verify everything is correct, open a command prompt, and type "fbuild -version". You should see something like the following:
 </p>
 <div class='output'>c:\p4\Code>fbuild -version
-FBuild - v0.50 (x86)
+FBuild - v0.98 (x86)
 
 c:\p4\Code></div>
 <p>You're now ready to start configuring FASTBuild.
@@ -113,6 +127,6 @@ Naturally aliases are used a lot to simplify invoking builds of particular targe
 </p>
 </div>
 
-  <script>generateFooter()</script>
+    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
 </body>
 </html>

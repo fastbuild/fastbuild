@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
 #include "MetaData.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
@@ -14,7 +13,7 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_BEGIN( IMetaData, RefObject, MetaNone() )
+REFLECT_BEGIN( IMetaData, Object, MetaNone() )
 REFLECT_END( IMetaData )
 
 // CONSTRUCTOR
@@ -70,7 +69,7 @@ IMetaData & MetaPath( bool relative )
 
 // MetaRange
 //------------------------------------------------------------------------------
-IMetaData & MetaRange( uint32_t minVal, uint32_t maxVal )
+IMetaData & MetaRange( int32_t minVal, int32_t maxVal )
 {
     return *FNEW( Meta_Range( minVal, maxVal ) );
 }

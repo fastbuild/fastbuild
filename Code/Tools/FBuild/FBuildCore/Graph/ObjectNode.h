@@ -33,7 +33,7 @@ public:
                          NodeProxy * srcFile,
                          const AString & compilerOptions,
                          uint32_t flags );
-    virtual ~ObjectNode();
+    virtual ~ObjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
 
@@ -60,7 +60,9 @@ public:
         FLAG_WARNINGS_AS_ERRORS_MSVC    = 0x80000,
         FLAG_VBCC               =   0x100000,
         FLAG_STATIC_ANALYSIS_MSVC = 0x200000,
-        FLAG_ORBIS_WAVE_PSSLC   =   0x400000
+        FLAG_ORBIS_WAVE_PSSLC   =   0x400000,
+        FLAG_DIAGNOSTICS_COLOR_AUTO = 0x800000,
+        FLAG_WARNINGS_AS_ERRORS_CLANGGCC = 0x1000000,
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,
@@ -71,7 +73,9 @@ public:
 
     inline bool IsCreatingPCH() const { return GetFlag( FLAG_CREATING_PCH ); }
     inline bool IsUsingPCH() const { return GetFlag( FLAG_USING_PCH ); }
-    inline bool IsMSVC() const { return GetFlag( FLAG_MSVC ); }
+    inline bool IsClang() const { return GetFlag( FLAG_CLANG ); }
+    inline bool IsGCC() const { return GetFlag( FLAG_GCC ); }
+    inline bool IsMSVC() const { return GetFlag(FLAG_MSVC); }
     inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
 
     virtual void SaveRemote( IOStream & stream ) const override;
@@ -162,9 +166,13 @@ private:
         ~CompileHelper();
 
         // start compilation
-        bool SpawnCompiler( Job * job, const AString & name,
-            const AString & workingDir, const AString & compiler,
-            const AString & outputFile, const Args & fullArgs );
+        bool SpawnCompiler( Job * job,
+            const AString & name,
+            const AString & workingDir,
+            const CompilerNode * compilerNode,
+            const AString & compiler,
+            const AString & outputFile,
+            const Args & fullArgs );
 
         // determine overall result
         inline int                      GetResult() const { return m_Result; }
@@ -208,6 +216,7 @@ private:
     uint32_t            m_Flags                             = 0;
     uint32_t            m_PreprocessorFlags                 = 0;
     uint64_t            m_PCHCacheKey                       = 0;
+    uint64_t            m_LightCacheKey                     = 0;
 
     // Not serialized
     Array< AString >    m_Includes;

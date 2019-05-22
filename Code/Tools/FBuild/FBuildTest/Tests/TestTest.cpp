@@ -127,7 +127,7 @@ void TestTest::Fail_ReturnCode() const
     TEST_ASSERT( fBuild.Build( AStackString<>( "Fail_ReturnCode" ) ) == false );
 
     // Ensure failure was of the test
-    TEST_ASSERT( GetRecordedOutput().Find( "Test failed (error 1)" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "Error: 1 (0x01)" ) );
 }
 
 // Fail_Crash

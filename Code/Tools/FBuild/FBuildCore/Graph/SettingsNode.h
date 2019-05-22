@@ -19,7 +19,7 @@ class SettingsNode : public Node
 public:
     explicit SettingsNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~SettingsNode();
+    virtual ~SettingsNode() override;
 
     static inline Node::Type GetTypeS() { return Node::SETTINGS_NODE; }
 

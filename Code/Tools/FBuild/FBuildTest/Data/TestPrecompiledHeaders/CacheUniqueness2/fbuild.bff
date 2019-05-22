@@ -17,7 +17,6 @@ ForEach( .SubDir in .SubDirs )
         #if __WINDOWS__
             .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.cpp'
             .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/PrecompiledHeader.pch'
-            .PCHOptions                 = '%1 /Fo"%3" /Z7 /W4 /WX /Yc"PrecompiledHeader.h" /Fp"%2" /nologo /c'
         #else
             .PCHInputFile               = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/PrecompiledHeader.h'
             .PCHOutputFile              = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/PrecompiledHeader.pch'
@@ -28,9 +27,10 @@ ForEach( .SubDir in .SubDirs )
         .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/'
         .CompilerOutputPath         = '$Out$/Test/PrecompiledHeaders/CacheUniqueness2/$SubDir$/'
         .CompilerOptions            + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/"'
-        #if __WINDOWS__
+                                    #if __WINDOWS__
                                         + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
-        #endif
+                                    #endif
+        .PCHOptions                 + ' "-ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/CacheUniqueness2/"'
     }
 }
 

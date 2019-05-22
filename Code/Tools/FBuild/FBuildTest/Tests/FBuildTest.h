@@ -6,8 +6,9 @@
 //------------------------------------------------------------------------------
 #include "TestFramework/UnitTest.h"
 
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
 #include "Core/Process/Mutex.h"
 
@@ -59,6 +60,19 @@ class FBuildTestOptions : public FBuildOptions
 {
 public:
     FBuildTestOptions();
+};
+
+// FBuildForTest
+//  - Wrapper for tests to use FBuild while accessing some internals for
+//    testing purposes
+//------------------------------------------------------------------------------
+class FBuildForTest : public FBuild
+{
+public:
+    FBuildForTest( FBuildOptions & options ) : FBuild( options ) {}
+
+    size_t GetRecursiveDependencyCount( const Node * node ) const;
+    size_t GetRecursiveDependencyCount( const char * nodeName ) const;
 };
 
 //------------------------------------------------------------------------------

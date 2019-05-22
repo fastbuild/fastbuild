@@ -22,7 +22,7 @@ public:
                 const char * environment,
                 bool shareHandles = false );
     bool IsRunning() const;
-    int WaitForExit();
+    int32_t WaitForExit();
     void Detach();
     void KillProcessTree();
 

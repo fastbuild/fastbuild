@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 // FBuildCore
 #include "FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
@@ -13,6 +11,7 @@
 
 // Core
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Tracing/Tracing.h"
@@ -20,7 +19,7 @@
 // system
 #include <stdio.h> // for sscanf
 #if defined( __WINDOWS__ )
-    #include <windows.h> // for QueryDosDeviceA
+    #include "Core/Env/WindowsHeader.h" // for QueryDosDeviceA
 #endif
 
 // CONSTRUCTOR - FBuildOptions
@@ -175,8 +174,6 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_AllowDistributed = true;
                 m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
                 m_AllowLocalRace = false;
-                m_UseCacheRead = false;
-                m_UseCacheWrite = false;
                 continue;
             }
             else if ( thisArg == "-help" )
@@ -268,6 +265,16 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-showtargets" )
             {
                 m_DisplayTargetList = true;
+                continue;
+            }
+            else if ( thisArg == "-compdb" )
+            {
+                m_GenerateCompilationDatabase = true;
+            }
+            else if ( thisArg == "-showalltargets" )
+            {
+                m_DisplayTargetList = true;
+                m_ShowHiddenTargets = true;
                 continue;
             }
             else if ( thisArg == "-summary" )
@@ -544,6 +551,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -cachetrim [size] Trim the cache to the given size in MiB.\n"
             " -cacheverbose  Emit details about cache interactions.\n"
             " -clean         Force a clean build.\n"
+            " -compdb        Generate JSON compilation database for specified targets.\n"
             " -config [path] Explicitly specify the config file to use.\n" );
 #ifdef DEBUG
     OUTPUT( " -debug         Break at startup, to attach debugger.\n" );
@@ -581,7 +589,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             "                Example absolute path : \"C:\\ProgramData\\fbuild\\sandbox\"\n"
             " -showcmds      Show command lines used to launch external processes.\n"
             " -showdeps      Show known dependency tree for specified targets.\n"
-            " -showtargets   Display list of primary build targets.\n"
+            " -showtargets   Display list of primary targets, excluding those marked \"Hidden\".\n"
+            " -showalltargets Display list of primary targets, including those marked \"Hidden\".\n"
             " -summary       Show a summary at the end of the build.\n"
             " -verbose       Show detailed diagnostic information. This will slow\n"
             "                down building.\n"

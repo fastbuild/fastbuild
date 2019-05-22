@@ -182,4 +182,32 @@ FBuildTestOptions::FBuildTestOptions()
     m_ShowSummary = true; // required to generate stats for node count checks
 }
 
+// GetRecursiveDependencyCount
+//------------------------------------------------------------------------------
+size_t FBuildForTest::GetRecursiveDependencyCount( const Node * node ) const
+{
+    size_t count = 0;
+    const Dependencies * depLists[3] = { &node->GetPreBuildDependencies(),
+                                            &node->GetStaticDependencies(),
+                                            &node->GetDynamicDependencies() };
+    for ( const Dependencies * depList : depLists )
+    {
+        for ( const Dependency & dep : *depList )
+        {
+            count += GetRecursiveDependencyCount( dep.GetNode() );
+        }
+        count += depList->GetSize();
+    }
+    return count;
+}
+
+// GetRecursiveDependencyCount
+//------------------------------------------------------------------------------
+size_t FBuildForTest::GetRecursiveDependencyCount( const char * nodeName ) const
+{
+    const Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    TEST_ASSERT( node );
+    return GetRecursiveDependencyCount( node );
+}
+
 //------------------------------------------------------------------------------

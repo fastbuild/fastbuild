@@ -19,7 +19,7 @@ class TestNode : public FileNode
 public:
     TestNode();
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~TestNode();
+    virtual ~TestNode() override;
 
     static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
 

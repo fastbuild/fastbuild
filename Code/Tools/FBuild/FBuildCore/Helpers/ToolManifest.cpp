@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "ToolManifest.h"
 
 // Core
@@ -28,19 +26,19 @@
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_STRUCT_BEGIN( ToolManifest, Struct, MetaNone() )
-    REFLECT(        m_ToolId,                       "ToolId",                       MetaNone() )
-    REFLECT(        m_TimeStamp,                    "TimeStamp",                    MetaNone() )
-    REFLECT(        m_MainExecutableRootPath,       "MainExecutableRootPath",       MetaNone() )
-    REFLECT_ARRAY_OF_STRUCT( m_Files,               "Files",    ToolManifestFile,   MetaNone() )
-    REFLECT_ARRAY(  m_CustomEnvironmentVariables,   "CustomEnvironmentVariables",   MetaNone() )
+    REFLECT(        m_ToolId,                       "ToolId",                       MetaHidden() )
+    REFLECT(        m_TimeStamp,                    "TimeStamp",                    MetaHidden() )
+    REFLECT(        m_MainExecutableRootPath,       "MainExecutableRootPath",       MetaHidden() )
+    REFLECT_ARRAY_OF_STRUCT( m_Files,               "Files",    ToolManifestFile,   MetaHidden() )
+    REFLECT_ARRAY(  m_CustomEnvironmentVariables,   "CustomEnvironmentVariables",   MetaHidden() )
 REFLECT_END( ToolManifest )
 
 REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct, MetaNone() )
-    REFLECT( m_Name,        "Name",         MetaNone() )
-    REFLECT( m_TimeStamp,   "TimeStamp",    MetaNone() )
-    REFLECT( m_Hash,        "Hash",         MetaNone() )
-    REFLECT( m_UncompressedContentSize, "UncompressedContentSize",  MetaNone() )
-    REFLECT( m_CompressedContentSize, "CompressedContentSize",  MetaNone() )
+    REFLECT( m_Name,        "Name",         MetaHidden() )
+    REFLECT( m_TimeStamp,   "TimeStamp",    MetaHidden() )
+    REFLECT( m_Hash,        "Hash",         MetaHidden() )
+    REFLECT( m_UncompressedContentSize, "UncompressedContentSize",  MetaHidden() )
+    REFLECT( m_CompressedContentSize, "CompressedContentSize",  MetaHidden() )
 REFLECT_END( ToolManifestFile )
 
 // CONSTRUCTOR (ToolManifestFile)
@@ -331,11 +329,11 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         const char * token = envVar.Find( "%1" );
         if ( token )
         {
-            AString::Copy( envVar.Get(), mem, ( token - envVar.Get() ) );   // Copy the data up to the token
+            AString::Copy( envVar.Get(), mem, (size_t)( token - envVar.Get() ) );   // Copy the data up to the token
             mem += ( token - envVar.Get() );
             AString::Copy( basePath.Get(), mem, basePath.GetLength() );     // Append the basePath instead of the token
             mem += basePath.GetLength();
-            AString::Copy( token + 2, mem, envVar.GetLength() - 2 - ( token - envVar.Get() ) + 1 ); // Append the trailing portion of the string.
+            AString::Copy( token + 2, mem, (size_t)( envVar.GetLength() - 2 - ( token - envVar.Get() ) + 1 ) ); // Append the trailing portion of the string.
             mem += ( envVar.GetLength() - 2 - ( token - envVar.Get() ) + 1 );
         }
         else
@@ -453,7 +451,7 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
         FLOG_WARN( "Invalid data received for fileId %u", fileId );
         return false;
     }
-    c.Decompress( data );
+    VERIFY( c.Decompress( data ) );
     const void * uncompressedData = c.GetResult();
     const size_t uncompressedDataSize = c.GetResultSize();
 
@@ -577,9 +575,15 @@ bool ToolManifest::AddFile( const AString & fileName, const uint64_t timeStamp )
     const uint32_t hash = xxHash::Calc32( uncompressedContent, uncompressedContentSize );
     m_Files.Append( ToolManifestFile( fileName, timeStamp, hash, uncompressedContentSize ) );
 
-    ToolManifestFile & f = m_Files.Top();
-    // store compressed file content (take ownership of data)
-    f.StoreCompressedContent( uncompressedContent, uncompressedContentSize );
+    // Compress and keep the data if we are in distributed mode (this saves us
+    // having to re-load the data later on)
+    if (FBuild::Get().GetOptions().m_AllowDistributed)
+    {
+        ToolManifestFile & f = m_Files.Top();
+        // store compressed file content (take ownership of data)
+        f.StoreCompressedContent( uncompressedContent, uncompressedContentSize );
+    }
+
     // free unused uncompressed data
     FREE( uncompressedContent );
 

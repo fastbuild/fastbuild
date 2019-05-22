@@ -13,7 +13,7 @@ class Meta_IgnoreForComparison : public IMetaData
     REFLECT_DECLARE( Meta_IgnoreForComparison )
 public:
     explicit Meta_IgnoreForComparison();
-    virtual ~Meta_IgnoreForComparison();
+    virtual ~Meta_IgnoreForComparison() override;
 };
 
 //------------------------------------------------------------------------------

@@ -12,7 +12,7 @@ class FunctionError : public Function
 {
 public:
     explicit        FunctionError();
-    inline virtual ~FunctionError() = default;
+    inline virtual ~FunctionError() override = default;
 
     virtual bool AcceptsHeader() const override;
     virtual bool NeedsHeader() const override;

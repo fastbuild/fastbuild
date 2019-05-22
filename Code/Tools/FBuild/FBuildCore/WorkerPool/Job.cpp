@@ -3,14 +3,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Job.h"
 
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Env/Assert.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
@@ -78,7 +77,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
         if ( m_IsLocal )
         {
             ASSERT( s_TotalLocalDataMemoryUsage >= m_DataSize );
-            AtomicSub64( &s_TotalLocalDataMemoryUsage, m_DataSize );
+            AtomicSub64( &s_TotalLocalDataMemoryUsage, (int32_t)m_DataSize );
         }
     }
 
@@ -90,7 +89,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
     // Update total memory use tracking
     if ( m_IsLocal )
     {
-        AtomicAdd64( &s_TotalLocalDataMemoryUsage, m_DataSize );
+        AtomicAdd64( &s_TotalLocalDataMemoryUsage, (int32_t)m_DataSize );
     }
 }
 
@@ -192,9 +191,9 @@ void Job::Deserialize( IOStream & stream )
     OwnData( data, dataSize, compressed );
 }
 
-// GetMessagesForMonitorLog
+// GetMessagesForLog
 //------------------------------------------------------------------------------
-void Job::GetMessagesForMonitorLog( AString & buffer ) const
+void Job::GetMessagesForLog( AString & buffer ) const
 {
     // The common case is that there are no messages
     if ( m_Messages.IsEmpty() )
@@ -216,6 +215,20 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
     {
         buffer += msg;
     }
+}
+
+// GetMessagesForMonitorLog
+//------------------------------------------------------------------------------
+void Job::GetMessagesForMonitorLog( AString & buffer ) const
+{
+    // The common case is that there are no messages
+    if ( m_Messages.IsEmpty() )
+    {
+        return;
+    }
+
+    // concat all messages
+    GetMessagesForLog( buffer );
 
     // Escape some characters to simplify parsing in the log
     // (The monitor will knows how to restore them)

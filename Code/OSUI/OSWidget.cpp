@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "OSUI/PrecompiledHeader.h"
 #include "OSWidget.h"
 
 // OSUI
@@ -14,8 +13,8 @@
 
 // system
 #if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h" // Must be before CommCtrl
     #include <CommCtrl.h>
-    #include <Windows.h>
 #endif
 
 // Defines

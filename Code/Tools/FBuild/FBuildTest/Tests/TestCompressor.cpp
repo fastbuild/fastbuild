@@ -97,7 +97,7 @@ void TestCompressor::CompressSimpleHelper( const char * data,
 
     // decompress
     Compressor d;
-    d.Decompress( compressedMem );
+    TEST_ASSERT( d.Decompress( compressedMem ) );
     const size_t decompressedSize = d.GetResultSize();
     TEST_ASSERT( decompressedSize == size );
     TEST_ASSERT( memcmp( data, d.GetResult(), size ) == 0 );
@@ -143,11 +143,11 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     AutoPtr< char > compressedData( (char *)ALLOC( compressedSize ) );
     memcpy( compressedData.Get(), comp.GetResult(), compressedSize );
     float compressedPerc = ( (float)compressedSize / (float)dataSize ) * 100.0f;
-    OUTPUT( "Compressed Size: %u (%2.1f%% of original)\n", (uint32_t)compressedSize, compressedPerc );
+    OUTPUT( "Compressed Size: %u (%2.1f%% of original)\n", (uint32_t)compressedSize, (double)compressedPerc );
 
     // decompress to check we get original data back
     Compressor decomp;
-    decomp.Decompress( compressedData.Get() );
+    TEST_ASSERT( decomp.Decompress( compressedData.Get() ) );
     size_t uncompressedSize = decomp.GetResultSize();
     TEST_ASSERT( uncompressedSize == dataSize );
     for ( size_t i=0; i<uncompressedSize; ++i )
@@ -170,8 +170,8 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         ++numRepeats;
     }
     float compressTimeTaken = t.GetElapsed();
-    double compressThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / compressTimeTaken ) / 1024.0;
-    OUTPUT( "     Comp Speed: %2.1f MB/s - %2.3fs (%u repeats)\n", (float)compressThroughputMBs, compressTimeTaken, numRepeats );
+    double compressThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / (double)compressTimeTaken ) / 1024.0;
+    OUTPUT( "     Comp Speed: %2.1f MB/s - %2.3fs (%u repeats)\n", (double)compressThroughputMBs, (double)compressTimeTaken, numRepeats );
 
     // decompress the data
     Timer t2;
@@ -179,13 +179,13 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     while ( t2.GetElapsed() < TIME_TO_REPEAT )
     {
         Compressor d;
-        d.Decompress( compressedData.Get() );
+        TEST_ASSERT( d.Decompress( compressedData.Get() ) );
         TEST_ASSERT( d.GetResultSize() == dataSize );
         ++numRepeats;
     }
     float decompressTimeTaken = t2.GetElapsed();
-    double decompressThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / decompressTimeTaken ) / 1024.0;
-    OUTPUT( "   Decomp Speed: %2.1f MB/s - %2.3fs (%u repeats)\n", (float)decompressThroughputMBs, decompressTimeTaken, numRepeats );
+    double decompressThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / (double)decompressTimeTaken ) / 1024.0;
+    OUTPUT( "   Decomp Speed: %2.1f MB/s - %2.3fs (%u repeats)\n", (double)decompressThroughputMBs, (double)decompressTimeTaken, numRepeats );
 
     // time memcpy to compare with
     Timer t0;
@@ -198,8 +198,8 @@ void TestCompressor::CompressHelper( const char * fileName ) const
         ++numRepeats;
     }
     float memcpyTimeTaken = t0.GetElapsed();
-    double memcpyThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / memcpyTimeTaken ) / 1024.0;
-    OUTPUT( "   MemCpy Speed: %2.1f MB/s - %2.3fs (%u repeats)\n", (float)memcpyThroughputMBs, memcpyTimeTaken, numRepeats );
+    double memcpyThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / (double)memcpyTimeTaken ) / 1024.0;
+    OUTPUT( "   MemCpy Speed: %2.1f MB/s - %2.3fs (%u repeats)\n", (double)memcpyThroughputMBs, (double)memcpyTimeTaken, numRepeats );
 }
 
 // TestHeaderValidity

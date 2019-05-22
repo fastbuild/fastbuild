@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "SmallBlockAllocator.h"
 
 // Core
@@ -181,7 +179,7 @@ bool SmallBlockAllocator::Free( void * ptr )
     // Even if the buckets have nevere been initialized, this is safe
     // as it will result in a page index out of bounds since for any valid
     // pointer as no allocation can validly be outside of the user mode address space.
-    const size_t pageIndex = ( ( (char *)ptr - (char *)s_BucketMemoryStart) / MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE );
+    const size_t pageIndex = (size_t)( ( (char *)ptr - (char *)s_BucketMemoryStart) / MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE );
     if ( pageIndex >= BUCKET_MAPPING_TABLE_SIZE )
     {
         return false; // Not a bucket allocation
@@ -276,7 +274,7 @@ bool SmallBlockAllocator::Free( void * ptr )
 
     // Update page to bucket mapping table
     ASSERT( s_BucketMappingTable[ pageIndex ] ==  0 );
-    const size_t bucketIndex = ( this - SmallBlockAllocator::s_Buckets );
+    const size_t bucketIndex = (size_t)( this - SmallBlockAllocator::s_Buckets );
     ASSERT( bucketIndex <= 255 );
     s_BucketMappingTable[ pageIndex ] = (uint8_t)bucketIndex;
 

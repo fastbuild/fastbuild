@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FLog.h"
 
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
@@ -12,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 
 #include "Core/Env/Types.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Process.h"
@@ -23,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #if defined( __WINDOWS__ ) && defined( DEBUG )
-    #include <windows.h> // for OutputDebugStringA
+    #include "Core/Env/WindowsHeader.h" // for OutputDebugStringA
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     // TODO:LINUX TODO:MAC Clean up this _itoa_s mess
@@ -304,22 +303,22 @@ static FileStream * g_MonitorFileStream = nullptr;
     if ( timeTakenMinutes > 0 )
     {
         char buffer[ 8 ];
-        _itoa_s( timeTakenMinutes, buffer, 8, 10 );
+        _itoa_s( (int32_t)timeTakenMinutes, buffer, 8, 10 );
         m_ProgressText += buffer;
         m_ProgressText.Append( "m ", 2 );
     }
     char buffer[ 8 ];
-    _itoa_s( timeTakenSeconds, buffer, 8, 10 );
+    _itoa_s( (int32_t)timeTakenSeconds, buffer, 8, 10 );
     if ( timeTakenSeconds < 10 ) { m_ProgressText += '0'; }
     m_ProgressText += buffer;
     m_ProgressText += 's';
 
     // active/available jobs " (%u/%u)"
     m_ProgressText.Append( " (", 2 );
-    _itoa_s( numJobsActive, buffer, 8, 10 );
+    _itoa_s( (int32_t)numJobsActive, buffer, 8, 10 );
     m_ProgressText += buffer;
     m_ProgressText += '/';
-    _itoa_s( numJobsActive + numJobs, buffer, 8, 10 );
+    _itoa_s( (int32_t)( numJobsActive + numJobs ), buffer, 8, 10 );
     m_ProgressText += buffer;
     m_ProgressText += ')';
 
@@ -327,10 +326,10 @@ static FileStream * g_MonitorFileStream = nullptr;
     if ( FBuild::Get().GetOptions().m_AllowDistributed )
     {
         m_ProgressText.Append( "+(", 2 );
-        _itoa_s( numJobsDistActive, buffer, 8, 10 );
+        _itoa_s( (int32_t)numJobsDistActive, buffer, 8, 10 );
         m_ProgressText += buffer;
         m_ProgressText += '/';
-        _itoa_s( numJobsDistActive + numJobsDist, buffer, 8, 10 );
+        _itoa_s( (int32_t)( numJobsDistActive + numJobsDist ), buffer, 8, 10 );
         m_ProgressText += buffer;
         m_ProgressText += ')';
     }
@@ -378,7 +377,7 @@ static FileStream * g_MonitorFileStream = nullptr;
     if ( threadIndex > 0 )
     {
         char buffer[ 8 ];
-        _itoa_s( threadIndex, buffer, 8, 10 );
+        _itoa_s( (int32_t)threadIndex, buffer, 8, 10 );
         tmp += buffer;
         tmp += '>';
         if ( threadIndex < 10 )

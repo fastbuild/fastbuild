@@ -3,11 +3,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FunctionIf.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
@@ -85,15 +84,15 @@ FunctionIf::FunctionIf()
     const BFFIterator operatorIter( pos );
 
     // in
-    if ( pos.ParseExactString( "in" ) )
+    if ( pos.ParseExactString( BFF_KEYWORD_IN ) )
     {
         op = Operator::OP_IN;
     }
     // not in
-    else if ( pos.ParseExactString( "not" ) )
+    else if ( pos.ParseExactString( BFF_KEYWORD_NOT ) )
     {
         pos.SkipWhiteSpace();
-        if ( pos.ParseExactString( "in" ) )
+        if ( pos.ParseExactString( BFF_KEYWORD_IN ) )
         {
             op = Operator::OP_NOT_IN;
         }

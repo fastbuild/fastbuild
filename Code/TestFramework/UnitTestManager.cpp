@@ -15,7 +15,7 @@
 
 #include <string.h>
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Static Data
@@ -24,6 +24,17 @@
 /*static*/ UnitTestManager::TestInfo UnitTestManager::s_TestInfos[ MAX_TESTS ];
 /*static*/ UnitTestManager * UnitTestManager::s_Instance = nullptr;
 /*static*/ UnitTest * UnitTestManager::s_FirstTest = nullptr;
+
+// OnAssert callback
+//------------------------------------------------------------------------------
+/*static*/
+#if defined( __WINDOWS__ )
+    __declspec(noreturn)
+#endif
+void OnAssert( const char * /*message*/ )
+{
+    throw "Assert Failed";
+}
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -39,7 +50,7 @@ UnitTestManager::UnitTestManager()
     #ifdef ASSERTS_ENABLED
         if ( IsDebuggerAttached() == false )
         {
-            AssertHandler::SetThrowOnAssert( true );
+            AssertHandler::SetAssertCallback( OnAssert );
         }
     #endif
 }
@@ -51,7 +62,7 @@ UnitTestManager::~UnitTestManager()
     #ifdef ASSERTS_ENABLED
         if ( IsDebuggerAttached() == false )
         {
-            AssertHandler::SetThrowOnAssert( false );
+            AssertHandler::SetAssertCallback( nullptr );
         }
     #endif
 
@@ -106,6 +117,9 @@ loop:
 //------------------------------------------------------------------------------
 bool UnitTestManager::RunTests( const char * testGroup )
 {
+    // Reset results so RunTests can be called multiple times
+    s_NumTests = 0;
+
     // check for compile time filter
     UnitTest * test = s_FirstTest;
     while ( test )
@@ -160,11 +174,11 @@ bool UnitTestManager::RunTests( const char * testGroup )
             status = ( info.m_MemoryLeaks ) ? "FAIL (LEAKS)" : "FAIL";
         }
 
-        OUTPUT( "%12s : %5.3fs : %s\n", status, info.m_TimeTaken, info.m_TestName );
+        OUTPUT( "%12s : %5.3fs : %s\n", status, (double)info.m_TimeTaken, info.m_TestName );
         totalTime += info.m_TimeTaken;
     }
     OUTPUT( "------------------------------------------------------------\n" );
-    OUTPUT( "Passed: %u / %u (%u failures) in %2.3fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), totalTime );
+    OUTPUT( "Passed: %u / %u (%u failures) in %2.3fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), (double)totalTime );
     OUTPUT( "------------------------------------------------------------\n" );
 
     return ( s_NumTests == numPassed );
@@ -175,6 +189,7 @@ bool UnitTestManager::RunTests( const char * testGroup )
 void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
 {
     // record info for this test
+    ASSERT( s_NumTests < MAX_TESTS );
     TestInfo& info = s_TestInfos[ s_NumTests ];
     info.m_TestGroup = testGroup;
     info.m_TestName = testName;
@@ -217,14 +232,14 @@ void UnitTestManager::TestEnd()
         if ( MemTracker::GetCurrentAllocationCount() != 0 )
         {
             info.m_MemoryLeaks = true;
-            OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, timeTaken );
+            OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
             MemTracker::DumpAllocations();
             TEST_ASSERT( false );
             return;
         }
     #endif
 
-    OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", info.m_TestName, timeTaken );
+    OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", info.m_TestName, (double)timeTaken );
     info.m_Passed = true;
 }
 

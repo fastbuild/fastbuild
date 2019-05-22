@@ -8,6 +8,7 @@ namespace
 
 class B
 {
+public:
     static int Function()
     {
         return AnonFunction();

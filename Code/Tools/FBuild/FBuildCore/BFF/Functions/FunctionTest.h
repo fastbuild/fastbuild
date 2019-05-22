@@ -12,7 +12,7 @@ class FunctionTest : public Function
 {
 public:
     explicit        FunctionTest();
-    inline virtual ~FunctionTest() = default;
+    inline virtual ~FunctionTest() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

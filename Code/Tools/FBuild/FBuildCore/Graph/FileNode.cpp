@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FileNode.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
@@ -14,6 +12,8 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
+
+#include <string.h> // for strstr
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -60,6 +60,23 @@ void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const char *
 
     // Are there any warnings? (string is ok even in non-English)
     if ( strstr( data, ": warning " ) )
+    {
+        const bool treatAsWarnings = true;
+        DumpOutput( job, data, dataSize, name, treatAsWarnings );
+    }
+}
+
+// HandleWarningsClangGCC
+//------------------------------------------------------------------------------
+void FileNode::HandleWarningsClangGCC( Job * job, const AString & name, const char * data, uint32_t dataSize )
+{
+    if ( ( data == nullptr ) || ( dataSize == 0 ) )
+    {
+        return;
+    }
+
+    // Are there any warnings? (string is ok even in non-English)
+    if ( strstr( data, "warning: " ) )
     {
         const bool treatAsWarnings = true;
         DumpOutput( job, data, dataSize, name, treatAsWarnings );

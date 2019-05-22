@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "CRC32.h"
 
 #include "Core/Math/Conversions.h"
@@ -60,9 +58,7 @@ static const uint32_t g_CRC32Table[ 256 ] =
 #define UINT unsigned int
 #define RES unsigned int
 #define INT int
-#define INT_PTR unsigned int
 #define SIZE_T size_t
-#define DWORD unsigned int
 #define BYTE unsigned char
 
 //#define CRCPOLY 0x82f63b78 // reversed 0x1EDC6F41
@@ -100,19 +96,19 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
 
     RES crc = CRCINIT;
 
-    // Align to DWORD boundary
-    SIZE_T align = (sizeof(DWORD) - (size_t)buf) & (sizeof(DWORD) - 1);
+    // Align to uint32_t boundary
+    SIZE_T align = (sizeof(uint32_t) - (size_t)buf) & (sizeof(uint32_t) - 1);
     align = Math::Min(align, len);
     len -= align;
     for (; align; align--)
         crc = g_crc_slicing[0][(crc ^ *buf++) & 0xFF] ^ (crc >> 8);
 
-    SIZE_T nqwords = len / (sizeof(DWORD) + sizeof(DWORD));
+    SIZE_T nqwords = len / (sizeof(uint32_t) + sizeof(uint32_t));
     for (; nqwords; nqwords--) {
-        crc ^= *(DWORD*)buf;
-        buf += sizeof(DWORD);
-        UINT next = *(DWORD*)buf;
-        buf += sizeof(DWORD);
+        crc ^= *(uint32_t*)buf;
+        buf += sizeof(uint32_t);
+        UINT next = *(uint32_t*)buf;
+        buf += sizeof(uint32_t);
         crc =
             g_crc_slicing[7][(crc      ) & 0xFF] ^
             g_crc_slicing[6][(crc >>  8) & 0xFF] ^
@@ -124,7 +120,7 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
             g_crc_slicing[0][(next >> 24)];
     }
 
-    len &= sizeof(DWORD) * 2 - 1;
+    len &= sizeof(uint32_t) * 2 - 1;
     for (; len; len--)
         crc = g_crc_slicing[0][(crc ^ *buf++) & 0xFF] ^ (crc >> 8);
     return ~crc;
@@ -152,7 +148,7 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
         uint8_t b = bytes[ i ];
         if ( ( b >= 'A' ) && ( b <= 'Z' ) )
         {
-            b = 'a' + ( b - 'A' );
+            b = (uint8_t)( 'a' + ( b - 'A' ) );
         }
         crc32 = ( crc32 >> 8 ) ^ g_CRC32Table[ ( crc32 ^ b ) & 0x000000FF ];
     }
