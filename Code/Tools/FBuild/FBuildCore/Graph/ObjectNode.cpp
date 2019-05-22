@@ -2488,7 +2488,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     DumpOutput( job, m_Out.Get(), m_OutSize, outputName );
                 }
 
-                job->Error( "Failed to build Object (error %i) '%s'\n", m_Result, outputName.Get() );
+                job->Error( "Failed to build Object Error: %s '%s'\n", ERROR_STR(m_Result), outputName.Get() );
                 result = false;
             }
         }
@@ -2507,8 +2507,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
         else
         {
-            job->Error( "Failed to spawn '%s' process (error %i) to build '%s'\n",
-                spawnExe.Get(), Env::GetLastErr(), outputName.Get() );
+            job->Error( "Failed to spawn '%s' process Error: %s to build '%s'\n",
+                spawnExe.Get(), LAST_ERROR_STR, outputName.Get() );
             job->OnSystemError();
         }
         result = false;
