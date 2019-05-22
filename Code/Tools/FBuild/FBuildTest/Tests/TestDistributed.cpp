@@ -353,28 +353,17 @@ void TestDistributed::ErrorsAreCorrectlyReported() const
 //------------------------------------------------------------------------------
 void TestDistributed::WarningsAreCorrectlyReported() const
 {
-    FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
-    options.m_AllowDistributed = true;
-    options.m_NumWorkerThreads = 1;
-    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
-    options.m_AllowLocalRace = false;
-    options.m_ForceCleanBuild = true;
-    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
-    options.m_DistributionPort = TEST_PROTOCOL_PORT;
-
-    // start a client to emulate the other end
-    Server s( 1 );
-    s.Listen( TEST_PROTOCOL_PORT );
+    HelperOptions helperOptions;
+    helperOptions.m_TargetIsAFile = false;
+    helperOptions.m_ClientOptions.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
+    helperOptions.m_ClientOptions.m_AllowLocalRace = false;
+    helperOptions.m_ClientOptions.m_ForceCleanBuild = true;
 
     // MSVC
     #if defined( __WINDOWS__ )
         {
-            FBuild fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
-
-            // Check that build passes
-            TEST_ASSERT( fBuild.Build( AStackString<>( "WarningsAreCorrectlyReported-MSVC" ) ) );
+            const char * target( "WarningsAreCorrectlyReported-MSVC" );
+            TestHelper( target, helperOptions );
 
             // Check that error is returned
             TEST_ASSERT( GetRecordedOutput().Find( "warning C4101" ) && GetRecordedOutput().Find( "'x': unreferenced local variable" ) );
@@ -384,11 +373,8 @@ void TestDistributed::WarningsAreCorrectlyReported() const
     // Clang
     #if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
         {
-            FBuild fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
-
-            // Check that build passes
-            TEST_ASSERT( fBuild.Build( AStackString<>( "WarningsAreCorrectlyReported-Clang" ) ) );
+            const char * target( "WarningsAreCorrectlyReported-Clang" );
+            TestHelper( target, helperOptions );
 
             // Check that error is returned
             TEST_ASSERT( GetRecordedOutput().Find( "warning: unused variable 'x' [-Wunused-variable]" ) );

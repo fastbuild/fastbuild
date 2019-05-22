@@ -971,6 +971,21 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             // built ok - serialize to disc
 
             Node* node = job->GetNode();
+            Node::Type nodeType = node->GetType();
+            ObjectNode * on = nullptr;
+            switch ( nodeType )
+            {
+                case Node::OBJECT_NODE:
+                    on = node->CastTo< ObjectNode >();
+                    break;
+                case Node::TEST_NODE:
+                    // nothing to do here
+                    break;
+                default:
+                    ASSERT( false );
+                    break;
+            }
+
             const AString & nodeName = node->GetName();
             if ( Node::EnsurePathExistsForFile( nodeName ) == false )
             {
@@ -983,13 +998,10 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
                 result = WriteFileToDisk( nodeName, (const char *)data + sizeof( uint32_t ), firstFileSize );
 
-                ObjectNode * on = nullptr;
-                Node::Type nodeType = node->GetType();
                 switch ( nodeType )
                 {
                     case Node::OBJECT_NODE:
                         {
-                            on = node->CastTo< ObjectNode >();
                             const uint32_t secondFileSize = on->IsUsingPDB() ? *(uint32_t *)( (const char *)data + sizeof( uint32_t ) + firstFileSize ) : 0;
                             if ( result && on->IsUsingPDB() )
                             {
@@ -1055,18 +1067,18 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                         AStackString<> msgBuffer;
                         job->GetMessagesForLog( msgBuffer );
 
-                        if ( objectNode->IsMSVC())
+                        if ( on->IsMSVC())
                         {
-                            if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
+                            if ( on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
                             {
-                                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                                FileNode::HandleWarningsMSVC( job, on->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
                             }
                         }
-                        else if ( objectNode->IsClang() || objectNode->IsGCC() )
+                        else if ( on->IsClang() || on->IsGCC() )
                         {
-                            if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
+                            if ( !on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
                             {
-                                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                                FileNode::HandleWarningsClangGCC( job, on->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
                             }
                         }
                     }
