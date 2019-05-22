@@ -75,12 +75,31 @@ Compiler( 'Compiler-ClangForWindows-Dist-Tags' )
 Using( .LinuxGCCToolChain )
 .CompilerStruct =
 [
+#if CI_BUILD
+    .Executable     = 'GXX_BINARY'
+    .ExtraFiles     = {
+                        '/usr/bin/as'
+                        'CC1_BINARY'
+                        'CC1PLUS_BINARY'
+                      }
+#else
+    #if USING_GCC_4
     .Executable     = '/usr/bin/gcc-4.9'
     .ExtraFiles     = {
                         '/usr/bin/as'
                         '$GCC4_BasePath$/cc1'
                         '$GCC4_BasePath$/cc1plus'
                       }
+    #endif
+    #if USING_GCC_7
+    .Executable     = '$GCC7_BasePath$/x86_64-linux-gnu-g++-7'
+    .ExtraFiles     = {
+                        '/usr/bin/as'
+                        '/usr/lib/gcc/x86_64-linux-gnu/7/cc1'
+                        '/usr/lib/gcc/x86_64-linux-gnu/7/cc1plus'
+                      }
+    #endif
+#endif
     Using( .CompilerTagsStruct )
 ]
 Compiler( 'Compiler-GCC-Dist-Tags' )
