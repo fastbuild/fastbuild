@@ -974,7 +974,7 @@
                 pathCopy.SetLength( baseLength );
                 pathCopy += entry->d_name;
                 pathCopy += NATIVE_SLASH;
-                GetFilesRecurse( pathCopy, wildCard, results );
+                GetFilesRecurse( pathCopy, wildCard, includeDirs, results );
 
                 if ( !includeDirs )
                 {
