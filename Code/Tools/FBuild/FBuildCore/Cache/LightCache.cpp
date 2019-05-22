@@ -392,10 +392,10 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString &
 {
     outCyclic = false;
 
-    const int stackSize = (int)m_IncludeStack.GetSize();
-    for ( int i=( stackSize - 1 ); i >=0; --i )
+    const int32_t stackSize = (int32_t)m_IncludeStack.GetSize();
+    for ( int32_t i = ( stackSize - 1 ); i >= 0; --i )
     {
-        AStackString<> possibleIncludePath( m_IncludeStack[ i ]->m_FileName );
+        AStackString<> possibleIncludePath( m_IncludeStack[ (size_t)i ]->m_FileName );
         const char * lastFwdSlash = possibleIncludePath.FindLast( '/' );
         const char * lastBackSlash = possibleIncludePath.FindLast( '\\' );
         const char * lastSlash = ( lastFwdSlash > lastBackSlash ) ? lastFwdSlash : lastBackSlash;

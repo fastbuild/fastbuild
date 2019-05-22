@@ -20,6 +20,7 @@ public:
     virtual bool IsAFile() const override { return true; }
 
     static void HandleWarningsMSVC( Job * job, const AString & name, const char * data, uint32_t dataSize );
+    static void HandleWarningsClangGCC( Job * job, const AString & name, const char * data, uint32_t dataSize );
 protected:
     virtual BuildResult DoBuild( Job * job ) override;
 

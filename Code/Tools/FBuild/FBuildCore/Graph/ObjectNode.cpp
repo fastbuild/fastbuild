@@ -948,6 +948,10 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             {
                 flags &= ( ~ObjectNode::FLAG_DIAGNOSTICS_COLOR_AUTO );
             }
+            else if ( token.BeginsWith( "-werror" ) )
+            {
+                flags |= ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC;
+            }
         }
     }
 
@@ -2252,10 +2256,23 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
     }
     else
     {
-        // Handle MSCL warnings if not already a failure
-        if ( IsMSVC() && ( ch.GetResult() == 0 ) && !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ))
+        // Handle warnings for compilation that passed
+        if ( ch.GetResult() == 0 )
         {
-            HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+            if ( IsMSVC() )
+            {
+                if ( !GetFlag( FLAG_WARNINGS_AS_ERRORS_MSVC ) )
+                {
+                    HandleWarningsMSVC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+                }
+            }
+            else if ( IsClang() || IsGCC() )
+            {
+                if ( !GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
+                {
+                    HandleWarningsClangGCC( job, GetName(), ch.GetOut().Get(), ch.GetOutSize() );
+                }
+            }
         }
     }
 
@@ -2431,7 +2448,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 // then the issue is related to compiler settings.
                 // If they are not present, it's a system error, possibly caused by system resource
                 // exhaustion on the remote machine
-                if ( ( strstr( stdOut, "C1076" ) == nullptr ) && 
+                if ( ( strstr( stdOut, "C1076" ) == nullptr ) &&
                      ( strstr( stdOut, "C3859" ) == nullptr ) )
                 {
                     job->OnSystemError();

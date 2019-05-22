@@ -23,6 +23,10 @@ Compiler( 'Compiler-VS2013-x64' )
                     '$VS2013_BasePath$/VC/redist/x86/Microsoft.VC120.CRT/msvcr120.dll'
                     '$VS2013_BasePath$/VC/redist/x86/Microsoft.VC120.CRT/vccorlib120.dll'
                   }
+
+    #if ENABLE_LIGHT_CACHE 
+        .UseLightCache_Experimental = true
+    #endif
 }
 
 // X64 ToolChain for Windows

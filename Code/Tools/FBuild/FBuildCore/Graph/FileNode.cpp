@@ -66,6 +66,23 @@ void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const char *
     }
 }
 
+// HandleWarningsClangGCC
+//------------------------------------------------------------------------------
+void FileNode::HandleWarningsClangGCC( Job * job, const AString & name, const char * data, uint32_t dataSize )
+{
+    if ( ( data == nullptr ) || ( dataSize == 0 ) )
+    {
+        return;
+    }
+
+    // Are there any warnings? (string is ok even in non-English)
+    if ( strstr( data, "warning: " ) )
+    {
+        const bool treatAsWarnings = true;
+        DumpOutput( job, data, dataSize, name, treatAsWarnings );
+    }
+}
+
 // DumpOutput
 //------------------------------------------------------------------------------
 void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings )

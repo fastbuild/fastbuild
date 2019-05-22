@@ -21,6 +21,10 @@ Compiler( 'Compiler-VS2015-x64' )
                     '$VS2015_BasePath$/VC/redist/x64/Microsoft.VC140.CRT/vccorlib140.dll'
                     '$VS2015_BasePath$/VC/redist/x64/Microsoft.VC140.CRT/vcruntime140.dll'
                   }
+
+    #if ENABLE_LIGHT_CACHE 
+        .UseLightCache_Experimental = true
+    #endif
 }
 
 // X64 ToolChain for Windows
