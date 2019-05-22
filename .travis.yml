@@ -131,7 +131,7 @@ script:
       s:GXX_BINARY:$(which ${GXX}):
       s:CC1_BINARY:$(${GCC} -print-prog-name=cc1):
       s:CC1PLUS_BINARY:$(${GCC} -print-prog-name=cc1plus):
-      " ../External/SDK/GCC/Linux/GCC_CI.bff
+      " ../*.bff
       ;;
     esac
   # Put full paths to Clang binaries into config files.
@@ -141,7 +141,7 @@ script:
       sed -i -e "
       s:CLANG_BINARY:$(which ${CLANG}):
       s:CLANGXX_BINARY:$(which ${CLANGXX}):
-      " ../External/SDK/Clang/{Linux,OSX}/Clang_CI.bff
+      " ../*.bff
       ;;
     esac
   # Run tests in the selected configuration.
