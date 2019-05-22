@@ -36,6 +36,7 @@ private:
     void WorkerTags_Local();
     void AnonymousNamespaces();
     void ErrorsAreCorrectlyReported() const;
+    void WarningsAreCorrectlyReported() const;
     void ShutdownMemoryLeak() const;
     void TestForceInclude() const;
     void TestZiDebugFormat() const;
@@ -85,6 +86,7 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( WorkerTags_Local )
     REGISTER_TEST( AnonymousNamespaces )
     REGISTER_TEST( ErrorsAreCorrectlyReported )
+    REGISTER_TEST( WarningsAreCorrectlyReported )
     #if defined( __WINDOWS__ )
         // TODO:LINUX TODO:OSX - Fix and enable this test
         REGISTER_TEST( ShutdownMemoryLeak )
@@ -345,6 +347,55 @@ void TestDistributed::ErrorsAreCorrectlyReported() const
         }
     #endif
 }
+
+
+// WarningsAreCorrectlyReported
+//------------------------------------------------------------------------------
+void TestDistributed::WarningsAreCorrectlyReported() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( TEST_PROTOCOL_PORT );
+
+    // MSVC
+    #if defined( __WINDOWS__ )
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+
+            // Check that build passes
+            TEST_ASSERT( fBuild.Build( AStackString<>( "WarningsAreCorrectlyReported-MSVC" ) ) );
+
+            // Check that error is returned
+            TEST_ASSERT( GetRecordedOutput().Find( "warning C4101" ) && GetRecordedOutput().Find( "'x': unreferenced local variable" ) );
+        }
+    #endif
+
+    // Clang
+    #if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
+        {
+            FBuild fBuild( options );
+            TEST_ASSERT( fBuild.Initialize() );
+
+            // Check that build passes
+            TEST_ASSERT( fBuild.Build( AStackString<>( "WarningsAreCorrectlyReported-Clang" ) ) );
+
+            // Check that error is returned
+            TEST_ASSERT( GetRecordedOutput().Find( "warning: unused variable 'x' [-Wunused-variable]" ) );
+        }
+    #endif
+}
+
 
 // ShutdownMemoryLeak
 //------------------------------------------------------------------------------

@@ -65,6 +65,7 @@ public:
     void Serialize( IOStream & stream );
     void Deserialize( IOStream & stream );
 
+    void                GetMessagesForLog( AString & buffer ) const;
     void                GetMessagesForMonitorLog( AString & buffer ) const;
 
     enum DistributionState

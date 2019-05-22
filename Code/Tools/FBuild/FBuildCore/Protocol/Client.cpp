@@ -1046,6 +1046,38 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                     ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
                 }
             }
+
+            switch ( nodeType )
+            {
+                case Node::OBJECT_NODE:
+                    {
+                        // get list of messages during remote work
+                        AStackString<> msgBuffer;
+                        job->GetMessagesForLog( msgBuffer );
+
+                        if ( objectNode->IsMSVC())
+                        {
+                            if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
+                            {
+                                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                            }
+                        }
+                        else if ( objectNode->IsClang() || objectNode->IsGCC() )
+                        {
+                            if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
+                            {
+                                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                            }
+                        }
+                    }
+                    break;
+                case Node::TEST_NODE:
+                    // nothing to do here
+                    break;
+                default:
+                    ASSERT( false );
+                    break;
+            }
         }
         else
         {
