@@ -3,14 +3,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "MultiBuffer.h"
 
 // Core
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
+#include "Core/Strings/AString.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

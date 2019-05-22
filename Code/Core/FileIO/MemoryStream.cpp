@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "MemoryStream.h"
 
 #include <memory.h> // for memcpy
@@ -127,7 +125,7 @@ void MemoryStream::GrowToAccomodate( uint64_t bytesToAccomodate )
     m_Begin = (char *)ALLOC( newCapacity );
     m_End = m_Begin + ( oldEnd - oldBegin );
     m_MaxEnd = m_Begin + newCapacity;
-    memcpy( m_Begin, oldBegin, oldEnd - oldBegin );
+    memcpy( m_Begin, oldBegin, (size_t)( oldEnd - oldBegin ) );
     FREE( oldBegin );
 }
 

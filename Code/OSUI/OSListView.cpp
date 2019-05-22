@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "OSUI/PrecompiledHeader.h"
 #include "OSListView.h"
 
 // OSUI
@@ -15,8 +14,8 @@
 
 // system
 #if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h" // Must be before CommCtrl
     #include <CommCtrl.h>
-    #include <Windows.h>
 #endif
 
 // Defines
@@ -49,7 +48,7 @@ void OSListView::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
                                  "ListView",
                                  WS_CHILD | LVS_REPORT | WS_VISIBLE | LVS_NOSORTHEADER,
                                  x, y,
-                                 w, h,
+                                 (int32_t)w, (int32_t)h,
                                  (HWND)m_Parent->GetHandle(),
                                  nullptr,
                                  nullptr,
@@ -72,7 +71,7 @@ void OSListView::AddColumn( const char * columnHeading, uint32_t columnIndex, ui
         LV_COLUMN col;
         memset( &col, 0, sizeof( col ) );
         col.mask = LVCF_WIDTH | LVCF_TEXT;
-        col.cx = columnWidth;
+        col.cx = (int32_t)columnWidth;
         col.pszText = const_cast< char * >( columnHeading ); // work around lack of const in LV_COLUMN when setting
         SendMessage( (HWND)m_Handle, LVM_INSERTCOLUMN, columnIndex, (LPARAM)&col );
     #else
@@ -116,11 +115,11 @@ void OSListView::SetItemText( uint32_t index, uint32_t subItemIndex, const char 
         LVITEM item;
         memset( &item, 0, sizeof( LVITEM ) );
         item.mask = LVIF_TEXT;
-        item.iItem = index;
+        item.iItem = (int32_t)index;
 
         // host name
         item.pszText = (LPSTR)text;
-        item.iSubItem = subItemIndex;
+        item.iSubItem = (int32_t)subItemIndex;
         SendMessage( (HWND)m_Handle, LVM_SETITEM, (WPARAM)0, (LPARAM)&item );
     #else
         (void)index;

@@ -1,0 +1,19 @@
+//
+// LightCache does not support includes which use macros as follows
+// but should detect this case and safely detect this case
+//
+//------------------------------------------------------------------------------
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    .CompilerInputFiles = {
+                            '$TestRoot$/Data/TestCache/LightCache_CyclicInclude/file1.cpp'
+                            '$TestRoot$/Data/TestCache/LightCache_CyclicInclude/file2.cpp'
+                          }
+    .CompilerOutputPath = '$Out$/Test/Cache/LightCache_CyclicInclude/'
+}

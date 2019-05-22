@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "FileStream.h"
 
 // Core
@@ -15,7 +13,7 @@
 // system
 #include <stdio.h>
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #else
    #include <fcntl.h>
    #include <unistd.h>
@@ -276,7 +274,7 @@ bool FileStream::IsOpen() const
     LARGE_INTEGER zeroPos, newPos;
     zeroPos.QuadPart = 0;
     VERIFY( SetFilePointerEx( (HANDLE)m_Handle, zeroPos, &newPos, FILE_CURRENT ) );
-    return newPos.QuadPart;
+    return (uint64_t)newPos.QuadPart;
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
     return lseek( m_Handle, 0, SEEK_CUR );
 #else
@@ -292,7 +290,7 @@ bool FileStream::IsOpen() const
 
 #if defined( __WINDOWS__ )
     LARGE_INTEGER newPos;
-    newPos.QuadPart = pos;
+    newPos.QuadPart = (int64_t)pos;
     if ( FALSE == SetFilePointerEx( (HANDLE)m_Handle, newPos, nullptr, FILE_BEGIN ) )
     {
         return false;

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="../common.js"></script>
 
 <html>
 <head>
@@ -8,7 +7,22 @@
 <title>FASTBuild - Function Reference - Compiler</title>
 </head>
 <body>
-  <script>generateHeaderParent()</script>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='../home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
 
 <h1>Compiler</h1>
     <div id='compiler' class='newsitemheader'>
@@ -19,7 +33,7 @@
 Describes a compiler and specifies how to interact with the compiler process for dependency tracking,
 distribution, caching and more.
       </p>
-<div class='code'>Compiler( 'name' )              // (optional) Alias
+<div class='code'>Compiler( 'name' )              // Alias
 {
   .Executable                   // Primary compiler executable
   .ExtraFiles                   // (optional) Additional files (usually dlls) required by the compiler.
@@ -34,7 +48,9 @@ distribution, caching and more.
   .ClangRewriteIncludes         // (optional) Use Clang's -frewrite-includes option when preprocessing
                                 //            (default: true)
   .VS2012EnumBugFix             // (optional) Enable work-around for bug in VS2012 compiler (default: false)
-  
+  .Environment                  // (optional) Environment variables to use for local build
+  .UseLightCache_Experimental   // (optional) Enabled experimental "light" caching mode (default: false)
+
   .RequiredWorkerTags           // (optional) List of wildcard tags required to run this compiler
                                 //            default: empty list
 }
@@ -201,6 +217,26 @@ This results in very unintuitive compile errors.</p>
 
   	<p><hr></p>
 
+	<p><b>.Environment</b> - String or ArrayOfStrings - (Optional)</p>
+	<p>When set, overrides the environment for local compiles</p>
+   <p>This allows you to have a different environment per compiler</p>
+
+  	<p><hr></p>
+
+	<p><b>.UseLightCache_Experimental</b> - Boolean - (Optional)</p>
+    <p>When set, activates "Light Caching" mode. Light Caching mode avoids using the compiler's
+    preprocessor for cache lookups, instead allowing FASTBuild to parse the files itself to gather the
+    required information. This parsing is significantly faster than for each file and additionally allows
+    FASTBuild to eliminate redundant file parsing between object files, further accelerating cache lookups.
+    <p><font color=red>NOTE:</font>This feature should be used with caution. While there are no known issues (it self disables
+    when know to not work - see other notes) it should be considered experimental.</p>
+    <p><font color=red>NOTE:</font>For now, Light Caching can only be used with the MSVC compiler. Support will be extended
+    to other compilers in future versions.</p>
+    <p><font color=red>NOTE:</font> Light Caching does not support macros using for include paths (i.e. "#include MY_INCLUDE_HEADER")
+    Support for this will be added in future versions.</p>
+
+  	<p><hr></p>
+
 	<p><b>.RequiredWorkerTags</b> - String or ArrayOfStrings - (Optional)</p>
 	<p><p>Specify the worker tags required for the compiler.</p>
 <p>This option allows you to run the compiler on only those workers that match the required tags.</p>
@@ -219,18 +255,36 @@ This results in very unintuitive compile errors.</p>
 <div id='compiler' class='newsitemheader'>Examples</div>
     <div class='newsitembody'>
 
-<b>Clang</b>
-<div class='code'>// Clang for Windows
-Compiler( 'Compiler-x86Clang' )
+<b>MSVC - 2017</b>
+<div class='code'>// VisualStudio 2017 x64 Compiler
+.VS2017_BasePath         = 'C:\Program Files (x86)\Microsoft Visual Studio\2017\2017\Community'
+.VS2017_Version          = '14.16.27023'
+Compiler( 'Compiler-VS2017-x64' )
 {
-  .Executable = '$ClangForWindowsBasePath$\clang++.exe'
+    .Root       = '$VS2017_BasePath$\VC\Tools\MSVC\$VS2017_Version$\bin\Hostx64\x64'
+    .Executable = '$Root$\cl.exe'
+    .ExtraFiles = {
+                    '$Root$\c1.dll'
+                    '$Root$\c1xx.dll',
+                    '$Root$\c2.dll',
+                    '$Root$\msobj140.dll'
+                    '$Root$\mspdb140.dll'
+                    '$Root$\mspdbcore.dll'
+                    '$Root$\mspdbsrv.exe'
+                    '$Root$\mspft140.dll'
+                    '$Root$\msvcp140.dll'
+                    '$Root$\vcruntime140.dll'
+                    '$Root$\1033/clui.dll'
+                  }
 }</div>
+
 <b>MSVC - 2013</b>
 <div class='code'>// VisualStudio 2013 x86 Compiler
 Compiler( 'Compiler-x86' )
 {
   .Executable = '$VSBasePath$\VC\bin\cl.exe'
-  .ExtraFiles = { '$VSBasePath$\VC\bin\c1.dll'
+  .ExtraFiles = {
+                  '$VSBasePath$\VC\bin\c1.dll'
                   '$VSBasePath$\VC\bin\c1ast.dll',
                   '$VSBasePath$\VC\bin\c1xx.dll',
                   '$VSBasePath$\VC\bin\c1xxast.dll',
@@ -245,22 +299,11 @@ Compiler( 'Compiler-x86' )
                   '$VSBasePath$\VC\redist\x86\Microsoft.VC120.CRT\vccorlib120.dll'
                 }
 }</div>
-<b>MSVC - 2010</b>
-<div class='code'>// VisualStudio 2010 x86 Compiler
-Compiler( "Compiler-x86" )
+<b>Clang</b>
+<div class='code'>// Clang for Windows
+Compiler( 'Compiler-x86Clang' )
 {
-  .Executable = '$VSBasePath$\VC\bin\cl.exe'
-  .ExtraFiles = { '$VSBasePath$\VC\bin\c1.dll'
-                  '$VSBasePath$\VC\bin\c1xx.dll'
-                  '$VSBasePath$\VC\bin\c2.dll'
-                  '$VSBasePath$\Common7\IDE\mspdb100.dll'
-                  '$VSBasePath$\Common7\IDE\msobj100.dll'
-                  '$VSBasePath$\Common7\IDE\mspdbsrv.exe'
-                  '$VSBasePath$\Common7\IDE\mspdbcore.dll'
-                  '$VSBasePath$\VC\bin\1033\clui.dll'
-                  '$VSBasePath$\VC\redist\x86\Microsoft.VC100.CRT\msvcp100.dll'
-                  '$VSBasePath$\VC\redist\x86\Microsoft.VC100.CRT\msvcr100.dll'
-    }
+  .Executable = '$ClangForWindowsBasePath$\clang++.exe'
 }</div>
 <b>Intel</b>
 <div class='code'>// Intel 2015 Update 4 x64 Compiler
@@ -298,6 +341,6 @@ Compiler( 'Compiler-x64Intel' )
 }</div>
 </div>
 
-  <script>generateFooter()</script>
+    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
 </body>
 </html>

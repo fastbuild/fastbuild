@@ -13,7 +13,7 @@ class Meta_Hidden : public IMetaData
     REFLECT_DECLARE( Meta_Hidden )
 public:
     explicit Meta_Hidden();
-    virtual ~Meta_Hidden();
+    virtual ~Meta_Hidden() override;
 };
 
 //------------------------------------------------------------------------------

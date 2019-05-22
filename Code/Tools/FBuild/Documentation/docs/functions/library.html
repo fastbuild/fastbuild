@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="../common.js"></script>
 
 <html>
 <head>
@@ -8,7 +7,22 @@
 <title>FASTBuild - Function Reference - Library</title>
 </head>
 <body>
-  <script>generateHeaderParent()</script>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='../home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
 
 <h1>Library</h1>
     <div id='library' class='newsitemheader'>
@@ -63,6 +77,11 @@ Builds a statically linked library.
   ; Additional options
   .PreBuildDependencies     ; (optional) Force targets to be built before this library (Rarely needed,
                             ; but useful when a library relies on generated code).
+
+  .Environment              ; (optional) Environment variables to use for local build
+                            ; If set, librarian uses this environment
+                            ; If not set, librarian uses .Environment from your Settings node
+  .Hidden                   ; (optional) Hide a target from -showtargets (default false)
 }
 </div>
 <p><b>Build-Time Substitutions</b>
@@ -92,6 +111,6 @@ Builds a statically linked library.
     </div>
 
 
-  <script>generateFooter()</script>
+    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
 </body>
 </html>

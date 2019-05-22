@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="common.js"></script>
 
 <html>
 <head>
@@ -8,10 +7,98 @@
 <title>FASTBuild - Change Log</title>
 </head>
 <body>
-  <script>generateHeader()</script>
-
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
 
 <h1>Changelog</h1>
+
+
+<div class='newsitemheader'>
+    v0.98&nbsp;<font color='#bbbbbb'>(29-Apr-2019)</font>
+</div>
+<div class='newsitembody'>
+    Notes
+	<ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Distributed compilation protocol version changed : please update workers</li>
+    </ul>
+    New
+    <ul>
+        <li>.UseLightCache_Experimental mode on Compiler() can be used for massively accelerated caching</li>
+        <li>-compdb option can create a JSON Compilation Database (Thanks to dummyunit)</li>
+    </ul>
+    Fixes
+    <ul>
+        <li>Distributed Compilation:</li>
+        <ul>
+            <li>Fix race condition resulting in crash when a local race is won (Thanks to dummyunit, Sam Hocevar & Lambert Clara)</li>
+            <li>Prevent rare crash during startup when using distributed compilation</li>
+        </ul>
+        <li>BFF Parsing:</li>
+        <ul>
+            <li>Variable self-assignment is handled correctly during bff parsing (Thanks to dummyunit)</li>
+            <li>Fix inconsistent parsing of bff function headers without args (Thanks to dummyunit)</li>
+        </ul>
+        <li>[OSX][Linux] FASTBUILD_CACHE_PATH env var is respected on OSX and Linux (Thanks to Damian Szuberski)</li>
+        <li>GCC is corrently detected for when version specific exe is referenced (Thanks to Damian Szuberski)</li>
+        <li>Strip -isysroot when compiling preprocessed output; should only be used during preprocessing (Thanks to Nick Edwards)</li>
+        <li>Paths terminated with .. are correctly canonicalized (Thanks to Yaroslav Kovtun)</li>
+        <li>DLL() detects dll when a library is configured via -Wl,--oformat=prx (Thanks to jfr2)</li>
+        <li>Precompiled headers are migrated when using AllowDBMigration_Experimental (Thanks to Yaroslav Kovtun)</li>
+        <li>MSVC precompiled header users are retrievable from cache after DB migration using AllowDBMigration_Experimental</li>
+        <li>[Windows] UNC paths are respected in some places they were not (Thanks to Brian Burgin)</li>
+        <li>MSVC .pchast is correctly cached when folder name contains a period (Thanks to Brian Burgin)</li>
+        <li>MSVC .pchast is correctly cached when filename contains a period</li>
+    </ul>
+	Improvements
+	<ul>
+        <li>Distributed Compilation:</li>
+        <ul>
+            <li>FBuildWorker responds to quite notifications (Thanks to Brian Burgin)</li>
+            <li>Compiler files sent for distributed compilation are compressed (Thanks to Brian Burgin)</li>
+            <li>-forceremote no longer modifies caching options</li>
+            <li>Remote MSVC out of heap space is automatically retried</li>
+            <li>Remote MSVC failing to write compiler tmp file is automatically retried</li>
+            <li>Remove worker timeout mechanism which could cause unnecessary disconnections under heavy network load</li>
+            <li>Workers will reject connections from mismatched platforms</li>
+        </ul>
+        <li>BFF Parsing:</li>
+        <ul>
+            <li>Non-bff parsing error formats standardized (Thanks to Brian Burgin)</li>
+        </ul>
+        <li>Project Generation:</li>
+        <ul>
+            <li>XCode schemes appear alphabetically</li>
+            <li>XCode project folders appear alphabetically</li>
+            <li>XCode "doc" schemes are hidden by default</li>
+        </ul>
+        <li>[Linux][OSX] Significantly improve compile times by fixing process output capture (Thanks to Yaroslav Kovtun)</li>
+        <li>Improve resilience against corrupt files in the network cache</li>
+        <li>Exec() can be made to run every time with new .ExecAlways property</li>
+        <li>Test will print test output if a test times out to assist triage (Thanks to dummyunit)</li>
+        <li>.i extension is used for preprocessed files when using gcc (Thanks to Damian Szuberski)</li>
+        <li>Colored output from Clang and GCC is supported (Thanks to dummyunit)</li>
+        <li>.Environment can be set per Compiler, Library, Executable and DLL (Thanks to Brian Burgin)</li>
+        <li>.CompilerOutputKeepBaseExtension can be set on ObjectList if extension is needed to uniquify (Thanks to Yaroslav Kovtun)</li>
+        <li>The .fdb  is uniquified per-platform to allow filesystem shared between operating systems/VMs</li>
+        <li>Improve compression speed slightly (Upgrade to LZ4)</li>
+	</ul>
+</div>
+
 
 <div class='newsitemheader'>
     v0.97&nbsp;<font color='#bbbbbb'>(9-Jan-2019)</font>
@@ -1635,6 +1722,6 @@ Fixes
     </div>
 
 
-  <script>generateFooter()</script>
+    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
 </body>
 </html>

@@ -3,14 +3,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "SharedMemory.h"
 #include "Core/Env/Assert.h"
 #include "Core/Strings/AString.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #elif defined(__LINUX__) || defined(__APPLE__)
     #include <fcntl.h>
     #include <unistd.h>
@@ -21,7 +19,7 @@
 #if defined(__LINUX__) || defined(__APPLE__)
 namespace
 {
-void PosixMapMemory( const char* name,
+bool PosixMapMemory( const char* name,
                      size_t length,
                      bool create,
                      int * mapFile,
@@ -45,7 +43,10 @@ void PosixMapMemory( const char* name,
         *mapFile = shm_open( portableName.Get(),
                              O_RDWR | (create ? O_CREAT : 0),
                              S_IWUSR | S_IRUSR );
-        ASSERT( *mapFile != -1 );
+        if ( *mapFile == -1 )
+        {
+            return false;
+        }
 
         if( create )
         {
@@ -53,7 +54,7 @@ void PosixMapMemory( const char* name,
         }
 
         *memory = mmap( nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, *mapFile, 0 );
-        ASSERT( *memory != MAP_FAILED );
+        return ( *memory != MAP_FAILED );
 }
 }
 #endif
@@ -76,21 +77,13 @@ SharedMemory::SharedMemory()
 //------------------------------------------------------------------------------
 SharedMemory::~SharedMemory()
 {
+    Unmap();
     #if defined( __WINDOWS__ )
-        if ( m_Memory )
-        {
-            UnmapViewOfFile( m_Memory );
-        }
         if ( m_MapFile )
         {
             CloseHandle( m_MapFile );
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        if( m_Memory )
-        {
-            ASSERT( m_Length > 0 );
-            munmap( m_Memory, m_Length );
-        }
         if( m_MapFile != -1 )
         {
             close( m_MapFile );
@@ -132,7 +125,7 @@ void SharedMemory::Create( const char * name, unsigned int size )
 
 // Open
 //------------------------------------------------------------------------------
-void SharedMemory::Open( const char * name, unsigned int size )
+bool SharedMemory::Open( const char * name, unsigned int size )
 {
     #if defined( __WINDOWS__ )
         m_MapFile = OpenFileMappingA( FILE_MAP_ALL_ACCESS,  // read/write access
@@ -146,11 +139,35 @@ void SharedMemory::Open( const char * name, unsigned int size )
                                       0,                    // DWORD dwFileOffsetLow
                                       size );
         }
+        return ( ( m_Memory != nullptr ) && ( m_MapFile != nullptr ) );
     #elif defined( __APPLE__ ) || defined(__LINUX__)
-        PosixMapMemory(name, size, false, &m_MapFile, &m_Memory, m_Name);
+        const bool result = PosixMapMemory(name, size, false, &m_MapFile, &m_Memory, m_Name);
         m_Length = size;
+        return result;
     #else
         #error
+    #endif
+}
+
+// Unmap
+//------------------------------------------------------------------------------
+void SharedMemory::Unmap()
+{
+    #if defined( __WINDOWS__ )
+        if ( m_Memory )
+        {
+            UnmapViewOfFile( m_Memory );
+            m_Memory = nullptr;
+        }
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+        if ( m_Memory )
+        {
+            ASSERT( m_Length > 0 );
+            munmap( m_Memory, m_Length );
+            m_Memory = nullptr;
+        }
+    #else
+        #error Unknown Platform
     #endif
 }
 

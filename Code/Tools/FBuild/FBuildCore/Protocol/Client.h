@@ -108,7 +108,6 @@ private:
     void        NotifyJobQueue();
     void        LookForWorkers();
     void        CommunicateJobAvailability();
-    void        CheckForTimeouts();
 
     // More verbose name to avoid conflict with windows.h SendMessage
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg );

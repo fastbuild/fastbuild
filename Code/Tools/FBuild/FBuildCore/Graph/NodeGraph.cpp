@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "NodeGraph.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
@@ -38,6 +36,7 @@
 // Core
 #include "Core/Containers/AutoPtr.h"
 #include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -223,12 +222,18 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
     AutoPtr< char > memory( (char *)ALLOC( fileSize ) );
     if ( fs.ReadBuffer( memory.Get(), fileSize ) != fileSize )
     {
+        FLOG_ERROR( "Could not read Database. Error: %s File: '%s'", LAST_ERROR_STR, nodeGraphDBFile );
         return LoadResult::LOAD_ERROR;
     }
     ConstMemoryStream ms( memory.Get(), fileSize );
 
     // Load the Old DB
-    return Load( ms, nodeGraphDBFile );
+    NodeGraph::LoadResult res = Load( ms, nodeGraphDBFile );
+    if ( res == LoadResult::LOAD_ERROR )
+    {
+        FLOG_ERROR( "Database loading failed: '%s'", nodeGraphDBFile );
+    }
+    return res;
 }
 
 // Load
@@ -1379,7 +1384,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
                     worstMinDistance = d;
                 }
             }
-            else if ( d < worstMinDistance )
+            else
             {
                 ASSERT( nodes.Top().m_Distance > d );
                 const size_t count = nodes.GetSize();

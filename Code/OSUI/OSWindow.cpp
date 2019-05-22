@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "OSUI/PrecompiledHeader.h"
 #include "OSDropDown.h"
 #include "OSWindow.h"
 
@@ -12,7 +11,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Defines
@@ -40,6 +39,7 @@
                         {
                             return 0; // Handled
                         }
+                        break;
                     }
                     case SC_CLOSE:
                     {
@@ -47,6 +47,7 @@
                         {
                             return 0; // Handled
                         }
+                        break;
                     }
                 }
                 break;
@@ -132,7 +133,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
 
         // Register Window class
         AStackString<> uniqueWindowClass;
-        uniqueWindowClass.Format( "windowClass_%p", this );
+        uniqueWindowClass.Format( "windowClass_%p", (void *)this );
 
         WNDCLASSEX wc;
         wc.cbSize           = sizeof(WNDCLASSEX);
@@ -154,7 +155,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
                                  nullptr,                   // LPCTSTR lpWindowName,
                                  WS_CAPTION | WS_SYSMENU,   // DWORD dwStyle,
                                  x, y,                      // int x, int y,
-                                 w, h,                      // int nWidth, int nHeight,
+                                 (int32_t)w, (int32_t)h,    // int nWidth, int nHeight,
                                  nullptr,                   // HWND hWndParent,
                                  nullptr,                   // HMENU hMenu,
                                  nullptr,                   // HINSTANCE hInstance,

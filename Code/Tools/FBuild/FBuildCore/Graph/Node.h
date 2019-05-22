@@ -10,8 +10,9 @@
 
 // Core
 #include "Core/Containers/Array.h"
+#include "Core/Reflection/ReflectionMacros.h"
+#include "Core/Reflection/Struct.h"
 #include "Core/Containers/Tags.h"
-#include "Core/Reflection/Object.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
@@ -178,11 +179,17 @@ public:
 
     const AString & GetName() const { return m_Name; }
 
+    bool IsHidden() const { return m_Hidden; }
+
     #if defined( DEBUG )
         // Help catch serialization errors
         inline bool IsSaved() const     { return m_IsSaved; }
         inline void MarkAsSaved() const { m_IsSaved = true; }
     #endif
+
+    inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
+    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
+    inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
 protected:
     friend class FBuild;
@@ -195,10 +202,7 @@ protected:
     friend class Report;
     friend class VSProjectConfig; // TODO:C Remove this
     friend class WorkerThread;
-
-    inline const Dependencies & GetPreBuildDependencies() const { return m_PreBuildDependencies; }
-    inline const Dependencies & GetStaticDependencies() const { return m_StaticDependencies; }
-    inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
+    friend class CompilationDatabase;
 
     void SetName( const AString & name );
 
@@ -239,6 +243,10 @@ protected:
                                                     const Function * function,
                                                     const Array< AString > & preBuildDependencyNames );
 
+    static const char * GetEnvironmentString( const Array< AString > & envVars,
+                                              const char * & inoutCachedEnvString );
+
+
     AString m_Name;
 
     State m_State;
@@ -254,6 +262,7 @@ protected:
     uint32_t              m_ProcessingTime;  // time spent on this node
     mutable uint32_t      m_ProgressAccumulator;
     uint32_t              m_Index;
+    bool                  m_Hidden;
     mutable WorkerRecords m_WorkerRecords;
 
     Dependencies m_PreBuildDependencies;

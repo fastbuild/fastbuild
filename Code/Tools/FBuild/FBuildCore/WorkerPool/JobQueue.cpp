@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "JobQueue.h"
 #include "Job.h"
 #include "WorkerThread.h"
@@ -627,12 +625,17 @@ Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
             // Wait for cancellation
             {
                 PROFILE_SECTION( "WaitForLocalCancel" );
-                m_DistributedJobsMutex.Unlock(); // Allow WorkerThread access
                 while ( job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY_CANCEL_LOCAL )
                 {
+                    m_DistributedJobsMutex.Unlock(); // Allow WorkerThread access
                     Thread::Sleep( 1 );
+                    m_DistributedJobsMutex.Lock();
+
+                    if ( !m_DistributableJobs_InProgress.FindDeref( jobId ) )
+                    {
+                        return nullptr; // Job disappeared - FinishedProcessingJob reaped it
+                    }
                 }
-                m_DistributedJobsMutex.Lock();
             }
 
             // Did cancallation work? It can fail if we try to cancel after build has finished
@@ -901,6 +904,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             // Local Job finished while trying to cancel, so fail cancellation
             // Local thread now entirely owns Job, so set state as if race
             // never happened
+            m_DistributableJobs_InProgress.Erase( it );
             job->SetDistributionState( Job::DIST_COMPLETED_LOCALLY ); // Cancellation has failed
 
         }
@@ -982,7 +986,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         }
     }
 
-    Node::BuildResult result = Node::NODE_RESULT_FAILED;
+    Node::BuildResult result;
     if ( FBuild::Get().GetOptions().m_FastCancel && FBuild::GetStopBuild() )
     {
         // When stopping build and fast cancel is active we simulate a build error with this node.

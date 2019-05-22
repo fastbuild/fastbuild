@@ -154,9 +154,9 @@ void TestMemPoolBlock::TestSpeed()
     }
 
     // output
-    OUTPUT( "malloc       : %2.3fs - %u allocs @ %u allocs/sec\n", time1, numAllocs, (uint32_t)( (float)numAllocs / time1 ) );
-    OUTPUT( "Alloc        : %2.3fs - %u allocs @ %u allocs/sec\n", time2, numAllocs, (uint32_t)( (float)numAllocs / time2 ) );
-    OUTPUT( "MemPoolBlock : %2.3fs - %u allocs @ %u allocs/sec\n", time3, numAllocs, (uint32_t)( (float)numAllocs / time3 ) );
+    OUTPUT( "malloc       : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time1, numAllocs, (uint32_t)( (float)numAllocs / time1 ) );
+    OUTPUT( "Alloc        : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time2, numAllocs, (uint32_t)( (float)numAllocs / time2 ) );
+    OUTPUT( "MemPoolBlock : %2.3fs - %u allocs @ %u allocs/sec\n", (double)time3, numAllocs, (uint32_t)( (float)numAllocs / time3 ) );
 }
 
 //------------------------------------------------------------------------------

@@ -33,7 +33,7 @@ public:
                          NodeProxy * srcFile,
                          const AString & compilerOptions,
                          uint32_t flags );
-    virtual ~ObjectNode();
+    virtual ~ObjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
     virtual const Tags & GetRequiredWorkerTags() const override;
@@ -60,7 +60,8 @@ public:
         FLAG_WARNINGS_AS_ERRORS_MSVC    = 0x80000,
         FLAG_VBCC               =   0x100000,
         FLAG_STATIC_ANALYSIS_MSVC = 0x200000,
-        FLAG_ORBIS_WAVE_PSSLC   =   0x400000
+        FLAG_ORBIS_WAVE_PSSLC   =   0x400000,
+        FLAG_DIAGNOSTICS_COLOR_AUTO = 0x800000,
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,
@@ -207,6 +208,7 @@ private:
     uint32_t            m_Flags                             = 0;
     uint32_t            m_PreprocessorFlags                 = 0;
     uint64_t            m_PCHCacheKey                       = 0;
+    uint64_t            m_LightCacheKey                     = 0;
 
     // Not serialized
     Array< AString >   m_Includes;

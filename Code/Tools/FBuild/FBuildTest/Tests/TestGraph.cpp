@@ -30,11 +30,6 @@
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 
-// system
-#if defined( __WINDOWS__ )
-    #include <windows.h>
-#endif
-
 // TestGraph
 //------------------------------------------------------------------------------
 class TestGraph : public FBuildTest
@@ -94,12 +89,11 @@ void TestGraph::TestNodeTypes() const
     TEST_ASSERT( fn->GetType() == Node::FILE_NODE);
     TEST_ASSERT( FileNode::GetTypeS() == Node::FILE_NODE);
 
-    CompilerNode * cn( nullptr );
     {
         #if defined( __WINDOWS__ )
-            cn = ng.CreateCompilerNode( AStackString<>( "c:\\cl.exe" ) );
+            CompilerNode * cn = ng.CreateCompilerNode( AStackString<>( "c:\\cl.exe" ) );
         #else
-            cn = ng.CreateCompilerNode( AStackString<>( "/usr/bin/gcc" ) );
+            CompilerNode * cn = ng.CreateCompilerNode( AStackString<>( "/usr/bin/gcc" ) );
         #endif
         TEST_ASSERT( cn->GetType() == Node::COMPILER_NODE );
         TEST_ASSERT( AStackString<>( "Compiler" ) == cn->GetTypeName() );
@@ -720,7 +714,7 @@ void TestGraph::BFFDirtied() const
     // Load from dirtied BFF
     {
         FBuild fBuild( options );
-        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
 
         // Ensure user was informed of reparsing trigger
         TEST_ASSERT( GetRecordedOutput().Find( "has changed (reparsing will occur)" ) );

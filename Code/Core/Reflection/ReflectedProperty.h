@@ -13,14 +13,9 @@
 //------------------------------------------------------------------------------
 class AString;
 class IMetaData;
-class Mat44;
 class Object;
 class ReflectionInfo;
-class RefObject;
 class Struct;
-class Vec2;
-class Vec3;
-class Vec4;
 template< class T > class Array;
 
 // ReflectedProperty
@@ -91,12 +86,6 @@ public:
     GETSET_PROPERTY( int64_t, int64_t )
     GETSET_PROPERTY( bool, bool )
     GETSET_PROPERTY( AString, const AString & )
-    GETSET_PROPERTY( Vec2, const Vec2 & )
-    GETSET_PROPERTY( Vec3, const Vec3 & )
-    GETSET_PROPERTY( Vec4, const Vec4 & )
-    GETSET_PROPERTY( Mat44, const Mat44 & )
-    GETSET_PROPERTY( Ref< RefObject >, const Ref< RefObject > & )
-    GETSET_PROPERTY( WeakRef< Object >, const WeakRef< Object > & )
 
     #define GETSET_PROPERTY_ARRAY( valueType ) \
         void GetProperty( const void * object, Array< valueType > * value ) const; \
@@ -106,27 +95,6 @@ public:
 
     #undef GETSET_PROPERTY
     #undef GETSET_PROPERTY_ARRAY
-
-    #if defined( __WINDOWS__ )
-        inline const char * GetTypeString() const { return TypeToTypeString( GetType() ); }
-        void ToString( const void * object, AString & buffer ) const;
-    #endif
-    static bool FromString( const AString & buffer, float * value );
-    static bool FromString( const AString & buffer, uint8_t * value );
-    static bool FromString( const AString & buffer, uint16_t * value );
-    static bool FromString( const AString & buffer, uint32_t * value );
-    static bool FromString( const AString & buffer, uint64_t * value );
-    static bool FromString( const AString & buffer, int8_t * value );
-    static bool FromString( const AString & buffer, int16_t * value );
-    static bool FromString( const AString & buffer, int32_t * value );
-    static bool FromString( const AString & buffer, int64_t * value );
-    static bool FromString( const AString & buffer, bool * value );
-    static bool FromString( const AString & buffer, AString * value );
-    static bool FromString( const AString & buffer, Vec2 * value );
-    static bool FromString( const AString & buffer, Vec3 * value );
-    static bool FromString( const AString & buffer, Vec4 * value );
-    static bool FromString( const AString & buffer, Mat44 * value );
-    static const char * TypeToTypeString( PropertyType type );
 
     void AddMetaData( const IMetaData * metaDataChain );
 

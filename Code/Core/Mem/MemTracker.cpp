@@ -3,9 +3,14 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "MemTracker.h"
+#include "Core/Env/Types.h"
+
+#if defined( __WINDOWS__ )
+    PRAGMA_DISABLE_PUSH_MSVC( 4073 ) // initializers put in library initialization area
+    #pragma init_seg(lib)
+    PRAGMA_DISABLE_POP_MSVC
+#endif
 
 //------------------------------------------------------------------------------
 #if defined( MEMTRACKER_ENABLED )
@@ -18,6 +23,15 @@
 
     // system
     #include <memory.h> // for memset
+
+    // GlobalData
+    //------------------------------------------------------------------------------
+    class LeakDumper { public: ~LeakDumper() { MemTracker::DumpAllocations(); } };
+    #if defined( __WINDOWS__ )
+        static LeakDumper g_LeakDumper;
+    #else
+        static LeakDumper g_LeakDumper __attribute__((init_priority(101)));
+    #endif
 
     // Static Data
     //------------------------------------------------------------------------------
@@ -74,7 +88,7 @@
             a->m_Size = size;
             a->m_Next = s_AllocationHashTable[ hashIndex ];
             a->m_File = file;
-            a->m_Line = line;
+            a->m_Line = (uint32_t)line;
             static size_t breakOnSize = (size_t)-1;
             static uint32_t breakOnId = 0;
             if ( ( size == breakOnSize ) || ( a->m_Id == breakOnId ) )
@@ -178,11 +192,11 @@
         uint64_t numAllocs = 0;
 
         // for each leak, we'll print a view of the memory
-        unsigned char displayChar[256];
+        char displayChar[256];
         memset( displayChar, '.', sizeof( displayChar ) );
-        const unsigned char * okChars = (const unsigned char *)"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`1234567890-=!@#$^&*()_+[]{};:'\",<>/?|\\";
-        const unsigned char * ok = okChars;
-        for ( ;; ) { unsigned char c = *ok; if ( c == 0 ) break; displayChar[ c ] = c; ++ok; }
+        const char * okChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`1234567890-=!@#$^&*()_+[]{};:'\",<>/?|\\";
+        const char * ok = okChars;
+        for ( ;; ) { char c = *ok; if ( c == 0 ) break; displayChar[ (unsigned char)c ] = c; ++ok; }
 
         char memView[ 32 ] = { 0 };
 
@@ -202,8 +216,8 @@
                 const size_t num = Math::Min< size_t >( (size_t)size, 31 );
                 for ( uint32_t j=0; j<num; ++j )
                 {
-                    unsigned char c = *src;
-                    *dst = displayChar[ c ];
+                    char c = *src;
+                    *dst = displayChar[ (uint8_t)c ];
                     ++src;
                     ++dst;
                 }

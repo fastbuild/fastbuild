@@ -1,0 +1,59 @@
+// Clang
+//------------------------------------------------------------------------------
+
+// Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-Clang' )
+{
+    .Executable                     = 'CLANGXX_BINARY'
+    .CompilerFamily                 = 'clang' // Specify compiler family explicitly because binary name may change at any moment
+}
+
+// ToolChain
+//------------------------------------------------------------------------------
+.ToolChain_Clang_OSX =
+[
+    .Platform                       = 'x64OSX'
+
+    // Compiler Options
+    .Compiler                       = 'Compiler-Clang'
+    .CommonCompilerOptions          = ' -o "%2" "%1"'   // Input/Output
+                                    + ' -c'             // Compile only
+                                    + ' -g'             // Generate debug info
+                                    + ' -m64'           // x86_64
+                                    + ' -D__OSX__'      // Platform define
+                                    + ' -D__APPLE__'    // Platform define
+
+                                    // Include paths
+                                    + ' -I./'
+
+                                    // Enable warnings
+                                    + ' -Wall -Werror -Wfatal-errors'       // warnings as errors
+                                    + ' -Wextra'
+
+                                    // Disabled warnings
+                                    + ' -Wno-#pragma-messages'
+                                    + ' -Wno-invalid-offsetof'      // we get the offset of members in non-POD types
+                                    + ' -Wno-implicit-exception-spec-mismatch' // Fires on our new/delete operator (Clang bug?)
+
+
+    .CompilerOptions                = ' -std=c++11 $CommonCompilerOptions$'
+    .CompilerOptionsC               = ' -x c $CommonCompilerOptions$'
+
+    // Librarian
+    .Librarian                      = '/usr/bin/ar'
+    .LibrarianOptions               = 'rcs "%2" "%1"'
+
+    // Linker
+    .Linker                         = 'CLANGXX_BINARY'
+    .LinkerOptions                  = '"%1" -o "%2" -g'
+
+    // File Extensions
+    .LibExtension                   = '.a'
+    .ExeExtension                   = ''
+
+    // Exception Control
+    .UseExceptions                  = ' -fexceptions'
+]
+
+//------------------------------------------------------------------------------
