@@ -1067,7 +1067,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                         AStackString<> msgBuffer;
                         job->GetMessagesForLog( msgBuffer );
 
-                        if ( on->IsMSVC())
+                        if ( on->IsMSVC() )
                         {
                             if ( on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
                             {
