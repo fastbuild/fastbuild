@@ -227,8 +227,8 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
         return;
     }
 
-    // concat all messages 
-    GetMessagesForLog(buffer);
+    // concat all messages
+    GetMessagesForLog( buffer );
 
     // Escape some characters to simplify parsing in the log
     // (The monitor will knows how to restore them)

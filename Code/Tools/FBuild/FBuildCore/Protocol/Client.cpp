@@ -548,11 +548,24 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             }
         }
 
-        // get list of messages during remote work 
+        // get list of messages during remote work
         AStackString<> msgBuffer;
-        job->GetMessagesForLog(msgBuffer);
-        
-        Node::DumpOutput( nullptr, msgBuffer.Get(), msgBuffer.GetLength(), nullptr );
+        job->GetMessagesForLog( msgBuffer );
+
+        if ( objectNode->IsMSVC())
+        {
+            if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
+            {
+                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+            }
+        }
+        else if ( objectNode->IsClang() || objectNode->IsGCC() )
+        {
+            if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
+            {
+                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+            }
+        }
     }
     else
     {
