@@ -796,23 +796,27 @@
 // IsShortcutDir
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::IsShortcutDir(
-    const WIN32_FIND_DATA & findData )
+    const void * findData )
 {
+    ASSERT( findData );
+    WIN32_FIND_DATA * pFindData = (WIN32_FIND_DATA*)findData;
     // shortcut dirs are . and ..
-    return ( findData.cFileName[ 0 ] == '.' &&
-         ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) );
+    return ( pFindData->cFileName[ 0 ] == '.' &&
+         ( ( pFindData->cFileName[ 1 ] == '.' ) || ( pFindData->cFileName[ 1 ] == '\000' ) ) );
 }
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
 // IsShortcutDir
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::IsShortcutDir( const dirent * entry )
+/*static*/ bool FileIO::IsShortcutDir( const void * entry )
 {
+    ASSERT( entry );
+    dirent * pEntry = (dirent*)entry;
     // shortcut dirs are . and ..
     bool isShortcutDir = false;
-    if ( entry->d_name[ 0 ] == '.' )
+    if ( pEntry->d_name[ 0 ] == '.' )
     {
-        if ( ( entry->d_name[ 1 ] == 0 ) ||
-             ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
+        if ( ( pEntry->d_name[ 1 ] == 0 ) ||
+             ( ( pEntry->d_name[ 1 ] == '.' ) && ( pEntry->d_name[ 2 ] == 0 ) ) )
         {
             isShortcutDir = true;;
         }
@@ -825,11 +829,13 @@
 // IncludeFileObjectInResults
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::IncludeFileObjectInResults(
-    const WIN32_FIND_DATA & findData,
+    const void * findData,
     const bool includeDirs )
 {
+    ASSERT( findData );
+    WIN32_FIND_DATA * pFindData = (WIN32_FIND_DATA*)findData;
     bool includeFileObject = true;  // first assume true
-    if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+    if ( pFindData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
     {
         if ( includeDirs )
         {
@@ -875,7 +881,7 @@
                 // ignore magic '.' and '..' folders
                 // (don't need to check length of name, as all names are at least 1 char
                 // which means index 0 and 1 are valid to access)
-                if ( IsShortcutDir( findData ) )
+                if ( IsShortcutDir( &findData ) )
                 {
                     continue;
                 }
@@ -900,7 +906,7 @@
 
         do
         {
-            if ( !IncludeFileObjectInResults( findData, includeDirs ) )
+            if ( !IncludeFileObjectInResults( &findData, includeDirs ) )
             {
                 continue;
             }
@@ -1013,7 +1019,7 @@
 
         do
         {
-            if ( !IncludeFileObjectInResults( findData, includeDirs ) )
+            if ( !IncludeFileObjectInResults( &findData, includeDirs ) )
             {
                 continue;
             }
@@ -1115,7 +1121,7 @@
                 // ignore magic '.' and '..' folders
                 // (don't need to check length of name, as all names are at least 1 char
                 // which means index 0 and 1 are valid to access)
-                if ( IsShortcutDir( findData ) )
+                if ( IsShortcutDir( &findData ) )
                 {
                     continue;
                 }

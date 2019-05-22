@@ -182,7 +182,7 @@ void WorkerBrokerage::GetTagCache(
                 if ( tagDir.BeginsWithI( TAG_NOT_OPERATOR_DIR_PREFIX ) )
                 {
                     valueToUse = TAG_NOT_OPERATOR;
-                    valueToUse += ( tagDir.Get() + strlen( TAG_NOT_OPERATOR_DIR_PREFIX ) );
+                    valueToUse += ( tagDir.Get() + AString::StrLen( TAG_NOT_OPERATOR_DIR_PREFIX ) );
                 }
                 else
                 {

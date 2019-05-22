@@ -8,10 +8,6 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AString.h"
 
-#if defined( __WINDOWS__ )
-    #include <windows.h>
-#endif
-
 // Defines
 //------------------------------------------------------------------------------
 #define MAX_PATH 260
@@ -98,12 +94,12 @@ private:
     static bool IsMatch( const Array< AString > * patterns,
                                    const char * fileName );
     #if defined( __WINDOWS__ )
-    static bool IsShortcutDir( const WIN32_FIND_DATA & findData );
+    static bool IsShortcutDir( const void * findData );
     static bool IncludeFileObjectInResults(
-                                 const WIN32_FIND_DATA & findData,
+                                 const void * findData,
                                  const bool includeDirs );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-    static bool IsShortcutDir( const dirent * entry );
+    static bool IsShortcutDir( const void * entry );
     #endif
 };
 
