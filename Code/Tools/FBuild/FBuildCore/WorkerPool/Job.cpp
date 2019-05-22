@@ -191,9 +191,9 @@ void Job::Deserialize( IOStream & stream )
     OwnData( data, dataSize, compressed );
 }
 
-// GetMessagesForMonitorLog
+// GetMessagesForLog
 //------------------------------------------------------------------------------
-void Job::GetMessagesForMonitorLog( AString & buffer ) const
+void Job::GetMessagesForLog( AString & buffer ) const
 {
     // The common case is that there are no messages
     if ( m_Messages.IsEmpty() )
@@ -215,6 +215,20 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
     {
         buffer += msg;
     }
+}
+
+// GetMessagesForMonitorLog
+//------------------------------------------------------------------------------
+void Job::GetMessagesForMonitorLog( AString & buffer ) const
+{
+    // The common case is that there are no messages
+    if ( m_Messages.IsEmpty() )
+    {
+        return;
+    }
+
+    // concat all messages 
+    GetMessagesForLog(buffer);
 
     // Escape some characters to simplify parsing in the log
     // (The monitor will knows how to restore them)
