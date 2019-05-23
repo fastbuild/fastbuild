@@ -76,14 +76,13 @@ Client::~Client()
     for ( size_t i=0; i<numServers; ++i )
     {
         ServerState * const ss = m_ServerList[ i ];
-        if ( ss )
+        ASSERT( ss );
+
+        if (ss->m_Connection != nullptr)
         {
-            if (ss->m_Connection != nullptr)
-            {
-                ss->m_Connection->SetUserData( nullptr );
-            }
-            FDELETE ss;
+            ss->m_Connection->SetUserData( nullptr );
         }
+        FDELETE ss;
     }
     m_ServerList.Clear();
 }
