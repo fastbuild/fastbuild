@@ -92,9 +92,10 @@ Client::~Client()
 {
     ASSERT( connection );
     ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    ss->Disconnect();
+    if ( ss )
+    {
+        ss->Disconnect();
+    }
 }
 
 // ThreadFuncStatic
