@@ -807,12 +807,14 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::IsShortcutDir( const void * entry )
 {
+    ASSERT( entry );
+    dirent * pEntry = (dirent*)entry;
     // shortcut dirs are . and ..
     bool isShortcutDir = false;
-    if ( entry->d_name[ 0 ] == '.' )
+    if ( pEntry->d_name[ 0 ] == '.' )
     {
-        if ( ( entry->d_name[ 1 ] == 0 ) ||
-             ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
+        if ( ( pEntry->d_name[ 1 ] == 0 ) ||
+             ( ( pEntry->d_name[ 1 ] == '.' ) && ( pEntry->d_name[ 2 ] == 0 ) ) )
         {
             isShortcutDir = true;;
         }
