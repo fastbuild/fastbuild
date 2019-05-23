@@ -46,28 +46,28 @@ private:
     void EmitCompilationMessage( bool stealingRemoteJob, bool racingRemoteJob,
         bool isRemote, const AString & workingDir, const AString & testExe ) const;
 
-    AString          m_TestExecutable;
-    Array< AString > m_ExtraFiles;
-    Array< AString > m_TestInput;
-    Array< AString > m_TestInputPath;
-    Array< AString > m_TestInputPattern;
-    Array< AString > m_TestInputExcludePath;
-    Array< AString > m_TestInputExcludedFiles;
-    Array< AString > m_TestInputExcludePattern;
-    AString          m_TestArguments;
-    AString          m_TestWorkingDir;
-    uint32_t         m_TestTimeOut;
-    bool             m_TestAlwaysShowOutput;
-    Array< AString > m_PreBuildDependencyNames;
-    ToolManifest     m_Manifest;
-    bool             m_AllowDistribution;
-    AString          m_ExecutableRootPath;
-    Array< AString > m_CustomEnvironmentVariables;
-    bool             m_DeleteRemoteFilesWhenDone;
+    AString             m_TestExecutable;
+    Array< AString >    m_ExtraFiles;
+    Array< AString >    m_TestInput;
+    Array< AString >    m_TestInputPath;
+    Array< AString >    m_TestInputPattern;
+    Array< AString >    m_TestInputExcludePath;
+    Array< AString >    m_TestInputExcludedFiles;
+    Array< AString >    m_TestInputExcludePattern;
+    AString             m_TestArguments;
+    AString             m_TestWorkingDir;
+    uint32_t            m_TestTimeOut;
+    bool                m_TestAlwaysShowOutput;
+    Array< AString >    m_PreBuildDependencyNames;
+    bool                m_AllowDistribution;
+    AString             m_ExecutableRootPath;
+    Array< AString >    m_CustomEnvironmentVariables;
+    bool                m_DeleteRemoteFilesWhenDone;
 
-    // Not serialized
-    bool             m_TestInputPathRecurse;
-    uint32_t         m_NumTestInputFiles;
+    // Internal State
+    bool                m_TestInputPathRecurse;
+    uint32_t            m_NumTestInputFiles;
+    ToolManifest        m_Manifest;
 };
 
 //------------------------------------------------------------------------------
