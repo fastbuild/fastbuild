@@ -12,7 +12,6 @@
 // Core
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
-#include "Core/Time/Time.h"
 #include "Core/Tracing/Tracing.h"
 
 // Static
@@ -152,8 +151,7 @@ void FBuildStats::OutputSummary() const
         const char * typeName = Node::GetTypeName( Node::Type( i ) );
 
         AStackString<> cpuTime;
-        const bool outputFractionalDigits = true;
-        Time::FormatTime( (float)( (double)stats.m_ProcessingTimeMS / (double)1000 ), outputFractionalDigits, cpuTime );
+        FormatTime( (float)( (double)stats.m_ProcessingTimeMS / (double)1000 ), cpuTime );
 
         AStackString<> cacheInfo;
         if ( ( stats.m_NumCacheHits + stats.m_NumCacheMisses + stats.m_NumCacheStores ) > 0 )
@@ -190,16 +188,15 @@ void FBuildStats::OutputSummary() const
     }
 
     AStackString<> buffer;
-    const bool outputFractionalDigits = true;
-    Time::FormatTime( m_TotalBuildTime, outputFractionalDigits, buffer );
+    FormatTime( m_TotalBuildTime, buffer );
     output += "Time:\n";
     output.AppendFormat( " - Real       : %s\n", buffer.Get() );
     float totalLocalCPUInSeconds = (float)( (double)m_TotalLocalCPUTimeMS / (double)1000 );
     float totalRemoteCPUInSeconds = (float)( (double)m_TotalRemoteCPUTimeMS / (double)1000 );
-    Time::FormatTime( totalLocalCPUInSeconds, outputFractionalDigits, buffer );
+    FormatTime( totalLocalCPUInSeconds, buffer );
     float localRatio = ( totalLocalCPUInSeconds / m_TotalBuildTime );
     output.AppendFormat( " - Local CPU  : %s (%2.1f:1)\n", buffer.Get(), (double)localRatio );
-    Time::FormatTime( totalRemoteCPUInSeconds, outputFractionalDigits, buffer );
+    FormatTime( totalRemoteCPUInSeconds, buffer );
     float remoteRatio = ( totalRemoteCPUInSeconds / m_TotalBuildTime );
     output.AppendFormat( " - Remote CPU : %s (%2.1f:1)\n", buffer.Get(), (double)remoteRatio );
     output += "-----------------------------------------------------------------\n";
@@ -289,6 +286,41 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( const Dependencies & depende
     {
         GatherPostBuildStatisticsRecurse( it->GetNode() );
     }
+}
+
+// FormatTime
+//------------------------------------------------------------------------------
+void FBuildStats::FormatTime( float timeInSeconds , AString & buffer ) const
+{
+    buffer.Clear();
+
+    uint32_t days = (uint32_t)( timeInSeconds / ( 24.0f * 60.0f * 60.0f ) );
+    timeInSeconds -= ( (float)days * ( 24.0f * 60.0f * 60.0f ) );
+    uint32_t hours = (uint32_t)( timeInSeconds / ( 60.0f * 60.0f ) );
+    timeInSeconds -= ( (float)hours * ( 60.0f * 60.0f ) );
+    uint32_t mins = (uint32_t)( timeInSeconds / 60.0f );
+    timeInSeconds -= ( (float)mins * 60.0f );
+
+    AStackString<> temp;
+
+    if ( days > 0 )
+    {
+        temp.Format( "%u days, ", days );
+        buffer += temp;
+    }
+    if ( hours > 0 )
+    {
+        temp.Format( "%uh:", hours );
+        buffer += temp;
+    }
+    if ( mins > 0 )
+    {
+        temp.Format( "%um ", mins );
+        buffer += temp;
+    }
+
+    temp.Format( "%2.3fs", (double)timeInSeconds );
+    buffer += temp;
 }
 
 //------------------------------------------------------------------------------

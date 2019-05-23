@@ -33,15 +33,17 @@ void WorkerBrokerage::Init()
 {
     PROFILE_FUNCTION
 
+    ASSERT( Thread::IsMainThread() );
+
     if ( m_Initialized )
     {
         return;
     }
 
-    // brokerage path includes version to reduce unnecessary comms attempts
+    // brokerage path includes version to reduce unnecssary comms attempts
     uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
 
-    // root dir
+    // root folder
     AStackString<> root;
     if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", root ) )
     {

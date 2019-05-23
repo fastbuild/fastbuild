@@ -16,9 +16,8 @@
     #define DEBUGSPAM( ... )    Tracing::DoNothing()
     #define WARNING( ... )      Tracing::DoNothing()
 #endif
-#define OUTPUT_STRING( message ) Tracing::Output( message )
-#define OUTPUT( ... )            Tracing::OutputFormat( __VA_ARGS__ )
-#define FATALERROR( ... )        Tracing::FatalErrorFormat( __VA_ARGS__ )
+#define OUTPUT( ... )           Tracing::OutputFormat( __VA_ARGS__ )
+#define FATALERROR( ... )       Tracing::FatalErrorFormat( __VA_ARGS__ )
 
 // Tracing
 //------------------------------------------------------------------------------

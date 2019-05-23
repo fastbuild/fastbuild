@@ -23,7 +23,7 @@ ObjectList( 'Caching' )
                                     + ' /AI"$WindowsDK_WinRTAssemblyPath$"'
                                 #endif
                                 #if USING_VS2015
-                                    + ' /AI"$VS2015_AllProcPath$/vcpackages"'
+                                    + ' /AI"$VS2015_BasePath$/VC/vcpackages"'
                                     + ' /AI"$WindowsDK_WinRTAssemblyPath$"'
                                 #endif
                                 #if USING_VS2017

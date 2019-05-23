@@ -5,7 +5,6 @@
 //------------------------------------------------------------------------------
 #include "Time.h"
 #include "Core/Env/Assert.h"
-#include "Core/Strings/AStackString.h"
 
 // system
 #if defined( __WINDOWS__ )
@@ -38,50 +37,6 @@ uint64_t Time::GetCurrentFileTime()
     #else
         #error Unknown platform
     #endif
-}
-
-// FormatTime
-//------------------------------------------------------------------------------
-void Time::FormatTime( const float timeInSeconds, const bool outputFractionalDigits, AString & buffer )
-{
-    buffer.Clear();
-
-    float mutableTimeInSeconds = timeInSeconds;
-
-    uint32_t days = (uint32_t)( mutableTimeInSeconds / ( 24.0f * 60.0f * 60.0f ) );
-    mutableTimeInSeconds -= ( (float)days * ( 24.0f * 60.0f * 60.0f ) );
-    uint32_t hours = (uint32_t)( mutableTimeInSeconds / ( 60.0f * 60.0f ) );
-    mutableTimeInSeconds -= ( (float)hours * ( 60.0f * 60.0f ) );
-    uint32_t mins = (uint32_t)( mutableTimeInSeconds / 60.0f );
-    mutableTimeInSeconds -= ( (float)mins * 60.0f );
-
-    AStackString<> temp;
-
-    if ( days > 0 )
-    {
-        temp.Format( "%u days, ", days );
-        buffer += temp;
-    }
-    if ( hours > 0 )
-    {
-        temp.Format( "%uh:", hours );
-        buffer += temp;
-    }
-    if ( mins > 0 )
-    {
-        temp.Format( "%um ", mins );
-        buffer += temp;
-    }
-
-    if ( outputFractionalDigits )
-    {
-        temp.Format( "%2.3fs", mutableTimeInSeconds );
-    }
-    else
-    {
-        temp.Format( "%us", (uint32_t) mutableTimeInSeconds );
-    }
-    buffer += temp;
 }
 
 //------------------------------------------------------------------------------

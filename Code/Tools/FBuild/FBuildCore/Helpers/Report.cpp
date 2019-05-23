@@ -15,7 +15,6 @@
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
-#include "Core/Time/Time.h"
 
 // system
 #include <stdarg.h> // for va_args
@@ -100,9 +99,8 @@ void Report::Generate( const FBuildStats & stats )
 
     // patch in time take
     const float time = t.GetElapsed();
-    const bool outputFractionalDigits = true;
     AStackString<> timeTakenBuffer;
-    Time::FormatTime( time, outputFractionalDigits, timeTakenBuffer );
+    stats.FormatTime( time, timeTakenBuffer );
     char * placeholder = m_Output.Find( "^^^^    " );
     memcpy( placeholder, timeTakenBuffer.Get(), timeTakenBuffer.GetLength() );
 
@@ -314,13 +312,12 @@ void Report::CreateOverview( const FBuildStats & stats )
 
     // Real Time
     float totalBuildTime = stats.m_TotalBuildTime;
-    const bool outputFractionalDigits = true;
-    Time::FormatTime( totalBuildTime, outputFractionalDigits, buffer );
+    stats.FormatTime( totalBuildTime, buffer );
     Write( "<tr><td>Time</td><td>%s</td></tr>\n", buffer.Get() );
 
     // Local CPU Time
     float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / (double)1000 );
-    Time::FormatTime( totalLocalCPUInSeconds, outputFractionalDigits, buffer );
+    stats.FormatTime( totalLocalCPUInSeconds, buffer );
     float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
     Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)localRatio );
 

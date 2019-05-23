@@ -787,57 +787,6 @@
     }
 #endif
 
-#if defined( __WINDOWS__ )
-// IsShortcutDir
-//------------------------------------------------------------------------------
-/*static*/ bool FileIO::IsShortcutDir(
-    const void * findData )
-{
-    ASSERT( findData );
-    WIN32_FIND_DATA * pFindData = (WIN32_FIND_DATA*)findData;
-    // shortcut dirs are . and ..
-    return ( pFindData->cFileName[ 0 ] == '.' &&
-         ( ( pFindData->cFileName[ 1 ] == '.' ) || ( pFindData->cFileName[ 1 ] == '\000' ) ) );
-}
-#elif defined( __LINUX__ ) || defined( __APPLE__ )
-// IsShortcutDir
-//------------------------------------------------------------------------------
-/*static*/ bool FileIO::IsShortcutDir( const void * entry )
-{
-    ASSERT( entry );
-    dirent * pEntry = (dirent*)entry;
-    // shortcut dirs are . and ..
-    bool isShortcutDir = false;
-    if ( pEntry->d_name[ 0 ] == '.' )
-    {
-        if ( ( pEntry->d_name[ 1 ] == 0 ) ||
-             ( ( pEntry->d_name[ 1 ] == '.' ) && ( pEntry->d_name[ 2 ] == 0 ) ) )
-        {
-            isShortcutDir = true;;
-        }
-    }
-    return isShortcutDir;
-}
-#endif
-
-#if defined( __WINDOWS__ )
-// IncludeFileObjectInResults
-//------------------------------------------------------------------------------
-/*static*/ bool FileIO::IncludeFileObjectInResults(
-    const void * findData)
-{
-    ASSERT( findData );
-    WIN32_FIND_DATA * pFindData = (WIN32_FIND_DATA*)findData;
-    bool includeFileObject = true;  // first assume true
-    if ( pFindData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-    {
-        // don't include directories
-        includeFileObject = false;
-    }
-    return includeFileObject;
-}
-#endif
-
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurse( AString & pathCopy,
@@ -864,7 +813,8 @@
                 // ignore magic '.' and '..' folders
                 // (don't need to check length of name, as all names are at least 1 char
                 // which means index 0 and 1 are valid to access)
-                if ( IsShortcutDir( &findData ) )
+                if ( findData.cFileName[ 0 ] == '.' &&
+                     ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
                 {
                     continue;
                 }
@@ -889,7 +839,7 @@
 
         do
         {
-            if ( !IncludeFileObjectInResults( &findData ) )
+            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
             {
                 continue;
             }
@@ -948,9 +898,13 @@
             if ( isDir )
             {
                 // ignore . and ..
-                if ( IsShortcutDir( entry ) )
+                if ( entry->d_name[ 0 ] == '.' )
                 {
-                    continue;
+                    if ( ( entry->d_name[ 1 ] == 0 ) ||
+                         ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
+                    {
+                        continue;
+                    }
                 }
 
                 // regular dir
@@ -958,7 +912,6 @@
                 pathCopy += entry->d_name;
                 pathCopy += NATIVE_SLASH;
                 GetFilesRecurse( pathCopy, wildCard, results );
-
                 continue;
             }
 
@@ -998,7 +951,7 @@
 
         do
         {
-            if ( !IncludeFileObjectInResults( &findData ) )
+            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
             {
                 continue;
             }
@@ -1056,6 +1009,7 @@
             // dir?
             if ( isDir )
             {
+                // ignore dirs
                 continue;
             }
 
@@ -1100,7 +1054,8 @@
                 // ignore magic '.' and '..' folders
                 // (don't need to check length of name, as all names are at least 1 char
                 // which means index 0 and 1 are valid to access)
-                if ( IsShortcutDir( &findData ) )
+                if ( findData.cFileName[ 0 ] == '.' &&
+                    ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
                 {
                     continue;
                 }
@@ -1193,9 +1148,13 @@
             if ( isDir )
             {
                 // ignore . and ..
-                if ( IsShortcutDir( entry ) )
+                if ( entry->d_name[ 0 ] == '.' )
                 {
-                    continue;
+                    if ( ( entry->d_name[ 1 ] == 0 ) ||
+                         ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
+                    {
+                        continue;
+                    }
                 }
 
                 // regular dir

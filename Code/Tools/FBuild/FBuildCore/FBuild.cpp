@@ -193,6 +193,7 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             m_Cache = nullptr;
         }
     }
+
     return true;
 }
 

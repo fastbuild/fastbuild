@@ -88,13 +88,6 @@ private:
                                  Array< FileInfo > * results );
     static bool IsMatch( const Array< AString > * patterns, const char * fileName );
 
-    #if defined( __WINDOWS__ )
-    static bool IsShortcutDir( const void * findData );
-    static bool IncludeFileObjectInResults(
-                                 const void * findData );
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
-    static bool IsShortcutDir( const void * entry );
-    #endif
 };
 
 //------------------------------------------------------------------------------

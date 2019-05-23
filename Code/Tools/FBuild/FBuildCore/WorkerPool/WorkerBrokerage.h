@@ -47,12 +47,12 @@ private:
     void SetBrokerageRecord();
     void RemoveBrokerageFile();
     
-    AString                m_BrokerageRoot;
-    bool                   m_Availability;
-    bool                   m_Initialized;
-    AString                m_HostName;
-    BrokerageRecord        m_BrokerageRecord;
-    Timer                  m_TimerLastUpdate;      // Throttle network access
+    AString             m_BrokerageRoot;
+    bool                m_Availability;
+    bool                m_Initialized;
+    AString             m_HostName;
+    BrokerageRecord     m_BrokerageRecord;
+    Timer               m_TimerLastUpdate;      // Throttle network access
 };
 
 //------------------------------------------------------------------------------

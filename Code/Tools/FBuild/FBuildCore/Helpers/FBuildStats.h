@@ -63,6 +63,8 @@ public:
         uint32_t m_NumFailed;
     };
 
+    void FormatTime( float timeInSeconds , AString & buffer  ) const;
+
     const Node * GetRootNode() const { return m_RootNode; }
     const Array< const Node * > & GetNodesByTime() const { return m_NodesByTime; }
 
