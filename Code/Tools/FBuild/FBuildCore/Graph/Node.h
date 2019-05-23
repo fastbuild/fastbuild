@@ -147,6 +147,7 @@ public:
 
     inline uint32_t GetLastBuildTime() const    { return m_LastBuildTimeMs; }
     inline uint32_t GetProcessingTime() const   { return m_ProcessingTime; }
+    inline uint32_t GetCachingTime() const      { return m_CachingTime; }
     inline uint32_t GetRecursiveCost() const    { return m_RecursiveCost; }
 
     inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
@@ -223,8 +224,9 @@ protected:
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );
 
-    inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
-    inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }
+    inline void     SetLastBuildTime( uint32_t ms )   { m_LastBuildTimeMs = ms; }
+    inline void     AddProcessingTime( uint32_t ms )  { m_ProcessingTime += ms; }
+    inline void     AddCachingTime( uint32_t ms )     { m_CachingTime += ms; }
 
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
@@ -250,19 +252,20 @@ protected:
     AString m_Name;
 
     State m_State;
-    mutable uint32_t      m_BuildPassTag; // prevent multiple recursions into the same node
-    uint32_t              m_ControlFlags;
-    mutable uint32_t      m_StatsFlags;
-    uint64_t              m_Stamp;
-    uint32_t              m_RecursiveCost;
+    mutable uint32_t m_BuildPassTag; // prevent multiple recursions into the same node
+    uint32_t        m_ControlFlags;
+    mutable uint32_t        m_StatsFlags;
+    uint64_t        m_Stamp;
+    uint32_t        m_RecursiveCost;
     Type m_Type;
-    Node *                m_Next; // node map linked list pointer
-    uint32_t              m_NameCRC;
-    uint32_t              m_LastBuildTimeMs; // time it took to do last known full build of this node
-    uint32_t              m_ProcessingTime;  // time spent on this node
-    mutable uint32_t      m_ProgressAccumulator;
-    uint32_t              m_Index;
-    bool                  m_Hidden;
+    Node *          m_Next; // node map linked list pointer
+    uint32_t        m_NameCRC;
+    uint32_t m_LastBuildTimeMs; // time it took to do last known full build of this node
+    uint32_t m_ProcessingTime;  // time spent on this node
+    uint32_t m_CachingTime;  // time spent caching this node
+    mutable uint32_t m_ProgressAccumulator;
+    uint32_t        m_Index;
+    bool            m_Hidden;
     mutable WorkerRecords m_WorkerRecords;
 
     Dependencies m_PreBuildDependencies;
