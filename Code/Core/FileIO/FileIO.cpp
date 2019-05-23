@@ -1862,6 +1862,8 @@ bool FileIO::FileInfo::IsReadOnly() const
         errorMsg.Format( "Failed to set permissions on dir %s (error %i)", rootSandboxPath.Get(), Env::GetLastErr() );
     }
 #else  // not Windows
+    (void)rootSandboxPath;
+
     // @TODO: add permission setting code for Mac and Linux sandbox
     errorMsg += "Mac and Linux sandbox logic is not yet implemented";
 #endif
