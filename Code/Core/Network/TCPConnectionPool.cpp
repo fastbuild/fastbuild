@@ -33,6 +33,8 @@
     #define INVALID_SOCKET ( -1 )
     #define SOCKET_ERROR -1
     
+    #include <stdio.h>
+    #include <stdlib.h>
     #include <execinfo.h>
 #else
     #error Unknown platform
