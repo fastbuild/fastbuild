@@ -8,10 +8,6 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AString.h"
 
-#if defined( __WINDOWS__ )
-    #include <windows.h>
-#endif
-
 // Defines
 //------------------------------------------------------------------------------
 #define MAX_PATH 260
@@ -99,29 +95,29 @@ private:
     static bool IsMatch( const Array< AString > * patterns,
                                    const char * fileName );
     #if defined( __WINDOWS__ )
-    static bool IsShortcutDir( const WIN32_FIND_DATA & findData );
+    static bool IsShortcutDir( const void * findData );
     static bool IncludeFileObjectInResults(
-                                 const WIN32_FIND_DATA & findData,
+                                 const void * findData,
                                  const bool includeDirs );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-    static bool IsShortcutDir( const dirent * entry );
+    static bool IsShortcutDir( const void * entry );
     #endif
 
     #if defined( __WINDOWS__ )
         static bool CheckAndSetPermissions(
-            const HANDLE hDir,
-            const PSID pUsersSID,
-            const PSID pLowLabelSID,
-            const BYTE lowLabelAceFlags,
-            const DWORD usersDirAllowMask,
-            const DWORD usersDirDenyMask,
-            const DWORD usersChildAllowMask,
-            const DWORD usersChildDenyMask,
-            const BOOL setPermissions,
-            PACL & pDACL,
-            BOOL & hasDesiredUsersDirPermissions,
-            BOOL & hasDesiredUsersChildPermissions,
-            BOOL & hasLowIntegrityPermission );
+            const void * dir,
+            const void * usersSID,
+            const void * lowLabelSID,
+            const char lowLabelAceFlags,
+            const uint32_t usersDirAllowMask,
+            const uint32_t usersDirDenyMask,
+            const uint32_t usersChildAllowMask,
+            const uint32_t usersChildDenyMask,
+            const bool setPermissions,
+            void * & dacl,
+            bool & hasDesiredUsersDirPermissions,
+            bool & hasDesiredUsersChildPermissions,
+            bool & hasLowIntegrityPermission );
     #endif
 
 };

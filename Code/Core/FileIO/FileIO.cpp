@@ -794,16 +794,18 @@
 // IsShortcutDir
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::IsShortcutDir(
-    const WIN32_FIND_DATA & findData )
+    const void * findData )
 {
+    ASSERT( findData );
+    WIN32_FIND_DATA * pFindData = (WIN32_FIND_DATA*)findData;
     // shortcut dirs are . and ..
-    return ( findData.cFileName[ 0 ] == '.' &&
-         ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) );
+    return ( pFindData->cFileName[ 0 ] == '.' &&
+         ( ( pFindData->cFileName[ 1 ] == '.' ) || ( pFindData->cFileName[ 1 ] == '\000' ) ) );
 }
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
 // IsShortcutDir
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::IsShortcutDir( const dirent * entry )
+/*static*/ bool FileIO::IsShortcutDir( const void * entry )
 {
     // shortcut dirs are . and ..
     bool isShortcutDir = false;
@@ -823,11 +825,13 @@
 // IncludeFileObjectInResults
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::IncludeFileObjectInResults(
-    const WIN32_FIND_DATA & findData,
+    const void * findData,
     const bool includeDirs )
 {
+    ASSERT( findData );
+    WIN32_FIND_DATA * pFindData = (WIN32_FIND_DATA*)findData;
     bool includeFileObject = true;  // first assume true
-    if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+    if ( pFindData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
     {
         if ( includeDirs )
         {
@@ -873,7 +877,7 @@
                 // ignore magic '.' and '..' folders
                 // (don't need to check length of name, as all names are at least 1 char
                 // which means index 0 and 1 are valid to access)
-                if ( IsShortcutDir( findData ) )
+                if ( IsShortcutDir( &findData ) )
                 {
                     continue;
                 }
@@ -898,7 +902,7 @@
 
         do
         {
-            if ( !IncludeFileObjectInResults( findData, includeDirs ) )
+            if ( !IncludeFileObjectInResults( &findData, includeDirs ) )
             {
                 continue;
             }
@@ -1011,7 +1015,7 @@
 
         do
         {
-            if ( !IncludeFileObjectInResults( findData, includeDirs ) )
+            if ( !IncludeFileObjectInResults( &findData, includeDirs ) )
             {
                 continue;
             }
@@ -1506,21 +1510,26 @@ bool FileIO::FileInfo::IsReadOnly() const
 // CheckAndSetPermissions
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::CheckAndSetPermissions(
-    const HANDLE hDir,
-    const PSID pUsersSID,
-    const PSID pLowLabelSID,
-    const BYTE lowLabelAceFlags,
-    const DWORD usersDirAllowMask,
-    const DWORD usersDirDenyMask,
-    const DWORD usersChildAllowMask,
-    const DWORD usersChildDenyMask,
-    const BOOL setPermissions,
-    PACL & pDACL,
-    BOOL & hasDesiredUsersDirPermissions,
-    BOOL & hasDesiredUsersChildPermissions,
-    BOOL & hasLowIntegrityPermission )
+    const void * dir,
+    const void * usersSID,
+    const void * lowLabelSID,
+    const char lowLabelAceFlags,
+    const uint32_t usersDirAllowMask,
+    const uint32_t usersDirDenyMask,
+    const uint32_t usersChildAllowMask,
+    const uint32_t usersChildDenyMask,
+    const bool setPermissions,
+    void * & dacl,
+    bool & hasDesiredUsersDirPermissions,
+    bool & hasDesiredUsersChildPermissions,
+    bool & hasLowIntegrityPermission )
 {
     // Check and set permissions on a dir
+    const HANDLE hDir = (HANDLE)dir;
+    const PSID pUsersSID = (PSID)usersSID;
+    const PSID pLowLabelSID = (PSID)lowLabelSID;
+    PACL pDACL = NULL;
+
     bool success = false;
     hasDesiredUsersDirPermissions = false;
     hasDesiredUsersChildPermissions = false;
@@ -1650,6 +1659,7 @@ bool FileIO::FileInfo::IsReadOnly() const
         }
     }
     // pDACL, pSACL, and pSD do not need clearing
+    dacl = pDACL;
     return success;
 }
 #endif  // Windows
