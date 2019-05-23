@@ -816,7 +816,7 @@
         if ( ( pEntry->d_name[ 1 ] == 0 ) ||
              ( ( pEntry->d_name[ 1 ] == '.' ) && ( pEntry->d_name[ 2 ] == 0 ) ) )
         {
-            isShortcutDir = true;;
+            isShortcutDir = true;
         }
     }
     return isShortcutDir;
@@ -972,7 +972,7 @@
                 pathCopy.SetLength( baseLength );
                 pathCopy += entry->d_name;
                 pathCopy += NATIVE_SLASH;
-                GetFilesRecurse( pathCopy, wildCard, results );
+                GetFilesRecurse( pathCopy, wildCard, includeDirs, results );
 
                 if ( !includeDirs )
                 {
