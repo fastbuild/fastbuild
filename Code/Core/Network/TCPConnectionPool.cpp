@@ -32,10 +32,6 @@
     #include <unistd.h>
     #define INVALID_SOCKET ( -1 )
     #define SOCKET_ERROR -1
-    
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <execinfo.h>
 #else
     #error Unknown platform
 #endif
@@ -458,21 +454,6 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
 #ifdef DEBUG
     ASSERT( connection->m_InUse == false );
     connection->m_InUse = true;
-#endif
-
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-    if ( connection->m_Socket == INVALID_SOCKET )
-    {
-        void *array[10];
-        size_t size;
-
-        // get void*'s for all entries on the stack
-        size = backtrace(array, 10);
-
-        // print out all the frames to stderr
-        fprintf(stderr, "Error:\n");
-        backtrace_symbols_fd(array, size, STDERR_FILENO);
-    }
 #endif
 
     ASSERT( connection->m_Socket != INVALID_SOCKET );
