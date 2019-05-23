@@ -58,10 +58,7 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( AnonymousNamespaces )
     REGISTER_TEST( ErrorsAreCorrectlyReported )
     REGISTER_TEST( WarningsAreCorrectlyReported )
-    #if defined( __WINDOWS__ )
-        // TODO:LINUX TODO:OSX - Fix and enable this test
-        REGISTER_TEST( ShutdownMemoryLeak )
-    #endif
+    REGISTER_TEST( ShutdownMemoryLeak )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( TestForceInclude )
         REGISTER_TEST( TestZiDebugFormat )
@@ -339,7 +336,7 @@ void TestDistributed::ShutdownMemoryLeak() const
     public:
         static uint32_t AbortBuild( void * )
         {
-            // Wait until some distribtued jobs are available
+            // Wait until some distributed jobs are available
             Timer t;
             while ( Job::GetTotalLocalDataMemoryUsage() == 0 )
             {
