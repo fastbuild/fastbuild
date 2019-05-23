@@ -44,9 +44,9 @@ public:
     void Load();
     void Save();
 private:
-    Mode             m_Mode;
-    uint32_t         m_NumCPUsToUse;
-    bool             m_StartMinimized;
+    Mode        m_Mode;
+    uint32_t    m_NumCPUsToUse;
+    bool        m_StartMinimized;
     Array< AString > m_BaseWorkerTagStrings;
 
     mutable Tags     m_BaseWorkerTags;
