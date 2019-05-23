@@ -414,8 +414,8 @@ void Report::DoCacheStats( const FBuildStats & stats )
             const float     cMissesPerc  = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
 
             // stores
-            const uint32_t  cStores      = ls.objectCount_CacheStores;
-            const float     cStoreTime = (float)ls.cacheTimeMS / 1000.f; // ms to s
+            const uint32_t  cStores     = ls.objectCount_CacheStores;
+            const float     cStoreTime  = (float)ls.cacheTimeMS / 1000.0f; // ms to s
 
             // start collapsable section
             if ( numOutput == 10 )
@@ -521,8 +521,8 @@ void Report::DoCPUTimeByType( const FBuildStats & stats )
 void Report::DoCPUTimeByItem( const FBuildStats & stats )
 {
     const FBuildOptions & options = FBuild::Get().GetOptions();
-    bool cacheEnabled = (options.m_UseCacheRead || options.m_UseCacheWrite);
-        
+    const bool cacheEnabled = ( options.m_UseCacheRead || options.m_UseCacheWrite );
+
     DoSectionTitle("CPU Time by Item", "cpuTimeByItem");
 
     DoTableStart();
@@ -550,18 +550,18 @@ void Report::DoCPUTimeByItem( const FBuildStats & stats )
             DoToggleSection( (uint32_t)nodes.GetSize() - 10 );
         }
 
-        if (cacheEnabled)
+        if ( cacheEnabled )
         {
-            bool cacheHit = node->GetStatFlag(Node::STATS_CACHE_HIT);
-            bool cacheStore = node->GetStatFlag(Node::STATS_CACHE_STORE);
+            const bool cacheHit = node->GetStatFlag(Node::STATS_CACHE_HIT);
+            const bool cacheStore = node->GetStatFlag(Node::STATS_CACHE_STORE);
 
-            Write((numOutput == 10) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td style=\"width:120px;\">%s</td><td>%s</td></tr>\n"
-                                    : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A" ), name );
+            Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td style=\"width:120px;\">%s</td><td>%s</td></tr>\n"
+                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A" ), name );
         }
         else
         {
-            Write((numOutput == 10) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td>%s</td></tr>\n"
-                : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, name);
+            Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td>%s</td></tr>\n"
+                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, name);
 
         }
         numOutput++;

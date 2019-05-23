@@ -1343,8 +1343,8 @@ void ObjectNode::WriteToCache( Job * job )
                     m_PCHCacheKey = xxHash::Calc64( data, dataSize );
                 }
 
-                uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
-                AddCachingTime(cachingTime);
+                const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
+                AddCachingTime( cachingTime );
 
                 // Output
                 if ( FBuild::Get().GetOptions().m_CacheVerbose )
