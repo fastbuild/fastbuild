@@ -124,10 +124,11 @@ private:
     float            m_WorkerListRefreshElapsedTimeSec;  // seconds since we started the worker list retries
     int32_t          m_WorkerListRefreshLimitSec;        // max seconds elapsed until stop retrying worker list
     int32_t          m_WorkerConnectionRetryLimitSec;    // max seconds elapsed until stop retrying connection to worker
-    volatile bool    m_ShouldExit;                       // signal from main thread
-    volatile bool    m_Exited;                           // flagged on exit
-    bool             m_DetailedLogging;
-    Thread::ThreadHandle m_Thread;                       // the thread to find and manage workers
+    Array< AString >    m_WorkerList;   // workers to connect to
+    volatile bool       m_ShouldExit;   // signal from main thread
+    volatile bool       m_Exited;         // flagged on exit
+    bool                m_DetailedLogging;
+    Thread::ThreadHandle m_Thread;      // the thread to find and manage workers
 
     // state
     Timer                 m_StatusUpdateTimer;
