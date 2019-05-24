@@ -24,7 +24,6 @@ Settings
 
 #if __LINUX__
 .ExeExtension = ''
-}
 #endif
 
 #if __WINDOWS__
