@@ -95,24 +95,24 @@ void WorkerBrokerage::ListDirContents(
     }
 }
 
-// GetRootWorkers
+// GetWorkers
 //------------------------------------------------------------------------------
-void WorkerBrokerage::GetRootWorkers(
+void WorkerBrokerage::GetWorkers(
     const Array< AString > & excludedWorkers,
-    Array< AString > & rootWorkersToInclude ) const
+    Array< AString > & workersToInclude ) const
 {
-    Array< AString > rootWorkers;
-    ListDirContents( m_BrokerageRoot, rootWorkers );
-    rootWorkersToInclude.SetCapacity( rootWorkers.GetSize() );
-    for ( size_t i=0; i<rootWorkers.GetSize(); ++i )
+    Array< AString > workers;
+    ListDirContents( m_BrokerageRoot, workers );
+    workersToInclude.SetCapacity( workers.GetSize() );
+    for ( size_t i=0; i<workers.GetSize(); ++i )
     {
-        const AString & rootWorker = rootWorkers[ i ];
-        if ( rootWorker.CompareI( m_HostName ) != 0 &&
-              !excludedWorkers.Find( rootWorker ) )
+        const AString & worker = workers[ i ];
+        if ( worker.CompareI( m_HostName ) != 0 &&
+              !excludedWorkers.Find( worker ) )
         {
-            if ( !rootWorkersToInclude.Find( rootWorker ) )
+            if ( !workersToInclude.Find( worker ) )
             {
-                rootWorkersToInclude.Append( rootWorker );
+                workersToInclude.Append( worker );
             }
         }
     }
@@ -134,7 +134,7 @@ void WorkerBrokerage::FindWorkers(
         return;
     }
 
-    GetRootWorkers( excludedWorkers, workers );
+    GetWorkers( excludedWorkers, workers );
 }
 
 // SetBrokerageRecord

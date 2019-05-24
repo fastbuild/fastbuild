@@ -84,7 +84,6 @@ Client::~Client()
         }
         FDELETE ss;
     }
-    m_ServerList.Clear();
 }
 
 //------------------------------------------------------------------------------
@@ -261,11 +260,11 @@ void Client::RetryWorkers()
                     timeIntervalString,
                     timeLimitString ) )
                 {
-                    OUTPUT( "Will refresh worker list in %s, retry limit %s\n", timeIntervalString.Get(), timeLimitString.Get() );
+                    DIST_INFO( "Will refresh worker list in %s, retry limit %s\n", timeIntervalString.Get(), timeLimitString.Get() );
                 }
                 else
                 {
-                    OUTPUT( "No more refreshes of worker list\n" );
+                    DIST_INFO( "No more refreshes of worker list\n" );
                     m_RetryingWorkers = false;
                 }
             }
@@ -277,10 +276,7 @@ void Client::RetryWorkers()
         else  // static workers
         {
             // this code block only runs once per run of the app
-            OUTPUT( "Not refreshing worker list, since you specified a .Workers list in your Settings node\n" );
-
-            // clear 2d array
-            m_WorkerList.Clear();
+            DIST_INFO( "Not refreshing worker list, since you specified a .Workers list in your Settings node\n" );
 
             // use the settings workers for the first element of the worker list,
             // since all jobs for static workers will use the same list
@@ -484,7 +480,7 @@ void Client::LookForWorkers()
         for ( size_t m=0; m<numWorkers; ++m )
         {
             ServerState * const stateToCheck = m_ServerList[ m ];
-            if ( stateToCheck && stateToCheck->m_RemoteName == worker )
+            if ( stateToCheck->m_RemoteName == worker )
             {
                 ss = stateToCheck;
                 break;
@@ -513,8 +509,6 @@ void Client::LookForWorkers()
             continue;
         }
 
-        ss->m_ConnectionDelayTimer.Start();  // reset time
-
         DIST_INFO( "Connecting to: %s\n", ss->m_RemoteName.Get() );
         const ConnectionInfo * ci = Connect( ss->m_RemoteName, m_Port, 2000 ); // 2000ms connection timeout
         if ( ci == nullptr )
@@ -529,6 +523,7 @@ void Client::LookForWorkers()
                 // so we don't hit the network so much, use exponential backoff
                 ss->m_ConnectionRetryIntervalSec *= 2;
             }
+
             AStackString<> timeIntervalString;
             AStackString<> timeLimitString;
             if ( ShouldRetry( timeSinceLastRetry,
@@ -538,24 +533,22 @@ void Client::LookForWorkers()
                 timeIntervalString,
                 timeLimitString ) )
             {
-                OUTPUT( "%s did not respond, retrying in >= %s, retry limit %s\n", ss->m_RemoteName.Get(), timeIntervalString.Get(), timeLimitString.Get() );
+                ss->m_ConnectionDelayTimer.Start();  // reset time
+                DIST_INFO( "%s did not respond, retrying in >= %s, retry limit %s\n", ss->m_RemoteName.Get(), timeIntervalString.Get(), timeLimitString.Get() );
             }
             else
             {
-                OUTPUT( "%s no more retries\n", ss->m_RemoteName.Get() );
+                DIST_INFO( "%s no more retries\n", ss->m_RemoteName.Get() );
                 ExcludeWorker( *ss, newlyExcludedWorkers );
             }
         }
         else
         {
             DIST_INFO( " - connection: %s (OK)\n", ss->m_RemoteName.Get() );
-            uint32_t numJobsAvailable = 0;
             uint32_t numJobsAvailableForWorker = 0;
             if ( JobQueue::IsValid() )
             {
-                JobQueue::Get().GetNumDistributableJobsAvailable(
-                    numJobsAvailable,
-                    numJobsAvailableForWorker );
+                numJobsAvailableForWorker = JobQueue::Get().GetNumDistributableJobsAvailable();
             }
 
             ci->SetUserData( ss );
@@ -603,11 +596,8 @@ void Client::CommunicateJobAvailability()
         MutexHolder ssMH( ss->m_Mutex );
         if ( ss->m_Connection )
         {
-            uint32_t numJobsAvailable = 0;
             uint32_t numJobsAvailableForWorker = 0;
-            JobQueue::Get().GetNumDistributableJobsAvailable(
-                    numJobsAvailable,
-                    numJobsAvailableForWorker );
+            numJobsAvailableForWorker = JobQueue::Get().GetNumDistributableJobsAvailable();
             if ( ss->m_NumJobsAvailableForWorker != numJobsAvailableForWorker )
             {
                 PROFILE_SECTION( "UpdateJobAvailability" )
@@ -615,8 +605,7 @@ void Client::CommunicateJobAvailability()
                 SendMessageInternal( ss->m_Connection, msg );
                 ss->m_NumJobsAvailableForWorker = numJobsAvailableForWorker;
             }
-            if ( numJobsAvailable > 0 &&  // if any job in queue
-                 numJobsAvailableForWorker == 0 )  // worker cannot build any job
+            if ( numJobsAvailableForWorker == 0 )  // worker cannot build any job
             {
                 // The worker can't build any of the current jobs, so disconnect from it.
                 // This allows us to try other workers that may be able to build jobs,
@@ -805,7 +794,6 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     ServerState * ss = (ServerState *)connection->GetUserData();
     ASSERT( ss );
 
-    AStackString<> workerName( ss->m_RemoteName );
     ConstMemoryStream ms( payload, payloadSize );
 
     uint32_t jobId = 0;
@@ -845,7 +833,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         return;
     }
 
-    DIST_INFO( "Got Result: %s - %s%s\n", workerName.Get(),
+    DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
                                           job->GetNode()->GetName().Get(),
                                           job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
 
@@ -855,23 +843,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     {
         // built ok - serialize to disc
 
-        Node* node = job->GetNode();
-        Node::Type nodeType = node->GetType();
-        ObjectNode * on = nullptr;
-        switch ( nodeType )
-        {
-            case Node::OBJECT_NODE:
-                on = node->CastTo< ObjectNode >();
-                break;
-            case Node::TEST_NODE:
-                // nothing to do here
-                break;
-            default:
-                ASSERT( false );
-                break;
-        }
-
-        const AString & nodeName = node->GetName();
+        ObjectNode * on = job->GetNode()->CastTo< ObjectNode >();
+        const AString & nodeName = on->GetName();
         if ( Node::EnsurePathExistsForFile( nodeName ) == false )
         {
             FLOG_ERROR( "Failed to create path for '%s'", nodeName.Get() );
@@ -883,28 +856,15 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
             result = WriteFileToDisk( nodeName, (const char *)data + sizeof( uint32_t ), firstFileSize );
 
-            switch ( nodeType )
+            const uint32_t secondFileSize = on->IsUsingPDB() ? *(uint32_t *)( (const char *)data + sizeof( uint32_t ) + firstFileSize ) : 0;
+            if ( result && on->IsUsingPDB() )
             {
-                case Node::OBJECT_NODE:
-                    {
-                        const uint32_t secondFileSize = on->IsUsingPDB() ? *(uint32_t *)( (const char *)data + sizeof( uint32_t ) + firstFileSize ) : 0;
-                        if ( result && on->IsUsingPDB() )
-                        {
-                            data = (const void *)( (const char *)data + sizeof( uint32_t ) + firstFileSize );
-                            ASSERT( ( firstFileSize + secondFileSize + ( sizeof( uint32_t ) * 2 ) ) == size );
+                data = (const void *)( (const char *)data + sizeof( uint32_t ) + firstFileSize );
+                ASSERT( ( firstFileSize + secondFileSize + ( sizeof( uint32_t ) * 2 ) ) == size );
 
-                            AStackString<> pdbName;
-                            on->GetPDBName( pdbName );
-                            result = WriteFileToDisk( pdbName, (const char *)data + sizeof( uint32_t ), secondFileSize );
-                        }
-                    }
-                    break;
-                case Node::TEST_NODE:
-                    // nothing to do here, since relying on single WriteFileToDisk() above
-                    break;
-                default:
-                    ASSERT( false );
-                    break;
+                AStackString<> pdbName;
+                on->GetPDBName( pdbName );
+                result = WriteFileToDisk( pdbName, (const char *)data + sizeof( uint32_t ), secondFileSize );
             }
 
             if ( result == true )
@@ -919,21 +879,10 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                 f->SetStatFlag(Node::STATS_BUILT_REMOTE);
 
                 // commit to cache?
-                switch ( nodeType )
+                if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
+                        on->ShouldUseCache() )
                 {
-                    case Node::OBJECT_NODE:
-                        if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
-                                on->ShouldUseCache() )
-                        {
-                            on->WriteToCache( job );
-                        }
-                        break;
-                    case Node::TEST_NODE:
-                        // nothing to do here, since tests do not use cache
-                        break;
-                    default:
-                        ASSERT( false );
-                        break;
+                    on->WriteToCache( job );
                 }
             }
             else
@@ -942,36 +891,23 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             }
         }
 
-        switch ( nodeType )
-        {
-            case Node::OBJECT_NODE:
-                {
-                    // get list of messages during remote work
-                    AStackString<> msgBuffer;
-                    job->GetMessagesForLog( msgBuffer );
+        // get list of messages during remote work
+        AStackString<> msgBuffer;
+        job->GetMessagesForLog( msgBuffer );
 
-                    if ( on->IsMSVC() )
-                    {
-                        if ( on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
-                        {
-                            FileNode::HandleWarningsMSVC( job, on->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
-                        }
-                    }
-                    else if ( on->IsClang() || on->IsGCC() )
-                    {
-                        if ( !on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
-                        {
-                            FileNode::HandleWarningsClangGCC( job, on->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
-                        }
-                    }
-                }
-                break;
-            case Node::TEST_NODE:
-                // nothing to do here
-                break;
-            default:
-                ASSERT( false );
-                break;
+        if ( on->IsMSVC() )
+        {
+            if ( on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
+            {
+                FileNode::HandleWarningsMSVC( job, on->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+            }
+        }
+        else if ( on->IsClang() || on->IsGCC() )
+        {
+            if ( !on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
+            {
+                FileNode::HandleWarningsClangGCC( job, on->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+            }
         }
     }
     else
@@ -1004,7 +940,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                        " - Blacklisted Worker: %s\n"
                        " - Node              : %s\n"
                        " - Job Error Count   : %u / %u\n",
-                       workerName.Get(),
+                       ss->m_RemoteName.Get(),
                        job->GetNode()->GetName().Get(),
                        job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT
                       );
@@ -1016,7 +952,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                 // re-queue job, job will be re-attempted on another worker
                 JobQueue::Get().ReturnUnfinishedDistributableJob( job );
                 // failed on this worker, add info about this to error output
-                tmp.Format( "FBuild: System error from worker %s\n", workerName.Get() );
+                tmp.Format( "FBuild: System error from worker %s\n", ss->m_RemoteName.Get() );
             }
             else
             {
@@ -1046,7 +982,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
         FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
                       result ? "SUCCESS" : "ERROR",
-                      workerName.Get(),
+                      ss->m_RemoteName.Get(),
                       job->GetNode()->GetName().Get(),
                       msgBuffer.Get() );
     }
@@ -1192,7 +1128,7 @@ Client::ServerState::ServerState( const bool detailedLogging )
 //------------------------------------------------------------------------------
 Client::ServerState::~ServerState()
 {
-    MutexHolder mh( m_Mutex );
+    // no need to get mutex since in dtor
     ClearConnectionFields();
     if ( !m_RemoteName.IsEmpty() )
     {

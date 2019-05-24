@@ -22,6 +22,8 @@
 #define DIST_MEMORY_LIMIT_MIN ( 16 ) // 16MiB
 #define DIST_MEMORY_LIMIT_MAX ( ( sizeof(void *) == 8 ) ? 64 * 1024 : 2048 ) // 64 GiB or 2 GiB
 #define DIST_MEMORY_LIMIT_DEFAULT ( ( sizeof(void *) == 8 ) ? 2048 : 1024 ) // 2 GiB or 1 GiB
+#define WORKER_LIMIT_MIN ( -1 )  // for infinite
+#define WORKER_LIMIT_MAX ( 2147483647 )  // max of int32_t
 
 // REFLECTION
 //------------------------------------------------------------------------------
@@ -34,8 +36,8 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
     REFLECT(        m_AllowDBMigration_Experimental, "AllowDBMigration_Experimental", MetaOptional() )
-    REFLECT(        m_WorkerListRefreshLimitSec,      "WorkerListRefreshLimit",    MetaOptional() )
-    REFLECT(        m_WorkerConnectionRetryLimitSec,  "WorkerConnectionRetryLimit",    MetaOptional() )
+    REFLECT(        m_WorkerListRefreshLimitSec,      "WorkerListRefreshLimit",    MetaOptional() + MetaRange( WORKER_LIMIT_MIN, WORKER_LIMIT_MAX ) )
+    REFLECT(        m_WorkerConnectionRetryLimitSec,  "WorkerConnectionRetryLimit",    MetaOptional() + MetaRange( WORKER_LIMIT_MIN, WORKER_LIMIT_MAX ) )
 REFLECT_END( SettingsNode )
 
 // CONSTRUCTOR

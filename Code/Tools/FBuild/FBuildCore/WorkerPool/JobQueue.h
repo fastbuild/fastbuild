@@ -61,9 +61,7 @@ public:
     bool HaveWorkersStopped() const;
 
     // access state
-    void GetNumDistributableJobsAvailable(
-        uint32_t & numJobsAvailable,
-        uint32_t & numJobsAvailableForWorker ) const;
+    size_t GetNumDistributableJobsAvailable() const;
 
     void GetJobStats( uint32_t & numJobs, uint32_t & numJobsActive,
                       uint32_t & numJobsDist, uint32_t & numJobsDistActive ) const;

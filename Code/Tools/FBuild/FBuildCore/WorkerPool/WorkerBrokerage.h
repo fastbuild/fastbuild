@@ -41,9 +41,9 @@ private:
 
     void Init();
     void ListDirContents( const AString & path, Array< AString > & contents ) const;
-    void GetRootWorkers(
+    void GetWorkers(
         const Array< AString > & excludedWorkers,
-        Array< AString > & rootWorkersToInclude ) const;
+        Array< AString > & workersToInclude ) const;
     void SetBrokerageRecord();
     void RemoveBrokerageFile();
     

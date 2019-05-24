@@ -203,22 +203,10 @@ bool JobQueue::HaveWorkersStopped() const
 
 // GetNumDistributableJobsAvailable
 //------------------------------------------------------------------------------
-void JobQueue::GetNumDistributableJobsAvailable(
-    uint32_t & numJobsAvailable,
-    uint32_t & numJobsAvailableForWorker ) const
+size_t JobQueue::GetNumDistributableJobsAvailable() const
 {
     MutexHolder m( m_DistributedJobsMutex );
-
-    numJobsAvailable = (uint32_t)m_DistributableJobs_Available.GetSize();
-    numJobsAvailableForWorker = 0;
-    for ( size_t i=0; i<numJobsAvailable; ++i )
-    {
-        Job * job = m_DistributableJobs_Available[ i ];
-        if ( job )
-        {
-            ++numJobsAvailableForWorker;
-        }
-    }
+    return m_DistributableJobs_Available.GetSize();
 }
 
 // GetJobStats
