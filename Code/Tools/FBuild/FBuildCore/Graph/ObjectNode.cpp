@@ -2166,14 +2166,14 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         // That way GCC will be able to deduce the same language from the name
         // of temporary file as it would do from the original name.
         const char * lastDot = fileName.FindLast( '.' );
-        if ( lastDot != nullptr && lastDot[1] != '\0' )
+        if ( ( lastDot != nullptr ) && ( lastDot[1] != '\0' ) )
         {
             AStackString<> extension( lastDot + 1 );
             if ( extension == "c" )
             {
                 fileName += ".i";
             }
-            else if ( extension == "cpp" || extension == "cc" || extension == "cxx" || extension == "c++" || extension == "cp" || extension == "CPP" || extension == "C" )
+            else if ( ( extension == "cpp" ) || ( extension == "cc" ) || ( extension == "cxx" ) || ( extension == "c++" || extension == "cp" || extension == "CPP" || extension == "C" ) )
             {
                 fileName += ".ii";
             }
@@ -2181,11 +2181,11 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
             {
                 fileName += ".mi";
             }
-            else if ( extension == "mm" || extension == "M" )
+            else if ( ( extension == "mm" ) || ( extension == "M" ) )
             {
                 fileName += ".mii";
             }
-            else if ( extension == "F" || extension == "fpp" || extension == "FPP" )
+            else if ( ( extension == "F" ) || ( extension == "fpp" ) || ( extension == "FPP" ) )
             {
                 fileName += ".f";
             }
@@ -2213,7 +2213,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
             {
                 fileName += ".f08";
             }
-            else if ( extension == "S" || extension == "sx" )
+            else if ( ( extension == "S" ) || ( extension == "sx" ) )
             {
                 fileName += ".s";
             }
