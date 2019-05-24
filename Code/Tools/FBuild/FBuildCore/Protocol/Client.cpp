@@ -548,7 +548,8 @@ void Client::LookForWorkers()
             uint32_t numJobsAvailableForWorker = 0;
             if ( JobQueue::IsValid() )
             {
-                numJobsAvailableForWorker = JobQueue::Get().GetNumDistributableJobsAvailable();
+                numJobsAvailableForWorker =
+                    (uint32_t)(JobQueue::Get().GetNumDistributableJobsAvailable());
             }
 
             ci->SetUserData( ss );
@@ -596,8 +597,8 @@ void Client::CommunicateJobAvailability()
         MutexHolder ssMH( ss->m_Mutex );
         if ( ss->m_Connection )
         {
-            uint32_t numJobsAvailableForWorker = 0;
-            numJobsAvailableForWorker = JobQueue::Get().GetNumDistributableJobsAvailable();
+            uint32_t numJobsAvailableForWorker =
+                (uint32_t)(JobQueue::Get().GetNumDistributableJobsAvailable());
             if ( ss->m_NumJobsAvailableForWorker != numJobsAvailableForWorker )
             {
                 PROFILE_SECTION( "UpdateJobAvailability" )
