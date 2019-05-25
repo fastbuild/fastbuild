@@ -144,7 +144,7 @@ void TestDistributed::WithPCH() const
 void TestDistributed::RegressionTest_RemoteCrashOnErrorFormatting()
 {
     const char * target( "badcode" );
-    TestHelper( target, 4, true ); // compilation should fail
+    TestHelper( target, 1, true ); // compilation should fail
 }
 
 //------------------------------------------------------------------------------
@@ -164,7 +164,7 @@ void TestDistributed::TestLocalRace()
     }
     {
         const char * target( "badcode" );
-        TestHelper( target, 4, true, true ); // compilation should fail, allow race
+        TestHelper( target, 1, true, true ); // compilation should fail, allow race
     }
 }
 
@@ -208,7 +208,7 @@ void TestDistributed::AnonymousNamespaces()
 void TestDistributed::TestForceInclude() const
 {
     const char * target( "../tmp/Test/Distributed/ForceInclude/ForceInclude.lib" );
-    TestHelper( target, 4 );
+    TestHelper( target, 1 );
 }
 
 // ErrorsAreCorrectlyReported
@@ -409,7 +409,7 @@ void TestDistributed::TestZiDebugFormat_Local() const
 void TestDistributed::D8049_ToolLongDebugRecord() const
 {
     FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/D8049_ToolLongDebugRecord/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
