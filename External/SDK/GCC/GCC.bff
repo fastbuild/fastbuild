@@ -38,7 +38,7 @@
         {
             .ProjectOutput                  = '$_CURRENT_BFF_DIR_$/../../../tmp/VisualStudio/Projects/GCC.vcxproj'
             .PlatformToolset                = 'v141'
-    
+
             .ProjectX64Debug                = [ .Platform = 'x64' .Config = 'x64-Debug' ]
             .ProjectX64Analyze              = [ .Platform = 'x64' .Config = 'x64-Analyze' ]
             .ProjectX64Profile              = [ .Platform = 'x64' .Config = 'x64-Profile' ]

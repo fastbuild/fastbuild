@@ -21,7 +21,7 @@ Settings {}
 // Compile a real file to create a non-trivial amount of per-object dependencies
 //------------------------------------------------------------------------------
 ObjectList( 'ObjectList_0' )
-{ 
+{
     // Compile a real file to obtain some non-trivial dependencies
     .CompilerInputFiles = 'Core/FileIO/FileIO.cpp'
     .CompilerOptions    + ' "-I."'
@@ -42,7 +42,7 @@ ForEach( .Item in .Items )
 {
     // Create Alias depending on all previous items
     ObjectList( 'ObjectList_$Item$' )
-    { 
+    {
         .PreBuildDependencies = .Targets
         .CompilerInputAllowNoFiles = true // This ObjectList doesn't compile anything itself
     }
