@@ -1047,6 +1047,13 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
                 {
                     upToDateCount++;
                 }
+
+                // Check for failure again propagatating overall state more quickly. This aallows failed
+                // builds to terminate moe quickly
+                if ( n->GetState() == Node::FAILED )
+                {
+                    failedCount++;
+                }
             }
         }
 
