@@ -74,6 +74,7 @@
                 // Compilation on TravisCI VMs is significantly slower
                 // so the tests need more time to complete succesfully.
                 .TestTimeOut            = 900
+                .TestAlwaysShowOutput       = true // Show test timings on the CI
             #endif
         }
     }
