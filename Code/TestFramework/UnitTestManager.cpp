@@ -13,6 +13,7 @@
 #include "Core/Strings/AString.h"
 #include "Core/Tracing/Tracing.h"
 
+#include <stdio.h>
 #include <string.h>
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
@@ -196,6 +197,9 @@ void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
     ++s_NumTests;
 
     OUTPUT( " - Test '%s'\n", testName );
+    // Flush the output to ensure that name of the test will be logged in case the test will crash the whole binary.
+    fflush( stdout );
+
     #ifdef MEMTRACKER_ENABLED
         MemTracker::Reset();
     #endif
