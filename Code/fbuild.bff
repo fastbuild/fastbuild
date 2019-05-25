@@ -48,6 +48,12 @@ Settings
         #endif
     #endif
 ]
+.Analyze_Config =
+[
+    .CompilerOptions                = ' -DDEBUG -DPROFILING_ENABLED -DANALYZE'
+    .CompilerOptionsC               = .CompilerOptions
+    .Config                         = 'Analyze'
+]
 .Profile_Config =
 [
     .CompilerOptions                = ' -DRELEASE -DPROFILING_ENABLED'
@@ -98,12 +104,18 @@ Settings
 //------------------------------------------------------------------------------
 .Debug_Optimizations_MSVC =
 [
-    .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR- /analyze'
+    .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR-'
+    .CompilerOptionsC               = .CompilerOptions
+]
+.Analyze_Optimizations_MSVC =
+[
+    Using( .Debug_Optimizations_MSVC )
+    .CompilerOptions                + ' /analyze'
     .CompilerOptionsC               = .CompilerOptions
 ]
 .Profile_Optimizations_MSVC =
 [
-    .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /analyze /Zo'
+    .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /Zo'
     .CompilerOptionsC               = .CompilerOptions
     .LinkerOptions                  = ' /OPT:REF,ICF'
 ]
@@ -144,6 +156,9 @@ Settings
     .X64DebugConfig             = .X64BaseConfig
                                 + .Debug_Config
                                 + .Debug_Optimizations_MSVC
+    .X64AnalyzeConfig           = .X64BaseConfig
+                                + .Analyze_Config
+                                + .Analyze_Optimizations_MSVC
     .X64ReleaseConfig           = .X64BaseConfig
                                 + .Release_Config
                                 + .Release_Optimizations_MSVC
@@ -254,13 +269,14 @@ Settings
 ]
 
 .ProjectX64Debug        = [ Using( .ProjectCommon ) .Config = 'x64-Debug' ]
+.ProjectX64Analyze      = [ Using( .ProjectCommon ) .Config = 'x64-Analyze' ]
 .ProjectX64Profile      = [ Using( .ProjectCommon ) .Config = 'x64-Profile' ]
 .ProjectX64Release      = [ Using( .ProjectCommon ) .Config = 'x64-Release' ]
 .ProjectX64ClangDebug   = [ Using( .ProjectCommon ) .Config = 'x64Clang-Debug' ]
 .ProjectX64ClangProfile = [ Using( .ProjectCommon ) .Config = 'x64Clang-Profile' ]
 .ProjectX64ClangRelease = [ Using( .ProjectCommon ) .Config = 'x64Clang-Release' ]
 
-.ProjectConfigs = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+.ProjectConfigs = { .ProjectX64Debug, .ProjectX64Analyze, .ProjectX64Profile, .ProjectX64Release,
                     .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
 
 // Project to compile everything
@@ -285,20 +301,21 @@ VCXProject( 'UpdateSolution-proj' )
     ]
 
     .ProjectX64Debug        = [ Using( .ProjectX64Debug )       Using( .GenerateProjectsCommands ) ]
+    .ProjectX64Analyze      = [ Using( .ProjectX64Analyze )     Using( .GenerateProjectsCommands ) ]
     .ProjectX64Profile      = [ Using( .ProjectX64Profile )     Using( .GenerateProjectsCommands ) ]
     .ProjectX64Release      = [ Using( .ProjectX64Release )     Using( .GenerateProjectsCommands ) ]
     .ProjectX64ClangDebug   = [ Using( .ProjectX64ClangDebug )  Using( .GenerateProjectsCommands ) ]
     .ProjectX64ClangProfile = [ Using( .ProjectX64ClangProfile )  Using( .GenerateProjectsCommands ) ]
     .ProjectX64ClangRelease = [ Using( .ProjectX64ClangRelease )  Using( .GenerateProjectsCommands ) ]
 
-    .ProjectConfigs = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+    .ProjectConfigs = { .ProjectX64Debug, .ProjectX64Analyze, .ProjectX64Profile, .ProjectX64Release,
                         .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
 }
 
 // Configurations
 //------------------------------------------------------------------------------
 #if __WINDOWS__
-    .Configs_Windows_MSVC   = { .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig }
+    .Configs_Windows_MSVC   = { .X64DebugConfig, .X64AnalyzeConfig, .X64ProfileConfig, .X64ReleaseConfig }
     .Configs_Windows_Clang  = { .X64ClangDebugConfig, .X64ClangProfileConfig, .X64ClangReleaseConfig }
     .Configs                = .Configs_Windows_MSVC
                             + .Configs_Windows_Clang
@@ -316,6 +333,7 @@ VCXProject( 'UpdateSolution-proj' )
 #endif
 
 .Targets_x64_Debug = {}
+.Targets_x64_Analyze = {}
 .Targets_x64_Profile = {}
 .Targets_x64_Release = {}
 .Targets_x64Clang_Debug = {}
@@ -370,7 +388,7 @@ ForEach( .Config in .Configs )
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
 .Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX' }
-.PlatformConfigs_x64           = { 'Debug', 'Profile', 'Release' }
+.PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release' }
 .PlatformConfigs_x64Clang      = { 'Debug', 'Profile', 'Release' }
 .PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan' }
 .PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release' }

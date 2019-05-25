@@ -39,12 +39,13 @@
             .PlatformToolset                = .VS_PlatformToolset
     
             .ProjectX64Debug                = [ .Platform = 'x64' .Config = 'x64-Debug' ]
+            .ProjectX64Analyze              = [ .Platform = 'x64' .Config = 'x64-Analyze' ]
             .ProjectX64Profile              = [ .Platform = 'x64' .Config = 'x64-Profile' ]
             .ProjectX64Release              = [ .Platform = 'x64' .Config = 'x64-Release' ]
             .ProjectX64ClangDebug           = [ .Platform = 'x64' .Config = 'x64Clang-Debug' ]
             .ProjectX64ClangProfile         = [ .Platform = 'x64' .Config = 'x64Clang-Profile' ]
             .ProjectX64ClangRelease         = [ .Platform = 'x64' .Config = 'x64Clang-Release' ]
-            .ProjectConfigs                 = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+            .ProjectConfigs                 = { .ProjectX64Debug, .ProjectX64Analyze, .ProjectX64Profile, .ProjectX64Release,
                                                 .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
         }
     #endif

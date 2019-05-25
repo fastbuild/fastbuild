@@ -85,12 +85,13 @@
             .LocalDebuggerWorkingDirectory = '^$(SolutionDir)..\..\Code'
 
             .ProjectX64Debug        = [ Using( .ProjectX64Debug )           .Target = '$ProjectName$-X64-Debug' ]
+            .ProjectX64Analyze      = [ Using( .ProjectX64Analyze )         .Target = '$ProjectName$-X64-Analyze' ]
             .ProjectX64Profile      = [ Using( .ProjectX64Profile )         .Target = '$ProjectName$-X64-Profile' ]
             .ProjectX64Release      = [ Using( .ProjectX64Release )         .Target = '$ProjectName$-X64-Release' ]
             .ProjectX64ClangDebug   = [ Using( .ProjectX64ClangDebug )      .Target = '$ProjectName$-X64Clang-Debug' ]
             .ProjectX64ClangProfile = [ Using( .ProjectX64ClangProfile )    .Target = '$ProjectName$-X64Clang-Profile' ]
             .ProjectX64ClangRelease = [ Using( .ProjectX64ClangRelease )    .Target = '$ProjectName$-X64Clang-Release' ]
-            .ProjectConfigs         = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
+            .ProjectConfigs         = { .ProjectX64Debug, .ProjectX64Analyze, .ProjectX64Profile, .ProjectX64Release,
                                         .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
         }
     #endif
