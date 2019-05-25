@@ -148,25 +148,25 @@ script:
   - |
     case "${TRAVIS_OS_NAME}:${CFG}" in
       linux:|osx:|windows:)
-        ${FBUILD_CMD} Tests
+        ${FBUILD_CMD} -summary Tests
         ;;
       linux:asan)
-        ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-ASan
+        ${FBUILD_CMD} -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-ASan
         ;;
       linux:msan)
-        ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-MSan
+        ${FBUILD_CMD} -summary {CoreTest,FBuildTest}-RunTest-x64ClangLinux-MSan
         ;;
     esac
   # Check non-unity build.
   - |
     case "${TRAVIS_OS_NAME}:${CFG}" in
       linux:)
-        ${FBUILD_CMD} -nounity -clean All-x64{,Clang}Linux-Debug
+        ${FBUILD_CMD} -summary -nounity -clean All-x64{,Clang}Linux-Debug
         ;;
       osx:)
-        ${FBUILD_CMD} -nounity -clean All-x64OSX-Debug
+        ${FBUILD_CMD} -summary -nounity -clean All-x64OSX-Debug
         ;;
       windows:)
-        ${FBUILD_CMD} -nounity -clean All-x64{,Clang}-Debug
+        ${FBUILD_CMD} -summary -nounity -clean All-x64{,Clang}-Debug
         ;;
     esac
