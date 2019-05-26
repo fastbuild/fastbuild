@@ -42,7 +42,11 @@ void TestHash::CompareHashTimes_Large() const
     Random r( seed );
 
     // fill a buffer to use for tests
-    const size_t dataSize( 64 * 1024 * 1024 );
+    #if defined( DEBUG )
+        const size_t dataSize( 32 * 1024 * 1024 );
+    #else
+        const size_t dataSize( 64 * 1024 * 1024 );
+    #endif
     AutoPtr< uint32_t > data( (uint32_t *)ALLOC( dataSize ) );
     for ( size_t i=0; i<dataSize / sizeof( uint32_t ); ++i )
     {
@@ -142,7 +146,11 @@ void TestHash::CompareHashTimes_Small() const
     strings.Append( AString( "longstring_98274ncoif834JODhiorhmwe8r8wy48on87h8mhwejrijrdIERwurd9j,8chm8hiuorciwriowjri" ) );
     strings.Append( AString( "c:\\files\\subdir\\project\\thing\\stuff.cpp" ) );
     const size_t numStrings = strings.GetSize();
-    const size_t numIterations = 102400;
+    #if defined( DEBUG )
+        const size_t numIterations = 10240;
+    #else
+        const size_t numIterations = 102400;
+    #endif
 
     // calc datasize
     size_t dataSize( 0 );

@@ -88,7 +88,11 @@ void TestMemPoolBlock::TestAllocsMultiplePages() const
 //------------------------------------------------------------------------------
 void TestMemPoolBlock::TestSpeed()
 {
-    const uint32_t numAllocs( 1000 * 1000 );
+    #if defined( DEBUG )
+        const uint32_t numAllocs( 100 * 1000 );
+    #else
+        const uint32_t numAllocs( 1000 * 1000 );
+    #endif
     const uint32_t allocSize( 24 );
 
     float time1( 0.0f );

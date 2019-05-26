@@ -225,7 +225,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
         Timer timer;
 
         size_t totalSent = 0;
-        while ( timer.GetElapsed() < 0.1f )
+        while ( ( totalSent < maxSendSize ) && ( timer.GetElapsed() < 0.1f ) )
         {
             // client sends some know data to the server
             TEST_ASSERT( client.Send( ci, data.Get(), sendSize ) );
