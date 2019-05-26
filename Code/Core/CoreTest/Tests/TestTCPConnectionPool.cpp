@@ -83,21 +83,19 @@ void TestTestTCPConnectionPool::TestOneServerMultipleClients() const
         TCPConnectionPool server;
         TEST_ASSERT( server.Listen( testPort ) );
 
-        // connect like a client
-        TCPConnectionPool clientA;
-        TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
-
-        // connect like a client
-        TCPConnectionPool clientB;
-        TEST_ASSERT( clientB.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
-
-        // connect like a client
-        TCPConnectionPool clientC;
-        TEST_ASSERT( clientC.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
-
-        // connect like a client
-        TCPConnectionPool clientD;
-        TEST_ASSERT( clientD.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
+        // connect several clients
+        const size_t numClients = 4;
+        TCPConnectionPool clients[ numClients ];
+        for ( size_t j = 0; j < numClients; ++j )
+        {
+            // All each client to retry in case of local resource exhaustion
+            Timer t;
+            while ( clients[ j ].Connect( AStackString<>( "127.0.0.1" ), testPort ) == nullptr )
+            {
+                TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
+                Thread::Sleep( 50 );
+            }
+        }
     }
 }
 
@@ -121,10 +119,16 @@ void TestTestTCPConnectionPool::TestMultipleServersOneClient() const
 
         // connect client to multiple servers
         TCPConnectionPool clientA;
-        TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
-        TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + 1 ) );
-        TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + 2 ) );
-        TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + 3 ) );
+        for ( size_t j = 0; j < 4; ++j )
+        {
+            // All each connection to be retried in case of local resource exhaustion
+            Timer t;
+            while ( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + (uint16_t)j ) == nullptr )
+            {
+                TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
+                Thread::Sleep( 50 );
+            }
+        }
     }
 }
 
@@ -147,8 +151,16 @@ void TestTestTCPConnectionPool::TestConnectionCount() const
         // connect client to multiple servers
         {
             TCPConnectionPool clientA;
-            TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort ) );
-            TEST_ASSERT( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + 1 ) );
+            for ( size_t j = 0; j < 2; ++j )
+            {
+                // All each connection to be retried in case of local resource exhaustion
+                Timer t;
+                while ( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + (uint16_t)j ) == nullptr )
+                {
+                    TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
+                    Thread::Sleep( 50 );
+                }
+            }
 
             WAIT_UNTIL_WITH_TIMEOUT( serverA.GetNumConnections() == 1 );
             WAIT_UNTIL_WITH_TIMEOUT( serverB.GetNumConnections() == 1 );
