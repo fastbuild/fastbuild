@@ -10,6 +10,7 @@
 #include "Core/Env/Types.h"
 #include "Core/Mem/MemTracker.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -247,7 +248,7 @@ void UnitTestManager::TestEnd()
     info.m_Passed = true;
 }
 
-// Assert
+// AssertFailure
 //------------------------------------------------------------------------------
 /*static*/ bool UnitTestManager::AssertFailure( const char * message,
                                                 const char * file,
@@ -265,5 +266,34 @@ void UnitTestManager::TestEnd()
     // throw will be caught by the unit test framework and noted as a failure
     throw "Test Failed";
 }
+
+// AssertFailureM
+//------------------------------------------------------------------------------
+/*static*/ bool UnitTestManager::AssertFailureM( const char * message,
+                                                 const char * file,
+                                                 uint32_t line,
+                                                 const char * formatString,
+                                                 ... )
+{
+    AStackString< 4096 > buffer;
+    va_list args;
+    va_start( args, formatString );
+    buffer.VFormat( formatString, args );
+    va_end( args );
+
+    OUTPUT( "\n-------- TEST ASSERTION FAILED --------\n" );
+    OUTPUT( "%s(%i): Assert: %s", file, line, message );
+    OUTPUT( "\n%s", buffer.Get() );
+    OUTPUT( "\n-----^^^ TEST ASSERTION FAILED ^^^-----\n" );
+
+    if ( IsDebuggerAttached() )
+    {
+        return true; // tell the calling code to break at the failure sight
+    }
+
+    // throw will be caught by the unit test framework and noted as a failure
+    throw "Test Failed";
+}
+
 
 //------------------------------------------------------------------------------

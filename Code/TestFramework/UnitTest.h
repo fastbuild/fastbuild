@@ -39,6 +39,19 @@ private:
     } while ( false );                                              \
     PRAGMA_DISABLE_POP_MSVC
 
+#define TEST_ASSERTM( expression, ... )                             \
+    do {                                                            \
+    PRAGMA_DISABLE_PUSH_MSVC(4127)                                  \
+        if ( !( expression ) )                                      \
+        {                                                           \
+            if ( UnitTestManager::AssertFailureM(  #expression, __FILE__, __LINE__, __VA_ARGS__ ) ) \
+            {                                                       \
+                BREAK_IN_DEBUGGER;                                  \
+            }                                                       \
+        }                                                           \
+    } while ( false )                                               \
+    PRAGMA_DISABLE_POP_MSVC
+
 #define DECLARE_TESTS                                               \
     virtual void RunTests();                                        \
     virtual const char * GetName() const;
