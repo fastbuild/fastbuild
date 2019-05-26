@@ -212,7 +212,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 
     // write all the events we have
     const ProfileEventInfo * const end = infos.End();
-    AStackString<> buffer;
+    AStackString< 8192 > buffer;
     for ( const ProfileEventInfo * it = infos.Begin(); it != end; ++it )
     {
         const ProfileEventInfo & info = *it;
@@ -230,11 +230,19 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 
                 // SetThreadName event
                 // {"name": "thread_name", "ph": "M", "pid": 0, "tid": 164, "args": { "name" : "ThreadName" }},
-                buffer.Format( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":0,\"tid\":%" PRIu64 ",\"args\":{\"name\":\"%s\"}},\n",
-                        threadId,
-                        info.m_ThreadName.IsEmpty() ? "_MainThread" : info.m_ThreadName.Get() );
-                g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+                buffer.AppendFormat( "{\"name\":\"thread_name\",\"ph\":\"M\",\"pid\":0,\"tid\":%" PRIu64 ",\"args\":{\"name\":\"%s\"}},\n",
+                                     threadId,
+                                     info.m_ThreadName.IsEmpty() ? "_MainThread" : info.m_ThreadName.Get() );
+
+                if ( buffer.GetLength() > ( 8192 - 256 ) )
+                {
+                    g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+                    buffer.Clear();
+                }
             }
+
+            AStackString<32> threadIsAsString;
+            threadIsAsString.Format( "%" PRIu64, threadId );
 
             const size_t numEvents( info.m_NumEvents );
             for ( size_t i=0; i<numEvents; ++i )
@@ -242,13 +250,34 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
                 const ProfileEvent& e = info.m_Events[i];
 
                 // {"name": "Asub", "ph": "B", "pid": 22630, "tid": 22630, "ts": 829},
-                buffer.Format( "{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":0,\"tid\":%" PRIu64 ",\"ts\":%" PRIu64 "},\n",
-                               e.m_Id ? e.m_Id : "",
-                               e.m_Id ? 'B' : 'E',
-                               threadId,
-                               (uint64_t)( (double)e.m_TimeStamp * (double)Timer::GetFrequencyInvFloatMS() * 1000.0 ) );
+                if ( e.m_Id )
+                {
+                    buffer += "{\"name\":\"";
+                    buffer += e.m_Id;
+                    buffer += "\",\"ph\":\"B\",\"pid\":0,\"tid\":";
+                }
+                else
+                {
+                    buffer += "{\"name\":\"\",\"ph\":\"E\",\"pid\":0,\"tid\":";
+                }
+                buffer += threadIsAsString;
+                buffer += ",\"ts\":";
+                buffer.AppendFormat( "%" PRIu64, (uint64_t)( (double)e.m_TimeStamp * (double)Timer::GetFrequencyInvFloatMS() * 1000.0 ) );
+                buffer += "},\n";
 
+                if ( buffer.GetLength() > ( 8192 - 256 ) )
+                {
+                    g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+                    buffer.Clear();
+                }
+            }
+
+
+            // Flush remaining
+            if ( buffer.GetLength() > 0 )
+            {
                 g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
+                buffer.Clear();
             }
         }
         FDELETE [] info.m_Events;
