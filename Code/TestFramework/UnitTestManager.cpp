@@ -139,6 +139,9 @@ bool UnitTestManager::RunTests( const char * testGroup )
 
         OUTPUT( "------------------------------\n" );
         OUTPUT( "Test Group: %s\n", test->GetName() );
+        #ifdef PROFILING_ENABLED
+            ProfileManager::Start( test->GetName() );
+        #endif
         try
         {
             test->RunTests();
@@ -148,6 +151,10 @@ bool UnitTestManager::RunTests( const char * testGroup )
             OUTPUT( " - Test '%s' *** FAILED ***\n", s_TestInfos[ s_NumTests - 1 ].m_TestName );
             s_TestInfos[ s_NumTests - 1 ].m_TestGroup->PostTest( false );
         }
+        #ifdef PROFILING_ENABLED
+            ProfileManager::Stop();
+            ProfileManager::Synchronize();
+        #endif
         test = test->m_NextTestGroup;
     }
 
@@ -182,6 +189,10 @@ bool UnitTestManager::RunTests( const char * testGroup )
     OUTPUT( "------------------------------------------------------------\n" );
     OUTPUT( "Passed: %u / %u (%u failures) in %2.3fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), (double)totalTime );
     OUTPUT( "------------------------------------------------------------\n" );
+
+    #ifdef PROFILING_ENABLED
+        ProfileManager::SynchronizeNoTag();
+    #endif
 
     return ( s_NumTests == numPassed );
 }
@@ -221,12 +232,15 @@ void UnitTestManager::TestEnd()
 
     info.m_TestGroup->PostTest( true );
 
+    #ifdef MEMTRACKER_ENABLED
+        // Get allocation count here (before profiling, which can cause allocations)
+        const uint32_t posAllocationCount = MemTracker::GetCurrentAllocationCount();
+    #endif
+
+    // Flush profiling info (track time taken as part of test)
     #ifdef PROFILING_ENABLED
         ProfileManager::Stop();
-
-        // flush the profiling buffers, but don't profile the sync itself
-        // (because it leaves an outstanding memory alloc, it looks like a leak)
-        ProfileManager::SynchronizeNoTag();
+        ProfileManager::Synchronize();
     #endif
 
     float timeTaken = m_Timer.GetElapsed();
@@ -234,7 +248,7 @@ void UnitTestManager::TestEnd()
     info.m_TimeTaken = timeTaken;
 
     #ifdef MEMTRACKER_ENABLED
-        if ( MemTracker::GetCurrentAllocationCount() != 0 )
+        if ( posAllocationCount != 0 )
         {
             info.m_MemoryLeaks = true;
             OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
