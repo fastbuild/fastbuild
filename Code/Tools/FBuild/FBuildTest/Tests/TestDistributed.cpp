@@ -18,6 +18,10 @@
 //------------------------------------------------------------------------------
 #define TEST_PROTOCOL_PORT ( Protocol::PROTOCOL_PORT + 1 ) // Avoid conflict with real worker
 
+#if !defined( __has_feature )
+    #define __has_feature( ... ) 0
+#endif
+
 // TestDistributed
 //------------------------------------------------------------------------------
 class TestDistributed : public FBuildTest
@@ -359,7 +363,12 @@ void TestDistributed::ShutdownMemoryLeak() const
         {
             // Wait until some distributed jobs are available
             Timer t;
-            while ( t.GetElapsed() < 5.0f )
+            float timeout = 5.0f;
+            #if __has_feature( thread_sanitizer ) || defined( __SANITIZE_THREAD__ )
+                // Code under ThreadSanitizer runs several time slower than normal, so we need a larger timeout.
+                timeout = 30.0f;
+            #endif
+            while ( t.GetElapsed() < timeout )
             {
                 if ( Job::GetTotalLocalDataMemoryUsage() != 0 )
                 {
