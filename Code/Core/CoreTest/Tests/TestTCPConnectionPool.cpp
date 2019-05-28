@@ -46,6 +46,8 @@ private:
 
     void TestConnectionStuckDuringSend() const;
     static uint32_t TestConnectionStuckDuringSend_ThreadFunc( void * userData );
+
+    void TestConnectionFailure() const;
 };
 
 // Helper Macros
@@ -69,6 +71,7 @@ REGISTER_TESTS_BEGIN( TestTestTCPConnectionPool )
     REGISTER_TEST( TestConnectionCount )
     REGISTER_TEST( TestDataTransfer )
     REGISTER_TEST( TestConnectionStuckDuringSend )
+    REGISTER_TEST( TestConnectionFailure )
 REGISTER_TESTS_END
 
 // TestOneServerMultipleClients
@@ -305,6 +308,20 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
         }
     }
     return 0;
+}
+
+// TestConnectionFailure
+//------------------------------------------------------------------------------
+void TestTestTCPConnectionPool::TestConnectionFailure() const
+{
+    const uint16_t testPort( TEST_PORT );
+
+    TCPConnectionPool client;
+
+    // Check that TCPConnectionPool doesn't create ConnectionInfo when
+    // connection fails after wait for it via select().
+    // To do that we try to connect to our chosen test port without listening on it.
+    TEST_ASSERT( client.Connect( AStackString<>( "127.0.0.1" ), testPort ) == nullptr );
 }
 
 //------------------------------------------------------------------------------

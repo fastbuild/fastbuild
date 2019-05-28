@@ -327,6 +327,33 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
 
         if( FD_ISSET( sockfd, &write ) )
         {
+            #if defined( __APPLE__ ) || defined( __LINUX__ )
+                // On Linux a write flag set by select() doesn't mean that
+                // connect() succeeded, it only means that it is completed.
+                // To get the result we need to query SO_ERROR value via getsockopt().
+                int32_t error = 0;
+                socklen_t size = sizeof(error);
+                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) == SOCKET_ERROR )
+                {
+                    #ifdef TCPCONNECTION_DEBUG
+                        AStackString<> host;
+                        GetAddressAsString( hostIP, host );
+                        TCPDEBUG( "getsockopt() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
+                    #endif
+                    CloseSocket( sockfd );
+                    return nullptr;
+                }
+                if ( error != 0 )
+                {
+                    #ifdef TCPCONNECTION_DEBUG
+                        AStackString<> host;
+                        GetAddressAsString( hostIP, host );
+                        TCPDEBUG( "connect() failed, SO_ERROR: %s (Host: %s, Port: %u)\n", ERROR_STR( error ), host.Get(), port );
+                    #endif
+                    CloseSocket( sockfd );
+                    return nullptr;
+                }
+            #endif
             break; // connection success!
         }
 
