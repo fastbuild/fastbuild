@@ -179,23 +179,16 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     class TestServer : public TCPConnectionPool
     {
     public:
-        ~TestServer()
-        {
-            ShutdownAllConnections();
-        }
+        ~TestServer() = default;
         virtual void OnReceive( const ConnectionInfo *, void * data, uint32_t size, bool & )
         {
             TEST_ASSERT( size == m_DataSize );
-            bool ok = true;
-            for ( size_t i=0; i< size; ++i )
-            {
-                ok &= (((char *)data)[ i ] == (char)i );
-            }
-            TEST_ASSERT( ok );
+            TEST_ASSERT( memcmp( data, m_ExpectedData, size ) == 0 );
             m_ReceivedBytes += size;
         }
         volatile size_t m_ReceivedBytes = 0;
         size_t m_DataSize = 0;
+        const char * m_ExpectedData;
     };
 
     const uint16_t testPort( TEST_PORT );
@@ -209,6 +202,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     }
 
     TestServer server;
+    server.m_ExpectedData = data.Get(); // Allow OnReceive to compare data to expected
     TEST_ASSERT( server.Listen( testPort ) );
 
     // client
@@ -252,10 +246,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
     class SlowServer : public TCPConnectionPool
     {
     public:
-        ~SlowServer()
-        {
-            ShutdownAllConnections();
-        }
+        ~SlowServer() = default;
         virtual void OnReceive( const ConnectionInfo *, void *, uint32_t, bool & )
         {
             Thread::Sleep( 1000 );

@@ -48,6 +48,13 @@
 {
     PROFILE_FUNCTION
 
+    // Fast path for "localhost". Although we have a fast path for detecting ip4
+    // format adresses, it can still take several ms to call
+    if ( hostName == "127.0.0.1" )
+    {
+        return 0x0100007f;
+    }
+
     // see if string it already in ip4 format
     PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // Deprecated...
     uint32_t ip = inet_addr( hostName.Get() ); // TODO:C Consider using inet_pton()
