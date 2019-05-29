@@ -41,7 +41,7 @@ public:
     // TEST_ASSERT uses this interface to notify of assertion failures
     static bool AssertFailure( const char * message, const char * file, uint32_t line );
     // TEST_ASSERTM uses this interface to notify of assertion failures
-    static bool AssertFailureM( const char* message, const char* file, uint32_t line, const char* formatString, ... );
+    static bool AssertFailureM( const char* message, const char* file, uint32_t line, const char* formatString, ... ) FORMAT_STRING( 4, 5 );
 
 private:
     Timer       m_Timer;
