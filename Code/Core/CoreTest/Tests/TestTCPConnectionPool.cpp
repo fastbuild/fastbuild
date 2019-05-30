@@ -95,7 +95,11 @@ void TestTestTCPConnectionPool::TestOneServerMultipleClients() const
                 TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
                 Thread::Sleep( 50 );
             }
+
+            clients[ j ].ShutdownAllConnections();
         }
+
+        server.ShutdownAllConnections();
     }
 }
 
@@ -129,6 +133,12 @@ void TestTestTCPConnectionPool::TestMultipleServersOneClient() const
                 Thread::Sleep( 50 );
             }
         }
+
+        clientA.ShutdownAllConnections();
+        serverA.ShutdownAllConnections();
+        serverB.ShutdownAllConnections();
+        serverC.ShutdownAllConnections();
+        serverD.ShutdownAllConnections();
     }
 }
 
@@ -165,9 +175,12 @@ void TestTestTCPConnectionPool::TestConnectionCount() const
             WAIT_UNTIL_WITH_TIMEOUT( serverA.GetNumConnections() == 1 );
             WAIT_UNTIL_WITH_TIMEOUT( serverB.GetNumConnections() == 1 );
             WAIT_UNTIL_WITH_TIMEOUT( clientA.GetNumConnections() == 2 );
+            clientA.ShutdownAllConnections();
         }
         WAIT_UNTIL_WITH_TIMEOUT( serverA.GetNumConnections() == 0 );
         WAIT_UNTIL_WITH_TIMEOUT( serverB.GetNumConnections() == 0 );
+        serverA.ShutdownAllConnections();
+        serverB.ShutdownAllConnections();
     }
 }
 
@@ -179,7 +192,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     class TestServer : public TCPConnectionPool
     {
     public:
-        ~TestServer() = default;
+        ~TestServer() { ShutdownAllConnections(); }
         virtual void OnReceive( const ConnectionInfo *, void * data, uint32_t size, bool & )
         {
             TEST_ASSERT( size == m_DataSize );
@@ -236,6 +249,8 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
 
         sendSize = ( sendSize * 2 ) + 33; // +33 to avoid powers of 2
     }
+
+    client.ShutdownAllConnections();
 }
 
 // TestConnectionStuckDuringSend
@@ -246,7 +261,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
     class SlowServer : public TCPConnectionPool
     {
     public:
-        ~SlowServer() = default;
+        ~SlowServer() { ShutdownAllConnections(); }
         virtual void OnReceive( const ConnectionInfo *, void *, uint32_t, bool & )
         {
             Thread::Sleep( 1000 );
@@ -280,6 +295,8 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
 
     // if timeout was hit, things were stuck
     TEST_ASSERT( timedOut == false );
+
+    client.ShutdownAllConnections();
 }
 /*static*/ uint32_t TestTestTCPConnectionPool::TestConnectionStuckDuringSend_ThreadFunc( void * userData )
 {

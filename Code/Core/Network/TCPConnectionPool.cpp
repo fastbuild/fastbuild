@@ -77,8 +77,11 @@ TCPConnectionPool::TCPConnectionPool()
 //------------------------------------------------------------------------------
 TCPConnectionPool::~TCPConnectionPool()
 {
-    m_ShuttingDown = true;
-    ShutdownAllConnections();
+    // ShutdownAllConnections() must be called explicitly prior to destruction
+    // as virtual callbacks in derived classes make it unsafe to do so here.
+    // By enforcing explicit shutdown, even when not strictly needed, we can
+    // ensure no unsafe cases exist (and can assert below)
+    ASSERT( m_ShuttingDown && "ShutdownAllConnections not called");
 }
 
 // ShutdownAllConnections
@@ -86,6 +89,8 @@ TCPConnectionPool::~TCPConnectionPool()
 void TCPConnectionPool::ShutdownAllConnections()
 {
     PROFILE_FUNCTION
+
+    m_ShuttingDown = true;
 
     m_ConnectionsMutex.Lock();
 
