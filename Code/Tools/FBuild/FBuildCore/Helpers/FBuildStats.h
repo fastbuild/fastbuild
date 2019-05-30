@@ -61,6 +61,7 @@ public:
 
         uint32_t m_ProcessingTimeMS;
         uint32_t m_NumFailed;
+        uint32_t m_CachingTimeMS;
     };
 
     void FormatTime( float timeInSeconds , AString & buffer  ) const;

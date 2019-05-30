@@ -77,8 +77,11 @@ TCPConnectionPool::TCPConnectionPool()
 //------------------------------------------------------------------------------
 TCPConnectionPool::~TCPConnectionPool()
 {
-    m_ShuttingDown = true;
-    ShutdownAllConnections();
+    // ShutdownAllConnections() must be called explicitly prior to destruction
+    // as virtual callbacks in derived classes make it unsafe to do so here.
+    // By enforcing explicit shutdown, even when not strictly needed, we can
+    // ensure no unsafe cases exist (and can assert below)
+    ASSERT( m_ShuttingDown && "ShutdownAllConnections not called");
 }
 
 // ShutdownAllConnections
@@ -86,6 +89,8 @@ TCPConnectionPool::~TCPConnectionPool()
 void TCPConnectionPool::ShutdownAllConnections()
 {
     PROFILE_FUNCTION
+
+    m_ShuttingDown = true;
 
     m_ConnectionsMutex.Lock();
 
@@ -327,6 +332,33 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
 
         if( FD_ISSET( sockfd, &write ) )
         {
+            #if defined( __APPLE__ ) || defined( __LINUX__ )
+                // On Linux a write flag set by select() doesn't mean that
+                // connect() succeeded, it only means that it is completed.
+                // To get the result we need to query SO_ERROR value via getsockopt().
+                int32_t error = 0;
+                socklen_t size = sizeof(error);
+                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) == SOCKET_ERROR )
+                {
+                    #ifdef TCPCONNECTION_DEBUG
+                        AStackString<> host;
+                        GetAddressAsString( hostIP, host );
+                        TCPDEBUG( "getsockopt() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
+                    #endif
+                    CloseSocket( sockfd );
+                    return nullptr;
+                }
+                if ( error != 0 )
+                {
+                    #ifdef TCPCONNECTION_DEBUG
+                        AStackString<> host;
+                        GetAddressAsString( hostIP, host );
+                        TCPDEBUG( "connect() failed, SO_ERROR: %s (Host: %s, Port: %u)\n", ERROR_STR( error ), host.Get(), port );
+                    #endif
+                    CloseSocket( sockfd );
+                    return nullptr;
+                }
+            #endif
             break; // connection success!
         }
 
@@ -762,7 +794,7 @@ TCPSocket TCPConnectionPool::CreateSocket() const
     return newSocket;
 }
 
-// CreateThread
+// CreateListenThread
 //------------------------------------------------------------------------------
 void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port )
 {
@@ -789,6 +821,8 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TCPConnectionPool::ListenThreadWrapperFunction( void * data )
 {
+    PROFILE_FUNCTION
+
     ConnectionInfo * ci = (ConnectionInfo *)data;
     ci->m_TCPConnectionPool->ListenThreadFunction( ci );
     return 0;
@@ -919,6 +953,8 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TCPConnectionPool::ConnectionThreadWrapperFunction( void * data )
 {
+    PROFILE_FUNCTION
+
     ConnectionInfo * ci = (ConnectionInfo *)data;
     ci->m_TCPConnectionPool->ConnectionThreadFunction( ci );
     return 0;

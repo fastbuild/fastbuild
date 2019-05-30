@@ -52,6 +52,7 @@ FBuildStats::Stats::Stats()
     , m_NumCacheStores( 0 )
     , m_ProcessingTimeMS( 0 )
     , m_NumFailed( 0 )
+    , m_CachingTimeMS( 0 )
 {}
 
 // OnBuildStop
@@ -108,6 +109,7 @@ void FBuildStats::GatherPostBuildStatistics( Node * node )
         m_Totals.m_NumCacheHits     += m_PerTypeStats[ i ].m_NumCacheHits;
         m_Totals.m_NumCacheMisses   += m_PerTypeStats[ i ].m_NumCacheMisses;
         m_Totals.m_NumCacheStores   += m_PerTypeStats[ i ].m_NumCacheStores;
+        m_Totals.m_CachingTimeMS    += m_PerTypeStats[ i ].m_CachingTimeMS;
     }
 }
 
@@ -128,7 +130,7 @@ void FBuildStats::OutputSummary() const
         for ( size_t i=0; i<itemsToDisplay; ++i )
         {
             const Node * n = m_NodesByTime[ i ];
-            output.AppendFormat( "%-9.3f %s\n", (double)( (float)n->GetProcessingTime() / 1000.0f ), n->GetName().Get() );
+            output.AppendFormat( "%-9.3f %s\n", (double)( (float)n->GetProcessingTime() / 1000.0f ), n->GetPrettyName().Get() );
         }
         output += "\n";
     }
@@ -257,6 +259,7 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
         if ( node->GetStatFlag( Node::STATS_CACHE_STORE ) )
         {
             stats.m_NumCacheStores++;
+            stats.m_CachingTimeMS += node->GetCachingTime();
         }
     }
 

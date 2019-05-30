@@ -138,6 +138,7 @@ public:
 
     inline uint32_t GetLastBuildTime() const    { return m_LastBuildTimeMs; }
     inline uint32_t GetProcessingTime() const   { return m_ProcessingTime; }
+    inline uint32_t GetCachingTime() const      { return m_CachingTime; }
     inline uint32_t GetRecursiveCost() const    { return m_RecursiveCost; }
 
     inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
@@ -169,6 +170,8 @@ public:
     inline uint32_t GetBuildPassTag() const             { return m_BuildPassTag; }
 
     const AString & GetName() const { return m_Name; }
+
+    virtual const AString & GetPrettyName() const { return GetName(); }
 
     bool IsHidden() const { return m_Hidden; }
 
@@ -214,8 +217,9 @@ protected:
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );
 
-    inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
-    inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }
+    inline void     SetLastBuildTime( uint32_t ms )   { m_LastBuildTimeMs = ms; }
+    inline void     AddProcessingTime( uint32_t ms )  { m_ProcessingTime += ms; }
+    inline void     AddCachingTime( uint32_t ms )     { m_CachingTime += ms; }
 
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
@@ -251,6 +255,7 @@ protected:
     uint32_t        m_NameCRC;
     uint32_t m_LastBuildTimeMs; // time it took to do last known full build of this node
     uint32_t m_ProcessingTime;  // time spent on this node
+    uint32_t m_CachingTime;  // time spent caching this node
     mutable uint32_t m_ProgressAccumulator;
     uint32_t        m_Index;
     bool            m_Hidden;

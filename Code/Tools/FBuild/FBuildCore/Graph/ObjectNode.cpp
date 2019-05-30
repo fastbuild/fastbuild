@@ -1343,13 +1343,16 @@ void ObjectNode::WriteToCache( Job * job )
                     m_PCHCacheKey = xxHash::Calc64( data, dataSize );
                 }
 
+                const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
+                AddCachingTime( cachingTime );
+
                 // Output
                 if ( FBuild::Get().GetOptions().m_CacheVerbose )
                 {
                     AStackString<> output;
                     output.Format( "Obj: %s\n"
                                    " - Cache Store: %u ms '%s'\n",
-                                   GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+                                   GetName().Get(), cachingTime, cacheFileName.Get() );
                     if ( m_PCHCacheKey != 0 )
                     {
                         output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
@@ -2158,7 +2161,63 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     AStackString<> fileName( sourceFile->GetName().FindLast( NATIVE_SLASH ) + 1 );
     if ( GetFlag( FLAG_GCC ) )
     {
-        fileName += ".i";
+        // Add extension to the name of the temporary file that corresponds to
+        // a preprocessed variant of the original extension.
+        // That way GCC will be able to deduce the same language from the name
+        // of temporary file as it would do from the original name.
+        const char * lastDot = fileName.FindLast( '.' );
+        if ( ( lastDot != nullptr ) && ( lastDot[1] != '\0' ) )
+        {
+            AStackString<> extension( lastDot + 1 );
+            if ( extension == "c" )
+            {
+                fileName += ".i";
+            }
+            else if ( ( extension == "cpp" ) || ( extension == "cc" ) || ( extension == "cxx" ) || ( extension == "c++" || extension == "cp" || extension == "CPP" || extension == "C" ) )
+            {
+                fileName += ".ii";
+            }
+            else if ( extension == "m" )
+            {
+                fileName += ".mi";
+            }
+            else if ( ( extension == "mm" ) || ( extension == "M" ) )
+            {
+                fileName += ".mii";
+            }
+            else if ( ( extension == "F" ) || ( extension == "fpp" ) || ( extension == "FPP" ) )
+            {
+                fileName += ".f";
+            }
+            else if ( extension == "FOR" )
+            {
+                fileName += ".for";
+            }
+            else if ( extension == "FTN" )
+            {
+                fileName += ".ftn";
+            }
+            else if ( extension == "F90" )
+            {
+                fileName += ".f90";
+            }
+            else if ( extension == "F95" )
+            {
+                fileName += ".f95";
+            }
+            else if ( extension == "F03" )
+            {
+                fileName += ".f03";
+            }
+            else if ( extension == "F08" )
+            {
+                fileName += ".f08";
+            }
+            else if ( ( extension == "S" ) || ( extension == "sx" ) )
+            {
+                fileName += ".s";
+            }
+        }
     }
 
     void const * dataToWrite = job->GetData();

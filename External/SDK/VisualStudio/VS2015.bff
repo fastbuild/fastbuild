@@ -22,7 +22,7 @@ Compiler( 'Compiler-VS2015-x64' )
                     '$VS2015_BasePath$/VC/redist/x64/Microsoft.VC140.CRT/vcruntime140.dll'
                   }
 
-    #if ENABLE_LIGHT_CACHE 
+    #if ENABLE_LIGHT_CACHE
         .UseLightCache_Experimental = true
     #endif
 }

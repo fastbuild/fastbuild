@@ -32,8 +32,10 @@ private:
     void TestLocalRace();
     void RemoteRaceWinRemote();
     void AnonymousNamespaces();
-    void ErrorsAreCorrectlyReported() const;
-    void WarningsAreCorrectlyReported() const;
+    void ErrorsAreCorrectlyReported_MSVC() const;
+    void ErrorsAreCorrectlyReported_Clang() const;
+    void WarningsAreCorrectlyReported_MSVC() const;
+    void WarningsAreCorrectlyReported_Clang() const;
     void ShutdownMemoryLeak() const;
     void TestForceInclude() const;
     void TestZiDebugFormat() const;
@@ -56,13 +58,12 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( TestLocalRace )
     REGISTER_TEST( RemoteRaceWinRemote )
     REGISTER_TEST( AnonymousNamespaces )
-    REGISTER_TEST( ErrorsAreCorrectlyReported )
-    REGISTER_TEST( WarningsAreCorrectlyReported )
+    REGISTER_TEST( ShutdownMemoryLeak )
     #if defined( __WINDOWS__ )
-        // TODO:LINUX TODO:OSX - Fix and enable this test
-        REGISTER_TEST( ShutdownMemoryLeak )
-    #endif
-    #if defined( __WINDOWS__ )
+        REGISTER_TEST( ErrorsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
+        REGISTER_TEST( ErrorsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
+        REGISTER_TEST( WarningsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
+        REGISTER_TEST( WarningsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
         REGISTER_TEST( TestForceInclude )
         REGISTER_TEST( TestZiDebugFormat )
         REGISTER_TEST( TestZiDebugFormat_Local )
@@ -147,7 +148,7 @@ void TestDistributed::WithPCH() const
 void TestDistributed::RegressionTest_RemoteCrashOnErrorFormatting()
 {
     const char * target( "badcode" );
-    TestHelper( target, 4, true ); // compilation should fail
+    TestHelper( target, 1, true ); // compilation should fail
 }
 
 //------------------------------------------------------------------------------
@@ -167,7 +168,7 @@ void TestDistributed::TestLocalRace()
     }
     {
         const char * target( "badcode" );
-        TestHelper( target, 4, true, true ); // compilation should fail, allow race
+        TestHelper( target, 1, true, true ); // compilation should fail, allow race
     }
 }
 
@@ -211,12 +212,12 @@ void TestDistributed::AnonymousNamespaces()
 void TestDistributed::TestForceInclude() const
 {
     const char * target( "../tmp/Test/Distributed/ForceInclude/ForceInclude.lib" );
-    TestHelper( target, 4 );
+    TestHelper( target, 1 );
 }
 
-// ErrorsAreCorrectlyReported
+// ErrorsAreCorrectlyReported_MSVC
 //------------------------------------------------------------------------------
-void TestDistributed::ErrorsAreCorrectlyReported() const
+void TestDistributed::ErrorsAreCorrectlyReported_MSVC() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
@@ -228,43 +229,51 @@ void TestDistributed::ErrorsAreCorrectlyReported() const
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = TEST_PROTOCOL_PORT;
 
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
     // start a client to emulate the other end
     Server s( 1 );
     s.Listen( TEST_PROTOCOL_PORT );
 
-    // MSVC
-    #if defined( __WINDOWS__ )
-        {
-            FBuild fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
+    // Check that build fails
+    TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-MSVC" ) ) );
 
-            // Check that build fails
-            TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-MSVC" ) ) );
-
-            // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "error C2143" ) && GetRecordedOutput().Find( "missing ';' before '}'" ) );
-        }
-    #endif
-
-    // Clang
-    #if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
-        {
-            FBuild fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
-
-            // Check that build fails
-            TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-Clang" ) ) );
-
-            // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
-        }
-    #endif
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "error C2143" ) && GetRecordedOutput().Find( "missing ';' before '}'" ) );
 }
 
-
-// WarningsAreCorrectlyReported
+// ErrorsAreCorrectlyReported_Clang
 //------------------------------------------------------------------------------
-void TestDistributed::WarningsAreCorrectlyReported() const
+void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( TEST_PROTOCOL_PORT );
+
+    // Check that build fails
+    TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-Clang" ) ) );
+
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
+}
+
+// WarningsAreCorrectlyReported_MSVC
+//------------------------------------------------------------------------------
+void TestDistributed::WarningsAreCorrectlyReported_MSVC() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
@@ -276,39 +285,47 @@ void TestDistributed::WarningsAreCorrectlyReported() const
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = TEST_PROTOCOL_PORT;
 
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
     // start a client to emulate the other end
     Server s( 1 );
     s.Listen( TEST_PROTOCOL_PORT );
 
-    // MSVC
-    #if defined( __WINDOWS__ )
-        {
-            FBuild fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
+    // Check that build passes
+    TEST_ASSERT( fBuild.Build( AStackString<>( "WarningsAreCorrectlyReported-MSVC" ) ) );
 
-            // Check that build passes
-            TEST_ASSERT( fBuild.Build( AStackString<>( "WarningsAreCorrectlyReported-MSVC" ) ) );
-
-            // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "warning C4101" ) && GetRecordedOutput().Find( "'x': unreferenced local variable" ) );
-        }
-    #endif
-
-    // Clang
-    #if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
-        {
-            FBuild fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
-
-            // Check that build passes
-            TEST_ASSERT( fBuild.Build( AStackString<>( "WarningsAreCorrectlyReported-Clang" ) ) );
-
-            // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "warning: unused variable 'x' [-Wunused-variable]" ) );
-        }
-    #endif
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "warning C4101" ) && GetRecordedOutput().Find( "'x': unreferenced local variable" ) );
 }
 
+// WarningsAreCorrectlyReported_Clang
+//------------------------------------------------------------------------------
+void TestDistributed::WarningsAreCorrectlyReported_Clang() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( TEST_PROTOCOL_PORT );
+
+    // Check that build passes
+    TEST_ASSERT( fBuild.Build( AStackString<>( "WarningsAreCorrectlyReported-Clang" ) ) );
+
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "warning: unused variable 'x' [-Wunused-variable]" ) );
+}
 
 // ShutdownMemoryLeak
 //------------------------------------------------------------------------------
@@ -339,7 +356,7 @@ void TestDistributed::ShutdownMemoryLeak() const
     public:
         static uint32_t AbortBuild( void * )
         {
-            // Wait until some distribtued jobs are available
+            // Wait until some distributed jobs are available
             Timer t;
             while ( Job::GetTotalLocalDataMemoryUsage() == 0 )
             {
@@ -412,7 +429,7 @@ void TestDistributed::TestZiDebugFormat_Local() const
 void TestDistributed::D8049_ToolLongDebugRecord() const
 {
     FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/D8049_ToolLongDebugRecord/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker

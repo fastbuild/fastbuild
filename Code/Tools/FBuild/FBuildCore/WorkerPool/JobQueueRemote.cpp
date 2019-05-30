@@ -67,8 +67,8 @@ void JobQueueRemote::SignalStopWorkers()
     for ( size_t i=0; i<numWorkerThreads; ++i )
     {
         m_Workers[ i ]->Stop();
+        WakeWorkers();
     }
-    WakeWorkers();
 }
 
 // HaveWorkersStopped

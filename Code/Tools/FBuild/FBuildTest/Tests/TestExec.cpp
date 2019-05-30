@@ -59,7 +59,7 @@ void TestExec::BuildHelperExe() const
 
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
-    options.m_ForceCleanBuild = true;
+    options.m_NumWorkerThreads = 1;
 
     FBuild fBuild( options );
     fBuild.Initialize();
@@ -71,24 +71,10 @@ void TestExec::BuildHelperExe() const
 
     // build (via alias)
     TEST_ASSERT(fBuild.Build(AStackString<>("HelperExe")));
+    TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Exec/exec.fdb" ) );
 
     // make sure all output is where it is expected
     EnsureFileExists(exec);
-
-    // spawn exe which does a runtime check that the resource is availble
-    Process p;
-    p.Spawn(exec.Get(), nullptr, nullptr, nullptr);
-
-    AutoPtr< char > memOut;
-    AutoPtr< char > memErr;
-    uint32_t memOutSize = 0;
-    uint32_t memErrSize = 0;
-    p.ReadAllData(memOut, &memOutSize, memErr, &memErrSize);
-
-    TEST_ASSERT(!p.IsRunning());
-    // Get result
-    int ret = p.WaitForExit();
-    TEST_ASSERT( ret == 0 ); // verify expected ret code
 
     // Check stats
     //               Seen,  Built,  Type
@@ -107,7 +93,7 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
 
     FBuild fBuild(options);
-    fBuild.Initialize();
+    fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     // Make the relevant inputs
     const AStackString<> inFile_dummy( "../tmp/Test/Exec/dummy_file_does_not_exist.txt" );
@@ -148,10 +134,10 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode ( 1,     1,      Node::OBJECT_NODE );
-    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+    CheckStatsNode ( 1,     0,      Node::OBJECT_NODE );
+    CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
-    CheckStatsNode ( 1,     1,      Node::EXE_NODE );
+    CheckStatsNode ( 1,     0,      Node::EXE_NODE );
     CheckStatsNode ( 4,     4,      Node::EXEC_NODE );
 }
 
@@ -163,7 +149,7 @@ void TestExec::Build_ExecCommand_NoRebuild() const
 
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
-    options.m_ForceCleanBuild = false;
+    options.m_NumWorkerThreads = 1;
 
     FBuild fBuild(options);
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
@@ -190,7 +176,7 @@ void TestExec::Build_ExecCommand_SingleInputChange() const
 
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
-    options.m_ForceCleanBuild = false;
+    options.m_NumWorkerThreads = 1;
 
     FBuild fBuild(options);
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
@@ -227,7 +213,7 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
 
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
-    options.m_ForceCleanBuild = false;
+    options.m_NumWorkerThreads = 1;
 
     FBuild fBuild(options);
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
@@ -299,13 +285,15 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
 
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestExec/exec.bff";
-    options.m_ForceCleanBuild = true;
     options.m_FastCancel = true;
+    options.m_NumWorkerThreads = 2;
 
     FBuild fBuild(options);
-    fBuild.Initialize();
+    fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
     // build
-    TEST_ASSERT(!fBuild.Build(AStackString<>("ExecCommandTest_OneInput_ReturnCode_ExpectFail")));
-    TEST_ASSERT(!fBuild.Build(AStackString<>("ExecCommandTest_OneInput_WrongOutput_ExpectFail")));
+    Array< AString > targets( 2, false );
+    targets.Append( AStackString<>( "ExecCommandTest_OneInput_ReturnCode_ExpectFail" ) );
+    targets.Append( AStackString<>( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" ) );
+    TEST_ASSERT( !fBuild.Build( targets ) );
 }

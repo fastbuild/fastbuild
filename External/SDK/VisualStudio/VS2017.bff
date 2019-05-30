@@ -25,7 +25,7 @@ Compiler( 'Compiler-VS2017-x64' )
                     '$Root$/1033/clui.dll'
                   }
 
-    #if ENABLE_LIGHT_CACHE 
+    #if ENABLE_LIGHT_CACHE
         .UseLightCache_Experimental = true
     #endif
 }

@@ -543,8 +543,7 @@ void TestGraph::TestDeepGraph() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DeepGraph.bff";
-    options.m_UseCacheRead = true;
-    options.m_UseCacheWrite = true;
+    options.m_NumWorkerThreads = 1;
 
     const char * dbFile1 = "../tmp/Test/Graph/DeepGraph.fdb";
 
@@ -566,7 +565,7 @@ void TestGraph::TestDeepGraph() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
         TEST_ASSERT( fBuild.Build( AStackString<>( "all" ) ) );
-        CheckStatsNode ( 30,        0,      Node::OBJECT_NODE );
+        CheckStatsNode ( 1,         0,      Node::OBJECT_NODE );
 
         // make sure walking the graph wasn't slow (should be a good deal less
         // than 100ms, but allow for a lot of slack on the test machine)

@@ -65,6 +65,7 @@ private:
         uint32_t        objectCount_Cacheable;
         uint32_t        objectCount_CacheHits;
         uint32_t        objectCount_CacheStores;
+        uint32_t        cacheTimeMS;
 
         bool operator < ( const LibraryStats & other ) const { return cpuTimeMS > other.cpuTimeMS; }
     };
