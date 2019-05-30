@@ -330,6 +330,8 @@ void TestTestTCPConnectionPool::TestConnectionFailure() const
     // connection fails after wait for it via select().
     // To do that we try to connect to our chosen test port without listening on it.
     TEST_ASSERT( client.Connect( AStackString<>( "127.0.0.1" ), testPort ) == nullptr );
+
+    client.ShutdownAllConnections();
 }
 
 //------------------------------------------------------------------------------
