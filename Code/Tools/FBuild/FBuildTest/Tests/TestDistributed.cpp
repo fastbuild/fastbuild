@@ -354,14 +354,18 @@ void TestDistributed::ShutdownMemoryLeak() const
     class Helper
     {
     public:
-        static uint32_t AbortBuild( void * )
+        static uint32_t AbortBuild( void * data )
         {
             // Wait until some distributed jobs are available
             Timer t;
-            while ( Job::GetTotalLocalDataMemoryUsage() == 0 )
+            while ( t.GetElapsed() < 5.0f )
             {
+                if ( Job::GetTotalLocalDataMemoryUsage() != 0 )
+                {
+                    *static_cast< bool * >( data ) = true;
+                    break;
+                }
                 Thread::Sleep( 1 );
-                TEST_ASSERT( t.GetElapsed() < 5.0f ); // Ensure test doesn't hang if broken
             }
 
             // Abort the build
@@ -369,7 +373,8 @@ void TestDistributed::ShutdownMemoryLeak() const
             return 0;
         }
     };
-    Thread::ThreadHandle h = Thread::CreateThread( Helper::AbortBuild );
+    bool detectedDistributedJobs = false;
+    Thread::ThreadHandle h = Thread::CreateThread( Helper::AbortBuild, nullptr, 64 * KILOBYTE, &detectedDistributedJobs );
 
     // Start build and check it was aborted
     TEST_ASSERT( fBuild.Build( AStackString<>( "ShutdownMemoryLeak" ) ) == false );
@@ -377,6 +382,8 @@ void TestDistributed::ShutdownMemoryLeak() const
 
     Thread::WaitForThread( h );
     Thread::CloseHandle( h );
+
+    TEST_ASSERT( detectedDistributedJobs );
 }
 
 // TestZiDebugFormat
