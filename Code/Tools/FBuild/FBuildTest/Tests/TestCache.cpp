@@ -250,9 +250,6 @@ void TestCache::ConsistentCacheKeysWithDist() const
     options.m_AllowLocalRace = false;
     options.m_NoLocalConsumptionOfRemoteJobs = true;
 
-    Server s;
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
-
     // Write Only
     {
         options.m_UseCacheRead = false;
@@ -261,6 +258,10 @@ void TestCache::ConsistentCacheKeysWithDist() const
         // Compile
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
+
+        Server s;
+        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
         TEST_ASSERT( fBuild.Build( "ConsistentCacheKeys" ) );
 
         // Check for cache hit
@@ -275,6 +276,10 @@ void TestCache::ConsistentCacheKeysWithDist() const
         // Compile with /analyze (warnings only)
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
+
+        Server s;
+        s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
         TEST_ASSERT( fBuild.Build( "ConsistentCacheKeys" ) );
 
         // Check for cache hit
@@ -471,12 +476,13 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteWithDistActive() const
     EnsureFileDoesNotExist( mAnalyzeMSVCXMLFile1 );
     EnsureFileDoesNotExist( mAnalyzeMSVCXMLFile2 );
 
-    Server s;
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
-
     // Compile with /analyze (warnings only)
     FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
+
+    Server s;
+    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
     TEST_ASSERT( fBuild.Build( "Analyze+WarningsOnly" ) );
 
     // Check for cache hit
@@ -518,12 +524,13 @@ void TestCache::Analyze_MSVC_WarningsOnly_ReadWithDistActive() const
     EnsureFileDoesNotExist( mAnalyzeMSVCXMLFile1 );
     EnsureFileDoesNotExist( mAnalyzeMSVCXMLFile2 );
 
-    Server s;
-    s.Listen( Protocol::PROTOCOL_TEST_PORT );
-
     // Compile with /analyze (warnings only)
     FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
+
+    Server s;
+    s.Listen( Protocol::PROTOCOL_TEST_PORT );
+
     TEST_ASSERT( fBuild.Build( "Analyze+WarningsOnly" ) );
 
     // Check for cache hit
