@@ -40,6 +40,8 @@ private:
     void Analyze_MSVC_WarningsOnly_Read() const;
     void Analyze_MSVC_WarningsOnly_WriteWithDistActive() const;
     void Analyze_MSVC_WarningsOnly_ReadWithDistActive() const;
+
+    TestCache & operator = ( TestCache & other ) = delete; // Avoid warnings about implicit deletion of operators
 };
 
 // Register Tests
@@ -414,7 +416,9 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     TEST_ASSERT( output.Find( "warning C6201" ) && output.Find( "Index '32' is out of valid index range" ) );
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
     // file2.cpp
-    TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0':  this does not adhere to the specification for the function" ) );
+    #if _MSC_VER >= 1910 // From VS2017 or later 
+        TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0':  this does not adhere to the specification for the function" ) );
+    #endif
 
     // Check analysis file is present with expected errors
     AString xml;
@@ -422,7 +426,9 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
+    #if _MSC_VER >= 1910 // From VS2017 or later 
+        TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
+    #endif
 }
 
 // Analyze_MSVC_WarningsOnly_Read
@@ -454,8 +460,9 @@ void TestCache::Analyze_MSVC_WarningsOnly_Read() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
-
+    #if _MSC_VER >= 1910 // From VS2017 or later 
+        TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
+    #endif
 }
 
 // Analyze_MSVC_WarningsOnly_WriteWithDistActive
@@ -494,7 +501,9 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteWithDistActive() const
     TEST_ASSERT( output.Find( "warning C6201" ) && output.Find( "Index '32' is out of valid index range" ) );
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
     // file2.cpp
-    TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0':  this does not adhere to the specification for the function" ) );
+    #if _MSC_VER >= 1910 // From VS2017 or later 
+        TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0':  this does not adhere to the specification for the function" ) );
+    #endif
 
     // Check analysis file is present with expected errors
     AString xml;
@@ -502,8 +511,9 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteWithDistActive() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
-
+    #if _MSC_VER >= 1910 // From VS2017 or later 
+        TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
+    #endif
 }
 
 // Analyze_MSVC_WarningsOnly_ReadWithDistActive
@@ -544,7 +554,9 @@ void TestCache::Analyze_MSVC_WarningsOnly_ReadWithDistActive() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
+    #if _MSC_VER >= 1910 // From VS2017 or later 
+        TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
+    #endif
 }
 
 //------------------------------------------------------------------------------

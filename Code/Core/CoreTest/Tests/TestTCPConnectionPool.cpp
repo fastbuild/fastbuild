@@ -130,7 +130,8 @@ void TestTestTCPConnectionPool::TestMultipleServersOneClient() const
         {
             // All each connection to be retried in case of local resource exhaustion
             Timer t;
-            while ( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + (uint16_t)j ) == nullptr )
+            const uint16_t port = (uint16_t)( testPort + j );
+            while ( clientA.Connect( AStackString<>( "127.0.0.1" ), port ) == nullptr )
             {
                 TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
                 Thread::Sleep( 50 );
@@ -168,7 +169,8 @@ void TestTestTCPConnectionPool::TestConnectionCount() const
             {
                 // All each connection to be retried in case of local resource exhaustion
                 Timer t;
-                while ( clientA.Connect( AStackString<>( "127.0.0.1" ), testPort + (uint16_t)j ) == nullptr )
+                const uint16_t port = (uint16_t)( testPort + j );
+                while ( clientA.Connect( AStackString<>( "127.0.0.1" ), port ) == nullptr )
                 {
                     TEST_ASSERTM( t.GetElapsed() < 5.0f, "Failed to connect. (Pass %u, client %u)", i, (uint32_t)j );
                     Thread::Sleep( 50 );
