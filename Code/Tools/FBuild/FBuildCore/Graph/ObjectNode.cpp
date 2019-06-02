@@ -533,6 +533,13 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
             {
                 usePreProcessedOutput = false;
             }
+
+            // Compiling with /analyze cannot use the preprocessed output
+            // as it results in inconsistent behavior with the _PREFAST_ macro
+            if ( GetFlag( FLAG_STATIC_ANALYSIS_MSVC ) )
+            {
+                usePreProcessedOutput = false;
+            }
         }
 
         // The CUDA compiler seems to not be able to compile its own preprocessed output
@@ -914,9 +921,13 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         // 2) code consuming the windows runtime cannot be distributed due to preprocessing weirdness
         // 3) pch files can't be built from preprocessed output (disabled acceleration), so can't be distributed
         // 4) user only wants preprocessor step executed
+        // 5) Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
         if ( !usingCLR && !usingPreprocessorOnly )
         {
-            if ( isDistributableCompiler && !usingWinRT && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
+            if ( isDistributableCompiler &&
+                 !usingWinRT &&
+                 !( flags & ObjectNode::FLAG_CREATING_PCH ) &&
+                 !( flags & ObjectNode::FLAG_STATIC_ANALYSIS_MSVC ) )
             {
                 flags |= ObjectNode::FLAG_CAN_BE_DISTRIBUTED;
             }
@@ -1878,13 +1889,15 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     {
         if ( isMSVC )
         {
-            if ( GetFlag( FLAG_STATIC_ANALYSIS_MSVC ) )
-            {
-                // /E disables the /D_PREFAST_ define when used with /analyze
-                // but we want SAL annotations to still be applied
-                fullArgs += "/D_PREFAST_"; // NOTE: Must be before /E option!
-                fullArgs.AddDelimiter();
-            }
+            // This attempt to define the missing _PREFAST_ macro results in strange
+            // inconsistencies when compiling with /analyze
+            //if ( GetFlag( FLAG_STATIC_ANALYSIS_MSVC ) )
+            //{
+            //    // /E disables the /D_PREFAST_ define when used with /analyze
+            //    // but we want SAL annotations to still be applied
+            //    fullArgs += "/D_PREFAST_=1"; // NOTE: Must be before /E option!
+            //    fullArgs.AddDelimiter();
+            //}
 
             fullArgs += "/E"; // run pre-processor only
 

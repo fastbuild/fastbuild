@@ -38,8 +38,8 @@ private:
     const char* const mAnalyzeMSVCXMLFile2 = "../tmp/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/file2.nativecodeanalysis.xml";
     void Analyze_MSVC_WarningsOnly_Write() const;
     void Analyze_MSVC_WarningsOnly_Read() const;
-    void Analyze_MSVC_WarningsOnly_WriteWithDistActive() const;
-    void Analyze_MSVC_WarningsOnly_ReadWithDistActive() const;
+    void Analyze_MSVC_WarningsOnly_WriteFromDist() const;
+    void Analyze_MSVC_WarningsOnly_ReadFromDist() const;
 
     TestCache & operator = ( TestCache & other ) = delete; // Avoid warnings about implicit deletion of operators
 };
@@ -57,8 +57,10 @@ REGISTER_TESTS_BEGIN( TestCache )
         REGISTER_TEST( LightCache_ImportDirective )
         REGISTER_TEST( Analyze_MSVC_WarningsOnly_Write )
         REGISTER_TEST( Analyze_MSVC_WarningsOnly_Read )
-        REGISTER_TEST( Analyze_MSVC_WarningsOnly_WriteWithDistActive )
-        REGISTER_TEST( Analyze_MSVC_WarningsOnly_ReadWithDistActive )
+
+        // Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
+        //REGISTER_TEST( Analyze_MSVC_WarningsOnly_WriteFromDist )
+        //REGISTER_TEST( Analyze_MSVC_WarningsOnly_ReadFromDist )
     #endif
 REGISTER_TESTS_END
 
@@ -465,9 +467,9 @@ void TestCache::Analyze_MSVC_WarningsOnly_Read() const
     #endif
 }
 
-// Analyze_MSVC_WarningsOnly_WriteWithDistActive
+// Analyze_MSVC_WarningsOnly_WriteFromDist
 //------------------------------------------------------------------------------
-void TestCache::Analyze_MSVC_WarningsOnly_WriteWithDistActive() const
+void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
@@ -516,9 +518,9 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteWithDistActive() const
     #endif
 }
 
-// Analyze_MSVC_WarningsOnly_ReadWithDistActive
+// Analyze_MSVC_WarningsOnly_ReadFromDist
 //------------------------------------------------------------------------------
-void TestCache::Analyze_MSVC_WarningsOnly_ReadWithDistActive() const
+void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
 {
     FBuildTestOptions options;
     options.m_ForceCleanBuild = true;
