@@ -184,13 +184,14 @@ void TestDistributed::RemoteRaceWinRemote()
     options.m_ForceCleanBuild = true;
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_NoLocalConsumptionOfRemoteJobs = true;
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_PORT );
+    s.Listen( TEST_PROTOCOL_PORT );
 
     TEST_ASSERT( fBuild.Build( AStackString<>( "RemoteRaceWinRemote" ) ) );
 }
