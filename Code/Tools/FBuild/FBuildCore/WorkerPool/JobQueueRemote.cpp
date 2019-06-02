@@ -452,7 +452,7 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     }
 
     // transfer data to job
-    uint64_t memSize;
+    size_t memSize;
     void * mem = mb.Release( memSize );
     job->OwnData( mem, memSize );
 
