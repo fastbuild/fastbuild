@@ -28,7 +28,9 @@ class TCPConnectionPool;
 namespace Protocol
 {
     enum { PROTOCOL_PORT = 31264 }; // Arbitrarily chosen port
-    enum { PROTOCOL_VERSION = 19 };
+    enum { PROTOCOL_VERSION = 20 };
+
+    enum { PROTOCOL_TEST_PORT = PROTOCOL_PORT + 1 }; // Different port for use by tests
 
     // Identifiers for all unique messages
     //------------------------------------------------------------------------------

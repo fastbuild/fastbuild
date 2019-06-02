@@ -1,0 +1,26 @@
+//
+// Check Cache interactions with Static Analysis
+//
+//------------------------------------------------------------------------------
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers        = { "127.0.0.1" }
+}
+
+.CompilerInputFiles     = {
+                            '$TestRoot$/Data/TestCache/Analyze_MSVC/file1.cpp'
+                            '$TestRoot$/Data/TestCache/Analyze_MSVC/file2.cpp'
+                          }
+
+//
+// Compile with /analyze (warnings only)
+//
+ObjectList( 'Analyze+WarningsOnly' )
+{
+    .CompilerOutputPath = '$Out$/Test/Cache/Analyze_MSVC/Analyze+WarningsOnly/'
+    .CompilerOptions    + ' /analyze'
+                        - ' /WX'  // We have this on by default so we remove it
+                        + ' /wd4530' // warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+}
