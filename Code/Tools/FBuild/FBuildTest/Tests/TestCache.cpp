@@ -83,7 +83,7 @@ void TestCache::Write() const
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure cache was written to
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -105,7 +105,7 @@ void TestCache::Write() const
             FBuildForTest fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
 
-            TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+            TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
             // Ensure cache was written to
             const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -142,7 +142,7 @@ void TestCache::Read() const
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure cache was written to
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -164,7 +164,7 @@ void TestCache::Read() const
             FBuildForTest fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
 
-            TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+            TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
             // Ensure cache was written to
             const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -201,7 +201,7 @@ void TestCache::ReadWrite() const
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure cache was written to
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -223,7 +223,7 @@ void TestCache::ReadWrite() const
             FBuildForTest fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
 
-            TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+            TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
             // Ensure cache was written to
             const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -320,7 +320,7 @@ void TestCache::LightCache_IncludeUsingMacro() const
     FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Ensure we detected that we could not use the LightCache
     TEST_ASSERT( GetRecordedOutput().Find( "Light cache cannot be used for" ) );
@@ -344,7 +344,7 @@ void TestCache::LightCache_CyclicInclude() const
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure cache we fell back to normal caching
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -359,7 +359,7 @@ void TestCache::LightCache_CyclicInclude() const
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
         // Ensure cache we fell back to normal caching
         const FBuildStats::Stats & objStats = fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE );
@@ -381,7 +381,7 @@ void TestCache::LightCache_ImportDirective() const
     FBuildForTest fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Ensure we detected that we could not use the LightCache
     TEST_ASSERT( GetRecordedOutput().Find( "Light cache cannot be used for" ) );

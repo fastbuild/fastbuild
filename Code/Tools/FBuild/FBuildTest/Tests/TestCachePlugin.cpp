@@ -40,7 +40,7 @@ void TestCachePlugin::BuildPlugin() const
     TEST_ASSERT( fBuild.Initialize() );
 
     const bool is64bits = ( sizeof(void *) == 8 );
-    TEST_ASSERT( fBuild.Build( AStackString<>( is64bits ? "Plugin-DLL-X64" : "Plugin-DLL-X86" ) ) );
+    TEST_ASSERT( fBuild.Build( is64bits ? "Plugin-DLL-X64" : "Plugin-DLL-X86" ) );
 }
 
 // UsePlugin
@@ -60,7 +60,7 @@ void TestCachePlugin::UsePlugin() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "TestFiles-Lib" ) ) );
+        TEST_ASSERT( fBuild.Build( "TestFiles-Lib" ) );
         TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 1 );
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 0 );
     }
@@ -72,7 +72,7 @@ void TestCachePlugin::UsePlugin() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "TestFiles-Lib" ) ) );
+        TEST_ASSERT( fBuild.Build( "TestFiles-Lib" ) );
         TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 0 );
         TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 0 );
     }

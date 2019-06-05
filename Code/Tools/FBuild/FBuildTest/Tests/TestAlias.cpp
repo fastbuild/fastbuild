@@ -45,7 +45,7 @@ void TestAlias::MissingAliasTarget() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // building should fail
-    TEST_ASSERT( fBuild.Build( AStackString<>( "alias" ) ) == false );
+    TEST_ASSERT( fBuild.Build( "alias" ) == false );
 }
 
 // ReflectionAliasResolution

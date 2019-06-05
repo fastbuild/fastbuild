@@ -73,7 +73,7 @@ void TestRemoveDir::RemoveDir() const
     TEST_ASSERT( files.GetSize() == 2 );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "RemoveDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "RemoveDir" ) );
 
     // Check files are NOT there
     files.Clear();
