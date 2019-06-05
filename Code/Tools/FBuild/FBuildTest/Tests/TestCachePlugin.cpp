@@ -39,8 +39,7 @@ void TestCachePlugin::BuildPlugin() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    const bool is64bits = ( sizeof(void *) == 8 );
-    TEST_ASSERT( fBuild.Build( is64bits ? "Plugin-DLL-X64" : "Plugin-DLL-X86" ) );
+    TEST_ASSERT( fBuild.Build( "Plugin-DLL-X64" ) );
 }
 
 // UsePlugin
@@ -51,9 +50,7 @@ void TestCachePlugin::UsePlugin() const
     options.m_ForceCleanBuild = true;
     options.m_UseCacheRead = true;
     options.m_UseCacheWrite = true;
-    const bool is64bits = ( sizeof(void *) == 8 );
-    options.m_ConfigFile = is64bits ? "Tools/FBuild/FBuildTest/Data/TestCachePlugin/useplugin.bff"
-                                    : "Tools/FBuild/FBuildTest/Data/TestCachePlugin/useplugin-x86.bff";
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCachePlugin/useplugin.bff";
 
     // Read
     {
