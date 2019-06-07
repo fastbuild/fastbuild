@@ -65,7 +65,7 @@ FBuildStats TestUnity::BuildGenerate( FBuildTestOptions options, bool useDB, boo
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestGenerateDBFileName() : nullptr ) );
 
     // Implement Unity and activate this test
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Unity-Test" ) ) );
+    TEST_ASSERT( fBuild.Build( "Unity-Test" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetTestGenerateDBFileName() ) );
 
     return fBuild.GetStats();
@@ -179,7 +179,7 @@ FBuildStats TestUnity::BuildCompile( FBuildTestOptions options, bool useDB, bool
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestCompileDBFileName() : nullptr ) );
 
     // Implement Unity and activate this test
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Unity-Compiled" ) ) );
+    TEST_ASSERT( fBuild.Build( "Unity-Compiled" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetTestCompileDBFileName() ) );
 
     return fBuild.GetStats();
@@ -273,7 +273,7 @@ void TestUnity::TestGenerateFromExplicitList() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Unity-Explicit-Files" ) ) );
+    TEST_ASSERT( fBuild.Build( "Unity-Explicit-Files" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -292,28 +292,28 @@ void TestUnity::TestExcludedFiles() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFileName" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFileName" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePath" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePath" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePathRelative" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePathRelative" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePattern" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePattern" ) );
     }
 }
 
@@ -330,7 +330,7 @@ void TestUnity::IsolateFromUnity_Regression() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/IsolateFromUnity/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Compile" ) ) );
+    TEST_ASSERT( fBuild.Build( "Compile" ) );
 }
 
 //------------------------------------------------------------------------------

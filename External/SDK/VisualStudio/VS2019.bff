@@ -20,6 +20,7 @@ Compiler( 'Compiler-VS2019-x64' )
                     '$Root$/msvcp140.dll'
                     '$Root$/vcruntime140.dll'
                     '$Root$/1033/clui.dll'
+                    '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
                   }
 
     #if ENABLE_LIGHT_CACHE

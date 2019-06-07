@@ -106,7 +106,7 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
         TEST_ASSERT( FileIO::FileExists( target ) == false );
     }
 
-    bool pass = fBuild.Build( AStackString<>( target ) );
+    bool pass = fBuild.Build( target );
     if ( !shouldFail )
     {
         TEST_ASSERT( pass );
@@ -184,15 +184,16 @@ void TestDistributed::RemoteRaceWinRemote()
     options.m_ForceCleanBuild = true;
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_NoLocalConsumptionOfRemoteJobs = true;
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_PORT );
+    s.Listen( TEST_PROTOCOL_PORT );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "RemoteRaceWinRemote" ) ) );
+    TEST_ASSERT( fBuild.Build( "RemoteRaceWinRemote" ) );
 }
 
 // AnonymousNamespaces
@@ -237,7 +238,7 @@ void TestDistributed::ErrorsAreCorrectlyReported_MSVC() const
     s.Listen( TEST_PROTOCOL_PORT );
 
     // Check that build fails
-    TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-MSVC" ) ) );
+    TEST_ASSERT( false == fBuild.Build( "ErrorsAreCorrectlyReported-MSVC" ) );
 
     // Check that error is returned
     TEST_ASSERT( GetRecordedOutput().Find( "error C2143" ) && GetRecordedOutput().Find( "missing ';' before '}'" ) );
@@ -265,7 +266,7 @@ void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
     s.Listen( TEST_PROTOCOL_PORT );
 
     // Check that build fails
-    TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-Clang" ) ) );
+    TEST_ASSERT( false == fBuild.Build( "ErrorsAreCorrectlyReported-Clang" ) );
 
     // Check that error is returned
     TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
@@ -293,7 +294,7 @@ void TestDistributed::WarningsAreCorrectlyReported_MSVC() const
     s.Listen( TEST_PROTOCOL_PORT );
 
     // Check that build passes
-    TEST_ASSERT( fBuild.Build( AStackString<>( "WarningsAreCorrectlyReported-MSVC" ) ) );
+    TEST_ASSERT( fBuild.Build( "WarningsAreCorrectlyReported-MSVC" ) );
 
     // Check that error is returned
     TEST_ASSERT( GetRecordedOutput().Find( "warning C4101" ) && GetRecordedOutput().Find( "'x': unreferenced local variable" ) );
@@ -321,7 +322,7 @@ void TestDistributed::WarningsAreCorrectlyReported_Clang() const
     s.Listen( TEST_PROTOCOL_PORT );
 
     // Check that build passes
-    TEST_ASSERT( fBuild.Build( AStackString<>( "WarningsAreCorrectlyReported-Clang" ) ) );
+    TEST_ASSERT( fBuild.Build( "WarningsAreCorrectlyReported-Clang" ) );
 
     // Check that error is returned
     TEST_ASSERT( GetRecordedOutput().Find( "warning: unused variable 'x' [-Wunused-variable]" ) );
@@ -354,14 +355,18 @@ void TestDistributed::ShutdownMemoryLeak() const
     class Helper
     {
     public:
-        static uint32_t AbortBuild( void * )
+        static uint32_t AbortBuild( void * data )
         {
             // Wait until some distributed jobs are available
             Timer t;
-            while ( Job::GetTotalLocalDataMemoryUsage() == 0 )
+            while ( t.GetElapsed() < 5.0f )
             {
+                if ( Job::GetTotalLocalDataMemoryUsage() != 0 )
+                {
+                    *static_cast< bool * >( data ) = true;
+                    break;
+                }
                 Thread::Sleep( 1 );
-                TEST_ASSERT( t.GetElapsed() < 5.0f ); // Ensure test doesn't hang if broken
             }
 
             // Abort the build
@@ -369,14 +374,17 @@ void TestDistributed::ShutdownMemoryLeak() const
             return 0;
         }
     };
-    Thread::ThreadHandle h = Thread::CreateThread( Helper::AbortBuild );
+    bool detectedDistributedJobs = false;
+    Thread::ThreadHandle h = Thread::CreateThread( Helper::AbortBuild, nullptr, 64 * KILOBYTE, &detectedDistributedJobs );
 
     // Start build and check it was aborted
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ShutdownMemoryLeak" ) ) == false );
+    TEST_ASSERT( fBuild.Build( "ShutdownMemoryLeak" ) == false );
     TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: ShutdownMemoryLeak" ) )
 
     Thread::WaitForThread( h );
     Thread::CloseHandle( h );
+
+    TEST_ASSERT( detectedDistributedJobs );
 }
 
 // TestZiDebugFormat
@@ -400,7 +408,7 @@ void TestDistributed::TestZiDebugFormat() const
     Server s( 1 );
     s.Listen( TEST_PROTOCOL_PORT );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "remoteZi" ) ) );
+    TEST_ASSERT( fBuild.Build( "remoteZi" ) );
 }
 
 // TestZiDebugFormat_Local
@@ -421,7 +429,7 @@ void TestDistributed::TestZiDebugFormat_Local() const
     Server s( 1 );
     s.Listen( TEST_PROTOCOL_PORT );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "remoteZi" ) ) );
+    TEST_ASSERT( fBuild.Build( "remoteZi" ) );
 }
 
 // D8049_ToolLongDebugRecord
@@ -445,7 +453,7 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     Server s( 1 );
     s.Listen( TEST_PROTOCOL_PORT );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "D8049" ) ) );
+    TEST_ASSERT( fBuild.Build( "D8049" ) );
 }
 
 //------------------------------------------------------------------------------

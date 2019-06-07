@@ -70,7 +70,7 @@ void TestExec::BuildHelperExe() const
     EnsureFileDoesNotExist(exec);
 
     // build (via alias)
-    TEST_ASSERT(fBuild.Build(AStackString<>("HelperExe")));
+    TEST_ASSERT( fBuild.Build( "HelperExe" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Exec/exec.fdb" ) );
 
     // make sure all output is where it is expected
@@ -123,7 +123,7 @@ void TestExec::Build_ExecCommand_ExpectedSuccesses() const
     EnsureFileDoesNotExist(outFile_multiInputB);
 
     // build (via alias)
-    TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_ExpectedSuccesses")));
+    TEST_ASSERT( fBuild.Build( "ExecCommandTest_ExpectedSuccesses" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Exec/exec.fdb" ) );
 
     EnsureFileExists(outFile_dummy);
@@ -154,7 +154,7 @@ void TestExec::Build_ExecCommand_NoRebuild() const
     FBuild fBuild(options);
     fBuild.Initialize( "../tmp/Test/Exec/exec.fdb" );
 
-    TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_ExpectedSuccesses")));
+    TEST_ASSERT( fBuild.Build( "ExecCommandTest_ExpectedSuccesses" ) );
 
     // We expect only one command to run a second time (the one that always runs)
 
@@ -191,7 +191,7 @@ void TestExec::Build_ExecCommand_SingleInputChange() const
     #endif
     CreateInputFile( inFile_oneInput );
 
-    TEST_ASSERT( fBuild.Build(AStackString<>("ExecCommandTest_OneInput")) );
+    TEST_ASSERT( fBuild.Build( "ExecCommandTest_OneInput" ) );
 
     // We expect only one command to run a second time (the one that always runs)
 
@@ -221,7 +221,7 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
     const AStackString<> inFile_multiInputA( "../tmp/Test/Exec/MultiInputA.txt" );
     CreateInputFile(inFile_multiInputA);
 
-    TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_MultipleInput")));
+    TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
 
     // We expect only one command to run a second time (the one that always runs)
 
@@ -239,7 +239,7 @@ void TestExec::Build_ExecCommand_MultipleInputChange() const
     const AStackString<> inFile_multiInputB( "../tmp/Test/Exec/MultiInputB.txt" );
     CreateInputFile(inFile_multiInputB);
 
-    TEST_ASSERT(fBuild.Build(AStackString<>("ExecCommandTest_MultipleInput")));
+    TEST_ASSERT( fBuild.Build( "ExecCommandTest_MultipleInput" ) );
 
     // We expect only one command to run a second time (the one that always runs)
 

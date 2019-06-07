@@ -409,6 +409,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             // LightCache hashing was successful
 
             // Try retrieve from cache
+            GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
             if ( RetrieveFromCache( job ) )
             {
                 return NODE_RESULT_OK_CACHE;
@@ -456,6 +457,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     if ( useCache )
     {
         // try to get from cache
+        GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
         if ( RetrieveFromCache( job ) )
         {
             return NODE_RESULT_OK_CACHE;
@@ -528,6 +530,13 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
             // If creating the PCH, we can't use the preprocessed info
             // as this would prevent acceleration by users of the PCH
             if ( GetFlag( FLAG_CREATING_PCH ) )
+            {
+                usePreProcessedOutput = false;
+            }
+
+            // Compiling with /analyze cannot use the preprocessed output
+            // as it results in inconsistent behavior with the _PREFAST_ macro
+            if ( GetFlag( FLAG_STATIC_ANALYSIS_MSVC ) )
             {
                 usePreProcessedOutput = false;
             }
@@ -912,9 +921,13 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         // 2) code consuming the windows runtime cannot be distributed due to preprocessing weirdness
         // 3) pch files can't be built from preprocessed output (disabled acceleration), so can't be distributed
         // 4) user only wants preprocessor step executed
+        // 5) Distribution of /analyze is not currently supported due to preprocessor/_PREFAST_ inconsistencies
         if ( !usingCLR && !usingPreprocessorOnly )
         {
-            if ( isDistributableCompiler && !usingWinRT && !( flags & ObjectNode::FLAG_CREATING_PCH ) )
+            if ( isDistributableCompiler &&
+                 !usingWinRT &&
+                 !( flags & ObjectNode::FLAG_CREATING_PCH ) &&
+                 !( flags & ObjectNode::FLAG_STATIC_ANALYSIS_MSVC ) )
             {
                 flags |= ObjectNode::FLAG_CAN_BE_DISTRIBUTED;
             }
@@ -1103,6 +1116,20 @@ void ObjectNode::GetPDBName( AString & pdbName ) const
     ASSERT( IsUsingPDB() );
     pdbName = m_Name;
     pdbName += ".pdb";
+}
+
+// GetNativeAnalysisXMLPath
+//------------------------------------------------------------------------------
+void ObjectNode::GetNativeAnalysisXMLPath( AString& outXMLFileName ) const
+{
+    ASSERT( IsUsingStaticAnalysisMSVC() );
+
+    const AString & sourceName = m_PCHObjectFileName.IsEmpty() ? m_Name : m_PCHObjectFileName;
+
+    // TODO:B The xml path can be manually specified with /analyze:log
+    const char * extPos = sourceName.FindLast( '.' ); // Only last extension removed
+    outXMLFileName.Assign( sourceName.Get(), extPos ? extPos : sourceName.GetEnd() );
+    outXMLFileName += ".nativecodeanalysis.xml";
 }
 
 // GetObjExtension
@@ -1419,14 +1446,8 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
         }
 
         // .nativecodeanalysis.xml (all files)
-        // TODO:B The xml path can be manually specified with /analyze:log
-        AStackString<> xmlFileName( m_PCHObjectFileName.IsEmpty() ? m_Name : m_PCHObjectFileName );
-        const char * extPos = xmlFileName.FindLast( '.' ); // Only last extension removed
-        if ( extPos )
-        {
-            xmlFileName.SetLength( (uint32_t)( extPos - xmlFileName.Get() ) );
-        }
-        xmlFileName += ".nativecodeanalysis.xml";
+        AStackString<> xmlFileName;
+        GetNativeAnalysisXMLPath( xmlFileName );
         outFileNames.Append( xmlFileName );
     }
 }
@@ -1868,6 +1889,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     {
         if ( isMSVC )
         {
+            // This attempt to define the missing _PREFAST_ macro results in strange
+            // inconsistencies when compiling with /analyze
+            //if ( GetFlag( FLAG_STATIC_ANALYSIS_MSVC ) )
+            //{
+            //    // /E disables the /D_PREFAST_ define when used with /analyze
+            //    // but we want SAL annotations to still be applied
+            //    fullArgs += "/D_PREFAST_=1"; // NOTE: Must be before /E option!
+            //    fullArgs.AddDelimiter();
+            //}
+
             fullArgs += "/E"; // run pre-processor only
 
             // Ensure unused defines declared in the PCH but not used

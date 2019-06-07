@@ -190,7 +190,7 @@ void TestProjectGeneration::TestFunction() const
     EnsureFileDoesNotExist( filters );
 
     // do build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestSln" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestSln" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/ProjectGeneration/fbuild.fdb" ) );
 
     EnsureFileExists( project );
@@ -239,7 +239,7 @@ void TestProjectGeneration::TestFunction_NoRebuild() const
     #endif
 
     // do build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestProj" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestProj" ) );
 
     // Make sure files have not been changed
     TEST_ASSERT( dateTime1 == FileIO::GetFileLastWriteTime( project ) );
@@ -349,7 +349,7 @@ void TestProjectGeneration::IntellisenseAndCodeSense() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // Generate project
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Intellisense" ) ) );
+    TEST_ASSERT( fBuild.Build( "Intellisense" ) );
 
     // Ensure VS Intellisense info is present
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/ObjectList.vcxproj" );
@@ -526,7 +526,7 @@ void TestProjectGeneration::VCXProj_DefaultConfigs() const
     EnsureFileDoesNotExist( project );
 
     // do build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "DefaultConfigs" ) ) );
+    TEST_ASSERT( fBuild.Build( "DefaultConfigs" ) );
 
     // Load the generate project into memory
     FileStream f;
@@ -570,7 +570,7 @@ void TestProjectGeneration::VCXProj_PerConfigOverrides() const
     EnsureFileDoesNotExist( project );
 
     // do build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "PerConfigOverrides" ) ) );
+    TEST_ASSERT( fBuild.Build( "PerConfigOverrides" ) );
 
     // Load the generate project into memory
     FileStream f;
@@ -922,7 +922,7 @@ void TestProjectGeneration::Solution_Empty() const
     EnsureFileDoesNotExist( solution );
 
     // do build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "EmptySolution" ) ) );
+    TEST_ASSERT( fBuild.Build( "EmptySolution" ) );
 
     //
     EnsureFileExists( solution );
@@ -951,7 +951,7 @@ void TestProjectGeneration::Solution_SolutionRelativePaths() const
     EnsureFileDoesNotExist( solution );
 
     // do build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+    TEST_ASSERT( fBuild.Build( "Solution" ) );
 
     //
     EnsureFileExists( solution );
@@ -991,7 +991,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_None() const
     EnsureFileDoesNotExist( solution );
 
     // do build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+    TEST_ASSERT( fBuild.Build( "Solution" ) );
 
     //
     EnsureFileExists( solution );
@@ -1025,7 +1025,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_Project() const
     EnsureFileDoesNotExist( solution );
 
     // do build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+    TEST_ASSERT( fBuild.Build( "Solution" ) );
 
     //
     EnsureFileExists( solution );
@@ -1071,7 +1071,7 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
     EnsureFileDoesNotExist( solution );
 
     // do build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Solution" ) ) );
+    TEST_ASSERT( fBuild.Build( "Solution" ) );
 
     //
     EnsureFileExists( solution );
@@ -1110,7 +1110,7 @@ void TestProjectGeneration::XCode() const
     EnsureFileDoesNotExist( project );
 
     // do build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "XCodeProj" ) ) );
+    TEST_ASSERT( fBuild.Build( "XCodeProj" ) );
 
     // Check stats
     //               Seen,  Built,  Type

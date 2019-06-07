@@ -93,6 +93,17 @@ void FBuildTest::EnsureDirExists( const char * dirPath ) const
     TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( dirPath ) ) );
 }
 
+// LoadFileContentsAsString
+//------------------------------------------------------------------------------
+void FBuildTest::LoadFileContentsAsString( const char* fileName, AString& outString ) const
+{
+    FileStream f;
+    TEST_ASSERT( f.Open( fileName ) );
+    const uint32_t fileSize = (uint32_t)f.GetFileSize();
+    outString.SetLength( fileSize );
+    TEST_ASSERT( f.ReadBuffer( outString.Get(), fileSize ) );
+}
+
 // CheckStatsNode
 //------------------------------------------------------------------------------
 void FBuildTest::CheckStatsNode( const FBuildStats & stats, size_t numSeen, size_t numBuilt, Node::Type nodeType ) const
@@ -180,6 +191,9 @@ FBuildTestOptions::FBuildTestOptions()
 {
     // Override defaults
     m_ShowSummary = true; // required to generate stats for node count checks
+
+    // Ensure any distributed compilation tests use the test port
+    m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 }
 
 // GetRecursiveDependencyCount

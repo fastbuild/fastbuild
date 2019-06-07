@@ -68,7 +68,7 @@ void TestExe::Build() const
     EnsureFileDoesNotExist( exe );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Exe" ) ) );
+    TEST_ASSERT( fBuild.Build( "Exe" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Exe/exe.fdb" ) );
 
     // make sure all output is where it is expected
@@ -105,7 +105,7 @@ void TestExe::Build_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Exe/exe.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Exe" ) ) );
+    TEST_ASSERT( fBuild.Build( "Exe" ) );
 
     // Check stats
     //               Seen,  Built,  Type

@@ -65,7 +65,7 @@ void TestCompiler::BuildCompiler_Explicit() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Compiler" ) ) );
+    TEST_ASSERT( fBuild.Build( "Compiler" ) );
 
     // Save DB for use by NoRebuild test
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
@@ -85,7 +85,7 @@ void TestCompiler::BuildCompiler_Explicit_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
 
     // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Compiler" ) ) );
+    TEST_ASSERT( fBuild.Build( "Compiler" ) );
 
     // Check stats
     //              Seen,   Built,  Type
@@ -103,7 +103,7 @@ void TestCompiler::BuildCompiler_Explicit_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Explicit/explicit.fdb" ) );
 
     // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Compiler" ) ) );
+    TEST_ASSERT( fBuild.Build( "Compiler" ) );
 
     // Check stats
     //              Seen,   Built,  Type
@@ -121,7 +121,7 @@ void TestCompiler::BuildCompiler_Implicit() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Save DB for use by NoRebuild test
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
@@ -141,7 +141,7 @@ void TestCompiler::BuildCompiler_Implicit_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
 
     // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Save DB for use by NoRebuild test
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
@@ -162,7 +162,7 @@ void TestCompiler::BuildCompiler_Implicit_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
 
     // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Save DB for use by NoRebuild test
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/Implicit/implicit.fdb" ) );
@@ -211,7 +211,7 @@ void TestCompiler::CompilerExecutableAsDependency() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Save DB for use by NoRebuild test
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/TestCompiler/executableasdependency.fdb" ) );
@@ -231,7 +231,7 @@ void TestCompiler::CompilerExecutableAsDependency_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/TestCompiler/executableasdependency.fdb" ) );
 
     // Build a file genereated by a Compiler that we compiled
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
     // Check stats
     //               Seen,  Built,  Type

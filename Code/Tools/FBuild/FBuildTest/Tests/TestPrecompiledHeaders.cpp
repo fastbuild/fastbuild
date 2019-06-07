@@ -79,7 +79,7 @@ FBuildStats TestPrecompiledHeaders::Build( FBuildTestOptions options, bool useDB
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetPCHDBFileName() : nullptr ) );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( target ? target : "PCHTest" ) ) );
+    TEST_ASSERT( fBuild.Build( target ? target : "PCHTest" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBFileName() ) );
 
     return fBuild.GetStats();

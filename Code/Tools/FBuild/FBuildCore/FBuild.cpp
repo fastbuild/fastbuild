@@ -199,6 +199,13 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 
 // Build
 //------------------------------------------------------------------------------
+bool FBuild::Build( const char* target )
+{
+    return Build( AStackString<>( target ) );
+}
+
+// Build
+//------------------------------------------------------------------------------
 bool FBuild::Build( const AString & target )
 {
     ASSERT( !target.IsEmpty() );

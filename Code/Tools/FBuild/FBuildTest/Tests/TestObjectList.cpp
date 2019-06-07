@@ -48,28 +48,28 @@ void TestObjectList::TestExcludedFiles() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFileName" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFileName" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePath" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePath" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePathRelative" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePathRelative" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePattern" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePattern" ) );
     }
 }
 
@@ -82,7 +82,7 @@ void TestObjectList::CompilerInputFilesRoot() const
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 }
 
 // ExtraOutputFolders_PathExtraction
@@ -138,7 +138,7 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
         {
             FBuild fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
-            TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+            TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
             EnsureFileExists( objectListASMFile );
             EnsureFileExists( objectListPDBFile );
@@ -148,7 +148,7 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
         {
             FBuild fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
-            TEST_ASSERT( fBuild.Build( AStackString<>( "Library" ) ) );
+            TEST_ASSERT( fBuild.Build( "Library" ) );
 
             EnsureFileExists( libraryASMFile );
             EnsureFileExists( libraryPDBFile );
