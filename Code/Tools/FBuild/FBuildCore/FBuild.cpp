@@ -374,8 +374,9 @@ bool FBuild::Build( Node * nodeToBuild )
         const SettingsNode * settings = m_DependencyGraph->GetSettings();
         m_Client = FNEW( Client(
             settings->GetWorkerList(), m_Options.m_DistributionPort, 
-            settings->GetWorkerListRefreshLimitSec(), settings->GetWorkerConnectionRetryLimitSec(),
-            settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
+            settings->GetWorkerListRefreshLimitSec(),
+            settings->GetWorkerConnectionLimit(),
+            m_Options.m_DistVerbose ) );
     }
 
     m_Timer.Start();

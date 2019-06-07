@@ -275,8 +275,7 @@ void Worker::UpdateAvailability()
     }
     else
     {
-        // to avoid doing a lot of network file I/O when going idle and not idle,
-        // don't set unavailable here
+        m_WorkerBrokerage.SetUnavailable();
     }
 }
 

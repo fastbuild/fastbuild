@@ -35,7 +35,6 @@ public:
     Client( const Array< AString > & settingsWorkers,
             uint16_t port,
             int32_t workerListRefreshLimitSec,
-            int32_t workerConnectionRetryLimitSec,
             uint32_t workerConnectionLimit,
             bool detailedLogging );
     ~Client();
@@ -46,7 +45,7 @@ private:
     class ServerState
     {
         public:
-            ServerState( const bool detailedLogging );
+            ServerState();
             ~ServerState();
             void Disconnect();
 
@@ -64,7 +63,8 @@ private:
             bool                       m_Blacklisted;  // worker had a system error
             bool                       m_Excluded;  // worker was added to excluded workers list
             bool                       m_DetailedLogging;
-        
+            size_t                     m_Id;
+
         private:
             void ClearConnectionFields();
     };
@@ -102,6 +102,8 @@ private:
     void            OutputNumWorkers();
     void            LookForWorkers();
     void            CommunicateJobAvailability();
+    ServerState *   GetServer( const ConnectionInfo * connection ) const;
+    void            RemoveServer( const size_t serverId );
 
     // More verbose name to avoid conflict with windows.h SendMessage
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg );
@@ -116,7 +118,6 @@ private:
     uint32_t            m_WorkerListRefreshIntervalSec;     // seconds between worker list retries
     float               m_WorkerListRefreshElapsedTimeSec;  // seconds since we started the worker list retries
     int32_t             m_WorkerListRefreshLimitSec;        // max seconds elapsed until stop retrying worker list
-    int32_t             m_WorkerConnectionRetryLimitSec;    // max seconds elapsed until stop retrying connection to worker
     volatile bool       m_ShouldExit;                       // signal from main thread
     volatile bool       m_Exited;                           // flagged on exit
     bool                m_DetailedLogging;
@@ -125,10 +126,11 @@ private:
     // state
     Timer               m_StatusUpdateTimer;
 
-    Mutex                 m_ServerListMutex;
-    Array< ServerState* > m_ServerList;
-    uint32_t              m_WorkerConnectionLimit;
-    uint16_t              m_Port;
+    Mutex                         m_ServerListMutex;
+    mutable Array< ServerState >  m_ServerList;
+    size_t                        m_NextServerId;
+    uint32_t                      m_WorkerConnectionLimit;
+    uint16_t                      m_Port;
 };
 
 //------------------------------------------------------------------------------

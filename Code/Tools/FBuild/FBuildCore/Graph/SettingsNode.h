@@ -31,7 +31,6 @@ public:
     const AString &                     GetCachePluginDLL() const;
     inline const Array< AString > &     GetWorkerList() const { return m_Workers; }
     int32_t                             GetWorkerListRefreshLimitSec() const { return m_WorkerListRefreshLimitSec; }
-    int32_t                             GetWorkerConnectionRetryLimitSec() const { return m_WorkerConnectionRetryLimitSec; }
     uint32_t                            GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
     uint32_t                            GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
     bool                                GetAllowDBMigration_Experimental() const { return m_AllowDBMigration_Experimental; }
@@ -56,7 +55,6 @@ private:
     uint32_t            m_DistributableJobMemoryLimitMiB;
     bool                m_AllowDBMigration_Experimental;
     int32_t             m_WorkerListRefreshLimitSec;
-    int32_t             m_WorkerConnectionRetryLimitSec;
 };
 
 //------------------------------------------------------------------------------

@@ -37,7 +37,6 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
     REFLECT(        m_AllowDBMigration_Experimental, "AllowDBMigration_Experimental", MetaOptional() )
     REFLECT(        m_WorkerListRefreshLimitSec,      "WorkerListRefreshLimit",    MetaOptional() + MetaRange( WORKER_LIMIT_MIN, WORKER_LIMIT_MAX ) )
-    REFLECT(        m_WorkerConnectionRetryLimitSec,  "WorkerConnectionRetryLimit",    MetaOptional() + MetaRange( WORKER_LIMIT_MIN, WORKER_LIMIT_MAX ) )
 REFLECT_END( SettingsNode )
 
 // CONSTRUCTOR
@@ -49,8 +48,6 @@ SettingsNode::SettingsNode()
 , m_AllowDBMigration_Experimental( false )
 , m_WorkerListRefreshLimitSec( 300 )  // default: a maximum of 5 minutes refreshing the worker list,
                                       // in case workers are rebooting
-, m_WorkerConnectionRetryLimitSec( 300 )  // default: a maximum of 5 minutes retrying connections,
-                                          // in case workers are rebooting
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );
