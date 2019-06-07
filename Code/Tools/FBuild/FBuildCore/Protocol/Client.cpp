@@ -607,16 +607,6 @@ void Client::CommunicateJobAvailability()
                 SendMessageInternal( ss->m_Connection, msg );
                 ss->m_NumJobsAvailableForWorker = numJobsAvailableForWorker;
             }
-            if ( numJobsAvailableForWorker == 0 )  // worker cannot build any job
-            {
-                // The worker can't build any of the current jobs, so disconnect from it.
-                // This allows us to try other workers that may be able to build jobs,
-                // and we avoid hitting the m_WorkerConnectionLimit with only noop workers.
-                Disconnect( ss->m_Connection );
-                // delay reconnecting to this worker
-                ss->m_ConnectionRetryIntervalSec = 5;  // next retry is in >= 5 seconds
-                ss->m_ConnectionDelayTimer.Start();    // reset time
-            }
         }
     }
 }
@@ -846,8 +836,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         // built ok - serialize to disc
         MultiBuffer mb( data, ms.GetSize() - ms.Tell() );
 
-        ObjectNode * on = job->GetNode()->CastTo< ObjectNode >();
-        const AString & nodeName = on->GetName();
+        ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
+        const AString & nodeName = objectNode->GetName();
         if ( Node::EnsurePathExistsForFile( nodeName ) == false )
         {
             FLOG_ERROR( "Failed to create path for '%s'", nodeName.Get() );
@@ -893,7 +883,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                 if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
                         on->ShouldUseCache() )
                 {
-                    on->WriteToCache( job );
+                    objectNode->WriteToCache( job );
                 }
             }
             else
@@ -906,18 +896,18 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         AStackString<> msgBuffer;
         job->GetMessagesForLog( msgBuffer );
 
-        if ( on->IsMSVC() )
+        if ( objectNode->IsMSVC() )
         {
-            if ( on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
+            if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
             {
-                FileNode::HandleWarningsMSVC( job, on->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
             }
         }
-        else if ( on->IsClang() || on->IsGCC() )
+        else if ( objectNode->IsClang() || objectNode->IsGCC() )
         {
-            if ( !on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
+            if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
             {
-                FileNode::HandleWarningsClangGCC( job, on->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
             }
         }
     }
