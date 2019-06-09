@@ -20,6 +20,7 @@
         {
             .UnityInputPath             = '$ProjectPath$/'
             .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+            .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
             .UnityInputExcludePath      = '$ProjectPath$/CoreTest/' // Exclude Tests
             .UnityInputExcludedFiles    = .MemTrackerFile
         }

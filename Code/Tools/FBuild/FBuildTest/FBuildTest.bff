@@ -17,6 +17,7 @@
         {
             .UnityInputPath             = '$ProjectPath$/'
             .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+            .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
             .UnityInputExcludePath      = 'Tools/FBuild/FBuildTest/Data/' // Ignore test data (some of which is code)
         }
 
