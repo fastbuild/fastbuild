@@ -6,14 +6,15 @@
 
     // Library
     //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs )
+    .ProjectConfigs = {}
+    ForEach( .BuildConfig in .BuildConfigs )
     {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
+        Using( .BuildConfig )
+        .OutputBase + '\$Platform$-$BuildConfigName$'
 
         // Unity
         //--------------------------------------------------------------------------
-        Unity( '$ProjectName$-Unity-$Platform$-$Config$' )
+        Unity( '$ProjectName$-Unity-$Platform$-$BuildConfigName$' )
         {
             .UnityInputPath             = '$ProjectPath$/'
             .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
@@ -22,20 +23,25 @@
 
         // Library
         //--------------------------------------------------------------------------
-        Library( '$ProjectName$-Lib-$Platform$-$Config$' )
+        Library( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
         {
             // Test framework uses exceptions
             .CompilerOptions            + .UseExceptions
 
             // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$Config$'
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
             .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-        ^'Targets_$Platform$_$Config$' + { '$ProjectName$-$Platform$-$Config$' }
+        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$BuildConfigName$' }
+        ^'Targets_$Platform$_$BuildConfigName$' + { '$ProjectName$-$Platform$-$BuildConfigName$' }
+
+        #if __WINDOWS__
+            .ProjectConfig              = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = '$ProjectName$-$Platform$-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
     }
 
     // Aliases
@@ -50,16 +56,6 @@
             .ProjectOutput              = '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
             .ProjectInputPaths          = '$ProjectPath$\'
             .ProjectBasePath            = '$ProjectPath$\'
-
-            .ProjectX64Debug        = [ Using( .ProjectX64Debug )           .Target = '$ProjectName$-X64-Debug' ]
-            .ProjectX64Analyze      = [ Using( .ProjectX64Analyze )         .Target = '$ProjectName$-X64-Analyze' ]
-            .ProjectX64Profile      = [ Using( .ProjectX64Profile )         .Target = '$ProjectName$-X64-Profile' ]
-            .ProjectX64Release      = [ Using( .ProjectX64Release )         .Target = '$ProjectName$-X64-Release' ]
-            .ProjectX64ClangDebug   = [ Using( .ProjectX64ClangDebug )      .Target = '$ProjectName$-X64Clang-Debug' ]
-            .ProjectX64ClangProfile = [ Using( .ProjectX64ClangProfile )    .Target = '$ProjectName$-X64Clang-Profile' ]
-            .ProjectX64ClangRelease = [ Using( .ProjectX64ClangRelease )    .Target = '$ProjectName$-X64Clang-Release' ]
-            .ProjectConfigs         = { .ProjectX64Debug, .ProjectX64Analyze, .ProjectX64Profile, .ProjectX64Release,
-                                        .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
         }
     #endif
 
