@@ -74,6 +74,8 @@ public:
 
     size_t GetRecursiveDependencyCount( const Node * node ) const;
     size_t GetRecursiveDependencyCount( const char * nodeName ) const;
+
+    void SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const;
 };
 
 //------------------------------------------------------------------------------

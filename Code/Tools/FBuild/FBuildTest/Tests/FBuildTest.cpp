@@ -224,4 +224,14 @@ size_t FBuildForTest::GetRecursiveDependencyCount( const char * nodeName ) const
     return GetRecursiveDependencyCount( node );
 }
 
+// SerializeDepGraphToText
+//------------------------------------------------------------------------------
+void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString& outBuffer ) const
+{
+    Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    Dependencies deps( 1, false );
+    deps.Append( Dependency( node ) );
+    m_DependencyGraph->SerializeToText( deps, outBuffer );
+}
+
 //------------------------------------------------------------------------------
