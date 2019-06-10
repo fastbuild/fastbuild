@@ -147,6 +147,8 @@ ProjectAllowedFileExtensions
 ProjectBasePath
 ProjectBuildCommand
 ProjectCleanCommand
+ProjectConfigs
+ProjectFileTypes
 ProjectFiles
 ProjectFilesToExclude
 ProjectGuid
@@ -168,7 +170,10 @@ RootNamespace
 SimpleDistributionMode
 SolutionBuildProject
 SolutionConfig
+SolutionConfigs
+SolutionDependencies
 SolutionDeployProjects
+SolutionFolders
 SolutionMinimumVisualStudioVersion
 SolutionOutput
 SolutionPlatform
