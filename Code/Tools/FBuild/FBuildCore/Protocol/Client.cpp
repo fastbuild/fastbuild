@@ -47,7 +47,7 @@ Client::Client( const Array< AString > & settingsWorkers,
     , m_ShouldExit( false )
     , m_Exited( false )
     , m_DetailedLogging( detailedLogging )
-    , m_NextServerId( 1 )  // start with 1, since 0 means invalid
+    , m_NextIncrementServerId( 0 )
     , m_WorkerConnectionLimit( workerConnectionLimit )
     , m_Port( port )
 {
@@ -81,10 +81,13 @@ Client::~Client()
     {
         ss->Disconnect();
 
-        MutexHolder ssMH( ss->m_Mutex );
-        if (ss->m_Connection != nullptr)
+        // since erasing server state below, only hold mutex for connection change
         {
-            ss->m_Connection->SetUserData( nullptr );
+            MutexHolder ssMH( ss->m_Mutex );
+            if (ss->m_Connection != nullptr)
+            {
+                ss->m_Connection->SetUserData( nullptr );
+            }
         }
 
         MutexHolder mh( m_ServerListMutex );
@@ -373,10 +376,13 @@ bool Client::UpdateServerList(
         ServerState * const ss = serverStatesToRemove[ i ];
         ASSERT( ss );
 
-        MutexHolder ssMH( ss->m_Mutex );
-        if (ss->m_Connection != nullptr)
+        // since erasing server state below, only hold mutex for connection change
         {
-            ss->m_Connection->SetUserData( nullptr );
+            MutexHolder ssMH( ss->m_Mutex );
+            if (ss->m_Connection != nullptr)
+            {
+                ss->m_Connection->SetUserData( nullptr );
+            }
         }
 
         // caller already holds m_ServerListMutex
@@ -396,7 +402,17 @@ bool Client::UpdateServerList(
 
         // lock the server state
         MutexHolder mhSS( ss.m_Mutex );
-        ss.m_Id = m_NextServerId++;
+
+        if ( !m_FreeServerIds.IsEmpty() )
+        {
+            ss.m_Id = m_FreeServerIds.Top();
+            m_FreeServerIds.Pop();
+        }
+        else
+        {
+            // No elements in free array, so use next available
+            ss.m_Id = m_NextIncrementServerId++;
+        }
         ss.m_DetailedLogging = m_DetailedLogging;
         ss.m_RemoteName = addedWorkers[ workerIndex ];
         anyChangesApplied = true;
@@ -618,8 +634,6 @@ Client::ServerState * Client::GetServer( const ConnectionInfo * connection ) con
     ASSERT( connection );
 
     const size_t serverId = (size_t)connection->GetUserData();
-    ASSERT( serverId > 0 );  // 0 means invalid
-
     const size_t numServers = m_ServerList.GetSize();
     for ( size_t i=0; i < numServers; ++i )
     {
@@ -643,6 +657,7 @@ void Client::RemoveServer( const size_t serverId )
         if ( ss.m_Id == serverId )
         {
             m_ServerList.EraseIndex( i );
+            m_FreeServerIds.Append( serverId );
             break;
         }
     }
@@ -690,26 +705,28 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     ServerState * ss = GetServer( connection );
     ASSERT( ss );
 
-    MutexHolder ssMH( ss->m_Mutex );
-
-    // are we expecting a msg, or the payload for a msg?
     void * payload = nullptr;
     size_t payloadSize = 0;
-    if ( ss->m_CurrentMessage == nullptr )
+
     {
-        // message
-        ss->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
-        if ( ss->m_CurrentMessage->HasPayload() )
+        MutexHolder ssMH( ss->m_Mutex );
+        // are we expecting a msg, or the payload for a msg?
+        if ( ss->m_CurrentMessage == nullptr )
         {
-            return;
+            // message
+            ss->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
+            if ( ss->m_CurrentMessage->HasPayload() )
+            {
+                return;
+            }
         }
-    }
-    else
-    {
-        // payload
-        ASSERT( ss->m_CurrentMessage->HasPayload() );
-        payload = data;
-        payloadSize = size;
+        else
+        {
+            // payload
+            ASSERT( ss->m_CurrentMessage->HasPayload() );
+            payload = data;
+            payloadSize = size;
+        }
     }
 
     // determine message type

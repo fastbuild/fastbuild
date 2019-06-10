@@ -128,7 +128,8 @@ private:
 
     Mutex                         m_ServerListMutex;
     mutable Array< ServerState >  m_ServerList;
-    size_t                        m_NextServerId;
+    size_t                        m_NextIncrementServerId;
+    Array< size_t >               m_FreeServerIds;
     uint32_t                      m_WorkerConnectionLimit;
     uint16_t                      m_Port;
 };
