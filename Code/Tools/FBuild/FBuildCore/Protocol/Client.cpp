@@ -601,9 +601,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                             if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
                                     on->ShouldUseCache() )
                             {
-                                AStackString<> workingDir;
-                                on->GetWorkingDir( job, workingDir );
-                                on->WriteToCache( job, workingDir );
+                                on->WriteToCache( job );
                             }
                             break;
                         case Node::TEST_NODE:

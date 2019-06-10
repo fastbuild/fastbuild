@@ -222,7 +222,7 @@ void TestDistributed::TestLocalRace()
         TestHelper( target, helperOptions );
     }
 
-    helperOptions.m_ServerOptions.m_NumThreadsInJobQueue = 4;
+    helperOptions.m_ServerNumThreadsInJobQueue = 4;
 
     {
         const char * target( "../tmp/Test/Distributed/dist.lib" );
@@ -236,7 +236,7 @@ void TestDistributed::TestLocalRace()
         const char * target( "badcode" );
         helperOptions.m_TargetIsAFile = false;
         helperOptions.m_CompilationShouldFail = true;
-        helperOptions.m_ServerOptions.m_NumThreadsInJobQueue = 1;
+        helperOptions.m_ServerNumThreadsInJobQueue = 1;
         TestHelper( target, helperOptions );
     }
 }
