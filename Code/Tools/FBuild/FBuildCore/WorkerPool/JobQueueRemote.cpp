@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h"
 
 // Core
 #include "Core/Env/ErrorFormat.h"
@@ -67,8 +68,8 @@ void JobQueueRemote::SignalStopWorkers()
     for ( size_t i=0; i<numWorkerThreads; ++i )
     {
         m_Workers[ i ]->Stop();
+        WakeWorkers();
     }
-    WakeWorkers();
 }
 
 // HaveWorkersStopped
@@ -444,51 +445,52 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
     const Node * node = job->GetNode();
     Node::Type nodeType = node->GetType();
     bool includePDB = false;
+    bool usingStaticAnalysis = false;
     switch ( nodeType )
     {
         case Node::OBJECT_NODE:
             {
                 ObjectNode * on = node->CastTo< ObjectNode >();
-                includePDB = (  on->IsUsingPDB() && ( job->IsLocal() == false ) );
+                includePDB = on->IsUsingPDB();
+                usingStaticAnalysis = on->IsUsingStaticAnalysisMSVC();
             }
             break;
         case Node::TEST_NODE:
-            // no PDB to include
+            // no other files to include
             break;
         default:
             ASSERT( false );
             break;
     }
 
-    // main object
-    FileStream fs;
-    if ( fs.Open( node->GetName().Get() ) == false )
-    {
-        job->Error( "File missing despite success: '%s'", node->GetName().Get() );
-        FLOG_ERROR( "File missing despite success: '%s'", node->GetName().Get() );
-        return false;
-    }
-    uint32_t size = (uint32_t)fs.GetFileSize();
-    uint32_t size2 = 0;
+    // Detemine list of files to send
 
-    // pdb file if present
-    FileStream fs2;
-    AStackString<> pdbName;
+    // 1. main file
+    //---------------
+    Array< AString > fileNames( 3, false );
+    fileNames.Append( node->GetName() );
+
     switch ( nodeType )
     {
         case Node::OBJECT_NODE:
             {
                 ObjectNode * on = node->CastTo< ObjectNode >();
+                // 2. PDB file (optional)
+                //-----------------------
                 if ( includePDB )
                 {
-                    on->GetPDBName( pdbName );
-                    if ( fs2.Open( pdbName.Get() ) == false )
-                    {
-                        job->Error( "File missing despite success: '%s'", pdbName.Get() );
-                        FLOG_ERROR( "File missing despite success: '%s'", pdbName.Get() );
-                        return false;
-                    }
-                    size2 = (uint32_t)fs2.GetFileSize();
+                    AStackString<> pdbFileName;
+                    on->GetPDBName( pdbFileName );
+                    fileNames.Append( pdbFileName );
+                }
+
+                // 3. .nativecodeanalysis.xml file (optional)
+                //--------------------------------------------
+                if ( usingStaticAnalysis )
+                {
+                    AStackString<> xmlFileName;
+                    on->GetNativeAnalysisXMLPath( xmlFileName );
+                    fileNames.Append( xmlFileName );
                 }
             }
             break;
@@ -500,45 +502,18 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
             break;
     }
 
-    // calc memory required
-    size_t memSize = sizeof( uint32_t ); // write size of first file
-    memSize += size;
-    if ( includePDB )
+    MultiBuffer mb;
+    size_t problemFileIndex = 0;
+    if ( !mb.CreateFromFiles( fileNames, &problemFileIndex ) )
     {
-        memSize += sizeof( uint32_t ); // write size of second file
-        memSize += size2;
-    }
-
-    // allocate entire buffer
-    AutoPtr< char > mem( (char *)ALLOC( memSize ) );
-
-    // write first file size
-    *( (uint32_t *)mem.Get() ) = size;
-
-    // read first file
-    if ( fs.Read( mem.Get() + sizeof( uint32_t ), size ) != size )
-    {
-        job->Error( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, node->GetName().Get() );
-        FLOG_ERROR( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, node->GetName().Get() );
-        return false;
-    }
-
-    if ( includePDB )
-    {
-        // write second file size
-        *( (uint32_t *)( mem.Get() + sizeof( uint32_t ) + size ) ) = size2;
-
-        // read second file
-        if ( fs2.Read( mem.Get() + sizeof( uint32_t ) + size + sizeof( uint32_t ), size2 ) != size2 )
-        {
-            job->Error( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, pdbName.Get() );
-            FLOG_ERROR( "File read error. Error: %s File: '%s'", LAST_ERROR_STR, pdbName.Get() );
-            return false;
-        }
+        job->Error( "Error reading file: '%s'", fileNames[ problemFileIndex ].Get() );
+        FLOG_ERROR( "Error reading file: '%s'", fileNames[ problemFileIndex ].Get() );
     }
 
     // transfer data to job
-    job->OwnData( mem.Release(), memSize );
+    size_t memSize;
+    void * mem = mb.Release( memSize );
+    job->OwnData( mem, memSize );
 
     return true;
 }

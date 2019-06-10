@@ -55,7 +55,11 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestSmallBlockAllocator::SingleThreaded() const
 {
-    const uint32_t numAllocs( 100 * 1000 );
+    #if defined( DEBUG )
+        const uint32_t numAllocs( 10 * 1000 );
+    #else
+        const uint32_t numAllocs( 100 * 1000 );
+    #endif
     const uint32_t repeatCount( 10 );
 
     Array< uint32_t > allocSizes( 0, true );
@@ -75,7 +79,11 @@ void TestSmallBlockAllocator::SingleThreaded() const
 //------------------------------------------------------------------------------
 void TestSmallBlockAllocator::MultiThreaded() const
 {
-    const uint32_t numAllocs( 100 * 1000 );
+    #if defined( DEBUG )
+        const uint32_t numAllocs( 10 * 1000 );
+    #else
+        const uint32_t numAllocs( 100 * 1000 );
+    #endif
     const uint32_t repeatCount( 10 );
 
     Array< uint32_t > allocSizes( 0, true );
@@ -129,6 +137,7 @@ void TestSmallBlockAllocator::MultiThreaded() const
             TEST_ASSERT( timedOut == false );
             time2 += info[ i ].m_TimeTaken;
         }
+        time2 /= numThreads;
     }
 
     // output

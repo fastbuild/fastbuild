@@ -1,0 +1,36 @@
+
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers        = { "127.0.0.1" }
+}
+
+// D8049 - "command line is too long to fit in debug record"
+#if __WINDOWS__
+    ObjectList( 'D8049' )
+    {
+        .CompilerInputFiles     = 'Tools/FBuild/FBuildTest/Data/TestDistributed/a_normal.cpp'
+        .CompilerOutputPath     = '$Out$/Test/Distributed/D8049/'
+
+        // Add a bunch of unique extra includes. This is short enough to pass "locally", but long
+        // enough to fail "remotely" (when using temp dir as working dir which would be
+        // prepended to the full path (prior to the fix this tests))
+        .ExtraIncludePaths = ''
+        .LoopI = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }
+        .LoopJ = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }
+        .LoopK = { '0', '1', '2', '3', '4', '5', '6', '7' }
+        ForEach( .I in .LoopI )
+        {
+            ForEach( .J in .LoopJ )
+            {
+                ForEach( .K in .LoopK )
+                {
+                    ^ExtraIncludePaths + ' /I"D$I$/$J$/$K$/"'
+                }
+            }
+        }
+
+        .CompilerOptions        + '$ExtraIncludePaths$'
+    }
+#endif

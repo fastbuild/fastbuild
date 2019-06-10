@@ -60,9 +60,6 @@ Compiler( 'Compiler-Clang5' )
                                     + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
                                     + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
                                     + ' -Wno-int-to-void-pointer-cast'  // cast to 'void *' from smaller integer type 'unsigned long' [-Wint-to-void-pointer-cast]
-                                    #if USING_VS2013
-                                        + ' -Wno-implicit-exception-spec-mismatch'
-                                    #endif
                                     + ' -Wno-deprecated-declarations' // Clang doesn't respect pragmas disabling warning in stdio.h
 
                                     // Disabled warnings
