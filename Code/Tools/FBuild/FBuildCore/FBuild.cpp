@@ -228,6 +228,13 @@ NodeGraph * FBuild::GetGraph()
 
 // Build
 //------------------------------------------------------------------------------
+bool FBuild::Build( const char* target )
+{
+    return Build( AStackString<>( target ) );
+}
+
+// Build
+//------------------------------------------------------------------------------
 bool FBuild::Build( const AString & target )
 {
     ASSERT( !target.IsEmpty() );
@@ -785,21 +792,21 @@ void FBuild::DisplayTargetList( bool showHidden ) const
 //------------------------------------------------------------------------------
 bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
 {
-    // create a temporary node, not hooked into the DB
+    AString buffer( 10 * 1024 * 1024 );
+
+    // Get the nodes for the targets, or leave empty to display everything
     Dependencies deps;
-    if ( !GetTargets( targets, deps ) )
+    if ( targets.IsEmpty() == false )
     {
-        return false; // GetTargets will have emitted an error
+        if ( !GetTargets( targets, deps ) )
+        {
+            return false; // GetTargets will have emitted an error
+        }
     }
 
     OUTPUT( "FBuild: Dependency database\n" );
-
-    if ( m_DependencyGraph == nullptr )
-    {
-        return false;
-    }
-
-    m_DependencyGraph->Display( deps );
+    m_DependencyGraph->SerializeToText( deps, buffer );
+    OUTPUT( "%s", buffer.Get() );
     return true;
 }
 

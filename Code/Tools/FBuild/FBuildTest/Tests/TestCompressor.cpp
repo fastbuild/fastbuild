@@ -150,24 +150,19 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     TEST_ASSERT( decomp.Decompress( compressedData.Get() ) );
     size_t uncompressedSize = decomp.GetResultSize();
     TEST_ASSERT( uncompressedSize == dataSize );
-    for ( size_t i=0; i<uncompressedSize; ++i )
-    {
-        TEST_ASSERT( ( (char *)data.Get() )[ i ] == ( (char *)decomp.GetResult() )[ i ] );
-    }
+    TEST_ASSERT( memcmp( data.Get(), decomp.GetResult(), uncompressedSize ) == 0 );
 
     // speed checks
     //--------------
-    const float TIME_TO_REPEAT( 0.3f );
+    const uint32_t numRepeats = 50;
 
     // compress the data several times to get more stable throughput value
     Timer t;
-    uint32_t numRepeats( 0 );
-    while ( t.GetElapsed() < TIME_TO_REPEAT )
+    for ( uint32_t i = 0; i < numRepeats; ++i )
     {
         Compressor c;
         c.Compress( data.Get(), dataSize );
         TEST_ASSERT( c.GetResultSize() == compressedSize );
-        ++numRepeats;
     }
     float compressTimeTaken = t.GetElapsed();
     double compressThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / (double)compressTimeTaken ) / 1024.0;
@@ -175,13 +170,11 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 
     // decompress the data
     Timer t2;
-    numRepeats = 0;
-    while ( t2.GetElapsed() < TIME_TO_REPEAT )
+    for ( uint32_t i = 0; i < numRepeats; ++i )
     {
         Compressor d;
         TEST_ASSERT( d.Decompress( compressedData.Get() ) );
         TEST_ASSERT( d.GetResultSize() == dataSize );
-        ++numRepeats;
     }
     float decompressTimeTaken = t2.GetElapsed();
     double decompressThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / (double)decompressTimeTaken ) / 1024.0;
@@ -189,13 +182,11 @@ void TestCompressor::CompressHelper( const char * fileName ) const
 
     // time memcpy to compare with
     Timer t0;
-    numRepeats = 0;
-    while ( t0.GetElapsed() < TIME_TO_REPEAT )
+    for ( uint32_t i = 0; i < numRepeats; ++i )
     {
         char * mem = (char *)ALLOC( dataSize );
         memcpy( mem, data.Get(), dataSize );
         FREE( mem );
-        ++numRepeats;
     }
     float memcpyTimeTaken = t0.GetElapsed();
     double memcpyThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / (double)memcpyTimeTaken ) / 1024.0;

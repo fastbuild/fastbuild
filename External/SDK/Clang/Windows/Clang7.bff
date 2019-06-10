@@ -59,9 +59,6 @@ Compiler( 'Compiler-Clang7' )
                                     + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
                                     + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
                                     + ' -Wno-int-to-void-pointer-cast'  // cast to 'void *' from smaller integer type 'unsigned long' [-Wint-to-void-pointer-cast]
-                                    #if USING_VS2013
-                                        + ' -Wno-implicit-exception-spec-mismatch'
-                                    #endif
 
                                     // as of v7.0.1, these warnings fire inside system headers
                                     + ' -Wno-reserved-id-macro'         // macro name is a reserved identifier [-Wreserved-id-macro]

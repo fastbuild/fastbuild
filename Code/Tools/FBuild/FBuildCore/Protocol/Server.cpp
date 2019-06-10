@@ -309,6 +309,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgConn
 
     // take note of initial status of client
     ClientState * cs = (ClientState *)connection->GetUserData();
+    MutexHolder mh( cs->m_Mutex );
     cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
     cs->m_HostName = msg->GetHostName();
 }
@@ -319,6 +320,7 @@ void Server::Process( const ConnectionInfo * connection, const Protocol::MsgStat
 {
     // take note of latest status of client
     ClientState * cs = (ClientState *)connection->GetUserData();
+    MutexHolder mh( cs->m_Mutex );
     cs->m_NumJobsAvailable = msg->GetNumJobsAvailable();
 
     // Wake main thread to request jobs

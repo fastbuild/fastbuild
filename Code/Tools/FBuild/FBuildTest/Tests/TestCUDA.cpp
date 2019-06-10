@@ -50,7 +50,7 @@ void TestCUDA::Build() const
         EnsureFileDoesNotExist( obj );
 
         // build (via alias)
-        TEST_ASSERT( fBuild.Build( AStackString<>( "CUDA-Obj" ) ) );
+        TEST_ASSERT( fBuild.Build( "CUDA-Obj" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/CUDA/cuda.fdb" ) );
 
         // make sure all output is where it is expected
@@ -84,7 +84,7 @@ void TestCUDA::Build_NoRebuild() const
         const AStackString<> obj( "../tmp/Test/CUDA/test.obj" );
 
         // build (via alias)
-        TEST_ASSERT( fBuild.Build( AStackString<>( "CUDA-Obj" ) ) );
+        TEST_ASSERT( fBuild.Build( "CUDA-Obj" ) );
 
         // make sure all output is where it is expected
         EnsureFileExists( obj );
@@ -117,7 +117,7 @@ void TestCUDA::Build_CacheHit() const
         EnsureFileDoesNotExist( obj );
 
         // build (via alias)
-        TEST_ASSERT( fBuild.Build( AStackString<>( "CUDA-Obj" ) ) );
+        TEST_ASSERT( fBuild.Build( "CUDA-Obj" ) );
 
         // make sure all output is where it is expected
         EnsureFileExists( obj );

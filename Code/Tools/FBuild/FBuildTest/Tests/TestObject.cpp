@@ -84,7 +84,7 @@ void TestObject::Preprocessor() const
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "CustomPreprocessor" ) ) );
+        TEST_ASSERT( fBuild.Build( "CustomPreprocessor" ) );
         fBuild.SaveDependencyGraph( database );
 
         // Check stats
@@ -102,7 +102,7 @@ void TestObject::Preprocessor() const
         TEST_ASSERT( fBuild.Initialize( database ) );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "CustomPreprocessor" ) ) );
+        TEST_ASSERT( fBuild.Build( "CustomPreprocessor" ) );
 
         // Check stats
         //               Seen,  Built,  Type
@@ -142,7 +142,7 @@ void TestObject::TestStaleDynamicDeps() const
         f.Close();
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "CPPGenerator" ) ) );
+        TEST_ASSERT( fBuild.Build( "CPPGenerator" ) );
     }
 
     // Build using CPP Generator (clean)
@@ -155,7 +155,7 @@ void TestObject::TestStaleDynamicDeps() const
         TEST_ASSERT( fBuild.Initialize() );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "StaleDynamicDeps" ) ) );
+        TEST_ASSERT( fBuild.Build( "StaleDynamicDeps" ) );
 
         // Save DB
         TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
@@ -186,7 +186,7 @@ void TestObject::TestStaleDynamicDeps() const
         TEST_ASSERT( fBuild.Initialize( database ) );
 
         // Compile
-        TEST_ASSERT( fBuild.Build( AStackString<>( "StaleDynamicDeps" ) ) );
+        TEST_ASSERT( fBuild.Build( "StaleDynamicDeps" ) );
 
         // Check stats
         //               Seen,  Built,  Type

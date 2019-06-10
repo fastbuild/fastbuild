@@ -601,35 +601,37 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
     }
 }
 
-// Display
+// SerializeToText
 //------------------------------------------------------------------------------
-void NodeGraph::Display( const Dependencies & deps ) const
+void NodeGraph::SerializeToText( const Dependencies & deps, AString & outBuffer ) const
 {
-    AString buffer( 10 * 1024 * 1024 );
+    s_BuildPassTag++;
 
-    const size_t numNodes = m_AllNodes.GetSize();
-    Array< bool > visited( numNodes, false );
-    visited.SetSize( numNodes );
-    memset( visited.Begin(), 0, numNodes );
-    for ( const Dependency & dep : deps )
+    if ( deps.IsEmpty() == false )
     {
-        DisplayRecurse( dep.GetNode(), visited, 0, buffer );
+        for ( const Dependency & dep : deps )
+        {
+            SerializeToText( dep.GetNode(), 0, outBuffer );
+        }
     }
-
-    OUTPUT("%s", buffer.Get());
+    else
+    {
+        for ( Node * node : m_AllNodes )
+        {
+            SerializeToText( node, 0, outBuffer );
+        }
+    }
 }
 
-// DisplayRecurse
+// SerializeToText
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::DisplayRecurse( Node * node, Array< bool > & visited, uint32_t depth, AString& outBuffer )
+/*static*/ void NodeGraph::SerializeToText( Node * node, uint32_t depth, AString& outBuffer )
 {
     // Print this even if it has been visited before so the edge is visible
     outBuffer.AppendFormat( "%*s%s %s\n", depth * 4, "", node->GetTypeName(), node->GetName().Get() );
 
     // Don't descend into already visited nodes
-    uint32_t nodeIndex = node->GetIndex();
-    ASSERT( nodeIndex != INVALID_NODE_INDEX );
-    if ( visited[ nodeIndex ] )
+    if ( node->GetBuildPassTag() == s_BuildPassTag )
     {
         if ( node->GetPreBuildDependencies().GetSize() ||
              node->GetStaticDependencies().GetSize() ||
@@ -639,17 +641,17 @@ void NodeGraph::Display( const Dependencies & deps ) const
         }
         return;
     }
-    visited[ nodeIndex ] = true;
+    node->SetBuildPassTag( s_BuildPassTag );
 
     // Dependencies
-    DisplayRecurse( "PreBuild", node->GetPreBuildDependencies(), visited, depth, outBuffer );
-    DisplayRecurse( "Static", node->GetStaticDependencies(), visited, depth, outBuffer );
-    DisplayRecurse( "Dynamic", node->GetDynamicDependencies(), visited, depth, outBuffer );
+    SerializeToText( "PreBuild", node->GetPreBuildDependencies(), depth, outBuffer );
+    SerializeToText( "Static", node->GetStaticDependencies(), depth, outBuffer );
+    SerializeToText( "Dynamic", node->GetDynamicDependencies(), depth, outBuffer );
 }
 
-// DisplayRecurse
+// SerializeToText
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::DisplayRecurse( const char * title, const Dependencies & dependencies, Array< bool > & visited, uint32_t depth, AString & outBuffer )
+/*static*/ void NodeGraph::SerializeToText( const char * title, const Dependencies & dependencies, uint32_t depth, AString & outBuffer )
 {
     const Dependency * const end = dependencies.End();
     const Dependency * it = dependencies.Begin();
@@ -660,7 +662,7 @@ void NodeGraph::Display( const Dependencies & deps ) const
     for ( ; it != end; ++it )
     {
         Node * n = it->GetNode();
-        DisplayRecurse( n, visited, depth + 1, outBuffer );
+        SerializeToText( n, depth + 1, outBuffer );
     }
 }
 
@@ -1046,6 +1048,13 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
                 if ( n->GetState() == Node::UP_TO_DATE )
                 {
                     upToDateCount++;
+                }
+
+                // Check for failure again propagatating overall state more quickly. This aallows failed
+                // builds to terminate moe quickly
+                if ( n->GetState() == Node::FAILED )
+                {
+                    failedCount++;
                 }
             }
         }

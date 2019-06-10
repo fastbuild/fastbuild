@@ -66,6 +66,8 @@ bool IsDebuggerAttached()
             file, line, message );
 
         puts( buffer );
+        fflush( stdout );
+
         #if defined( __WINDOWS__ )
             OutputDebugStringA( buffer );
         #endif

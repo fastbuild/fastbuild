@@ -35,8 +35,10 @@ private:
     void WorkerTags_Remote();
     void WorkerTags_Local();
     void AnonymousNamespaces();
-    void ErrorsAreCorrectlyReported() const;
-    void WarningsAreCorrectlyReported() const;
+    void ErrorsAreCorrectlyReported_MSVC() const;
+    void ErrorsAreCorrectlyReported_Clang() const;
+    void WarningsAreCorrectlyReported_MSVC() const;
+    void WarningsAreCorrectlyReported_Clang() const;
     void ShutdownMemoryLeak() const;
     void TestForceInclude() const;
     void TestZiDebugFormat() const;
@@ -85,10 +87,12 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( WorkerTags_Remote )
     REGISTER_TEST( WorkerTags_Local )
     REGISTER_TEST( AnonymousNamespaces )
-    REGISTER_TEST( ErrorsAreCorrectlyReported )
-    REGISTER_TEST( WarningsAreCorrectlyReported )
     REGISTER_TEST( ShutdownMemoryLeak )
     #if defined( __WINDOWS__ )
+        REGISTER_TEST( ErrorsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
+        REGISTER_TEST( ErrorsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
+        REGISTER_TEST( WarningsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
+        REGISTER_TEST( WarningsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
         REGISTER_TEST( TestForceInclude )
         REGISTER_TEST( TestZiDebugFormat )
         REGISTER_TEST( TestZiDebugFormat_Local )
@@ -152,7 +156,7 @@ void TestDistributed::TestHelper(
         TEST_ASSERT( FileIO::FileExists( target ) == false );
     }
 
-    bool pass = fBuild.Build( AStackString<>( target ) );
+    bool pass = fBuild.Build( target );
     if ( !helperOptions.m_CompilationShouldFail )
     {
         TEST_ASSERT( pass );
@@ -203,7 +207,6 @@ void TestDistributed::RegressionTest_RemoteCrashOnErrorFormatting()
     HelperOptions helperOptions;
     helperOptions.m_TargetIsAFile = false;
     helperOptions.m_CompilationShouldFail = true;
-    helperOptions.m_ServerOptions.m_NumThreadsInJobQueue = 4;
     TestHelper( target, helperOptions );
 }
 
@@ -232,6 +235,7 @@ void TestDistributed::TestLocalRace()
         const char * target( "badcode" );
         helperOptions.m_TargetIsAFile = false;
         helperOptions.m_CompilationShouldFail = true;
+        helperOptions.m_ServerOptions.m_NumThreadsInJobQueue = 1;
         TestHelper( target, helperOptions );
     }
 }
@@ -249,7 +253,6 @@ void TestDistributed::RemoteRaceWinRemote()
     helperOptions.m_ClientOptions.m_ForceCleanBuild = true;
     TestHelper( target, helperOptions );
 }
-
 
 // WorkerTags_Remote
 //------------------------------------------------------------------------------
@@ -308,13 +311,12 @@ void TestDistributed::TestForceInclude() const
 {
     const char * target( "../tmp/Test/Distributed/ForceInclude/ForceInclude.lib" );
     HelperOptions helperOptions;
-    helperOptions.m_ServerOptions.m_NumThreadsInJobQueue = 4;
     TestHelper( target, helperOptions );
 }
 
-// ErrorsAreCorrectlyReported
+// ErrorsAreCorrectlyReported_MSVC
 //------------------------------------------------------------------------------
-void TestDistributed::ErrorsAreCorrectlyReported() const
+void TestDistributed::ErrorsAreCorrectlyReported_MSVC() const
 {
     HelperOptions helperOptions;
     helperOptions.m_TargetIsAFile = false;
@@ -322,33 +324,33 @@ void TestDistributed::ErrorsAreCorrectlyReported() const
     helperOptions.m_ClientOptions.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
     helperOptions.m_ClientOptions.m_ForceCleanBuild = true;
 
-    // MSVC
-    #if defined( __WINDOWS__ )
-        {
-            const char * target( "ErrorsAreCorrectlyReported-MSVC" );
-            TestHelper( target, helperOptions );
+    const char * target( "ErrorsAreCorrectlyReported-MSVC" );
+    TestHelper( target, helperOptions );
 
-            // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "error C2143" ) && GetRecordedOutput().Find( "missing ';' before '}'" ) );
-        }
-    #endif
-
-    // Clang
-    #if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
-        {
-            const char * target( "ErrorsAreCorrectlyReported-Clang" );
-            TestHelper( target, helperOptions );
-
-            // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
-        }
-    #endif
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "error C2143" ) && GetRecordedOutput().Find( "missing ';' before '}'" ) );
 }
 
-
-// WarningsAreCorrectlyReported
+// ErrorsAreCorrectlyReported_Clang
 //------------------------------------------------------------------------------
-void TestDistributed::WarningsAreCorrectlyReported() const
+void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
+{
+    HelperOptions helperOptions;
+    helperOptions.m_TargetIsAFile = false;
+    helperOptions.m_CompilationShouldFail = true;
+    helperOptions.m_ClientOptions.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
+    helperOptions.m_ClientOptions.m_ForceCleanBuild = true;
+
+    const char * target( "ErrorsAreCorrectlyReported-Clang" );
+    TestHelper( target, helperOptions );
+
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
+}
+
+// WarningsAreCorrectlyReported_MSVC
+//------------------------------------------------------------------------------
+void TestDistributed::WarningsAreCorrectlyReported_MSVC() const
 {
     HelperOptions helperOptions;
     helperOptions.m_TargetIsAFile = false;
@@ -356,29 +358,29 @@ void TestDistributed::WarningsAreCorrectlyReported() const
     helperOptions.m_ClientOptions.m_AllowLocalRace = false;
     helperOptions.m_ClientOptions.m_ForceCleanBuild = true;
 
-    // MSVC
-    #if defined( __WINDOWS__ )
-        {
-            const char * target( "WarningsAreCorrectlyReported-MSVC" );
-            TestHelper( target, helperOptions );
+    const char * target( "WarningsAreCorrectlyReported-MSVC" );
+    TestHelper( target, helperOptions );
 
-            // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "warning C4101" ) && GetRecordedOutput().Find( "'x': unreferenced local variable" ) );
-        }
-    #endif
-
-    // Clang
-    #if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
-        {
-            const char * target( "WarningsAreCorrectlyReported-Clang" );
-            TestHelper( target, helperOptions );
-
-            // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "warning: unused variable 'x' [-Wunused-variable]" ) );
-        }
-    #endif
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "warning C4101" ) && GetRecordedOutput().Find( "'x': unreferenced local variable" ) );
 }
 
+// WarningsAreCorrectlyReported_Clang
+//------------------------------------------------------------------------------
+void TestDistributed::WarningsAreCorrectlyReported_Clang() const
+{
+    HelperOptions helperOptions;
+    helperOptions.m_TargetIsAFile = false;
+    helperOptions.m_ClientOptions.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
+    helperOptions.m_ClientOptions.m_AllowLocalRace = false;
+    helperOptions.m_ClientOptions.m_ForceCleanBuild = true;
+
+    const char * target( "WarningsAreCorrectlyReported-Clang" );
+    TestHelper( target, helperOptions );
+
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "warning: unused variable 'x' [-Wunused-variable]" ) );
+}
 
 // ShutdownMemoryLeak
 //------------------------------------------------------------------------------
@@ -407,14 +409,18 @@ void TestDistributed::ShutdownMemoryLeak() const
     class Helper
     {
     public:
-        static uint32_t AbortBuild( void * )
+        static uint32_t AbortBuild( void * data )
         {
             // Wait until some distributed jobs are available
             Timer t;
-            while ( Job::GetTotalLocalDataMemoryUsage() == 0 )
+            while ( t.GetElapsed() < 5.0f )
             {
+                if ( Job::GetTotalLocalDataMemoryUsage() != 0 )
+                {
+                    *static_cast< bool * >( data ) = true;
+                    break;
+                }
                 Thread::Sleep( 1 );
-                TEST_ASSERT( t.GetElapsed() < 5.0f ); // Ensure test doesn't hang if broken
             }
 
             // Abort the build
@@ -422,14 +428,17 @@ void TestDistributed::ShutdownMemoryLeak() const
             return 0;
         }
     };
-    Thread::ThreadHandle h = Thread::CreateThread( Helper::AbortBuild );
+    bool detectedDistributedJobs = false;
+    Thread::ThreadHandle h = Thread::CreateThread( Helper::AbortBuild, nullptr, 64 * KILOBYTE, &detectedDistributedJobs );
 
     // Start build and check it was aborted
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ShutdownMemoryLeak" ) ) == false );
+    TEST_ASSERT( fBuild.Build( "ShutdownMemoryLeak" ) == false );
     TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: ShutdownMemoryLeak" ) )
 
     Thread::WaitForThread( h );
     Thread::CloseHandle( h );
+
+    TEST_ASSERT( detectedDistributedJobs );
 }
 
 // TestZiDebugFormat
@@ -462,6 +471,7 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     const char * target( "D8049" );
     HelperOptions helperOptions;
     helperOptions.m_TargetIsAFile = false;
+    helperOptions.m_ClientOptions.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/D8049_ToolLongDebugRecord/fbuild.bff";
     helperOptions.m_ClientOptions.m_ForceCleanBuild = true;
     TestHelper( target, helperOptions );
 }

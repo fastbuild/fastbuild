@@ -58,7 +58,7 @@ FBuildStats TestCLR::Build( FBuildTestOptions options, bool useDB, const char * 
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestDBFileName() : nullptr ) );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( target ) ) );
+    TEST_ASSERT( fBuild.Build( target ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetTestDBFileName() ) );
 
     return fBuild.GetStats();

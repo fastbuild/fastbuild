@@ -13,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include <Tools/FBuild/FBuildCore/Helpers/MultiBuffer.h>
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueue.h"
 
@@ -970,6 +971,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         {
             // built ok - serialize to disc
 
+            MultiBuffer mb( data, (size_t)(ms.GetSize() - ms.Tell()) );
+
             Node* node = job->GetNode();
             Node::Type nodeType = node->GetType();
             ObjectNode * on = nullptr;
@@ -994,23 +997,29 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             }
             else
             {
-                const uint32_t firstFileSize = *(uint32_t *)data;
+                size_t fileIndex = 0;
 
-                result = WriteFileToDisk( nodeName, (const char *)data + sizeof( uint32_t ), firstFileSize );
+                // 1. main output file
+                result = WriteFileToDisk( nodeName, mb, fileIndex++ );
 
                 switch ( nodeType )
                 {
                     case Node::OBJECT_NODE:
                         {
-                            const uint32_t secondFileSize = on->IsUsingPDB() ? *(uint32_t *)( (const char *)data + sizeof( uint32_t ) + firstFileSize ) : 0;
+                            // 2. PDB file (optional)
                             if ( result && on->IsUsingPDB() )
                             {
-                                data = (const void *)( (const char *)data + sizeof( uint32_t ) + firstFileSize );
-                                ASSERT( ( firstFileSize + secondFileSize + ( sizeof( uint32_t ) * 2 ) ) == size );
-
                                 AStackString<> pdbName;
                                 on->GetPDBName( pdbName );
-                                result = WriteFileToDisk( pdbName, (const char *)data + sizeof( uint32_t ), secondFileSize );
+                                result = WriteFileToDisk( pdbName, mb, fileIndex++ );
+                            }
+
+                            // 3. .nativecodeanalysis.xml (optional)
+                            if ( result && on->IsUsingStaticAnalysisMSVC() )
+                            {
+                                AStackString<> xmlFileName;
+                                on->GetNativeAnalysisXMLPath( xmlFileName );
+                                result = WriteFileToDisk( xmlFileName, mb, fileIndex++ );
                             }
                         }
                         break;
@@ -1313,32 +1322,13 @@ const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, ui
 
 // WriteFileToDisk
 //------------------------------------------------------------------------------
-bool Client::WriteFileToDisk( const AString & fileName, const char * data, const uint32_t dataSize ) const
+bool Client::WriteFileToDisk( const AString & fileName, const MultiBuffer & multiBuffer, size_t index ) const
 {
-    // Open the file
-    FileStream fs;
-    if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
+    if ( multiBuffer.ExtractFile( index, fileName ) == false )
     {
-        // On Windows, we can occasionally fail to open the file with error 1224 (ERROR_USER_MAPPED_FILE), due to
-        // things like anti-virus etc. Simply retry if that happens
-        // Also, when a <LOCAL RACE> occurs, the local compilation process might not have exited at this point
-        // (we call ::TerminateProcess, which is async),which can cause failure below, because the file is still locked.
-        FileIO::WorkAroundForWindowsFilePermissionProblem( fileName, FileStream::WRITE_ONLY, 15 ); // 15 secs max wait
-
-        if ( fs.Open( fileName.Get(), FileStream::WRITE_ONLY ) == false )
-        {
-            FLOG_ERROR( "Failed to create file. Error: %s File: '%s'", LAST_ERROR_STR, fileName.Get() );
-            return false;
-        }
-    }
-
-    // Write the contents
-    if ( fs.WriteBuffer( data, dataSize ) != dataSize )
-    {
-        FLOG_ERROR( "Failed to write file. Error: %s File: '%s'", LAST_ERROR_STR, fileName.Get() );
+        FLOG_ERROR( "Failed to create file. Error: %s File: '%s'", LAST_ERROR_STR, fileName.Get() );
         return false;
     }
-
     return true;
 }
 

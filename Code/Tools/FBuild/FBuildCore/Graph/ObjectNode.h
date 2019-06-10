@@ -77,6 +77,7 @@ public:
     inline bool IsGCC() const { return GetFlag( FLAG_GCC ); }
     inline bool IsMSVC() const { return GetFlag(FLAG_MSVC); }
     inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
+    inline bool IsUsingStaticAnalysisMSVC() const { return GetFlag( FLAG_STATIC_ANALYSIS_MSVC ); }
 
     virtual void SaveRemote( IOStream & stream ) const override;
     static Node * LoadRemote( IOStream & stream );
@@ -90,6 +91,7 @@ public:
     ObjectNode * GetPrecompiledHeader() const;
 
     void GetPDBName( AString & pdbName ) const;
+    void GetNativeAnalysisXMLPath( AString& outXMLFileName ) const;
 
     const char * GetObjExtension() const;
 private:

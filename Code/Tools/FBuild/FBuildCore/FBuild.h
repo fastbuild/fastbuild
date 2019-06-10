@@ -42,6 +42,7 @@ public:
     NodeGraph * GetGraph();
 
     // build a target
+    bool Build( const char * target );
     bool Build( const AString & target );
     bool Build( const Array< AString > & targets );
     bool Build( Node * nodeToBuild );
