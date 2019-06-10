@@ -569,6 +569,13 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
                 {
                     usePreProcessedOutput = false;
                 }
+
+                // Compiling with /analyze cannot use the preprocessed output
+                // as it results in inconsistent behavior with the _PREFAST_ macro
+                if ( GetFlag( FLAG_STATIC_ANALYSIS_MSVC ) )
+                {
+                    usePreProcessedOutput = false;
+                }
             }
 
             // The CUDA compiler seems to not be able to compile its own preprocessed output
@@ -578,6 +585,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
             }
 
             if ( GetFlag( FLAG_VBCC ) )
+            {
+                usePreProcessedOutput = false;
+            }
+
+            // We might not have preprocessed data if using the LightCache
+            if ( job->GetData() == nullptr )
             {
                 usePreProcessedOutput = false;
             }
@@ -609,13 +622,6 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
                   showIncludes, finalize, workingDir ) )
             {
                 return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
-            }
-
-            // Compiling with /analyze cannot use the preprocessed output
-            // as it results in inconsistent behavior with the _PREFAST_ macro
-            if ( GetFlag( FLAG_STATIC_ANALYSIS_MSVC ) )
-            {
-                usePreProcessedOutput = false;
             }
         }
 
@@ -1270,7 +1276,7 @@ const AString & ObjectNode::GetCacheName( Job * job, const AString & workingDir 
     }
 
     AStackString<> cacheName;
-    FBuild::Get().GetCacheFileName( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
+    ICache::GetCacheId( preprocessedSourceKey, commandLineKey, toolChainKey, pchKey, cacheName );
     job->SetCacheName(cacheName);
 
     return job->GetCacheName();
@@ -1923,6 +1929,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 {
                     continue;
                 }
+            }
+        }
+
+        // Strip -fdiagnostics-color options because we are going to override them
+        if ( forceColoredDiagnostics && ( isClang || isGCC ) )
+        {
+            if ( StripToken( "-fdiagnostics-color", token, true ) ||
+                 StripToken( "-fno-diagnostics-color", token ) )
+            {
+                continue;
             }
         }
 
