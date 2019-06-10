@@ -122,6 +122,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ForceCleanBuild = true;
                 continue;
             }
+            else if ( thisArg == "-compdb" )
+            {
+                m_GenerateCompilationDatabase = true;
+                continue;
+            }
             else if ( thisArg == "-config" )
             {
                 int pathIndex = ( i + 1 );
@@ -266,10 +271,6 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 m_DisplayTargetList = true;
                 continue;
-            }
-            else if ( thisArg == "-compdb" )
-            {
-                m_GenerateCompilationDatabase = true;
             }
             else if ( thisArg == "-showalltargets" )
             {

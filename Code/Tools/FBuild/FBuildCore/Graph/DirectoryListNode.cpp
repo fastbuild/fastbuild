@@ -194,6 +194,8 @@ DirectoryListNode::~DirectoryListNode() = default;
         }
     }
 
+    MakePrettyName( files.GetSize() );
+
     if ( FLog::ShowInfo() )
     {
         const size_t numFiles = m_Files.GetSize();
@@ -207,6 +209,22 @@ DirectoryListNode::~DirectoryListNode() = default;
     }
 
     return NODE_RESULT_OK;
+}
+
+// MakePrettyName
+//------------------------------------------------------------------------------
+void DirectoryListNode::MakePrettyName( const size_t totalFiles )
+{
+    AStackString<> prettyName( m_Path );
+    if (m_Recursive)
+    {
+        prettyName += " (recursive)";
+    }
+
+    const size_t numFiles = m_Files.GetSize();
+    prettyName.AppendFormat( ", files kept: %zu / %zu", numFiles, totalFiles );
+
+    m_PrettyName = prettyName;
 }
 
 //------------------------------------------------------------------------------

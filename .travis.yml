@@ -65,12 +65,7 @@ install:
   - chmod +x ./${FBUILD}
   # Set up some variables for convenience.
   - |
-    case "${TRAVIS_OS_NAME}" in
-    linux)   NCPU=$(nproc) ;;
-    osx)     NCPU=$(sysctl -n hw.ncpu) ;;
-    windows) NCPU=${NUMBER_OF_PROCESSORS} ;;
-    esac
-  - FBUILD_CMD="../${FBUILD} -j${NCPU} -noprogress"
+  - FBUILD_CMD="../${FBUILD} -noprogress -summary"
   - GCC=${GCC:-gcc}
   - GXX=${GCC/gcc/g++}
   - CLANG=${CLANG:-clang}

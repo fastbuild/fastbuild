@@ -14,6 +14,7 @@
 //------------------------------------------------------------------------------
 class Job;
 class MemoryStream;
+class MultiBuffer;
 namespace Protocol
 {
     class IMessage;
@@ -46,7 +47,7 @@ private:
     void Process( const ConnectionInfo * connection, const Protocol::MsgRequestFile * msg );
 
     const ToolManifest * FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const;
-    bool WriteFileToDisk( const AString & fileName, const char * data, const uint32_t dataSize ) const;
+    bool WriteFileToDisk( const AString& fileName, const MultiBuffer & multiBuffer, size_t index ) const;
 
     static uint32_t ThreadFuncStatic( void * param );
     void            ThreadFunc();

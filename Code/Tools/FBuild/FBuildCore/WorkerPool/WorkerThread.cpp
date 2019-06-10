@@ -22,6 +22,7 @@
 // Static
 //------------------------------------------------------------------------------
 static THREAD_LOCAL uint32_t s_WorkerThreadThreadIndex = 0;
+Mutex WorkerThread::s_TmpRootMutex;
 AStackString<> WorkerThread::s_TmpRoot;
 
 //------------------------------------------------------------------------------
@@ -63,46 +64,48 @@ WorkerThread::~WorkerThread()
 {
     PROFILE_FUNCTION
 
+    AStackString<> tmpDirPath;
     if ( sandboxEnabled )
     {
         if ( !obfuscatedSandboxTmp.IsEmpty() )
         {
-            s_TmpRoot = obfuscatedSandboxTmp;
-            PathUtils::EnsureTrailingSlash( s_TmpRoot );
+            tmpDirPath = obfuscatedSandboxTmp;
+            PathUtils::EnsureTrailingSlash( tmpDirPath );
         }
     }
     else
     {
-        VERIFY( FBuild::GetTempDir( s_TmpRoot ) );
+        VERIFY( FBuild::GetTempDir( tmpDirPath ) );
     #if defined( __WINDOWS__ )
-        s_TmpRoot += ".fbuild.tmp\\";
+        tmpDirPath += ".fbuild.tmp\\";
     #else
-        s_TmpRoot += "_fbuild.tmp/";
+        tmpDirPath += "_fbuild.tmp/";
     #endif
     }
 
     if ( remote )
     {
-        s_TmpRoot += "0";
+        tmpDirPath += "0";
     }
     else
     {
         const AString & workingDir = FBuild::Get().GetOptions().GetWorkingDir();
-        if ( s_TmpRoot.BeginsWith( workingDir ) )
+        if ( tmpDirPath.BeginsWith( workingDir ) )
         {
-            s_TmpRoot += "0";
+            tmpDirPath += "0";
         }
         else
         {
             // use the working dir hash to uniquify the path
-            AStackString<> buffer;
-            const uint32_t workingDirHash = FBuild::Get().GetOptions().GetWorkingDirHash();
-            buffer.Format( "0x%08x", workingDirHash );
-            s_TmpRoot += buffer;
+            const uint32_t workingDirHash = remote ? 0 : FBuild::Get().GetOptions().GetWorkingDirHash();
+            tmpDirPath.AppendFormat( "0x%08x", workingDirHash );
         }
     }
-    s_TmpRoot += NATIVE_SLASH;
-    VERIFY( FileIO::EnsurePathExists( s_TmpRoot ) );
+    tmpDirPath += NATIVE_SLASH;
+    VERIFY( FileIO::EnsurePathExists( tmpDirPath ) );
+
+    MutexHolder lock( s_TmpRootMutex );
+    s_TmpRoot = tmpDirPath;
 }
 
 // WaitForStop
@@ -253,13 +256,13 @@ void WorkerThread::WaitForStop()
 //------------------------------------------------------------------------------
 /*static*/ void WorkerThread::GetTempFileDirectory( AString & tmpFileDirectory )
 {
-    ASSERT( !s_TmpRoot.IsEmpty() );
-
     // get the index for the worker thread
     // (for the main thread, this will be 0 which is OK)
     const uint32_t threadIndex = WorkerThread::GetThreadIndex();
 
-    tmpFileDirectory.Format( "%s%s%u", s_TmpRoot.Get(), CORE_PHRASE, threadIndex );
+    MutexHolder lock( s_TmpRootMutex );
+    ASSERT( !s_TmpRoot.IsEmpty() );
+    tmpFileDirectory.Format( "%score_%u%c", s_TmpRoot.Get(), threadIndex, NATIVE_SLASH );
 }
 
 // CreateTempFile

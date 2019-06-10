@@ -21,6 +21,7 @@ private:
     void TestExcludedFiles() const;
     void CompilerInputFilesRoot() const;
     void ExtraOutputFolders_PathExtraction() const;
+    void ObjectListChaining() const;
     #if defined( __WINDOWS__ )
         void ExtraOutputFolders_Build() const;
     #endif
@@ -32,6 +33,7 @@ REGISTER_TESTS_BEGIN( TestObjectList )
     REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
     REGISTER_TEST( CompilerInputFilesRoot )
     REGISTER_TEST( ExtraOutputFolders_PathExtraction )
+    REGISTER_TEST( ObjectListChaining )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( ExtraOutputFolders_Build )
     #endif
@@ -48,28 +50,28 @@ void TestObjectList::TestExcludedFiles() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFileName" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFileName" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePath" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePath" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePathRelative" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePathRelative" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePattern" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePattern" ) );
     }
 }
 
@@ -82,7 +84,7 @@ void TestObjectList::CompilerInputFilesRoot() const
 
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+    TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 }
 
 // ExtraOutputFolders_PathExtraction
@@ -105,6 +107,71 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
     TEST_ASSERT( pdbPath.EndsWith( "pdb" ) && !pdbPath.EndsWith( ".pdb" ));
     TEST_ASSERT( asmPath.BeginsWith( "Tools" ) );
     TEST_ASSERT( asmPath.EndsWith( "asm" ) && !pdbPath.EndsWith( ".asm" ));
+}
+
+// ObjectListChaining
+//  - Ensure that an ObjectList consuming the output of another ObjectList
+//    is managed correctly
+//------------------------------------------------------------------------------
+void TestObjectList::ObjectListChaining() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObjectList/ObjectListChaining/fbuild.bff";
+    const char* dbFile = "../tmp/Test/TestObjectList/ObjectListChaining/fbuild.fdb";
+
+    AString depGraphText1( 8 * 1024 );
+    AString depGraphText2( 8 * 1024 );
+
+    // Build
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
+
+        // Save DB for reloading below
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode(     2,      2,  Node::OBJECT_LIST_NODE );
+        CheckStatsNode(     2,      2,  Node::OBJECT_NODE );
+        CheckStatsNode(     2,      2,  Node::DIRECTORY_LIST_NODE );
+
+        fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText1 );
+    }
+
+    // Check no-rebuild
+    {
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode(     2,      0,  Node::OBJECT_LIST_NODE );
+        CheckStatsNode(     2,      0,  Node::OBJECT_NODE );
+        CheckStatsNode(     2,      2,  Node::DIRECTORY_LIST_NODE );
+    }
+
+    // Check no-rebuild DB migration
+    {
+        options.m_ForceDBMigration_Debug = true;
+
+        FBuildForTest fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) );
+        TEST_ASSERT( fBuild.Build( "ObjectList2" ) );
+
+        // Check stats
+        //               Seen,  Built,  Type
+        CheckStatsNode( 2, 0, Node::OBJECT_LIST_NODE );
+        CheckStatsNode( 2, 0, Node::OBJECT_NODE );
+        CheckStatsNode( 2, 2, Node::DIRECTORY_LIST_NODE );
+
+        fBuild.SerializeDepGraphToText( "ObjectList2", depGraphText2 );
+    }
+
+    // Check node graph is the same after migration
+    TEST_ASSERT( depGraphText1 == depGraphText2 );
 }
 
 // ExtraOutputFolders_Build
@@ -138,7 +205,7 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
         {
             FBuild fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
-            TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+            TEST_ASSERT( fBuild.Build( "ObjectList" ) );
 
             EnsureFileExists( objectListASMFile );
             EnsureFileExists( objectListPDBFile );
@@ -148,7 +215,7 @@ void TestObjectList::ExtraOutputFolders_PathExtraction() const
         {
             FBuild fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
-            TEST_ASSERT( fBuild.Build( AStackString<>( "Library" ) ) );
+            TEST_ASSERT( fBuild.Build( "Library" ) );
 
             EnsureFileExists( libraryASMFile );
             EnsureFileExists( libraryPDBFile );

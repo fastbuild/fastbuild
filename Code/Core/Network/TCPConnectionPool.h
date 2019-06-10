@@ -60,7 +60,7 @@ public:
     TCPConnectionPool();
     virtual ~TCPConnectionPool();
 
-    // derived classes must call this from their destructor if they rely on virtual callbacks
+    // Must be called explicitly before destruction
     void ShutdownAllConnections();
 
     // manage connections

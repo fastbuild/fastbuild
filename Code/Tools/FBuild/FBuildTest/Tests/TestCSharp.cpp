@@ -61,7 +61,7 @@ void TestCSharp::TestSingleFile() const
     EnsureFileDoesNotExist( "../tmp/Test/CSharp/csharpsingle.dll" );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Single-Target" ) ) );
+    TEST_ASSERT( fBuild.Build( "CSharp-Single-Target" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/CSharp/csharpsingle.fdb" ) );
 
     // Test output file
@@ -88,7 +88,7 @@ void TestCSharp::TestSingleFile_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpsingle.fdb" ) );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Single-Target" ) ) );
+    TEST_ASSERT( fBuild.Build( "CSharp-Single-Target" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -113,7 +113,7 @@ void TestCSharp::TestSingleFile_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpsingle.fdb" ) );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Single-Target" ) ) );
+    TEST_ASSERT( fBuild.Build( "CSharp-Single-Target" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -139,7 +139,7 @@ void TestCSharp::TestMultipleFiles() const
     EnsureFileDoesNotExist( "../tmp/Test/CSharp/csharpmulti.dll" );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Multi-Target" ) ) );
+    TEST_ASSERT( fBuild.Build( "CSharp-Multi-Target" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/CSharp/csharpmulti.fdb" ) );
 
     // Test output files
@@ -166,7 +166,7 @@ void TestCSharp::TestMultipleFiles_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmulti.fdb" ) );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Multi-Target" ) ) );
+    TEST_ASSERT( fBuild.Build( "CSharp-Multi-Target" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -191,7 +191,7 @@ void TestCSharp::TestMultipleFiles_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmulti.fdb" ) );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-Multi-Target" ) ) );
+    TEST_ASSERT( fBuild.Build( "CSharp-Multi-Target" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -220,7 +220,7 @@ void TestCSharp::TestMultipleAssemblies() const
     EnsureFileDoesNotExist( "../tmp/Test/CSharp/csharpassemblyc.dll" );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyC" ) ) );
+    TEST_ASSERT( fBuild.Build( "CSharp-AssemblyC" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 
     // Test output files
@@ -249,7 +249,7 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyC" ) ) );
+    TEST_ASSERT( fBuild.Build( "CSharp-AssemblyC" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -273,7 +273,7 @@ void TestCSharp::TestMultipleAssemblies_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/CSharp/csharpmultipleassemblies.fdb" ) );
 
     // Build it
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CSharp-AssemblyC" ) ) );
+    TEST_ASSERT( fBuild.Build( "CSharp-AssemblyC" ) );
 
     // Check stats
     //               Seen,  Built,  Type

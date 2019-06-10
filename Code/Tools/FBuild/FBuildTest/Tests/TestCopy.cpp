@@ -78,7 +78,7 @@ void TestCopy::TestCopyFunction_FileToFile() const
     EnsureFileDoesNotExist( dst );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToFile" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToFile" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/filetofile.fdb" ) );
 
     // make sure all output is where it is expected
@@ -102,7 +102,7 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetofile.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToFile" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToFile" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -124,7 +124,7 @@ void TestCopy::TestCopyFunction_FileToFile_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetofile.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToFile" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToFile" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -149,7 +149,7 @@ void TestCopy::TestCopyFunction_FileToDir() const
     EnsureFileDoesNotExist( dst );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToDir" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/filetodir.fdb" ) );
 
     EnsureFileExists( dst );
@@ -172,7 +172,7 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetodir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -194,7 +194,7 @@ void TestCopy::TestCopyFunction_FileToDir_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/filetodir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestCopyFileToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestCopyFileToDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -221,7 +221,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir() const
     EnsureFileDoesNotExist( dst2 );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestMultiCopyToDir" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/multifiletodir.fdb" ) );
 
     EnsureFileExists( dst1 );
@@ -245,7 +245,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/multifiletodir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestMultiCopyToDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -267,7 +267,7 @@ void TestCopy::TestCopyFunction_MultiFileToDir_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/multifiletodir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestMultiCopyToDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestMultiCopyToDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -294,7 +294,7 @@ void TestCopy::TestCopyFunction_SourceBasePath() const
     EnsureFileDoesNotExist( dst2 );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestSourceBasePath" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestSourceBasePath" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
 
     EnsureFileExists( dst1 );
@@ -319,7 +319,7 @@ void TestCopy::TestCopyFunction_SourceBasePath_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/SourceBasePath/sourcebasepath.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "TestSourceBasePath" ) ) );
+    TEST_ASSERT( fBuild.Build( "TestSourceBasePath" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -344,7 +344,7 @@ void TestCopy::ChainedCopy() const
     EnsureFileDoesNotExist( dst );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ChainedCopy3" ) ) );
+    TEST_ASSERT( fBuild.Build( "ChainedCopy3" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/ChainedCopy/chainedcopy.fdb" ) );
 
     // make sure all output is where it is expected
@@ -368,7 +368,7 @@ void TestCopy::ChainedCopy_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/ChainedCopy/chainedcopy.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "ChainedCopy3" ) ) );
+    TEST_ASSERT( fBuild.Build( "ChainedCopy3" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -395,7 +395,7 @@ void TestCopy::CopyDir() const
     EnsureFileDoesNotExist( dstB );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "CopyDir" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/CopyDir/copydir.fdb" ) );
 
     // make sure all output is where it is expected
@@ -422,7 +422,7 @@ void TestCopy::CopyDir_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/CopyDir/copydir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "CopyDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -446,7 +446,7 @@ void TestCopy::CopyDir_NoRebuild_BFFChange() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/CopyDir/copydir.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDir" ) ) );
+    TEST_ASSERT( fBuild.Build( "CopyDir" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -486,7 +486,7 @@ void TestCopy::CopyDirDeleteSrc() const
         EnsureFileDoesNotExist( dstB );
 
         // build (via alias)
-        TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDirDeleteSrc" ) ) );
+        TEST_ASSERT( fBuild.Build( "CopyDirDeleteSrc" ) );
         TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Copy/CopyDir/copydirdeletesrc.fdb" ) );
 
         // make sure all output is where it is expected
@@ -513,7 +513,7 @@ void TestCopy::CopyDirDeleteSrc() const
         TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Copy/CopyDir/copydirdeletesrc.fdb" ) );
 
         // build (via alias)
-        TEST_ASSERT( fBuild.Build( AStackString<>( "CopyDirDeleteSrc" ) ) );
+        TEST_ASSERT( fBuild.Build( "CopyDirDeleteSrc" ) );
 
         // make sure all output is where it is expected
         EnsureFileExists( dstA );
@@ -538,7 +538,7 @@ void TestCopy::CopyEmpty() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "CopyEmpty" ) ) );
+    TEST_ASSERT( fBuild.Build( "CopyEmpty" ) );
 }
 
 // MissingTrailingSlash
