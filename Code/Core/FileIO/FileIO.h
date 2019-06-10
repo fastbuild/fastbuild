@@ -75,7 +75,21 @@ public:
     #endif
 
     static bool ContainsValidDirChars( const AString & string, AString & errorMsg );
-    static bool SetLowIntegrity( const AString & rootSandboxPath, AString & errorMsg );
+    #if defined( __WINDOWS__ )
+    enum Permissions 
+    {   
+       None    = 0,
+       Read    = 1,
+       List    = 2,
+       Write   = 4,
+       Execute = 8,
+       Delete  = 16
+    };
+    static bool SetLowIntegrity( const AString & path,
+                                 const uint32_t dirPermissions,
+                                 const uint32_t filePermissions,
+                                 AString & errorMsg );
+    #endif
 
 private:
     static void GetFilesRecurse( AString & path,

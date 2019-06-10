@@ -7,7 +7,7 @@
 #include "FileStream.h"
 
 // Core
-#include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
@@ -1664,27 +1664,121 @@ bool FileIO::FileInfo::IsReadOnly() const
     dacl = pDACL;
     return success;
 }
-#endif  // Windows
 
 // SetLowIntegrity
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::SetLowIntegrity( const AString & rootSandboxPath, AString & errorMsg )
+/*static*/ bool FileIO::SetLowIntegrity(
+    const AString & path,
+    const uint32_t dirPermissions,
+    const uint32_t filePermissions,
+    AString & errorMsg )
 {
     bool success = false;
-#if defined( __WINDOWS__ )
-    const DWORD usersDirAllowMask = FILE_ALL_ACCESS;
-    // for security, don't allow users in the built-in users group to list the working dir
-    // low integrity client code should create a guid-named dir under the working dir
-    // to hide its files from other low integrity code and other users
-    const DWORD usersDirDenyMask = FILE_LIST_DIRECTORY | WRITE_DAC | WRITE_OWNER;
-    const DWORD usersChildAllowMask = FILE_ALL_ACCESS;
-    const DWORD usersChildDenyMask = WRITE_DAC | WRITE_OWNER;
+    DWORD usersDirAllowMask = 0;
+    DWORD usersChildAllowMask = 0;
+    DWORD usersDirDenyMask = 0;
+    DWORD usersChildDenyMask = 0;
+
+    // read permissions
+    DWORD tempDirMask = FILE_READ_EA | FILE_READ_ATTRIBUTES | READ_CONTROL | SYNCHRONIZE;
+    DWORD tempFileMask = FILE_READ_DATA | FILE_READ_EA | FILE_READ_ATTRIBUTES | READ_CONTROL | SYNCHRONIZE;
+    if (dirPermissions & Read)
+    {
+        usersDirAllowMask |= tempDirMask;
+    }
+    else
+    {
+        usersDirDenyMask |= tempDirMask;
+    }
+    if (filePermissions & Read)
+    {
+        usersChildAllowMask |= tempFileMask;
+    }
+    else
+    {
+        usersChildDenyMask |= tempFileMask;
+    }
+
+    // list permissions
+    tempDirMask = FILE_LIST_DIRECTORY;
+    if (dirPermissions & List)
+    {
+        usersDirAllowMask |= tempDirMask;
+    }
+    else
+    {
+        usersDirDenyMask |= tempDirMask;
+    }
+    // List permission does not apply to files, so skip for files
+
+    // write permissions
+    tempDirMask = FILE_ADD_FILE | FILE_ADD_SUBDIRECTORY | FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES;
+    tempFileMask = FILE_WRITE_DATA | FILE_APPEND_DATA | FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES;
+    if (dirPermissions & Write)
+    {
+        usersDirAllowMask |= tempDirMask;
+    }
+    else
+    {
+        usersDirDenyMask |= tempDirMask;
+    }
+    if (filePermissions & Write)
+    {
+        usersChildAllowMask |= tempFileMask;
+    }
+    else
+    {
+        usersChildDenyMask |= tempFileMask;
+    }
+
+    // execute permissions
+    tempDirMask = FILE_TRAVERSE;  // traverse and execute
+    tempFileMask = FILE_EXECUTE;
+    if (dirPermissions & Execute)
+    {
+        usersDirAllowMask |= tempDirMask;
+    }
+    else
+    {
+        usersDirDenyMask |= tempDirMask;
+    }
+    if (filePermissions & Execute)
+    {
+        usersChildAllowMask |= tempFileMask;
+    }
+    else
+    {
+        usersChildDenyMask |= tempFileMask;
+    }
+
+    // delete permissions
+    tempDirMask = FILE_DELETE_CHILD;
+    tempFileMask = DELETE;
+    if (dirPermissions & Delete)
+    {
+        usersDirAllowMask |= tempDirMask;
+    }
+    else
+    {
+        usersDirDenyMask |= tempDirMask;
+    }
+    if (filePermissions & Delete)
+    {
+        usersChildAllowMask |= tempFileMask;
+    }
+    else
+    {
+        usersChildDenyMask |= tempFileMask;
+    }
+
+    usersDirDenyMask |= WRITE_DAC | WRITE_OWNER;
+    usersChildDenyMask |= WRITE_DAC | WRITE_OWNER;
 
     // Set permissions to allow low integrity code to access a dir and its children
     // from https://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/ca60b920-e351-4cd6-aa40-b2bf149ad226
     // from https://stackoverflow.com/questions/690780/how-to-create-directory-with-all-rights-granted-to-everyone
     // open dir for reading permissions
-    HANDLE hDir = ::CreateFile( rootSandboxPath.Get(),
+    HANDLE hDir = ::CreateFile( path.Get(),
         READ_CONTROL,
         0,
         NULL,
@@ -1732,12 +1826,12 @@ bool FileIO::FileInfo::IsReadOnly() const
         // check if the dir already has the desired permissions
         // this is so can open the dir for read access
         // and not need write access to it if the permissions are already set
-        BOOL hasDesiredUsersDirPermissions = false;
-        BOOL hasDesiredUsersChildPermissions = false;
-        BOOL hasLowIntegrityPermission = false;
+        bool hasDesiredUsersDirPermissions = false;
+        bool hasDesiredUsersChildPermissions = false;
+        bool hasLowIntegrityPermission = false;
         if ( success )
         {
-            PACL pDACL = NULL;
+            void * pDACL = NULL;
             const BOOL setPermissions = false;  // check only
             success = CheckAndSetPermissions(
                 hDir,
@@ -1763,7 +1857,7 @@ bool FileIO::FileInfo::IsReadOnly() const
         if ( success && !hasDesiredPermissions )
         {
             // open dir for setting permissions
-            hDir = ::CreateFile( rootSandboxPath.Get(),
+            hDir = ::CreateFile( path.Get(),
                 READ_CONTROL | WRITE_DAC | WRITE_OWNER,
                 0,
                 NULL,
@@ -1773,7 +1867,7 @@ bool FileIO::FileInfo::IsReadOnly() const
             success = hDir != INVALID_HANDLE_VALUE;
             if ( success )
             {
-                PACL pDACL = NULL;
+                void * pDACL = NULL;
                 const BOOL setPermissions = true;  // set the permissions
                 success = CheckAndSetPermissions(
                     hDir,
@@ -1790,7 +1884,7 @@ bool FileIO::FileInfo::IsReadOnly() const
                     hasDesiredUsersChildPermissions,
                     hasLowIntegrityPermission );
 
-                PACL daclToUse = pDACL;
+                PACL daclToUse = (PACL)pDACL;
                 PACL daclToClear = NULL;  // pDACL does not need clearing
                 if ( success )
                 {
@@ -1832,7 +1926,7 @@ bool FileIO::FileInfo::IsReadOnly() const
                         }
 
                         PACL pAdditionsDACL = NULL;
-                        success = ::SetEntriesInAcl( numEa, ea, pDACL, &pAdditionsDACL ) == ERROR_SUCCESS;
+                        success = ::SetEntriesInAcl( numEa, ea, daclToUse, &pAdditionsDACL ) == ERROR_SUCCESS;
                         ::LocalFree( ea );
                         daclToUse = pAdditionsDACL;
                         daclToClear = pAdditionsDACL;  // needs clearing since SetEntriesInAcl allocs
@@ -1859,15 +1953,10 @@ bool FileIO::FileInfo::IsReadOnly() const
     }
     if ( !success)
     {
-        errorMsg.Format( "Failed to set permissions on dir %s (error %i)", rootSandboxPath.Get(), Env::GetLastErr() );
+        errorMsg.Format( "Failed to set permissions on dir %s Error: %s", path.Get(), LAST_ERROR_STR );
     }
-#else  // not Windows
-    (void)rootSandboxPath;
-
-    // @TODO: add permission setting code for Mac and Linux sandbox
-    errorMsg += "Mac and Linux sandbox logic is not yet implemented";
-#endif
     return success;
 }
+#endif  // Windows
 
 //------------------------------------------------------------------------------

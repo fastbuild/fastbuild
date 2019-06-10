@@ -163,19 +163,48 @@ int Worker::Work()
 
         if ( m_WorkerSettings->GetSandboxEnabled() )
         {
+        #if defined( __WINDOWS__ )
+            const AString & absSandboxExe = m_WorkerSettings->GetAbsSandboxExe();
+            const char * lastSlash = absSandboxExe.FindLast( NATIVE_SLASH );
+            if ( !lastSlash )
+            {
+                ErrorMessage( "Failed to get sandbox exe dir from sandbox exe\n" );
+                return -2;
+            }
+            AStackString<> sandboxExeDir;
+            sandboxExeDir.Assign( absSandboxExe.Get(), lastSlash );
             AStackString<> errorMsg;
             if ( !FileIO::SetLowIntegrity(
-                m_WorkerSettings->GetSandboxTmp(), errorMsg ) )  // pass in root sandbox tmp dir, so we can secure it
+                sandboxExeDir,
+                FileIO::Read | FileIO::List,  // dir permissions
+                FileIO::Read | FileIO::Execute,  // file permissions
+                errorMsg ) )
             {
                 ErrorMessageString( errorMsg.Get() );
                 return -2;
             }
+            if ( !FileIO::SetLowIntegrity(
+                m_WorkerSettings->GetSandboxTmp(),  // pass in root sandbox tmp dir
+                // for dir, don't allow List permission,
+                // since for security, we don't allow users in the built-in
+                // users group to list the working dir; low integrity client code should create
+                // a random number-named dir under the working dir to hide its files from other
+                // low integrity code and other users
+                FileIO::Read | FileIO::Execute,  // dir permissions
+                FileIO::Read | FileIO::Write | FileIO::Execute | FileIO::Delete,  // file permissions
+                errorMsg ) )
+            {
+                ErrorMessageString( errorMsg.Get() );
+                return -2;
+            }
+        #endif
+
             if ( !FileIO::EnsurePathExists( tmpPath ) )
             {
                 // print the root sandbox tmp dir, not the obfuscated dir
                 // so we can hide the obfuscated dir from other processes
-                ErrorMessage( "Failed to create sandbox dir under %s (error %i)",
-                    m_WorkerSettings->GetSandboxTmp().Get(), Env::GetLastErr() );
+                ErrorMessage( "Failed to create sandbox dir under %s Error: %s",
+                    m_WorkerSettings->GetSandboxTmp().Get(), LAST_ERROR_STR );
                 return -2;
             }
         }

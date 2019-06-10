@@ -50,7 +50,7 @@ ObjectList( "DummySandboxExe-Lib" )
 #if __WINDOWS__
     Using( .VisualStudioToolChain_X64 )
 #endif
-    .CompilerInputFiles = { './Tools/FBuild/FBuildTest/Data/TestDistributed/WorkerTags/dummysandbox.cpp'
+    .CompilerInputFiles = { './Tools/FBuild/FBuildTest/Data/TestDistributed/Sandbox/dummysandbox.cpp'
                             './Core/Env/Env.cpp'
                             './Core/Env/ErrorFormat.cpp'
                             './Core/Mem/Mem.cpp'

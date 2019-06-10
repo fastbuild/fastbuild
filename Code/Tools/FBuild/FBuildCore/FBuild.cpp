@@ -32,6 +32,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Mem/SmallBlockAllocator.h"
 #include "Core/Process/SystemMutex.h"
@@ -224,7 +225,6 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         const AString & absSandboxExe = settings->GetAbsSandboxExe();
         if ( absSandboxExe.IsEmpty() || settings->GetSandboxTmp().IsEmpty() )
         {
-            errorMsg.Clear();
             errorMsg += "To enable the sandbox, please specify a non-empty sandbox exe ";
             errorMsg += "and a non-empty sandbox tmp in either your ";
             errorMsg += "Settings node or via the command line -sandboxexe and -sandboxtmp args\n";
@@ -239,23 +239,49 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 
         if ( !FileIO::EnsurePathExists( settings->GetSandboxTmp() ) )
         {
-            FLOG_ERROR( "Failed to create tmp dir %s (error %i)", settings->GetSandboxTmp().Get(), Env::GetLastErr() );
+            FLOG_ERROR( "Failed to create tmp dir %s Error: %s", settings->GetSandboxTmp().Get(), LAST_ERROR_STR );
         }
-        
-        errorMsg.Clear();
+
+    #if defined( __WINDOWS__ )
+        const char * lastSlash = absSandboxExe.FindLast( NATIVE_SLASH );
+        if ( !lastSlash )
+        {
+            FLOG_ERROR( "Failed to get sandbox exe dir from sandbox exe\n" );
+            return false;
+        }
+        AStackString<> sandboxExeDir;
+        sandboxExeDir.Assign( absSandboxExe.Get(), lastSlash );
         if ( !FileIO::SetLowIntegrity(
-              settings->GetSandboxTmp(), errorMsg ) )  // pass in root sandbox tmp dir, so we can secure it
+            sandboxExeDir,
+            FileIO::Read | FileIO::List,  // dir permissions
+            FileIO::Read | FileIO::Execute,  // file permissions
+            errorMsg ) )
         {
             FLOG_ERROR_STRING( errorMsg.Get() );
             return false;
         }
+        if ( !FileIO::SetLowIntegrity(
+            settings->GetSandboxTmp(),  // pass in root sandbox tmp dir
+            // for dir, don't allow List permission,
+            // since for security, we don't allow users in the built-in
+            // users group to list the working dir; low integrity client code should create
+            // a random number-named dir under the working dir to hide its files from other
+            // low integrity code and other users
+            FileIO::Read | FileIO::Execute,  // dir permissions
+            FileIO::Read | FileIO::Write | FileIO::Execute | FileIO::Delete,  // file permissions
+            errorMsg ) )
+        {
+            FLOG_ERROR_STRING( errorMsg.Get() );
+            return false;
+        }
+    #endif
 
         const AString & obfuscatedSandboxTmp = settings->GetObfuscatedSandboxTmp();
         if ( !FileIO::EnsurePathExists( obfuscatedSandboxTmp ) )
         {
             // print the root sandbox tmp dir, not the obfuscated dir
             // so we can hide the obfuscated dir from other processes
-            FLOG_ERROR( "Failed to create sandbox dir under %s (error %i)", settings->GetSandboxTmp().Get(), Env::GetLastErr() );
+            FLOG_ERROR( "Failed to create sandbox dir under %s Error: %s", settings->GetSandboxTmp().Get(), LAST_ERROR_STR );
             return false;
         }
 
