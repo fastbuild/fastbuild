@@ -44,6 +44,8 @@
     #include <sys/time.h>
 #endif
 
+#include <stdio.h>
+
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
@@ -2603,9 +2605,18 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     AStackString<> tmpFile;
                     Node::GetSandboxTmpFile( basePath, outputFile, tmpFile );
 
-                    OUTPUT( "basePath:%s", basePath.Get() );
-                    OUTPUT( "outputFile:%s", outputFile.Get() );
-                    OUTPUT( "tmpFile:%s", tmpFile.Get() );
+                    const uint32_t BUFFER_SIZE( 4096 );
+                    char buffer[ BUFFER_SIZE ];
+                    #if defined( __APPLE__ ) || defined( __LINUX__ )
+                        sprintf( buffer,
+                    #else
+                        sprintf_s( buffer, BUFFER_SIZE,
+                    #endif
+                        "basePath:%s outputFile:%s tmpFile:%s\n",
+                        basePath.Get(), outputFile.Get(), tmpFile.Get() );
+
+                    puts( buffer );
+                    fflush( stdout );
 
                     tmpFiles.Append( tmpFile );
                     FileIO::FileCopy( tmpFile.Get(), outputFile.Get() );
