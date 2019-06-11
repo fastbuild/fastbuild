@@ -2621,7 +2621,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
                     AutoPtr< char > findOut;
                     AutoPtr< char > findErr;
-                    int             findResult;
+                    int             findResult = 0;
                     #if defined( __APPLE__ ) || defined( __LINUX__ )
                         Process findProcess;
                         bool findOk = findProcess.Spawn( "../../../../../../usr/bin/find",
