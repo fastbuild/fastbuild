@@ -2619,6 +2619,21 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     AStackString<> tmpFile;
                     Node::GetSandboxTmpFile( basePath, outputFile, tmpFile );
 
+                    AutoPtr< char > findOut;
+                    uint32_t        findOutSize;
+                    AutoPtr< char > findErr;
+                    uint32_t        findErrSize;
+                    int             findResult;
+                    #if defined( __APPLE__ ) || defined( __LINUX__ )
+                        Process findProcess;
+                        findProcess.Spawn( "find",
+                           "/home/travis/build/ -name test.o",
+                           nullptr,
+                           environmentString );
+                        findResult = findProcess.WaitForExit();
+                        findProcess.ReadAllData( findOut, &findOutSize, findErr, &findErrSize );
+                    #endif
+                    
                     const uint32_t BUFFER_SIZE( 4096 );
                     char buffer[ BUFFER_SIZE ];
                     #if defined( __APPLE__ ) || defined( __LINUX__ )
@@ -2626,8 +2641,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     #else
                         sprintf_s( buffer, BUFFER_SIZE,
                     #endif
-                        "basePath:%s outputFile:%s tmpFile:%s\n",
-                        basePath.Get(), outputFile.Get(), tmpFile.Get() );
+                        "findOutput: %s findErr: %s basePath:%s outputFile:%s tmpFile:%s\n",
+                        findOut.Get(), findErr.Get(), basePath.Get(), outputFile.Get(), tmpFile.Get() );
 
                     puts( buffer );
                     fflush( stdout );
