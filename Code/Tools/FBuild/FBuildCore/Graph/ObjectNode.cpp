@@ -2562,6 +2562,20 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
            spawnArgs.Get(),
            workingDir.IsEmpty() ? nullptr : workingDir.Get(),
            environmentString );
+
+        const uint32_t BUFFER_SIZE( 4096 );
+        char buffer[ BUFFER_SIZE ];
+        #if defined( __APPLE__ ) || defined( __LINUX__ )
+            sprintf( buffer,
+        #else
+            sprintf_s( buffer, BUFFER_SIZE,
+        #endif
+            "spawnExe:%s spawnArgs:%s workingDir:%s\n",
+            spawnExe.Get(), spawnArgs.Get(), workingDir.Get() );
+
+        puts( buffer );
+        fflush( stdout );
+
     }
     else
     {
