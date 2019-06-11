@@ -2602,6 +2602,11 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     AStackString<> basePath( outputFile.Get(), outputFile.FindLast( NATIVE_SLASH ) );
                     AStackString<> tmpFile;
                     Node::GetSandboxTmpFile( basePath, outputFile, tmpFile );
+
+                    OUTPUT( "basePath:%s", basePath.Get() );
+                    OUTPUT( "outputFile:%s", outputFile.Get() );
+                    OUTPUT( "tmpFile:%s", tmpFile.Get() );
+
                     tmpFiles.Append( tmpFile );
                     FileIO::FileCopy( tmpFile.Get(), outputFile.Get() );
                 }
