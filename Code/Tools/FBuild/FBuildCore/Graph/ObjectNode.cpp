@@ -2619,23 +2619,21 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     AStackString<> tmpFile;
                     Node::GetSandboxTmpFile( basePath, outputFile, tmpFile );
 
-                    AutoPtr< char > findOut;
-                    AutoPtr< char > findErr;
-                    int             findResult = 0;
-                    #if defined( __APPLE__ ) || defined( __LINUX__ )
-                        Process findProcess;
-                        bool findOk = findProcess.Spawn( "/usr/bin/find",
-                           "/home/travis/build/ -name test.o",
-                           nullptr,
-                           environmentString );
-                        if (findOk)
-                        {
-                            uint32_t findOutSize = 0;
-                            uint32_t findErrSize = 0;
-                            findProcess.ReadAllData( findOut, &findOutSize, findErr, &findErrSize );
-                            findResult = findProcess.WaitForExit();
-                        }
-                    #endif
+                    AStackString<> filesString;
+                    Array< AString > files( 1024, true );
+                    FileIO::GetFiles(
+                        AStackString<>( "/home/travis/build" ),
+                        AStackString<>( "test.*" ),
+                        true,
+                        false,  // includeDirs
+                        &files );
+                    for ( Array< AString >::Iter it = files.Begin();
+                          it != files.End();
+                          it++ )
+                    {
+                        filesString += (*it).Get();
+                        filesString += "\n";
+                    }
                     
                     const uint32_t BUFFER_SIZE( 4096 );
                     char buffer[ BUFFER_SIZE ];
@@ -2644,8 +2642,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     #else
                         sprintf_s( buffer, BUFFER_SIZE,
                     #endif
-                        "findResult: %d findOutput: %s findErr: %s basePath:%s outputFile:%s tmpFile:%s\n",
-                        findResult, findOut.Get(), findErr.Get(), basePath.Get(), outputFile.Get(), tmpFile.Get() );
+                        "filesString: %s basePath:%s outputFile:%s tmpFile:%s\n",
+                        filesString.Get(), basePath.Get(), outputFile.Get(), tmpFile.Get() );
 
                     puts( buffer );
                     fflush( stdout );
