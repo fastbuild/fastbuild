@@ -2624,16 +2624,16 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     int             findResult;
                     #if defined( __APPLE__ ) || defined( __LINUX__ )
                         Process findProcess;
-                        findProcess.Spawn( "../../../../../../usr/bin/find",
+                        bool findOk = findProcess.Spawn( "../../../../../../usr/bin/find",
                            "/home/travis/build/ -name test.o",
                            nullptr,
                            environmentString );
-                        findResult = findProcess.WaitForExit();
-                        if ( findResult == 0)
+                        if (findOk)
                         {
-                            uint32_t findOutSize;
-                            uint32_t findErrSize;
+                            uint32_t findOutSize = 0;
+                            uint32_t findErrSize = 0;
                             findProcess.ReadAllData( findOut, &findOutSize, findErr, &findErrSize );
+                            findResult = findProcess.WaitForExit();
                         }
                     #endif
                     
