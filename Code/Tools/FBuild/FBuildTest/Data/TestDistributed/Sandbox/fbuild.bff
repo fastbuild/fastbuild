@@ -62,7 +62,7 @@ ObjectList( "DummySandboxExe-Lib" )
                             './Core/Strings/AString.cpp'
                             './Core/Time/Timer.cpp'
                           }
-    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/Sandbox/lib'
+    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/Sandbox'
 
 #if __WINDOWS__
     .CompilerOptions + ' /DRELEASE'
@@ -85,7 +85,7 @@ ObjectList( "DummySandboxExe-Lib" )
 ObjectList( "TestExe-Lib" )
 {
     Using( .TestObjectListStruct )
-    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/Sandbox/lib'
+    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/Sandbox'
 }
 
 .ExecutableStruct =
