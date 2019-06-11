@@ -108,6 +108,10 @@ Executable( "DummySandboxExe" )
                         + ' kernel32.lib'
                         + .CRTLibs_Static
     #endif
+    #if __LINUX__
+        Using( .LinuxGCCToolChain )
+        .LinkerOptions      + ' -pthread -ldl -lrt'
+    #endif
     .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/Sandbox/dummysandbox$ExeExtension$'
 }
 
