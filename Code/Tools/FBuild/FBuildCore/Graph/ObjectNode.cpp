@@ -2629,9 +2629,12 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                            nullptr,
                            environmentString );
                         findResult = findProcess.WaitForExit();
-                        uint32_t findOutSize;
-                        uint32_t findErrSize;
-                        findProcess.ReadAllData( findOut, &findOutSize, findErr, &findErrSize );
+                        if ( findResult == 0)
+                        {
+                            uint32_t findOutSize;
+                            uint32_t findErrSize;
+                            findProcess.ReadAllData( findOut, &findOutSize, findErr, &findErrSize );
+                        }
                     #endif
                     
                     const uint32_t BUFFER_SIZE( 4096 );
