@@ -2653,9 +2653,12 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
                     puts( buffer );
                     fflush( stdout );
-
-                    tmpFiles.Append( tmpFile );
-                    FileIO::FileCopy( tmpFile.Get(), outputFile.Get() );
+                    
+                    if ( FileIO::FileExists( tmpFile.Get() ) )
+                    {
+                        tmpFiles.Append( tmpFile );
+                        FileIO::FileCopy( tmpFile.Get(), outputFile.Get() );
+                    }
                 }
             }
             else  // failed
