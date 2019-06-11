@@ -530,7 +530,7 @@ void TestDistributed::_TestSandbox( const bool remote, const bool clean )
     helperOptions.m_ServerOptions.m_SandboxTmp += "/server";
 
     // keep the dummysandbox files around for the following sandbox test steps
-    helperOptions.m_KeepPrevFilesWildcard = "dummysandbox.*";
+    helperOptions.m_KeepPrevFilesWildcard = "dummysandbox*.*";
 
     // build test target, with sandbox
     {
