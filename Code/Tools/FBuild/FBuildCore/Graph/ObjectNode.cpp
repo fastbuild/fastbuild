@@ -2624,7 +2624,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     int             findResult = 0;
                     #if defined( __APPLE__ ) || defined( __LINUX__ )
                         Process findProcess;
-                        bool findOk = findProcess.Spawn( "../../../../../../usr/bin/find",
+                        bool findOk = findProcess.Spawn( "/usr/bin/find",
                            "/home/travis/build/ -name test.o",
                            nullptr,
                            environmentString );
