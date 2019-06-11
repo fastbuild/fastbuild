@@ -653,26 +653,29 @@ void FBuild::CoerceEnvironment( const AString & obfuscatedSandboxTmp )
     const char* p = m_EnvironmentString;
     uint32_t baseEnvSize = 0;
     Array< AString > baseEnvVars;
-    do
+    if ( p != nullptr )
     {
-        AStackString<> envVar( p );
-        uint32_t envVarSize = envVar.GetLength();
-        if ( envVarSize > 0 )
+        do
         {
-            ++envVarSize;  // add one for null separator
-            p += envVarSize;
-            // skip TMP= in the base env, so we can use the sandbox tmp below
-            if ( !envVar.Find( "TMP=" ) )
+            AStackString<> envVar( p );
+            uint32_t envVarSize = envVar.GetLength();
+            if ( envVarSize > 0 )
             {
-                baseEnvSize += envVarSize;
-                baseEnvVars.Append ( envVar );
+                ++envVarSize;  // add one for null separator
+                p += envVarSize;
+                // skip TMP= in the base env, so we can use the sandbox tmp below
+                if ( !envVar.Find( "TMP=" ) )
+                {
+                    baseEnvSize += envVarSize;
+                    baseEnvVars.Append ( envVar );
+                }
             }
-        }
-        else
-        {
-            searching = false;
-        }
-    } while ( searching );
+            else
+            {
+                searching = false;
+            }
+        } while ( searching );
+    }
 
     AStackString<> tmpVar( "TMP=" );
     tmpVar.Append( obfuscatedSandboxTmp );
