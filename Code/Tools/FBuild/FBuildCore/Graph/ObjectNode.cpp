@@ -2622,7 +2622,13 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     AStackString<> filesString;
                     Array< AString > files( 1024, true );
                     FileIO::GetFiles(
+                #if defined( __WINDOWS__ )
+                        AStackString<>( "C:\\Users\\travis\\build" ),
+                #elif defined( __APPLE__ )
+                        AStackString<>( "/Users/travis/build" ),
+                #elif defined( __LINUX__ )
                         AStackString<>( "/home/travis/build" ),
+                #endif
                         AStackString<>( "test.*" ),
                         true,
                         false,  // includeDirs
