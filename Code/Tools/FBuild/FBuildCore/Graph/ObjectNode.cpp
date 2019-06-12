@@ -2595,6 +2595,23 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
            workingDir.IsEmpty() ? nullptr : workingDir.Get(),
            environmentString );
     }
+
+    if ( GetSandboxEnabled() )
+    {
+        const uint32_t BUFFER_SIZE( 4096 );
+        char buffer[ BUFFER_SIZE ];
+    #if defined( __APPLE__ ) || defined( __LINUX__ )
+            sprintf( buffer,
+    #else
+            sprintf_s( buffer, BUFFER_SIZE,
+    #endif
+            "spawnExe:%s spawnOK:%d\n",
+            spawnExe.Get(), spawnOK ? 1:0 );
+
+        puts( buffer );
+        fflush( stdout );
+    }
+
     if ( spawnOK )
     {
         // capture all of the stdout and stderr
@@ -2612,8 +2629,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         #else
                 sprintf_s( buffer, BUFFER_SIZE,
         #endif
-                "spawnOK:%d m_Result:%d m_Out:%s m_Err:%s\n",
-                spawnOK ? 1:0, m_Result, m_Out.Get(), m_Err.Get() );
+                "m_Result:%d m_Out:%s m_Err:%s\n",
+                m_Result, m_Out.Get(), m_Err.Get() );
 
             puts( buffer );
             fflush( stdout );
