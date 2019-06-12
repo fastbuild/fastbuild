@@ -2551,6 +2551,24 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // use relative path, if we can; so we reduce command length
         AStackString<> compileExeRelPath;
         PathUtils::GetPathGivenWorkingDir( workingDir, compileExe, compileExeRelPath );
+
+        const uint32_t BUFFER_SIZE( 4096 );
+        char buffer[ BUFFER_SIZE ];
+        #if defined( __APPLE__ ) || defined( __LINUX__ )
+            sprintf( buffer,
+        #else
+            sprintf_s( buffer, BUFFER_SIZE,
+        #endif
+            "compileExeRelPath:%s\n",
+            compileExeRelPath.Get() );
+
+        puts( buffer );
+        fflush( stdout );
+
+        #if defined( __LINUX__ )
+            compileExeRelPath = "g++";
+        #endif
+
         spawnArgs += compileExeRelPath;
         spawnArgs += doubleQuote;
         spawnArgs += ' ';
@@ -2562,20 +2580,6 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
            spawnArgs.Get(),
            workingDir.IsEmpty() ? nullptr : workingDir.Get(),
            environmentString );
-
-        const uint32_t BUFFER_SIZE( 4096 );
-        char buffer[ BUFFER_SIZE ];
-        #if defined( __APPLE__ ) || defined( __LINUX__ )
-            sprintf( buffer,
-        #else
-            sprintf_s( buffer, BUFFER_SIZE,
-        #endif
-            "spawnExe:%s spawnArgs:%s workingDir:%s\n",
-            spawnExe.Get(), spawnArgs.Get(), workingDir.Get() );
-
-        puts( buffer );
-        fflush( stdout );
-
     }
     else
     {
@@ -2618,42 +2622,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     AStackString<> basePath( outputFile.Get(), outputFile.FindLast( NATIVE_SLASH ) );
                     AStackString<> tmpFile;
                     Node::GetSandboxTmpFile( basePath, outputFile, tmpFile );
-
-                    AStackString<> filesString;
-                    Array< AString > files( 1024, true );
-                    FileIO::GetFiles(
-                #if defined( __WINDOWS__ )
-                        AStackString<>( "C:\\Users\\travis\\build" ),
-                #elif defined( __APPLE__ )
-                        AStackString<>( "/Users/travis/build" ),
-                #elif defined( __LINUX__ )
-                        AStackString<>( "/home/travis/build" ),
-                #endif
-                        AStackString<>( "test.*" ),
-                        true,
-                        false,  // includeDirs
-                        &files );
-                    for ( Array< AString >::Iter it = files.Begin();
-                          it != files.End();
-                          it++ )
-                    {
-                        filesString += (*it).Get();
-                        filesString += "\n";
-                    }
-                    
-                    const uint32_t BUFFER_SIZE( 4096 );
-                    char buffer[ BUFFER_SIZE ];
-                    #if defined( __APPLE__ ) || defined( __LINUX__ )
-                        sprintf( buffer,
-                    #else
-                        sprintf_s( buffer, BUFFER_SIZE,
-                    #endif
-                        "filesString: %s basePath:%s outputFile:%s tmpFile:%s\n",
-                        filesString.Get(), basePath.Get(), outputFile.Get(), tmpFile.Get() );
-
-                    puts( buffer );
-                    fflush( stdout );
-                    
+                    // compile may not create an output file (preprocessor case)
                     if ( FileIO::FileExists( tmpFile.Get() ) )
                     {
                         tmpFiles.Append( tmpFile );
