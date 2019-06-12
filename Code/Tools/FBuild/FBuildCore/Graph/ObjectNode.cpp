@@ -2603,18 +2603,21 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // Get result
         m_Result = m_Process.WaitForExit();
 
-        const uint32_t BUFFER_SIZE( 4096 );
-        char buffer[ BUFFER_SIZE ];
-    #if defined( __APPLE__ ) || defined( __LINUX__ )
-            sprintf( buffer,
-    #else
-            sprintf_s( buffer, BUFFER_SIZE,
-    #endif
-            "spawnOK:%d m_Result:%d m_Out:%s m_Err:%s\n",
-            spawnOK ? 1:0, m_Result, m_Out.Get(), m_Err.Get() );
+        if ( GetSandboxEnabled() )
+        {
+            const uint32_t BUFFER_SIZE( 4096 );
+            char buffer[ BUFFER_SIZE ];
+        #if defined( __APPLE__ ) || defined( __LINUX__ )
+                sprintf( buffer,
+        #else
+                sprintf_s( buffer, BUFFER_SIZE,
+        #endif
+                "spawnOK:%d m_Result:%d m_Out:%s m_Err:%s\n",
+                spawnOK ? 1:0, m_Result, m_Out.Get(), m_Err.Get() );
 
-        puts( buffer );
-        fflush( stdout );
+            puts( buffer );
+            fflush( stdout );
+        }
 
         if ( !m_Process.HasAborted() )
         {
