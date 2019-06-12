@@ -264,6 +264,11 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
     AStackString<> basePath;
     GetRemotePath( basePath );
     PathUtils::EnsureTrailingSlash( basePath );
+    #if defined( __LINUX__ )
+        // for /usr/bin/ld
+        basePath += ":/usr/bin";
+    #endif
+
     AStackString<> paths;
     paths.Format( "PATH=%s", basePath.Get() );
 
