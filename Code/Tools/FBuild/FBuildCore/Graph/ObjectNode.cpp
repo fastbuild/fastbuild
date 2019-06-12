@@ -2550,15 +2550,20 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         spawnArgs += doubleQuote;
         // use relative path, if we can; so we reduce command length
         AStackString<> compileExeRelPath;
+    #if defined( __LINUX__ )
+        // on Linux, use absolute path
+        compileExeRelPath = compileExe;
+    #else
         PathUtils::GetPathGivenWorkingDir( workingDir, compileExe, compileExeRelPath );
+    #endif
 
         const uint32_t BUFFER_SIZE( 4096 );
         char buffer[ BUFFER_SIZE ];
-        #if defined( __APPLE__ ) || defined( __LINUX__ )
+    #if defined( __APPLE__ ) || defined( __LINUX__ )
             sprintf( buffer,
-        #else
+    #else
             sprintf_s( buffer, BUFFER_SIZE,
-        #endif
+    #endif
             "compileExeRelPath:%s\n",
             compileExeRelPath.Get() );
 
