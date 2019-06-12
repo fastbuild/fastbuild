@@ -2567,8 +2567,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     #else
             sprintf_s( buffer, BUFFER_SIZE,
     #endif
-            "compileExeRelPath:%s remoteEnv:%d\n",
-            compileExeRelPath.Get(), remoteEnv );
+            "compileExeRelPath:%s remoteEnv:%d env:%s\n",
+            compileExeRelPath.Get(), remoteEnv, environmentString );
 
         puts( buffer );
         fflush( stdout );
