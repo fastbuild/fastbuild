@@ -2565,10 +2565,6 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         puts( buffer );
         fflush( stdout );
 
-        #if defined( __LINUX__ )
-            compileExeRelPath = "g++";
-        #endif
-
         spawnArgs += compileExeRelPath;
         spawnArgs += doubleQuote;
         spawnArgs += ' ';
