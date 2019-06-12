@@ -2611,7 +2611,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             sprintf_s( buffer, BUFFER_SIZE,
     #endif
             "spawnOK:%d m_Result:%d m_Out:%s m_Err:%s\n",
-            spawnOK ? 1:0, m_Result, m_Out, m_Err );
+            spawnOK ? 1:0, m_Result, m_Out.Get(), m_Err.Get() );
 
         puts( buffer );
         fflush( stdout );
