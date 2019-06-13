@@ -124,12 +124,16 @@ int main( int argc, char** argv )
         {
             fprintf( stdout, "%s", memOut.Get() );
         }
+        
         if ( memErr.Get() != nullptr )
         {
             fprintf( stderr, "%s", memErr.Get() );
+            if ( strstr( memErr.Get(), "cannot find" ) == NULL )
+            {
+                break;
+            }
         }
-        
-        if (result == 0)
+        else
         {
             break;
         }
