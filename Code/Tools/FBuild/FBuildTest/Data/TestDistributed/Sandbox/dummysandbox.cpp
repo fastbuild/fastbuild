@@ -124,7 +124,9 @@ int main( int argc, char** argv )
         {
             fprintf( stdout, "%s", memOut.Get() );
         }
-        
+
+        fprintf( stderr, "stderr:");
+
         if ( memErr.Get() != nullptr )
         {
             fprintf( stderr, "%s", memErr.Get() );
