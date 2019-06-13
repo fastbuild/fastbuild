@@ -347,18 +347,6 @@ ObjectNode::~ObjectNode()
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
 
-    const uint32_t BUFFER_SIZE( 4096 );
-    char buffer[ BUFFER_SIZE ];
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-        sprintf( buffer,
-#else
-        sprintf_s( buffer, BUFFER_SIZE,
-#endif
-        "EmitCompilationMessage1\n" );
-
-    puts( buffer );
-    fflush( stdout );
-
     EmitCompilationMessage( fullArgs, useDeoptimization, workingDir, compiler );
 
     // spawn the process
@@ -658,6 +646,16 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
 
     bool result = BuildFinalOutput( job, fullArgs, workingDir, compiler );
 
+    const uint32_t BUFFER_SIZE( 4096 );
+    char buffer[ BUFFER_SIZE ];
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+        sprintf( buffer,
+#else
+        sprintf_s( buffer, BUFFER_SIZE,
+#endif
+        "BuildFinalOutput result:%d\n", result );
+    FLOG_BUILD_DIRECT( buffer );
+
     // cleanup temp file
     if ( tmpFileName.IsEmpty() == false )
     {
@@ -706,18 +704,6 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job, const AString & workingD
         {
             return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
         }
-
-    const uint32_t BUFFER_SIZE( 4096 );
-    char buffer[ BUFFER_SIZE ];
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-        sprintf( buffer,
-#else
-        sprintf_s( buffer, BUFFER_SIZE,
-#endif
-        "EmitCompilationMessage3\n" );
-
-        puts( buffer );
-        fflush( stdout );
 
         EmitCompilationMessage( fullArgs, false, workingDir, compiler );
 
@@ -793,18 +779,6 @@ Node::BuildResult ObjectNode::DoBuildOther(
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
-
-    const uint32_t BUFFER_SIZE( 4096 );
-    char buffer[ BUFFER_SIZE ];
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-        sprintf( buffer,
-#else
-        sprintf_s( buffer, BUFFER_SIZE,
-#endif
-        "EmitCompilationMessage4\n" );
-
-        puts( buffer );
-        fflush( stdout );
 
     EmitCompilationMessage( fullArgs, useDeoptimization, workingDir, compiler );
 
@@ -2179,18 +2153,6 @@ bool ObjectNode::BuildPreprocessedOutput(
     const CompilerNode * specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
     const AString & specificCompilerExe = specificCompiler ? specificCompiler->GetExecutable() : AString::GetEmpty();
 
-    const uint32_t BUFFER_SIZE( 4096 );
-    char buffer[ BUFFER_SIZE ];
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-        sprintf( buffer,
-#else
-        sprintf_s( buffer, BUFFER_SIZE,
-#endif
-        "EmitCompilationMessage5\n" );
-
-    puts( buffer );
-    fflush( stdout );
-
     EmitCompilationMessage( fullArgs, useDeoptimization, workingDir,
         specificCompilerExe, false, false );
 
@@ -2237,18 +2199,6 @@ bool ObjectNode::LoadStaticSourceFileForDistribution(
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
     const CompilerNode * specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
     const AString & specificCompilerExe = specificCompiler ? specificCompiler->GetExecutable() : AString::GetEmpty();
-
-    const uint32_t BUFFER_SIZE( 4096 );
-    char buffer[ BUFFER_SIZE ];
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-        sprintf( buffer,
-#else
-        sprintf_s( buffer, BUFFER_SIZE,
-#endif
-        "EmitCompilationMessage6\n" );
-
-    puts( buffer );
-    fflush( stdout );
 
     EmitCompilationMessage(fullArgs, useDeoptimization, workingDir,
         specificCompilerExe, false, false );
