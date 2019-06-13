@@ -45,7 +45,7 @@ int main( int argc, char** argv )
         return 1;
     }
 
-    char * cmd = "/usr/bin/strace";
+    const char * cmd = "/usr/bin/strace";
 
     const size_t maxChars = 4096;
     char * cmdArgs = new char[maxChars];
