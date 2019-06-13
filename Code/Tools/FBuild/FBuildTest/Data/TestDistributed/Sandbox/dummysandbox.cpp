@@ -74,7 +74,6 @@ int main( int argc, char** argv )
 
     // spawn the process
     Process p;
-    ffprintf( stderr, "cmd:%s cmdArgs:%s\n", cmd, cmdArgs );
     if ( p.Spawn( cmd, cmdArgs, nullptr, nullptr ) == false )
     {
         if ( p.HasAborted() )
@@ -97,6 +96,7 @@ int main( int argc, char** argv )
 
     // Get result
     const int result = p.WaitForExit();
+    fprintf( stderr, "cmd:%s cmdArgs:%s result:%d\n", cmd, cmdArgs, result );
     if ( p.HasAborted() )
     {
         return 4;
@@ -111,6 +111,5 @@ int main( int argc, char** argv )
         fprintf( stderr, "%s", memErr.Get() );
     }
 
-    fprintf( stderr, "result:%d\n", result );
     return result; // test will check this
 }
