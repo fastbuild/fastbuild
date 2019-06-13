@@ -45,9 +45,12 @@ int main( int argc, char** argv )
         return 1;
     }
 
-    const char * cmd = argv[1];
-    
     const size_t maxChars = 4096;
+    char * cmd = new char[maxChars];
+    cmd[ 0 ] = '\0';  // terminate string
+    strcat_safe( cmd, "strace ", maxChars );
+    strcat_safe( cmd, argv[1], maxChars );
+
     char * cmdArgs = new char[maxChars];
     cmdArgs[ 0 ] = '\0';  // terminate string
     if ( argc > 2 )  // if cmd has args
