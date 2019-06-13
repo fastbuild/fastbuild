@@ -347,6 +347,17 @@ ObjectNode::~ObjectNode()
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
 
+    const uint32_t BUFFER_SIZE( 4096 );
+    char buffer[ BUFFER_SIZE ];
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+        sprintf( buffer,
+#else
+        sprintf_s( buffer, BUFFER_SIZE,
+#endif
+        "EmitCompilationMessage1\n" );
+
+    puts( buffer );
+    fflush( stdout );
     EmitCompilationMessage( fullArgs, useDeoptimization, workingDir, compiler );
 
     // spawn the process
@@ -627,6 +638,15 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
 
     if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote )
     {
+    const uint32_t BUFFER_SIZE( 4096 );
+    char buffer[ BUFFER_SIZE ];
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+        sprintf( buffer,
+#else
+        sprintf_s( buffer, BUFFER_SIZE,
+#endif
+        "EmitCompilationMessage2\n" );
+
         // show that we are locally consuming a remote job
         EmitCompilationMessage( fullArgs, useDeoptimization, workingDir,
             compiler, stealingRemoteJob, racingRemoteJob, isRemote );
@@ -682,6 +702,15 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job, const AString & workingD
         {
             return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
         }
+
+    const uint32_t BUFFER_SIZE( 4096 );
+    char buffer[ BUFFER_SIZE ];
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+        sprintf( buffer,
+#else
+        sprintf_s( buffer, BUFFER_SIZE,
+#endif
+        "EmitCompilationMessage3\n" );
 
         EmitCompilationMessage( fullArgs, false, workingDir, compiler );
 
@@ -757,6 +786,15 @@ Node::BuildResult ObjectNode::DoBuildOther(
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
+
+    const uint32_t BUFFER_SIZE( 4096 );
+    char buffer[ BUFFER_SIZE ];
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+        sprintf( buffer,
+#else
+        sprintf_s( buffer, BUFFER_SIZE,
+#endif
+        "EmitCompilationMessage4\n" );
 
     EmitCompilationMessage( fullArgs, useDeoptimization, workingDir, compiler );
 
@@ -2130,6 +2168,16 @@ bool ObjectNode::BuildPreprocessedOutput(
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
     const CompilerNode * specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
     const AString & specificCompilerExe = specificCompiler ? specificCompiler->GetExecutable() : AString::GetEmpty();
+
+    const uint32_t BUFFER_SIZE( 4096 );
+    char buffer[ BUFFER_SIZE ];
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+        sprintf( buffer,
+#else
+        sprintf_s( buffer, BUFFER_SIZE,
+#endif
+        "EmitCompilationMessage5\n" );
+
     EmitCompilationMessage( fullArgs, useDeoptimization, workingDir,
         specificCompilerExe, false, false );
 
@@ -2176,6 +2224,16 @@ bool ObjectNode::LoadStaticSourceFileForDistribution(
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
     const CompilerNode * specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
     const AString & specificCompilerExe = specificCompiler ? specificCompiler->GetExecutable() : AString::GetEmpty();
+
+    const uint32_t BUFFER_SIZE( 4096 );
+    char buffer[ BUFFER_SIZE ];
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+        sprintf( buffer,
+#else
+        sprintf_s( buffer, BUFFER_SIZE,
+#endif
+        "EmitCompilationMessage6\n" );
+
     EmitCompilationMessage(fullArgs, useDeoptimization, workingDir,
         specificCompilerExe, false, false );
 
@@ -2553,26 +2611,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         spawnArgs += doubleQuote;
         // use relative path, if we can; so we reduce command length
         AStackString<> compileExeRelPath;
-    #if defined( __LINUX__ )
-        // on Linux, use absolute path
-        compileExeRelPath = compileExe;
-    #else
         PathUtils::GetPathGivenWorkingDir( workingDir, compileExe, compileExeRelPath );
-    #endif
-
-        const uint32_t BUFFER_SIZE( 4096 );
-        char buffer[ BUFFER_SIZE ];
-    #if defined( __APPLE__ ) || defined( __LINUX__ )
-            sprintf( buffer,
-    #else
-            sprintf_s( buffer, BUFFER_SIZE,
-    #endif
-            "compileExeRelPath:%s remoteEnv:%d env:%s\n",
-            compileExeRelPath.Get(), remoteEnv, environmentString );
-
-        puts( buffer );
-        fflush( stdout );
-
         spawnArgs += compileExeRelPath;
         spawnArgs += doubleQuote;
         spawnArgs += ' ';
@@ -2595,23 +2634,6 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
            workingDir.IsEmpty() ? nullptr : workingDir.Get(),
            environmentString );
     }
-
-    if ( GetSandboxEnabled() )
-    {
-        const uint32_t BUFFER_SIZE( 4096 );
-        char buffer[ BUFFER_SIZE ];
-    #if defined( __APPLE__ ) || defined( __LINUX__ )
-            sprintf( buffer,
-    #else
-            sprintf_s( buffer, BUFFER_SIZE,
-    #endif
-            "spawnExe:%s spawnOK:%d\n",
-            spawnExe.Get(), spawnOK ? 1:0 );
-
-        puts( buffer );
-        fflush( stdout );
-    }
-
     if ( spawnOK )
     {
         // capture all of the stdout and stderr
@@ -2619,23 +2641,6 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
         // Get result
         m_Result = m_Process.WaitForExit();
-
-        if ( GetSandboxEnabled() )
-        {
-            const uint32_t BUFFER_SIZE( 4096 );
-            char buffer[ BUFFER_SIZE ];
-        #if defined( __APPLE__ ) || defined( __LINUX__ )
-                sprintf( buffer,
-        #else
-                sprintf_s( buffer, BUFFER_SIZE,
-        #endif
-                "m_Result:%d m_Out:%s m_Err:%s\n",
-                m_Result, m_Out.Get(), m_Err.Get() );
-
-            puts( buffer );
-            fflush( stdout );
-        }
-
         if ( !m_Process.HasAborted() )
         {
             // Handle special types of failures
