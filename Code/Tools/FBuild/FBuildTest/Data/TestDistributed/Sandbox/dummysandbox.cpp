@@ -51,6 +51,8 @@ int main( int argc, char** argv )
     strcat_safe( cmd, argv[1], maxChars );
 
     char * cmdArgs = new char[maxChars];
+    
+    int result = 0;
 
     int iteration = 0;
     while (iteration < 2)
@@ -111,7 +113,7 @@ int main( int argc, char** argv )
         p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
 
         // Get result
-        const int result = p.WaitForExit();
+        result = p.WaitForExit();
         fprintf( stderr, "cmd:%s cmdArgs:%s result:%d\n", cmd, cmdArgs, result );
         if ( p.HasAborted() )
         {
