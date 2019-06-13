@@ -22,6 +22,8 @@
 #include "Core/Process/Process.h"
 #include "Core/Env/Env.h"
 
+#include <stdio.h>
+
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
@@ -217,6 +219,20 @@ TestNode::~TestNode() = default;
         // use relative path, if we can; so we reduce command length
         AStackString<> testExeRelPath;
         PathUtils::GetPathGivenWorkingDir( workingDir, testExe, testExeRelPath );
+
+        const uint32_t BUFFER_SIZE( 4096 );
+        char buffer[ BUFFER_SIZE ];
+    #if defined( __APPLE__ ) || defined( __LINUX__ )
+            sprintf( buffer,
+    #else
+            sprintf_s( buffer, BUFFER_SIZE,
+    #endif
+            "testExeRelPath:%s env:%s\n",
+            testExeRelPath.Get(), environmentString );
+
+        puts( buffer );
+        fflush( stdout );
+
         spawnArgs += testExeRelPath;
         spawnArgs += doubleQuote;
         spawnArgs += ' ';
@@ -239,6 +255,23 @@ TestNode::~TestNode() = default;
             workingDir.IsEmpty() ? nullptr : workingDir.Get(),
             environmentString );
     }
+
+    if ( GetSandboxEnabled() )
+    {
+        const uint32_t BUFFER_SIZE( 4096 );
+        char buffer[ BUFFER_SIZE ];
+    #if defined( __APPLE__ ) || defined( __LINUX__ )
+            sprintf( buffer,
+    #else
+            sprintf_s( buffer, BUFFER_SIZE,
+    #endif
+            "testSpawnExe:%s testSpawnOK:%d\n",
+            spawnExe.Get(), spawnOK ? 1:0 );
+
+        puts( buffer );
+        fflush( stdout );
+    }
+
     if ( spawnOK )
     {
         // capture all of the stdout and stderr
@@ -248,6 +281,23 @@ TestNode::~TestNode() = default;
         uint32_t memErrSize = 0;
         bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut * 1000 );
         int exitStatus = p.WaitForExit();
+
+        if ( GetSandboxEnabled() )
+        {
+            const uint32_t BUFFER_SIZE( 4096 );
+            char buffer[ BUFFER_SIZE ];
+        #if defined( __APPLE__ ) || defined( __LINUX__ )
+                sprintf( buffer,
+        #else
+                sprintf_s( buffer, BUFFER_SIZE,
+        #endif
+                "testExitStatus:%d testOut:%s testErr:%s\n",
+                exitStatus, memOut.Get(), memErr.Get() );
+
+            puts( buffer );
+            fflush( stdout );
+        }
+
         if ( !p.HasAborted() )
         {
             if ( ( timedOut == true ) || ( exitStatus != 0 ) || ( m_TestAlwaysShowOutput == true ) )
