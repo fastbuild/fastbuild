@@ -45,14 +45,13 @@ int main( int argc, char** argv )
         return 1;
     }
 
-    const size_t maxChars = 4096;
-    char * cmd = new char[maxChars];
-    cmd[ 0 ] = '\0';  // terminate string
-    strcat_safe( cmd, "/usr/bin/strace ", maxChars );
-    strcat_safe( cmd, argv[1], maxChars );
+    char * cmd = "/usr/bin/strace";
 
+    const size_t maxChars = 4096;
     char * cmdArgs = new char[maxChars];
     cmdArgs[ 0 ] = '\0';  // terminate string
+    strcat_safe( cmdArgs, argv[1], maxChars );
+    strcat_safe( cmdArgs, " ", maxChars );
     if ( argc > 2 )  // if cmd has args
     {
         // loop over remaining args after the cmd
