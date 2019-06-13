@@ -45,72 +45,94 @@ int main( int argc, char** argv )
         return 1;
     }
 
-    const char * cmd = "/usr/bin/strace";
-
     const size_t maxChars = 4096;
+    char * cmd = new char[maxChars];
+    cmd[ 0 ] = '\0';  // terminate string
+    strcat_safe( cmd, argv[1], maxChars );
+
     char * cmdArgs = new char[maxChars];
-    cmdArgs[ 0 ] = '\0';  // terminate string
-    strcat_safe( cmdArgs, argv[1], maxChars );
-    strcat_safe( cmdArgs, " ", maxChars );
-    if ( argc > 2 )  // if cmd has args
+
+    int iteration = 0;
+    while (iteration < 2)
     {
-        // loop over remaining args after the cmd
-        for( int i = 2; i < argc; ++i )
+        cmdArgs[ 0 ] = '\0';  // terminate string
+
+        if (iteration > 0)
         {
-            // if arg contains spaces, then add it with quotes
-            char * spacePos = strstr( argv[ i ], " " );
-            if ( spacePos != nullptr )
-            {
-                strcat_safe( cmdArgs, "\"", maxChars );
-                strcat_safe( cmdArgs, argv[ i ], maxChars );
-                strcat_safe( cmdArgs, "\"", maxChars );
-            }
-            else  // no spaces, so add arg as-is
-            {
-                strcat_safe( cmdArgs, argv[ i ], maxChars );
-            }
-            // include a space between each arg
+            const char * straceCmd = "/usr/bin/strace";
+            cmd[ 0 ] = '\0';  // terminate string
+            strcat_safe( cmd, straceCmd, maxChars );
+            strcat_safe( cmdArgs, argv[1], maxChars );
             strcat_safe( cmdArgs, " ", maxChars );
         }
-    }
 
-    // spawn the process
-    Process p;
-    if ( p.Spawn( cmd, cmdArgs, nullptr, nullptr ) == false )
-    {
-        if ( p.HasAborted() )
+        if ( argc > 2 )  // if cmd has args
         {
-            fprintf( stderr, "%s child '%s' process aborted!\n", appName, cmd );
-            return 2;
+            // loop over remaining args after the cmd
+            for( int i = 2; i < argc; ++i )
+            {
+                // if arg contains spaces, then add it with quotes
+                char * spacePos = strstr( argv[ i ], " " );
+                if ( spacePos != nullptr )
+                {
+                    strcat_safe( cmdArgs, "\"", maxChars );
+                    strcat_safe( cmdArgs, argv[ i ], maxChars );
+                    strcat_safe( cmdArgs, "\"", maxChars );
+                }
+                else  // no spaces, so add arg as-is
+                {
+                    strcat_safe( cmdArgs, argv[ i ], maxChars );
+                }
+                // include a space between each arg
+                strcat_safe( cmdArgs, " ", maxChars );
+            }
         }
 
-        fprintf( stderr, "%s failed to spawn child '%s' process Error: %s\n",
-                appName, cmd, LAST_ERROR_STR );
-        return 3;
-    }
+        // spawn the process
+        Process p;
+        if ( p.Spawn( cmd, cmdArgs, nullptr, nullptr ) == false )
+        {
+            if ( p.HasAborted() )
+            {
+                fprintf( stderr, "%s child '%s' process aborted!\n", appName, cmd );
+                return 2;
+            }
 
-    // capture all of the stdout and stderr
-    AutoPtr< char > memOut;
-    AutoPtr< char > memErr;
-    uint32_t memOutSize = 0;
-    uint32_t memErrSize = 0;
-    p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
+            fprintf( stderr, "%s failed to spawn child '%s' process Error: %s\n",
+                    appName, cmd, LAST_ERROR_STR );
+            return 3;
+        }
 
-    // Get result
-    const int result = p.WaitForExit();
-    fprintf( stderr, "cmd:%s cmdArgs:%s result:%d\n", cmd, cmdArgs, result );
-    if ( p.HasAborted() )
-    {
-        return 4;
-    }
+        // capture all of the stdout and stderr
+        AutoPtr< char > memOut;
+        AutoPtr< char > memErr;
+        uint32_t memOutSize = 0;
+        uint32_t memErrSize = 0;
+        p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
 
-    if ( memOut.Get() != nullptr )
-    {
-        fprintf( stdout, "%s", memOut.Get() );
-    }
-    if ( memErr.Get() != nullptr )
-    {
-        fprintf( stderr, "%s", memErr.Get() );
+        // Get result
+        const int result = p.WaitForExit();
+        fprintf( stderr, "cmd:%s cmdArgs:%s result:%d\n", cmd, cmdArgs, result );
+        if ( p.HasAborted() )
+        {
+            return 4;
+        }
+
+        if ( memOut.Get() != nullptr )
+        {
+            fprintf( stdout, "%s", memOut.Get() );
+        }
+        if ( memErr.Get() != nullptr )
+        {
+            fprintf( stderr, "%s", memErr.Get() );
+        }
+        
+        if (result == 0)
+        {
+            break;
+        }
+
+        iteration++;
     }
 
     return result; // test will check this
