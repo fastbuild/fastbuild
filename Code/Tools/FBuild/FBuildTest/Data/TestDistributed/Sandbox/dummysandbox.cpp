@@ -36,11 +36,11 @@ int main( int argc, char** argv )
     {
         if ( appName )
         {
-            printf( "%s bad args!\n", appName );
+            fprintf( stderr, "%s bad args!\n", appName );
         }
         else
         {
-            printf( "bad args!\n" );
+            fprintf( stderr, "bad args!\n" );
         }
         return 1;
     }
@@ -74,16 +74,16 @@ int main( int argc, char** argv )
 
     // spawn the process
     Process p;
-    printf( "cmd:%s cmdArgs:%s\n", cmd, cmdArgs );
+    ffprintf( stderr, "cmd:%s cmdArgs:%s\n", cmd, cmdArgs );
     if ( p.Spawn( cmd, cmdArgs, nullptr, nullptr ) == false )
     {
         if ( p.HasAborted() )
         {
-            printf( "%s child '%s' process aborted!\n", appName, cmd );
+            fprintf( stderr, "%s child '%s' process aborted!\n", appName, cmd );
             return 2;
         }
 
-        printf( "%s failed to spawn child '%s' process Error: %s\n",
+        fprintf( stderr, "%s failed to spawn child '%s' process Error: %s\n",
                 appName, cmd, LAST_ERROR_STR );
         return 3;
     }
@@ -104,13 +104,13 @@ int main( int argc, char** argv )
 
     if ( memOut.Get() != nullptr )
     {
-        printf( "%s", memOut.Get() );
+        fprintf( stdout, "%s", memOut.Get() );
     }
     if ( memErr.Get() != nullptr )
     {
-        printf( "%s", memErr.Get() );
+        fprintf( stderr, "%s", memErr.Get() );
     }
 
-    printf( "result:%d\n", result );
+    fprintf( stderr, "result:%d\n", result );
     return result; // test will check this
 }
