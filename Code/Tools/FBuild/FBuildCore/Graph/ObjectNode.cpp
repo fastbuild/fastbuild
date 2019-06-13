@@ -358,6 +358,7 @@ ObjectNode::~ObjectNode()
 
     puts( buffer );
     fflush( stdout );
+
     EmitCompilationMessage( fullArgs, useDeoptimization, workingDir, compiler );
 
     // spawn the process
@@ -647,6 +648,9 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
 #endif
         "EmitCompilationMessage2\n" );
 
+        puts( buffer );
+        fflush( stdout );
+
         // show that we are locally consuming a remote job
         EmitCompilationMessage( fullArgs, useDeoptimization, workingDir,
             compiler, stealingRemoteJob, racingRemoteJob, isRemote );
@@ -711,6 +715,9 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job, const AString & workingD
         sprintf_s( buffer, BUFFER_SIZE,
 #endif
         "EmitCompilationMessage3\n" );
+
+        puts( buffer );
+        fflush( stdout );
 
         EmitCompilationMessage( fullArgs, false, workingDir, compiler );
 
@@ -795,6 +802,9 @@ Node::BuildResult ObjectNode::DoBuildOther(
         sprintf_s( buffer, BUFFER_SIZE,
 #endif
         "EmitCompilationMessage4\n" );
+
+        puts( buffer );
+        fflush( stdout );
 
     EmitCompilationMessage( fullArgs, useDeoptimization, workingDir, compiler );
 
@@ -2178,6 +2188,9 @@ bool ObjectNode::BuildPreprocessedOutput(
 #endif
         "EmitCompilationMessage5\n" );
 
+    puts( buffer );
+    fflush( stdout );
+
     EmitCompilationMessage( fullArgs, useDeoptimization, workingDir,
         specificCompilerExe, false, false );
 
@@ -2233,6 +2246,9 @@ bool ObjectNode::LoadStaticSourceFileForDistribution(
         sprintf_s( buffer, BUFFER_SIZE,
 #endif
         "EmitCompilationMessage6\n" );
+
+    puts( buffer );
+    fflush( stdout );
 
     EmitCompilationMessage(fullArgs, useDeoptimization, workingDir,
         specificCompilerExe, false, false );
