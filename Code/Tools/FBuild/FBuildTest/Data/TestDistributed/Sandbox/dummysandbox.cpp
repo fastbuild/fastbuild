@@ -74,6 +74,7 @@ int main( int argc, char** argv )
 
     // spawn the process
     Process p;
+    printf( "cmd:%s cmdArgs:%s\n", cmd, cmdArgs );
     if ( p.Spawn( cmd, cmdArgs, nullptr, nullptr ) == false )
     {
         if ( p.HasAborted() )
@@ -110,5 +111,6 @@ int main( int argc, char** argv )
         printf( "%s", memErr.Get() );
     }
 
+    printf( "result:%d\n", result );
     return result; // test will check this
 }
