@@ -2583,16 +2583,13 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     compileExe = compiler;
 
     const char * environmentString = nullptr;
-    int remoteEnv = 0;
     if ( ( job->IsLocal() == false ) && ( job->GetToolManifest() ) )
     {
         environmentString = job->GetToolManifest()->GetRemoteEnvironmentString();
-        remoteEnv = 1;
     }
     else
     {
         environmentString = compilerNode->GetEnvironmentString();
-        remoteEnv = 0;
     }
 
     // spawn the process
