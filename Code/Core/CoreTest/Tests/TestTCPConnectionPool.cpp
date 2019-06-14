@@ -7,6 +7,7 @@
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/Network/TCPConnectionPool.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
@@ -202,9 +203,9 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
         {
             TEST_ASSERT( size == m_DataSize );
             TEST_ASSERT( memcmp( data, m_ExpectedData, size ) == 0 );
-            m_ReceivedBytes += size;
+            AtomicAddU64( &m_ReceivedBytes, size );
         }
-        volatile size_t m_ReceivedBytes = 0;
+        volatile uint64_t m_ReceivedBytes = 0;
         size_t m_DataSize = 0;
         const char * m_ExpectedData;
     };
@@ -231,7 +232,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
     size_t sendSize = 31;
     while ( sendSize <= maxSendSize )
     {
-        server.m_ReceivedBytes = 0;
+        AtomicStoreRelaxed( &server.m_ReceivedBytes, 0 );
         server.m_DataSize = sendSize;
 
         Timer timer;
@@ -244,7 +245,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
             totalSent += sendSize;
         }
 
-        while( server.m_ReceivedBytes < totalSent )
+        while ( static_cast< size_t >( AtomicLoadRelaxed( &server.m_ReceivedBytes ) ) < totalSent )
         {
             Thread::Sleep( 1 );
         }
