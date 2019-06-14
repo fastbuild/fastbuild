@@ -31,13 +31,9 @@ inline bool AtomicLoadAcquire( const volatile bool * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined( _M_IX86 )
-            bool value = *x;
-            _ReadWriteBarrier();
-            return value;
-        #else
-            #error Unknown architecture
-        #endif
+        bool value = *x;
+        _ReadWriteBarrier();
+        return value;
     #else
         #error Unknown compiler
     #endif
@@ -47,11 +43,7 @@ inline void AtomicStoreRelaxed( volatile bool * x, bool value )
     #if defined( __GNUC__ ) || defined( __clang__ )
         __atomic_store_n( x, value, __ATOMIC_RELAXED );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined ( _M_IX86 )
-            *x = value;
-        #else
-            #error Unknown architecture
-        #endif
+        *x = value;
     #else
         #error Unknown compiler
     #endif
@@ -61,12 +53,8 @@ inline void AtomicStoreRelease( volatile bool * x, bool value )
     #if defined( __GNUC__ ) || defined( __clang__ )
         __atomic_store_n( x, value, __ATOMIC_RELEASE );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined ( _M_IX86 )
-            _ReadWriteBarrier();
-            *x = value;
-        #else
-            #error Unknown architecture
-        #endif
+        _ReadWriteBarrier();
+        *x = value;
     #else
         #error Unknown compiler
     #endif
@@ -80,11 +68,7 @@ inline T * AtomicLoadRelaxed( T * const volatile * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_RELAXED );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined( _M_IX86 )
-            return *x;
-        #else
-            #error Unknown architecture
-        #endif
+        return *x;
     #else
         #error Unknown compiler
     #endif
@@ -95,13 +79,9 @@ inline T * AtomicLoadAcquire( T * const volatile * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined( _M_IX86 )
-            T * value = *x;
-            _ReadWriteBarrier();
-            return value;
-        #else
-            #error Unknown architecture
-        #endif
+        T * value = *x;
+        _ReadWriteBarrier();
+        return value;
     #else
         #error Unknown compiler
     #endif
@@ -112,11 +92,7 @@ inline void AtomicStoreRelaxed( T * volatile * x, T * value )
     #if defined( __GNUC__ ) || defined( __clang__ )
         __atomic_store_n( x, value, __ATOMIC_RELAXED );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined ( _M_IX86 )
-            *x = value;
-        #else
-            #error Unknown architecture
-        #endif
+        *x = value;
     #else
         #error Unknown compiler
     #endif
@@ -127,12 +103,8 @@ inline void AtomicStoreRelease( T * volatile * x, T * value )
     #if defined( __GNUC__ ) || defined( __clang__ )
         __atomic_store_n( x, value, __ATOMIC_RELEASE );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined ( _M_IX86 )
-            _ReadWriteBarrier();
-            *x = value;
-        #else
-            #error Unknown architecture
-        #endif
+        _ReadWriteBarrier();
+        *x = value;
     #else
         #error Unknown compiler
     #endif
@@ -210,11 +182,7 @@ inline int32_t AtomicLoadRelaxed( const volatile int32_t * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_RELAXED );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined( _M_IX86 )
-            return *x;
-        #else
-            #error Unknown architecture
-        #endif
+        return *x;
     #else
         #error Unknown compiler
     #endif
@@ -228,13 +196,9 @@ inline int32_t AtomicLoadAcquire( const volatile int32_t * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined( _M_IX86 )
-            int32_t value = *x;
-            _ReadWriteBarrier();
-            return value;
-        #else
-            #error Unknown architecture
-        #endif
+        int32_t value = *x;
+        _ReadWriteBarrier();
+        return value;
     #else
         #error Unknown compiler
     #endif
@@ -248,11 +212,7 @@ inline void AtomicStoreRelaxed( volatile int32_t * x, int32_t value )
     #if defined( __GNUC__ ) || defined( __clang__ )
         __atomic_store_n( x, value, __ATOMIC_RELAXED );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined ( _M_IX86 )
-            *x = value;
-        #else
-            #error Unknown architecture
-        #endif
+        *x = value;
     #else
         #error Unknown compiler
     #endif
@@ -266,12 +226,8 @@ inline void AtomicStoreRelease( volatile int32_t * x, int32_t value )
     #if defined( __GNUC__ ) || defined( __clang__ )
         __atomic_store_n( x, value, __ATOMIC_RELEASE );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined ( _M_IX86 )
-            _ReadWriteBarrier();
-            *x = value;
-        #else
-            #error Unknown architecture
-        #endif
+        _ReadWriteBarrier();
+        *x = value;
     #else
         #error Unknown compiler
     #endif
@@ -353,13 +309,7 @@ inline int64_t AtomicLoadRelaxed( const volatile int64_t * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_RELAXED );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 )
-            return *x;
-        #elif defined( _M_IX86 )
-            return _InterlockedOr64( x, 0 );
-        #else
-            #error Unknown architecture
-        #endif
+        return *x;
     #else
         #error Unknown compiler
     #endif
@@ -373,15 +323,9 @@ inline int64_t AtomicLoadAcquire( const volatile int64_t * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_ACQUIRE );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 )
-            int64_t value = *x;
-            _ReadWriteBarrier();
-            return value;
-        #elif defined( _M_IX86 )
-            return _InterlockedOr64( x, 0 );
-        #else
-            #error Unknown architecture
-        #endif
+        int64_t value = *x;
+        _ReadWriteBarrier();
+        return value;
     #else
         #error Unknown compiler
     #endif
@@ -395,13 +339,7 @@ inline void AtomicStoreRelaxed( volatile int64_t * x, int64_t value )
     #if defined( __GNUC__ ) || defined( __clang__ )
         __atomic_store_n( x, value, __ATOMIC_RELAXED );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 )
-            *x = value;
-        #elif defined ( _M_IX86 )
-            _InterlockedExchange64( x, value );
-        #else
-            #error Unknown architecture
-        #endif
+        *x = value;
     #else
         #error Unknown compiler
     #endif
@@ -415,14 +353,8 @@ inline void AtomicStoreRelease( volatile int64_t * x, int64_t value )
     #if defined( __GNUC__ ) || defined( __clang__ )
         __atomic_store_n( x, value, __ATOMIC_RELEASE );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 )
-            _ReadWriteBarrier();
-            *x = value;
-        #elif defined ( _M_IX86 )
-            _InterlockedExchange64( x, value );
-        #else
-            #error Unknown architecture
-        #endif
+        _ReadWriteBarrier();
+        *x = value;
     #else
         #error Unknown compiler
     #endif

@@ -264,7 +264,7 @@ void Client::CommunicateJobAvailability()
         if ( AtomicLoadRelaxed( &it->m_Connection ) )
         {
             MutexHolder ssMH( it->m_Mutex );
-            if ( auto connection = AtomicLoadRelaxed( &it->m_Connection ) )
+            if ( const ConnectionInfo * connection = AtomicLoadRelaxed( &it->m_Connection ) )
             {
                 if ( it->m_NumJobsAvailable != numJobsAvailable )
                 {
