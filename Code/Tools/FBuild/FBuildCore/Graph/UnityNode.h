@@ -35,10 +35,10 @@ public:
     class FileAndOrigin
     {
     public:
-		FileAndOrigin()
-		 : m_Info( nullptr )
-		 , m_DirListOrigin( nullptr )
-		{}
+        FileAndOrigin()
+         : m_Info( nullptr )
+         , m_DirListOrigin( nullptr )
+        {}
 
         FileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin )
          : m_Info( info )
@@ -63,7 +63,7 @@ private:
     virtual bool IsAFile() const override { return false; }
 
     bool GetFiles( Array< FileAndOrigin > & files );
-	void FilterForceIsolated( Array< FileAndOrigin > & files, Array< FileAndOrigin > & isolatedFiles );
+    void FilterForceIsolated( Array< FileAndOrigin > & files, Array< FileAndOrigin > & isolatedFiles );
 
     // Exposed properties
     Array< AString > m_InputPaths;

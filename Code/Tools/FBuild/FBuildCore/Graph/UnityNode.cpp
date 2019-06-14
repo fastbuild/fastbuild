@@ -138,7 +138,7 @@ UnityNode::~UnityNode()
         return NODE_RESULT_FAILED; // GetFiles will have emitted an error
     }
 
-	FilterForceIsolated( files, m_IsolatedFiles );
+    FilterForceIsolated( files, m_IsolatedFiles );
 
     // TODO:A Sort files for consistent ordering across file systems/platforms
 
@@ -454,43 +454,43 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 //------------------------------------------------------------------------------
 void UnityNode::FilterForceIsolated( Array< FileAndOrigin > & files, Array< FileAndOrigin > & isolatedFiles )
 {
-	if ( m_FilesToIsolate.GetSize() == 0 )
-	{
-		return;
-	}
+    if ( m_FilesToIsolate.GetSize() == 0 )
+    {
+        return;
+    }
 
-	const FileAndOrigin * readIt = files.Begin();
-	FileAndOrigin * writeIt = files.Begin();
+    const FileAndOrigin * readIt = files.Begin();
+    FileAndOrigin * writeIt = files.Begin();
 
-	for( ; readIt != files.End(); ++readIt )
-	{
-		bool isolate = false;
-		for ( const AString& filename : m_FilesToIsolate )
-		{
-			if ( PathUtils::PathEndsWithFile( readIt->GetName(), filename ) )
-			{
-				isolate = true;
-				break;
-			}
-		}
+    for( ; readIt != files.End(); ++readIt )
+    {
+        bool isolate = false;
+        for ( const AString& filename : m_FilesToIsolate )
+        {
+            if ( PathUtils::PathEndsWithFile( readIt->GetName(), filename ) )
+            {
+                isolate = true;
+                break;
+            }
+        }
 
-		if ( isolate )
-		{
-			isolatedFiles.Append( *readIt );
-		}
-		else if ( writeIt != readIt )
-		{
-			ASSERT( writeIt < readIt );
-			*writeIt = *readIt;
-			writeIt++;
-		}
-		else
-		{
-			writeIt++;
-		}
-	}
+        if ( isolate )
+        {
+            isolatedFiles.Append( *readIt );
+        }
+        else if ( writeIt != readIt )
+        {
+            ASSERT( writeIt < readIt );
+            *writeIt = *readIt;
+            writeIt++;
+        }
+        else
+        {
+            writeIt++;
+        }
+    }
 
-	files.SetSize( writeIt - files.Begin() );
+    files.SetSize( writeIt - files.Begin() );
 }
 
 
