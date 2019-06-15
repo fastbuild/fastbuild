@@ -11,7 +11,7 @@ matrix:
     - os: windows
     # Windows, Static Analysis
     - os: windows
-    - env: CFG=analyze
+      env: CFG=analyze
     # Linux, latest supported compilers
     - os: linux
       env: GCC=gcc-8 CLANG=clang-8
