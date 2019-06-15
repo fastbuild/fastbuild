@@ -52,7 +52,7 @@
 
     // DebugSpamFormat
     //------------------------------------------------------------------------------
-    /*static*/ void Tracing::DebugSpamFormat( const char * fmtString, ... )
+    /*static*/ void Tracing::DebugSpamFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
     {
         AStackString< 8192 > buffer;
 
@@ -83,7 +83,7 @@
 
     // WarningFormat
     //------------------------------------------------------------------------------
-    /*static*/ void Tracing::WarningFormat( const char * file, uint32_t line, const char * fmtString, ... )
+    /*static*/ void Tracing::WarningFormat( MSVC_SAL_PRINTF const char * file, uint32_t line, const char * fmtString, ... )
     {
         AStackString<> buffer;
 
@@ -122,7 +122,7 @@
 
 // OutputFormat
 //------------------------------------------------------------------------------
-/*static*/ void Tracing::OutputFormat( const char * fmtString, ... )
+/*static*/ void Tracing::OutputFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 8192 > buffer;
 
@@ -154,7 +154,7 @@
 
 // ErrorFormat
 //------------------------------------------------------------------------------
-/*static*/ void Tracing::FatalErrorFormat( const char * fmtString, ... )
+/*static*/ void Tracing::FatalErrorFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 8192 > buffer;
 

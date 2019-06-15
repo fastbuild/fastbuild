@@ -4,6 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
 #include "Core/Strings/AString.h"
 
@@ -53,7 +54,7 @@ public:
     inline const Array< AString > & GetMessages() const { return m_Messages; }
 
     // logging interface
-    void                Error( const char * format, ... ) FORMAT_STRING( 2, 3 );
+    void                Error( MSVC_SAL_PRINTF const char * format, ... ) FORMAT_STRING( 2, 3 );
     void                ErrorPreformatted( const char * message );
     void                SetMessages( const Array< AString >& messages );
 

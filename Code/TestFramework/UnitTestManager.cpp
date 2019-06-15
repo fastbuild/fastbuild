@@ -269,7 +269,7 @@ void UnitTestManager::TestEnd()
                                                 uint32_t line )
 {
     OUTPUT( "\n-------- TEST ASSERTION FAILED --------\n" );
-    OUTPUT( "%s(%i): Assert: %s", file, line, message );
+    OUTPUT( "%s(%u): Assert: %s", file, line, message );
     OUTPUT( "\n-----^^^ TEST ASSERTION FAILED ^^^-----\n" );
 
     if ( IsDebuggerAttached() )
@@ -286,7 +286,7 @@ void UnitTestManager::TestEnd()
 /*static*/ bool UnitTestManager::AssertFailureM( const char * message,
                                                  const char * file,
                                                  uint32_t line,
-                                                 const char * formatString,
+                                                 MSVC_SAL_PRINTF const char * formatString,
                                                  ... )
 {
     AStackString< 4096 > buffer;
@@ -296,7 +296,7 @@ void UnitTestManager::TestEnd()
     va_end( args );
 
     OUTPUT( "\n-------- TEST ASSERTION FAILED --------\n" );
-    OUTPUT( "%s(%i): Assert: %s", file, line, message );
+    OUTPUT( "%s(%u): Assert: %s", file, line, message );
     OUTPUT( "\n%s", buffer.Get() );
     OUTPUT( "\n-----^^^ TEST ASSERTION FAILED ^^^-----\n" );
 

@@ -803,7 +803,7 @@ void Report::DoSectionTitle( const char * sectionName, const char * sectionId )
 
 // DoTableStart
 //------------------------------------------------------------------------------
-void Report::DoTableStart( int width, const char * id, bool hidden )
+void Report::DoTableStart( uint32_t width, const char * id, bool hidden )
 {
     AStackString<> output;
     output.Format( "<table width=%u", width );
@@ -832,7 +832,7 @@ void Report::DoTableStop()
 //------------------------------------------------------------------------------
 void Report::DoToggleSection( size_t numMore )
 {
-    static int tableId = 0;
+    static uint32_t tableId = 0;
     ++tableId;
     AStackString<> tableIdStr;
     tableIdStr.Format( "table%u", tableId );
@@ -849,7 +849,7 @@ void Report::DoToggleSection( size_t numMore )
 
 // Write
 //------------------------------------------------------------------------------
-void Report::Write( const char * fmtString, ... )
+void Report::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > tmp;
 

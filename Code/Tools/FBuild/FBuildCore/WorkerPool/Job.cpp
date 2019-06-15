@@ -95,7 +95,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
 
 // Error
 //------------------------------------------------------------------------------
-void Job::Error( const char * format, ... )
+void Job::Error( MSVC_SAL_PRINTF const char * format, ... )
 {
     AStackString< 8192 > buffer;
 

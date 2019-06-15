@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerage.h"
 
 // Core
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/FileIO/FileStream.h"
 
 // Forward Declarations
@@ -38,8 +39,8 @@ private:
 
     inline bool InConsoleMode() const { return ( m_MainWindow == nullptr ); }
 
-    void StatusMessage( const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
-    void ErrorMessage( const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
+    void StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
+    void ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
 
     WorkerWindow        * m_MainWindow;
     Server              * m_ConnectionPool;
