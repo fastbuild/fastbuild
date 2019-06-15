@@ -73,7 +73,7 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
     const bool wasEmpty = m_Jobs.IsEmpty();
 
     m_Jobs.Append( jobs );
-    AtomicAddU32( &m_Count, (uint32_t)jobs.GetSize() );
+    AtomicAddU32( &m_Count, (int32_t)jobs.GetSize() );
 
     if ( wasEmpty )
     {
