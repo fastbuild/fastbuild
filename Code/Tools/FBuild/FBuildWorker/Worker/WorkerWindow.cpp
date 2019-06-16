@@ -167,7 +167,7 @@ void WorkerWindow::UIUpdateThread()
             for ( uint32_t i=0; i<numProcessors; ++i )
             {
                 float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
-                buffer.Format( "%i CPUs (%2.1f%%)", ( i + 1 ), (double)perc );
+                buffer.Format( "%u CPUs (%2.1f%%)", ( i + 1 ), (double)perc );
                 m_ResourcesDropDown->AddItem( buffer.Get() );
             }
         }

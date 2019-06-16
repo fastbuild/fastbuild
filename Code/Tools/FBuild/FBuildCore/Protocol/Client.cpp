@@ -22,6 +22,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/Random.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Tracing/Tracing.h"
 
@@ -64,7 +65,7 @@ Client::~Client()
 {
     SetShuttingDown();
 
-    m_ShouldExit = true;
+    AtomicStoreRelaxed( &m_ShouldExit, true );
     Thread::WaitForThread( m_Thread );
 
     ShutdownAllConnections();
@@ -118,19 +119,19 @@ void Client::ThreadFunc()
     for ( ;; )
     {
         LookForWorkers();
-        if ( m_ShouldExit )
+        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
         {
             break;
         }
 
         CommunicateJobAvailability();
-        if ( m_ShouldExit )
+        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
         {
             break;
         }
 
         Thread::Sleep( 1 );
-        if ( m_ShouldExit )
+        if ( AtomicLoadRelaxed( &m_ShouldExit ) )
         {
             break;
         }
@@ -460,8 +461,7 @@ void Client::LookForWorkers()
     for ( size_t i=0; i<numWorkers; i++ )
     {
         ServerState & ss = m_ServerList[ i ];
-
-        if ( ss.m_Connection )
+        if ( AtomicLoadRelaxed( &( ss.m_Connection ) ) )
         {
             numConnections++;
         }
@@ -502,7 +502,7 @@ void Client::LookForWorkers()
             }
         }
 
-        if ( ss == nullptr || ss->m_Connection )
+        if ( ss == nullptr || AtomicLoadRelaxed( &( ss->m_Connection ) )
         {
             continue;
         }
@@ -570,7 +570,7 @@ void Client::LookForWorkers()
             }
 
             ci->SetUserData( (void *)(ss->m_Id) );
-            ss->m_Connection = ci; // success!
+            AtomicStoreRelaxed( &( ss->m_Connection ), ci ); // success!
             ss->m_ConnectionRetryIntervalSec = 0;
             ss->m_NumJobsAvailableForWorker = numJobsAvailableForWorker;
             ss->m_StatusTimer.Start();
@@ -612,7 +612,7 @@ void Client::CommunicateJobAvailability()
         ServerState & ss = m_ServerList[ i ];
 
         MutexHolder ssMH( ss.m_Mutex );
-        if ( ss.m_Connection )
+        if ( const ConnectionInfo * connection = AtomicLoadRelaxed( &( ss.m_Connection ) ) )
         {
             uint32_t numJobsAvailableForWorker =
                 (uint32_t)(JobQueue::Get().GetNumDistributableJobsAvailable());
@@ -620,7 +620,7 @@ void Client::CommunicateJobAvailability()
             {
                 PROFILE_SECTION( "UpdateJobAvailability" )
                 Protocol::MsgStatus msg( numJobsAvailableForWorker );
-                SendMessageInternal( ss.m_Connection, msg );
+                SendMessageInternal( connection, msg );
                 ss.m_NumJobsAvailableForWorker = numJobsAvailableForWorker;
             }
         }
@@ -1208,7 +1208,7 @@ void Client::ServerState::ClearConnectionFields()
         // we had the connection drop between message and payload
         FREE( (void *)( m_CurrentMessage ) );
 
-        m_Connection = nullptr;
+        AtomicStoreRelaxed( &m_Connection, static_cast< const ConnectionInfo * >( nullptr ) );
         m_CurrentMessage = nullptr;
         m_NumJobsAvailableForWorker = 0;
     }

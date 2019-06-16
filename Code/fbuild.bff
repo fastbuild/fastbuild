@@ -87,6 +87,16 @@ Settings
 
     .BuildConfigName                = 'MSan'
 ]
+.TSan_Config =
+[
+    .CompilerOptions                = ' -DRELEASE'
+                                    + ' -fsanitize=thread'
+    .CompilerOptionsC               = .CompilerOptions
+    .CompilerOptionsPCH             = .CompilerOptions
+    .LinkerOptions                  = ' -fsanitize=thread'
+
+    .BuildConfigName                = 'TSan'
+]
 .Fuzzer_Config =
 [
     #if USING_CLANG_6
@@ -209,6 +219,9 @@ Settings
     .X64ASanConfig_Linux        = .X64BaseConfig_Linux
                                 + .ASan_Config
                                 + .Release_Optimizations
+    .X64TSanConfig_Linux        = .X64BaseConfig_Linux
+                                + .TSan_Config
+                                + .Release_Optimizations
     // Clang
     .X64ClangBaseConfig_Linux   = .LinuxCompatibilityOptions // Must be first
                                 + .ToolChain_Clang_Linux
@@ -228,6 +241,9 @@ Settings
     .X64ClangMSanConfig_Linux   = .X64ClangBaseConfig_Linux
                                 + .MSan_Config
                                 + .Fuzzer_Config
+                                + .Release_Optimizations
+    .X64ClangTSanConfig_Linux   = .X64ClangBaseConfig_Linux
+                                + .TSan_Config
                                 + .Release_Optimizations
 #endif
 
@@ -284,9 +300,9 @@ Settings
 #endif
 #if __LINUX__
     .BuildConfigs               = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
-                                    .X64ASanConfig_Linux,
+                                    .X64ASanConfig_Linux, .X64TSanConfig_Linux,
                                     .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
-                                    .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux }
+                                    .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux, .X64ClangTSanConfig_Linux }
 #endif
 #if __OSX__
     .BuildConfigs               = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
@@ -304,11 +320,13 @@ Settings
 .Targets_x64Linux_Profile = {}
 .Targets_x64Linux_Release = {}
 .Targets_x64Linux_ASan = {}
+.Targets_x64Linux_TSan = {}
 .Targets_x64ClangLinux_Debug = {}
 .Targets_x64ClangLinux_Profile = {}
 .Targets_x64ClangLinux_Release = {}
 .Targets_x64ClangLinux_ASan = {}
 .Targets_x64ClangLinux_MSan = {}
+.Targets_x64ClangLinux_TSan = {}
 
 .Targets_x64OSX_Debug = {}
 .Targets_x64OSX_Profile = {}
@@ -350,10 +368,10 @@ ForEach( .BuildConfig in .BuildConfigs )
 .Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX' }
 .PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release' }
 .PlatformConfigs_x64Clang      = { 'Debug', 'Profile', 'Release' }
-.PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan' }
+.PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release' }
 #if USING_CLANG_6
-                               + { 'ASan', 'MSan' }
+                               + { 'ASan', 'MSan', 'TSan' }
 #endif
 .PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
 ForEach( .Platform in .Platforms )

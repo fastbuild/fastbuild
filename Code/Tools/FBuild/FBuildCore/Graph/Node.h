@@ -136,7 +136,7 @@ public:
     inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
     inline void SetStatFlag( StatsFlag flag ) const { m_StatsFlags |= flag; }
 
-    inline uint32_t GetLastBuildTime() const    { return m_LastBuildTimeMs; }
+    uint32_t GetLastBuildTime() const;
     inline uint32_t GetProcessingTime() const   { return m_ProcessingTime; }
     inline uint32_t GetCachingTime() const      { return m_CachingTime; }
     inline uint32_t GetRecursiveCost() const    { return m_RecursiveCost; }
@@ -217,7 +217,7 @@ protected:
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );
 
-    inline void     SetLastBuildTime( uint32_t ms )   { m_LastBuildTimeMs = ms; }
+    void SetLastBuildTime( uint32_t ms );
     inline void     AddProcessingTime( uint32_t ms )  { m_ProcessingTime += ms; }
     inline void     AddCachingTime( uint32_t ms )     { m_CachingTime += ms; }
 

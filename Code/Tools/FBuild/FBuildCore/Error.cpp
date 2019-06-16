@@ -647,7 +647,7 @@
 void Error::FormatError( const BFFIterator & iter,
                          uint32_t errNum,
                          const Function * function,
-                         const char * message, ... )
+                         MSVC_SAL_PRINTF const char * message, ... )
 {
     ASSERT( message );
     AStackString< 4096 > buffer;

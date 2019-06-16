@@ -157,7 +157,7 @@ void ProjectGeneratorBase::AddFile( const AString & fileName )
 
 // Write
 //------------------------------------------------------------------------------
-void ProjectGeneratorBase::Write( const char * fmtString, ... )
+void ProjectGeneratorBase::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > tmp;
 

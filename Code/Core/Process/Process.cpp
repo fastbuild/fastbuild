@@ -8,6 +8,7 @@
 #include "Core/Env/Assert.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Math/Conversions.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Time/Timer.h"
@@ -176,7 +177,7 @@ bool Process::Spawn( const char * executable,
     ASSERT( !m_Started );
     ASSERT( executable );
 
-    if ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) )
+    if ( m_MasterAbortFlag && AtomicLoadRelaxed( m_MasterAbortFlag ) )
     {
         // Once master process has aborted, we no longer permit spawning sub-processes.
         return false;
@@ -576,8 +577,8 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     bool processExited = false;
     for ( ;; )
     {
-        const bool masterAbort = ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) );
-        const bool abort = ( m_AbortFlag && ( *m_AbortFlag ) );
+        const bool masterAbort = ( m_MasterAbortFlag && AtomicLoadRelaxed( m_MasterAbortFlag ) );
+        const bool abort = ( m_AbortFlag && AtomicLoadRelaxed( m_AbortFlag ) );
         if ( abort || masterAbort )
         {
             PROFILE_SECTION( "Abort" )
