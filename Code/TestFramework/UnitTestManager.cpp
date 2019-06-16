@@ -253,7 +253,10 @@ void UnitTestManager::TestEnd()
             info.m_MemoryLeaks = true;
             OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
             MemTracker::DumpAllocations();
-            TEST_ASSERT( false );
+            if ( IsDebuggerAttached() )
+            {
+                TEST_ASSERT( false && "Memory leaks detected" );
+            }
             return;
         }
     #endif
