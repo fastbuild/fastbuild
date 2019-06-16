@@ -502,7 +502,7 @@ void Client::LookForWorkers()
             }
         }
 
-        if ( ss == nullptr || AtomicLoadRelaxed( &( ss->m_Connection ) )
+        if ( ss == nullptr || AtomicLoadRelaxed( &( ss->m_Connection ) ) )
         {
             continue;
         }
