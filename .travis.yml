@@ -6,39 +6,47 @@ matrix:
     # Compile & Run Tests (Unity)
     #=====================================================================
     - os: linux
+      stage: CompileWithTests
       name: "Linux All+Tests"
     #---------------------------------------------------------------------
     - os: osx
+      stage: CompileWithTests
       name: "OSX All+Tests"
       compiler: clang
     #---------------------------------------------------------------------
     - os: windows
+      stage: CompileWithTests
       name: "Windows All+Tests"
     #=====================================================================
     # Compile Only (No Unity)
     #=====================================================================
     - os: linux
+      stage: NoUnity
       name: "Linux Debug -nounity"
       env: CFG=nounity
     #---------------------------------------------------------------------
     - os: osx
+      stage: NoUnity
       name: "OSX Debug -nounity"
       compiler: clang
       env: CFG=nounity
     #---------------------------------------------------------------------
     - os: windows
+      stage: NoUnity
       name: "Windows Debug -nounity"
       env: CFG=nounity
     #=====================================================================
-    # Static Analaysis
+    # Static Analysis
     #=====================================================================
     - os: windows
+      stage: StaticAnalysis
       name: "Windows Analyze"
       env: CFG=analyze
     #=====================================================================
     # Linux, Latest supported compilers
     #=====================================================================
     - os: linux
+      stage: Other
       name: "Linux GCC8 & Clang8"
       env: GCC=gcc-8 CLANG=clang-8
       addons:
@@ -56,6 +64,7 @@ matrix:
     # Linux, AddressSanitizer
     #---------------------------------------------------------------------
     - os: linux
+      stage: Sanitizers
       name: "Linux AddressSanitizer"
       env: CFG=asan CLANG=clang-8
       # Use latest clang when building with sanitizers.
@@ -72,6 +81,7 @@ matrix:
     # Linux, MemorySanitizer
     #---------------------------------------------------------------------
     - os: linux
+      stage: Sanitizers
       name: "Linux MemorySanitizer"
       env: CFG=msan CLANG=clang-8
       # Use latest clang when building with sanitizers.
@@ -87,6 +97,7 @@ matrix:
     # Linux, ThreadSanitizer
     #---------------------------------------------------------------------
     - os: linux
+      stage: Sanitizers
       name: "Linux ThreadSanitizer"
       env: CFG=tsan CLANG=clang-8
       # Use latest clang when building with sanitizers.
@@ -103,6 +114,13 @@ matrix:
     - env: CFG=msan CLANG=clang-8
     - env: CFG=tsan CLANG=clang-8
   fast_finish: true
+
+stages:
+  - CompileWithTests
+  - NoUnity
+  - StaticAnalysis
+  - Sanitizers
+  - Other
 
 install:
   # Download and unpack archive for a release version.
