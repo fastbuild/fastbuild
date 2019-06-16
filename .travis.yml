@@ -196,7 +196,7 @@ script:
   - |
     case "${TRAVIS_OS_NAME}:${CFG}" in
       linux:|osx:|windows:)
-        ${FBUILD_CMD} All+Tests
+        ${FBUILD_CMD} Tests
         ;;
       linux:asan)
         ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-ASan
