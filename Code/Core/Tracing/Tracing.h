@@ -7,6 +7,7 @@
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
 #include "Core/Containers/Array.h"
+#include "Core/Process/Mutex.h"
 
 // Macros
 //------------------------------------------------------------------------------
@@ -39,14 +40,37 @@ public:
     static void FatalErrorFormat( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 1, 2 );
 
     typedef bool Callback( const char * mesage );
-    static void AddCallbackDebugSpam( Callback * callback );
-    static void AddCallbackOutput( Callback * callback );
-    static void RemoveCallbackDebugSpam( Callback * callback );
-    static void RemoveCallbackOutput( Callback * callback );
+    static void AddCallbackDebugSpam( Callback * callback )     { s_Callbacks.AddCallbackDebugSpam( callback ); }
+    static void AddCallbackOutput( Callback * callback )        { s_Callbacks.AddCallbackOutput( callback ); }
+    static void RemoveCallbackDebugSpam( Callback * callback )  { s_Callbacks.RemoveCallbackDebugSpam( callback ); }
+    static void RemoveCallbackOutput( Callback * callback )     { s_Callbacks.RemoveCallbackOutput( callback ); }
 
 private:
-    static Array< Callback * > s_CallbacksDebugSpam;
-    static Array< Callback * > s_CallbacksOutput;
+    class Callbacks
+    {
+    public:
+        Callbacks();
+        ~Callbacks();
+
+        void AddCallbackDebugSpam( Callback* callback );
+        void AddCallbackOutput( Callback* callback );
+        void RemoveCallbackDebugSpam( Callback* callback );
+        void RemoveCallbackOutput( Callback* callback );
+
+        bool DispatchCallbacksDebugSpam( const char * message );
+        bool DispatchCallbacksOutput( const char* message );
+
+    protected:
+        // Tracing can occur during static initialization or shutdown
+        // so we need a way to detect that to prevent unsafe access
+        static bool         s_Valid;
+
+        Mutex               m_CallbacksMutex;
+        bool                m_InCallbackDispatch;
+        Array< Callback * > m_CallbacksDebugSpam;
+        Array< Callback * > m_CallbacksOutput;
+    };
+    static Callbacks        s_Callbacks;
 };
 
 //------------------------------------------------------------------------------
