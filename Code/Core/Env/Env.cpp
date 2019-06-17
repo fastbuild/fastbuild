@@ -8,6 +8,7 @@
 // Core
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Process/Atomic.h"
 
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
@@ -315,17 +316,17 @@ static bool IsStdOutRedirectedInternal()
 /*static*/ bool Env::IsStdOutRedirected( const bool recheck )
 {
     static volatile int32_t sCachedResult = 0; // 0 - not checked, 1 - true, 2 - false
-    const int32_t result = sCachedResult;
+    const int32_t result = AtomicLoadRelaxed( &sCachedResult );
     if ( recheck || ( result == 0 ) )
     {
         if ( IsStdOutRedirectedInternal() )
         {
-            sCachedResult = 1;
+            AtomicStoreRelaxed( &sCachedResult, 1 );
             return true;
         }
         else
         {
-            sCachedResult = 2;
+            AtomicStoreRelaxed( &sCachedResult, 2 );
             return false;
         }
     }

@@ -35,6 +35,7 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Mem/SmallBlockAllocator.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/SystemMutex.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
@@ -476,8 +477,8 @@ bool FBuild::Build( Node * nodeToBuild )
 {
     ASSERT( nodeToBuild );
 
-    s_StopBuild = false; // allow multiple runs in same process
-    s_AbortBuild = false; // allow multiple runs in same process
+    AtomicStoreRelaxed( &s_StopBuild, false ); // allow multiple runs in same process
+    AtomicStoreRelaxed( &s_AbortBuild, false ); // allow multiple runs in same process
 
     // create worker threads
     // get values from options here, since some tests call Build() without calling Initialize()
@@ -552,7 +553,7 @@ bool FBuild::Build( Node * nodeToBuild )
         bool complete = ( nodeToBuild->GetState() == Node::UP_TO_DATE ) ||
                         ( nodeToBuild->GetState() == Node::FAILED );
 
-        if ( s_StopBuild || complete )
+        if ( AtomicLoadRelaxed( &s_StopBuild ) || complete )
         {
             if ( stopping == false )
             {
@@ -568,7 +569,7 @@ bool FBuild::Build( Node * nodeToBuild )
                 if ( m_Options.m_FastCancel )
                 {
                     // Notify the system that the master process has been killed and that it can kill its process.
-                    s_AbortBuild = true;
+                    AtomicStoreRelaxed( &s_AbortBuild, true );
                 }
             }
         }
@@ -768,11 +769,11 @@ void FBuild::GetLibEnvVar( AString & value ) const
 //------------------------------------------------------------------------------
 void FBuild::AbortBuild()
 {
-    s_StopBuild = true;
+    AtomicStoreRelaxed( &s_StopBuild, true );
     if ( FBuild::IsValid() && FBuild::Get().m_Options.m_FastCancel )
     {
         // Notify the system that the master process has been killed and that it can kill its process.
-        s_AbortBuild = true;
+        AtomicStoreRelaxed( &s_AbortBuild, true );
     }
 }
 
@@ -784,6 +785,13 @@ void FBuild::AbortBuild()
     {
         AbortBuild();
     }
+}
+
+// GetStopBuild
+//------------------------------------------------------------------------------
+/*static*/ bool FBuild::GetStopBuild()
+{
+    return AtomicLoadRelaxed( &s_StopBuild );
 }
 
 // UpdateBuildStatus

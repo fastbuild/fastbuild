@@ -26,7 +26,7 @@ public:
     JobSubQueue();
     ~JobSubQueue();
 
-    inline uint32_t GetCount() const { return m_Count; }
+    uint32_t GetCount() const;
 
     // jobs pushed by the main thread
     void QueueJobs( Array< Node * > & nodes );

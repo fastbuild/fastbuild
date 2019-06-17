@@ -47,6 +47,7 @@
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/CRC32.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Reflection/ReflectedProperty.h"
@@ -433,6 +434,20 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     // Couldn't delete the file
     FLOG_ERROR( "Failed to delete file before build '%s'", fileName.Get() );
     return false;
+}
+
+// GetLastBuildTime
+//------------------------------------------------------------------------------
+uint32_t Node::GetLastBuildTime() const
+{
+    return AtomicLoadRelaxed( &m_LastBuildTimeMs );
+}
+
+// SetLastBuildTime
+//------------------------------------------------------------------------------
+void Node::SetLastBuildTime( uint32_t ms )
+{
+    AtomicStoreRelaxed( &m_LastBuildTimeMs, ms );
 }
 
 // CreateNode

@@ -16,6 +16,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 
@@ -52,7 +53,7 @@ void WorkerThread::Init()
 //------------------------------------------------------------------------------
 WorkerThread::~WorkerThread()
 {
-    ASSERT( m_Exited );
+    ASSERT( AtomicLoadRelaxed( &m_Exited ) );
 }
 
 // InitTmpDir
@@ -108,6 +109,20 @@ WorkerThread::~WorkerThread()
     s_TmpRoot = tmpDirPath;
 }
 
+// Stop
+//------------------------------------------------------------------------------
+void WorkerThread::Stop()
+{
+    AtomicStoreRelaxed( &m_ShouldExit, true );
+}
+
+// HasExited
+//------------------------------------------------------------------------------
+bool WorkerThread::HasExited() const
+{
+    return AtomicLoadRelaxed( &m_Exited );
+}
+
 // WaitForStop
 //------------------------------------------------------------------------------
 void WorkerThread::WaitForStop()
@@ -153,7 +168,7 @@ void WorkerThread::WaitForStop()
         // Wait for work to become available (or quit signal)
         JobQueue::Get().WorkerThreadWait( 500 );
 
-        if ( m_ShouldExit || FBuild::GetStopBuild() )
+        if ( AtomicLoadRelaxed( &m_ShouldExit ) || FBuild::GetStopBuild() )
         {
             break;
         }
@@ -161,7 +176,7 @@ void WorkerThread::WaitForStop()
         Update();
     }
 
-    m_Exited = true;
+    AtomicStoreRelaxed( &m_Exited, true );
 
     // wake up main thread
     if ( JobQueue::IsValid() ) // Unit Tests

@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
@@ -53,7 +54,7 @@ public:
                                  AString & outRelativeFileName );
 protected:
     // Helper to format some text
-    void Write( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    void Write( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // Internal helpers
     void        GetProjectRelativePath_Deprecated( const AString & fileName, AString & shortFileName ) const;

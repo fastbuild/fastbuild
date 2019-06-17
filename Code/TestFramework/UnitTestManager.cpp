@@ -253,7 +253,10 @@ void UnitTestManager::TestEnd()
             info.m_MemoryLeaks = true;
             OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
             MemTracker::DumpAllocations();
-            TEST_ASSERT( false );
+            if ( IsDebuggerAttached() )
+            {
+                TEST_ASSERT( false && "Memory leaks detected" );
+            }
             return;
         }
     #endif
@@ -269,7 +272,7 @@ void UnitTestManager::TestEnd()
                                                 uint32_t line )
 {
     OUTPUT( "\n-------- TEST ASSERTION FAILED --------\n" );
-    OUTPUT( "%s(%i): Assert: %s", file, line, message );
+    OUTPUT( "%s(%u): Assert: %s", file, line, message );
     OUTPUT( "\n-----^^^ TEST ASSERTION FAILED ^^^-----\n" );
 
     if ( IsDebuggerAttached() )
@@ -286,7 +289,7 @@ void UnitTestManager::TestEnd()
 /*static*/ bool UnitTestManager::AssertFailureM( const char * message,
                                                  const char * file,
                                                  uint32_t line,
-                                                 const char * formatString,
+                                                 MSVC_SAL_PRINTF const char * formatString,
                                                  ... )
 {
     AStackString< 4096 > buffer;
@@ -296,7 +299,7 @@ void UnitTestManager::TestEnd()
     va_end( args );
 
     OUTPUT( "\n-------- TEST ASSERTION FAILED --------\n" );
-    OUTPUT( "%s(%i): Assert: %s", file, line, message );
+    OUTPUT( "%s(%u): Assert: %s", file, line, message );
     OUTPUT( "\n%s", buffer.Get() );
     OUTPUT( "\n-----^^^ TEST ASSERTION FAILED ^^^-----\n" );
 

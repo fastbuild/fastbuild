@@ -17,6 +17,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
@@ -54,7 +55,7 @@ Server::Server( const Options & serverOptions )
 //------------------------------------------------------------------------------
 Server::~Server()
 {
-    m_ShouldExit = true;
+    AtomicStoreRelaxed( &m_ShouldExit, true );
     JobQueueRemote::Get().WakeMainThread();
     Thread::WaitForThread( m_Thread );
 
@@ -528,7 +529,7 @@ void Server::CheckWaitingJobs( const ToolManifest * manifest )
 //------------------------------------------------------------------------------
 void Server::ThreadFunc()
 {
-    while ( m_ShouldExit == false )
+    while ( AtomicLoadRelaxed( &m_ShouldExit ) == false )
     {
         FinalizeCompletedJobs();
 
@@ -542,7 +543,7 @@ void Server::ThreadFunc()
 //------------------------------------------------------------------------------
 void Server::FindNeedyClients()
 {
-    if ( m_ShouldExit )
+    if ( AtomicLoadRelaxed( &m_ShouldExit ) )
     {
         return;
     }

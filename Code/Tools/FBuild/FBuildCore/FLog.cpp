@@ -53,7 +53,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
 // Info
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Info( const char * formatString, ... )
+/*static*/ void FLog::Info( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     AStackString< 8192 > buffer;
 
@@ -67,7 +67,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
 // Build
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Build( const char * formatString, ... )
+/*static*/ void FLog::Build( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     AStackString< 8192 > buffer;
 
@@ -81,7 +81,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
 // Monitor
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Monitor( const char * formatString, ... )
+/*static*/ void FLog::Monitor( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     // Is monitoring enabled?
     if ( g_MonitorFileStream == nullptr )
@@ -113,7 +113,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
 // Warning
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Warning( const char * formatString, ... )
+/*static*/ void FLog::Warning( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     AStackString< 8192 > buffer;
 
@@ -142,7 +142,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
 // Error
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Error( const char * formatString, ... )
+/*static*/ void FLog::Error( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     // we prevent output here, rather than where the macros is inserted
     // as an error being output is not the normal code path, and a check
