@@ -17,10 +17,6 @@ public:
     virtual ~Object_ReflectionInfo() = default;
 };
 Object_ReflectionInfo g_Object_ReflectionInfo;
-void Object_ReflectionInfo_Bind()
-{
-    ReflectionInfo::BindReflection( g_Object_ReflectionInfo );
-}
 
 // DynamicCastHelper
 //------------------------------------------------------------------------------

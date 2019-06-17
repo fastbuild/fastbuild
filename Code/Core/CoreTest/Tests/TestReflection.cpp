@@ -7,7 +7,6 @@
 
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/MemoryStream.h"
-#include "Core/Reflection/BindReflection.h"
 #include "Core/Reflection/MetaData/Meta_File.h"
 #include "Core/Reflection/MetaData/Meta_Optional.h"
 #include "Core/Reflection/MetaData/Meta_Path.h"
@@ -23,13 +22,6 @@
 //------------------------------------------------------------------------------
 class TestReflection : public UnitTest
 {
-public:
-    TestReflection()
-    {
-        BIND_REFLECTION( TestObject )
-        BIND_REFLECTION( TestStruct )
-    }
-
 private:
     DECLARE_TESTS
 

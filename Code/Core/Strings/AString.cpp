@@ -184,7 +184,7 @@ int32_t AString::CompareI( const char * other ) const
 
 // Format
 //------------------------------------------------------------------------------
-AString & AString::Format( const char * fmtString, ... )
+AString & AString::Format( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     va_list args;
     va_start(args, fmtString);
@@ -506,7 +506,7 @@ AString & AString::Append( const char * string, size_t len )
 
 // AppendFormat
 //------------------------------------------------------------------------------
-AString & AString::AppendFormat( const char * fmtString, ... )
+AString & AString::AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > buffer;
     va_list args;
