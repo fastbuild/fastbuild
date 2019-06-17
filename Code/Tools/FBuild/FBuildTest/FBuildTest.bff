@@ -71,11 +71,10 @@
             .TestExecutable                 = '$ProjectName$-Exe-$Platform$-$BuildConfigName$'
             .TestOutput                     = "$OutputBase$/$ProjectPath$/TestOutput.txt"
             .TestWorkingDir                 = 'Tools/FBuild/FBuildTest'
-            .TestTimeOut                    = 300
+            .TestTimeOut                    = 500
             #if CI_BUILD
-                // Compilation on TravisCI VMs is significantly slower
-                // so the tests need more time to complete succesfully.
-                .TestTimeOut            = 900
+                // Temporarily showing output to help identify things on the CI
+                // that are significantly slower than local runs
                 .TestAlwaysShowOutput       = true // Show test timings on the CI
             #endif
         }
