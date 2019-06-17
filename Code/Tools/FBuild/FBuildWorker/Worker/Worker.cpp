@@ -415,7 +415,7 @@ void Worker::CheckForExeUpdate()
 
 // StatusMessage
 //------------------------------------------------------------------------------
-void Worker::StatusMessage( const char * fmtString, ... ) const
+void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
 {
     // Status Messages are only shown in console mode
     if ( InConsoleMode() == false )
@@ -447,7 +447,7 @@ void Worker::StatusMessage( const char * fmtString, ... ) const
 
 // ErrorMessageString
 //------------------------------------------------------------------------------
-void Worker::ErrorMessageString( const char * message ) const
+void Worker::ErrorMessageString( MSVC_SAL_PRINTF const char * message ) const
 {
     if ( InConsoleMode() )
     {

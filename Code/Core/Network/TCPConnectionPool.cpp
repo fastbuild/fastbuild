@@ -12,6 +12,7 @@
 #include "Core/Network/Network.h"
 #include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Time/Timer.h"
 
@@ -81,7 +82,7 @@ TCPConnectionPool::~TCPConnectionPool()
     // as virtual callbacks in derived classes make it unsafe to do so here.
     // By enforcing explicit shutdown, even when not strictly needed, we can
     // ensure no unsafe cases exist (and can assert below)
-    ASSERT( m_ShuttingDown && "ShutdownAllConnections not called");
+    ASSERT( AtomicLoadRelaxed( &m_ShuttingDown ) && "ShutdownAllConnections not called");
 }
 
 // ShutdownAllConnections
@@ -90,7 +91,7 @@ void TCPConnectionPool::ShutdownAllConnections()
 {
     PROFILE_FUNCTION
 
-    m_ShuttingDown = true;
+    AtomicStoreRelaxed( &m_ShuttingDown, true );
 
     m_ConnectionsMutex.Lock();
 
@@ -280,7 +281,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         if ( selRet == 0 )
         {
             // are we shutting down?
-            if ( m_ShuttingDown )
+            if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
             {
                 #ifdef TCPCONNECTION_DEBUG
                     AStackString<> host;
@@ -385,20 +386,27 @@ void TCPConnectionPool::Disconnect( const ConnectionInfo * ci )
 
     if ( ci == m_ListenConnection )
     {
-        ci->m_ThreadQuitNotification = true;
+        AtomicStoreRelease( &ci->m_ThreadQuitNotification, true );
         return;
     }
 
     ConnectionInfo ** iter = m_Connections.Find( ci );
     if ( iter != nullptr )
     {
-        ci->m_ThreadQuitNotification = true;
+        AtomicStoreRelease( &ci->m_ThreadQuitNotification, true );
         return;
     }
 
     // connection is no longer valid.... we handle this gracefully
     // as the connection might be lost while trying to disconnect
     // on another thread
+}
+
+// SetShuttingDown
+//------------------------------------------------------------------------------
+void TCPConnectionPool::SetShuttingDown()
+{
+    AtomicStoreRelaxed( &m_ShuttingDown, true );
 }
 
 // GetNumConnections
@@ -462,7 +470,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
     ASSERT( connection );
 
     // closing connection, possibly from a previous failure
-    if ( connection->m_ThreadQuitNotification || m_ShuttingDown )
+    if ( AtomicLoadAcquire( &connection->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
     {
         return false;
     }
@@ -537,7 +545,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
         {
             if ( WouldBlock() )
             {
-                if ( connection->m_ThreadQuitNotification || m_ShuttingDown )
+                if ( AtomicLoadAcquire( &connection->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     sendOK = false;
                     break;
@@ -616,7 +624,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
         {
             if ( WouldBlock() )
             {
-                if ( ci->m_ThreadQuitNotification || m_ShuttingDown )
+                if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     return false;
                 }
@@ -646,7 +654,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
         {
             if ( WouldBlock() )
             {
-                if ( ci->m_ThreadQuitNotification || m_ShuttingDown )
+                if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     FreeBuffer( buffer );
                     return false;
@@ -837,7 +845,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
     struct sockaddr_in remoteAddrInfo;
     int remoteAddrInfoSize = sizeof( remoteAddrInfo );
 
-    while ( ci->m_ThreadQuitNotification == false )
+    while ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) == false )
     {
         // timout for select() operations
         // (modified by select, so we must recreate it)
@@ -970,7 +978,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
     OnConnected( ci ); // Do callback
 
     // process socket events
-    while ( ci->m_ThreadQuitNotification == false )
+    while ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) == false )
     {
         // timout for select() operations
         // (modified by select, so we must recreate it)
@@ -997,7 +1005,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
             continue;
         }
 
-        if ( ci->m_ThreadQuitNotification == true )
+        if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) )
         {
             break; // don't bother reading any pending data if shutting down
         }

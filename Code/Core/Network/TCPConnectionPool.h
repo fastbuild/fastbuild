@@ -69,7 +69,7 @@ public:
     const ConnectionInfo * Connect( const AString & host, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
     const ConnectionInfo * Connect( uint32_t hostIP, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
     void Disconnect( const ConnectionInfo * ci );
-    void SetShuttingDown() { m_ShuttingDown = true; }
+    void SetShuttingDown();
 
     // query connection state
     size_t GetNumConnections() const;

@@ -218,6 +218,11 @@ public:
         ASSERT( false ); // invalid thread handle
         timedOut = false;
         return -1;
+    #elif __has_feature( thread_sanitizer ) || defined( __SANITIZE_THREAD__ )
+        // ThreadSanitizer doesn't support pthread_timedjoin_np yet (as of February 2018)
+        timedOut = false;
+        (void)timeoutMS;
+        return WaitForThread( handle );
     #elif defined( __APPLE__ )
         timedOut = false;
         (void)timeoutMS; // TODO:MAC Implement timeout support

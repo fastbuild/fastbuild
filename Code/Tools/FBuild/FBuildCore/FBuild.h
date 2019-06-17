@@ -99,7 +99,7 @@ public:
     // attempt to cleanly stop the build
     static        void AbortBuild();
     static        void OnBuildError();
-    static inline bool GetStopBuild() { return s_StopBuild; }
+    static        bool GetStopBuild();
     static inline volatile bool * GetAbortBuildPointer() { return &s_AbortBuild; }
 
     inline ICache * GetCache() const { return m_Cache; }

@@ -6,6 +6,7 @@
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
 #include "Core/Env/Assert.h"
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
 
 // Typedefs
@@ -63,7 +64,7 @@ public:
     AString & operator += ( const AString & string );
     inline AString & Append( const AString & string ) { return this->operator +=( string ); }
     AString & Append( const char * string, size_t len );
-    AString & AppendFormat( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    AString & AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // comparison
     bool operator == ( const char * other ) const;
@@ -83,7 +84,7 @@ public:
 
     inline bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
 
-    AString & Format( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    AString & Format( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
     AString & VFormat( const char * fmtString, va_list arg );
 
     void Tokenize( Array< AString > & tokens, char splitChar = ' ' ) const;

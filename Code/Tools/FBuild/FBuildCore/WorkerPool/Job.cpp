@@ -58,7 +58,7 @@ void Job::Cancel()
 {
     ASSERT( m_IsLocal ); // Cancellation should only occur locally
     ASSERT( m_Abort == false ); // Job must be not already be cancelled
-    m_Abort = true;
+    AtomicStoreRelaxed( &m_Abort, true );
 }
 
 // OwnData
@@ -95,7 +95,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
 
 // Error
 //------------------------------------------------------------------------------
-void Job::Error( const char * format, ... )
+void Job::Error( MSVC_SAL_PRINTF const char * format, ... )
 {
     AStackString< 8192 > buffer;
 
@@ -235,6 +235,13 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
     buffer.Replace( '\n', (char)12 );
     buffer.Replace( '\r', (char)12 );
     buffer.Replace( '\"', '\'' ); // TODO:B The monitor can't differentiate ' and "
+}
+
+// GetTotalLocalDataMemoryUsage
+//------------------------------------------------------------------------------
+/*static*/ uint64_t Job::GetTotalLocalDataMemoryUsage()
+{
+    return (uint64_t)AtomicLoadRelaxed( &s_TotalLocalDataMemoryUsage );
 }
 
 //------------------------------------------------------------------------------

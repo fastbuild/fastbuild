@@ -42,7 +42,14 @@ JobSubQueue::JobSubQueue()
 JobSubQueue::~JobSubQueue()
 {
     ASSERT( m_Jobs.IsEmpty() );
-    ASSERT( m_Count == 0 );
+    ASSERT( AtomicLoadRelaxed( &m_Count ) == 0 );
+}
+
+// GetCount
+//------------------------------------------------------------------------------
+uint32_t JobSubQueue::GetCount() const
+{
+    return AtomicLoadRelaxed( &m_Count );
 }
 
 // JobSubQueue:QueueJobs
@@ -66,7 +73,7 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
     const bool wasEmpty = m_Jobs.IsEmpty();
 
     m_Jobs.Append( jobs );
-    m_Count += (uint32_t)jobs.GetSize();
+    AtomicAddU32( &m_Count, (int32_t)jobs.GetSize() );
 
     if ( wasEmpty )
     {
@@ -84,7 +91,7 @@ Job * JobSubQueue::RemoveJob()
     Job * retJob = nullptr;
 
     // lock-free early out if there are no jobs
-    if ( m_Count == 0 )
+    if ( AtomicLoadRelaxed( &m_Count ) == 0 )
     {
         return retJob;
     }
@@ -101,9 +108,7 @@ Job * JobSubQueue::RemoveJob()
     retJob = m_Jobs.Top();
     if ( retJob )
     {
-        ASSERT( m_Count );
-        --m_Count;
-
+        VERIFY( AtomicDecU32( &m_Count ) != static_cast< uint32_t >( -1 ) );
         m_Jobs.Pop();
     }
     return retJob;
@@ -402,7 +407,7 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
 
     numJobs = m_LocalJobs_Available.GetCount();
     numJobsDist = (uint32_t)m_DistributableJobs_Available.GetSize();
-    numJobsActive = m_NumLocalJobsActive;
+    numJobsActive = AtomicLoadRelaxed( &m_NumLocalJobsActive );
     numJobsDistActive = (uint32_t)m_DistributableJobs_InProgress.GetSize();
 }
 

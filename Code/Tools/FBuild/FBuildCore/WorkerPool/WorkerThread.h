@@ -28,8 +28,8 @@ public:
 
     static void InitTmpDir( bool remote = false );
 
-    inline void Stop()              { m_ShouldExit = true; }
-    inline bool HasExited() const   { return m_Exited; }
+    void Stop();
+    bool HasExited() const;
     void WaitForStop();
 
     static uint32_t GetThreadIndex();

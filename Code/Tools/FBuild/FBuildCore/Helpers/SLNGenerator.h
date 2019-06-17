@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
@@ -50,7 +51,7 @@ private:
     void WriteFooter();
 
     // Helper to format some text
-    void Write( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    void Write( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // working buffer
     AString m_Output;
