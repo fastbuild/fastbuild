@@ -127,7 +127,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
 // ErrorString
 //------------------------------------------------------------------------------
-/*static*/ void FLog::ErrorString( const char * message )
+/*static*/ void FLog::ErrorString( MSVC_SAL_PRINTF const char * message )
 {
     // we prevent output here, rather than where the macros is inserted
     // as an error being output is not the normal code path, and a check

@@ -141,7 +141,7 @@ int Worker::Work()
         {
             if ( !FileIO::EnsurePathExists( m_WorkerSettings->GetSandboxTmp() ) )
             {
-                ErrorMessage( "Failed to create tmp folder %s (error %i)", m_WorkerSettings->GetSandboxTmp().Get(), Env::GetLastErr() );
+                ErrorMessage( "Failed to create tmp folder %s (error %u)", m_WorkerSettings->GetSandboxTmp().Get(), Env::GetLastErr() );
                 return -2;
             }
             tmpPath = m_WorkerSettings->GetObfuscatedSandboxTmp();

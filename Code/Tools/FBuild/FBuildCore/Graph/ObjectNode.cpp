@@ -653,7 +653,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
 #else
         sprintf_s( buffer, BUFFER_SIZE,
 #endif
-        "BuildFinalOutput result:%d\n", result );
+        "BuildFinalOutput result:%d\n", result ? 1 : 0 );
     FLOG_BUILD_DIRECT( buffer );
 
     // cleanup temp file
@@ -2669,7 +2669,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
         else
         {
-            job->Error( "Failed to spawn '%s' process (error %i) to build '%s'\n",
+            job->Error( "Failed to spawn '%s' process (error %u) to build '%s'\n",
                 spawnExe.Get(), Env::GetLastErr(), outputName.Get() );
             job->OnSystemError();
         }
