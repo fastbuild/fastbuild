@@ -470,7 +470,7 @@ void Worker::ErrorMessageString( MSVC_SAL_PRINTF const char * message ) const
 
 // ErrorMessage
 //------------------------------------------------------------------------------
-void Worker::ErrorMessage( const char * fmtString, ... ) const
+void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
 {
     AStackString<> buffer;
 
