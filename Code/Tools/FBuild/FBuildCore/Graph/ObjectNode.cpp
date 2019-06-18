@@ -627,17 +627,15 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
 
     if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote )
     {
-    const uint32_t BUFFER_SIZE( 4096 );
-    char buffer[ BUFFER_SIZE ];
+        const uint32_t BUFFER_SIZE( 4096 );
+        char buffer[ BUFFER_SIZE ];
 #if defined( __APPLE__ ) || defined( __LINUX__ )
         sprintf( buffer,
 #else
         sprintf_s( buffer, BUFFER_SIZE,
 #endif
         "EmitCompilationMessage2\n" );
-
-        puts( buffer );
-        fflush( stdout );
+        FLOG_BUILD_DIRECT( buffer );
 
         // show that we are locally consuming a remote job
         EmitCompilationMessage( fullArgs, useDeoptimization, workingDir,
@@ -2476,6 +2474,16 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs, const AStri
     if ( !ch.SpawnCompiler( job, GetName(), workingDir,
          GetCompiler(), compiler, m_Name, fullArgs ) )
     {
+        const uint32_t BUFFER_SIZE( 4096 );
+        char buffer[ BUFFER_SIZE ];
+    #if defined( __APPLE__ ) || defined( __LINUX__ )
+            sprintf( buffer,
+    #else
+            sprintf_s( buffer, BUFFER_SIZE,
+    #endif
+            "failed out:%s err:%s\n", ch.GetOut().Get(), ch.GetErr().Get() );
+        FLOG_BUILD_DIRECT( buffer );
+
         // did spawn fail, or did we spawn and fail to compile?
         if ( ch.GetResult() != 0 )
         {
@@ -2495,6 +2503,16 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs, const AStri
     }
     else
     {
+        const uint32_t BUFFER_SIZE( 4096 );
+        char buffer[ BUFFER_SIZE ];
+    #if defined( __APPLE__ ) || defined( __LINUX__ )
+            sprintf( buffer,
+    #else
+            sprintf_s( buffer, BUFFER_SIZE,
+    #endif
+            "passed out:%s err:%s\n", ch.GetOut().Get(), ch.GetErr().Get() );
+        FLOG_BUILD_DIRECT( buffer );
+
         // Handle warnings for compilation that passed
         if ( ch.GetResult() == 0 )
         {
