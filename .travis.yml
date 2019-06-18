@@ -6,34 +6,34 @@ matrix:
     # Compile & Run Tests (Unity)
     #=====================================================================
     - os: linux
-      stage: CompileWithTests
-      name: "Linux Exes & Tests"
+      stage: Compile
+      name: "Linux: Debug/Profile/Release & Tests"
     #---------------------------------------------------------------------
     - os: osx
-      stage: CompileWithTests
-      name: "OSX Exes & Tests"
+      stage: Compile
+      name: "OSX: Debug/Profile/Release & Tests"
       compiler: clang
     #---------------------------------------------------------------------
     - os: windows
-      stage: CompileWithTests
-      name: "Windows Exes & Tests"
+      stage: Compile
+      name: "Windows: Debug/Profile/Release & Tests"
     #=====================================================================
     # Compile Only (No Unity)
     #=====================================================================
     - os: linux
-      stage: NoUnity
-      name: "Linux Debug -nounity"
+      stage: Compile
+      name: "Linux: Debug (NoUnity)"
       env: CFG=nounity
     #---------------------------------------------------------------------
     - os: osx
-      stage: NoUnity
-      name: "OSX Debug -nounity"
+      stage: Compile
+      name: "OSX: Debug (NoUnity)"
       compiler: clang
       env: CFG=nounity
     #---------------------------------------------------------------------
     - os: windows
-      stage: NoUnity
-      name: "Windows Debug -nounity"
+      stage: Compile
+      name: "Windows: Debug (NoUnity)"
       env: CFG=nounity
     #=====================================================================
     # Static Analysis
@@ -116,8 +116,7 @@ matrix:
   fast_finish: true
 
 stages:
-  - CompileWithTests
-  - NoUnity
+  - Compile
   - StaticAnalysis
   - Sanitizers
   - Other
