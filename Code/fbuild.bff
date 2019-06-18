@@ -363,6 +363,14 @@ ForEach( .BuildConfig in .BuildConfigs )
     Alias( 'All-$Platform$-$BuildConfigName$' ) { .Targets = .'Targets_$Platform$_$BuildConfigName$' }
 }
 
+// Exes
+//------------------------------------------------------------------------------
+Alias( 'Exes' )
+{
+    .Targets    = { 'FBuildWorker-Debug',   'FBuildWorker-Profile', 'FBuildWorker-Release'
+                    'FBuildApp-Debug',      'FBuildApp-Profile',    'FBuildApp-Release' }
+}
+
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
 .Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX' }
