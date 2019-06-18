@@ -7,16 +7,16 @@ matrix:
     #=====================================================================
     - os: linux
       stage: CompileWithTests
-      name: "Linux All+Tests"
+      name: "Linux Exes & Tests"
     #---------------------------------------------------------------------
     - os: osx
       stage: CompileWithTests
-      name: "OSX All+Tests"
+      name: "OSX Exes & Tests"
       compiler: clang
     #---------------------------------------------------------------------
     - os: windows
       stage: CompileWithTests
-      name: "Windows All+Tests"
+      name: "Windows Exes & Tests"
     #=====================================================================
     # Compile Only (No Unity)
     #=====================================================================
@@ -214,7 +214,7 @@ script:
   - |
     case "${TRAVIS_OS_NAME}:${CFG}" in
       linux:|osx:|windows:)
-        ${FBUILD_CMD} Tests
+        ${FBUILD_CMD} Exes Tests
         ;;
       linux:asan)
         ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-ASan
