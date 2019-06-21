@@ -28,7 +28,7 @@
 
         // Library
         //--------------------------------------------------------------------------
-        Library( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
+        ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
         {
             // Input
             .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
@@ -36,7 +36,6 @@
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
         Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$BuildConfigName$' }
         ^'Targets_$Platform$_$BuildConfigName$' + { '$ProjectName$-$Platform$-$BuildConfigName$' }

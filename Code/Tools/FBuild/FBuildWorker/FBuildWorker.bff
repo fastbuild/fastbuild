@@ -41,7 +41,6 @@
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
 
         // Executable

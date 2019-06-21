@@ -24,7 +24,7 @@
 
         // Library
         //--------------------------------------------------------------------------
-        Library( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
+        ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
         {
             // Input (Unity)
             .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
