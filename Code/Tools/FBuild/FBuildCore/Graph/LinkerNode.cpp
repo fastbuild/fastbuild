@@ -233,49 +233,6 @@ LinkerNode::~LinkerNode()
         ASSERT( !p.IsRunning() );
         // Get result
         int result = p.WaitForExit();
-
-    const uint32_t BUFFER_SIZE( 4096 );
-    char buffer[ BUFFER_SIZE ];
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-        sprintf( buffer,
-#else
-        sprintf_s( buffer, BUFFER_SIZE,
-#endif
-            "link m_Linker:%s fullArgs:%s workingDir:%s result:%d out:%s err:%s\n",
-            m_Linker.Get(),
-            fullArgs.GetFinalArgs().Get(),
-            workingDir,
-            result,
-            memOut.Get(),
-            memErr.Get() );
-        FLOG_BUILD_DIRECT( buffer );
-
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-        bool searching = true;
-        const char* env = environment;
-        if ( env != nullptr )
-        {
-            do
-            {
-                AStackString<> envVar( env );
-                uint32_t envVarSize = envVar.GetLength();
-                if ( envVarSize > 0 )
-                {
-                    ++envVarSize;  // add one for null separator
-                    env += envVarSize;
-                    sprintf( buffer,
-                        "env:%s\n",
-                        envVar.Get() );
-                    FLOG_BUILD_DIRECT( buffer );
-                }
-                else
-                {
-                    searching = false;
-                }
-            } while ( searching );
-        }
-#endif
-
         if ( p.HasAborted() )
         {
             return NODE_RESULT_FAILED;
