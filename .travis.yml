@@ -135,7 +135,7 @@ install:
   - chmod +x ./${FBUILD}
   # Set up some variables for convenience.
   - |
-  - FBUILD_CMD="../${FBUILD} -noprogress -summary"
+  - FBUILD_CMD="../${FBUILD} -noprogress -nostoponerror -summary"
   - GCC=${GCC:-gcc}
   - GXX=${GCC/gcc/g++}
   - CLANG=${CLANG:-clang}
