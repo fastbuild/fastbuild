@@ -241,15 +241,40 @@ LinkerNode::~LinkerNode()
 #else
         sprintf_s( buffer, BUFFER_SIZE,
 #endif
-        "link m_Linker:%s fullArgs:%s workingDir:%s environment:%s result:%d out:%s err:%s\n",
-        m_Linker.Get(),
-        fullArgs.GetFinalArgs().Get(),
-        workingDir,
-        environment,
-        result,
-        memOut.Get(),
-        memErr.Get() );
-    FLOG_BUILD_DIRECT( buffer );
+            "link m_Linker:%s fullArgs:%s workingDir:%s result:%d out:%s err:%s\n",
+            m_Linker.Get(),
+            fullArgs.GetFinalArgs().Get(),
+            workingDir,
+            result,
+            memOut.Get(),
+            memErr.Get() );
+        FLOG_BUILD_DIRECT( buffer );
+
+#if defined( __APPLE__ ) || defined( __LINUX__ )
+        bool searching = true;
+        const char* p = environment;
+        if ( p != nullptr )
+        {
+            do
+            {
+                AStackString<> envVar( p );
+                uint32_t envVarSize = envVar.GetLength();
+                if ( envVarSize > 0 )
+                {
+                    ++envVarSize;  // add one for null separator
+                    p += envVarSize;
+                    sprintf( buffer,
+                        "env:%s\n",
+                        envVar.Get() );
+                    FLOG_BUILD_DIRECT( buffer );
+                }
+                else
+                {
+                    searching = false;
+                }
+            } while ( searching );
+        }
+#endif
 
         if ( p.HasAborted() )
         {
