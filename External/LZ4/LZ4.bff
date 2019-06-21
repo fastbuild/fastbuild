@@ -47,7 +47,7 @@
         Using( ."LZ4Options_$Platform$" )
 
         // Static Library
-        Library( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
+        ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
         {
             // Input - Only build specific files we use
             .CompilerInputFiles         = {
@@ -70,12 +70,15 @@
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/External/$ProjectName$/'
-            .LibrarianOutput            = '$OutputBase$/External/$ProjectName$/$ProjectName$$LibExtension$'
         }
         Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$BuildConfigName$' }
 
         #if __WINDOWS__
             .ProjectConfig              = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = '$ProjectName$-$Platform$-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+        #if __OSX__
+            .ProjectConfig              = [ .Config = '$BuildConfigName$'   .Target = '$ProjectName$-x64OSX-$BuildConfigName$' ]
             ^ProjectConfigs             + .ProjectConfig
         #endif
     }
@@ -106,11 +109,6 @@
             .ProjectBasePath            = '$ProjectPath$/'
 
             .XCodeBuildWorkingDir       = '../../../../Code/'
-
-            .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = '$ProjectName$-x64OSX-Debug' ]
-            .ProjectOSXProfile      = [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
-            .ProjectOSXRelease      = [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]
-            .ProjectConfigs         = { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }
         }
     #endif
 }

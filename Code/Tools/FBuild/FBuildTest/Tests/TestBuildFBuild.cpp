@@ -56,16 +56,13 @@ FBuildStats TestBuildFBuild::BuildInternal( FBuildTestOptions options, bool useD
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetDBFile() : nullptr ) );
 
+    // Build a subset of targets as a sort of smoke test
     Array< AString > targets;
     #if defined( __WINDOWS__ )
         targets.Append( AStackString<>( "All-x64-Debug" ) );
-        targets.Append( AStackString<>( "All-x64-Release" ) );
-        targets.Append( AStackString<>( "All-x64Clang-Debug" ) );
         targets.Append( AStackString<>( "All-x64Clang-Release" ) );
     #elif defined( __LINUX__ )
         targets.Append( AStackString<>( "All-x64Linux-Debug" ) );
-        targets.Append( AStackString<>( "All-x64Linux-Release" ) );
-        targets.Append( AStackString<>( "All-x64ClangLinux-Debug" ) );
         targets.Append( AStackString<>( "All-x64ClangLinux-Release" ) );
     #elif defined( __OSX__ )
         targets.Append( AStackString<>( "All-x64OSX-Debug" ) );
