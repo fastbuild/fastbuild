@@ -212,16 +212,6 @@ LinkerNode::~LinkerNode()
                                 workingDir,
                                 environment );
 
-    const uint32_t BUFFER_SIZE( 4096 );
-    char buffer[ BUFFER_SIZE ];
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-        sprintf( buffer,
-#else
-        sprintf_s( buffer, BUFFER_SIZE,
-#endif
-        "link spawn result:%d\n", spawnOK ? 1 : 0 );
-    FLOG_BUILD_DIRECT( buffer );
-
         if ( !spawnOK )
         {
             if ( p.HasAborted() )
@@ -244,19 +234,25 @@ LinkerNode::~LinkerNode()
         // Get result
         int result = p.WaitForExit();
 
+    const uint32_t BUFFER_SIZE( 4096 );
+    char buffer[ BUFFER_SIZE ];
 #if defined( __APPLE__ ) || defined( __LINUX__ )
         sprintf( buffer,
 #else
         sprintf_s( buffer, BUFFER_SIZE,
 #endif
-        "link spawn result %d out:%s err:%s\n", result, memOut.Get(), memErr.Get() );
+        "link m_Linker:%s fullArgs:%s workingDir:%s environment:%s result:%d out:%s err:%s\n",
+        m_Linker.Get(),
+        fullArgs.GetFinalArgs().Get(),
+        workingDir,
+        environment,
+        result,
+        memOut.Get(),
+        memErr.Get() );
     FLOG_BUILD_DIRECT( buffer );
 
         if ( p.HasAborted() )
         {
-
-    FLOG_BUILD_DIRECT( "link aborted\n" );
-
             return NODE_RESULT_FAILED;
         }
 

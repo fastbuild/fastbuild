@@ -45,102 +45,69 @@ int main( int argc, char** argv )
         return 1;
     }
 
-    const size_t maxChars = 4096;
-    char * cmd = new char[maxChars];
-    cmd[ 0 ] = '\0';  // terminate string
-    strcat_safe( cmd, argv[1], maxChars );
-
-    char * cmdArgs = new char[maxChars];
+    const char * cmd = argv[1];
     
-    int result = 0;
-
-    int iteration = 0;
-    while (iteration < 2)
+    const size_t maxChars = 4096;
+    char * cmdArgs = new char[maxChars];
+    cmdArgs[ 0 ] = '\0';  // terminate string
+    if ( argc > 2 )  // if cmd has args
     {
-        cmdArgs[ 0 ] = '\0';  // terminate string
-
-        if (iteration > 0)
+        // loop over remaining args after the cmd
+        for( int i = 2; i < argc; ++i )
         {
-            const char * straceCmd = "/usr/bin/strace";
-            cmd[ 0 ] = '\0';  // terminate string
-            strcat_safe( cmd, straceCmd, maxChars );
-            strcat_safe( cmdArgs, argv[1], maxChars );
+            // if arg contains spaces, then add it with quotes
+            char * spacePos = strstr( argv[ i ], " " );
+            if ( spacePos != nullptr )
+            {
+                strcat_safe( cmdArgs, "\"", maxChars );
+                strcat_safe( cmdArgs, argv[ i ], maxChars );
+                strcat_safe( cmdArgs, "\"", maxChars );
+            }
+            else  // no spaces, so add arg as-is
+            {
+                strcat_safe( cmdArgs, argv[ i ], maxChars );
+            }
+            // include a space between each arg
             strcat_safe( cmdArgs, " ", maxChars );
         }
+    }
 
-        if ( argc > 2 )  // if cmd has args
-        {
-            // loop over remaining args after the cmd
-            for( int i = 2; i < argc; ++i )
-            {
-                // if arg contains spaces, then add it with quotes
-                char * spacePos = strstr( argv[ i ], " " );
-                if ( spacePos != nullptr )
-                {
-                    strcat_safe( cmdArgs, "\"", maxChars );
-                    strcat_safe( cmdArgs, argv[ i ], maxChars );
-                    strcat_safe( cmdArgs, "\"", maxChars );
-                }
-                else  // no spaces, so add arg as-is
-                {
-                    strcat_safe( cmdArgs, argv[ i ], maxChars );
-                }
-                // include a space between each arg
-                strcat_safe( cmdArgs, " ", maxChars );
-            }
-        }
-
-        // spawn the process
-        Process p;
-        if ( p.Spawn( cmd, cmdArgs, nullptr, nullptr ) == false )
-        {
-            if ( p.HasAborted() )
-            {
-                fprintf( stderr, "%s child '%s' process aborted!\n", appName, cmd );
-                return 2;
-            }
-
-            fprintf( stderr, "%s failed to spawn child '%s' process Error: %s\n",
-                    appName, cmd, LAST_ERROR_STR );
-            return 3;
-        }
-
-        // capture all of the stdout and stderr
-        AutoPtr< char > memOut;
-        AutoPtr< char > memErr;
-        uint32_t memOutSize = 0;
-        uint32_t memErrSize = 0;
-        p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
-
-        // Get result
-        result = p.WaitForExit();
-        fprintf( stderr, "cmd:%s cmdArgs:%s result:%d\n", cmd, cmdArgs, result );
+    // spawn the process
+    Process p;
+    if ( p.Spawn( cmd, cmdArgs, nullptr, nullptr ) == false )
+    {
         if ( p.HasAborted() )
         {
-            return 4;
+            fprintf( stderr, "%s child '%s' process aborted!\n", appName, cmd );
+            return 2;
         }
 
-        if ( memOut.Get() != nullptr )
-        {
-            fprintf( stdout, "%s", memOut.Get() );
-        }
+        fprintf( stderr, "%s failed to spawn child '%s' process Error: %s\n",
+                appName, cmd, LAST_ERROR_STR );
+        return 3;
+    }
 
-        fprintf( stderr, "stderr:");
+    // capture all of the stdout and stderr
+    AutoPtr< char > memOut;
+    AutoPtr< char > memErr;
+    uint32_t memOutSize = 0;
+    uint32_t memErrSize = 0;
+    p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize );
 
-        if ( memErr.Get() != nullptr )
-        {
-            fprintf( stderr, "%s", memErr.Get() );
-            if ( strstr( memErr.Get(), "cannot find" ) == NULL )
-            {
-                break;
-            }
-        }
-        else
-        {
-            break;
-        }
+    // Get result
+    const int result = p.WaitForExit();
+    if ( p.HasAborted() )
+    {
+        return 4;
+    }
 
-        iteration++;
+    if ( memOut.Get() != nullptr )
+    {
+        fprintf( stdout, "%s", memOut.Get() );
+    }
+    if ( memErr.Get() != nullptr )
+    {
+        fprintf( stderr, "%s", memErr.Get() );
     }
 
     return result; // test will check this

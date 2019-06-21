@@ -44,8 +44,6 @@
     #include <sys/time.h>
 #endif
 
-#include <stdio.h>
-
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
@@ -627,32 +625,18 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
 
     if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote )
     {
-        const uint32_t BUFFER_SIZE( 4096 );
-        char buffer[ BUFFER_SIZE ];
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-        sprintf( buffer,
-#else
-        sprintf_s( buffer, BUFFER_SIZE,
-#endif
-        "EmitCompilationMessage2\n" );
-        FLOG_BUILD_DIRECT( buffer );
-
         // show that we are locally consuming a remote job
         EmitCompilationMessage( fullArgs, useDeoptimization, workingDir,
             compiler, stealingRemoteJob, racingRemoteJob, isRemote );
     }
 
-    bool result = BuildFinalOutput( job, fullArgs, workingDir, compiler );
+        // We might not have preprocessed data if using the LightCache
+        if ( job->GetData() == nullptr )
+        {
+            usePreProcessedOutput = false;
+        }
 
-    const uint32_t BUFFER_SIZE( 4096 );
-    char buffer[ BUFFER_SIZE ];
-#if defined( __APPLE__ ) || defined( __LINUX__ )
-        sprintf( buffer,
-#else
-        sprintf_s( buffer, BUFFER_SIZE,
-#endif
-        "BuildFinalOutput result:%d\n", result ? 1 : 0 );
-    FLOG_BUILD_DIRECT( buffer );
+    bool result = BuildFinalOutput( job, fullArgs, workingDir, compiler );
 
     // cleanup temp file
     if ( tmpFileName.IsEmpty() == false )
@@ -1947,6 +1931,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             }
         }
 
+        // Strip -fdiagnostics-color options because we are going to override them
+        if ( forceColoredDiagnostics && ( isClang || isGCC ) )
+        {
+            if ( StripToken( "-fdiagnostics-color", token, true ) ||
+                 StripToken( "-fno-diagnostics-color", token ) )
+            {
+                continue;
+            }
+        }
+
         AStackString<> basePath( m_Name.Get(), m_Name.FindLast( NATIVE_SLASH ) );
 
         // %1 -> InputFile
@@ -2474,16 +2468,6 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs, const AStri
     if ( !ch.SpawnCompiler( job, GetName(), workingDir,
          GetCompiler(), compiler, m_Name, fullArgs ) )
     {
-        const uint32_t BUFFER_SIZE( 4096 );
-        char buffer[ BUFFER_SIZE ];
-    #if defined( __APPLE__ ) || defined( __LINUX__ )
-            sprintf( buffer,
-    #else
-            sprintf_s( buffer, BUFFER_SIZE,
-    #endif
-            "failed out:%s err:%s\n", ch.GetOut().Get(), ch.GetErr().Get() );
-        FLOG_BUILD_DIRECT( buffer );
-
         // did spawn fail, or did we spawn and fail to compile?
         if ( ch.GetResult() != 0 )
         {
@@ -2503,16 +2487,6 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs, const AStri
     }
     else
     {
-        const uint32_t BUFFER_SIZE( 4096 );
-        char buffer[ BUFFER_SIZE ];
-    #if defined( __APPLE__ ) || defined( __LINUX__ )
-            sprintf( buffer,
-    #else
-            sprintf_s( buffer, BUFFER_SIZE,
-    #endif
-            "passed out:%s err:%s\n", ch.GetOut().Get(), ch.GetErr().Get() );
-        FLOG_BUILD_DIRECT( buffer );
-
         // Handle warnings for compilation that passed
         if ( ch.GetResult() == 0 )
         {
@@ -2666,7 +2640,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                     DumpOutput( job, m_Out.Get(), m_OutSize, outputName );
                 }
 
-                job->Error( "Failed to build Object (error %i) '%s'\n", m_Result, outputName.Get() );
+                job->Error( "Failed to build Object Error: %s '%s'\n", ERROR_STR(m_Result), outputName.Get() );
                 result = false;
             }
         }
@@ -2687,8 +2661,8 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
         else
         {
-            job->Error( "Failed to spawn '%s' process (error %u) to build '%s'\n",
-                spawnExe.Get(), Env::GetLastErr(), outputName.Get() );
+            job->Error( "Failed to spawn '%s' process Error: %s to build '%s'\n",
+                spawnExe.Get(), LAST_ERROR_STR, outputName.Get() );
             job->OnSystemError();
         }
         result = false;
