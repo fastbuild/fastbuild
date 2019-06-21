@@ -249,11 +249,14 @@ LinkerNode::~LinkerNode()
 #else
         sprintf_s( buffer, BUFFER_SIZE,
 #endif
-        "link spawn out:%s err:%s\n", memOut.Get(), memErr.Get() );
+        "link spawn result %d out:%s err:%s\n", result, memOut.Get(), memErr.Get() );
     FLOG_BUILD_DIRECT( buffer );
 
         if ( p.HasAborted() )
         {
+
+    FLOG_BUILD_DIRECT( "link aborted\n" );
+
             return NODE_RESULT_FAILED;
         }
 
