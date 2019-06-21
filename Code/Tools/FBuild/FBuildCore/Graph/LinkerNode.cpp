@@ -244,8 +244,6 @@ LinkerNode::~LinkerNode()
         // Get result
         int result = p.WaitForExit();
 
-    const uint32_t BUFFER_SIZE( 4096 );
-    char buffer[ BUFFER_SIZE ];
 #if defined( __APPLE__ ) || defined( __LINUX__ )
         sprintf( buffer,
 #else
