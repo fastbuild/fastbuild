@@ -252,17 +252,17 @@ LinkerNode::~LinkerNode()
 
 #if defined( __APPLE__ ) || defined( __LINUX__ )
         bool searching = true;
-        const char* p = environment;
-        if ( p != nullptr )
+        const char* env = environment;
+        if ( env != nullptr )
         {
             do
             {
-                AStackString<> envVar( p );
+                AStackString<> envVar( env );
                 uint32_t envVarSize = envVar.GetLength();
                 if ( envVarSize > 0 )
                 {
                     ++envVarSize;  // add one for null separator
-                    p += envVarSize;
+                    env += envVarSize;
                     sprintf( buffer,
                         "env:%s\n",
                         envVar.Get() );
