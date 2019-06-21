@@ -584,11 +584,13 @@ Alias( 'All+Tests' )
                                         'LZ4-xcodeproj'
                                         'OSUI-xcodeproj'
                                         'TestFramework-xcodeproj' }
-
-        .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = 'All-x64OSX-Debug' ]
-        .ProjectOSXProfile      = [ .Config = 'Profile' .Target = 'All-x64OSX-Profile' ]
-        .ProjectOSXRelease      = [ .Config = 'Release' .Target = 'All-x64OSX-Release' ]
-        .ProjectConfigs         = { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }
+        .ProjectConfigs = {}
+        ForEach( .BuildConfig in.BuildConfigs )
+        {
+            Using( .BuildConfig )
+            .ProjectConfig          = [ .Config = '$BuildConfigName$' .Target = 'All-x64OSX-$BuildConfigName$' ]
+            ^ProjectConfigs         + .ProjectConfig
+        }
     }
 #endif
 

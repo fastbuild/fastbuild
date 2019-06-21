@@ -13,6 +13,7 @@
 #if __WINDOWS__
     //#define USING_CLANG_5
     #define USING_CLANG_7
+    //#define USING_CLANG_8
 #endif
 
 // Activate
@@ -44,6 +45,9 @@
     #endif
     #if USING_CLANG_7
         #include "Windows/Clang7.bff"
+    #endif
+    #if USING_CLANG_8
+        #include "Windows/Clang8.bff"
     #endif
 #endif
 
