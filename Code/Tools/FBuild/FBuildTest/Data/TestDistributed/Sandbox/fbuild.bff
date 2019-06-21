@@ -101,23 +101,24 @@ Executable( "DummySandboxExe" )
     #if __WINDOWS__
         Using( .VisualStudioToolChain_X64 )
         .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
-    #endif
-    .Libraries          = { 'DummySandboxExe-Lib' }
-    #if __WINDOWS__
-    .LinkerOptions      + ' Advapi32.lib'
-                        + ' kernel32.lib'
-                        + .CRTLibs_Static
+                            + ' Advapi32.lib'
+                            + ' kernel32.lib'
+                            + .CRTLibs_Static
     #endif
     #if __LINUX__
         Using( .LinuxGCCToolChain )
         .LinkerOptions      + ' -pthread -ldl -lrt'
     #endif
+    .Libraries          = { 'DummySandboxExe-Lib' }
     .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/Sandbox/dummysandbox$ExeExtension$'
 }
 
 Executable( "TestExe" )
 {
     Using( .ExecutableStruct )
+    #if __LINUX__
+        .LinkerOptions      + ' -B/usr/bin'
+    #endif
     .Libraries          = { 'TestExe-Lib' }
     .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/Sandbox/test$ExeExtension$'
 }
