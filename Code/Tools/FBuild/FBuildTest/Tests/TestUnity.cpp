@@ -256,11 +256,11 @@ void TestUnity::TestCompile_NoRebuild_BFFChange() const
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
     CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 4+numF );
+    CheckStatsTotal( stats, 8+numF, 3+numF );
 }
 
 // TestGenerateFromExplicitList

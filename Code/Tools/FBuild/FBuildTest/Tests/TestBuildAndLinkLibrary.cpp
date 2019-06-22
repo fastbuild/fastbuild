@@ -145,10 +145,10 @@ void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild_BFFChange() const
     //               Seen,  Built,  Type
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( 7,     7,      Node::FILE_NODE ); // 3 cpps + 3 headers + librarian
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 3,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,     0,      Node::LIBRARY_NODE );
-    CheckStatsTotal( 13,    9 );
+    CheckStatsTotal( 13,    8 );
 }
 
 // TestLibMerge
@@ -229,11 +229,11 @@ void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild_BFFChange() const
     // Check stats
     //               Seen,  Built,  Type
     CheckStatsNode ( 7,     7,      Node::FILE_NODE ); // 3 cpps + 3 headers + librarian
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE ); // Compiler rebuils after migration
+    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 3,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 3,     0,      Node::LIBRARY_NODE ); // 2 libs + merge lib
-    CheckStatsTotal( 15,    8 );
+    CheckStatsTotal( 15,    7 );
 }
 
 //------------------------------------------------------------------------------

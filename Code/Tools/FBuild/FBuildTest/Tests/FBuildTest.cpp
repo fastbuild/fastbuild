@@ -224,6 +224,21 @@ size_t FBuildForTest::GetRecursiveDependencyCount( const char * nodeName ) const
     return GetRecursiveDependencyCount( node );
 }
 
+// GetNodesOfType
+//------------------------------------------------------------------------------
+void FBuildForTest::GetNodesOfType( Node::Type type, Array<const Node *> & outNodes ) const
+{
+    const size_t numNodes = m_DependencyGraph->GetNodeCount();
+    for ( size_t i = 0; i < numNodes; ++i )
+    {
+        const Node * node = m_DependencyGraph->GetNodeByIndex( i );
+        if ( node->GetType() == type )
+        {
+            outNodes.Append( node );
+        }
+    }
+}
+
 // SerializeDepGraphToText
 //------------------------------------------------------------------------------
 void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString& outBuffer ) const

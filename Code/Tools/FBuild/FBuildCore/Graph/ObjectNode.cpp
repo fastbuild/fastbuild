@@ -1162,6 +1162,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
     // hash the pre-processed input data
     ASSERT( m_LightCacheKey || job->GetData() );
     const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey : xxHash::Calc64( job->GetData(), job->GetDataSize() );
+    ASSERT( preprocessedSourceKey );
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
@@ -1174,9 +1175,11 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
         BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, finalize );
         commandLineKey = xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
     }
+    ASSERT( commandLineKey );
 
     // ToolChain hash
     const uint64_t toolChainKey = GetCompiler()->CastTo< CompilerNode >()->GetManifest().GetToolId();
+    ASSERT( toolChainKey );
 
     // PCH dependency
     uint64_t pchKey = 0;
