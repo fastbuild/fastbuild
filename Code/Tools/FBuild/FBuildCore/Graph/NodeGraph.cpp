@@ -1758,6 +1758,16 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         return;
     }
 
+    // Migrate children before parents
+    for ( Dependency & dep : newNode.m_PreBuildDependencies )
+    {
+        MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
+    }
+    for ( Dependency& dep : newNode.m_StaticDependencies )
+    {
+        MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
+    }
+
     // Get the matching node in the old DB
     const Node * oldNode;
     if ( oldNodeHint )
@@ -2143,6 +2153,10 @@ bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependenc
         Node * nodeA = depsA[ i ].GetNode();
         Node * nodeB = depsB[ i ].GetNode();
         if ( nodeA->GetType() != nodeB->GetType() )
+        {
+            return false;
+        }
+        if ( nodeA->GetStamp() != nodeB->GetStamp() )
         {
             return false;
         }
