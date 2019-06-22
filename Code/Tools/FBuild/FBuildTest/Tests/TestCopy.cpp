@@ -688,7 +688,7 @@ void TestCopy::ObjectListChaining2() const
         buffer.SetLength( (uint32_t)f.GetFileSize() );
         VERIFY( f.ReadBuffer( buffer.Get(), buffer.GetLength() ) == buffer.GetLength() );
     }
-    VERIFY( buffer.Replace( "/DEXTRA_A", "/DEXTRA_B" ) == 1 );
+    VERIFY( buffer.Replace( "-DEXTRA_A", "-DEXTRA_B" ) == 1 );
     {
         FileStream f;
         VERIFY( f.Open( configFileCopy, FileStream::WRITE_ONLY ) );

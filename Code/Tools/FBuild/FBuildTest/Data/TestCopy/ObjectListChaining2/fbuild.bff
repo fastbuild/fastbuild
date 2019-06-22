@@ -13,7 +13,7 @@ Using( .StandardEnvironment )
 Settings {}
 
 // Test will modity this line to trigger targetted changes in the bff
-.CompilerOptions                + ' /DEXTRA_A'
+.CompilerOptions                + ' -DEXTRA_A'
 
 // ObjectList1
 //------------------------------------------------------------------------------
