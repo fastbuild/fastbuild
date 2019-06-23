@@ -101,7 +101,7 @@ Compiler( 'Compiler-Clang7' )
     .LibrarianOptions               = 'rc "%2" "%1"' // NOTE: output must come first
 
     // Linker
-    //.Linker                       = From VS installation
+    .Linker                         = '$Clang7_BasePath$\bin\lld-link.exe'
     .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
                                     + .VSLibPaths
 
