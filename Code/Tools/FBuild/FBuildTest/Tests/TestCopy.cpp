@@ -652,6 +652,7 @@ void TestCopy::ObjectListChaining2() const
 
     FileIO::EnsurePathExistsForFile( AStackString<>( configFileCopy ) );
     VERIFY( FileIO::FileCopy( configFileOriginal, configFileCopy ) );
+    VERIFY( FileIO::SetReadOnly( configFileCopy, false ) );
 
     FBuildTestOptions options;
     options.m_ConfigFile = configFileCopy;
