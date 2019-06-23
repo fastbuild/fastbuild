@@ -123,7 +123,12 @@ Array< T >::Array()
 //------------------------------------------------------------------------------
 template < class T >
 Array< T >::Array( const Array< T > & other )
-    : Array<T>()
+    : m_Begin( nullptr )
+    , m_Size( 0 )
+    , m_CapacityAndFlags( 0 )
+    #if defined( ASSERTS_ENABLED )
+        , m_Resizeable( true )
+    #endif
 {
     *this = other;
 }
