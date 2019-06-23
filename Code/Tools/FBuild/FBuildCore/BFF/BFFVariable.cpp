@@ -303,7 +303,8 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
              ( srcType == BFFVariable::VAR_STRING) )
         {
             uint32_t num = (uint32_t)( 1 + varDst->GetArrayOfStrings().GetSize() );
-            Array< AString > values(num, false);
+            StackArray<AString> values;
+            values.SetCapacity( num );
             values.Append( varDst->GetArrayOfStrings() );
             values.Append( varSrc->GetString() );
 
@@ -316,7 +317,8 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
              ( srcType == BFFVariable::VAR_STRUCT ) )
         {
             uint32_t num = (uint32_t)( 1 + varDst->GetArrayOfStructs().GetSize() );
-            Array< const BFFVariable * > values( num, false );
+            StackArray<const BFFVariable *> values;
+            values.SetCapacity( num );
             values.Append( varDst->GetArrayOfStructs() );
             values.Append( varSrc );
 
@@ -348,7 +350,8 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
         if ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS )
         {
             const unsigned int num = (unsigned int)( varSrc->GetArrayOfStrings().GetSize() + varDst->GetArrayOfStrings().GetSize() );
-            Array< AString > values(num, false);
+            StackArray<AString> values;
+            values.SetCapacity( num );
             values.Append( varDst->GetArrayOfStrings() );
             values.Append( varSrc->GetArrayOfStrings() );
 
@@ -359,7 +362,8 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
         if ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
         {
             const unsigned int num = (unsigned int)( varSrc->GetArrayOfStructs().GetSize() + varDst->GetArrayOfStructs().GetSize() );
-            Array< const BFFVariable * > values( num, false );
+            StackArray<const BFFVariable *> values;
+            values.SetCapacity( num );
             values.Append( varDst->GetArrayOfStructs() );
             values.Append( varSrc->GetArrayOfStructs() );
 

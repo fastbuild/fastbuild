@@ -28,17 +28,19 @@ public:
     typedef T *         Iter;
     typedef const T *   ConstIter;
     Iter        Begin() const   { return m_Begin; }
-    Iter        End() const     { return m_End; }
-    inline T &          operator [] ( size_t index )        { ASSERT( index < GetSize() ); return m_Begin[ index ]; }
-    inline const T &    operator [] ( size_t index ) const  { ASSERT( index < GetSize() ); return m_Begin[ index ]; }
-    inline T &          Top()       { ASSERT( m_Begin < m_End ); return m_End[ -1 ]; }
-    inline const T &    Top() const { ASSERT( m_Begin < m_End ); return m_End[ -1 ]; }
+    Iter        End() const     { return m_Begin + m_Size; }
+    inline T &          operator [] ( size_t index )        { ASSERT( index < m_Size ); return m_Begin[ index ]; }
+    inline const T &    operator [] ( size_t index ) const  { ASSERT( index < m_Size ); return m_Begin[ index ]; }
+    inline T &          Top()       { ASSERT( m_Size ); return *( m_Begin + m_Size - 1 ); }
+    inline const T &    Top() const { ASSERT( m_Size ); return *( m_Begin + m_Size - 1 ); }
 
     // C++11 style for range based for
     Iter        begin()         { return m_Begin; }
     ConstIter   begin() const   { return m_Begin; }
-    Iter        end()           { return m_End; }
-    ConstIter   end() const     { return m_End; }
+    ConstIter   cbegin() const  { return m_Begin; }
+    Iter        end()           { return m_Begin + m_Size; }
+    ConstIter   end() const     { return m_Begin + m_Size; }
+    ConstIter   cend() const    { return m_Begin + m_Size; }
 
     // modify capacity/size
     void SetCapacity( size_t capacity );
@@ -47,10 +49,10 @@ public:
     void Swap( Array< T > & other );
 
     // sorting
-    void Sort() { ShellSort( m_Begin, m_End, AscendingCompare() ); }
-    void SortDeref() { ShellSort( m_Begin, m_End, AscendingCompareDeref() ); }
+    void Sort() { ShellSort( m_Begin, m_Begin + m_Size, AscendingCompare() ); }
+    void SortDeref() { ShellSort( m_Begin, m_Begin + m_Size, AscendingCompareDeref() ); }
     template < class COMPARER >
-    void Sort( const COMPARER & comp ) { ShellSort( m_Begin, m_End, comp ); }
+    void Sort( const COMPARER & comp ) { ShellSort( m_Begin, m_Begin + m_Size, comp ); }
 
     // find
     template < class U >
@@ -78,21 +80,29 @@ public:
     Array & operator = ( const Array< T > & other );
 
     // query state
-    inline bool     IsAtCapacity() const    { return ( m_End == m_MaxEnd ); }
-    inline size_t   GetCapacity() const     { return (size_t)( m_MaxEnd - m_Begin ); }
-    inline size_t   GetSize() const         { return (size_t)( m_End - m_Begin ); }
-    inline bool     IsEmpty() const         { return ( m_Begin == m_End ); }
+    inline bool     IsAtCapacity() const    { return ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) ); }
+    inline size_t   GetCapacity() const     { return ( m_CapacityAndFlags & CAPACITY_MASK ); }
+    inline size_t   GetSize() const         { return m_Size; }
+    inline bool     IsEmpty() const         { return ( m_Size == 0 ); }
 
-private:
+protected:
     void Grow();
     inline T * Allocate( size_t numElements ) const;
     inline void Deallocate( T * ptr ) const;
 
-    T * m_Begin;
-    T * m_End;
-    T * m_MaxEnd;
+    // High bit of Capacity is set when memory should not be freed
+    // (allocated on the stack for example)
+    enum : uint32_t
+    {
+        DO_NOT_FREE_MEMORY_FLAG = 0x80000000,
+        CAPACITY_MASK = 0x7FFFFFFF,
+    };
+
+    T *         m_Begin;
+    uint32_t    m_Size;
+    uint32_t    m_CapacityAndFlags;
     #if defined( ASSERTS_ENABLED )
-        bool m_Resizeable;
+        bool    m_Resizeable;
     #endif
 };
 
@@ -101,8 +111,8 @@ private:
 template < class T >
 Array< T >::Array()
     : m_Begin( nullptr )
-    , m_End( nullptr )
-    , m_MaxEnd( nullptr )
+    , m_Size( 0 )
+    , m_CapacityAndFlags( 0 )
     #if defined( ASSERTS_ENABLED )
         , m_Resizeable( true )
     #endif
@@ -113,8 +123,8 @@ Array< T >::Array()
 //------------------------------------------------------------------------------
 template < class T >
 Array< T >::Array( const Array< T > & other )
+    : Array()
 {
-    INPLACE_NEW (this) Array( other.GetSize(), true );
     *this = other;
 }
 
@@ -122,9 +132,8 @@ Array< T >::Array( const Array< T > & other )
 //------------------------------------------------------------------------------
 template < class T >
 Array< T >::Array( const T * otherBegin, const T * otherEnd )
+    : Array( (size_t)( otherEnd - otherBegin ) )
 {
-    const size_t size = (size_t)( otherEnd - otherBegin );
-    INPLACE_NEW (this) Array( size, true );
     Append( otherBegin, otherEnd );
 }
 
@@ -139,14 +148,14 @@ Array< T >::Array( size_t initialCapacity, bool resizeable )
             m_Resizeable = true; // allow initial allocation
         #endif
         m_Begin = Allocate( initialCapacity );
-        m_End = m_Begin;
-        m_MaxEnd = m_Begin + initialCapacity;
+        m_Size = 0;
+        m_CapacityAndFlags = (uint32_t)initialCapacity;
     }
     else
     {
         m_Begin = nullptr;
-        m_End = nullptr;
-        m_MaxEnd = nullptr;
+        m_Size = 0;
+        m_CapacityAndFlags = 0;
     }
     #if defined( ASSERTS_ENABLED )
         m_Resizeable = resizeable;
@@ -169,15 +178,16 @@ template < class T >
 void Array< T >::Destruct()
 {
     T * iter = m_Begin;
-    while ( iter < m_End )
+    T * end = m_Begin + m_Size;
+    while ( iter < end )
     {
         iter->~T();
         iter++;
     }
     Deallocate( m_Begin );
     m_Begin = nullptr;
-    m_End = nullptr;
-    m_MaxEnd = nullptr;
+    m_Size = 0;
+    m_CapacityAndFlags = 0;
 }
 
 // SetCapacity
@@ -194,8 +204,9 @@ void Array< T >::SetCapacity( size_t capacity )
 
     // transfer and items across and destroy all the originals
     T * src = m_Begin;
+    T * end = src + m_Size;
     T * dst = newMem;
-    while ( src < m_End )
+    while ( src < end )
     {
         INPLACE_NEW ( dst ) T( *src );
         src->~T();
@@ -208,8 +219,7 @@ void Array< T >::SetCapacity( size_t capacity )
 
     // hook up to new memory
     m_Begin = newMem;
-    m_End = dst;
-    m_MaxEnd = newMem + capacity;
+    m_CapacityAndFlags = (uint32_t)capacity;
 }
 
 // SetSize
@@ -217,7 +227,7 @@ void Array< T >::SetCapacity( size_t capacity )
 template < class T >
 void Array< T >::SetSize( size_t size )
 {
-    size_t oldSize = GetSize();
+    const size_t oldSize = m_Size;
 
     // no change
     if ( oldSize == size )
@@ -230,13 +240,13 @@ void Array< T >::SetSize( size_t size )
     {
         // destroy excess items
         T * item = m_Begin + size;
-        T * endItem = m_End;
+        T * endItem = m_Begin + m_Size;
         while ( item < endItem )
         {
             item->~T();
             item++;
         }
-        m_End = m_Begin + size;
+        m_Size = (uint32_t)size;
         return;
     }
 
@@ -249,14 +259,14 @@ void Array< T >::SetSize( size_t size )
     }
 
     // create additional new items
-    T * item = m_End;
+    T * item = m_Begin + m_Size;
     T * newEnd = m_Begin + size;
     while( item < newEnd )
     {
         INPLACE_NEW ( item ) T;
         item++;
     }
-    m_End = newEnd;
+    m_Size = (uint32_t)size;
 }
 
 // Clear
@@ -266,14 +276,15 @@ void Array< T >::Clear()
 {
     // destroy all items
     T * src = m_Begin;
-    while ( src < m_End )
+    T * end = src + m_Size;
+    while ( src < end )
     {
         src->~T();
         src++;
     }
 
     // set to empty, but do not free memory
-    m_End = m_Begin;
+    m_Size = 0;
 }
 
 // Find
@@ -281,21 +292,25 @@ void Array< T >::Clear()
 template < class T >
 void Array< T >::Swap( Array< T > & other )
 {
+    // Neither array can be on the stack
+    ASSERT( ( m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG ) == 0 );
+    ASSERT( ( other.m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG ) == 0 );
+
     T * tmpBegin = m_Begin;
-    T * tmpEnd = m_End;
-    T * tmpMaxEnd = m_MaxEnd;
+    uint32_t tmpSize = m_Size;
+    uint32_t tmpCapacityAndFlags = m_CapacityAndFlags;
     #if defined( ASSERTS_ENABLED )
         bool tmpResizeable = m_Resizeable;
     #endif
     m_Begin = other.m_Begin;
-    m_End = other.m_End;
-    m_MaxEnd = other.m_MaxEnd;
+    m_Size = other.m_Size;
+    m_CapacityAndFlags = other.m_CapacityAndFlags;
     #if defined( ASSERTS_ENABLED )
         m_Resizeable = other.m_Resizeable;
     #endif
     other.m_Begin = tmpBegin;
-    other.m_End = tmpEnd;
-    other.m_MaxEnd = tmpMaxEnd;
+    other.m_Size = tmpSize;
+    other.m_CapacityAndFlags = tmpCapacityAndFlags;
     #if defined( ASSERTS_ENABLED )
         other.m_Resizeable = tmpResizeable;
     #endif
@@ -308,7 +323,7 @@ template < class U >
 T * Array< T >::Find( const U & obj ) const
 {
     T * pos = m_Begin;
-    T * endPos = m_End;
+    T * endPos = pos + m_Size;
     while ( pos < endPos )
     {
         if ( *pos == obj )
@@ -327,7 +342,7 @@ template < class U >
 T * Array< T >::FindDeref( const U & obj ) const
 {
     T * pos = m_Begin;
-    T * endPos = m_End;
+    T * endPos = pos + m_Size;
     while ( pos < endPos )
     {
         if ( *(*pos) == obj )
@@ -374,12 +389,13 @@ bool Array< T >::FindDerefAndErase( const U & obj )
 template < class T >
 void Array< T >::Append( const T & item )
 {
-    if ( m_End == m_MaxEnd )
+    if ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) )
     {
         Grow();
     }
-    INPLACE_NEW ( m_End ) T( item );
-    m_End++;
+    T * end = m_Begin + m_Size;
+    INPLACE_NEW ( end ) T( item );
+    m_Size++;
 }
 
 // Append
@@ -412,9 +428,10 @@ void Array< T >::Append( const U * otherBegin, const U * otherEnd )
 template < class T >
 void Array< T >::Pop()
 {
-    ASSERT( m_Begin < m_End ); // something must be in the array
+    ASSERT( m_Size ); // something must be in the array
 
-    T * it = --m_End;
+    --m_Size;
+    T * it = m_Begin + m_Size;
     it->~T();
     (void)it; // avoid warning for arrays of pod types (like uint32_t)
 }
@@ -424,12 +441,13 @@ void Array< T >::Pop()
 template < class T >
 void Array< T >::PopFront()
 {
-    ASSERT( m_Begin < m_End ); // something must be in the array
+    ASSERT( m_Size ); // something must be in the array
 
     // shuffle everything backwards 1 element, overwriting the top elem
     T * dst = m_Begin;
     T * src = m_Begin + 1;
-    while ( src < m_End )
+    T * end = m_Begin + m_Size;
+    while ( src < end )
     {
         *dst = *src;
         dst++;
@@ -439,7 +457,7 @@ void Array< T >::PopFront()
     // free last element (which is now a dupe)
     dst->~T();
 
-    m_End--;
+    --m_Size;
 }
 
 // Erase (iter)
@@ -447,17 +465,18 @@ void Array< T >::PopFront()
 template < class T >
 void Array< T >::Erase( T * const iter )
 {
-    ASSERT( iter < m_End );
+    ASSERT( iter < ( m_Begin + m_Size ) );
 
     T * dst = iter;
-    T * last = ( m_End - 1 );
+    T * end = m_Begin + m_Size;
+    T * last = ( end - 1 );
     while ( dst < last )
     {
         *dst = *(dst + 1);
         dst++;
     }
     dst->~T();
-    m_End = last;
+    --m_Size;
 }
 
 // Grow
@@ -475,13 +494,13 @@ Array< T > & Array< T >::operator = ( const Array< T > & other )
     {
         Deallocate( m_Begin );
         m_Begin = Allocate( otherSize );
-        m_MaxEnd = m_Begin + otherSize;
+        m_CapacityAndFlags = (uint32_t)otherSize;
     }
 
-    m_End = m_Begin + otherSize;
+    m_Size = (uint32_t)otherSize;
     T * dst = m_Begin;
+    const T * endPos = dst + otherSize;
     T * src = other.m_Begin;
-    const T * endPos = m_End;
     while ( dst < endPos )
     {
         INPLACE_NEW ( dst ) T( *src );
@@ -507,7 +526,8 @@ void Array< T >::Grow()
 
     T * src = m_Begin;
     T * dst = newMem;
-    while ( src < m_End )
+    T * end = m_Begin + m_Size;
+    while ( src < end )
     {
         INPLACE_NEW ( dst ) T( *src );
         src->~T();
@@ -516,8 +536,8 @@ void Array< T >::Grow()
     }
     Deallocate( m_Begin );
     m_Begin = newMem;
-    m_End = ( newMem ) + size;
-    m_MaxEnd = ( newMem ) + newCapacity;
+    m_Size = (uint32_t)size;
+    m_CapacityAndFlags = (uint32_t)newCapacity;
 }
 
 // Allocate
@@ -535,7 +555,27 @@ T * Array< T >::Allocate( size_t numElements ) const
 template < class T >
 void Array< T >::Deallocate( T * ptr ) const
 {
-    FREE( ptr );
+    if ( ( m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG ) == 0 )
+    {
+        FREE( ptr );
+    }
 }
+
+// StackArray
+//------------------------------------------------------------------------------
+template<class T, uint32_t RESERVED = 32>
+class StackArray : public Array<T>
+{
+public:
+    StackArray()
+    {
+        Array<T>::m_Begin = (T *)&m_Storage;
+        Array<T>::m_CapacityAndFlags = ( RESERVED | Array<T>::DO_NOT_FREE_MEMORY_FLAG );
+    }
+
+    inline void operator = ( const Array<T> & other ) { Array<T>::operator = ( other ); }
+private:
+    uint64_t m_Storage[ RESERVED * sizeof( T ) / sizeof( uint64_t ) ];
+};
 
 //------------------------------------------------------------------------------
