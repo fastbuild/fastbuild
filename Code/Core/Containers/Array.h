@@ -178,8 +178,8 @@ template < class T >
 void Array< T >::Destruct()
 {
     T * iter = m_Begin;
-    T * end = m_Begin + m_Size;
-    while ( iter < end )
+    T * endIter = m_Begin + m_Size;
+    while ( iter < endIter )
     {
         iter->~T();
         iter++;
@@ -204,9 +204,9 @@ void Array< T >::SetCapacity( size_t capacity )
 
     // transfer and items across and destroy all the originals
     T * src = m_Begin;
-    T * end = src + m_Size;
+    T * endIter = src + m_Size;
     T * dst = newMem;
-    while ( src < end )
+    while ( src < endIter )
     {
         INPLACE_NEW ( dst ) T( *src );
         src->~T();
@@ -276,8 +276,8 @@ void Array< T >::Clear()
 {
     // destroy all items
     T * src = m_Begin;
-    T * end = src + m_Size;
-    while ( src < end )
+    T * endIter = src + m_Size;
+    while ( src < endIter )
     {
         src->~T();
         src++;
@@ -393,8 +393,8 @@ void Array< T >::Append( const T & item )
     {
         Grow();
     }
-    T * end = m_Begin + m_Size;
-    INPLACE_NEW ( end ) T( item );
+    T * pos = m_Begin + m_Size;
+    INPLACE_NEW ( pos ) T( item );
     m_Size++;
 }
 
@@ -446,8 +446,8 @@ void Array< T >::PopFront()
     // shuffle everything backwards 1 element, overwriting the top elem
     T * dst = m_Begin;
     T * src = m_Begin + 1;
-    T * end = m_Begin + m_Size;
-    while ( src < end )
+    T * endIter = m_Begin + m_Size;
+    while ( src < endIter )
     {
         *dst = *src;
         dst++;
@@ -468,8 +468,8 @@ void Array< T >::Erase( T * const iter )
     ASSERT( iter < ( m_Begin + m_Size ) );
 
     T * dst = iter;
-    T * end = m_Begin + m_Size;
-    T * last = ( end - 1 );
+    T * endIter = m_Begin + m_Size;
+    T * last = (endIter - 1 );
     while ( dst < last )
     {
         *dst = *(dst + 1);
@@ -526,8 +526,8 @@ void Array< T >::Grow()
 
     T * src = m_Begin;
     T * dst = newMem;
-    T * end = m_Begin + m_Size;
-    while ( src < end )
+    T * endIter = m_Begin + m_Size;
+    while ( src < endIter )
     {
         INPLACE_NEW ( dst ) T( *src );
         src->~T();
