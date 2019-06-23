@@ -123,7 +123,7 @@ Array< T >::Array()
 //------------------------------------------------------------------------------
 template < class T >
 Array< T >::Array( const Array< T > & other )
-    : Array()
+    : Array<T>()
 {
     *this = other;
 }
@@ -132,7 +132,7 @@ Array< T >::Array( const Array< T > & other )
 //------------------------------------------------------------------------------
 template < class T >
 Array< T >::Array( const T * otherBegin, const T * otherEnd )
-    : Array( (size_t)( otherEnd - otherBegin ) )
+    : Array<T>( (size_t)( otherEnd - otherBegin ) )
 {
     Append( otherBegin, otherEnd );
 }
