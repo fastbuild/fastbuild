@@ -454,7 +454,7 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 //------------------------------------------------------------------------------
 void UnityNode::FilterForceIsolated( Array< FileAndOrigin > & files, Array< FileAndOrigin > & isolatedFiles )
 {
-    if ( m_FilesToIsolate.GetSize() == 0 )
+    if ( m_FilesToIsolate.IsEmpty() )
     {
         return;
     }
@@ -462,10 +462,10 @@ void UnityNode::FilterForceIsolated( Array< FileAndOrigin > & files, Array< File
     const FileAndOrigin * readIt = files.Begin();
     FileAndOrigin * writeIt = files.Begin();
 
-    for( ; readIt != files.End(); ++readIt )
+    for ( ; readIt != files.End(); ++readIt )
     {
         bool isolate = false;
-        for ( const AString& filename : m_FilesToIsolate )
+        for ( const AString & filename : m_FilesToIsolate )
         {
             if ( PathUtils::PathEndsWithFile( readIt->GetName(), filename ) )
             {

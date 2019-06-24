@@ -36,13 +36,13 @@ public:
     {
     public:
         FileAndOrigin()
-         : m_Info( nullptr )
-         , m_DirListOrigin( nullptr )
+            : m_Info( nullptr )
+            , m_DirListOrigin( nullptr )
         {}
 
         FileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin )
-         : m_Info( info )
-         , m_DirListOrigin( dirListOrigin )
+            : m_Info( info )
+            , m_DirListOrigin( dirListOrigin )
         {}
 
         inline const AString &              GetName() const             { return m_Info->m_Name; }

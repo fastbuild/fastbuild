@@ -205,6 +205,7 @@ UnityInputExcludedFiles
 UnityInputFiles
 UnityInputIsolateWritableFiles
 UnityInputIsolateWritableFilesLimit
+UnityInputIsolatedFiles
 UnityInputObjectLists
 UnityInputPath
 UnityInputPathRecurse
