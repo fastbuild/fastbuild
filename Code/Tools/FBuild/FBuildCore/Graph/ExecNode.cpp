@@ -48,6 +48,7 @@ ExecNode::ExecNode()
     , m_ExecUseStdOutAsOutput( false )
     , m_ExecAlways( false )
     , m_ExecInputPathRecurse( true )
+    , m_NumExecInputFiles( 0 )
 {
     m_Type = EXEC_NODE;
 

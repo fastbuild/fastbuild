@@ -1008,10 +1008,7 @@ void Node::ReplaceDummyName( const AString & newName )
     // insert additional tokens
     for ( size_t i=1; i<( numTokens-2 ); ++i )
     {
-        if ( i != 0 )
-        {
-            fixed += ':';
-        }
+        fixed += ':';
         fixed += tokens[ i ];
     }
 

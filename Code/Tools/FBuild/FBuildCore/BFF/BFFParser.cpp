@@ -1607,17 +1607,15 @@ bool BFFParser::StoreVariableArray( const AString & name,
         varType = var ? var->GetType() : BFFVariable::VAR_ARRAY_OF_STRINGS;
     }
 
-    // check if selected type correctly
-    ASSERT ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS || varType == BFFVariable::VAR_ARRAY_OF_STRUCTS );
-
     // Register this variable
     if ( varType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
     {
         // structs
         BFFStackFrame::SetVarArrayOfStructs( name, structValues, frame );
     }
-    else if ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS )
+    else
     {
+        ASSERT( varType == BFFVariable::VAR_ARRAY_OF_STRINGS );
         // strings
         BFFStackFrame::SetVarArrayOfStrings( name, values, frame );
     }

@@ -459,8 +459,8 @@ void UnityNode::FilterForceIsolated( Array< FileAndOrigin > & files, Array< File
         return;
     }
 
-    const FileAndOrigin * readIt = files.Begin();
-    FileAndOrigin * writeIt = files.Begin();
+    FileAndOrigin* writeIt = files.Begin();
+    const FileAndOrigin * readIt = writeIt;
 
     for ( ; readIt != files.End(); ++readIt )
     {

@@ -1353,7 +1353,6 @@
                 return;
             }
         }
-        f.Close();
     }
 #endif
 

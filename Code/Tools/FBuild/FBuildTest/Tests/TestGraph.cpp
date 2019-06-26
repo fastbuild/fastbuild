@@ -74,8 +74,7 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestGraph::EmptyGraph() const
 {
-    NodeGraph * ng = FNEW( NodeGraph );
-    FDELETE ng;
+    NodeGraph ng;
 }
 
 // TestNodeTypes

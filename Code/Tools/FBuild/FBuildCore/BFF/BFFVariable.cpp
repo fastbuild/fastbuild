@@ -286,8 +286,8 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
 //------------------------------------------------------------------------------
 BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFIterator & operatorIter ) const
 {
-    const BFFVariable *varDst = this;
-    const BFFVariable *varSrc = &other;
+    const BFFVariable * const varDst = this;
+    const BFFVariable * const varSrc = &other;
 
     const VarType dstType = m_Type;
     const VarType srcType = other.m_Type;
@@ -328,7 +328,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
 
         // Incompatible types
         Error::Error_1034_OperationNotSupported( operatorIter, // TODO:C we don't have access to the rhsIterator so we use the operator
-                                                 varDst ? varDst->GetType() : varSrc->GetType(),
+                                                 varDst->GetType(),
                                                  varSrc->GetType(),
                                                  operatorIter );
         return nullptr;

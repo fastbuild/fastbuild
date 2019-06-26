@@ -2112,16 +2112,17 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
             // Keeping the found enums let us avoid searching for them twice.
             uint32_t nbrEnumsFound = 0;
             const char * buggyEnum = nullptr;
-            do
+            for (;;)
             {
                 buggyEnum = strstr( workBuffer, BUGGY_CODE );
-                if ( buggyEnum != nullptr )
+                if ( buggyEnum == nullptr )
                 {
-                    ++nbrEnumsFound;
-                    enumsFound.Append( buggyEnum );
-                    workBuffer = buggyEnum + sizeof( BUGGY_CODE ) - 1;
+                    break;
                 }
-            } while ( buggyEnum != nullptr );
+                ++nbrEnumsFound;
+                enumsFound.Append( buggyEnum );
+                workBuffer = buggyEnum + sizeof( BUGGY_CODE ) - 1;
+            }
             ASSERT( enumsFound.GetSize() == nbrEnumsFound );
 
             // Now allocate the new buffer with enough space to add a space after each enum found
@@ -2133,7 +2134,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
             char * writeDest = bufferCopy;
             size_t sizeLeftInSourceBuffer = outputBufferSize;
             buggyEnum = nullptr;
-            do
+            for (;;)
             {
                 if ( enumIndex < nbrEnumsFound )
                 {
@@ -2145,29 +2146,27 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
                     buggyEnum = nullptr;
                 }
 
-                if ( buggyEnum != nullptr )
-                {
-                    // Copy what's before the enum + the enum.
-                    size_t sizeToCopy = (size_t)( buggyEnum - workBuffer );
-                    sizeToCopy += ( sizeof( BUGGY_CODE ) - 1 );
-                    memcpy( writeDest, workBuffer, sizeToCopy );
-                    writeDest += sizeToCopy;
-
-                    // Add a space
-                    *writeDest = ' ';
-                    ++writeDest;
-
-                    ASSERT( sizeLeftInSourceBuffer >= sizeToCopy );
-                    sizeLeftInSourceBuffer -= sizeToCopy;
-                    workBuffer += sizeToCopy;
-                }
-                else
+                if ( buggyEnum == nullptr )
                 {
                     // Copy the rest of the data.
                     memcpy( writeDest, workBuffer, sizeLeftInSourceBuffer );
                     break;
                 }
-            } while ( buggyEnum != nullptr );
+
+                // Copy what's before the enum + the enum.
+                size_t sizeToCopy = (size_t)( buggyEnum - workBuffer );
+                sizeToCopy += ( sizeof( BUGGY_CODE ) - 1 );
+                memcpy( writeDest, workBuffer, sizeToCopy );
+                writeDest += sizeToCopy;
+
+                // Add a space
+                *writeDest = ' ';
+                ++writeDest;
+
+                ASSERT( sizeLeftInSourceBuffer >= sizeToCopy );
+                sizeLeftInSourceBuffer -= sizeToCopy;
+                workBuffer += sizeToCopy;
+            }
 
             bufferCopy[ newBufferSize ] = 0; // null terminator for include parser
         }

@@ -267,7 +267,7 @@ bool SmallBlockAllocator::Free( void * ptr )
     // Commit the page
     void * newPage = (void *)( ( (size_t)SmallBlockAllocator::s_BucketMemoryStart ) + ( (size_t)pageIndex * MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE ) );
     #if defined( __WINDOWS__ )
-        ::VirtualAlloc( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE );
+        VERIFY( ::VirtualAlloc( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE ) );
     #else
         VERIFY( ::mprotect( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, PROT_READ | PROT_WRITE ) == 0 );
     #endif

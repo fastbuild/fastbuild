@@ -26,7 +26,6 @@ REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
     REFLECT_ARRAY(  m_TestInputPath,            "TestInputPath",            MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_TestInputPattern,         "TestInputPattern",         MetaOptional() )
     REFLECT(        m_TestInputPathRecurse,     "TestInputPathRecurse",     MetaOptional() )
-    REFLECT(        m_TestInputPathRecurse,     "TestInputPathRecurse",     MetaOptional() )
     REFLECT_ARRAY(  m_TestInputExcludePath,     "TestInputExcludePath",     MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_TestInputExcludedFiles,   "TestInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
     REFLECT_ARRAY(  m_TestInputExcludePattern,  "TestInputExcludePattern",  MetaOptional() )
@@ -50,6 +49,7 @@ TestNode::TestNode()
     , m_TestTimeOut( 0 )
     , m_TestAlwaysShowOutput( false )
     , m_TestInputPathRecurse( true )
+    , m_NumTestInputFiles( 0 )
 {
     m_Type = Node::TEST_NODE;
 }
