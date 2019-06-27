@@ -58,6 +58,8 @@ private:
     void GetSize() const;
     void IsEmpty() const;
 
+    void Alignment() const;
+
     void StackArrayOverflowToHeap() const;
 
     // Helper functions
@@ -110,6 +112,8 @@ REGISTER_TESTS_BEGIN( TestArray )
     REGISTER_TEST( GetCapacity )
     REGISTER_TEST( GetSize )
     REGISTER_TEST( IsEmpty )
+
+    REGISTER_TEST( Alignment )
 
     REGISTER_TEST( StackArrayOverflowToHeap )
 REGISTER_TESTS_END
@@ -1595,6 +1599,117 @@ void TestArray::IsEmpty() const
     }
 }
 
+// Alignment
+//------------------------------------------------------------------------------
+void TestArray::Alignment() const
+{
+    // Small
+    {
+        class Align1
+        {
+        public:
+            uint8_t mValue = 111;
+        };
+        static_assert( __alignof( Align1 ) == 1, "Align1 check" ); // Make sure we're testing 1 byte alignment
+
+        // Heap
+        {
+            Array<Align1> array;
+            array.SetSize( 1 );
+            CheckConsistency( array ); // Checks alignment of members
+            array.SetSize( 3 );
+            CheckConsistency( array ); // Checks alignment of members
+            array.SetSize( 32 );
+            CheckConsistency( array ); // Checks alignment of members
+        }
+
+        // Stack - one item reservation
+        {
+            StackArray<Align1, 1> array;
+            array.SetSize( 1 );
+            CheckConsistency( array ); // Checks alignment of members
+        }
+
+        // Stack - multiple items
+        {
+            StackArray<Align1, 32> array;
+            array.SetSize( 32 );
+            CheckConsistency( array ); // Checks alignment of members
+        }
+    }
+
+    // Medium
+    {
+        class Align4
+        {
+        public:
+            uint32_t mValue = 222;
+        };
+        static_assert( __alignof( Align4 ) == 4, "Align4 check" ); // Make sure we're testing 4 byte alignment
+
+        // Heap
+        {
+            Array<Align4> array;
+            array.SetSize( 1 );
+            CheckConsistency( array ); // Checks alignment of members
+            array.SetSize( 3 );
+            CheckConsistency( array ); // Checks alignment of members
+            array.SetSize( 32 );
+            CheckConsistency( array ); // Checks alignment of members
+        }
+
+        // Stack - one item (ensure small class is tested)
+        {
+            StackArray<Align4, 1> array;
+            array.SetSize( 1 );
+            CheckConsistency( array ); // Checks alignment of members
+        }
+
+        // Stack - multiple items
+        {
+            StackArray<Align4, 32> array;
+            array.SetSize( 32 );
+            CheckConsistency( array ); // Checks alignment of members
+        }
+    }
+
+    // Large
+    {
+        PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
+        class alignas( 128 ) Align128
+        {
+        public:
+            uint32_t mValue = 333;
+        };
+        PRAGMA_DISABLE_POP_MSVC // 4324
+        static_assert( __alignof( Align128 ) == 128, "Align128 Check" ); // Make sure we're testing 128 byte alignment
+
+        // Heap
+        {
+            Array<Align128> array;
+            array.SetSize( 1 );
+            CheckConsistency( array ); // Checks alignment of members
+            array.SetSize( 3 );
+            CheckConsistency( array ); // Checks alignment of members
+            array.SetSize( 32 );
+            CheckConsistency( array ); // Checks alignment of members
+        }
+
+        // Stack - one item (ensure small class is tested)
+        {
+            StackArray<Align128, 1> array;
+            array.SetSize( 1 );
+            CheckConsistency( array ); // Checks alignment of members
+        }
+
+        // Stack - multiple items
+        {
+            StackArray<Align128, 32> array;
+            array.SetSize( 32 );
+            CheckConsistency( array ); // Checks alignment of members
+        }
+    }
+}
 
 // StackArrayOverflowToHeap
 //------------------------------------------------------------------------------
@@ -1661,6 +1776,7 @@ void TestArray::StackArrayOverflowToHeap() const
     }
 }
 
+// CheckConsistency
 //------------------------------------------------------------------------------
 template <typename T>
 void TestArray::CheckConsistency( const Array<T> & array ) const
@@ -1675,6 +1791,12 @@ void TestArray::CheckConsistency( const Array<T> & array ) const
     else
     {
         TEST_ASSERT( array.End() > array.Begin() );
+    }
+
+    // Ensure each element in the array has the correct alignment
+    for ( const T & item : array )
+    {
+        TEST_ASSERT( ( uintptr_t( &item ) & ( __alignof( T ) - 1 ) ) == 0 );
     }
 }
 

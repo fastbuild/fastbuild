@@ -580,7 +580,9 @@ public:
 
     inline void operator = ( const Array<T> & other ) { Array<T>::operator = ( other ); }
 private:
-    uint64_t m_Storage[ RESERVED * sizeof( T ) / sizeof( uint64_t ) ];
+    PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
+    alignas(__alignof(T)) uint8_t m_Storage[ RESERVED * sizeof( T ) ];
+    PRAGMA_DISABLE_POP_MSVC // 4324
 };
 
 //------------------------------------------------------------------------------
