@@ -37,7 +37,6 @@ XCodeProject
 
 AdditionalOptions
 AllowCaching
-AllowDBMigration_Experimental
 AllowDistribution
 ApplicationEnvironment
 AssemblySearchPath
@@ -81,6 +80,7 @@ Dependencies
 DeploymentFiles
 DeploymentType
 Dest
+DisableDBMigration
 DistributableJobMemoryLimitMiB
 Environment
 ExcludePaths

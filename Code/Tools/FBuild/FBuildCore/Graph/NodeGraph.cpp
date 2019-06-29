@@ -145,7 +145,7 @@ NodeGraph::~NodeGraph()
 
             // Migrate old DB info to new DB
             const SettingsNode * settings = newNG->GetSettings();
-            if ( settings->GetAllowDBMigration_Experimental() || forceMigration ) // TODO:B Remove when feature no longer experimental
+            if ( ( settings->GetDisableDBMigration() == false ) || forceMigration )
             {
                 newNG->Migrate( *oldNG );
             }
