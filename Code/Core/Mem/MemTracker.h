@@ -51,6 +51,7 @@
         static void DumpAllocations();
 
         static inline uint32_t GetCurrentAllocationCount() { return s_AllocationCount; }
+        static inline uint32_t GetCurrentAllocationId() { return s_Id; }
 
         struct Allocation
         {
