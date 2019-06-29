@@ -490,7 +490,7 @@ void UnityNode::FilterForceIsolated( Array< FileAndOrigin > & files, Array< File
         }
     }
 
-    files.SetSize( writeIt - files.Begin() );
+    files.SetSize( (uint64_t)( writeIt - files.Begin() ) );
 }
 
 
