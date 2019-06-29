@@ -54,6 +54,33 @@ AString::AString( const AString & string )
     Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
 }
 
+// CONSTRUCTOR (AString &&)
+//------------------------------------------------------------------------------
+AString::AString( AString && string )
+{
+    // If source string memory can't be freed, it can't be moved
+    if ( string.MemoryMustBeFreed() == false )
+    {
+        // Copy
+        m_Contents = const_cast<char*>( s_EmptyString ); // cast to allow pointing to protected string
+        m_Length = 0;
+        m_ReservedAndFlags = 0;
+        Assign( string );
+    }
+    else
+    {
+        // Move
+        m_Contents = string.m_Contents;
+        m_Length = string.m_Length;
+        m_ReservedAndFlags = string.m_ReservedAndFlags;
+    }
+
+    // Clear other string
+    string.m_Contents = const_cast<char*>( s_EmptyString );
+    string.m_Length = 0;
+    string.m_ReservedAndFlags = 0;
+}
+
 // CONSTRUCTOR (const char *)
 //------------------------------------------------------------------------------
 AString::AString( const char * string )
@@ -380,6 +407,33 @@ void AString::Assign( const AString & string )
     }
     Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
     m_Length = len;
+}
+
+// Assign (AString &&)
+//------------------------------------------------------------------------------
+void AString::Assign( AString && string )
+{
+    // If memory can't be freed, it can't be moved
+    if ( string.MemoryMustBeFreed() == false )
+    {
+        // Fallback to regular assignment
+        Assign( string );
+    }
+    else
+    {
+        if ( MemoryMustBeFreed() )
+        {
+            FREE( m_Contents );
+        }
+        m_Contents = string.m_Contents;
+        m_Length = string.m_Length;
+        m_ReservedAndFlags = string.m_ReservedAndFlags;
+    }
+
+    // Clear other string
+    string.m_Contents = const_cast<char*>( s_EmptyString );
+    string.m_Length = 0;
+    string.m_ReservedAndFlags = 0;
 }
 
 // Clear
