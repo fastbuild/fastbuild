@@ -1664,10 +1664,10 @@ bool BFFParser::StoreVariableStruct( const AString & name,
     }
 
     // get variables defined in the scope
-    const Array< const BFFVariable * > & structMembers = stackFrame.GetLocalVariables();
+    Array<BFFVariable *> & structMembers = stackFrame.GetLocalVariables();
 
     // Register this variable
-    BFFStackFrame::SetVarStruct( name, structMembers, frame ? frame : stackFrame.GetParent() );
+    BFFStackFrame::SetVarStruct( name, Move( structMembers ), frame ? frame : stackFrame.GetParent() );
 
     return true;
 }

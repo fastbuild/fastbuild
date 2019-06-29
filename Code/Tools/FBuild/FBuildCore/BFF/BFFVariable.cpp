@@ -133,6 +133,21 @@ BFFVariable::BFFVariable( const AString & name, const Array< const BFFVariable *
     SetValueStruct( values );
 }
 
+// CONSTRUCTOR (&&)
+//------------------------------------------------------------------------------
+BFFVariable::BFFVariable( const AString & name,
+                          Array<BFFVariable *> && values )
+    : m_Name( name )
+    , m_Type( VAR_STRUCT )
+    , m_FreezeCount( 0 )
+    , m_BoolValue( false )
+    , m_IntValue( 0 )
+    //, m_StringValue() // default construct this
+    //, m_ArrayValues()
+    , m_SubVariables( Move( values ) )
+{
+}
+
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name,
@@ -232,6 +247,26 @@ void BFFVariable::SetValueStruct( const Array< const BFFVariable * > & values )
 
     // swap
     m_SubVariables.Swap( newVars );
+}
+
+// SetValueStruct
+//------------------------------------------------------------------------------
+void BFFVariable::SetValueStruct( Array<BFFVariable *> && values )
+{
+    ASSERT( 0 == m_FreezeCount );
+
+    // Take a copy of the old pointers
+    Array<BFFVariable *> oldVars;
+    oldVars.Swap( m_SubVariables );
+
+    // Take ownership of new variables
+    m_SubVariables = Move( values );
+
+    // Free old variables
+    for ( BFFVariable * var : oldVars )
+    {
+        FDELETE var;
+    }
 }
 
 // SetValueArrayOfStructs

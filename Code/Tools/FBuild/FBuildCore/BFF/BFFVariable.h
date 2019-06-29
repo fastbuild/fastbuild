@@ -79,6 +79,7 @@ private:
     explicit BFFVariable( const AString & name, const Array< AString > & values );
     explicit BFFVariable( const AString & name, int i );
     explicit BFFVariable( const AString & name, const Array< const BFFVariable * > & values );
+    explicit BFFVariable( const AString & name, Array<BFFVariable *> && values );
     explicit BFFVariable( const AString & name, const Array< const BFFVariable * > & structs, VarType type ); // type for disambiguation
     ~BFFVariable();
 
@@ -87,6 +88,7 @@ private:
     void SetValueArrayOfStrings( const Array< AString > & values );
     void SetValueInt( int i );
     void SetValueStruct( const Array< const BFFVariable * > & members );
+    void SetValueStruct( Array<BFFVariable *> && members );
     void SetValueArrayOfStructs( const Array< const BFFVariable * > & values );
 
     AString m_Name;

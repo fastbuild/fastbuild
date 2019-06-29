@@ -139,6 +139,28 @@ BFFStackFrame::~BFFStackFrame()
     frame->m_Variables.Append( v );
 }
 
+// SetVarStruct
+//------------------------------------------------------------------------------
+/*static*/ void BFFStackFrame::SetVarStruct( const AString& name,
+                                             Array<BFFVariable *> && members,
+                                             BFFStackFrame * frame )
+{
+    frame = frame ? frame : s_StackHead;
+    ASSERT( frame );
+
+    BFFVariable* var = frame->GetVarMutableNoRecurse( name );
+    if ( var )
+    {
+        var->SetValueStruct( Move( members ) );
+        return;
+    }
+
+    // variable not found at this level, so create it
+    BFFVariable* v = FNEW( BFFVariable( name, Move( members ) ) );
+    frame->m_Variables.Append( v );
+}
+
+
 // SetVarArrayOfStructs
 //------------------------------------------------------------------------------
 /*static*/ void BFFStackFrame::SetVarArrayOfStructs( const AString & name,
