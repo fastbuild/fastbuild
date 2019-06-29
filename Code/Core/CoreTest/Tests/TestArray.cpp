@@ -60,11 +60,23 @@ private:
 
     void Alignment() const;
 
+    void MoveConstructor() const;
+    void MoveAssignment() const;
+    void MoveWhenGrowing() const;
+    void MoveAppend() const;
+    void MoveSetCapacity() const;
+    void MovePopFront() const;
+    void MoveErase() const;
+
     void StackArrayOverflowToHeap() const;
 
     // Helper functions
     template <typename T>
     void CheckConsistency( const Array<T> & array ) const;
+    template <class SRC, class DST, uint32_t EXPECTED_ALLOCS, class SRC_CAST = SRC>
+    void MoveConstructorHelper() const;
+    template <class SRC, class DST, uint32_t EXPECTED_ALLOCS, class ELEM, class SRC_CAST = SRC>
+    void MoveAssignmentHelper( const ELEM & value ) const;
 };
 
 // Register Tests
@@ -114,6 +126,14 @@ REGISTER_TESTS_BEGIN( TestArray )
     REGISTER_TEST( IsEmpty )
 
     REGISTER_TEST( Alignment )
+
+    REGISTER_TEST( MoveConstructor )
+    REGISTER_TEST( MoveAssignment )
+    REGISTER_TEST( MoveWhenGrowing )
+    REGISTER_TEST( MoveAppend )
+    REGISTER_TEST( MoveSetCapacity )
+    REGISTER_TEST( MovePopFront )
+    REGISTER_TEST( MoveErase )
 
     REGISTER_TEST( StackArrayOverflowToHeap )
 REGISTER_TESTS_END
@@ -1709,6 +1729,285 @@ void TestArray::Alignment() const
             CheckConsistency( array ); // Checks alignment of members
         }
     }
+}
+
+// MoveConstructorHelper
+//------------------------------------------------------------------------------
+template <class SRC, class DST, uint32_t EXPECTED_ALLOCS, class SRC_CAST>
+void TestArray::MoveConstructorHelper() const
+{
+    // Create the source array
+    SRC arrayA;
+    arrayA.SetSize( 8 ); // Add some elements
+
+    // Take note of memory state before
+    TEST_MEMORY_SNAPSHOT( s1 );
+
+    // Move construct destination. SRC_CAST allows us to check Array/StackArray
+    // behave the same
+    DST arrayB( Move( (SRC_CAST&)( arrayA ) ) );
+
+    // Check expected amount of allocs occurred
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
+
+    // Source string should be empty
+    TEST_ASSERT( arrayA.IsEmpty() );
+
+    CheckConsistency( arrayA );
+    CheckConsistency( arrayB );
+}
+
+// MoveConstructor
+//------------------------------------------------------------------------------
+void TestArray::MoveConstructor() const
+{
+    // POD Data
+    {
+        //                    Src                   Dest                    Allocs    SrcCast
+        //------------------------------------------------------------------------------------------
+        // Moves from heap can be performed
+        MoveConstructorHelper<Array<uint32_t>,      Array<uint32_t>,        0                      >();
+        MoveConstructorHelper<Array<uint32_t>,      StackArray<uint32_t>,   0                      >();
+
+        // Moves from stack to stack are copies, but avoid memory allocation
+        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>,   0                      >();
+        MoveConstructorHelper<StackArray<uint32_t>, StackArray<uint32_t>,   0,      Array<uint32_t>>(); // Src as Array, behave the same
+
+        // Moves from stack to heap need re-allocation and copy
+        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>,        1                      >();
+        MoveConstructorHelper<StackArray<uint32_t>, Array<uint32_t>,        1,      Array<uint32_t>>(); // Src as Array, behave the same
+    }
+
+    // Complex Types
+    {
+        //                    Src                   Dest                    Allocs    SrcCast
+        //------------------------------------------------------------------------------------------
+        // Moves from heap can be performed
+        MoveConstructorHelper<Array<AString>,       Array<AString>,         0                      >();
+        MoveConstructorHelper<Array<AString>,       StackArray<AString>,    0                      >();
+
+        // Moves from stack to stack are copies, but avoid memory allocation
+        MoveConstructorHelper<StackArray<AString>,  StackArray<AString>,    0                      >();
+        MoveConstructorHelper<StackArray<AString>,  StackArray<AString>,    0,      Array<AString> >(); // Src as Array, behave the same
+
+        // Moves from stack to heap need Array reallocated, but items can be moved
+        MoveConstructorHelper<StackArray<AString>,  Array<AString>,         1                      >();
+        MoveConstructorHelper<StackArray<AString>,  Array<AString>,         1,      Array<AString> >(); // Src as Array, behave the same
+    }
+}
+
+// MoveAssignmentHelper
+//------------------------------------------------------------------------------
+template <class SRC, class DST, uint32_t EXPECTED_ALLOCS, class ELEM, class SRC_CAST>
+void TestArray::MoveAssignmentHelper( const ELEM & value ) const
+{
+    // Empty destination
+    {
+        // Create the source array
+        SRC arrayA;
+        arrayA.SetCapacity( 8 );
+        for ( size_t i = 0; i < 8; ++i )
+        {
+            arrayA.Append( value ); // Add some elements
+        }
+
+        // Create the destination
+        DST arrayB;
+
+        // Take note of memory state before
+        TEST_MEMORY_SNAPSHOT( s1 );
+
+        // Move construct destination. SRC_CAST allows us to check Array/StackArray
+        // behave the same
+        arrayB = Move( (SRC_CAST&)( arrayA ) );
+
+        // Check expected amount of allocs occurred
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, EXPECTED_ALLOCS )
+
+        // Source string should be empty
+        TEST_ASSERT( arrayA.IsEmpty() );
+
+        CheckConsistency( arrayA );
+        CheckConsistency( arrayB );
+    }
+
+    // Non-empty destination (check move doesn't leak destination string memory)
+    {
+        // Take note of memory state before
+        TEST_MEMORY_SNAPSHOT( s1 );
+
+        {
+            // Create the source array
+            SRC arrayA;
+            arrayA.SetCapacity( 8 );
+            for ( size_t i = 0; i < 8; ++i )
+            {
+                arrayA.Append( value ); // Add some elements
+            }
+
+            // Create the destination (with some allocations)
+            DST arrayB;
+            for ( size_t i = 0; i < 8; ++i )
+            {
+                arrayB.Append( value ); // Add some elements
+            }
+
+            // Move construct destination. SRC_CAST allows us to check Array/StackArray
+            // behave the same
+            arrayB = Move( (SRC_CAST&)( arrayA ) );
+
+            // Source string should be empty
+            TEST_ASSERT( arrayA.IsEmpty() );
+
+            CheckConsistency( arrayA );
+            CheckConsistency( arrayB );
+        }
+
+        // Check should be no more active allocs in total, even if some allocs occurred
+        TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( s1, 0 )
+    }
+}
+
+
+// MoveAssignment
+//------------------------------------------------------------------------------
+void TestArray::MoveAssignment() const
+{
+    // POD Data
+    {
+        //                  Src                     Dest                    Allocs  Elem        SrcCast
+        //---------------------------------------------------------------------------------------------
+        // Moves from heap can be performed
+        MoveAssignmentHelper<Array<uint32_t>,       Array<uint32_t>,        0,      uint32_t                   >( 99 );
+        MoveAssignmentHelper<Array<uint32_t>,       StackArray<uint32_t>,   0,      uint32_t                   >( 99 );
+
+        // Moves from stack to stack are copies, but avoid memory allocation
+        MoveAssignmentHelper<StackArray<uint32_t>,  StackArray<uint32_t>,   0,      uint32_t                   >( 99 );
+        MoveAssignmentHelper<StackArray<uint32_t>,  StackArray<uint32_t>,   0,      uint32_t,   Array<uint32_t>>( 99 ); // Src as Array, behave the same
+
+        // Moves from stack to heap need re-allocation and copy
+        MoveAssignmentHelper<StackArray<uint32_t>,  Array<uint32_t>,        1,      uint32_t                   >( 99 );
+        MoveAssignmentHelper<StackArray<uint32_t>,  Array<uint32_t>,        1,      uint32_t,   Array<uint32_t>>( 99 ); // Src as Array, behave the same
+    }
+
+    // Complex Types
+    {
+        //                   Src                    Dest                    Allocs  Elem            SrcCast
+        //-----------------------------------------------------------------------------------------------
+        // Moves from heap can be performed
+        MoveAssignmentHelper<Array<AString>,        Array<AString>,         0,      AString                   >( AString( "string" ) );
+        MoveAssignmentHelper<Array<AString>,        StackArray<AString>,    0,      AString                   >( AString( "string" ) );
+
+        // Moves from stack to stack are copies, but avoid memory allocation
+        MoveAssignmentHelper<StackArray<AString>,   StackArray<AString>,    0,      AString                   >( AString( "string" ) );
+        MoveAssignmentHelper<StackArray<AString>,   StackArray<AString>,    0,      AString,    Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
+
+        // Moves from stack to heap need Array reallocated, but items can be moved
+        MoveAssignmentHelper<StackArray<AString>,   Array<AString>,         1,      AString                   >( AString( "string" ) );
+        MoveAssignmentHelper<StackArray<AString>,   Array<AString>,         1,      AString,    Array<AString>>( AString( "string" ) ); // Src as Array, behave the same
+    }
+}
+
+// MoveWhenGrowing
+//------------------------------------------------------------------------------
+void TestArray::MoveWhenGrowing() const
+{
+    Array<AString> array( 4, true );
+    array.Append( AString( "string1" ) );
+    array.Append( AString( "string2" ) );
+    array.Append( AString( "string3" ) );
+    array.Append( AString( "string4" ) );
+
+    const AString string5( "string4" );
+
+    // Take note of memory state before
+    TEST_MEMORY_SNAPSHOT( s1 );
+
+    // array will need to reallocate
+    array.Append( string5 );
+
+    // Should be 2 allocs: one for resize and one for new string
+    // but existing strings should have been moved
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 2 )
+
+    CheckConsistency( array );
+}
+
+// MoveAppend
+//------------------------------------------------------------------------------
+void TestArray::MoveAppend() const
+{
+    AString string( "string4" );
+    Array<AString> array( 1, false );
+
+    // Take note of memory state before
+    TEST_MEMORY_SNAPSHOT( s1 );
+
+    array.Append( Move( string ) );
+
+    // Should be no allocations
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+
+    CheckConsistency( array );
+}
+
+// MoveSetCapacity
+//------------------------------------------------------------------------------
+void TestArray::MoveSetCapacity() const
+{
+    // Create array with something in it
+    Array<AString> array( 1, true );
+    array.Append( AString( "string1" ) );
+
+    // Take note of memory state before
+    TEST_MEMORY_SNAPSHOT( s1 );
+
+    array.SetCapacity( 8 );
+
+    // Should be 1 allocation for resize (element should be moved)
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 )
+
+    CheckConsistency( array );
+}
+
+// MovePopFront
+//------------------------------------------------------------------------------
+void TestArray::MovePopFront() const
+{
+    // Create array with something in it
+    Array<AString> array( 2, false );
+    array.Append( AString( "string1" ) );
+    array.Append( AString( "string2string2" ) ); // Larger than string 1
+
+    // Take note of memory state before
+    TEST_MEMORY_SNAPSHOT( s1 );
+
+    array.PopFront();
+
+    // Should be no allocations (element should be moved)
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+
+    CheckConsistency( array );
+}
+
+// MoveErase
+//------------------------------------------------------------------------------
+void TestArray::MoveErase() const
+{
+    // Create array with something in it
+    Array<AString> array( 2, false );
+    array.Append( AString( "string1" ) );
+    array.Append( AString( "string2string2" ) ); // Larger than string 1
+
+    // Take note of memory state before
+    TEST_MEMORY_SNAPSHOT( s1 );
+
+    array.Erase( array.Begin() );
+
+    // Should be no allocations (element should be moved)
+    TEST_EXPECT_ALLOCATION_EVENTS( s1, 0 )
+
+    CheckConsistency( array );
 }
 
 // StackArrayOverflowToHeap

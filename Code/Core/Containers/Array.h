@@ -4,6 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Containers/Move.h"
 #include "Core/Containers/Sort.h"
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
@@ -18,6 +19,7 @@ class Array
 public:
     explicit Array();
     explicit Array( const Array< T > & other );
+    explicit Array( Array< T > && other );
     explicit Array( const T * otherBegin, const T * otherEnd );
     explicit Array( size_t initialCapacity, bool resizeable = false );
     ~Array();
@@ -68,6 +70,7 @@ public:
 
     // add/remove items
     void Append( const T & item );
+    void Append( T && item );
     template < class U >
     void Append( const Array< U > & other );
     template < class U >
@@ -78,6 +81,7 @@ public:
     inline void EraseIndex( size_t index ) { Erase( m_Begin + index ); }
 
     Array & operator = ( const Array< T > & other );
+    Array & operator = ( Array< T > && other );
 
     // query state
     inline bool     IsAtCapacity() const    { return ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) ); }
@@ -131,6 +135,38 @@ Array< T >::Array( const Array< T > & other )
     #endif
 {
     *this = other;
+}
+
+// CONSTRUCTOR (&&)
+//------------------------------------------------------------------------------
+template < class T >
+Array< T >::Array( Array< T > && other )
+{
+    #if defined( ASSERTS_ENABLED )
+        m_Resizeable = true;
+    #endif
+
+    // If memory cannot be freed it cannot be moved
+    if ( other.m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG )
+    {
+        // Copy
+        m_Begin = nullptr;
+        m_Size = 0;
+        m_CapacityAndFlags = 0;
+        operator = ( Move( other ) );
+    }
+    else
+    {
+        // Move
+        m_Begin = other.m_Begin;
+        m_Size = other.m_Size;
+        m_CapacityAndFlags = other.m_CapacityAndFlags;
+
+        // Clear other
+        other.m_Begin = nullptr;
+        other.m_Size = 0;
+        other.m_CapacityAndFlags = 0;
+    }
 }
 
 // CONSTRUCTOR
@@ -213,7 +249,7 @@ void Array< T >::SetCapacity( size_t capacity )
     T * dst = newMem;
     while ( src < endIter )
     {
-        INPLACE_NEW ( dst ) T( *src );
+        INPLACE_NEW ( dst ) T( Move( *src ) );
         src->~T();
         src++;
         dst++;
@@ -406,6 +442,20 @@ void Array< T >::Append( const T & item )
 // Append
 //------------------------------------------------------------------------------
 template < class T >
+void Array< T >::Append( T && item )
+{
+    if ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) )
+    {
+        Grow();
+    }
+    T * pos = m_Begin + m_Size;
+    INPLACE_NEW ( pos ) T( Move( item ) );
+    m_Size++;
+}
+
+// Append
+//------------------------------------------------------------------------------
+template < class T >
 template < class U >
 void Array< T >::Append( const Array< U > & other )
 {
@@ -454,7 +504,7 @@ void Array< T >::PopFront()
     T * endIter = m_Begin + m_Size;
     while ( src < endIter )
     {
-        *dst = *src;
+        *dst = Move( *src );
         dst++;
         src++;
     }
@@ -477,14 +527,14 @@ void Array< T >::Erase( T * const iter )
     T * last = (endIter - 1 );
     while ( dst < last )
     {
-        *dst = *(dst + 1);
+        *dst = Move( *( dst + 1 ) );
         dst++;
     }
     dst->~T();
     --m_Size;
 }
 
-// Grow
+// operator =
 //------------------------------------------------------------------------------
 template < class T >
 Array< T > & Array< T >::operator = ( const Array< T > & other )
@@ -516,6 +566,66 @@ Array< T > & Array< T >::operator = ( const Array< T > & other )
     return *this;
 }
 
+// operator = (&&)
+//------------------------------------------------------------------------------
+template < class T >
+Array< T > & Array< T >::operator = ( Array< T > && other )
+{
+    ASSERT( &other != this ); // Invalid to assign to self
+
+    // Destruct existing elements
+    Clear();
+
+    // If memory cannot be freed it cannot be moved
+    if ( other.m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG )
+    {
+        // Cannot move array, but can move elements
+
+        // need to reallocate storage?
+        const uint32_t otherSize = (uint32_t)other.GetSize();
+        if ( GetCapacity() < otherSize )
+        {
+            Deallocate( m_Begin );
+            m_Begin = Allocate( otherSize );
+            m_CapacityAndFlags = (uint32_t)otherSize;
+        }
+
+        // Move elements
+        T * src = other.m_Begin;
+        const T * const srcEnd = other.m_Begin + other.m_Size;
+        T * dst = m_Begin;
+        while ( src < srcEnd )
+        {
+            INPLACE_NEW ( dst ) T( Move( *src ) );
+            ++src;
+            ++dst;
+        }
+        m_Size = otherSize;
+
+        // Elements are moved, but they still need to be destructed
+        // and all memory freed
+        other.Destruct();
+    }
+    else
+    {
+        // Move
+        if ( ( m_CapacityAndFlags & DO_NOT_FREE_MEMORY_FLAG ) == 0 )
+        {
+            Destruct(); // Free our own memory
+        }
+        m_Begin = other.m_Begin;
+        m_Size = other.m_Size;
+        m_CapacityAndFlags = other.m_CapacityAndFlags;
+
+        // Clear other as we now own the memory
+        other.m_Begin = nullptr;
+        other.m_Size = 0;
+        other.m_CapacityAndFlags = 0;
+    }
+
+    return *this;
+}
+
 // Grow
 //------------------------------------------------------------------------------
 template < class T >
@@ -534,7 +644,7 @@ void Array< T >::Grow()
     T * endIter = m_Begin + m_Size;
     while ( src < endIter )
     {
-        INPLACE_NEW ( dst ) T( *src );
+        INPLACE_NEW ( dst ) T( Move( *src ) );
         src->~T();
         dst++;
         src++;
@@ -577,8 +687,32 @@ public:
         Array<T>::m_Begin = (T *)&m_Storage;
         Array<T>::m_CapacityAndFlags = ( RESERVED | Array<T>::DO_NOT_FREE_MEMORY_FLAG );
     }
+    StackArray( const StackArray<T> & other )
+    {
+        Array<T>::m_Begin = (T*)& m_Storage;
+        Array<T>::m_Size = 0;
+        Array<T>::m_CapacityAndFlags = ( RESERVED | Array<T>::DO_NOT_FREE_MEMORY_FLAG );
+        Array<T>::operator = ( Move( other ) );
+    }
+    StackArray( Array<T> && other )
+    {
+        Array<T>::m_Begin = (T*)& m_Storage;
+        Array<T>::m_Size = 0;
+        Array<T>::m_CapacityAndFlags = ( RESERVED | Array<T>::DO_NOT_FREE_MEMORY_FLAG );
+        Array<T>::operator = ( Move( other ) );
+    }
+    StackArray( StackArray<T> && other )
+    {
+        Array<T>::m_Begin = (T*)& m_Storage;
+        Array<T>::m_Size = 0;
+        Array<T>::m_CapacityAndFlags = ( RESERVED | Array<T>::DO_NOT_FREE_MEMORY_FLAG );
+        Array<T>::operator = ( Move( other ) );
+    }
 
-    inline void operator = ( const Array<T> & other ) { Array<T>::operator = ( other ); }
+    inline void operator = ( const Array<T> & other )       { Array<T>::operator = ( other ); }
+    inline void operator = ( const StackArray<T> & other )  { Array<T>::operator = ( other ); }
+    inline void operator = ( Array<T> && other )            { Array<T>::operator = ( Move( other ) ); }
+    inline void operator = ( StackArray<T> && other )       { Array<T>::operator = ( Move( other ) ); }
 private:
     PRAGMA_DISABLE_PUSH_MSVC( 4324 ) // structure was padded due to alignment specifier
     alignas(__alignof(T)) uint8_t m_Storage[ RESERVED * sizeof( T ) ];
