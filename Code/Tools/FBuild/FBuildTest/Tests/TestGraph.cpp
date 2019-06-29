@@ -730,7 +730,7 @@ void TestGraph::DBVersionChanged() const
 
     // Since we're poking this, we want to know if the layout ever changes somehow
     TEST_ASSERT( ms.GetFileSize() == 4 );
-    TEST_ASSERT( ( (const char *)ms.GetDataMutable() )[3] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
+    TEST_ASSERT( ( (const uint8_t *)ms.GetDataMutable() )[3] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
 
     ( (char *)ms.GetDataMutable() )[3] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
 
