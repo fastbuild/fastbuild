@@ -14,7 +14,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFStackFrame::BFFStackFrame()
-: m_Variables( 32, true )
+    : m_Variables( 32, true )
 {
     // hook into top of stack chain
     m_Next = s_StackHead;
@@ -30,11 +30,9 @@ BFFStackFrame::~BFFStackFrame()
     s_StackHead = m_Next;
 
     // free all variables we own
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( BFFVariable * var : m_Variables )
     {
-        FDELETE *i;
+        FDELETE var;
     }
 }
 
@@ -261,13 +259,11 @@ BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
 const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & name ) const
 {
     // look at this scope level
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( const BFFVariable * var : m_Variables )
     {
-        if ( ( *i )->GetName() == name )
+        if ( var->GetName() == name )
         {
-            return *i;
+            return var;
         }
     }
 
@@ -342,21 +338,19 @@ const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & nameOnly,
     ASSERT( nameOnly.BeginsWith( '.' ) == false ); // Should not include . : TODO:C Resolve the inconsistency
 
     // look at this scope level
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( const BFFVariable * var : m_Variables )
     {
-        // if name only (minus type prefix ) length matches
-        if ( ( *i )->GetName().GetLength() == ( nameOnly.GetLength() + 1 ) )
+        // if name only (minus type prefix) length matches
+        if ( var->GetName().GetLength() == ( nameOnly.GetLength() + 1 ) )
         {
             //types match?
             if ( ( type == BFFVariable::VAR_ANY ) ||
-                 ( type == ( *i )->GetType() ) )
+                 ( type == var->GetType() ) )
             {
                 // compare names
-                if ( nameOnly == ( ( *i )->GetName().Get() + 1 ) )
+                if ( nameOnly == ( var->GetName().Get() + 1 ) )
                 {
-                    return *i;
+                    return var;
                 }
             }
         }
@@ -379,13 +373,11 @@ const BFFVariable * BFFStackFrame::GetVarNoRecurse( const AString & name ) const
     ASSERT( s_StackHead ); // we shouldn't be calling this if there aren't any stack frames
 
     // look at this scope level
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( const BFFVariable * var : m_Variables )
     {
-        if ( ( *i )->GetName() == name )
+        if ( var->GetName() == name )
         {
-            return *i;
+            return var;
         }
     }
 
@@ -399,13 +391,11 @@ BFFVariable * BFFStackFrame::GetVarMutableNoRecurse( const AString & name )
     ASSERT( s_StackHead ); // we shouldn't be calling this if there aren't any stack frames
 
     // look at this scope level
-    Array< BFFVariable * >::Iter i = m_Variables.Begin();
-    Array< BFFVariable * >::Iter end = m_Variables.End();
-    for( ; i < end ; ++i )
+    for ( BFFVariable * var : m_Variables )
     {
-        if ( ( *i )->GetName() == name )
+        if ( var->GetName() == name )
         {
-            return *i;
+            return var;
         }
     }
 
@@ -414,7 +404,7 @@ BFFVariable * BFFStackFrame::GetVarMutableNoRecurse( const AString & name )
 
 // CreateOrReplaceVarMutableNoRecurse
 //------------------------------------------------------------------------------
-void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable *var )
+void BFFStackFrame::CreateOrReplaceVarMutableNoRecurse( BFFVariable * var )
 {
     ASSERT( s_StackHead ); // we shouldn't be calling this if there aren't any stack frames
     ASSERT( var );

@@ -33,7 +33,7 @@ public:
 
     const AString & GetString() const { ASSERT( IsString() ); return m_StringValue; }
     const Array< AString > & GetArrayOfStrings() const { ASSERT( IsArrayOfStrings() ); return m_ArrayValues; }
-    int GetInt() const { ASSERT( IsInt() ); return m_IntValue; }
+    int32_t GetInt() const { ASSERT( IsInt() ); return m_IntValue; }
     bool GetBool() const { ASSERT( IsBool() ); return m_BoolValue; }
     const Array< const BFFVariable * > & GetStructMembers() const { ASSERT( IsStruct() ); RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables ); }
     const Array< const BFFVariable * > & GetArrayOfStructs() const { ASSERT( IsArrayOfStructs() ); RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_SubVariables ); }
@@ -77,7 +77,7 @@ private:
     explicit BFFVariable( const AString & name, const AString & value );
     explicit BFFVariable( const AString & name, bool value );
     explicit BFFVariable( const AString & name, const Array< AString > & values );
-    explicit BFFVariable( const AString & name, int i );
+    explicit BFFVariable( const AString & name, int32_t i );
     explicit BFFVariable( const AString & name, const Array< const BFFVariable * > & values );
     explicit BFFVariable( const AString & name, Array<BFFVariable *> && values );
     explicit BFFVariable( const AString & name, const Array< const BFFVariable * > & structs, VarType type ); // type for disambiguation
@@ -94,11 +94,11 @@ private:
     AString m_Name;
     VarType m_Type;
 
-    mutable uint8_t     m_FreezeCount;
+    mutable uint8_t     m_FreezeCount   = 0;
 
     //
-    bool                m_BoolValue;
-    int                 m_IntValue;
+    bool                m_BoolValue     = false;
+    int32_t             m_IntValue      = 0;
     AString             m_StringValue;
     Array< AString >    m_ArrayValues;
     Array< BFFVariable * > m_SubVariables; // Used for struct members of arrays of structs

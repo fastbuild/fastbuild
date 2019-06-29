@@ -25,28 +25,16 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, VarType type )
-: m_Name( name )
-, m_Type( type )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, true )
-, m_SubVariables( 0, true )
+    : m_Name( name )
+    , m_Type( type )
 {
 }
 
 // CONSTRUCTOR (copy)
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const BFFVariable & other )
-: m_Name( other.m_Name )
-, m_Type( other.m_Type )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, true )
-, m_SubVariables( 0, true )
+    : m_Name( other.m_Name )
+    , m_Type( other.m_Type )
 {
     switch( m_Type )
     {
@@ -64,71 +52,45 @@ BFFVariable::BFFVariable( const BFFVariable & other )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, const AString & value )
-: m_Name( name )
-, m_Type( VAR_STRING )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-, m_StringValue( value )
-, m_ArrayValues( 0, false )
-, m_SubVariables( 0, true )
+    : m_Name( name )
+    , m_Type( VAR_STRING )
+    , m_StringValue( value )
 {
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, bool value )
-: m_Name( name )
-, m_Type( VAR_BOOL )
-, m_FreezeCount( 0 )
-, m_BoolValue( value )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, false )
-, m_SubVariables( 0, false )
+    : m_Name( name )
+    , m_Type( VAR_BOOL )
+    , m_BoolValue( value )
 {
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, const Array< AString > & values )
-: m_Name( name )
-, m_Type( VAR_ARRAY_OF_STRINGS )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, true )
-, m_SubVariables( 0, false )
+    : m_Name( name )
+    , m_Type( VAR_ARRAY_OF_STRINGS )
+    , m_ArrayValues( values )
 {
-    m_ArrayValues = values;
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-BFFVariable::BFFVariable( const AString & name, int i )
-: m_Name( name )
-, m_Type( VAR_INT )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( i )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, true )
-, m_SubVariables( 0, true )
+BFFVariable::BFFVariable( const AString & name, int32_t i )
+    : m_Name( name )
+    , m_Type( VAR_INT )
+    , m_IntValue( i )
 {
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, const Array< const BFFVariable * > & values )
-: m_Name( name )
-, m_Type( VAR_STRUCT )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, false )
-, m_SubVariables( values.GetSize(), true )
+    : m_Name( name )
+    , m_Type( VAR_STRUCT )
+    , m_SubVariables( values.GetSize(), true )
 {
     SetValueStruct( values );
 }
@@ -139,11 +101,6 @@ BFFVariable::BFFVariable( const AString & name,
                           Array<BFFVariable *> && values )
     : m_Name( name )
     , m_Type( VAR_STRUCT )
-    , m_FreezeCount( 0 )
-    , m_BoolValue( false )
-    , m_IntValue( 0 )
-    //, m_StringValue() // default construct this
-    //, m_ArrayValues()
     , m_SubVariables( Move( values ) )
 {
 }
@@ -153,14 +110,9 @@ BFFVariable::BFFVariable( const AString & name,
 BFFVariable::BFFVariable( const AString & name,
                           const Array< const BFFVariable * > & structs,
                           VarType type ) // type for disambiguation
-: m_Name( name )
-, m_Type( VAR_ARRAY_OF_STRUCTS )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, false )
-, m_SubVariables( structs.GetSize(), true )
+    : m_Name( name )
+    , m_Type( VAR_ARRAY_OF_STRUCTS )
+    , m_SubVariables( structs.GetSize(), true )
 {
     // type for disambiguation only - sanity check it's the right type
     ASSERT( type == VAR_ARRAY_OF_STRUCTS ); (void)type;
@@ -173,11 +125,9 @@ BFFVariable::BFFVariable( const AString & name,
 BFFVariable::~BFFVariable()
 {
     // clean up sub variables
-    for ( BFFVariable ** it = m_SubVariables.Begin();
-          it != m_SubVariables.End();
-          ++it )
+    for ( BFFVariable * var : m_SubVariables )
     {
-        FDELETE *it;
+        FDELETE var;
     }
 }
 
@@ -228,21 +178,15 @@ void BFFVariable::SetValueStruct( const Array< const BFFVariable * > & values )
     Array< BFFVariable * > newVars( values.GetSize(), false );
 
     m_Type = VAR_STRUCT;
-    for ( const BFFVariable ** it = values.Begin();
-          it != values.End();
-          ++it )
+    for ( const BFFVariable * var : values )
     {
-        const BFFVariable * var = *it;
-        BFFVariable * newV = FNEW( BFFVariable( *var ) );
-        newVars.Append( newV );
+        newVars.Append( FNEW( BFFVariable( *var ) ) );
     }
 
     // free old members
-    for ( BFFVariable ** it = m_SubVariables.Begin();
-          it != m_SubVariables.End();
-          ++it )
+    for ( BFFVariable * var : m_SubVariables )
     {
-        FDELETE *it;
+        FDELETE var;
     }
 
     // swap
@@ -280,21 +224,15 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
     Array< BFFVariable * > newVars( values.GetSize(), false );
 
     m_Type = VAR_ARRAY_OF_STRUCTS;
-    for ( const BFFVariable ** it = values.Begin();
-          it != values.End();
-          ++it )
+    for ( const BFFVariable * var : values)
     {
-        const BFFVariable * var = *it;
-        BFFVariable * newV = FNEW( BFFVariable( *var ) );
-        newVars.Append( newV );
+        newVars.Append( FNEW( BFFVariable( *var ) ) );
     }
 
     // free old members
-    for ( BFFVariable ** it = m_SubVariables.Begin();
-          it != m_SubVariables.End();
-          ++it )
+    for ( BFFVariable * var : m_SubVariables )
     {
-        FDELETE *it;
+        FDELETE var;
     }
 
     m_SubVariables.Swap( newVars );
