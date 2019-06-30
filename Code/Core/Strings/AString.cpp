@@ -30,7 +30,7 @@ AString::AString()
 //------------------------------------------------------------------------------
 AString::AString( uint32_t reserve )
 {
-    char * mem = nullptr;
+    char * mem = const_cast<char *>( s_EmptyString ); // cast to allow pointing to protected string
     if ( reserve > 0 )
     {
         reserve = Math::RoundUp( reserve, (uint32_t)2 );
