@@ -96,7 +96,7 @@ void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, cons
         AStackString<> msg;
         msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
 
-        AutoPtr< char > mem( (char *)Alloc( dataSize + msg.GetLength() ) );
+        AutoPtr< char > mem( (char *)ALLOC( dataSize + msg.GetLength() ) );
         memcpy( mem.Get(), msg.Get(), msg.GetLength() );
         memcpy( mem.Get() + msg.GetLength(), data, dataSize );
 
