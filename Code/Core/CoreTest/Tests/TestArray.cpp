@@ -2019,9 +2019,9 @@ void TestArray::StackArrayOverflowToHeap() const
         // Place some cookies around array to detect overruns
         struct CookieWrapper1
         {
-            uint64_t cookie1 = 0xF00DF00D;
+            volatile uint64_t cookie1 = 0xF00DF00D;
             StackArray<uint64_t, 4> stackArray;
-            uint64_t cookie2 = 0xF00DF00D;
+            volatile uint64_t cookie2 = 0xF00DF00D;
         };
         CookieWrapper1 cw;
 
@@ -2049,9 +2049,9 @@ void TestArray::StackArrayOverflowToHeap() const
         // Place some cookies around array to detect overruns
         struct CookieWrapper2
         {
-            uint64_t cookie1 = 0xF00DF00D;
+            volatile uint64_t cookie1 = 0xF00DF00D;
             StackArray<AString, 4> stackArray;
-            uint64_t cookie2 = 0xF00DF00D;
+            volatile uint64_t cookie2 = 0xF00DF00D;
         };
         CookieWrapper2 cw;
 

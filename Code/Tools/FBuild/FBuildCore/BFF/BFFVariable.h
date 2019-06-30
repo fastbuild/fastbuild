@@ -83,6 +83,8 @@ private:
     explicit BFFVariable( const AString & name, const Array< const BFFVariable * > & structs, VarType type ); // type for disambiguation
     ~BFFVariable();
 
+    BFFVariable & operator =( const BFFVariable & other ) = delete;
+
     void SetValueString( const AString & value );
     void SetValueBool( bool value );
     void SetValueArrayOfStrings( const Array< AString > & values );

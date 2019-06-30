@@ -27,7 +27,7 @@
 // An address with the MSB set is not a valid user-space address on Windows, Linux or OSX
 // We can take advantage of this to test if an allocation being freed is a bucket
 // allocation whether or not the SmallBlockAlloctor is initialized or not
-#define MEM_BUCKETS_NOT_INITIALIZED (void *)( 1LLU << 63 )
+#define MEM_BUCKETS_NOT_INITIALIZED (void *)( ~0LLU )
 
 // Static Data
 //------------------------------------------------------------------------------

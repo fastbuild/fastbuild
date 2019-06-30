@@ -1845,6 +1845,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
             {
                 // Create the dependency
                 newDepNode = Node::CreateNode( *this, oldDepNode->GetType(), oldDepNode->GetName() );
+                ASSERT( newDepNode );
                 newDeps.Append( Dependency( newDepNode, oldDep.IsWeak() ) );
 
                 // Early out for FileNode (no properties and doesn't need Initialization)

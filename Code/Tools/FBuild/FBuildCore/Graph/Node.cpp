@@ -418,6 +418,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 
     // Create node
     Node * n = CreateNode( nodeGraph, (Type)nodeType, name );
+    ASSERT( n );
 
     // Early out for FileNode
     if ( nodeType == Node::FILE_NODE )
