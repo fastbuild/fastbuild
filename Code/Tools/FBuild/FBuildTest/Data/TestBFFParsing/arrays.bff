@@ -96,6 +96,12 @@
     // assignment of empty array wrapped in inplace array to non-empty
     .T11 = .Array
     .T11 = { .EmptyArray }
+
+    // concatentation of empty array of different type
+    .Struct = []
+    .EmptyArray2 = { .Struct }
+    .EmptyArray2 = {}
+    .T12 = .Array + .EmptyArray2
 }
 
 // Operations with ArrayOfStructs and empty arrays
@@ -133,4 +139,9 @@
     // assignment of empty array wrapped in inplace array to non-empty
     .T11 = .Array
     .T11 = { .EmptyArray }
+
+    // concatentation of empty array of different type
+    .EmptyArray2 = { '' }
+    .EmptyArray2 = {}
+    .T12 = .Array + .EmptyArray2
 }

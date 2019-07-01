@@ -1841,7 +1841,12 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
         {
             if ( concat )
             {
-                BFFStackFrame::SetVarArrayOfStrings( dstName, varDst->GetArrayOfStrings(), dstFrame );
+                // Avoid self-assignment by checking that the destination variable is not in destination scope.
+                const BFFVariable * var = (dstFrame ? dstFrame : BFFStackFrame::GetCurrent())->GetLocalVar( dstName );
+                if ( varDst != var )
+                {
+                    BFFStackFrame::SetVarArrayOfStrings( dstName, varDst->GetArrayOfStrings(), dstFrame );
+                }
             }
             else
             {
@@ -1855,7 +1860,12 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
         {
             if ( concat )
             {
-                BFFStackFrame::SetVarArrayOfStructs( dstName, varDst->GetArrayOfStructs(), dstFrame );
+                // Avoid self-assignment by checking that the destination variable is not in destination scope.
+                const BFFVariable * var = (dstFrame ? dstFrame : BFFStackFrame::GetCurrent())->GetLocalVar( dstName );
+                if ( varDst != var )
+                {
+                    BFFStackFrame::SetVarArrayOfStructs( dstName, varDst->GetArrayOfStructs(), dstFrame );
+                }
             }
             else
             {
