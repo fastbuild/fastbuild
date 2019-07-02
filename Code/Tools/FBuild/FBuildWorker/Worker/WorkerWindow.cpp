@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 
 // FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 
 // OSUI
@@ -33,7 +34,7 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-WorkerWindow::WorkerWindow( void * hInstance )
+WorkerWindow::WorkerWindow( void * hInstance, WorkerBrokerage * workerBrokerage )
     : OSWindow( hInstance )
     , m_UIState( NOT_READY )
     , m_UIThreadHandle( INVALID_THREAD_HANDLE )
@@ -46,10 +47,8 @@ WorkerWindow::WorkerWindow( void * hInstance )
     , m_ResourcesDropDown( nullptr )
     , m_Splitter( nullptr )
     , m_Menu( nullptr )
+    , m_WorkerBrokerage( workerBrokerage )
 {
-    // obtain host name
-    Network::GetHostName(m_HostName);
-
     // spawn UI thread - this creates the window, which must be done
     // on the same thread as we intend to process messages on
     m_UIThreadHandle = Thread::CreateThread( &UIUpdateThreadWrapper,
@@ -80,7 +79,7 @@ WorkerWindow::~WorkerWindow()
 void WorkerWindow::SetStatus( const char * statusText )
 {
     AStackString< 512 > text;
-    text.Format( "FBuildWorker %s | \"%s\" | %s", FBUILD_VERSION_STRING, m_HostName.Get(), statusText );
+    text.Format( "FBuildWorker %s | \"%s\" | %s", FBUILD_VERSION_STRING, m_WorkerBrokerage->GetHostName().Get(), statusText );
     SetTitle( text.Get() );
 }
 
@@ -185,7 +184,8 @@ void WorkerWindow::UIUpdateThread()
         // popup menu for tray icon
         m_Menu = FNEW( OSMenu( this ) );
         m_Menu->Init();
-        m_Menu->AddItem( "Exit" );
+        m_Menu->AddItem( "Open broker directory...", TRAYITEM_OPEN_BROKER_DIRECTORY );
+        m_Menu->AddItem( "Exit", TRAYITEM_EXIT );
 
         // Display the window and minimize it if needed
         if ( WorkerSettings::Get().GetStartMinimzed() )
@@ -283,10 +283,24 @@ void WorkerWindow::UIUpdateThread()
 //------------------------------------------------------------------------------
 /*virtual*/ bool WorkerWindow::OnTrayIconRightClick()
 {
+    Array< OSMenu::ItemStatus > statuses;
+    const bool enableBrokerDirectory = !m_WorkerBrokerage->GetBrokerageRoot().IsEmpty();
+    statuses.Append(OSMenu::ItemStatus { TRAYITEM_OPEN_BROKER_DIRECTORY, enableBrokerDirectory });
+
     uint32_t index;
-    if ( m_Menu->ShowAndWaitForSelection( index ) )
+    if ( m_Menu->ShowAndWaitForSelection( statuses, index ) )
     {
-        SetWantToQuit();
+        switch ( index )
+        {
+            case TRAYITEM_OPEN_BROKER_DIRECTORY:
+#if defined( __WINDOWS__ )
+                ShellExecute( nullptr, "open", m_WorkerBrokerage->GetBrokerageRoot().Get(), nullptr, nullptr, SW_NORMAL);
+#endif
+                break;
+            case TRAYITEM_EXIT:
+                SetWantToQuit();
+                break;
+        }
     }
 
     return true; // Handled

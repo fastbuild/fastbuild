@@ -7,6 +7,7 @@
 #include "OSWidget.h"
 
 // Core
+#include "Core/Containers/Array.h"
 #include "Core/Env/Types.h"
 
 // Forward Declarations
@@ -22,9 +23,15 @@ public:
 
     void Init();
 
-    void AddItem( const char * text );
+    struct ItemStatus
+    {
+        uint32_t Index;
+        bool     Enabled = true;
+    };
 
-    bool ShowAndWaitForSelection( uint32_t & outIndex );
+    void AddItem( const char * text, uint32_t index );
+
+    bool ShowAndWaitForSelection( const Array< ItemStatus > & itemStatuses, uint32_t & outIndex );
 
 protected:
     #if defined( __WINDOWS__ )
