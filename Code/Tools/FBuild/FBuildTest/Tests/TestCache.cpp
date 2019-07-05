@@ -418,7 +418,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     TEST_ASSERT( output.Find( "warning C6201" ) && output.Find( "Index '32' is out of valid index range" ) );
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
     // file2.cpp
-    #if _MSC_VER >= 1910 // From VS2017 or later 
+    #if _MSC_VER >= 1910 // From VS2017 or later
         TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0':  this does not adhere to the specification for the function" ) );
     #endif
 
@@ -428,7 +428,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_Write() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    #if _MSC_VER >= 1910 // From VS2017 or later 
+    #if _MSC_VER >= 1910 // From VS2017 or later
         TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
     #endif
 }
@@ -462,7 +462,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_Read() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    #if _MSC_VER >= 1910 // From VS2017 or later 
+    #if _MSC_VER >= 1910 // From VS2017 or later
         TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
     #endif
 }
@@ -503,7 +503,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
     TEST_ASSERT( output.Find( "warning C6201" ) && output.Find( "Index '32' is out of valid index range" ) );
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
     // file2.cpp
-    #if _MSC_VER >= 1910 // From VS2017 or later 
+    #if _MSC_VER >= 1910 // From VS2017 or later
         TEST_ASSERT( output.Find( "warning C6387" ) && output.Find( "could be '0':  this does not adhere to the specification for the function" ) );
     #endif
 
@@ -513,7 +513,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    #if _MSC_VER >= 1910 // From VS2017 or later 
+    #if _MSC_VER >= 1910 // From VS2017 or later
         TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
     #endif
 }
@@ -556,7 +556,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_ReadFromDist() const
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6201</DEFECTCODE>" ) );
     TEST_ASSERT( xml.Find( "<DEFECTCODE>6386</DEFECTCODE>" ) );
     LoadFileContentsAsString( mAnalyzeMSVCXMLFile2, xml );
-    #if _MSC_VER >= 1910 // From VS2017 or later 
+    #if _MSC_VER >= 1910 // From VS2017 or later
         TEST_ASSERT( xml.Find( "<DEFECTCODE>6387</DEFECTCODE>" ) );
     #endif
 }

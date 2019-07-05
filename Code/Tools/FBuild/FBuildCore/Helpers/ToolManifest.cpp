@@ -230,7 +230,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     return true;
 }
 
-// 
+// Migrate
 //------------------------------------------------------------------------------
 void ToolManifest::Migrate( const ToolManifest & oldManifest )
 {
