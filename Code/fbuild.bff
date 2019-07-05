@@ -19,9 +19,6 @@ Settings
         .Environment    = { "PATH=$VS_PATH$",
                             "TMP=$TMP$",
                             "SystemRoot=C:\Windows" }
-        .CachePath      = "$TMP$\.fbuild.cache"
-    #else
-        .CachePath      = "/tmp/.fbuild.cache"
     #endif
     .AllowDBMigration_Experimental = true
 }
