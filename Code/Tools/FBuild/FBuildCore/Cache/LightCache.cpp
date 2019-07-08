@@ -48,6 +48,114 @@ public:
     inline bool operator <  ( const IncludedFile & other ) const    { return ( m_FileName < other.m_FileName ); }
 };
 
+#define LIGHTCACHE_DEFAULT_BUCKET_SIZE 1024
+class IncludedFileHashSet
+{
+public:
+    IncludedFileHashSet( const IncludedFileHashSet & ) = delete;
+    IncludedFileHashSet &operator=( const IncludedFileHashSet & ) = delete;
+    IncludedFileHashSet()
+    {
+        m_Buckets.SetSize( LIGHTCACHE_DEFAULT_BUCKET_SIZE );
+        for( auto &elt : m_Buckets )
+        {
+            elt = nullptr;
+        }
+    }
+    IncludedFile **Find( const AString & fileName, uint64_t fileNameHash )
+    {
+        if( m_Buckets.IsEmpty() )
+           return nullptr;
+        size_t probe_count = 1;
+        size_t startIdx = fileNameHash & ( m_Buckets.GetSize() - 1 );
+        IncludedFile **bucket = &m_Buckets[ startIdx ];
+        while( *bucket != nullptr )
+        {
+            if( (*bucket)->m_FileNameHash == fileNameHash && **bucket == fileName )
+            {
+                return bucket;
+            }
+            bucket = Next( m_Buckets, startIdx, probe_count );
+        }
+        return bucket;
+    }
+    void Insert( IncludedFile *item, IncludedFile **location )
+    {
+        if( m_Buckets.GetSize() / 2 <= m_Elts )
+        {
+            size_t newSize = (
+               m_Buckets.GetSize() < LIGHTCACHE_DEFAULT_BUCKET_SIZE) ?
+                  LIGHTCACHE_DEFAULT_BUCKET_SIZE :
+                  ( m_Buckets.GetSize() * 2 );
+            Grow( newSize );
+            location = nullptr;
+        }
+        if( location == nullptr || location < m_Buckets.begin() || location >= m_Buckets.end() )
+        {
+            // passed in location is now invalid, re-find our item.
+            // we can assume it isn't present
+            size_t probe_count = 1;
+            size_t startIdx = item->m_FileNameHash & ( m_Buckets.GetSize() - 1 );
+            location = &m_Buckets[ startIdx ];
+            while( *location != nullptr )
+            {
+                location = Next( m_Buckets, startIdx, probe_count );
+            }
+        }
+        ++m_Elts;
+        *location = item;
+    }
+    void Destruct()
+    {
+        for ( IncludedFile * file : m_Buckets )
+        {
+            FDELETE file;
+        }
+        m_Buckets.Destruct();
+    }
+
+private:
+    static IncludedFile **Next( Array< IncludedFile * > &buckets,
+                                  size_t startIdx,
+                                  size_t &probe_count)
+    {
+        size_t curIdx = startIdx + probe_count * probe_count; //quadratic probing
+        curIdx &= ( buckets.GetSize() - 1 );
+        ++probe_count;
+        return &buckets[ curIdx ];
+    }
+    void Grow( size_t elts )
+    {
+        Array< IncludedFile * > dest{ elts, true };
+        dest.SetSize( elts );
+        for( auto &elt : dest )
+        {
+            elt = nullptr;
+        }
+
+        // populate dest with the elements in m_Buckets.  Rely on uniqueness
+        // in source to avoid comparing in dest
+        for( IncludedFile *elt : m_Buckets )
+        {
+            if( elt == nullptr )
+               continue;
+            size_t probe_count = 1;
+            size_t startIdx = elt->m_FileNameHash & ( dest.GetSize() - 1 );
+            IncludedFile **bucket = &dest[ startIdx ];
+            while( *bucket != nullptr )
+            {
+                bucket = Next( dest, startIdx, probe_count );
+            }
+            *bucket = elt;
+        }
+        m_Buckets.Swap( dest );
+    }
+
+    // m_Buckets must always be a size that is a power of 2
+    Array< IncludedFile * > m_Buckets{ 1024, true };
+    size_t m_Elts = 0;
+};
+
 // IncludedFileBucket
 //------------------------------------------------------------------------------
 class IncludedFileBucket
@@ -55,21 +163,21 @@ class IncludedFileBucket
 public:
     IncludedFileBucket()
         : m_Mutex()
-        , m_Files( 1024, true )
     {}
     void Destruct()
     {
-        for ( IncludedFile * file : m_Files )
-        {
-            FDELETE file;
-        }
-        m_Files.Destruct();
+        m_HashSet.Destruct();
     }
-
     Mutex                   m_Mutex;
-    Array< IncludedFile * > m_Files;
+    IncludedFileHashSet     m_HashSet;
 };
-#define LIGHTCACHE_NUM_BUCKETS 128
+// using a power of two number of buckets.  64 top level buckets should be a
+// reasonable tradeoff between size and contention
+#define LIGHTCACHE_NUM_BUCKET_BITS 6
+#define LIGHTCACHE_NUM_BUCKETS ( 1ULL<<6 )
+#define LIGHTCACHE_BUCKET_MASK_BASE ( LIGHTCACHE_NUM_BUCKETS - 1ULL )
+// use upper bits for bucket selection, as lower bits get used in the hash set
+#define LIGHTCACHE_HASH_TO_BUCKET(hash) ( (( hash ) >> ( 64ULL - LIGHTCACHE_NUM_BUCKET_BITS )) & LIGHTCACHE_BUCKET_MASK_BASE )
 static IncludedFileBucket g_AllIncludedFiles[ LIGHTCACHE_NUM_BUCKETS ];
 
 // CONSTRUCTOR
@@ -161,10 +269,10 @@ void LightCache::Hash( IncludedFile * file, FileStream & f )
     ASSERT( f.IsOpen() );
 
     // Read all contents
-    const size_t fileSize = f.GetFileSize();
+    const uint64_t fileSize = f.GetFileSize();
     AString fileContents;
     fileContents.SetLength( (uint32_t)fileSize );
-    if ( f.Read( fileContents.Get(), fileSize ) != fileSize )
+    if ( f.Read( fileContents.Get(), (size_t)fileSize ) != fileSize )
     {
         m_ProblemParsing = true;
         return;
@@ -469,16 +577,16 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & 
 const IncludedFile * LightCache::FileExists( const AString & fileName )
 {
     const uint64_t fileNameHash = xxHash::Calc64( fileName );
-    const uint64_t bucketIndex = fileNameHash % LIGHTCACHE_NUM_BUCKETS;
+    const uint64_t bucketIndex = LIGHTCACHE_HASH_TO_BUCKET( fileNameHash );
     IncludedFileBucket & bucket = g_AllIncludedFiles[ bucketIndex ];
-
+    IncludedFile ** location = nullptr;
     // Retrieve from shared cache
     {
         MutexHolder mh( bucket.m_Mutex );
-        IncludedFile ** found = bucket.m_Files.FindDeref( fileName );
-        if ( found )
+        location = bucket.m_HashSet.Find( fileName, fileNameHash );
+        if ( location && *location )
         {
-            return *found; // File previously handled so we can re-use the result
+            return *location; // File previously handled so we can re-use the result
         }
     }
 
@@ -496,7 +604,7 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         {
             // Store to shared cache
             MutexHolder mh( bucket.m_Mutex );
-            bucket.m_Files.Append( newFile );
+            bucket.m_HashSet.Insert( newFile, location );
         }
         return newFile;
     }
@@ -508,7 +616,7 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     {
         // Store to shared cache
         MutexHolder mh( bucket.m_Mutex );
-        bucket.m_Files.Append( newFile );
+        bucket.m_HashSet.Insert( newFile, location );
     }
 
     return newFile;
