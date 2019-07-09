@@ -66,7 +66,7 @@ public:
             elt = nullptr;
         }
     }
-    IncludedFile *Find( const AString & fileName, uint64_t fileNameHash )
+    const IncludedFile *Find( const AString & fileName, uint64_t fileNameHash )
     {
         IncludedFile ** location = InternalFind( fileName, fileNameHash );
         if( location && *location )
@@ -78,7 +78,7 @@ public:
 
     // If two threads find the same include simultaneously, we delete the new
     // one and return the old one.
-    IncludedFile * Insert( IncludedFile *item )
+    const IncludedFile * Insert( IncludedFile *item )
     {
         if( m_Buckets.GetSize() / 2 <= m_Elts )
         {
@@ -601,7 +601,7 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     // Retrieve from shared cache
     {
         MutexHolder mh( bucket.m_Mutex );
-        IncludedFile * location = bucket.m_HashSet.Find( fileName, fileNameHash );
+        const IncludedFile * location = bucket.m_HashSet.Find( fileName, fileNameHash );
         if ( location )
         {
             return location; // File previously handled so we can re-use the result
@@ -610,6 +610,7 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
 
     // A newly seen file
     IncludedFile * newFile = FNEW( IncludedFile() );
+    const IncludedFile * retval = nullptr;
     newFile->m_FileNameHash = fileNameHash;
     newFile->m_FileName = fileName;
     newFile->m_Exists = false;
@@ -622,9 +623,9 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         {
             // Store to shared cache
             MutexHolder mh( bucket.m_Mutex );
-            newFile = bucket.m_HashSet.Insert( newFile );
+            retval = bucket.m_HashSet.Insert( newFile );
         }
-        return newFile;
+        return retval;
     }
 
     // File exists - parse it
@@ -634,10 +635,10 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     {
         // Store to shared cache
         MutexHolder mh( bucket.m_Mutex );
-        newFile = bucket.m_HashSet.Insert( newFile );
+        retval = bucket.m_HashSet.Insert( newFile );
     }
 
-    return newFile;
+    return retval;
 }
 
 // SkipWhitepspace
