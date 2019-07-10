@@ -407,6 +407,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         else
         {
             // LightCache hashing was successful
+            SetStatFlag( Node::STATS_LIGHT_CACHE ); // Light compatible
 
             // Try retrieve from cache
             GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
@@ -1356,14 +1357,18 @@ void ObjectNode::WriteToCache( Job * job )
         if ( buffer.CreateFromFiles( fileNames ) )
         {
             // try to compress
+            const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
             Compressor c;
             c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize() );
             const void * data = c.GetResult();
             const size_t dataSize = c.GetResultSize();
+            const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
 
+            const uint32_t startPublish( (uint32_t)t.GetElapsedMS() );
             if ( cache->Publish( cacheFileName, data, dataSize ) )
             {
                 // cache store complete
+                const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
 
                 SetStatFlag( Node::STATS_CACHE_STORE );
 
@@ -1381,8 +1386,8 @@ void ObjectNode::WriteToCache( Job * job )
                 {
                     AStackString<> output;
                     output.Format( "Obj: %s\n"
-                                   " - Cache Store: %u ms '%s'\n",
-                                   GetName().Get(), cachingTime, cacheFileName.Get() );
+                                   " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
+                                   GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, buffer.GetDataSize(), cacheFileName.Get() );
                     if ( m_PCHCacheKey != 0 )
                     {
                         output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
