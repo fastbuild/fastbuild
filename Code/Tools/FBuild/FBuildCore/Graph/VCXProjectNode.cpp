@@ -206,6 +206,14 @@ VCXProjectNode::VCXProjectNode()
 //------------------------------------------------------------------------------
 VCXProjectNode::~VCXProjectNode() = default;
 
+// DetermineNeedToBuild
+//------------------------------------------------------------------------------
+/*virtual*/ bool VCXProjectNode::DetermineNeedToBuild( bool /*forceClean*/ ) const
+{
+    // VCXProjectNode always builds, but only writes the result if different
+    return true;
+}
+
 // DoBuild
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult VCXProjectNode::DoBuild( Job * UNUSED( job ) )
