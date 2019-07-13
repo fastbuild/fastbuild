@@ -42,7 +42,7 @@ REFLECT_END( TestNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 TestNode::TestNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL ) // keep output on test fail
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_TestExecutable()
     , m_TestArguments()
     , m_TestWorkingDir()

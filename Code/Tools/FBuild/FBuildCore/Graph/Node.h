@@ -82,7 +82,6 @@ public:
     {
         FLAG_NONE                   = 0x00,
         FLAG_TRIVIAL_BUILD          = 0x01, // DoBuild is performed locally in main thread
-        FLAG_NO_DELETE_ON_FAIL      = 0x02, // Don't delete output file on failure (for Test etc)
     };
 
     enum StatsFlag
