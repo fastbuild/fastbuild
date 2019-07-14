@@ -232,8 +232,10 @@ TestNode::~TestNode() = default;
     }
 
     // test passed
-    // we only keep the "last modified" time of the test output for passed tests
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+
+    // record new file time
+    RecordStampFromBuiltFile();
+
     return NODE_RESULT_OK;
 }
 

@@ -347,9 +347,8 @@ LinkerNode::~LinkerNode()
         // success!
     }
 
-    // record time stamp for next time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    ASSERT( m_Stamp );
+    // record new file time
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }

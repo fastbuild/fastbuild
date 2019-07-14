@@ -1137,4 +1137,12 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFItera
     return inoutCachedEnvString;
 }
 
+// RecordStampFromBuiltFile
+//------------------------------------------------------------------------------
+void Node::RecordStampFromBuiltFile()
+{
+    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    ASSERT( m_Stamp != 0 );
+}
+
 //------------------------------------------------------------------------------

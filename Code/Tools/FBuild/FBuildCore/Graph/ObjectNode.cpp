@@ -372,7 +372,7 @@ ObjectNode::~ObjectNode()
     }
 
     // record new file time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }
@@ -619,7 +619,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     // record new file time
     if ( job->IsLocal() )
     {
-        m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+        // record new file time
+        RecordStampFromBuiltFile();
 
         const bool useCache = ShouldUseCache();
         if ( m_Stamp && useCache )
@@ -699,7 +700,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
     }
 
     // record new file time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }
@@ -727,7 +728,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
     }
 
     // record new file time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }
@@ -1291,9 +1292,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
             FileIO::WorkAroundForWindowsFilePermissionProblem( m_Name );
 
-            // the file time we set and local file system might have different
-            // granularity for timekeeping, so we need to update with the actual time written
-            m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+            // record new file time (note that time may differ from what we set above due to
+            // file system precision)
+            RecordStampFromBuiltFile();
 
             // Output
             AStackString<> output;

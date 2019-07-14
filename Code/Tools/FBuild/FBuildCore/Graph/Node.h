@@ -241,6 +241,7 @@ protected:
     static const char * GetEnvironmentString( const Array< AString > & envVars,
                                               const char * & inoutCachedEnvString );
 
+    void RecordStampFromBuiltFile();
 
     AString m_Name;
 

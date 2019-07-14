@@ -223,7 +223,7 @@ CSNode::~CSNode() = default;
     }
 
     // record new file time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }

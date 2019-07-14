@@ -537,8 +537,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
             if ( result )
             {
-                // record build time
-                objectNode->m_Stamp = FileIO::GetFileLastWriteTime( nodeName );
+                // record new file time
+                objectNode->RecordStampFromBuiltFile();
 
                 // record time taken to build
                 objectNode->SetLastBuildTime( buildTime );
