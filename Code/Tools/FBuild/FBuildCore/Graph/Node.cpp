@@ -159,7 +159,6 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     }
 
     // if we don't have a stamp, we are building for the first time
-    // (or we're a node that is built every time)
     if ( m_Stamp == 0 )
     {
         // don't output for file nodes, which are always built

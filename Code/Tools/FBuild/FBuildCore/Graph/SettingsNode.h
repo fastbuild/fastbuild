@@ -35,8 +35,6 @@ public:
     bool                                GetDisableDBMigration() const { return m_DisableDBMigration; }
 
 private:
-    //virtual BuildResult DoBuild( Job * job ) override;
-
     void ProcessEnvironment( const Array< AString > & envStrings ) const;
 
     // Settings from environment variables
