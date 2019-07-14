@@ -1256,11 +1256,6 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
             GetExtraCacheFilePaths( job, fileNames );
 
-            // Get current "system time" and convert to "file time"
-            #if defined( __WINDOWS__ )
-                const uint64_t fileTimeNow = Time::GetCurrentFileTime();
-            #endif
-
             // Extract the files
             const size_t numFiles = fileNames.GetSize();
             for ( size_t i=0; i<numFiles; ++i )
@@ -1272,12 +1267,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
                     return false;
                 }
 
-                // Get current "system time" and convert to "file time"
-                #if defined( __WINDOWS__ )
-                    const bool timeSetOK = FileIO::SetFileLastWriteTime( fileNames[ i ], fileTimeNow );
-                #elif defined( __APPLE__ ) || defined( __LINUX__ )
-                    const bool timeSetOK = ( utimes( fileNames[ i ].Get(), nullptr ) == 0 );
-                #endif
+                // Update file modification time
+                const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow( fileNames[ i ] );
 
                 // set the time on the local file
                 if ( timeSetOK == false )
