@@ -35,7 +35,7 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
-    REFLECT(        m_AllowDBMigration_Experimental, "AllowDBMigration_Experimental", MetaOptional() )
+    REFLECT(        m_DisableDBMigration,       "DisableDBMigration",       MetaOptional() )
     REFLECT(        m_WorkerListRefreshLimitSec,      "WorkerListRefreshLimit",    MetaOptional() + MetaRange( WORKER_LIMIT_MIN, WORKER_LIMIT_MAX ) )
 REFLECT_END( SettingsNode )
 
@@ -45,7 +45,7 @@ SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
 , m_WorkerConnectionLimit( 15 )  // default: a maximum of 15 workers simultaneously connected
 , m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
-, m_AllowDBMigration_Experimental( false )
+, m_DisableDBMigration( false )
 , m_WorkerListRefreshLimitSec( 300 )  // default: a maximum of 5 minutes refreshing the worker list,
                                       // in case workers are rebooting
 {

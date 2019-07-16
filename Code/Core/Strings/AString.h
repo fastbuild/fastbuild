@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
+#include "Core/Containers/Move.h"
 #include "Core/Env/Assert.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
@@ -27,6 +28,7 @@ public:
     explicit AString();
     explicit AString( uint32_t reserve );
     explicit AString( const AString & string );
+    explicit AString( AString && string );
     explicit AString( const char * string );
     explicit AString( const char * start, const char * end );
     ~AString();
@@ -49,9 +51,11 @@ public:
     // assignment
     inline AString & operator = ( const char * string ) { Assign( string ); return *this; }
     inline AString & operator = ( const AString & string ) { Assign( string ); return *this; }
+    inline AString & operator = ( AString && string ) { Assign( Move( string ) ); return *this; }
     void Assign( const char * string );
     void Assign( const char * start, const char * end );
     void Assign( const AString & string );
+    void Assign( AString && string );
     void Clear();
     void SetReserved( size_t capacity );
 

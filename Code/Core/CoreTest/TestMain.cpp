@@ -10,6 +10,7 @@
 int main(int , char * [])
 {
     // Tests to run
+    REGISTER_TESTGROUP( TestArray )
     REGISTER_TESTGROUP( TestAtomic )
     REGISTER_TESTGROUP( TestAString )
     REGISTER_TESTGROUP( TestEnv )

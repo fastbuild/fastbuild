@@ -114,11 +114,8 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
     if ( !shouldFail )
     {
         TEST_ASSERT( pass );
-    }
 
-    // make sure all output files are as expected
-    if ( !shouldFail )
-    {
+        // make sure all output files are as expected
         TEST_ASSERT( FileIO::FileExists( target ) );
     }
 }

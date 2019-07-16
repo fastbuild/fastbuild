@@ -5,5 +5,13 @@
 // Tell the normal congfiguration to override the output path
 #define BUILDING_FROM_TESTS
 
+// Provide a default cache setup for environments that don't have one
+#if __WINDOWS__
+    #import TMP
+    .CachePath      = "$TMP$\.fbuild.cache"
+#else
+    .CachePath      = "/tmp/.fbuild.cache"
+#endif
+
 // Use the normal build configuration
 #include "../../../../../fbuild.bff"

@@ -19,9 +19,6 @@ Settings
         .Environment    = { "PATH=$VS_PATH$",
                             "TMP=$TMP$",
                             "SystemRoot=C:\Windows" }
-        .CachePath      = "$TMP$\.fbuild.cache"
-    #else
-        .CachePath      = "/tmp/.fbuild.cache"
     #endif
     .AllowDBMigration_Experimental = true
 }
@@ -363,6 +360,14 @@ ForEach( .BuildConfig in .BuildConfigs )
     Alias( 'All-$Platform$-$BuildConfigName$' ) { .Targets = .'Targets_$Platform$_$BuildConfigName$' }
 }
 
+// Exes
+//------------------------------------------------------------------------------
+Alias( 'Exes' )
+{
+    .Targets    = { 'FBuildWorker-Debug',   'FBuildWorker-Profile', 'FBuildWorker-Release'
+                    'FBuildApp-Debug',      'FBuildApp-Profile',    'FBuildApp-Release' }
+}
+
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
 .Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX' }
@@ -576,11 +581,13 @@ Alias( 'All+Tests' )
                                         'LZ4-xcodeproj'
                                         'OSUI-xcodeproj'
                                         'TestFramework-xcodeproj' }
-
-        .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = 'All-x64OSX-Debug' ]
-        .ProjectOSXProfile      = [ .Config = 'Profile' .Target = 'All-x64OSX-Profile' ]
-        .ProjectOSXRelease      = [ .Config = 'Release' .Target = 'All-x64OSX-Release' ]
-        .ProjectConfigs         = { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }
+        .ProjectConfigs = {}
+        ForEach( .BuildConfig in.BuildConfigs )
+        {
+            Using( .BuildConfig )
+            .ProjectConfig          = [ .Config = '$BuildConfigName$' .Target = 'All-x64OSX-$BuildConfigName$' ]
+            ^ProjectConfigs         + .ProjectConfig
+        }
     }
 #endif
 

@@ -47,17 +47,17 @@ void TestHash::CompareHashTimes_Large() const
     #else
         const size_t dataSize( 64 * 1024 * 1024 );
     #endif
-    AutoPtr< uint32_t > data( (uint32_t *)ALLOC( dataSize ) );
-    for ( size_t i=0; i<dataSize / sizeof( uint32_t ); ++i )
+    AutoPtr< uint64_t > data( (uint64_t *)ALLOC( dataSize ) );
+    for ( size_t i=0; i<dataSize / sizeof( uint64_t ); ++i )
     {
-        data.Get()[ i ] = r.GetRand();
+        data.Get()[ i ] = ( (uint64_t)r.GetRand() << 32 ) | (uint64_t)r.GetRand();
     }
 
     // baseline - sum 64 bits
     {
         Timer t;
         uint64_t sum( 0 );
-        uint64_t * it = (uint64_t *)data.Get();
+        uint64_t * it = data.Get();
         uint64_t * end = it + ( dataSize / sizeof( uint64_t ) );
         while ( it != end )
         {
@@ -74,7 +74,7 @@ void TestHash::CompareHashTimes_Large() const
     {
         Timer t;
         uint32_t sum( 0 );
-        uint32_t * it = data.Get();
+        uint32_t * it = (uint32_t *)data.Get();
         uint32_t * end = it + ( dataSize / sizeof( uint32_t ) );
         while ( it != end )
         {
