@@ -195,6 +195,7 @@ public:
     inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
 protected:
+    friend class Client;
     friend class FBuild;
     friend struct FBuildStats;
     friend class Function;
