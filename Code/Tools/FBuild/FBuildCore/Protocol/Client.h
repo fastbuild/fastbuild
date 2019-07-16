@@ -9,6 +9,7 @@
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AString.h"
 #include "Core/Time/Timer.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerage.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -31,7 +32,8 @@ class ToolManifest;
 class Client : public TCPConnectionPool
 {
 public:
-    Client( const Array< AString > & workerList,
+    Client( WorkerBrokerage & workerBrokerage,
+            const Array< AString > & workerList,
             uint16_t port,
             uint32_t workerConnectionLimit,
             bool detailedLogging );
@@ -59,6 +61,7 @@ private:
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg );
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream );
 
+    WorkerBrokerage &   m_WorkerBrokerage;
     Array< AString >    m_WorkerList;   // workers to connect to
     volatile bool       m_ShouldExit;   // signal from main thread
     bool                m_DetailedLogging;

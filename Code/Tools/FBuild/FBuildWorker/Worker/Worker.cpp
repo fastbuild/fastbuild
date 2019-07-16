@@ -146,6 +146,8 @@ int Worker::Work()
         }
     }
 
+    int err = 0;
+
     for(;;)
     {
         if ( InConsoleMode() )
@@ -160,7 +162,11 @@ int Worker::Work()
             }
         }
 
-        UpdateAvailability();
+        err = UpdateAvailability();
+        if ( err != 0 )
+        {
+            break;
+        }
 
         UpdateUI();
 
@@ -177,7 +183,17 @@ int Worker::Work()
 
     m_WorkerBrokerage.SetAvailability( false );
 
-    return 0;
+    if ( err == 0 )  // if not already error'd
+    {
+        const uint32_t brokerageStatus = m_WorkerBrokerage.GetBrokerageStatus();
+        if ( brokerageStatus != WorkerBrokerage::BrokerageSuccess )
+        {
+            // skip display of error dialog here, since UI already shutdown
+            return -2;
+        }
+    }
+
+    return err;
 }
 
 // HasEnoughDiskSpace
@@ -219,7 +235,7 @@ bool Worker::HasEnoughDiskSpace()
 
 // UpdateAvailability
 //------------------------------------------------------------------------------
-void Worker::UpdateAvailability()
+int Worker::UpdateAvailability()
 {
     // Check disk space
     bool hasEnoughDiskSpace = HasEnoughDiskSpace();
@@ -270,6 +286,16 @@ void Worker::UpdateAvailability()
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
 
     m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
+    const uint32_t brokerageStatus = m_WorkerBrokerage.GetBrokerageStatus();
+    if ( brokerageStatus != WorkerBrokerage::BrokerageSuccess )
+    {
+        AStackString<> msg;
+        m_WorkerBrokerage.GetStatusMsg( brokerageStatus, msg );
+        ErrorMessageString( msg.Get() );
+        return -2;
+    }
+
+    return 0;
 }
 
 // UpdateUI
@@ -417,6 +443,30 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     OUTPUT( "%s", buffer.Get() );
 }
 
+// ErrorMessageString
+//------------------------------------------------------------------------------
+void Worker::ErrorMessageString( MSVC_SAL_PRINTF const char * message ) const
+{
+    if ( InConsoleMode() )
+    {
+        // Forward to console
+        StatusMessage( "%s", message );
+        return;
+    }
+
+    // Display interactive Message Box
+    #if defined( __WINDOWS__ )
+        ::MessageBox( nullptr, message, "FBuild Worker",
+            MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST | MB_OK );
+    #elif defined( __APPLE__ )
+        // TODO:MAC Implement ErrorMessageString for non-console mode
+    #elif defined( __LINUX__ )
+        // TODO:LINUX Implement ErrorMessageString for non-console mode
+    #else
+        #error Unknown Platform
+    #endif
+}
+
 // ErrorMessage
 //------------------------------------------------------------------------------
 void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
@@ -428,23 +478,7 @@ void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     buffer.VFormat( fmtString, args );
     va_end( args );
 
-    if ( InConsoleMode() )
-    {
-        // Forward to console
-        StatusMessage( "%s", buffer.Get() );
-        return;
-    }
-
-    // Display interactive Message Box
-    #if defined( __WINDOWS__ )
-        ::MessageBox( nullptr, buffer.Get(), "FBuild Worker", MB_OK );
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement ErrorMessage for non-console mode
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ErrorMessage for non-console mode
-    #else
-        #error Unknown Platform
-    #endif
+    ErrorMessageString( buffer.Get() );
 }
 
 //------------------------------------------------------------------------------

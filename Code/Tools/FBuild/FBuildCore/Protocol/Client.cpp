@@ -34,11 +34,13 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Client::Client( const Array< AString > & workerList,
+Client::Client( WorkerBrokerage & workerBrokerage,
+                const Array< AString > & workerList,
                 uint16_t port,
                 uint32_t workerConnectionLimit,
                 bool detailedLogging )
-    : m_WorkerList( workerList )
+    : m_WorkerBrokerage( workerBrokerage )
+    , m_WorkerList( workerList )
     , m_ShouldExit( false )
     , m_DetailedLogging( detailedLogging )
     , m_WorkerConnectionLimit( workerConnectionLimit )
@@ -191,7 +193,8 @@ void Client::LookForWorkers()
         }
 
         // ignore blacklisted workers
-        if ( ss.m_Blacklisted )
+        if ( ss.m_Blacklisted || 
+             m_WorkerBrokerage.GetBlacklistedWorkers().Find( ss.m_RemoteName ) )
         {
             continue;
         }
@@ -600,9 +603,26 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             // take note of failure of job
             job->OnSystemError();
 
-            // debugging message
             const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
             const AString & workerName = m_WorkerList[ workerIndex ];
+
+            AStackString<> blacklistReason;
+            blacklistReason += "Node: ";
+            blacklistReason += nodeName;
+            blacklistReason += "\n";
+            blacklistReason += "Details: ";
+            blacklistReason += failureOutput;
+            AStackString<> errorMsg;
+            m_WorkerBrokerage.BlacklistWorker(
+                workerName,
+                blacklistReason,
+                errorMsg );
+            if ( !errorMsg.IsEmpty() )
+            {
+                failureOutput += errorMsg;
+            }
+
+            // debugging message
             DIST_INFO( "Remote System Failure!\n"
                        " - Blacklisted Worker: %s\n"
                        " - Node              : %s\n"
