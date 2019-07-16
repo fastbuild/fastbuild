@@ -339,7 +339,7 @@ static bool IsStdOutRedirectedInternal()
             return true; // Redirected to something that is not a pipe
         }
 
-        char buffer[ sizeof( FILE_NAME_INFO ) + MAX_PATH * sizeof( wchar_t ) ];
+        alignas( __alignof( FILE_NAME_INFO ) ) char buffer[ sizeof( FILE_NAME_INFO ) + MAX_PATH * sizeof( wchar_t ) ];
         if ( ! GetFileInformationByHandleEx( h, FileNameInfo, buffer, sizeof( buffer ) ) )
         {
             return true; // Redirected to something that doesn't have a name

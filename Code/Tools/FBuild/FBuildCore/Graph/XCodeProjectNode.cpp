@@ -129,6 +129,14 @@ XCodeProjectNode::XCodeProjectNode()
 //------------------------------------------------------------------------------
 XCodeProjectNode::~XCodeProjectNode() = default;
 
+// DetermineNeedToBuild
+//------------------------------------------------------------------------------
+/*virtual*/ bool XCodeProjectNode::DetermineNeedToBuild( bool /*forceClean*/ ) const
+{
+    // XCodeProjectNode always builds, but only writes the result if different
+    return true;
+}
+
 // DoBuild
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult XCodeProjectNode::DoBuild( Job * )

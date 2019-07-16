@@ -145,7 +145,7 @@ NodeGraph::~NodeGraph()
 
             // Migrate old DB info to new DB
             const SettingsNode * settings = newNG->GetSettings();
-            if ( settings->GetAllowDBMigration_Experimental() || forceMigration ) // TODO:B Remove when feature no longer experimental
+            if ( ( settings->GetDisableDBMigration() == false ) || forceMigration )
             {
                 newNG->Migrate( *oldNG );
             }
@@ -1623,6 +1623,16 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         return;
     }
 
+    // Migrate children before parents
+    for ( Dependency & dep : newNode.m_PreBuildDependencies )
+    {
+        MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
+    }
+    for ( Dependency& dep : newNode.m_StaticDependencies )
+    {
+        MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
+    }
+
     // Get the matching node in the old DB
     const Node * oldNode;
     if ( oldNodeHint )
@@ -1700,6 +1710,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
             {
                 // Create the dependency
                 newDepNode = Node::CreateNode( *this, oldDepNode->GetType(), oldDepNode->GetName() );
+                ASSERT( newDepNode );
                 newDeps.Append( Dependency( newDepNode, oldDep.IsWeak() ) );
 
                 // Early out for FileNode (no properties and doesn't need Initialization)
@@ -2008,6 +2019,10 @@ bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependenc
         Node * nodeA = depsA[ i ].GetNode();
         Node * nodeB = depsB[ i ].GetNode();
         if ( nodeA->GetType() != nodeB->GetType() )
+        {
+            return false;
+        }
+        if ( nodeA->GetStamp() != nodeB->GetStamp() )
         {
             return false;
         }

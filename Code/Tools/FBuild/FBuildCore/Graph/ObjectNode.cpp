@@ -396,7 +396,7 @@ ObjectNode::~ObjectNode()
         }
 
         // record new file time
-        m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+        RecordStampFromBuiltFile();
 
         return NODE_RESULT_OK;
     }
@@ -439,6 +439,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor(
         else
         {
             // LightCache hashing was successful
+            SetStatFlag( Node::STATS_LIGHT_CACHE ); // Light compatible
 
             // Try retrieve from cache
             GetCacheName( job, workingDir ); // Prepare the cache key (always done here even if write only mode)
@@ -676,7 +677,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
         // record new file time
         if ( job->IsLocal() )
         {
-            m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+            // record new file time
+            RecordStampFromBuiltFile();
 
             const bool useCache = ShouldUseCache();
             if ( m_Stamp && useCache )
@@ -807,7 +809,7 @@ Node::BuildResult ObjectNode::DoBuildOther(
         }
 
         // record new file time
-        m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+        RecordStampFromBuiltFile();
 
         return NODE_RESULT_OK;
     }
@@ -1250,6 +1252,7 @@ const AString & ObjectNode::GetCacheName( Job * job, const AString & workingDir 
     // hash the pre-processed input data
     ASSERT( m_LightCacheKey || job->GetData() );
     const uint64_t preprocessedSourceKey = m_LightCacheKey ? m_LightCacheKey : xxHash::Calc64( job->GetData(), job->GetDataSize() );
+    ASSERT( preprocessedSourceKey );
 
     // hash the build "environment"
     // TODO:B Exclude preprocessor control defines (the preprocessed input has considered those already)
@@ -1263,9 +1266,11 @@ const AString & ObjectNode::GetCacheName( Job * job, const AString & workingDir 
             showIncludes, finalize, workingDir );
         commandLineKey = xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
     }
+    ASSERT( commandLineKey );
 
     // ToolChain hash
     const uint64_t toolChainKey = GetCompiler()->GetManifest().GetToolId();
+    ASSERT( toolChainKey );
 
     // PCH dependency
     uint64_t pchKey = 0;
@@ -1340,11 +1345,6 @@ bool ObjectNode::RetrieveFromCache( Job * job, const AString & workingDir )
 
             GetExtraCacheFilePaths( job, fileNames );
 
-            // Get current "system time" and convert to "file time"
-            #if defined( __WINDOWS__ )
-                const uint64_t fileTimeNow = Time::GetCurrentFileTime();
-            #endif
-
             // Extract the files
             const size_t numFiles = fileNames.GetSize();
             for ( size_t i=0; i<numFiles; ++i )
@@ -1356,12 +1356,8 @@ bool ObjectNode::RetrieveFromCache( Job * job, const AString & workingDir )
                     return false;
                 }
 
-                // Get current "system time" and convert to "file time"
-                #if defined( __WINDOWS__ )
-                    const bool timeSetOK = FileIO::SetFileLastWriteTime( fileNames[ i ], fileTimeNow );
-                #elif defined( __APPLE__ ) || defined( __LINUX__ )
-                    const bool timeSetOK = ( utimes( fileNames[ i ].Get(), nullptr ) == 0 );
-                #endif
+                // Update file modification time
+                const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow( fileNames[ i ] );
 
                 // set the time on the local file
                 if ( timeSetOK == false )
@@ -1376,9 +1372,9 @@ bool ObjectNode::RetrieveFromCache( Job * job, const AString & workingDir )
 
             FileIO::WorkAroundForWindowsFilePermissionProblem( m_Name );
 
-            // the file time we set and local file system might have different
-            // granularity for timekeeping, so we need to update with the actual time written
-            m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+            // record new file time (note that time may differ from what we set above due to
+            // file system precision)
+            RecordStampFromBuiltFile();
 
             // Output
             AStackString<> output;
@@ -1442,14 +1438,18 @@ void ObjectNode::WriteToCache( Job * job, const AString & workingDir )
         if ( buffer.CreateFromFiles( fileNames ) )
         {
             // try to compress
+            const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
             Compressor c;
             c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize() );
             const void * data = c.GetResult();
             const size_t dataSize = c.GetResultSize();
+            const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
 
+            const uint32_t startPublish( (uint32_t)t.GetElapsedMS() );
             if ( cache->Publish( cacheFileName, data, dataSize ) )
             {
                 // cache store complete
+                const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
 
                 SetStatFlag( Node::STATS_CACHE_STORE );
 
@@ -1467,8 +1467,8 @@ void ObjectNode::WriteToCache( Job * job, const AString & workingDir )
                 {
                     AStackString<> output;
                     output.Format( "Obj: %s\n"
-                                   " - Cache Store: %u ms '%s'\n",
-                                   GetName().Get(), cachingTime, cacheFileName.Get() );
+                                   " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
+                                   GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, (size_t)buffer.GetDataSize(), cacheFileName.Get() );
                     if ( m_PCHCacheKey != 0 )
                     {
                         output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
@@ -2267,16 +2267,17 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
             // Keeping the found enums let us avoid searching for them twice.
             uint32_t nbrEnumsFound = 0;
             const char * buggyEnum = nullptr;
-            do
+            for (;;)
             {
                 buggyEnum = strstr( workBuffer, BUGGY_CODE );
-                if ( buggyEnum != nullptr )
+                if ( buggyEnum == nullptr )
                 {
-                    ++nbrEnumsFound;
-                    enumsFound.Append( buggyEnum );
-                    workBuffer = buggyEnum + sizeof( BUGGY_CODE ) - 1;
+                    break;
                 }
-            } while ( buggyEnum != nullptr );
+                ++nbrEnumsFound;
+                enumsFound.Append( buggyEnum );
+                workBuffer = buggyEnum + sizeof( BUGGY_CODE ) - 1;
+            }
             ASSERT( enumsFound.GetSize() == nbrEnumsFound );
 
             // Now allocate the new buffer with enough space to add a space after each enum found
@@ -2288,7 +2289,7 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
             char * writeDest = bufferCopy;
             size_t sizeLeftInSourceBuffer = outputBufferSize;
             buggyEnum = nullptr;
-            do
+            for (;;)
             {
                 if ( enumIndex < nbrEnumsFound )
                 {
@@ -2300,29 +2301,27 @@ void ObjectNode::TransferPreprocessedData( const char * data, size_t dataSize, J
                     buggyEnum = nullptr;
                 }
 
-                if ( buggyEnum != nullptr )
-                {
-                    // Copy what's before the enum + the enum.
-                    size_t sizeToCopy = (size_t)( buggyEnum - workBuffer );
-                    sizeToCopy += ( sizeof( BUGGY_CODE ) - 1 );
-                    memcpy( writeDest, workBuffer, sizeToCopy );
-                    writeDest += sizeToCopy;
-
-                    // Add a space
-                    *writeDest = ' ';
-                    ++writeDest;
-
-                    ASSERT( sizeLeftInSourceBuffer >= sizeToCopy );
-                    sizeLeftInSourceBuffer -= sizeToCopy;
-                    workBuffer += sizeToCopy;
-                }
-                else
+                if ( buggyEnum == nullptr )
                 {
                     // Copy the rest of the data.
                     memcpy( writeDest, workBuffer, sizeLeftInSourceBuffer );
                     break;
                 }
-            } while ( buggyEnum != nullptr );
+
+                // Copy what's before the enum + the enum.
+                size_t sizeToCopy = (size_t)( buggyEnum - workBuffer );
+                sizeToCopy += ( sizeof( BUGGY_CODE ) - 1 );
+                memcpy( writeDest, workBuffer, sizeToCopy );
+                writeDest += sizeToCopy;
+
+                // Add a space
+                *writeDest = ' ';
+                ++writeDest;
+
+                ASSERT( sizeLeftInSourceBuffer >= sizeToCopy );
+                sizeLeftInSourceBuffer -= sizeToCopy;
+                workBuffer += sizeToCopy;
+            }
 
             bufferCopy[ newBufferSize ] = 0; // null terminator for include parser
         }

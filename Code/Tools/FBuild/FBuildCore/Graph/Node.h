@@ -84,7 +84,6 @@ public:
     {
         FLAG_NONE                   = 0x00,
         FLAG_TRIVIAL_BUILD          = 0x01, // DoBuild is performed locally in main thread
-        FLAG_NO_DELETE_ON_FAIL      = 0x02, // Don't delete output file on failure (for Test etc)
     };
 
     enum StatsFlag
@@ -94,8 +93,9 @@ public:
         STATS_CACHE_HIT     = 0x04, // needed building, was cacheable & was retrieved from the cache
         STATS_CACHE_MISS    = 0x08, // needed building, was cacheable, but wasn't in cache
         STATS_CACHE_STORE   = 0x10, // needed building, was cacheable & was stored to the cache
-        STATS_BUILT_REMOTE  = 0x20, // node was built remotely
-        STATS_FAILED        = 0x40, // node needed building, but failed
+        STATS_LIGHT_CACHE   = 0x20, // used the LightCache
+        STATS_BUILT_REMOTE  = 0x40, // node was built remotely
+        STATS_FAILED        = 0x80, // node needed building, but failed
         STATS_REPORT_PROCESSED  = 0x4000, // seen during report processing
         STATS_STATS_PROCESSED   = 0x8000 // mark during stats gathering (leave this last)
     };
@@ -250,6 +250,7 @@ protected:
     static const char * GetEnvironmentString( const Array< AString > & envVars,
                                               const char * & inoutCachedEnvString );
 
+    void RecordStampFromBuiltFile();
 
     AString m_Name;
 

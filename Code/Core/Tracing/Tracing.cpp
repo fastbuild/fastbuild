@@ -164,6 +164,7 @@
 //------------------------------------------------------------------------------
 Tracing::Callbacks::Callbacks()
     : m_CallbacksMutex()
+    , m_InCallbackDispatch( false )
     , m_CallbacksDebugSpam( 2, true )
     , m_CallbacksOutput( 2, true )
 {

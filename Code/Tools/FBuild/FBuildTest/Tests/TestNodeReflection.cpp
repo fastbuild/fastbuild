@@ -207,7 +207,7 @@ class TestHelper
 {
 public:
     explicit TestHelper( BaseNode * node ) : m_Node( node ) {}
-    ~TestHelper() { delete m_Node; }
+    ~TestHelper() { delete m_Node; delete m_Function; }
 
     NodeGraph           m_NodeGraph;
     FBuild              m_FBuild;

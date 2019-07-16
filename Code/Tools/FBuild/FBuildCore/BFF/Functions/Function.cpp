@@ -58,31 +58,15 @@
 
 // Static
 //------------------------------------------------------------------------------
-/*static*/ Function * Function::s_FirstFunction = nullptr;
+/*static*/ Array<const Function *> g_Functions( 22, false );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Function::Function( const char * name )
-: m_NextFunction( nullptr )
-, m_Name( name )
+: m_Name( name )
 , m_Seen( false )
 , m_AliasForFunction( 256 )
 {
-    if ( s_FirstFunction == nullptr )
-    {
-        s_FirstFunction = this;
-        return;
-    }
-    Function * func = s_FirstFunction;
-    while ( func )
-    {
-        if ( func->m_NextFunction == nullptr )
-        {
-            func->m_NextFunction = this;
-            return;
-        }
-        func = func->m_NextFunction;
-    }
 }
 
 // DESTRUCTOR
@@ -93,14 +77,12 @@ Function::~Function() = default;
 //------------------------------------------------------------------------------
 /*static*/ const Function * Function::Find( const AString & name )
 {
-    Function * func = s_FirstFunction;
-    while ( func )
+    for ( const Function * func : g_Functions )
     {
         if ( func->GetName() == name )
         {
             return func;
         }
-        func = func->m_NextFunction;
     }
     return nullptr;
 }
@@ -109,42 +91,39 @@ Function::~Function() = default;
 //------------------------------------------------------------------------------
 /*static*/ void Function::Create()
 {
-    FNEW( FunctionAlias );
-    FNEW( FunctionCompiler );
-    FNEW( FunctionCopy );
-    FNEW( FunctionCopyDir );
-    FNEW( FunctionCSAssembly );
-    FNEW( FunctionDLL );
-    FNEW( FunctionError );
-    FNEW( FunctionExec );
-    FNEW( FunctionExecutable );
-    FNEW( FunctionForEach );
-    FNEW( FunctionIf );
-    FNEW( FunctionLibrary );
-    FNEW( FunctionObjectList );
-    FNEW( FunctionPrint );
-    FNEW( FunctionRemoveDir );
-    FNEW( FunctionSettings );
-    FNEW( FunctionTest );
-    FNEW( FunctionUnity );
-    FNEW( FunctionUsing );
-    FNEW( FunctionVCXProject );
-    FNEW( FunctionVSSolution );
-    FNEW( FunctionXCodeProject );
+    g_Functions.Append( FNEW( FunctionAlias ) );
+    g_Functions.Append( FNEW( FunctionCompiler ) );
+    g_Functions.Append( FNEW( FunctionCopy ) );
+    g_Functions.Append( FNEW( FunctionCopyDir ) );
+    g_Functions.Append( FNEW( FunctionCSAssembly ) );
+    g_Functions.Append( FNEW( FunctionDLL ) );
+    g_Functions.Append( FNEW( FunctionError ) );
+    g_Functions.Append( FNEW( FunctionExec ) );
+    g_Functions.Append( FNEW( FunctionExecutable ));
+    g_Functions.Append( FNEW( FunctionForEach ) );
+    g_Functions.Append( FNEW( FunctionIf ) );
+    g_Functions.Append( FNEW( FunctionLibrary ) );
+    g_Functions.Append( FNEW( FunctionObjectList ) );
+    g_Functions.Append( FNEW( FunctionPrint ) );
+    g_Functions.Append( FNEW( FunctionRemoveDir ) );
+    g_Functions.Append( FNEW( FunctionSettings ) );
+    g_Functions.Append( FNEW( FunctionTest ) );
+    g_Functions.Append( FNEW( FunctionUnity ) );
+    g_Functions.Append( FNEW( FunctionUsing ) );
+    g_Functions.Append( FNEW( FunctionVCXProject ) );
+    g_Functions.Append( FNEW( FunctionVSSolution ) );
+    g_Functions.Append( FNEW( FunctionXCodeProject ) );
 }
 
 // Destroy
 //------------------------------------------------------------------------------
 /*static*/ void Function::Destroy()
 {
-    Function * func = s_FirstFunction;
-    while ( func )
+    for ( const Function * func : g_Functions )
     {
-        Function * nextFunc = func->m_NextFunction;
         FDELETE func;
-        func = nextFunc;
     }
-    s_FirstFunction = nullptr;
+    g_Functions.Clear();
 }
 
 // AcceptsHeader
@@ -928,7 +907,7 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, 
     }
     if ( variable->IsString() )
     {
-        Array< AString > strings;
+        StackArray<AString> strings;
         if ( !PopulateStringHelper( nodeGraph, iter, nullptr, ri->HasMetaData< Meta_File >(), nullptr, variable, strings ) )
         {
             return false; // PopulateStringHelper will have emitted an error
@@ -1242,7 +1221,7 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 //------------------------------------------------------------------------------
 bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
-    Array< AString > strings;
+    StackArray<AString> strings;
     if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error
@@ -1273,7 +1252,7 @@ bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator 
 //------------------------------------------------------------------------------
 bool Function::PopulateString( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
-    Array< AString > strings;
+    StackArray<AString> strings;
     if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error

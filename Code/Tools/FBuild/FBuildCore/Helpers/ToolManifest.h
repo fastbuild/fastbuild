@@ -29,7 +29,6 @@ public:
     ToolManifestFile();
     explicit ToolManifestFile( const AString & name, uint64_t stamp, uint32_t hash, uint32_t size );
     ~ToolManifestFile();
-    void StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const;
 
     enum SyncState
     {
@@ -37,6 +36,26 @@ public:
         SYNCHRONIZING,
         SYNCHRONIZED,
     };
+
+    bool                DoBuild();
+    void                StoreCompressedContent( const void * uncompressedData, const uint32_t uncompressedDataSize ) const;
+    void                Migrate( const ToolManifestFile & oldFile );
+
+    const void *        GetFileData( size_t & outDataSize ) const;
+
+    // Access state
+    const AString &     GetName() const                     { return m_Name; }
+    uint64_t            GetTimeStamp() const                { return m_TimeStamp; }
+    uint32_t            GetHash() const                     { return m_Hash; }
+    uint32_t            GetUncompressedContentSize() const  { return m_UncompressedContentSize; }
+    SyncState           GetSyncState() const                { return m_SyncState; }
+
+    // Modify state
+    void                SetSyncState( SyncState state )         { m_SyncState = state; }
+    void                SetFileLock( FileStream * fileLock )    { m_FileLock = fileLock; }
+
+protected:
+    bool                LoadFile( void * & uncompressedContent, uint32_t & uncompressedContentSize ) const;
 
     // common members
     AString          m_Name;
@@ -63,11 +82,13 @@ public:
     explicit ToolManifest( uint64_t toolId );
     ~ToolManifest();
 
-    bool Generate( const AString & mainExecutableRoot,
+    void Initialize( const AString & mainExecutableRoot,
         const Dependencies & dependencies, 
-        const Array<AString>& customEnvironmentVariables,
-        const Tags & requiredWorkerTags,
+        const Array<AString> & customEnvironmentVariables,
+        const Array<AString> & requiredWorkerTagStrings,
         bool deleteRemoteFilesWhenDone = false );
+    bool DoBuild( const Dependencies & dependencies );
+    void Migrate( const ToolManifest & oldManifest );
 
     inline uint64_t GetToolId() const { return m_ToolId; }
     inline uint64_t GetTimeStamp() const { return m_TimeStamp; }
@@ -88,7 +109,7 @@ public:
     inline void *   GetUserData() const         { return m_UserData; }
     const Array< ToolManifestFile > & GetFiles() const { return m_Files; }
 
-    void MarkFileAsSynchronizing( size_t fileId ) { ASSERT( m_Files[ fileId ].m_SyncState == ToolManifestFile::NOT_SYNCHRONIZED ); m_Files[ fileId ].m_SyncState = ToolManifestFile::SYNCHRONIZING; }
+    void MarkFileAsSynchronizing( size_t fileId ) { ASSERT( m_Files[ fileId ].GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED ); m_Files[ fileId ].SetSyncState( ToolManifestFile::SYNCHRONIZING ); }
     void CancelSynchronizingFiles();
 
     const void *    GetFileData( uint32_t fileId, size_t & dataSize ) const;
@@ -97,12 +118,9 @@ public:
     void            GetRemotePath( AString & path ) const;
     void            GetRemoteFilePath( uint32_t fileId, AString & exe ) const;
     const char *    GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
-    const Tags &    GetRequiredWorkerTags() const { return m_RequiredWorkerTags; }
+    const Tags &    GetRequiredWorkerTags() const;
 
 private:
-    bool            AddFile( const AString & fileName, const uint64_t timeStamp );
-    bool            LoadFile( const AString & fileName, void * & uncompressedContent, uint32_t & uncompressedContentSize ) const;
-
     mutable Mutex   m_Mutex;
 
     // Reflected
@@ -111,11 +129,12 @@ private:
     AString                     m_MainExecutableRootPath;
     Array< ToolManifestFile >   m_Files;
     Array< AString >            m_CustomEnvironmentVariables;
+    Array< AString >            m_RequiredWorkerTagStrings;
 
     // Internal state
     bool            m_Synchronized;
     const char *    m_RemoteEnvironmentString;
-    Tags            m_RequiredWorkerTags;
+    mutable Tags    m_RequiredWorkerTags;
     void *          m_UserData;
     bool            m_DeleteRemoteFilesWhenDone;
 
