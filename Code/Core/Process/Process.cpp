@@ -157,8 +157,8 @@ void Process::KillProcessTree()
             ::CloseHandle( hChildProc );
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        // TODO: Kill process tree if necessary?
-        kill( m_ChildPID, SIGTERM );
+        // Kill all processes in the process group of the child process.
+        kill( -m_ChildPID, SIGKILL );
     #else
         #error Unknown platform
     #endif
@@ -354,6 +354,11 @@ bool Process::Spawn( const char * executable,
         const bool isChild = ( childProcessPid == 0 );
         if ( isChild )
         {
+            // Put child process into its own process group.
+            // This will allow as to send signals to the whole group which we use to implement KillProcessTree.
+            // The new process group will have ID equal to the PID of the child process.
+            VERIFY( setpgid( 0, 0 ) == 0 );
+
             VERIFY( dup2( stdOutPipeFDs[ 1 ], STDOUT_FILENO ) != -1 );
             VERIFY( dup2( stdErrPipeFDs[ 1 ], STDERR_FILENO ) != -1 );
 

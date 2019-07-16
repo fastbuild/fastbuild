@@ -42,7 +42,7 @@ REFLECT_END( TestNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 TestNode::TestNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL ) // keep output on test fail
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_TestExecutable()
     , m_TestArguments()
     , m_TestWorkingDir()
@@ -232,8 +232,10 @@ TestNode::~TestNode() = default;
     }
 
     // test passed
-    // we only keep the "last modified" time of the test output for passed tests
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+
+    // record new file time
+    RecordStampFromBuiltFile();
+
     return NODE_RESULT_OK;
 }
 

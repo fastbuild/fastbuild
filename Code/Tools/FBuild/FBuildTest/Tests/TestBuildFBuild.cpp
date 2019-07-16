@@ -105,8 +105,12 @@ void TestBuildFBuild::BuildClean() const
     TEST_ASSERT( objStats.m_NumProcessed > 10 ); // not exact so we don't have to update it
     TEST_ASSERT( objStats.m_NumBuilt == objStats.m_NumProcessed ); // everything rebuilt
 
-    // TODO:B Re-enable when we can disable isolation from unity (which disables the cache for some objects)
-    //TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumBuilt ); // everything stored to the cache
+    #if defined( __WINDOWS__ )
+        // One windows, 2 .res files are built which can't be stored, and everything else can
+        TEST_ASSERT( objStats.m_NumCacheStores == ( objStats.m_NumBuilt - 2 ) );
+    #else
+        TEST_ASSERT( objStats.m_NumCacheStores == objStats.m_NumBuilt ); // everything stored to the cache
+    #endif
 }
 
 // Build_NoRebuild
@@ -148,10 +152,14 @@ void TestBuildFBuild::BuildCleanWithCache() const
     // test everything was retrieved from the cache
     const FBuildStats::Stats & objStats = stats.GetStatsFor( Node::OBJECT_NODE );
     TEST_ASSERT( objStats.m_NumProcessed > 10 ); // not exact so we don't have to update it
-
-    // TODO:B Re-enable when we can disable isolation from unity (which disables the cache for some objects)
-    //TEST_ASSERT( objStats.m_NumBuilt == 0 ); // nothing built
-    //TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed ); // everything read from cache
+    #if defined( __WINDOWS__ )
+        // One windows, 2 .res files are built, and everything else comes from the cache
+        TEST_ASSERT( objStats.m_NumBuilt == 2 );
+        TEST_ASSERT( objStats.m_NumCacheHits == ( objStats.m_NumProcessed - 2 ) );
+    #else
+        TEST_ASSERT( objStats.m_NumBuilt == 0 ); // nothing built
+        TEST_ASSERT( objStats.m_NumCacheHits == objStats.m_NumProcessed ); // everything read from cache
+    #endif
 }
 
 // DBSavePerformance

@@ -540,14 +540,13 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
             if ( result )
             {
-                // record build time
-                FileNode * f = (FileNode *)job->GetNode();
-                f->m_Stamp = FileIO::GetFileLastWriteTime( nodeName );
+                // record new file time
+                objectNode->RecordStampFromBuiltFile();
 
                 // record time taken to build
-                f->SetLastBuildTime( buildTime );
-                f->SetStatFlag(Node::STATS_BUILT);
-                f->SetStatFlag(Node::STATS_BUILT_REMOTE);
+                objectNode->SetLastBuildTime( buildTime );
+                objectNode->SetStatFlag(Node::STATS_BUILT);
+                objectNode->SetStatFlag(Node::STATS_BUILT_REMOTE);
 
                 // commit to cache?
                 if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
@@ -558,7 +557,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             }
             else
             {
-                ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
+                objectNode->GetStatFlag( Node::STATS_FAILED );
             }
         }
 

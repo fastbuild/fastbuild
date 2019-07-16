@@ -372,7 +372,7 @@ ObjectNode::~ObjectNode()
     }
 
     // record new file time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }
@@ -407,6 +407,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         else
         {
             // LightCache hashing was successful
+            SetStatFlag( Node::STATS_LIGHT_CACHE ); // Light compatible
 
             // Try retrieve from cache
             GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
@@ -618,7 +619,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     // record new file time
     if ( job->IsLocal() )
     {
-        m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+        // record new file time
+        RecordStampFromBuiltFile();
 
         const bool useCache = ShouldUseCache();
         if ( m_Stamp && useCache )
@@ -698,7 +700,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
     }
 
     // record new file time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }
@@ -726,7 +728,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
     }
 
     // record new file time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }
@@ -1254,11 +1256,6 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
             GetExtraCacheFilePaths( job, fileNames );
 
-            // Get current "system time" and convert to "file time"
-            #if defined( __WINDOWS__ )
-                const uint64_t fileTimeNow = Time::GetCurrentFileTime();
-            #endif
-
             // Extract the files
             const size_t numFiles = fileNames.GetSize();
             for ( size_t i=0; i<numFiles; ++i )
@@ -1270,12 +1267,8 @@ bool ObjectNode::RetrieveFromCache( Job * job )
                     return false;
                 }
 
-                // Get current "system time" and convert to "file time"
-                #if defined( __WINDOWS__ )
-                    const bool timeSetOK = FileIO::SetFileLastWriteTime( fileNames[ i ], fileTimeNow );
-                #elif defined( __APPLE__ ) || defined( __LINUX__ )
-                    const bool timeSetOK = ( utimes( fileNames[ i ].Get(), nullptr ) == 0 );
-                #endif
+                // Update file modification time
+                const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow( fileNames[ i ] );
 
                 // set the time on the local file
                 if ( timeSetOK == false )
@@ -1290,9 +1283,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
             FileIO::WorkAroundForWindowsFilePermissionProblem( m_Name );
 
-            // the file time we set and local file system might have different
-            // granularity for timekeeping, so we need to update with the actual time written
-            m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+            // record new file time (note that time may differ from what we set above due to
+            // file system precision)
+            RecordStampFromBuiltFile();
 
             // Output
             AStackString<> output;
@@ -1356,14 +1349,18 @@ void ObjectNode::WriteToCache( Job * job )
         if ( buffer.CreateFromFiles( fileNames ) )
         {
             // try to compress
+            const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
             Compressor c;
             c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize() );
             const void * data = c.GetResult();
             const size_t dataSize = c.GetResultSize();
+            const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
 
+            const uint32_t startPublish( (uint32_t)t.GetElapsedMS() );
             if ( cache->Publish( cacheFileName, data, dataSize ) )
             {
                 // cache store complete
+                const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
 
                 SetStatFlag( Node::STATS_CACHE_STORE );
 
@@ -1381,8 +1378,8 @@ void ObjectNode::WriteToCache( Job * job )
                 {
                     AStackString<> output;
                     output.Format( "Obj: %s\n"
-                                   " - Cache Store: %u ms '%s'\n",
-                                   GetName().Get(), cachingTime, cacheFileName.Get() );
+                                   " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
+                                   GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, (size_t)buffer.GetDataSize(), cacheFileName.Get() );
                     if ( m_PCHCacheKey != 0 )
                     {
                         output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );

@@ -233,8 +233,9 @@ ExecNode::~ExecNode() = default;
         f.Close();
     }
 
-    // update the file's "last modified" time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    // record new file time
+    RecordStampFromBuiltFile();
+
     return NODE_RESULT_OK;
 }
 

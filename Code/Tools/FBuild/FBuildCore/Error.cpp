@@ -300,12 +300,18 @@
                                                          BFFVariable::VarType rhs,
                                                          const  BFFIterator & operatorIter )
 {
+    BFFIterator operatorIterNext( operatorIter );
+    operatorIterNext++;
+
     const char * operation  = "???"; // should never be used
     switch ( *operatorIter )
     {
-        case BFFParser::BFF_VARIABLE_ASSIGNMENT:    operation = "="; break;
+        case BFFParser::BFF_VARIABLE_ASSIGNMENT:    operation = ( *operatorIterNext == '=' ) ? "==" : "="; break;
         case BFFParser::BFF_VARIABLE_CONCATENATION: operation = "+"; break;
         case BFFParser::BFF_VARIABLE_SUBTRACTION:   operation = "-"; break;
+        case '>':                                   operation = ( *operatorIterNext == '=' ) ? ">=" : ">"; break;
+        case '<':                                   operation = ( *operatorIterNext == '=' ) ? "<=" : "<"; break;
+        case '!':                                   operation = "!="; ASSERT( *operatorIterNext == '=' ); break;
         default:                                    ASSERT( false ); break;
     }
 
