@@ -51,7 +51,7 @@ REFLECT_END( TestNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 TestNode::TestNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL ) // keep output on test fail
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_TestExecutable()
     , m_TestArguments()
     , m_TestWorkingDir()
@@ -184,6 +184,10 @@ TestNode::TestNode( const AString & objectName, const AString & testExecutable,
     m_StaticDependencies.Append( testInputPaths );
     m_StaticDependencies.Append( extraFiles );
 
+    m_Manifest.Initialize(
+        m_ExecutableRootPath, m_StaticDependencies,
+        m_CustomEnvironmentVariables, m_DeleteRemoteFilesWhenDone );
+
     return true;
 }
 
@@ -237,12 +241,9 @@ TestNode::~TestNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult TestNode::DoBuild( Job * job )
 {
-    if ( !m_Manifest.Generate(
-        m_ExecutableRootPath, m_StaticDependencies,
-        m_CustomEnvironmentVariables,
-        m_DeleteRemoteFilesWhenDone) )
+    if ( !m_Manifest.DoBuild( m_StaticDependencies ) )
     {
-        return NODE_RESULT_FAILED; // Generate will have emitted error
+        return NODE_RESULT_FAILED; // DoBuild will have emitted error
     }
 
     const bool canDistribute = m_AllowDistribution && FBuild::Get().GetOptions().m_AllowDistributed;
@@ -364,8 +365,8 @@ Node::BuildResult TestNode::DoBuildCommon( Job * job,
             if ( ( timedOut == false ) && ( exitStatus == 0 ) )
             {
                 // test passed
-                // we only keep the "last modified" time of the test output for passed tests
-                m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+                // record new file time
+                RecordStampFromBuiltFile();
                 m_Stamp = Math::Max( m_Stamp, m_Manifest.GetTimeStamp() );
             }
         }

@@ -167,13 +167,12 @@ size_t ReflectedPropertyStruct::GetArraySize( const void * object ) const
     ASSERT( GetType() == PT_STRUCT );
 
     // get the array
-    const size_t elementSize = GetPropertySize();
     const void * arrayBase = (const void *)( (size_t)object + m_Offset );
     const Array< char > * array = static_cast< const Array< char > * >( arrayBase );
 
-    // calculate the size
-    const size_t size = ( array->End() - array->Begin() ) / elementSize;
-    return size;
+    // NOTE: This assumes Array stores the size explicitly (and does not calculate it
+    //       based on the element size)
+    return array->GetSize();
 }
 
 //------------------------------------------------------------------------------

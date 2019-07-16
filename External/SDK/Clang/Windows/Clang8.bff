@@ -76,8 +76,8 @@ Compiler( 'Compiler-Clang8' )
     // Linker
     .Linker                         = '$Clang8_BasePath$\bin\lld-link.exe'
     .Linker                         = 'c:\Windows\System32\cmd.exe'
-    .LinkerOptions                  = '/c echo %1 > %2' // /NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
-                                    //+ .VSLibPaths
+    .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+                                    + .VSLibPaths
 
     // File Extensions
     .LibExtension                   = '.a'

@@ -155,23 +155,16 @@ void TestDistributed::TestHelper(
         TEST_ASSERT( FileIO::FileExists( target ) == false );
     }
 
-    if ( helperOptions.m_TargetIsAFile &&
-        !helperOptions.m_CompilationShouldFail )
-    {
-        TEST_ASSERT( FileIO::FileExists( target ) == false );
-    }
-
     bool pass = fBuild.Build( target );
     if ( !helperOptions.m_CompilationShouldFail )
     {
         TEST_ASSERT( pass );
-    }
 
-    // make sure output file is as expected
-    if ( helperOptions.m_TargetIsAFile &&
-        !helperOptions.m_CompilationShouldFail )
-    {
-        TEST_ASSERT( FileIO::FileExists( target ) );
+        // make sure all output files are as expected
+        if ( helperOptions.m_TargetIsAFile )
+        {
+            TEST_ASSERT( FileIO::FileExists( target ) );
+        }
     }
 }
 

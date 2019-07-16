@@ -528,11 +528,11 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
             Node* node = job->GetNode();
             Node::Type nodeType = node->GetType();
-            ObjectNode * on = nullptr;
+            ObjectNode * objectNode = nullptr;
             switch ( nodeType )
             {
                 case Node::OBJECT_NODE:
-                    on = node->CastTo< ObjectNode >();
+                    objectNode = node->CastTo< ObjectNode >();
                     break;
                 case Node::TEST_NODE:
                     // nothing to do here
@@ -560,18 +560,18 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                     case Node::OBJECT_NODE:
                         {
                             // 2. PDB file (optional)
-                            if ( result && on->IsUsingPDB() )
+                            if ( result && objectNode->IsUsingPDB() )
                             {
                                 AStackString<> pdbName;
-                                on->GetPDBName( pdbName );
+                                objectNode->GetPDBName( pdbName );
                                 result = WriteFileToDisk( pdbName, mb, fileIndex++ );
                             }
 
                             // 3. .nativecodeanalysis.xml (optional)
-                            if ( result && on->IsUsingStaticAnalysisMSVC() )
+                            if ( result && objectNode->IsUsingStaticAnalysisMSVC() )
                             {
                                 AStackString<> xmlFileName;
-                                on->GetNativeAnalysisXMLPath( xmlFileName );
+                                objectNode->GetNativeAnalysisXMLPath( xmlFileName );
                                 result = WriteFileToDisk( xmlFileName, mb, fileIndex++ );
                             }
                         }
@@ -586,23 +586,22 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
                 if ( result == true )
                 {
-                    // record build time
-                    FileNode * f = (FileNode *)job->GetNode();
-                    f->m_Stamp = FileIO::GetFileLastWriteTime( nodeName );
+                    // record new file time
+                    node->RecordStampFromBuiltFile();
 
                     // record time taken to build
-                    f->SetLastBuildTime( buildTime );
-                    f->SetStatFlag(Node::STATS_BUILT);
-                    f->SetStatFlag(Node::STATS_BUILT_REMOTE);
+                    node->SetLastBuildTime( buildTime );
+                    node->SetStatFlag(Node::STATS_BUILT);
+                    node->SetStatFlag(Node::STATS_BUILT_REMOTE);
 
                     // commit to cache?
                     switch ( nodeType )
                     {
                         case Node::OBJECT_NODE:
                             if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
-                                    on->ShouldUseCache() )
+                                    objectNode->ShouldUseCache() )
                             {
-                                on->WriteToCache( job );
+                                objectNode->WriteToCache( job );
                             }
                             break;
                         case Node::TEST_NODE:
@@ -615,7 +614,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                 }
                 else
                 {
-                    ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
+                    node->GetStatFlag( Node::STATS_FAILED );
                 }
             }
 
@@ -627,18 +626,18 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                         AStackString<> msgBuffer;
                         job->GetMessagesForLog( msgBuffer );
 
-                        if ( on->IsMSVC() )
+                        if ( objectNode->IsMSVC() )
                         {
-                            if ( on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
+                            if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
                             {
-                                FileNode::HandleWarningsMSVC( job, on->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
                             }
                         }
-                        else if ( on->IsClang() || on->IsGCC() )
+                        else if ( objectNode->IsClang() || objectNode->IsGCC() )
                         {
-                            if ( !on->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
+                            if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
                             {
-                                FileNode::HandleWarningsClangGCC( job, on->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
                             }
                         }
                     }

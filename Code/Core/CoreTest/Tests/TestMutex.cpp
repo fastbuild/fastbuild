@@ -143,11 +143,11 @@ void TestMutex::TestExclusivity() const
         PaddingStruct ps1;
         PaddingStruct * ps2 = FNEW( PaddingStruct );
 
-        ASSERT( ( (size_t)&ps1.m_Mutex1 % sizeof( void * ) ) == 0 );
-        ASSERT( ( (size_t)&ps1.m_Mutex2 % sizeof( void * ) ) == 0 );
+        TEST_ASSERT( ( (size_t)&ps1.m_Mutex1 % sizeof( void * ) ) == 0 );
+        TEST_ASSERT( ( (size_t)&ps1.m_Mutex2 % sizeof( void * ) ) == 0 );
 
-        ASSERT( ( (size_t)&ps2->m_Mutex1 % sizeof( void * ) ) == 0 );
-        ASSERT( ( (size_t)&ps2->m_Mutex2 % sizeof( void * ) ) == 0 );
+        TEST_ASSERT( ( (size_t)&ps2->m_Mutex1 % sizeof( void * ) ) == 0 );
+        TEST_ASSERT( ( (size_t)&ps2->m_Mutex2 % sizeof( void * ) ) == 0 );
 
         delete ps2;
     }

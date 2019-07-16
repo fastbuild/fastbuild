@@ -50,6 +50,7 @@ FBuildStats::Stats::Stats()
     , m_NumCacheHits( 0 )
     , m_NumCacheMisses( 0 )
     , m_NumCacheStores( 0 )
+    , m_NumLightCache( 0 )
     , m_ProcessingTimeMS( 0 )
     , m_NumFailed( 0 )
     , m_CachingTimeMS( 0 )
@@ -109,6 +110,7 @@ void FBuildStats::GatherPostBuildStatistics( Node * node )
         m_Totals.m_NumCacheHits     += m_PerTypeStats[ i ].m_NumCacheHits;
         m_Totals.m_NumCacheMisses   += m_PerTypeStats[ i ].m_NumCacheMisses;
         m_Totals.m_NumCacheStores   += m_PerTypeStats[ i ].m_NumCacheStores;
+        m_Totals.m_NumLightCache    += m_PerTypeStats[ i ].m_NumLightCache;
         m_Totals.m_CachingTimeMS    += m_PerTypeStats[ i ].m_CachingTimeMS;
     }
 }
@@ -260,6 +262,10 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
         {
             stats.m_NumCacheStores++;
             stats.m_CachingTimeMS += node->GetCachingTime();
+        }
+        if ( node->GetStatFlag( Node::STATS_LIGHT_CACHE ) )
+        {
+            stats.m_NumLightCache++;
         }
     }
 

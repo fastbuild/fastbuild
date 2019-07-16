@@ -61,14 +61,11 @@ void OSTrayIcon::ShowNotification( const char * msg )
 {
     #if defined( __WINDOWS__ )
         size_t len = strlen( msg );
-        ASSERT( len < 256 );
-        if ( len < 256 )
-        {
-            m_NotifyIconData.uFlags = NIF_INFO;
-            m_NotifyIconData.dwInfoFlags = NIIF_INFO;
-            strncpy_s( m_NotifyIconData.szInfo, 256, msg, len );
-            Shell_NotifyIcon( NIM_MODIFY, &m_NotifyIconData );
-        }
+        AString::Copy( msg, m_NotifyIconData.szTip, Math::Min<size_t>( len, sizeof( m_NotifyIconData.szTip ) - 1 ) );
+        m_NotifyIconData.uFlags = NIF_INFO;
+        m_NotifyIconData.dwInfoFlags = NIIF_INFO;
+        strncpy_s( m_NotifyIconData.szInfo, 256, msg, len );
+        Shell_NotifyIcon( NIM_MODIFY, &m_NotifyIconData );
     #elif defined( __APPLE__ )
         (void)msg; // TODO:MAC Implement ShowBalloonTip
     #elif defined( __LINUX__ )

@@ -660,7 +660,7 @@ void Server::RequestMissingFiles( const ConnectionInfo * connection, ToolManifes
     for ( size_t i=0; i<numFiles; ++i )
     {
         const ToolManifestFile & f = files[ i ];
-        if ( f.m_SyncState == ToolManifestFile::NOT_SYNCHRONIZED )
+        if ( f.GetSyncState() == ToolManifestFile::NOT_SYNCHRONIZED )
         {
             // request this file
             Protocol::MsgRequestFile reqFileMsg( manifest->GetToolId(), (uint32_t)i );

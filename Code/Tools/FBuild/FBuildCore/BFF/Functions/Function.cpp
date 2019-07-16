@@ -907,7 +907,7 @@ bool Function::GetNameForNode( NodeGraph & nodeGraph, const BFFIterator & iter, 
     }
     if ( variable->IsString() )
     {
-        Array< AString > strings;
+        StackArray<AString> strings;
         if ( !PopulateStringHelper( nodeGraph, iter, nullptr, ri->HasMetaData< Meta_File >(), nullptr, variable, strings ) )
         {
             return false; // PopulateStringHelper will have emitted an error
@@ -1221,7 +1221,7 @@ bool Function::PopulatePathAndFileHelper( const BFFIterator & iter,
 //------------------------------------------------------------------------------
 bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
-    Array< AString > strings;
+    StackArray<AString> strings;
     if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error
@@ -1252,7 +1252,7 @@ bool Function::PopulateArrayOfStrings( NodeGraph & nodeGraph, const BFFIterator 
 //------------------------------------------------------------------------------
 bool Function::PopulateString( NodeGraph & nodeGraph, const BFFIterator & iter, void * base, const ReflectedProperty & property, const BFFVariable * variable, bool required ) const
 {
-    Array< AString > strings;
+    StackArray<AString> strings;
     if ( !PopulateStringHelper( nodeGraph, iter, property.HasMetaData< Meta_Path >(), property.HasMetaData< Meta_File >(), property.HasMetaData< Meta_AllowNonFile >(), variable, strings ) )
     {
         return false; // PopulateStringHelper will have emitted an error

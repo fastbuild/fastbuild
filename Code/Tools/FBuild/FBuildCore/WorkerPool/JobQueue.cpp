@@ -736,38 +736,18 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     {
         node->SetStatFlag( Node::STATS_FAILED );
     }
-
-    if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
+    else if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
     {
         // nothing to check
     }
-    else if ( node->IsAFile() )
+    else 
     {
-        if ( result == Node::NODE_RESULT_FAILED )
-        {
-            if ( !isOutputFile || ( node->GetControlFlags() & Node::FLAG_NO_DELETE_ON_FAIL ) )
-            {
-                // node failed, but builder wants result left on disc
-            }
-            else
-            {
-                // build of file failed - if there is a file....
-                if ( FileIO::FileExists( node->GetName().Get() ) )
-                {
-                    // ... it is invalid, so try to delete it
-                    if ( FileIO::FileDelete( node->GetName().Get() ) == false )
-                    {
-                        // failed to delete it - this might cause future build problems!
-                        FLOG_ERROR( "Post failure deletion failed for '%s'", node->GetName().Get() );
-                    }
-                }
-            }
-        }
-        else
-        {
-            // build completed ok, or retrieved from cache...
-            ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_OK_CACHE ) );
+        // build completed ok, or retrieved from cache...
+        ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_OK_CACHE ) );
 
+        // Check that the file is on disk as expected
+        if ( node->IsAFile() )
+        {
             // (don't check existence of input files)
             if ( node->GetType() != Node::FILE_NODE )
             {

@@ -23,6 +23,7 @@ public:
     virtual bool IsAFile() const override;
 
 private:
+    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     // Exposed Properties

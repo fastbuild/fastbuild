@@ -261,6 +261,14 @@ SLNNode::SLNNode()
 //------------------------------------------------------------------------------
 SLNNode::~SLNNode() = default;
 
+// DetermineNeedToBuild
+//------------------------------------------------------------------------------
+/*virtual*/ bool SLNNode::DetermineNeedToBuild( bool /*forceClean*/ ) const
+{
+    // SLNNode always builds, but only writes the result if different
+    return true;
+}
+
 // DoBuild
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult SLNNode::DoBuild( Job * UNUSED( job ) )

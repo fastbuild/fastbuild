@@ -1303,7 +1303,8 @@ bool BFFParser::StoreVariableString( const AString & name,
         else if ( var->IsArrayOfStrings() || dstIsEmpty )
         {
             // OK - can concat String to ArrayOfStrings or to empty array
-            Array< AString > finalValues( var->GetArrayOfStrings().GetSize() + 1, false );
+            StackArray<AString> finalValues;
+            finalValues.SetCapacity( var->GetArrayOfStrings().GetSize() + 1 );
             if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
             {
                 if ( !dstIsEmpty )
@@ -1345,7 +1346,7 @@ bool BFFParser::StoreVariableString( const AString & name,
         else if ( var->IsArrayOfStrings() || dstIsEmpty )
         {
             // OK - store new string as the single element of array
-            Array< AString > values( 1, false );
+            StackArray<AString> values;
             values.Append( value );
             BFFStackFrame::SetVarArrayOfStrings( name, values, frame );
             return true;
@@ -1368,8 +1369,8 @@ bool BFFParser::StoreVariableArray( const AString & name,
                                     const BFFIterator & operatorIter,
                                     BFFStackFrame * frame )
 {
-    Array< AString > values( 32, true );
-    Array< const BFFVariable * > structValues( 32, true );
+    StackArray<AString> values;
+    StackArray<const BFFVariable *> structValues;
 
     // find existing
     const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
@@ -1606,17 +1607,15 @@ bool BFFParser::StoreVariableArray( const AString & name,
         varType = var ? var->GetType() : BFFVariable::VAR_ARRAY_OF_STRINGS;
     }
 
-    // check if selected type correctly
-    ASSERT ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS || varType == BFFVariable::VAR_ARRAY_OF_STRUCTS );
-
     // Register this variable
     if ( varType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
     {
         // structs
         BFFStackFrame::SetVarArrayOfStructs( name, structValues, frame );
     }
-    else if ( varType == BFFVariable::VAR_ARRAY_OF_STRINGS )
+    else
     {
+        ASSERT( varType == BFFVariable::VAR_ARRAY_OF_STRINGS );
         // strings
         BFFStackFrame::SetVarArrayOfStrings( name, values, frame );
     }
@@ -1665,10 +1664,10 @@ bool BFFParser::StoreVariableStruct( const AString & name,
     }
 
     // get variables defined in the scope
-    const Array< const BFFVariable * > & structMembers = stackFrame.GetLocalVariables();
+    Array<BFFVariable *> & structMembers = stackFrame.GetLocalVariables();
 
     // Register this variable
-    BFFStackFrame::SetVarStruct( name, structMembers, frame ? frame : stackFrame.GetParent() );
+    BFFStackFrame::SetVarStruct( name, Move( structMembers ), frame ? frame : stackFrame.GetParent() );
 
     return true;
 }
@@ -1786,7 +1785,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
         if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS || dstIsEmpty ) &&
              ( srcType == BFFVariable::VAR_STRING ) )
         {
-            Array< AString > values( varDst->GetArrayOfStrings().GetSize() + 1, false );
+            StackArray<AString> values;
+            values.SetCapacity( varDst->GetArrayOfStrings().GetSize() + 1 );
             if ( concat )
             {
                 if ( !dstIsEmpty )
@@ -1824,7 +1824,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
              !subtract )
         {
             uint32_t num = (uint32_t)( 1 + ( ( concat && !dstIsEmpty ) ? varDst->GetArrayOfStructs().GetSize() : 0 ) );
-            Array< const BFFVariable * > values( num, false );
+            StackArray<const BFFVariable *> values;
+            values.SetCapacity( num );
             if ( concat && !dstIsEmpty )
             {
                 values.Append( varDst->GetArrayOfStructs() );
@@ -1840,7 +1841,12 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
         {
             if ( concat )
             {
-                BFFStackFrame::SetVarArrayOfStrings( dstName, varDst->GetArrayOfStrings(), dstFrame );
+                // Avoid self-assignment by checking that the destination variable is not in destination scope.
+                const BFFVariable * var = ( dstFrame ? dstFrame : BFFStackFrame::GetCurrent() )->GetLocalVar( dstName );
+                if ( varDst != var )
+                {
+                    BFFStackFrame::SetVarArrayOfStrings( dstName, varDst->GetArrayOfStrings(), dstFrame );
+                }
             }
             else
             {
@@ -1854,7 +1860,12 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
         {
             if ( concat )
             {
-                BFFStackFrame::SetVarArrayOfStructs( dstName, varDst->GetArrayOfStructs(), dstFrame );
+                // Avoid self-assignment by checking that the destination variable is not in destination scope.
+                const BFFVariable * var = ( dstFrame ? dstFrame : BFFStackFrame::GetCurrent() )->GetLocalVar( dstName );
+                if ( varDst != var )
+                {
+                    BFFStackFrame::SetVarArrayOfStructs( dstName, varDst->GetArrayOfStructs(), dstFrame );
+                }
             }
             else
             {
@@ -1907,7 +1918,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
             if ( concat )
             {
                 const unsigned int num = (unsigned int)( varSrc->GetArrayOfStrings().GetSize() + varDst->GetArrayOfStrings().GetSize() );
-                Array< AString > values( num, false );
+                StackArray<AString> values;
+                values.SetCapacity( num );
                 values.Append( varDst->GetArrayOfStrings() );
                 values.Append( varSrc->GetArrayOfStrings() );
                 BFFStackFrame::SetVarArrayOfStrings( dstName, values, dstFrame );
@@ -1924,7 +1936,8 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
             if ( concat )
             {
                 const unsigned int num = (unsigned int)( varSrc->GetArrayOfStructs().GetSize() + varDst->GetArrayOfStructs().GetSize() );
-                Array< const BFFVariable * > values( num, false );
+                StackArray<const BFFVariable *> values;
+                values.SetCapacity( num );
                 values.Append( varDst->GetArrayOfStructs() );
                 values.Append( varSrc->GetArrayOfStructs() );
                 BFFStackFrame::SetVarArrayOfStructs( dstName, values, dstFrame );
