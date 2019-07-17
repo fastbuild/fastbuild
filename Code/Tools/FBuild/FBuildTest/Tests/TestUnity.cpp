@@ -37,6 +37,7 @@ private:
     void TestGenerateFromExplicitList() const;
     void TestExcludedFiles() const;
     void IsolateFromUnity_Regression() const;
+    void UnityInputIsolatedFiles() const;
 };
 
 // Register Tests
@@ -51,6 +52,7 @@ REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( TestGenerateFromExplicitList ) // create a unity with manually provided files
     REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
     REGISTER_TEST( IsolateFromUnity_Regression )
+    REGISTER_TEST( UnityInputIsolatedFiles )
 REGISTER_TESTS_END
 
 // BuildGenerate
@@ -256,11 +258,11 @@ void TestUnity::TestCompile_NoRebuild_BFFChange() const
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
     CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 4+numF );
+    CheckStatsTotal( stats, 8+numF, 3+numF );
 }
 
 // TestGenerateFromExplicitList
@@ -331,6 +333,23 @@ void TestUnity::IsolateFromUnity_Regression() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) );
+}
+
+// UnityInputIsolatedFiles
+//------------------------------------------------------------------------------
+void TestUnity::UnityInputIsolatedFiles() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/UnityInputIsolatedFiles/fbuild.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "Compile" ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
+    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
 }
 
 //------------------------------------------------------------------------------

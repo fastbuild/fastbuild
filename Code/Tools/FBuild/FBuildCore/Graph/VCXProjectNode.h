@@ -100,6 +100,7 @@ public:
     const Array< VSProjectConfig > & GetConfigs() const { return m_ProjectConfigs; }
 
 private:
+    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void PostLoad( NodeGraph & nodeGraph ) override;
 

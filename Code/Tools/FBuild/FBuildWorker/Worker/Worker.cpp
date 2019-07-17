@@ -66,7 +66,7 @@ void Worker::Initialize( void * hInstance, const bool consoleMode )
         #if __WINDOWS__
             VERIFY( ::AllocConsole() );
             PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-            (void)freopen("CONOUT$", "w", stdout); // TODO:C consider using freopen_s
+            VERIFY( freopen("CONOUT$", "w", stdout) ); // TODO:C consider using freopen_s
             PRAGMA_DISABLE_POP_MSVC // 4996
         #endif
     }

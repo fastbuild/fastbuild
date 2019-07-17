@@ -45,8 +45,8 @@ FunctionForEach::FunctionForEach()
                     const BFFIterator * functionHeaderStopToken ) const
 {
     // build array for each pair to loop through
-    Array< AString >                localNames( 4, true );
-    Array< const BFFVariable * >    arrayVars( 4, true );
+    StackArray<AString> localNames;
+    StackArray<const BFFVariable *> arrayVars;
 
     int loopLen = -1;
 

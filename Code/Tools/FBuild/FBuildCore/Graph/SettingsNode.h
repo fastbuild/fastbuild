@@ -32,7 +32,7 @@ public:
     inline const Array< AString > & GetWorkerList() const { return m_Workers; }
     uint32_t                        GetWorkerConnectionLimit() const { return m_WorkerConnectionLimit; }
     uint32_t                        GetDistributableJobMemoryLimitMiB() const { return m_DistributableJobMemoryLimitMiB; }
-    bool                            GetAllowDBMigration_Experimental() const { return m_AllowDBMigration_Experimental; }
+    bool                            GetDisableDBMigration() const { return m_DisableDBMigration; }
     bool                            GetSandboxEnabled() const { return m_SandboxEnabled; }
     void                            SetSandboxEnabled( const bool sandboxEnabled );
     inline const AString &          GetSandboxExe() const { return m_SandboxExe; }
@@ -46,8 +46,6 @@ public:
     void                            SetObfuscatedSandboxTmp( const AString & obfuscatedSandboxTmp );
 
 private:
-    //virtual BuildResult DoBuild( Job * job ) override;
-
     void ProcessEnvironment( const Array< AString > & envStrings ) const;
 
     // Settings from environment variables
@@ -63,7 +61,7 @@ private:
     Array< AString  > m_Workers;
     uint32_t          m_WorkerConnectionLimit;
     uint32_t          m_DistributableJobMemoryLimitMiB;
-    bool              m_AllowDBMigration_Experimental;
+    bool              m_DisableDBMigration; // TODO:C Remove this option some time after v0.99
 
     bool              m_SandboxEnabled;
     AString           m_SandboxExe;

@@ -337,8 +337,15 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 
     uint32_t timeTakenMS = uint32_t( timer.GetElapsedMS() );
 
-    if ( result == Node::NODE_RESULT_OK )
+    if ( result == Node::NODE_RESULT_FAILED )
     {
+        node->SetStatFlag( Node::STATS_FAILED );
+    }
+    else
+    {
+        // build completed ok
+        ASSERT( result == Node::NODE_RESULT_OK );
+
         // record new build time only if built (i.e. if failed, the time
         // does not represent how long it takes to create this resource)
         node->SetLastBuildTime( timeTakenMS );
@@ -347,31 +354,11 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         #ifdef DEBUG
             if ( job->IsLocal() )
             {
-                // record new file time for remote job we built locally
+                // we should have recorded the new file time for remote job we built locally
                 ASSERT( node->m_Stamp == FileIO::GetFileLastWriteTime(node->GetName()) );
             }
         #endif
-    }
 
-    if ( result == Node::NODE_RESULT_FAILED )
-    {
-        node->SetStatFlag( Node::STATS_FAILED );
-
-        // build of file failed - if there is a file....
-        if ( FileIO::FileExists( node->GetName().Get() ) )
-        {
-            // ... it is invalid, so try to delete it
-            if ( FileIO::FileDelete( node->GetName().Get() ) == false )
-            {
-                // failed to delete it - this might cause future build problems!
-                FLOG_ERROR( "Post failure deletion failed for '%s'", node->GetName().Get() );
-            }
-        }
-    }
-    else
-    {
-        // build completed ok, or retrieved from cache...
-        ASSERT( result == Node::NODE_RESULT_OK );
 
         // TODO:A Also read into job if cache is being used
         if ( job->IsLocal() == false )

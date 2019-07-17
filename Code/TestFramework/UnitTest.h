@@ -2,7 +2,12 @@
 //------------------------------------------------------------------------------
 #pragma once
 
+// Includes
+//------------------------------------------------------------------------------
 #include "UnitTestManager.h"
+
+// Core
+#include "Core/Mem/MemTracker.h" // For MEMTRACKER_ENABLED
 
 // UnitTest - Tests derive from this interface
 //------------------------------------------------------------------------------
@@ -24,7 +29,7 @@ private:
     UnitTest * m_NextTestGroup;
 };
 
-// macros
+// Test Assertions
 //------------------------------------------------------------------------------
 #define TEST_ASSERT( expression )                                   \
     do {                                                            \
@@ -52,6 +57,8 @@ private:
     } while ( false )                                               \
     PRAGMA_DISABLE_POP_MSVC
 
+// Test Declarations
+//------------------------------------------------------------------------------
 #define DECLARE_TESTS                                               \
     virtual void RunTests();                                        \
     virtual const char * GetName() const;
@@ -81,5 +88,43 @@ private:
 #define REGISTER_TESTGROUP( testGroupName )                         \
         extern void testGroupName##Register();                      \
         testGroupName##Register();
+
+// Memory snapshots
+//------------------------------------------------------------------------------
+#if defined( MEMTRACKER_ENABLED )
+    class TestMemorySnapshot
+    {
+    public:
+        TestMemorySnapshot()
+            : m_AllocationId( MemTracker::GetCurrentAllocationId() )
+            , m_ActiveAllocationCount( MemTracker::GetCurrentAllocationCount() )
+        {}
+        uint32_t    m_AllocationId;
+        uint32_t    m_ActiveAllocationCount;
+    };
+
+    // Take a snapshot of the memory state
+    #define TEST_MEMORY_SNAPSHOT( snapshot )                            \
+        TestMemorySnapshot snapshot;
+
+    // Check for expected or unexpected allocations since a snapshot
+    #define TEST_EXPECT_ALLOCATION_EVENTS( snapshot, expected )         \
+        {                                                               \
+            const uint32_t numAllocs = ( MemTracker::GetCurrentAllocationId() - snapshot.m_AllocationId ); \
+            TEST_ASSERTM( numAllocs == expected, "%u alloc(s) instead of %u alloc(s)", numAllocs, expected ); \
+        }
+
+    // Test for new active allocations since a snapshot
+    #define TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( snapshot, expected )    \
+        {                                                               \
+            const uint32_t numActiveAllocs = ( MemTracker::GetCurrentAllocationCount() - snapshot.m_ActiveAllocationCount ); \
+            TEST_ASSERTM( numActiveAllocs == expected, "%u allocs(s) instead of %u alloc(s)", numActiveAllocs, expected ); \
+        }
+
+#else
+    #define TEST_MEMORY_SNAPSHOT( snapshot )
+    #define TEST_EXPECT_ALLOCATION_EVENTS( snapshot, expected )
+    #define TEST_EXPECT_INCREASED_ACTIVE_ALLOCATIONS( snapshot, expected )
+#endif
 
 //------------------------------------------------------------------------------

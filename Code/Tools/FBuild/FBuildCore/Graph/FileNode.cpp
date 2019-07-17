@@ -45,7 +45,9 @@ FileNode::~FileNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult FileNode::DoBuild( Job * UNUSED( job ) )
 {
+    // NOTE: Not calling RecordStampFromBuiltFile as this is not a built file
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    // Don't assert m_Stamp != 0 as input file might not exist
     return NODE_RESULT_OK;
 }
 
@@ -96,7 +98,7 @@ void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, cons
         AStackString<> msg;
         msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
 
-        AutoPtr< char > mem( (char *)Alloc( dataSize + msg.GetLength() ) );
+        AutoPtr< char > mem( (char *)ALLOC( dataSize + msg.GetLength() ) );
         memcpy( mem.Get(), msg.Get(), msg.GetLength() );
         memcpy( mem.Get() + msg.GetLength(), data, dataSize );
 

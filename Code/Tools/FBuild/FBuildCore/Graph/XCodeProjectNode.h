@@ -44,6 +44,7 @@ public:
     static inline Node::Type GetTypeS() { return Node::XCODEPROJECT_NODE; }
 
 private:
+    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void PostLoad( NodeGraph & nodeGraph ) override;
 

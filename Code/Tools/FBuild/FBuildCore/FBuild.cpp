@@ -905,7 +905,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
             case Node::SETTINGS_NODE:       break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
-        if ( displayName && ( !hidden || ( hidden && showHidden ) ) )
+        if ( displayName && ( !hidden || showHidden ) )
         {
             OUTPUT( "\t%s\n", node->GetName().Get() );
         }

@@ -17,10 +17,10 @@ def getfiles(outFiles):
                 outFiles.append(fullPath)
 
 files = []
+print('Getting list of files...')
 getfiles(files)
+print('Checking files...')
 for file in files:
-    print(file)
-
     fixedFile = []
     fixed = False
 
@@ -59,6 +59,10 @@ for file in files:
 
     # any changes made?
     if fixed == True:
-        f = open(file, 'w')
-        f.writelines(fixedFile)
-        f.close()
+        try:
+            f = open(file, 'w')
+            f.writelines(fixedFile)
+            f.close()
+            print(' - FIXED: {}'.format(file))
+        except:
+            print(' - FIX FAILED: {}'.format(file))
