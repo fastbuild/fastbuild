@@ -429,7 +429,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 
     ss->m_Jobs.Append( job ); // Track in-flight job
 
-    // if tool is explicity specified, get the id of the tool manifest
+    // if tool is explicitly specified, get the id of the tool manifest
     Node * n = job->GetNode()->CastTo< ObjectNode >()->GetCompiler();
     const ToolManifest & manifest = n->CastTo< CompilerNode >()->GetManifest();
     uint64_t toolId = manifest.GetToolId();
