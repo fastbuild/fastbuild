@@ -8,6 +8,8 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/ExeNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/DLLNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
@@ -128,6 +130,9 @@ void  ProjectGeneratorBase::SortFilesAndFolders()
     {
         m_Folders[ index ]->m_SortedIndex = index;
 
+        // Sort files in folders
+        m_Folders[ index ]->m_Files.SortDeref();
+
         // Sort child folders as well
         m_Folders[ index ]->m_Folders.SortDeref();
     }
@@ -138,15 +143,20 @@ void  ProjectGeneratorBase::SortFilesAndFolders()
 void ProjectGeneratorBase::AddFile( const AString & fileName )
 {
     // Handle BasePath
-    AStackString<> shortFileName;
-    GetProjectRelativePath_Deprecated( fileName, shortFileName );
+    AStackString<> relativePath;
+    GetProjectRelativePath_Deprecated( fileName, relativePath );
 
     // Find existing folder
-    Folder * folder = GetFolderFor( shortFileName );
+    Folder * folder = GetFolderFor( relativePath );
+
+    // Get file name with no path
+    const char * fileNameOnly = relativePath.FindLast( '/' );
+    fileNameOnly = fileNameOnly ? fileNameOnly : relativePath.FindLast( '\\' );
+    fileNameOnly = fileNameOnly ? ( fileNameOnly + 1 ) : relativePath.Get();
 
     // Add file
     File * newFile = FNEW( File );
-    newFile->m_Name = shortFileName;
+    newFile->m_FileName = fileNameOnly;
     newFile->m_FullPath = fileName;
     newFile->m_Folder = folder;
     m_Files.Append( newFile );
@@ -177,12 +187,9 @@ void ProjectGeneratorBase::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 
 // AddConfig
 //------------------------------------------------------------------------------
-void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetNode )
+void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config )
 {
-    Config c;
-    c.m_Name = name;
-    c.m_TargetNode = targetNode;
-    m_Configs.Append( c );
+    m_Configs.Append( &config );
 }
 
 // WriteIfDifferent
@@ -320,7 +327,6 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
         ext = tmp;
     }
 }
-
 
 // FindTargetForIntellisenseInfo
 //------------------------------------------------------------------------------
@@ -494,6 +500,47 @@ void ProjectGeneratorBase::AddConfig( const AString & name, const Node * targetN
             outTokenString += postToken;
         }
     }
+}
+
+// FindExecutableTarget
+//------------------------------------------------------------------------------
+/*static*/ const LinkerNode * ProjectGeneratorBase::FindExecutableTarget( const Node * node )
+{
+    if ( node )
+    {
+        switch ( node->GetType() )
+        {
+            case Node::EXE_NODE: return node->CastTo< ExeNode >();
+            case Node::DLL_NODE: return node->CastTo< DLLNode >();
+            case Node::ALIAS_NODE:
+            {
+                const LinkerNode * n = FindExecutableTarget( node->CastTo< AliasNode >()->GetAliasedNodes() );
+                if ( n )
+                {
+                    return n;
+                }
+                break; // Nothing aliased - ignore
+            }
+            default: break; // Unsupported type - ignore
+        }
+    }
+    
+    return nullptr;
+}
+
+// FindExecutableTarget
+//------------------------------------------------------------------------------
+/*static*/ const LinkerNode * ProjectGeneratorBase::FindExecutableTarget( const Dependencies & deps )
+{
+    for ( const Dependency & dep : deps )
+    {
+        const LinkerNode * n = FindExecutableTarget( dep.GetNode() );
+        if ( n )
+        {
+            return n;
+        }
+    }
+    return nullptr;
 }
 
 // GetRelativePath
