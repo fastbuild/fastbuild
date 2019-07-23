@@ -57,44 +57,47 @@ public:
     inline bool operator <  ( const IncludedFile & other ) const    { return ( m_FileName < other.m_FileName ); }
 };
 
+// IncludedFileHashSet
+//------------------------------------------------------------------------------
 #define LIGHTCACHE_DEFAULT_BUCKET_SIZE 1024
 class IncludedFileHashSet
 {
 public:
     IncludedFileHashSet( const IncludedFileHashSet & ) = delete;
     IncludedFileHashSet & operator=( const IncludedFileHashSet & ) = delete;
-    ~IncludedFileHashSet()
-    {
-        Destruct();
-    }
     IncludedFileHashSet()
     {
         m_Buckets.SetSize( LIGHTCACHE_DEFAULT_BUCKET_SIZE );
-        for ( auto & elt : m_Buckets )
+        for ( IncludedFile * & elt : m_Buckets )
         {
             elt = nullptr;
         }
     }
-    const IncludedFile *Find( const AString & fileName, uint64_t fileNameHash )
+
+    ~IncludedFileHashSet()
+    {
+        Destruct();
+    }
+
+    const IncludedFile * Find( const AString & fileName, uint64_t fileNameHash )
     {
         IncludedFile ** location = InternalFind( fileName, fileNameHash );
         if ( location && *location )
         {
-           return *location;
+            return *location;
         }
         return nullptr;
     }
 
     // If two threads find the same include simultaneously, we delete the new
     // one and return the old one.
-    const IncludedFile * Insert( IncludedFile *item )
+    const IncludedFile * Insert( IncludedFile * item )
     {
-        if ( m_Buckets.GetSize() / 2 <= m_Elts )
+        if ( ( m_Buckets.GetSize() / 2 ) <= m_Elts )
         {
-            size_t newSize = (
-                m_Buckets.GetSize() < LIGHTCACHE_DEFAULT_BUCKET_SIZE) ?
-                    LIGHTCACHE_DEFAULT_BUCKET_SIZE :
-                    ( m_Buckets.GetSize() * 2 );
+            const size_t newSize = ( m_Buckets.GetSize() < LIGHTCACHE_DEFAULT_BUCKET_SIZE )
+                                 ? LIGHTCACHE_DEFAULT_BUCKET_SIZE
+                                 : ( m_Buckets.GetSize() * 2 );
             Grow( newSize );
         }
         IncludedFile ** location = InternalFind( item->m_FileName, item->m_FileNameHash );
@@ -123,14 +126,14 @@ public:
     }
 
 private:
-    IncludedFile **InternalFind( const AString & fileName, uint64_t fileNameHash )
+    IncludedFile ** InternalFind( const AString & fileName, uint64_t fileNameHash )
     {
         if ( m_Buckets.IsEmpty() )
         {
             return nullptr;
         }
-        size_t probe_count = 1;
-        size_t startIdx = fileNameHash & ( m_Buckets.GetSize() - 1 );
+        size_t probeCount = 1;
+        const size_t startIdx = fileNameHash & ( m_Buckets.GetSize() - 1 );
         IncludedFile ** bucket = &m_Buckets[ startIdx ];
         while ( *bucket != nullptr )
         {
@@ -138,7 +141,7 @@ private:
             {
                 return bucket;
             }
-            bucket = Next( m_Buckets, startIdx, probe_count );
+            bucket = Next( m_Buckets, startIdx, probeCount );
         }
         ASSERT( *bucket == nullptr );
         return bucket;
@@ -146,36 +149,36 @@ private:
 
     static IncludedFile ** Next( Array< IncludedFile * > &buckets,
                                  size_t startIdx,
-                                 size_t & probe_count )
+                                 size_t & probeCount )
     {
-        size_t curIdx = startIdx + probe_count * probe_count; //quadratic probing
+        size_t curIdx = startIdx + ( probeCount * probeCount ); //quadratic probing
         curIdx &= ( buckets.GetSize() - 1 );
-        ++probe_count;
+        ++probeCount;
         return &buckets[ curIdx ];
     }
     void Grow( size_t elts )
     {
         Array< IncludedFile * > dest( elts, true );
         dest.SetSize( elts );
-        for ( auto & elt : dest )
+        for ( IncludedFile * & elt : dest )
         {
             elt = nullptr;
         }
 
         // populate dest with the elements in m_Buckets.  Rely on uniqueness
         // in source to avoid comparing in dest
-        for ( IncludedFile *elt : m_Buckets )
+        for ( IncludedFile * elt : m_Buckets )
         {
             if ( elt == nullptr )
             {
                 continue;
             }
-            size_t probe_count = 1;
-            size_t startIdx = elt->m_FileNameHash & ( dest.GetSize() - 1 );
-            IncludedFile **bucket = &dest[ startIdx ];
+            size_t probeCount = 1;
+            const size_t startIdx = elt->m_FileNameHash & ( dest.GetSize() - 1 );
+            IncludedFile ** bucket = &dest[ startIdx ];
             while ( *bucket != nullptr )
             {
-                bucket = Next( dest, startIdx, probe_count );
+                bucket = Next( dest, startIdx, probeCount );
             }
             ASSERT( *bucket == nullptr );
             *bucket = elt;
