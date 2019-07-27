@@ -212,9 +212,10 @@ public:
 class IncludedFileBucket
 {
 public:
-    IncludedFileBucket()
-        : m_Mutex()
-    {}
+    IncludedFileBucket() = default;
+    IncludedFileBucket( const IncludedFileBucket & ) = delete;
+    IncludedFileBucket & operator = ( const IncludedFileBucket & ) = delete;
+
     void Destruct()
     {
         m_HashSet.Destruct();
