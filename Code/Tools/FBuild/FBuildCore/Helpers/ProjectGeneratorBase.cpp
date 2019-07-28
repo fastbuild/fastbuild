@@ -502,9 +502,10 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     }
 }
 
-// FindExecutableTarget
+// FindExecutableDebugTarget
+// - Return the node that would be used for debugging
 //------------------------------------------------------------------------------
-/*static*/ const LinkerNode * ProjectGeneratorBase::FindExecutableTarget( const Node * node )
+/*static*/ const FileNode * ProjectGeneratorBase::FindExecutableDebugTarget( const Node * node )
 {
     if ( node )
     {
@@ -512,9 +513,20 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
         {
             case Node::EXE_NODE: return node->CastTo< ExeNode >();
             case Node::DLL_NODE: return node->CastTo< DLLNode >();
+            case Node::COPY_FILE_NODE:
+            {
+                // When copying, we want to debug the copy as that usually means a staging dir
+                // is being created (collating dependencies, isolated from intermediate files)
+                return (const FileNode *)node;
+            }
+            case Node::TEST_NODE:
+            {
+                // Get executable backing test
+                return (FileNode *)node->CastTo< TestNode >()->GetTestExecutable();
+            }
             case Node::ALIAS_NODE:
             {
-                const LinkerNode * n = FindExecutableTarget( node->CastTo< AliasNode >()->GetAliasedNodes() );
+                const FileNode * n = FindExecutableDebugTarget( node->CastTo< AliasNode >()->GetAliasedNodes() );
                 if ( n )
                 {
                     return n;
@@ -528,13 +540,13 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     return nullptr;
 }
 
-// FindExecutableTarget
+// FindExecutableDebugTarget
 //------------------------------------------------------------------------------
-/*static*/ const LinkerNode * ProjectGeneratorBase::FindExecutableTarget( const Dependencies & deps )
+/*static*/ const FileNode * ProjectGeneratorBase::FindExecutableDebugTarget( const Dependencies & deps )
 {
     for ( const Dependency & dep : deps )
     {
-        const LinkerNode * n = FindExecutableTarget( dep.GetNode() );
+        const FileNode * n = FindExecutableDebugTarget( dep.GetNode() );
         if ( n )
         {
             return n;

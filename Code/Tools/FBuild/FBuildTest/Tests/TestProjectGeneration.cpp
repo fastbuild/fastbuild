@@ -6,6 +6,7 @@
 #include "FBuildTest.h"
 
 // FBuild
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -32,6 +33,7 @@ private:
     void TestFunction() const;
     void TestFunction_NoRebuild() const;
     void TestFunction_Speed() const;
+    void FindExecutableTarget() const;
 
     // VCXProj
     void VCXProj_DefaultConfigs() const;
@@ -66,6 +68,7 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( TestFunction )
     REGISTER_TEST( TestFunction_NoRebuild )
     REGISTER_TEST( TestFunction_Speed )
+    REGISTER_TEST( FindExecutableTarget )
     REGISTER_TEST( VCXProj_DefaultConfigs )
     REGISTER_TEST( VCXProj_PerConfigOverrides )
     REGISTER_TEST( VCXProj_HandleDuplicateFiles )
@@ -335,6 +338,42 @@ void TestProjectGeneration::TestFunction_Speed() const
         }
         float time = t.GetElapsed();
         OUTPUT( "Gen vcxproj.filters: %2.3fs\n", (double)time );
+    }
+}
+
+// FindExecutableTarget
+//
+// When generating projects we sometimes need the path executable related to
+// the project in a given config (to set the executable to debug for example)
+//------------------------------------------------------------------------------
+void TestProjectGeneration::FindExecutableTarget() const
+{
+    // Parse bff
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/FindExecutableTarget/fbuild.bff";
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Alias -> Test -> Executable
+    //  - This should return the Executable
+    {
+        const Node * testAlias = fBuild.GetNode( "AliasToTest" );
+        TEST_ASSERT( testAlias );
+        const Node * exe = ProjectGeneratorBase::FindExecutableDebugTarget( testAlias );
+        TEST_ASSERT( exe );
+        TEST_ASSERT( exe->GetType() == Node::EXE_NODE );
+    }
+
+    // Alias -> Copy -> Executable
+    //  - This should return the Copy of the Executable (if making a copy
+    //    it's likely a "staging dir" is being created and you want to
+    //    collect dependencies in that folder and run from that folder)
+    {
+        const Node * copyAlias = fBuild.GetNode( "AliasToCopy" );
+        TEST_ASSERT( copyAlias );
+        const Node * copy = ProjectGeneratorBase::FindExecutableDebugTarget( copyAlias );
+        TEST_ASSERT( copy );
+        TEST_ASSERT( copy->GetType() == Node::COPY_FILE_NODE );
     }
 }
 

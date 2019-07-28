@@ -6,7 +6,6 @@
 #include "XCodeProjectGenerator.h"
 
 // FBuildCore
-#include "Tools/FBuild/FBuildCore/Graph/LinkerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
@@ -320,7 +319,7 @@ void XCodeProjectGenerator::WriteFiles()
 
         const char * shortFolderName = "Sources";
 
-        Write( "\t\t1111111100000000%08X /* %s in %s */ = {isa = PBXBuildFile; fileRef = 1111111111111111%08X /* %s */; };\n",
+        Write( "\t\t1111111100000000%08u /* %s in %s */ = {isa = PBXBuildFile; fileRef = 1111111111111111%08u /* %s */; };\n",
                     file->m_SortedIndex, shortName, shortFolderName, file->m_SortedIndex, shortName );
     }
     Write( "/* End PBXBuildFile section */\n" );
@@ -347,7 +346,7 @@ void XCodeProjectGenerator::WriteFiles()
             fileEncoding = "";
         }
 
-        Write( "\t\t1111111111111111%08X /* %s */ = {isa = PBXFileReference;%s lastKnownFileType = %s; name = %s; path = %s; sourceTree = \"<group>\"; };\n",
+        Write( "\t\t1111111111111111%08u /* %s */ = {isa = PBXFileReference;%s lastKnownFileType = %s; name = %s; path = %s; sourceTree = \"<group>\"; };\n",
                     file->m_SortedIndex, shortName, fileEncoding, lastKnownFileType, shortName, file->m_FullPath.Get() );
     }
     Write( "/* End PBXFileReference section */\n" );
@@ -390,7 +389,7 @@ void XCodeProjectGenerator::WriteFolders()
         // Child Files
         for ( const File * file : folder->m_Files )
         {
-            Write( "\t\t\t\t1111111111111111%08X /* %s */,\n",
+            Write( "\t\t\t\t1111111111111111%08u /* %s */,\n",
                    file->m_SortedIndex, file->m_FileName.Get() );
         }
 
@@ -422,6 +421,9 @@ void XCodeProjectGenerator::WriteFolders()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteBuildCommand()
 {
+    AStackString<> buildPhaseGuid;
+    GetGUID_PBXSourcesBuildPhase( 0, buildPhaseGuid );
+
     // PBXLegacyTarget
     {
         AStackString<> pbxLegacyTargetGUID;
@@ -437,6 +439,7 @@ void XCodeProjectGenerator::WriteBuildCommand()
         Write( "\t\t\tbuildArgumentsString = \"%s\";\n", m_XCodeBuildToolArgs.Get() );
         Write( "\t\t\tbuildConfigurationList = %s /* Build configuration list for PBXLegacyTarget \"%s\" */;\n", xConfigurationListGUID.Get(), m_ProjectName.Get() );
         Write( "\t\t\tbuildPhases = (\n" );
+        Write( "\t\t\t\t%s /* Sources */,\n", buildPhaseGuid.Get() );
         Write( "\t\t\t);\n" );
         WriteString( 3, "buildToolPath", m_XCodeBuildToolPath );
         WriteString( 3, "buildWorkingDirectory", m_XCodeBuildWorkingDir );
@@ -456,9 +459,6 @@ void XCodeProjectGenerator::WriteBuildCommand()
 
         AStackString<> xConfigurationListGUID;
         GetGUID_XConfigurationList( 2, xConfigurationListGUID );
-
-        AStackString<> buildPhaseGuid;
-        GetGUID_PBXSourcesBuildPhase( 0, buildPhaseGuid );
 
         Write( "\n" );
         Write( "/* Begin PBXNativeTarget section */\n" );
@@ -504,7 +504,7 @@ void XCodeProjectGenerator::WriteGeneralSettings()
     Write( "\t\t%s /* Project object */ = {\n", pbxProjectGUID.Get() );
     Write( "\t\t\tisa = PBXProject;\n" );
     Write( "\t\t\tattributes = {\n" );
-    Write( "\t\t\t\tLastUpgradeCheck = 0630;\n" );
+    Write( "\t\t\t\tLastUpgradeCheck = 1020;\n" );
     WriteString( 4, "ORGANIZATIONNAME", m_XCodeOrganizationName );
     Write( "\t\t\t\tTargetAttributes = {\n" );
     Write( "\t\t\t\t\t%s = {\n", pbxNativeTargetGUID.Get() );
@@ -517,11 +517,11 @@ void XCodeProjectGenerator::WriteGeneralSettings()
     Write( "\t\t\t};\n" );
     Write( "\t\t\tbuildConfigurationList = %s /* Build configuration list for PBXProject \"%s\" */;\n", xConfigurationListGUID.Get(), m_ProjectName.Get() );
     Write( "\t\t\tcompatibilityVersion = \"Xcode 3.2\";\n" );
-    Write( "\t\t\tdevelopmentRegion = English;\n" );
+    Write( "\t\t\tdevelopmentRegion = en;\n" );
     Write( "\t\t\thasScannedForEncodings = 0;\n" );
     Write( "\t\t\tknownRegions = (\n" );
-    Write( "\t\t\t\tEnglish,\n" );
     Write( "\t\t\t\ten,\n" );
+    Write( "\t\t\t\tBase,\n" );
     Write( "\t\t\t);\n" );
     Write( "\t\t\tmainGroup = %s;\n", pbxGroupGUID.Get() );
     Write( "\t\t\tprojectDirPath = \"\";\n" );
@@ -553,7 +553,7 @@ void XCodeProjectGenerator::WritePBXSourcesBuildPhase()
     {
         const char * shortFolderName = "Sources";
 
-        Write( "\t\t\t\t1111111100000000%08x /* %s in %s */,\n",
+        Write( "\t\t\t\t1111111100000000%08u /* %s in %s */,\n",
                file->m_SortedIndex, file->m_FileName.Get(), shortFolderName );
     }
     Write( "\t\t\t);\n" );
@@ -568,6 +568,8 @@ void XCodeProjectGenerator::WritePBXSourcesBuildPhase()
 //------------------------------------------------------------------------------
 void XCodeProjectGenerator::WriteBuildConfiguration()
 {
+    const AStackString<> yesString( "YES" );
+
     Write( "\n" );
     Write( "/* Begin XCBuildConfiguration section */\n" );
 
@@ -587,10 +589,10 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         if ( debugWorkingDir.IsEmpty() )
         {
             // Fall back to the executable working dir if we can find it
-            const LinkerNode * ln = ProjectGeneratorBase::FindExecutableTarget( config.m_TargetNode );
-            if ( ln )
+            const FileNode * debugTarget = ProjectGeneratorBase::FindExecutableDebugTarget( config.m_TargetNode );
+            if ( debugTarget )
             {
-                const AString & exeName = ln->GetName();
+                const AString & exeName = debugTarget->GetName();
                 const char * lastSlash = exeName.FindLast( NATIVE_SLASH );
                 if ( lastSlash )
                 {
@@ -606,8 +608,11 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                "\t\t\tisa = XCBuildConfiguration;\n"
                "\t\t\tbuildSettings = {\n",
                xcBuildConfigurationGUID.Get(), config.m_Config.Get() );
+        WriteString( 4, "CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED", yesString );
+        WriteString( 4, "ENABLE_TESTABILITY", yesString );
         WriteString( 4, "FASTBUILD_DEBUG_WORKING_DIR", debugWorkingDir );
         WriteString( 4, "FASTBUILD_TARGET", target );
+        WriteString( 4, "ONLY_ACTIVE_ARCH", yesString );
         if ( config.m_XCodeBaseSDK.IsEmpty() == false )
         {
             WriteString( 4, "SDKROOT", config.m_XCodeBaseSDK );
@@ -630,7 +635,8 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                "\t\t\tbuildSettings = {\n",
                xcBuildConfigurationGUID.Get(), config->m_Config.Get() );
 
-        Write( "\t\t\t\tOTHER_CFLAGS = \"\";\n"
+        Write( "\t\t\t\tCLANG_ENABLE_OBJC_WEAK = YES;\n"
+               "\t\t\t\tOTHER_CFLAGS = \"\";\n"
                "\t\t\t\tOTHER_LDFLAGS = \"\";\n"
                "\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";\n"
                "\t\t\t};\n"
@@ -650,6 +656,8 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
                "\t\t\tisa = XCBuildConfiguration;\n"
                "\t\t\tbuildSettings = {\n",
                xcBuildConfigurationGUID.Get(), config->m_Config.Get() );
+
+        Write( "\t\t\t\tALWAYS_SEARCH_USER_PATHS = NO;\n" );
 
         // TODO:B Can this (and other warning settings) be derived from the compiler options automatically?
         Write( "\t\t\t\tCLANG_CXX_LANGUAGE_STANDARD = \"gnu++0x\";\n" );

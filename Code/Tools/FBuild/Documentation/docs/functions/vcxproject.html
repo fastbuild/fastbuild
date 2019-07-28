@@ -432,7 +432,9 @@ Example:
 <hr>
 
       <p><b>LocalDebuggerCommand</b> - String - (Optional)</p>
-      <p>Executable to launch when debugging.</p>
+      <p>Explicitly specify the executable to launch when debugging. The LocalDebuggerCommand property of a
+Visual Studio project is usually set automatically by FASTBuild (extracted from the .Target specified per
+build configuration), but can be explicitily set via .LocalDebuggerCommand if desired.<p>
       Example:
 <div class='code'>.LocalDebuggerCommand  = 'tmp/bin/MyExe.exe'</div>
 <hr>

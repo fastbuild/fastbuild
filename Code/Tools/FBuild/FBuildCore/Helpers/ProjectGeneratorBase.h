@@ -11,7 +11,7 @@
 // Forward Declarations
 //------------------------------------------------------------------------------'
 class Dependencies;
-class LinkerNode;
+class FileNode;
 class Node;
 class ObjectListNode;
 
@@ -57,8 +57,8 @@ public:
                                            AString & outTokenString,
                                            const char* preToken,
                                            const char* postToken );
-    static const LinkerNode * FindExecutableTarget( const Node * node );
-    static const LinkerNode * FindExecutableTarget( const Dependencies & deps );
+    static const FileNode * FindExecutableDebugTarget( const Node * node );
+    static const FileNode * FindExecutableDebugTarget( const Dependencies & deps );
 
     // Helpers
     static void GetRelativePath( const AString & projectFolderPath,

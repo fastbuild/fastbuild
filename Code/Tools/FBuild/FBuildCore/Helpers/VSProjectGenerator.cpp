@@ -220,9 +220,22 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             Write( "    <ConfigurationType>Makefile</ConfigurationType>\n" );
             Write( "    <UseDebugLibraries>false</UseDebugLibraries>\n" );
 
+            // If a specific executable is specified, use that, otherwise try to auto-derive
+            // the executable from the .Target
+            AStackString<> localDebuggerCommand( cIt->m_LocalDebuggerCommand );
+            if ( localDebuggerCommand.IsEmpty() )
+            {
+                // Get the executable path and make it project-relative
+                const Node * debugTarget = ProjectGeneratorBase::FindExecutableDebugTarget( cIt->m_TargetNode );
+                if ( debugTarget )
+                {
+                    ProjectGeneratorBase::GetRelativePath( projectBasePath, debugTarget->GetName(), localDebuggerCommand );
+                }
+            }
+
             WritePGItem( "PlatformToolset",                 cIt->m_PlatformToolset );
             WritePGItem( "LocalDebuggerCommandArguments",   cIt->m_LocalDebuggerCommandArguments );
-            WritePGItem( "LocalDebuggerCommand",            cIt->m_LocalDebuggerCommand );
+            WritePGItem( "LocalDebuggerCommand",            localDebuggerCommand );
             WritePGItem( "LocalDebuggerEnvironment",        cIt->m_LocalDebuggerEnvironment );
 
             Write( "  </PropertyGroup>\n" );
