@@ -1563,6 +1563,14 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 {
                     continue; // skip this token in both cases
                 }
+                if (StripTokenWithArg("-MF", token, i))
+                {
+                    continue; // skip this token in both cases
+                }
+                if (StripTokenWithArg("-MD", token, i))
+                {
+                    continue; // skip this token in both cases
+                }
             }
             if ( isGCC || isClang || isVBCC || isOrbisWavePsslc )
             {
