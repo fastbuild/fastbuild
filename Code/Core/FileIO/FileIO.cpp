@@ -24,6 +24,7 @@
     #include <libgen.h>
     #include <limits.h>
     #include <stdio.h>
+    #include <string.h>
     #include <sys/stat.h>
     #include <unistd.h>
 #endif
@@ -222,6 +223,20 @@
             return false;
         }
         linkPath.SetLength( length );
+
+        if (linkPath.Get()[0] != '/' )
+        {
+            // Convert linkPath to a full path in case the relative path
+            // is wrong from dstFileName
+            if ( srcFileName[0] != '/' )
+            {
+                return false;
+            }
+            const char *pLastSlash = strrchr(srcFileName, '/');
+            const size_t lenSrcPath = (pLastSlash - srcFileName) + 1;
+            linkPath.Format("%.*s%s", (int)lenSrcPath, srcFileName, linkPath.Get());
+        }
+
         return symlink( linkPath.Get(), dstFileName ) == 0;
     }
 
