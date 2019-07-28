@@ -83,9 +83,16 @@ FunctionPrint::FunctionPrint()
         {
             // find end of pattern
             BFFIterator stop( start );
-            stop.SkipString( c );
-            ASSERT( stop.GetCurrent() < functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
-        
+            do
+            {
+              stop++;
+            } while ( stop.GetCurrent() < functionHeaderStopToken->GetCurrent() && *stop != c );
+            if ( stop.GetCurrent() == functionHeaderStopToken->GetCurrent() )
+            {
+              Error::Error_1002_MatchingClosingTokenNotFound( start, nullptr, c );
+              return false;
+            }
+
             // perform variable substitutions
             AStackString< 1024 > pat;
         
