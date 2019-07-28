@@ -150,7 +150,7 @@ void TestFileIO::FileCopySymlink() const
         // by the file copy API.  Also on Windows, it would make unit
         // tests require administrator privileges.
     #elif defined ( __LINUX__ )
-        AStackString<> symlinkTarget( "symlink" );
+        AStackString<> symlinkTarget( "/symlink" );
 
         // generate a process unique file path
         AStackString<> path;
