@@ -26,7 +26,8 @@ protected:
                                 const BFFIterator * functionHeaderStartToken,
                                 const BFFIterator * functionHeaderStopToken ) const override;
 
-    static void PrintVarRecurse( const BFFVariable & var, uint32_t indent );
+    static void PrintVarRecurse( const BFFVariable& var, uint32_t indent, uint32_t maxIndent );
+    static void PrintStackVars( const AString &pattern, bool iterateParents, bool expandStructs );
 };
 
 //------------------------------------------------------------------------------
