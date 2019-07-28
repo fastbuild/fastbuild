@@ -280,16 +280,17 @@ FunctionPrint::FunctionPrint()
             pFrame = pFrame->GetParent();
         } while ( pFrame != nullptr && iterateParents );
     }
-    const int iNumFrames = static_cast<int>(aFrames.GetSize());
+    const uint32_t iNumFrames = static_cast<uint32_t>(aFrames.GetSize());
 
-    const int iMaxDepth = shouldRecurse ? 0xFFFFFFFF : 0;
+    const uint32_t iMaxDepth = shouldRecurse ? 0xFFFFFFFF : 0;
     const bool bPatternMatchesAll = (pattern == "*");
-    for ( int iFrame = iNumFrames - 1; iFrame >= 0; --iFrame )
+    for ( uint32_t iFrame = iNumFrames; iFrame > 0; )
     {
+        --iFrame;
         const BFFStackFrame* const pFrame = aFrames[ iFrame ];
-        const int iDepth = iNumFrames - iFrame - 1;
+        const uint32_t iDepth = iNumFrames - iFrame - 1;
         const Array< const BFFVariable* >& rVariablesInFrame = pFrame->GetLocalVariables();
-        for ( int iVar = 0; iVar < rVariablesInFrame.GetSize(); ++iVar )
+        for ( size_t iVar = 0; iVar < rVariablesInFrame.GetSize(); ++iVar )
         {
             const BFFVariable* const pVar = rVariablesInFrame[ iVar ];
             if ( bPatternMatchesAll || pVar->GetName().Matches( pattern.Get() ) )
