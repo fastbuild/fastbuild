@@ -37,6 +37,7 @@ class RemoveDirNode;
 class SettingsNode;
 class SLNNode;
 class TestNode;
+class TextFileNode;
 class UnityNode;
 class VCXProjectNode;
 class XCodeProjectNode;
@@ -122,6 +123,7 @@ public:
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
     SettingsNode * CreateSettingsNode( const AString & name );
+    TextFileNode * CreateTextFileNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );
 

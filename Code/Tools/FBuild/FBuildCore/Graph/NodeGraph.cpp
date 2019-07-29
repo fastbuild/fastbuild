@@ -29,6 +29,7 @@
 #include "SettingsNode.h"
 #include "SLNNode.h"
 #include "TestNode.h"
+#include "TextFileNode.h"
 #include "UnityNode.h"
 #include "VCXProjectNode.h"
 #include "XCodeProjectNode.h"
@@ -977,6 +978,19 @@ SettingsNode * NodeGraph::CreateSettingsNode( const AString & name )
     node->SetName( name );
     AddNode( node );
     return node;
+}
+
+// CreateTextFileNode
+//------------------------------------------------------------------------------
+TextFileNode* NodeGraph::CreateTextFileNode( const AString& nodeName )
+{
+  ASSERT( Thread::IsMainThread() );
+  ASSERT( IsCleanPath( nodeName ) );
+
+  TextFileNode* node = FNEW( TextFileNode() );
+  node->SetName( nodeName );
+  AddNode( node );
+  return node;
 }
 
 // AddNode

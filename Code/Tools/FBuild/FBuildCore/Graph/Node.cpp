@@ -26,6 +26,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/RemoveDirNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/TextFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
@@ -79,6 +80,7 @@
     "RemoveDir",
     "XCodeProj",
     "Settings",
+    "TextFile",
 };
 static Mutex g_NodeEnvStringMutex;
 
@@ -375,6 +377,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         case Node::REMOVE_DIR_NODE:     return nodeGraph.CreateRemoveDirNode( name );
         case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
         case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
+        case Node::TEXT_FILE_NODE:      return nodeGraph.CreateTextFileNode( name );
         case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
     }
 
