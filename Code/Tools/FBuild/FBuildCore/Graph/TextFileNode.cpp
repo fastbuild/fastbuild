@@ -76,35 +76,6 @@ TextFileNode::~TextFileNode() = default;
         return true;
     }
     return Node::DetermineNeedToBuild( forceClean );
-
-    //if ( Node::DetermineNeedToBuild( forceClean ) )
-    //{
-    //    return true;
-    //}
-
-    //// The file should exist if we get here
-    //FILE *F = fopen( GetName().Get(), "r" );
-    //ASSERT(F != nullptr);
-    //if ( !F )
-    //{
-    //    return true;
-    //}
-
-    //// See if the contents have changed
-    //char line[4096];
-    //AStackString< 4096 > contentsOnDisk;
-    //while ( fgets( line, sizeof( line ) - 1, F ) > 0 )
-    //{
-    //  contentsOnDisk += line;
-    //}
-
-    //fclose(F);
-
-    //if ( contentsOnDisk != m_TextFileContents )
-    //{
-    //  return true;
-    //}
-    //return false;
 }
 
 // DoBuild
