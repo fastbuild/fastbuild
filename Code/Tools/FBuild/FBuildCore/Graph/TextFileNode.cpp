@@ -84,22 +84,22 @@ TextFileNode::~TextFileNode() = default;
 {
     EmitCompilationMessage();
 
-    // Generate the file contents for comparing with later
+    // Generate the file contents
     size_t totalSize = 1;
     for ( size_t i = 0; i < m_TextFileInputStrings.GetSize(); ++i )
     {
       totalSize += m_TextFileInputStrings[ i ].GetLength() + 1;
     }
-    m_TextFileContents.Clear();
-    m_TextFileContents.SetReserved( totalSize );
+    AStackString<4096> textFileContents;
+    textFileContents.SetReserved( totalSize );
     for ( size_t i = 0; i < m_TextFileInputStrings.GetSize(); ++i )
     {
-      m_TextFileContents += m_TextFileInputStrings[ i ];
+      textFileContents += m_TextFileInputStrings[ i ];
       // It's not always safe to include a \r, such as when generating a shell script
 #if defined( __WINDOWS__ )
-      m_TextFileContents += "\r\n";
+      textFileContents += "\r\n";
 #else
-      m_TextFileContents += '\n';
+      textFileContents += '\n';
 #endif
     }
 
@@ -109,10 +109,10 @@ TextFileNode::~TextFileNode() = default;
       FLOG_ERROR( "Could not open '%s' for writing", GetName().Get() );
       return NODE_RESULT_FAILED;
     }
-    uint64_t nWritten = stream.WriteBuffer( m_TextFileContents.Get(), m_TextFileContents.GetLength() );
+    uint64_t nWritten = stream.WriteBuffer( textFileContents.Get(), textFileContents.GetLength() );
     stream.Close();
 
-    if ( nWritten != m_TextFileContents.GetLength() )
+    if ( nWritten != textFileContents.GetLength() )
     {
       FLOG_ERROR( "Failed to write all to '%s'", GetName().Get() );
       return NODE_RESULT_FAILED;

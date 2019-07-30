@@ -27,10 +27,6 @@ private:
     virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
-    // const FileNode * GetTextFileutable() const { return m_StaticDependencies[0].GetNode()->CastTo< FileNode >(); }
-    // void GetFullArgs(AString & fullArgs) const;
-    // void GetInputFiles(AString & fullArgs, const AString & pre, const AString & post) const;
-
     void EmitCompilationMessage() const;
 
     // Exposed Properties
@@ -38,10 +34,6 @@ private:
     Array< AString >    m_TextFileInputStrings;
     bool                m_TextFileAlways;
     Array< AString >    m_PreBuildDependencyNames;
-
-    // Internal State
-    AString             m_TextFileContents;
-    // uint32_t            m_NumTextFileInputFiles;
 };
 
 //------------------------------------------------------------------------------
