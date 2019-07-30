@@ -47,9 +47,16 @@ public:
     // Intellisense Helpers
     static const ObjectListNode * FindTargetForIntellisenseInfo( const Node * node );
     static const ObjectListNode * FindTargetForIntellisenseInfo( const Dependencies & deps );
+    static void ExtractIncludePaths( const AString & compilerArgs,
+                                     Array< AString > & outIncludes,
+                                     bool escapeQuotes );
+    static void ExtractDefines( const AString & compilerArgs,
+                                Array< AString > & outDefines,
+                                bool escapeQuotes );
+    static void ExtractAdditionalOptions( const AString & compilerArgs,
+                                          Array< AString > & outOptions );
     static void ExtractIntellisenseOptions( const AString & compilerArgs,
-                                            const char * option,
-                                            const char * alternateOption,
+                                            const Array< AString > & prefixes,
                                             Array< AString > & outOptions,
                                             bool escapeQuotes,
                                             bool keepFullOption );

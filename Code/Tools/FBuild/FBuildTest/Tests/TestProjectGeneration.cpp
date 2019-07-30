@@ -444,6 +444,19 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( token.Find( "Intellisense\\Include\\Quoted\\Space\\Path" ) );
             TEST_ASSERT( token.Find( "Intellisense\\Include\\Quoted\\Slash\\Path" ) );
             TEST_ASSERT( token.Find( "Intellisense\\Include\\Quoted\\Slash\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemInclude\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemInclude\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemInclude\\Quoted\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemInclude\\Quoted\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemAfterInclude\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemAfterInclude\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemAfterInclude\\Quoted\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemAfterInclude\\Quoted\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\QuoteInclude\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\QuoteInclude\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\QuoteInclude\\Quoted\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\QuoteInclude\\Quoted\\Space\\Path" ) );
+
             includesOk = true;
         }
         else if ( token.Find( "AdditionalOptions" ) )
@@ -474,9 +487,9 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
 
     // Check
     const size_t NUM_DEFINES = 8;
-    bool definesOk[ NUM_DEFINES ] = { false, false, false, false, false, false, false, false };
-    const size_t NUM_INCLUDES = 8;
-    bool includesOk[ NUM_INCLUDES ] = { false, false, false, false, false, false, false, false };
+    bool definesOk[ NUM_DEFINES ] = {};
+    const size_t NUM_INCLUDES = 20;
+    bool includesOk[ NUM_INCLUDES ] = {};
     bool inDefineSection = false;
     bool inIncludeSection = false;
     for ( const AString & token : tokens )
@@ -530,6 +543,19 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
             if ( token.Find( "Intellisense/Include/Quoted/Space/Path" ) )       { includesOk[ 5 ] = true; }
             if ( token.Find( "Intellisense/Include/Quoted/Slash/Path" ) )       { includesOk[ 6 ] = true; }
             if ( token.Find( "Intellisense/Include/Quoted/Slash/Space/Path" ) ) { includesOk[ 7 ] = true; }
+            if ( token.Find( "Intellisense/SystemInclude/Path" ) )              { includesOk[ 8 ] = true; }
+            if ( token.Find( "Intellisense/SystemInclude/Space/Path" ) )        { includesOk[ 9 ] = true; }
+            if ( token.Find( "Intellisense/SystemInclude/Quoted/Path" ) )       { includesOk[ 10 ] = true; }
+            if ( token.Find( "Intellisense/SystemInclude/Quoted/Space/Path" ) ) { includesOk[ 11 ] = true; }
+            if ( token.Find( "Intellisense/SystemAfterInclude/Path" ) )         { includesOk[ 12 ] = true; }
+            if ( token.Find( "Intellisense/SystemAfterInclude/Space/Path" ) )   { includesOk[ 13 ] = true; }
+            if ( token.Find( "Intellisense/SystemAfterInclude/Quoted/Path" ) )  { includesOk[ 14 ] = true; }
+            if ( token.Find( "Intellisense/SystemAfterInclude/Quoted/Space/Path" ) ) { includesOk[ 15 ] = true; }
+            if ( token.Find( "Intellisense/QuoteInclude/Path" ) )               { includesOk[ 16 ] = true; }
+            if ( token.Find( "Intellisense/QuoteInclude/Space/Path" ) )         { includesOk[ 17 ] = true; }
+            if ( token.Find( "Intellisense/QuoteInclude/Quoted/Path" ) )        { includesOk[ 18 ] = true; }
+            if ( token.Find( "Intellisense/QuoteInclude/Quoted/Space/Path" ) )  { includesOk[ 19 ] = true; }
+
             continue;
         }
     }
