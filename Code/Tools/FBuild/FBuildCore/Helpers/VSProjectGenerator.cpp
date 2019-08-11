@@ -208,6 +208,22 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     WritePGItem( "ApplicationEnvironment", m_ApplicationEnvironment );
     Write( "  </PropertyGroup>\n" );
 
+    // Per-config Globals
+    for ( const VSProjectConfig & config : configs )
+    {
+        const bool needSection = ( config.m_Keyword.IsEmpty() == false ) ||
+                                 ( config.m_ApplicationType.IsEmpty() == false ) ||
+                                 ( config.m_ApplicationTypeRevision.IsEmpty() == false );
+        if ( needSection )
+        {
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Globals\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WritePGItem( "Keyword", config.m_Keyword );
+            WritePGItem( "ApplicationType", config.m_ApplicationType );
+            WritePGItem( "ApplicationTypeRevision", config.m_ApplicationTypeRevision );
+            Write( "  </PropertyGroup>\n" );
+        }
+    }
+
     // Default props
     Write( "  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />\n" );
 
@@ -342,6 +358,8 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "LocalDebuggerWorkingDirectory",   cIt->m_LocalDebuggerWorkingDirectory );
             WritePGItem( "IntDir",                          cIt->m_IntermediateDirectory );
             WritePGItem( "OutDir",                          cIt->m_OutputDirectory );
+            WritePGItem( "PackagePath",                     cIt->m_PackagePath );
+            WritePGItem( "AdditionalSymbolSearchPaths",     cIt->m_AdditionalSymbolSearchPaths );
             WritePGItem( "LayoutDir",                       cIt->m_LayoutDir );
             WritePGItem( "LayoutExtensionFilter",           cIt->m_LayoutExtensionFilter );
             Write( "  </PropertyGroup>\n" );

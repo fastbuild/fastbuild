@@ -48,6 +48,11 @@ public:
     AString             m_LocalDebuggerWorkingDirectory;
     AString             m_LocalDebuggerCommand;
     AString             m_LocalDebuggerEnvironment;
+    AString             m_Keyword;
+    AString             m_ApplicationType;
+    AString             m_ApplicationTypeRevision;
+    AString             m_PackagePath;
+    AString             m_AdditionalSymbolSearchPaths;
 };
 
 // VSProjectConfig
