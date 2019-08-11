@@ -36,9 +36,12 @@ VSSolution
 XCodeProject
 
 AdditionalOptions
+AdditionalSymbolSearchPaths
 AllowCaching
 AllowDistribution
 ApplicationEnvironment
+ApplicationType
+ApplicationTypeRevision
 AssemblySearchPath
 AumidOverride
 BaseProjectConfig
@@ -109,6 +112,7 @@ ForcedUsingAssemblies
 Hidden
 IncludeSearchPath
 IntermediateDirectory
+Keyword
 LayoutDir
 LayoutExtensionFilter
 Librarian
@@ -134,6 +138,7 @@ PCHInputFile
 PCHObjectFileName
 PCHOptions
 PCHOutputFile
+PackagePath
 Path
 Pattern
 Patterns
@@ -218,8 +223,13 @@ UseLightCache_Experimental
 VS2012EnumBugFix
 WorkerConnectionLimit
 Workers
+XCodeBaseSDK
 XCodeBuildToolArgs
 XCodeBuildToolPath
 XCodeBuildWorkingDir
+XCodeCommandLineArguments
+XCodeCommandLineArgumentsDisabled
+XCodeDebugWorkingDir
+XCodeDocumentVersioning
 XCodeOrganizationName
 Xbox360DebuggerCommand

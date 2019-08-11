@@ -26,11 +26,6 @@
 
 <h1>XCodeProject</h1>
 
-    <div class='newsitembody'>
-  	  <p><font color='red'>NOTE:</font> XCodeProject generation is in Beta. Syntax may be changed in future versions as the capabilities are extended.</p>
-    </div>
-
-
     <div id='unity' class='newsitemheader'>
       Summary
     </div>
@@ -56,18 +51,25 @@
   .XCodeBuildToolArgs            // (optional) Args to pass to FASTBuild
   .XCodeBuildWorkingDir          // (optional) Working dir to set when invoking FASTBuild
 
-  // Project Configurations
-  .ProjectConfigs                // Project configurations (see below)
+  // Debugging Options
+  .XCodeDocumentVersioning       // (optional) Enable "Document Versioning" (default: false)
+  .XCodeCommandLineArguments     // (optional) Enabled command line options for debug target
+  .XCodeCommandLineArgumentsDiabled // (optional) Disabled command line options for debug target
 
   // Other Options
   .XCodeOrganizationName         // (optional) Organization name to set in project
+
+  // Project Configurations
+  .ProjectConfigs                // Project configurations (see below)
 }
 
 // ProjectConfigs - structs in the following format
 //--------------------------------------------------
 [
   .Config                        // Config to add to project (e.g. "Debug", "Release" etc)
-  .Target                        // FASTBuild compilation target to associate with .Config
+  .Target                        // (optional) FASTBuild compilation target to associate with .Config
+  .XCodeBaseSDK                  // (optional) SDK for compilation target (e.g. "iphoneos", "macosx" )
+  .XCodeDebugWorkingDir          // (optional) Working dir for target when debugging
 ]
 </div>
     </div>
@@ -242,23 +244,6 @@
     </div>
 
 	<!-- 
-		Project Configurations
-	-->
-    <div id='unity' class='newsitemheader'>
-      Project Configurations
-    </div>
-    <div class='newsitembody'>
-      
-      <p><b>.ProjectConfigs</b> - Array of ProjectConfig Structure(s) - (Required)</p>
-      <p>One or more build configuration must be specified. The .Target specifies which target 
-	  FASTBuild will compile for a given .Config.</p>
-      Example:
-      <div class='code'>.DebugConfig   = [ .Config = 'Debug'   .Target = 'Lib-OSX-Debug' ]
-.ReleaseConfig = [ .Config = 'Release' .Target = 'Lib-OSX-Release' ]
-.ProjectConfigs = { .DebugConfig, .ReleaseConfig }</div>
-    </div>
-
-	<!-- 
 		Other Options
 	-->
     <div id='unity' class='newsitemheader'>
@@ -273,7 +258,53 @@
 	  If not specified, the default will be used:
       <div class='code'>.XCodeOrganizationName = 'Organization'</div>
     </div>
-    
+
+	<!-- 
+		Project Configurations
+	-->
+    <div id='unity' class='newsitemheader'>
+      Project Configurations
+    </div>
+    <div class='newsitembody'>
+      
+      <p><b>.ProjectConfigs</b> - Array of ProjectConfig Structure(s) - (Required)</p>
+      <p>One or more build configuration must be specified. Each configuration can be selected
+      in the XCode UI and the various properties specify how to generare configuration info
+      for XCode.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ ... ] // See below for options
+.ReleaseConfig = [ ... ] // See below for options
+.ProjectConfigs = [ .DebugConfig, .ReleaseConfig ]</div>
+
+      <hr>
+      <p><b>.Config</b> - String - (Required)</p>
+      <p>The name of the build configuration. This will be displayed in various places in the XCodeUI.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .Config = 'Debug' ...</div>
+
+      <hr>
+      <p><b>.Target</b> - String - (Required)</p>
+      <p>The target defined in the .bff which should be compiled for this configuration.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .Target = 'MyApp-OSX-Debug' ...</div>
+
+      <hr>
+      <p><b>.XCodeBaseSDK</b> - String - (Optional)</p>
+      <p>The SDK associate with the target. This controls the options available for launching an
+      executable for debugging and must be specified if the target is not 'macosx'.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .XCodeBaseSDK = 'iphoneos' ...</div>
+
+      <hr>
+      <p><b>.XCodeDebugWorkingDir</b> - String - (Optional)</p>
+      <p>The working directory to be used when debugging this build configuration. If not specified,
+      the path to the exectuable created by .Target will be used.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .XCodeDebugWorkingDir = 'path/path' ...</div>
+
+
+    </div>
+
     </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
 </body>
 </html>

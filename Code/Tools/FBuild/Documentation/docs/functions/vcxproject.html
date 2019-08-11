@@ -114,6 +114,11 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
 .Xbox360DebuggerCommand         // (optional) Debugger command for Xbox360 only.
 .DebuggerFlavor                 // (optional) Debugger flavor.
 .AumidOverride                  // (optional) Aumid override (for XboxOne).
+.Keyword,                       // (optional) Keyword
+.ApplicationType,               // (optional) Application type
+.ApplicationTypeRevision,       // (optional) Application type revision
+.PackagePath,                   // (optional) Path to package to debug
+.AdditionalSymbolSearchPaths,   // (optional) Additional symbol search paths for debugging
 
 // Misc
 .PlatformToolset                // (optional) Specify PlatformToolset.
@@ -469,6 +474,26 @@ build configuration), but can be explicitily set via .LocalDebuggerCommand if de
 
       <p><b>AumidOverride</b> - String - (Optional)</p>
       <p>Aumid override (for XboxOne).</p>
+<hr>
+
+      <p><b>Keyword</b> - String - (Optional)</p>
+      <p>Keyword e.g. 'Android'</p>
+
+<hr>
+      <p><b>ApplicationType</b> - String - (Optional)</p>
+      <p>ApplicationType e.g. 'Android'</p>
+
+<hr>
+      <p><b>ApplicationTypeRevision</b> - String - (Optional)</p>
+      <p>ApplicationType e.g. '3.0'</p>
+
+<hr>
+      <p><b>PackagePath</b> - String - (Optional)</p>
+      <p>Path to the package to be used for debugging.</p>
+
+<hr>
+      <p><b>AdditionalSymbolSearchPaths</b> - String - (Optional)</p>
+      <p>Path to additional symbols to be used when debugging.</p>
 <hr>
 
       <p><b>PlatformToolset</b> - String - (Optional)</p>
