@@ -73,6 +73,7 @@ CompilerOutputKeepBaseExtension
 CompilerOutputPath
 CompilerOutputPrefix
 CompilerReferences
+Condition
 Config
 CustomEnvironmentVariables
 DebuggerFlavor
@@ -148,6 +149,7 @@ PreBuildDependencies
 Preprocessor
 PreprocessorDefinitions
 PreprocessorOptions
+Project
 ProjectAllowedFileExtensions
 ProjectBasePath
 ProjectBuildCommand
@@ -161,6 +163,7 @@ ProjectInputPaths
 ProjectInputPathsExclude
 ProjectOutput
 ProjectPatternToExclude
+ProjectProjectImports
 ProjectProjectReferences
 ProjectRebuildCommand
 ProjectReferences

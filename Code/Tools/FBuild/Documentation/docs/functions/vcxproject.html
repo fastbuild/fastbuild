@@ -53,6 +53,9 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
   // Reference Options
   .ProjectReferences              // (optional) References to assemblies (e.g "System.Core")
   .ProjectProjectReferences       // (optional) References to projects (e.g. "myproj.csproj|{guid}")
+
+  // Project Import Options
+  .ProjectProjectImports          // (optional) Array of ProjectImports, see below for details
 								  
   // Other Options
   .RootNamespace                  // (optional) Set RootNamespace for project
@@ -70,6 +73,14 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
 [
   .FileType                       // FileType to use (e.g. "CppForm")
   .Pattern                        // Pattern of files to apply to (e.g. "*\\Forms\\*.h")
+]
+
+// ProjectProjectImports - structs in the following format
+//-------------------------------------------------
+.ProjectImport =
+[
+  .Condition                      // Condition for import
+  .Project                        // Path to file to import
 ]
 
 // ProjectConfigs - structs in the following format
@@ -295,6 +306,33 @@ Example:
                               'myproj2.csproj|{ffceb8c4-bc26-4932-ddb6-ff7cf4dd72a5}'
                             }</div>
 </div>
+
+
+
+<div class='newsitemheader'>Project Import Options</div>
+<div class='newsitembody'>
+
+      <p><b>.ProjectProjectImports</b> - ArrayOfStructs - (Optional)</p>
+      <p>Additional .targets files can be imported into a Visual Studio project. This can be useful
+      for better integration/debugging of non-native architectures.</p>
+      Example:
+<div class='code'>.ProjectImport          = [
+                            .Condition = "'$(ConfigurationType)' == 'Makefile'"
+                            .Project = "$(VCTargetsPath)\Platforms\$(Platform)\Custom.Makefile.targets"
+                          ]
+.ProjectProjectImports  = { .ProjectImport }</div>
+      NOTE: By default, the following project imports are active.
+<div class='code'>.ProjectImportPS4       = [
+                            .Condition = "'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets')"
+                            .Project = "$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets"
+                          ]
+.ProjectImportAndroid   = [
+                            .Condition = "'$(ConfigurationType)' == 'Makefile' and '$(AndroidAPILevel)' != '' and Exists('$(VCTargetsPath)\Application Type\$(ApplicationType)\$(ApplicationTypeRevision)\Android.Common.targets')"
+                            .Project = "$(VCTargetsPath)\Application Type\$(ApplicationType)\$(ApplicationTypeRevision)\Android.Common.targets"
+                          ]
+.ProjectProjectImports  = { .ProjectImportPS4, .ProjectImportAndroid }</div>
+</div>
+
 
 <div class='newsitemheader'>Other Options</div>
 <div class='newsitembody'>

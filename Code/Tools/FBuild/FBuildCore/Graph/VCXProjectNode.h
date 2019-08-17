@@ -89,6 +89,16 @@ public:
     AString             m_Pattern;  // e.g. "Code\Forms\*.h" (can be full filename also)
 };
 
+// VSProjectImport
+//------------------------------------------------------------------------------
+class VSProjectImport : public Struct
+{
+    REFLECT_STRUCT_DECLARE( VSProjectImport )
+public:
+    AString             m_Condition;    // e.g. "'$(ConfigurationType)' == 'Makefile'"
+    AString             m_Project;      // e.g. "$(VCTargetsPath)\\Platforms\\$(Platform)\\SCE.Makefile.$(Platform).targets"
+};
+
 // VCXProjectNode
 //------------------------------------------------------------------------------
 class VCXProjectNode : public FileNode
@@ -131,6 +141,8 @@ private:
 
     Array< AString >    m_ProjectReferences;
     Array< AString >    m_ProjectProjectReferences;
+
+    Array< VSProjectImport > m_ProjectProjectImports;
 };
 
 //------------------------------------------------------------------------------

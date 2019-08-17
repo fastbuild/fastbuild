@@ -94,7 +94,8 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files )
 //------------------------------------------------------------------------------
 const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile,
                                                      const Array< VSProjectConfig > & configs,
-                                                     const Array< VSProjectFileType > & fileTypes )
+                                                     const Array< VSProjectFileType > & fileTypes,
+                                                     const Array< VSProjectImport > & projectImports )
 {
     ASSERT( !m_ProjectGuid.IsEmpty() );
 
@@ -397,7 +398,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     Write("  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />\n" );
     Write("  <ImportGroup Label=\"ExtensionTargets\">\n" );
     Write("  </ImportGroup>\n" );
-    Write("  <Import Condition=\"'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\\Platforms\\$(Platform)\\SCE.Makefile.$(Platform).targets')\" Project=\"$(VCTargetsPath)\\Platforms\\$(Platform)\\SCE.Makefile.$(Platform).targets\" />\n");
+    for ( const VSProjectImport & import : projectImports )
+    {
+        WriteF( "  <Import Condition=\"%s\" Project=\"%s\" />\n", import.m_Condition.Get(), import.m_Project.Get() );
+    }
     Write( "</Project>" ); // carriage return at end
 
     m_OutputVCXProj = m_Tmp;
