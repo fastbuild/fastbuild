@@ -351,7 +351,9 @@ static bool IsStdOutRedirectedInternal()
 
 // AllocEnvironmentString
 //------------------------------------------------------------------------------
-/*static*/ const char * Env::AllocEnvironmentString( const Array< AString > & environment )
+/*static*/ const char * Env::AllocEnvironmentString(
+    const char * baseEnv,
+    const Array< AString > & environment )
 {
     size_t len = 0;
     const size_t numEnvVars = environment.GetSize();
@@ -359,6 +361,17 @@ static bool IsStdOutRedirectedInternal()
     {
         len += environment[i].GetLength() + 1;
     }
+    size_t baseEnvLen = 0;
+    for (;;)
+    {
+        size_t lastLen = AString::StrLen( baseEnv + baseEnvLen );
+        if( lastLen == 0 )
+        {
+            break;
+        }
+        baseEnvLen += lastLen + 1;
+    }
+    len += baseEnvLen;
     len += 1; // for double null
 
     // Now that the environment string length is calculated, allocate and fill.
@@ -366,10 +379,12 @@ static bool IsStdOutRedirectedInternal()
     const char * environmentString = mem;
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
-        const AString & envVar = environment[i];
+        const AString & envVar = environment[ i ];
         AString::Copy( envVar.Get(), mem, envVar.GetLength() + 1 );
         mem += ( envVar.GetLength() + 1 );
     }
+    AString::Copy( baseEnv, mem, baseEnvLen );
+    mem += baseEnvLen;
     *mem = 0;
 
     return environmentString;
