@@ -46,6 +46,7 @@ REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
 
     // Internal State
     REFLECT(       m_NumTestInputFiles,          "NumTestInputFiles",          MetaHidden() )
+    REFLECT_STRUCT( m_Manifest,         "Manifest", ToolManifest, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( TestNode )
 
 // CONSTRUCTOR
@@ -473,6 +474,17 @@ void TestNode::EmitCompilationMessage(
     return FNEW( TestNode( name, testExecutable, testArguments,
         testWorkingDir, testTimeOut, testAlwaysShowOutput,
         allowDistribution, deleteRemoteFilesWhenDone ) );
+}
+
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void TestNode::Migrate( const Node & oldNode )
+{
+    // Migrate Node level properties
+    Node::Migrate( oldNode );
+
+    // Migrate the timestamp/hash info stored for the files in the ToolManifest
+    m_Manifest.Migrate( oldNode.CastTo<TestNode>()->GetManifest() );
 }
 
 //------------------------------------------------------------------------------

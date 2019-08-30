@@ -42,6 +42,7 @@ private:
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
     Node::BuildResult DoBuildCommon( Job * job,
         bool stealingRemoteJob, bool racingRemoteJob);
+    virtual void Migrate( const Node & oldNode ) override;
 
     void EmitCompilationMessage( bool stealingRemoteJob, bool racingRemoteJob,
         bool isRemote, const AString & workingDir, const AString & testExe ) const;
