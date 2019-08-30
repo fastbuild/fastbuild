@@ -665,7 +665,7 @@ void FBuild::CoerceEnvironment( const AString & obfuscatedSandboxTmp )
                 ++envVarSize;  // add one for null separator
                 p += envVarSize;
                 // skip TMP= in the base env, so we can use the sandbox tmp below
-                if ( !envVar.Find( "TMP=" ) )
+                if ( !envVar.FindI( "TMP=" ) )
                 {
                     baseEnvSize += envVarSize;
                     baseEnvVars.Append ( envVar );
