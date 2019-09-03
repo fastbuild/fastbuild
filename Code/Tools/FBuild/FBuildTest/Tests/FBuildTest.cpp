@@ -239,6 +239,13 @@ void FBuildForTest::GetNodesOfType( Node::Type type, Array<const Node *> & outNo
     }
 }
 
+// GetNode
+//------------------------------------------------------------------------------
+const Node * FBuildForTest::GetNode( const char * nodeName ) const
+{
+    return m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+}
+
 // SerializeDepGraphToText
 //------------------------------------------------------------------------------
 void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString& outBuffer ) const
