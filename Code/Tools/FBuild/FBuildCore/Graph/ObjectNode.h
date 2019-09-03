@@ -32,6 +32,7 @@ public:
     explicit ObjectNode( const AString & objectName,
                          NodeProxy * srcFile,
                          const AString & compilerOptions,
+                         const Array< AString > & customEnvironmentVariables,
                          uint32_t flags );
     virtual ~ObjectNode() override;
 
@@ -172,7 +173,8 @@ private:
             const AString & workingDir,
             const CompilerNode * compilerNode,
             const AString & compiler,
-            const Args & fullArgs );
+            const Args & fullArgs,
+            const Array< AString > & customEnvironmentVariables );
 
         // determine overall result
         inline int                      GetResult() const { return m_Result; }
@@ -217,6 +219,7 @@ private:
     uint32_t            m_PreprocessorFlags                 = 0;
     uint64_t            m_PCHCacheKey                       = 0;
     uint64_t            m_LightCacheKey                     = 0;
+    Array< AString >    m_CustomEnvironmentVariables;
 
     // Not serialized
     Array< AString >   m_Includes;

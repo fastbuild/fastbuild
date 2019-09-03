@@ -49,7 +49,7 @@ private:
 
     // Internal State
     uint32_t         m_NumTestInputFiles;
-    Tags             m_RequiredWorkerTags;
+    mutable Tags     m_RequiredWorkerTags;
 };
 
 //------------------------------------------------------------------------------

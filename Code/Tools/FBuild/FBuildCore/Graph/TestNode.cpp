@@ -162,6 +162,11 @@ TestNode::~TestNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ const Tags & TestNode::GetRequiredWorkerTags() const
 {
+    if ( m_RequiredWorkerTags.IsEmpty() )
+    {
+        // get the tags from the strings
+        m_RequiredWorkerTags.ParseAndAddTags( m_RequiredWorkerTagStrings );
+    }
     return m_RequiredWorkerTags;
 }
 

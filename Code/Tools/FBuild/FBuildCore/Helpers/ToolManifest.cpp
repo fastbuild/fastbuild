@@ -31,7 +31,6 @@ REFLECT_STRUCT_BEGIN( ToolManifest, Struct, MetaNone() )
     REFLECT(        m_TimeStamp,                    "TimeStamp",                    MetaHidden() )
     REFLECT(        m_MainExecutableRootPath,       "MainExecutableRootPath",       MetaHidden() )
     REFLECT_ARRAY_OF_STRUCT( m_Files,               "Files",    ToolManifestFile,   MetaHidden() )
-    REFLECT_ARRAY(  m_CustomEnvironmentVariables,   "CustomEnvironmentVariables",   MetaHidden() )
 REFLECT_END( ToolManifest )
 
 REFLECT_STRUCT_BEGIN( ToolManifestFile, Struct, MetaNone() )
@@ -70,7 +69,8 @@ ToolManifest::ToolManifest()
     , m_TimeStamp( 0 )
     , m_Files( 0, true )
     , m_Synchronized( false )
-    , m_RemoteEnvironmentString( nullptr )
+    , m_RemoteBaseEnvString( nullptr )
+    , m_RemoteBaseEnvStringSize( 0 )
     , m_UserData( nullptr )
 {
 }
@@ -82,7 +82,8 @@ ToolManifest::ToolManifest( uint64_t toolId )
     , m_TimeStamp( 0 )
     , m_Files( 0, true )
     , m_Synchronized( false )
-    , m_RemoteEnvironmentString( nullptr )
+    , m_RemoteBaseEnvString( nullptr )
+    , m_RemoteBaseEnvStringSize( 0 )
     , m_UserData( nullptr )
 {
 }
@@ -91,7 +92,7 @@ ToolManifest::ToolManifest( uint64_t toolId )
 //------------------------------------------------------------------------------
 ToolManifest::~ToolManifest()
 {
-    FREE( (void *)m_RemoteEnvironmentString );
+    FREE( (void *)m_RemoteBaseEnvString );
 }
 
 // StoreCompressedContent (ToolManifestFile)
@@ -115,7 +116,7 @@ bool ToolManifestFile::DoBuild()
 
     // Should not have any file data in memory
     ASSERT( m_CompressedContent == nullptr );
-    ASSERT( m_CompressedContentSize == 0 );
+    // m_CompressedContentSize may be non-zero, from cached node graph
 
     // Do we already have a hash?
     if ( m_Hash != 0 )
@@ -167,13 +168,9 @@ void ToolManifestFile::Migrate( const ToolManifestFile & oldFile )
 //------------------------------------------------------------------------------
 void ToolManifest::Initialize( const AString& mainExecutableRoot, 
     const Dependencies & dependencies, 
-    const Array<AString> & customEnvironmentVariables,
-    const Array<AString> & requiredWorkerTagStrings,
     bool deleteRemoteFilesWhenDone )
 {
     m_MainExecutableRootPath = mainExecutableRoot;
-    m_CustomEnvironmentVariables = customEnvironmentVariables;
-    m_RequiredWorkerTagStrings = requiredWorkerTagStrings;
     m_DeleteRemoteFilesWhenDone = deleteRemoteFilesWhenDone;
 
     // Pre-reserve the list of files, but loading/hashing until later
@@ -206,7 +203,8 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     // create a hash for the whole tool chain
     const size_t numFiles( m_Files.GetSize() );
     const size_t memSize( numFiles * sizeof( uint32_t ) * 2 );
-    uint32_t * mem = (uint32_t *)ALLOC( memSize );
+    // add one for m_DeleteRemoteFilesWhenDone value
+    uint32_t * mem = (uint32_t *)ALLOC( memSize + 1 );
     uint32_t * pos = mem;
     for ( size_t i=0; i<numFiles; ++i )
     {
@@ -222,6 +220,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
+    *pos = m_DeleteRemoteFilesWhenDone;
     m_ToolId = xxHash::Calc64( mem, memSize );
     FREE( mem );
 
@@ -271,15 +270,6 @@ void ToolManifest::SerializeForRemote( IOStream & ms ) const
         ms.Write( f.GetUncompressedContentSize() );
     }
 
-    const size_t numEnvVars( m_CustomEnvironmentVariables.GetSize() );
-    ms.Write( (uint32_t)numEnvVars );
-    for ( size_t i = 0; i < numEnvVars; ++i )
-    {
-        ms.Write( m_CustomEnvironmentVariables[ i ] );
-    }
-
-    m_RequiredWorkerTags.Write( ms );
-
     ms.Write( m_DeleteRemoteFilesWhenDone );
 }
 
@@ -308,20 +298,6 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         ms.Read( uncompressedContentSize );
         m_Files.Append( ToolManifestFile( name, timeStamp, hash, uncompressedContentSize ) );
     }
-
-    ASSERT( m_CustomEnvironmentVariables.IsEmpty() );
-
-    uint32_t numEnvVars( 0 );
-    ms.Read( numEnvVars );
-    m_CustomEnvironmentVariables.SetCapacity( numEnvVars );
-    for ( size_t i = 0; i < (size_t)numEnvVars; ++i )
-    {
-        AStackString<> envVar;
-        ms.Read( envVar );
-        m_CustomEnvironmentVariables.Append( envVar );
-    }
-
-    m_RequiredWorkerTags.Read( ms );
 
     ms.Read( m_DeleteRemoteFilesWhenDone );
 
@@ -362,7 +338,7 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
     }
 
     // Generate Environment
-    ASSERT( m_RemoteEnvironmentString == nullptr );
+    ASSERT( m_RemoteBaseEnvString == nullptr );
 
     // PATH=
     AStackString<> basePath;
@@ -382,31 +358,17 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
     #endif
 
     // Calculate the length of the full environment string
-    size_t len( paths.GetLength() + 1 );
+    uint32_t len( paths.GetLength() + 1 );
     #if defined( __WINDOWS__ )
         len += ( tmp.GetLength() + 1 );
         len += ( sysRoot.GetLength() + 1 );
     #endif
 
-    for ( size_t i = 0; i < numEnvVars; ++i )
-    {
-        const AString & envVar = m_CustomEnvironmentVariables[i];
-        if ( envVar.Find( "%1" ) )
-        {
-            len += envVar.GetLength() - 2 + basePath.GetLength() + 1;   // If there is a %1 it will be removed and replaced by the basePath. +1 for the null terminator.
-        }
-        else
-        {
-            len += envVar.GetLength() + 1;
-        }
-    }
-
-    len += 1; // for double null
-
-
     // Now that the environment string length is calculated, allocate and fill.
-    char * mem = (char *)ALLOC( len );
-    m_RemoteEnvironmentString = mem;
+    // + 1 for double null
+    char * mem = (char *)ALLOC( len + 1 );
+    m_RemoteBaseEnvString = mem;
+    m_RemoteBaseEnvStringSize = len;
 
     AString::Copy( paths.Get(), mem, paths.GetLength() + 1 ); // including null
     mem += ( paths.GetLength() + 1 ); // including null
@@ -418,26 +380,6 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         AString::Copy( sysRoot.Get(), mem, sysRoot.GetLength() + 1 ); // including null
         mem += ( sysRoot.GetLength() + 1 ); // including null
     #endif
-
-    for ( size_t i = 0; i < numEnvVars; ++i )
-    {
-        const AString & envVar = m_CustomEnvironmentVariables[i];
-        const char * token = envVar.Find( "%1" );
-        if ( token )
-        {
-            AString::Copy( envVar.Get(), mem, (size_t)( token - envVar.Get() ) );   // Copy the data up to the token
-            mem += ( token - envVar.Get() );
-            AString::Copy( basePath.Get(), mem, basePath.GetLength() );     // Append the basePath instead of the token
-            mem += basePath.GetLength();
-            AString::Copy( token + 2, mem, (size_t)( envVar.GetLength() - 2 - ( token - envVar.Get() ) + 1 ) ); // Append the trailing portion of the string.
-            mem += ( envVar.GetLength() - 2 - ( token - envVar.Get() ) + 1 );
-        }
-        else
-        {
-            AString::Copy( envVar.Get(), mem, envVar.GetLength() + 1 );
-            mem += ( envVar.GetLength() + 1 );
-        }
-    }
 
     *mem = 0; ++mem; // double null
 
@@ -648,16 +590,67 @@ void ToolManifest::GetRemotePath( AString & path ) const
     path += subDir;
 }
 
-// GetRequiredWorkerTags
+// GetRemoteEnvironmentString
 //------------------------------------------------------------------------------
-const Tags & ToolManifest::GetRequiredWorkerTags() const
+const char * ToolManifest::GetRemoteEnvironmentString(
+    const Array< AString > & customEnvironmentVariables,
+    const char * & inoutCachedEnvString ) const
 {
-    if ( m_RequiredWorkerTags.IsEmpty() )
+    const size_t numEnvVars( customEnvironmentVariables.GetSize() );
+    if ( numEnvVars == 0 )
     {
-        // get the tags from the strings
-        m_RequiredWorkerTags.ParseAndAddTags( m_RequiredWorkerTagStrings );
+        // leave inoutCachedEnvString untouched, since
+        // m_RemoteBaseEnvString is owned by ToolManifest not the caller
+        return m_RemoteBaseEnvString;
     }
-    return m_RequiredWorkerTags;
+
+    AStackString<> basePath;
+    GetRemotePath( basePath );
+    PathUtils::EnsureTrailingSlash( basePath );
+    size_t len = m_RemoteBaseEnvStringSize;
+
+    for ( size_t i = 0; i < numEnvVars; ++i )
+    {
+        const AString & envVar = customEnvironmentVariables[i];
+        if ( envVar.Find( "%1" ) )
+        {
+            len += envVar.GetLength() - 2 + basePath.GetLength() + 1;   // If there is a %1 it will be removed and replaced by the basePath. +1 for the null terminator.
+        }
+        else
+        {
+            len += envVar.GetLength() + 1;
+        }
+    }
+
+    char * mem = (char *)ALLOC( len + 1 );
+    inoutCachedEnvString = mem;
+
+    AString::Copy( m_RemoteBaseEnvString, mem, m_RemoteBaseEnvStringSize );
+    mem += m_RemoteBaseEnvStringSize;
+
+    for ( size_t i = 0; i < numEnvVars; ++i )
+    {
+        const AString & envVar = customEnvironmentVariables[i];
+        const char * token = envVar.Find( "%1" );
+        if ( token )
+        {
+            AString::Copy( envVar.Get(), mem, (size_t)( token - envVar.Get() ) );   // Copy the data up to the token
+            mem += ( token - envVar.Get() );
+            AString::Copy( basePath.Get(), mem, basePath.GetLength() );     // Append the basePath instead of the token
+            mem += basePath.GetLength();
+            AString::Copy( token + 2, mem, (size_t)( envVar.GetLength() - 2 - ( token - envVar.Get() ) + 1 ) ); // Append the trailing portion of the string.
+            mem += ( envVar.GetLength() - 2 - ( token - envVar.Get() ) + 1 );
+        }
+        else
+        {
+            AString::Copy( envVar.Get(), mem, envVar.GetLength() + 1 );
+            mem += ( envVar.GetLength() + 1 );
+        }
+    }
+
+    *mem = 0; // double null
+
+    return inoutCachedEnvString;
 }
 
 // LoadFile (ToolManifestFile)
