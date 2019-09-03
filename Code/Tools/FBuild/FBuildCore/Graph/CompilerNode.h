@@ -54,6 +54,7 @@ public:
 
     const AString & GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->GetName(); }
     const char * GetEnvironmentString() const;
+    const Array< AString > & GetCustomEnvironmentVariables() const { return m_CustomEnvironmentVariables; }
 
 private:
     bool InitializeCompilerFamily( const BFFIterator & iter, const Function * function );

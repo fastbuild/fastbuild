@@ -84,7 +84,6 @@ public:
 
     void Initialize( const AString & mainExecutableRoot,
         const Dependencies & dependencies, 
-        const Array<AString>& customEnvironmentVariables,
         bool deleteRemoteFilesWhenDone = false );
     bool DoBuild( const Dependencies & dependencies );
     void Migrate( const ToolManifest & oldManifest );
@@ -116,7 +115,9 @@ public:
 
     void            GetRemotePath( AString & path ) const;
     void            GetRemoteFilePath( uint32_t fileId, AString & exe ) const;
-    const char *    GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
+    const char *    GetRemoteEnvironmentString(
+                        const Array< AString > & customEnvironmentVariables,
+                        const char * & inoutCachedEnvString ) const;
 
     static void     GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
     void Cleanup();
@@ -128,11 +129,11 @@ private:
     uint64_t                    m_TimeStamp;    // Time stamp of most recent file
     AString                     m_MainExecutableRootPath;
     Array< ToolManifestFile >   m_Files;
-    Array< AString >            m_CustomEnvironmentVariables;
 
     // Internal state
     bool            m_Synchronized;
-    const char *    m_RemoteEnvironmentString;
+    const char *    m_RemoteBaseEnvString;
+    uint32_t        m_RemoteBaseEnvStringSize;
     void *          m_UserData;
     bool            m_DeleteRemoteFilesWhenDone;
 

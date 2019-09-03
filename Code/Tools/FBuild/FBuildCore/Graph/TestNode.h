@@ -23,7 +23,8 @@ public:
     // simplified remote constructor
     explicit TestNode( const AString & objectName, const AString & testExecutable,
         const AString & testArguments, const AString & testWorkingDir, const uint32_t testTimeout, 
-        const bool testAlwaysShowOutput, const bool allowDistribution, const bool deleteRemoteFilesWhenDone);
+        const bool testAlwaysShowOutput, const bool allowDistribution,
+        const Array< AString > & customEnvironmentVariables );
 
     virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
     virtual ~TestNode() override;
@@ -36,6 +37,7 @@ public:
     inline const ToolManifest & GetManifest() const { return m_Manifest; }
 
     inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
+
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;

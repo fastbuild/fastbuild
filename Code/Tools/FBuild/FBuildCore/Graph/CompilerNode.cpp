@@ -128,7 +128,7 @@ CompilerNode::CompilerNode()
         return false;
     }
 
-    m_Manifest.Initialize( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables );
+    m_Manifest.Initialize( m_ExecutableRootPath, m_StaticDependencies );
 
     return true;
 }

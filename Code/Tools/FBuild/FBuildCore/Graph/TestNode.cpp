@@ -45,7 +45,7 @@ REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
     REFLECT(       m_DeleteRemoteFilesWhenDone,  "DeleteRemoteFilesWhenDone",  MetaOptional() )
 
     // Internal State
-    REFLECT(       m_NumTestInputFiles,          "NumTestInputFiles",          MetaHidden() )
+    REFLECT(       m_NumTestInputFiles, "NumTestInputFiles",      MetaHidden() )
     REFLECT_STRUCT( m_Manifest,         "Manifest", ToolManifest, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( TestNode )
 
@@ -71,7 +71,8 @@ TestNode::TestNode()
 //------------------------------------------------------------------------------
 TestNode::TestNode( const AString & objectName, const AString & testExecutable,
     const AString & testArguments, const AString & testWorkingDir, const uint32_t testTimeOut,
-    const bool testAlwaysShowOutput, const bool allowDistribution, const bool deleteRemoteFilesWhenDone )
+    const bool testAlwaysShowOutput, const bool allowDistribution,
+    const Array< AString > & customEnvironmentVariables )
 : FileNode( objectName, Node::FLAG_NONE )
     , m_TestExecutable(testExecutable)
     , m_TestArguments(testArguments)
@@ -80,7 +81,8 @@ TestNode::TestNode( const AString & objectName, const AString & testExecutable,
     , m_TestAlwaysShowOutput(testAlwaysShowOutput)
     , m_AllowDistribution( allowDistribution )
     , m_ExecutableRootPath()
-    , m_DeleteRemoteFilesWhenDone( deleteRemoteFilesWhenDone )
+    , m_CustomEnvironmentVariables( customEnvironmentVariables )
+    , m_DeleteRemoteFilesWhenDone( true )  // ignored, manifest uses its own value
     , m_TestInputPathRecurse( true )
     , m_NumTestInputFiles ( 0 )
 {
@@ -187,7 +189,7 @@ TestNode::TestNode( const AString & objectName, const AString & testExecutable,
 
     m_Manifest.Initialize(
         m_ExecutableRootPath, m_StaticDependencies,
-        m_CustomEnvironmentVariables, m_DeleteRemoteFilesWhenDone );
+        m_DeleteRemoteFilesWhenDone );
 
     return true;
 }
@@ -298,10 +300,18 @@ Node::BuildResult TestNode::DoBuildCommon( Job * job,
 
     // spawn the process
     Process p( FBuild::GetAbortBuildPointer() );
-    const char * environmentString = ( FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr );
+    const char * environmentString = nullptr;
+    const char * ownedEnvironmentString = nullptr;
     if ( ( job->IsLocal() == false ) && ( job->GetToolManifest() ) )
     {
-        environmentString = job->GetToolManifest()->GetRemoteEnvironmentString();
+        environmentString =
+            job->GetToolManifest()->GetRemoteEnvironmentString(
+                m_CustomEnvironmentVariables,
+                ownedEnvironmentString );
+    }
+    else
+    {
+        environmentString = ( FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr );
     }
 
     AStackString<> spawnExe;
@@ -313,6 +323,11 @@ Node::BuildResult TestNode::DoBuildCommon( Job * job,
         m_TestArguments.Get(),
         workingDir.IsEmpty() ? nullptr : workingDir.Get(),
         environmentString );
+
+    FREE( (void *)ownedEnvironmentString );
+    ownedEnvironmentString = nullptr;
+    environmentString = nullptr;
+
     if ( spawnOK )
     {
         // capture all of the stdout and stderr
@@ -444,7 +459,9 @@ void TestNode::EmitCompilationMessage(
     stream.Write( m_TestTimeOut );
     stream.Write( m_TestAlwaysShowOutput );
     stream.Write( m_AllowDistribution );
-    stream.Write( m_DeleteRemoteFilesWhenDone );
+    stream.Write( m_CustomEnvironmentVariables );
+    
+    // don't save m_DeleteRemoteFilesWhenDone, since manifest uses its own value
 }
 
 // LoadRemote
@@ -458,7 +475,7 @@ void TestNode::EmitCompilationMessage(
     uint32_t testTimeOut = 0; 
     bool testAlwaysShowOutput = false; 
     bool allowDistribution = false; 
-    bool deleteRemoteFilesWhenDone = false; 
+    Array< AString > customEnvironmentVariables;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( testExecutable ) == false ) ||
          ( stream.Read( testArguments ) == false ) ||
@@ -466,14 +483,14 @@ void TestNode::EmitCompilationMessage(
          ( stream.Read( testTimeOut ) == false ) ||
          ( stream.Read( testAlwaysShowOutput ) == false ) ||
          ( stream.Read( allowDistribution ) == false ) ||
-         ( stream.Read( deleteRemoteFilesWhenDone ) == false ) )
+         ( stream.Read( customEnvironmentVariables ) == false ) )
     {
         return nullptr; 
     }
 
     return FNEW( TestNode( name, testExecutable, testArguments,
         testWorkingDir, testTimeOut, testAlwaysShowOutput,
-        allowDistribution, deleteRemoteFilesWhenDone ) );
+        allowDistribution, customEnvironmentVariables ) );
 }
 
 // Migrate
