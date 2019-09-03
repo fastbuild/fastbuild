@@ -1,7 +1,7 @@
 // Visual Studio 2019
 //------------------------------------------------------------------------------
 .VS2019_BasePath         = '$_CURRENT_BFF_DIR_$/2019/Community'
-.VS2019_Version          = '14.20.27508'
+.VS2019_Version          = '14.22.27905'
 
 // X64 Compiler
 //------------------------------------------------------------------------------
@@ -18,6 +18,7 @@ Compiler( 'Compiler-VS2019-x64' )
                     '$Root$/mspdbsrv.exe'
                     '$Root$/mspft140.dll'
                     '$Root$/msvcp140.dll'
+                    '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
                     '$Root$/vcruntime140.dll'
                     '$Root$/1033/clui.dll'
                     '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis

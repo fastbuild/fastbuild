@@ -6,6 +6,7 @@
 #include "FBuildTest.h"
 
 // FBuild
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -32,6 +33,7 @@ private:
     void TestFunction() const;
     void TestFunction_NoRebuild() const;
     void TestFunction_Speed() const;
+    void FindExecutableTarget() const;
 
     // VCXProj
     void VCXProj_DefaultConfigs() const;
@@ -66,6 +68,7 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( TestFunction )
     REGISTER_TEST( TestFunction_NoRebuild )
     REGISTER_TEST( TestFunction_Speed )
+    REGISTER_TEST( FindExecutableTarget )
     REGISTER_TEST( VCXProj_DefaultConfigs )
     REGISTER_TEST( VCXProj_PerConfigOverrides )
     REGISTER_TEST( VCXProj_HandleDuplicateFiles )
@@ -160,13 +163,16 @@ void TestProjectGeneration::Test() const
         fileTypes.Append( ft );
     }
 
+    // Project Imports
+    Array< VSProjectImport > projectImports;
+
     FBuild fBuild; // needed for NodeGraph::CleanPath
 
     AStackString<> projectFile( "../../../../tmp/Test/ProjectGeneration/Core.vcxproj" );
     AStackString<> projectFileClean;
     NodeGraph::CleanPath( projectFile, projectFileClean );
 
-    const AString & vcxproj = pg.GenerateVCXProj( projectFileClean, configs, fileTypes );
+    const AString & vcxproj = pg.GenerateVCXProj( projectFileClean, configs, fileTypes, projectImports );
     const AString & filters = pg.GenerateVCXProjFilters( projectFileClean );
 
     TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( "../../../../tmp/Test/ProjectGeneration/" ) ) );
@@ -324,6 +330,8 @@ void TestProjectGeneration::TestFunction_Speed() const
         fileTypes.Append( ft );
     }
 
+    Array< VSProjectImport > projectImports;
+
     AStackString<> projectFileName;
     projectFileName.Format( "%s//dummy.vcxproj", baseDir.Get() );
     PathUtils::FixupFilePath( projectFileName );
@@ -332,7 +340,7 @@ void TestProjectGeneration::TestFunction_Speed() const
         Timer t;
         for ( size_t i = 0; i < 5; ++i )
         {
-        pg.GenerateVCXProj( projectFileName, configs, fileTypes );
+            pg.GenerateVCXProj( projectFileName, configs, fileTypes, projectImports );
         }
         float time = t.GetElapsed();
         OUTPUT( "Gen vcxproj        : %2.3fs\n", (double)time );
@@ -345,6 +353,42 @@ void TestProjectGeneration::TestFunction_Speed() const
         }
         float time = t.GetElapsed();
         OUTPUT( "Gen vcxproj.filters: %2.3fs\n", (double)time );
+    }
+}
+
+// FindExecutableTarget
+//
+// When generating projects we sometimes need the path executable related to
+// the project in a given config (to set the executable to debug for example)
+//------------------------------------------------------------------------------
+void TestProjectGeneration::FindExecutableTarget() const
+{
+    // Parse bff
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/FindExecutableTarget/fbuild.bff";
+    FBuildForTest fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Alias -> Test -> Executable
+    //  - This should return the Executable
+    {
+        const Node * testAlias = fBuild.GetNode( "AliasToTest" );
+        TEST_ASSERT( testAlias );
+        const Node * exe = ProjectGeneratorBase::FindExecutableDebugTarget( testAlias );
+        TEST_ASSERT( exe );
+        TEST_ASSERT( exe->GetType() == Node::EXE_NODE );
+    }
+
+    // Alias -> Copy -> Executable
+    //  - This should return the Copy of the Executable (if making a copy
+    //    it's likely a "staging dir" is being created and you want to
+    //    collect dependencies in that folder and run from that folder)
+    {
+        const Node * copyAlias = fBuild.GetNode( "AliasToCopy" );
+        TEST_ASSERT( copyAlias );
+        const Node * copy = ProjectGeneratorBase::FindExecutableDebugTarget( copyAlias );
+        TEST_ASSERT( copy );
+        TEST_ASSERT( copy->GetType() == Node::COPY_FILE_NODE );
     }
 }
 
@@ -415,6 +459,19 @@ void TestProjectGeneration::VCXProj_Intellisense_Check( const char * projectFile
             TEST_ASSERT( token.Find( "Intellisense\\Include\\Quoted\\Space\\Path" ) );
             TEST_ASSERT( token.Find( "Intellisense\\Include\\Quoted\\Slash\\Path" ) );
             TEST_ASSERT( token.Find( "Intellisense\\Include\\Quoted\\Slash\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemInclude\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemInclude\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemInclude\\Quoted\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemInclude\\Quoted\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemAfterInclude\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemAfterInclude\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemAfterInclude\\Quoted\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\SystemAfterInclude\\Quoted\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\QuoteInclude\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\QuoteInclude\\Space\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\QuoteInclude\\Quoted\\Path" ) );
+            TEST_ASSERT( token.Find( "Intellisense\\QuoteInclude\\Quoted\\Space\\Path" ) );
+
             includesOk = true;
         }
         else if ( token.Find( "AdditionalOptions" ) )
@@ -445,9 +502,9 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
 
     // Check
     const size_t NUM_DEFINES = 8;
-    bool definesOk[ NUM_DEFINES ] = { false, false, false, false, false, false, false, false };
-    const size_t NUM_INCLUDES = 8;
-    bool includesOk[ NUM_INCLUDES ] = { false, false, false, false, false, false, false, false };
+    bool definesOk[ NUM_DEFINES ] = {};
+    const size_t NUM_INCLUDES = 20;
+    bool includesOk[ NUM_INCLUDES ] = {};
     bool inDefineSection = false;
     bool inIncludeSection = false;
     for ( const AString & token : tokens )
@@ -501,6 +558,19 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
             if ( token.Find( "Intellisense/Include/Quoted/Space/Path" ) )       { includesOk[ 5 ] = true; }
             if ( token.Find( "Intellisense/Include/Quoted/Slash/Path" ) )       { includesOk[ 6 ] = true; }
             if ( token.Find( "Intellisense/Include/Quoted/Slash/Space/Path" ) ) { includesOk[ 7 ] = true; }
+            if ( token.Find( "Intellisense/SystemInclude/Path" ) )              { includesOk[ 8 ] = true; }
+            if ( token.Find( "Intellisense/SystemInclude/Space/Path" ) )        { includesOk[ 9 ] = true; }
+            if ( token.Find( "Intellisense/SystemInclude/Quoted/Path" ) )       { includesOk[ 10 ] = true; }
+            if ( token.Find( "Intellisense/SystemInclude/Quoted/Space/Path" ) ) { includesOk[ 11 ] = true; }
+            if ( token.Find( "Intellisense/SystemAfterInclude/Path" ) )         { includesOk[ 12 ] = true; }
+            if ( token.Find( "Intellisense/SystemAfterInclude/Space/Path" ) )   { includesOk[ 13 ] = true; }
+            if ( token.Find( "Intellisense/SystemAfterInclude/Quoted/Path" ) )  { includesOk[ 14 ] = true; }
+            if ( token.Find( "Intellisense/SystemAfterInclude/Quoted/Space/Path" ) ) { includesOk[ 15 ] = true; }
+            if ( token.Find( "Intellisense/QuoteInclude/Path" ) )               { includesOk[ 16 ] = true; }
+            if ( token.Find( "Intellisense/QuoteInclude/Space/Path" ) )         { includesOk[ 17 ] = true; }
+            if ( token.Find( "Intellisense/QuoteInclude/Quoted/Path" ) )        { includesOk[ 18 ] = true; }
+            if ( token.Find( "Intellisense/QuoteInclude/Quoted/Space/Path" ) )  { includesOk[ 19 ] = true; }
+
             continue;
         }
     }
@@ -653,7 +723,7 @@ void TestProjectGeneration::VCXProj_HandleDuplicateFiles() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >() ) );
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >(), Array< VSProjectImport >() ) );
         TEST_ASSERT( proj.Replace( "File.cpp", "" ) == 1 );
         TEST_ASSERT( proj.FindI( "File.cpp" ) == nullptr );
     }
@@ -738,7 +808,7 @@ void TestProjectGeneration::VCXProj_Folders() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >() ) );
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >(), Array< VSProjectImport >() ) );
         TEST_ASSERT( proj.Replace( "AFile.cpp", "" ) == 3 );
         TEST_ASSERT( proj.FindI( "AFile.cpp" ) == nullptr );
         TEST_ASSERT( proj.Replace( "ZFile.cpp", "" ) == 2 );
@@ -820,7 +890,7 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >() ) );
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >(), Array< VSProjectImport >() ) );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\File.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"..\\ProjectSourceFiles\\SubDir\\File.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.FindI( "<CustomBuild " ) == nullptr );
@@ -891,7 +961,7 @@ void TestProjectGeneration::VCXProj_ProjectRelativePaths2() const
 
     // Check vcxproj
     {
-        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >() ) );
+        AStackString<> proj( pg.GenerateVCXProj( projectFileName, configs, Array< VSProjectFileType >(), Array< VSProjectImport >() ) );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"GeneratedCpp.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.Replace( "<CustomBuild Include=\"SubDir\\GeneratedCpp.cpp\" />", "" ) == 1 );
         TEST_ASSERT( proj.FindI( "<CustomBuild " ) == nullptr );

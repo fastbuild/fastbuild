@@ -26,6 +26,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/Conversions.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
@@ -705,11 +706,29 @@ void TestGraph::BFFDirtied() const
         TEST_ASSERT( fBuild.GetSettings()->GetWorkerList().IsEmpty() == false );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #elif defined( __LINUX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
-    #endif
+    // Modify file, ensuring filetime has changed (different file systems have different resolutions)
+    const uint64_t originalTime = FileIO::GetFileLastWriteTime( AStackString<>( copyOfBFF ) );
+    Timer t;
+    uint32_t sleepTimeMS = 2;
+    for ( ;; )
+    {
+        // Truncate file
+        FileStream fs;
+        TEST_ASSERT( fs.Open( copyOfBFF, FileStream::WRITE_ONLY ) );
+        fs.Close();
+
+        // See if the mod time has changed
+        if ( FileIO::GetFileLastWriteTime( AStackString<>( copyOfBFF ) ) != originalTime )
+        {
+            break; // All done
+        }
+
+        // Wait a while and try again
+        Thread::Sleep( sleepTimeMS );
+        sleepTimeMS = Math::Max<uint32_t>( sleepTimeMS * 2, 128 );
+
+        TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check fail test after a longtime
+    }
 
     // Modity BFF (make it empty)
     {
@@ -725,8 +744,13 @@ void TestGraph::BFFDirtied() const
         // Ensure user was informed of reparsing trigger
         TEST_ASSERT( GetRecordedOutput().Find( "has changed (reparsing will occur)" ) );
 
+        // Get cache path directly from property to ignore environment variables
+        const ReflectionInfo * ri = fBuild.GetSettings()->GetReflectionInfoV();
+        AStackString<> cachePath;
+        TEST_ASSERT( ri->GetProperty( (void *)fBuild.GetSettings(), "CachePath", &cachePath ) );
+
         // Make sure settings don't "leak" from the original BFF into the new one
-        TEST_ASSERT( fBuild.GetSettings()->GetCachePath().IsEmpty() );
+        TEST_ASSERT( cachePath.IsEmpty() );
         TEST_ASSERT( fBuild.GetEnvironmentStringSize() == 0 );
         TEST_ASSERT( fBuild.GetSettings()->GetWorkerList().IsEmpty() );
     }
@@ -745,7 +769,7 @@ void TestGraph::DBVersionChanged() const
     TEST_ASSERT( ms.GetFileSize() == 4 );
     TEST_ASSERT( ( (const uint8_t *)ms.GetDataMutable() )[3] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
 
-    ( (char *)ms.GetDataMutable() )[3] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
+    ( (uint8_t *)ms.GetDataMutable() )[3] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
 
     const char* oldDB       = "../tmp/Test/Graph/DBVersionChanged/fbuild.fdb";
     const char* emptyBFF    = "../tmp/Test/Graph/DBVersionChanged/fbuild.bff";
