@@ -1120,12 +1120,11 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFItera
         return inoutCachedEnvString;
     }
 
-    const char * baseEnv = FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
-
     // Do we need a custom env string?
     if ( envVars.IsEmpty() )
     {
-        return baseEnv;
+        // No - return build-wide environment
+        return FBuild::IsValid() ? FBuild::Get().GetEnvironmentString() : nullptr;
     }
 
     // More than one caller could be retrieving the same env string
@@ -1133,8 +1132,8 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFItera
     // if we could avoid it as the mutex will not be heavily constested.
     MutexHolder mh( g_NodeEnvStringMutex );
 
-    // Caller owns the memory
-    inoutCachedEnvString = Env::AllocEnvironmentString( baseEnv, envVars );
+    // Caller owns thr memory
+    inoutCachedEnvString = Env::AllocEnvironmentString( envVars );
     return inoutCachedEnvString;
 }
 

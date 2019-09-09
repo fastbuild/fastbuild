@@ -351,97 +351,26 @@ static bool IsStdOutRedirectedInternal()
 
 // AllocEnvironmentString
 //------------------------------------------------------------------------------
-/*static*/ const char * Env::AllocEnvironmentString(
-    const char * baseEnv,
-    const Array< AString > & environment )
+/*static*/ const char * Env::AllocEnvironmentString( const Array< AString > & environment )
 {
-    Array< AString > envKeys;
+    size_t len = 0;
     const size_t numEnvVars = environment.GetSize();
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
-        const AString & envVar = environment[ i ];
-        const char * envSeparator = envVar.Find( "=" );
-        if ( envSeparator )
-        {
-            AStackString<> envKey( envVar.Get(), envSeparator );
-            envKeys.Append( envKey );
-        }
+        len += environment[i].GetLength() + 1;
     }
+    len += 1; // for double null
 
-    bool searching = true;
-    // split existing environment string by null char separator
-    const char* p = baseEnv;
-    uint32_t envSize = 0;
-    Array< AString > baseEnvVars;
-    if ( p != nullptr )
-    {
-        do
-        {
-            AStackString<> envVar( p );
-            uint32_t envVarSize = envVar.GetLength();
-            if ( envVarSize > 0 )
-            {
-                ++envVarSize;  // add one for null separator
-                p += envVarSize;
-                bool found = false;
-                char * envSeparator = envVar.Find( "=" );
-                if ( envSeparator )
-                {
-                    AStackString<> baseKey( envVar.Get(), envSeparator );
-                    for ( size_t i = 0; i < numEnvVars; ++i )
-                    {
-                        if ( baseKey.FindI( envKeys[ i ] ) )
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                if ( !found )
-                {
-                    envSize += envVarSize;
-                    baseEnvVars.Append( envVar );
-                }
-                else
-                {
-                    // skip env var, so we can add our own below
-                }
-            }
-            else
-            {
-                searching = false;
-            }
-        } while ( searching );
-    }
-
+    // Now that the environment string length is calculated, allocate and fill.
+    char * mem = (char *)ALLOC( len );
+    const char * environmentString = mem;
     for ( size_t i = 0; i < numEnvVars; ++i )
     {
-        const uint32_t envVarLen = environment[ i ].GetLength();
-        if ( envVarLen > 0 )
-        {
-            // add one for null separator
-            envSize += envVarLen + 1;
-        }
+        const AString & envVar = environment[i];
+        AString::Copy( envVar.Get(), mem, envVar.GetLength() + 1 );
+        mem += ( envVar.GetLength() + 1 );
     }
-
-    // plus one, since incoming envString has null and need one more for double null terminator
-    char * environmentString = (char *)ALLOC( envSize + 1 );
-
-    uint32_t destOffset = 0;
-    const size_t numBaseEnvVars = baseEnvVars.GetSize();
-    for ( size_t i=0; i<numBaseEnvVars; ++i )
-    {
-        const uint32_t copyLength = baseEnvVars[ i ].GetLength() + 1;  // add one for null separator
-        AString::Copy( baseEnvVars[ i ].Get(), (char *)environmentString + destOffset, copyLength );
-        destOffset += copyLength;
-    }
-
-    for ( size_t i = 0; i < numEnvVars; ++i )
-    {
-        const uint32_t copyLength = environment[ i ].GetLength() + 1;  // add one for null separator
-        AString::Copy( environment[ i ].Get(), (char *)environmentString + destOffset, copyLength );
-        destOffset += copyLength;
-    }
+    *mem = 0;
 
     return environmentString;
 }
