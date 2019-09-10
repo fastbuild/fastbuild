@@ -129,13 +129,13 @@ private:
     uint64_t                    m_TimeStamp;    // Time stamp of most recent file
     AString                     m_MainExecutableRootPath;
     Array< ToolManifestFile >   m_Files;
+    bool                        m_DeleteRemoteFilesWhenDone;
 
     // Internal state
     bool            m_Synchronized;
     const char *    m_RemoteBaseEnvString;
     uint32_t        m_RemoteBaseEnvStringSize;
     void *          m_UserData;
-    bool            m_DeleteRemoteFilesWhenDone;
 
     // Not serialized
     bool            m_Remote;

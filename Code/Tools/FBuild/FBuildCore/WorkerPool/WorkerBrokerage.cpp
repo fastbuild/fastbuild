@@ -94,7 +94,8 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
     Array< AString > results( 256, true );
     if ( !FileIO::GetFiles( m_BrokerageRoot,
                             AStackString<>( "*" ),
-                            false,
+                            false, // recurse
+                            false, // includeDirs
                             &results ) )
     {
         FLOG_WARN( "No workers found in '%s'", m_BrokerageRoot.Get() );

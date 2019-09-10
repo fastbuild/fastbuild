@@ -120,6 +120,7 @@ void TestDistributed::TestHelper(
         AStackString<>( "../tmp/Test/Distributed" ),
         helperOptions.m_DelPrevFilesWildcard,
         true,  // recurse
+        false, // includeDirs
         &files );
     const AString * iter = files.Begin();
     const AString * const end = files.End();

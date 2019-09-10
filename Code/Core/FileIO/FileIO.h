@@ -21,12 +21,13 @@ public:
     static bool FileDelete( const char * fileName );
     static bool FileCopy( const char * srcFileName, const char * dstFileName, bool allowOverwrite = true );
     static bool FileMove( const AString & srcFileName, const AString & dstFileName );
-    static bool DirectoryDelete( const AString & path );
+    static bool DirectoryDelete( const AString & path, const bool recurse = false );
 
     // directory listing
     static bool GetFiles( const AString & path,
                           const AString & wildCard,
-                          bool recurse,
+                          const bool recurse,
+                          const bool includeDirs,
                           Array< AString > * results );
     struct FileInfo
     {
@@ -75,11 +76,14 @@ public:
     #endif
 
 private:
+    static bool _DirectoryDelete( const AString & path );
     static void GetFilesRecurse( AString & path,
                                  const AString & wildCard,
+                                 const bool includeDirs,
                                  Array< AString > * results );
     static void GetFilesNoRecurse( const char * path,
                                    const char * wildCard,
+                                   const bool includeDirs,
                                    Array< AString > * results );
     static void GetFilesRecurseEx( AString & path,
                                  const Array< AString > * patterns,
@@ -89,6 +93,14 @@ private:
                                  Array< FileInfo > * results );
     static bool IsMatch( const Array< AString > * patterns, const char * fileName );
 
+    #if defined( __WINDOWS__ )
+    static bool IsShortcutDir( const void * findData );
+    static bool IncludeFileObjectInResults(
+                                 const void * findData,
+                                 const bool includeDirs );
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+    static bool IsShortcutDir( const void * entry );
+    #endif
 };
 
 //------------------------------------------------------------------------------

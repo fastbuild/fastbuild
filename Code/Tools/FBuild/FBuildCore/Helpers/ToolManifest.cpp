@@ -30,6 +30,7 @@ REFLECT_STRUCT_BEGIN( ToolManifest, Struct, MetaNone() )
     REFLECT(        m_ToolId,                       "ToolId",                       MetaHidden() )
     REFLECT(        m_TimeStamp,                    "TimeStamp",                    MetaHidden() )
     REFLECT(        m_MainExecutableRootPath,       "MainExecutableRootPath",       MetaHidden() )
+    REFLECT(        m_DeleteRemoteFilesWhenDone,    "DeleteRemoteFilesWhenDone",    MetaHidden() + MetaOptional() )
     REFLECT_ARRAY_OF_STRUCT( m_Files,               "Files",    ToolManifestFile,   MetaHidden() )
 REFLECT_END( ToolManifest )
 
@@ -81,11 +82,11 @@ ToolManifest::ToolManifest()
     : m_ToolId( 0 )
     , m_TimeStamp( 0 )
     , m_Files( 0, true )
+    , m_DeleteRemoteFilesWhenDone( false )
     , m_Synchronized( false )
     , m_RemoteBaseEnvString( nullptr )
     , m_RemoteBaseEnvStringSize( 0 )
     , m_UserData( nullptr )
-    , m_DeleteRemoteFilesWhenDone( false )
     , m_Remote( false )
 {
 }
@@ -96,11 +97,11 @@ ToolManifest::ToolManifest( uint64_t toolId )
     : m_ToolId( toolId )
     , m_TimeStamp( 0 )
     , m_Files( 0, true )
+    , m_DeleteRemoteFilesWhenDone( false )
     , m_Synchronized( false )
     , m_RemoteBaseEnvString( nullptr )
     , m_RemoteBaseEnvStringSize( 0 )
     , m_UserData( nullptr )
-    , m_DeleteRemoteFilesWhenDone ( false )
     , m_Remote( false )
 {
 }
@@ -698,14 +699,15 @@ const char * ToolManifest::GetRemoteEnvironmentString(
 //------------------------------------------------------------------------------
 void ToolManifest::Cleanup()
 {
-    
     if ( m_DeleteRemoteFilesWhenDone &&  // if delete requested
-          m_Remote )  // only ever delete remote files
+         m_Remote )  // only ever delete remote files
     {
         MutexHolder mh( m_Mutex );
 
         // loop over files
         const size_t numFiles = m_Files.GetSize();
+        size_t remoteDirLength = 0;
+        AStackString<> shortestRemoteDir;
         Array< AString > remoteDirs( numFiles, false );
         for ( size_t i=0; i<numFiles; ++i )
         {
@@ -717,8 +719,14 @@ void ToolManifest::Cleanup()
                 const char * lastSlash = remoteFilePath.FindLast( NATIVE_SLASH );
                 if ( ( lastSlash != nullptr ) && ( lastSlash != remoteFilePath.Get() ) )
                 {
-                    remoteDirs.Append(AString::GetEmpty());
-                    remoteDirs.Top().Assign( remoteFilePath.Get(), lastSlash );
+                    AStackString<> remoteDir( remoteFilePath.Get(), lastSlash );
+                    // find remote dir with shortest length
+                    if ( remoteDirLength == 0 ||
+                         remoteDir.GetLength() < remoteDirLength )
+                    {
+                        remoteDirLength = remoteDir.GetLength();
+                        shortestRemoteDir = remoteDir;
+                    }
                 }
                 // release the file lock
                 m_Files[ i ].Release();
@@ -726,16 +734,10 @@ void ToolManifest::Cleanup()
                 FileIO::FileDelete( remoteFilePath.Get() );
             }
         }
-        
-        // delete the directories
-        for ( size_t i=0; i<numFiles; ++i )
+
+        if ( !shortestRemoteDir.IsEmpty() )
         {
-            // cleanup temp directory
-            const AString & remoteDir = remoteDirs[ i ];
-            if ( !remoteDir.IsEmpty() )
-            {
-                FileIO::DirectoryDelete( remoteDir );
-            }
+            FileIO::DirectoryDelete( shortestRemoteDir, true );  // recurse
         }
 
         // mark the manifest as not synchronized

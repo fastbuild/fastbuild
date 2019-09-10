@@ -140,8 +140,18 @@ void TestProjectGeneration::Test() const
 
     // files
     Array< AString > files;
-    FileIO::GetFiles( baseDir, AStackString<>( "*.cpp" ), true, &files );
-    FileIO::GetFiles( baseDir, AStackString<>( "*.h" ), true, &files );
+    FileIO::GetFiles(
+        baseDir,
+        AStackString<>( "*.cpp" ),
+        true,  // recurse
+        false, // includeDirs
+        &files );
+    FileIO::GetFiles(
+        baseDir,
+        AStackString<>( "*.h" ),
+        true,  // recurse
+        false, // includeDirs
+        &files );
     pg.AddFiles( files );
 
     // fileTypes
