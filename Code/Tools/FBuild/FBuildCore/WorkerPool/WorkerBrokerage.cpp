@@ -146,9 +146,26 @@ void WorkerBrokerage::SetAvailability(bool available)
             {
                 FileIO::EnsurePathExists( m_BrokerageRoot );
 
-                // create file to signify availability
-                FileStream fs;
-                fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
+                // Periodically update the modified time of brokerage file for workers that are still active,
+                // so an external script can easily delete older brokerage files (clean up orphaned ones
+                // from crashed workers).
+                const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow(
+                    m_BrokerageFilePath );
+                if ( !timeSetOK )
+                {
+                    if ( !FileIO::FileExists( m_BrokerageFilePath.Get() ) )
+                    {
+                        // create file to signify availability
+                        FileStream fs;
+                        // create empty file; clients look at the filename, not the file contents
+                        fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
+                    }
+                    else
+                    {
+                        // failed to set write timestamp
+                        return;
+                    }
+                }
 
                 // Restart the timer
                 m_TimerLastUpdate.Start();
