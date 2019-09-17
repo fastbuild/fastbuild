@@ -216,7 +216,7 @@ void Client::RetryWorkers()
                     m_WorkerListRefreshTimer.Start();  // reset time
                     if ( m_WorkerListRefreshIntervalSec == 0 )
                     {
-                        m_WorkerListRefreshIntervalSec = 5;  // next retry is in >= 5 seconds
+                        m_WorkerListRefreshIntervalSec = 4;  // next retry is in >= 4 seconds
                     }
                     else
                     {
@@ -588,7 +588,7 @@ void Client::LookForWorkers()
                     DIST_INFO( " - connection: %s (FAILED)\n", ss->m_RemoteName.Get() );
                     if ( ss->m_ConnectionRetryIntervalSec == 0 )
                     {
-                        ss->m_ConnectionRetryIntervalSec = 5;  // next retry is in >= 5 seconds
+                        ss->m_ConnectionRetryIntervalSec = 4;  // next retry is in >= 4 seconds
                     }
                     else
                     {
@@ -700,7 +700,7 @@ void Client::CommunicateJobAvailability()
                     // and we avoid hitting the m_WorkerConnectionLimit with only noop workers.
                     Disconnect( connection );
                     // delay reconnecting to this worker
-                    ss->m_ConnectionRetryIntervalSec = 5;  // next retry is in >= 5 seconds
+                    ss->m_ConnectionRetryIntervalSec = 4;  // next retry is in >= 4 seconds
                     ss->m_ConnectionDelayTimer.Start();    // reset time
                 }
             }
