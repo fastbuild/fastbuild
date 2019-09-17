@@ -2610,6 +2610,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
     #else
         // TODO:LINUX TODO:MAC Implement blacklist checks
+        (void)result;
     #endif
 
     return true;
