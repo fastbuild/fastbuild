@@ -59,8 +59,9 @@ public:
     void                SetMessages( const Array< AString >& messages );
 
     // Flag "system failures" - i.e. not a compilation failure, but some other problem (typically a remote worker misbehaving)
-    void OnSystemError() { ++m_SystemErrorCount; }
-    inline uint8_t GetSystemErrorCount() const { return m_SystemErrorCount; }
+    void OnSystemError(const int32_t errorCode) { m_SystemErrors.Append( errorCode ); }
+    inline size_t GetSystemErrorCount() const { return m_SystemErrors.GetSize(); }
+    inline const Array< int32_t > & GetSystemErrors() const { return m_SystemErrors; }
 
     // serialization for remote distribution
     void Serialize( IOStream & stream );
@@ -100,7 +101,8 @@ private:
     volatile bool       m_Abort             = false;
     bool                m_DataIsCompressed  = false;
     bool                m_IsLocal           = true;
-    uint8_t             m_SystemErrorCount  = 0; // On client, the total error count, on the worker a flag for the current attempt
+    Array< int32_t >    m_SystemErrors; // On client, the total errors; on worker, errors for the current attempt
+
     DistributionState   m_DistributionState = DIST_NONE;
     AString             m_RemoteName;
     AString             m_RemoteSourceRoot;

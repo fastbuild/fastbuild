@@ -624,7 +624,7 @@ void Server::FinalizeCompletedJobs()
             ms.Write( job->GetJobId() );
             ms.Write( job->GetNode()->GetName() );
             ms.Write( result == Node::UP_TO_DATE );
-            ms.Write( job->GetSystemErrorCount() > 0 );
+            ms.Write( job->GetSystemErrors() );
             ms.Write( job->GetMessages() );
             ms.Write( job->GetNode()->GetLastBuildTime() );
 

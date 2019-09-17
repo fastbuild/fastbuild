@@ -467,8 +467,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     bool result = false;
     ms.Read( result );
 
-    bool systemError = false;
-    ms.Read( systemError );
+    Array< int32_t > systemErrors;
+    ms.Read( systemErrors );
 
     Array< AString > messages;
     ms.Read( messages );
@@ -593,39 +593,48 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             failureOutput += *it;
         }
 
-        // was it a system error?
-        if ( systemError )
+        // were there any system errors?
+        if ( !systemErrors.IsEmpty() )
         {
-            // blacklist misbehaving worker
-            ss->m_Blacklisted = true;
-
-            // take note of failure of job
-            job->OnSystemError();
+            const size_t numErrors = systemErrors.GetSize();
+            for ( size_t i=0; i<numErrors; ++i )
+            {
+                if ( ((ObjectNode *)job->GetNode())->IsBlacklistSystemError( systemErrors[ i ] ) )
+                {
+                    // blacklist misbehaving worker
+                    ss->m_Blacklisted = true;
+                }
+                // take note of failure of job
+                job->OnSystemError( systemErrors[ i ] );
+            }
 
             const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
             const AString & workerName = m_WorkerList[ workerIndex ];
 
-            AStackString<> blacklistReason;
-            blacklistReason += "Node: ";
-            blacklistReason += nodeName;
-            blacklistReason += "\n";
-            blacklistReason += "Details: ";
-            blacklistReason += failureOutput;
-            AStackString<> errorMsg;
-            m_WorkerBrokerage.BlacklistWorker(
-                workerName,
-                blacklistReason,
-                errorMsg );
-            if ( !errorMsg.IsEmpty() )
+            if ( ss->m_Blacklisted )
             {
-                failureOutput += errorMsg;
+                AStackString<> blacklistReason;
+                blacklistReason += "Node: ";
+                blacklistReason += nodeName;
+                blacklistReason += "\n";
+                blacklistReason += "Details: ";
+                blacklistReason += failureOutput;
+                AStackString<> errorMsg;
+                m_WorkerBrokerage.BlacklistWorker(
+                    workerName,
+                    blacklistReason,
+                    errorMsg );
+                if ( !errorMsg.IsEmpty() )
+                {
+                    failureOutput += errorMsg;
+                }
             }
 
             // debugging message
             DIST_INFO( "Remote System Failure!\n"
-                       " - Blacklisted Worker: %s\n"
+                       " - Worker            : %s\n"
                        " - Node              : %s\n"
-                       " - Job Error Count   : %u / %u\n"
+                       " - Job Error Count   : %zu / %u\n"
                        " - Details           :\n"
                        "%s",
                        workerName.Get(),

@@ -2267,7 +2267,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
     {
         job->Error( "Failed to create temp directory. Error: %s TmpDir: '%s' Target: '%s'", LAST_ERROR_STR, tmpDirectory.Get(), GetName().Get() );
-        job->OnSystemError();
+        job->OnSystemError( Env::GetLastErr() );
         return NODE_RESULT_FAILED;
     }
     tmpFileName = tmpDirectory;
@@ -2280,14 +2280,14 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
         if ( WorkerThread::CreateTempFile( tmpFileName, tmpFile ) == false )
         {
             job->Error( "Failed to create temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
-            job->OnSystemError();
+            job->OnSystemError( Env::GetLastErr() );
             return NODE_RESULT_FAILED;
         }
     }
     if ( tmpFile.Write( dataToWrite, dataToWriteSize ) != dataToWriteSize )
     {
         job->Error( "Failed to write to temp file. Error: %s TmpFile: '%s' Target: '%s'", LAST_ERROR_STR, tmpFileName.Get(), GetName().Get() );
-        job->OnSystemError();
+        job->OnSystemError( Env::GetLastErr() );
         return NODE_RESULT_FAILED;
     }
     tmpFile.Close();
@@ -2414,7 +2414,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         }
 
         job->Error( "Failed to spawn process. Error: %s Target: '%s'\n", LAST_ERROR_STR, name.Get() );
-        job->OnSystemError();
+        job->OnSystemError( Env::GetLastErr() );
         return false;
     }
 
@@ -2476,7 +2476,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
              ( (uint32_t)result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
         {
-            job->OnSystemError(); // task will be retried on another worker
+            job->OnSystemError( result ); // task will be retried on another worker
             return;
         }
 
@@ -2485,7 +2485,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // use return code 1 for normal compilation failure
         if ( ( result == 0x1 ) && ( stdErr == nullptr ) )
         {
-            job->OnSystemError(); // task will be retried on another worker
+            job->OnSystemError( result ); // task will be retried on another worker
             return;
         }
 
@@ -2510,7 +2510,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                      strstr( stdOut, "C1085" ) ||
                      strstr( stdOut, "C1088" ) )
                 {
-                    job->OnSystemError();
+                    job->OnSystemError( 0x2 );  // ERROR_FILE_NOT_FOUND
                     return;
                 }
             }
@@ -2521,7 +2521,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // includes on the host this should never occur remotely other than in this context.
             if ( stdOut && strstr( stdOut, "C1083" ) )
             {
-                job->OnSystemError();
+                job->OnSystemError( 0x2 );  // ERROR_FILE_NOT_FOUND
                 return;
             }
 
@@ -2540,7 +2540,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                 if ( ( strstr( stdOut, "C1076" ) == nullptr ) &&
                      ( strstr( stdOut, "C3859" ) == nullptr ) )
                 {
-                    job->OnSystemError();
+                    job->OnSystemError( 0x8 );  // ERROR_NOT_ENOUGH_MEMORY
                     return;
                 }
             }
@@ -2550,7 +2550,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // the result of faulty hardware.
             if ( stdOut && strstr( stdOut, "C1001" ) )
             {
-                job->OnSystemError();
+                job->OnSystemError( 0x54F );  // ERROR_INTERNAL_ERROR
                 return;
             }
 
@@ -2560,7 +2560,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // TODO:C Should we check for localized msg?
             if ( stdOut && strstr( stdOut, "No space left on device" ) )
             {
-                job->OnSystemError();
+                job->OnSystemError( 0x70 );  // ERROR_DISK_FULL
                 return;
             }
         }
@@ -2572,7 +2572,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // TODO:C Should we check for localized msg?
             if ( stdErr && ( strstr( stdErr, "IO failure on output stream" ) ) )
             {
-                job->OnSystemError();
+                job->OnSystemError( 0x1 );
                 return;
             }
         }
@@ -2584,7 +2584,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             // TODO:C Should we check for localized msg?
             if ( stdErr && ( strstr( stdErr, "No space left on device" ) ) )
             {
-                job->OnSystemError();
+                job->OnSystemError( 0x2 );
                 return;
             }
         }
@@ -2593,6 +2593,26 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         (void)stdOut;
         (void)stdErr;
     #endif
+}
+
+// IsBlacklistSystemError
+//------------------------------------------------------------------------------
+/*static*/ bool ObjectNode::IsBlacklistSystemError( int result )
+{
+    #if defined( __WINDOWS__ )
+        // If remote PC is shutdown by user, remote process may be terminated
+        if ( ( (uint32_t)result == 0x40010004 ) || // DBG_TERMINATE_PROCESS
+             ( (uint32_t)result == 0xC0000142 ) )  // STATUS_DLL_INIT_FAILED - Occurs if remote PC is stuck on force reboot dialog during shutdown
+        {
+            // don't blacklist machine if it is only rebooting or shutting down
+            return false;
+        }
+
+    #else
+        // TODO:LINUX TODO:MAC Implement blacklist checks
+    #endif
+
+    return true;
 }
 
 // ShouldUseDeoptimization
