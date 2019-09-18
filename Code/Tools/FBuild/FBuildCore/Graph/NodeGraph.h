@@ -21,6 +21,7 @@ class CopyDirNode;
 class CopyFileNode;
 class CSNode;
 class Dependencies;
+class ListDependenciesNode;
 class DirectoryListNode;
 class DLLNode;
 class ExeNode;
@@ -127,6 +128,7 @@ public:
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
     SettingsNode * CreateSettingsNode( const AString & name );
+    ListDependenciesNode* CreateListDependenciesNode( const AString& name );
     TextFileNode * CreateTextFileNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );
