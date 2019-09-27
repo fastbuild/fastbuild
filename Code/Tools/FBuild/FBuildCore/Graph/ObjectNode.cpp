@@ -1604,7 +1604,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     }
                 }
             }
-            else if ( isQtRCC || isCUDA )
+            else if ( isQtRCC )
             {
                 // remove --output (or alias -o) so dependency list goes to stdout
                 if ( StripTokenWithArg( "--output", token, i ) ||
@@ -1613,6 +1613,18 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue;
                 }
             }
+			else if (isCUDA)
+			{
+				// remove --output-file (or alias -o) so preprocessor output goes to stdout
+				// remove --compile (or alias -c) when using preprocessor only
+				if (StripTokenWithArg("--output-file", token, i) ||
+					StripTokenWithArg("-o", token, i) ||
+					StripToken("--compile", token) || 
+					StripToken("-c", token))
+				{
+					continue;
+				}
+			}
         }
 
         if ( isClang || isGCC ) // Also check when invoked via gcc sym link
