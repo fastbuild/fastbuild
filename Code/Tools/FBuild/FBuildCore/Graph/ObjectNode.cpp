@@ -790,11 +790,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         bool msvcStyle;
         if ( GetDedicatedPreprocessor() != nullptr )
         {
-            msvcStyle = GetPreprocessorFlag( FLAG_MSVC ) || GetPreprocessorFlag( FLAG_CUDA_NVCC );
+            msvcStyle = GetPreprocessorFlag( FLAG_MSVC );
         }
         else
         {
-            msvcStyle = GetFlag( FLAG_MSVC ) || GetFlag( FLAG_CUDA_NVCC );
+            msvcStyle = GetFlag( FLAG_MSVC );
         }
         bool result = msvcStyle ? parser.ParseMSCL_Preprocessed( output, outputSize )
                                 : parser.ParseGCC_Preprocessed( output, outputSize );
