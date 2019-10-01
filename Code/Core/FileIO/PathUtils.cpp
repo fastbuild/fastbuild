@@ -218,7 +218,7 @@
     char compA = *itA;
     char compB = *itB;
 
-    #if !defined( __LINUX__ )
+    #if defined( __WINDOWS__ ) || defined( __OSX__ )
         // Windows & OSX: Case insensitive
         if ( ( compA >= 'A' ) && ( compB <= 'Z' ) )
         {
@@ -243,7 +243,7 @@
             pathB = itB;
         }
         
-        #if !defined( __LINUX__ )
+        #if defined( __WINDOWS__ ) || defined( __OSX__ )
             // Windows & OSX: Case insensitive
             if ( ( compA >= 'A' ) && ( compB <= 'Z' ) )
             {
