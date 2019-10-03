@@ -220,7 +220,7 @@
 
     #if defined( __WINDOWS__ ) || defined( __OSX__ )
         // Windows & OSX: Case insensitive
-        if ( ( compA >= 'A' ) && ( compB <= 'Z' ) )
+        if ( ( compA >= 'A' ) && ( compA <= 'Z' ) )
         {
             compA = 'a' + ( compA - 'A' );
         }
