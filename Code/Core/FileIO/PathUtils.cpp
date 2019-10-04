@@ -242,7 +242,7 @@
             pathA = itA;
             pathB = itB;
         }
-        
+
         #if defined( __WINDOWS__ ) || defined( __OSX__ )
             // Windows & OSX: Case insensitive
             if ( ( compA >= 'A' ) && ( compA <= 'Z' ) )
