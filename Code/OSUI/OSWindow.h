@@ -25,7 +25,7 @@ class OSWidget;
 class OSWindow
 {
 public:
-    explicit OSWindow( void * hInstance );
+    explicit OSWindow( void * hInstance = nullptr );
     virtual ~OSWindow();
 
     void Init( int32_t x, int32_t y, uint32_t w, uint32_t h );

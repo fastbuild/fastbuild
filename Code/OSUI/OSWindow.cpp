@@ -107,7 +107,14 @@ OSWindow::OSWindow( void * hInstance ) :
     #endif
     m_ChildWidgets( 0, true )
 {
-    #if !defined( __WINDOWS__ )
+    #if defined( __WINDOWS__ )
+        // Obtain the executable HINSTANCE if not explictily provided
+        if ( m_HInstance == nullptr )
+        {
+            m_HInstance = GetModuleHandle( nullptr );
+            ASSERT( m_HInstance );
+        }
+    #else
         (void)hInstance;
     #endif
 }

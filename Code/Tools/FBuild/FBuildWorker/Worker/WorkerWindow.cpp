@@ -33,10 +33,9 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-WorkerWindow::WorkerWindow( void * hInstance )
-    : OSWindow( hInstance )
-    , m_UIState( NOT_READY )
-    , m_UIThreadHandle( INVALID_THREAD_HANDLE )
+WorkerWindow::WorkerWindow()
+    : OSWindow()
+    , m_WantToQuit( false )
     , m_TrayIcon( nullptr )
     , m_Font( nullptr )
     , m_ModeLabel( nullptr )
@@ -49,31 +48,11 @@ WorkerWindow::WorkerWindow( void * hInstance )
 {
     // obtain host name
     Network::GetHostName(m_HostName);
-
-    // spawn UI thread - this creates the window, which must be done
-    // on the same thread as we intend to process messages on
-    m_UIThreadHandle = Thread::CreateThread( &UIUpdateThreadWrapper,
-                                             "UIThread",
-                                             ( 32 * KILOBYTE ) );
-    ASSERT( m_UIThreadHandle != INVALID_THREAD_HANDLE );
-
-    // wait for the UI thread to hit the main update loop
-    while ( m_UIState != UPDATING ) { Thread::Sleep( 1 ); }
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-WorkerWindow::~WorkerWindow()
-{
-    // make sure we're only here if we're exiting
-    ASSERT( m_UIState == ALLOWED_TO_QUIT );
-
-    // ensure the thread is shutdown
-    Thread::WaitForThread( m_UIThreadHandle );
-
-    // clean up the ui thread
-    Thread::CloseHandle( m_UIThreadHandle );
-}
+WorkerWindow::~WorkerWindow() = default;
 
 // SetStatus
 //------------------------------------------------------------------------------
@@ -92,17 +71,9 @@ void WorkerWindow::SetWorkerState( size_t index, const AString & hostName, const
     m_ThreadList->SetItemText( (uint32_t)index, 2, status.Get() );
 }
 
-// UIUpdateThreadWrapper
+// Work
 //------------------------------------------------------------------------------
-/*static*/ uint32_t WorkerWindow::UIUpdateThreadWrapper( void * )
-{
-    WorkerWindow::Get().UIUpdateThread();
-    return 0;
-}
-
-// UIUpdateThread
-//------------------------------------------------------------------------------
-void WorkerWindow::UIUpdateThread()
+void WorkerWindow::Work()
 {
     #if defined( __WINDOWS__ )
         // center the window on screen
@@ -202,9 +173,6 @@ void WorkerWindow::UIUpdateThread()
 
         SetStatus( "Idle" );
 
-        // we can now accept manipulation from the main thread
-        m_UIState = UPDATING;
-
         // process messages until wo need to quit
         MSG msg;
         do
@@ -223,7 +191,7 @@ void WorkerWindow::UIUpdateThread()
                 // no message right now - prevent CPU thrashing by having a sleep
                 Sleep( 100 );
             }
-        } while ( m_UIState < ALLOWED_TO_QUIT );
+        } while ( m_WantToQuit == false );
 
         // clean up UI resources
         FDELETE( m_Splitter );
