@@ -263,6 +263,7 @@ bool LightCache::Hash( ObjectNode * node,
 {
     PROFILE_FUNCTION
 
+    m_UseRelativePaths = useRelativePaths;
     ProjectGeneratorBase::ExtractIncludePaths( compilerArgs,
                                                m_IncludePaths,
                                                false ); // escapeQuotes
