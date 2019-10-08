@@ -1543,6 +1543,49 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     }
 }
 
+// AddRelativeIncludeToArgs
+/*static*/ bool ObjectNode::AddRelativeIncludeToArgs( const char * tokenToCheckFor, const AString & token, const AString & workingDir, Args & fullArgs )
+{
+    ASSERT( m_UseRelativePaths ); // Should not be using this method unless forcing relative paths
+    if ( token.BeginsWith( tokenToCheckFor ) )
+    {
+        const char * start = token.Get() + AString::StrLen( tokenToCheckFor ); // Skip token characters
+        const char * end = token.GetEnd();
+
+        // Strip quotes if present
+        if ( *start == '"' )
+        {
+            ++start;
+        }
+        if ( *end[ -1 ] == '"' )
+        {
+            --end;
+        }
+        AStackString<> includePath( start, end );
+        const bool isFullPath = PathUtils::IsFullPath( includePath );
+
+        if ( isFullPath )
+        {
+            fullArgs.Append( token.Get(), (size_t) ( start - token.Get() ) );
+            AStackString<> relPath;
+            if ( PathUtils::IsFolderPath( includePath ) )
+            {
+                PathUtils::FixupFolderPath( includePath );
+            }
+            else
+            {
+                PathUtils::FixupFilePath( includePath );
+            }
+            PathUtils::GetRelativePath( workingDir, includePath, relPath );
+            fullArgs += relPath;
+            fullArgs.Append( end, (size_t) ( token.GetEnd() - end ) );
+            fullArgs.AddDelimiter();
+            return true; // found and replaced
+        }
+    }
+    return false; // not found
+}    
+
 
 // BuildArgs
 //------------------------------------------------------------------------------
@@ -1675,47 +1718,6 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             }
         }
 
-        // If use relative paths on local machine, replace all absolute paths
-        if ( m_UseRelativePaths && job->IsLocal() )
-        {
-            if ( IsStartOfCompilerArg_MSVC( token, "I" ) )
-            {
-                // Get include path part
-                const char * start = token.Get() + 2; // Skip /I or -I
-                const char * end = token.GetEnd();
-
-                // strip quotes if present
-                if ( *start == '"' )
-                {
-                    ++start;
-                }
-                if ( end[ -1 ] == '"' )
-                {
-                    --end;
-                }
-                AStackString includePath( start, end );
-                const bool isFullPath = PathUtils::IsFullPath( includePath );
-
-                // Replace full paths and leave relative paths alone
-                if ( isFullPath )
-                {
-                    // Remove full path include
-                    StripTokenWithArg_MSVC( "I", token, i );
-
-                    // Add relative include
-                    fullArgs.Append( token.Get(), (size_t) ( start - token.Get() ) );
-                    AStackString<> relPath;
-                    PathUtils::FixupFilePath( includePath );
-                    PathUtils::GetRelativePath( workingDir, includePath, relPath );
-                    fullArgs += relPath;
-                    fullArgs.Append( end, (size_t) ( token.GetEnd() - end ) );
-                    fullArgs.AddDelimiter();
-
-                    continue; // include path has been replaced
-                }
-            }
-        }
-
         // remove includes for second pass
         if ( pass == PASS_COMPILE_PREPROCESSED )
         {
@@ -1797,6 +1799,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                     continue; // skip this token in both cases
                 }
             }
+        }
+
+        // If use relative paths on local machine, replace all absolute paths
+        if ( m_UseRelativePaths && job->IsLocal() )
+        {
+            if ( AddRelativeIncludeToArgs( "-I", token, workingDir, fullArgs ) ||
+                 AddRelativeIncludeToArgs( "/I", token, workingDir, fullArgs ) )
+                {
+                    continue; // Skip replaced token
+                }
         }
 
         if ( isMSVC )
