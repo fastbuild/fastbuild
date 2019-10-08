@@ -1805,7 +1805,8 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         if ( m_UseRelativePaths && job->IsLocal() )
         {
             if ( AddRelativeIncludeToArgs( "-I", token, workingDir, fullArgs ) ||
-                 AddRelativeIncludeToArgs( "/I", token, workingDir, fullArgs ) )
+                 AddRelativeIncludeToArgs( "/I", token, workingDir, fullArgs ) ||
+                 AddRelativeIncludeToArgs( "-include", token, workingDir, fullArgs ) )
                 {
                     continue; // Skip replaced token
                 }
