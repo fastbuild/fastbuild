@@ -196,6 +196,7 @@ private:
     bool                m_DeoptimizeWritableFilesWithToken  = false;
     bool                m_AllowDistribution                 = true;
     bool                m_AllowCaching                      = true;
+    bool                m_UseRelativePaths                  = false;
     Array< AString >    m_CompilerForceUsing;
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;

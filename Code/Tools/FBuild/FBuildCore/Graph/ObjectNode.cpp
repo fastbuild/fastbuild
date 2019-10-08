@@ -57,6 +57,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
     REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
+    REFLECT( m_UseRelativePaths,                    "UseRelativePaths",                 MetaOptional() )
     REFLECT_ARRAY( m_CompilerForceUsing,            "CompilerForceUsing",               MetaOptional() + MetaFile() )
 
     // Preprocessor
@@ -394,7 +395,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     if ( useCache && GetCompiler()->GetUseLightCache() )
     {
         LightCache lc;
-        if ( lc.Hash( this, fullArgs.GetFinalArgs(), m_LightCacheKey, m_Includes ) == false )
+        if ( lc.Hash( this, fullArgs.GetFinalArgs(), m_LightCacheKey, m_Includes, m_UseRelativePaths ) == false )
         {
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
@@ -1567,6 +1568,10 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     }
     fullArgs.Clear();
 
+    const AString & constWorkingDir = FBuild::Get().GetWorkingDir();
+    AString workingDir( constWorkingDir );
+    PathUtils::FixupFolderPath( workingDir ); // Set up working directory to be system-appropriate
+
     const bool isMSVC           = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_MSVC ) : GetFlag( FLAG_MSVC );
     const bool isClang          = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CLANG ) : GetFlag( FLAG_CLANG );
     const bool isGCC            = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_GCC ) : GetFlag( FLAG_GCC );
@@ -1667,6 +1672,47 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             if ( StripToken_MSVC( "Gm", token ) )
             {
                 continue;
+            }
+        }
+
+        // If use relative paths on local machine, replace all absolute paths
+        if ( m_UseRelativePaths && job->IsLocal() )
+        {
+            if ( IsStartOfCompilerArg_MSVC( token, "I" ) )
+            {
+                // Get include path part
+                const char * start = token.Get() + 2; // Skip /I or -I
+                const char * end = token.GetEnd();
+
+                // strip quotes if present
+                if ( *start == '"' )
+                {
+                    ++start;
+                }
+                if ( end[ -1 ] == '"' )
+                {
+                    --end;
+                }
+                AStackString includePath( start, end );
+                const bool isFullPath = PathUtils::IsFullPath( includePath );
+
+                // Replace full paths and leave relative paths alone
+                if ( isFullPath )
+                {
+                    // Remove full path include
+                    StripTokenWithArg_MSVC( "I", token, i );
+
+                    // Add relative include
+                    fullArgs.Append( token.Get(), (size_t) ( start - token.Get() ) );
+                    AStackString<> relPath;
+                    PathUtils::FixupFilePath( includePath );
+                    PathUtils::GetRelativePath( workingDir, includePath, relPath );
+                    fullArgs += relPath;
+                    fullArgs.Append( end, (size_t) ( token.GetEnd() - end ) );
+                    fullArgs.AddDelimiter();
+
+                    continue; // include path has been replaced
+                }
             }
         }
 
@@ -1807,14 +1853,24 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         if ( found )
         {
             fullArgs += AStackString<>( token.Get(), found );
+            AStackString<> inputFile;
             if ( overrideSrcFile.IsEmpty() )
             {
-                fullArgs += GetSourceFile()->GetName();
+                inputFile = GetSourceFile()->GetName();
             }
             else
             {
-                fullArgs += overrideSrcFile;
+                inputFile = overrideSrcFile;
             }
+
+            if ( m_UseRelativePaths )
+            {
+                AStackString<> relPath;
+                PathUtils::GetRelativePath( workingDir, inputFile, relPath );
+                inputFile = relPath;
+            }
+
+            fullArgs += inputFile;
             fullArgs += AStackString<>( found + 2, token.GetEnd() );
             fullArgs.AddDelimiter();
             continue;
@@ -1825,7 +1881,18 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         if ( found )
         {
             fullArgs += AStackString<>( token.Get(), found );
-            fullArgs += m_Name;
+
+            if ( m_UseRelativePaths )
+            {
+                AStackString<> relPath;
+                PathUtils::GetRelativePath( workingDir, m_Name, relPath );
+                fullArgs += relPath;
+            }
+            else
+            {
+                fullArgs += m_Name;
+            }
+
             fullArgs += AStackString<>( found + 2, token.GetEnd() );
             fullArgs.AddDelimiter();
             continue;
@@ -1840,7 +1907,18 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 // handle /Option:%3 -> /Option:A
                 fullArgs += AStackString<>( token.Get(), found );
                 ASSERT( m_PCHObjectFileName.IsEmpty() == false ); // Should have been populated
-                fullArgs += m_PCHObjectFileName;
+
+                if ( m_UseRelativePaths )
+                {
+                    AStackString<> relPath;
+                    PathUtils::GetRelativePath( workingDir, m_PCHObjectFileName, relPath );
+                    fullArgs += relPath;
+                }
+                else
+                {
+                    fullArgs += m_PCHObjectFileName;
+                }
+
                 fullArgs += AStackString<>( found + 2, token.GetEnd() );
                 fullArgs.AddDelimiter();
                 continue;

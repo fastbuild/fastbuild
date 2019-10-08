@@ -10,6 +10,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -257,7 +258,8 @@ LightCache::~LightCache()
 bool LightCache::Hash( ObjectNode * node,
                        const AString & compilerArgs,
                        uint64_t & outSourceHash,
-                       Array< AString > & outIncludes )
+                       Array< AString > & outIncludes,
+                       bool useRelativePaths )
 {
     PROFILE_FUNCTION
 
@@ -779,13 +781,24 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & 
 //------------------------------------------------------------------------------
 const IncludedFile * LightCache::FileExists( const AString & fileName )
 {
-    const uint64_t fileNameHash = xxHash::Calc64( fileName );
+    AString filePath;
+    if ( m_UseRelativePaths )
+    {
+        const AString & workingDir = FBuild::Get().GetWorkingDir();
+        PathUtils::GetRelativePath( workingDir, fileName, filePath );
+    }
+    else
+    {
+        filePath = AString( fileName );
+    }
+
+    const uint64_t fileNameHash = xxHash::Calc64( filePath );
     const uint64_t bucketIndex = LIGHTCACHE_HASH_TO_BUCKET( fileNameHash );
     IncludedFileBucket & bucket = g_AllIncludedFiles[ bucketIndex ];
     // Retrieve from shared cache
     {
         MutexHolder mh( bucket.m_Mutex );
-        const IncludedFile * location = bucket.m_HashSet.Find( fileName, fileNameHash );
+        const IncludedFile * location = bucket.m_HashSet.Find( filePath, fileNameHash );
         if ( location )
         {
             return location; // File previously handled so we can re-use the result
@@ -796,13 +809,13 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     IncludedFile * newFile = FNEW( IncludedFile() );
     const IncludedFile * retval = nullptr;
     newFile->m_FileNameHash = fileNameHash;
-    newFile->m_FileName = fileName;
+    newFile->m_FileName = filePath;
     newFile->m_Exists = false;
     newFile->m_ContentHash = 0;
 
     // Try to open the new file
     FileStream f;
-    if ( f.Open( fileName.Get() ) == false )
+    if ( f.Open( filePath.Get() ) == false )
     {
         {
             // Store to shared cache

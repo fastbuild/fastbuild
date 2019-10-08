@@ -49,6 +49,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
     REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
+    REFLECT( m_UseRelativePaths,                    "UseRelativePaths",                 MetaOptional() )
     REFLECT( m_Hidden,                              "Hidden",                           MetaOptional() )
     // Precompiled Headers
     REFLECT( m_PCHInputFile,                        "PCHInputFile",                     MetaOptional() + MetaFile() )
@@ -713,6 +714,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_PreprocessorOptions = preprocessorOptions;
     node->m_Flags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
+    node->m_UseRelativePaths = m_UseRelativePaths;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {

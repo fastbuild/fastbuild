@@ -29,7 +29,8 @@ public:
     bool Hash( ObjectNode * node,                // Object to be compiled
                const AString & compilerArgs,     // Args to extract include paths from
                uint64_t & outSourceHash,         // Resulting hash of source code
-               Array< AString > & outIncludes ); // Discovered dependencies
+               Array< AString > & outIncludes,   // Discovered dependencies
+               bool useRelativePaths );          // Use exclusively relative paths
 
     static void ClearCachedFiles();
 
@@ -59,6 +60,7 @@ protected:
     Array< const IncludedFile * >   m_IncludeStack;             // Stack of includes, for file relative checks
     Array< const IncludeDefine * >  m_IncludeDefines;           // Macros describing files to include
     bool                            m_ProblemParsing;           // Did we encounter some code we couldn't parse?
+    bool                            m_UseRelativePaths;         // Should we translate absolute paths to relative?
 };
 
 //------------------------------------------------------------------------------
