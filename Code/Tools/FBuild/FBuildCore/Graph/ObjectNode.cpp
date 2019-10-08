@@ -1546,7 +1546,6 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
 // AddRelativeIncludeToArgs
 /*static*/ bool ObjectNode::AddRelativeIncludeToArgs( const char * tokenToCheckFor, const AString & token, const AString & workingDir, Args & fullArgs )
 {
-    ASSERT( m_UseRelativePaths ); // Should not be using this method unless forcing relative paths
     if ( token.BeginsWith( tokenToCheckFor ) )
     {
         const char * start = token.Get() + AString::StrLen( tokenToCheckFor ); // Skip token characters
@@ -1557,7 +1556,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
         {
             ++start;
         }
-        if ( *end[ -1 ] == '"' )
+        if ( end[ -1 ] == '"' )
         {
             --end;
         }
