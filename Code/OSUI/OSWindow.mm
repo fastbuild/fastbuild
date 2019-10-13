@@ -27,11 +27,11 @@
 
 // AppDelegate
 //------------------------------------------------------------------------------
-@interface AppDelegate : NSObject<NSApplicationDelegate, NSWindowDelegate>
-    @property OSWindow * mOSWindow;
+@interface Window : NSWindow<NSApplicationDelegate, NSWindowDelegate>
+    @property OSWindow * m_OSWindow;
 @end
 
-@implementation AppDelegate
+@implementation Window
 // applicationDidFinishLaunching
 //------------------------------------------------------------------------------
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
@@ -46,7 +46,7 @@
 - (void)windowWillMiniaturize:(NSNotification *)notification
 {
     (void)notification;
-    _mOSWindow->OnMinimize();
+    _m_OSWindow->OnMinimize();
 }
 
 // windowShouldClose
@@ -54,7 +54,7 @@
 - (BOOL)windowShouldClose:(id)sender {
     (void)sender;
 
-    const bool closeHandled = _mOSWindow->OnClose();
+    const bool closeHandled = _m_OSWindow->OnClose();
     return closeHandled ? NO : YES; // Swallow the close if handled by the callback
 }
 @end
@@ -63,29 +63,36 @@
 //------------------------------------------------------------------------------
 void * WindowOSX_Create( OSWindow * owner, int32_t x, int32_t y, uint32_t w, uint32_t h )
 {
-    AppDelegate * delegate = [[AppDelegate alloc] init];
-    delegate.mOSWindow = owner;
-
-    NSApplication * application = [NSApplication sharedApplication];
-    [application setDelegate:delegate];
-
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     id applicationName = [[NSProcessInfo processInfo] processName];
-    NSWindow * window = [[NSWindow alloc]
+    Window * window = [[Window alloc]
             initWithContentRect:NSMakeRect(0, 0, w, h)
             styleMask:NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable
             backing:NSBackingStoreBuffered
             defer:NO
             ];
-    [window setDelegate:delegate];
     [window cascadeTopLeftFromPoint:NSMakePoint(x, y)];
     [window setTitle:applicationName];
     [window makeKeyAndOrderFront:nil];
+    window.m_OSWindow = owner;
     
     FlippedView * flippedView = [[FlippedView alloc] init];
     [window setContentView:flippedView];
 
-    return (__bridge void *)window;
+    NSApplication * application = [NSApplication sharedApplication];
+    [application setDelegate:window];
+    
+    // NOTE: transfer ownership to C++
+    return (__bridge_retained void *)window;
+}
+
+// WindowOSX_Destroy
+//------------------------------------------------------------------------------
+void WindowOSX_Destroy( OSWindow * owner )
+{
+    // NOTE: Transfer ownership back to ARC
+    Window * window = (__bridge_transfer Window *)owner->GetHandle();
+    (void)window;
 }
 
 // WindowOSX_MessageLoop
@@ -134,7 +141,7 @@ void WindowOSX_SetMinimized( bool minimized )
 //------------------------------------------------------------------------------
 void WindowOSX_SetTitle( OSWindow * owner, const char * title )
 {
-    NSWindow * window = (__bridge NSWindow *)owner->GetHandle();
+    Window * window = (__bridge Window *)owner->GetHandle();
     NSString * string = [NSString stringWithUTF8String:title];
     [[NSOperationQueue mainQueue] addOperationWithBlock:^{
         [window setTitle:string];

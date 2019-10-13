@@ -24,6 +24,7 @@
 //------------------------------------------------------------------------------
 #if defined( __OSX__ )
     void * WindowOSX_Create( OSWindow * owner, int32_t x, int32_t y, uint32_t w, uint32_t h );
+    void WindowOSX_Destroy( OSWindow * owner );
     uint32_t WindowOSX_GetPrimaryScreenWidth();
     void WindowOSX_MessageLoop();
     void WindowOSX_SetTitle( OSWindow * owner, const char * title );
@@ -137,6 +138,11 @@ OSWindow::~OSWindow()
         if ( m_Handle )
         {
             DestroyWindow( (HWND)m_Handle );
+        }
+    #elif defined( __OSX__ )
+        if ( m_Handle )
+        {
+            WindowOSX_Destroy( this );
         }
     #endif
 }
