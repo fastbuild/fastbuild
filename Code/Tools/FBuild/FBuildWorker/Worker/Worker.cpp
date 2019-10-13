@@ -97,13 +97,6 @@ Worker::~Worker()
 //------------------------------------------------------------------------------
 int32_t Worker::Work()
 {
-    // spawn work thread
-    m_WorkThread = Thread::CreateThread( &WorkThreadWrapper,
-                                         "WorkerThread",
-                                         ( 256 * KILOBYTE ),
-                                         this );
-    ASSERT( m_WorkThread != INVALID_THREAD_HANDLE );
-
     // Open GUI or setup console
     if ( InConsoleMode() )
     {
@@ -120,6 +113,18 @@ int32_t Worker::Work()
     {
         // Create UI
         m_MainWindow = FNEW( WorkerWindow() );
+    }
+    
+    // spawn work thread
+    m_WorkThread = Thread::CreateThread( &WorkThreadWrapper,
+                                        "WorkerThread",
+                                        ( 256 * KILOBYTE ),
+                                        this );
+    ASSERT( m_WorkThread != INVALID_THREAD_HANDLE );
+    
+	// Run the UI message loop if we're not in console mode
+    if ( m_MainWindow )
+    {
         m_MainWindow->Work(); // Blocks until exit
     }
 

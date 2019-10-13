@@ -48,33 +48,7 @@ WorkerWindow::WorkerWindow()
 {
     // obtain host name
     Network::GetHostName(m_HostName);
-}
 
-// DESTRUCTOR
-//------------------------------------------------------------------------------
-WorkerWindow::~WorkerWindow() = default;
-
-// SetStatus
-//------------------------------------------------------------------------------
-void WorkerWindow::SetStatus( const char * statusText )
-{
-    AStackString< 512 > text;
-    text.Format( "FBuildWorker %s | \"%s\" | %s", FBUILD_VERSION_STRING, m_HostName.Get(), statusText );
-    SetTitle( text.Get() );
-}
-
-// SetWorkerState
-//------------------------------------------------------------------------------
-void WorkerWindow::SetWorkerState( size_t index, const AString & hostName, const AString & status )
-{
-    m_ThreadList->SetItemText( (uint32_t)index, 1, hostName.Get() );
-    m_ThreadList->SetItemText( (uint32_t)index, 2, status.Get() );
-}
-
-// Work
-//------------------------------------------------------------------------------
-void WorkerWindow::Work()
-{
     // center the window on screen
     const uint32_t w = 700;
     const uint32_t h = 300;
@@ -180,7 +154,45 @@ void WorkerWindow::Work()
     #endif
 
     SetStatus( "Idle" );
+}
 
+// DESTRUCTOR
+//------------------------------------------------------------------------------
+WorkerWindow::~WorkerWindow()
+{
+    // clean up UI resources
+    FDELETE( m_Splitter );
+    FDELETE( m_ResourcesLabel );
+    FDELETE( m_ResourcesDropDown );
+    FDELETE( m_ModeLabel );
+    FDELETE( m_ModeDropDown );
+    FDELETE( m_ThreadList );
+    FDELETE( m_Menu );
+    FDELETE( m_Font );
+    FDELETE( m_TrayIcon );
+}
+
+// SetStatus
+//------------------------------------------------------------------------------
+void WorkerWindow::SetStatus( const char * statusText )
+{
+    AStackString< 512 > text;
+    text.Format( "FBuildWorker %s | \"%s\" | %s", FBUILD_VERSION_STRING, m_HostName.Get(), statusText );
+    SetTitle( text.Get() );
+}
+
+// SetWorkerState
+//------------------------------------------------------------------------------
+void WorkerWindow::SetWorkerState( size_t index, const AString & hostName, const AString & status )
+{
+    m_ThreadList->SetItemText( (uint32_t)index, 1, hostName.Get() );
+    m_ThreadList->SetItemText( (uint32_t)index, 2, status.Get() );
+}
+
+// Work
+//------------------------------------------------------------------------------
+void WorkerWindow::Work()
+{
     #if defined( __WINDOWS__ )
         // process messages until wo need to quit
         MSG msg;
@@ -206,17 +218,6 @@ void WorkerWindow::Work()
     #if defined( __OSX__ )
         PumpMessages();
     #endif
-
-    // clean up UI resources
-    FDELETE( m_Splitter );
-    FDELETE( m_ResourcesLabel );
-    FDELETE( m_ResourcesDropDown );
-    FDELETE( m_ModeLabel );
-    FDELETE( m_ModeDropDown );
-    FDELETE( m_ThreadList );
-    FDELETE( m_Menu );
-    FDELETE( m_Font );
-    FDELETE( m_TrayIcon );
 }
 
 // OnMinimize
