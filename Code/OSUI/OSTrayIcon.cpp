@@ -12,6 +12,12 @@
 #include "Core/Env/Assert.h"
 #include "Core/Strings/AString.h"
 
+// System
+//------------------------------------------------------------------------------
+#if defined( __OSX__ )
+    #include <mach-o/getsect.h>
+#endif
+
 // Defines
 //------------------------------------------------------------------------------
 #define ID_TRAY_APP_ICON                5000
@@ -20,7 +26,7 @@
 // OSX Functions
 //------------------------------------------------------------------------------
 #if defined( __OSX__ )
-    void * TrayIconOSX_Create();
+    void * TrayIconOSX_Create( void * iconData, size_t iconDataSize );
     void TrayIconOSX_SetMenu( OSTrayIcon * owner, OSMenu * menu );
 #endif
 
@@ -48,9 +54,10 @@ OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
         // Display
         Shell_NotifyIcon( NIM_ADD, &m_NotifyIconData );
     #elif defined( __OSX__ )
+        const struct section_64 * sect = getsectbyname( "binary", "trayicon" );
+        m_Handle = TrayIconOSX_Create( (void *)sect->addr, sect->size );
         (void)parentWindow;
         (void)toolTip;
-        m_Handle = TrayIconOSX_Create();
     #else
         (void)parentWindow;
         (void)toolTip;

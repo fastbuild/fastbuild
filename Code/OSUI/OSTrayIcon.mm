@@ -12,17 +12,10 @@
 
 // TrayIconOSX_Create
 //------------------------------------------------------------------------------
-void * TrayIconOSX_Create()
+void * TrayIconOSX_Create( void * iconData, size_t iconDataSize )
 {
-    // Create an icon image - TODO:OSX Use an actual image
-    NSSize size;
-    size.width = 16;
-    size.height = 16;
-    NSColor * color = [NSColor colorWithCalibratedRed:0.0f green:0.0f blue:1.0f alpha:1.0];
-    NSImage * statusImage = [[NSImage alloc] initWithSize:size];
-    [statusImage lockFocus];
-    [color drawSwatchInRect:NSMakeRect(0, 0, size.width, size.height)];
-    [statusImage unlockFocus];
+    // Create NSImage from data
+    NSImage * statusImage = [[NSImage alloc] initWithData:[NSData dataWithBytes:iconData length:iconDataSize]];
 
     // Add status item to global status bar
     NSStatusItem * statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
