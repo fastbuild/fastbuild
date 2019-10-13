@@ -239,6 +239,8 @@ void OSWindow::SetMinimized( bool minimized )
         return GetSystemMetrics( SM_CXSCREEN );
     #elif defined( __OSX__ )
         return WindowOSX_GetPrimaryScreenWidth();
+    #else
+        return 1920; // TODO:LINUX Implement
     #endif
 }
 
