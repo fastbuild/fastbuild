@@ -101,6 +101,18 @@ void WindowOSX_MessageLoop()
 void WindowOSX_StopMessageLoop()
 {
     [NSApp stop:nil];
+
+    // Send a dummy event to force the event loop to stop
+    [NSApp postEvent:[NSEvent otherEventWithType:NSEventTypeApplicationDefined
+                              location:NSMakePoint( 0, 0 )
+                              modifierFlags:0
+                              timestamp:0
+                              windowNumber:0
+                              context:NULL
+                              subtype:0
+                              data1:0
+                              data2:0]
+           atStart:NO];
 }
 
 // WindowOSX_SetMinimized

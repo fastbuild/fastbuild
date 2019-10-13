@@ -50,11 +50,13 @@ Worker::Worker( const AString & args, bool consoleMode )
     m_ConnectionPool = FNEW( Server );
 
     Env::GetExePath( m_BaseExeName );
-    if ( m_BaseExeName.Replace( ".copy", "" ) != 1 )
-    {
-        m_BaseExeName.Clear(); // not running from copy, disable restart detection
-    }
-    m_BaseArgs.Replace( "-subprocess", "" );
+    #if defined( __WINDOWS__ )
+        if ( m_BaseExeName.Replace( ".copy", "" ) != 1 )
+        {
+            m_BaseExeName.Clear(); // not running from copy, disable restart detection
+        }
+        m_BaseArgs.Replace( "-subprocess", "" );
+    #endif
 }
 
 // DESTRUCTOR
