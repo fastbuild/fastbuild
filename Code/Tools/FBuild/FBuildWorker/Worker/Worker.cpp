@@ -99,7 +99,7 @@ int32_t Worker::Work()
 {
     // spawn work thread
     m_WorkThread = Thread::CreateThread( &WorkThreadWrapper,
-                                         "UIThread",
+                                         "WorkerThread",
                                          ( 256 * KILOBYTE ),
                                          this );
     ASSERT( m_WorkThread != INVALID_THREAD_HANDLE );
@@ -201,6 +201,11 @@ uint32_t Worker::WorkThread()
 
         Thread::Sleep( 500 );
     }
+
+    #if defined( __OSX__ )
+        extern void WindowOSX_StopMessageLoop(); // TODO:C tidy this up
+        WindowOSX_StopMessageLoop();
+    #endif
 
     m_WorkerBrokerage.SetAvailability( false );
 

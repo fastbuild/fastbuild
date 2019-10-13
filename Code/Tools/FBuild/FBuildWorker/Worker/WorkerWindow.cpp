@@ -75,89 +75,96 @@ void WorkerWindow::SetWorkerState( size_t index, const AString & hostName, const
 //------------------------------------------------------------------------------
 void WorkerWindow::Work()
 {
+    // center the window on screen
+    const uint32_t w = 700;
+    const uint32_t h = 300;
+    const int32_t x = (int32_t)( GetPrimaryScreenWidth() - w );
+    const int32_t y = 0;
+
+    // Create the window
+    Init( x, y, w, h );
+
+    // Create the tray icon
+    AStackString<> toolTip;
+    toolTip.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
+    m_TrayIcon = FNEW( OSTrayIcon( this, toolTip ) );
+
+    // listview
+    m_ThreadList = FNEW( OSListView( this ) );
     #if defined( __WINDOWS__ )
-        // center the window on screen
-        uint32_t w = 700;
-        uint32_t h = 300;
-        int32_t x = ( GetSystemMetrics(SM_CXSCREEN) - (int32_t)w );
-        int32_t y = 0;
-
-        Init( x, y, w, h );
-
-        // Create the tray icon
-        AStackString<> toolTip;
-        toolTip.Format( "FBuildWorker %s", FBUILD_VERSION_STRING );
-        m_TrayIcon = FNEW( OSTrayIcon( this, toolTip ) );
-
         // get main window dimensions for positioning/sizing child controls
         RECT rcClient; // The parent window's client area.
         GetClientRect( (HWND)GetHandle(), &rcClient );
-
-        // listview
-        m_ThreadList = FNEW( OSListView( this ) );
         m_ThreadList->Init( 0, 30, (uint32_t)( rcClient.right - rcClient.left) , (uint32_t)( ( rcClient.bottom - rcClient.top ) - 30 ) );
-        m_ThreadList->AddColumn( "CPU", 0, 35 );
-        m_ThreadList->AddColumn( "Host", 1, 100 );
-        m_ThreadList->AddColumn( "Status", 2, 530 );
-        size_t numWorkers = JobQueueRemote::Get().GetNumWorkers();
-        m_ThreadList->SetItemCount( (uint32_t)numWorkers );
-        for ( size_t i=0; i<numWorkers; ++i )
-        {
-            AStackString<> string;
-            string.Format( "%u", (uint32_t)( numWorkers - i ) );
-            m_ThreadList->AddItem( string.Get() );
-        }
+    #elif defined( __OSX__ )
+        m_ThreadList->Init( 4, 30, w - 8, h - 38 );
+    #endif
+    m_ThreadList->AddColumn( "CPU", 0, 35 );
+    m_ThreadList->AddColumn( "Host", 1, 100 );
+    m_ThreadList->AddColumn( "Status", 2, 530 );
+    size_t numWorkers = JobQueueRemote::Get().GetNumWorkers();
+    m_ThreadList->SetItemCount( (uint32_t)numWorkers );
+    for ( size_t i=0; i<numWorkers; ++i )
+    {
+        AStackString<> string;
+        string.Format( "%u", (uint32_t)( i + 1 ) );
+        m_ThreadList->AddItem( string.Get() );
+    }
 
+    #if defined( __WINDOWS__ )
         // font
         m_Font = FNEW( OSFont() );
         m_Font->Init( 14, "Verdana" );
+    #endif
 
-        // Mode drop down
-        m_ModeDropDown = FNEW( OSDropDown( this ) );
-        m_ModeDropDown->SetFont( m_Font );
-        m_ModeDropDown->Init( 100, 3, 230, 200 );
-        m_ModeDropDown->AddItem( "Disabled" );
-        m_ModeDropDown->AddItem( "Work For Others When Idle" );
-        m_ModeDropDown->AddItem( "Work For Others Always" );
-        m_ModeDropDown->AddItem( "Work For Others Proportional" );
-        m_ModeDropDown->SetSelectedItem( WorkerSettings::Get().GetMode() );
+    // Mode drop down
+    m_ModeDropDown = FNEW( OSDropDown( this ) );
+    m_ModeDropDown->SetFont( m_Font );
+    m_ModeDropDown->Init( 100, 3, 230, 200 );
+    m_ModeDropDown->AddItem( "Disabled" );
+    m_ModeDropDown->AddItem( "Work For Others When Idle" );
+    m_ModeDropDown->AddItem( "Work For Others Always" );
+    m_ModeDropDown->AddItem( "Work For Others Proportional" );
+    m_ModeDropDown->SetSelectedItem( WorkerSettings::Get().GetMode() );
 
-        // Mode label
-        m_ModeLabel = FNEW( OSLabel( this ) );
-        m_ModeLabel->SetFont( m_Font );
-        m_ModeLabel->Init( 5, 7, 95, 15, "Current Mode:" );
+    // Mode label
+    m_ModeLabel = FNEW( OSLabel( this ) );
+    m_ModeLabel->SetFont( m_Font );
+    m_ModeLabel->Init( 5, 7, 95, 15, "Current Mode:" );
 
-        // Resources drop down
-        m_ResourcesDropDown = FNEW( OSDropDown( this ) );
-        m_ResourcesDropDown->SetFont( m_Font );
-        m_ResourcesDropDown->Init( 380, 3, 150, 200 );
+    // Resources drop down
+    m_ResourcesDropDown = FNEW( OSDropDown( this ) );
+    m_ResourcesDropDown->SetFont( m_Font );
+    m_ResourcesDropDown->Init( 380, 3, 150, 200 );
+    {
+        // add items
+        uint32_t numProcessors = Env::GetNumProcessors();
+        AStackString<> buffer;
+        for ( uint32_t i=0; i<numProcessors; ++i )
         {
-            // add items
-            uint32_t numProcessors = Env::GetNumProcessors();
-            AStackString<> buffer;
-            for ( uint32_t i=0; i<numProcessors; ++i )
-            {
-                float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
-                buffer.Format( "%u CPUs (%2.1f%%)", ( i + 1 ), (double)perc );
-                m_ResourcesDropDown->AddItem( buffer.Get() );
-            }
+            float perc = ( i == ( numProcessors - 1 ) ) ? 100.0f : ( (float)( i + 1 ) / (float)numProcessors ) * 100.0f;
+            buffer.Format( "%u CPUs (%2.1f%%)", ( i + 1 ), (double)perc );
+            m_ResourcesDropDown->AddItem( buffer.Get() );
         }
-        m_ResourcesDropDown->SetSelectedItem( WorkerSettings::Get().GetNumCPUsToUse() - 1 );
+    }
+    m_ResourcesDropDown->SetSelectedItem( WorkerSettings::Get().GetNumCPUsToUse() - 1 );
 
-        // Resources label
-        m_ResourcesLabel = FNEW( OSLabel( this ) );
-        m_ResourcesLabel->SetFont( m_Font );
-        m_ResourcesLabel->Init( 335, 7, 45, 15, "Using:" );
+    // Resources label
+    m_ResourcesLabel = FNEW( OSLabel( this ) );
+    m_ResourcesLabel->SetFont( m_Font );
+    m_ResourcesLabel->Init( 335, 7, 45, 15, "Using:" );
 
-        // splitter
-        m_Splitter = FNEW( OSSplitter( this ) );
-        m_Splitter->Init( 0, 27, w, 2u );
+    // splitter
+    m_Splitter = FNEW( OSSplitter( this ) );
+    m_Splitter->Init( 0, 27, w, 2u );
 
-        // popup menu for tray icon
-        m_Menu = FNEW( OSMenu( this ) );
-        m_Menu->Init();
-        m_Menu->AddItem( "Exit" );
+    // popup menu for tray icon
+    m_Menu = FNEW( OSMenu( this ) );
+    m_Menu->Init();
+    m_Menu->AddItem( "Exit" );
+    m_TrayIcon->SetMenu( m_Menu );
 
+    #if defined( __WINDOWS__ )
         // Display the window and minimize it if needed
         if ( WorkerSettings::Get().GetStartMinimzed() )
         {
@@ -170,9 +177,11 @@ void WorkerWindow::Work()
             UpdateWindow( (HWND)GetHandle() );
             ShowWindow( (HWND)GetHandle(), SW_SHOWNOACTIVATE ); // First call can be ignored
         }
+    #endif
 
-        SetStatus( "Idle" );
+    SetStatus( "Idle" );
 
+    #if defined( __WINDOWS__ )
         // process messages until wo need to quit
         MSG msg;
         do
@@ -192,33 +201,34 @@ void WorkerWindow::Work()
                 Sleep( 100 );
             }
         } while ( m_WantToQuit == false );
-
-        // clean up UI resources
-        FDELETE( m_Splitter );
-        FDELETE( m_ResourcesLabel );
-        FDELETE( m_ResourcesDropDown );
-        FDELETE( m_ModeLabel );
-        FDELETE( m_ModeDropDown );
-        FDELETE( m_ThreadList );
-        FDELETE( m_Menu );
-        FDELETE( m_Font );
-        FDELETE( m_TrayIcon );
-
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement UIThread
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement UIThread
-    #else
-        #error Unknown Platform
     #endif
+
+    #if defined( __OSX__ )
+        PumpMessages();
+    #endif
+
+    // clean up UI resources
+    FDELETE( m_Splitter );
+    FDELETE( m_ResourcesLabel );
+    FDELETE( m_ResourcesDropDown );
+    FDELETE( m_ModeLabel );
+    FDELETE( m_ModeDropDown );
+    FDELETE( m_ThreadList );
+    FDELETE( m_Menu );
+    FDELETE( m_Font );
+    FDELETE( m_TrayIcon );
 }
 
 // OnMinimize
 //------------------------------------------------------------------------------
 /*virtual*/ bool WorkerWindow::OnMinimize()
 {
-    // Override minimize
-    ToggleMinimized();
+    #if defined( __OSX__ )
+        SetMinimized( true );
+    #else
+        // Override minimize
+        ToggleMinimized();
+    #endif
     return true; // Stop window minimizing (since we already handled it)
 }
 
@@ -227,7 +237,12 @@ void WorkerWindow::Work()
 /*virtual*/ bool WorkerWindow::OnClose()
 {
     // Override close to minimize
-    ToggleMinimized();
+    #if defined( __OSX__ )
+        SetMinimized( true );
+    #else
+        ToggleMinimized();
+    #endif
+
     return true; // Stop window closeing (since we already handled it)
 }
 
@@ -251,11 +266,13 @@ void WorkerWindow::Work()
 //------------------------------------------------------------------------------
 /*virtual*/ bool WorkerWindow::OnTrayIconRightClick()
 {
-    uint32_t index;
-    if ( m_Menu->ShowAndWaitForSelection( index ) )
-    {
-        SetWantToQuit();
-    }
+    #if defined( __WINDOWS__ )
+        uint32_t index;
+        if ( m_Menu->ShowAndWaitForSelection( index ) )
+        {
+            OnTrayIconMenuItemSelected( index );
+        }
+    #endif
 
     return true; // Handled
 }
@@ -274,6 +291,14 @@ void WorkerWindow::Work()
         WorkerSettings::Get().SetNumCPUsToUse( (uint32_t)index + 1 );
     }
     WorkerSettings::Get().Save();
+}
+
+// OnTrayIconMenuItemSelected
+//------------------------------------------------------------------------------
+/*virtual*/ void WorkerWindow::OnTrayIconMenuItemSelected( uint32_t /*index*/ )
+{
+    // We only have one menu item right now
+    SetWantToQuit();
 }
 
 // ToggleMinimized
@@ -298,7 +323,7 @@ void WorkerWindow::ToggleMinimized()
             SetActiveWindow( hWnd );
         }
     #elif defined( __APPLE__ )
-        // TODO:MAC Implement WorkerWindow::Toggle
+        SetMinimized( minimized );
     #elif defined( __LINUX__ )
         // TODO:LINUX Implement WorkerWindow::Toggle
     #else

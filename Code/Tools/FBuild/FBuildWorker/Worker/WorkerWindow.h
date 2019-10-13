@@ -43,8 +43,6 @@ public:
     bool WantToQuit() const { return m_WantToQuit; }
     void SetWantToQuit() { m_WantToQuit = true; }
 
-    void ShowBalloonTip( const char * msg );
-
 private:
     // OSWindow events
     virtual bool OnClose() override;
@@ -53,6 +51,7 @@ private:
     virtual bool OnTrayIconLeftClick() override;
     virtual bool OnTrayIconRightClick() override;
     virtual void OnDropDownSelectionChanged( OSDropDown * dropDown ) override;
+    virtual void OnTrayIconMenuItemSelected( uint32_t index ) override;
 
     // Internal Helpers
     void ToggleMinimized();
