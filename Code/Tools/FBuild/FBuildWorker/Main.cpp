@@ -27,7 +27,7 @@ SystemMutex g_OneProcessMutex( "Global\\FBuildWorker" );
 
 // Functions
 //------------------------------------------------------------------------------
-int MainCommon( const AString & args, void * hInstance );
+int MainCommon( const AString & args );
 #if defined( __WINDOWS__ )
     int LaunchSubProcess( const AString & args );
 #endif
@@ -49,13 +49,13 @@ void ShowMsgBox( const char * msg )
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
     PRAGMA_DISABLE_PUSH_MSVC( 28251 ) // don't complain about missing annotations on WinMain
-    int WINAPI WinMain( HINSTANCE hInstance,
+    int WINAPI WinMain( HINSTANCE /*hInstance*/,
                         HINSTANCE /*hPrevInstance*/,
                         LPSTR lpCmdLine,
                         int /*nCmdShow*/ )
     {
         AStackString<> args( lpCmdLine );
-        return MainCommon( args, hInstance );
+        return MainCommon( args );
     }
     PRAGMA_DISABLE_POP_MSVC
 #else
@@ -70,7 +70,7 @@ void ShowMsgBox( const char * msg )
             }
             args += argv[ i ];
         }
-        return MainCommon( args, nullptr );
+        return MainCommon( args );
     }
 #endif
 
@@ -78,7 +78,7 @@ void ShowMsgBox( const char * msg )
 
 // MainCommon
 //------------------------------------------------------------------------------
-int MainCommon( const AString & args, void * hInstance )
+int MainCommon( const AString & args )
 {
     // don't buffer output
     VERIFY( setvbuf(stdout, nullptr, _IONBF, 0) == 0 );
@@ -174,7 +174,7 @@ int MainCommon( const AString & args, void * hInstance )
         }
 
         // worker settings are set, so initialize the worker
-        worker.Initialize( hInstance, options.m_ConsoleMode );
+        worker.Initialize( options.m_ConsoleMode );
 
         // do work
         ret = worker.Work();
