@@ -112,6 +112,7 @@ private:
     bool                m_IsLocal           = true;
     Array< int32_t >    m_SystemErrors; // On client, the total errors; on worker, errors for the current attempt
     Array< BlacklistRecord > m_BlacklistRecords;
+
     DistributionState   m_DistributionState = DIST_NONE;
     AString             m_RemoteName;
     AString             m_RemoteSourceRoot;
