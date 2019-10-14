@@ -228,7 +228,7 @@ uint32_t Worker::WorkThread()
         if ( brokerageStatus != WorkerBrokerage::BrokerageSuccess )
         {
             // skip display of error dialog here, since UI already shutdown
-            return -2;
+            return (uint32_t)-2;
         }
     }
 
