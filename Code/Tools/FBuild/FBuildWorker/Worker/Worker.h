@@ -12,6 +12,7 @@
 // Core
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/Process/Thread.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -27,23 +28,27 @@ class Worker
 {
 public:
     explicit Worker( const AString & args );
-    void Initialize( void * hInstance, const bool consoleMode );
+    void Initialize( const bool consoleMode );
     ~Worker();
 
-    int Work();
+    int32_t Work();
 
 private:
+    static uint32_t WorkThreadWrapper( void * userData );
+    uint32_t WorkThread();
+
     void UpdateAvailability();
     void UpdateUI();
     void CheckForExeUpdate();
     bool HasEnoughDiskSpace();
 
-    inline bool InConsoleMode() const { return ( m_MainWindow == nullptr ); }
+    inline bool InConsoleMode() const { return m_ConsoleMode; }
 
     void StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
     void ErrorMessageString( MSVC_SAL_PRINTF const char * message ) const;
     void ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
 
+    bool                m_ConsoleMode;
     WorkerWindow        * m_MainWindow;
     Server              * m_ConnectionPool;
     NetworkStartupHelper * m_NetworkStartupHelper;
@@ -61,6 +66,7 @@ private:
         int32_t             m_LastDiskSpaceResult;      // -1 : No check done yet. 0=Not enough space right now. 1=OK for now.
     #endif
     mutable AString     m_LastStatusMessage;
+    Thread::ThreadHandle m_WorkThread;
 };
 
 //------------------------------------------------------------------------------

@@ -35,7 +35,8 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Worker::Worker( const AString & args )
-    : m_MainWindow( nullptr )
+    : m_ConsoleMode( false )
+    , m_MainWindow( nullptr )
     , m_ConnectionPool( nullptr )
     , m_NetworkStartupHelper( nullptr )
     , m_BaseArgs( args )
@@ -50,8 +51,9 @@ Worker::Worker( const AString & args )
 
 // Initialize
 //------------------------------------------------------------------------------
-void Worker::Initialize( void * hInstance, const bool consoleMode )
+void Worker::Initialize( const bool consoleMode )
 {
+    m_ConsoleMode = consoleMode;
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
 
     Server::Options serverOptions;
@@ -61,28 +63,14 @@ void Worker::Initialize( void * hInstance, const bool consoleMode )
 
     m_ConnectionPool = FNEW( Server ( serverOptions ) );
 
-    if ( consoleMode == true )
-    {
-        #if __WINDOWS__
-            VERIFY( ::AllocConsole() );
-            PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-            VERIFY( freopen("CONOUT$", "w", stdout) ); // TODO:C consider using freopen_s
-            PRAGMA_DISABLE_POP_MSVC // 4996
-        #endif
-    }
-    else
-    {
-        m_MainWindow = FNEW( WorkerWindow( hInstance ) );
-    }
-
     Env::GetExePath( m_BaseExeName );
-    if ( m_BaseExeName.Replace( ".copy", "" ) != 1 )
-    {
-        m_BaseExeName.Clear(); // not running from copy, disable restart detection
-    }
-    m_BaseArgs.Replace( "-subprocess", "" );
-
-    StatusMessage( "FBuildWorker %s", FBUILD_VERSION_STRING );
+    #if defined( __WINDOWS__ )
+        if ( m_BaseExeName.Replace( ".copy", "" ) != 1 )
+        {
+            m_BaseExeName.Clear(); // not running from copy, disable restart detection
+        }
+        m_BaseArgs.Replace( "-subprocess", "" );
+    #endif
 }
 
 // DESTRUCTOR
@@ -123,14 +111,64 @@ Worker::~Worker()
 
 // Work
 //------------------------------------------------------------------------------
-int Worker::Work()
+int32_t Worker::Work()
 {
+    // Open GUI or setup console
+    if ( InConsoleMode() )
+    {
+        #if __WINDOWS__
+            VERIFY( ::AllocConsole() );
+            PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+            VERIFY( freopen("CONOUT$", "w", stdout) ); // TODO:C consider using freopen_s
+            PRAGMA_DISABLE_POP_MSVC // 4996
+        #endif
+
+        // TODO: Block until Ctrl+C
+    }
+    else
+    {
+        // Create UI
+        m_MainWindow = FNEW( WorkerWindow() );
+    }
+    
+    // spawn work thread
+    m_WorkThread = Thread::CreateThread( &WorkThreadWrapper,
+                                        "WorkerThread",
+                                        ( 256 * KILOBYTE ),
+                                        this );
+    ASSERT( m_WorkThread != INVALID_THREAD_HANDLE );
+    
+	// Run the UI message loop if we're not in console mode
+    if ( m_MainWindow )
+    {
+        m_MainWindow->Work(); // Blocks until exit
+    }
+
+    // Join work thread and get exit code
+    return Thread::WaitForThread( m_WorkThread );
+}
+
+// WorkThreadWrapper
+//------------------------------------------------------------------------------
+/*static*/ uint32_t Worker::WorkThreadWrapper( void * userData )
+{
+    Worker * worker = reinterpret_cast<Worker *>( userData );
+    return worker->WorkThread();
+}
+
+// WorkThread
+//------------------------------------------------------------------------------
+uint32_t Worker::WorkThread()
+{
+    // Initial status message
+    StatusMessage( "FBuildWorker %s", FBUILD_VERSION_STRING );
+
     // start listening
     StatusMessage( "Listening on port %u\n", Protocol::PROTOCOL_PORT );
     if ( m_ConnectionPool->Listen( Protocol::PROTOCOL_PORT ) == false )
     {
         ErrorMessage( "Failed to listen on port %u.  Check port is not in use.", Protocol::PROTOCOL_PORT );
-        return -1;
+        return (uint32_t)-1;
     }
 
     // Special folder for Orbis Clang
@@ -142,7 +180,7 @@ int Worker::Work()
             if ( !FileIO::EnsurePathExists( m_WorkerSettings->GetSandboxTmp() ) )
             {
                 ErrorMessage( "Failed to create tmp folder %s (error %u)", m_WorkerSettings->GetSandboxTmp().Get(), Env::GetLastErr() );
-                return -2;
+                return (uint32_t)-2;
             }
             tmpPath = m_WorkerSettings->GetObfuscatedSandboxTmp();
         }
@@ -169,7 +207,7 @@ int Worker::Work()
             if ( !lastSlash )
             {
                 ErrorMessage( "Failed to get sandbox exe dir from sandbox exe\n" );
-                return -2;
+                return (uint32_t)-2;
             }
             AStackString<> sandboxExeDir;
             sandboxExeDir.Assign( absSandboxExe.Get(), lastSlash );
@@ -181,7 +219,7 @@ int Worker::Work()
                 errorMsg ) )
             {
                 ErrorMessageString( errorMsg.Get() );
-                return -2;
+                return (uint32_t)-2;
             }
             if ( !FileIO::SetLowIntegrity(
                 m_WorkerSettings->GetSandboxTmp(),  // pass in root sandbox tmp dir
@@ -195,7 +233,7 @@ int Worker::Work()
                 errorMsg ) )
             {
                 ErrorMessageString( errorMsg.Get() );
-                return -2;
+                return (uint32_t)-2;
             }
         #endif
 
@@ -205,7 +243,7 @@ int Worker::Work()
                 // so we can hide the obfuscated dir from other processes
                 ErrorMessage( "Failed to create sandbox dir under %s Error: %s",
                     m_WorkerSettings->GetSandboxTmp().Get(), LAST_ERROR_STR );
-                return -2;
+                return (uint32_t)-2;
             }
         }
         else
@@ -213,7 +251,7 @@ int Worker::Work()
             if ( !FileIO::EnsurePathExists( tmpPath ) )
             {
                 ErrorMessage( "Failed to create tmp folder %s Error: %s", tmpPath.Get(), LAST_ERROR_STR );
-                return -2;
+                return (uint32_t)-2;
             }
         }
 
@@ -225,7 +263,7 @@ int Worker::Work()
         if ( !m_TargetIncludeFolderLock.Open( tmpPath.Get(), FileStream::WRITE_ONLY ) )
         {
             ErrorMessage( "Failed to lock tmp folder. Error: %s", LAST_ERROR_STR );
-            return -2;
+            return (uint32_t)-2;
         }
     }
 
@@ -254,9 +292,10 @@ int Worker::Work()
         Thread::Sleep( 500 );
     }
 
-    // allow to UI to shutdown
-    // the application MUST NOT try to update the UI from this point on
-    m_MainWindow->SetAllowQuit();
+    #if defined( __OSX__ )
+        extern void WindowOSX_StopMessageLoop(); // TODO:C tidy this up
+        WindowOSX_StopMessageLoop();
+    #endif
 
     m_WorkerBrokerage.SetAvailability( false );
 
