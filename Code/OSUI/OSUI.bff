@@ -21,9 +21,21 @@
             .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
         }
 
+        #if __OSX__
+            ObjectList( '$ProjectName$-ObjCPP-$Platform$-$BuildConfigName$' )
+            {
+                .CompilerInputPath      = '$ProjectPath$/'
+                .CompilerInputPattern   = '*.mm'
+                .CompilerOutputExtension= '.mm.o'
+                .CompilerOptions        + ' -fobjc-arc'
+                                        + ' -x objective-c'
+                .CompilerOutputPath     = '$OutputBase$/$ProjectName$/'
+            }
+        #endif
+
         // Library
         //--------------------------------------------------------------------------
-        ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
+        ObjectList( '$ProjectName$-CPP-$Platform$-$BuildConfigName$' )
         {
             // Input (Unity)
             .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
@@ -33,6 +45,13 @@
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+        }
+        Alias( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
+        {
+            .Targets = { '$ProjectName$-CPP-$Platform$-$BuildConfigName$' }
+            #if __OSX__
+                .Targets + '$ProjectName$-ObjCPP-$Platform$-$BuildConfigName$'
+            #endif
         }
         Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$BuildConfigName$' }
         ^'Targets_$Platform$_$BuildConfigName$' + { '$ProjectName$-$Platform$-$BuildConfigName$' }
