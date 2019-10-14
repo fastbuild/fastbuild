@@ -503,6 +503,25 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
     if ( result == true )
     {
+        // job succeeded, so write blacklist file
+        // for any blacklisted workers from previous attempts of the job
+        const Array< Job::BlacklistRecord > & blacklistRecords =
+            job->GetBlacklistRecords();
+        const size_t numRecords = blacklistRecords.GetSize();
+        for ( size_t i = 0; i < numRecords; ++i )
+        {
+            const Job::BlacklistRecord & blacklistRecord = blacklistRecords[ i ];
+            AStackString<> errorMsg;
+            m_WorkerBrokerage.BlacklistWorker(
+                blacklistRecord.workerName,
+                blacklistRecord.blacklistReason,
+                errorMsg );
+            if ( !errorMsg.IsEmpty() )
+            {
+                Node::DumpOutput( nullptr, errorMsg.Get(), errorMsg.GetLength(), nullptr );
+            }
+        }
+
         // built ok - serialize to disc
         MultiBuffer mb( data, ms.GetSize() - ms.Tell() );
 
@@ -613,21 +632,16 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
             if ( ss->m_Blacklisted )
             {
-                AStackString<> blacklistReason;
-                blacklistReason += "Node: ";
-                blacklistReason += nodeName;
-                blacklistReason += "\n";
-                blacklistReason += "Details: ";
-                blacklistReason += failureOutput;
-                AStackString<> errorMsg;
-                m_WorkerBrokerage.BlacklistWorker(
-                    workerName,
-                    blacklistReason,
-                    errorMsg );
-                if ( !errorMsg.IsEmpty() )
-                {
-                    failureOutput += errorMsg;
-                }
+                // don't write to blacklist file here, since
+                // we do that above if job eventually succeeded
+                Job::BlacklistRecord blacklistRecord;
+                blacklistRecord.workerName = workerName;
+                blacklistRecord.blacklistReason = "Node: ";
+                blacklistRecord.blacklistReason += nodeName;
+                blacklistRecord.blacklistReason += "\n";
+                blacklistRecord.blacklistReason += "Details: ";
+                blacklistRecord.blacklistReason += failureOutput;
+                job->AppendBlacklistRecord( blacklistRecord );
             }
 
             // debugging message
