@@ -373,7 +373,6 @@ void Worker::UpdateUI()
         m_MainWindow->SetStatus( status.Get() );
     }
 
-
     if ( InConsoleMode() == false )
     {
         // thread output
