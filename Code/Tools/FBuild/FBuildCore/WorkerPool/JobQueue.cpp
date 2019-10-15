@@ -345,13 +345,20 @@ Job * JobQueue::GetDistributableJobToRace()
 
 // OnReturnRemoteJob
 //------------------------------------------------------------------------------
-Job * JobQueue::OnReturnRemoteJob( uint32_t jobId )
+Job * JobQueue::OnReturnRemoteJob( uint32_t jobId, bool result )
 {
     MutexHolder m( m_DistributedJobsMutex );
     auto jobIt = m_DistributableJobs_InProgress.FindDeref( jobId );
     if ( jobIt )
     {
         Job * job = *jobIt;
+
+        // If the remote job failed, return immediately without interrupting
+        // the local job yet, because it may just be a recoverable error.
+        if ( result == false )
+        {
+            return job;
+        }
 
         // What state is the job in?
         const Job::DistributionState distState = job->GetDistributionState();

@@ -80,7 +80,7 @@ private:
     // client side of protocol consumes jobs via this interface
     friend class Client;
     Job *       GetDistributableJobToProcess( bool remote );
-    Job *       OnReturnRemoteJob( uint32_t jobId );
+    Job *       OnReturnRemoteJob( uint32_t jobId, bool result );
     void        ReturnUnfinishedDistributableJob( Job * job );
 
     // Semaphore to manage work

@@ -485,7 +485,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
     // Has the job been cancelled in the interim?
     // (Due to a Race by the main thread for example)
-    Job * job = JobQueue::Get().OnReturnRemoteJob( jobId );
+    Job * job = JobQueue::Get().OnReturnRemoteJob( jobId, result || !systemError );
     if ( job == nullptr )
     {
         // don't save result as we were cancelled
