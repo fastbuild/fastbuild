@@ -259,7 +259,7 @@ bool LightCache::Hash( ObjectNode * node,
                        const AString & compilerArgs,
                        uint64_t & outSourceHash,
                        Array< AString > & outIncludes,
-                       bool useRelativePaths )
+                       const bool useRelativePaths )
 {
     PROFILE_FUNCTION
 
@@ -782,7 +782,7 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & 
 //------------------------------------------------------------------------------
 const IncludedFile * LightCache::FileExists( const AString & fileName )
 {
-    AString filePath;
+    AStackString<> filePath;
     if ( m_UseRelativePaths )
     {
         const AString & workingDir = FBuild::Get().GetWorkingDir();
@@ -790,7 +790,7 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
     }
     else
     {
-        filePath = AString( fileName );
+        filePath = fileName;
     }
 
     const uint64_t fileNameHash = xxHash::Calc64( filePath );

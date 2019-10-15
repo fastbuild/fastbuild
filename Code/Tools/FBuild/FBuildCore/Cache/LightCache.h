@@ -30,7 +30,7 @@ public:
                const AString & compilerArgs,     // Args to extract include paths from
                uint64_t & outSourceHash,         // Resulting hash of source code
                Array< AString > & outIncludes,   // Discovered dependencies
-               bool useRelativePaths );          // Use exclusively relative paths
+               const bool useRelativePaths );    // Use exclusively relative paths
 
     static void ClearCachedFiles();
 
