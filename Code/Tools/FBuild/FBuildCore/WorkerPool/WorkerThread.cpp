@@ -288,7 +288,7 @@ void WorkerThread::WaitForStop()
     ASSERT( fileName );
 
     GetTempFileDirectory( tmpFileName );
-    tmpFileName.AppendFormat( "%c%s", NATIVE_SLASH, fileName );
+    tmpFileName += fileName;
 }
 
 // CreateTempFile

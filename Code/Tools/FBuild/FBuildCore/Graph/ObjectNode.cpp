@@ -2417,7 +2417,7 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
     }
 
     WorkerThread::GetTempFileDirectory( tmpDirectory );
-    tmpDirectory.AppendFormat( "%c%08X%c", NATIVE_SLASH, sourceNameHash, NATIVE_SLASH );
+    tmpDirectory.AppendFormat( "%08X%c", sourceNameHash, NATIVE_SLASH );
     if ( FileIO::DirectoryCreate( tmpDirectory ) == false )
     {
         job->Error( "Failed to create temp directory. Error: %s TmpDir: '%s' Target: '%s'", LAST_ERROR_STR, tmpDirectory.Get(), GetName().Get() );

@@ -356,7 +356,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
             fileName += filePath.FindLast( NATIVE_SLASH ) + 1;
         }
         sandboxTmpFile = tempFileDir;
-        sandboxTmpFile.AppendFormat( "%c%s", NATIVE_SLASH, fileName.Get() );
+        sandboxTmpFile += fileName;
     }
 }
 
