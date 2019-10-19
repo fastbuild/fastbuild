@@ -9,6 +9,7 @@
 #include "Core/Network/TCPConnectionPool.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
+#include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
@@ -306,6 +307,8 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
 }
 /*static*/ uint32_t TestTestTCPConnectionPool::TestConnectionStuckDuringSend_ThreadFunc( void * userData )
 {
+    PROFILE_SET_THREAD_NAME( "ConnectionStuckSend" )
+
     const ConnectionInfo * ci = (const ConnectionInfo *)userData;
     TCPConnectionPool & client = ci->GetTCPConnectionPool();
     // send lots of data to slow server

@@ -49,6 +49,84 @@
 #endif
 #define LAST_NETWORK_ERROR_STR ERROR_STR( GetLastNetworkError() )
 
+// TCPConnectionPoolProfileHelper
+//------------------------------------------------------------------------------
+#if defined( PROFILING_ENABLED )
+    class TCPConnectionPoolProfileHelper
+    {
+    public:
+        enum ThreadType
+        {
+            THREAD_LISTEN,
+            THREAD_CONNECTION
+        };
+
+        TCPConnectionPoolProfileHelper( ThreadType threadType )
+        {
+            // Chose which bitmap to use
+            uint64_t& bitmap = ( threadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
+
+            // Find free bit
+            uint32_t bit = 0;
+            {
+                MutexHolder mh( s_Mutex );
+                for ( ; bit < 64; ++bit )
+                {
+                    // Is this bit clear?
+                    if ( ( ( (uint64_t)1 << bit ) & bitmap ) == 0 )
+                    {
+                        // Set bit as we will use this Id
+                        bitmap |= ( (uint64_t)1 << bit );
+                        break;
+                    }
+                }
+            }
+            m_Bit = bit; // Store the bit for this thread
+            m_ThreadType = threadType;
+
+            // No free bits? (Last bit is never set)
+            if ( bit == 63 )
+            {
+                return; // Can't set thread name
+            }
+
+            // Format and set
+            AStackString<> threadName;
+            threadName.Format( ( threadType == THREAD_LISTEN ) ? "Listen_%u" : "Connection_%u", bit );
+            PROFILE_SET_THREAD_NAME( threadName.Get() )
+        }
+        ~TCPConnectionPoolProfileHelper()
+        {
+            // Clear bit if we reserved one
+            if ( m_Bit < 63 )
+            {
+                // Chose which bitmap to use
+                uint64_t& bitmap = ( m_ThreadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
+
+                // Clear bit
+                MutexHolder mh( s_Mutex );
+                bitmap &= ~( 1 << m_Bit );
+            }
+        }
+
+    protected:
+        ThreadType          m_ThreadType;
+        uint32_t            m_Bit;
+
+        static Mutex        s_Mutex;
+        static uint64_t     s_IdBitmapListen;
+        static uint64_t     s_IdBitmapConnection;
+    };
+    /*static*/ Mutex    TCPConnectionPoolProfileHelper::s_Mutex;
+    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapListen        = 0;
+    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapConnection    = 0;
+
+    #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )   \
+        TCPConnectionPoolProfileHelper threadNameHelper( threadType );
+#else
+    #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )
+#endif
+
 // CONSTRUCTOR - ConnectionInfo
 //------------------------------------------------------------------------------
 ConnectionInfo::ConnectionInfo( TCPConnectionPool * ownerPool )
@@ -826,6 +904,7 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TCPConnectionPool::ListenThreadWrapperFunction( void * data )
 {
+    TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( TCPConnectionPoolProfileHelper::THREAD_LISTEN );
     PROFILE_FUNCTION
 
     ConnectionInfo * ci = (ConnectionInfo *)data;
@@ -958,6 +1037,7 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TCPConnectionPool::ConnectionThreadWrapperFunction( void * data )
 {
+    TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( TCPConnectionPoolProfileHelper::THREAD_CONNECTION );
     PROFILE_FUNCTION
 
     ConnectionInfo * ci = (ConnectionInfo *)data;
