@@ -8,6 +8,7 @@
 #include "Core/Containers/AutoPtr.h"
 #include "Core/Network/TCPConnectionPool.h"
 #include "Core/Process/Atomic.h"
+#include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
@@ -205,10 +206,12 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
             TEST_ASSERT( size == m_DataSize );
             TEST_ASSERT( memcmp( data, m_ExpectedData, size ) == 0 );
             AtomicAddU64( &m_ReceivedBytes, size );
+            m_DataReceviedSemaphore.Signal();
         }
         volatile uint64_t m_ReceivedBytes = 0;
         size_t m_DataSize = 0;
         const char * m_ExpectedData;
+        Semaphore m_DataReceviedSemaphore;
     };
 
     const uint16_t testPort( TEST_PORT );
@@ -248,7 +251,7 @@ void TestTestTCPConnectionPool::TestDataTransfer() const
 
         while ( static_cast< size_t >( AtomicLoadRelaxed( &server.m_ReceivedBytes ) ) < totalSent )
         {
-            Thread::Sleep( 1 );
+            server.m_DataReceviedSemaphore.Wait();
         }
 
         const float speedMBs = ( float( totalSent ) / timer.GetElapsed() ) / float( 1024 * 1024 );
@@ -271,7 +274,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
         ~SlowServer() { ShutdownAllConnections(); }
         virtual void OnReceive( const ConnectionInfo *, void *, uint32_t, bool & )
         {
-            Thread::Sleep( 1000 );
+            Thread::Sleep( 200 );
         }
     };
     SlowServer slowServer;
@@ -290,7 +293,7 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
                                                     (void*)ci );
 
     // let thread send enough data to become blocked in Send
-    Thread::Sleep( 1000 );
+    Thread::Sleep( 100 );
 
     // flag for shutdown
     client.SetShuttingDown();
@@ -329,13 +332,14 @@ void TestTestTCPConnectionPool::TestConnectionStuckDuringSend() const
 void TestTestTCPConnectionPool::TestConnectionFailure() const
 {
     const uint16_t testPort( TEST_PORT );
+    const uint32_t timeoutMS( 100 );
 
     TCPConnectionPool client;
 
     // Check that TCPConnectionPool doesn't create ConnectionInfo when
     // connection fails after wait for it via select().
     // To do that we try to connect to our chosen test port without listening on it.
-    TEST_ASSERT( client.Connect( AStackString<>( "127.0.0.1" ), testPort ) == nullptr );
+    TEST_ASSERT( client.Connect( AStackString<>( "127.0.0.1" ), testPort, timeoutMS ) == nullptr );
 
     client.ShutdownAllConnections();
 }
