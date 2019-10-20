@@ -193,7 +193,7 @@ void TCPConnectionPool::ShutdownAllConnections()
         }
 
         m_ConnectionsMutex.Unlock();
-        Thread::Sleep( 1 );
+        m_ShutdownSemaphore.Wait( 100 );
         m_ConnectionsMutex.Lock();
     }
     m_ConnectionsMutex.Unlock();
@@ -993,6 +993,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         ASSERT( m_ListenConnection == ci );
         m_ListenConnection = nullptr;
     }
+    m_ShutdownSemaphore.Signal(); // Wake main thread which may be waiting on shutdown
 
     FDELETE ci;
 
@@ -1118,6 +1119,10 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         ConnectionInfo ** iter = m_Connections.Find( ci );
         ASSERT( iter );
         m_Connections.Erase( iter );
+    }
+    if ( m_ShuttingDown )
+    {
+        m_ShutdownSemaphore.Signal(); // Wake main thread which will be waiting on shutdown
     }
 
     FDELETE ci;
