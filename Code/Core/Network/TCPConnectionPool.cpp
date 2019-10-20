@@ -193,7 +193,7 @@ void TCPConnectionPool::ShutdownAllConnections()
         }
 
         m_ConnectionsMutex.Unlock();
-        m_ShutdownSemaphore.Wait();
+        m_ShutdownSemaphore.Wait( 1 );
         m_ConnectionsMutex.Lock();
     }
     m_ConnectionsMutex.Unlock();
