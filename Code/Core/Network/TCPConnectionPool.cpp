@@ -1120,7 +1120,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         ASSERT( iter );
         m_Connections.Erase( iter );
     }
-    if ( m_ShuttingDown )
+    if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
     {
         m_ShutdownSemaphore.Signal(); // Wake main thread which will be waiting on shutdown
     }
