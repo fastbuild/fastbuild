@@ -353,6 +353,8 @@ void TestProjectGeneration::TestFunction_Speed() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::FindExecutableTarget() const
 {
+#pragma warning( push )
+#pragma warning (disable : 6011)
     // Parse bff
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/FindExecutableTarget/fbuild.bff";
@@ -380,6 +382,7 @@ void TestProjectGeneration::FindExecutableTarget() const
         TEST_ASSERT( copy );
         TEST_ASSERT( copy->GetType() == Node::COPY_FILE_NODE );
     }
+#pragma warning( pop )
 }
 
 // IntellisenseAndCodeSense
