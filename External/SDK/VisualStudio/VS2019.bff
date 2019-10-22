@@ -45,6 +45,26 @@
 
 .VS2019_ToolchainPath   = '$VS2019_BasePath$/Tools/MSVC/$VS2019_Version$'
 
+// user-defined VS2019 installation
+#if exists(my_VS_BasePath)
+    #import my_VS_BasePath
+    #define my_VS_BasePathImported
+    .VS2019_BasePath = .my_VS_BasePath
+#endif
+#if !my_VS_BasePathImported
+    .my_VS_BasePath = .VS2019_BasePath
+#endif
+
+// user-defined VS2019 buildtools version
+#if exists(my_VS_Version)
+    #import my_VS_Version
+    #define my_VS_VersionImported
+    .VS2019_Version = .my_VS_Version
+#endif
+#if !my_VS_VersionImported
+    .my_VS_Version = .VS2019_Version
+#endif
+
 // X64 Compiler
 //------------------------------------------------------------------------------
 Compiler( 'Compiler-VS2019-x64' )

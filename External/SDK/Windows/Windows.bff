@@ -10,5 +10,6 @@
     #include "Windows10SDK.bff"
     Alias( 'ResourceCompiler' ) { .Targets = 'ResourceCompiler-Windows10' }
 #endif
-
+Using( .WindowsSDK_X64 )
+Print( 'Using Windows $Win_SDKVersion_HumanReadable$ SDK (v$Windows_SDKVersion$) from $Windows_SDKBasePath$' )
 //------------------------------------------------------------------------------
