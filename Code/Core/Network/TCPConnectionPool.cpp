@@ -819,8 +819,12 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
                                      int * addressSize ) const
 {
     #if defined( __WINDOWS__ )
-        // On Windows, handles are not inherited (SOCK_CLOEXEC is not needed/supported)
+        // On Windows, the newSocket inherits WSA_FLAG_NO_HANDLE_INHERIT from socket
         TCPSocket newSocket = accept( socket, address, addressSize );
+        DWORD flags;
+        ASSERT( GetHandleInformation( (HANDLE)newSocket, &flags ) );
+        ASSERT( ( flags & HANDLE_FLAG_INHERIT ) == 0 );
+        (void)flags;
     #elif defined( __LINUX__ )
         // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
         TCPSocket newSocket = accept4( socket, address, (unsigned int *)addressSize, SOCK_CLOEXEC );
@@ -848,10 +852,12 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
 TCPSocket TCPConnectionPool::CreateSocket() const
 {
     #if defined( __LINUX__ )
-        // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
+        // On Linux we can create the socket with inheritance disabled (SOCK_CLOEXEC)
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
+    #elif defined( __WINDOWS__ )
+        // On Windows we can create the socket with inheritance disabled (WSA_FLAG_NO_HANDLE_INHERIT)
+        TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, 0, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
     #else
-        // On Windows, handles are not inherited (SOCK_CLOEXEC is not needed/supported)
         // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
     #endif
@@ -869,7 +875,7 @@ TCPSocket TCPConnectionPool::CreateSocket() const
         // The best we can do is reduce the likelyhood of problems by immediately
         // setting the flag after creation.
         // In practice, the listen socket is the most problematic one to be
-        // inherited (as it can prevents re-use), but thankfully starting listening
+        // inherited (as it prevents re-use), but thankfully starting listening
         // while spawning a process is not something we generally do.
         VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
     #endif
