@@ -29,6 +29,14 @@ private:
     UnitTest * m_NextTestGroup;
 };
 
+// Create a no-return helper to improve static analysis
+#if defined( __WINDOWS__ )
+    __declspec(noreturn) void TestNoReturn();
+    #define TEST_NO_RETURN TestNoReturn();
+#else
+    #define TEST_NO_RETURN
+#endif
+
 // Test Assertions
 //------------------------------------------------------------------------------
 #define TEST_ASSERT( expression )                                   \
@@ -40,6 +48,7 @@ private:
             {                                                       \
                 BREAK_IN_DEBUGGER;                                      \
             }                                                       \
+            TEST_NO_RETURN                                          \
         }                                                           \
     } while ( false );                                              \
     PRAGMA_DISABLE_POP_MSVC
@@ -53,6 +62,7 @@ private:
             {                                                       \
                 BREAK_IN_DEBUGGER;                                  \
             }                                                       \
+            TEST_NO_RETURN                                          \
         }                                                           \
     } while ( false )                                               \
     PRAGMA_DISABLE_POP_MSVC
