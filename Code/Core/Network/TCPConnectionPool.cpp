@@ -856,7 +856,7 @@ TCPSocket TCPConnectionPool::CreateSocket() const
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
     #elif defined( __WINDOWS__ )
         // On Windows we can create the socket with inheritance disabled (WSA_FLAG_NO_HANDLE_INHERIT)
-        TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, 0, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
+        TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
     #else
         // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
