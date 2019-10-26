@@ -821,10 +821,12 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
     #if defined( __WINDOWS__ )
         // On Windows, the newSocket inherits WSA_FLAG_NO_HANDLE_INHERIT from socket
         TCPSocket newSocket = accept( socket, address, addressSize );
-        DWORD flags;
-        ASSERT( GetHandleInformation( (HANDLE)newSocket, &flags ) );
-        ASSERT( ( flags & HANDLE_FLAG_INHERIT ) == 0 );
-        (void)flags;
+
+        // TODO: Re-enable
+        //DWORD flags;
+        //ASSERT( GetHandleInformation( (HANDLE)newSocket, &flags ) );
+        //ASSERT( ( flags & HANDLE_FLAG_INHERIT ) == 0 );
+        //(void)flags;
     #elif defined( __LINUX__ )
         // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
         TCPSocket newSocket = accept4( socket, address, (unsigned int *)addressSize, SOCK_CLOEXEC );
@@ -855,8 +857,11 @@ TCPSocket TCPConnectionPool::CreateSocket() const
         // On Linux we can create the socket with inheritance disabled (SOCK_CLOEXEC)
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
     #elif defined( __WINDOWS__ )
+        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+
+        // TODO: Re-enable
         // On Windows we can create the socket with inheritance disabled (WSA_FLAG_NO_HANDLE_INHERIT)
-        TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
+        //TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
     #else
         // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
