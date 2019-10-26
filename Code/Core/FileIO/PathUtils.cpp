@@ -277,7 +277,11 @@
         }
         if ( ( c == '/' ) || ( c == '\\' ) )
         {
-            outRelativeFileName += "..\\";
+            #if defined( __WINDOWS__ )
+                outRelativeFileName += "..\\";
+            #else
+                outRelativeFileName += "../";
+            #endif
         }
         ++pathA;
     }
