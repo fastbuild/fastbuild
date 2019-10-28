@@ -10,8 +10,8 @@ ObjectList( 'ObjectList_Rel' )
 {
     .CompilerInputFiles =
     {
-        '$TestRoot$/Data/TestCache/CacheWithRelativePaths/a.cpp'
-        '$TestRoot$/Data/TestCache/CacheWithRelativePaths/b.cpp'
+        '$TestRoot$/Data/TestCache/a.cpp'
+        '$TestRoot$/Data/TestCache/b.cpp'
     }
     .CompilerOutputPath = '$Out$/Test/CacheWithRelativePaths/'
     .UseRelativePaths = true
