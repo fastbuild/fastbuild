@@ -1567,14 +1567,6 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
         {
             fullArgs.Append( token.Get(), (size_t) ( start - token.Get() ) );
             AStackString<> relPath;
-            if ( PathUtils::IsFolderPath( includePath ) )
-            {
-                PathUtils::FixupFolderPath( includePath );
-            }
-            else
-            {
-                PathUtils::FixupFilePath( includePath );
-            }
             PathUtils::GetRelativePath( workingDir, includePath, relPath );
             fullArgs += relPath;
             fullArgs.Append( end, (size_t) ( token.GetEnd() - end ) );
