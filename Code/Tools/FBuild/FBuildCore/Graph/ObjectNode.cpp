@@ -1376,7 +1376,7 @@ void ObjectNode::WriteToCache( Job * job )
             const size_t dataSize = c.GetResultSize();
             const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
 
-            const uint32_t startPublish( (uint32_t)t.GetElapsedMS() );
+            const uint32_t startPublish( stopCompress );
             if ( cache->Publish( cacheFileName, data, dataSize ) )
             {
                 // cache store complete
