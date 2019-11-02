@@ -21,11 +21,18 @@
             .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
         }
 
+        // Objective C++
         #if __OSX__
+            Unity( '$ProjectName$-UnityObjCPP-$Platform$-$BuildConfigName$' )
+            {
+                .UnityInputPath         = '$ProjectPath$/'
+                .UnityInputPattern      = '*.mm'
+                .UnityOutputPath        = '$OutputBase$/$ProjectPath$/'
+                .UnityOutputPattern     = '$ProjectName$_Unity*.mm'
+            }
             ObjectList( '$ProjectName$-ObjCPP-$Platform$-$BuildConfigName$' )
             {
-                .CompilerInputPath      = '$ProjectPath$/'
-                .CompilerInputPattern   = '*.mm'
+                .CompilerInputUnity     = '$ProjectName$-UnityObjCPP-$Platform$-$BuildConfigName$'
                 .CompilerOutputExtension= '.mm.o'
                 .CompilerOptions        + ' -fobjc-arc'
                                         + ' -x objective-c'
