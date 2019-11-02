@@ -105,7 +105,7 @@
 
                 // Clear bit
                 MutexHolder mh( s_Mutex );
-                bitmap &= ~( 1 << m_Bit );
+                bitmap &= ~( (uint64_t)1 << m_Bit );
             }
         }
 
