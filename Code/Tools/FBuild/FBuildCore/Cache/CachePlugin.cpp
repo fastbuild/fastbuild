@@ -169,10 +169,7 @@ void * CachePlugin::GetFunction( const char * friendlyName, const char * mangled
 /*virtual*/ void CachePlugin::FreeMemory( void * data, size_t dataSize )
 {
     ASSERT( m_FreeMemoryFunc ); // should never get here without being valid
-    if ( m_FreeMemoryFunc )
-    {
-        (*m_FreeMemoryFunc)( data, dataSize );
-    }
+    (*m_FreeMemoryFunc)( data, dataSize );
 }
 
 // OutputInfo
