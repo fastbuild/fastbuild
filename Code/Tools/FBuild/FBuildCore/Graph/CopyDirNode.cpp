@@ -176,14 +176,13 @@ CopyDirNode::~CopyDirNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult CopyDirNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult CopyDirNode::DoBuild( Job * /*job*/ )
 {
     // consider ourselves to be as recent as the newest file
     uint64_t timeStamp = 0;
-    const Dependency * const end = m_DynamicDependencies.End();
-    for ( const Dependency * it = m_DynamicDependencies.Begin(); it != end; ++it )
+    for ( const Dependency & dep: m_DynamicDependencies )
     {
-        CopyFileNode * cn = it->GetNode()->CastTo< CopyFileNode >();
+        CopyFileNode * cn = dep.GetNode()->CastTo< CopyFileNode >();
         timeStamp = Math::Max< uint64_t >( timeStamp, cn->GetStamp() );
     }
     m_Stamp = timeStamp;

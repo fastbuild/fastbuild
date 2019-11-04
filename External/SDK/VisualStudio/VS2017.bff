@@ -2,6 +2,9 @@
 //------------------------------------------------------------------------------
 .VS2017_BasePath         = '$_CURRENT_BFF_DIR_$/2017/Community'
 .VS2017_Version          = '14.16.27023'
+#if CI_BUILD
+    .VS2017_BasePath     = 'C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools'
+#endif
 
 // X64 Compiler
 //------------------------------------------------------------------------------
@@ -20,9 +23,10 @@ Compiler( 'Compiler-VS2017-x64' )
                     '$Root$/msvcp140.dll'
                     '$Root$/vcruntime140.dll'
                     '$Root$/1033/clui.dll'
+                    '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
                   }
 
-    #if ENABLE_LIGHT_CACHE 
+    #if ENABLE_LIGHT_CACHE
         .UseLightCache_Experimental = true
     #endif
 }

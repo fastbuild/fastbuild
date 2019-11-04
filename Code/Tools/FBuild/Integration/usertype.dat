@@ -36,10 +36,12 @@ VSSolution
 XCodeProject
 
 AdditionalOptions
+AdditionalSymbolSearchPaths
 AllowCaching
-AllowDBMigration_Experimental
 AllowDistribution
 ApplicationEnvironment
+ApplicationType
+ApplicationTypeRevision
 AssemblySearchPath
 AumidOverride
 BaseProjectConfig
@@ -71,6 +73,7 @@ CompilerOutputKeepBaseExtension
 CompilerOutputPath
 CompilerOutputPrefix
 CompilerReferences
+Condition
 Config
 CustomEnvironmentVariables
 DebuggerFlavor
@@ -81,6 +84,7 @@ Dependencies
 DeploymentFiles
 DeploymentType
 Dest
+DisableDBMigration
 DistributableJobMemoryLimitMiB
 Environment
 ExcludePaths
@@ -106,8 +110,10 @@ FileType
 FilesToExclude
 ForcedIncludes
 ForcedUsingAssemblies
+Hidden
 IncludeSearchPath
 IntermediateDirectory
+Keyword
 LayoutDir
 LayoutExtensionFilter
 Librarian
@@ -133,6 +139,7 @@ PCHInputFile
 PCHObjectFileName
 PCHOptions
 PCHOutputFile
+PackagePath
 Path
 Pattern
 Patterns
@@ -142,10 +149,13 @@ PreBuildDependencies
 Preprocessor
 PreprocessorDefinitions
 PreprocessorOptions
+Project
 ProjectAllowedFileExtensions
 ProjectBasePath
 ProjectBuildCommand
 ProjectCleanCommand
+ProjectConfigs
+ProjectFileTypes
 ProjectFiles
 ProjectFilesToExclude
 ProjectGuid
@@ -153,6 +163,7 @@ ProjectInputPaths
 ProjectInputPathsExclude
 ProjectOutput
 ProjectPatternToExclude
+ProjectProjectImports
 ProjectProjectReferences
 ProjectRebuildCommand
 ProjectReferences
@@ -167,7 +178,10 @@ RootNamespace
 SimpleDistributionMode
 SolutionBuildProject
 SolutionConfig
+SolutionConfigs
+SolutionDependencies
 SolutionDeployProjects
+SolutionFolders
 SolutionMinimumVisualStudioVersion
 SolutionOutput
 SolutionPlatform
@@ -199,6 +213,7 @@ UnityInputExcludedFiles
 UnityInputFiles
 UnityInputIsolateWritableFiles
 UnityInputIsolateWritableFilesLimit
+UnityInputIsolatedFiles
 UnityInputObjectLists
 UnityInputPath
 UnityInputPathRecurse
@@ -211,8 +226,13 @@ UseLightCache_Experimental
 VS2012EnumBugFix
 WorkerConnectionLimit
 Workers
+XCodeBaseSDK
 XCodeBuildToolArgs
 XCodeBuildToolPath
 XCodeBuildWorkingDir
+XCodeCommandLineArguments
+XCodeCommandLineArgumentsDisabled
+XCodeDebugWorkingDir
+XCodeDocumentVersioning
 XCodeOrganizationName
 Xbox360DebuggerCommand

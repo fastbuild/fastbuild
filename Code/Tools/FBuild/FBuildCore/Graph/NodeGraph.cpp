@@ -36,6 +36,7 @@
 // Core
 #include "Core/Containers/AutoPtr.h"
 #include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/ConstMemoryStream.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
@@ -144,7 +145,7 @@ NodeGraph::~NodeGraph()
 
             // Migrate old DB info to new DB
             const SettingsNode * settings = newNG->GetSettings();
-            if ( settings->GetAllowDBMigration_Experimental() || forceMigration ) // TODO:B Remove when feature no longer experimental
+            if ( ( settings->GetDisableDBMigration() == false ) || forceMigration )
             {
                 newNG->Migrate( *oldNG );
             }
@@ -221,12 +222,18 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
     AutoPtr< char > memory( (char *)ALLOC( fileSize ) );
     if ( fs.ReadBuffer( memory.Get(), fileSize ) != fileSize )
     {
+        FLOG_ERROR( "Could not read Database. Error: %s File: '%s'", LAST_ERROR_STR, nodeGraphDBFile );
         return LoadResult::LOAD_ERROR;
     }
     ConstMemoryStream ms( memory.Get(), fileSize );
 
     // Load the Old DB
-    return Load( ms, nodeGraphDBFile );
+    NodeGraph::LoadResult res = Load( ms, nodeGraphDBFile );
+    if ( res == LoadResult::LOAD_ERROR )
+    {
+        FLOG_ERROR( "Database loading failed: '%s'", nodeGraphDBFile );
+    }
+    return res;
 }
 
 // Load
@@ -594,35 +601,37 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
     }
 }
 
-// Display
+// SerializeToText
 //------------------------------------------------------------------------------
-void NodeGraph::Display( const Dependencies & deps ) const
+void NodeGraph::SerializeToText( const Dependencies & deps, AString & outBuffer ) const
 {
-    AString buffer( 10 * 1024 * 1024 );
+    s_BuildPassTag++;
 
-    const size_t numNodes = m_AllNodes.GetSize();
-    Array< bool > visited( numNodes, false );
-    visited.SetSize( numNodes );
-    memset( visited.Begin(), 0, numNodes );
-    for ( const Dependency & dep : deps )
+    if ( deps.IsEmpty() == false )
     {
-        DisplayRecurse( dep.GetNode(), visited, 0, buffer );
+        for ( const Dependency & dep : deps )
+        {
+            SerializeToText( dep.GetNode(), 0, outBuffer );
+        }
     }
-
-    OUTPUT("%s", buffer.Get());
+    else
+    {
+        for ( Node * node : m_AllNodes )
+        {
+            SerializeToText( node, 0, outBuffer );
+        }
+    }
 }
 
-// DisplayRecurse
+// SerializeToText
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::DisplayRecurse( Node * node, Array< bool > & visited, uint32_t depth, AString& outBuffer )
+/*static*/ void NodeGraph::SerializeToText( Node * node, uint32_t depth, AString& outBuffer )
 {
     // Print this even if it has been visited before so the edge is visible
     outBuffer.AppendFormat( "%*s%s %s\n", depth * 4, "", node->GetTypeName(), node->GetName().Get() );
 
     // Don't descend into already visited nodes
-    uint32_t nodeIndex = node->GetIndex();
-    ASSERT( nodeIndex != INVALID_NODE_INDEX );
-    if ( visited[ nodeIndex ] )
+    if ( node->GetBuildPassTag() == s_BuildPassTag )
     {
         if ( node->GetPreBuildDependencies().GetSize() ||
              node->GetStaticDependencies().GetSize() ||
@@ -632,17 +641,17 @@ void NodeGraph::Display( const Dependencies & deps ) const
         }
         return;
     }
-    visited[ nodeIndex ] = true;
+    node->SetBuildPassTag( s_BuildPassTag );
 
     // Dependencies
-    DisplayRecurse( "PreBuild", node->GetPreBuildDependencies(), visited, depth, outBuffer );
-    DisplayRecurse( "Static", node->GetStaticDependencies(), visited, depth, outBuffer );
-    DisplayRecurse( "Dynamic", node->GetDynamicDependencies(), visited, depth, outBuffer );
+    SerializeToText( "PreBuild", node->GetPreBuildDependencies(), depth, outBuffer );
+    SerializeToText( "Static", node->GetStaticDependencies(), depth, outBuffer );
+    SerializeToText( "Dynamic", node->GetDynamicDependencies(), depth, outBuffer );
 }
 
-// DisplayRecurse
+// SerializeToText
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::DisplayRecurse( const char * title, const Dependencies & dependencies, Array< bool > & visited, uint32_t depth, AString & outBuffer )
+/*static*/ void NodeGraph::SerializeToText( const char * title, const Dependencies & dependencies, uint32_t depth, AString & outBuffer )
 {
     const Dependency * const end = dependencies.End();
     const Dependency * it = dependencies.Begin();
@@ -653,7 +662,7 @@ void NodeGraph::Display( const Dependencies & deps ) const
     for ( ; it != end; ++it )
     {
         Node * n = it->GetNode();
-        DisplayRecurse( n, visited, depth + 1, outBuffer );
+        SerializeToText( n, depth + 1, outBuffer );
     }
 }
 
@@ -1039,6 +1048,13 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
                 if ( n->GetState() == Node::UP_TO_DATE )
                 {
                     upToDateCount++;
+                }
+
+                // Check for failure again propagatating overall state more quickly. This aallows failed
+                // builds to terminate moe quickly
+                if ( n->GetState() == Node::FAILED )
+                {
+                    failedCount++;
                 }
             }
         }
@@ -1742,6 +1758,16 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         return;
     }
 
+    // Migrate children before parents
+    for ( Dependency & dep : newNode.m_PreBuildDependencies )
+    {
+        MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
+    }
+    for ( Dependency& dep : newNode.m_StaticDependencies )
+    {
+        MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
+    }
+
     // Get the matching node in the old DB
     const Node * oldNode;
     if ( oldNodeHint )
@@ -1819,6 +1845,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
             {
                 // Create the dependency
                 newDepNode = Node::CreateNode( *this, oldDepNode->GetType(), oldDepNode->GetName() );
+                ASSERT( newDepNode );
                 newDeps.Append( Dependency( newDepNode, oldDep.IsWeak() ) );
 
                 // Early out for FileNode (no properties and doesn't need Initialization)
@@ -2127,6 +2154,10 @@ bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependenc
         Node * nodeA = depsA[ i ].GetNode();
         Node * nodeB = depsB[ i ].GetNode();
         if ( nodeA->GetType() != nodeB->GetType() )
+        {
+            return false;
+        }
+        if ( nodeA->GetStamp() != nodeB->GetStamp() )
         {
             return false;
         }

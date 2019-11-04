@@ -1,0 +1,16 @@
+//
+// LightCache does not support #import directives.
+// But it should detect this case and safely fall back to regular cache.
+//
+//------------------------------------------------------------------------------
+#define ENABLE_LIGHT_CACHE // Shared compiler config will check this
+
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+ObjectList( 'ObjectList' )
+{
+    .CompilerInputFiles = { '$TestRoot$/Data/TestCache/LightCache_ImportDirective/file.cpp' }
+    .CompilerOutputPath = '$Out$/Test/Cache/LightCache_ImportDirective/'
+}

@@ -37,10 +37,14 @@ inline void operator delete[]( void *, void * ) {}
 
 // Alloc/Free
 //------------------------------------------------------------------------------
-void * Alloc( size_t size );
-void * Alloc( size_t size, size_t alignment );
-void * AllocFileLine( size_t size, const char * file, int line );
-void * AllocFileLine( size_t size, size_t alignment, const char * file, int line );
+#if !defined( MEMTRACKER_ENABLED )
+    // Functions are private when MemTracker is enabled
+    void * Alloc( size_t size );
+    void * Alloc( size_t size, size_t alignment );
+#else
+    void * AllocFileLine( size_t size, const char * file, int line );
+    void * AllocFileLine( size_t size, size_t alignment, const char * file, int line );
+#endif
 void Free( void * ptr );
 
 // global new/delete
@@ -54,7 +58,7 @@ void Free( void * ptr );
 #if !defined( __has_feature )
     #define __has_feature( ... ) 0
 #endif
-#if !__has_feature( address_sanitizer ) && !__has_feature( memory_sanitizer ) && !defined( __SANITIZE_ADDRESS__ )
+#if !__has_feature( address_sanitizer ) && !__has_feature( memory_sanitizer ) && !__has_feature( thread_sanitizer ) && !defined( __SANITIZE_ADDRESS__ )
 void * operator new( size_t size );
 void * operator new[]( size_t size );
 void operator delete( void * ptr ) NOEXCEPT;

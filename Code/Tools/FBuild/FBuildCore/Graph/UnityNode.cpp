@@ -29,6 +29,7 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT_ARRAY( m_InputPattern,      "UnityInputPattern",                    MetaOptional() )
     REFLECT_ARRAY( m_Files,             "UnityInputFiles",                      MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_FilesToExclude,    "UnityInputExcludedFiles",              MetaOptional() + MetaFile( true ) ) // relative
+    REFLECT_ARRAY( m_FilesToIsolate,    "UnityInputIsolatedFiles",              MetaOptional() + MetaFile( true ) ) // relative
     REFLECT_ARRAY( m_ExcludePatterns,   "UnityInputExcludePattern",             MetaOptional() + MetaFile( true ) ) // relative
     REFLECT_ARRAY( m_ObjectLists,       "UnityInputObjectLists",                MetaOptional() )
     REFLECT( m_OutputPath,              "UnityOutputPath",                      MetaPath() )
@@ -38,6 +39,7 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT( m_IsolateWritableFiles,    "UnityInputIsolateWritableFiles",       MetaOptional() )
     REFLECT( m_PrecompiledHeader,       "UnityPCH",                             MetaOptional() + MetaFile( true ) ) // relative
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_Hidden,                  "Hidden",                               MetaOptional() )
 REFLECT_END( UnityNode )
 
 // CONSTRUCTOR
@@ -135,6 +137,8 @@ UnityNode::~UnityNode()
     {
         return NODE_RESULT_FAILED; // GetFiles will have emitted an error
     }
+
+    FilterForceIsolated( files, m_IsolatedFiles );
 
     // TODO:A Sort files for consistent ordering across file systems/platforms
 
@@ -444,6 +448,49 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
     }
 
     return ok;
+}
+
+// FilterForceIsolated
+//------------------------------------------------------------------------------
+void UnityNode::FilterForceIsolated( Array< FileAndOrigin > & files, Array< FileAndOrigin > & isolatedFiles )
+{
+    if ( m_FilesToIsolate.IsEmpty() )
+    {
+        return;
+    }
+
+    FileAndOrigin* writeIt = files.Begin();
+    const FileAndOrigin * readIt = writeIt;
+
+    for ( ; readIt != files.End(); ++readIt )
+    {
+        bool isolate = false;
+        for ( const AString & filename : m_FilesToIsolate )
+        {
+            if ( PathUtils::PathEndsWithFile( readIt->GetName(), filename ) )
+            {
+                isolate = true;
+                break;
+            }
+        }
+
+        if ( isolate )
+        {
+            isolatedFiles.Append( *readIt );
+        }
+        else if ( writeIt != readIt )
+        {
+            ASSERT( writeIt < readIt );
+            *writeIt = *readIt;
+            writeIt++;
+        }
+        else
+        {
+            writeIt++;
+        }
+    }
+
+    files.SetSize( (uint64_t)( writeIt - files.Begin() ) );
 }
 
 

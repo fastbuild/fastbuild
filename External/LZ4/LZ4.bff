@@ -1,20 +1,20 @@
 // LZ4
 //------------------------------------------------------------------------------
-.LZ4BasePath		= '../External/LZ4/lz4-1.9.1/lib'
-.LZ4IncludePaths	= ' "-I$LZ4BasePath$"'
+.LZ4BasePath        = '../External/LZ4/lz4-1.9.1/lib'
+.LZ4IncludePaths    = ' "-I$LZ4BasePath$"'
 {
-	.ProjectName		= 'LZ4'
-	.ProjectPath		= '$LZ4BasePath$'
+    .ProjectName        = 'LZ4'
+    .ProjectPath        = '$LZ4BasePath$'
 
     // Target/Compiler specific options
-    .LZ4Options_x64     = [ 
-                            .LZ4CompilerOptions	= ' /wd6239'	// (<non-zero constant> && <expression>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
-											    + ' /wd6262'	// Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
-											    + ' /wd28251'	// warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
+    .LZ4Options_x64     = [
+                            .LZ4CompilerOptions = ' /wd6239'    // (<non-zero constant> && <expression>) always evaluates to the result of <expression>.  Did you intend to use the bitwise-and operator?
+                                                + ' /wd6262'    // Function uses '%u' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.
+                                                + ' /wd28251'   // warning C28251: Inconsistent annotation for '_setjmp': this instance has no annotations. See <no file>(0).
 
                                                 + ' -O2'        // Compile with optimizations even in debug to improve performance
-					      ]
-    .LZ4Options_x64Clang= [ 
+                          ]
+    .LZ4Options_x64Clang= [
                             .LZ4CompilerOptions = ' -Wno-shift-count-overflow'
                                                 + ' -Wno-unused-macros'
                                                 + ' -Wno-unreachable-code'
@@ -24,39 +24,41 @@
                                                 + ' -Wno-missing-prototypes'
 
                                                 + ' -O2'        // Compile with optimizations even in debug to improve performance
-					      ]
-    .LZ4Options_x64Linux= [ 
+                          ]
+    .LZ4Options_x64Linux= [
                             .LZ4CompilerOptions = ' -Wno-implicit-fallthrough'
 
                                                 + ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
     .LZ4Options_x64ClangLinux  = .LZ4Options_x64Linux
-    .LZ4Options_x64OSX  = [ 
+    .LZ4Options_x64OSX  = [
                             .LZ4CompilerOptions = ' -O2'        // Compile with optimizations even in debug to improve performance
                           ]
 
-	// Library
-	//--------------------------------------------------------------------------
-	ForEach( .Config in .Configs )
-	{
-		Using( .Config )
-		.OutputBase + '\$Platform$-$Config$'
+    // Library
+    //--------------------------------------------------------------------------
+    .ProjectConfigs = {}
+    ForEach( .BuildConfig in .BuildConfigs )
+    {
+        Using( .BuildConfig )
 
-		Using( ."LZ4Options_$Platform$" )
+        .OutputBase + '\$Platform$-$BuildConfigName$'
 
-		// Static Library
-		Library( '$ProjectName$-Lib-$Platform$-$Config$' )
-		{
+        Using( ."LZ4Options_$Platform$" )
+
+        // Static Library
+        ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
+        {
             // Input - Only build specific files we use
-	        .CompilerInputFiles         = { 
+            .CompilerInputFiles         = {
                                             '$LZ4BasePath$\lz4.c'
                                             '$LZ4BasePath$\xxhash.c'
                                           }
 
             // Options
-			.CompilerOptions			= .CompilerOptionsC
+            .CompilerOptions            = .CompilerOptionsC
                                         + .LZ4IncludePaths
-										+ .LZ4CompilerOptions
+                                        + .LZ4CompilerOptions
 
                                         // Remove flags that disable opimizations
                                         #if __WINDOWS__
@@ -66,53 +68,47 @@
                                             - ' -O0'
                                         #endif
 
-			// Output
-			.CompilerOutputPath			= '$OutputBase$/External/$ProjectName$/'
-            .LibrarianOutput            = '$OutputBase$/External/$ProjectName$/$ProjectName$$LibExtension$'
-		}
-		Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$Config$' }
-	}
+            // Output
+            .CompilerOutputPath         = '$OutputBase$/External/$ProjectName$/'
+        }
+        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Lib-$Platform$-$BuildConfigName$' }
 
-	// Aliases
-	//--------------------------------------------------------------------------
+        #if __WINDOWS__
+            .ProjectConfig              = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = '$ProjectName$-$Platform$-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+        #if __OSX__
+            .ProjectConfig              = [ .Config = '$BuildConfigName$'   .Target = '$ProjectName$-x64OSX-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+    }
+
+    // Aliases
+    //--------------------------------------------------------------------------
     #include "../../Code/gen_default_aliases.bff"
 
-	// Visual Studio Project Generation
-	//--------------------------------------------------------------------------
-	#if __WINDOWS__
-		VCXProject( '$ProjectName$-proj' )
-		{
-			.ProjectOutput				= '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
-			.ProjectInputPaths			= '$ProjectPath$\'
-	        .ProjectFiles               = '../External/LZ4/LZ4.bff'
-			.ProjectBasePath			= '$ProjectPath$\'
-	
-			.ProjectX64Debug		= [ Using( .ProjectX64Debug )			.Target = '$ProjectName$-X64-Debug' ]
-			.ProjectX64Profile		= [ Using( .ProjectX64Profile )			.Target = '$ProjectName$-X64-Profile' ]
-			.ProjectX64Release		= [ Using( .ProjectX64Release )			.Target = '$ProjectName$-X64-Release' ]
-			.ProjectX64ClangDebug	= [ Using( .ProjectX64ClangDebug )		.Target = '$ProjectName$-X64Clang-Debug' ]
-			.ProjectX64ClangProfile	= [ Using( .ProjectX64ClangProfile )	.Target = '$ProjectName$-X64Clang-Profile' ]
-			.ProjectX64ClangRelease	= [ Using( .ProjectX64ClangRelease )	.Target = '$ProjectName$-X64Clang-Release' ]
-			.ProjectConfigs			= { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-										.ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
-		}
-	#endif
+    // Visual Studio Project Generation
+    //--------------------------------------------------------------------------
+    #if __WINDOWS__
+        VCXProject( '$ProjectName$-proj' )
+        {
+            .ProjectOutput              = '../tmp/VisualStudio/Projects/$ProjectName$.vcxproj'
+            .ProjectInputPaths          = '$ProjectPath$\'
+            .ProjectFiles               = '../External/LZ4/LZ4.bff'
+            .ProjectBasePath            = '$ProjectPath$\'
+        }
+    #endif
 
-	// XCode Project Generation
-	//--------------------------------------------------------------------------
-	#if __OSX__
-		XCodeProject( '$ProjectName$-xcodeproj' )
-		{
-			.ProjectOutput 				= '../tmp/XCode/Projects/0_External/$ProjectName$.xcodeproj/project.pbxproj'
-			.ProjectInputPaths			= '$ProjectPath$/'
-			.ProjectBasePath			= '$ProjectPath$/'
-	
-			.XCodeBuildWorkingDir		= '../../../../Code/'
-			
-			.ProjectOSXDebug 		= [ .Config = 'Debug' 	.Target = '$ProjectName$-x64OSX-Debug' ]
-			.ProjectOSXProfile 		= [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
-			.ProjectOSXRelease 		= [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]		
-			.ProjectConfigs 		= { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }	
-		}
-	#endif
+    // XCode Project Generation
+    //--------------------------------------------------------------------------
+    #if __OSX__
+        XCodeProject( '$ProjectName$-xcodeproj' )
+        {
+            .ProjectOutput              = '../tmp/XCode/Projects/0_External/$ProjectName$.xcodeproj/project.pbxproj'
+            .ProjectInputPaths          = '$ProjectPath$/'
+            .ProjectBasePath            = '$ProjectPath$/'
+
+            .XCodeBuildWorkingDir       = '../../../../Code/'
+        }
+    #endif
 }

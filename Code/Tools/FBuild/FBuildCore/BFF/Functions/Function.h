@@ -117,10 +117,6 @@ public:
                              bool allowRemoveDirNodes = false,
                              bool allowCompilerNodes = false );
 
-private:
-    Function *  m_NextFunction;
-    static Function * s_FirstFunction;
-
 protected:
     AString     m_Name;
     mutable bool m_Seen; // track for unique enforcement

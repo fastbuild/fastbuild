@@ -84,6 +84,7 @@ public:
     static inline Node::Type GetTypeS() { return Node::SLN_NODE; }
 
 private:
+    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     bool Save( const AString & content, const AString & fileName ) const;

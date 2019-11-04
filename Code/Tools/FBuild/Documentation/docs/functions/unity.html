@@ -41,7 +41,8 @@ Builds one or more Unity/Blob files containing includes of other source code fil
   .UnityInputPattern       ; (optional) Pattern(s) of files to find (default *.cpp)
   .UnityInputPathRecurse   ; (optional) Recurse when searching for files (default true)
   .UnityInputFiles         ; (optional) Explicit list of files to include
-  .UnityInputExcludedFiles ; (optional) Explicit list of excluded files (partial, root-relative of full path)
+  .UnityInputExcludedFiles ; (optional) Explicit list of excluded files (partial, root-relative or full path)
+  .UnityInputIsolatedFiles ; (optional) List of files to exclude from unity, but still compile (partial end or root-relative)
   .UnityInputObjectLists   ; (optional) ObjectList(s) to use as input
   .UnityInputIsolateWritableFiles ; (optional) Build writable files individually (default false)
   .UnityInputIsolateWritableFilesLimit ; (optional) Disable isolation when many files are writable (default 0)
@@ -51,6 +52,7 @@ Builds one or more Unity/Blob files containing includes of other source code fil
   .UnityPCH                ; (optional) Precompiled Header file to add to generated Unity files
   .PreBuildDependencies    ; (optional) Force targets to be built before this Unity (Rarely needed,
                            ; but useful when a Unity should contain generated code)
+  .Hidden                  ; (optional) Hide a target from -showtargets (default false)
 }
 </div>
     </div>

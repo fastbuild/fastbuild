@@ -2,44 +2,45 @@
 //------------------------------------------------------------------------------
 {
     .ProjectName        = 'FBuildApp'
-    .ProjectPath        = 'Tools\FBuild\FBuildApp'
+    .ProjectPath        = 'Tools/FBuild/FBuildApp'
 
     // Executable
     //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs )
+    .ProjectConfigs = {}
+    ForEach( .BuildConfig in .BuildConfigs )
     {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
+        Using( .BuildConfig )
+        .OutputBase + '/$Platform$-$BuildConfigName$'
 
         // Unity
         //--------------------------------------------------------------------------
-        Unity( '$ProjectName$-Unity-$Platform$-$Config$' )
+        Unity( '$ProjectName$-Unity-$Platform$-$BuildConfigName$' )
         {
             .UnityInputPath             = '$ProjectPath$/'
             .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+            .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
         }
 
         // Library
         //--------------------------------------------------------------------------
-        ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
+        ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
         {
             // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$Config$'
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
 
         // Executable
         //--------------------------------------------------------------------------
-        Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
+        Executable( '$ProjectName$-Exe-$Platform$-$BuildConfigName$' )
         {
             .Libraries                  = {
-                                            'FBuildApp-Lib-$Platform$-$Config$',
-                                            'FBuildCore-Lib-$Platform$-$Config$',
-                                            'Core-Lib-$Platform$-$Config$',
-                                            'LZ4-Lib-$Platform$-$Config$'
+                                            'FBuildApp-Lib-$Platform$-$BuildConfigName$',
+                                            'FBuildCore-Lib-$Platform$-$BuildConfigName$',
+                                            'Core-Lib-$Platform$-$BuildConfigName$',
+                                            'LZ4-Lib-$Platform$-$BuildConfigName$'
                                           }
             #if __LINUX__
                 .LinkerOutput               = '$OutputBase$/$ProjectPath$/fbuild$ExeExtension$' // NOTE: lower case
@@ -56,10 +57,25 @@
             #endif
             #if __LINUX__
                 .LinkerOptions              + ' -pthread -ldl -lrt'
+
+                .LinkerStampExe             = '/bin/bash'
+                .ExtractDebugInfo           = 'objcopy --only-keep-debug $LinkerOutput$ $LinkerOutput$.debug'
+                .StripDebugInfo             = 'objcopy --strip-debug $LinkerOutput$'
+                .AddDebugLink               = 'objcopy --add-gnu-debuglink $LinkerOutput$.debug $LinkerOutput$'
+                .LinkerStampExeArgs         = '-c "$ExtractDebugInfo$ && $StripDebugInfo$ && $AddDebugLink$"'
             #endif
         }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
-        ^'Targets_$Platform$_$Config$' + { '$ProjectName$-$Platform$-$Config$' }
+        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$BuildConfigName$' }
+        ^'Targets_$Platform$_$BuildConfigName$' + { '$ProjectName$-$Platform$-$BuildConfigName$' }
+
+        #if __WINDOWS__
+            .ProjectConfig              = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = '$ProjectName$-$Platform$-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+        #if __OSX__
+            .ProjectConfig              = [ .Config = '$BuildConfigName$'   .Target = '$ProjectName$-x64OSX-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
     }
 
     // Aliases
@@ -77,15 +93,6 @@
 
             .LocalDebuggerCommand       = '^$(SolutionDir)..\^$(Configuration)\Tools\FBuild\FBuildApp\FBuild.exe'
             .LocalDebuggerWorkingDirectory = '^$(SolutionDir)..\..\Code'
-
-            .ProjectX64Debug        = [ Using( .ProjectX64Debug )           .Target = '$ProjectName$-X64-Debug' ]
-            .ProjectX64Profile      = [ Using( .ProjectX64Profile )         .Target = '$ProjectName$-X64-Profile' ]
-            .ProjectX64Release      = [ Using( .ProjectX64Release )         .Target = '$ProjectName$-X64-Release' ]
-            .ProjectX64ClangDebug   = [ Using( .ProjectX64ClangDebug )      .Target = '$ProjectName$-X64Clang-Debug' ]
-            .ProjectX64ClangProfile = [ Using( .ProjectX64ClangProfile )    .Target = '$ProjectName$-X64Clang-Profile' ]
-            .ProjectX64ClangRelease = [ Using( .ProjectX64ClangRelease )    .Target = '$ProjectName$-X64Clang-Release' ]
-            .ProjectConfigs         = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-                                        .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
         }
     #endif
 
@@ -99,11 +106,6 @@
             .ProjectBasePath            = '$ProjectPath$/'
 
             .XCodeBuildWorkingDir       = '../../../../Code/'
-
-            .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = '$ProjectName$-x64OSX-Debug' ]
-            .ProjectOSXProfile      = [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
-            .ProjectOSXRelease      = [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]
-            .ProjectConfigs         = { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }
         }
     #endif
 }

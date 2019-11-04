@@ -11,63 +11,44 @@
     #define USING_CLANG_8
 #endif
 #if __WINDOWS__
-    //#define USING_CLANG_5
     #define USING_CLANG_7
+    //#define USING_CLANG_8
+    //#define USING_CLANG_9
 #endif
 
 // Activate
 //------------------------------------------------------------------------------
 #if__LINUX__
-    #if USING_CLANG_3
-        #include "Linux/Clang3.bff"
-    #endif
-    #if USING_CLANG_6
-        #include "Linux/Clang6.bff"
+    #if CI_BUILD
+        #include "Linux/Clang_CI.bff"
+    #else
+        #if USING_CLANG_3
+            #include "Linux/Clang3.bff"
+        #endif
+        #if USING_CLANG_6
+            #include "Linux/Clang6.bff"
+        #endif
     #endif
 #endif
 #if __OSX__
-    #if USING_CLANG_8
-        #include "OSX/Clang8.bff"
+    #if CI_BUILD
+        #include "OSX/Clang_CI.bff"
+    #else
+        #if USING_CLANG_8
+            #include "OSX/Clang8.bff"
+        #endif
     #endif
 #endif
 #if __WINDOWS__
-    #if USING_CLANG_5
-        #include "Windows/Clang5.bff"
-    #endif
     #if USING_CLANG_7
         #include "Windows/Clang7.bff"
     #endif
+    #if USING_CLANG_8
+        #include "Windows/Clang8.bff"
+    #endif
+    #if USING_CLANG_9
+        #include "Windows/Clang9.bff"
+    #endif
 #endif
-
-// Projects
-//--------------------------------------------------------------------------
-{
-    // Common
-    .ProjectBasePath                = '$_CURRENT_BFF_DIR_$/'
-    .ProjectInputPaths              = .ProjectBasePath
-    .ProjectAllowedFileExtensions   = '*.bff'
-
-    #if __WINDOWS__
-        // Visual Studio
-        VCXProject( 'Clang-proj' )
-        {
-            .ProjectOutput                  = '$_CURRENT_BFF_DIR_$/../../../tmp/VisualStudio/Projects/Clang.vcxproj'
-            .PlatformToolset                = 'v141'
-    
-            .ProjectX64Debug                = [ .Platform = 'x64' .Config = 'x64-Debug' ]
-            .ProjectX64Profile              = [ .Platform = 'x64' .Config = 'x64-Profile' ]
-            .ProjectX64Release              = [ .Platform = 'x64' .Config = 'x64-Release' ]
-            .ProjectX64ClangDebug           = [ .Platform = 'x64' .Config = 'x64Clang-Debug' ]
-            .ProjectX64ClangProfile         = [ .Platform = 'x64' .Config = 'x64Clang-Profile' ]
-            .ProjectX64ClangRelease         = [ .Platform = 'x64' .Config = 'x64Clang-Release' ]
-            .ProjectConfigs                 = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-                                                .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
-        }
-    #endif
-
-    #if __OSX__
-        // XCode - TODO:C Add project
-    #endif
-}
 
 //------------------------------------------------------------------------------

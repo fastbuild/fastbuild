@@ -31,7 +31,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
-    REFLECT_STRUCT( m_Manifest,     "Manifest", ToolManifest, MetaHidden() )
+    REFLECT_STRUCT( m_Manifest,     "Manifest", ToolManifest, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
@@ -119,7 +119,7 @@ CompilerNode::CompilerNode()
     {
         return false;
     }
-    
+
     // The LightCache is only compatible with MSVC for now
     // - GCC/Clang can be supported when built in include paths can be extracted
     //   and -nostdinc/-nostdinc++ is handled
@@ -128,6 +128,8 @@ CompilerNode::CompilerNode()
         Error::Error_1502_LightCacheIncompatibleWithCompiler( iter, function );
         return false;
     }
+
+    m_Manifest.Initialize( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables );
 
     return true;
 }
@@ -329,7 +331,7 @@ CompilerNode::~CompilerNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * /*job*/ )
 {
-    if ( !m_Manifest.Generate( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables ) )
+    if ( !m_Manifest.DoBuild( m_StaticDependencies ) )
     {
         return Node::NODE_RESULT_FAILED; // Generate will have emitted error
     }
@@ -343,6 +345,17 @@ CompilerNode::~CompilerNode()
 const char * CompilerNode::GetEnvironmentString() const
 {
     return Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
+}
+
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void CompilerNode::Migrate( const Node & oldNode )
+{
+    // Migrate Node level properties
+    Node::Migrate( oldNode );
+
+    // Migrate the timestamp/hash info stored for the files in the ToolManifest
+    m_Manifest.Migrate( oldNode.CastTo<CompilerNode>()->GetManifest() );
 }
 
 //------------------------------------------------------------------------------

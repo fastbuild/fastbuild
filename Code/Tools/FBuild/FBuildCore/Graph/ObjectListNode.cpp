@@ -49,6 +49,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
     REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
+    REFLECT( m_Hidden,                              "Hidden",                           MetaOptional() )
     // Precompiled Headers
     REFLECT( m_PCHInputFile,                        "PCHInputFile",                     MetaOptional() + MetaFile() )
     REFLECT( m_PCHOutputFile,                       "PCHOutputFile",                    MetaOptional() + MetaFile() )
@@ -439,14 +440,13 @@ ObjectListNode::~ObjectListNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult ObjectListNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult ObjectListNode::DoBuild( Job * /*job*/ )
 {
     // consider ourselves to be as recent as the newest file
     uint64_t timeStamp = 0;
-    const Dependency * const end = m_DynamicDependencies.End();
-    for ( const Dependency * it = m_DynamicDependencies.Begin(); it != end; ++it )
+    for ( const Dependency & dep : m_DynamicDependencies )
     {
-        ObjectNode * on = it->GetNode()->CastTo< ObjectNode >();
+        ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();
         timeStamp = Math::Max< uint64_t >( timeStamp, on->GetStamp() );
     }
     m_Stamp = timeStamp;

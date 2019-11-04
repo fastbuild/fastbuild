@@ -6,6 +6,9 @@
 //------------------------------------------------------------------------------
 #include "FileNode.h"
 
+// FBuild
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
+
 // Core
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
@@ -17,13 +20,13 @@ class Function;
 
 // XCodeProjectConfig
 //------------------------------------------------------------------------------
-struct XCodeProjectConfig : public Struct
+class XCodeProjectConfig : public ProjectGeneratorBaseConfig
 {
     REFLECT_STRUCT_DECLARE( XCodeProjectConfig )
 public:
-    AString             m_Config;
     AString             m_Target;
-    const Node *        m_TargetNode = nullptr;
+    AString             m_XCodeBaseSDK;
+    AString             m_XCodeDebugWorkingDir;
 
     static bool ResolveTargets( NodeGraph & nodeGraph,
                                 Array< XCodeProjectConfig > & configs,
@@ -44,6 +47,7 @@ public:
     static inline Node::Type GetTypeS() { return Node::XCODEPROJECT_NODE; }
 
 private:
+    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void PostLoad( NodeGraph & nodeGraph ) override;
 
@@ -59,6 +63,9 @@ private:
     AString             m_XCodeBuildToolPath;
     AString             m_XCodeBuildToolArgs;
     AString             m_XCodeBuildWorkingDir;
+    bool                m_XCodeDocumentVersioning = false;
+    Array<AString>      m_XCodeCommandLineArguments;
+    Array<AString>      m_XCodeCommandLineArgumentsDisabled;
 };
 
 //------------------------------------------------------------------------------

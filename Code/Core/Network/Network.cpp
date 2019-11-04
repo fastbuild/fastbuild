@@ -37,8 +37,8 @@
     }
     else
     {
-        ASSERT( false && "This should never fail" );
         hostName = "Unknown";
+        ASSERT( false && "This should never fail" );
     }
 }
 
@@ -47,6 +47,13 @@
 /*static*/ uint32_t Network::GetHostIPFromName( const AString & hostName, uint32_t timeoutMS )
 {
     PROFILE_FUNCTION
+
+    // Fast path for "localhost". Although we have a fast path for detecting ip4
+    // format adresses, it can still take several ms to call
+    if ( hostName == "127.0.0.1" )
+    {
+        return 0x0100007f;
+    }
 
     // see if string it already in ip4 format
     PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // Deprecated...

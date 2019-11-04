@@ -55,7 +55,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum { NODE_GRAPH_CURRENT_VERSION = 124 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 132 };
 
     bool IsValid() const
     {
@@ -90,7 +90,7 @@ public:
 
     LoadResult Load( IOStream & stream, const char * nodeGraphDBFile );
     void Save( IOStream & stream, const char * nodeGraphDBFile ) const;
-    void Display( const Dependencies & dependencies ) const;
+    void SerializeToText( const Dependencies & dependencies, AString & outBuffer ) const;
 
     // access existing nodes
     Node * FindNode( const AString & nodeName ) const;
@@ -174,8 +174,8 @@ private:
     static void SaveRecurse( IOStream & stream, Node * node, Array< bool > & savedNodeFlags );
     static void SaveRecurse( IOStream & stream, const Dependencies & dependencies, Array< bool > & savedNodeFlags );
     bool LoadNode( IOStream & stream );
-    static void DisplayRecurse( Node * node, Array< bool > & savedNodeFlags, uint32_t depth, AString & outBuffer );
-    static void DisplayRecurse( const char * title, const Dependencies & dependencies, Array< bool > & savedNodeFlags, uint32_t depth, AString & outBuffer );
+    static void SerializeToText( Node * node, uint32_t depth, AString & outBuffer );
+    static void SerializeToText( const char * title, const Dependencies & dependencies, uint32_t depth, AString & outBuffer );
 
     // DB Migration
     void Migrate( const NodeGraph & oldNodeGraph );

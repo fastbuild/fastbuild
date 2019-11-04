@@ -42,7 +42,14 @@ JobSubQueue::JobSubQueue()
 JobSubQueue::~JobSubQueue()
 {
     ASSERT( m_Jobs.IsEmpty() );
-    ASSERT( m_Count == 0 );
+    ASSERT( AtomicLoadRelaxed( &m_Count ) == 0 );
+}
+
+// GetCount
+//------------------------------------------------------------------------------
+uint32_t JobSubQueue::GetCount() const
+{
+    return AtomicLoadRelaxed( &m_Count );
 }
 
 // JobSubQueue:QueueJobs
@@ -66,7 +73,7 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
     const bool wasEmpty = m_Jobs.IsEmpty();
 
     m_Jobs.Append( jobs );
-    m_Count += (uint32_t)jobs.GetSize();
+    AtomicAddU32( &m_Count, (int32_t)jobs.GetSize() );
 
     if ( wasEmpty )
     {
@@ -82,7 +89,7 @@ void JobSubQueue::QueueJobs( Array< Node * > & nodes )
 Job * JobSubQueue::RemoveJob()
 {
     // lock-free early out if there are no jobs
-    if ( m_Count == 0 )
+    if ( AtomicLoadRelaxed( &m_Count ) == 0 )
     {
         return nullptr;
     }
@@ -96,8 +103,7 @@ Job * JobSubQueue::RemoveJob()
         return nullptr;
     }
 
-    ASSERT( m_Count );
-    --m_Count;
+    VERIFY( AtomicDecU32( &m_Count ) != static_cast< uint32_t >( -1 ) );
 
     Job * job = m_Jobs.Top();
     m_Jobs.Pop();
@@ -220,7 +226,7 @@ void JobQueue::GetJobStats( uint32_t & numJobs,
 
     numJobs = m_LocalJobs_Available.GetCount();
     numJobsDist = (uint32_t)m_DistributableJobs_Available.GetSize();
-    numJobsActive = m_NumLocalJobsActive;
+    numJobsActive = AtomicLoadRelaxed( &m_NumLocalJobsActive );
     numJobsDistActive = (uint32_t)m_DistributableJobs_InProgress.GetSize();
 }
 
@@ -730,38 +736,18 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
     {
         node->SetStatFlag( Node::STATS_FAILED );
     }
-
-    if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
+    else if ( result == Node::NODE_RESULT_NEED_SECOND_BUILD_PASS )
     {
         // nothing to check
     }
-    else if ( node->IsAFile() )
+    else 
     {
-        if ( result == Node::NODE_RESULT_FAILED )
-        {
-            if ( !isOutputFile || ( node->GetControlFlags() & Node::FLAG_NO_DELETE_ON_FAIL ) )
-            {
-                // node failed, but builder wants result left on disc
-            }
-            else
-            {
-                // build of file failed - if there is a file....
-                if ( FileIO::FileExists( node->GetName().Get() ) )
-                {
-                    // ... it is invalid, so try to delete it
-                    if ( FileIO::FileDelete( node->GetName().Get() ) == false )
-                    {
-                        // failed to delete it - this might cause future build problems!
-                        FLOG_ERROR( "Post failure deletion failed for '%s'", node->GetName().Get() );
-                    }
-                }
-            }
-        }
-        else
-        {
-            // build completed ok, or retrieved from cache...
-            ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_OK_CACHE ) );
+        // build completed ok, or retrieved from cache...
+        ASSERT( ( result == Node::NODE_RESULT_OK ) || ( result == Node::NODE_RESULT_OK_CACHE ) );
 
+        // Check that the file is on disk as expected
+        if ( node->IsAFile() )
+        {
             // (don't check existence of input files)
             if ( node->GetType() != Node::FILE_NODE )
             {

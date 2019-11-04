@@ -1,0 +1,35 @@
+//
+// Chaining
+//
+// Chain the output of one ObjectList as the input of a CopyDir
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// ObjectList1
+//------------------------------------------------------------------------------
+ObjectList( 'ObjectList' )
+{
+    // Build a cpp file. Using a directory list so that it's discovered dynamically
+    .CompilerInputPath          = 'Tools/FBuild/FBuildTest/Data/TestCopy/ObjectListChaining/'
+    .CompilerOutputPath         = '$Out$/Test/Copy/ObjectListChaining/1/'
+}
+
+// ObjectList2
+//  - consume output of ObjectList1
+//------------------------------------------------------------------------------
+CopyDir( 'CopyDir' )
+{
+    // Ensure ObjectList1 builds first, since we cannot define static dependencies on the output
+    .PreBuildDependencies       = 'ObjectList'
+
+    .SourcePaths                = '$Out$/Test/Copy/ObjectListChaining/1/'
+    .Dest                       = '$Out$/Test/Copy/ObjectListChaining/2/'
+}
+
+//------------------------------------------------------------------------------

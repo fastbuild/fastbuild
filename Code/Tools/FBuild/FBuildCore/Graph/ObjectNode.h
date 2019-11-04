@@ -62,6 +62,7 @@ public:
         FLAG_STATIC_ANALYSIS_MSVC = 0x200000,
         FLAG_ORBIS_WAVE_PSSLC   =   0x400000,
         FLAG_DIAGNOSTICS_COLOR_AUTO = 0x800000,
+        FLAG_WARNINGS_AS_ERRORS_CLANGGCC = 0x1000000,
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,
@@ -72,8 +73,11 @@ public:
 
     inline bool IsCreatingPCH() const { return GetFlag( FLAG_CREATING_PCH ); }
     inline bool IsUsingPCH() const { return GetFlag( FLAG_USING_PCH ); }
-    inline bool IsMSVC() const { return GetFlag( FLAG_MSVC ); }
+    inline bool IsClang() const { return GetFlag( FLAG_CLANG ); }
+    inline bool IsGCC() const { return GetFlag( FLAG_GCC ); }
+    inline bool IsMSVC() const { return GetFlag(FLAG_MSVC); }
     inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
+    inline bool IsUsingStaticAnalysisMSVC() const { return GetFlag( FLAG_STATIC_ANALYSIS_MSVC ); }
 
     virtual void SaveRemote( IOStream & stream ) const override;
     static Node * LoadRemote( IOStream & stream );
@@ -87,6 +91,7 @@ public:
     ObjectNode * GetPrecompiledHeader() const;
 
     void GetPDBName( AString & pdbName ) const;
+    void GetNativeAnalysisXMLPath( AString& outXMLFileName ) const;
 
     const char * GetObjExtension() const;
 private:
