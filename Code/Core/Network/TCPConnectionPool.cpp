@@ -49,6 +49,84 @@
 #endif
 #define LAST_NETWORK_ERROR_STR ERROR_STR( GetLastNetworkError() )
 
+// TCPConnectionPoolProfileHelper
+//------------------------------------------------------------------------------
+#if defined( PROFILING_ENABLED )
+    class TCPConnectionPoolProfileHelper
+    {
+    public:
+        enum ThreadType
+        {
+            THREAD_LISTEN,
+            THREAD_CONNECTION
+        };
+
+        TCPConnectionPoolProfileHelper( ThreadType threadType )
+        {
+            // Chose which bitmap to use
+            uint64_t& bitmap = ( threadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
+
+            // Find free bit
+            uint32_t bit = 0;
+            {
+                MutexHolder mh( s_Mutex );
+                for ( ; bit < 64; ++bit )
+                {
+                    // Is this bit clear?
+                    if ( ( ( (uint64_t)1 << bit ) & bitmap ) == 0 )
+                    {
+                        // Set bit as we will use this Id
+                        bitmap |= ( (uint64_t)1 << bit );
+                        break;
+                    }
+                }
+            }
+            m_Bit = bit; // Store the bit for this thread
+            m_ThreadType = threadType;
+
+            // No free bits? (Last bit is never set)
+            if ( bit == 63 )
+            {
+                return; // Can't set thread name
+            }
+
+            // Format and set
+            AStackString<> threadName;
+            threadName.Format( ( threadType == THREAD_LISTEN ) ? "Listen_%u" : "Connection_%u", bit );
+            PROFILE_SET_THREAD_NAME( threadName.Get() )
+        }
+        ~TCPConnectionPoolProfileHelper()
+        {
+            // Clear bit if we reserved one
+            if ( m_Bit < 63 )
+            {
+                // Chose which bitmap to use
+                uint64_t& bitmap = ( m_ThreadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
+
+                // Clear bit
+                MutexHolder mh( s_Mutex );
+                bitmap &= ~( (uint64_t)1 << m_Bit );
+            }
+        }
+
+    protected:
+        ThreadType          m_ThreadType;
+        uint32_t            m_Bit;
+
+        static Mutex        s_Mutex;
+        static uint64_t     s_IdBitmapListen;
+        static uint64_t     s_IdBitmapConnection;
+    };
+    /*static*/ Mutex    TCPConnectionPoolProfileHelper::s_Mutex;
+    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapListen        = 0;
+    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapConnection    = 0;
+
+    #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )   \
+        TCPConnectionPoolProfileHelper threadNameHelper( threadType );
+#else
+    #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )
+#endif
+
 // CONSTRUCTOR - ConnectionInfo
 //------------------------------------------------------------------------------
 ConnectionInfo::ConnectionInfo( TCPConnectionPool * ownerPool )
@@ -115,7 +193,7 @@ void TCPConnectionPool::ShutdownAllConnections()
         }
 
         m_ConnectionsMutex.Unlock();
-        Thread::Sleep( 1 );
+        m_ShutdownSemaphore.Wait( 1 );
         m_ConnectionsMutex.Lock();
     }
     m_ConnectionsMutex.Unlock();
@@ -744,8 +822,14 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
                                      int * addressSize ) const
 {
     #if defined( __WINDOWS__ )
-        // On Windows, handles are not inherited (SOCK_CLOEXEC is not needed/supported)
+        // On Windows, the newSocket inherits WSA_FLAG_NO_HANDLE_INHERIT from socket
         TCPSocket newSocket = accept( socket, address, addressSize );
+
+        // TODO: Re-enable
+        //DWORD flags;
+        //ASSERT( GetHandleInformation( (HANDLE)newSocket, &flags ) );
+        //ASSERT( ( flags & HANDLE_FLAG_INHERIT ) == 0 );
+        //(void)flags;
     #elif defined( __LINUX__ )
         // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
         TCPSocket newSocket = accept4( socket, address, (unsigned int *)addressSize, SOCK_CLOEXEC );
@@ -773,10 +857,15 @@ TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
 TCPSocket TCPConnectionPool::CreateSocket() const
 {
     #if defined( __LINUX__ )
-        // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
+        // On Linux we can create the socket with inheritance disabled (SOCK_CLOEXEC)
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
+    #elif defined( __WINDOWS__ )
+        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+
+        // TODO: Re-enable
+        // On Windows we can create the socket with inheritance disabled (WSA_FLAG_NO_HANDLE_INHERIT)
+        //TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
     #else
-        // On Windows, handles are not inherited (SOCK_CLOEXEC is not needed/supported)
         // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
         TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
     #endif
@@ -794,7 +883,7 @@ TCPSocket TCPConnectionPool::CreateSocket() const
         // The best we can do is reduce the likelyhood of problems by immediately
         // setting the flag after creation.
         // In practice, the listen socket is the most problematic one to be
-        // inherited (as it can prevents re-use), but thankfully starting listening
+        // inherited (as it prevents re-use), but thankfully starting listening
         // while spawning a process is not something we generally do.
         VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
     #endif
@@ -829,6 +918,7 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TCPConnectionPool::ListenThreadWrapperFunction( void * data )
 {
+    TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( TCPConnectionPoolProfileHelper::THREAD_LISTEN );
     PROFILE_FUNCTION
 
     ConnectionInfo * ci = (ConnectionInfo *)data;
@@ -916,9 +1006,9 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         MutexHolder mh( m_ConnectionsMutex );
         ASSERT( m_ListenConnection == ci );
         m_ListenConnection = nullptr;
+        FDELETE ci;
+        m_ShutdownSemaphore.Signal(); // Wake main thread which may be waiting on shutdown
     }
-
-    FDELETE ci;
 
     // thread exit
     TCPDEBUG( "Listen thread exited\n" );
@@ -961,6 +1051,7 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TCPConnectionPool::ConnectionThreadWrapperFunction( void * data )
 {
+    TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( TCPConnectionPoolProfileHelper::THREAD_CONNECTION );
     PROFILE_FUNCTION
 
     ConnectionInfo * ci = (ConnectionInfo *)data;
@@ -1041,9 +1132,12 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         ConnectionInfo ** iter = m_Connections.Find( ci );
         ASSERT( iter );
         m_Connections.Erase( iter );
+        FDELETE ci;
+        if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
+        {
+            m_ShutdownSemaphore.Signal(); // Wake main thread which will be waiting on shutdown
+        }
     }
-
-    FDELETE ci;
 
     // thread exit
     TCPDEBUG( "connection thread exited\n" );

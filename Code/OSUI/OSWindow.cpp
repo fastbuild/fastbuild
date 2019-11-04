@@ -242,7 +242,7 @@ void OSWindow::SetMinimized( bool minimized )
 /*sttaic*/ uint32_t OSWindow::GetPrimaryScreenWidth()
 {
     #if defined( __WINDOWS__ )
-        return GetSystemMetrics( SM_CXSCREEN );
+        return (uint32_t)GetSystemMetrics( SM_CXSCREEN );
     #elif defined( __OSX__ )
         return WindowOSX_GetPrimaryScreenWidth();
     #else

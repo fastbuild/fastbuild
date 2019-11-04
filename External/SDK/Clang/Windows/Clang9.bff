@@ -1,15 +1,15 @@
-// Clang 8.x.x
+// Clang 9.x.x
 //------------------------------------------------------------------------------
-.Clang8_BasePath     = '../External/SDK/Clang/Windows/8.0.0'
+.Clang9_BasePath     = '../External/SDK/Clang/Windows/9.0.0'
 #if CI_BUILD
-    .Clang8_BasePath = 'C:\Program Files\LLVM'
+    .Clang9_BasePath = 'C:\Program Files\LLVM'
 #endif
 
 // Compiler
 //------------------------------------------------------------------------------
-Compiler( 'Compiler-Clang8' )
+Compiler( 'Compiler-Clang9' )
 {
-    .Root                           = '$Clang8_BasePath$'
+    .Root                           = '$Clang9_BasePath$'
     .ExtraFiles                     = {
                                         '$Root$/bin/msvcp140.dll'
                                         '$Root$/bin/vcruntime140.dll'
@@ -30,7 +30,7 @@ Compiler( 'Compiler-Clang8' )
     .Platform                       = 'x64Clang'
 
     // Compiler Options
-    .Compiler                       = 'Compiler-Clang8'
+    .Compiler                       = 'Compiler-Clang9'
     .CommonCompilerOptions          = ' -c -g'
 
                                     // Include paths
@@ -54,7 +54,7 @@ Compiler( 'Compiler-Clang8' )
                                     + ' -fmsc-version=$MSC_VER$'
                                     + ' -Xclang -flto-visibility-public-std' // LTO visibility matches MSVC behaviour
 
-                                    // as of v8.0.0, these warnings fire inside system headers
+                                    // as of v9.0.0, these warnings fire inside system headers
                                     + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
                                     + ' -Wno-unknown-pragmas'           // unknown pragma ignored [-Wunknown-pragmas]
                                     + ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
@@ -69,11 +69,11 @@ Compiler( 'Compiler-Clang8' )
     .PCHOptions                     = ' -x c++-header "%1" -o"%2" $CommonCompilerOptions$'
 
     // Librarian
-    .Librarian                      = '$Clang8_BasePath$\bin\llvm-ar.exe'
+    .Librarian                      = '$Clang9_BasePath$\bin\llvm-ar.exe'
     .LibrarianOptions               = '/c echo %1 > %2' // 'rc "%2" "%1"' // NOTE: output must come first
 
     // Linker
-    .Linker                         = '$Clang8_BasePath$\bin\lld-link.exe'
+    .Linker                         = '$Clang9_BasePath$\bin\lld-link.exe'
     .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
                                     + .VSLibPaths
 

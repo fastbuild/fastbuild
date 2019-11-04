@@ -1038,6 +1038,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     }
 
     // Check GCC/Clang options
+    bool objectiveC = false;
     if ( flags & ( ObjectNode::FLAG_CLANG | ObjectNode::FLAG_GCC ) )
     {
         // Clang supported -fdiagnostics-color option (and defaulted to =auto) since its first release
@@ -1048,8 +1049,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
         Array< AString > tokens;
         args.Tokenize( tokens );
-        for ( const AString & token : tokens )
+        const AString * const end = tokens.End();
+        for ( const AString * it = tokens.Begin(); it != end; ++it )
         {
+            const AString & token = *it;
+
             if ( token == "-fdiagnostics-color=auto" )
             {
                 flags |= ObjectNode::FLAG_DIAGNOSTICS_COLOR_AUTO;
@@ -1062,6 +1066,21 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             {
                 flags |= ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC;
             }
+            else if ( token == "-fobjc-arc" )
+            {
+                objectiveC = true;
+            }
+            else if ( token == "-x" )
+            {
+                if ( it < ( end - 1 ) )
+                {
+                    const AString & nextToken = *( it + 1);
+                    if ( nextToken == "objective-c" )
+                    {
+                        objectiveC = true;
+                    }
+                }
+            }
         }
     }
 
@@ -1069,7 +1088,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     if ( flags & ( ObjectNode::FLAG_CLANG | ObjectNode::FLAG_GCC | ObjectNode::FLAG_SNC | ObjectNode::CODEWARRIOR_WII | ObjectNode::GREENHILLS_WIIU ) )
     {
         // creation of the PCH must be done locally to generate a usable PCH
-        if ( !( flags & ObjectNode::FLAG_CREATING_PCH ) )
+        // Objective C/C++ cannot be distributed
+        if ( !creatingPCH && !objectiveC )
         {
             if ( isDistributableCompiler )
             {
@@ -1456,7 +1476,7 @@ void ObjectNode::WriteToCache( Job * job, const AString & workingDir )
             const size_t dataSize = c.GetResultSize();
             const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
 
-            const uint32_t startPublish( (uint32_t)t.GetElapsedMS() );
+            const uint32_t startPublish( stopCompress );
             if ( cache->Publish( cacheFileName, data, dataSize ) )
             {
                 // cache store complete

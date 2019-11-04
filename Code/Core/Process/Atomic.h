@@ -17,11 +17,7 @@ inline bool AtomicLoadRelaxed( const volatile bool * x )
     #if defined( __GNUC__ ) || defined( __clang__ )
         return __atomic_load_n( x, __ATOMIC_RELAXED );
     #elif defined( _MSC_VER )
-        #if defined( _M_X64 ) || defined( _M_IX86 )
-            return *x;
-        #else
-            #error Unknown architecture
-        #endif
+        return *x;
     #else
         #error Unknown compiler
     #endif

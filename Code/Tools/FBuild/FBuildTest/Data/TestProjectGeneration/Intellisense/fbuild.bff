@@ -122,6 +122,26 @@ XCodeProject( 'Test-xcode' )
     .ProjectOutput      = '$Out$/Test.xcodeproj/project.pbxproj'
 }
 
+// Copy
+//------------------------------------------------------------------------------
+Copy( 'Copy' )
+{
+    .Source             = 'Executable' // This provides Intellisense info
+    .Dest               = '$Out$/Copy/'
+}
+VCXProject( 'Copy-proj' )
+{
+    .Config             = [ .Platform = 'Win32' .Config = 'Debug' .Target = 'Copy' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$\Copy.vcxproj'
+}
+XCodeProject( 'Copy-xcode' )
+{
+    .Config             = [ .Platform = 'OSX' .Config = 'Debug' .Target = 'Copy' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$/Copy.xcodeproj/project.pbxproj'
+}
+
 // Alias to build
 //------------------------------------------------------------------------------
 Alias( 'Intellisense' )
@@ -135,6 +155,8 @@ Alias( 'Intellisense' )
                     'Executable-xcode'
                     'Test-proj'
                     'Test-xcode'
+                    'Copy-proj'
+                    'Copy-xcode'
                   }
 }
 
