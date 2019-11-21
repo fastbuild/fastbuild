@@ -203,7 +203,17 @@ void TestObject::ModTimeChangeBackwards() const
     const AStackString<> fileB( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileB.cpp" );
     const char* database = "../tmp/Test/Object/ModTimeChangeBackwards/fbuild.fdb";
 
+    // Generate full path file fileA
+    AStackString<> fileAFullPath;
+    {
+        FileIO::GetCurrentDir( fileAFullPath );
+        fileAFullPath += '/';
+        fileAFullPath += fileA;
+        PathUtils::FixupFilePath( fileAFullPath );
+    }
+
     // Create two empty files
+    uint64_t oldModTime;
     {
         // Generate some header files
         EnsureDirExists( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/" );
@@ -212,6 +222,24 @@ void TestObject::ModTimeChangeBackwards() const
         f.Close();
         TEST_ASSERT( f.Open( fileB.Get(), FileStream::WRITE_ONLY ) );
         f.Close();
+
+        // Take note of FileA's original time
+        oldModTime = FileIO::GetFileLastWriteTime( fileAFullPath );
+
+        // Modify FileA time (jump through hoops to handle poor filetime granularity)
+        Timer timeout;
+        for ( ;; )
+        {
+            TEST_ASSERT( timeout.GetElapsed() < 30.0f );
+
+            Thread::Sleep( 10 );
+
+            TEST_ASSERT( FileIO::SetFileLastWriteTimeToNow( fileAFullPath ) );
+            if ( FileIO::GetFileLastWriteTime( fileAFullPath ) != oldModTime )
+            {
+                break;
+            }
+        }
     }
 
     // Compile library for the two files
@@ -238,15 +266,7 @@ void TestObject::ModTimeChangeBackwards() const
     }
 
     // Change modtime into the past
-    {
-        AStackString<> fileAFullPath;
-        FileIO::GetCurrentDir( fileAFullPath );
-        fileAFullPath += '/';
-        fileAFullPath += fileA;
-        PathUtils::FixupFilePath( fileAFullPath );
-        const uint64_t newModTime = FileIO::GetFileLastWriteTime( fileA ) - 1000000000ULL;
-        TEST_ASSERT( FileIO::SetFileLastWriteTime( fileAFullPath, newModTime ) );
-    }
+    TEST_ASSERT( FileIO::SetFileLastWriteTime( fileAFullPath, oldModTime ) );
 
     // Compile library again
     {
