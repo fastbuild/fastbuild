@@ -144,7 +144,7 @@ REFLECT_END( VCXProjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 VCXProjectNode::VCXProjectNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
     , m_ProjectSccEntrySAK( false )
 {
     m_Type = Node::VCXPROJECT_NODE;
@@ -226,14 +226,6 @@ VCXProjectNode::VCXProjectNode()
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 VCXProjectNode::~VCXProjectNode() = default;
-
-// DetermineNeedToBuild
-//------------------------------------------------------------------------------
-/*virtual*/ bool VCXProjectNode::DetermineNeedToBuild( bool /*forceClean*/ ) const
-{
-    // VCXProjectNode always builds, but only writes the result if different
-    return true;
-}
 
 // DoBuild
 //------------------------------------------------------------------------------
