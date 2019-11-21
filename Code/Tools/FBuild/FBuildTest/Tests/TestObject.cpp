@@ -175,6 +175,11 @@ void TestObject::TestStaleDynamicDeps() const
     // Delete one of the generated headers
     EnsureFileDoesNotExist(fileB);
 
+    // TODO:B Get rid of this
+    #if defined( __OSX__ )
+        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+    #endif
+
     // Build Again
     {
         // Init
