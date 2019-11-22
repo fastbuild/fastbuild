@@ -29,9 +29,26 @@
 <div id='print' class='newsitemheader'>Summary</div>
 <div class='newsitembody'>
   <p>
-  Prints some text during BFF parsing.
+  Prints some text or variable state during BFF parsing.
   </p>
-  <div class='code'>Print( "String or $VarName$" )</div>
+  <div class='code'>Print( "String with optional $VarName$" )     // (1)
+Print( .VarName )                             // (2)
+Print( /String with optional $VarName$/opts ) // (3)</div>
+<ol>
+  <li>Prints a string, embedding any scalar variables included.  To print a $, escape it with a ^.  
+      Arrays and structs cannot be printed this way.</li>
+  <li>Prints a variable.  If the variable is an array or struct, it will recursively print the members.</li>
+  <li>(0.99)Prints all variables in the current scope that match the given pattern.  The pattern string may include variables, 
+      as in variant 1. The pattern is a wildcard, not a regex.  Note that variables names start with a period.  
+	  After the closing slash, a set of characters may be included to enable certain options.  The following options are supported:
+      <table>
+        <tr><td valign=top><b>P</b></td><td>: Includes the entire chain of parent scopes.  Output starts with the global variables and then then 
+		                  first child scope in the chain is indented, and so on until the current scope is reached, which 
+						  will be the most indented.  Without P, only variables declared in the current scope will be printed,
+						  and there will be no extra indenting.</td></tr>
+        <tr><td valign=top><b>+</b></td><td>: Recurses into array and struct variables.  Without the +, just the variable name and type are printed.</td></tr>
+      </table></li>
+</ol>
 </div>
 	
 <div id='print' class='newsitemheader'>Details</div>
@@ -56,9 +73,17 @@
 .X64_Debug     = [ .Config = 'Debug'   .Platform = 'X64' ]
 .X64_Release   = [ .Config = 'Release' .Platform = 'X64' ]
 .Configs       = { .X86_Debug, .X86_Release, .X64_Debug, .X64_Release }
+{
+  .X64Configs = { ^X64_Debug, ^X64_Release }
+  .X86Configs = { .X86_Release }
   
+  Print(/.X64*/P)
+  Print(/.X86*/+)
+  Print('----------')
+}
 ForEach( .Config in .Configs )
 {
+  Print( .Config )
   Using( .Config )
   .TargetName = '$Platform$-$Config$'
 	
@@ -67,9 +92,41 @@ ForEach( .Config in .Configs )
   <p>
   Will generate the following output:
   </p>
-  <div class='output'>TargetName = X86-Debug
+  <div class='output'>.X64_Debug = // Struct
+.X64_Release = // Struct
+    .X64Configs = // ArrayOfStructs, size: 2
+.X86Configs = // ArrayOfStructs, size: 1
+{
+    .X86_Release = // Struct
+    [
+        .Config = 'Release'
+        .Platform = 'X86'
+    ]
+}
+----------
+.Config = // Struct
+[
+    .Config = 'Debug'
+    .Platform = 'X86'
+]
+TargetName = X86-Debug
+.Config = // Struct
+[
+    .Config = 'Release'
+    .Platform = 'X86'
+]
 TargetName = X86-Release
+.Config = // Struct
+[
+    .Config = 'Debug'
+    .Platform = 'X64'
+]
 TargetName = X64-Debug
+.Config = // Struct
+[
+    .Config = 'Release'
+    .Platform = 'X64'
+]
 TargetName = X64-Release</div>
 </div>
 

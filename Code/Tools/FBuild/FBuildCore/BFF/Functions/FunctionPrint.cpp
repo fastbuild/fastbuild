@@ -79,6 +79,60 @@ FunctionPrint::FunctionPrint()
 
             FLOG_BUILD_DIRECT( tmp.Get() );
         }
+        else if ( c == '/' )
+        {
+            // find end of pattern
+            BFFIterator stop( start );
+            do
+            {
+              stop++;
+            } while ( stop.GetCurrent() < functionHeaderStopToken->GetCurrent() && *stop != c );
+            if ( stop.GetCurrent() == functionHeaderStopToken->GetCurrent() )
+            {
+              Error::Error_1002_MatchingClosingTokenNotFound( start, nullptr, c );
+              return false;
+            }
+
+            // perform variable substitutions
+            AStackString< 1024 > pat;
+        
+            start++; // skip past opening quote
+            if ( BFFParser::PerformVariableSubstitutions( start, stop, pat ) == false )
+            {
+                return false; // substitution will have emitted an error
+            }
+
+            stop++;
+            stop.SkipWhiteSpaceAndComments();
+            
+            // Look at the options.
+            bool iterateParents = false;
+            bool shouldRecurse = false;
+        
+            for ( BFFIterator iterOpt = stop; stop.GetCurrent() < functionHeaderStopToken->GetCurrent(); )
+            {
+                switch ( *iterOpt )
+                {
+                    case 'P':
+                        iterateParents = true;
+                        break;
+                    case '+':
+                        shouldRecurse = true;
+                        break;
+                    default:
+                    {
+                        AStackString<32> err;
+                        err.Format("Print pattern option %c", *iterOpt );
+                        Error::Error_1030_UnknownDirective(iterOpt, err);
+                        return false;
+                    }
+                }
+                stop++;
+                stop.SkipWhiteSpaceAndComments();
+            }
+        
+            PrintStackVars( pat, iterateParents, shouldRecurse);
+        }
         else if ( c == BFFParser::BFF_DECLARE_VAR_INTERNAL ||
                   c == BFFParser::BFF_DECLARE_VAR_PARENT )
         {
@@ -110,7 +164,7 @@ FunctionPrint::FunctionPrint()
             }
 
             // dump the contents
-            PrintVarRecurse( *var, 0 );
+            PrintVarRecurse( *var, 0, 0xFFFFFFFF );
         }
         else
         {
@@ -124,7 +178,7 @@ FunctionPrint::FunctionPrint()
 
 // PrintVarRecurse
 //------------------------------------------------------------------------------
-/*static*/ void FunctionPrint::PrintVarRecurse( const BFFVariable & var, uint32_t indent )
+/*static*/ void FunctionPrint::PrintVarRecurse( const BFFVariable & var, uint32_t indent, uint32_t maxIndent )
 {
     AStackString<> indentStr;
     for ( uint32_t i=0; i<indent; ++i )
@@ -152,14 +206,18 @@ FunctionPrint::FunctionPrint()
         case BFFVariable::VAR_ARRAY_OF_STRINGS:
         {
             const auto & strings = var.GetArrayOfStrings();
-            FLOG_BUILD( "%s = // ArrayOfStrings, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)strings.GetSize(), indentStr.Get() );
-            for ( const AString & string : strings )
+            FLOG_BUILD( "%s = // ArrayOfStrings, size: %u\n", var.GetName().Get(), (uint32_t)strings.GetSize() );
+            if ( maxIndent >= indent )
             {
-                AStackString<> value( string );
-                value.Replace( "'", "^'" ); // escape single quotes
-                FLOG_BUILD( "%s    '%s'\n", indentStr.Get(), value.Get() );
+                FLOG_BUILD( "%s{\n", indentStr.Get() );
+                for ( const AString & string : strings )
+                {
+                    AStackString<> value( string );
+                    value.Replace( "'", "^'" ); // escape single quotes
+                    FLOG_BUILD( "%s    '%s'\n", indentStr.Get(), value.Get() );
+                }
+                FLOG_BUILD( "%s}\n", indentStr.Get() );
             }
-            FLOG_BUILD( "%s}\n", indentStr.Get() );
             break;
         }
         case BFFVariable::VAR_INT:
@@ -169,27 +227,79 @@ FunctionPrint::FunctionPrint()
         }
         case BFFVariable::VAR_STRUCT:
         {
-            FLOG_BUILD( "%s = // Struct\n%s[\n", var.GetName().Get(), indentStr.Get() );
-            for ( const BFFVariable * subVar : var.GetStructMembers() )
+            FLOG_BUILD( "%s = // Struct\n", var.GetName().Get() );
+            if ( maxIndent >= indent )
             {
-                PrintVarRecurse( *subVar, indent );
+                FLOG_BUILD( "%s[\n", indentStr.Get() );
+                for ( const BFFVariable * subVar : var.GetStructMembers() )
+                {
+                    PrintVarRecurse( *subVar, indent, maxIndent );
+                }
+                FLOG_BUILD( "%s]\n", indentStr.Get() );
             }
-            FLOG_BUILD( "%s]\n", indentStr.Get() );
             break;
         }
         case BFFVariable::VAR_ARRAY_OF_STRUCTS:
         {
             const auto & structs = var.GetArrayOfStructs();
-            FLOG_BUILD( "%s = // ArrayOfStructs, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)structs.GetSize(), indentStr.Get() );
-            for ( const BFFVariable * subVar : structs )
+            FLOG_BUILD( "%s = // ArrayOfStructs, size: %u\n", var.GetName().Get(), (uint32_t)structs.GetSize() );
+            if ( maxIndent >= indent )
             {
-                PrintVarRecurse( *subVar, indent );
+                FLOG_BUILD( "%s{\n", indentStr.Get() );
+                for ( const BFFVariable * subVar : structs )
+                {
+                    PrintVarRecurse( *subVar, indent, maxIndent );
+                }
+                FLOG_BUILD( "%s}\n", indentStr.Get() );
             }
-            FLOG_BUILD( "%s}\n", indentStr.Get() );
             break;
         }
         case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); break; // Something is terribly wrong
     }
+}
+
+
+// PrintVarRecurse
+//------------------------------------------------------------------------------
+/*static*/ void FunctionPrint::PrintStackVars( const AString& pattern, bool iterateParents, bool shouldRecurse )
+{
+    // Build an array of BFFStackFrame so it can be iterated in reverse order as 
+    // the frame stack (global variables get printed first)
+    Array< const BFFStackFrame* > aFrames(/*initialCapacity=*/10, /*resizable=*/true );
+    {
+        BFFStackFrame *pFrame = BFFStackFrame::GetCurrent();
+        if ( pFrame->GetParent() )
+        {
+            // Print gets a stack frame even though it doesn't have {}, and
+            // that frame isn't interesting to the caller.  So iterate past it.
+            pFrame = pFrame->GetParent();
+        }
+        do
+        {
+            aFrames.Append( pFrame );
+            pFrame = pFrame->GetParent();
+        } while ( pFrame != nullptr && iterateParents );
+    }
+    const uint32_t iNumFrames = static_cast<uint32_t>(aFrames.GetSize());
+
+    const uint32_t iMaxDepth = shouldRecurse ? 0xFFFFFFFF : 0;
+    const bool bPatternMatchesAll = (pattern == "*");
+    for ( uint32_t iFrame = iNumFrames; iFrame > 0; )
+    {
+        --iFrame;
+        const BFFStackFrame* const pFrame = aFrames[ iFrame ];
+        const uint32_t iDepth = iNumFrames - iFrame - 1;
+        const Array< const BFFVariable* >& rVariablesInFrame = pFrame->GetLocalVariables();
+        for ( size_t iVar = 0; iVar < rVariablesInFrame.GetSize(); ++iVar )
+        {
+            const BFFVariable* const pVar = rVariablesInFrame[ iVar ];
+            if ( bPatternMatchesAll || pVar->GetName().Matches( pattern.Get() ) )
+            {
+                PrintVarRecurse(*pVar, iDepth, iMaxDepth);
+            }
+        }
+    }
+
 }
 
 //------------------------------------------------------------------------------
