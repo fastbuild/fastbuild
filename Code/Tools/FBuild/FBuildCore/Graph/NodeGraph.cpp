@@ -1840,7 +1840,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
     // - since everything matches, we only need to migrate the stamps
     for ( Dependency & dep : newNode.m_StaticDependencies )
     {
-        const size_t index = ( &dep - newNode.m_StaticDependencies.Begin() );
+        const size_t index = size_t( &dep - newNode.m_StaticDependencies.Begin() );
         const Dependency & oldDep = oldNode->m_StaticDependencies[ index ];
         dep.Stamp( oldDep.GetNodeStamp() );
     }
