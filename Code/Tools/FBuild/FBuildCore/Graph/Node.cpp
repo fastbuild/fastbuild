@@ -151,21 +151,21 @@ Node::~Node() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
-bool Node::DetermineNeedToBuild( bool forceClean ) const
+bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 {
-    if ( forceClean )
+    // Some nodes (like File and Directory) always build as they represent external state
+    // that can be modified before the build is run
+    if ( m_ControlFlags & FLAG_ALWAYS_BUILD )
     {
+        // Don't output detailed FLOG_INFO for these nodes
         return true;
     }
 
     // if we don't have a stamp, we are building for the first time
+    // can also occur if explicitly dirtied in a previous build
     if ( m_Stamp == 0 )
     {
-        // don't output for file nodes, which are always built
-        if ( GetType() != Node::FILE_NODE )
-        {
-            FLOG_INFO( "Need to build '%s' (first time)", GetName().Get() );
-        }
+        FLOG_INFO( "Need to build '%s' (first time or dirtied)", GetName().Get() );
         return true;
     }
 
@@ -190,33 +190,15 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     }
 
     // static deps
-    const Dependencies & staticDeps = GetStaticDependencies();
-    for ( Dependencies::ConstIter it = staticDeps.Begin();
-          it != staticDeps.End();
-          it++ )
+    for ( const Dependency & dep : deps )
     {
-        Node * n = it->GetNode();
-
-        // ignore directories - the derived node should extract what it needs in DoDynamicDependencies
-        if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
-        {
-            continue;
-        }
-
-        // ignore unity nodes - the derived node should extract what it needs in DoDynamicDependencies
-        if ( n->GetType() == Node::UNITY_NODE )
-        {
-            continue;
-        }
-
         // Weak dependencies don't cause rebuilds
-        if ( it->IsWeak() )
+        if ( dep.IsWeak() )
         {
             continue;
         }
 
-        // we're about to compare stamps, so we should be a file (or a file list)
-        ASSERT( n->IsAFile() || ( n->GetType() == Node::COMPILER_NODE ) || ( n->GetType() == Node::OBJECT_LIST_NODE ) );
+        Node * n = dep.GetNode();
 
         if ( n->GetStamp() == 0 )
         {
@@ -225,47 +207,14 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
             return true;
         }
 
-        if ( n->GetStamp() > m_Stamp )
+        // Compare the "stamp" for this dependency recorded last time we built. If it has changed
+        // the dependency has changed and we must rebuild
+        if ( dep.GetNodeStamp() != n->GetStamp() )
         {
-            // file is newer than us
-            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %" PRIu64 ", dep = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
+            FLOG_INFO( "Need to build '%s' (dep changed '%s' from = %" PRIu64 ", to = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), dep.GetNodeStamp(), n->GetStamp() );
             return true;
         }
     }
-
-    // dynamic deps
-    const Dependencies & dynamicDeps = GetDynamicDependencies();
-    for ( Dependencies::ConstIter it = dynamicDeps.Begin();
-          it != dynamicDeps.End();
-          it++ )
-    {
-        Node * n = it->GetNode();
-
-        // we're about to compare stamps, so we should be a file (or a file list)
-        ASSERT( n->IsAFile() || ( n->GetType() == Node::OBJECT_LIST_NODE ) );
-
-        // Weak dependencies don't cause rebuilds
-        if ( it->IsWeak() )
-        {
-            continue;
-        }
-
-        // should be a file
-        if ( n->GetStamp() == 0 )
-        {
-            // file missing - this may be ok, but node needs to build to find out
-            FLOG_INFO( "Need to build '%s' (dep missing: '%s')", GetName().Get(), n->GetName().Get() );
-            return true;
-        }
-
-        if ( n->GetStamp() > m_Stamp )
-        {
-            // file is newer than us
-            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %" PRIu64 ", dep = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
-            return true;
-        }
-    }
-
 
     // nothing needs building
     FLOG_INFO( "Up-To-Date '%s'", GetName().Get() );
@@ -292,7 +241,21 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 //------------------------------------------------------------------------------
 /*virtual*/ bool Node::Finalize( NodeGraph & )
 {
-    // most nodes have nothing to do
+    // Stamp static and dynamic dependencies (prebuild deps don't need stamping
+    // as they are never trigger builds)
+    Dependencies * allDeps[2] = { &m_StaticDependencies, &m_DynamicDependencies };
+    for ( Dependencies * deps : allDeps )
+    {
+        for ( Dependency & dep : *deps )
+        {
+            // If not built, each node should have a non-zero node stamp
+            // If built, it's possible to have a zero stamp due to missing files
+            ASSERT( dep.GetNode()->GetStatFlag( Node::STATS_BUILT ) ||
+                    dep.GetNode()->GetStamp() );
+            dep.Stamp( dep.GetNode()->GetStamp() );
+        }
+    }
+
     return true;
 }
 

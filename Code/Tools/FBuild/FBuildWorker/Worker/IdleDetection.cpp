@@ -22,6 +22,9 @@
     #include <stdlib.h>
     #include <sys/stat.h>
 #endif
+#if defined( __OSX__ )
+    #include <mach/mach_host.h>
+#endif
 
 // Defines
 //------------------------------------------------------------------------------
@@ -182,10 +185,12 @@ bool IdleDetection::IsIdleInternal( float & idleCurrent )
         outUserTime = ((uint64_t)ftUser.dwHighDateTime << 32) | (uint64_t)ftUser.dwLowDateTime;
         outKernTime -= outIdleTime; // Kern time includes Idle, but we don't want that
     #elif defined( __OSX__ )
-        // TODO:OSX Implement GetSystemTotalCPUUsage
-        outIdleTime = 0;
-        outKernTime = 0;
-        outUserTime = 0;
+        host_cpu_load_info_data_t cpuInfo;
+        mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
+        VERIFY( host_statistics( mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpuInfo, &count ) == KERN_SUCCESS );
+        outIdleTime = cpuInfo.cpu_ticks[ CPU_STATE_IDLE ];
+        outKernTime = cpuInfo.cpu_ticks[ CPU_STATE_SYSTEM ];
+        outUserTime = cpuInfo.cpu_ticks[ CPU_STATE_USER ];
     #elif defined( __LINUX__ )
         // Read first line of /proc/stat
         AStackString< 1024 > procStat;

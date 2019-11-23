@@ -12,7 +12,9 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
 // Core
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 
@@ -27,6 +29,7 @@ private:
     void MSVCArgHelpers() const;
     void Preprocessor() const;
     void TestStaleDynamicDeps() const;
+    void ModTimeChangeBackwards() const;
 };
 
 // Register Tests
@@ -35,6 +38,7 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( MSVCArgHelpers )             // Test functions that check for MSVC args
     REGISTER_TEST( Preprocessor )
     REGISTER_TEST( TestStaleDynamicDeps )       // Test dynamic deps are cleared when necessary
+    REGISTER_TEST( ModTimeChangeBackwards )
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
@@ -166,15 +170,14 @@ void TestObject::TestStaleDynamicDeps() const
         CheckStatsNode ( 2,     2,      Node::COMPILER_NODE );
         CheckStatsNode ( 4,     4,      Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity
 
-        // Delete one of the generated headers
-        EnsureFileDoesNotExist( fileB );
     }
 
-    // TODO:C Changes to the way dependencies are managed might make this unnecessary
+    // Delete one of the generated headers
+    EnsureFileDoesNotExist(fileB);
+
+    // TODO:B Get rid of this
     #if defined( __OSX__ )
         Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #elif defined( __LINUX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
     #endif
 
     // Build Again
@@ -193,6 +196,122 @@ void TestObject::TestStaleDynamicDeps() const
         CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
         CheckStatsNode ( 2,     0,      Node::COMPILER_NODE );
         CheckStatsNode ( 3,     1,      Node::OBJECT_NODE ); // 3xCPPGen + 1xUnity, rebuild of unity
+    }
+}
+
+// ModTimeChangeBackwards
+//------------------------------------------------------------------------------
+//  - Ensure a file rebuilds if the time changes into the past
+void TestObject::ModTimeChangeBackwards() const
+{
+    const AStackString<> fileA( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileA.cpp" );
+    const AStackString<> fileB( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileB.cpp" );
+    const char* database = "../tmp/Test/Object/ModTimeChangeBackwards/fbuild.fdb";
+
+    // Generate full path file fileA
+    AStackString<> fileAFullPath;
+    {
+        FileIO::GetCurrentDir( fileAFullPath );
+        fileAFullPath += '/';
+        fileAFullPath += fileA;
+        PathUtils::FixupFilePath( fileAFullPath );
+    }
+
+    // Create two empty files
+    uint64_t oldModTime;
+    {
+        // Generate some header files
+        EnsureDirExists( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/" );
+        FileStream f;
+        TEST_ASSERT( f.Open( fileA.Get(), FileStream::WRITE_ONLY ) );
+        f.Close();
+        TEST_ASSERT( f.Open( fileB.Get(), FileStream::WRITE_ONLY ) );
+        f.Close();
+
+        // Take note of FileA's original time
+        oldModTime = FileIO::GetFileLastWriteTime( fileAFullPath );
+
+        // Modify FileA time (jump through hoops to handle poor filetime granularity)
+        Timer timeout;
+        for ( ;; )
+        {
+            TEST_ASSERT( timeout.GetElapsed() < 30.0f );
+
+            Thread::Sleep( 10 );
+
+            TEST_ASSERT( FileIO::SetFileLastWriteTimeToNow( fileAFullPath ) );
+            if ( FileIO::GetFileLastWriteTime( fileAFullPath ) != oldModTime )
+            {
+                break;
+            }
+        }
+    }
+
+    // Compile library for the two files
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestObject/ModTimeChangeBackwards/fbuild.bff";
+        options.m_ForceCleanBuild = true;
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ModTimeChangeBackwards" ) );
+
+        // Save DB
+        TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+
+        // Check stats
+        //              Seen,   Built,  Type
+        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1,      1,      Node::COMPILER_NODE );
+        CheckStatsNode( 2,      2,      Node::OBJECT_NODE );
+        CheckStatsNode( 1,      1,      Node::LIBRARY_NODE );
+    }
+
+    // Change modtime into the past
+    TEST_ASSERT( FileIO::SetFileLastWriteTime( fileAFullPath, oldModTime ) );
+
+    // Compile library again
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/BuildAndLinkLibrary/DeleteFile/fbuild.bff";
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( database ) );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ModTimeChangeBackwards" ) );
+
+        // Save DB
+        TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+
+        // Check stats
+        //              Seen,   Built,  Type
+        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
+        CheckStatsNode( 2,      1,      Node::OBJECT_NODE );    // Note: One object rebuilds
+        CheckStatsNode( 1,      1,      Node::LIBRARY_NODE );   // Note: library rebuilds
+    }
+
+    // Ensure no rebuild
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/BuildAndLinkLibrary/DeleteFile/fbuild.bff";
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( database ) );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "ModTimeChangeBackwards" ) );
+
+        // Check stats
+        //              Seen,   Built,  Type
+        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
+        CheckStatsNode( 2,      0,      Node::OBJECT_NODE );
+        CheckStatsNode( 1,      0,      Node::LIBRARY_NODE );
     }
 }
 

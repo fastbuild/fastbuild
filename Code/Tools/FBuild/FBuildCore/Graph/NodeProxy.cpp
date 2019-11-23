@@ -34,7 +34,7 @@ NodeProxy::~NodeProxy() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
-/*virtual*/ bool NodeProxy::DetermineNeedToBuild( bool UNUSED( forceClean ) ) const
+/*virtual*/ bool NodeProxy::DetermineNeedToBuild( const Dependencies & /*deps*/ ) const
 {
     ASSERT( false ); // should never call this
     return false;
