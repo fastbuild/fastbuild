@@ -175,7 +175,7 @@ void TestObject::TestStaleDynamicDeps() const
     // Delete one of the generated headers
     EnsureFileDoesNotExist(fileB);
 
-    // TODO:B Get rid of this
+    // TODO:B Get rid of this (needed to work around poor filetime granularity)
     #if defined( __OSX__ )
         Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
     #endif
@@ -272,6 +272,14 @@ void TestObject::ModTimeChangeBackwards() const
 
     // Change modtime into the past
     TEST_ASSERT( FileIO::SetFileLastWriteTime( fileAFullPath, oldModTime ) );
+
+    // Because of poor filetime granularity on OSX (pre-APFS) the object A we will rebuild
+    // below could have an unchanged modtime. To work around this, we must wait until enough
+    // time has elapsed to ensure the modtime will be different.
+    // TODO:B Find a better solve for this. While unlikely, this could happen in real-world use
+#if defined( __OSX__ )
+    Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
+#endif
 
     // Compile library again
     {
