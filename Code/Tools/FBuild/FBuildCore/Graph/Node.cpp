@@ -200,7 +200,8 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 
         Node * n = dep.GetNode();
 
-        if ( n->GetStamp() == 0 )
+        const uint64_t stamp = n->GetStamp();
+        if ( stamp == 0 )
         {
             // file missing - this may be ok, but node needs to build to find out
             FLOG_INFO( "Need to build '%s' (dep missing: '%s')", GetName().Get(), n->GetName().Get() );
@@ -209,15 +210,15 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 
         // Compare the "stamp" for this dependency recorded last time we built. If it has changed
         // the dependency has changed and we must rebuild
-        if ( dep.GetNodeStamp() != n->GetStamp() )
+        const uint64_t oldStamp = dep.GetNodeStamp();
+        if ( stamp != oldStamp )
         {
-            FLOG_INFO( "Need to build '%s' (dep changed '%s' from = %" PRIu64 ", to = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), dep.GetNodeStamp(), n->GetStamp() );
+            FLOG_INFO( "Need to build '%s' (dep changed: '%s', %" PRIu64 " -> %" PRIu64 ")", GetName().Get(), n->GetName().Get(), oldStamp, stamp );
             return true;
         }
     }
 
     // nothing needs building
-    FLOG_INFO( "Up-To-Date '%s'", GetName().Get() );
     return false;
 }
 
