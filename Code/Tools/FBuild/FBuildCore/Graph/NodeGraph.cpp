@@ -1093,7 +1093,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     // check pre-build dependencies
     if ( nodeToBuild->GetState() == Node::NOT_PROCESSED )
     {
-        // all static deps done?
+        // all pre-build deps done?
         bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
@@ -1133,16 +1133,16 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
             // Clear dynamic dependencies
             nodeToBuild->m_DynamicDependencies.Clear();
 
+            // Explicitly mark node in a way that will result in it rebuilding should
+            // we cancel the build before builing this node
+            nodeToBuild->m_Stamp = 0;
+
             // Regenerate dynamic dependencies
             if ( nodeToBuild->DoDynamicDependencies( *this, forceClean ) == false )
             {
                 nodeToBuild->SetState( Node::FAILED );
                 return;
             }
-
-            // Explicitly mark node in a way that will result it rebuilding should
-            // we cancel the build before builing this node
-            nodeToBuild->m_Stamp = 0;
 
             // Continue through to check dynamic dependencies and build
         }
@@ -1168,6 +1168,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
     nodeToBuild->SetStatFlag( Node::STATS_PROCESSED );
     if ( forceClean ||
+         ( nodeToBuild->GetStamp() == 0 ) || // Avoid redundant messages from DetermineNeedToBuild
          nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetStaticDependencies() ) ||
          nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetDynamicDependencies() ) )
     {
@@ -1176,6 +1177,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     }
     else
     {
+        FLOG_INFO("Up-To-Date '%s'", nodeToBuild->GetName().Get());
         nodeToBuild->SetState( Node::UP_TO_DATE );
     }
 }
