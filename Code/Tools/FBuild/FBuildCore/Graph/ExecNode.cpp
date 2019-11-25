@@ -155,14 +155,14 @@ ExecNode::~ExecNode() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::DetermineNeedToBuild( bool forceClean ) const
+/*virtual*/ bool ExecNode::DetermineNeedToBuild( const Dependencies & deps ) const
 {
     if ( m_ExecAlways )
     {
         FLOG_INFO( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
         return true;
     }
-    return Node::DetermineNeedToBuild( forceClean );
+    return Node::DetermineNeedToBuild( deps );
 }
 
 // DoBuild

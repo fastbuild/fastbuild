@@ -87,7 +87,7 @@ REFLECT_END( XCodeProjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 XCodeProjectNode::XCodeProjectNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
     , m_XCodeOrganizationName( "Organization" )
     , m_XCodeBuildToolPath( "./FBuild" )
     , m_XCodeBuildToolArgs( "-ide $(FASTBUILD_TARGET)" )
@@ -133,14 +133,6 @@ XCodeProjectNode::XCodeProjectNode()
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 XCodeProjectNode::~XCodeProjectNode() = default;
-
-// DetermineNeedToBuild
-//------------------------------------------------------------------------------
-/*virtual*/ bool XCodeProjectNode::DetermineNeedToBuild( bool /*forceClean*/ ) const
-{
-    // XCodeProjectNode always builds, but only writes the result if different
-    return true;
-}
 
 // DoBuild
 //------------------------------------------------------------------------------
