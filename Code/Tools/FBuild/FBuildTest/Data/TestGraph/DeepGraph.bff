@@ -14,143 +14,46 @@
 Using( .StandardEnvironment )
 Settings {}
 
+// CommonOptions
+//------------------------------------------------------------------------------
+.CompilerOutputPath     = '$Out$/Test/Graph/DeepGraph'
+
 // Compile a real file to create a non-trivial amount of per-object dependencies
 //------------------------------------------------------------------------------
-.CompilerInputFiles = 'Core/FileIO/FileIO.cpp'
-.CompilerOptions    + ' "-I."'
-                    + ' -DDEBUG -D_DEBUG'
+ObjectList( 'ObjectList_0' )
+{
+    // Compile a real file to obtain some non-trivial dependencies
+    .CompilerInputFiles = 'Core/FileIO/FileIO.cpp'
+    .CompilerOptions    + ' "-I."'
+                        + ' -DDEBUG -D_DEBUG'
+}
+.Targets = { 'ObjectList_0' }
 
-// Common options
+// Create a chain of dependencies resuling in many common
+// subtrees to ensure graph parsing optimizes out these redundant
+// passes
 //------------------------------------------------------------------------------
-.CompilerOutputPath = '$Out$/Test/Graph/DeepGraph'
-.PreBuildDependencies = {}
+.Items  = {
+            '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9',  '10',
+            '11', '12', '13', '14', '15', '16', '17', '18', '19', '20',
+            '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'
+          }
+ForEach( .Item in .Items )
+{
+    // Create Alias depending on all previous items
+    ObjectList( 'ObjectList_$Item$' )
+    {
+        .PreBuildDependencies = .Targets
+        .CompilerInputAllowNoFiles = true // This ObjectList doesn't compile anything itself
+    }
 
-// Create a node which depends on all the other nodes before it
-// (This would happen in a project with many DLLs)
-//------------------------------------------------------------------------------
-.SubConfig = 'ObjectList_1'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_2'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_3'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_4'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_5'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_6'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_7'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_8'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_9'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_10'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_11'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_12'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_13'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_14'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_15'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_16'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_17'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_18'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_19'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_20'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_21'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_22'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_23'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_24'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_25'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_26'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_27'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_28'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_29'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
-
-.SubConfig = 'ObjectList_30'
-ObjectList( '$SubConfig$' ) { .CompilerOutputPath + '/$SubConfig$/' }
-.PreBuildDependencies + .SubConfig
+    // Add this new Alias to list of items
+    ^Targets + 'ObjectList_$Item$'
+}
 
 // Final alias for test to use
 //------------------------------------------------------------------------------
 Alias( 'all' )
 {
-    .Targets    = { 'ObjectList_30' }
+    // Depend on final list of .Targets
 }

@@ -52,7 +52,7 @@ REGISTER_TESTS_END
 
             EnsureFileDoesNotExist( objFile );
 
-            TEST_ASSERT( fBuild.Build( AStackString<>( "Caching" ) ) );
+            TEST_ASSERT( fBuild.Build( "Caching" ) );
             TEST_ASSERT( fBuild.SaveDependencyGraph( dbFileName ) );
 
             EnsureFileExists( objFile );
@@ -67,7 +67,7 @@ REGISTER_TESTS_END
         {
             FBuild fBuild( baseOptions );
             TEST_ASSERT( fBuild.Initialize( dbFileName ) );
-            TEST_ASSERT( fBuild.Build( AStackString<>( "Caching" ) ) );
+            TEST_ASSERT( fBuild.Build( "Caching" ) );
 
             // Ensure nothing was built
             const FBuildStats & stats = fBuild.GetStats();
@@ -85,7 +85,7 @@ REGISTER_TESTS_END
 
             FBuild fBuild( options );
             TEST_ASSERT( fBuild.Initialize() );
-            TEST_ASSERT( fBuild.Build( AStackString<>( "Caching" ) ) );
+            TEST_ASSERT( fBuild.Build( "Caching" ) );
             TEST_ASSERT( fBuild.SaveDependencyGraph( dbFileName ) );
 
             EnsureFileExists( objFile );
@@ -101,7 +101,7 @@ REGISTER_TESTS_END
         {
             FBuild fBuild( baseOptions );
             TEST_ASSERT( fBuild.Initialize( dbFileName ) );
-            TEST_ASSERT( fBuild.Build( AStackString<>( "Caching" ) ) );
+            TEST_ASSERT( fBuild.Build( "Caching" ) );
 
             // Ensure nothing was built
             const FBuildStats & stats = fBuild.GetStats();

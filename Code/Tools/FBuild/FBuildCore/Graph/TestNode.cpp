@@ -26,7 +26,6 @@ REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
     REFLECT_ARRAY(  m_TestInputPath,            "TestInputPath",            MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_TestInputPattern,         "TestInputPattern",         MetaOptional() )
     REFLECT(        m_TestInputPathRecurse,     "TestInputPathRecurse",     MetaOptional() )
-    REFLECT(        m_TestInputPathRecurse,     "TestInputPathRecurse",     MetaOptional() )
     REFLECT_ARRAY(  m_TestInputExcludePath,     "TestInputExcludePath",     MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_TestInputExcludedFiles,   "TestInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
     REFLECT_ARRAY(  m_TestInputExcludePattern,  "TestInputExcludePattern",  MetaOptional() )
@@ -43,13 +42,14 @@ REFLECT_END( TestNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 TestNode::TestNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NO_DELETE_ON_FAIL ) // keep output on test fail
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_TestExecutable()
     , m_TestArguments()
     , m_TestWorkingDir()
     , m_TestTimeOut( 0 )
     , m_TestAlwaysShowOutput( false )
     , m_TestInputPathRecurse( true )
+    , m_NumTestInputFiles( 0 )
 {
     m_Type = Node::TEST_NODE;
 }
@@ -232,8 +232,10 @@ TestNode::~TestNode() = default;
     }
 
     // test passed
-    // we only keep the "last modified" time of the test output for passed tests
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+
+    // record new file time
+    RecordStampFromBuiltFile();
+
     return NODE_RESULT_OK;
 }
 

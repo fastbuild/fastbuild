@@ -39,6 +39,7 @@ public:
     bool Initialize( const char * nodeGraphDBFile = nullptr );
 
     // build a target
+    bool Build( const char * target );
     bool Build( const AString & target );
     bool Build( const Array< AString > & targets );
     bool Build( Node * nodeToBuild );
@@ -59,7 +60,7 @@ public:
     inline const char * GetEnvironmentString() const            { return m_EnvironmentString; }
     inline uint32_t     GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
 
-    void DisplayTargetList() const;
+    void DisplayTargetList( bool showHidden ) const;
     bool DisplayDependencyDB( const Array< AString > & targets ) const;
     bool GenerateCompilationDatabase( const Array< AString > & targets ) const;
 
@@ -92,7 +93,7 @@ public:
     // attempt to cleanly stop the build
     static        void AbortBuild();
     static        void OnBuildError();
-    static inline bool GetStopBuild() { return s_StopBuild; }
+    static        bool GetStopBuild();
     static inline volatile bool * GetAbortBuildPointer() { return &s_AbortBuild; }
 
     inline ICache * GetCache() const { return m_Cache; }

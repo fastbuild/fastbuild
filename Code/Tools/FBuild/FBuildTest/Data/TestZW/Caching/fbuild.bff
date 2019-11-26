@@ -18,10 +18,6 @@ ObjectList( 'Caching' )
 {
     .CompilerOptions            + ' /ZW'
                                 + ' /EHsc'
-                                #if USING_VS2013
-                                    + ' /AI"$VS2013_BasePath$/VC/vcpackages"'
-                                    + ' /AI"$WindowsDK_WinRTAssemblyPath$"'
-                                #endif
                                 #if USING_VS2015
                                     + ' /AI"$VS2015_BasePath$/VC/vcpackages"'
                                     + ' /AI"$WindowsDK_WinRTAssemblyPath$"'

@@ -43,6 +43,7 @@ public:
     uint32_t GetCacheHits() const       { return m_Totals.m_NumCacheHits; }
     uint32_t GetCacheMisses() const     { return m_Totals.m_NumCacheMisses; }
     uint32_t GetCacheStores() const     { return m_Totals.m_NumCacheStores; }
+    uint32_t GetLightCacheCount() const { return m_Totals.m_NumLightCache; }
 
     // get stats per node type
     struct Stats;
@@ -58,9 +59,11 @@ public:
         uint32_t m_NumCacheHits;
         uint32_t m_NumCacheMisses;
         uint32_t m_NumCacheStores;
+        uint32_t m_NumLightCache;
 
         uint32_t m_ProcessingTimeMS;
         uint32_t m_NumFailed;
+        uint32_t m_CachingTimeMS;
     };
 
     void FormatTime( float timeInSeconds , AString & buffer  ) const;

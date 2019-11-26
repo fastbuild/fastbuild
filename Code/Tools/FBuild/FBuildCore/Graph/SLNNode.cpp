@@ -73,7 +73,7 @@ struct VCXProjectNodeComp
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 SLNNode::SLNNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
 {
     m_LastBuildTimeMs = 100; // higher default than a file node
     m_Type = Node::SLN_NODE;

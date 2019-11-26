@@ -347,9 +347,8 @@ LinkerNode::~LinkerNode()
         // success!
     }
 
-    // record time stamp for next time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    ASSERT( m_Stamp );
+    // record new file time
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }
@@ -1339,7 +1338,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::DLL_NODE )
     {
         // TODO:B Depend on import lib
-        nodes.Append( Dependency( node, true ) ); // NOTE: Weak dependency
+        nodes.Append( Dependency( node, 0, true ) ); // NOTE: Weak dependency
         return true;
     }
 

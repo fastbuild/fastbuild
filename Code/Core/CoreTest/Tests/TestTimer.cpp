@@ -32,7 +32,7 @@ void TestTimer::Validate() const
     Timer t;
     t.Start();
     const int64_t before = t.GetNow();
-    Thread::Sleep( 100 ); // sleep for 100ms
+    Thread::Sleep( 10 ); // sleep for 100ms
     const float elapsed = t.GetElapsed();
     const float elapsedMS = t.GetElapsedMS();
     const int64_t after = t.GetNow();

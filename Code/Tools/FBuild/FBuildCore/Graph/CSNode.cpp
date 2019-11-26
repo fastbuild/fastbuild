@@ -212,7 +212,8 @@ CSNode::~CSNode() = default;
         // something went wrong, print details
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
-        goto failed;
+        FLOG_ERROR( "Failed to build Object. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
+        return NODE_RESULT_FAILED;
     }
 
     if ( !FileIO::FileExists( m_Name.Get() ) )
@@ -222,14 +223,9 @@ CSNode::~CSNode() = default;
     }
 
     // record new file time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
-
-failed:
-    FLOG_ERROR( "Failed to build Object. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-
-    return NODE_RESULT_FAILED;
 }
 
 // GetCompiler

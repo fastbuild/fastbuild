@@ -48,6 +48,7 @@ ExecNode::ExecNode()
     , m_ExecUseStdOutAsOutput( false )
     , m_ExecAlways( false )
     , m_ExecInputPathRecurse( true )
+    , m_NumExecInputFiles( 0 )
 {
     m_Type = EXEC_NODE;
 
@@ -154,14 +155,14 @@ ExecNode::~ExecNode() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::DetermineNeedToBuild( bool forceClean ) const
+/*virtual*/ bool ExecNode::DetermineNeedToBuild( const Dependencies & deps ) const
 {
     if ( m_ExecAlways )
     {
         FLOG_INFO( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
         return true;
     }
-    return Node::DetermineNeedToBuild( forceClean );
+    return Node::DetermineNeedToBuild( deps );
 }
 
 // DoBuild
@@ -232,8 +233,9 @@ ExecNode::~ExecNode() = default;
         f.Close();
     }
 
-    // update the file's "last modified" time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    // record new file time
+    RecordStampFromBuiltFile();
+
     return NODE_RESULT_OK;
 }
 

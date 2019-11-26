@@ -7,6 +7,9 @@
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
 
+// Core
+#include "Core/Env/MSVCStaticAnalysis.h"
+
 // Forward Declarations
 //------------------------------------------------------------------------------
 class AString;
@@ -213,7 +216,7 @@ private:
     static void FormatError( const BFFIterator & iter,
                              uint32_t errNum,
                              const Function * function,
-                             const char * message, ... ) FORMAT_STRING( 4, 5 );
+                             MSVC_SAL_PRINTF const char * message, ... ) FORMAT_STRING( 4, 5 );
 };
 
 //------------------------------------------------------------------------------

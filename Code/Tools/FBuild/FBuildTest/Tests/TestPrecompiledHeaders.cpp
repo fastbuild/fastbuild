@@ -79,7 +79,7 @@ FBuildStats TestPrecompiledHeaders::Build( FBuildTestOptions options, bool useDB
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( useDB ? GetPCHDBFileName() : nullptr ) );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( target ? target : "PCHTest" ) ) );
+    TEST_ASSERT( fBuild.Build( target ? target : "PCHTest" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetPCHDBFileName() ) );
 
     return fBuild.GetStats();
@@ -167,13 +167,13 @@ void TestPrecompiledHeaders::TestPCH_NoRebuild_BFFChange() const
         numF++; // pch.cpp
     #endif
     CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );  // cpp + pch cpp + pch .h
-    CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 2,      0,      Node::OBJECT_NODE );// obj + pch obj
     CheckStatsNode ( stats, 1,      0,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::EXE_NODE );
-    CheckStatsTotal( stats, 7+numF, 3+numF );
+    CheckStatsTotal( stats, 7+numF, 2+numF );
 }
 
 // TestPCHWithCache
@@ -280,13 +280,13 @@ void TestPrecompiledHeaders::TestPCHWithCache_BFFChange() const
         numF++; // pch.cpp
     #endif
     CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );  // cpp + pch cpp + pch .h
-    CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE );
+    CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 2,      0,      Node::OBJECT_NODE );// obj + pch obj
     CheckStatsNode ( stats, 1,      1,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::EXE_NODE );
-    CheckStatsTotal( stats, 7+numF, 5+numF );
+    CheckStatsTotal( stats, 7+numF, 4+numF );
 
     // Ensure the object was pulled from the cache
     TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits == 1 );

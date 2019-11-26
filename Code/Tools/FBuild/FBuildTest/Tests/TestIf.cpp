@@ -33,6 +33,7 @@ private:
     void IfFunctionStringCompare() const;
     void UsageError_ExtraTokensAfterExpression() const;
     void UsageError_UnsupportedTypeForIn() const;
+    void UsageError_UnsupportedOperation() const;
 
     void Parse( const char * fileName, bool expectFailure = false ) const;
 };
@@ -53,6 +54,7 @@ REGISTER_TESTS_BEGIN( TestIf )
     REGISTER_TEST( IfFunctionStringCompare )
     REGISTER_TEST( UsageError_ExtraTokensAfterExpression )
     REGISTER_TEST( UsageError_UnsupportedTypeForIn )
+    REGISTER_TEST( UsageError_UnsupportedOperation )
 REGISTER_TESTS_END
 
 // IfFunctionTrue
@@ -160,6 +162,14 @@ void TestIf::UsageError_UnsupportedTypeForIn() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_unsupportedtypeforin.bff", true ); // Expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Property '.Int' must be of type <ArrayOfStrings> or <String> (found <Int>" ) );
+}
+
+// UsageError_UnsupportedOperation
+//------------------------------------------------------------------------------
+void TestIf::UsageError_UnsupportedOperation() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestIf/usageerror_unsupportedoperation.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Operation not supported: 'Bool' >= 'Bool'" ) );
 }
 
 // Parse

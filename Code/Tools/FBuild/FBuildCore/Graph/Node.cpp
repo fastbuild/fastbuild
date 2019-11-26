@@ -45,6 +45,7 @@
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/CRC32.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Reflection/ReflectedProperty.h"
@@ -126,8 +127,10 @@ Node::Node( const AString & name, Type type, uint32_t controlFlags )
     , m_Next( nullptr )
     , m_LastBuildTimeMs( 0 )
     , m_ProcessingTime( 0 )
+    , m_CachingTime( 0 )
     , m_ProgressAccumulator( 0 )
     , m_Index( INVALID_NODE_INDEX )
+    , m_Hidden( false )
 {
     SetName( name );
 
@@ -148,22 +151,21 @@ Node::~Node() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
-bool Node::DetermineNeedToBuild( bool forceClean ) const
+bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 {
-    if ( forceClean )
+    // Some nodes (like File and Directory) always build as they represent external state
+    // that can be modified before the build is run
+    if ( m_ControlFlags & FLAG_ALWAYS_BUILD )
     {
+        // Don't output detailed FLOG_INFO for these nodes
         return true;
     }
 
     // if we don't have a stamp, we are building for the first time
-    // (or we're a node that is built every time)
+    // can also occur if explicitly dirtied in a previous build
     if ( m_Stamp == 0 )
     {
-        // don't output for file nodes, which are always built
-        if ( GetType() != Node::FILE_NODE )
-        {
-            FLOG_INFO( "Need to build '%s' (first time)", GetName().Get() );
-        }
+        FLOG_INFO( "Need to build '%s' (first time or dirtied)", GetName().Get() );
         return true;
     }
 
@@ -188,85 +190,35 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     }
 
     // static deps
-    const Dependencies & staticDeps = GetStaticDependencies();
-    for ( Dependencies::ConstIter it = staticDeps.Begin();
-          it != staticDeps.End();
-          it++ )
+    for ( const Dependency & dep : deps )
     {
-        Node * n = it->GetNode();
-
-        // ignore directories - the derived node should extract what it needs in DoDynamicDependencies
-        if ( n->GetType() == Node::DIRECTORY_LIST_NODE )
-        {
-            continue;
-        }
-
-        // ignore unity nodes - the derived node should extract what it needs in DoDynamicDependencies
-        if ( n->GetType() == Node::UNITY_NODE )
-        {
-            continue;
-        }
-
         // Weak dependencies don't cause rebuilds
-        if ( it->IsWeak() )
+        if ( dep.IsWeak() )
         {
             continue;
         }
 
-        // we're about to compare stamps, so we should be a file (or a file list)
-        ASSERT( n->IsAFile() || ( n->GetType() == Node::COMPILER_NODE ) || ( n->GetType() == Node::OBJECT_LIST_NODE ) );
+        Node * n = dep.GetNode();
 
-        if ( n->GetStamp() == 0 )
+        const uint64_t stamp = n->GetStamp();
+        if ( stamp == 0 )
         {
             // file missing - this may be ok, but node needs to build to find out
             FLOG_INFO( "Need to build '%s' (dep missing: '%s')", GetName().Get(), n->GetName().Get() );
             return true;
         }
 
-        if ( n->GetStamp() > m_Stamp )
+        // Compare the "stamp" for this dependency recorded last time we built. If it has changed
+        // the dependency has changed and we must rebuild
+        const uint64_t oldStamp = dep.GetNodeStamp();
+        if ( stamp != oldStamp )
         {
-            // file is newer than us
-            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %" PRIu64 ", dep = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
+            FLOG_INFO( "Need to build '%s' (dep changed: '%s', %" PRIu64 " -> %" PRIu64 ")", GetName().Get(), n->GetName().Get(), oldStamp, stamp );
             return true;
         }
     }
-
-    // dynamic deps
-    const Dependencies & dynamicDeps = GetDynamicDependencies();
-    for ( Dependencies::ConstIter it = dynamicDeps.Begin();
-          it != dynamicDeps.End();
-          it++ )
-    {
-        Node * n = it->GetNode();
-
-        // we're about to compare stamps, so we should be a file (or a file list)
-        ASSERT( n->IsAFile() || ( n->GetType() == Node::OBJECT_LIST_NODE ) );
-
-        // Weak dependencies don't cause rebuilds
-        if ( it->IsWeak() )
-        {
-            continue;
-        }
-
-        // should be a file
-        if ( n->GetStamp() == 0 )
-        {
-            // file missing - this may be ok, but node needs to build to find out
-            FLOG_INFO( "Need to build '%s' (dep missing: '%s')", GetName().Get(), n->GetName().Get() );
-            return true;
-        }
-
-        if ( n->GetStamp() > m_Stamp )
-        {
-            // file is newer than us
-            FLOG_INFO( "Need to build '%s' (dep is newer: '%s' this = %" PRIu64 ", dep = %" PRIu64 ")", GetName().Get(), n->GetName().Get(), m_Stamp, n->GetStamp() );
-            return true;
-        }
-    }
-
 
     // nothing needs building
-    FLOG_INFO( "Up-To-Date '%s'", GetName().Get() );
     return false;
 }
 
@@ -290,7 +242,21 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 //------------------------------------------------------------------------------
 /*virtual*/ bool Node::Finalize( NodeGraph & )
 {
-    // most nodes have nothing to do
+    // Stamp static and dynamic dependencies (prebuild deps don't need stamping
+    // as they are never trigger builds)
+    Dependencies * allDeps[2] = { &m_StaticDependencies, &m_DynamicDependencies };
+    for ( Dependencies * deps : allDeps )
+    {
+        for ( Dependency & dep : *deps )
+        {
+            // If not built, each node should have a non-zero node stamp
+            // If built, it's possible to have a zero stamp due to missing files
+            ASSERT( dep.GetNode()->GetStatFlag( Node::STATS_BUILT ) ||
+                    dep.GetNode()->GetStamp() );
+            dep.Stamp( dep.GetNode()->GetStamp() );
+        }
+    }
+
     return true;
 }
 
@@ -330,6 +296,20 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     // Couldn't delete the file
     FLOG_ERROR( "Failed to delete file before build '%s'", fileName.Get() );
     return false;
+}
+
+// GetLastBuildTime
+//------------------------------------------------------------------------------
+uint32_t Node::GetLastBuildTime() const
+{
+    return AtomicLoadRelaxed( &m_LastBuildTimeMs );
+}
+
+// SetLastBuildTime
+//------------------------------------------------------------------------------
+void Node::SetLastBuildTime( uint32_t ms )
+{
+    AtomicStoreRelaxed( &m_LastBuildTimeMs, ms );
 }
 
 // CreateNode
@@ -401,6 +381,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
 
     // Create node
     Node * n = CreateNode( nodeGraph, (Type)nodeType, name );
+    ASSERT( n );
 
     // Early out for FileNode
     if ( nodeType == Node::FILE_NODE )
@@ -991,10 +972,7 @@ void Node::ReplaceDummyName( const AString & newName )
     // insert additional tokens
     for ( size_t i=1; i<( numTokens-2 ); ++i )
     {
-        if ( i != 0 )
-        {
-            fixed += ':';
-        }
+        fixed += ':';
         fixed += tokens[ i ];
     }
 
@@ -1121,6 +1099,50 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFItera
     // Caller owns thr memory
     inoutCachedEnvString = Env::AllocEnvironmentString( envVars );
     return inoutCachedEnvString;
+}
+
+// RecordStampFromBuiltFile
+//------------------------------------------------------------------------------
+void Node::RecordStampFromBuiltFile()
+{
+    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    ASSERT( m_Stamp != 0 );
+    
+    // On OS X, the 'ar' tool (for making libraries) appears to clamp the
+    // modification time of libraries to whole seconds. On HFS/HFS+ file systems,
+    // this doesn't matter because the resolution of the file system is 1 second.
+    //
+    // As of OS X 10.13 (High Sierra) Apple added a new filesystem (APFS) and
+    // this is the default for all drives on 10.14 (Mojave). This filesystem
+    // supports nanosecond filetime granularity.
+    //
+    // The combination of these things means that on an APFS file system a library
+    // built after an object file can have a time that is older. Because
+    // FASTBuild expects chronologically sensible filetimes, this backwards
+    // time relationship triggers unnecessary builds.
+    //
+    // As a work-around, if we detect that a file has a modification which is
+    // precisely a multiple of 1 second, we manually update the timestamp to
+    // the current time.
+    //
+    // TODO:B Remove this work-around. A planned change to the dependency db
+    // to record times per dependency and see when the differ instead of when
+    // they are more recent will fix this.
+    #if defined( __OSX__ )
+        // For now, only apply the work-around to library nodes
+        if ( GetType() == Node::LIBRARY_NODE )
+        {
+            if ( ( m_Stamp % 1000000000 ) == 0 )
+            {
+                // Set to current time
+                FileIO::SetFileLastWriteTimeToNow( m_Name );
+                
+                // Re-query the time from the file
+                m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+                ASSERT( m_Stamp != 0 );
+            }
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------

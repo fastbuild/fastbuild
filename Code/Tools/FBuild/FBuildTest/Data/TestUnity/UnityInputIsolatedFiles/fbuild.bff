@@ -1,0 +1,27 @@
+//
+// Test .UnityInputIsolatedFiles
+//  - Ensurefile is excluded from Unity, but still built
+//
+#include "..\..\testcommon.bff"
+
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+.OutputPath = '$Out$/Test/Unity/UnityInputIsolatedFiles/'
+
+// Isolate Writable Files
+Unity( 'Unity' )
+{
+    .UnityInputPath                 = 'Tools/FBuild/FBuildTest/Data/TestUnity/UnityInputIsolatedFiles/'
+    .UnityOutputPath                = '$OutputPath$/'
+
+    // Exclude a file, but still compile it
+    .UnityInputIsolatedFiles        = 'file.2.cpp'
+}
+
+ObjectList( 'Compile' )
+{
+    .CompilerInputUnity             = 'Unity'
+    .CompilerOutputPath             = '$OutputPath$/'
+}

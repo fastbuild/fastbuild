@@ -10,7 +10,9 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerage.h"
 
 // Core
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/Process/Thread.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -25,22 +27,26 @@ class WorkerSettings;
 class Worker
 {
 public:
-    explicit Worker( void * hInstance, const AString & args, bool consoleMode );
+    explicit Worker( const AString & args, bool consoleMode );
     ~Worker();
 
-    int Work();
+    int32_t Work();
 
 private:
+    static uint32_t WorkThreadWrapper( void * userData );
+    uint32_t WorkThread();
+
     void UpdateAvailability();
     void UpdateUI();
     void CheckForExeUpdate();
     bool HasEnoughDiskSpace();
 
-    inline bool InConsoleMode() const { return ( m_MainWindow == nullptr ); }
+    inline bool InConsoleMode() const { return m_ConsoleMode; }
 
-    void StatusMessage( const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
-    void ErrorMessage( const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
+    void StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
+    void ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
 
+    bool                m_ConsoleMode;
     WorkerWindow        * m_MainWindow;
     Server              * m_ConnectionPool;
     NetworkStartupHelper * m_NetworkStartupHelper;
@@ -58,6 +64,7 @@ private:
         int32_t             m_LastDiskSpaceResult;      // -1 : No check done yet. 0=Not enough space right now. 1=OK for now.
     #endif
     mutable AString     m_LastStatusMessage;
+    Thread::ThreadHandle m_WorkThread;
 };
 
 //------------------------------------------------------------------------------

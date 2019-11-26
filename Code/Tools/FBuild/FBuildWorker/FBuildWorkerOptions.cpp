@@ -30,8 +30,8 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
     m_ConsoleMode( false )
 {
-    #ifndef __WINDOWS__
-        m_ConsoleMode = true; // TODO:OSX Support GUI mode
+    #ifdef __LINUX__
+        m_ConsoleMode = true; // Only console mode supported on Linux
     #endif
 }
 
@@ -105,6 +105,12 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_OverrideWorkMode = true;
             continue;
         }
+        else if ( token == "-mode=proportional" )
+        {
+            m_WorkMode = WorkerSettings::PROPORTIONAL;
+            m_OverrideWorkMode = true;
+            continue;
+        }
         #if defined( __WINDOWS__ )
             else if ( token == "-nosubprocess" )
             {
@@ -139,10 +145,11 @@ void FBuildWorkerOptions::ShowUsageError()
                        "                -n : NUMBER_OF_PROCESSORS-n.\n"
                        "                n% : % of NUMBER_OF_PROCESSORS.\n"
                        "\n"
-                       "-mode=[disabled|idle|dedicated] : Set work mode.\n"
+                       "-mode=[disabled|idle|dedicated|proportional] : Set work mode.\n"
                        "                disabled : Don't accept any work.\n"
                        "                idle : Accept work when PC is idle.\n"
                        "                dedicated : Accept work always.\n"
+                       "                proportional : Accept work proportional to free CPU.\n"
                        "\n"
                        #if defined( __WINDOWS__ )
                        "-nosubprocess : Don't spawn a sub-process worker copy.\n";

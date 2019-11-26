@@ -42,18 +42,22 @@ void TestHash::CompareHashTimes_Large() const
     Random r( seed );
 
     // fill a buffer to use for tests
-    const size_t dataSize( 64 * 1024 * 1024 );
-    AutoPtr< uint32_t > data( (uint32_t *)ALLOC( dataSize ) );
-    for ( size_t i=0; i<dataSize / sizeof( uint32_t ); ++i )
+    #if defined( DEBUG )
+        const size_t dataSize( 32 * 1024 * 1024 );
+    #else
+        const size_t dataSize( 64 * 1024 * 1024 );
+    #endif
+    AutoPtr< uint64_t > data( (uint64_t *)ALLOC( dataSize ) );
+    for ( size_t i=0; i<dataSize / sizeof( uint64_t ); ++i )
     {
-        data.Get()[ i ] = r.GetRand();
+        data.Get()[ i ] = ( (uint64_t)r.GetRand() << 32 ) | (uint64_t)r.GetRand();
     }
 
     // baseline - sum 64 bits
     {
         Timer t;
         uint64_t sum( 0 );
-        uint64_t * it = (uint64_t *)data.Get();
+        uint64_t * it = data.Get();
         uint64_t * end = it + ( dataSize / sizeof( uint64_t ) );
         while ( it != end )
         {
@@ -70,7 +74,7 @@ void TestHash::CompareHashTimes_Large() const
     {
         Timer t;
         uint32_t sum( 0 );
-        uint32_t * it = data.Get();
+        uint32_t * it = (uint32_t *)data.Get();
         uint32_t * end = it + ( dataSize / sizeof( uint32_t ) );
         while ( it != end )
         {
@@ -142,7 +146,11 @@ void TestHash::CompareHashTimes_Small() const
     strings.Append( AString( "longstring_98274ncoif834JODhiorhmwe8r8wy48on87h8mhwejrijrdIERwurd9j,8chm8hiuorciwriowjri" ) );
     strings.Append( AString( "c:\\files\\subdir\\project\\thing\\stuff.cpp" ) );
     const size_t numStrings = strings.GetSize();
-    const size_t numIterations = 102400;
+    #if defined( DEBUG )
+        const size_t numIterations = 10240;
+    #else
+        const size_t numIterations = 102400;
+    #endif
 
     // calc datasize
     size_t dataSize( 0 );

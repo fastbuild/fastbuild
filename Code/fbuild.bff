@@ -19,9 +19,6 @@ Settings
         .Environment    = { "PATH=$VS_PATH$",
                             "TMP=$TMP$",
                             "SystemRoot=C:\Windows" }
-        .CachePath      = "$TMP$\.fbuild.cache"
-    #else
-        .CachePath      = "/tmp/.fbuild.cache"
     #endif
     .AllowDBMigration_Experimental = true
 }
@@ -34,7 +31,7 @@ Settings
     .CompilerOptions                = ' -DDEBUG -DPROFILING_ENABLED'
     .CompilerOptionsC               = .CompilerOptions
 
-    .Config                         = 'Debug'
+    .BuildConfigName                = 'Debug'
 
     #if !BUILDING_FROM_TESTS
         // Build writable files (Perforce "Open for edit") outside of Unity
@@ -42,14 +39,24 @@ Settings
         // - Only in Debug as this impacts performance (inlining)
         // - Only when not building from tests (FASTBuild building itself)
         .UnityInputIsolateWritableFiles = true
+        // Also not when building on CI (which build from git)
+        #if CI_BUILD
+            .UnityInputIsolateWritableFiles = false
+        #endif
     #endif
+]
+.Analyze_Config =
+[
+    .CompilerOptions                = ' -DDEBUG -DPROFILING_ENABLED -DANALYZE'
+    .CompilerOptionsC               = .CompilerOptions
+    .BuildConfigName                = 'Analyze'
 ]
 .Profile_Config =
 [
     .CompilerOptions                = ' -DRELEASE -DPROFILING_ENABLED'
     .CompilerOptionsC               = .CompilerOptions
 
-    .Config                         = 'Profile'
+    .BuildConfigName                = 'Profile'
 ]
 .Release_Config =
 [
@@ -57,7 +64,7 @@ Settings
     .CompilerOptionsC               = .CompilerOptions
     .CompilerOptionsDeoptimized     = .CompilerOptions
 
-    .Config                         = 'Release'
+    .BuildConfigName                = 'Release'
 ]
 .ASan_Config =
 [
@@ -66,7 +73,7 @@ Settings
     .CompilerOptionsC               = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=address'
 
-    .Config                         = 'ASan'
+    .BuildConfigName                = 'ASan'
 ]
 .MSan_Config =
 [
@@ -75,7 +82,17 @@ Settings
     .CompilerOptionsC               = .CompilerOptions
     .LinkerOptions                  = ' -fsanitize=memory -L../External/MSan'
 
-    .Config                         = 'MSan'
+    .BuildConfigName                = 'MSan'
+]
+.TSan_Config =
+[
+    .CompilerOptions                = ' -DRELEASE'
+                                    + ' -fsanitize=thread'
+    .CompilerOptionsC               = .CompilerOptions
+    .CompilerOptionsPCH             = .CompilerOptions
+    .LinkerOptions                  = ' -fsanitize=thread'
+
+    .BuildConfigName                = 'TSan'
 ]
 .Fuzzer_Config =
 [
@@ -94,12 +111,18 @@ Settings
 //------------------------------------------------------------------------------
 .Debug_Optimizations_MSVC =
 [
-    .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR- /analyze'
+    .CompilerOptions                = ' /MTd /Od /RTC1 /GS /Oy- /GR-'
+    .CompilerOptionsC               = .CompilerOptions
+]
+.Analyze_Optimizations_MSVC =
+[
+    Using( .Debug_Optimizations_MSVC )
+    .CompilerOptions                + ' /analyze'
     .CompilerOptionsC               = .CompilerOptions
 ]
 .Profile_Optimizations_MSVC =
 [
-    .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /analyze /Zo'
+    .CompilerOptions                = ' /MT /Ox /Oy /Oi /GS- /GF /Gy /Gw /GR- /Zo'
     .CompilerOptionsC               = .CompilerOptions
     .LinkerOptions                  = ' /OPT:REF,ICF'
 ]
@@ -140,6 +163,9 @@ Settings
     .X64DebugConfig             = .X64BaseConfig
                                 + .Debug_Config
                                 + .Debug_Optimizations_MSVC
+    .X64AnalyzeConfig           = .X64BaseConfig
+                                + .Analyze_Config
+                                + .Analyze_Optimizations_MSVC
     .X64ReleaseConfig           = .X64BaseConfig
                                 + .Release_Config
                                 + .Release_Optimizations_MSVC
@@ -190,6 +216,9 @@ Settings
     .X64ASanConfig_Linux        = .X64BaseConfig_Linux
                                 + .ASan_Config
                                 + .Release_Optimizations
+    .X64TSanConfig_Linux        = .X64BaseConfig_Linux
+                                + .TSan_Config
+                                + .Release_Optimizations
     // Clang
     .X64ClangBaseConfig_Linux   = .LinuxCompatibilityOptions // Must be first
                                 + .ToolChain_Clang_Linux
@@ -209,6 +238,9 @@ Settings
     .X64ClangMSanConfig_Linux   = .X64ClangBaseConfig_Linux
                                 + .MSan_Config
                                 + .Fuzzer_Config
+                                + .Release_Optimizations
+    .X64ClangTSanConfig_Linux   = .X64ClangBaseConfig_Linux
+                                + .TSan_Config
                                 + .Release_Optimizations
 #endif
 
@@ -249,69 +281,32 @@ Settings
     .PlatformToolset            = '$VS_PlatformToolset$'
 ]
 
-.ProjectX64Debug        = [ Using( .ProjectCommon ) .Config = 'x64-Debug' ]
-.ProjectX64Profile      = [ Using( .ProjectCommon ) .Config = 'x64-Profile' ]
-.ProjectX64Release      = [ Using( .ProjectCommon ) .Config = 'x64-Release' ]
-.ProjectX64ClangDebug   = [ Using( .ProjectCommon ) .Config = 'x64Clang-Debug' ]
-.ProjectX64ClangProfile = [ Using( .ProjectCommon ) .Config = 'x64Clang-Profile' ]
-.ProjectX64ClangRelease = [ Using( .ProjectCommon ) .Config = 'x64Clang-Release' ]
-
-.ProjectConfigs = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-                    .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
-
-// Project to compile everything
-VCXProject( 'All-proj' )
-{
-    .ProjectOutput              = '../tmp/VisualStudio/Projects/All.vcxproj'
-    .ProjectFiles           = { '.\fbuild.bff' }
-    .ProjectBasePath            = '.\'
-}
-
-// Project to regenerate projects/solutions
-VCXProject( 'UpdateSolution-proj' )
-{
-    .ProjectOutput              = '../tmp/VisualStudio/Projects/UpdateSolution.vcxproj'
-    .ProjectFiles           = { '.\fbuild.bff' }
-    .ProjectBasePath            = '.\'
-
-    .GenerateProjectsCommands =
-    [
-        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
-        .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
-    ]
-
-    .ProjectX64Debug        = [ Using( .ProjectX64Debug )       Using( .GenerateProjectsCommands ) ]
-    .ProjectX64Profile      = [ Using( .ProjectX64Profile )     Using( .GenerateProjectsCommands ) ]
-    .ProjectX64Release      = [ Using( .ProjectX64Release )     Using( .GenerateProjectsCommands ) ]
-    .ProjectX64ClangDebug   = [ Using( .ProjectX64ClangDebug )  Using( .GenerateProjectsCommands ) ]
-    .ProjectX64ClangProfile = [ Using( .ProjectX64ClangProfile )  Using( .GenerateProjectsCommands ) ]
-    .ProjectX64ClangRelease = [ Using( .ProjectX64ClangRelease )  Using( .GenerateProjectsCommands ) ]
-
-    .ProjectConfigs = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-                        .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
-}
+.Project_x64_Debug        = [ Using( .ProjectCommon ) .Config = 'x64-Debug' ]
+.Project_x64_Analyze      = [ Using( .ProjectCommon ) .Config = 'x64-Analyze' ]
+.Project_x64_Profile      = [ Using( .ProjectCommon ) .Config = 'x64-Profile' ]
+.Project_x64_Release      = [ Using( .ProjectCommon ) .Config = 'x64-Release' ]
+.Project_x64Clang_Debug   = [ Using( .ProjectCommon ) .Config = 'x64Clang-Debug' ]
+.Project_x64Clang_Profile = [ Using( .ProjectCommon ) .Config = 'x64Clang-Profile' ]
+.Project_x64Clang_Release = [ Using( .ProjectCommon ) .Config = 'x64Clang-Release' ]
 
 // Configurations
 //------------------------------------------------------------------------------
 #if __WINDOWS__
-    .Configs_Windows_MSVC   = { .X64DebugConfig, .X64ProfileConfig, .X64ReleaseConfig }
-    .Configs_Windows_Clang  = { .X64ClangDebugConfig, .X64ClangProfileConfig, .X64ClangReleaseConfig }
-    .Configs                = .Configs_Windows_MSVC
-                            + .Configs_Windows_Clang
+    .BuildConfigs               = { .X64DebugConfig, .X64AnalyzeConfig, .X64ProfileConfig, .X64ReleaseConfig
+                                    .X64ClangDebugConfig, .X64ClangProfileConfig, .X64ClangReleaseConfig }
 #endif
 #if __LINUX__
-    .Configs_Linux          = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
-                                .X64ASanConfig_Linux,
-                                .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
-                                .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux }
-    .Configs                = .Configs_Linux
+    .BuildConfigs               = { .X64DebugConfig_Linux, .X64ProfileConfig_Linux, .X64ReleaseConfig_Linux,
+                                    .X64ASanConfig_Linux, .X64TSanConfig_Linux,
+                                    .X64ClangDebugConfig_Linux, .X64ClangProfileConfig_Linux, .X64ClangReleaseConfig_Linux,
+                                    .X64ClangASanConfig_Linux, .X64ClangMSanConfig_Linux, .X64ClangTSanConfig_Linux }
 #endif
 #if __OSX__
-    .Configs_OSX_Clang      = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
-    .Configs                = .Configs_OSX_Clang
+    .BuildConfigs               = { .X64DebugConfig_OSX, .X64ProfileConfig_OSX, .X64ReleaseConfig_OSX }
 #endif
 
 .Targets_x64_Debug = {}
+.Targets_x64_Analyze = {}
 .Targets_x64_Profile = {}
 .Targets_x64_Release = {}
 .Targets_x64Clang_Debug = {}
@@ -322,11 +317,13 @@ VCXProject( 'UpdateSolution-proj' )
 .Targets_x64Linux_Profile = {}
 .Targets_x64Linux_Release = {}
 .Targets_x64Linux_ASan = {}
+.Targets_x64Linux_TSan = {}
 .Targets_x64ClangLinux_Debug = {}
 .Targets_x64ClangLinux_Profile = {}
 .Targets_x64ClangLinux_Release = {}
 .Targets_x64ClangLinux_ASan = {}
 .Targets_x64ClangLinux_MSan = {}
+.Targets_x64ClangLinux_TSan = {}
 
 .Targets_x64OSX_Debug = {}
 .Targets_x64OSX_Profile = {}
@@ -350,26 +347,36 @@ VCXProject( 'UpdateSolution-proj' )
 #include "Tools\FBuild\FBuildApp\FBuildApp.bff"
 #include "Tools\FBuild\FBuildWorker\FBuildWorker.bff"
 #include "Tools\FBuild\FBuildTest\FBuildTest.bff"
-#include "Tools\FBuild\BFFFuzzer\BFFFuzzer.bff"
+#if !CI_BUILD
+    #include "Tools\FBuild\BFFFuzzer\BFFFuzzer.bff"
+#endif
 
 // Aliases : All-$Platform$-$Config$
 //------------------------------------------------------------------------------
-ForEach( .Config in .Configs )
+ForEach( .BuildConfig in .BuildConfigs )
 {
-    Using( .Config )
+    Using( .BuildConfig )
 
-    Alias( 'All-$Platform$-$Config$' ) { .Targets = .'Targets_$Platform$_$Config$' }
+    Alias( 'All-$Platform$-$BuildConfigName$' ) { .Targets = .'Targets_$Platform$_$BuildConfigName$' }
+}
+
+// Exes
+//------------------------------------------------------------------------------
+Alias( 'Exes' )
+{
+    .Targets    = { 'FBuildWorker-Debug',   'FBuildWorker-Profile', 'FBuildWorker-Release'
+                    'FBuildApp-Debug',      'FBuildApp-Profile',    'FBuildApp-Release' }
 }
 
 // Aliases : All-$Platform$
 //------------------------------------------------------------------------------
 .Platforms = { 'x64', 'x64Clang', 'x64Linux', 'x64ClangLinux', 'x64OSX' }
-.PlatformConfigs_x64           = { 'Debug', 'Profile', 'Release' }
+.PlatformConfigs_x64           = { 'Debug', 'Analyze', 'Profile', 'Release' }
 .PlatformConfigs_x64Clang      = { 'Debug', 'Profile', 'Release' }
-.PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan' }
+.PlatformConfigs_x64Linux      = { 'Debug', 'Profile', 'Release', 'ASan', 'TSan' }
 .PlatformConfigs_x64ClangLinux = { 'Debug', 'Profile', 'Release' }
 #if USING_CLANG_6
-                               + { 'ASan', 'MSan' }
+                               + { 'ASan', 'MSan', 'TSan' }
 #endif
 .PlatformConfigs_x64OSX        = { 'Debug', 'Profile', 'Release' }
 ForEach( .Platform in .Platforms )
@@ -449,6 +456,63 @@ Alias( 'All+Tests' )
 // Visual Studio Solution
 //------------------------------------------------------------------------------
 #if __WINDOWS__
+    // Project to compile everything
+    VCXProject( 'All-proj' )
+    {
+        .ProjectOutput              = '../tmp/VisualStudio/Projects/All.vcxproj'
+        .ProjectFiles           = { '.\fbuild.bff' }
+        .ProjectBasePath            = '.\'
+
+        //.ProjectConfigs             = .AllProjectConfigs_x64
+
+        .ProjectConfigs = {}
+        ForEach( .BuildConfig in.BuildConfigs )
+        {
+            Using( .BuildConfig )
+            .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = 'All-$Platform$-$BuildConfigName$' ]
+            ^ProjectConfigs         + .ProjectConfig
+        }
+    }
+
+    // Project for Platform/Compiler SDKs
+    VCXProject( 'SDKs-proj' )
+    {
+        .ProjectOutput              = '../tmp/VisualStudio/Projects/SDKs.vcxproj'
+        .ProjectInputPaths          = '../External/SDK/'
+        .ProjectAllowedFileExtensions = '*.bff'
+        .ProjectBasePath            = .ProjectInputPaths
+
+        .ProjectConfigs = {}
+        ForEach( .BuildConfig in.BuildConfigs )
+        {
+            Using( .BuildConfig )
+            .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) ]
+            ^ProjectConfigs         + .ProjectConfig
+        }
+    }
+
+    // Project to regenerate projects/solutions
+    VCXProject( 'UpdateSolution-proj' )
+    {
+        .ProjectOutput              = '../tmp/VisualStudio/Projects/UpdateSolution.vcxproj'
+        .ProjectFiles           = { '.\fbuild.bff' }
+        .ProjectBasePath            = '.\'
+
+        .GenerateProjectsCommands =
+        [
+            .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs'
+            .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild solution -vs -clean'
+        ]
+
+        .ProjectConfigs = {}
+        ForEach( .BuildConfig in.BuildConfigs )
+        {
+            Using( .BuildConfig )
+            .ProjectConfig          = [ Using( .'Project_$Platform$_$BuildConfigName$' ) Using( .GenerateProjectsCommands ) ]
+            ^ProjectConfigs         + .ProjectConfig
+        }
+    }
+
     VSSolution( 'solution' )
     {
         .SolutionOutput     = '../tmp/VisualStudio/FASTBuild.sln'
@@ -456,7 +520,15 @@ Alias( 'All+Tests' )
                                 'UpdateSolution-proj',
                               }
         .SolutionBuildProject = 'All-proj'
-        .SolutionConfigs    = .ProjectConfigs
+        .SolutionConfigs = {}
+        ForEach( .BuildConfig in.BuildConfigs )
+        {
+            Using( .BuildConfig )
+            .SolutionConfig         = [ Using( .'Project_$Platform$_$BuildConfigName$' ) ]
+            ^SolutionConfigs        + .SolutionConfig
+        }
+
+        .SolutionVisualStudioVersion = '$VS_SolutionVersion$'
 
         // Work around for Visual Studio F5 behaviour up-to-date check
         .Deps               = [
@@ -468,7 +540,7 @@ Alias( 'All+Tests' )
         .Folder_0_External =
         [
             .Path           = '0. External'
-            .Projects       = { 'Clang-proj', 'GCC-proj', 'LZ4-proj', 'VisualStudio-proj', 'Windows-proj' }
+            .Projects       = { 'LZ4-proj', 'SDKs-proj' }
         ]
         .Folder_1_Test =
         [
@@ -509,11 +581,13 @@ Alias( 'All+Tests' )
                                         'LZ4-xcodeproj'
                                         'OSUI-xcodeproj'
                                         'TestFramework-xcodeproj' }
-
-        .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = 'all-x64OSX-Debug' ]
-        .ProjectOSXProfile      = [ .Config = 'Profile' .Target = 'all-x64OSX-Profile' ]
-        .ProjectOSXRelease      = [ .Config = 'Release' .Target = 'all-x64OSX-Release' ]
-        .ProjectConfigs         = { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }
+        .ProjectConfigs = {}
+        ForEach( .BuildConfig in.BuildConfigs )
+        {
+            Using( .BuildConfig )
+            .ProjectConfig          = [ .Config = '$BuildConfigName$' .Target = 'All-x64OSX-$BuildConfigName$' ]
+            ^ProjectConfigs         + .ProjectConfig
+        }
     }
 #endif
 

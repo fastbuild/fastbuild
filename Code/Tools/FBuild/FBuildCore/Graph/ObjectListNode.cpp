@@ -22,6 +22,7 @@
 // Core
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // Reflection
@@ -49,6 +50,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
     REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
+    REFLECT( m_Hidden,                              "Hidden",                           MetaOptional() )
     // Precompiled Headers
     REFLECT( m_PCHInputFile,                        "PCHInputFile",                     MetaOptional() + MetaFile() )
     REFLECT( m_PCHOutputFile,                       "PCHOutputFile",                    MetaOptional() + MetaFile() )
@@ -439,17 +441,24 @@ ObjectListNode::~ObjectListNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult ObjectListNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult ObjectListNode::DoBuild( Job * /*job*/ )
 {
-    // consider ourselves to be as recent as the newest file
-    uint64_t timeStamp = 0;
-    const Dependency * const end = m_DynamicDependencies.End();
-    for ( const Dependency * it = m_DynamicDependencies.Begin(); it != end; ++it )
+    // Generate stamp
+    if ( m_DynamicDependencies.IsEmpty() )
     {
-        ObjectNode * on = it->GetNode()->CastTo< ObjectNode >();
-        timeStamp = Math::Max< uint64_t >( timeStamp, on->GetStamp() );
+        m_Stamp = 1; // Non-zero
     }
-    m_Stamp = timeStamp;
+    else
+    {
+        Array< uint64_t > stamps( m_DynamicDependencies.GetSize(), false );
+        for ( const Dependency & dep : m_DynamicDependencies )
+        {
+            ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();
+            ASSERT( on->GetStamp() );
+            stamps.Append( on->GetStamp() );
+        }
+        m_Stamp = xxHash::Calc64( &stamps[0], ( stamps.GetSize() * sizeof(uint64_t) ) );
+    }
 
     return NODE_RESULT_OK;
 }

@@ -60,6 +60,7 @@ private:
     bool InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
 
     virtual BuildResult DoBuild( Job * job ) override;
+    virtual void Migrate( const Node & oldNode ) override;
 
     // Exposed params
     AString                 m_Executable;
