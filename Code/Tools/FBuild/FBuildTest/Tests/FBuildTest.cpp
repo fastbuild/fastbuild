@@ -93,6 +93,17 @@ void FBuildTest::EnsureDirExists( const char * dirPath ) const
     TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( dirPath ) ) );
 }
 
+// LoadFileContentsAsString
+//------------------------------------------------------------------------------
+void FBuildTest::LoadFileContentsAsString( const char* fileName, AString& outString ) const
+{
+    FileStream f;
+    TEST_ASSERT( f.Open( fileName ) );
+    const uint32_t fileSize = (uint32_t)f.GetFileSize();
+    outString.SetLength( fileSize );
+    TEST_ASSERT( f.ReadBuffer( outString.Get(), fileSize ) );
+}
+
 // CheckStatsNode
 //------------------------------------------------------------------------------
 void FBuildTest::CheckStatsNode( const FBuildStats & stats, size_t numSeen, size_t numBuilt, Node::Type nodeType ) const
@@ -180,6 +191,9 @@ FBuildTestOptions::FBuildTestOptions()
 {
     // Override defaults
     m_ShowSummary = true; // required to generate stats for node count checks
+
+    // Ensure any distributed compilation tests use the test port
+    m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
 }
 
 // GetRecursiveDependencyCount
@@ -208,6 +222,38 @@ size_t FBuildForTest::GetRecursiveDependencyCount( const char * nodeName ) const
     const Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
     TEST_ASSERT( node );
     return GetRecursiveDependencyCount( node );
+}
+
+// GetNodesOfType
+//------------------------------------------------------------------------------
+void FBuildForTest::GetNodesOfType( Node::Type type, Array<const Node *> & outNodes ) const
+{
+    const size_t numNodes = m_DependencyGraph->GetNodeCount();
+    for ( size_t i = 0; i < numNodes; ++i )
+    {
+        const Node * node = m_DependencyGraph->GetNodeByIndex( i );
+        if ( node->GetType() == type )
+        {
+            outNodes.Append( node );
+        }
+    }
+}
+
+// GetNode
+//------------------------------------------------------------------------------
+const Node * FBuildForTest::GetNode( const char * nodeName ) const
+{
+    return m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+}
+
+// SerializeDepGraphToText
+//------------------------------------------------------------------------------
+void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString& outBuffer ) const
+{
+    Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    Dependencies deps( 1, false );
+    deps.Append( Dependency( node ) );
+    m_DependencyGraph->SerializeToText( deps, outBuffer );
 }
 
 //------------------------------------------------------------------------------

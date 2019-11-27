@@ -27,7 +27,7 @@
 // An address with the MSB set is not a valid user-space address on Windows, Linux or OSX
 // We can take advantage of this to test if an allocation being freed is a bucket
 // allocation whether or not the SmallBlockAlloctor is initialized or not
-#define MEM_BUCKETS_NOT_INITIALIZED (void *)( 1LLU << 63 )
+#define MEM_BUCKETS_NOT_INITIALIZED (void *)( ~0LLU )
 
 // Static Data
 //------------------------------------------------------------------------------
@@ -250,7 +250,7 @@ bool SmallBlockAllocator::Free( void * ptr )
 /*virtual*/ void * SmallBlockAllocator::MemBucket::AllocateMemoryForPage()
 {
     // Have we exhausted our page space?
-    if ( SmallBlockAllocator::s_BucketNextFreePageIndex >= BUCKET_NUM_PAGES )
+    if ( AtomicLoadRelaxed( &SmallBlockAllocator::s_BucketNextFreePageIndex ) >= BUCKET_NUM_PAGES )
     {
         return nullptr;
     }
@@ -267,7 +267,7 @@ bool SmallBlockAllocator::Free( void * ptr )
     // Commit the page
     void * newPage = (void *)( ( (size_t)SmallBlockAllocator::s_BucketMemoryStart ) + ( (size_t)pageIndex * MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE ) );
     #if defined( __WINDOWS__ )
-        ::VirtualAlloc( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE );
+        VERIFY( ::VirtualAlloc( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE ) );
     #else
         VERIFY( ::mprotect( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, PROT_READ | PROT_WRITE ) == 0 );
     #endif

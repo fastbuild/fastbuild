@@ -35,6 +35,7 @@ protected:
     void EnsureDirDoesNotExist( const AString & dirPath ) const { EnsureDirDoesNotExist( dirPath.Get() ); }
     void EnsureDirExists( const char * dirPath ) const;
     void EnsureDirExists( const AString & dirPath ) const { EnsureDirExists( dirPath.Get() ); }
+    void LoadFileContentsAsString( const char* fileName, AString& outString ) const;
 
     // Helpers to check build results
     void CheckStatsNode( const FBuildStats & stats, size_t numSeen, size_t numBuilt, Node::Type nodeType ) const;
@@ -73,6 +74,11 @@ public:
 
     size_t GetRecursiveDependencyCount( const Node * node ) const;
     size_t GetRecursiveDependencyCount( const char * nodeName ) const;
+
+    void GetNodesOfType( Node::Type type, Array<const Node*>& outNodes ) const;
+    const Node * GetNode( const char * nodeName ) const;
+
+    void SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const;
 };
 
 //------------------------------------------------------------------------------

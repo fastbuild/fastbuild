@@ -88,7 +88,7 @@ void TestFastCancel::Cancel() const
     Thread::ThreadHandle h = Thread::CreateThread( CancelHelperThread );
 
     // Start build and check it was aborted
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Cancel" ) ) == false );
+    TEST_ASSERT( fBuild.Build( "Cancel" ) == false );
     TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: Cancel" ) )
 
     Thread::WaitForThread( h );

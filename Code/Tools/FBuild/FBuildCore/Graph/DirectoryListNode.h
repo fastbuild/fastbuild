@@ -26,6 +26,8 @@ public:
 
     virtual bool IsAFile() const override { return false; }
 
+    virtual const AString & GetPrettyName() const override { return m_PrettyName.IsEmpty() ? m_Name : m_PrettyName; }
+
     static void FormatName( const AString & path,
                             const Array< AString > * patterns,
                             bool recursive,
@@ -36,6 +38,8 @@ public:
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;
+
+    void MakePrettyName( const size_t totalFiles );
 
     friend class CompilationDatabase; // For DoBuild - TODO:C This is not ideal
 
@@ -51,6 +55,7 @@ private:
 
     // Internal State
     Array< FileIO::FileInfo > m_Files;
+    AString m_PrettyName;
 };
 
 //------------------------------------------------------------------------------

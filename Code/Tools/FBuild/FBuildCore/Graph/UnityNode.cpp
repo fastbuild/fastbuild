@@ -17,6 +17,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
@@ -29,6 +30,7 @@ REFLECT_NODE_BEGIN( UnityNode, Node, MetaNone() )
     REFLECT_ARRAY( m_InputPattern,      "UnityInputPattern",                    MetaOptional() )
     REFLECT_ARRAY( m_Files,             "UnityInputFiles",                      MetaOptional() + MetaFile() )
     REFLECT_ARRAY( m_FilesToExclude,    "UnityInputExcludedFiles",              MetaOptional() + MetaFile( true ) ) // relative
+    REFLECT_ARRAY( m_FilesToIsolate,    "UnityInputIsolatedFiles",              MetaOptional() + MetaFile( true ) ) // relative
     REFLECT_ARRAY( m_ExcludePatterns,   "UnityInputExcludePattern",             MetaOptional() + MetaFile( true ) ) // relative
     REFLECT_ARRAY( m_ObjectLists,       "UnityInputObjectLists",                MetaOptional() )
     REFLECT( m_OutputPath,              "UnityOutputPath",                      MetaPath() )
@@ -44,7 +46,7 @@ REFLECT_END( UnityNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 UnityNode::UnityNode()
-: Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_NONE )
+: Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_ALWAYS_BUILD )
 , m_InputPathRecurse( true )
 , m_InputPattern( 1, true )
 , m_Files( 0, true )
@@ -137,6 +139,8 @@ UnityNode::~UnityNode()
         return NODE_RESULT_FAILED; // GetFiles will have emitted an error
     }
 
+    FilterForceIsolated( files, m_IsolatedFiles );
+
     // TODO:A Sort files for consistent ordering across file systems/platforms
 
     // how many files should go in each unity file?
@@ -152,6 +156,8 @@ UnityNode::~UnityNode()
 
     AString output;
     output.SetReserved( 32 * 1024 );
+
+    Array< uint64_t > stamps( m_NumUnityFilesToCreate, false );
 
     // create each unity file
     for ( size_t i=0; i<m_NumUnityFilesToCreate; ++i )
@@ -277,6 +283,8 @@ UnityNode::~UnityNode()
             m_UnityFileNames.Append( unityName );
         }
 
+        stamps.Append( xxHash::Calc64( output.Get(), output.GetLength() ) );
+
         // need to write the unity file?
         bool needToWrite = false;
         FileStream f;
@@ -351,6 +359,10 @@ UnityNode::~UnityNode()
 
     // Sanity check that all files were written
     ASSERT( numFilesWritten == numFiles );
+
+    // Calculate final hash to represent generation of Unity files
+    ASSERT( stamps.GetSize() == m_NumUnityFilesToCreate );
+    m_Stamp = xxHash::Calc64( &stamps[ 0 ], stamps.GetSize() * sizeof( uint64_t ) );
 
     return NODE_RESULT_OK;
 }
@@ -445,6 +457,49 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
     }
 
     return ok;
+}
+
+// FilterForceIsolated
+//------------------------------------------------------------------------------
+void UnityNode::FilterForceIsolated( Array< FileAndOrigin > & files, Array< FileAndOrigin > & isolatedFiles )
+{
+    if ( m_FilesToIsolate.IsEmpty() )
+    {
+        return;
+    }
+
+    FileAndOrigin* writeIt = files.Begin();
+    const FileAndOrigin * readIt = writeIt;
+
+    for ( ; readIt != files.End(); ++readIt )
+    {
+        bool isolate = false;
+        for ( const AString & filename : m_FilesToIsolate )
+        {
+            if ( PathUtils::PathEndsWithFile( readIt->GetName(), filename ) )
+            {
+                isolate = true;
+                break;
+            }
+        }
+
+        if ( isolate )
+        {
+            isolatedFiles.Append( *readIt );
+        }
+        else if ( writeIt != readIt )
+        {
+            ASSERT( writeIt < readIt );
+            *writeIt = *readIt;
+            writeIt++;
+        }
+        else
+        {
+            writeIt++;
+        }
+    }
+
+    files.SetSize( (uint64_t)( writeIt - files.Begin() ) );
 }
 
 

@@ -33,6 +33,7 @@
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/Math/xxHash.h"
 #include "Core/Mem/SmallBlockAllocator.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/SystemMutex.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
@@ -199,6 +200,13 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
 
 // Build
 //------------------------------------------------------------------------------
+bool FBuild::Build( const char* target )
+{
+    return Build( AStackString<>( target ) );
+}
+
+// Build
+//------------------------------------------------------------------------------
 bool FBuild::Build( const AString & target )
 {
     ASSERT( !target.IsEmpty() );
@@ -354,8 +362,8 @@ bool FBuild::Build( Node * nodeToBuild )
 {
     ASSERT( nodeToBuild );
 
-    s_StopBuild = false; // allow multiple runs in same process
-    s_AbortBuild = false; // allow multiple runs in same process
+    AtomicStoreRelaxed( &s_StopBuild, false ); // allow multiple runs in same process
+    AtomicStoreRelaxed( &s_AbortBuild, false ); // allow multiple runs in same process
 
     // create worker threads
     m_JobQueue = FNEW( JobQueue( m_Options.m_NumWorkerThreads ) );
@@ -426,7 +434,7 @@ bool FBuild::Build( Node * nodeToBuild )
         bool complete = ( nodeToBuild->GetState() == Node::UP_TO_DATE ) ||
                         ( nodeToBuild->GetState() == Node::FAILED );
 
-        if ( s_StopBuild || complete )
+        if ( AtomicLoadRelaxed( &s_StopBuild ) || complete )
         {
             if ( stopping == false )
             {
@@ -442,7 +450,7 @@ bool FBuild::Build( Node * nodeToBuild )
                 if ( m_Options.m_FastCancel )
                 {
                     // Notify the system that the master process has been killed and that it can kill its process.
-                    s_AbortBuild = true;
+                    AtomicStoreRelaxed( &s_AbortBuild, true );
                 }
             }
         }
@@ -581,11 +589,11 @@ void FBuild::GetLibEnvVar( AString & value ) const
 //------------------------------------------------------------------------------
 void FBuild::AbortBuild()
 {
-    s_StopBuild = true;
+    AtomicStoreRelaxed( &s_StopBuild, true );
     if ( FBuild::IsValid() && FBuild::Get().m_Options.m_FastCancel )
     {
         // Notify the system that the master process has been killed and that it can kill its process.
-        s_AbortBuild = true;
+        AtomicStoreRelaxed( &s_AbortBuild, true );
     }
 }
 
@@ -597,6 +605,13 @@ void FBuild::AbortBuild()
     {
         AbortBuild();
     }
+}
+
+// GetStopBuild
+//------------------------------------------------------------------------------
+/*static*/ bool FBuild::GetStopBuild()
+{
+    return AtomicLoadRelaxed( &s_StopBuild );
 }
 
 // UpdateBuildStatus
@@ -710,7 +725,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
             case Node::SETTINGS_NODE:       break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
-        if ( displayName && ( !hidden || ( hidden && showHidden ) ) )
+        if ( displayName && ( !hidden || showHidden ) )
         {
             OUTPUT( "\t%s\n", node->GetName().Get() );
         }
@@ -721,16 +736,21 @@ void FBuild::DisplayTargetList( bool showHidden ) const
 //------------------------------------------------------------------------------
 bool FBuild::DisplayDependencyDB( const Array< AString > & targets ) const
 {
-    // create a temporary node, not hooked into the DB
+    AString buffer( 10 * 1024 * 1024 );
+
+    // Get the nodes for the targets, or leave empty to display everything
     Dependencies deps;
-    if ( !GetTargets( targets, deps ) )
+    if ( targets.IsEmpty() == false )
     {
-        return false; // GetTargets will have emitted an error
+        if ( !GetTargets( targets, deps ) )
+        {
+            return false; // GetTargets will have emitted an error
+        }
     }
 
     OUTPUT( "FBuild: Dependency database\n" );
-
-    m_DependencyGraph->Display( deps );
+    m_DependencyGraph->SerializeToText( deps, buffer );
+    OUTPUT( "%s", buffer.Get() );
     return true;
 }
 

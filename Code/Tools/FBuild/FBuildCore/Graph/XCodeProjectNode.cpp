@@ -23,6 +23,8 @@
 REFLECT_STRUCT_BEGIN_BASE( XCodeProjectConfig )
     REFLECT( m_Config,  "Config",   MetaNone() )
     REFLECT( m_Target,  "Target",   MetaOptional() )
+    REFLECT( m_XCodeBaseSDK,            "XCodeBaseSDK",         MetaOptional() )
+    REFLECT( m_XCodeDebugWorkingDir,    "XCodeDebugWorkingDir", MetaOptional() )
 REFLECT_END( XCodeProjectConfig )
 
 REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
@@ -38,6 +40,9 @@ REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFi
     REFLECT( m_XCodeBuildToolPath,                  "XCodeBuildToolPath",           MetaOptional() )
     REFLECT( m_XCodeBuildToolArgs,                  "XCodeBuildToolArgs",           MetaOptional() )
     REFLECT( m_XCodeBuildWorkingDir,                "XCodeBuildWorkingDir",         MetaOptional() )
+    REFLECT( m_XCodeDocumentVersioning,             "XCodeDocumentVersioning",      MetaOptional() )
+    REFLECT_ARRAY( m_XCodeCommandLineArguments,         "XCodeCommandLineArguments",            MetaOptional() )
+    REFLECT_ARRAY( m_XCodeCommandLineArgumentsDisabled, "XCodeCommandLineArgumentsDisabled",    MetaOptional() )
 REFLECT_END( XCodeProjectNode )
 
 // XCodeProjectConfig::ResolveTargets
@@ -82,7 +87,7 @@ REFLECT_END( XCodeProjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 XCodeProjectNode::XCodeProjectNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
     , m_XCodeOrganizationName( "Organization" )
     , m_XCodeBuildToolPath( "./FBuild" )
     , m_XCodeBuildToolArgs( "-ide $(FASTBUILD_TARGET)" )
@@ -159,6 +164,9 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     g.SetXCodeBuildToolPath( m_XCodeBuildToolPath );
     g.SetXCodeBuildToolArgs( m_XCodeBuildToolArgs );
     g.SetXCodeBuildWorkingDir( m_XCodeBuildWorkingDir );
+    g.SetXCodeDocumentVersioning( m_XCodeDocumentVersioning );
+    g.SetXCodeCommandLineArguments( m_XCodeCommandLineArguments );
+    g.SetXCodeCommandLineArgumentsDisabled( m_XCodeCommandLineArgumentsDisabled );
 
     // Add files
     for ( const Dependency & dep : m_StaticDependencies )
@@ -213,9 +221,9 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     }
 
     // Add configs
-    for ( const auto& cfg : m_ProjectConfigs )
+    for ( const XCodeProjectConfig & cfg : m_ProjectConfigs )
     {
-        g.AddConfig( cfg.m_Config, cfg.m_TargetNode );
+        g.AddConfig( cfg );
     }
 
     // Generate project.pbxproj file
@@ -227,13 +235,13 @@ XCodeProjectNode::~XCodeProjectNode() = default;
         }
     }
 
+    // Get folder containing project.pbxproj
+    const char * projectFolderSlash = m_Name.FindLast( NATIVE_SLASH );
+    ASSERT( projectFolderSlash );
+    const AStackString<> folder( m_Name.Get(), projectFolderSlash );
+
     // Generate user-specific xcschememanagement.plist
     {
-        // Get folder containing project.pbxproj
-        const char * projectFolderSlash = m_Name.FindLast( NATIVE_SLASH );
-        ASSERT( projectFolderSlash );
-        const AStackString<> folder( m_Name.Get(), projectFolderSlash );
-
         // Get the user name
         AStackString<> userName;
         if ( Env::GetLocalUserName( userName ) == false )
@@ -253,6 +261,24 @@ XCodeProjectNode::~XCodeProjectNode() = default;
             plist.Format( "%s/xcuserdata/%s.xcuserdatad/xcschemes/xcschememanagement.plist", folder.Get(), userName.Get() );
         #endif
         if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, plist ) == false )
+        {
+            return Node::NODE_RESULT_FAILED; // WriteIfMissing will have emitted an error
+        }
+    }
+
+    // Generate .xcscheme file
+    {
+        // Create the plist
+        const AString & output = g.GenerateXCScheme();
+
+        // Write to disk if different
+        AStackString<> xcscheme;
+        #if defined( __WINDOWS__ )
+            xcscheme.Format( "%s\\xcshareddata\\xcschemes\\%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
+        #else
+            xcscheme.Format( "%s/xcshareddata/xcschemes/%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
+        #endif
+        if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, xcscheme ) == false )
         {
             return Node::NODE_RESULT_FAILED; // WriteIfMissing will have emitted an error
         }

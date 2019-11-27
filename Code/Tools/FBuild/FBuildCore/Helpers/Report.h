@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Mem/MemPoolBlock.h"
 #include "Core/Strings/AString.h"
 
@@ -65,6 +66,7 @@ private:
         uint32_t        objectCount_Cacheable;
         uint32_t        objectCount_CacheHits;
         uint32_t        objectCount_CacheStores;
+        uint32_t        cacheTimeMS;
 
         bool operator < ( const LibraryStats & other ) const { return cpuTimeMS > other.cpuTimeMS; }
     };
@@ -98,14 +100,14 @@ private:
     enum { DEFAULT_TABLE_WIDTH = 990 };
 
     // Helpers
-    void DoTableStart( int width = DEFAULT_TABLE_WIDTH, const char * id = nullptr, bool hidden = false );
+    void DoTableStart( uint32_t width = DEFAULT_TABLE_WIDTH, const char * id = nullptr, bool hidden = false );
     void DoTableStop();
     void DoToggleSection( size_t numMore = 0 );
     void DoSectionTitle( const char * sectionName, const char * sectionId );
     void DoPieChart( const Array< PieItem > & items, const char * units );
 
     // Helper to format some text
-    void Write( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    void Write( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // gather stats
     void GetLibraryStats( const FBuildStats & stats );
