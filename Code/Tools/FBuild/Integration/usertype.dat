@@ -90,6 +90,7 @@ Environment
 ExcludePaths
 ExcludePatterns
 ExecAlways
+ExecAlwaysShowOutput
 ExecArguments
 ExecExecutable
 ExecInput

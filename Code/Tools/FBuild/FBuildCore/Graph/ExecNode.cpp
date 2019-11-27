@@ -211,23 +211,20 @@ ExecNode::~ExecNode() = default;
     {
         return NODE_RESULT_FAILED;
     }
-
-    // did the executable fail?
-    if ( result != m_ExecReturnCode )
+    const bool buildFailed = ( result != m_ExecReturnCode );
+    
+    // Print output if appropriate
+    if ( buildFailed || m_ExecAlwaysShowOutput )
     {
-        // something went wrong, print details
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
-
-        FLOG_ERROR( "Execution failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-        return NODE_RESULT_FAILED;
     }
 
-    // If we want to show output anyway, print it now
-    if ( m_ExecAlwaysShowOutput == true )
+    // did the executable fail?
+    if ( buildFailed )
     {
-        Node::DumpOutput(job, memOut.Get(), memOutSize);
-        Node::DumpOutput(job, memErr.Get(), memErrSize);
+        FLOG_ERROR( "Execution failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
+        return NODE_RESULT_FAILED;
     }
 
     if ( m_ExecUseStdOutAsOutput == true )
