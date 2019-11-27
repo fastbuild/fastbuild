@@ -22,7 +22,7 @@ REFLECT_END( AliasNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 AliasNode::AliasNode()
-: Node( AString::GetEmpty(), Node::ALIAS_NODE, Node::FLAG_TRIVIAL_BUILD )
+: Node( AString::GetEmpty(), Node::ALIAS_NODE, Node::FLAG_TRIVIAL_BUILD | Node::FLAG_ALWAYS_BUILD )
 {
     m_LastBuildTimeMs = 1; // almost no work is done for this node
 }
@@ -49,14 +49,6 @@ AliasNode::AliasNode()
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 AliasNode::~AliasNode() = default;
-
-// DetermineNeedToBuild
-//------------------------------------------------------------------------------
-/*virtual*/ bool AliasNode::DetermineNeedToBuild( bool forceClean ) const
-{
-    (void)forceClean;
-    return true;
-}
 
 // DoBuild
 //------------------------------------------------------------------------------

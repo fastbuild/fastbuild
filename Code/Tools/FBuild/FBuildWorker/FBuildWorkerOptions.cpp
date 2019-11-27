@@ -30,8 +30,8 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
     m_ConsoleMode( false )
 {
-    #ifndef __WINDOWS__
-        m_ConsoleMode = true; // TODO:OSX Support GUI mode
+    #ifdef __LINUX__
+        m_ConsoleMode = true; // Only console mode supported on Linux
     #endif
 }
 
