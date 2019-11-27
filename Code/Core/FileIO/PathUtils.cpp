@@ -31,7 +31,8 @@
     #if defined( __WINDOWS__ )
         // full paths on Windows have a drive letter and colon, or are unc
         return ( ( path.GetLength() >= 2 && path[ 1 ] == ':' ) ||
-                 path.BeginsWith( NATIVE_DOUBLE_SLASH ) );
+                 path.BeginsWith( NATIVE_DOUBLE_SLASH ) ||
+                 path.BeginsWith( OTHER_DOUBLE_SLASH ) );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         // full paths on Linux/OSX/IOS begin with a slash
         return path.BeginsWith( NATIVE_SLASH );

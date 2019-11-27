@@ -13,11 +13,13 @@ class AString;
     #define NATIVE_SLASH_STR ( "\\" )
     #define NATIVE_DOUBLE_SLASH ( "\\\\" )
     #define OTHER_SLASH ( '/' )
+    #define OTHER_DOUBLE_SLASH ( "//" )
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
     #define NATIVE_SLASH ( '/' )
     #define NATIVE_SLASH_STR ( "/" )
     #define NATIVE_DOUBLE_SLASH ( "//" )
     #define OTHER_SLASH ( '\\' )
+    #define OTHER_DOUBLE_SLASH ( "\\\\" )
 #endif
 
 // For places that explicitly need slashes a certain way

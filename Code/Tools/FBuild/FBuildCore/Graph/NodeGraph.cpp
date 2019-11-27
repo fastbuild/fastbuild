@@ -1292,8 +1292,23 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
         ASSERT( workingDir.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
 
         // build the start of the path
-        cleanPath = workingDir;
-        cleanPath += NATIVE_SLASH;
+        #if defined( __WINDOWS__ )
+            // On windows, a single slash represents relative to the current drive root
+            if ( name.BeginsWith( NATIVE_SLASH ) || name.BeginsWith( OTHER_SLASH ) )
+            {
+                cleanPath = AString( "" );
+                cleanPath += workingDir.Get()[0];
+                cleanPath += ":";
+            }
+            else
+            {
+                cleanPath = workingDir;
+                cleanPath += NATIVE_SLASH;
+            }
+        #else
+            cleanPath = workingDir;
+            cleanPath += NATIVE_SLASH;
+        #endif
 
         // concatenate
         uint32_t len = cleanPath.GetLength();
@@ -1319,17 +1334,61 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     const char * src = name.Get();
     const char * const srcEnd = name.GetEnd();
 
+    #if defined( __WINDOWS__ )
+        if ( name.BeginsWith( "\\\\?\\" ) )
+        {
+            // With *exactly* this path start (before altering slashes), the path should
+            // be left entirely as-is, and not be normalized/cleaned.
+            while ( src < srcEnd ) { *dst++ = *src++; }
+            return;
+        }
+    #endif
+
     // clean slashes
     char lastChar = NATIVE_SLASH; // consider first item to follow a path (so "..\file.dat" works)
-    #if defined( __WINDOWS__ )
-        while ( *src == NATIVE_SLASH || *src == OTHER_SLASH ) { ++src; } // strip leading slashes
-    #endif
 
     const char * lowestRemovableChar = cleanPath.Get();
     if ( isFullPath )
     {
         #if defined( __WINDOWS__ )
-            lowestRemovableChar += 3; // e.g. "c:\"
+            // Two types of Windows full paths: \\unc\something, and C:\something
+            if ( name.BeginsWith( NATIVE_DOUBLE_SLASH ) || name.BeginsWith( OTHER_DOUBLE_SLASH ) )
+            {
+                const char * afterNative = name.Find( NATIVE_SLASH, src + 2, srcEnd );
+                const char * afterOther = name.Find( OTHER_SLASH, src + 2, srcEnd );
+                // There must be at least one slash after the initial two for this to be a valid path
+                ASSERT( afterNative != nullptr || afterOther != nullptr );
+                // Choose the earliest slash that exists.
+                const char * afterSlash;
+                if ( ( afterNative != nullptr && afterOther != nullptr && afterNative < afterOther )
+                        || afterOther == nullptr )
+                {
+                    afterSlash = afterNative;
+                }
+                else
+                {
+                    afterSlash = afterOther;
+                }
+
+                lowestRemovableChar += ( afterSlash - src );
+                // Copy the qualifier part of the path here, so things like the double slash and "."
+                // are not replaced.
+                while ( src <= afterSlash ) {
+                    if ( *src != OTHER_SLASH )
+                    {
+                        *dst++ = *src++;
+                    }
+                    else
+                    {
+                        *dst++ = NATIVE_SLASH;
+                        src++;
+                    }
+                }
+            }
+            else
+            {
+                lowestRemovableChar += 3; // e.g. "c:\"
+            }
         #else
             lowestRemovableChar += 1; // e.g. "/"
         #endif
