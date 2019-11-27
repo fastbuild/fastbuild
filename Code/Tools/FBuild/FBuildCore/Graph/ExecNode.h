@@ -44,6 +44,7 @@ private:
     AString             m_ExecArguments;
     AString             m_ExecWorkingDir;
     int32_t             m_ExecReturnCode;
+    bool                m_ExecAlwaysShowOutput;
     bool                m_ExecUseStdOutAsOutput;
     bool                m_ExecAlways;
     bool                m_ExecInputPathRecurse;
