@@ -25,6 +25,13 @@ FunctionRemoveDir::FunctionRemoveDir()
     return true;
 }
 
+// NeedsHeader
+//------------------------------------------------------------------------------
+/*virtual*/ bool FunctionRemoveDir::NeedsHeader() const
+{
+    return true;
+}
+
 // Commit
 //------------------------------------------------------------------------------
 /*virtual*/ bool FunctionRemoveDir::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
