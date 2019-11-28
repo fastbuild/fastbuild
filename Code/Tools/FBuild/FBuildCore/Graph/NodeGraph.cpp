@@ -1680,8 +1680,13 @@ bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* 
     if ( PathUtils::ArePathsEqual( originalNodeGraphDBFile, nodeGraphDBFileClean ) == false )
     {
         FLOG_WARN( "Database has been moved (originally at '%s', now at '%s').", originalNodeGraphDBFile.Get(), nodeGraphDBFileClean.Get() );
-        compatibleDB = false;
-        return true;
+        if ( FBuild::Get().GetOptions().m_ContinueAfterDBMove )
+        {
+            // Allow build to continue (will be a clean build)
+            compatibleDB = false;
+            return true;
+        }
+        return false;
     }
 
     uint32_t numFiles = 0;
