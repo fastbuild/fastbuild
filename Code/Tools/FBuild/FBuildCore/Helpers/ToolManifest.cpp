@@ -203,8 +203,8 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     // create a hash for the whole tool chain
     const size_t numFiles( m_Files.GetSize() );
     const size_t memSize( numFiles * sizeof( uint32_t ) * 2 );
-    // add one for m_DeleteRemoteFilesWhenDone value
-    uint32_t * mem = (uint32_t *)ALLOC( memSize + 1 );
+    // add to size for m_DeleteRemoteFilesWhenDone bool value
+    uint32_t * mem = (uint32_t *)ALLOC( memSize + sizeof( bool ) );
     uint32_t * pos = mem;
     for ( size_t i=0; i<numFiles; ++i )
     {
