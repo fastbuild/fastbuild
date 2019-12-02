@@ -1363,17 +1363,17 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
                 if ( ( afterNative != nullptr && afterOther != nullptr && afterNative < afterOther )
                         || afterOther == nullptr )
                 {
-                    afterSlash = afterNative;
+                    afterSlash = afterNative + 1;
                 }
                 else
                 {
-                    afterSlash = afterOther;
+                    afterSlash = afterOther + 1;
                 }
 
-                lowestRemovableChar += ( afterSlash - src );
+                lowestRemovableChar += ( afterSlash - src ); // e.g. "\\server\"
                 // Copy the qualifier part of the path here, so things like the double slash and "."
                 // are not replaced.
-                while ( src <= afterSlash ) {
+                while ( src < afterSlash ) {
                     if ( *src != OTHER_SLASH )
                     {
                         *dst++ = *src++;
