@@ -28,6 +28,114 @@
 
 
 <div class='newsitemheader'>
+    v0.99&nbsp;<font color='#bbbbbb'>(3-Nov-2019)</font>
+</div>
+<div class='newsitembody'>
+    <b>Notes</b>
+	<ul>
+        <li>DB Version Changed : clean build will occur</li>
+        <li>Distributed compilation protocol version changed : please update workers</li>
+		<li>Cache version has changed</li>
+    </ul>
+    <b>New</b>
+    <ul>
+		<li>When bff changes, only affected targets are rebuilt</li>
+        <li>[OSX] FBuildWorker UI implemented for OSX</li>
+    </ul>
+    <b>Fixes</b>
+    <ul>
+		<li>Distributed Compilation:</li>
+		<ul>
+			<li>[Linux][OSX] Fix occasional compilation failure when a remote host wins a distributed race (Thanks to dummyunit)</li>		
+			<li>ObjectiveC/C++ distribution is automatically disabled (can't be robustly distributed)</li>
+			<li>Distributed compilation automatically disabled for incompatible /analyze options with MSVC compiler</li>
+				- preprocessor inconsistencies prevent distributed compilation
+			<li>[OSX][Linux] FBuildWorker restarts when it detects it has been modified</li>
+			<li>[OSX][Linux] Avoid unnecessary thread creation on Linux and OSX for failed network connections (Thanks to dummyunit)</li>
+			<li>Warnings no longer swallowed when generated remotely if /WX not set (Thanks to Leonid Mashinskiy)</li>
+		</ul>
+		<li>Project Generation:</li>
+		<ul>
+			<li>Fix slow Visual Studio project generation for projects with over 1024 files</li>
+			<li>Files in folders in the XCode tree view are sorted alphabetically</li>
+			<li>XCode "-doc" projects are hidden by default</li>
+			<li>Intellisense/CodeSense information is correctly populated if project references a Copy()</li>
+		</ul>
+		<li>Caching:</li>
+		<ul>
+			<li>Expermental LightCache feature detects unsupported #import directives (Thanks to dummyunit)</li>		
+			<li>Cache write only + dist no longer uses an incorrect key for storing</li>
+				- With this combination of options, the returned compilation result was used instead of the source for hashing
+			<li>Caching with /analyze no longer uses preprocessed output so SAL-reliant errors work correctly</li>
+		</ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>Fix %s 'is not an ObjectNode (type: File)' error when migrating DB after bff edit</li>
+			<li>Error 1034 no longer malformed for certain operators (was printing ??? in some cases)  (Thanks to dummyunit)</li>
+			<li>Concatenating empty arrays of a different type could produce incorrect results (Thanks to dummyunit)</li>
+		</ul>
+		<li>Emit error when database (.fdb) cannot be loaded correctly due to corruption (was silently failing)</li>
+		<li>[Linux] Correct fbuild.linux.fdb is used for database file as intended (Thanks to dummyunit)</li>
+		<li>Add missing line feeds to some error messages (Thansk to dummyunit)</li>
+		<li>Emit error instead of hanging when fbuild.exe fails to spawn in wrapper mode (Thanks to dummyunit)</li>
+		<li>Clang and GCC warnings are shown when -Werror is not set, just like MSVC without /WX</li>
+		<li>GCC preprocessed extension fixed so language is correct regardless of compiler exe name or -x options (Thanks to dummyunit)</li>
+		<li>Missing properties added to integration files (usertype.dat and notepad++markup.xml)</li> 
+		<li>Relative path generation was not case sensitive on Windows and OSX (Thanks to ohoughton)</li>
+    </ul>
+	<b>Improvements</b>
+	<ul>
+		<li>Distributed Compilation:</li>
+		<ul>
+			<li>Add proportional FBuildWorker mode - scale to consume available idle CPU (Thanks to Tomáš Nezval)</li>		
+			<li>FBuildWorker stops accepting work more quickly when machine leaves idle state (Thanks to Tomáš Nezval)</li>
+			<li>C1060 (out of heap mem) only considered a system failure when C1076 & C3859 not present (Thanks to Lambert Clara)</li>
+			<li>Defer loading of Compiler() files until needed, saving some time for distributed builds</li>
+			<li>Compiler() avoids re-hashing files after DB migration</li>
+			<li>Reduce process shutdown time for distributed builds when closing connections</li>
+			<li>[OSX] FBuildWorker for OSX supports simple Idle Detection</li>
+		</ul>
+		<li>Project Generation:</li>
+		<ul>
+			<li>Optimize Visual Studio project generation 10%</li>
+			<li>VCXProject automatically populates the LocalDebuggerCommand if a .Target is specified for a config</li>
+			<li>Intellisense/Codesense includes -isystem -isystem-after and -iquote include paths</li>
+			<li>VCXProj exposes .Keyword, .ApplicationType, .ApplicationTypeRevision, .PackagePath and .AdditionalSymbolPath per-config</li>
+			<li>VCXProject exposes .ProjectProjectImports to allow importing of custom .targets files</li>
+			<li>VCXProject imports Android .targets if available to better support debugging on Android</li>
+			<li>XCode projects are generated to more closely match manually created projects</li>
+			<li>XCode projects can set .XCodeBaseSDK (macosx, iphoneos etc) in .ProjectConfigs</li>
+			<li>XCode projects can set .CommandLineArguments and .CommandLineArgumentsDisabled</li>
+			<li>XCode projects have "Document Versioning" disabled by default (can enable with .XCodeDocumentVersioning)</li>
+			<li>XCode projects can set .XCodeDebugWorkingDir in .ProjectConfigs</li>
+			<li>XCode projects set various options to avoid warnings in later XCode versions</li>		
+		</ul>
+		<li>Caching:</li>
+		<ul>
+			<li>-cacheverbose provides details about compression timing (Thanks to Lambert Clara)</li>		
+			<li>-cacheverbose shows more detailed info for cache stores, to match cache hits</li>
+			<li>LightCache can handle includes from macros</li>
+			<li>Significant improvement to LightCache performance (Thanks to Ben Craig)</li>
+		</ul>
+		<li>BFF Parsing:</li>
+		<ul>
+			<li>Optimize BFFParser parsing when creating structs (speedups for 20% or more are not uncommon)</li>
+			<li>BFFParsing speed improved ~2.5%</li>
+			<li>Use StackArray to improve BFF parsing performance ~2.5%</li>
+		</ul>
+		<li>Library, ObjectList, Alias and Unity nodes can be hidden from -showtargets (Thanks to Philipp Mirzayants)</li>
+		<li>-report includes cache timing information (Thanks to Lambert Clara)</li>
+		<li>Directory lists in the -summary shown in a more human readable format (Thanks to Lambert Clara)</li>
+		<li>Failed builds terminate up to 0.5s faster</li>
+		<li>UnityInputIsolatedFiles allows files to be automatically exluded from Unity, but still compiled (Thanks to Martin Donlon)</li>
+		<li>Output for failed tasks no longer deleted - failed output can be useful for triage</li>
+		<li>[OSX] nsec filetimes supported on OS X 10.13 and higher with APFS</li>
+		<li>[Linux] Reduce process overhead (particularly for short-lived ones)</li>
+		<li>[Linux] Reduce per-process buffer size usage to scale better on multi-core systems</li>
+	</ul>
+</div>
+
+<div class='newsitemheader'>
     v0.98&nbsp;<font color='#bbbbbb'>(29-Apr-2019)</font>
 </div>
 <div class='newsitembody'>

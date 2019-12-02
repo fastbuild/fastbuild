@@ -4,8 +4,8 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define FBUILD_VERSION_STRING "v0.98"
-#define FBUILD_VERSION (uint32_t)98
+#define FBUILD_VERSION_STRING "v0.99"
+#define FBUILD_VERSION (uint32_t)99
 #if defined( __WINDOWS__ )
     #define FBUILD_VERSION_PLATFORM "Windows"
 #elif defined( __APPLE__ )

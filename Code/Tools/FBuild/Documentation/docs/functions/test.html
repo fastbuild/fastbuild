@@ -58,6 +58,10 @@ Defines the execution of an executable as a test.</p>
   .PreBuildDependencies       // (optional) Force targets to be built before this Test (Rarely needed,
                               // but useful when Test relies on externally generated files).
 
+  .Environment             // (optional) Environment variables to use for local build
+                           // If set, linker uses this environment
+                           // If not set, linker uses .Environment from your Settings node
+
   .AllowDistribution          // (optional) Allow distributed running of the test exe (if available)
                               //            default: true
   .ExecutableRootPath         // (optional) Override default path for executable distribution
@@ -126,6 +130,12 @@ Test( 'Test' )
 	  <p>One or more nodes which must be built before this test is executed.</p>
 	  <p>The .PreBuildDependencies option ensures the specified targets are up-to-date before the
 	  Test() is executed.</p>
+
+    <hr>
+
+    <p><b>.Environment</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>When set, overrides the environment for running a Test.</p>
+      <p>This allows you to have a different environment per Test if needed.</p>
   	<p><hr></p>
 
 	<p><b>.AllowDistribution</b> - Boolean - (Optional)</p>
@@ -148,8 +158,6 @@ Test( 'Test' )
     <p>cached on the remote workers.</p>
   	<p><hr></p>
 
-    </div>
-
     <div class='newsitemheader'>
       Simple Example
     </div>
@@ -158,7 +166,7 @@ Test( 'Test' )
 <div class='code'>
 Test( 'MyCoreTests-Run' )
 {
-  .TestExecutable = 'MyCoreTests-Exe' // Must be previously defined with Executable()
+  .TestExecutable = 'MyCoreTests-Exe' // Must be previously defined, usually with Executable()
   .TestOutput = 'Tests/MyCoreTests_Output.txt'
 }
 </div>

@@ -96,7 +96,6 @@ public:
 
     const char * GetObjExtension() const;
 private:
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
     virtual bool Finalize( NodeGraph & nodeGraph ) override;

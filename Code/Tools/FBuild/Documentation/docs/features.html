@@ -50,7 +50,7 @@
         <li>Build multiple targets at once</li>
 		<li>Compile on Windows, OS X and Linux</li>
         <li>Target Windows, OS X, Linux, IOS, Android, Xbox 360, Xbox One, PS3, PS4, Wii & WiiU</li>
-		<li>Supports MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior & NVCC (CUDA)</li>
+		<li>Supports MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior, NVCC (CUDA) & VBCC</li>
       </ul>
     </div>
   </td>
@@ -84,7 +84,7 @@
     <div class='newsitemheader'>More...</div>
     <div class='newsitembody' style='height:110;'>
       <ul>
-        <li>Unit Test support</li>
+        <li>Test support</li>
         <li>Build statistics</li>
         <li>Progress bar</li>
         <li>Visual Studio and XCode Project generation</li>
@@ -106,27 +106,24 @@
 
     <div class='newsitemheader'>Built-in cache support</div>
     <div class='newsitembody'>
-<p>Build caching is supported as a built-in feature. A single line in the configuration file enables sharing of build results via a local or network cache.</p>
-<img src='timing_cache.png'>
+<p>Build caching is supported as a built-in feature. A single line in the configuration file enables sharing of build results via a local or network cache. Caching can accelerate compile times up to 10x.</p>
 </div>
 
     <div class='newsitemheader'>Lightning fast "nothing to build"</div>
     <div class='newsitembody'>
-<p>FASTBuild knows the entire dependency graph before the build starts and can perform the absolute minimum IO required to determine which files need building.  The build state is saved between invocations to minimize work required for incremental and "nothing" builds.  The build configuration file is only parsed when it changes.</p>
-<img src='timing_noop.png'>
+<p>FASTBuild knows the entire dependency graph before the build starts and can perform the absolute minimum IO required to determine which files need building.  The build state is saved between invocations to minimize work required for incremental and "nothing" builds.  The build configuration file is only parsed when it changes.
+Performance of no-op build is important in automated testing and build scenarios.</p>
 </div>
 
 
     <div class='newsitemheader'>Unity/Blob</div>
     <div class='newsitembody'>
-FASTBuild supports automatically generated Unity/Blob builds.  By including many cpp files into single a single Unity (or Blob) file, compilation and link times can be greatly reduced.  Unity in FASTBuild is compatible with network distribution and caching.  Unity can automatically build "open for edit" (writable) files individually, allowing quicker iteration times when working.<br>
-<img src='timing_unity.png'>
+FASTBuild supports automatically generated Unity/Blob builds.  By including many cpp files into single a single Unity (or Blob) file, compilation and link times can be greatly reduced. Improvements of 10x or more are not common. Unity in FASTBuild is compatible with network distribution and caching.  Unity can automatically build "open for edit" (writable) files individually, allowing quicker iteration times when working.<br>
 </div>
 
     <div class='newsitemheader'>Distributed Compilation</div>
     <div class='newsitembody'>
-<p>FASTBuild supports distributed compilation.</p>
-<img src='timing_dist.png'>
+<p>FASTBuild supports distributed compilation, allowing you to take advantage of unused CPU resources on your network to accelerate compilation. Speedups of 5x are common.</p>
 </div>
 
 
@@ -134,7 +131,7 @@ FASTBuild supports automatically generated Unity/Blob builds.  By including many
 
     <div class='newsitemheader'>Tiny, self-contained executable</div>
     <div class='newsitembody'>
-FASTBuild is a single executable, weighing in at around 400KB.  
+FASTBuild is a single executable, weighing in at ~1MiB.
 </div>
 
     <div class='newsitemheader'>Small run-time memory usage</div>
@@ -144,7 +141,7 @@ FASTBuild uses very little memory, apart from some per-cpu work buffers.  A typi
 
     <div class='newsitemheader'>No external dependencies</div>
     <div class='newsitembody'>
-FASTBuild requires no external DLLs, libraries, 3rd party software or executables (other than those belonging to your compiler(s)).  It runs on a clean install of Windows (Vista, 7, 8.1, 10 or server class equivalents), OS X (10.7+) or Linux.
+FASTBuild requires no external DLLs, libraries, 3rd party software or executables (other than those belonging to your compiler(s)).  It runs on a clean install of Windows (7 or later), OS X (10.7+) or Linux.
 </div>
 
     <div class='newsitemheader'>No installation required</div>
@@ -165,9 +162,9 @@ FASTBuild can target multiple (and any combination of) defined targets (or even 
 As with buiding multiple platforms simultaneously, FASTBuild can build multiple versions of the same platform simulatenously.  For example you can build the "debug", "release" and "retail" configurations in parallel.  Again, this is ideal for maximizing performance on automated build servers or during pre-submit "sanity-check" compiles.
 </div>
 
-    <div class='newsitemheader'>Support Consoles, Windows, Linux and OS X</div>
+    <div class='newsitemheader'>Support Consoles, Windows, Linux, OS X, Smartphones and more</div>
     <div class='newsitembody'>
-FASTBuild runs on Windows, Linux and OS X, targeting those platforms. It also supports all major consoles (PS3, PS4, Xbox360, XboxOne, Wii & WiiU) and smartphones (IOS & Android).  Supported compilers are MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior &amp; CUDA. It will also work with any other syntactically compatible command line compilers, preparing it for more platforms in the future.
+FASTBuild runs on Windows, Linux and OS X, targeting those platforms. It also supports all major consoles (PS3, PS4, Xbox360, XboxOne, Wii & WiiU) smartphones (IOS & Android) and retro development.  Supported compilers are MSVC, GCC, SNC, Clang, GreenHills, CodeWarrior &amp; CUDA. It will also work with any other syntactically compatible command line compilers, preparing it for more platforms in the future.
 </div>
 
 
@@ -193,9 +190,9 @@ FASTBuild output, whether it be build progress or config parsing errors, is outp
 
 <h1>More...</h1>
 
-    <div class="newsitemheader">Unit Test support</div>
+    <div class="newsitemheader">Test support</div>
     <div class='newsitembody'>
-FASTBuild contains built in support for Unit Tests.  Unit tests are automatically compiled and executed only when relevant source is modified.
+FASTBuild contains built in support for running Tests. Tests are automatically compiled and executed only when relevant source is modified or other dependencies change.
 </div>
 
     <div class="newsitemheader">Build statistics</div>
@@ -210,7 +207,7 @@ FASTBuild tracks build times across build and can use this information to estima
 
     <div class="newsitemheader">Visual Studio and XCode Project generation</div>
     <div class='newsitembody'>
-FASTBuild can generate vcxproj and vcxproj.filters to integrate FASTBuild compilation into the Visual Studio IDE. Similarly, XCode projects can be generatated to integrate FASTBuild compilation into the XCode IDE.
+FASTBuild can generate .vcxproj and .sln to integrate FASTBuild compilation into the Visual Studio IDE. Similarly, XCode projects can be generatated to integrate FASTBuild compilation into the XCode IDE.
 </div>
 
 

@@ -644,12 +644,19 @@ void TestGraph::DBLocationChanged() const
         TEST_ASSERT( FileIO::FileCopy( dbFile1, dbFile2 ) );
     }
 
-    // Check that the DB in the new location is detected as invalid and the user
-    // is notified appropriately
+    // Moving a DB should result in a messsage and a failed build
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile2 ) == false );
         TEST_ASSERT( GetRecordedOutput().Find( "Database has been moved" ) );
+    }
+
+    // With -continueafterdmove, message should be emitted, but build should pass
+    options.m_ContinueAfterDBMove = true;
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile2 ) == true );
+        TEST_ASSERT( AStackString<>( GetRecordedOutput() ).Replace( "Database has been moved", "", 2 ) == 2 ); // Find twice
     }
 }
 

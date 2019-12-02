@@ -64,6 +64,10 @@
     <td>Explicity specify the config file to use.</td>
   </tr>
   <tr>
+    <td><a href="#continueafterdbmove">-continueafterdbmove</a></td>
+    <td>Allow build to continue after a DB move.</td>
+  </tr>
+  <tr>
     <td><a href="#dist">-dist</a></td>
     <td>Enable distributed compilation.</td>
   </tr>
@@ -239,6 +243,13 @@ information and performance metrics. This can be used to assist troubleshooting.
     <div class='newsitembody'>
 <p>Explicity specify the config file to use.  By default, FASTBuild looks for "fbuild.bff" in the current directory.  This options allows a file to be explicitly
 specified instead.</p>
+</div>
+
+    <div class='newsitemheader' id="continueafterdbmove">--continueafterdbmove</div>
+    <div class='newsitembody'>
+<p>Allow build to continue after a DB move.</p>
+<p>FASTBuild's database is tied to the directory in which it was created and cannot be moved. If a move is detected, an error will be emitted. -continueafterdbmove allows the build
+to continue after this error has been emitted, ignoring and replacing the DB file.</p>
 </div>
 
     <div class='newsitemheader' id="dist">-dist</div>

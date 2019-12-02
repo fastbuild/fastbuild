@@ -32,6 +32,7 @@ REFLECT_NODE_BEGIN( ExecNode, Node, MetaName( "ExecOutput" ) + MetaFile() )
     REFLECT(        m_ExecArguments,            "ExecArguments",            MetaOptional() )
     REFLECT(        m_ExecWorkingDir,           "ExecWorkingDir",           MetaOptional() + MetaPath() )
     REFLECT(        m_ExecReturnCode,           "ExecReturnCode",           MetaOptional() )
+    REFLECT(        m_ExecAlwaysShowOutput,     "ExecAlwaysShowOutput",     MetaOptional() )
     REFLECT(        m_ExecUseStdOutAsOutput,    "ExecUseStdOutAsOutput",    MetaOptional() )
     REFLECT(        m_ExecAlways,               "ExecAlways",               MetaOptional() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
@@ -45,6 +46,7 @@ REFLECT_END( ExecNode )
 ExecNode::ExecNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
     , m_ExecReturnCode( 0 )
+    , m_ExecAlwaysShowOutput( false )
     , m_ExecUseStdOutAsOutput( false )
     , m_ExecAlways( false )
     , m_ExecInputPathRecurse( true )
@@ -155,14 +157,14 @@ ExecNode::~ExecNode() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
-/*virtual*/ bool ExecNode::DetermineNeedToBuild( bool forceClean ) const
+/*virtual*/ bool ExecNode::DetermineNeedToBuild( const Dependencies & deps ) const
 {
     if ( m_ExecAlways )
     {
         FLOG_INFO( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
         return true;
     }
-    return Node::DetermineNeedToBuild( forceClean );
+    return Node::DetermineNeedToBuild( deps );
 }
 
 // DoBuild
@@ -209,14 +211,18 @@ ExecNode::~ExecNode() = default;
     {
         return NODE_RESULT_FAILED;
     }
-
-    // did the executable fail?
-    if ( result != m_ExecReturnCode )
+    const bool buildFailed = ( result != m_ExecReturnCode );
+    
+    // Print output if appropriate
+    if ( buildFailed || m_ExecAlwaysShowOutput )
     {
-        // something went wrong, print details
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
+    }
 
+    // did the executable fail?
+    if ( buildFailed )
+    {
         FLOG_ERROR( "Execution failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
         return NODE_RESULT_FAILED;
     }

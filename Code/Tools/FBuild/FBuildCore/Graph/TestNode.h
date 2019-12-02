@@ -37,6 +37,7 @@ public:
     inline const ToolManifest & GetManifest() const { return m_Manifest; }
 
     inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
+    const char * GetEnvironmentString() const;
 
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
@@ -62,6 +63,7 @@ private:
     uint32_t            m_TestTimeOut;
     bool                m_TestAlwaysShowOutput;
     Array< AString >    m_PreBuildDependencyNames;
+    Array< AString >    m_Environment;
     bool                m_AllowDistribution;
     AString             m_ExecutableRootPath;
     Array< AString >    m_CustomEnvironmentVariables;
@@ -70,6 +72,7 @@ private:
     // Internal State
     bool                m_TestInputPathRecurse;
     uint32_t            m_NumTestInputFiles;
+    mutable const char * m_EnvironmentString;
     ToolManifest        m_Manifest;
 };
 

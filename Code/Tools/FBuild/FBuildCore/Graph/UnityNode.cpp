@@ -17,6 +17,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
 
@@ -45,7 +46,7 @@ REFLECT_END( UnityNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 UnityNode::UnityNode()
-: Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_NONE )
+: Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_ALWAYS_BUILD )
 , m_InputPathRecurse( true )
 , m_InputPattern( 1, true )
 , m_Files( 0, true )
@@ -155,6 +156,8 @@ UnityNode::~UnityNode()
 
     AString output;
     output.SetReserved( 32 * 1024 );
+
+    Array< uint64_t > stamps( m_NumUnityFilesToCreate, false );
 
     // create each unity file
     for ( size_t i=0; i<m_NumUnityFilesToCreate; ++i )
@@ -280,6 +283,8 @@ UnityNode::~UnityNode()
             m_UnityFileNames.Append( unityName );
         }
 
+        stamps.Append( xxHash::Calc64( output.Get(), output.GetLength() ) );
+
         // need to write the unity file?
         bool needToWrite = false;
         FileStream f;
@@ -354,6 +359,10 @@ UnityNode::~UnityNode()
 
     // Sanity check that all files were written
     ASSERT( numFilesWritten == numFiles );
+
+    // Calculate final hash to represent generation of Unity files
+    ASSERT( stamps.GetSize() == m_NumUnityFilesToCreate );
+    m_Stamp = xxHash::Calc64( &stamps[ 0 ], stamps.GetSize() * sizeof( uint64_t ) );
 
     return NODE_RESULT_OK;
 }
