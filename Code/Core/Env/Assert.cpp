@@ -14,6 +14,11 @@
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
 #endif
+#if defined( __OSX__ )
+    #include <sys/types.h>
+    #include <unistd.h>
+    #include <sys/sysctl.h>
+#endif
 
 // Static
 //------------------------------------------------------------------------------
@@ -39,7 +44,29 @@ bool IsDebuggerAttached()
     #if defined( __WINDOWS__ )
         return ( IsDebuggerPresent() == TRUE );
     #elif defined( __APPLE__ )
-        return false; // TODO:MAC Implement IsDebugerAttached
+        //
+        // From: https://developer.apple.com/library/archive/qa/qa1361/_index.html
+        //
+
+        // Initialize the flags so that, if sysctl fails for some bizarre
+        // reason, we get a predictable result.
+        struct kinfo_proc info;
+        info.kp_proc.p_flag = 0;
+        
+        // Initialize mib, which tells sysctl the info we want, in this case
+        // we're looking for information about a specific process ID.
+        int mib[4];
+        mib[0] = CTL_KERN;
+        mib[1] = KERN_PROC;
+        mib[2] = KERN_PROC_PID;
+        mib[3] = getpid();
+        
+        // Call sysctl
+        size_t size = sizeof(info);
+        VERIFY( sysctl( mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0 ) == 0 );
+    
+        // We're being debugged if the P_TRACED flag is set.
+        return ( ( info.kp_proc.p_flag & P_TRACED ) != 0 );
     #elif defined( __LINUX__ )
         return false; // TODO:LINUX Implement IsDebugerAttached
     #else

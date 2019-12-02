@@ -1338,7 +1338,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::DLL_NODE )
     {
         // TODO:B Depend on import lib
-        nodes.Append( Dependency( node, true ) ); // NOTE: Weak dependency
+        nodes.Append( Dependency( node, 0, true ) ); // NOTE: Weak dependency
         return true;
     }
 

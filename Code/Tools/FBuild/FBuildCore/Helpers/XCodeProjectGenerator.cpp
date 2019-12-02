@@ -775,6 +775,7 @@ bool XCodeProjectGenerator::ShouldQuoteString( const AString & value ) const
              ( c == '"' ) ||
              ( c == '?' ) ||
              ( c == '-' ) ||
+             ( c == '+' ) ||
              ( c == '=' ) )
         {
             return true;

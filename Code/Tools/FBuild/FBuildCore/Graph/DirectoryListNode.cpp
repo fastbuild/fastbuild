@@ -12,7 +12,9 @@
 // Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // Reflection
@@ -29,7 +31,7 @@ REFLECT_END( DirectoryListNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 DirectoryListNode::DirectoryListNode()
-    : Node( AString::GetEmpty(), Node::DIRECTORY_LIST_NODE, Node::FLAG_NONE )
+    : Node( AString::GetEmpty(), Node::DIRECTORY_LIST_NODE, Node::FLAG_ALWAYS_BUILD )
     , m_Recursive( true )
 {
     m_LastBuildTimeMs = 100;
@@ -206,6 +208,24 @@ DirectoryListNode::~DirectoryListNode() = default;
         {
             FLOG_INFO( " - %s\n", m_Files[ i ].m_Name.Get() );
         }
+    }
+
+    // Hash the directory listing to represent the discovered files
+    // Note: We don't include any file attributes in this hash, because
+    // if a downstream node depends on the files, it will do so directly
+    // The hash only represents the list of discovered files
+    if ( m_Files.IsEmpty() )
+    {
+        m_Stamp = 1; // Non-zero
+    }
+    else
+    {
+        MemoryStream ms;
+        for ( const FileIO::FileInfo & file : m_Files )
+        {
+            ms.WriteBuffer( file.m_Name.Get(), file.m_Name.GetLength() );
+        }
+        m_Stamp = xxHash::Calc64( ms.GetData(), ms.GetSize() );
     }
 
     return NODE_RESULT_OK;

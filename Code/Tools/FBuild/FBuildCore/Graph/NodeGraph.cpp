@@ -780,11 +780,11 @@ FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
     {
         AStackString< 512 > fullPath;
         CleanPath( fileName, fullPath );
-        node = FNEW( FileNode( fullPath, Node::FLAG_TRIVIAL_BUILD ) );
+        node = FNEW( FileNode( fullPath, Node::FLAG_TRIVIAL_BUILD | Node::FLAG_ALWAYS_BUILD ) );
     }
     else
     {
-        node = FNEW( FileNode( fileName, Node::FLAG_TRIVIAL_BUILD ) );
+        node = FNEW( FileNode( fileName, Node::FLAG_TRIVIAL_BUILD | Node::FLAG_ALWAYS_BUILD) );
     }
 
     AddNode( node );
@@ -1094,7 +1094,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     // check pre-build dependencies
     if ( nodeToBuild->GetState() == Node::NOT_PROCESSED )
     {
-        // all static deps done?
+        // all pre-build deps done?
         bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
@@ -1126,14 +1126,29 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
     if ( nodeToBuild->GetState() != Node::DYNAMIC_DEPS_DONE )
     {
-        // static deps ready, update dynamic deps
-        bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
-        if ( nodeToBuild->DoDynamicDependencies( *this, forceClean ) == false )
+        // If static deps require us to rebuild, dynamic dependencies need regenerating
+        const bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
+        if ( forceClean ||
+             nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetStaticDependencies() ) )
         {
-            nodeToBuild->SetState( Node::FAILED );
-            return;
+            // Clear dynamic dependencies
+            nodeToBuild->m_DynamicDependencies.Clear();
+
+            // Explicitly mark node in a way that will result in it rebuilding should
+            // we cancel the build before builing this node
+            nodeToBuild->m_Stamp = 0;
+
+            // Regenerate dynamic dependencies
+            if ( nodeToBuild->DoDynamicDependencies( *this, forceClean ) == false )
+            {
+                nodeToBuild->SetState( Node::FAILED );
+                return;
+            }
+
+            // Continue through to check dynamic dependencies and build
         }
 
+        // Dynamic dependencies are ready to be checked
         nodeToBuild->SetState( Node::DYNAMIC_DEPS_DONE );
     }
 
@@ -1153,13 +1168,17 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     // building
     bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
     nodeToBuild->SetStatFlag( Node::STATS_PROCESSED );
-    if ( nodeToBuild->DetermineNeedToBuild( forceClean ) )
+    if ( forceClean ||
+         ( nodeToBuild->GetStamp() == 0 ) || // Avoid redundant messages from DetermineNeedToBuild
+         nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetStaticDependencies() ) ||
+         nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetDynamicDependencies() ) )
     {
         nodeToBuild->m_RecursiveCost = cost;
         JobQueue::Get().AddJobToBatch( nodeToBuild );
     }
     else
     {
+        FLOG_INFO("Up-To-Date '%s'", nodeToBuild->GetName().Get());
         nodeToBuild->SetState( Node::UP_TO_DATE );
     }
 }
@@ -1527,6 +1546,12 @@ bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* 
     if ( PathUtils::ArePathsEqual( originalNodeGraphDBFile, nodeGraphDBFileClean ) == false )
     {
         FLOG_WARN( "Database has been moved (originally at '%s', now at '%s').", originalNodeGraphDBFile.Get(), nodeGraphDBFileClean.Get() );
+        if ( FBuild::Get().GetOptions().m_ContinueAfterDBMove )
+        {
+            // Allow build to continue (will be a clean build)
+            compatibleDB = false;
+            return true;
+        }
         return false;
     }
 
@@ -1685,6 +1710,15 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         return;
     }
 
+    // Migrate static Dependencies
+    // - since everything matches, we only need to migrate the stamps
+    for ( Dependency & dep : newNode.m_StaticDependencies )
+    {
+        const size_t index = size_t( &dep - newNode.m_StaticDependencies.Begin() );
+        const Dependency & oldDep = oldNode->m_StaticDependencies[ index ];
+        dep.Stamp( oldDep.GetNodeStamp() );
+    }
+
     // Migrate Dynamic Dependencies
     {
         // New node should have no dynamic dependencies
@@ -1705,14 +1739,14 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
             }
             if ( newDepNode )
             {
-                newDeps.Append( Dependency( newDepNode, oldDep.IsWeak() ) );
+                newDeps.Append( Dependency( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() ) );
             }
             else
             {
                 // Create the dependency
                 newDepNode = Node::CreateNode( *this, oldDepNode->GetType(), oldDepNode->GetName() );
                 ASSERT( newDepNode );
-                newDeps.Append( Dependency( newDepNode, oldDep.IsWeak() ) );
+                newDeps.Append( Dependency( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() ) );
 
                 // Early out for FileNode (no properties and doesn't need Initialization)
                 if ( oldDepNode->GetType() == Node::FILE_NODE )

@@ -82,6 +82,7 @@ public:
     {
         FLAG_NONE                   = 0x00,
         FLAG_TRIVIAL_BUILD          = 0x01, // DoBuild is performed locally in main thread
+        FLAG_ALWAYS_BUILD           = 0x02, // DoBuild is always performed (for e.g. directory listings)
     };
 
     enum StatsFlag
@@ -220,7 +221,7 @@ protected:
 
     // each node must implement these core functions
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
-    virtual bool DetermineNeedToBuild( bool forceClean ) const;
+    virtual bool DetermineNeedToBuild( const Dependencies & deps ) const;
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );

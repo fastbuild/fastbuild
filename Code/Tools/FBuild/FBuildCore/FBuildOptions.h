@@ -1,4 +1,4 @@
-// FBuild.cpp - The main FBuild interface class
+// FBuildOptions.h - Command line options processing
 //------------------------------------------------------------------------------
 #pragma once
 
@@ -87,6 +87,7 @@ public:
     bool        m_SaveDBOnCompletion                = false;
     bool        m_FixupErrorPaths                   = false;
     bool        m_ForceDBMigration_Debug            = false; // Force migration even if bff has not changed (for tests)
+    bool        m_ContinueAfterDBMove               = false;
 
     uint32_t    m_NumWorkerThreads                  = 0; // True default detected in constructor
     AString     m_ConfigFile;
