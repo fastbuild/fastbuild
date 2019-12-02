@@ -228,7 +228,7 @@ const char * TestNode::GetEnvironmentString() const
         spawnArgs += doubleQuote;
         // use relative path, if we can; so we reduce command length
         AStackString<> testExeRelPath;
-        PathUtils::GetPathGivenWorkingDir( workingDir, testExe, testExeRelPath );
+        PathUtils::GetRelativePath( workingDir, testExe, testExeRelPath );
         spawnArgs += testExeRelPath;
         spawnArgs += doubleQuote;
         spawnArgs += ' ';

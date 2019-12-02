@@ -1666,7 +1666,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
                 startingPath = path;
             }
             AStackString<> relPath;
-            PathUtils::GetPathGivenWorkingDir( workingDir, startingPath, relPath );
+            PathUtils::GetRelativePath( workingDir, startingPath, relPath );
             fullArgs += relPath;
         }
         else
@@ -1681,7 +1681,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
         // since sandbox dir already incorporated into remote workingDir
         // use relative path, if we can; so we reduce command length
         AStackString<> relPath;
-        PathUtils::GetPathGivenWorkingDir( workingDir, path, relPath );
+        PathUtils::GetRelativePath( workingDir, path, relPath );
         fullArgs += relPath;
     }
 }
@@ -2570,7 +2570,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         spawnArgs += doubleQuote;
         // use relative path, if we can; so we reduce command length
         AStackString<> compileExeRelPath;
-        PathUtils::GetPathGivenWorkingDir( workingDir, compileExe, compileExeRelPath );
+        PathUtils::GetRelativePath( workingDir, compileExe, compileExeRelPath );
         spawnArgs += compileExeRelPath;
         spawnArgs += doubleQuote;
         spawnArgs += ' ';

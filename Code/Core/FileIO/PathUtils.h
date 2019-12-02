@@ -50,14 +50,10 @@ public:
     static void StripFileExtension( AString & filePath );
     static void GetRelativePath( const AString & basePath,
                                  const AString & fileName,
-                                 AString & outRelativeFileName,
-                                 const bool rebaseFile = true );
+                                 AString & outRelativeFileName );
     static void CleanPath(
         const AString & workingDir, const AString & name,
         AString & fullPath, const bool makeFullPath = true );
-    static void GetPathGivenWorkingDir(
-        const AString & workingDir, const AString & path,
-        AString & resultPath );
     static void GetObfuscatedSandboxTmp(
         const bool sandboxEnabled, const AString & workingDir,
         const AString & sandboxTmp, AString & obfuscatedSandboxTmp );

@@ -135,8 +135,7 @@ void TestPathUtils::GetRelativePath() const
         AStackString<> result; \
         PathUtils::GetRelativePath( AStackString<>( base ), \
                                     AStackString<>( path ), \
-                                    result, \
-                                    false ); \
+                                    result ); \
         TEST_ASSERTM( result == expectedResult, "Expected: %s\nGot     : %s", expectedResult, result.Get() ); \
     }
 

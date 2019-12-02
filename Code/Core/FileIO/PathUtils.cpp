@@ -195,8 +195,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void PathUtils::GetRelativePath( const AString & basePath,
                                             const AString & fileName,
-                                            AString & outRelativeFileName,
-                                            const bool rebaseFile )
+                                            AString & outRelativeFileName )
 {
     // Makes no sense to call with empty basePath
     ASSERT( basePath.IsEmpty() == false );
@@ -209,7 +208,7 @@
     {
         AStackString<> basePathCopy( basePath );
         basePathCopy += NATIVE_SLASH;
-        GetRelativePath( basePathCopy, fileName, outRelativeFileName, rebaseFile );
+        GetRelativePath( basePathCopy, fileName, outRelativeFileName );
         return;
     }
 
@@ -286,18 +285,9 @@
     }
     else
     {
-        // No common sub-path
-        if ( rebaseFile )
-        {
-            // file is in some completely other directory, so put in root of basePath
-            const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
-            outRelativeFileName = ( lastSlash ? lastSlash + 1 : fileName.Get() );
-        }
-        else
-        {
-            // not rebasing file, so use fileName as-is
-            outRelativeFileName = fileName;
-        }
+        // No common sub-path, the path must be on a different drive from the working directory
+        // Therefore use path as-is
+        outRelativeFileName = fileName;
     }
 }
 
@@ -449,23 +439,6 @@
     // sanity checks
     ASSERT( cleanPath.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
     ASSERT( cleanPath.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
-}
-
-// GetPathGivenWorkingDir
-//------------------------------------------------------------------------------
-/*static*/ void PathUtils::GetPathGivenWorkingDir(
-    const AString & workingDir, const AString & path,
-    AString & resultPath )
-{
-    if ( !workingDir.IsEmpty() )
-    {
-        GetRelativePath( workingDir, path, resultPath, false );  // don't rebase file
-    }
-    else
-    {
-        // use original path
-        resultPath = path;
-    }
 }
 
 // GetObfuscatedSandboxTmp
