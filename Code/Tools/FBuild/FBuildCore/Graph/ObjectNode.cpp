@@ -1693,7 +1693,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     {
         // use relative path, if we can; so we reduce command length
         AStackString<> relPath;
-        PathUtils::GetPathGivenWorkingDir( workingDir, path, relPath );
+        PathUtils::GetRelativePath( workingDir, path, relPath );
         fullArgs += relPath;
     }
 }
