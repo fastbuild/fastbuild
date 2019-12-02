@@ -183,33 +183,6 @@ ObjectNode::~ObjectNode()
     }
 }
 
-// DoDynamicDependencies
-//------------------------------------------------------------------------------
-/*virtual*/ bool ObjectNode::DoDynamicDependencies( NodeGraph & /*nodeGraph*/, bool forceClean )
-{
-    // TODO:A Remove ObjectNode::DoDynamicDependencies
-    // - Dependencies added in Finalize need to be cleared if StaticDependencies
-    //   change. We should to that globally to remove the need for this code.
-
-    if (forceClean)
-    {
-        m_DynamicDependencies.Clear(); // We will update deps in Finalize after DoBuild
-        return true;
-    }
-
-    // If static deps would trigger a rebuild, invalidate dynamicdeps
-    const uint64_t stamp = GetStamp();
-    for ( const Dependency & dep : m_StaticDependencies )
-    {
-        if ( dep.GetNode()->GetStamp() > stamp )
-        {
-            m_DynamicDependencies.Clear(); // We will update deps in Finalize after DoBuild
-            return true;
-        }
-    }
-    return true;
-}
-
 // GetRequiredWorkerTags
 //------------------------------------------------------------------------------
 /*virtual*/ const Tags & ObjectNode::GetRequiredWorkerTags() const
@@ -321,8 +294,20 @@ ObjectNode::~ObjectNode()
             FLOG_ERROR( "'%s' is not a FileNode (type: %s)", fn->GetName().Get(), fn->GetTypeName() );
             return false;
         }
+
+        // Ensure files that are seen for the first time here have their
+        // mod time recorded in the database
+        if ( ( fn->GetType() == Node::FILE_NODE ) &&
+             ( fn->GetStamp() == 0 ) &&
+             ( fn->GetStatFlag( Node::STATS_BUILT ) == false ) )
+        {
+            fn->CastTo< FileNode >()->DoBuild( nullptr );
+        }
+
         m_DynamicDependencies.Append( Dependency( fn ) );
     }
+
+    Node::Finalize( nodeGraph );
 
     return true;
 }

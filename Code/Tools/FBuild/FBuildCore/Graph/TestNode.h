@@ -26,6 +26,8 @@ public:
     virtual const Tags & GetRequiredWorkerTags() const override;
 
     inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
+    const char * GetEnvironmentString() const;
+
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
@@ -45,10 +47,12 @@ private:
     bool             m_TestAlwaysShowOutput;
     bool             m_TestInputPathRecurse;
     Array< AString > m_PreBuildDependencyNames;
+    Array< AString > m_Environment;
     Array< AString > m_RequiredWorkerTagStrings;
 
     // Internal State
     uint32_t         m_NumTestInputFiles;
+    mutable const char * m_EnvironmentString;
     mutable Tags     m_RequiredWorkerTags;
 };
 

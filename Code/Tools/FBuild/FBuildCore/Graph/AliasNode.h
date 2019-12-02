@@ -29,7 +29,6 @@ public:
     inline const Dependencies & GetAliasedNodes() const { return m_StaticDependencies; }
 
 private:
-    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     Array< AString > m_Targets;
