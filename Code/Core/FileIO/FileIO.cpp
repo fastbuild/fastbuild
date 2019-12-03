@@ -15,6 +15,7 @@
 
 // system
 #if defined( __WINDOWS__ )
+    #include <windows.h>
     #include <winioctl.h>
     #include "Core/Env/WindowsHeader.h"
     #include "Core/Time/Time.h"
