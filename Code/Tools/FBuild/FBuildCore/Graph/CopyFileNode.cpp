@@ -21,6 +21,7 @@ REFLECT_NODE_BEGIN( CopyFileNode, Node, MetaNone() )
     REFLECT(        m_Source,                   "Source",                   MetaFile() )
     REFLECT(        m_Dest,                     "Dest",                     MetaPath() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT( m_SymlinkBehavior, "SymlinkBehavior", MetaOptional() )
 REFLECT_END( CopyFileNode )
 
 // CONSTRUCTOR
@@ -47,6 +48,12 @@ CopyFileNode::CopyFileNode()
         return false; // GetNodeList will have emitted an error
     }
 
+    if ( FileIO::ParseSymlinkBehavior( m_SymlinkBehavior ) == FileIO::INVALID_SYM_LINK_BEHAVIOR )
+    {
+        Error::Error_1104_TargetNotDefined( iter, function, "SymlinkBehavior", m_SymlinkBehavior );
+        return false;
+    }
+    
     return true;
 }
 
@@ -61,8 +68,8 @@ CopyFileNode::~CopyFileNode() = default;
     EmitCopyMessage();
 
     // copy the file
-    if ( FileIO::FileCopy( GetSourceNode()->GetName().Get(), m_Name.Get() ) == false )
-    {
+	if ( FileIO::FileCopy( GetSourceNode()->GetName().Get(), m_Name.Get(), FileIO::ParseSymlinkBehavior( m_SymlinkBehavior ) ) == false )
+	{
         FLOG_ERROR( "Copy failed. Error: %s Target: '%s'", LAST_ERROR_STR, GetName().Get() );
         return NODE_RESULT_FAILED; // copy failed
     }
@@ -103,6 +110,12 @@ void CopyFileNode::EmitCopyMessage() const
     output += m_StaticDependencies[ 0 ].GetNode()->GetName();
     output += " -> ";
     output += GetName();
+    if ( !m_SymlinkBehavior.IsEmpty() )
+    {
+        output += " (";
+        output += m_SymlinkBehavior;
+        output += ")";
+    }
     output += '\n';
     FLOG_BUILD_DIRECT( output.Get() );
 }

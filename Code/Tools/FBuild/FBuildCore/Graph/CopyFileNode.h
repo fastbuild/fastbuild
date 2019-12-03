@@ -35,6 +35,7 @@ private:
     AString             m_Source;
     AString             m_Dest;
     Array< AString >    m_PreBuildDependencyNames;
+    AString             m_SymlinkBehavior;
 };
 
 //------------------------------------------------------------------------------

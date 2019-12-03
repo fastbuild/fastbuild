@@ -4,8 +4,8 @@
 // Select desired Visual Studio version
 //------------------------------------------------------------------------------
 //#define USING_VS2015
-#define USING_VS2017
-//#define USING_VS2019
+//#define USING_VS2017
+#define USING_VS2019
 
 // Activate
 //------------------------------------------------------------------------------

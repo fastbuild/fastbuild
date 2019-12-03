@@ -17,10 +17,19 @@
 class FileIO
 {
 public:
+	enum SymlinkBehavior
+	{
+		INVALID_SYM_LINK_BEHAVIOR,
+		FOLLOW_SRC_AND_DST,       // The pre-0.96 behavior, and behavior of cp
+		FOLLOW_SRC,
+		FOLLOW_NEITHER,           // The 0.96 behavior
+		DEFAULT_SYM_LINK_BEHAVIOR = FOLLOW_SRC_AND_DST,
+	};
+	static SymlinkBehavior ParseSymlinkBehavior( const AString& value );
     static bool FileExists( const char * fileName );
     static bool FileDelete( const char * fileName );
-    static bool FileCopy( const char * srcFileName, const char * dstFileName, bool allowOverwrite = true );
-    static bool FileMove( const AString & srcFileName, const AString & dstFileName );
+	static bool FileCopy( const char* srcFileName, const char* dstFileName, SymlinkBehavior linkBehavior = DEFAULT_SYM_LINK_BEHAVIOR, bool allowOverwrite = true );
+	static bool FileMove( const AString & srcFileName, const AString & dstFileName );
     static bool DirectoryDelete( const AString & path );
 
     // directory listing
