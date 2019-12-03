@@ -252,6 +252,7 @@
         flags |= COPYFILE_NOFOLLOW_SRC;
     case FOLLOW_SRC:
         flags |= COPYFILE_NOFOLLOW_DST;
+    default:
     }
     bool result = ( copyfile( srcFileName, dstFileName, nullptr, flags ) == 0 );
     return result;
