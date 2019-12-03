@@ -221,8 +221,8 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
     // create a hash for the whole tool chain
     const size_t numFiles( m_Files.GetSize() );
     const size_t memSize( numFiles * sizeof( uint32_t ) * 2 );
-    // add to size for m_DeleteRemoteFilesWhenDone bool value
-    uint32_t * mem = (uint32_t *)ALLOC( memSize + sizeof( bool ) );
+    // add space for (uint32_t)m_DeleteRemoteFilesWhenDone
+    uint32_t * mem = (uint32_t *)ALLOC( memSize + sizeof( uint32_t ) );
     uint32_t * pos = mem;
     for ( size_t i=0; i<numFiles; ++i )
     {
@@ -238,7 +238,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
-    *pos = m_DeleteRemoteFilesWhenDone;
+    *pos = (uint32_t)m_DeleteRemoteFilesWhenDone;
     m_ToolId = xxHash::Calc64( mem, memSize );
     FREE( mem );
 
