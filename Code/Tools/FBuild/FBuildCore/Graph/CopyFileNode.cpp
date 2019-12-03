@@ -68,8 +68,8 @@ CopyFileNode::~CopyFileNode() = default;
     EmitCopyMessage();
 
     // copy the file
-	if ( FileIO::FileCopy( GetSourceNode()->GetName().Get(), m_Name.Get(), FileIO::ParseSymlinkBehavior( m_SymlinkBehavior ) ) == false )
-	{
+    if ( FileIO::FileCopy( GetSourceNode()->GetName().Get(), m_Name.Get(), FileIO::ParseSymlinkBehavior( m_SymlinkBehavior ) ) == false )
+    {
         FLOG_ERROR( "Copy failed. Error: %s Target: '%s'", LAST_ERROR_STR, GetName().Get() );
         return NODE_RESULT_FAILED; // copy failed
     }
