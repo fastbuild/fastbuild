@@ -27,6 +27,7 @@ private:
 
     // Tests
     void TestPCH() const;
+    void TestPCH_Reuse() const;
     void TestPCH_NoRebuild() const;
     void TestPCH_NoRebuild_BFFChange() const;
     void TestPCHWithCache() const;
@@ -51,6 +52,7 @@ private:
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestPrecompiledHeaders )
     REGISTER_TEST( TestPCH )
+    REGISTER_TEST( TestPCH_Reuse )
     REGISTER_TEST( TestPCH_NoRebuild )
     REGISTER_TEST( TestPCH_NoRebuild_BFFChange )
     REGISTER_TEST( TestPCHWithCache )
@@ -128,6 +130,32 @@ void TestPrecompiledHeaders::TestPCH() const
 
     // check we wrote all objects to the cache
     TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 2 ); // pch and obj using pch
+}
+
+
+// TestPCH_Reuse
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::TestPCH_Reuse() const
+{
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/Reuse/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+
+    FBuild fBuild(options);
+    TEST_ASSERT(fBuild.Initialize(nullptr));
+
+    // Copy files to temp dir
+    TEST_ASSERT(FileIO::EnsurePathExists(AStackString<>("../tmp/Test/PrecompiledHeaders/Reuse/")));
+    TEST_ASSERT(FileIO::FileCopy("Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/Reuse/PrecompiledHeader.cpp", "../tmp/Test/PrecompiledHeaders/Reuse/PrecompiledHeader.cpp"));
+    TEST_ASSERT(FileIO::FileCopy("Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/Reuse/PrecompiledHeader.h", "../tmp/Test/PrecompiledHeaders/Reuse/PrecompiledHeader.h"));
+
+    AStackString<> target("PCHTest-Reuse");
+
+    TEST_ASSERT(fBuild.Build(target));
+
+    CheckStatsNode(1, 1, Node::OBJECT_NODE);
+    CheckStatsNode(1, 1, Node::OBJECT_LIST_NODE);
 }
 
 // TestPCH_NoRebuild

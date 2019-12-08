@@ -114,12 +114,28 @@ ObjectListNode::ObjectListNode()
     }
 
     // .PCHInputFile
-    const bool usingPCH = ( m_PCHInputFile.IsEmpty() == false );
+    const bool usingPCH = ( m_PCHOutputFile.IsEmpty() == false );
     Node * precompiledHeader = nullptr;
     if ( usingPCH )
     {
-        // .PCHOutput and .PCHOptions are required is .PCHInputFile is set
-        if ( m_PCHOutputFile.IsEmpty() || m_PCHOptions.IsEmpty() )
+        precompiledHeader = nodeGraph.FindNode(m_PCHOutputFile);
+
+        if ( precompiledHeader != nullptr )
+        {
+            // When reusing PCH objects .PCHInputFile must be empty and .PHCOptions will be ignored
+            if ( !m_PCHInputFile.IsEmpty() )
+            {
+                Error::Error_1301_AlreadyDefinedPCH(iter, function, m_PCHOutputFile.Get());
+                return false;
+            }
+
+            ObjectNode* node = precompiledHeader->CastTo<ObjectNode>();
+            m_PCHOptions = node->m_CompilerOptions;
+            m_PCHInputFile = node->m_CompilerInputFile;
+        }
+
+        // .PCHInputFile and .PCHOptions are required when creating a new PCH node
+        if ( m_PCHInputFile.IsEmpty() || m_PCHOptions.IsEmpty() )
         {
             Error::Error_1300_MissingPCHArgs( iter, function );
             return false;
@@ -136,15 +152,11 @@ ObjectListNode::ObjectListNode()
             }
         }
 
-        // .PCHOutputFile
-        if ( nodeGraph.FindNode( m_PCHOutputFile ) )
+        if ( precompiledHeader == nullptr )
         {
-            // TODO:C - Allow existing definition if settings are identical for better multi-ObjectList use of PCH
-            Error::Error_1301_AlreadyDefinedPCH( iter, function, m_PCHOutputFile.Get() );
-            return false;
+            precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
         }
 
-        precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
         if ( precompiledHeader == nullptr )
         {
             return false; // CreateObjectNode will have emitted an error
