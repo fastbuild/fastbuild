@@ -1241,12 +1241,18 @@ bool ObjectNode::RetrieveFromCache( Job * job )
             Compressor c;
             if ( c.IsValidData( cacheData, cacheDataSize ) == false )
             {
-                FLOG_WARN( "Cache returned invalid data (header) for '%s'", m_Name.Get() );
+                FLOG_WARN( "Cache returned invalid data (header)\n"
+                           " - File: '%s'\n"
+                           " - Key : %s\n",
+                           m_Name.Get(), cacheFileName.Get() );
                 return false;
             }
             if ( c.Decompress( cacheData ) == false )
             {
-                FLOG_WARN( "Cache returned invalid data (payload) for '%s'", m_Name.Get() );
+                FLOG_WARN( "Cache returned invalid data (payload)\n"
+                           " - File: '%s'\n"
+                           " - Key : %s\n",
+                           m_Name.Get(), cacheFileName.Get() );
                 return false;
             }
             const void * data = c.GetResult();
