@@ -5,9 +5,11 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
+#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
+#include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
@@ -102,6 +104,31 @@ void FBuildTest::LoadFileContentsAsString( const char* fileName, AString& outStr
     const uint32_t fileSize = (uint32_t)f.GetFileSize();
     outString.SetLength( fileSize );
     TEST_ASSERT( f.ReadBuffer( outString.Get(), fileSize ) );
+}
+
+// Parse
+//------------------------------------------------------------------------------
+void FBuildTest::Parse( const char * fileName, bool expectFailure ) const
+{
+    FileStream f;
+    TEST_ASSERT( f.Open( fileName, FileStream::READ_ONLY ) );
+    uint32_t fileSize = (uint32_t)f.GetFileSize();
+    AutoPtr< char > mem( (char *)ALLOC( fileSize + 1 ) );
+    mem.Get()[ fileSize ] = '\000'; // parser requires sentinel
+    TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
+
+    FBuild fBuild;
+    NodeGraph ng;
+    BFFParser p( ng );
+    bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
+    if ( expectFailure )
+    {
+        TEST_ASSERT( parseResult == false ); // Make sure it failed as expected
+    }
+    else
+    {
+        TEST_ASSERT( parseResult == true );
+    }
 }
 
 // CheckStatsNode

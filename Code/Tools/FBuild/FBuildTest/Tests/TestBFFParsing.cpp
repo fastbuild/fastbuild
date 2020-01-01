@@ -45,6 +45,11 @@ private:
     void IfExistsDirective() const;
     void ElseDirective() const;
     void ElseDirective_Bad() const;
+    void ElseDirective_Bad2() const;
+    void ElseDirective_Bad3() const;
+    void ElseDirective_Bad4() const;
+    void ElseDirective_Bad5() const;
+    void ElseDirective_Bad6() const;
     void InvalidDirective() const;
     void DefineUndefineDirectives() const;
     void BadDefineDirective() const;
@@ -62,8 +67,6 @@ private:
     void CyclicDependency() const;
     void SelfAssignment() const;
     void SelfAssignment2() const;
-
-    void Parse( const char * fileName, bool expectFailure = false ) const;
 };
 
 // Register Tests
@@ -94,6 +97,11 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( IfExistsDirective )
     REGISTER_TEST( ElseDirective )
     REGISTER_TEST( ElseDirective_Bad )
+    REGISTER_TEST( ElseDirective_Bad2 )
+    REGISTER_TEST( ElseDirective_Bad3 )
+    REGISTER_TEST( ElseDirective_Bad4 )
+    REGISTER_TEST( ElseDirective_Bad5 )
+    REGISTER_TEST( ElseDirective_Bad6 )
     REGISTER_TEST( InvalidDirective )
     REGISTER_TEST( DefineUndefineDirectives )
     REGISTER_TEST( BadDefineDirective )
@@ -154,6 +162,7 @@ void TestBFFParsing::Strings() const
 void TestBFFParsing::String_Unterminated() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/string_unterminated.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1002" ) );
 }
 
 // String_Unterminated2
@@ -161,6 +170,7 @@ void TestBFFParsing::String_Unterminated() const
 void TestBFFParsing::String_Unterminated2() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/string_unterminated2.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1002" ) );
 }
 
 // Arrays
@@ -175,6 +185,7 @@ void TestBFFParsing::Arrays() const
 void TestBFFParsing::Array_Unterminated() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/array_unterminated.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1002" ) );
 }
 
 // Array_TypeMismatch
@@ -263,6 +274,7 @@ void TestBFFParsing::Struct_ConcatenationOrder() const
 void TestBFFParsing::Struct_Unterminated() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/struct_unterminated.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1002" ) );
 }
 
 // Struct_MemberShadowsSelf
@@ -270,31 +282,6 @@ void TestBFFParsing::Struct_Unterminated() const
 void TestBFFParsing::Struct_MemberShadowsSelf() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/struct_membershadowsself.bff" );
-}
-
-// Parse
-//------------------------------------------------------------------------------
-void TestBFFParsing::Parse( const char * fileName, bool expectFailure ) const
-{
-    FileStream f;
-    TEST_ASSERT( f.Open( fileName, FileStream::READ_ONLY ) );
-    uint32_t fileSize = (uint32_t)f.GetFileSize();
-    AutoPtr< char > mem( (char *)ALLOC( fileSize + 1 ) );
-    mem.Get()[ fileSize ] = '\000'; // parser requires sentinel
-    TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
-
-    FBuild fBuild;
-    NodeGraph ng;
-    BFFParser p( ng );
-    bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
-    if ( expectFailure )
-    {
-        TEST_ASSERT( parseResult == false ); // Make sure it failed as expected
-    }
-    else
-    {
-        TEST_ASSERT( parseResult == true );
-    }
 }
 
 // IncludeScope
@@ -332,11 +319,47 @@ void TestBFFParsing::ElseDirective() const
 void TestBFFParsing::ElseDirective_Bad() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
+}
+
+// ElseDirective_Bad2
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad2() const
+{
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad2.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
+}
+
+// ElseDirective_Bad3
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad3() const
+{
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad3.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
+}
+
+// ElseDirective_Bad4
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad4() const
+{
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad4.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
+}
+
+// ElseDirective_Bad5
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad5() const
+{
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad5.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
+}
+
+// ElseDirective_Bad6
+//------------------------------------------------------------------------------
+void TestBFFParsing::ElseDirective_Bad6() const
+{
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/else_directive_bad6.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1041" ) );
 }
 
 // InvalidDirective
@@ -344,6 +367,7 @@ void TestBFFParsing::ElseDirective_Bad() const
 void TestBFFParsing::InvalidDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/invalid_directive.bff", true ); // Expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1030" ) );
 }
 
 // DefineUndefineDirectives
@@ -358,6 +382,7 @@ void TestBFFParsing::DefineUndefineDirectives() const
 void TestBFFParsing::BadDefineDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/bad_define.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1038" ) );
 }
 
 // BadUndefDirective
@@ -365,6 +390,7 @@ void TestBFFParsing::BadDefineDirective() const
 void TestBFFParsing::BadUndefDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/bad_undef.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1039" ) );
 }
 
 // BadUndefBuiltInDirective
@@ -372,6 +398,7 @@ void TestBFFParsing::BadUndefDirective() const
 void TestBFFParsing::BadUndefBuiltInDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/bad_undef_builtin.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1040" ) );
 }
 
 // ParentScope
@@ -401,6 +428,7 @@ void TestBFFParsing::ParentScopeBug2() const
 void TestBFFParsing::ParentScopeUnknown() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/parent_scope_unknown.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1009" ) );
 }
 
 // FrozenVariable
@@ -408,6 +436,7 @@ void TestBFFParsing::ParentScopeUnknown() const
 void TestBFFParsing::FrozenVariable() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/frozen_foreach.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1060" ) );
 }
 
 // FrozenVariable_Nested
@@ -415,6 +444,7 @@ void TestBFFParsing::FrozenVariable() const
 void TestBFFParsing::FrozenVariable_Nested() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/frozen_foreach_nested.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1060" ) );
 }
 
 // DynamicVarNameConstruction
