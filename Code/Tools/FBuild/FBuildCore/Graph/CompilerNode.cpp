@@ -131,6 +131,9 @@ CompilerNode::CompilerNode()
         return false;
     }
 
+    // get the tags from the strings
+    m_RequiredWorkerTags.ParseAndAddTags( m_RequiredWorkerTagStrings );
+
     m_Manifest.Initialize( m_ExecutableRootPath, m_StaticDependencies );
 
     return true;
@@ -333,10 +336,6 @@ CompilerNode::~CompilerNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * /*job*/ )
 {
-    // get the tags from the strings
-    Tags requiredWorkerTags;
-    requiredWorkerTags.ParseAndAddTags( m_RequiredWorkerTagStrings );
-
     if ( !m_Manifest.DoBuild( m_StaticDependencies ) )
     {
         return Node::NODE_RESULT_FAILED; // Generate will have emitted error
@@ -351,18 +350,6 @@ CompilerNode::~CompilerNode()
 const char * CompilerNode::GetEnvironmentString() const
 {
     return Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
-}
-
-// GetRequiredWorkerTags
-//------------------------------------------------------------------------------
-const Tags & CompilerNode::GetRequiredWorkerTags() const
-{
-    if ( m_RequiredWorkerTags.IsEmpty() )
-    {
-        // get the tags from the strings
-        m_RequiredWorkerTags.ParseAndAddTags( m_RequiredWorkerTagStrings );
-    }
-    return m_RequiredWorkerTags;
 }
 
 // Migrate
