@@ -729,7 +729,7 @@ void Error::FormatError( const BFFToken * iter,
 
     // find the line end
     const char * lineEnd = lineStart;
-    while ( ( *lineEnd != '\r' ) && ( *lineEnd != '\n' ) && ( lineEnd !=  0 ) )
+    while ( ( *lineEnd != '\r' ) && ( *lineEnd != '\n' ) && ( *lineEnd !=  0 ) )
     {
         lineEnd++;
     }
