@@ -5,7 +5,6 @@
 //------------------------------------------------------------------------------
 #include "NodeGraph.h"
 
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionSettings.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
@@ -1836,7 +1835,8 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
                 MigrateProperties( (const void *)oldDepNode, (void *)newDepNode, newDepNode->GetReflectionInfoV() );
 
                 // Initialize the new node
-                VERIFY( newDepNode->Initialize( *this, BFFIterator(), nullptr ) );
+                const BFFToken * token = nullptr;
+                VERIFY( newDepNode->Initialize( *this, token, nullptr ) );
 
                 // Continue recursing
                 MigrateNode( oldNodeGraph, *newDepNode, oldDepNode );

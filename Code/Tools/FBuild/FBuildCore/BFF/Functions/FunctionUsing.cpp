@@ -5,7 +5,6 @@
 //------------------------------------------------------------------------------
 #include "FunctionUsing.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"

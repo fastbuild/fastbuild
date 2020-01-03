@@ -50,7 +50,7 @@ public:
                                      const BFFVariable * lhs,
                                      const BFFVariable * rhs,
                                      BFFStackFrame * frame,
-                                     const BFFIterator & operatorIter );
+                                     const BFFToken * operatorIter );
 
     // get a variable (caller passes complete name indicating type (user vs system))
     static const BFFVariable * GetVar( const char * name, BFFStackFrame * frame = nullptr );

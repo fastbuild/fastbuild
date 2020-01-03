@@ -1061,7 +1061,7 @@ void Node::ReplaceDummyName( const AString & newName )
 
 // InitializePreBuildDependencies
 //------------------------------------------------------------------------------
-bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const Array< AString > & preBuildDependencyNames )
+bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const Array< AString > & preBuildDependencyNames )
 {
     if ( preBuildDependencyNames.IsEmpty() )
     {

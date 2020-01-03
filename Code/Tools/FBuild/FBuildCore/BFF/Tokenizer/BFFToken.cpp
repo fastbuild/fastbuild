@@ -52,4 +52,31 @@ BFFToken::BFFToken( const BFFFile & file, const char * sourcePos, BFFTokenType t
 {
 }
 
+// GetPosInfo
+//------------------------------------------------------------------------------
+void BFFToken::GetPosInfo( uint32_t & outLine,
+                           uint32_t & outColumn,
+                           const char * & outLineStart ) const
+{
+    ASSERT( m_SourcePos >= m_BFFFile.GetSourceFileContents().Get() );
+    ASSERT( m_SourcePos <= m_BFFFile.GetSourceFileContents().GetEnd() ); // <= to allow pointing to EOF
+
+    // count the number of lines from the start of the file to
+    // the current iterator position
+    const char * p = m_BFFFile.GetSourceFileContents().Get();
+    outLineStart = p;
+    outLine = 1;
+    while ( p < m_SourcePos ) // loop to current iterator pos
+    {
+        bool atLineEnd = ( *p == '\n' );
+        p++;
+        if ( atLineEnd )
+        {
+            outLineStart = p;
+            outLine++;
+        }
+    }
+    outColumn = (uint32_t)( ( p - outLineStart ) + 1 );
+}
+
 //------------------------------------------------------------------------------

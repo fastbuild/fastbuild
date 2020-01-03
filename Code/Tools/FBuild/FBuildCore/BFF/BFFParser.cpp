@@ -4,7 +4,6 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "BFFParser.h"
-#include "BFFIterator.h"
 #include "BFFKeywords.h"
 #include "BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFFile.h"

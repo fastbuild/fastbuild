@@ -15,7 +15,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // XCodeProjectConfig
@@ -30,7 +29,7 @@ public:
 
     static bool ResolveTargets( NodeGraph & nodeGraph,
                                 Array< XCodeProjectConfig > & configs,
-                                const BFFIterator * iter = nullptr,
+                                const BFFToken * iter = nullptr,
                                 const Function * function = nullptr );
 };
 
@@ -41,7 +40,7 @@ class XCodeProjectNode : public FileNode
     REFLECT_NODE_DECLARE( XCodeProjectNode )
 public:
     explicit XCodeProjectNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~XCodeProjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::XCODEPROJECT_NODE; }

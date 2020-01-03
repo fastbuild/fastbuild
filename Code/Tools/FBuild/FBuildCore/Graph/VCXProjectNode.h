@@ -75,7 +75,7 @@ public:
 
     static bool ResolveTargets( NodeGraph & nodeGraph,
                                 Array< VSProjectConfig > & configs,
-                                const BFFIterator * iter = nullptr,
+                                const BFFToken * iter = nullptr,
                                 const Function * function = nullptr );
 };
 
@@ -106,7 +106,7 @@ class VCXProjectNode : public FileNode
     REFLECT_NODE_DECLARE( VCXProjectNode )
 public:
     VCXProjectNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~VCXProjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::VCXPROJECT_NODE; }

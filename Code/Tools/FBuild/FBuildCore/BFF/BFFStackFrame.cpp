@@ -209,7 +209,7 @@ BFFVariable * BFFStackFrame::ConcatVars( const AString & name,
                                          const BFFVariable * lhs,
                                          const BFFVariable * rhs,
                                          BFFStackFrame * frame,
-                                         const BFFIterator & operatorIter )
+                                         const BFFToken * operatorIter )
 {
     frame = frame ? frame : s_StackHead;
 

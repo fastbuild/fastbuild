@@ -6,7 +6,6 @@
 #include "BFFTokenizer.h"
 
 // FBuildCore
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
@@ -877,7 +876,6 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * &
     m_Depth++;
     if ( m_Depth >= 128 )
     {
-        BFFIterator error;
         Error::Error_1035_ExcessiveDepthComplexity( &args[ 0 ] );
         return false;
     }

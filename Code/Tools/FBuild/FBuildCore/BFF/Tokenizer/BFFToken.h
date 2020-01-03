@@ -71,6 +71,8 @@ public:
     const AString & GetSourceFileContents() const   { return m_BFFFile.GetSourceFileContents(); }
     const char *    GetSourcePos() const            { return m_SourcePos; }
 
+    void GetPosInfo( uint32_t & outLine, uint32_t & outColumn, const char * & outLineStart ) const;
+
 private:
     BFFTokenType    m_Type;
     bool            m_Boolean   = false;

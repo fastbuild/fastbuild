@@ -13,7 +13,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
-class BFFIterator;
 class ConstMemoryStream;
 class Function;
 class NodeGraph;
@@ -27,7 +26,7 @@ class ObjectNode : public FileNode
     REFLECT_NODE_DECLARE( ObjectNode )
 public:
     ObjectNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     // simplified remote constructor
     explicit ObjectNode( const AString & objectName,
                          NodeProxy * srcFile,

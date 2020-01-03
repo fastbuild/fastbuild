@@ -106,7 +106,7 @@ REFLECT_END( VCXProjectNode )
 //------------------------------------------------------------------------------
 /*static*/ bool VSProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
                                                  Array< VSProjectConfig > & configs,
-                                                 const BFFIterator * iter,
+                                                 const BFFToken * iter,
                                                  const Function * function )
 {
     // Must provide iter and function, or neither
@@ -129,7 +129,7 @@ REFLECT_END( VCXProjectNode )
         {
             if ( iter && function )
             {
-                Error::Error_1104_TargetNotDefined( *iter, function, ".Target", config.m_Target );
+                Error::Error_1104_TargetNotDefined( iter, function, ".Target", config.m_Target );
                 return false;
             }
             ASSERT( false ); // Should not be possible to fail when restoring from serialized DB
@@ -164,7 +164,7 @@ VCXProjectNode::VCXProjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool VCXProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool VCXProjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
@@ -211,7 +211,7 @@ VCXProjectNode::VCXProjectNode()
     }
 
     // Resolve Target names to Node pointers for later use
-    if ( VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
+    if ( VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, iter, function ) == false )
     {
         return false; // Initialize will have emitted an error
     }

@@ -5,7 +5,6 @@
 //------------------------------------------------------------------------------
 #include "ObjectListNode.h"
 
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -82,7 +81,7 @@ ObjectListNode::ObjectListNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -647,8 +646,8 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
             preprocessorFlags = ObjectNode::DetermineFlags( GetPreprocessor(), m_PreprocessorOptions, false, usingPCH );
         }
 
-        BFFIterator dummyIter;
-        ObjectNode * objectNode = CreateObjectNode( nodeGraph, dummyIter, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
+        BFFToken * token = nullptr;
+        ObjectNode * objectNode = CreateObjectNode( nodeGraph, token, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
         if ( !objectNode )
         {
             FLOG_ERROR( "Failed to create node '%s'!", objFile.Get() );
@@ -683,7 +682,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
 // CreateObjectNode
 //------------------------------------------------------------------------------
 ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
-                                               const BFFIterator & iter,
+                                               const BFFToken * iter,
                                                const Function * function,
                                                const uint32_t flags,
                                                const uint32_t preprocessorFlags,
