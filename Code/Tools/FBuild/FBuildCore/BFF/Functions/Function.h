@@ -11,6 +11,9 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class BFFIterator;
+class BFFParser;
+class BFFToken;
+class BFFTokenRange;
 class BFFVariable;
 class Dependencies;
 class DirectoryListNode;
@@ -52,11 +55,10 @@ public:
 
     // most functions don't need to override this
     virtual bool ParseFunction( NodeGraph & nodeGraph,
-                                const BFFIterator & functionNameStart,
-                                const BFFIterator * functionBodyStartToken,
-                                const BFFIterator * functionBodyStopToken,
-                                const BFFIterator * functionHeaderStartToken,
-                                const BFFIterator * functionHeaderStopToken ) const;
+                                BFFParser & parser,
+                                const BFFToken * functionNameStart,
+                                const BFFTokenRange & headerRange,
+                                const BFFTokenRange & bodyRange ) const;
 
     // most functions will override this to commit the effects of the function
     virtual bool Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const;

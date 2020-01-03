@@ -33,6 +33,7 @@ private:
     void UnnamedScope() const;
     void UnnamedScope_Unterminated() const;
     void IncludeDirective() const;
+    void Include_ExcessiveDepth() const;
     void OnceDirective() const;
     void Structs() const;
     void Struct_Concatenation() const;
@@ -85,6 +86,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( UnnamedScope )
     REGISTER_TEST( UnnamedScope_Unterminated )
     REGISTER_TEST( IncludeDirective )
+    REGISTER_TEST( Include_ExcessiveDepth )
     REGISTER_TEST( OnceDirective )
     REGISTER_TEST( Structs )
     REGISTER_TEST( Struct_Concatenation )
@@ -129,7 +131,7 @@ void TestBFFParsing::Empty() const
     char buffer[ 1 ] = { '\000' }; // post data sentinel
     NodeGraph ng;
     BFFParser p( ng );
-    TEST_ASSERT( p.Parse( buffer, 0, "empty.bff", 0, 0 ) );
+    TEST_ASSERT( p.ParseFromString( "empty.bff", buffer ) );
 }
 
 // AlmostEmpty
@@ -140,7 +142,7 @@ void TestBFFParsing::AlmostEmpty() const
     const char * buffer = "\r\n\000"; // empty line + post data sentinel
     NodeGraph ng;
     BFFParser p( ng );
-    TEST_ASSERT( p.Parse( buffer, 2, "empty.bff", 0, 0 ) );
+    TEST_ASSERT( p.ParseFromString( "empty.bff", buffer ) );
 }
 
 // Comments
@@ -215,8 +217,7 @@ void TestBFFParsing::UnnamedScope() const
 void TestBFFParsing::UnnamedScope_Unterminated() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/unnamedscope_unterminated.bff", true ); // expect failure
-    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1025 - Missing scope close token '}'." ) );
-
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1002 - Matching closing token } not found" ) );
 }
 
 // IncludeDirective
@@ -224,6 +225,14 @@ void TestBFFParsing::UnnamedScope_Unterminated() const
 void TestBFFParsing::IncludeDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/includes.bff" );
+}
+
+// Include_ExcessiveDepth
+//------------------------------------------------------------------------------
+void TestBFFParsing::Include_ExcessiveDepth() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/include_excessivedepth.bff", true ); // expect failure
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1035 - Excessive depth complexity" ) );
 }
 
 // OnceDirective

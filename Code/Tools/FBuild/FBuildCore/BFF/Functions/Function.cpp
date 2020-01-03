@@ -31,6 +31,7 @@
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
@@ -165,64 +166,49 @@ Function::~Function() = default;
 // ParseFunction
 //------------------------------------------------------------------------------
 /*virtual*/ bool Function::ParseFunction( NodeGraph & nodeGraph,
-                                          const BFFIterator & functionNameStart,
-                                          const BFFIterator * functionBodyStartToken,
-                                          const BFFIterator * functionBodyStopToken,
-                                          const BFFIterator * functionHeaderStartToken,
-                                          const BFFIterator * functionHeaderStopToken ) const
+                                          BFFParser & parser,
+                                          const BFFToken * functionNameStart,
+                                          const BFFTokenRange & headerRange,
+                                          const BFFTokenRange & bodyRange ) const
 {
     m_AliasForFunction.Clear();
-    if ( AcceptsHeader() &&
-         functionHeaderStartToken && functionHeaderStopToken )
+    if ( AcceptsHeader() && ( headerRange.IsEmpty()== false ) )
     {
-        ASSERT( *functionHeaderStartToken < *functionHeaderStopToken );
-
-        // find opening quote
-        BFFIterator start( *functionHeaderStartToken );
-        ASSERT( *start == BFFParser::BFF_FUNCTION_ARGS_OPEN );
-        start++;
-        start.SkipWhiteSpace();
-        BFFIterator stop( start );
-        if ( start.IsAtString() )
+        // Check for exactly one string
+        const BFFToken * headerArgsIter = headerRange.GetCurrent();
+        if ( headerArgsIter->IsString() )
         {
-            stop.SkipString();
-            ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
-            if ( start.GetDistTo( stop ) <= 1 )
+            // Ensure string is not empty
+            if ( headerArgsIter->GetValueString().IsEmpty() )
             {
-                Error::Error_1003_EmptyStringNotAllowedInHeader( start, this );
+                Error::Error_1003_EmptyStringNotAllowedInHeader( headerArgsIter, this );
                 return false;
             }
 
-            // store alias name for use in Commit
-            start++; // skip past opening quote
-            if ( BFFParser::PerformVariableSubstitutions( start, stop, m_AliasForFunction ) == false )
+            // Store alias name for use in Commit
+            if ( BFFParser::PerformVariableSubstitutions( headerArgsIter, m_AliasForFunction ) == false )
             {
                 return false; // substitution will have emitted an error
             }
-
-            stop++; // skip closing quote for the next check
         }
         else if ( NeedsHeader() )
         {
-            Error::Error_1001_MissingStringStartToken( start, this );
+            Error::Error_1001_MissingStringStartToken( headerArgsIter, this );
             return false;
         }
+        ++headerArgsIter;
 
         // make sure there are no extraneous tokens
-        stop.SkipWhiteSpaceAndComments();
-        if ( *stop != BFFParser::BFF_FUNCTION_ARGS_CLOSE )
+        if ( headerArgsIter != headerRange.GetEnd() )
         {
-            Error::Error_1002_MatchingClosingTokenNotFound( stop, this, BFFParser::BFF_FUNCTION_ARGS_CLOSE );
+            Error::Error_1002_MatchingClosingTokenNotFound( headerArgsIter, this, BFFParser::BFF_FUNCTION_ARGS_CLOSE );
             return false;
         }
     }
 
     // parse the function body
-    BFFParser subParser( nodeGraph );
-    BFFIterator subIter( *functionBodyStartToken );
-    subIter++; // skip past opening body token
-    subIter.SetMax( functionBodyStopToken->GetCurrent() ); // cap parsing to body end
-    if ( subParser.Parse( subIter ) == false )
+    BFFTokenRange range( bodyRange );
+    if ( parser.Parse( range ) == false )
     {
         return false;
     }

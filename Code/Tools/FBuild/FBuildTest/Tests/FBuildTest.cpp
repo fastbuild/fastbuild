@@ -110,17 +110,10 @@ void FBuildTest::LoadFileContentsAsString( const char* fileName, AString& outStr
 //------------------------------------------------------------------------------
 void FBuildTest::Parse( const char * fileName, bool expectFailure ) const
 {
-    FileStream f;
-    TEST_ASSERT( f.Open( fileName, FileStream::READ_ONLY ) );
-    uint32_t fileSize = (uint32_t)f.GetFileSize();
-    AutoPtr< char > mem( (char *)ALLOC( fileSize + 1 ) );
-    mem.Get()[ fileSize ] = '\000'; // parser requires sentinel
-    TEST_ASSERT( f.Read( mem.Get(), fileSize ) == fileSize );
-
     FBuild fBuild;
     NodeGraph ng;
     BFFParser p( ng );
-    bool parseResult = p.Parse( mem.Get(), fileSize, fileName, 0, 0 );
+    bool parseResult = p.ParseFromFile( fileName );
     if ( expectFailure )
     {
         TEST_ASSERT( parseResult == false ); // Make sure it failed as expected

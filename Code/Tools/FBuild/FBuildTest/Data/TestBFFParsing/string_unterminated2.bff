@@ -1,5 +1,6 @@
 // Un unterminated string could cause a } to be incorrectly handled, causing an infinite loop
 
-{#ifB'
+{
+#if B'
 #endif
 .a={'}

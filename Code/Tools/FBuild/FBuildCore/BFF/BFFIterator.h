@@ -4,6 +4,8 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFToken.h"
+
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
 #include "Core/Strings/AString.h"
@@ -35,6 +37,18 @@ public:
             , m_MaxPos( pos + dataSize )
             , m_FileName( fileName )
             , m_FileTimeStamp( fileTimeStamp ) {}
+
+    // TODO:B Remove this temporary shim
+    inline BFFIterator( const BFFToken * token )
+            : m_Pos( token->GetSourcePos() )
+            , m_MinPos( token->GetSourceFileContents().Get() )
+            , m_MaxPos( token->GetSourceFileContents().GetEnd() )
+            , m_FileName( token->GetSourceFileName().Get() )
+            , m_FileTimeStamp( 0 )
+    {
+        ASSERT( m_Pos >= m_MinPos );
+        ASSERT( m_Pos <= m_MaxPos );
+    }
     inline ~BFFIterator() = default;
 
     void operator = ( const BFFIterator & iter );
