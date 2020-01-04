@@ -128,7 +128,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         }
 
         // New scope
-        if ( token->IsCurlyBracket() && ( token->GetValueString() == "{" ) )
+        if ( token->IsOpeningCurlyBracket() )
         {
             // start an unnamed scope
             if ( ParseUnnamedScope( iter ) == false )
@@ -303,7 +303,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
         iter++; // Consume the rhs
         return StoreVariableString( varName, rhsToken, opToken, frame );
     }
-    else if ( rhsToken->IsCurlyBracket() ) // Open Scope
+    else if ( rhsToken->IsOpeningCurlyBracket() ) // Open Scope
     {
         const BFFToken * openBraceToken = iter.GetCurrent();
         BFFTokenRange bracedRange;
@@ -314,7 +314,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
         }
         return StoreVariableArray( varName, bracedRange, opToken, frame );
     }
-    else if ( rhsToken->IsSquareBracket() ) // Open Struct
+    else if ( rhsToken->IsOpeningSquareBracket() ) // Open Struct
     {
         const BFFToken * openBraceToken = iter.GetCurrent();
         BFFTokenRange bracedRange;
@@ -426,7 +426,7 @@ bool BFFParser::ParseFunction( BFFTokenRange & iter )
 
     // Is there a header?
     BFFTokenRange headerRange;
-    if ( iter->IsRoundBracket() && ( iter->GetValueString() == "(" ) )
+    if ( iter->IsOpeningRoundBracket() )
     {
         // Check if this function can have a header
         if ( func->AcceptsHeader() == false )
@@ -455,7 +455,7 @@ bool BFFParser::ParseFunction( BFFTokenRange & iter )
     if ( func->NeedsBody() )
     {
         // Check for body start
-        if ( ( iter->IsCurlyBracket() == false ) || ( iter->GetValueString() != "{" ) )
+        if ( iter->IsOpeningCurlyBracket() == false )
         {
             Error::Error_1024_FunctionRequiresABody( iter.GetCurrent(), func );
             return false;
@@ -485,7 +485,7 @@ bool BFFParser::ParseUnnamedScope( BFFTokenRange & iter )
 
     // Find limits of args inside brackets
     const BFFToken * openToken = iter.GetCurrent();
-    ASSERT( openToken->IsCurlyBracket() );
+    ASSERT( openToken->IsOpeningCurlyBracket() );
     BFFTokenRange range;
     if ( FindBracedRange( iter, range ) == false )
     {
@@ -525,29 +525,28 @@ bool BFFParser::FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBraced
 //------------------------------------------------------------------------------
 bool BFFParser::FindBracedRangeRecurse( BFFTokenRange & iter ) const
 {
-    // Determine the matching close character
+    // Determine the matching close token
     const BFFToken * openToken = iter.GetCurrent();
-    char closeTokenChar;
+    BFFTokenType closeTokenType;
     switch( openToken->GetType() )
     {
-        case BFFTokenType::CurlyBracket:    closeTokenChar = '}'; break;
-        case BFFTokenType::RoundBracket:    closeTokenChar = ')'; break;
-        case BFFTokenType::SquareBracket:   closeTokenChar = ']'; break;
+        case BFFTokenType::OpeningCurlyBracket:    closeTokenType = BFFTokenType::ClosingCurlyBracket; break;
+        case BFFTokenType::OpeningRoundBracket:    closeTokenType = BFFTokenType::ClosingRoundBracket; break;
+        case BFFTokenType::OpeningSquareBracket:   closeTokenType = BFFTokenType::ClosingSquareBracket; break;
         default: ASSERT(false); return false;
     }
     iter++;
 
     while ( iter.IsAtEnd() == false )
     {
-        // found bracket?
+        // Found the close bracket?
+        if ( iter.GetCurrent()->GetType() == closeTokenType )
+        {
+            return true;
+        }
+
         if ( iter.GetCurrent()->GetType() == openToken->GetType() )
         {
-            // Is it a close bracket?
-            if ( iter.GetCurrent()->GetValueString()[ 0 ] == closeTokenChar )
-            {
-                return true;
-            }
-
             // Recurse into nested open bracket
             if ( FindBracedRangeRecurse( iter ) == false )
             {

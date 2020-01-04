@@ -291,25 +291,46 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         }
 
         // Round Brackets?
-        if ( ( c == '(' ) || ( c == ')' ) )
+        if ( c == '(' )
         {
-            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::RoundBracket, pos, pos + 1 ) );
+            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::OpeningRoundBracket, pos, pos + 1 ) );
+            pos++;
+            continue;
+        }
+
+        if ( c == ')' )
+        {
+            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::ClosingRoundBracket, pos, pos + 1 ) );
             pos++;
             continue;
         }
 
         // Curly Brackets?
-        if ( ( c == '{' ) || ( c == '}' ) )
+        if ( c == '{' )
         {
-            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::CurlyBracket, pos, pos + 1 ) );
+            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::OpeningCurlyBracket, pos, pos + 1 ) );
+            pos++;
+            continue;
+        }
+
+        if ( c == '}' )
+        {
+            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::ClosingCurlyBracket, pos, pos + 1 ) );
             pos++;
             continue;
         }
 
         // Square Brackets?
-        if ( ( c == '[' ) || ( c == ']' ) )
+        if ( c == '[' )
         {
-            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::SquareBracket, pos, pos + 1 ) );
+            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::OpeningSquareBracket, pos, pos + 1 ) );
+            pos++;
+            continue;
+        }
+
+        if ( c == ']' )
+        {
+            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::ClosingSquareBracket, pos, pos + 1 ) );
             pos++;
             continue;
         }
@@ -678,7 +699,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
 bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outResult )
 {
     // Expect open bracket
-    if ( ( iter->IsRoundBracket() == false ) || ( iter->GetValueString() != "(" ) )
+    if ( iter->IsOpeningRoundBracket() == false )
     {
         Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter.GetCurrent(), AStackString<>( "exists" ), '(' );
         return false;
@@ -695,8 +716,8 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
     const AString & varName = iter->GetValueString();
     iter++; // consume string value
 
-    // Expect open bracket
-    if ( ( iter->IsRoundBracket() == false ) || ( iter->GetValueString() != ")" ) )
+    // Expect close bracket
+    if ( iter->IsClosingRoundBracket() == false )
     {
         Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter.GetCurrent(), AStackString<>( "exists" ), ')' );
         return false;

@@ -18,19 +18,22 @@ class BFFFile;
 //------------------------------------------------------------------------------
 enum class BFFTokenType : uint8_t
 {
-    Invalid,        // Input that can't be reconciled
-    Identifier,     // Unspecified identifier
-    Function,       // ForEach, Compiler etc
-    Variable,       // .Var or ^Var
-    Keyword,        // in etc
-    Number,         // 12, 56, -102 etc
-    Operator,       // = += > ! == etc
-    RoundBracket,   // ( or )
-    CurlyBracket,   // { or }
-    SquareBracket,  // [ or ]
-    String,         // "Hello"
-    Boolean,        // true or false
-    Comma,          // Comma
+    Invalid,               // Input that can't be reconciled
+    Identifier,            // Unspecified identifier
+    Function,              // ForEach, Compiler etc
+    Variable,              // .Var or ^Var
+    Keyword,               // in etc
+    Number,                // 12, 56, -102 etc
+    Operator,              // = += > ! == etc
+    OpeningRoundBracket,   // (
+    ClosingRoundBracket,   // )
+    OpeningCurlyBracket,   // {
+    ClosingCurlyBracket,   // }
+    OpeningSquareBracket,  // [
+    ClosingSquareBracket,  // ]
+    String,                // "Hello"
+    Boolean,               // true or false
+    Comma,                 // Comma
 };
 
 // BFFToken
@@ -53,9 +56,12 @@ public:
     bool IsOperator() const                         { return ( m_Type == BFFTokenType::Operator ); }
     bool IsOperator( const char * op ) const        { return ( m_Type == BFFTokenType::Operator ) && ( m_String == op ); }
     bool IsOperator( const char op ) const          { return ( m_Type == BFFTokenType::Operator ) && ( m_String[ 0 ] == op ); }
-    bool IsRoundBracket() const                     { return ( m_Type == BFFTokenType::RoundBracket ); }
-    bool IsCurlyBracket() const                     { return ( m_Type == BFFTokenType::CurlyBracket ); }
-    bool IsSquareBracket() const                    { return ( m_Type == BFFTokenType::SquareBracket ); }
+    bool IsOpeningRoundBracket() const              { return ( m_Type == BFFTokenType::OpeningRoundBracket ); }
+    bool IsClosingRoundBracket() const              { return ( m_Type == BFFTokenType::ClosingRoundBracket ); }
+    bool IsOpeningCurlyBracket() const              { return ( m_Type == BFFTokenType::OpeningCurlyBracket ); }
+    bool IsClosingCurlyBracket() const              { return ( m_Type == BFFTokenType::ClosingCurlyBracket ); }
+    bool IsOpeningSquareBracket() const             { return ( m_Type == BFFTokenType::OpeningSquareBracket ); }
+    bool IsClosingSquareBracket() const             { return ( m_Type == BFFTokenType::ClosingSquareBracket ); }
     bool IsString() const                           { return ( m_Type == BFFTokenType::String ); }
     bool IsBooelan() const                          { return ( m_Type == BFFTokenType::Boolean ); }
     bool IsVariable() const                         { return ( m_Type == BFFTokenType::Variable ); }
