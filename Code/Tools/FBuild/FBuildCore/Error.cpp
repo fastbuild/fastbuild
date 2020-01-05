@@ -384,6 +384,13 @@
     FormatError( iter, 1043u, nullptr, "Cyclic dependency detected for node '%s'.", nodeName.Get() );
 }
 
+// Error_1044_OperatorExpected
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1044_OperatorExpected( const BFFToken * iter )
+{
+    FormatError( iter, 1044u, nullptr, "Operator expected." );
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFToken * iter,
@@ -678,7 +685,7 @@
     }
     else
     {
-        outBuffer.Format( "%02x", c );
+        outBuffer.Format( "0x%02x", c );
     }
 }
 

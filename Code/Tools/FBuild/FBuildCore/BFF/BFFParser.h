@@ -17,6 +17,7 @@
 //------------------------------------------------------------------------------
 class BFFTokenRange;
 class FileStream;
+class Function;
 class NodeGraph;
 
 // BFFParser
@@ -63,8 +64,8 @@ private:
     bool ParseFunction( BFFTokenRange & iter );
     bool ParseUnnamedScope( BFFTokenRange & iter );
 
+    bool FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBracedRange, const Function * function = nullptr ) const;
     bool FindBracedRangeRecurse( BFFTokenRange & iter ) const;
-    bool FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBracedRange ) const;
 
     bool StoreVariableString( const AString & name, const BFFToken * rhsString, const BFFToken * operatorToken, BFFStackFrame * frame );
     bool StoreVariableArray( const AString & name, const BFFTokenRange & tokenRange, const BFFToken * operatorIter, BFFStackFrame * frame );

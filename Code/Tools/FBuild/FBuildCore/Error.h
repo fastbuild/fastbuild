@@ -107,6 +107,7 @@ public:
     static void Error_1041_ElseWithoutIf( const BFFToken * iter );
     static void Error_1042_UnknownOperator(const BFFToken * iter, const AString & operatorName );
     static void Error_1043_CyclicDependencyDetected( const BFFToken * iter, const AString & nodeName );
+    static void Error_1044_OperatorExpected( const BFFToken * iter );
 
     // 1050 - 1099 : Variable type errors
     //------------------------------------------------------------------------------

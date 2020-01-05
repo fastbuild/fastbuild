@@ -124,6 +124,61 @@ void FBuildTest::Parse( const char * fileName, bool expectFailure ) const
     }
 }
 
+// ParseFromString
+//------------------------------------------------------------------------------
+bool FBuildTest::ParseFromString( const char * bffContents,
+                                  const char * expectedError ) const
+{
+    // Note size of output so we can check if error was part of this invocation
+    const size_t outputSizeBefore = GetRecordedOutput().GetLength();
+
+    // Parse
+    NodeGraph ng;
+    BFFParser p( ng );
+    const bool result = p.ParseFromString( "test.bff", bffContents );
+
+    // Handle result
+    if ( result == true )
+    {
+        // Success
+
+        // Did we expect to fail?
+        if ( expectedError )
+        {
+            OUTPUT( "Expected failure but did not fail" );
+            return false; // break in calling code
+        }
+
+        // Expected success so everything is ok
+        return true;
+    }
+    else
+    {
+        // Failure
+        
+        // Did we expected to fail?
+        if ( expectedError )
+        {
+            // Search for expected error
+            const char * searchStart = GetRecordedOutput().Get() + outputSizeBefore;
+            const bool foundExpectedError = ( GetRecordedOutput().Find( expectedError, searchStart ) != nullptr );
+
+            if ( foundExpectedError == false )
+            {
+                OUTPUT( "Failed in an unexpected way" );
+                return false; // break in calling code
+            }
+
+            // Failed in the expected way so everything is ok
+            return true;
+        }
+
+        // Failed but should not have
+        OUTPUT( "Unexpected failure" );
+        return false; // break in calling code
+    }
+}
+
 // CheckStatsNode
 //------------------------------------------------------------------------------
 void FBuildTest::CheckStatsNode( const FBuildStats & stats, size_t numSeen, size_t numBuilt, Node::Type nodeType ) const

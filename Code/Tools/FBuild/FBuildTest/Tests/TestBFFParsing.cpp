@@ -25,7 +25,6 @@ private:
     void Comments() const;
     void Strings() const;
     void String_Unterminated() const;
-    void String_Unterminated2() const;
     void Arrays() const;
     void Array_Unterminated() const;
     void Array_TypeMismatch() const;
@@ -34,6 +33,7 @@ private:
     void UnnamedScope_Unterminated() const;
     void IncludeDirective() const;
     void Include_ExcessiveDepth() const;
+    void ImportDirective() const;
     void OnceDirective() const;
     void Structs() const;
     void Struct_Concatenation() const;
@@ -68,6 +68,7 @@ private:
     void CyclicDependency() const;
     void SelfAssignment() const;
     void SelfAssignment2() const;
+    void Variables() const;
 };
 
 // Register Tests
@@ -78,7 +79,6 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Comments )
     REGISTER_TEST( Strings )
     REGISTER_TEST( String_Unterminated )
-    REGISTER_TEST( String_Unterminated2 )
     REGISTER_TEST( Arrays )
     REGISTER_TEST( Array_Unterminated )
     REGISTER_TEST( Array_TypeMismatch )
@@ -87,6 +87,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( UnnamedScope_Unterminated )
     REGISTER_TEST( IncludeDirective )
     REGISTER_TEST( Include_ExcessiveDepth )
+    REGISTER_TEST( ImportDirective )
     REGISTER_TEST( OnceDirective )
     REGISTER_TEST( Structs )
     REGISTER_TEST( Struct_Concatenation )
@@ -121,28 +122,26 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( CyclicDependency )
     REGISTER_TEST( SelfAssignment )
     REGISTER_TEST( SelfAssignment2 )
+    REGISTER_TEST( Variables )
 REGISTER_TESTS_END
 
 // Empty
 //------------------------------------------------------------------------------
 void TestBFFParsing::Empty() const
 {
-    // an empty file should pass without problem
-    char buffer[ 1 ] = { '\000' }; // post data sentinel
-    NodeGraph ng;
-    BFFParser p( ng );
-    TEST_ASSERT( p.ParseFromString( "empty.bff", buffer ) );
+    TEST_PARSE_OK( "" );
 }
 
 // AlmostEmpty
 //------------------------------------------------------------------------------
 void TestBFFParsing::AlmostEmpty() const
 {
-    // an empty file should pass without problem
-    const char * buffer = "\r\n\000"; // empty line + post data sentinel
-    NodeGraph ng;
-    BFFParser p( ng );
-    TEST_ASSERT( p.ParseFromString( "empty.bff", buffer ) );
+    TEST_PARSE_OK( " " );
+    TEST_PARSE_OK( "\t" );
+    TEST_PARSE_OK( "\r" );
+    TEST_PARSE_OK( "\n" );
+    TEST_PARSE_OK( "\r\n" );
+    TEST_PARSE_OK( " \t\r\n     " );
 }
 
 // Comments
@@ -150,6 +149,13 @@ void TestBFFParsing::AlmostEmpty() const
 void TestBFFParsing::Comments() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/comments.bff" );
+
+    TEST_PARSE_OK( "//" );
+    TEST_PARSE_OK( ";" );
+    TEST_PARSE_OK( "// Comments" );
+    TEST_PARSE_OK( "; Comments" );
+    TEST_PARSE_OK( "// Comments\n" );
+    TEST_PARSE_OK( "; Comments\n" );
 }
 
 // Strings
@@ -163,16 +169,16 @@ void TestBFFParsing::Strings() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::String_Unterminated() const
 {
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/string_unterminated.bff", true ); // expect failure
-    TEST_ASSERT( GetRecordedOutput().Find( "Error #1002" ) );
-}
-
-// String_Unterminated2
-//------------------------------------------------------------------------------
-void TestBFFParsing::String_Unterminated2() const
-{
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/string_unterminated2.bff", true ); // expect failure
-    TEST_ASSERT( GetRecordedOutput().Find( "Error #1002" ) );
+    TEST_PARSE_FAIL( ".A='",        "Error #1002" );
+    TEST_PARSE_FAIL( ".A='text",    "Error #1002" );
+    TEST_PARSE_FAIL( ".A=\"",       "Error #1002" );
+    TEST_PARSE_FAIL( ".A=\"text",   "Error #1002" );
+    TEST_PARSE_FAIL( ".A=\"''",     "Error #1002" );
+    TEST_PARSE_FAIL( ".A='\"\"",    "Error #1002" );
+    TEST_PARSE_FAIL( ".A\n=\n'",    "Error #1002" );
+    TEST_PARSE_FAIL( ".A\n=\n\"",   "Error #1002" );
+    TEST_PARSE_FAIL( ".A='^'",      "Error #1002" );
+    TEST_PARSE_FAIL( ".A=\"^\"",    "Error #1002" );
 }
 
 // Arrays
@@ -186,8 +192,10 @@ void TestBFFParsing::Arrays() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::Array_Unterminated() const
 {
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/array_unterminated.bff", true ); // expect failure
-    TEST_ASSERT( GetRecordedOutput().Find( "Error #1002" ) );
+    TEST_PARSE_FAIL( ".Array={",                        "Error #1002" );
+    TEST_PARSE_FAIL( ".Array={;}",                      "Error #1002" );
+    TEST_PARSE_FAIL( ".Array={//}",                     "Error #1002" );
+    TEST_PARSE_FAIL( ".Array={\n#if FALSE\n}\n#endif",  "Error #1002" );
 }
 
 // Array_TypeMismatch
@@ -216,14 +224,17 @@ void TestBFFParsing::UnnamedScope() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::UnnamedScope_Unterminated() const
 {
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/unnamedscope_unterminated.bff", true ); // expect failure
-    TEST_ASSERT( GetRecordedOutput().Find( "Error #1002 - Matching closing token } not found" ) );
+    TEST_PARSE_FAIL( "{",       "Error #1002" );
+    TEST_PARSE_FAIL( "{\n",     "Error #1002" );
 }
 
 // IncludeDirective
 //------------------------------------------------------------------------------
 void TestBFFParsing::IncludeDirective() const
 {
+    TEST_PARSE_FAIL( "#include",            "Error #1031" );
+    TEST_PARSE_FAIL( "#include BLAH",       "Error #1031" );
+
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/includes.bff" );
 }
 
@@ -235,10 +246,27 @@ void TestBFFParsing::Include_ExcessiveDepth() const
     TEST_ASSERT( GetRecordedOutput().Find( "Error #1035 - Excessive depth complexity" ) );
 }
 
+// ImportDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::ImportDirective() const
+{
+    TEST_PARSE_FAIL( "#import",             "Error #1031" );
+    TEST_PARSE_FAIL( "#import 'string'",    "Error #1031" );
+}
+
 // OnceDirective
 //------------------------------------------------------------------------------
 void TestBFFParsing::OnceDirective() const
 {
+    // Valid cases with varying whitespace
+    TEST_PARSE_OK( "#once" );
+    TEST_PARSE_OK( "\t#\t\tonce" );
+    TEST_PARSE_OK( "\r\n# once\n" );
+
+    // Invalid cases
+    TEST_PARSE_FAIL( "#once X",    "Error #1031" ); // Extraneous junk after directive
+
+    // #once used to prevent infinitely recursive includes
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/include_once.bff" );
 }
 
@@ -375,8 +403,13 @@ void TestBFFParsing::ElseDirective_Bad6() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::InvalidDirective() const
 {
-    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/invalid_directive.bff", true ); // Expect failure
-    TEST_ASSERT( GetRecordedOutput().Find( "Error #1030" ) );
+    TEST_PARSE_FAIL( "#",           "Error #1030" );
+    TEST_PARSE_FAIL( "#\n",         "Error #1030" );
+    TEST_PARSE_FAIL( "#invalid\n",  "Error #1030" );
+    TEST_PARSE_FAIL( "#define X\n"
+                     "#if X\n"
+                     "#invalid\n"
+                     "#endif\n",    "Error #1030" );
 }
 
 // DefineUndefineDirectives
@@ -514,6 +547,30 @@ void TestBFFParsing::SelfAssignment2() const
 
     TEST_ASSERT( fBuild.Initialize() == true );
     TEST_ASSERT( GetRecordedOutput().Find( "FAILED" ) == nullptr );
+}
+
+// Variables
+//------------------------------------------------------------------------------
+void TestBFFParsing::Variables() const
+{
+    // Incomplete declarations
+    TEST_PARSE_FAIL( ".",       "Error #1017" );
+    TEST_PARSE_FAIL( ".A",      "Error #1044" );
+    TEST_PARSE_FAIL( ".A=",     "Error #1017" );
+    TEST_PARSE_FAIL( ".A=[",    "Error #1002" );
+    TEST_PARSE_FAIL( ".A={",    "Error #1002" );
+
+    // Invalid declarations
+    TEST_PARSE_FAIL( ".A=(",    "Error #1017" );
+    TEST_PARSE_FAIL( ".A=]",    "Error #1017" );
+    TEST_PARSE_FAIL( ".A=}",    "Error #1017" );
+
+    // Invalid operations
+    TEST_PARSE_FAIL( ".A<5",    "Error #1034" );
+    TEST_PARSE_FAIL( ".A>5",    "Error #1034" );
+    TEST_PARSE_FAIL( ".A<=5",   "Error #1034" );
+    TEST_PARSE_FAIL( ".A>=5",   "Error #1034" );
+    TEST_PARSE_FAIL( ".A!=5",   "Error #1034" );
 }
 
 //------------------------------------------------------------------------------

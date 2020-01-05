@@ -128,7 +128,7 @@ bool BFFParser::Parse( BFFTokenRange & iter )
         }
 
         // New scope
-        if ( token->IsCurlyBracket() && ( token->GetValueString() == "{" ) )
+        if ( token->IsCurlyBracket( '{' ) )
         {
             // start an unnamed scope
             if ( ParseUnnamedScope( iter ) == false )
@@ -145,6 +145,13 @@ bool BFFParser::Parse( BFFTokenRange & iter )
             {
                 return false;
             }
+            continue;
+        }
+
+        // End of File
+        if ( token->GetType() == BFFTokenType::EndOfFile )
+        {
+            iter++;
             continue;
         }
 
@@ -272,30 +279,27 @@ bool BFFParser::ParseNamedVariableDeclaration( BFFTokenRange & iter )
 //------------------------------------------------------------------------------
 bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & varName, BFFStackFrame * frame )
 {
-    const BFFToken * opToken = iter.GetCurrent();
-
     // Variable must be followed by an operator
-    if ( opToken->GetType() != BFFTokenType::Operator )
+    if ( iter->IsOperator() == false )
     {
-        Error::Error_1016_UnexepectedCharFollowingVariableName( opToken );
+        Error::Error_1044_OperatorExpected( iter.GetCurrent() );
         return false;
     }
-
-    // Check this is an operator we support
-    const char op = opToken->GetValueString()[ 0 ];
-    if ( ( op != BFF_VARIABLE_ASSIGNMENT ) &&
-         ( op != BFF_VARIABLE_CONCATENATION ) &&
-         ( op != BFF_VARIABLE_SUBTRACTION ) )
-    {
-        Error::Error_1254_UnrecognizedOperator( opToken, nullptr ); // TODO: Check error
-        return false;
-    }
-
+    const BFFToken * opToken = iter.GetCurrent();
     iter++; // Consume operator
 
+    // Check this is an operator we support
+    if ( ( opToken->IsOperator( BFF_VARIABLE_ASSIGNMENT ) == false ) &&
+         ( opToken->IsOperator( BFF_VARIABLE_CONCATENATION ) == false ) &&
+         ( opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) == false ) )
+    {
+        Error::Error_1034_OperationNotSupported( opToken, BFFVariable::VAR_ANY, BFFVariable::VAR_ANY, opToken );
+        return false;
+    }
+
     // What operator type is this?
-    const bool concat = ( op == BFF_VARIABLE_CONCATENATION );
-    const bool subtract = ( op == BFF_VARIABLE_SUBTRACTION );
+    const bool concat = opToken->IsOperator( BFF_VARIABLE_CONCATENATION );
+    const bool subtract = opToken->IsOperator( BFF_VARIABLE_SUBTRACTION );
 
     const BFFToken * rhsToken = iter.GetCurrent();
     if ( rhsToken->IsString() )
@@ -303,25 +307,21 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
         iter++; // Consume the rhs
         return StoreVariableString( varName, rhsToken, opToken, frame );
     }
-    else if ( rhsToken->IsCurlyBracket() ) // Open Scope
+    else if ( rhsToken->IsCurlyBracket( '{' ) ) // Open Scope
     {
-        const BFFToken * openBraceToken = iter.GetCurrent();
         BFFTokenRange bracedRange;
         if ( FindBracedRange( iter, bracedRange ) == false )
         {
-            Error::Error_1002_MatchingClosingTokenNotFound( openBraceToken, nullptr, '}' );
-            return false;
+            return false; // FindBracedRange will have emitted an error
         }
         return StoreVariableArray( varName, bracedRange, opToken, frame );
     }
-    else if ( rhsToken->IsSquareBracket() ) // Open Struct
+    else if ( rhsToken->IsSquareBracket( '[' ) ) // Open Struct
     {
-        const BFFToken * openBraceToken = iter.GetCurrent();
         BFFTokenRange bracedRange;
         if ( FindBracedRange( iter, bracedRange ) == false )
         {
-            Error::Error_1002_MatchingClosingTokenNotFound( openBraceToken, nullptr, ']' );
-            return false;
+            return false; // FindBracedRange will have emitted an error
         }
         return StoreVariableStruct( varName, bracedRange, opToken, frame );
     }
@@ -426,7 +426,7 @@ bool BFFParser::ParseFunction( BFFTokenRange & iter )
 
     // Is there a header?
     BFFTokenRange headerRange;
-    if ( iter->IsRoundBracket() && ( iter->GetValueString() == "(" ) )
+    if ( iter->IsRoundBracket( '(' ) )
     {
         // Check if this function can have a header
         if ( func->AcceptsHeader() == false )
@@ -436,15 +436,14 @@ bool BFFParser::ParseFunction( BFFTokenRange & iter )
         }
 
         // Find limits of args inside brackets
-        if ( FindBracedRange( iter, headerRange ) == false )
+        if ( FindBracedRange( iter, headerRange, func ) == false )
         {
-            Error::Error_1022_MissingFunctionHeaderCloseToken( iter.GetCurrent(), func );
-            return false;
+            return false; // FindBracedRange will have emitted an error
         }
     }
 
     // Is a required header missing?
-    if ( func->NeedsHeader() && ( headerRange.GetCurrent() == nullptr ) )
+    if ( func->NeedsHeader() && headerRange.IsEmpty() )
     {
         Error::Error_1023_FunctionRequiresAHeader( iter.GetCurrent(), func );
         return false;
@@ -455,17 +454,16 @@ bool BFFParser::ParseFunction( BFFTokenRange & iter )
     if ( func->NeedsBody() )
     {
         // Check for body start
-        if ( ( iter->IsCurlyBracket() == false ) || ( iter->GetValueString() != "{" ) )
+        if ( iter->IsCurlyBracket( '{' ) == false )
         {
             Error::Error_1024_FunctionRequiresABody( iter.GetCurrent(), func );
             return false;
         }
 
         // Find close of body
-        if ( FindBracedRange( iter, bodyRange ) == false )
+        if ( FindBracedRange( iter, bodyRange, func ) == false )
         {
-            Error::Error_1025_MissingScopeCloseToken( iter.GetCurrent(), func );
-            return false;
+            return false; // FindBracedRange will have emitted an error
         }
      }
 
@@ -480,18 +478,16 @@ bool BFFParser::ParseFunction( BFFTokenRange & iter )
 //------------------------------------------------------------------------------
 bool BFFParser::ParseUnnamedScope( BFFTokenRange & iter )
 {
+    ASSERT( iter->IsCurlyBracket( '{' ) );
+
     // create stack for scope
     BFFStackFrame stackFrame;
 
     // Find limits of args inside brackets
-    const BFFToken * openToken = iter.GetCurrent();
-    ASSERT( openToken->IsCurlyBracket() );
     BFFTokenRange range;
     if ( FindBracedRange( iter, range ) == false )
     {
-        const char expectedChar = '}';
-        Error::Error_1002_MatchingClosingTokenNotFound( openToken, nullptr, expectedChar );
-        return false;
+        return false; // FindBracedRange will have emitted an error
     }
 
     // parse the scoped part
@@ -503,15 +499,26 @@ bool BFFParser::ParseUnnamedScope( BFFTokenRange & iter )
     return true;
 }
 
-
 // FindBracedRange
 //------------------------------------------------------------------------------
-bool BFFParser::FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBracedRange ) const
+bool BFFParser::FindBracedRange( BFFTokenRange & iter, BFFTokenRange & outBracedRange, const Function * function ) const
 {
+    // Determine the matching close character
+    const BFFToken * openToken = iter.GetCurrent();
+    char closeTokenChar;
+    switch( openToken->GetType() )
+    {
+        case BFFTokenType::CurlyBracket:    closeTokenChar = '}'; break;
+        case BFFTokenType::RoundBracket:    closeTokenChar = ')'; break;
+        case BFFTokenType::SquareBracket:   closeTokenChar = ']'; break;
+        default:                            ASSERT(false); return false;
+    }
+
     // Take note of range begin
     const BFFToken * begin = iter.GetCurrent() + 1; // First token after brace
     if ( FindBracedRangeRecurse( iter ) == false)
     {
+        Error::Error_1002_MatchingClosingTokenNotFound( openToken, function, closeTokenChar );
         return false;
     }
 
@@ -741,9 +748,8 @@ bool BFFParser::StoreVariableArray( const AString & name,
     }
 
     // Parse array of variables
-    const BFFToken * iter = tokenRange.GetBegin();
-    const BFFToken * end = tokenRange.GetEnd();
-    while ( iter < end )
+    BFFTokenRange iter( tokenRange );
+    while ( iter.IsAtEnd() == false )
     {
         if ( iter->IsString() )
         {
@@ -754,7 +760,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
                  ( varType != BFFVariable::VAR_ANY ) )
             {
                 // Mixed types in vector
-                Error::Error_1034_OperationNotSupported( iter,
+                Error::Error_1034_OperationNotSupported( iter.GetCurrent(),
                                                          varType,
                                                          BFFVariable::VAR_STRING,
                                                          opToken );
@@ -764,7 +770,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             // subtraction not supported on arrays
             if ( opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) )
             {
-                Error::Error_1034_OperationNotSupported( iter,
+                Error::Error_1034_OperationNotSupported( iter.GetCurrent(),
                                                          varType,
                                                          BFFVariable::VAR_STRING,
                                                          opToken );
@@ -775,7 +781,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             AStackString< 2048 > elementValue;
 
             // unescape and subsitute embedded variables
-            if ( PerformVariableSubstitutions( iter, elementValue ) == false )
+            if ( PerformVariableSubstitutions( iter.GetCurrent(), elementValue ) == false )
             {
                 return false;
             }
@@ -807,7 +813,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             // subtraction not supported on arrays
             if ( opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) )
             {
-                Error::Error_1034_OperationNotSupported( iter,
+                Error::Error_1034_OperationNotSupported( iter.GetCurrent(),
                                                          varType,
                                                          varSrc->GetType(),
                                                          opToken );
@@ -829,7 +835,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
                      ( varType != BFFVariable::VAR_ANY ) )
                 {
                     // inconsistency
-                    Error::Error_1034_OperationNotSupported( iter,
+                    Error::Error_1034_OperationNotSupported( iter.GetCurrent(),
                                                              varType,
                                                              varSrc->GetType(),
                                                              opToken );
@@ -853,7 +859,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
                      ( varType != BFFVariable::VAR_ANY ) )
                 {
                     // inconsistency
-                    Error::Error_1034_OperationNotSupported( iter,
+                    Error::Error_1034_OperationNotSupported( iter.GetCurrent(),
                                                              varType,
                                                              varSrc->GetType(),
                                                              opToken );
@@ -872,7 +878,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             }
             else
             {
-                Error::Error_1050_PropertyMustBeOfType( iter, nullptr, name.Get(),
+                Error::Error_1050_PropertyMustBeOfType( iter.GetCurrent(), nullptr, name.Get(),
                                                         varType,
                                                         BFFVariable::VAR_STRING,
                                                         BFFVariable::VAR_STRUCT );
@@ -881,13 +887,13 @@ bool BFFParser::StoreVariableArray( const AString & name,
         }
         else
         {
-            Error::Error_1001_MissingStringStartToken( iter, nullptr );
+            Error::Error_1001_MissingStringStartToken( iter.GetCurrent(), nullptr );
             return false;
         }
 
         iter++; // Entry has been handled
 
-        if ( iter->IsComma() ) // comma seperators are optional
+        if ( iter->IsComma() ) // comma separators are optional
         {
             iter++;
         }

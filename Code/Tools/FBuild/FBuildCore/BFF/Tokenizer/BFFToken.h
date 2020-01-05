@@ -31,6 +31,7 @@ enum class BFFTokenType : uint8_t
     String,         // "Hello"
     Boolean,        // true or false
     Comma,          // Comma
+    EndOfFile
 };
 
 // BFFToken
@@ -53,9 +54,9 @@ public:
     bool IsOperator() const                         { return ( m_Type == BFFTokenType::Operator ); }
     bool IsOperator( const char * op ) const        { return ( m_Type == BFFTokenType::Operator ) && ( m_String == op ); }
     bool IsOperator( const char op ) const          { return ( m_Type == BFFTokenType::Operator ) && ( m_String[ 0 ] == op ); }
-    bool IsRoundBracket() const                     { return ( m_Type == BFFTokenType::RoundBracket ); }
-    bool IsCurlyBracket() const                     { return ( m_Type == BFFTokenType::CurlyBracket ); }
-    bool IsSquareBracket() const                    { return ( m_Type == BFFTokenType::SquareBracket ); }
+    bool IsRoundBracket( const char c ) const       { return ( m_Type == BFFTokenType::RoundBracket ) && ( m_String[ 0 ] == c ); }
+    bool IsCurlyBracket( const char c ) const       { return ( m_Type == BFFTokenType::CurlyBracket ) && ( m_String[ 0 ] == c ); }
+    bool IsSquareBracket( const char c ) const      { return ( m_Type == BFFTokenType::SquareBracket ) && ( m_String[ 0 ] == c ); }
     bool IsString() const                           { return ( m_Type == BFFTokenType::String ); }
     bool IsBooelan() const                          { return ( m_Type == BFFTokenType::Boolean ); }
     bool IsVariable() const                         { return ( m_Type == BFFTokenType::Variable ); }

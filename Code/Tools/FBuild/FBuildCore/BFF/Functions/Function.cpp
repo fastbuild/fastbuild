@@ -171,7 +171,7 @@ Function::~Function() = default;
                                           const BFFTokenRange & bodyRange ) const
 {
     m_AliasForFunction.Clear();
-    if ( AcceptsHeader() && ( headerRange.IsEmpty()== false ) )
+    if ( AcceptsHeader() && ( headerRange.IsEmpty() == false ) )
     {
         // Check for exactly one string
         const BFFToken * headerArgsIter = headerRange.GetCurrent();

@@ -1,6 +1,0 @@
-// Un unterminated string could cause a } to be incorrectly handled, causing an infinite loop
-
-{
-#if B'
-#endif
-.a={'}
