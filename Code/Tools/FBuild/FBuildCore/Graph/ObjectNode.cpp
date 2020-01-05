@@ -1347,57 +1347,55 @@ void ObjectNode::WriteToCache( Job * job )
 
     ICache * cache = FBuild::Get().GetCache();
     ASSERT( cache );
-    if ( cache )
+
+    Array< AString > fileNames( 4, false );
+    fileNames.Append( m_Name );
+
+    GetExtraCacheFilePaths( job, fileNames );
+
+    MultiBuffer buffer;
+    if ( buffer.CreateFromFiles( fileNames ) )
     {
-        Array< AString > fileNames( 4, false );
-        fileNames.Append( m_Name );
+        // try to compress
+        const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
+        Compressor c;
+        c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize() );
+        const void * data = c.GetResult();
+        const size_t dataSize = c.GetResultSize();
+        const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
 
-        GetExtraCacheFilePaths( job, fileNames );
-
-        MultiBuffer buffer;
-        if ( buffer.CreateFromFiles( fileNames ) )
+        const uint32_t startPublish( stopCompress );
+        if ( cache->Publish( cacheFileName, data, dataSize ) )
         {
-            // try to compress
-            const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
-            Compressor c;
-            c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize() );
-            const void * data = c.GetResult();
-            const size_t dataSize = c.GetResultSize();
-            const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
+            // cache store complete
+            const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
 
-            const uint32_t startPublish( stopCompress );
-            if ( cache->Publish( cacheFileName, data, dataSize ) )
+            SetStatFlag( Node::STATS_CACHE_STORE );
+
+            // Dependent objects need to know the PCH key to be able to pull from the cache
+            if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
             {
-                // cache store complete
-                const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
-
-                SetStatFlag( Node::STATS_CACHE_STORE );
-
-                // Dependent objects need to know the PCH key to be able to pull from the cache
-                if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
-                {
-                    m_PCHCacheKey = xxHash::Calc64( data, dataSize );
-                }
-
-                const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
-                AddCachingTime( cachingTime );
-
-                // Output
-                if ( FBuild::Get().GetOptions().m_CacheVerbose )
-                {
-                    AStackString<> output;
-                    output.Format( "Obj: %s\n"
-                                   " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
-                                   GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, (size_t)buffer.GetDataSize(), cacheFileName.Get() );
-                    if ( m_PCHCacheKey != 0 )
-                    {
-                        output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
-                    }
-                    FLOG_BUILD_DIRECT( output.Get() );
-                }
-
-                return;
+                m_PCHCacheKey = xxHash::Calc64( data, dataSize );
             }
+
+            const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
+            AddCachingTime( cachingTime );
+
+            // Output
+            if ( FBuild::Get().GetOptions().m_CacheVerbose )
+            {
+                AStackString<> output;
+                output.Format( "Obj: %s\n"
+                                " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
+                                GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, (size_t)buffer.GetDataSize(), cacheFileName.Get() );
+                if ( m_PCHCacheKey != 0 )
+                {
+                    output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
+                }
+                FLOG_BUILD_DIRECT( output.Get() );
+            }
+
+            return;
         }
     }
 
