@@ -87,7 +87,7 @@ public:
     static void Error_1030_UnknownDirective( const BFFToken * iter,
                                              const AString & directiveName );
     static void Error_1031_UnexpectedCharFollowingDirectiveName( const BFFToken * iter,
-                                                                 const AString & directive,
+                                                                 const char * directiveName,
                                                                  char expectedChar );
     static void Error_1032_UnableToOpenInclude( const BFFToken * iter,
                                                 const AString & include );
@@ -108,6 +108,7 @@ public:
     static void Error_1042_UnknownOperator(const BFFToken * iter, const AString & operatorName );
     static void Error_1043_CyclicDependencyDetected( const BFFToken * iter, const AString & nodeName );
     static void Error_1044_OperatorExpected( const BFFToken * iter );
+    static void Error_1045_ExtraneousTokenFollowingDirective( const BFFToken * iter, const char * directiveName );
 
     // 1050 - 1099 : Variable type errors
     //------------------------------------------------------------------------------

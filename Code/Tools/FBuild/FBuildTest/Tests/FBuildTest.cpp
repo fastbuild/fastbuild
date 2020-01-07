@@ -6,6 +6,7 @@
 #include "FBuildTest.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
@@ -133,9 +134,11 @@ bool FBuildTest::ParseFromString( const char * bffContents,
     const size_t outputSizeBefore = GetRecordedOutput().GetLength();
 
     // Parse
+    Function::Create();
     NodeGraph ng;
     BFFParser p( ng );
     const bool result = p.ParseFromString( "test.bff", bffContents );
+    Function::Destroy();
 
     // Handle result
     if ( result == true )

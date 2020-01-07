@@ -712,6 +712,22 @@ An operator was expected at the current location.
 </div>
 </div>
 
+<!--------------- 1045 --------------->
+    <div class='newsitemheader'>1045 -  Extraneous token(s) following '%s' directive.</div>
+    <div class='newsitembody'>
+Extra tokens were found after what would otherwise be a valid directive.
+<h4>Example Config:</h4>
+<div class='code'>#if THING ExtraneousThing
+#endif</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1,11): FASTBuild Error #1045 - Extraneous token(s) following 'if' directive.
+#if THING ExtraneousThing
+          ^
+          \--here
+</div>
+</div>
+
+
 
 <!--------------- 1050 --------------->
     <div class='newsitemheader'>1050 - Property '%s' must be of type &lt;%s&gt; (found &lt;%s&gt;).</div>

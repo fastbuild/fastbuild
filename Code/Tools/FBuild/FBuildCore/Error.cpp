@@ -270,14 +270,14 @@
 // Error_1031_UnexpectedCharFollowingDirectiveName
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1031_UnexpectedCharFollowingDirectiveName( const BFFToken * iter,
-                                                                        const AString & directive,
+                                                                        const char * directiveName,
                                                                         char expectedChar )
 {
     AStackString<> buffer;
     GetChar( iter, buffer );
     FormatError( iter, 1031u, nullptr, "Unknown char '%s' following '%s' directive. (Expected '%c').",
                                      buffer.Get(),
-                                     directive.Get(),
+                                     directiveName,
                                      expectedChar );
 }
 
@@ -389,6 +389,13 @@
 /*static*/ void Error::Error_1044_OperatorExpected( const BFFToken * iter )
 {
     FormatError( iter, 1044u, nullptr, "Operator expected." );
+}
+
+// Error_1045_UnknownTokenFollowingDirective
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1045_ExtraneousTokenFollowingDirective( const BFFToken * iter, const char * directiveName )
+{
+    FormatError( iter, 1045u, nullptr, "Extraneous token(s) following '%s' directive.", directiveName );
 }
 
 // Error_1050_PropertyMustBeString

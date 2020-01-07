@@ -156,7 +156,7 @@ bool BFFTokenizer::TokenizeFromString( const AString & fileName, const AString &
     NodeGraph::CleanPath( fileName, cleanFileName );
 
     // A file seen for the first time
-    BFFFile * newFile = FNEW( BFFFile( fileName.Get(), fileContents ) );
+    BFFFile * newFile = FNEW( BFFFile( cleanFileName.Get(), fileContents ) );
     m_Files.Append( newFile );
 
     // Recursively tokenize
@@ -214,7 +214,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         {
             if ( HandleVariable( pos, end, file ) == false )
             {
-                return false; // HandleDirective will have emitted an error
+                return false; // HandleVariable will have emitted an error
             }
             continue;
         }
@@ -314,8 +314,8 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
             continue;
         }
 
-        // # directive
-        if ( IsDirective( c ) )
+        // # directive (non-recursive)
+        if ( IsDirective( c ) && ( m_ParsingDirective == false ) )
         {
             if ( HandleDirective( pos, end, file ) == false )
             {
@@ -458,49 +458,60 @@ bool BFFTokenizer::HandleDirective( const char * & pos, const char * end, const 
     const char * argsEnd = pos;
 
     // Tokenize the line
+    m_ParsingDirective = true;
     if ( Tokenize( file, argsStart, argsEnd ) == false )
     {
         return false; // Tokenize will have emitted an error
     }
+    m_ParsingDirective = false;
 
     // Remove directive args tokens (the directive parsing consumes them)
     const size_t numArgTokens = m_Tokens.GetSize() - numTokens;
     StackArray<BFFToken> args;
     for ( size_t i = 0; i < numArgTokens; ++i )
     {
-        if ( m_Tokens[ numTokens + i ].GetType() != BFFTokenType::EndOfFile )
-        {
-            args.Append( Move( m_Tokens[ numTokens + i ] ) );
-        }
+        args.Append( Move( m_Tokens[ numTokens + i ] ) );
     }
     for ( size_t i = 0; i < numArgTokens; ++i )
     {
         m_Tokens.Pop(); // Avoiding use of SetSize as this requires a default constructor
     }
-
-    // # must be followed by something
-    if ( args.IsEmpty() )
-    {
-        // TODO:C Improve error
-        const BFFToken error( file, argsStart, BFFTokenType::Invalid, AStackString<>( "???" ) );
-        Error::Error_1030_UnknownDirective( &error, AStackString<>( "???" ) );
-        return false;
-    }
+    BFFTokenRange argsRange( args.Begin(), args.End() );
 
     // Check keywords that are valid directives
     const BFFToken & directiveToken = args[ 0 ];
     const AString & directive = directiveToken.GetValueString();
     if ( directiveToken.IsKeyword() )
     {
-        if ( directive == "define" )        { return HandleDirective_Define( file, pos, end, args ); }
-        else if ( directive == "else" )     { return HandleDirective_Else( file, pos, end, args ); }
-        else if ( directive == "if" )       { return HandleDirective_If( file, pos, end, args ); }
-        else if ( directive == "import" )   { return HandleDirective_Import( file, pos, end, args ); }
-        else if ( directive == "include" )  { return HandleDirective_Include( file, pos, end, args ); }
-        else if ( directive == "once" )     { return HandleDirective_Once( file, pos, end, args ); }
-        else if ( directive == "undef" )    { return HandleDirective_Undef( file, pos, end, args ); }
+        const char * directiveName = nullptr;
+        bool result = false;
+        if ( directive == "define" )        { directiveName = "define";     result = HandleDirective_Define( file, pos, end, argsRange ); }
+        else if ( directive == "else" )     { directiveName = "else";       result = HandleDirective_Else( file, pos, end, argsRange ); }
+        else if ( directive == "if" )       { directiveName = "if";         result = HandleDirective_If( file, pos, end, argsRange ); }
+        else if ( directive == "import" )   { directiveName = "import";     result = HandleDirective_Import( file, pos, end, argsRange ); }
+        else if ( directive == "include" )  { directiveName = "include";    result = HandleDirective_Include( file, pos, end, argsRange ); }
+        else if ( directive == "once" )     { directiveName = "once";       result = HandleDirective_Once( file, pos, end, argsRange ); }
+        else if ( directive == "undef" )    { directiveName = "undef";      result = HandleDirective_Undef( file, pos, end, argsRange ); }
 
-        // TODO:C We should have an error for unused args here
+        // Did we see a recognized directive?
+        if ( directiveName )
+        {
+            // If it failed, we already emitted an error
+            if ( result == false )
+            {
+                return false; // Handle_* will have emitted an error
+            }
+
+            // If it passed, all tokens should have been consumed. This avoids each handler
+            // having to have the same boilerplate logic to check for extraneous tokens.
+            if ( argsRange->GetType() != BFFTokenType::EndOfFile )
+            {
+                Error::Error_1045_ExtraneousTokenFollowingDirective( argsRange.GetCurrent(), directiveName );
+                return false;
+            }
+
+            return true;
+        }
 
         // fall through to error handling
     }
@@ -512,98 +523,72 @@ bool BFFTokenizer::HandleDirective( const char * & pos, const char * end, const 
 
 // HandleDirective_Define
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Define( const BFFFile & /*file*/, const char * & /*pos*/, const char * /*end*/, const Array<BFFToken> & args )
+bool BFFTokenizer::HandleDirective_Define( const BFFFile & /*file*/, const char * & /*pos*/, const char * /*end*/, BFFTokenRange & argsIter )
 {
-    ASSERT( args[ 0 ].IsKeyword( "define" ) );
-
-    const AString & directive = args[ 0 ].GetValueString();
-
-    BFFTokenRange range( args.Begin(), args.End() );
-    range++; // consume directive
+    ASSERT( argsIter->IsKeyword( "define" ) );
+    argsIter++;
 
     // Check for end
-    if ( range.IsAtEnd() || ( range->IsIdentifier() == false ) )
+    if ( argsIter->IsIdentifier() == false )
     {
         // TODO:C A better error
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( &args[ 0 ], directive, '?' );
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "define", '?' );
         return false;
     }
 
-    const BFFToken * identifierToken = range.GetCurrent();
-    const AString & identifier = range->GetValueString();
-    range++; // consume identifier
-
     // Define the token
+    const AString & identifier = argsIter->GetValueString();
     if ( BFFMacros::Get().Define( identifier ) == false )
     {
         // Attempting to overwrite an existing token
-        Error::Error_1038_OverwritingTokenInDefine( identifierToken );
+        Error::Error_1038_OverwritingTokenInDefine( argsIter.GetCurrent() );
         return false;
     }
+    argsIter++; // consume identifier
 
     return true;
 }
 
 // HandleDirective_Else
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Else( const BFFFile & /*file*/, const char * & /*pos*/, const char * /*end*/, const Array<BFFToken> & args )
+bool BFFTokenizer::HandleDirective_Else( const BFFFile & /*file*/, const char * & /*pos*/, const char * /*end*/, BFFTokenRange & argsIter )
 {
-    ASSERT( args[ 0 ].IsKeyword( "else" ) );
+    ASSERT( argsIter->IsKeyword( "else" ) );
 
     // Finding the else directive is handled by ParseIfDirective, so if we hit one
     // by itself, that's an error
-    Error::Error_1041_ElseWithoutIf( &args[ 0 ] );
+    Error::Error_1041_ElseWithoutIf( argsIter.GetCurrent() );
     return false;
 }
 
 // HandleDirective_If
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos, const char * end, const Array<BFFToken> & args )
+bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter )
 {
-    ASSERT( args[ 0 ].IsKeyword( "if" ) );
-
-    const AString & directive = args[ 0 ].GetValueString();
-
-    BFFTokenRange range( args.Begin(), args.End() );
-    range++; // consume directive
-
-    // Check for end
-    if ( range.IsAtEnd() )
-    {
-        // TODO:C A better error
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( &args[ 0 ], directive, '?' );
-        return false;
-    }
+    ASSERT( argsIter->IsKeyword( "if" ) );
+    argsIter++;
 
     // Check for negation operator
     bool negate = false;
-    if ( range->IsOperator( "!" ) )
+    if ( argsIter->IsOperator( "!" ) )
     {
         negate = true;
-        range++; // consume negation operator
-
-        // Check for end
-        if ( range.IsAtEnd() )
-        {
-            // TODO:C A better error
-            Error::Error_1031_UnexpectedCharFollowingDirectiveName( &args[ 0 ], directive, '?' );
-            return false;
-        }
+        argsIter++; // consume negation operator
     }
 
     // Keyword or identifier?
     bool result = false;
-    if ( range->IsKeyword() && ( range->GetValueString() == BFF_KEYWORD_EXISTS ) )
+    if ( argsIter->IsKeyword( BFF_KEYWORD_EXISTS ) )
     {
-        range++; // consume keyword
-        if ( HandleDirective_IfExists( range, result ) == false )
+        argsIter++; // consume keyword
+        if ( HandleDirective_IfExists( argsIter, result ) == false )
         {
             return false;
         }
     }
-    else if ( range->IsIdentifier() )
+    else if ( argsIter->IsIdentifier() )
     {
-        if ( HandleDirective_IfDefined( range, result ) == false )
+        if ( HandleDirective_IfDefined( argsIter, result ) == false )
         {
             return false;
         }
@@ -611,7 +596,7 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
     else
     {
         // TODO:C A better error
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( &args[ 0 ], directive, '?' );
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "if", '?' );
         return false;
     }
 
@@ -679,7 +664,7 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
     // Expect open bracket
     if ( iter->IsRoundBracket( '(' ) == false )
     {
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter.GetCurrent(), AStackString<>( "exists" ), '(' );
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter.GetCurrent(), "exists", '(' );
         return false;
     }
     iter++; // consume open (
@@ -697,7 +682,7 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
     // Expect close bracket
     if ( iter->IsRoundBracket( ')' ) == false )
     {
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter.GetCurrent(), AStackString<>( "exists" ), ')' );
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter.GetCurrent(), "exists", ')' );
         return false;
     }
     iter++; // consume close )
@@ -801,42 +786,35 @@ bool BFFTokenizer::ParseToEndIf( const char * & pos, const char * end, const BFF
 
 // HandleDirective_Import
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & pos, const char * /*end*/, const Array<BFFToken> & args )
+bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & pos, const char * /*end*/, BFFTokenRange & argsIter )
 {
-    BFFTokenRange iter( args.Begin(), args.End() );
-    ASSERT( iter->IsKeyword( "import" ) );
-    iter++;
+    ASSERT( argsIter->IsKeyword( "import" ) );
+    argsIter++;
 
-    // #import takes exactly one literal arg
-    if ( iter.IsAtEnd() )
+    // #import expects a literal arg
+    if ( argsIter->IsIdentifier() == false )
     {
-        const AString & directive = args[ 0 ].GetValueString();
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( &args[ 0 ], directive, '?' );// TODO:A A better error
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "import", '?' ); // TODO:B A better error
         return false;
     }
-    if ( iter->IsIdentifier() == false )
-    {
-        const AString & directive = args[ 0 ].GetValueString();
-        const BFFToken & badToken = args[ 1 ];
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( &badToken, directive, '?' ); // TODO:B A better error
-        return false;
-    }
-    const AString & envVarToImport( args[ 1 ].GetValueString() );
+    const AString & envVarToImport( argsIter->GetValueString() );
 
     // TODO:B Check validity of macro arg
-
-    // TODO:B Check for extraneous args
 
     // look for varName in system environment
     AStackString<> varValue;
     uint32_t varHash = 0;
     bool optional = false;
     // TODO:C Move ImportEnvironmentVar to BFFTokenizer
-    if ( FBuild::Get().ImportEnvironmentVar( envVarToImport.Get(), optional, varValue, varHash ) == false )
+    if ( FBuild::IsValid() ) // TODO:B Remove singleton validity check when ImportEnvironmentVar moved to BFFTokenizer
     {
-        Error::Error_1009_UnknownVariable( &args[ 1 ], nullptr, envVarToImport );
-        return false;
+        if ( FBuild::Get().ImportEnvironmentVar( envVarToImport.Get(), optional, varValue, varHash ) == false )
+        {
+            Error::Error_1009_UnknownVariable( argsIter.GetCurrent(), nullptr, envVarToImport );
+            return false;
+        }
     }
+    argsIter++;
 
     // Inject variable declaration
     AStackString<> varName( "." );
@@ -850,27 +828,27 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & 
 
 // HandleDirective_Include
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * & /*pos*/, const char * /*end*/, const Array<BFFToken> & args )
+bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * & /*pos*/, const char * /*end*/, BFFTokenRange & argsIter )
 {
-    BFFTokenRange iter( args.Begin(), args.End() );
-    ASSERT( iter->IsKeyword( "include" ) );
-    iter++;
+    ASSERT( argsIter->IsKeyword( "include" ) );
 
-    // #include takes exactly one string arg
-    if ( iter.IsAtEnd() )
+    // Check include depth to detect cyclic includes
+    m_Depth++;
+    if ( m_Depth >= 128 )
     {
-        const AString & directive = args[ 0 ].GetValueString();
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( &args[ 0 ], directive, '?' );// TODO:A A better error
+        Error::Error_1035_ExcessiveDepthComplexity( argsIter.GetCurrent() );
         return false;
     }
-    if ( iter->IsString() == false )
+    argsIter++;
+
+    // #include expects a string arg for the include path
+    if ( argsIter->IsString() == false )
     {
-        const AString & directive = args[ 0 ].GetValueString();
-        const BFFToken & badToken = args[ 1 ];
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( &badToken, directive, '?' ); // TODO:B A better error
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "include", '?' ); // TODO:B A better error
         return false;
     }
-    AStackString<> include( args[ 1 ].GetValueString() );
+    AStackString<> include( argsIter->GetValueString() );
+    argsIter++;
 
     // TODO:B Check for empty string
 
@@ -889,14 +867,6 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * &
         include = tmp;
     }
 
-    // Check include depth to detect cyclic includes
-    m_Depth++;
-    if ( m_Depth >= 128 )
-    {
-        Error::Error_1035_ExcessiveDepthComplexity( &args[ 0 ] );
-        return false;
-    }
-
     // Recursively tokenize
     const bool result = TokenizeFromFile( include );
 
@@ -907,20 +877,12 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * &
 
 // HandleDirective_Once
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Once( const BFFFile & file, const char * & /*pos*/, const char * /*end*/, const Array<BFFToken> & args )
+bool BFFTokenizer::HandleDirective_Once( const BFFFile & file, const char * & /*pos*/, const char * /*end*/, BFFTokenRange & argsIter )
 {
     ASSERT( m_Files.Find( &file ) ); // Must be a file we're tracking
 
-    ASSERT( args[ 0 ].IsKeyword( "once" ) );
-
-    // #once takes no additional args
-    if ( args.GetSize() != 1 )
-    {
-        const AString & directive = args[ 0 ].GetValueString();
-        const BFFToken & badToken = args[ 1 ];
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( &badToken, directive, badToken.GetValueString()[ 0 ] );
-        return false;
-    }
+    ASSERT( argsIter->IsKeyword( "once" ) );
+    argsIter++;
 
     ASSERT( file.IsParseOnce() == false ); // Shouldn't be parsing a second time
 
@@ -930,40 +892,34 @@ bool BFFTokenizer::HandleDirective_Once( const BFFFile & file, const char * & /*
 
 // HandleDirective_Undef
 //------------------------------------------------------------------------------
-bool BFFTokenizer::HandleDirective_Undef( const BFFFile & /*file*/, const char * & /*pos*/, const char * /*end*/, const Array<BFFToken> & args )
+bool BFFTokenizer::HandleDirective_Undef( const BFFFile & /*file*/, const char * & /*pos*/, const char * /*end*/, BFFTokenRange & argsIter )
 {
-    ASSERT( args[ 0 ].IsKeyword( "undef" ) );
+    ASSERT( argsIter->IsKeyword( "undef" ) );
+    argsIter++; // consume directive
 
-    const AString & directive = args[ 0 ].GetValueString();
-
-    BFFTokenRange range( args.Begin(), args.End() );
-    range++; // consume directive
-
-    // Check for end
-    if ( range.IsAtEnd() || ( range->IsIdentifier() == false ) )
+    // Expect an identifier
+    if ( argsIter->IsIdentifier() == false )
     {
         // TODO:C A better error
-        Error::Error_1031_UnexpectedCharFollowingDirectiveName( &args[ 0 ], directive, '?' );
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( argsIter.GetCurrent(), "undef", '?' );
         return false;
     }
 
-    const BFFToken * identifierToken = range.GetCurrent();
-    const AString & identifier = range->GetValueString();
-    range++; // consume identifier
-
     // Undefine the token
+    const AString & identifier = argsIter->GetValueString();
     if ( BFFMacros::Get().Undefine( identifier ) == false )
     {
-        if ( identifierToken->GetValueString().BeginsWith( "__" ) )
+        if ( identifier.BeginsWith( "__" ) )
         {
-            Error::Error_1040_UndefOfBuiltInTokenNotAllowed( identifierToken );
+            Error::Error_1040_UndefOfBuiltInTokenNotAllowed( argsIter.GetCurrent() );
         }
         else
         {
-            Error::Error_1039_UnknownTokenInUndef( identifierToken );
+            Error::Error_1039_UnknownTokenInUndef( argsIter.GetCurrent() );
         }
         return false;
     }
+    argsIter++; // consume identifier
 
     return true;
 }

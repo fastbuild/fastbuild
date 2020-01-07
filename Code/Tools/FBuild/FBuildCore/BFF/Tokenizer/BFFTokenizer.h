@@ -46,16 +46,16 @@ protected:
     bool HandleVariable( const char * & pos, const char * end, const BFFFile & file );
     bool HandleDirective( const char * & pos, const char * end, const BFFFile & file );
 
-    bool HandleDirective_Define( const BFFFile & file, const char * & pos, const char * end, const Array<BFFToken> & args );
-    bool HandleDirective_Else( const BFFFile & file, const char * & pos, const char * end, const Array<BFFToken> & args );
-    bool HandleDirective_If( const BFFFile & file, const char * & pos, const char * end, const Array<BFFToken> & args );
+    bool HandleDirective_Define( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter );
+    bool HandleDirective_Else( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter );
+    bool HandleDirective_If( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter );
     bool HandleDirective_IfExists( BFFTokenRange & iter, bool & outResult );
     bool HandleDirective_IfDefined( BFFTokenRange & iter, bool & outResult );
     bool ParseToEndIf( const char * & pos, const char * end, const BFFFile & file, bool allowElse, const char * & outBlockEnd, bool * outIsElse );
-    bool HandleDirective_Import( const BFFFile & file, const char * & pos, const char * end, const Array<BFFToken> & args );
-    bool HandleDirective_Include( const BFFFile & file, const char * & pos, const char * end, const Array<BFFToken> & args );
-    bool HandleDirective_Once( const BFFFile & file, const char * & pos, const char * end, const Array<BFFToken> & args );
-    bool HandleDirective_Undef( const BFFFile & file, const char * & pos, const char * end, const Array<BFFToken> & args );
+    bool HandleDirective_Import( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter );
+    bool HandleDirective_Include( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter );
+    bool HandleDirective_Once( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter );
+    bool HandleDirective_Undef( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter );
 
     struct IncludedFile
     {
@@ -67,6 +67,7 @@ protected:
     Array<BFFFile *>    m_Files;
     BFFMacros           m_Macros;
     uint32_t            m_Depth = 0;
+    bool                m_ParsingDirective = false;
 };
 
 //------------------------------------------------------------------------------

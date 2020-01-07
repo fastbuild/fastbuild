@@ -31,6 +31,9 @@ private:
     void Integers() const;
     void UnnamedScope() const;
     void UnnamedScope_Unterminated() const;
+    void Directives() const;
+    void DefineDirective() const;
+    void ExistsDirective() const;
     void IncludeDirective() const;
     void Include_ExcessiveDepth() const;
     void ImportDirective() const;
@@ -69,6 +72,7 @@ private:
     void SelfAssignment() const;
     void SelfAssignment2() const;
     void Variables() const;
+    void Functions() const;
 };
 
 // Register Tests
@@ -85,6 +89,9 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( Integers )
     REGISTER_TEST( UnnamedScope )
     REGISTER_TEST( UnnamedScope_Unterminated )
+    REGISTER_TEST( Directives )
+    REGISTER_TEST( DefineDirective )
+    REGISTER_TEST( ExistsDirective )
     REGISTER_TEST( IncludeDirective )
     REGISTER_TEST( Include_ExcessiveDepth )
     REGISTER_TEST( ImportDirective )
@@ -123,6 +130,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( SelfAssignment )
     REGISTER_TEST( SelfAssignment2 )
     REGISTER_TEST( Variables )
+    REGISTER_TEST( Functions )
 REGISTER_TESTS_END
 
 // Empty
@@ -228,12 +236,42 @@ void TestBFFParsing::UnnamedScope_Unterminated() const
     TEST_PARSE_FAIL( "{\n",     "Error #1002" );
 }
 
+// Directives
+//------------------------------------------------------------------------------
+void TestBFFParsing::Directives() const
+{
+    TEST_PARSE_FAIL( "#define #",     "Error #1010 - Unknown construct" );
+    TEST_PARSE_FAIL( "#########",     "Error #1010 - Unknown construct" );
+}
+
+// DefineDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::DefineDirective() const
+{
+    TEST_PARSE_OK( "#define X");
+    TEST_PARSE_OK( "#define X123");
+    TEST_PARSE_OK( "#define X_");
+    TEST_PARSE_OK( "#define _X_");
+
+    TEST_PARSE_FAIL( "#define X Y",     "Error #1045 - Extraneous token(s)" );
+}
+
+// ExistsDirective
+//------------------------------------------------------------------------------
+void TestBFFParsing::ExistsDirective() const
+{
+    TEST_PARSE_FAIL( "#if exists",      "Error #1031" );
+    TEST_PARSE_FAIL( "#if exists(",     "Error #1030" );
+    TEST_PARSE_FAIL( "#if exists(x",    "Error #1031" );
+}
+
 // IncludeDirective
 //------------------------------------------------------------------------------
 void TestBFFParsing::IncludeDirective() const
 {
-    TEST_PARSE_FAIL( "#include",            "Error #1031" );
-    TEST_PARSE_FAIL( "#include BLAH",       "Error #1031" );
+    TEST_PARSE_FAIL( "#include",                        "Error #1031" );
+    TEST_PARSE_FAIL( "#include BLAH",                   "Error #1031" );
+    TEST_PARSE_FAIL( "#once\n#include \"test.bff\" X",  "Error #1045 - Extraneous token(s)" );
 
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/includes.bff" );
 }
@@ -252,6 +290,9 @@ void TestBFFParsing::ImportDirective() const
 {
     TEST_PARSE_FAIL( "#import",             "Error #1031" );
     TEST_PARSE_FAIL( "#import 'string'",    "Error #1031" );
+
+    Env::SetEnvVariable("BFF_TEST_IMPORT_VAR", AString("VALUE"));
+    TEST_PARSE_FAIL( "#import BFF_TEST_IMPORT_VAR X",   "Error #1045 - Extraneous token(s)" );
 }
 
 // OnceDirective
@@ -264,7 +305,7 @@ void TestBFFParsing::OnceDirective() const
     TEST_PARSE_OK( "\r\n# once\n" );
 
     // Invalid cases
-    TEST_PARSE_FAIL( "#once X",    "Error #1031" ); // Extraneous junk after directive
+    TEST_PARSE_FAIL( "#once X",    "Error #1045 - Extraneous token(s)" );
 
     // #once used to prevent infinitely recursive includes
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/include_once.bff" );
@@ -333,6 +374,12 @@ void TestBFFParsing::IncludeScope() const
 void TestBFFParsing::IfDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/if_directive.bff" );
+
+    TEST_PARSE_FAIL( "#if",             "Error #1031 - Unknown char" );
+    TEST_PARSE_FAIL( "#if 'string'",    "Error #1031 - Unknown char" );
+    TEST_PARSE_FAIL( "#if X Y\n"
+                     "#endif",          "Error #1045 - Extraneous token(s)" );
+    TEST_PARSE_FAIL( "##if!X\n ",       "Error #1010 - Unknown construct" );
 }
 
 // IfExistsDirective
@@ -433,6 +480,9 @@ void TestBFFParsing::BadUndefDirective() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/bad_undef.bff", true ); // expect failure
     TEST_ASSERT( GetRecordedOutput().Find( "Error #1039" ) );
+
+    TEST_PARSE_FAIL( "#define A\n"
+                     "#undef A X\n",    "Error #1045 - Extraneous token(s)" );
 }
 
 // BadUndefBuiltInDirective
@@ -571,6 +621,18 @@ void TestBFFParsing::Variables() const
     TEST_PARSE_FAIL( ".A<=5",   "Error #1034" );
     TEST_PARSE_FAIL( ".A>=5",   "Error #1034" );
     TEST_PARSE_FAIL( ".A!=5",   "Error #1034" );
+}
+
+// Functions
+//------------------------------------------------------------------------------
+void TestBFFParsing::Functions() const
+{
+    TEST_PARSE_FAIL( "If",          "Error #1023" );
+    TEST_PARSE_FAIL( "If(",         "Error #1002" );
+    TEST_PARSE_FAIL( "If{",         "Error #1023" );
+    TEST_PARSE_FAIL( "Settings",    "Error #1024" );
+    TEST_PARSE_FAIL( "Settings(",   "Error #1021" );
+    TEST_PARSE_FAIL( "Settings{",   "Error #1002" );
 }
 
 //------------------------------------------------------------------------------
