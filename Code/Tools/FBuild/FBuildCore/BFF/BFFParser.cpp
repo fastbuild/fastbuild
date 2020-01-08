@@ -791,12 +791,17 @@ bool BFFParser::StoreVariableArray( const AString & name,
         }
         else if ( iter->IsVariable() )
         {
-            // a variable
-            AStackString<> srcVarName( iter->GetValueString() );
+            // a variable, possibly with substitutions
+            AStackString<> srcVarName;
+            bool srcParentScope;
+            if ( ParseVariableName( iter.GetCurrent(), srcVarName, srcParentScope ) == false )
+            {
+                return false; // ParseVariableName will have emitted an error
+            }
 
             // Determine stack frame to use for Src var
             BFFStackFrame * srcFrame = BFFStackFrame::GetCurrent();
-            if ( iter->GetValueString()[ 0 ] == BFF_DECLARE_VAR_PARENT )
+            if ( srcParentScope )
             {
                 srcVarName[ 0 ] = BFF_DECLARE_VAR_INTERNAL;
                 srcFrame = BFFStackFrame::GetCurrent()->GetParent();
@@ -806,7 +811,7 @@ bool BFFParser::StoreVariableArray( const AString & name,
             const BFFVariable * varSrc = srcFrame ? srcFrame->GetVariableRecurse( srcVarName ) : nullptr;
             if ( varSrc == nullptr )
             {
-                Error::Error_1026_VariableNotFoundForModification( opToken, srcVarName );
+                Error::Error_1009_UnknownVariable( iter.GetCurrent(), nullptr, srcVarName );
                 return false;
             }
 

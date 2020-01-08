@@ -512,7 +512,7 @@ void TestBFFParsing::ParentScopeBug() const
 void TestBFFParsing::ParentScopeBug2() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/parent_scope_bug2.bff", true );
-    TEST_ASSERT( GetRecordedOutput().Find( "FASTBuild Error #1026" ) ); // Variable '%s' not found for modification.
+    TEST_ASSERT( GetRecordedOutput().Find( "Error #1009 - Unknown variable" ) );
 }
 
 // ParentScopeUnknown
@@ -621,6 +621,28 @@ void TestBFFParsing::Variables() const
     TEST_PARSE_FAIL( ".A<=5",   "Error #1034" );
     TEST_PARSE_FAIL( ".A>=5",   "Error #1034" );
     TEST_PARSE_FAIL( ".A!=5",   "Error #1034" );
+
+    // Dynamic variables (lhs)
+    TEST_PARSE_OK( ".A = 'B'\n"
+                   ".'$A$' = 'C'\n" );
+    TEST_PARSE_OK( ".A = 'B'\n"
+                   ".'Thing$A$' = 'C'\n" );
+
+    // Dynamic variables (rhs)
+    TEST_PARSE_OK( ".A = 'A'\n"
+                   ".X = .'$A$'" );
+    TEST_PARSE_OK( ".A = 'A'\n"
+                   ".X = { .'$A$' }" );
+
+    // Invalid dynamic variables (lhs)
+    TEST_PARSE_FAIL( ".'$A$' = 'String'",   "Error #1009 - Unknown variable" );
+
+    // Invalid dynamic variables (rhs)
+    TEST_PARSE_FAIL( ".A = .'$B$'",         "Error #1009 - Unknown variable" );
+    TEST_PARSE_FAIL( ".A = 'B'\n"
+                     ".X = .'$A$'",         "Error #1009 - Unknown variable"  );
+    TEST_PARSE_FAIL( ".A = 'B'\n"
+                     ".X = { .'$A$' }",     "Error #1009 - Unknown variable"  );
 }
 
 // Functions
