@@ -93,6 +93,8 @@ public:
     void GetNativeAnalysisXMLPath( AString& outXMLFileName ) const;
 
     const char * GetObjExtension() const;
+
+    const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
 private:
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;

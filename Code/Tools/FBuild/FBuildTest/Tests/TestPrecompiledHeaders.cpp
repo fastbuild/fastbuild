@@ -37,6 +37,7 @@ private:
     void CacheUniqueness2() const;
     void Deoptimization() const;
     void PrecompiledHeaderCacheAnalyze_MSVC() const;
+    void TestPCH_DifferentObj_MSVC() const;
 
     // Clang on Windows
     #if defined( __WINDOWS__ )
@@ -60,6 +61,7 @@ REGISTER_TESTS_BEGIN( TestPrecompiledHeaders )
     REGISTER_TEST( CacheUniqueness2 )
     REGISTER_TEST( Deoptimization )
     #if defined( __WINDOWS__ )
+        REGISTER_TEST( TestPCH_DifferentObj_MSVC )
         REGISTER_TEST( PrecompiledHeaderCacheAnalyze_MSVC )
         REGISTER_TEST( PreventUselessCacheTraffic_MSVC )
         REGISTER_TEST( TestPCHClangWindows )
@@ -128,6 +130,43 @@ void TestPrecompiledHeaders::TestPCH() const
 
     // check we wrote all objects to the cache
     TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 2 ); // pch and obj using pch
+}
+
+
+// TestPCH_DifferentObj_MSVC
+//------------------------------------------------------------------------------
+void TestPrecompiledHeaders::TestPCH_DifferentObj_MSVC() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/DifferentObj_MSVC/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    options.m_UseCacheWrite = true;
+
+    AStackString<> obj("../tmp/Test/PrecompiledHeaders/PCHUser.obj");
+    AStackString<> pch("../tmp/Test/PrecompiledHeaders/PrecompiledHeader.pch");
+
+    EnsureFileDoesNotExist(obj);
+    EnsureFileDoesNotExist(pch);
+
+    FBuildStats stats = Build(options, false); // don't use DB
+
+    EnsureFileExists(obj);
+    EnsureFileExists(pch);
+
+    // Check stats
+    //                      Seen,   Built,  Type
+    uint32_t numF = 5; // pch.h / slow.h / pchuser.cpp // pch.cpp
+    CheckStatsNode(stats, numF, 3, Node::FILE_NODE);
+    CheckStatsNode(stats, 1, 1, Node::COMPILER_NODE);
+    CheckStatsNode(stats, 2, 2, Node::OBJECT_NODE);// obj + pch obj
+    CheckStatsNode(stats, 1, 1, Node::OBJECT_LIST_NODE);
+    CheckStatsNode(stats, 1, 1, Node::DIRECTORY_LIST_NODE);
+    CheckStatsNode(stats, 1, 1, Node::ALIAS_NODE);
+    CheckStatsNode(stats, 1, 1, Node::EXE_NODE);
+    CheckStatsTotal(stats, numF + 7, 10);
+
+    // check we wrote all objects to the cache
+    TEST_ASSERT(stats.GetStatsFor(Node::OBJECT_NODE).m_NumCacheStores == 2); // pch and obj using pch
 }
 
 // TestPCH_NoRebuild
