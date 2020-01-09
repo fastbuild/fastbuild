@@ -516,7 +516,7 @@ bool BFFTokenizer::HandleDirective( const char * & pos, const char * end, const 
         // fall through to error handling
     }
 
-    const BFFToken error( file, argsStart, BFFTokenType::Invalid, argsStart );
+    const BFFToken error( file, argsStart, BFFTokenType::Invalid, argsStart, argsStart + 1 );
     Error::Error_1030_UnknownDirective( &error, directive );
     return false;
 }
