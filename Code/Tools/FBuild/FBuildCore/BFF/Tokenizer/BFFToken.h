@@ -44,7 +44,7 @@ public:
     BFFToken( const BFFFile & file, const char * sourcePos, BFFTokenType type, const AString & stringValue );
     BFFToken( const BFFFile & file, const char * sourcePos, BFFTokenType type, const bool boolValue );
 
-    BFFToken& operator=(const BFFToken&) = delete;
+    BFFToken & operator =( const BFFToken & ) = delete;
 
     // Convenience wrappers
     bool IsInvalid() const                          { return ( m_Type == BFFTokenType::Invalid ); }
