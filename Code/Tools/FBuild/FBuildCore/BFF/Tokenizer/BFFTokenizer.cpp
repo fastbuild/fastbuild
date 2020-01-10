@@ -100,9 +100,12 @@ BFFTokenizer::~BFFTokenizer()
 
 // TokenizeFromFile
 //------------------------------------------------------------------------------
-bool BFFTokenizer::TokenizeFromFile( const AString & fileName )
+bool BFFTokenizer::TokenizeFromFile( const AString & fileName, const BFFToken * token )
 {
     PROFILE_FUNCTION
+
+    // The root bff doesn't have a token
+    ASSERT( token || ( m_Depth == 0 ) );
 
     // Canonicalize path
     AStackString<> cleanFileName;
@@ -134,7 +137,7 @@ bool BFFTokenizer::TokenizeFromFile( const AString & fileName )
 
     // A file seen for the first time
     BFFFile * newFile = FNEW( BFFFile() );
-    if ( newFile->Load( cleanFileName ) == false )
+    if ( newFile->Load( cleanFileName, token ) == false )
     {
         FDELETE( newFile );
         return false; // Load will have emitted an error
@@ -848,7 +851,6 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * &
         return false;
     }
     AStackString<> include( argsIter->GetValueString() );
-    argsIter++;
 
     // TODO:B Check for empty string
 
@@ -868,7 +870,8 @@ bool BFFTokenizer::HandleDirective_Include( const BFFFile & file, const char * &
     }
 
     // Recursively tokenize
-    const bool result = TokenizeFromFile( include );
+    const bool result = TokenizeFromFile( include, argsIter.GetCurrent() );
+    argsIter++;
 
     --m_Depth;
 

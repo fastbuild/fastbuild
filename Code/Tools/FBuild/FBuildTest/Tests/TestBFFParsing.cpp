@@ -269,9 +269,16 @@ void TestBFFParsing::ExistsDirective() const
 //------------------------------------------------------------------------------
 void TestBFFParsing::IncludeDirective() const
 {
+    // Invalid incldue directives
     TEST_PARSE_FAIL( "#include",                        "Error #1031" );
     TEST_PARSE_FAIL( "#include BLAH",                   "Error #1031" );
     TEST_PARSE_FAIL( "#once\n#include \"test.bff\" X",  "Error #1045 - Extraneous token(s)" );
+
+    // Missing include file
+    TEST_PARSE_FAIL( "#include \"missing.bff\"",        "Error #1032" );
+
+    // Missing root file
+    Parse( "missing.bff", true ); // Expect failure
 
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/includes.bff" );
 }

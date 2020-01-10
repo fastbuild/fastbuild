@@ -134,11 +134,10 @@ bool FBuildTest::ParseFromString( const char * bffContents,
     const size_t outputSizeBefore = GetRecordedOutput().GetLength();
 
     // Parse
-    Function::Create();
+    FBuild fBuild;
     NodeGraph ng;
     BFFParser p( ng );
     const bool result = p.ParseFromString( "test.bff", bffContents );
-    Function::Destroy();
 
     // Handle result
     if ( result == true )
