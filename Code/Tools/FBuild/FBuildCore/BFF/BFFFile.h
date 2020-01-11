@@ -8,6 +8,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
+class BFFToken;
 
 // BFFFile
 //------------------------------------------------------------------------------
@@ -18,7 +19,7 @@ public:
     BFFFile( const char * fileName, const AString & fileContents );
     ~BFFFile();
 
-    bool Load( const AString & fileName );
+    bool Load( const AString & fileName, const BFFToken * token );
 
     const AString & GetFileName() const             { return m_FileName; }
     const AString & GetSourceFileContents() const   { return m_FileContents; }

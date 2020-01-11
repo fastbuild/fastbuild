@@ -662,15 +662,21 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     else
     {
         ObjectNode * other = on->CastTo< ObjectNode >();
-        if ( inputFile != other->GetSourceFile() )
+
+        // Check for conflicts
+        const bool conflict = ( inputFile != other->GetSourceFile() ) ||
+                              ( m_Name != other->GetOwnerObjectList() );
+        if ( conflict )
         {
-            FLOG_ERROR( "Conflicting objects found:\n"
-                        " File A: %s\n"
-                        " File B: %s\n"
-                        " Both compile to: %s\n",
-                        inputFile->GetName().Get(),
-                        other->GetSourceFile()->GetName().Get(),
-                        objFile.Get() );
+            FLOG_ERROR( "Conflicting objects found for: %s\n"
+                        " Source A  : %s\n"
+                        " ObjectList: %s\n"
+                        "AND\n"
+                        " Source B  : %s\n"
+                        " ObjectList: %s\n",
+                        objFile.Get(),
+                        inputFile->GetName().Get(), m_Name.Get(),
+                        other->GetSourceFile()->GetName().Get(), other->GetOwnerObjectList().Get() );
             return false;
         }
     }
@@ -720,6 +726,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_PreprocessorOptions = preprocessorOptions;
     node->m_Flags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
+    node->m_OwnerObjectList = m_Name;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {

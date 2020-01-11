@@ -48,7 +48,8 @@ bool BFFParser::ParseFromFile( const char * fileName )
     PROFILE_FUNCTION
 
     // Tokenize file
-    if ( m_Tokenizer.TokenizeFromFile( AStackString<>( fileName ) ) == false )
+    const BFFToken * token = nullptr; // The root include doesn't have an associated token
+    if ( m_Tokenizer.TokenizeFromFile( AStackString<>( fileName ), token ) == false )
     {
         return false; // Tokenize will have emitted an error
     }

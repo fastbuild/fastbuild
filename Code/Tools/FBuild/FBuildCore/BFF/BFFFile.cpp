@@ -7,6 +7,7 @@
 
 // FBuildCore
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Error.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -33,7 +34,7 @@ BFFFile::~BFFFile() = default;
 
 // Load
 //------------------------------------------------------------------------------
-bool BFFFile::Load( const AString & fileName )
+bool BFFFile::Load( const AString & fileName, const BFFToken * token )
 {
     FLOG_INFO( "Loading BFF '%s'", fileName.Get() );
 
@@ -42,7 +43,14 @@ bool BFFFile::Load( const AString & fileName )
     if ( bffStream.Open( fileName.Get() ) == false )
     {
         // missing bff is a fatal problem
-        FLOG_ERROR( "Failed to open BFF '%s'", fileName.Get() );
+        if ( token )
+        {
+            Error::Error_1032_UnableToOpenInclude( token, fileName );
+        }
+        else
+        {
+            FLOG_ERROR( "Failed to open BFF '%s'", fileName.Get() );
+        }
         return false;
     }
 

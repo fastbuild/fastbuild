@@ -95,6 +95,7 @@ public:
     const char * GetObjExtension() const;
 
     const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
+    const AString & GetOwnerObjectList() const { return m_OwnerObjectList; }
 private:
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
@@ -207,6 +208,7 @@ private:
     uint32_t            m_PreprocessorFlags                 = 0;
     uint64_t            m_PCHCacheKey                       = 0;
     uint64_t            m_LightCacheKey                     = 0;
+    AString             m_OwnerObjectList; // TODO:C This could be a pointer to the node in the future
 
     // Not serialized
     Array< AString >    m_Includes;
