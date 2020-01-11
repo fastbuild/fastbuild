@@ -94,6 +94,7 @@ public:
 
     const char * GetObjExtension() const;
 
+    const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
     const AString & GetOwnerObjectList() const { return m_OwnerObjectList; }
 private:
     virtual BuildResult DoBuild( Job * job ) override;

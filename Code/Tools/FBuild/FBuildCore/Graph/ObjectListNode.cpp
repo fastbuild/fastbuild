@@ -482,8 +482,7 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
                 if ( on->IsMSVC() )
                 {
                     fullArgs += pre;
-                    fullArgs += on->GetName();
-                    fullArgs += on->GetObjExtension();
+                    fullArgs += on->GetPCHObjectName();
                     fullArgs += post;
                     fullArgs.AddDelimiter();
                     continue;
