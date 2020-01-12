@@ -73,6 +73,7 @@ private:
     void SelfAssignment2() const;
     void Variables() const;
     void Functions() const;
+    void ErrorRowAndColumn() const;
 };
 
 // Register Tests
@@ -131,6 +132,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( SelfAssignment2 )
     REGISTER_TEST( Variables )
     REGISTER_TEST( Functions )
+    REGISTER_TEST( ErrorRowAndColumn )
 REGISTER_TESTS_END
 
 // Empty
@@ -662,6 +664,31 @@ void TestBFFParsing::Functions() const
     TEST_PARSE_FAIL( "Settings",    "Error #1024" );
     TEST_PARSE_FAIL( "Settings(",   "Error #1021" );
     TEST_PARSE_FAIL( "Settings{",   "Error #1002" );
+}
+
+// ErrorRowAndColumn
+//------------------------------------------------------------------------------
+void TestBFFParsing::ErrorRowAndColumn() const
+{
+    // Ensure error row/column indices are as expected
+    // (indices are 1-based)
+
+    // Normal with/without whitespace
+    TEST_PARSE_FAIL( "X",           "(1,1)" );
+    TEST_PARSE_FAIL( " X",          "(1,2)" );
+    TEST_PARSE_FAIL( "    X",       "(1,5)" );
+
+    // Tabs
+    TEST_PARSE_FAIL( "\tX",         "(1,2)" );
+    TEST_PARSE_FAIL( "\t\tX",       "(1,3)" );
+    TEST_PARSE_FAIL( " \tX",        "(1,3)" );
+
+    // Line endings
+    TEST_PARSE_FAIL( "\n\nX",       "(3,1)" ); // \n line endings
+    TEST_PARSE_FAIL( "\r\rX",       "(3,1)" ); // \r line endings
+    TEST_PARSE_FAIL( "\r\n\r\nX",   "(3,1)" ); // \r\n line endings
+    TEST_PARSE_FAIL( "\n\r\nX",     "(3,1)" ); // mixed line endings
+    TEST_PARSE_FAIL( "\r\n\nX",     "(3,1)" ); // mixed line endings
 }
 
 //------------------------------------------------------------------------------

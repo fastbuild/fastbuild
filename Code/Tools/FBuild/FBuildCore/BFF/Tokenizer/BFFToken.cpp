@@ -68,8 +68,29 @@ void BFFToken::GetPosInfo( uint32_t & outLine,
     outLine = 1;
     while ( p < m_SourcePos ) // loop to current iterator pos
     {
-        bool atLineEnd = ( *p == '\n' );
-        p++;
+        bool atLineEnd = false;
+        if ( *p == '\n' )
+        {
+            // \n line ending
+            atLineEnd = true;
+            p++;
+        }
+        else if ( *p == '\r' )
+        {
+            // \r or \r\n line endings
+            atLineEnd = true;
+            p++;
+
+            // skip \n for \r\n line endings
+            if ( *p == '\n' )
+            {
+                p++;
+            }
+        }
+        else
+        {
+            p++;
+        }
         if ( atLineEnd )
         {
             outLineStart = p;
