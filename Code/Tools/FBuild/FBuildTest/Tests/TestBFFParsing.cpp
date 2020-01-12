@@ -276,6 +276,9 @@ void TestBFFParsing::IncludeDirective() const
     TEST_PARSE_FAIL( "#include BLAH",                   "Error #1031" );
     TEST_PARSE_FAIL( "#once\n#include \"test.bff\" X",  "Error #1045 - Extraneous token(s)" );
 
+    // Including a directory
+    TEST_PARSE_FAIL( "#include \"/\"",                  "Error #1032" );
+
     // Missing include file
     TEST_PARSE_FAIL( "#include \"missing.bff\"",        "Error #1032" );
 
