@@ -71,7 +71,12 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         // options start with a '-'
         if ( thisArg.BeginsWith( '-' ) )
         {
-            if ( thisArg == "-cache" )
+            if ( thisArg == "-continueafterdbmove" )
+            {
+                m_ContinueAfterDBMove = true;
+                continue;
+            }
+            else if ( thisArg == "-cache" )
             {
                 m_UseCacheRead = true;
                 m_UseCacheWrite = true;
@@ -484,7 +489,8 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -cacheverbose  Emit details about cache interactions.\n"
             " -clean         Force a clean build.\n"
             " -compdb        Generate JSON compilation database for specified targets.\n"
-            " -config [path] Explicitly specify the config file to use.\n" );
+            " -config [path] Explicitly specify the config file to use.\n"
+            " -continueafterdbmove Allow builds after a DB move.\n" );
 #ifdef DEBUG
     OUTPUT( " -debug         Break at startup, to attach debugger.\n" );
 #endif
@@ -536,7 +542,7 @@ void FBuildOptions::DisplayVersion() const
         #define VERSION_CONFIG ""
     #endif
     OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
-            "Copyright 2012-2019 Franta Fulin - http://www.fastbuild.org\n" );
+            "Copyright 2012-2020 Franta Fulin - http://www.fastbuild.org\n" );
     #undef VERSION_CONFIG
 }
 

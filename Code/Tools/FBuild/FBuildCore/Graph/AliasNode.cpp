@@ -29,7 +29,7 @@ AliasNode::AliasNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool AliasNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     Dependencies targets( 32, true );
     const bool allowCopyDirNodes = true;

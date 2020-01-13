@@ -10,7 +10,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
-class BFFIterator;
 class Function;
 
 // CSNode
@@ -20,7 +19,7 @@ class CSNode : public FileNode
     REFLECT_NODE_DECLARE( CSNode )
 public:
     explicit CSNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~CSNode() override;
 
     static inline Node::Type GetTypeS() { return Node::CS_NODE; }

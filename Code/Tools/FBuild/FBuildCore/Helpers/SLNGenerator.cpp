@@ -26,7 +26,7 @@ SLNGenerator::SLNGenerator() = default;
 //------------------------------------------------------------------------------
 SLNGenerator::~SLNGenerator() = default;
 
-// GenerateVCXProj
+// GenerateSLN
 //------------------------------------------------------------------------------
 const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
                                            const AString & solutionVisualStudioVersion,
