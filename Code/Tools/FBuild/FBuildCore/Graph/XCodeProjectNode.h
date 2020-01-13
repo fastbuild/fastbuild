@@ -26,6 +26,7 @@ public:
     AString             m_Target;
     AString             m_XCodeBaseSDK;
     AString             m_XCodeDebugWorkingDir;
+    AString             m_XCodeIphoneOSDeploymentTarget;
 
     static bool ResolveTargets( NodeGraph & nodeGraph,
                                 Array< XCodeProjectConfig > & configs,

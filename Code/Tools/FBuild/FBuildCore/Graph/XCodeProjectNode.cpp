@@ -25,6 +25,7 @@ REFLECT_STRUCT_BEGIN_BASE( XCodeProjectConfig )
     REFLECT( m_Target,  "Target",   MetaOptional() )
     REFLECT( m_XCodeBaseSDK,            "XCodeBaseSDK",         MetaOptional() )
     REFLECT( m_XCodeDebugWorkingDir,    "XCodeDebugWorkingDir", MetaOptional() )
+    REFLECT( m_XCodeIphoneOSDeploymentTarget, "XCodeIphoneOSDeploymentTarget", MetaOptional() )
 REFLECT_END( XCodeProjectConfig )
 
 REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )

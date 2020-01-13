@@ -70,6 +70,7 @@
   .Target                        // (optional) FASTBuild compilation target to associate with .Config
   .XCodeBaseSDK                  // (optional) SDK for compilation target (e.g. "iphoneos", "macosx" )
   .XCodeDebugWorkingDir          // (optional) Working dir for target when debugging
+  .XCodeIphoneOSDeploymentTarget // (optional) iOS deployment version
 ]
 </div>
     </div>
@@ -302,6 +303,11 @@
       Example:
       <div class='code'>.DebugConfig = [ .XCodeDebugWorkingDir = 'path/path' ...</div>
 
+      <hr>
+      <p><b>.XCodeIphoneOSDeploymentTarget</b> - String - (Optional)</p>
+      <p>The iOS version required for deployment can be overridden from the XCode default.</p>
+      Example:
+      <div class='code'>.DebugConfig = [ .XCodeIphoneOSDeploymentTarget = '12.0' ...</div>
 
     </div>
 
