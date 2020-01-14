@@ -9,7 +9,6 @@
 #include "Tools/FBuild/FBuildCore/Graph/Dependencies.h"
 #include "Tools/FBuild/FBuildCore/Graph/LinkerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 
 // Core
@@ -118,7 +117,7 @@ void TestLinker::LibrariesOnCommandLine() const
 {
     FBuild fBuild;
     NodeGraph nodeGraph;
-    BFFIterator iter;
+    BFFToken * iter = nullptr;
 
     // MSVC: 2 libraries
     {

@@ -5,7 +5,6 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
@@ -262,8 +261,8 @@ void TestGraph::TestDirectoryListNode() const
     DirectoryListNode * node = ng.CreateDirectoryListNode( name );
     node->m_Path = testFolder;
     node->m_Patterns = patterns;
-    BFFIterator iter;
-    TEST_ASSERT( node->Initialize( ng, iter, nullptr ) );
+    BFFToken * token = nullptr;
+    TEST_ASSERT( node->Initialize( ng, token, nullptr ) );
     TEST_ASSERT( ng.FindNode( name ) == node );
 
     TEST_ASSERT( fb.Build( node ) );

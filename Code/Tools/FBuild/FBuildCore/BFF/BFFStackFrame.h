@@ -50,7 +50,7 @@ public:
                                      const BFFVariable * lhs,
                                      const BFFVariable * rhs,
                                      BFFStackFrame * frame,
-                                     const BFFIterator & operatorIter );
+                                     const BFFToken * operatorIter );
 
     // get a variable (caller passes complete name indicating type (user vs system))
     static const BFFVariable * GetVar( const char * name, BFFStackFrame * frame = nullptr );
@@ -75,6 +75,14 @@ public:
 
     const BFFVariable * GetVariableRecurse( const AString & name ) const;
 
+    const AString & GetLastVariableSeen() const { return m_LastVariableSeen; }
+    BFFStackFrame * GetLastVariableSeenFrame() const { return m_LastVariableSeenFrame; }
+    void            SetLastVariableSeen( const AString & varName, BFFStackFrame * frame )
+    { 
+        m_LastVariableSeen = varName;
+        m_LastVariableSeenFrame = frame;
+    }
+
 private:
     const BFFVariable * GetVariableRecurse( const AString & nameOnly,
                                       BFFVariable::VarType type ) const;
@@ -89,6 +97,10 @@ private:
 
     // pointer to parent scope
     BFFStackFrame * m_Next;
+
+    // Track last variable to allow omission of left hand side in operations on the same var
+    AString m_LastVariableSeen;
+    BFFStackFrame * m_LastVariableSeenFrame = nullptr;
 
     // the head of the linked list, from deepest to shallowest
     static BFFStackFrame * s_StackHead;

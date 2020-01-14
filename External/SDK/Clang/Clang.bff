@@ -18,7 +18,7 @@
 
 // Activate
 //------------------------------------------------------------------------------
-#if__LINUX__
+#if __LINUX__
     #if CI_BUILD
         #include "Linux/Clang_CI.bff"
     #else
