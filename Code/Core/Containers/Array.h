@@ -79,6 +79,8 @@ public:
     void PopFront(); // expensive - shuffles everything in the array!
     void Erase( T * const iter );
     inline void EraseIndex( size_t index ) { Erase( m_Begin + index ); }
+    template < class ... ARGS >
+    void EmplaceBack( ARGS && ... args );
 
     Array & operator = ( const Array< T > & other );
     Array & operator = ( Array< T > && other );
@@ -532,6 +534,21 @@ void Array< T >::Erase( T * const iter )
     }
     dst->~T();
     --m_Size;
+}
+
+// EmplaceBack
+//------------------------------------------------------------------------------
+template < class T >
+template < class ... ARGS >
+void Array< T >::EmplaceBack( ARGS && ... args )
+{
+    if ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) )
+    {
+        Grow();
+    }
+    T * pos = m_Begin + m_Size;
+    INPLACE_NEW ( pos ) T( args ... );
+    m_Size++;
 }
 
 // operator =
