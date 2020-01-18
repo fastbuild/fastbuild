@@ -230,7 +230,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
             {
                 return false; // GetQuotedString will have emitted an error
             }
-            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::String, string ) );
+            m_Tokens.EmplaceBack( file, tokenStart, BFFTokenType::String, string );
             continue;
         }
 
@@ -248,7 +248,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
                      ( opString == "<=" ) ||
                      ( opString == ">=" ) )
                 {
-                    m_Tokens.Append( BFFToken( file, pos, BFFTokenType::Operator, pos, pos + 2 ) );
+                    m_Tokens.EmplaceBack( file, pos, BFFTokenType::Operator, pos, pos + 2 );
                     pos += 2;
                     continue;
                 }
@@ -265,7 +265,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
             const bool isNegatedNumber = ( ( c == '-' ) && IsNumber( pos[ 1 ] ) );
             if ( isNegatedNumber == false )
             {
-                m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::Operator, pos, pos + 1 ) );
+                m_Tokens.EmplaceBack( file, tokenStart, BFFTokenType::Operator, pos, pos + 1 );
                 pos++;
                 continue;
             }
@@ -281,7 +281,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
             {
                 ++pos;
             }
-            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::Number, tokenStart, pos ) );
+            m_Tokens.EmplaceBack( file, tokenStart, BFFTokenType::Number, tokenStart, pos );
             continue;
         }
 
@@ -289,14 +289,14 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         if ( IsComma( c ) )
         {
             ++pos;
-            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::Comma, tokenStart, pos ) );
+            m_Tokens.EmplaceBack( file, tokenStart, BFFTokenType::Comma, tokenStart, pos );
             continue;
         }
 
         // Round Brackets?
         if ( ( c == '(' ) || ( c == ')' ) )
         {
-            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::RoundBracket, pos, pos + 1 ) );
+            m_Tokens.EmplaceBack( file, tokenStart, BFFTokenType::RoundBracket, pos, pos + 1 );
             pos++;
             continue;
         }
@@ -304,7 +304,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         // Curly Brackets?
         if ( ( c == '{' ) || ( c == '}' ) )
         {
-            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::CurlyBracket, pos, pos + 1 ) );
+            m_Tokens.EmplaceBack( file, tokenStart, BFFTokenType::CurlyBracket, pos, pos + 1 );
             pos++;
             continue;
         }
@@ -312,7 +312,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         // Square Brackets?
         if ( ( c == '[' ) || ( c == ']' ) )
         {
-            m_Tokens.Append( BFFToken( file, tokenStart, BFFTokenType::SquareBracket, pos, pos + 1 ) );
+            m_Tokens.EmplaceBack( file, tokenStart, BFFTokenType::SquareBracket, pos, pos + 1 );
             pos++;
             continue;
         }
@@ -333,7 +333,7 @@ bool BFFTokenizer::Tokenize( const BFFFile & file, const char * pos, const char 
         return false;
     }
 
-    m_Tokens.Append( BFFToken( file, end, BFFTokenType::EndOfFile, AString::GetEmpty() ) );
+    m_Tokens.EmplaceBack( file, end, BFFTokenType::EndOfFile, AString::GetEmpty() );
     return true;
 }
 
@@ -363,12 +363,12 @@ bool BFFTokenizer::HandleIdentifier( const char * & pos, const char * /*end*/, c
     // - Booleans
     if ( identifier == BFF_KEYWORD_TRUE )
     {
-        m_Tokens.Append( BFFToken( file, idStart, BFFTokenType::Boolean, true ) );
+        m_Tokens.EmplaceBack( file, idStart, BFFTokenType::Boolean, true );
         return true;
     }
     if ( identifier == BFF_KEYWORD_FALSE )
     {
-        m_Tokens.Append( BFFToken( file, idStart, BFFTokenType::Boolean, false ) );
+        m_Tokens.EmplaceBack( file, idStart, BFFTokenType::Boolean, false );
         return true;
     }
 
@@ -384,19 +384,19 @@ bool BFFTokenizer::HandleIdentifier( const char * & pos, const char * /*end*/, c
          ( identifier == BFF_KEYWORD_ONCE ) ||
          ( identifier == BFF_KEYWORD_UNDEF ) )
     {
-        m_Tokens.Append( BFFToken( file, idStart, BFFTokenType::Keyword, identifier ) );
+        m_Tokens.EmplaceBack( file, idStart, BFFTokenType::Keyword, identifier );
         return true;
     }
 
     // - Functions
     if ( Function::Find( identifier ) )
     {
-        m_Tokens.Append( BFFToken( file, idStart, BFFTokenType::Function, identifier ) );
+        m_Tokens.EmplaceBack( file, idStart, BFFTokenType::Function, identifier );
         return true;
     }
 
     // Unspecified Identifier
-    m_Tokens.Append( BFFToken( file, idStart, BFFTokenType::Identifier, identifier ) );
+    m_Tokens.EmplaceBack( file, idStart, BFFTokenType::Identifier, identifier );
     return true;
 }
 
@@ -440,7 +440,7 @@ bool BFFTokenizer::HandleVariable( const char * & pos, const char * /*end*/, con
         return false;
     }
 
-    m_Tokens.Append( BFFToken( file, variableStart, BFFTokenType::Variable, variableName ) );
+    m_Tokens.EmplaceBack( file, variableStart, BFFTokenType::Variable, variableName );
     return true;
 }
 
@@ -822,9 +822,9 @@ bool BFFTokenizer::HandleDirective_Import( const BFFFile & file, const char * & 
     // Inject variable declaration
     AStackString<> varName( "." );
     varName += envVarToImport;
-    m_Tokens.Append( BFFToken( file, pos, BFFTokenType::Variable, varName ) );
-    m_Tokens.Append( BFFToken( file, pos, BFFTokenType::Operator, AStackString<>( "=" ) ) );
-    m_Tokens.Append( BFFToken( file, pos, BFFTokenType::String, varValue ) );
+    m_Tokens.EmplaceBack( file, pos, BFFTokenType::Variable, varName );
+    m_Tokens.EmplaceBack( file, pos, BFFTokenType::Operator, AStackString<>( "=" ) );
+    m_Tokens.EmplaceBack( file, pos, BFFTokenType::String, varValue );
 
     return true;
 }
