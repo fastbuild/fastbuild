@@ -4,6 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Containers/Forward.h"
 #include "Core/Containers/Move.h"
 #include "Core/Containers/Sort.h"
 #include "Core/Env/Assert.h"
@@ -547,7 +548,7 @@ void Array< T >::EmplaceBack( ARGS && ... args )
         Grow();
     }
     T * pos = m_Begin + m_Size;
-    INPLACE_NEW ( pos ) T( args ... );
+    INPLACE_NEW ( pos ) T( Forward( ARGS, args ) ... );
     m_Size++;
 }
 

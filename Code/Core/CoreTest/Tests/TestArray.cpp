@@ -1310,7 +1310,7 @@ void TestArray::EmplaceBack() const
 {
     // POD
     {
-        // Emaplce one item
+        // Emplace one item
         Array<int32_t> array;
         array.EmplaceBack( 1 );
         CheckConsistency( array );
@@ -1335,8 +1335,15 @@ void TestArray::EmplaceBack() const
 
     // Complex Type
     {
-        Array<AString> array;
+        // Emplace one item
+        Array<AString> array( 1 );
+
+        TEST_MEMORY_SNAPSHOT( s1 ); // Take note of memory state before
+
         array.EmplaceBack( "string1" );
+
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 ) // Check expected amount of allocs occurred
+
         CheckConsistency( array );
         TEST_ASSERT( array.IsEmpty() == false );
         TEST_ASSERT( array.GetSize() == 1 );
@@ -1344,11 +1351,33 @@ void TestArray::EmplaceBack() const
         TEST_ASSERT( array[ 0 ] == "string1" );
     }
     {
-        // Pop one of many items
-        Array<AString> array;
+        // Emplace one item (Move)
+        Array<AString> array( 1 );
+
+        TEST_MEMORY_SNAPSHOT( s1 ); // Take note of memory state before
+
+        array.EmplaceBack( Move( AString( "string1" ) ) );
+
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 1 ) // Check expected amount of allocs occurred
+
+        CheckConsistency( array );
+        TEST_ASSERT( array.IsEmpty() == false );
+        TEST_ASSERT( array.GetSize() == 1 );
+        TEST_ASSERT( array.GetCapacity() >= 1 );
+        TEST_ASSERT( array[ 0 ] == "string1" );
+    }
+    {
+        // Emplace several items
+        Array<AString> array( 3 );
+
+        TEST_MEMORY_SNAPSHOT( s1 ); // Take note of memory state before
+
         array.EmplaceBack( "string1" );
         array.EmplaceBack( "string2" );
         array.EmplaceBack( "string3" );
+
+        TEST_EXPECT_ALLOCATION_EVENTS( s1, 3 ) // Check expected amount of allocs occurred
+
         CheckConsistency( array );
         TEST_ASSERT( array.IsEmpty() == false );
         TEST_ASSERT( array.GetSize() == 3 );
