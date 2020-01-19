@@ -58,7 +58,7 @@ BFFToken::BFFToken( BFFToken && other )
     : m_Type( other.m_Type )
     , m_Boolean( other.m_Boolean )
     , m_Integer( other.m_Integer )
-    , m_String( other.m_String )
+    , m_String( Move( other.m_String ) )
     , m_BFFFile( other.m_BFFFile )
     , m_SourcePos( other.m_SourcePos )
 {

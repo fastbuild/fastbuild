@@ -60,7 +60,7 @@ public:
     bool IsNumber() const                           { return ( m_Type == BFFTokenType::Number ); }
     bool IsOperator() const                         { return ( m_Type == BFFTokenType::Operator ); }
     bool IsOperator( const char * op ) const        { return ( m_Type == BFFTokenType::Operator ) && ( m_String == op ); }
-    bool IsOperator( const char op ) const          { return ( m_Type == BFFTokenType::Operator ) && ( m_String[ 0 ] == op ); }
+    bool IsOperator( const char op ) const          { return ( m_Type == BFFTokenType::Operator ) && ( m_String[ 0 ] == op ) && ( m_String.GetLength() == 1 ); }
     bool IsRoundBracket( const char c ) const       { return ( m_Type == BFFTokenType::RoundBracket ) && ( m_String[ 0 ] == c ); }
     bool IsCurlyBracket( const char c ) const       { return ( m_Type == BFFTokenType::CurlyBracket ) && ( m_String[ 0 ] == c ); }
     bool IsSquareBracket( const char c ) const      { return ( m_Type == BFFTokenType::SquareBracket ) && ( m_String[ 0 ] == c ); }

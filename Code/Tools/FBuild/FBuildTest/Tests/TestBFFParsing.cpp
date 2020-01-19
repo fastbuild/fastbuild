@@ -633,6 +633,7 @@ void TestBFFParsing::Variables() const
     TEST_PARSE_FAIL( ".A<=5",   "Error #1034" );
     TEST_PARSE_FAIL( ".A>=5",   "Error #1034" );
     TEST_PARSE_FAIL( ".A!=5",   "Error #1034" );
+    TEST_PARSE_FAIL( ".A==5",   "Error #1034" );
 
     // Dynamic variables (lhs)
     TEST_PARSE_OK( ".A = 'B'\n"
