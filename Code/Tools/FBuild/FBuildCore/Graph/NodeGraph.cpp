@@ -1466,7 +1466,6 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
 
     // sanity checks
     ASSERT( cleanPath.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
-    ASSERT( cleanPath.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
 }
 
 // FindNodeInternal
