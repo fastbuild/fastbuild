@@ -81,7 +81,7 @@ SLNNode::SLNNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool SLNNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool SLNNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // Solution Configs
     //------------------------------------------------------------------------------
@@ -364,7 +364,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
 //------------------------------------------------------------------------------
 bool SLNNode::GatherProject( NodeGraph & nodeGraph,
                              const Function * function,
-                             const BFFIterator & iter,
+                             const BFFToken * iter,
                              const char * propertyName,
                              const AString & projectName,
                              Array< VCXProjectNode * > & inOutProjects ) const
@@ -397,7 +397,7 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
 //------------------------------------------------------------------------------
 bool SLNNode::GatherProjects( NodeGraph & nodeGraph,
                               const Function * function,
-                              const BFFIterator & iter,
+                              const BFFToken * iter,
                               const char * propertyName,
                               const Array< AString > & projectNames,
                               Array< VCXProjectNode * > & inOutProjects ) const

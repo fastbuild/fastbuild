@@ -170,31 +170,9 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
 {
     ASSERT( m_UsedFiles.IsEmpty() ); // NodeGraph cannot be recycled
 
-    // open the configuration file
-    FLOG_INFO( "Loading BFF '%s'", bffFile );
-    FileStream bffStream;
-    if ( bffStream.Open( bffFile ) == false )
-    {
-        // missing bff is a fatal problem
-        FLOG_ERROR( "Failed to open BFF '%s'", bffFile );
-        return false;
-    }
-    const uint64_t rootBFFTimeStamp = FileIO::GetFileLastWriteTime( AStackString<>( bffFile ) );
-
-    // read entire config into memory
-    uint32_t size = (uint32_t)bffStream.GetFileSize();
-    AutoPtr< char > data( (char *)ALLOC( size + 1 ) ); // extra byte for null character sentinel
-    if ( bffStream.Read( data.Get(), size ) != size )
-    {
-        FLOG_ERROR( "Error reading BFF '%s'", bffFile );
-        return false;
-    }
-    const uint64_t rootBFFDataHash = xxHash::Calc64( data.Get(), size );
-
     // re-parse the BFF from scratch, clean build will result
     BFFParser bffParser( *this );
-    data.Get()[ size ] = '\0'; // data passed to parser must be NULL terminated
-    const bool ok = bffParser.Parse( data.Get(), size, bffFile, rootBFFTimeStamp, rootBFFDataHash ); // pass size excluding sentinel
+    const bool ok = bffParser.ParseFromFile( bffFile );
     if ( ok )
     {
         // Store a pointer to the SettingsNode as defined by the BFF, or create a
@@ -202,6 +180,14 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
         const AStackString<> settingsNodeName( "$$Settings$$" );
         const Node * settingsNode = FindNode( settingsNodeName );
         m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : CreateSettingsNode( settingsNodeName ); // Create a default
+
+        // Parser will populate m_UsedFiles
+        const Array<BFFFile *> & usedFiles = bffParser.GetUsedFiles();
+        m_UsedFiles.SetCapacity( usedFiles.GetSize() );
+        for ( const BFFFile * file : usedFiles )
+        {
+            m_UsedFiles.Append( UsedFile( file->GetFileName(), file->GetTimeStamp(), file->GetHash() ) );
+        }
     }
     return ok;
 }
@@ -1285,7 +1271,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     if ( !isFullPath && makeFullPath )
     {
         // make a full path by prepending working dir
-        const AString & workingDir = FBuild::Get().GetWorkingDir();
+        const AString & workingDir = FBuild::IsValid() ? FBuild::Get().GetWorkingDir() : AString::GetEmpty();
 
         // we're making the assumption that we don't need to clean the workingDir
         ASSERT( workingDir.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
@@ -1481,49 +1467,6 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     // sanity checks
     ASSERT( cleanPath.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
     ASSERT( cleanPath.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
-}
-
-// AddUsedFile
-//------------------------------------------------------------------------------
-void NodeGraph::AddUsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash )
-{
-    const size_t numFiles = m_UsedFiles.GetSize();
-    for ( size_t i=0 ;i<numFiles; ++i )
-    {
-        if ( PathUtils::ArePathsEqual( m_UsedFiles[i].m_FileName, fileName ) )
-        {
-            ASSERT( m_UsedFiles[ i ].m_Once == false ); // should not be trying to add a file a second time
-            return;
-        }
-    }
-    m_UsedFiles.Append( UsedFile( fileName, timeStamp, dataHash ) );
-}
-
-// IsOneUseFile
-//------------------------------------------------------------------------------
-bool NodeGraph::IsOneUseFile( const AString & fileName ) const
-{
-    const size_t numFiles = m_UsedFiles.GetSize();
-    ASSERT( numFiles ); // shouldn't be called if there are no files
-    for ( size_t i=0 ;i<numFiles; ++i )
-    {
-        if ( PathUtils::ArePathsEqual( m_UsedFiles[i].m_FileName, fileName ) )
-        {
-            return m_UsedFiles[ i ].m_Once;
-        }
-    }
-
-    // file never seen, so it can be included multiple time initially
-    // (if we hit a #once during parsing, we'll flag the file then)
-    return false;
-}
-
-// SetCurrentFileAsOneUse
-//------------------------------------------------------------------------------
-void NodeGraph::SetCurrentFileAsOneUse()
-{
-    ASSERT( !m_UsedFiles.IsEmpty() );
-    m_UsedFiles[ m_UsedFiles.GetSize() - 1 ].m_Once = true;
 }
 
 // FindNodeInternal
@@ -1739,6 +1682,12 @@ bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* 
     if ( PathUtils::ArePathsEqual( originalNodeGraphDBFile, nodeGraphDBFileClean ) == false )
     {
         FLOG_WARN( "Database has been moved (originally at '%s', now at '%s').", originalNodeGraphDBFile.Get(), nodeGraphDBFileClean.Get() );
+        if ( FBuild::Get().GetOptions().m_ContinueAfterDBMove )
+        {
+            // Allow build to continue (will be a clean build)
+            compatibleDB = false;
+            return true;
+        }
         return false;
     }
 
@@ -1901,7 +1850,7 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
     // - since everything matches, we only need to migrate the stamps
     for ( Dependency & dep : newNode.m_StaticDependencies )
     {
-        const size_t index = ( &dep - newNode.m_StaticDependencies.Begin() );
+        const size_t index = size_t( &dep - newNode.m_StaticDependencies.Begin() );
         const Dependency & oldDep = oldNode->m_StaticDependencies[ index ];
         dep.Stamp( oldDep.GetNodeStamp() );
     }
@@ -1945,7 +1894,8 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
                 MigrateProperties( (const void *)oldDepNode, (void *)newDepNode, newDepNode->GetReflectionInfoV() );
 
                 // Initialize the new node
-                VERIFY( newDepNode->Initialize( *this, BFFIterator(), nullptr ) );
+                const BFFToken * token = nullptr;
+                VERIFY( newDepNode->Initialize( *this, token, nullptr ) );
 
                 // Continue recursing
                 MigrateNode( oldNodeGraph, *newDepNode, oldDepNode );

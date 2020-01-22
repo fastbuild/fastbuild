@@ -55,7 +55,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 134 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 139 };
 
     bool IsValid() const
     {
@@ -131,11 +131,6 @@ public:
         static bool IsCleanPath( const AString & path );
     #endif
 
-    // as BFF files are encountered during parsing, we track them
-    void AddUsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash );
-    bool IsOneUseFile( const AString & fileName ) const;
-    void SetCurrentFileAsOneUse();
-
     static void UpdateBuildStatus( const Node * node,
                                    uint32_t & nodesBuiltTime,
                                    uint32_t & totalNodeTime );
@@ -196,11 +191,10 @@ private:
     // each file used in the generation of the node graph is tracked
     struct UsedFile
     {
-        explicit UsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash ) : m_FileName( fileName ), m_TimeStamp( timeStamp ), m_DataHash( dataHash ) , m_Once( false ) {}
+        explicit UsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash ) : m_FileName( fileName ), m_TimeStamp( timeStamp ), m_DataHash( dataHash ) {}
         AString     m_FileName;
         uint64_t    m_TimeStamp;
         uint64_t    m_DataHash;
-        bool        m_Once;
     };
     Array< UsedFile > m_UsedFiles;
 
