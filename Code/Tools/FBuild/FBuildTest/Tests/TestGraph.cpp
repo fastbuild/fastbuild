@@ -526,10 +526,6 @@ void TestGraph::TestCleanPathPartial() const
     CHECK_RELATIVE( "subdir//..//.file", ".file", ".file" )
 
     // edge cases/regressions
-    #if defined( __WINDOWS__ )
-        // - There was a bug with folders beginning with a slash on Windows
-        CHECK_RELATIVE( "\\folder\\file", "folder\\file", "" )
-    #endif
     // - A bug meant paths terminated with .. were not correctly handled
     CHECK_FULLPATH( "..", "C:\\Windows\\", "/tmp/" )
     CHECK_FULLPATH( ".\\..", "C:\\Windows\\", "/tmp/" )
