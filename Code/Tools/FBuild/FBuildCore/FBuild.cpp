@@ -373,9 +373,21 @@ bool FBuild::Build( Node * nodeToBuild )
         Array< AString > workers;
         if ( settings->GetWorkerList().IsEmpty() )
         {
-            // check for workers through brokerage
-            // TODO:C This could be moved out of the main code path
-            m_WorkerBrokerage.FindWorkers( workers );
+            // Check for workers for the FASTBUILD_WORKERS environment variable
+            // which is a list of worker addresses separated by a semi-colon.
+            
+            AString workersEnv;
+            if ( Env::GetEnvVariable("FASTBUILD_WORKERS", workersEnv) )
+            {
+                workersEnv.Tokenize(workers, ';');
+            }
+            
+            if ( workers.IsEmpty() )
+            {
+                // check for workers through brokerage
+                // TODO:C This could be moved out of the main code path
+                m_WorkerBrokerage.FindWorkers(workers);
+            }
         }
         else
         {
