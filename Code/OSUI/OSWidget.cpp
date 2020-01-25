@@ -30,9 +30,7 @@
 //------------------------------------------------------------------------------
 OSWidget::OSWidget( OSWindow * parentWindow )
     : m_Parent( parentWindow )
-    #if defined( __WINDOWS__ )
-        , m_Handle( nullptr )
-    #endif
+    , m_Handle( nullptr )
     , m_Initialized( false )
 {
     #if defined( __WINDOWS__ )

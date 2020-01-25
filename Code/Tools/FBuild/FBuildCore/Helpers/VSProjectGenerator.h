@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 class VSProjectConfig;
 class VSProjectFileType;
+class VSProjectImport;
 
 // VSProjectFilePair
 //------------------------------------------------------------------------------
@@ -44,14 +45,17 @@ public:
 
     const AString & GenerateVCXProj( const AString & projectFile,
                                      const Array< VSProjectConfig > & configs,
-                                     const Array< VSProjectFileType > & fileTypes );
+                                     const Array< VSProjectFileType > & fileTypes,
+                                     const Array< VSProjectImport > & projectImports );
+
     const AString & GenerateVCXProjFilters( const AString & projectFile );
 
     static void FormatDeterministicProjectGUID( AString & guid, const AString & projectName );
 
 private:
     // Helper to format some text
-    void Write( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    void Write( const char * string );
+    void WriteF( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // Helpers to format some xml
     void WritePGItem( const char * xmlTag, const AString & value );

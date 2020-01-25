@@ -6,28 +6,31 @@
 //------------------------------------------------------------------------------
 #include "FileNode.h"
 
+// FBuild
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
+
 // Core
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // XCodeProjectConfig
 //------------------------------------------------------------------------------
-struct XCodeProjectConfig : public Struct
+class XCodeProjectConfig : public ProjectGeneratorBaseConfig
 {
     REFLECT_STRUCT_DECLARE( XCodeProjectConfig )
 public:
-    AString             m_Config;
     AString             m_Target;
-    const Node *        m_TargetNode = nullptr;
+    AString             m_XCodeBaseSDK;
+    AString             m_XCodeDebugWorkingDir;
+    AString             m_XCodeIphoneOSDeploymentTarget;
 
     static bool ResolveTargets( NodeGraph & nodeGraph,
                                 Array< XCodeProjectConfig > & configs,
-                                const BFFIterator * iter = nullptr,
+                                const BFFToken * iter = nullptr,
                                 const Function * function = nullptr );
 };
 
@@ -38,7 +41,7 @@ class XCodeProjectNode : public FileNode
     REFLECT_NODE_DECLARE( XCodeProjectNode )
 public:
     explicit XCodeProjectNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~XCodeProjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::XCODEPROJECT_NODE; }
@@ -59,6 +62,9 @@ private:
     AString             m_XCodeBuildToolPath;
     AString             m_XCodeBuildToolArgs;
     AString             m_XCodeBuildWorkingDir;
+    bool                m_XCodeDocumentVersioning = false;
+    Array<AString>      m_XCodeCommandLineArguments;
+    Array<AString>      m_XCodeCommandLineArgumentsDisabled;
 };
 
 //------------------------------------------------------------------------------

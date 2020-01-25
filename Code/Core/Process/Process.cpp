@@ -8,6 +8,8 @@
 #include "Core/Env/Assert.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Math/Conversions.h"
+#include "Core/Math/Constants.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Time/Timer.h"
@@ -156,8 +158,8 @@ void Process::KillProcessTree()
             ::CloseHandle( hChildProc );
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        // TODO: Kill process tree if necessary?
-        kill( m_ChildPID, SIGTERM );
+        // Kill all processes in the process group of the child process.
+        kill( -m_ChildPID, SIGKILL );
     #else
         #error Unknown platform
     #endif
@@ -176,7 +178,7 @@ bool Process::Spawn( const char * executable,
     ASSERT( !m_Started );
     ASSERT( executable );
 
-    if ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) )
+    if ( m_MasterAbortFlag && AtomicLoadRelaxed( m_MasterAbortFlag ) )
     {
         // Once master process has aborted, we no longer permit spawning sub-processes.
         return false;
@@ -292,9 +294,11 @@ bool Process::Spawn( const char * executable,
 
         // Increase buffer sizes to reduce stalls
         #if defined( __LINUX__ )
-            const int bufferSize = ( 1024 * 1024 );
-            VERIFY( fcntl( stdOutPipeFDs[ 1 ], F_SETPIPE_SZ, bufferSize ) == bufferSize );
-            VERIFY( fcntl( stdErrPipeFDs[ 1 ], F_SETPIPE_SZ, bufferSize ) == bufferSize );
+            // On systems with many CPU cores, this can fail due to per-process
+            // limits being reached, so consider this a hint only.
+            // (We only increase the size of the stdout to avoid "wasting" memory
+            // accelerating the stderr, which is the uncommon case to write to)
+            fcntl( stdOutPipeFDs[ 1 ], F_SETPIPE_SZ, ( 512 * 1024 ) );
         #endif
 
         // prepare args
@@ -353,6 +357,11 @@ bool Process::Spawn( const char * executable,
         const bool isChild = ( childProcessPid == 0 );
         if ( isChild )
         {
+            // Put child process into its own process group.
+            // This will allow as to send signals to the whole group which we use to implement KillProcessTree.
+            // The new process group will have ID equal to the PID of the child process.
+            VERIFY( setpgid( 0, 0 ) == 0 );
+
             VERIFY( dup2( stdOutPipeFDs[ 1 ], STDOUT_FILENO ) != -1 );
             VERIFY( dup2( stdErrPipeFDs[ 1 ], STDERR_FILENO ) != -1 );
 
@@ -573,11 +582,19 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
 
     Timer t;
 
+    #if defined( __LINUX__ )
+        // Start with a short sleep interval to allow rapid termination of
+        // short-lived processes. The timeout increases during periods of
+        // no output and reset when receiving output to balance responsiveness
+        // with overhead.
+        uint32_t sleepIntervalMS = 1;
+    #endif
+
     bool processExited = false;
     for ( ;; )
     {
-        const bool masterAbort = ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) );
-        const bool abort = ( m_AbortFlag && ( *m_AbortFlag ) );
+        const bool masterAbort = ( m_MasterAbortFlag && AtomicLoadRelaxed( m_MasterAbortFlag ) );
+        const bool abort = ( m_AbortFlag && AtomicLoadRelaxed( m_AbortFlag ) );
         if ( abort || masterAbort )
         {
             PROFILE_SECTION( "Abort" )
@@ -594,6 +611,10 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
         // did we get some data?
         if ( ( prevOutSize != outSize ) || ( prevErrSize != errSize ) )
         {
+            #if defined( __LINUX__ )
+                // Reset sleep interval            
+                sleepIntervalMS = 1;
+            #endif
             continue; // try reading again right away incase there is more
         }
 
@@ -638,7 +659,10 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
                 #else
                     // TODO:C Investigate waiting on an event when process terminates
                     // to reduce overall process spawn time
-                    Thread::Sleep( 8 );
+                    Thread::Sleep( sleepIntervalMS );
+
+                    // Increase sleep interval upto limit
+                    sleepIntervalMS = Math::Min<uint32_t>( sleepIntervalMS * 2, 8 );
                 #endif
                 continue;
             }
@@ -876,7 +900,7 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     #elif defined( __LINUX__ )
         return ::getpid();
     #elif defined( __OSX__ )
-        return 0; // TODO: Implement GetCurrentId()
+        return ::getpid();
     #endif
 }
 

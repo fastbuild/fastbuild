@@ -48,7 +48,7 @@ FunctionObjectList::FunctionObjectList()
 
 // CheckCompilerOptions
 //------------------------------------------------------------------------------
-bool FunctionObjectList::CheckCompilerOptions( const BFFIterator & iter, const AString & compilerOptions, const uint32_t objFlags ) const
+bool FunctionObjectList::CheckCompilerOptions( const BFFToken * iter, const AString & compilerOptions, const uint32_t objFlags ) const
 {
     bool hasInputToken = false;
     bool hasOutputToken = false;
@@ -119,7 +119,7 @@ bool FunctionObjectList::CheckCompilerOptions( const BFFIterator & iter, const A
 
 // CheckMSVCPCHFlags
 //------------------------------------------------------------------------------
-bool FunctionObjectList::CheckMSVCPCHFlags( const BFFIterator & iter,
+bool FunctionObjectList::CheckMSVCPCHFlags( const BFFToken * iter,
                                             const AString & compilerOptions,
                                             const AString & pchOptions,
                                             const AString & pchOutputFile,

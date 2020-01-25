@@ -8,7 +8,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // TestNode
@@ -18,12 +17,14 @@ class TestNode : public FileNode
     REFLECT_NODE_DECLARE( TestNode )
 public:
     TestNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~TestNode() override;
 
     static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
 
     inline const Node* GetTestExecutable() const { return m_StaticDependencies[0].GetNode(); }
+    const char * GetEnvironmentString() const;
+
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
@@ -43,9 +44,11 @@ private:
     bool                m_TestAlwaysShowOutput;
     bool                m_TestInputPathRecurse;
     Array< AString >    m_PreBuildDependencyNames;
+    Array< AString >    m_Environment;
 
     // Internal State
     uint32_t            m_NumTestInputFiles;
+    mutable const char * m_EnvironmentString;
 };
 
 //------------------------------------------------------------------------------

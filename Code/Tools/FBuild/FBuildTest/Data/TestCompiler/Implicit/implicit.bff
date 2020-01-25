@@ -4,7 +4,7 @@
 ObjectList( 'ObjectList' )
 {
     // Compiler is implicitly created by this reference
-    .Compiler                   = 'Tools/FBuild/FBuildTest/Data/TestCompiler/Explicit/PlaceholderForClang'
+    .Compiler                   = 'Tools/FBuild/FBuildTest/Data/TestCompiler/Implicit/PlaceholderForClang'
 
     // Minimal settings for a valid ObjectList
     .CompilerInputAllowNoFiles  = true;

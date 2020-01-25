@@ -34,6 +34,7 @@ public:
     uint32_t m_CPUAllocation;
     bool m_OverrideWorkMode;
     WorkerSettings::Mode m_WorkMode;
+    uint32_t m_MinimumFreeMemoryMiB; // Minimum OS free memory including virtual memory to let worker do its work
 
     // Console mode
     bool m_ConsoleMode;

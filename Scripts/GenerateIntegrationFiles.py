@@ -53,6 +53,7 @@ def parse_files(files):
             # Properties
             if ((line.find('REFLECT(') == -1) and
                 (line.find('REFLECT_ARRAY(') == -1) and
+                (line.find('REFLECT_ARRAY_OF_STRUCT(') == -1) and
                 (line.find('REFLECT_STRUCT(') == -1) and
                 (line.find('MetaName( "') == -1)):
                 continue

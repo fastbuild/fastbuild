@@ -20,17 +20,14 @@ public:
     void Init();
     inline bool IsInitialized() const { return m_Initialized; }
 
-    void Enable(bool enable);
+    void Enable( bool enable );
 
-    #if defined( __WINDOWS__ )
-        inline void * GetHandle() const { return m_Handle; }
-    #endif
+    inline OSWindow * GetParentWindow() const { return m_Parent; }
+    inline void * GetHandle() const { return m_Handle; }
 protected:
 
     OSWindow *  m_Parent;
-    #if defined( __WINDOWS__ )
-        void * m_Handle;
-    #endif
+    void *      m_Handle;
     bool        m_Initialized;
 
     #if defined( __WINDOWS__ )

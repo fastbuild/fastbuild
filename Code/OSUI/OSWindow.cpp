@@ -20,6 +20,17 @@
     #define IDI_MAIN_ICON                   101
 #endif
 
+// OSX Functions
+//------------------------------------------------------------------------------
+#if defined( __OSX__ )
+    void * WindowOSX_Create( OSWindow * owner, int32_t x, int32_t y, uint32_t w, uint32_t h );
+    void WindowOSX_Destroy( OSWindow * owner );
+    uint32_t WindowOSX_GetPrimaryScreenWidth();
+    void WindowOSX_MessageLoop();
+    void WindowOSX_SetTitle( OSWindow * owner, const char * title );
+    void WindowOSX_SetMinimized( bool minimized );
+#endif
+
 // WindowWndProc
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
@@ -107,7 +118,14 @@ OSWindow::OSWindow( void * hInstance ) :
     #endif
     m_ChildWidgets( 0, true )
 {
-    #if !defined( __WINDOWS__ )
+    #if defined( __WINDOWS__ )
+        // Obtain the executable HINSTANCE if not explictily provided
+        if ( m_HInstance == nullptr )
+        {
+            m_HInstance = GetModuleHandle( nullptr );
+            ASSERT( m_HInstance );
+        }
+    #else
         (void)hInstance;
     #endif
 }
@@ -120,6 +138,11 @@ OSWindow::~OSWindow()
         if ( m_Handle )
         {
             DestroyWindow( (HWND)m_Handle );
+        }
+    #elif defined( __OSX__ )
+        if ( m_Handle )
+        {
+            WindowOSX_Destroy( this );
         }
     #endif
 }
@@ -167,6 +190,8 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         // User data doesn't take effect until you call SetWindowPos
         VERIFY( SetWindowPos( (HWND)m_Handle, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE ) );
         ASSERT( this == (void*)GetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA ) );
+    #elif defined( __OSX__ )
+        m_Handle = WindowOSX_Create( this, x, y, w, h );
     #else
         (void)x;
         (void)y;
@@ -183,6 +208,21 @@ void OSWindow::AddChild( OSWidget * childWidget )
     m_ChildWidgets.Append( childWidget );
 }
 
+// Enable
+//------------------------------------------------------------------------------
+void OSWindow::Enable( void * handle, bool enable )
+{
+    #if defined( __WINDOWS__ )
+        EnableWindow( (HWND)handle, enable );
+    #elif defined( __APPLE__ )
+        // TODO:MAC EnableWindow equivalent
+    #elif defined( __LINUX__ )
+        // TODO:LINUX EnableWindow equivalent
+    #else
+        #error Unknown Platform
+    #endif
+}
+
 // SetTitle
 //------------------------------------------------------------------------------
 void OSWindow::SetTitle( const char * title )
@@ -190,7 +230,7 @@ void OSWindow::SetTitle( const char * title )
     #if defined( __WINDOWS__ )
         VERIFY( SetWindowText( (HWND)m_Handle, title ) );
     #elif defined( __APPLE__ )
-        (void)title; // TODO:MAC SetWindowText equivalent
+        WindowOSX_SetTitle( this, title );
     #elif defined( __LINUX__ )
         (void)title; // TODO:LINUX SetWindowText equivalent
     #else
@@ -198,19 +238,42 @@ void OSWindow::SetTitle( const char * title )
     #endif
 }
 
-// Enable
+// SetMinimized
 //------------------------------------------------------------------------------
-void OSWindow::Enable( void * handle, bool enable )
+void OSWindow::SetMinimized( bool minimized )
 {
-#if defined( __WINDOWS__ )
-    EnableWindow( (HWND)handle, enable );
-#elif defined( __APPLE__ )
-    // TODO:MAC EnableWindow equivalent
-#elif defined( __LINUX__ )
-    // TODO:LINUX EnableWindow equivalent
-#else
-#error Unknown Platform
-#endif
+    #if defined( __WINDOWS__ )
+        ASSERT( false ); // TODO:B Unify with Windows functionality
+        (void)minimized;
+    #elif defined( __OSX__ )
+        WindowOSX_SetMinimized( minimized );
+    #else
+        (void)minimized;
+    #endif
+}
+
+// GetPrimaryScreenWidth
+//------------------------------------------------------------------------------
+/*sttaic*/ uint32_t OSWindow::GetPrimaryScreenWidth()
+{
+    #if defined( __WINDOWS__ )
+        return (uint32_t)GetSystemMetrics( SM_CXSCREEN );
+    #elif defined( __OSX__ )
+        return WindowOSX_GetPrimaryScreenWidth();
+    #else
+        return 1920; // TODO:LINUX Implement
+    #endif
+}
+
+// PumpMessages
+//------------------------------------------------------------------------------
+void OSWindow::PumpMessages()
+{
+    #if defined( __WINDOWS__ )
+        // TODO:B Move Windows message loop here
+    #elif defined( __OSX__ )
+        WindowOSX_MessageLoop();
+    #endif
 }
 
 // OnMinimize
@@ -253,6 +316,13 @@ void OSWindow::Enable( void * handle, bool enable )
 /*virtual*/ void OSWindow::OnDropDownSelectionChanged( OSDropDown * dropDown )
 {
     (void)dropDown; // Derived class can ignore these events if desired
+}
+
+// OnTrayIconMenuItemSelected
+//------------------------------------------------------------------------------
+/*virtual*/ void OSWindow::OnTrayIconMenuItemSelected( uint32_t /*index*/ )
+{
+    // Derived class can ignore these events if desired
 }
 
 // GetChildFromHandle
