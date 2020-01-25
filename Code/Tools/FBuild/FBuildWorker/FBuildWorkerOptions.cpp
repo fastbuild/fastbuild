@@ -122,6 +122,11 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
                 m_IsSubprocess = true;
                 continue;
             }
+            else if (token == "-debug")
+            {
+                Env::ShowMsgBox( "FBuildWorker", "Please attach debugger and press ok" );
+                continue;
+            }
         #endif
 
         ShowUsageError();

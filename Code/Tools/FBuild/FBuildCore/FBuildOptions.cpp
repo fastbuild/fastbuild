@@ -150,13 +150,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Args += '"';
                 continue;
             }
-            #ifdef DEBUG
-                else if ( thisArg == "-debug" )
-                {
-                    ASSERT( false && "Break due to '-debug' argument - attach debugger!" );
-                    continue;
-                }
-            #endif
+            else if ( thisArg == "-debug" )
+            {
+                Env::ShowMsgBox( "FBuild", "Please attach debugger and press ok" );
+                continue;
+            }
             else if ( thisArg == "-dist" )
             {
                 m_AllowDistributed = true;
