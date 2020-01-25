@@ -152,7 +152,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             }
             else if ( thisArg == "-debug" )
             {
-                Env::ShowMsgBox( "FBuild", "Please attach debugger and press ok" );
+                Env::ShowMsgBox( "FBuild", "Please attach debugger and press ok\n\n(-debug command line used)" );
                 continue;
             }
             else if ( thisArg == "-dist" )

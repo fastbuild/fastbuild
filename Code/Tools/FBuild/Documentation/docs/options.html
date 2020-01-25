@@ -68,6 +68,10 @@
     <td>Allow build to continue after a DB move.</td>
   </tr>
   <tr>
+    <td><a href="#debug_fbuild">-debug</a></td>
+    <td>[Windows Only] Allow attaching a debugger immediately on startup.</td>
+  </tr>
+  <tr>
     <td><a href="#dist">-dist</a></td>
     <td>Enable distributed compilation.</td>
   </tr>
@@ -192,6 +196,10 @@
     <td>Control worker CPUs allocation.</td>
   </tr>
   <tr>
+    <td><a href="#debug_fbuildworker">-debug</a></td>
+    <td>[Windows Only] Allow attaching a debugger immediately on startup.</td>
+  </tr>
+  <tr>
     <td><a href="#mode">-mode=[disabled|idle|dedicated|proportional]</a></td>
     <td>Control worker availability.</td>
   </tr>
@@ -250,6 +258,12 @@ specified instead.</p>
 <p>Allow build to continue after a DB move.</p>
 <p>FASTBuild's database is tied to the directory in which it was created and cannot be moved. If a move is detected, an error will be emitted. -continueafterdbmove allows the build
 to continue after this error has been emitted, ignoring and replacing the DB file.</p>
+</div>
+
+    <div class='newsitemheader' id="debug_fbuild">-debug</div>
+    <div class='newsitembody'>
+<p>[Windows Only] Display a message box on startup to allow a debugger to be attached. Can be useful if triaging problems with FASTBuild that can't
+be reproduced in the debugger.</p>
 </div>
 
     <div class='newsitemheader' id="dist">-dist</div>
@@ -491,6 +505,11 @@ runs in UI-less mode)</p>
 <p>NOTE: The newly overridden options will be saved and used on subsequent restarts of the worker.</p>
 </div>
 
+    <div class='newsitemheader' id="debug_fbuildworker">-debug</div>
+    <div class='newsitembody'>
+<p>[Windows Only] Display a message box on startup to allow a debugger to be attached. Can be useful if triaging problems with FASTBuild that can't
+be reproduced in the debugger.</p>
+</div>
 
     <div class='newsitemheader' id="mode">-mode=[disabled|idle|dedicated|proportional]</div>
     <div class='newsitembody'>

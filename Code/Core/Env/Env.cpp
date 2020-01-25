@@ -382,18 +382,19 @@ static bool IsStdOutRedirectedInternal()
     return environmentString;
 }
 
+// ShowMsgBox
 //------------------------------------------------------------------------------
+void Env::ShowMsgBox( const char * title, const char * msg )
+{
+    #if defined( __WINDOWS__ )
+        MessageBoxA( nullptr, msg, title, MB_OK );
+    #elif defined( __APPLE__ )
+        (void)msg; // TODO:MAC Implement ShowMsgBox
+    #elif defined( __LINUX__ )
+        (void)msg; // TODO:LINUX Implement ShowMsgBox
+    #else
+        #error Unknown Platform
+    #endif
+}
 
 //------------------------------------------------------------------------------
-void Env::ShowMsgBox(const char* title, const char * msg)
-{
-#if defined( __WINDOWS__ )
-    MessageBoxA(nullptr, msg, title, MB_OK);
-#elif defined( __APPLE__ )
-    (void)msg; // TODO:MAC Implement ShowMsgBox
-#elif defined( __LINUX__ )
-    (void)msg; // TODO:LINUX Implement ShowMsgBox
-#else
-#error Unknown Platform
-#endif
-}
