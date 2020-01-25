@@ -200,6 +200,10 @@
     <td>[Windows Only] Allow attaching a debugger immediately on startup.</td>
   </tr>
   <tr>
+    <td><a href="#minfreememory">-minfreememory=[MiB]</a></td>
+    <td>[Windows Only] Override the default minimum memory limit (in MiB).</td>
+  </tr>
+  <tr>
     <td><a href="#mode">-mode=[disabled|idle|dedicated|proportional]</a></td>
     <td>Control worker availability.</td>
   </tr>
@@ -510,6 +514,13 @@ runs in UI-less mode)</p>
 <p>[Windows Only] Display a message box on startup to allow a debugger to be attached. Can be useful if triaging problems with FASTBuild that can't
 be reproduced in the debugger.</p>
 </div>
+
+    <div class='newsitemheader' id="minfreememory">-minfreememory</div>
+    <div class='newsitembody'>
+<p>[Windows Only] Override the default minimum memory limit (in MiB) from the default of 1024 (1 GiB). When a worked has less memory available
+than this amount it will not accept work.</p>
+</div>
+            minfreememory
 
     <div class='newsitemheader' id="mode">-mode=[disabled|idle|dedicated|proportional]</div>
     <div class='newsitembody'>

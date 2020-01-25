@@ -21,6 +21,7 @@
 
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
+#include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
@@ -29,11 +30,10 @@
 #include "Core/Tracing/Tracing.h"
 
 // system
-#include <stdio.h>
-
 #if defined( __WINDOWS__ )
-#include <psapi.h>
+    #include <psapi.h>
 #endif
+#include <stdio.h>
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -47,7 +47,7 @@ Worker::Worker( const AString & args, bool consoleMode )
     , m_RestartNeeded( false )
     #if defined( __WINDOWS__ )
         , m_LastDiskSpaceResult( -1 )
-        , m_LastMemoryCheckResult(-1)
+        , m_LastMemoryCheckResult( -1 )
 #endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
@@ -265,41 +265,40 @@ bool Worker::HasEnoughDiskSpace()
 //------------------------------------------------------------------------------
 bool Worker::HasEnoughMemory()
 {
-#if defined( __WINDOWS__ )
-    // Only check free memory every few seconds
-    float elapsedTime = m_TimerLastMemoryCheck.GetElapsedMS();
-    if ( ( elapsedTime < 1000.0f ) && ( m_LastMemoryCheckResult != -1 ) )
-    {
-        return ( m_LastMemoryCheckResult != 0 );
-    }
-    m_TimerLastMemoryCheck.Start();
-
-    PERFORMANCE_INFORMATION memInfo;
-    memInfo.cb = sizeof( memInfo );
-    BOOL result = GetPerformanceInfo( &memInfo, sizeof( memInfo ) );
-    if ( result )
-    {
-        SIZE_T limitMemSize = memInfo.CommitLimit * memInfo.PageSize;
-        SIZE_T currentMemSize = memInfo.CommitTotal * memInfo.PageSize;
-
-        // Calculate the free memory in MB.
-        SIZE_T freeMemSize = ( limitMemSize - currentMemSize ) / ( 1024 * 1024 );
-
-        // Check if the free memory is high enough
-        WorkerSettings & ws = WorkerSettings::Get();
-        if ( freeMemSize > ws.GetMinimumFreeMemoryInMB() )
+    #if defined( __WINDOWS__ )
+        // Only check free memory every few seconds
+        float elapsedTime = m_TimerLastMemoryCheck.GetElapsedMS();
+        if ( ( elapsedTime < 1000.0f ) && ( m_LastMemoryCheckResult != -1 ) )
         {
-            m_LastMemoryCheckResult = 1;
-            return true;
+            return ( m_LastMemoryCheckResult != 0 );
         }
-    }
-
-    // The machine doesn't have enough memory or query failed. Exclude this machine from worker pool.
-    m_LastMemoryCheckResult = 0;
-    return false;
-#else
-    return true;
-#endif
+        m_TimerLastMemoryCheck.Start();
+    
+        PERFORMANCE_INFORMATION memInfo;
+        memInfo.cb = sizeof( memInfo );
+        if ( GetPerformanceInfo( &memInfo, sizeof( memInfo ) ) )
+        {
+            const uint64_t limitMemSize = memInfo.CommitLimit * memInfo.PageSize;
+            const uint64_t currentMemSize = memInfo.CommitTotal * memInfo.PageSize;
+    
+            // Calculate the free memory in MiB.
+            const uint64_t freeMemSize = ( limitMemSize - currentMemSize ) / MEGABYTE;
+    
+            // Check if the free memory is high enough
+            WorkerSettings & ws = WorkerSettings::Get();
+            if ( freeMemSize > ws.GetMinimumFreeMemoryMiB() )
+            {
+                m_LastMemoryCheckResult = 1;
+                return true;
+            }
+        }
+    
+        // The machine doesn't have enough memory or query failed. Exclude this machine from worker pool.
+        m_LastMemoryCheckResult = 0;
+        return false;
+    #else
+        return true; // TODO:LINUX TODO:OSX Implement
+    #endif
 }
 
 // UpdateAvailability
@@ -307,8 +306,8 @@ bool Worker::HasEnoughMemory()
 void Worker::UpdateAvailability()
 {
     // Check disk space
-    bool hasEnoughDiskSpace = HasEnoughDiskSpace();
-    bool hasEnoughMemory = HasEnoughMemory();
+    const bool hasEnoughDiskSpace = HasEnoughDiskSpace();
+    const bool hasEnoughMemory = HasEnoughMemory();
 
     m_IdleDetection.Update();
 

@@ -28,7 +28,7 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_CPUAllocation( 0 ),
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
-    m_MinimumFreeMemoryInMB( 0 ), // Unit is in MB.
+    m_MinimumFreeMemoryMiB( 0 ),
     m_ConsoleMode( false )
 {
     #ifdef __LINUX__
@@ -112,18 +112,18 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_OverrideWorkMode = true;
             continue;
         }
-        else if ( token.BeginsWith( "-minfreememory=" ) )
-        {
-            uint32_t num( 0 );
-            PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
-            if ( sscanf( token.Get() + 15, "%u", &num ) == 1 )
-            PRAGMA_DISABLE_POP_MSVC // 4996
-            {
-                m_MinimumFreeMemoryInMB = num;
-            }
-            continue;
-        }
         #if defined( __WINDOWS__ )
+            else if ( token.BeginsWith( "-minfreememory=" ) )
+            {
+                uint32_t num( 0 );
+                PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+                if ( sscanf( token.Get() + 15, "%u", &num ) == 1 )
+                PRAGMA_DISABLE_POP_MSVC // 4996
+                {
+                    m_MinimumFreeMemoryMiB = num;
+                }
+                continue;
+            }
             else if ( token == "-nosubprocess" )
             {
                 m_UseSubprocess = false;
