@@ -9,12 +9,18 @@ def getfiles(outFiles):
             if file.endswith(".bff") or file.endswith(".cpp") or file.endswith(".h"):
                 fullPath = root + '/' + file
                 outFiles.append(fullPath)
+    for root, dirs, files in os.walk("../External/"):
+        path = root.split('/')
+        for file in files:
+            if file.endswith(".bff"):
+                fullPath = root + '/' + file
+                outFiles.append(fullPath)
 
 files = []
+print('Getting list of files...')
 getfiles(files)
+print('Checking files...')
 for file in files:
-    print(file)
-
     fixedFile = []
     fixed = False
 
@@ -53,6 +59,10 @@ for file in files:
 
     # any changes made?
     if fixed == True:
-        f = open(file, 'w')
-        f.writelines(fixedFile)
-        f.close()
+        try:
+            f = open(file, 'w')
+            f.writelines(fixedFile)
+            f.close()
+            print(' - FIXED: {}'.format(file))
+        except:
+            print(' - FIX FAILED: {}'.format(file))

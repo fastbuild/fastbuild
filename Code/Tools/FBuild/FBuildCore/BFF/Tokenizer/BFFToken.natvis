@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="BFFTokenRange">
+    <DisplayString>{{pos: {m_Pos-m_Begin} - size: {m_End-m_Begin}}}</DisplayString>
+    <Expand>
+      <Item Name="[m_Pos]" ExcludeView="simple">m_Pos</Item>
+      <Item Name="[m_Begin]" ExcludeView="simple">m_Begin</Item>
+      <Item Name="[m_End]" ExcludeView="simple">m_End</Item>
+      <ArrayItems>
+        <Size>m_End-m_Pos</Size>
+        <ValuePointer>m_Pos</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+  <Type Name="BFFToken">
+    <DisplayString>{{{m_Type,en}  - {m_String.m_Contents,s}}}</DisplayString>
+  </Type>
+</AutoVisualizer>

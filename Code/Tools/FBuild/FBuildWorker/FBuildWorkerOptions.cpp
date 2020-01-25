@@ -29,10 +29,11 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
     m_WriteExtraInfoInBrokerFile( false ),
+    m_MinimumFreeMemoryMiB( 0 ),
     m_ConsoleMode( false )
 {
-    #ifndef __WINDOWS__
-        m_ConsoleMode = true; // TODO:OSX Support GUI mode
+    #ifdef __LINUX__
+        m_ConsoleMode = true; // Only console mode supported on Linux
     #endif
 }
 
@@ -118,6 +119,17 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             continue;
         }
         #if defined( __WINDOWS__ )
+            else if ( token.BeginsWith( "-minfreememory=" ) )
+            {
+                uint32_t num( 0 );
+                PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+                if ( sscanf( token.Get() + 15, "%u", &num ) == 1 )
+                PRAGMA_DISABLE_POP_MSVC // 4996
+                {
+                    m_MinimumFreeMemoryMiB = num;
+                }
+                continue;
+            }
             else if ( token == "-nosubprocess" )
             {
                 m_UseSubprocess = false;
@@ -126,6 +138,11 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             else if ( token == "-subprocess" ) // Internal option only!
             {
                 m_IsSubprocess = true;
+                continue;
+            }
+            else if ( token == "-debug" )
+            {
+                Env::ShowMsgBox( "FBuildWorker", "Please attach debugger and press ok\n\n(-debug command line used)" );
                 continue;
             }
         #endif
@@ -142,7 +159,7 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
 void FBuildWorkerOptions::ShowUsageError()
 {
     const char * msg = "FBuildWorker.exe - " FBUILD_VERSION_STRING "\n"
-                       "Copyright 2012-2019 Franta Fulin - http://www.fastbuild.org\n"
+                       "Copyright 2012-2020 Franta Fulin - http://www.fastbuild.org\n"
                        "\n"
                        "Command Line Options:\n"
                        "------------------------------------------------------------\n"

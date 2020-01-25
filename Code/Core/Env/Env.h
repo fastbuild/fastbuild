@@ -39,6 +39,7 @@ public:
 
     static uint32_t GetLastErr();
     static const char * AllocEnvironmentString( const Array< AString > & environment );
+    static void ShowMsgBox( const char * title, const char * msg );
 };
 
 // GetPlatform

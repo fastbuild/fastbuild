@@ -1,0 +1,49 @@
+//
+// FindExecutableTarge
+//
+// - Ensure executables can befound from build targets, via various indirections.
+//
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Executable
+//------------------------------------------------------------------------------
+Executable( 'Executable' )
+{
+    .Libraries          = { 'dummy.lib' }
+    .LinkerOutput       = '$Out$/Test/ProjectGeneration/FindExecutableTarget/Executable.exe'
+}
+
+// Test
+//------------------------------------------------------------------------------
+Test( 'RunTest' )
+{
+    .TestExecutable     = 'Executable'
+    .TestOutput         = '$Out$/Test/ProjectGeneration/FindExecutableTarget/TestOutput.txt'
+}
+
+// Alias
+//------------------------------------------------------------------------------
+Alias( 'AliasToTest' )
+{
+    .Targets = { 'RunTest' }
+}
+
+// Copy
+//------------------------------------------------------------------------------
+Copy( 'Copy' )
+{
+    .Source = 'Exectuable'
+    .Dest   = '$Out$/Test/ProjectGeneration/FindExecutableTarget/ExecutableCopy.exe'
+}
+
+// Alias (to Copy)
+//------------------------------------------------------------------------------
+Alias( 'AliasToCopy' )
+{
+    .Targets = { 'Copy' }
+}
+
+//------------------------------------------------------------------------------

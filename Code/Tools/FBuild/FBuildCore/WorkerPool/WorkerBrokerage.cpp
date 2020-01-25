@@ -35,8 +35,6 @@ void WorkerBrokerage::Init()
 {
     PROFILE_FUNCTION
 
-    ASSERT( Thread::IsMainThread() );
-
     if ( m_Initialized )
     {
         return;

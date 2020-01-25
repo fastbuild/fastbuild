@@ -63,7 +63,7 @@ void TestSharedMemory::CreateAccessDestroy() const
         t.Start();
 
         SharedMemory shm;
-            
+
         // Wait for parent to create shared memory and open it
         while ( shm.Open( sharedMemoryName.Get(), sizeof(uint32_t) ) == false )
         {
@@ -73,7 +73,7 @@ void TestSharedMemory::CreateAccessDestroy() const
             }
             Thread::Sleep( 1 );
         }
-            
+
         // Get shared memory pointer
         volatile uint32_t * magic = static_cast<volatile uint32_t *>( shm.GetPtr() );
         if ( magic == nullptr )

@@ -43,26 +43,3 @@ DLL( 'Plugin-DLL-X64' )
 
     .Libraries          = { 'CachePlugin-Lib-X64' }
 }
-
-#if __WINDOWS__
-    // Plugin library (X86)
-    //------------------------------------------------------------------------------
-    ObjectList( 'CachePlugin-Lib-X86' )
-    {
-        .CompilerInputFiles = "$TestRoot$/Data/TestCachePlugin/Plugin.cpp"
-        .CompilerOutputPath = "$Out$/Test/CachePlugin/X86/"
-    }
-
-    // Plugin DLL (X86)
-    //------------------------------------------------------------------------------
-    DLL( 'Plugin-DLL-X86' )
-    {
-        .LinkerOptions      + ' /DLL'
-                            + .CRTLibs_Static
-                            + ' OLDNAMES.LIB'
-                            + ' kernel32.lib'
-        .LinkerOutput       = '$Out$/Test/CachePlugin/X86/CachePlugin.dll'
-
-        .Libraries          = { 'CachePlugin-Lib-X86' }
-    }
-#endif

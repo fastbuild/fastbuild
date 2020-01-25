@@ -11,7 +11,7 @@ Settings {} // use Standard Environment
 
 ObjectList( 'ObjectList' )
 {
-    .CompilerInputFiles = { 
+    .CompilerInputFiles = {
                             '$TestRoot$/Data/TestCache/LightCache_CyclicInclude/file1.cpp'
                             '$TestRoot$/Data/TestCache/LightCache_CyclicInclude/file2.cpp'
                           }

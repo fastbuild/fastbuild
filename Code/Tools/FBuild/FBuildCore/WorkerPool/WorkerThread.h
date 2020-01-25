@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Env/Types.h"
+#include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
@@ -24,8 +25,8 @@ public:
 
     static void InitTmpDir( bool remote = false );
 
-    inline void Stop()              { m_ShouldExit = true; }
-    inline bool HasExited() const   { return m_Exited; }
+    void Stop();
+    bool HasExited() const;
     void WaitForStop();
 
     static uint32_t GetThreadIndex();
@@ -52,6 +53,7 @@ protected:
     uint32_t      m_ThreadIndex;
     Semaphore     m_MainThreadWaitForExit; // Used by main thread to wait for exit of worker
 
+    static Mutex s_TmpRootMutex; // s_TmpRoot is shared by local and remote queues in tests
     static AStackString<> s_TmpRoot;
 };
 

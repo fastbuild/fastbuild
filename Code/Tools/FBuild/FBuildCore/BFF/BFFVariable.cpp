@@ -25,28 +25,16 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, VarType type )
-: m_Name( name )
-, m_Type( type )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, true )
-, m_SubVariables( 0, true )
+    : m_Name( name )
+    , m_Type( type )
 {
 }
 
 // CONSTRUCTOR (copy)
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const BFFVariable & other )
-: m_Name( other.m_Name )
-, m_Type( other.m_Type )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, true )
-, m_SubVariables( 0, true )
+    : m_Name( other.m_Name )
+    , m_Type( other.m_Type )
 {
     switch( m_Type )
     {
@@ -64,73 +52,57 @@ BFFVariable::BFFVariable( const BFFVariable & other )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, const AString & value )
-: m_Name( name )
-, m_Type( VAR_STRING )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-, m_StringValue( value )
-, m_ArrayValues( 0, false )
-, m_SubVariables( 0, true )
+    : m_Name( name )
+    , m_Type( VAR_STRING )
+    , m_StringValue( value )
 {
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, bool value )
-: m_Name( name )
-, m_Type( VAR_BOOL )
-, m_FreezeCount( 0 )
-, m_BoolValue( value )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, false )
-, m_SubVariables( 0, false )
+    : m_Name( name )
+    , m_Type( VAR_BOOL )
+    , m_BoolValue( value )
 {
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, const Array< AString > & values )
-: m_Name( name )
-, m_Type( VAR_ARRAY_OF_STRINGS )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, true )
-, m_SubVariables( 0, false )
+    : m_Name( name )
+    , m_Type( VAR_ARRAY_OF_STRINGS )
+    , m_ArrayValues( values )
 {
-    m_ArrayValues = values;
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-BFFVariable::BFFVariable( const AString & name, int i )
-: m_Name( name )
-, m_Type( VAR_INT )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( i )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, true )
-, m_SubVariables( 0, true )
+BFFVariable::BFFVariable( const AString & name, int32_t i )
+    : m_Name( name )
+    , m_Type( VAR_INT )
+    , m_IntValue( i )
 {
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 BFFVariable::BFFVariable( const AString & name, const Array< const BFFVariable * > & values )
-: m_Name( name )
-, m_Type( VAR_STRUCT )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, false )
-, m_SubVariables( values.GetSize(), true )
+    : m_Name( name )
+    , m_Type( VAR_STRUCT )
+    , m_SubVariables( values.GetSize(), true )
 {
     SetValueStruct( values );
+}
+
+// CONSTRUCTOR (&&)
+//------------------------------------------------------------------------------
+BFFVariable::BFFVariable( const AString & name,
+                          Array<BFFVariable *> && values )
+    : m_Name( name )
+    , m_Type( VAR_STRUCT )
+    , m_SubVariables( Move( values ) )
+{
 }
 
 // CONSTRUCTOR
@@ -138,14 +110,9 @@ BFFVariable::BFFVariable( const AString & name, const Array< const BFFVariable *
 BFFVariable::BFFVariable( const AString & name,
                           const Array< const BFFVariable * > & structs,
                           VarType type ) // type for disambiguation
-: m_Name( name )
-, m_Type( VAR_ARRAY_OF_STRUCTS )
-, m_FreezeCount( 0 )
-, m_BoolValue( false )
-, m_IntValue( 0 )
-//, m_StringValue() // default construct this
-, m_ArrayValues( 0, false )
-, m_SubVariables( structs.GetSize(), true )
+    : m_Name( name )
+    , m_Type( VAR_ARRAY_OF_STRUCTS )
+    , m_SubVariables( structs.GetSize(), true )
 {
     // type for disambiguation only - sanity check it's the right type
     ASSERT( type == VAR_ARRAY_OF_STRUCTS ); (void)type;
@@ -158,11 +125,9 @@ BFFVariable::BFFVariable( const AString & name,
 BFFVariable::~BFFVariable()
 {
     // clean up sub variables
-    for ( BFFVariable ** it = m_SubVariables.Begin();
-          it != m_SubVariables.End();
-          ++it )
+    for ( BFFVariable * var : m_SubVariables )
     {
-        FDELETE *it;
+        FDELETE var;
     }
 }
 
@@ -213,25 +178,39 @@ void BFFVariable::SetValueStruct( const Array< const BFFVariable * > & values )
     Array< BFFVariable * > newVars( values.GetSize(), false );
 
     m_Type = VAR_STRUCT;
-    for ( const BFFVariable ** it = values.Begin();
-          it != values.End();
-          ++it )
+    for ( const BFFVariable * var : values )
     {
-        const BFFVariable * var = *it;
-        BFFVariable * newV = FNEW( BFFVariable( *var ) );
-        newVars.Append( newV );
+        newVars.Append( FNEW( BFFVariable( *var ) ) );
     }
 
     // free old members
-    for ( BFFVariable ** it = m_SubVariables.Begin();
-          it != m_SubVariables.End();
-          ++it )
+    for ( BFFVariable * var : m_SubVariables )
     {
-        FDELETE *it;
+        FDELETE var;
     }
 
     // swap
     m_SubVariables.Swap( newVars );
+}
+
+// SetValueStruct
+//------------------------------------------------------------------------------
+void BFFVariable::SetValueStruct( Array<BFFVariable *> && values )
+{
+    ASSERT( 0 == m_FreezeCount );
+
+    // Take a copy of the old pointers
+    Array<BFFVariable *> oldVars;
+    oldVars.Swap( m_SubVariables );
+
+    // Take ownership of new variables
+    m_SubVariables = Move( values );
+
+    // Free old variables
+    for ( BFFVariable * var : oldVars )
+    {
+        FDELETE var;
+    }
 }
 
 // SetValueArrayOfStructs
@@ -245,21 +224,15 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
     Array< BFFVariable * > newVars( values.GetSize(), false );
 
     m_Type = VAR_ARRAY_OF_STRUCTS;
-    for ( const BFFVariable ** it = values.Begin();
-          it != values.End();
-          ++it )
+    for ( const BFFVariable * var : values)
     {
-        const BFFVariable * var = *it;
-        BFFVariable * newV = FNEW( BFFVariable( *var ) );
-        newVars.Append( newV );
+        newVars.Append( FNEW( BFFVariable( *var ) ) );
     }
 
     // free old members
-    for ( BFFVariable ** it = m_SubVariables.Begin();
-          it != m_SubVariables.End();
-          ++it )
+    for ( BFFVariable * var : m_SubVariables )
     {
-        FDELETE *it;
+        FDELETE var;
     }
 
     m_SubVariables.Swap( newVars );
@@ -284,10 +257,10 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
 
 // ConcatVarsRecurse
 //------------------------------------------------------------------------------
-BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFIterator & operatorIter ) const
+BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFToken * operatorIter ) const
 {
-    const BFFVariable *varDst = this;
-    const BFFVariable *varSrc = &other;
+    const BFFVariable * const varDst = this;
+    const BFFVariable * const varSrc = &other;
 
     const VarType dstType = m_Type;
     const VarType srcType = other.m_Type;
@@ -303,7 +276,8 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
              ( srcType == BFFVariable::VAR_STRING) )
         {
             uint32_t num = (uint32_t)( 1 + varDst->GetArrayOfStrings().GetSize() );
-            Array< AString > values(num, false);
+            StackArray<AString> values;
+            values.SetCapacity( num );
             values.Append( varDst->GetArrayOfStrings() );
             values.Append( varSrc->GetString() );
 
@@ -316,7 +290,8 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
              ( srcType == BFFVariable::VAR_STRUCT ) )
         {
             uint32_t num = (uint32_t)( 1 + varDst->GetArrayOfStructs().GetSize() );
-            Array< const BFFVariable * > values( num, false );
+            StackArray<const BFFVariable *> values;
+            values.SetCapacity( num );
             values.Append( varDst->GetArrayOfStructs() );
             values.Append( varSrc );
 
@@ -326,7 +301,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
 
         // Incompatible types
         Error::Error_1034_OperationNotSupported( operatorIter, // TODO:C we don't have access to the rhsIterator so we use the operator
-                                                 varDst ? varDst->GetType() : varSrc->GetType(),
+                                                 varDst->GetType(),
                                                  varSrc->GetType(),
                                                  operatorIter );
         return nullptr;
@@ -348,7 +323,8 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
         if ( srcType == BFFVariable::VAR_ARRAY_OF_STRINGS )
         {
             const unsigned int num = (unsigned int)( varSrc->GetArrayOfStrings().GetSize() + varDst->GetArrayOfStrings().GetSize() );
-            Array< AString > values(num, false);
+            StackArray<AString> values;
+            values.SetCapacity( num );
             values.Append( varDst->GetArrayOfStrings() );
             values.Append( varSrc->GetArrayOfStrings() );
 
@@ -359,7 +335,8 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
         if ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS )
         {
             const unsigned int num = (unsigned int)( varSrc->GetArrayOfStructs().GetSize() + varDst->GetArrayOfStructs().GetSize() );
-            Array< const BFFVariable * > values( num, false );
+            StackArray<const BFFVariable *> values;
+            values.SetCapacity( num );
             values.Append( varDst->GetArrayOfStructs() );
             values.Append( varSrc->GetArrayOfStructs() );
 

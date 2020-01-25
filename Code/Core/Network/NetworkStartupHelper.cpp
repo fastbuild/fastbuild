@@ -6,6 +6,7 @@
 #include "NetworkStartupHelper.h"
 
 #include "Core/Env/Assert.h"
+#include "Core/Process/Atomic.h"
 
 //------------------------------------------------------------------------------
 // Static Data
@@ -56,7 +57,7 @@ NetworkStartupHelper::NetworkStartupHelper()
 /*static*/ bool NetworkStartupHelper::IsShuttingDown()
 {
     MutexHolder mh( s_Mutex );
-    return ( s_MasterShutdownFlag ) ? ( *s_MasterShutdownFlag ) : false;
+    return ( s_MasterShutdownFlag ) ? AtomicLoadRelaxed( s_MasterShutdownFlag ) : false;
 }
 
 //------------------------------------------------------------------------------

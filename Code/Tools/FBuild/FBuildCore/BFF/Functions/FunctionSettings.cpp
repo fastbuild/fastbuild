@@ -25,7 +25,7 @@ FunctionSettings::FunctionSettings()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionSettings::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionSettings::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
     AStackString<> name( "$$Settings$$" );
     if ( nodeGraph.FindNode( name ) )

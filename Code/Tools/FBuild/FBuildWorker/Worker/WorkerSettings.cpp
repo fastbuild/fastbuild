@@ -29,6 +29,7 @@ WorkerSettings::WorkerSettings()
     , m_StartMinimized( false )
     , m_WriteExtraInfoInBrokerFile( false )
     , m_LastWriteTime( 0 )
+    , m_MinimumFreeMemoryMiB( 1024 ) // 1 GiB
 {
     // half CPUs available to use by default
     uint32_t numCPUs = Env::GetNumProcessors();
@@ -63,6 +64,13 @@ void WorkerSettings::SetNumCPUsToUse( uint32_t c )
 void WorkerSettings::SetStartMinimized( bool startMinimized )
 {
     m_StartMinimized = startMinimized;
+}
+
+// SetMinimumFreeMemoryMiB
+//------------------------------------------------------------------------------
+void WorkerSettings::SetMinimumFreeMemoryMiB( uint32_t value )
+{
+    m_MinimumFreeMemoryMiB = value;
 }
 
 // Load

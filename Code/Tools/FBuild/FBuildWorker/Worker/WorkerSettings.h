@@ -41,6 +41,9 @@ public:
     void SetWriteExtraInfoInBrokerFile( bool writeExtraInfoInBrokerFile) { m_WriteExtraInfoInBrokerFile = writeExtraInfoInBrokerFile; }
 
     uint64_t GetLastWriteTime() const { return m_LastWriteTime; }
+  
+    inline uint32_t GetMinimumFreeMemoryMiB() { return m_MinimumFreeMemoryMiB; }
+    void SetMinimumFreeMemoryMiB( uint32_t value );
 
     void Load();
     void Save();
@@ -50,6 +53,7 @@ private:
     bool        m_StartMinimized;
     bool        m_WriteExtraInfoInBrokerFile;
     uint64_t    m_LastWriteTime;
+    uint32_t    m_MinimumFreeMemoryMiB; // Minimum OS free memory including virtual memory to let worker do its work
 };
 
 //------------------------------------------------------------------------------

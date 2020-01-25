@@ -277,23 +277,26 @@ void TestFileIO::FileTime() const
     const uint64_t oldTime = FileIO::GetFileLastWriteTime( path );
     TEST_ASSERT( oldTime != 0 );
 
-    // wait for some time that is bigger than filesystem time granularity
-    #if defined( __OSX__ )
-        // HFS+ has surprisingly poor time resolution (1 second)
-        Thread::Sleep( 1100 );
-    #else
-        Thread::Sleep( 500 );
-    #endif
+    // Modify the file until the filetime changes. This can be surprisingly
+    // long on OSX due to poor HFS+ filetime granularity
+    uint64_t newTime = 0;
+    for ( ;; )
+    {
+        Thread::Sleep( 10 );
 
-    // modify file
-    FileStream f2;
-    TEST_ASSERT( f.Open( path.Get(), FileStream::WRITE_ONLY ) == true );
-    f.Write( (uint32_t)0 );
-    f.Close();
+        // modify file
+        FileStream f2;
+        TEST_ASSERT( f.Open( path.Get(), FileStream::WRITE_ONLY ) == true );
+        f.Write( (uint32_t)0 );
+        f.Close();
 
-    // get new last write time
-    const uint64_t newTime = FileIO::GetFileLastWriteTime( path );
-    TEST_ASSERT( newTime > oldTime );
+        // get new last write time
+        newTime = FileIO::GetFileLastWriteTime( path );
+        if ( newTime > oldTime )
+        {
+            break;
+        }
+    }
 
     // manually set time back
     TEST_ASSERT( FileIO::SetFileLastWriteTime( path, oldTime ) == true );

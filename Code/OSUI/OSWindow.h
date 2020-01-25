@@ -12,6 +12,7 @@
 class AString;
 class OSDropDown;
 class OSWidget;
+class OSWindow;
 
 // Defines
 //------------------------------------------------------------------------------
@@ -25,21 +26,27 @@ class OSWidget;
 class OSWindow
 {
 public:
-    explicit OSWindow( void * hInstance );
+    explicit OSWindow( void * hInstance = nullptr );
     virtual ~OSWindow();
 
     void Init( int32_t x, int32_t y, uint32_t w, uint32_t h );
 
     void AddChild( OSWidget * childWidget );
 
+    inline void *   GetHandle() const { return m_Handle; }
+
     #if defined( __WINDOWS__ )
-        inline void *   GetHandle() const { return m_Handle; }
         inline void *   GetHInstance() const { return m_HInstance; }
 
         OSWidget *      GetChildFromHandle( void * handle );
     #endif
 
     void SetTitle( const char * title );
+    void SetMinimized( bool minimized );
+
+    static uint32_t GetPrimaryScreenWidth();
+
+    void PumpMessages();
 
     // Events for derived classes to respond to
     virtual bool OnMinimize();
@@ -48,10 +55,11 @@ public:
     virtual bool OnTrayIconLeftClick();
     virtual bool OnTrayIconRightClick();
     virtual void OnDropDownSelectionChanged( OSDropDown * dropDown );
+    virtual void OnTrayIconMenuItemSelected( uint32_t index );
 
 protected:
+    void * m_Handle;
     #if defined( __WINDOWS__ )
-        void * m_Handle;
         void * m_HInstance;
     #endif
     Array< OSWidget * > m_ChildWidgets;
