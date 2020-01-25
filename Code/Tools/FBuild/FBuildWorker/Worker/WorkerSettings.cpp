@@ -7,6 +7,7 @@
 
 // Core
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 
@@ -26,6 +27,8 @@ WorkerSettings::WorkerSettings()
     : m_Mode( WHEN_IDLE )
     , m_NumCPUsToUse( 1 )
     , m_StartMinimized( false )
+    , m_WriteExtraInfoInBrokerFile( false )
+    , m_LastWriteTime( 0 )
     , m_MinimumFreeMemoryMiB( 1024 ) // 1 GiB
 {
     // half CPUs available to use by default
@@ -83,8 +86,10 @@ void WorkerSettings::Load()
     {
         char header[ 4 ] = { 0 };
         f.Read( &header, 4 );
-        if ( ( header[ 3 ] < FBUILDWORKER_SETTINGS_MIN_VERSION ) ||
-             ( header[ 3 ] > FBUILDWORKER_SETTINGS_CURRENT_VERSION ) )
+
+        const uint8_t settingsVersion = header[ 3 ];
+        if ( ( settingsVersion < FBUILDWORKER_SETTINGS_MIN_VERSION ) ||
+             ( settingsVersion > FBUILDWORKER_SETTINGS_CURRENT_VERSION ) )
         {
             return; // version is too old, or newer, and cannot be read
         }
@@ -95,6 +100,10 @@ void WorkerSettings::Load()
         m_Mode = (Mode)mode;
         f.Read( m_NumCPUsToUse );
         f.Read( m_StartMinimized );
+
+        f.Close();
+
+        m_LastWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
     }
 }
 
@@ -122,6 +131,9 @@ void WorkerSettings::Save()
 
         if ( ok )
         {
+            f.Close();
+            m_LastWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
+
             return;
         }
     }

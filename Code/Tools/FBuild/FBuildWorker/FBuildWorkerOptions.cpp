@@ -28,6 +28,7 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_CPUAllocation( 0 ),
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
+    m_WriteExtraInfoInBrokerFile( false ),
     m_MinimumFreeMemoryMiB( 0 ),
     m_ConsoleMode( false )
 {
@@ -110,6 +111,11 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
         {
             m_WorkMode = WorkerSettings::PROPORTIONAL;
             m_OverrideWorkMode = true;
+            continue;
+        }
+        else if ( token == "-writeextrainfo" )
+        {
+            m_WriteExtraInfoInBrokerFile = true;
             continue;
         }
         #if defined( __WINDOWS__ )

@@ -36,6 +36,12 @@ public:
     void SetStartMinimized( bool startMinimized );
     inline bool GetStartMinimzed() { return m_StartMinimized; }
 
+    // Extra info in broker file
+    inline bool GetWriteExtraInfoInBrokerFile() const { return m_WriteExtraInfoInBrokerFile; }
+    void SetWriteExtraInfoInBrokerFile( bool writeExtraInfoInBrokerFile) { m_WriteExtraInfoInBrokerFile = writeExtraInfoInBrokerFile; }
+
+    uint64_t GetLastWriteTime() const { return m_LastWriteTime; }
+  
     inline uint32_t GetMinimumFreeMemoryMiB() { return m_MinimumFreeMemoryMiB; }
     void SetMinimumFreeMemoryMiB( uint32_t value );
 
@@ -45,6 +51,8 @@ private:
     Mode        m_Mode;
     uint32_t    m_NumCPUsToUse;
     bool        m_StartMinimized;
+    bool        m_WriteExtraInfoInBrokerFile;
+    uint64_t    m_LastWriteTime;
     uint32_t    m_MinimumFreeMemoryMiB; // Minimum OS free memory including virtual memory to let worker do its work
 };
 
