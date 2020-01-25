@@ -35,6 +35,16 @@ protected:
     void EnsureDirDoesNotExist( const AString & dirPath ) const { EnsureDirDoesNotExist( dirPath.Get() ); }
     void EnsureDirExists( const char * dirPath ) const;
     void EnsureDirExists( const AString & dirPath ) const { EnsureDirExists( dirPath.Get() ); }
+    void LoadFileContentsAsString( const char* fileName, AString& outString ) const;
+
+    // Helpers to invoke builds or parse bff files
+    void Parse( const char * fileName, bool expectFailure = false ) const;
+    bool ParseFromString( const char * bffContents,
+                          const char * expectedError = nullptr ) const;
+
+    // Helper macros
+    #define TEST_PARSE_OK( bffContents )            TEST_ASSERT( ParseFromString( bffContents ) );
+    #define TEST_PARSE_FAIL( bffContents, error )   TEST_ASSERT( ParseFromString( bffContents, error ) );
 
     // Helpers to check build results
     void CheckStatsNode( const FBuildStats & stats, size_t numSeen, size_t numBuilt, Node::Type nodeType ) const;
@@ -73,6 +83,11 @@ public:
 
     size_t GetRecursiveDependencyCount( const Node * node ) const;
     size_t GetRecursiveDependencyCount( const char * nodeName ) const;
+
+    void GetNodesOfType( Node::Type type, Array<const Node*>& outNodes ) const;
+    const Node * GetNode( const char * nodeName ) const;
+
+    void SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const;
 };
 
 //------------------------------------------------------------------------------

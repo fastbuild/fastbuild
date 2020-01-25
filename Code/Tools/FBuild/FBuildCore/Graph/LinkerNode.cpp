@@ -59,7 +59,7 @@ LinkerNode::LinkerNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool LinkerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool LinkerNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -347,9 +347,8 @@ LinkerNode::~LinkerNode()
         // success!
     }
 
-    // record time stamp for next time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    ASSERT( m_Stamp );
+    // record new file time
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }
@@ -958,7 +957,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 // GetOtherLibraries
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::GetOtherLibraries( NodeGraph & nodeGraph,
-                                               const BFFIterator & iter,
+                                               const BFFToken * iter,
                                                const Function * function,
                                                const AString & args,
                                                Dependencies & otherLibraries,
@@ -1162,7 +1161,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 // GetOtherLibrary
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::GetOtherLibrary( NodeGraph & nodeGraph,
-                                             const BFFIterator & iter,
+                                             const BFFToken * iter,
                                              const Function * function,
                                              Dependencies & libs,
                                              const AString & path,
@@ -1283,7 +1282,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 // DependOnNode
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::DependOnNode( NodeGraph & nodeGraph,
-                                          const BFFIterator & iter,
+                                          const BFFToken * iter,
                                           const Function * function,
                                           const AString & nodeName,
                                           Dependencies & nodes )
@@ -1312,7 +1311,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
 
 // DependOnNode
 //------------------------------------------------------------------------------
-/*static*/ bool LinkerNode::DependOnNode( const BFFIterator & iter,
+/*static*/ bool LinkerNode::DependOnNode( const BFFToken * iter,
                                           const Function * function,
                                           Node * node,
                                           Dependencies & nodes )
@@ -1339,7 +1338,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::DLL_NODE )
     {
         // TODO:B Depend on import lib
-        nodes.Append( Dependency( node, true ) ); // NOTE: Weak dependency
+        nodes.Append( Dependency( node, 0, true ) ); // NOTE: Weak dependency
         return true;
     }
 

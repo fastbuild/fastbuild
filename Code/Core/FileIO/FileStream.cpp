@@ -16,6 +16,7 @@
     #include "Core/Env/WindowsHeader.h"
 #else
    #include <fcntl.h>
+   #include <sys/stat.h>
    #include <unistd.h>
 #endif
 
@@ -147,8 +148,20 @@ bool FileStream::Open( const char * fileName, uint32_t fileMode )
     m_Handle = open( fileName, flags, mode );
     if ( m_Handle != INVALID_HANDLE_VALUE )
     {
-        // file opened ok
-        return true;
+        // Ensure this is not a directory
+        struct stat s;
+        if ( ( fstat( m_Handle, &s ) != 0 ) || S_ISDIR( s.st_mode ) )
+        {
+            // not a file (e.g. a directory)
+            close( m_Handle );
+
+            // fall through to setting INVALID_HANDLE_VALUE
+        }
+        else
+        {
+            // file opened ok
+            return true;
+        }
     }
 #else
     #error Unknown platform

@@ -6,43 +6,44 @@
 
     // Executable
     //--------------------------------------------------------------------------
-    ForEach( .Config in .Configs )
+    .ProjectConfigs = {}
+    ForEach( .BuildConfig in .BuildConfigs )
     {
-        Using( .Config )
-        .OutputBase + '\$Platform$-$Config$'
+        Using( .BuildConfig )
+        .OutputBase + '\$Platform$-$BuildConfigName$'
 
         // Unity
         //--------------------------------------------------------------------------
-        Unity( '$ProjectName$-Unity-$Platform$-$Config$' )
+        Unity( '$ProjectName$-Unity-$Platform$-$BuildConfigName$' )
         {
             .UnityInputPath             = '$ProjectPath$/'
             .UnityOutputPath            = '$OutputBase$/$ProjectPath$/'
+            .UnityOutputPattern         = '$ProjectName$_Unity*.cpp'
         }
 
         // Library
         //--------------------------------------------------------------------------
-        ObjectList( '$ProjectName$-Lib-$Platform$-$Config$' )
+        ObjectList( '$ProjectName$-Lib-$Platform$-$BuildConfigName$' )
         {
             // Input (Unity)
-            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$Config$'
+            .CompilerInputUnity         = '$ProjectName$-Unity-$Platform$-$BuildConfigName$'
 
             // Extra Compiler Options
             .CompilerOptions            + .UseExceptions // Test framework uses exceptions
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
-            .LibrarianOutput            = '$OutputBase$/$ProjectPath$/$ProjectName$$LibExtension$'
         }
 
         // Executable
         //--------------------------------------------------------------------------
-        Executable( '$ProjectName$-Exe-$Platform$-$Config$' )
+        Executable( '$ProjectName$-Exe-$Platform$-$BuildConfigName$' )
         {
             .Libraries                      = {
-                                                'CoreTest-Lib-$Platform$-$Config$'
-                                                'TestFrameWork-Lib-$Platform$-$Config$'
-                                                'Core-Lib-$Platform$-$Config$'
-                                                'LZ4-Lib-$Platform$-$Config$'
+                                                'CoreTest-Lib-$Platform$-$BuildConfigName$'
+                                                'TestFrameWork-Lib-$Platform$-$BuildConfigName$'
+                                                'Core-Lib-$Platform$-$BuildConfigName$'
+                                                'LZ4-Lib-$Platform$-$BuildConfigName$'
                                               }
             .LinkerOutput                   = '$OutputBase$/$ProjectPath$/$ProjectName$$ExeExtension$'
             #if __WINDOWS__
@@ -57,17 +58,26 @@
                 .LinkerOptions                  + ' -pthread -lrt'
             #endif
         }
-        Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
-        ^'Targets_$Platform$_$Config$' + { '$ProjectName$-$Platform$-$Config$' }
+        Alias( '$ProjectName$-$Platform$-$BuildConfigName$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$BuildConfigName$' }
+        ^'Targets_$Platform$_$BuildConfigName$' + { '$ProjectName$-$Platform$-$BuildConfigName$' }
 
         // Run Test
         //--------------------------------------------------------------------------
-        Test( "$ProjectName$-RunTest-$Platform$-$Config$" )
+        Test( "$ProjectName$-RunTest-$Platform$-$BuildConfigName$" )
         {
-            .TestExecutable                 = '$ProjectName$-Exe-$Platform$-$Config$'
+            .TestExecutable                 = '$ProjectName$-Exe-$Platform$-$BuildConfigName$'
             .TestOutput                     = "$OutputBase$/$ProjectPath$/TestOutput.txt"
             .TestTimeOut                    = 300
         }
+
+        #if __WINDOWS__
+            .ProjectConfig              = [ Using( .'Project_$Platform$_$BuildConfigName$' ) .Target = '$ProjectName$-$Platform$-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
+        #if __OSX__
+            .ProjectConfig              = [ .Config = '$BuildConfigName$'   .Target = '$ProjectName$-x64OSX-$BuildConfigName$' ]
+            ^ProjectConfigs             + .ProjectConfig
+        #endif
     }
 
     // Aliases
@@ -84,15 +94,6 @@
             .ProjectBasePath            = '$ProjectPath$\'
 
             .LocalDebuggerCommand       = '^$(SolutionDir)..\^$(Configuration)\Core\CoreTest\CoreTest.exe'
-
-            .ProjectX64Debug        = [ Using( .ProjectX64Debug )           .Target = '$ProjectName$-X64-Debug' ]
-            .ProjectX64Profile      = [ Using( .ProjectX64Profile )         .Target = '$ProjectName$-X64-Profile' ]
-            .ProjectX64Release      = [ Using( .ProjectX64Release )         .Target = '$ProjectName$-X64-Release' ]
-            .ProjectX64ClangDebug   = [ Using( .ProjectX64ClangDebug )      .Target = '$ProjectName$-X64Clang-Debug' ]
-            .ProjectX64ClangProfile = [ Using( .ProjectX64ClangProfile )    .Target = '$ProjectName$-X64Clang-Profile' ]
-            .ProjectX64ClangRelease = [ Using( .ProjectX64ClangRelease )    .Target = '$ProjectName$-X64Clang-Release' ]
-            .ProjectConfigs         = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-                                        .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
         }
     #endif
 
@@ -106,11 +107,6 @@
             .ProjectBasePath            = '$ProjectPath$/'
 
             .XCodeBuildWorkingDir       = '../../../../Code/'
-
-            .ProjectOSXDebug        = [ .Config = 'Debug'   .Target = '$ProjectName$-x64OSX-Debug' ]
-            .ProjectOSXProfile      = [ .Config = 'Profile' .Target = '$ProjectName$-x64OSX-Profile' ]
-            .ProjectOSXRelease      = [ .Config = 'Release' .Target = '$ProjectName$-x64OSX-Release' ]
-            .ProjectConfigs         = { .ProjectOSXDebug, .ProjectOSXProfile, .ProjectOSXRelease }
         }
     #endif
 }

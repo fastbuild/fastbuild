@@ -55,7 +55,7 @@ extern "C" int LLVMFuzzerTestOneInput( const uint8_t * data, size_t size )
 
     NodeGraph ng;
     BFFParser p( ng );
-    p.Parse( str.Get(), size, "fuzz.bff", 0, 0 );
+    p.ParseFromString( "fuzz.bff", str.Get() );
 
     return 0;  // Non-zero return values are reserved for future use.
 }

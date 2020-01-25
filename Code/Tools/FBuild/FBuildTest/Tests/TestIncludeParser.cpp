@@ -185,7 +185,7 @@ void TestIncludeParser::TestMSVC_P() const
     EnsureFileDoesNotExist( file );
 
     // Build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "MSVC-P" ) ) );
+    TEST_ASSERT( fBuild.Build( "MSVC-P" ) );
 
     // make sure all output files are as expected
     EnsureFileExists( file );

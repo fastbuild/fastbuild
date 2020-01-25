@@ -5,6 +5,10 @@
 //------------------------------------------------------------------------------
 .Windows10_SDKBasePath          = '$_CURRENT_BFF_DIR_$/10'
 .Windows10_SDKVersion           = '10.0.17763.0'
+#if CI_BUILD
+    .Windows10_SDKBasePath      = 'C:\Program Files (x86)\Windows Kits/10'
+    .Windows10_SDKVersion       = '10.0.17134.0'
+#endif
 
 // Defines
 //------------------------------------------------------------------------------

@@ -17,10 +17,15 @@ Compiler( 'Compiler-VS2015-x64' )
                     '$Root$/mspdbsrv.exe'
                     '$Root$/mspft140.dll'
                     '$Root$/1033/clui.dll'
+                    '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
                     '$VS2015_BasePath$/VC/redist/x64/Microsoft.VC140.CRT/msvcp140.dll'
                     '$VS2015_BasePath$/VC/redist/x64/Microsoft.VC140.CRT/vccorlib140.dll'
                     '$VS2015_BasePath$/VC/redist/x64/Microsoft.VC140.CRT/vcruntime140.dll'
                   }
+
+    #if ENABLE_LIGHT_CACHE
+        .UseLightCache_Experimental = true
+    #endif
 }
 
 // X64 ToolChain for Windows

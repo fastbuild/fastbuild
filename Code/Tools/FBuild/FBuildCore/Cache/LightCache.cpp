@@ -20,6 +20,15 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
+// Include Type
+//------------------------------------------------------------------------------
+enum class IncludeType : uint8_t
+{
+    ANGLE,      // #include <file.h>
+    QUOTE,      // #include "file.h"
+    MACRO,      // #include MACRO_H
+};
+
 // IncludedFile
 //------------------------------------------------------------------------------
 class IncludedFile
@@ -28,13 +37,13 @@ public:
     class Include
     {
     public:
-        Include( const AString & include, bool angleBracketForm )
+        Include( const AString & include, IncludeType type )
             : m_Include( include )
-            , m_AngleBracketForm( angleBracketForm )
+            , m_Type( type )
         {}
 
         AString                     m_Include;
-        bool                        m_AngleBracketForm;
+        IncludeType                 m_Type;
     };
 
     uint64_t                        m_FileNameHash;
@@ -48,29 +57,180 @@ public:
     inline bool operator <  ( const IncludedFile & other ) const    { return ( m_FileName < other.m_FileName ); }
 };
 
+// IncludedFileHashSet
+//------------------------------------------------------------------------------
+#define LIGHTCACHE_DEFAULT_BUCKET_SIZE 1024
+class IncludedFileHashSet
+{
+public:
+    IncludedFileHashSet( const IncludedFileHashSet & ) = delete;
+    IncludedFileHashSet & operator=( const IncludedFileHashSet & ) = delete;
+    IncludedFileHashSet()
+    {
+        m_Buckets.SetSize( LIGHTCACHE_DEFAULT_BUCKET_SIZE );
+        for ( IncludedFile * & elt : m_Buckets )
+        {
+            elt = nullptr;
+        }
+    }
+
+    ~IncludedFileHashSet()
+    {
+        Destruct();
+    }
+
+    const IncludedFile * Find( const AString & fileName, uint64_t fileNameHash )
+    {
+        IncludedFile ** location = InternalFind( fileName, fileNameHash );
+        if ( location && *location )
+        {
+            return *location;
+        }
+        return nullptr;
+    }
+
+    // If two threads find the same include simultaneously, we delete the new
+    // one and return the old one.
+    const IncludedFile * Insert( IncludedFile * item )
+    {
+        if ( ( m_Buckets.GetSize() / 2 ) <= m_Elts )
+        {
+            const size_t newSize = ( m_Buckets.GetSize() < LIGHTCACHE_DEFAULT_BUCKET_SIZE )
+                                 ? LIGHTCACHE_DEFAULT_BUCKET_SIZE
+                                 : ( m_Buckets.GetSize() * 2 );
+            Grow( newSize );
+        }
+        IncludedFile ** location = InternalFind( item->m_FileName, item->m_FileNameHash );
+        ASSERT( location != nullptr );
+
+        if ( *location != nullptr )
+        {
+            // A race between multiple threads got us a duplicate item.
+            // delete the new one
+            FDELETE item;
+            return *location;
+        }
+
+        ++m_Elts;
+        *location = item;
+        return *location;
+    }
+    void Destruct()
+    {
+        for ( IncludedFile * file : m_Buckets )
+        {
+            FDELETE file;
+        }
+        m_Buckets.Destruct();
+        m_Elts = 0;
+    }
+
+private:
+    IncludedFile ** InternalFind( const AString & fileName, uint64_t fileNameHash )
+    {
+        if ( m_Buckets.IsEmpty() )
+        {
+            return nullptr;
+        }
+        size_t probeCount = 1;
+        const size_t startIdx = fileNameHash & ( m_Buckets.GetSize() - 1 );
+        IncludedFile ** bucket = &m_Buckets[ startIdx ];
+        while ( *bucket != nullptr )
+        {
+            if ( ( (*bucket)->m_FileNameHash == fileNameHash ) && ( **bucket == fileName ) )
+            {
+                return bucket;
+            }
+            bucket = Next( m_Buckets, startIdx, probeCount );
+        }
+        ASSERT( *bucket == nullptr );
+        return bucket;
+    }
+
+    static IncludedFile ** Next( Array< IncludedFile * > &buckets,
+                                 size_t startIdx,
+                                 size_t & probeCount )
+    {
+        size_t curIdx = startIdx + ( probeCount * probeCount ); //quadratic probing
+        curIdx &= ( buckets.GetSize() - 1 );
+        ++probeCount;
+        return &buckets[ curIdx ];
+    }
+    void Grow( size_t elts )
+    {
+        Array< IncludedFile * > dest( elts, true );
+        dest.SetSize( elts );
+        for ( IncludedFile * & elt : dest )
+        {
+            elt = nullptr;
+        }
+
+        // populate dest with the elements in m_Buckets.  Rely on uniqueness
+        // in source to avoid comparing in dest
+        for ( IncludedFile * elt : m_Buckets )
+        {
+            if ( elt == nullptr )
+            {
+                continue;
+            }
+            size_t probeCount = 1;
+            const size_t startIdx = elt->m_FileNameHash & ( dest.GetSize() - 1 );
+            IncludedFile ** bucket = &dest[ startIdx ];
+            while ( *bucket != nullptr )
+            {
+                bucket = Next( dest, startIdx, probeCount );
+            }
+            ASSERT( *bucket == nullptr );
+            *bucket = elt;
+        }
+        m_Buckets.Swap( dest );
+    }
+
+    // m_Buckets must always be a size that is a power of 2
+    Array< IncludedFile * > m_Buckets{ LIGHTCACHE_DEFAULT_BUCKET_SIZE, true };
+    size_t m_Elts = 0;
+};
+
+// IncludeDefine
+//------------------------------------------------------------------------------
+class IncludeDefine
+{
+public:
+    IncludeDefine( const AString & macro, const AString & include, IncludeType type )
+        : m_Macro( macro )
+        , m_Include( include )
+        , m_Type( type )
+    {}
+
+    AString                         m_Macro;
+    AString                         m_Include;
+    IncludeType                     m_Type;
+};
+
 // IncludedFileBucket
 //------------------------------------------------------------------------------
 class IncludedFileBucket
 {
 public:
-    IncludedFileBucket()
-        : m_Mutex()
-        , m_Files( 1024, true )
-    {}
+    IncludedFileBucket() = default;
+    IncludedFileBucket( const IncludedFileBucket & ) = delete;
+    IncludedFileBucket & operator = ( const IncludedFileBucket & ) = delete;
+
     void Destruct()
     {
-        for ( IncludedFile * file : m_Files )
-        {
-            FDELETE file;
-        }
-        m_Files.Destruct();
+        m_HashSet.Destruct();
     }
-
     Mutex                   m_Mutex;
-    Array< IncludedFile * > m_Files;
+    IncludedFileHashSet     m_HashSet;
 };
-#define LIGHTCACHE_NUM_BUCKETS 128
-static IncludedFileBucket g_AllIncludedFiles[ LIGHTCACHE_NUM_BUCKETS ]; 
+// using a power of two number of buckets.  64 top level buckets should be a
+// reasonable tradeoff between size and contention
+#define LIGHTCACHE_NUM_BUCKET_BITS 6
+#define LIGHTCACHE_NUM_BUCKETS ( 1ULL << LIGHTCACHE_NUM_BUCKET_BITS )
+#define LIGHTCACHE_BUCKET_MASK_BASE ( LIGHTCACHE_NUM_BUCKETS - 1ULL )
+// use upper bits for bucket selection, as lower bits get used in the hash set
+#define LIGHTCACHE_HASH_TO_BUCKET(hash) ( (( hash ) >> ( 64ULL - LIGHTCACHE_NUM_BUCKET_BITS )) & LIGHTCACHE_BUCKET_MASK_BASE )
+static IncludedFileBucket g_AllIncludedFiles[ LIGHTCACHE_NUM_BUCKETS ];
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -84,7 +244,13 @@ LightCache::LightCache()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-LightCache::~LightCache() = default;
+LightCache::~LightCache()
+{
+    for ( const IncludeDefine * def : m_IncludeDefines )
+    {
+        FDELETE def;
+    }
+}
 
 // Hash
 //------------------------------------------------------------------------------
@@ -95,29 +261,27 @@ bool LightCache::Hash( ObjectNode * node,
 {
     PROFILE_FUNCTION
 
-    ProjectGeneratorBase::ExtractIntellisenseOptions( compilerArgs,
-                                                      "-I",
-                                                      "/I",
-                                                      m_IncludePaths,
-                                                      false,    //escapeQuotes,
-                                                      false );  //keepFullOption
+    ProjectGeneratorBase::ExtractIncludePaths( compilerArgs,
+                                               m_IncludePaths,
+                                               false ); // escapeQuotes
 
-	// Ensure all includes are slash terminated
+    // Ensure all includes are slash terminated
     for ( AString & includePath : m_IncludePaths )
     {
-	    if ( includePath.EndsWith( NATIVE_SLASH ) || includePath.EndsWith( OTHER_SLASH ) )
+        if ( includePath.EndsWith( NATIVE_SLASH ) || includePath.EndsWith( OTHER_SLASH ) )
         {
             continue;
         }
-    	includePath += NATIVE_SLASH;
+        includePath += NATIVE_SLASH;
     }
 
     const AString & rootFileName = node->GetSourceFile()->GetName();
-    const IncludedFile * includedFile = ProcessInclude( rootFileName, false );
+    ProcessInclude( rootFileName, IncludeType::QUOTE );
 
     // Handle missing root file
-    if ( includedFile == nullptr )
+    if ( m_AllIncludedFiles.IsEmpty() )
     {
+        // TODO: Error
         outSourceHash = 0;
         return false;
     }
@@ -154,128 +318,268 @@ bool LightCache::Hash( ObjectNode * node,
     }
 }
 
-// Hash
+// Parse
 //------------------------------------------------------------------------------
-void LightCache::Hash( IncludedFile * file, FileStream & f )
+void LightCache::Parse( IncludedFile * file, FileStream & f )
 {
     ASSERT( f.IsOpen() );
 
-	// Read all contents
-	const size_t fileSize = f.GetFileSize();
+    // Read all contents
+    const uint64_t fileSize = f.GetFileSize();
     AString fileContents;
     fileContents.SetLength( (uint32_t)fileSize );
-    if ( f.Read( fileContents.Get(), fileSize ) != fileSize )
+    if ( f.Read( fileContents.Get(), (size_t)fileSize ) != fileSize )
     {
         m_ProblemParsing = true;
         return;
     }
-	f.Close();
+    f.Close();
 
 
     // Store hash of file
     file->m_ContentHash = xxHash::Calc64( fileContents );
 
-	const char * pos = fileContents.Get();
-	for (;;)
-	{
-		// skip leading whitespace
-		SkipWhitespace( pos );
-		if ( *pos == 0 )
-		{
-			break;
-		}
+    const char * pos = fileContents.Get();
+    for (;;)
+    {
+        // skip leading whitespace
+        SkipWhitespace( pos );
+        if ( *pos == 0 )
+        {
+            break;
+        }
 
-		// did we hit the end of a line?
-		if ( IsAtEndOfLine( pos ) )
-		{
-			// line is entirely whitepace
-			SkipLineEnd( pos );
-			continue;
-		}
+        // did we hit the end of a line?
+        if ( IsAtEndOfLine( pos ) )
+        {
+            // line is entirely whitepace
+            SkipLineEnd( pos );
+            continue;
+        }
 
-		// line contains something useful
-		// is it an include directive?
-		const char c = *pos;
-		if ( c == '#' )
-		{
-			pos++;
-			SkipWhitespace( pos );
-			if ( AString::StrNCmp( pos, "include", 7 ) == 0 )
-			{
-				pos += 7;
-				SkipWhitespace( pos );
-				if ( ( *pos != '"' ) && ( *pos != '<' ) )
-				{
-					// We encountered an include we can't handle (using a macro for the path for example)
-                    m_ProblemParsing = true;
-                    return;
-				}
-				const bool angleBracketForm = ( *pos == '<' );
-				++pos;
-				const char * includeStart = pos;
-				SkipToEndOfQuotedString( pos );
-				const char * includeEnd = pos;
-				AStackString<> include( includeStart, includeEnd );
+        const char c = *pos;
 
-                file->m_Includes.Append( IncludedFile::Include{ include, angleBracketForm } );
+        // Is this a directive?
+        if ( c == '#' )
+        {
+            if ( ParseDirective( *file, pos ) == false )
+            {
+                m_ProblemParsing = true;
+                return;
+            }
+        }
 
-				SkipToEndOfLine( pos );
-				SkipLineEnd( pos );
-				continue;
-			}
-		}
+        // block comment?
+        if ( ( c == '/' ) && ( pos[ 1 ] == '*' ) )
+        {
+            SkipCommentBlock( pos );
+        }
 
-		// block comments
-		if ( ( c == '/' ) && ( pos[ 1 ] == '*' ) )
-		{
-			pos += 2; // skip /*
-			for (;;)
-			{
-				const char thisChar = *pos;
-				// end of data?
-				if ( thisChar == 0 )
-				{
-					break;
-				}
-				// enf of comment block?
-				if ( ( thisChar == '*' ) && ( pos[ 1 ] == '/' ) )
-				{
-					pos +=2;
-					break;
-				}
+        // Advance to next line
+        SkipToEndOfLine( pos );
+        SkipLineEnd( pos );
+    }
+}
 
-				// line ending - windows
-				if ( c == '\r' )
-				{
-					++pos;
-					if ( *pos == '\n' )
-					{
-						++pos;
-					}
-					continue;
-				}
+// ParseDirective
+//------------------------------------------------------------------------------
+bool LightCache::ParseDirective( IncludedFile & file, const char * & pos )
+{
+    // Skip '#' and whitespace
+    ASSERT( *pos == '#' );
+    pos++;
+    SkipWhitespace( pos );
 
-				// line ending - unix
-				if ( c == '\n' )
-				{
-					++pos;
-					continue;
-				}
+    // Handle directives we understand and care about
+    if ( AString::StrNCmp( pos, "include", 7 ) == 0 )
+    {
+        return ParseDirective_Include( file, pos );
+    }
+    if ( AString::StrNCmp( pos, "define", 6 ) == 0 )
+    {
+        return ParseDirective_Define( file, pos );
+    }
+    else if ( AString::StrNCmp( pos, "import", 6 ) == 0 )
+    {
+        return ParseDirective_Import( file, pos );
+    }
 
-				// part of comment
-				++pos;
-			}
-		}
+    // A directive we ignore
+    return true;
+}
 
-		// a non-include line
-		SkipToEndOfLine( pos );
-		SkipLineEnd( pos );
-	}
+// ParseDirective_Include
+//------------------------------------------------------------------------------
+bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos )
+{
+    // skip "include" and whitespace
+    ASSERT( AString::StrNCmp( pos, "include", 7 ) == 0 );
+    pos += 7;
+    SkipWhitespace( pos );
+
+    // Get include string
+    AStackString<> include;
+    IncludeType includeType;
+    if ( ( *pos == '"' ) || ( *pos == '<' ) )
+    {
+        // Looks like a normal include
+        if ( ParseIncludeString( pos, include, includeType ) == false )
+        {
+            // We encountered an include we can't handle (using a macro for the path for example)
+            return false;
+        }
+
+        file.m_Includes.Append( IncludedFile::Include{ include, includeType } );
+        return true;
+    }
+
+    // Not a normal include - perhaps this is a macro?
+    AStackString<> macroName;
+    if ( ParseMacroName( pos, macroName ) == false )
+    {
+        return false; // We saw an unexpected sequence after the #include
+    }
+
+    // Store the macro include which will be resolved later
+    file.m_Includes.Append( IncludedFile::Include{ macroName, IncludeType::MACRO } );
+    return true;
+}
+
+// ParseDirective_Define
+//------------------------------------------------------------------------------
+bool LightCache::ParseDirective_Define( IncludedFile & /*file*/, const char * & pos )
+{
+    // skip "include" and whitespace
+    ASSERT( AString::StrNCmp( pos, "define", 6 ) == 0 );
+    pos += 6;
+    SkipWhitespace( pos );
+
+    // Get macro name
+    AStackString<> macroName;
+    if ( ParseMacroName( pos, macroName ) == false )
+    {
+        return false; // Unexpected macro form - we don't know how to handle this
+    }
+
+    SkipWhitespace( pos );
+
+    // Is this defining an include path?
+    AStackString<> include;
+    IncludeType includeType;
+    if ( ParseIncludeString( pos, include, includeType ) == false )
+    {
+        // Not an include - this isn't an error. We just don't care about this macro
+        return true;
+    }
+
+    // Take not of the macro and the path it defines
+    m_IncludeDefines.Append( FNEW( IncludeDefine( macroName, include, includeType ) ) );
+
+    return true;
+}
+
+// ParseDirective_Import
+//------------------------------------------------------------------------------
+bool LightCache::ParseDirective_Import( IncludedFile & /*file*/, const char * & /*pos*/ )
+{
+    // We encountered an import directive, we can't handle them.
+    return false;
+}
+
+// SkipCommentBlock
+//------------------------------------------------------------------------------
+void LightCache::SkipCommentBlock( const char * & pos )
+{
+    // Skip opening /*
+    ASSERT( ( pos[ 0 ] == '/' ) && ( pos[ 1 ] == '*' ) );
+
+    // Skip to closing*/
+    for (;;)
+    {
+        const char thisChar = *pos;
+
+        // end of data?
+        if ( thisChar == 0 )
+        {
+            break;
+        }
+
+        // end of comment block?
+        if ( ( thisChar == '*' ) && ( pos[ 1 ] == '/' ) )
+        {
+            pos +=2;
+            break;
+        }
+
+        // part of comment
+        ++pos;
+    }
+}
+
+// ParseIncludeString
+//------------------------------------------------------------------------------
+bool LightCache::ParseIncludeString( const char * & pos,
+                                     AString & outIncludePath,
+                                     IncludeType & outIncludeType )
+{
+    // Does it start with a " or <
+    if ( ( *pos != '"' ) && ( *pos != '<' ) )
+    {
+        // Not a valid include string
+        return false;
+    }
+
+    outIncludeType = ( *pos == '<' ) ? IncludeType::ANGLE : IncludeType::QUOTE;
+
+    const char * includeStart = ( pos + 1 );
+    if ( SkipToEndOfQuotedString( pos ) == false )
+    {
+        return false;
+    }
+    const char * includeEnd = ( pos - 1 );
+    outIncludePath.Assign( includeStart, includeEnd );
+    return true;
+}
+
+// ParseMacroName
+//------------------------------------------------------------------------------
+bool LightCache::ParseMacroName( const char * & pos, AString & outMacroName )
+{
+    // Get macro name
+    const char * macroNameStart = pos;
+    char c = *macroNameStart;
+    // Check for valid identifier start
+    if ( !( ( c >= 'a' ) && ( c <= 'z' ) ) &&
+         !( ( c >= 'A' ) && ( c <= 'Z' ) ) &&
+         !( c == '_' ) )
+    {
+        return false; // Not a valid macro name so ignore it
+    }
+    ++pos;
+
+    // Find end of macro name
+    const char * macroNameEnd;
+    for ( ;; )
+    {
+        c = *pos;
+        if ( ( ( c >= 'a' ) && ( c <= 'z' ) ) ||
+                ( ( c >= 'A' ) && ( c <= 'Z' ) ) ||
+                ( ( c >= '0' ) && ( c <= '9' ) ) || 
+                ( c == '_' ) )
+        {
+            ++pos;
+            continue;
+        }
+        macroNameEnd = pos;
+        break;
+    }
+    outMacroName.Assign( macroNameStart, macroNameEnd );
+    return true;
 }
 
 // ProcessInclude
 //------------------------------------------------------------------------------
-const IncludedFile * LightCache::ProcessInclude( const AString & include, bool angleBracketForm )
+void LightCache::ProcessInclude( const AString & include, IncludeType type )
 {
     bool cyclic = false;
     const IncludedFile * file = nullptr;
@@ -287,78 +591,91 @@ const IncludedFile * LightCache::ProcessInclude( const AString & include, bool a
     }
     else
     {
-	    // From MSDN: http://msdn.microsoft.com/en-us/library/36k2cdd4.aspx
+        // #include MACRO_H
+        if ( type == IncludeType::MACRO )
+        {
 
-	    if ( angleBracketForm )
-	    {
-    	    // #include <file.h>
+            // Find macro - expand each possible value
+            for ( const IncludeDefine * def : m_IncludeDefines )
+            {
+                if ( def->m_Macro == include )
+                {
+                    ProcessInclude( def->m_Include, def->m_Type );
+                }
+            }
+            return;
+        }
 
-		    // 1. Along the path that's specified by each /I compiler option.
-		    file = ProcessIncludeFromIncludePath( include, cyclic );
+        // From MSDN: http://msdn.microsoft.com/en-us/library/36k2cdd4.aspx
 
-		    // 2. When compiling occurs on the command line, along the paths that are specified by the INCLUDE environment variable.
+        if ( type == IncludeType::ANGLE )
+        {
+            // #include <file.h>
+
+            // 1. Along the path that's specified by each /I compiler option.
+            file = ProcessIncludeFromIncludePath( include, cyclic );
+
+            // 2. When compiling occurs on the command line, along the paths that are specified by the INCLUDE environment variable.
             //if ( file == nullptr )
             //{
-    		//    ASSERT( false ); // TODO: Implement
+            //    ASSERT( false ); // TODO: Implement
             //}
-	    }
-        else
-	    {
-    	    // #include "file.h"
+        }
+        else if ( type == IncludeType::QUOTE )
+        {
+            // #include "file.h"
 
-		    // 1. In the same directory as the file that contains the #include statement.
-		    // 2. In the directories of the currently opened include files, in the reverse order in which they were opened. The search begins in the directory of the parent include file and continues upward through the directories of any grandparent include files.
+            // 1. In the same directory as the file that contains the #include statement.
+            // 2. In the directories of the currently opened include files, in the reverse order in which they were opened. The search begins in the directory of the parent include file and continues upward through the directories of any grandparent include files.
             file = ProcessIncludeFromIncludeStack( include, cyclic );
 
-		    // 3. Along the path that's specified by each /I compiler option.
+            // 3. Along the path that's specified by each /I compiler option.
             if ( file == nullptr )
             {
-    	        file = ProcessIncludeFromIncludePath( include, cyclic );
-		    }
+                file = ProcessIncludeFromIncludePath( include, cyclic );
+            }
 
-		    // 4. Along the paths that are specified by the INCLUDE environment variable.
+            // 4. Along the paths that are specified by the INCLUDE environment variable.
             //if ( file == nullptr )
             //{
-    		//    ASSERT( false ); // TODO: Implement
+            //    ASSERT( false ); // TODO: Implement
             //}
-	    }
+        }
     }
 
-    if ( file )
+    if ( file == nullptr )
     {
-        // Avoid recursing into files we've already seen
-        if ( cyclic )
-        {
-            return file;
-        }
-
-        // Have we already seen this file before?
-        if ( m_AllIncludedFiles.FindDeref( *file ) )
-        {
-            return file;
-        }
-
-        // Take note of this included file 
-        m_AllIncludedFiles.Append( file );
-
-        // Recurse
-        m_IncludeStack.Append( file );
-        for ( const IncludedFile::Include & inc : file->m_Includes )
-        {
-            ProcessInclude( inc.m_Include, inc.m_AngleBracketForm );
-        }
-        m_IncludeStack.Pop();
-
-        return file;
+        // Include not found. This is ok because:
+        // a) The file might not be needed. If the include is within an inactive part of the file
+        //    such as a comment or ifdef'd for example. If compilation succeeds, the file should
+        //    not be part of our dependencies anyway, so this is ok.
+        // b) The files is genuinely missing, in which case compilation will fail. If compilation
+        //    fails then we won't bake the dependencies with the missing file, so this is ok.
+        return;
     }
 
-	// Include not found. This is ok because:
-    // a) The file might not be needed. If the include is within an inactive part of the file
-    //    such as a comment or ifdef'd for example. If compilation succeeds, the file should
-    //    not be part of our dependencies anyway, so this is ok.
-    // b) The files is genuinely missing, in which case compilation will fail. If compilation
-    //    fails then we won't bake the dependencies with the missing file, so this is ok.
-    return nullptr;
+    // Avoid recursing into files we've already seen
+    if ( cyclic )
+    {
+        return;
+    }
+
+    // Have we already seen this file before?
+    if ( m_AllIncludedFiles.FindDeref( *file ) )
+    {
+        return;
+    }
+
+    // Take note of this included file
+    m_AllIncludedFiles.Append( file );
+
+    // Recurse
+    m_IncludeStack.Append( file );
+    for ( const IncludedFile::Include & inc : file->m_Includes )
+    {
+        ProcessInclude( inc.m_Include, inc.m_Type );
+    }
+    m_IncludeStack.Pop();
 }
 
 // ProcessIncludeFromFullPath
@@ -386,19 +703,19 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString &
 {
     outCyclic = false;
 
-	const int stackSize = (int)m_IncludeStack.GetSize();
-	for ( int i=( stackSize - 1 ); i >=0; --i )
-	{
-		AStackString<> possibleIncludePath( m_IncludeStack[ i ]->m_FileName );
-		const char * lastFwdSlash = possibleIncludePath.FindLast( '/' );
-		const char * lastBackSlash = possibleIncludePath.FindLast( '\\' );
-		const char * lastSlash = ( lastFwdSlash > lastBackSlash ) ? lastFwdSlash : lastBackSlash;
-		ASSERT( lastSlash ); // it's a full path, so it must have a slash
+    const int32_t stackSize = (int32_t)m_IncludeStack.GetSize();
+    for ( int32_t i = ( stackSize - 1 ); i >= 0; --i )
+    {
+        AStackString<> possibleIncludePath( m_IncludeStack[ (size_t)i ]->m_FileName );
+        const char * lastFwdSlash = possibleIncludePath.FindLast( '/' );
+        const char * lastBackSlash = possibleIncludePath.FindLast( '\\' );
+        const char * lastSlash = ( lastFwdSlash > lastBackSlash ) ? lastFwdSlash : lastBackSlash;
+        ASSERT( lastSlash ); // it's a full path, so it must have a slash
 
-		// truncate to slash (keep slash)
-		possibleIncludePath.SetLength( (uint32_t)( lastSlash - possibleIncludePath.Get() ) + 1 );
+        // truncate to slash (keep slash)
+        possibleIncludePath.SetLength( (uint32_t)( lastSlash - possibleIncludePath.Get() ) + 1 );
 
-		possibleIncludePath += include;
+        possibleIncludePath += include;
 
         NodeGraph::CleanPath( possibleIncludePath );
 
@@ -419,9 +736,9 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludeStack( const AString &
 
         // Try the next level of include stack
         // TODO: Could optimize out extra checks if path is the same
-	}
+    }
 
-	return nullptr; // not found
+    return nullptr; // not found
 }
 
 // ProcessIncludeFromIncludePath
@@ -431,10 +748,10 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & 
     outCyclic = false;
 
     AStackString<> possibleIncludePath;
-	for ( const AString & includePath : m_IncludePaths )
-	{
-		possibleIncludePath = includePath;
-		possibleIncludePath += include;
+    for ( const AString & includePath : m_IncludePaths )
+    {
+        possibleIncludePath = includePath;
+        possibleIncludePath += include;
 
         NodeGraph::CleanPath( possibleIncludePath );
 
@@ -453,31 +770,31 @@ const IncludedFile * LightCache::ProcessIncludeFromIncludePath( const AString & 
         }
 
         // Try the next include path...
-	}
+    }
 
-	return nullptr; // not found
+    return nullptr; // not found
 }
 
-// FileExists 
+// FileExists
 //------------------------------------------------------------------------------
 const IncludedFile * LightCache::FileExists( const AString & fileName )
 {
     const uint64_t fileNameHash = xxHash::Calc64( fileName );
-    const uint64_t bucketIndex = fileNameHash % LIGHTCACHE_NUM_BUCKETS;
+    const uint64_t bucketIndex = LIGHTCACHE_HASH_TO_BUCKET( fileNameHash );
     IncludedFileBucket & bucket = g_AllIncludedFiles[ bucketIndex ];
-
     // Retrieve from shared cache
     {
         MutexHolder mh( bucket.m_Mutex );
-        IncludedFile ** found = bucket.m_Files.FindDeref( fileName );
-        if ( found )
+        const IncludedFile * location = bucket.m_HashSet.Find( fileName, fileNameHash );
+        if ( location )
         {
-            return *found; // File previously handled so we can re-use the result
+            return location; // File previously handled so we can re-use the result
         }
     }
 
     // A newly seen file
     IncludedFile * newFile = FNEW( IncludedFile() );
+    const IncludedFile * retval = nullptr;
     newFile->m_FileNameHash = fileNameHash;
     newFile->m_FileName = fileName;
     newFile->m_Exists = false;
@@ -490,89 +807,112 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         {
             // Store to shared cache
             MutexHolder mh( bucket.m_Mutex );
-            bucket.m_Files.Append( newFile );
+            retval = bucket.m_HashSet.Insert( newFile );
         }
-        return newFile;
+        return retval;
     }
 
     // File exists - parse it
     newFile->m_Exists = true;
-    Hash( newFile, f );
+    Parse( newFile, f );
 
     {
         // Store to shared cache
         MutexHolder mh( bucket.m_Mutex );
-        bucket.m_Files.Append( newFile );
+        retval = bucket.m_HashSet.Insert( newFile );
     }
 
-    return newFile;
+    return retval;
 }
 
 // SkipWhitepspace
 //------------------------------------------------------------------------------
 void LightCache::SkipWhitespace( const char * & pos ) const
 {
-	for (;;)
-	{
-		const char c = *pos;
-		if ( ( c == ' ' ) || ( c == '\t' ) )
-		{
-			pos++;
-			continue;
-		}
-		break;
-	}
+    for (;;)
+    {
+        const char c = *pos;
+        if ( ( c == ' ' ) || ( c == '\t' ) )
+        {
+            pos++;
+            continue;
+        }
+        break;
+    }
 }
 
 // IsAtEndOfLine
 //------------------------------------------------------------------------------
 bool LightCache::IsAtEndOfLine( const char * pos ) const
 {
-	const char c = *pos;
-	return ( ( c == '\r' ) || ( c== '\n' ) );
+    const char c = *pos;
+    return ( ( c == '\r' ) || ( c== '\n' ) );
 }
 
 // SkipLineEnd
 //------------------------------------------------------------------------------
 void LightCache::SkipLineEnd( const char * & pos ) const
 {
-	while ( IsAtEndOfLine( pos ) )
-	{
-		++pos;
-		continue;
-	}
+    while ( IsAtEndOfLine( pos ) )
+    {
+        ++pos;
+        continue;
+    }
 }
 
 // SkipToEndOfLine
 //------------------------------------------------------------------------------
 void LightCache::SkipToEndOfLine( const char * & pos ) const
 {
-	for ( ;; )
-	{
-		const char c = *pos;
-		if ( ( c != '\r' ) && ( c != '\n' ) && ( c != '\000' ) )
-		{
-			++pos;
-			continue;
-		}
-		break;
-	}
+    for ( ;; )
+    {
+        const char c = *pos;
+        if ( ( c != '\r' ) && ( c != '\n' ) && ( c != '\000' ) )
+        {
+            ++pos;
+            continue;
+        }
+        break;
+    }
 }
 
 // SkipToEndOfQuotedString
 //------------------------------------------------------------------------------
-void LightCache::SkipToEndOfQuotedString( const char * & pos ) const
+bool LightCache::SkipToEndOfQuotedString( const char * & pos ) const
 {
-	for ( ;; )
-	{
-		const char c = *pos;
-		if ( ( c != '"' ) && ( c != '>' ) )
-		{
-			++pos;
-			continue;
-		}
-		break;
-	}
+    // Skip opening char
+    const char c = *pos;
+    ASSERT( ( c == '"' ) || ( c == '<' ) );
+    ++pos;
+
+    // Determing expected end char
+    const char endChar = ( c == '"' ) ? '"' : '>';
+
+    // Find end char
+    for ( ;; )
+    {
+        // Found it?
+        if ( *pos == endChar )
+        {
+            ++pos;
+            return true; // Found
+        }
+
+        // End of line?
+        if ( ( *pos == '\r' ) || ( *pos == '\n' ) )
+        {
+            return false;
+        }
+
+        // Hit end of buffer?
+        if ( *pos == 0 )
+        {
+            return false;
+        }
+
+        // Keep searching
+        ++pos;
+    }
 }
 
 //------------------------------------------------------------------------------
