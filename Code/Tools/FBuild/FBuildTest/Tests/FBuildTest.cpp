@@ -5,9 +5,12 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
+#include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
+#include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
@@ -91,6 +94,91 @@ void FBuildTest::EnsureDirDoesNotExist( const char * dirPath ) const
 void FBuildTest::EnsureDirExists( const char * dirPath ) const
 {
     TEST_ASSERT( FileIO::EnsurePathExists( AStackString<>( dirPath ) ) );
+}
+
+// LoadFileContentsAsString
+//------------------------------------------------------------------------------
+void FBuildTest::LoadFileContentsAsString( const char* fileName, AString& outString ) const
+{
+    FileStream f;
+    TEST_ASSERT( f.Open( fileName ) );
+    const uint32_t fileSize = (uint32_t)f.GetFileSize();
+    outString.SetLength( fileSize );
+    TEST_ASSERT( f.ReadBuffer( outString.Get(), fileSize ) );
+}
+
+// Parse
+//------------------------------------------------------------------------------
+void FBuildTest::Parse( const char * fileName, bool expectFailure ) const
+{
+    FBuild fBuild;
+    NodeGraph ng;
+    BFFParser p( ng );
+    bool parseResult = p.ParseFromFile( fileName );
+    if ( expectFailure )
+    {
+        TEST_ASSERT( parseResult == false ); // Make sure it failed as expected
+    }
+    else
+    {
+        TEST_ASSERT( parseResult == true );
+    }
+}
+
+// ParseFromString
+//------------------------------------------------------------------------------
+bool FBuildTest::ParseFromString( const char * bffContents,
+                                  const char * expectedError ) const
+{
+    // Note size of output so we can check if error was part of this invocation
+    const size_t outputSizeBefore = GetRecordedOutput().GetLength();
+
+    // Parse
+    FBuild fBuild;
+    NodeGraph ng;
+    BFFParser p( ng );
+    const bool result = p.ParseFromString( "test.bff", bffContents );
+
+    // Handle result
+    if ( result == true )
+    {
+        // Success
+
+        // Did we expect to fail?
+        if ( expectedError )
+        {
+            OUTPUT( "Expected failure but did not fail" );
+            return false; // break in calling code
+        }
+
+        // Expected success so everything is ok
+        return true;
+    }
+    else
+    {
+        // Failure
+        
+        // Did we expected to fail?
+        if ( expectedError )
+        {
+            // Search for expected error
+            const char * searchStart = GetRecordedOutput().Get() + outputSizeBefore;
+            const bool foundExpectedError = ( GetRecordedOutput().Find( expectedError, searchStart ) != nullptr );
+
+            if ( foundExpectedError == false )
+            {
+                OUTPUT( "Failed in an unexpected way" );
+                return false; // break in calling code
+            }
+
+            // Failed in the expected way so everything is ok
+            return true;
+        }
+
+        // Failed but should not have
+        OUTPUT( "Unexpected failure" );
+        return false; // break in calling code
+    }
 }
 
 // CheckStatsNode
@@ -180,6 +268,69 @@ FBuildTestOptions::FBuildTestOptions()
 {
     // Override defaults
     m_ShowSummary = true; // required to generate stats for node count checks
+
+    // Ensure any distributed compilation tests use the test port
+    m_DistributionPort = Protocol::PROTOCOL_TEST_PORT;
+}
+
+// GetRecursiveDependencyCount
+//------------------------------------------------------------------------------
+size_t FBuildForTest::GetRecursiveDependencyCount( const Node * node ) const
+{
+    size_t count = 0;
+    const Dependencies * depLists[3] = { &node->GetPreBuildDependencies(),
+                                            &node->GetStaticDependencies(),
+                                            &node->GetDynamicDependencies() };
+    for ( const Dependencies * depList : depLists )
+    {
+        for ( const Dependency & dep : *depList )
+        {
+            count += GetRecursiveDependencyCount( dep.GetNode() );
+        }
+        count += depList->GetSize();
+    }
+    return count;
+}
+
+// GetRecursiveDependencyCount
+//------------------------------------------------------------------------------
+size_t FBuildForTest::GetRecursiveDependencyCount( const char * nodeName ) const
+{
+    const Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    TEST_ASSERT( node );
+    return GetRecursiveDependencyCount( node );
+}
+
+// GetNodesOfType
+//------------------------------------------------------------------------------
+void FBuildForTest::GetNodesOfType( Node::Type type, Array<const Node *> & outNodes ) const
+{
+    const size_t numNodes = m_DependencyGraph->GetNodeCount();
+    for ( size_t i = 0; i < numNodes; ++i )
+    {
+        const Node * node = m_DependencyGraph->GetNodeByIndex( i );
+        if ( node->GetType() == type )
+        {
+            outNodes.Append( node );
+        }
+    }
+}
+
+// GetNode
+//------------------------------------------------------------------------------
+const Node * FBuildForTest::GetNode( const char * nodeName ) const
+{
+    return m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+}
+
+// SerializeDepGraphToText
+//------------------------------------------------------------------------------
+void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString& outBuffer ) const
+{
+    Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
+    Dependencies deps( 1, false );
+    deps.Append( Dependency( node ) );
+    m_DependencyGraph->SerializeToText( deps, outBuffer );
 }
 
 //------------------------------------------------------------------------------

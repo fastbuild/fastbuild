@@ -11,7 +11,7 @@ class FileStream : public IOStream
 {
 public:
     explicit FileStream();
-    ~FileStream();
+    virtual ~FileStream() override;
 
     enum FileMode
     {
@@ -42,11 +42,12 @@ public:
         bool SetLastWriteTime( uint64_t lastWriteTime );
     #endif
 
-    // Access to handle
-    inline void * GetHandle() const { return m_Handle; }
-
 private:
-    void * m_Handle;
+    #if defined( __WINDOWS__ )
+        void * m_Handle;
+    #else
+        int32_t m_Handle;
+    #endif
 };
 
 //------------------------------------------------------------------------------

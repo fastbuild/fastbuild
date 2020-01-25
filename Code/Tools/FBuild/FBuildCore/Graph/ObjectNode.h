@@ -13,7 +13,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
-class BFFIterator;
 class ConstMemoryStream;
 class Function;
 class NodeGraph;
@@ -27,13 +26,13 @@ class ObjectNode : public FileNode
     REFLECT_NODE_DECLARE( ObjectNode )
 public:
     ObjectNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     // simplified remote constructor
     explicit ObjectNode( const AString & objectName,
                          NodeProxy * srcFile,
                          const AString & compilerOptions,
                          uint32_t flags );
-    virtual ~ObjectNode();
+    virtual ~ObjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
 
@@ -60,7 +59,9 @@ public:
         FLAG_WARNINGS_AS_ERRORS_MSVC    = 0x80000,
         FLAG_VBCC               =   0x100000,
         FLAG_STATIC_ANALYSIS_MSVC = 0x200000,
-        FLAG_ORBIS_WAVE_PSSLC   =   0x400000
+        FLAG_ORBIS_WAVE_PSSLC   =   0x400000,
+        FLAG_DIAGNOSTICS_COLOR_AUTO = 0x800000,
+        FLAG_WARNINGS_AS_ERRORS_CLANGGCC = 0x1000000,
     };
     static uint32_t DetermineFlags( const CompilerNode * compilerNode,
                                     const AString & args,
@@ -71,8 +72,11 @@ public:
 
     inline bool IsCreatingPCH() const { return GetFlag( FLAG_CREATING_PCH ); }
     inline bool IsUsingPCH() const { return GetFlag( FLAG_USING_PCH ); }
-    inline bool IsMSVC() const { return GetFlag( FLAG_MSVC ); }
+    inline bool IsClang() const { return GetFlag( FLAG_CLANG ); }
+    inline bool IsGCC() const { return GetFlag( FLAG_GCC ); }
+    inline bool IsMSVC() const { return GetFlag(FLAG_MSVC); }
     inline bool IsUsingPDB() const { return GetFlag( FLAG_USING_PDB ); }
+    inline bool IsUsingStaticAnalysisMSVC() const { return GetFlag( FLAG_STATIC_ANALYSIS_MSVC ); }
 
     virtual void SaveRemote( IOStream & stream ) const override;
     static Node * LoadRemote( IOStream & stream );
@@ -86,13 +90,18 @@ public:
     ObjectNode * GetPrecompiledHeader() const;
 
     void GetPDBName( AString & pdbName ) const;
+    void GetNativeAnalysisXMLPath( AString& outXMLFileName ) const;
 
     const char * GetObjExtension() const;
+
+    const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
+    const AString & GetOwnerObjectList() const { return m_OwnerObjectList; }
 private:
-    virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
     virtual bool Finalize( NodeGraph & nodeGraph ) override;
+
+    virtual void Migrate( const Node & oldNode ) override;
 
     BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
     BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
@@ -149,7 +158,12 @@ private:
         ~CompileHelper();
 
         // start compilation
-        bool SpawnCompiler( Job * job, const AString & name, const AString & compiler, const Args & fullArgs, const char * workingDir = nullptr );
+        bool SpawnCompiler( Job * job,
+                            const AString & name,
+                            const CompilerNode * compilerNode,
+                            const AString & compiler,
+                            const Args & fullArgs,
+                            const char * workingDir = nullptr );
 
         // determine overall result
         inline int                      GetResult() const { return m_Result; }
@@ -193,6 +207,8 @@ private:
     uint32_t            m_Flags                             = 0;
     uint32_t            m_PreprocessorFlags                 = 0;
     uint64_t            m_PCHCacheKey                       = 0;
+    uint64_t            m_LightCacheKey                     = 0;
+    AString             m_OwnerObjectList; // TODO:C This could be a pointer to the node in the future
 
     // Not serialized
     Array< AString >    m_Includes;

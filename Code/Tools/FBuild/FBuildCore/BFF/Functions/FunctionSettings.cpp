@@ -3,11 +3,11 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FunctionSettings.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
+
+#include "Core/Strings/AStackString.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ FunctionSettings::FunctionSettings()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionSettings::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionSettings::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
     AStackString<> name( "$$Settings$$" );
     if ( nodeGraph.FindNode( name ) )

@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "AString.h"
 #include "AStackString.h"
 #include "Core/Math/Conversions.h"
@@ -32,7 +30,7 @@ AString::AString()
 //------------------------------------------------------------------------------
 AString::AString( uint32_t reserve )
 {
-    char * mem = nullptr;
+    char * mem = const_cast<char *>( s_EmptyString ); // cast to allow pointing to protected string
     if ( reserve > 0 )
     {
         reserve = Math::RoundUp( reserve, (uint32_t)2 );
@@ -53,7 +51,34 @@ AString::AString( const AString & string )
     uint32_t reserved = Math::RoundUp( len, (uint32_t)2 );
     m_Contents = (char *)ALLOC( reserved + 1 );
     SetReserved( reserved, true );
-    Copy( string.Get(), m_Contents, len ); // copy handles terminator
+    Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
+}
+
+// CONSTRUCTOR (AString &&)
+//------------------------------------------------------------------------------
+AString::AString( AString && string )
+{
+    // If source string memory can't be freed, it can't be moved
+    if ( string.MemoryMustBeFreed() == false )
+    {
+        // Copy
+        m_Contents = const_cast<char*>( s_EmptyString ); // cast to allow pointing to protected string
+        m_Length = 0;
+        m_ReservedAndFlags = 0;
+        Assign( string );
+    }
+    else
+    {
+        // Move
+        m_Contents = string.m_Contents;
+        m_Length = string.m_Length;
+        m_ReservedAndFlags = string.m_ReservedAndFlags;
+    }
+
+    // Clear other string
+    string.m_Contents = const_cast<char*>( s_EmptyString );
+    string.m_Length = 0;
+    string.m_ReservedAndFlags = 0;
 }
 
 // CONSTRUCTOR (const char *)
@@ -186,7 +211,7 @@ int32_t AString::CompareI( const char * other ) const
 
 // Format
 //------------------------------------------------------------------------------
-AString & AString::Format( const char * fmtString, ... )
+AString & AString::Format( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     va_list args;
     va_start(args, fmtString);
@@ -380,8 +405,35 @@ void AString::Assign( const AString & string )
         // didn't resize then the passed in string is empty too
         return;
     }
-    Copy( string.Get(), m_Contents, len ); // handles terminator
+    Copy( string.Get(), m_Contents, len ); // handles terminator (NOTE: Using len to support embedded nuls)
     m_Length = len;
+}
+
+// Assign (AString &&)
+//------------------------------------------------------------------------------
+void AString::Assign( AString && string )
+{
+    // If memory can't be freed, it can't be moved
+    if ( string.MemoryMustBeFreed() == false )
+    {
+        // Fallback to regular assignment
+        Assign( string );
+    }
+    else
+    {
+        if ( MemoryMustBeFreed() )
+        {
+            FREE( m_Contents );
+        }
+        m_Contents = string.m_Contents;
+        m_Length = string.m_Length;
+        m_ReservedAndFlags = string.m_ReservedAndFlags;
+    }
+
+    // Clear other string
+    string.m_Contents = const_cast<char*>( s_EmptyString );
+    string.m_Length = 0;
+    string.m_ReservedAndFlags = 0;
 }
 
 // Clear
@@ -481,7 +533,7 @@ AString & AString::operator += ( const AString & string )
             Grow( newLen );
         }
 
-        Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator
+        Copy( string.Get(), m_Contents + m_Length, suffixLen ); // handles terminator (NOTE: Using suffixLen to support embedded nuls)
         m_Length += suffixLen;
     }
     return *this;
@@ -508,7 +560,7 @@ AString & AString::Append( const char * string, size_t len )
 
 // AppendFormat
 //------------------------------------------------------------------------------
-AString & AString::AppendFormat( const char * fmtString, ... )
+AString & AString::AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > buffer;
     va_list args;
@@ -1239,7 +1291,7 @@ test_match:
     {
         pos++;
     }
-    return ( pos - string );
+    return (size_t)( pos - string );
 }
 
 // StrNCmp

@@ -6,8 +6,9 @@
 //------------------------------------------------------------------------------
 #include "TestFramework/UnitTest.h"
 
-#include "Tools/FBuild/FBuildCore/Graph/Node.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
+#include "Tools/FBuild/FBuildCore/Graph/Node.h"
 
 #include "Core/Process/Mutex.h"
 
@@ -34,6 +35,16 @@ protected:
     void EnsureDirDoesNotExist( const AString & dirPath ) const { EnsureDirDoesNotExist( dirPath.Get() ); }
     void EnsureDirExists( const char * dirPath ) const;
     void EnsureDirExists( const AString & dirPath ) const { EnsureDirExists( dirPath.Get() ); }
+    void LoadFileContentsAsString( const char* fileName, AString& outString ) const;
+
+    // Helpers to invoke builds or parse bff files
+    void Parse( const char * fileName, bool expectFailure = false ) const;
+    bool ParseFromString( const char * bffContents,
+                          const char * expectedError = nullptr ) const;
+
+    // Helper macros
+    #define TEST_PARSE_OK( bffContents )            TEST_ASSERT( ParseFromString( bffContents ) );
+    #define TEST_PARSE_FAIL( bffContents, error )   TEST_ASSERT( ParseFromString( bffContents, error ) );
 
     // Helpers to check build results
     void CheckStatsNode( const FBuildStats & stats, size_t numSeen, size_t numBuilt, Node::Type nodeType ) const;
@@ -59,6 +70,24 @@ class FBuildTestOptions : public FBuildOptions
 {
 public:
     FBuildTestOptions();
+};
+
+// FBuildForTest
+//  - Wrapper for tests to use FBuild while accessing some internals for
+//    testing purposes
+//------------------------------------------------------------------------------
+class FBuildForTest : public FBuild
+{
+public:
+    FBuildForTest( FBuildOptions & options ) : FBuild( options ) {}
+
+    size_t GetRecursiveDependencyCount( const Node * node ) const;
+    size_t GetRecursiveDependencyCount( const char * nodeName ) const;
+
+    void GetNodesOfType( Node::Type type, Array<const Node*>& outNodes ) const;
+    const Node * GetNode( const char * nodeName ) const;
+
+    void SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const;
 };
 
 //------------------------------------------------------------------------------

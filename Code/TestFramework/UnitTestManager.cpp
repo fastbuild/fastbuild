@@ -10,12 +10,14 @@
 #include "Core/Env/Types.h"
 #include "Core/Mem/MemTracker.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
 #include "Core/Tracing/Tracing.h"
 
+#include <stdio.h>
 #include <string.h>
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Static Data
@@ -24,6 +26,17 @@
 /*static*/ UnitTestManager::TestInfo UnitTestManager::s_TestInfos[ MAX_TESTS ];
 /*static*/ UnitTestManager * UnitTestManager::s_Instance = nullptr;
 /*static*/ UnitTest * UnitTestManager::s_FirstTest = nullptr;
+
+// OnAssert callback
+//------------------------------------------------------------------------------
+/*static*/
+#if defined( __WINDOWS__ )
+    __declspec(noreturn)
+#endif
+void OnAssert( const char * /*message*/ )
+{
+    throw "Assert Failed";
+}
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -39,7 +52,7 @@ UnitTestManager::UnitTestManager()
     #ifdef ASSERTS_ENABLED
         if ( IsDebuggerAttached() == false )
         {
-            AssertHandler::SetThrowOnAssert( true );
+            AssertHandler::SetAssertCallback( OnAssert );
         }
     #endif
 }
@@ -51,7 +64,7 @@ UnitTestManager::~UnitTestManager()
     #ifdef ASSERTS_ENABLED
         if ( IsDebuggerAttached() == false )
         {
-            AssertHandler::SetThrowOnAssert( false );
+            AssertHandler::SetAssertCallback( nullptr );
         }
     #endif
 
@@ -106,6 +119,9 @@ loop:
 //------------------------------------------------------------------------------
 bool UnitTestManager::RunTests( const char * testGroup )
 {
+    // Reset results so RunTests can be called multiple times
+    s_NumTests = 0;
+
     // check for compile time filter
     UnitTest * test = s_FirstTest;
     while ( test )
@@ -123,6 +139,9 @@ bool UnitTestManager::RunTests( const char * testGroup )
 
         OUTPUT( "------------------------------\n" );
         OUTPUT( "Test Group: %s\n", test->GetName() );
+        #ifdef PROFILING_ENABLED
+            ProfileManager::Start( test->GetName() );
+        #endif
         try
         {
             test->RunTests();
@@ -132,6 +151,10 @@ bool UnitTestManager::RunTests( const char * testGroup )
             OUTPUT( " - Test '%s' *** FAILED ***\n", s_TestInfos[ s_NumTests - 1 ].m_TestName );
             s_TestInfos[ s_NumTests - 1 ].m_TestGroup->PostTest( false );
         }
+        #ifdef PROFILING_ENABLED
+            ProfileManager::Stop();
+            ProfileManager::Synchronize();
+        #endif
         test = test->m_NextTestGroup;
     }
 
@@ -160,12 +183,16 @@ bool UnitTestManager::RunTests( const char * testGroup )
             status = ( info.m_MemoryLeaks ) ? "FAIL (LEAKS)" : "FAIL";
         }
 
-        OUTPUT( "%12s : %5.3fs : %s\n", status, info.m_TimeTaken, info.m_TestName );
+        OUTPUT( "%12s : %5.3fs : %s\n", status, (double)info.m_TimeTaken, info.m_TestName );
         totalTime += info.m_TimeTaken;
     }
     OUTPUT( "------------------------------------------------------------\n" );
-    OUTPUT( "Passed: %u / %u (%u failures) in %2.3fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), totalTime );
+    OUTPUT( "Passed: %u / %u (%u failures) in %2.3fs\n", numPassed, s_NumTests, ( s_NumTests - numPassed ), (double)totalTime );
     OUTPUT( "------------------------------------------------------------\n" );
+
+    #ifdef PROFILING_ENABLED
+        ProfileManager::SynchronizeNoTag();
+    #endif
 
     return ( s_NumTests == numPassed );
 }
@@ -175,12 +202,16 @@ bool UnitTestManager::RunTests( const char * testGroup )
 void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
 {
     // record info for this test
+    ASSERT( s_NumTests < MAX_TESTS );
     TestInfo& info = s_TestInfos[ s_NumTests ];
     info.m_TestGroup = testGroup;
     info.m_TestName = testName;
     ++s_NumTests;
 
     OUTPUT( " - Test '%s'\n", testName );
+    // Flush the output to ensure that name of the test will be logged in case the test will crash the whole binary.
+    fflush( stdout );
+
     #ifdef MEMTRACKER_ENABLED
         MemTracker::Reset();
     #endif
@@ -201,12 +232,15 @@ void UnitTestManager::TestEnd()
 
     info.m_TestGroup->PostTest( true );
 
+    #ifdef MEMTRACKER_ENABLED
+        // Get allocation count here (before profiling, which can cause allocations)
+        const uint32_t posAllocationCount = MemTracker::GetCurrentAllocationCount();
+    #endif
+
+    // Flush profiling info (track time taken as part of test)
     #ifdef PROFILING_ENABLED
         ProfileManager::Stop();
-
-        // flush the profiling buffers, but don't profile the sync itself
-        // (because it leaves an outstanding memory alloc, it looks like a leak)
-        ProfileManager::SynchronizeNoTag();
+        ProfileManager::Synchronize();
     #endif
 
     float timeTaken = m_Timer.GetElapsed();
@@ -214,28 +248,31 @@ void UnitTestManager::TestEnd()
     info.m_TimeTaken = timeTaken;
 
     #ifdef MEMTRACKER_ENABLED
-        if ( MemTracker::GetCurrentAllocationCount() != 0 )
+        if ( posAllocationCount != 0 )
         {
             info.m_MemoryLeaks = true;
-            OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, timeTaken );
+            OUTPUT( " - Test '%s' in %2.3fs : *** FAILED (Memory Leaks)***\n", info.m_TestName, (double)timeTaken );
             MemTracker::DumpAllocations();
-            TEST_ASSERT( false );
+            if ( IsDebuggerAttached() )
+            {
+                TEST_ASSERT( false && "Memory leaks detected" );
+            }
             return;
         }
     #endif
 
-    OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", info.m_TestName, timeTaken );
+    OUTPUT( " - Test '%s' in %2.3fs : PASSED\n", info.m_TestName, (double)timeTaken );
     info.m_Passed = true;
 }
 
-// Assert
+// AssertFailure
 //------------------------------------------------------------------------------
 /*static*/ bool UnitTestManager::AssertFailure( const char * message,
                                                 const char * file,
                                                 uint32_t line )
 {
     OUTPUT( "\n-------- TEST ASSERTION FAILED --------\n" );
-    OUTPUT( "%s(%i): Assert: %s", file, line, message );
+    OUTPUT( "%s(%u): Assert: %s", file, line, message );
     OUTPUT( "\n-----^^^ TEST ASSERTION FAILED ^^^-----\n" );
 
     if ( IsDebuggerAttached() )
@@ -246,5 +283,34 @@ void UnitTestManager::TestEnd()
     // throw will be caught by the unit test framework and noted as a failure
     throw "Test Failed";
 }
+
+// AssertFailureM
+//------------------------------------------------------------------------------
+/*static*/ bool UnitTestManager::AssertFailureM( const char * message,
+                                                 const char * file,
+                                                 uint32_t line,
+                                                 MSVC_SAL_PRINTF const char * formatString,
+                                                 ... )
+{
+    AStackString< 4096 > buffer;
+    va_list args;
+    va_start( args, formatString );
+    buffer.VFormat( formatString, args );
+    va_end( args );
+
+    OUTPUT( "\n-------- TEST ASSERTION FAILED --------\n" );
+    OUTPUT( "%s(%u): Assert: %s", file, line, message );
+    OUTPUT( "\n%s", buffer.Get() );
+    OUTPUT( "\n-----^^^ TEST ASSERTION FAILED ^^^-----\n" );
+
+    if ( IsDebuggerAttached() )
+    {
+        return true; // tell the calling code to break at the failure sight
+    }
+
+    // throw will be caught by the unit test framework and noted as a failure
+    throw "Test Failed";
+}
+
 
 //------------------------------------------------------------------------------

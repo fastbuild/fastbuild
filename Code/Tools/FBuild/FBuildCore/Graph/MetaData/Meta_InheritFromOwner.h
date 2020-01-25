@@ -13,7 +13,7 @@ class Meta_InheritFromOwner : public IMetaData
     REFLECT_DECLARE( Meta_InheritFromOwner )
 public:
     explicit Meta_InheritFromOwner();
-    virtual ~Meta_InheritFromOwner();
+    virtual ~Meta_InheritFromOwner() override;
 };
 
 //------------------------------------------------------------------------------

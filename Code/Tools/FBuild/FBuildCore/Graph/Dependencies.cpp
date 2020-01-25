@@ -4,8 +4,6 @@
 // Includes
 //------------------------------------------------------------------------------
 // FBuild
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Dependencies.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -30,6 +28,10 @@ void Dependencies::Save( IOStream & stream ) const
         // Nodes are saved by index to simplify deserialization
         uint32_t index = dep.GetNode()->GetIndex();
         stream.Write( index );
+
+        // Save stamp
+        const uint64_t stamp = dep.GetNodeStamp();
+        stream.Write( stamp );
 
         // Save weak flag
         bool isWeak = dep.IsWeak();
@@ -63,6 +65,13 @@ bool Dependencies::Load( NodeGraph & nodeGraph, IOStream & stream )
         Node * node = nodeGraph.GetNodeByIndex( index );
         ASSERT( node );
 
+        // Read Stamp
+        uint64_t stamp;
+        if ( stream.Read( stamp ) == false )
+        {
+            return false;
+        }
+
         // Read weak flag
         bool isWeak( false );
         if ( stream.Read( isWeak ) == false )
@@ -71,7 +80,7 @@ bool Dependencies::Load( NodeGraph & nodeGraph, IOStream & stream )
         }
 
         // Recombine dependency info
-        Append( Dependency( node, isWeak ) );
+        Append( Dependency( node, stamp, isWeak ) );
     }
     return true;
 }

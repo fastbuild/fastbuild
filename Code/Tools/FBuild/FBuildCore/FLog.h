@@ -4,11 +4,12 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Strings/AStackString.h"
-
 
 // Macros
 //------------------------------------------------------------------------------
+PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wgnu-zero-variadic-macro-arguments" ) // token pasting of ',' and __VA_ARGS__ is a GNU extension [-Wgnu-zero-variadic-macro-arguments]
 #define FLOG_INFO( fmtString, ... )                 \
     do {                                            \
         if ( FLog::ShowInfo() )                     \
@@ -70,6 +71,8 @@
     } while ( false );                              \
     PRAGMA_DISABLE_POP_MSVC
 
+PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wgnu-zero-variadic-macro-arguments
+
 // FLog class
 //------------------------------------------------------------------------------
 class FLog
@@ -80,11 +83,11 @@ public:
     inline static bool ShowErrors() { return s_ShowErrors; }
     inline static bool IsMonitorEnabled() { return s_MonitorEnabled; }
 
-    static void Info( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
-    static void Build( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
-    static void Warning( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
-    static void Error( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
-    static void Monitor( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Info( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Build( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Warning( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Error( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Monitor( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
 
     // for large, already formatted messages
     static void BuildDirect( const char * message );

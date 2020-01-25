@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "WorkerThreadRemote.h"
 #include "Job.h"
 
@@ -15,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Time/Timer.h"
 
@@ -39,7 +38,7 @@ WorkerThreadRemote::~WorkerThreadRemote()
 //------------------------------------------------------------------------------
 /*virtual*/ void WorkerThreadRemote::Main()
 {
-    while ( m_ShouldExit == false )
+    while ( AtomicLoadRelaxed( &m_ShouldExit ) == false )
     {
         if ( IsEnabled() == false )
         {
@@ -72,7 +71,7 @@ WorkerThreadRemote::~WorkerThreadRemote()
         }
     }
 
-    m_Exited = true;
+    AtomicStoreRelaxed( &m_Exited, true );
 
     m_MainThreadWaitForExit.Signal();
 }

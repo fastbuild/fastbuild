@@ -1,4 +1,6 @@
-const char * FunctionA()
+#include "string.h"
+
+const char * FunctionB()
 {
-    return "FunctionAString";
+    return "FunctionBString";
 }

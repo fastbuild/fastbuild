@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "VSProjectGenerator.h"
 
 // FBuildCore
@@ -17,6 +15,7 @@
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/CRC32.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // system
@@ -27,9 +26,9 @@
 class FileAscendingCompareIDeref
 {
 public:
-    inline bool operator () ( const AString * a, const AString * b ) const
+    inline bool operator () ( const VSProjectFilePair * a, const VSProjectFilePair * b ) const
     {
-        return ( a->CompareI( *b ) < 0 );
+        return ( a->m_ProjectRelativePath.CompareI( b->m_ProjectRelativePath ) < 0 );
     }
 };
 
@@ -43,6 +42,8 @@ VSProjectGenerator::VSProjectGenerator()
     , m_FilePathsCanonicalized( false )
     , m_Files( 1024, true )
 {
+    // preallocate to avoid re-allocations
+    m_Tmp.SetReserved( MEGABYTE );
 }
 
 // DESTRUCTOR
@@ -64,7 +65,8 @@ void VSProjectGenerator::AddFile( const AString & file )
     // ensure slash consistency which we rely on later
     AStackString<> fileCopy( file );
     fileCopy.Replace( FORWARD_SLASH, BACK_SLASH );
-    m_Files.Append( fileCopy );
+    m_Files.Append( VSProjectFilePair() );
+    m_Files.Top().m_AbsolutePath = fileCopy;
 }
 
 // AddFiles
@@ -92,12 +94,11 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files )
 //------------------------------------------------------------------------------
 const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile,
                                                      const Array< VSProjectConfig > & configs,
-                                                     const Array< VSProjectFileType > & fileTypes )
+                                                     const Array< VSProjectFileType > & fileTypes,
+                                                     const Array< VSProjectImport > & projectImports )
 {
     ASSERT( !m_ProjectGuid.IsEmpty() );
 
-    // preallocate to avoid re-allocations
-    m_Tmp.SetReserved( MEGABYTE );
     m_Tmp.SetLength( 0 );
 
     // determine folder for project
@@ -117,9 +118,9 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         const VSProjectConfig * const cEnd = configs.End();
         for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
         {
-            Write( "    <ProjectConfiguration Include=\"%s|%s\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
-            Write( "      <Configuration>%s</Configuration>\n", cIt->m_Config.Get() );
-            Write( "      <Platform>%s</Platform>\n", cIt->m_Platform.Get() );
+            WriteF("    <ProjectConfiguration Include=\"%s|%s\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
+            WriteF("      <Configuration>%s</Configuration>\n", cIt->m_Config.Get() );
+            WriteF("      <Platform>%s</Platform>\n", cIt->m_Platform.Get() );
             Write( "    </ProjectConfiguration>\n" );
         }
         Write( "  </ItemGroup>\n" );
@@ -128,8 +129,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     // files
     {
         Write("  <ItemGroup>\n" );
-        for ( const AString & fileName : m_Files )
+        for ( const VSProjectFilePair & filePathPair : m_Files )
         {
+            const AString & fileName = filePathPair.m_ProjectRelativePath;
+
             const char * fileType = nullptr;
             const VSProjectFileType * const end = fileTypes.End();
             for ( const VSProjectFileType * it=fileTypes.Begin(); it!=end; ++it )
@@ -142,13 +145,13 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             }
             if ( fileType )
             {
-                Write( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
-                Write( "        <FileType>%s</FileType>\n", fileType );
+                WriteF( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
+                WriteF( "        <FileType>%s</FileType>\n", fileType );
                 Write( "    </CustomBuild>\n" );
             }
             else
             {
-                Write( "    <CustomBuild Include=\"%s\" />\n", fileName.Get() );
+                WriteF( "    <CustomBuild Include=\"%s\" />\n", fileName.Get() );
             }
         }
         Write("  </ItemGroup>\n" );
@@ -168,13 +171,13 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 {
                     proj.SetLength( (uint32_t)( pipe - proj.Get() ) );
                     AStackString<> guid( pipe + 1 );
-                    Write( "    <ProjectReference Include=\"%s\">\n", proj.Get() );
-                    Write( "      <Project>%s</Project>\n", guid.Get() );
+                    WriteF("    <ProjectReference Include=\"%s\">\n", proj.Get() );
+                    WriteF("      <Project>%s</Project>\n", guid.Get() );
                     Write( "    </ProjectReference>\n" );
                 }
                 else
                 {
-                    Write( "    <ProjectReference Include=\"%s\" />\n", proj.Get() );
+                    WriteF( "    <ProjectReference Include=\"%s\" />\n", proj.Get() );
                 }
             }
         }
@@ -183,7 +186,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             const AString * const end = m_References.End();
             for ( const AString * it = m_References.Begin(); it != end; ++it )
             {
-                Write( "    <Reference Include=\"%s\" />\n", it->Get() );
+                WriteF( "    <Reference Include=\"%s\" />\n", it->Get() );
             }
         }
         Write("  </ItemGroup>\n" );
@@ -206,6 +209,22 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     WritePGItem( "ApplicationEnvironment", m_ApplicationEnvironment );
     Write( "  </PropertyGroup>\n" );
 
+    // Per-config Globals
+    for ( const VSProjectConfig & config : configs )
+    {
+        const bool needSection = ( config.m_Keyword.IsEmpty() == false ) ||
+                                 ( config.m_ApplicationType.IsEmpty() == false ) ||
+                                 ( config.m_ApplicationTypeRevision.IsEmpty() == false );
+        if ( needSection )
+        {
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Globals\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WritePGItem( "Keyword", config.m_Keyword );
+            WritePGItem( "ApplicationType", config.m_ApplicationType );
+            WritePGItem( "ApplicationTypeRevision", config.m_ApplicationTypeRevision );
+            Write( "  </PropertyGroup>\n" );
+        }
+    }
+
     // Default props
     Write( "  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />\n" );
 
@@ -214,13 +233,26 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         const VSProjectConfig * const cEnd = configs.End();
         for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
         {
-            Write( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Configuration\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Configuration\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
             Write( "    <ConfigurationType>Makefile</ConfigurationType>\n" );
             Write( "    <UseDebugLibraries>false</UseDebugLibraries>\n" );
 
+            // If a specific executable is specified, use that, otherwise try to auto-derive
+            // the executable from the .Target
+            AStackString<> localDebuggerCommand( cIt->m_LocalDebuggerCommand );
+            if ( localDebuggerCommand.IsEmpty() )
+            {
+                // Get the executable path and make it project-relative
+                const Node * debugTarget = ProjectGeneratorBase::FindExecutableDebugTarget( cIt->m_TargetNode );
+                if ( debugTarget )
+                {
+                    ProjectGeneratorBase::GetRelativePath( projectBasePath, debugTarget->GetName(), localDebuggerCommand );
+                }
+            }
+
             WritePGItem( "PlatformToolset",                 cIt->m_PlatformToolset );
             WritePGItem( "LocalDebuggerCommandArguments",   cIt->m_LocalDebuggerCommandArguments );
-            WritePGItem( "LocalDebuggerCommand",            cIt->m_LocalDebuggerCommand );
+            WritePGItem( "LocalDebuggerCommand",            localDebuggerCommand );
             WritePGItem( "LocalDebuggerEnvironment",        cIt->m_LocalDebuggerEnvironment );
 
             Write( "  </PropertyGroup>\n" );
@@ -239,7 +271,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         const VSProjectConfig * const cEnd = configs.End();
         for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
         {
-            Write( "  <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
+            WriteF("  <ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
             Write( "    <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />\n" );
             Write( "  </ImportGroup>\n" );
         }
@@ -253,7 +285,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         const VSProjectConfig * const cEnd = configs.End();
         for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
         {
-            Write( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
 
             WritePGItem( "NMakeBuildCommandLine",           cIt->m_ProjectBuildCommand );
             WritePGItem( "NMakeReBuildCommandLine",         cIt->m_ProjectRebuildCommand );
@@ -275,7 +307,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > defines;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, false );
+                    ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, false );
                     AStackString<> definesStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, nullptr, ";" );
                     WritePGItem( "NMakePreprocessorDefinitions", definesStr );
@@ -290,10 +322,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > includePaths;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false );
+                    ProjectGeneratorBase::ExtractIncludePaths( oln->GetCompilerOptions(), includePaths, false );
                     for ( AString & include : includePaths )
                     {
-                        GetProjectRelativePath( projectBasePath, include, include );
+                        ProjectGeneratorBase::GetRelativePath( projectBasePath, include, include );
                         #if !defined( __WINDOWS__ )
                             include.Replace( '/', '\\' ); // Convert to Windows-style slashes
                         #endif
@@ -306,13 +338,29 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "NMakeForcedIncludes",             cIt->m_ForcedIncludes );
             WritePGItem( "NMakeAssemblySearchPath",         cIt->m_AssemblySearchPath );
             WritePGItem( "NMakeForcedUsingAssemblies",      cIt->m_ForcedUsingAssemblies );
-            WritePGItem( "AdditionalOptions",               cIt->m_AdditionalOptions );
+            if ( cIt->m_AdditionalOptions.IsEmpty() == false )
+            {
+                WritePGItem( "AdditionalOptions",               cIt->m_AdditionalOptions );
+            }
+            else
+            {
+                if ( oln )
+                {
+                    Array< AString > additionalOptions;
+                    ProjectGeneratorBase::ExtractAdditionalOptions( oln->GetCompilerOptions(), additionalOptions );
+                    AStackString<> additionalOptionsStr;
+                    ProjectGeneratorBase::ConcatIntellisenseOptions( additionalOptions, additionalOptionsStr, nullptr, " " );
+                    WritePGItem( "AdditionalOptions", additionalOptionsStr );
+                }
+            }
             WritePGItem( "Xbox360DebuggerCommand",          cIt->m_Xbox360DebuggerCommand );
             WritePGItem( "DebuggerFlavor",                  cIt->m_DebuggerFlavor );
             WritePGItem( "AumidOverride",                   cIt->m_AumidOverride );
             WritePGItem( "LocalDebuggerWorkingDirectory",   cIt->m_LocalDebuggerWorkingDirectory );
             WritePGItem( "IntDir",                          cIt->m_IntermediateDirectory );
             WritePGItem( "OutDir",                          cIt->m_OutputDirectory );
+            WritePGItem( "PackagePath",                     cIt->m_PackagePath );
+            WritePGItem( "AdditionalSymbolSearchPaths",     cIt->m_AdditionalSymbolSearchPaths );
             WritePGItem( "LayoutDir",                       cIt->m_LayoutDir );
             WritePGItem( "LayoutExtensionFilter",           cIt->m_LayoutExtensionFilter );
             Write( "  </PropertyGroup>\n" );
@@ -324,7 +372,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
         const VSProjectConfig * const cEnd = configs.End();
         for ( const VSProjectConfig * cIt = configs.Begin(); cIt!=cEnd; ++cIt )
         {
-            Write( "  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
+            WriteF("  <ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\">\n", cIt->m_Config.Get(), cIt->m_Platform.Get() );
             Write( "    <BuildLog>\n" );
             if ( !cIt->m_BuildLogFile.IsEmpty() )
             {
@@ -350,7 +398,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     Write("  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />\n" );
     Write("  <ImportGroup Label=\"ExtensionTargets\">\n" );
     Write("  </ImportGroup>\n" );
-    Write("  <Import Condition=\"'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\\Platforms\\$(Platform)\\SCE.Makefile.$(Platform).targets')\" Project=\"$(VCTargetsPath)\\Platforms\\$(Platform)\\SCE.Makefile.$(Platform).targets\" />\n");
+    for ( const VSProjectImport & import : projectImports )
+    {
+        WriteF( "  <Import Condition=\"%s\" Project=\"%s\" />\n", import.m_Condition.Get(), import.m_Project.Get() );
+    }
     Write( "</Project>" ); // carriage return at end
 
     m_OutputVCXProj = m_Tmp;
@@ -361,8 +412,6 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
 //------------------------------------------------------------------------------
 const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & projectFile )
 {
-    // preallocate to avoid re-allocations
-    m_Tmp.SetReserved( MEGABYTE );
     m_Tmp.SetLength( 0 );
 
     // determine folder for project
@@ -378,29 +427,55 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
     // list of all folders
     Array< AString > folders( 1024, true );
+    Array< uint32_t > folderHashes( 1024, true );
 
     // files
     {
+        AStackString<> lastFolder;
         Write( "  <ItemGroup>\n" );
-        for ( const AString & fileName : m_Files )
+        for ( const VSProjectFilePair & filePathPair : m_Files )
         {
-            // get folder part, relative to base dir
+            // File reference (which VS uses to load from disk) is project-relative
+            WriteF( "    <CustomBuild Include=\"%s\">\n", filePathPair.m_ProjectRelativePath.Get() );
+
+            // get folder part, relative to base dir(s)
+            const AString & fileName = filePathPair.m_AbsolutePath;
             AStackString<> folder;
             GetFolderPath( fileName, folder );
 
-            Write( "    <CustomBuild Include=\"%s\">\n", fileName.Get() );
             if ( !folder.IsEmpty() )
             {
-                Write( "      <Filter>%s</Filter>\n", folder.Get() );
+                WriteF( "      <Filter>%s</Filter>\n", folder.Get() );
             }
             Write( "    </CustomBuild>\n" );
 
             // add new folders
-            if ( !folder.IsEmpty() )
+            if ( ( folder.IsEmpty() == false ) && ( folder != lastFolder ) )
             {
-                if ( folders.IsEmpty() || ( folders.Top().EqualsI( folder ) == false ) )
+                lastFolder = folder;
+
+                // Each unique path must be added, so FolderA/FolderB/FolderC
+                // will result in 3 entries, FolderA, FolderA/FolderB and FolderA/FolderB/FolderC
+                for (;;)
                 {
+                    // add this folder if not already added
+                    const uint32_t folderHash = xxHash::Calc32( folder );
+                    if ( folderHashes.Find( folderHash ) )
+                    {
+                        break; // If we've seen this folder, we've also seen the parent dirs
+                    }
+
+                    ASSERT( folder.IsEmpty() == false );
                     folders.Append( folder );
+                    folderHashes.Append( folderHash );
+
+                    // check parent folder
+                    const char * lastSlash = folder.FindLast( BACK_SLASH );
+                    if ( lastSlash == nullptr )
+                    {
+                        break; // no more parents
+                    }
+                    folder.SetLength( (uint32_t)( lastSlash - folder.Get() ) );
                 }
             }
         }
@@ -409,12 +484,15 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
     // folders
     {
-        const AString * const fEnd = folders.End();
-        for ( const AString * fIt = folders.Begin(); fIt!=fEnd; ++fIt )
+        const size_t numFolders = folders.GetSize();
+        for ( size_t i=0; i<numFolders; ++i )
         {
+            const AString & folder = folders[ i ];
+            const uint32_t folderHash = folderHashes[ i ];
+
             Write( "  <ItemGroup>\n" );
-            Write( "    <Filter Include=\"%s\">\n", fIt->Get() );
-            Write( "      <UniqueIdentifier>{%08x-6c94-4f93-bc2a-7f5284b7d434}</UniqueIdentifier>\n", CRC32::Calc( *fIt ) );
+            WriteF( "    <Filter Include=\"%s\">\n", folder.Get() );
+            WriteF( "      <UniqueIdentifier>{%08x-6c94-4f93-bc2a-7f5284b7d434}</UniqueIdentifier>\n", folderHash );
             Write( "    </Filter>\n" );
             Write( "  </ItemGroup>\n" );
         }
@@ -429,7 +507,22 @@ const AString & VSProjectGenerator::GenerateVCXProjFilters( const AString & proj
 
 // Write
 //------------------------------------------------------------------------------
-void VSProjectGenerator::Write( const char * fmtString, ... )
+void VSProjectGenerator::Write( const char * string )
+{
+    const size_t len = AString::StrLen( string );
+
+    // resize output buffer in large chunks to prevent re-sizing
+    if ( m_Tmp.GetLength() + len > m_Tmp.GetReserved() )
+    {
+        m_Tmp.SetReserved( m_Tmp.GetReserved() + MEGABYTE );
+    }
+
+    m_Tmp.Append( string, len );
+}
+
+// Write
+//------------------------------------------------------------------------------
+void VSProjectGenerator::WriteF( const char * fmtString, ... )
 {
     AStackString< 1024 > tmp;
 
@@ -455,7 +548,7 @@ void VSProjectGenerator::WritePGItem( const char * xmlTag, const AString & value
     {
         return;
     }
-    Write( "    <%s>%s</%s>\n", xmlTag, value.Get(), xmlTag );
+    WriteF( "    <%s>%s</%s>\n", xmlTag, value.Get(), xmlTag );
 }
 
 // GetFolderPath
@@ -484,61 +577,6 @@ void VSProjectGenerator::GetFolderPath( const AString & fileName, AString & fold
     folder.Clear();
 }
 
-// GetProjectRelativePath
-//------------------------------------------------------------------------------
-/*static*/ void VSProjectGenerator::GetProjectRelativePath( const AString & projectFolderPath,
-                                                            const AString & fileName,
-                                                            AString & outRelativeFileName )
-{
-    AStackString<> cleanFileName;
-    #if !defined( __WINDOWS__ )
-        // Normally we keep all paths with native slashes, but in this case we
-        // have windows slashes, so convert to native for the relative check
-        AStackString<> pathCopy( fileName );
-        pathCopy.Replace( '\\', '/' );
-        NodeGraph::CleanPath( pathCopy, cleanFileName );
-    #else
-        NodeGraph::CleanPath( fileName, cleanFileName );
-    #endif
-
-    // Find common sub-path
-    const char * pathA = projectFolderPath.Get();
-    const char * pathB = cleanFileName.Get();
-    while ( ( *pathA == *pathB ) && ( *pathA != '\0' ) )
-    {
-        pathA++;
-        pathB++;
-    }
-    const bool hasCommonSubPath = ( pathA != projectFolderPath.Get() );
-    if ( hasCommonSubPath == false )
-    {
-        // No common sub-path, so use relative name
-        outRelativeFileName = cleanFileName;
-        return;
-    }
-
-    // Build relative path
-
-    // For every remaining dir in the project path, go up one directory
-    outRelativeFileName.Clear();
-    for (;;)
-    {
-        const char c = *pathA;
-        if ( c == 0 )
-        {
-            break;
-        }
-        if ( ( c == '/' ) || ( c == '\\' ) )
-        {
-            outRelativeFileName += "..\\";
-        }
-        ++pathA;
-    }
-
-    // Add remainder of source path relative to the common sub path
-    outRelativeFileName += pathB;
-}
-
 // CanonicalizeFilePaths
 //------------------------------------------------------------------------------
 void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath )
@@ -548,21 +586,26 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         return;
     }
 
-    // Base Paths
-    for ( AString & basePath : m_BasePaths )
-    {
-        GetProjectRelativePath( projectBasePath, basePath, basePath );
-    }
-    
+    // Base Paths are retained as absolute paths
+    #if !defined( __WINDOWS__ )
+        for ( AString & basePath : m_BasePaths )
+        {
+            basePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
+        }
+    #endif
+
     // Files
     if ( m_Files.IsEmpty() == false )
     {
         // Canonicalize and make all paths relative to project
-        Array< const AString * > filePointers( m_Files.GetSize(), false );
-        for ( AString & file : m_Files )
+        Array< const VSProjectFilePair * > filePointers( m_Files.GetSize(), false );
+        for ( VSProjectFilePair & filePathPair : m_Files )
         {
-            GetProjectRelativePath( projectBasePath, file, file );
-            filePointers.Append( &file );
+            ProjectGeneratorBase::GetRelativePath( projectBasePath, filePathPair.m_AbsolutePath, filePathPair.m_ProjectRelativePath );
+            #if !defined( __WINDOWS__ )
+                filePathPair.m_ProjectRelativePath.Replace( FORWARD_SLASH, BACK_SLASH ); // Always Windows-style inside project
+            #endif
+            filePointers.Append( &filePathPair );
         }
 
         // Sort filenames to allow finding de-duplication
@@ -570,18 +613,19 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         filePointers.Sort( sorter );
 
         // Find unique files
-        Array< AString > uniqueFiles( m_Files.GetSize(), false );
-        const AString * prev = filePointers[ 0 ];
+        Array< VSProjectFilePair > uniqueFiles( m_Files.GetSize(), false );
+        const VSProjectFilePair * prev = filePointers[ 0 ];
         uniqueFiles.Append( *filePointers[ 0 ] );
         size_t numFiles = m_Files.GetSize();
         for ( size_t i=1; i<numFiles; ++i )
         {
-            const AString * current = filePointers[ i ];
-            if ( current->EqualsI( *prev ) )
+            const VSProjectFilePair * current = filePointers[ i ];
+            if ( current->m_ProjectRelativePath.EqualsI( prev->m_ProjectRelativePath ) )
             {
                 continue;
             }
             uniqueFiles.Append( *current );
+
             prev = current;
         }
 
@@ -589,7 +633,7 @@ void VSProjectGenerator::CanonicalizeFilePaths( const AString & projectBasePath 
         // we keep the sorted list in order to have more consistent behaviour
         uniqueFiles.Swap( m_Files );
     }
-   
+
     m_FilePathsCanonicalized = true;
 }
 

@@ -3,11 +3,8 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "ObjectListNode.h"
 
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -24,6 +21,7 @@
 // Core
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // Reflection
@@ -35,6 +33,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_CompilerOutputPath,                  "CompilerOutputPath",               MetaPath() )
     REFLECT( m_CompilerOutputPrefix,                "CompilerOutputPrefix",             MetaOptional() )
     REFLECT( m_CompilerOutputExtension,             "CompilerOutputExtension",          MetaOptional() )
+    REFLECT( m_CompilerOutputKeepBaseExtension,     "CompilerOutputKeepBaseExtension",  MetaOptional() )
     REFLECT( m_CompilerInputAllowNoFiles,           "CompilerInputAllowNoFiles",        MetaOptional() )
     REFLECT_ARRAY( m_CompilerInputPath,             "CompilerInputPath",                MetaOptional() + MetaPath() )
     REFLECT_ARRAY( m_CompilerInputPattern,          "CompilerInputPattern",             MetaOptional() )
@@ -50,6 +49,7 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
     REFLECT( m_AllowCaching,                        "AllowCaching",                     MetaOptional() )
+    REFLECT( m_Hidden,                              "Hidden",                           MetaOptional() )
     // Precompiled Headers
     REFLECT( m_PCHInputFile,                        "PCHInputFile",                     MetaOptional() + MetaFile() )
     REFLECT( m_PCHOutputFile,                       "PCHOutputFile",                    MetaOptional() + MetaFile() )
@@ -81,7 +81,7 @@ ObjectListNode::ObjectListNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -440,17 +440,24 @@ ObjectListNode::~ObjectListNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult ObjectListNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult ObjectListNode::DoBuild( Job * /*job*/ )
 {
-    // consider ourselves to be as recent as the newest file
-    uint64_t timeStamp = 0;
-    const Dependency * const end = m_DynamicDependencies.End();
-    for ( const Dependency * it = m_DynamicDependencies.Begin(); it != end; ++it )
+    // Generate stamp
+    if ( m_DynamicDependencies.IsEmpty() )
     {
-        ObjectNode * on = it->GetNode()->CastTo< ObjectNode >();
-        timeStamp = Math::Max< uint64_t >( timeStamp, on->GetStamp() );
+        m_Stamp = 1; // Non-zero
     }
-    m_Stamp = timeStamp;
+    else
+    {
+        Array< uint64_t > stamps( m_DynamicDependencies.GetSize(), false );
+        for ( const Dependency & dep : m_DynamicDependencies )
+        {
+            ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();
+            ASSERT( on->GetStamp() );
+            stamps.Append( on->GetStamp() );
+        }
+        m_Stamp = xxHash::Calc64( &stamps[0], ( stamps.GetSize() * sizeof(uint64_t) ) );
+    }
 
     return NODE_RESULT_OK;
 }
@@ -475,8 +482,7 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
                 if ( on->IsMSVC() )
                 {
                     fullArgs += pre;
-                    fullArgs += on->GetName();
-                    fullArgs += on->GetObjExtension();
+                    fullArgs += on->GetPCHObjectName();
                     fullArgs += post;
                     fullArgs.AddDelimiter();
                     continue;
@@ -569,17 +575,15 @@ CompilerNode * ObjectListNode::GetPreprocessor() const
     return m_StaticDependencies[ preprocessorIndex ].GetNode()->CastTo< CompilerNode >();
 }
 
-// CreateDynamicObjectNode
+// GetObjectFileName
 //------------------------------------------------------------------------------
-bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode, bool isIsolatedFromUnityNode )
+void ObjectListNode::GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile )
 {
-    const AString & fileName = inputFile->GetName();
-
     // Transform src file to dst object path
     // get file name only (no path, no ext)
     const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
     lastSlash = lastSlash ? ( lastSlash + 1 ) : fileName.Get();
-    const char * lastDot = fileName.FindLast( '.' );
+    const char * lastDot = m_CompilerOutputKeepBaseExtension ? fileName.GetEnd() : fileName.FindLast( '.' );
     lastDot = lastDot && ( lastDot > lastSlash ) ? lastDot : fileName.GetEnd();
 
     // if source comes from a directory listing, use path relative to dirlist base
@@ -604,11 +608,19 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     }
 
     AStackString<> fileNameOnly( lastSlash, lastDot );
-    AStackString<> objFile( m_CompilerOutputPath );
+    objFile = m_CompilerOutputPath;
     objFile += subPath;
     objFile += m_CompilerOutputPrefix;
     objFile += fileNameOnly;
     objFile += GetObjExtension();
+}
+
+// CreateDynamicObjectNode
+//------------------------------------------------------------------------------
+bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode, bool isIsolatedFromUnityNode )
+{
+    AStackString<> objFile;
+    GetObjectFileName( inputFile->GetName(), baseDir, objFile );
 
     // Create an ObjectNode to compile the above file
     // and depend on that
@@ -633,8 +645,8 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
             preprocessorFlags = ObjectNode::DetermineFlags( GetPreprocessor(), m_PreprocessorOptions, false, usingPCH );
         }
 
-        BFFIterator dummyIter;
-        ObjectNode * objectNode = CreateObjectNode( nodeGraph, dummyIter, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
+        BFFToken * token = nullptr;
+        ObjectNode * objectNode = CreateObjectNode( nodeGraph, token, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
         if ( !objectNode )
         {
             FLOG_ERROR( "Failed to create node '%s'!", objFile.Get() );
@@ -650,15 +662,21 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     else
     {
         ObjectNode * other = on->CastTo< ObjectNode >();
-        if ( inputFile != other->GetSourceFile() )
+
+        // Check for conflicts
+        const bool conflict = ( inputFile != other->GetSourceFile() ) ||
+                              ( m_Name != other->GetOwnerObjectList() );
+        if ( conflict )
         {
-            FLOG_ERROR( "Conflicting objects found:\n"
-                        " File A: %s\n"
-                        " File B: %s\n"
-                        " Both compile to: %s\n",
-                        inputFile->GetName().Get(),
-                        other->GetSourceFile()->GetName().Get(),
-                        objFile.Get() );
+            FLOG_ERROR( "Conflicting objects found for: %s\n"
+                        " Source A  : %s\n"
+                        " ObjectList: %s\n"
+                        "AND\n"
+                        " Source B  : %s\n"
+                        " ObjectList: %s\n",
+                        objFile.Get(),
+                        inputFile->GetName().Get(), m_Name.Get(),
+                        other->GetSourceFile()->GetName().Get(), other->GetOwnerObjectList().Get() );
             return false;
         }
     }
@@ -669,7 +687,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
 // CreateObjectNode
 //------------------------------------------------------------------------------
 ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
-                                               const BFFIterator & iter,
+                                               const BFFToken * iter,
                                                const Function * function,
                                                const uint32_t flags,
                                                const uint32_t preprocessorFlags,
@@ -708,6 +726,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_PreprocessorOptions = preprocessorOptions;
     node->m_Flags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
+    node->m_OwnerObjectList = m_Name;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {
@@ -739,6 +758,42 @@ const char * ObjectListNode::GetObjExtension() const
         #endif
     }
     return m_CompilerOutputExtension.Get();
+}
+
+// EnumerateInputFiles
+//------------------------------------------------------------------------------
+void ObjectListNode::EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const
+{
+    for ( size_t i = m_ObjectListInputStartIndex; i < m_ObjectListInputEndIndex; ++i )
+    {
+        const Node * node = m_StaticDependencies[ i ].GetNode();
+
+        if ( node->GetType() == Node::DIRECTORY_LIST_NODE )
+        {
+            const DirectoryListNode * dln = node->CastTo< DirectoryListNode >();
+
+            const Array< FileIO::FileInfo > & files = dln->GetFiles();
+            for ( const FileIO::FileInfo & fi : files )
+            {
+                callback( fi.m_Name, dln->GetPath(), userData );
+            }
+        }
+        else if ( node->GetType() == Node::UNITY_NODE )
+        {
+            const UnityNode * un = node->CastTo< UnityNode >();
+
+            un->EnumerateInputFiles( callback, userData );
+        }
+        else if ( node->IsAFile() )
+        {
+            callback( node->GetName(), AString::GetEmpty(), userData );
+        }
+        else
+        {
+            ASSERT( false ); // unexpected node type
+        }
+    }
+
 }
 
 //------------------------------------------------------------------------------

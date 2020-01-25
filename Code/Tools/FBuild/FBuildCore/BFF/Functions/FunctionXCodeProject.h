@@ -8,7 +8,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 
 // FunctionXCodeProject
 //------------------------------------------------------------------------------
@@ -16,7 +15,7 @@ class FunctionXCodeProject : public Function
 {
 public:
     explicit        FunctionXCodeProject();
-    inline virtual ~FunctionXCodeProject() = default;
+    inline virtual ~FunctionXCodeProject() override = default;
 
 protected:
     virtual bool AcceptsHeader() const override;

@@ -4,22 +4,21 @@
 //------------------------------------------------------------------------------
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "TCPConnectionPool.h"
 
 // Core
+#include "Core/Env/ErrorFormat.h"
 #include "Core/Mem/Mem.h"
 #include "Core/Network/Network.h"
 #include "Core/Strings/AString.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Time/Timer.h"
 
 // System
 #if defined( __WINDOWS__ )
-    #include <winsock2.h>
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #elif defined( __APPLE__ ) || defined( __LINUX__ )
     #include <string.h>
     #include <errno.h>
@@ -38,15 +37,94 @@
     #error Unknown platform
 #endif
 
+// Defines
 //------------------------------------------------------------------------------
-// For Debugging
-//------------------------------------------------------------------------------
+// Enable for debugging
 //#define TCPCONNECTION_DEBUG
 #ifdef TCPCONNECTION_DEBUG
     #include "Core/Tracing/Tracing.h"
     #define TCPDEBUG( ... ) DEBUGSPAM( __VA_ARGS__ )
 #else
     #define TCPDEBUG( ... )
+#endif
+#define LAST_NETWORK_ERROR_STR ERROR_STR( GetLastNetworkError() )
+
+// TCPConnectionPoolProfileHelper
+//------------------------------------------------------------------------------
+#if defined( PROFILING_ENABLED )
+    class TCPConnectionPoolProfileHelper
+    {
+    public:
+        enum ThreadType
+        {
+            THREAD_LISTEN,
+            THREAD_CONNECTION
+        };
+
+        TCPConnectionPoolProfileHelper( ThreadType threadType )
+        {
+            // Chose which bitmap to use
+            uint64_t& bitmap = ( threadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
+
+            // Find free bit
+            uint32_t bit = 0;
+            {
+                MutexHolder mh( s_Mutex );
+                for ( ; bit < 64; ++bit )
+                {
+                    // Is this bit clear?
+                    if ( ( ( (uint64_t)1 << bit ) & bitmap ) == 0 )
+                    {
+                        // Set bit as we will use this Id
+                        bitmap |= ( (uint64_t)1 << bit );
+                        break;
+                    }
+                }
+            }
+            m_Bit = bit; // Store the bit for this thread
+            m_ThreadType = threadType;
+
+            // No free bits? (Last bit is never set)
+            if ( bit == 63 )
+            {
+                return; // Can't set thread name
+            }
+
+            // Format and set
+            AStackString<> threadName;
+            threadName.Format( ( threadType == THREAD_LISTEN ) ? "Listen_%u" : "Connection_%u", bit );
+            PROFILE_SET_THREAD_NAME( threadName.Get() )
+        }
+        ~TCPConnectionPoolProfileHelper()
+        {
+            // Clear bit if we reserved one
+            if ( m_Bit < 63 )
+            {
+                // Chose which bitmap to use
+                uint64_t& bitmap = ( m_ThreadType == THREAD_LISTEN ) ? s_IdBitmapListen : s_IdBitmapConnection;
+
+                // Clear bit
+                MutexHolder mh( s_Mutex );
+                bitmap &= ~( (uint64_t)1 << m_Bit );
+            }
+        }
+
+    protected:
+        ThreadType          m_ThreadType;
+        uint32_t            m_Bit;
+
+        static Mutex        s_Mutex;
+        static uint64_t     s_IdBitmapListen;
+        static uint64_t     s_IdBitmapConnection;
+    };
+    /*static*/ Mutex    TCPConnectionPoolProfileHelper::s_Mutex;
+    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapListen        = 0;
+    /*static*/ uint64_t TCPConnectionPoolProfileHelper::s_IdBitmapConnection    = 0;
+
+    #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )   \
+        TCPConnectionPoolProfileHelper threadNameHelper( threadType );
+#else
+    #define TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( threadType )
 #endif
 
 // CONSTRUCTOR - ConnectionInfo
@@ -78,8 +156,11 @@ TCPConnectionPool::TCPConnectionPool()
 //------------------------------------------------------------------------------
 TCPConnectionPool::~TCPConnectionPool()
 {
-    m_ShuttingDown = true;
-    ShutdownAllConnections();
+    // ShutdownAllConnections() must be called explicitly prior to destruction
+    // as virtual callbacks in derived classes make it unsafe to do so here.
+    // By enforcing explicit shutdown, even when not strictly needed, we can
+    // ensure no unsafe cases exist (and can assert below)
+    ASSERT( AtomicLoadRelaxed( &m_ShuttingDown ) && "ShutdownAllConnections not called");
 }
 
 // ShutdownAllConnections
@@ -87,6 +168,8 @@ TCPConnectionPool::~TCPConnectionPool()
 void TCPConnectionPool::ShutdownAllConnections()
 {
     PROFILE_FUNCTION
+
+    AtomicStoreRelaxed( &m_ShuttingDown, true );
 
     m_ConnectionsMutex.Lock();
 
@@ -110,7 +193,7 @@ void TCPConnectionPool::ShutdownAllConnections()
         }
 
         m_ConnectionsMutex.Unlock();
-        Thread::Sleep( 1 );
+        m_ShutdownSemaphore.Wait( 1 );
         m_ConnectionsMutex.Lock();
     }
     m_ConnectionsMutex.Unlock();
@@ -134,27 +217,16 @@ bool TCPConnectionPool::Listen( uint16_t port )
     ASSERT( m_ListenConnection == nullptr );
 
     // create the socket
-    TCPSocket sockfd = socket( AF_INET, SOCK_STREAM, 0 );
+    TCPSocket sockfd = CreateSocket();
     if ( sockfd == INVALID_SOCKET )
     {
-        TCPDEBUG( "Create socket failed (Listen): %i\n", GetLastError() );
         return false;
     }
 
-    // allow socket re-use
-    static const int yes = 1;
-    int ret = setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof( yes ) );
-    if ( ret != 0 )
-    {
-        TCPDEBUG( "setsockopt failed: %i\n", GetLastError() );
-        CloseSocket( sockfd );
-        return false;
-    }
-
-    if ( !DisableNagle( sockfd ) )
-    {
-        return false; // DisableNagle will close socket
-    }
+    // Configure socket
+    AllowSocketReuse( sockfd );     // Allow socket re-use
+    DisableSigPipe( sockfd );       // Prevent socket inheritence by child processes
+    DisableNagle( sockfd );         // Disable Nagle's algorithm
 
     // set up the listen params
     struct sockaddr_in addrInfo;
@@ -166,16 +238,16 @@ bool TCPConnectionPool::Listen( uint16_t port )
     // bind
     if ( bind( sockfd, (struct sockaddr *)&addrInfo, sizeof( addrInfo ) ) != 0 )
     {
-        TCPDEBUG( "Bind failed: %i\n", GetLastError() );
+        TCPDEBUG( "Bind failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
         CloseSocket( sockfd );
         return false;
     }
 
     // listen
-    TCPDEBUG( "Listen on port %i (%x)\n", port, sockfd );
+    TCPDEBUG( "Listen on port %i (%x)\n", port, (uint32_t)sockfd );
     if ( listen( sockfd, 0 ) == SOCKET_ERROR ) // no backlog
     {
-        TCPDEBUG( "Listen FAILED %i (%x)\n", port, sockfd );
+        TCPDEBUG( "Listen FAILED %i (%x)\n", port, (uint32_t)sockfd );
         CloseSocket( sockfd );
         return false;
     }
@@ -211,35 +283,17 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
     PROFILE_FUNCTION
 
     // create a socket
-    TCPSocket sockfd = socket( AF_INET, SOCK_STREAM, 0 );
-
-    // outright failure?
+    TCPSocket sockfd = CreateSocket();
     if ( sockfd == INVALID_SOCKET )
     {
-        TCPDEBUG( "Create socket failed (Connect): %i\n", GetLastError() );
-        return nullptr;
+        return nullptr; // outright failure?
     }
 
-    // Set send/recv buffer sizes
-    if ( !SetBufferSizes( sockfd ) )
-    {
-        return nullptr; // SetBufferSizes will close socket
-    }
-
-    if ( !DisableNagle( sockfd ) )
-    {
-        return nullptr; // DisableNagle will close socket
-    }
-
-    // set non-blocking
-    u_long nonBlocking = 1;
-    #if defined( __WINDOWS__ )
-        ioctlsocket( sockfd, FIONBIO, &nonBlocking );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        VERIFY( ioctl( sockfd, FIONBIO, &nonBlocking ) >= 0 );
-    #else
-        #error Unknown platform
-    #endif
+    // Configure socket
+    DisableSigPipe( sockfd );       // Prevent socket inheritence by child processes
+    DisableNagle( sockfd );         // Disable Nagle's algorithm
+    SetLargeBufferSizes( sockfd );  // Set large send/recv buffer sizes
+    SetNonBlocking( sockfd );       // Set non-blocking
 
     // setup destination address
     struct sockaddr_in destAddr;
@@ -258,7 +312,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             #ifdef TCPCONNECTION_DEBUG
                 AStackString<> host;
                 GetAddressAsString( hostIP, host );
-                TCPDEBUG( "connect() failed: %i (host:%s port:%u)\n", GetLastError(), host.Get(), port );
+                TCPDEBUG( "connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
             #endif
             CloseSocket( sockfd );
             return nullptr;
@@ -273,10 +327,14 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         fd_set write, err;
         FD_ZERO( &write );
         FD_ZERO( &err );
+        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
         FD_SET( sockfd, &write );
         FD_SET( sockfd, &err );
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // 6319
+        PRAGMA_DISABLE_POP_MSVC // 4548
 
         // check connection every 10ms
         timeval pollingTimeout;
@@ -291,7 +349,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             #ifdef TCPCONNECTION_DEBUG
                 AStackString<> host;
                 GetAddressAsString( hostIP, host );
-                TCPDEBUG( "select() after connect() failed: %i (host:%s port:%u)\n", GetLastError(), host.Get(), port );
+                TCPDEBUG( "select() after connect() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
             #endif
             CloseSocket( sockfd );
             return nullptr;
@@ -301,12 +359,12 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
         if ( selRet == 0 )
         {
             // are we shutting down?
-            if ( m_ShuttingDown )
+            if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
             {
                 #ifdef TCPCONNECTION_DEBUG
                     AStackString<> host;
                     GetAddressAsString( hostIP, host );
-                    TCPDEBUG( "connect() aborted (Shutting Down) (host:%s port:%u)\n", host.Get(), port );
+                    TCPDEBUG( "connect() aborted (Shutting Down) (Host: %s, Port: %u)\n", host.Get(), port );
                 #endif
                 CloseSocket( sockfd );
                 return nullptr;
@@ -318,7 +376,7 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
                 #ifdef TCPCONNECTION_DEBUG
                     AStackString<> host;
                     GetAddressAsString( hostIP, host );
-                    TCPDEBUG( "connect() time out %u hit (host:%s port:%u)\n", timeout, host.Get(), port );
+                    TCPDEBUG( "connect() time out %u hit (Host: %s, Port: %u)\n", timeout, host.Get(), port );
                 #endif
                 CloseSocket( sockfd );
                 return nullptr;
@@ -334,7 +392,18 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
             #ifdef TCPCONNECTION_DEBUG
                 AStackString<> host;
                 GetAddressAsString( hostIP, host );
-                TCPDEBUG( "select() after connect() error: %i (host:%s port:%u)\n", GetLastError(), host.Get(), port );
+                const int lastNetworkError = GetLastNetworkError(); // NOTE: Get error before call to getsockopt
+
+                int32_t error = 0;
+                socklen_t size = sizeof(error);
+                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) != SOCKET_ERROR )
+                {
+                    TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i, SO_ERROR %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet, error );
+                }
+                else
+                {
+                    TCPDEBUG( "select() after connect() failed. Error: %s (Host:%s, Port: %u), select returned: %i\n", ERROR_STR( lastNetworkError ), host.Get(), port, selRet );
+                }
             #endif
             CloseSocket( sockfd );
             return nullptr;
@@ -342,6 +411,33 @@ const ConnectionInfo * TCPConnectionPool::Connect( uint32_t hostIP, uint16_t por
 
         if( FD_ISSET( sockfd, &write ) )
         {
+            #if defined( __APPLE__ ) || defined( __LINUX__ )
+                // On Linux a write flag set by select() doesn't mean that
+                // connect() succeeded, it only means that it is completed.
+                // To get the result we need to query SO_ERROR value via getsockopt().
+                int32_t error = 0;
+                socklen_t size = sizeof(error);
+                if ( getsockopt( sockfd, SOL_SOCKET, SO_ERROR, (char*)&error, &size ) == SOCKET_ERROR )
+                {
+                    #ifdef TCPCONNECTION_DEBUG
+                        AStackString<> host;
+                        GetAddressAsString( hostIP, host );
+                        TCPDEBUG( "getsockopt() failed. Error: %s (Host: %s, Port: %u)\n", LAST_NETWORK_ERROR_STR, host.Get(), port );
+                    #endif
+                    CloseSocket( sockfd );
+                    return nullptr;
+                }
+                if ( error != 0 )
+                {
+                    #ifdef TCPCONNECTION_DEBUG
+                        AStackString<> host;
+                        GetAddressAsString( hostIP, host );
+                        TCPDEBUG( "connect() failed, SO_ERROR: %s (Host: %s, Port: %u)\n", ERROR_STR( error ), host.Get(), port );
+                    #endif
+                    CloseSocket( sockfd );
+                    return nullptr;
+                }
+            #endif
             break; // connection success!
         }
 
@@ -368,20 +464,27 @@ void TCPConnectionPool::Disconnect( const ConnectionInfo * ci )
 
     if ( ci == m_ListenConnection )
     {
-        ci->m_ThreadQuitNotification = true;
+        AtomicStoreRelease( &ci->m_ThreadQuitNotification, true );
         return;
     }
 
     ConnectionInfo ** iter = m_Connections.Find( ci );
     if ( iter != nullptr )
     {
-        ci->m_ThreadQuitNotification = true;
+        AtomicStoreRelease( &ci->m_ThreadQuitNotification, true );
         return;
     }
 
     // connection is no longer valid.... we handle this gracefully
     // as the connection might be lost while trying to disconnect
     // on another thread
+}
+
+// SetShuttingDown
+//------------------------------------------------------------------------------
+void TCPConnectionPool::SetShuttingDown()
+{
+    AtomicStoreRelaxed( &m_ShuttingDown, true );
 }
 
 // GetNumConnections
@@ -445,7 +548,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
     ASSERT( connection );
 
     // closing connection, possibly from a previous failure
-    if ( connection->m_ThreadQuitNotification || m_ShuttingDown )
+    if ( AtomicLoadAcquire( &connection->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
     {
         return false;
     }
@@ -473,7 +576,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
 
     ASSERT( connection->m_Socket != INVALID_SOCKET );
 
-    TCPDEBUG( "Send: %i (%x)\n", totalBytes, connection->m_Socket );
+    TCPDEBUG( "Send: %i (%x)\n", totalBytes, (uint32_t)( connection->m_Socket ) );
 
     bool sendOK = true;
 
@@ -517,7 +620,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
         {
             if ( WouldBlock() )
             {
-                if ( connection->m_ThreadQuitNotification || m_ShuttingDown )
+                if ( AtomicLoadAcquire( &connection->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     sendOK = false;
                     break;
@@ -534,7 +637,7 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
                 continue;
             }
             // error
-            TCPDEBUG( "send error A.  Send: %i (Error: %i) (%x)\n", sent, GetLastError(), connection->m_Socket );
+            TCPDEBUG( "send() failed (A). Error: %s (Sent: %u, Socket: %x)\n", LAST_NETWORK_ERROR_STR, sent, (uint32_t)( connection->m_Socket ) );
             Disconnect( connection );
             sendOK = false;
             break;
@@ -591,12 +694,12 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
     uint32_t bytesToRead = 4;
     while ( bytesToRead > 0 )
     {
-        int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, bytesToRead, 0 );
+        int numBytes = (int)recv( ci->m_Socket, ( (char *)&size ) + 4 - bytesToRead, (int32_t)bytesToRead, 0 );
         if ( numBytes <= 0 )
         {
             if ( WouldBlock() )
             {
-                if ( ci->m_ThreadQuitNotification || m_ShuttingDown )
+                if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     return false;
                 }
@@ -604,13 +707,13 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
                 Thread::Sleep( 1 );
                 continue;
             }
-            TCPDEBUG( "recv error A.  Read: %i (Error: %i) (%x)\n", numBytes, GetLastError(), ci->m_Socket );
+            TCPDEBUG( "recv() failed (A). Error: %s (Read: %i, Socket: %x)\n", LAST_NETWORK_ERROR_STR, numBytes, (uint32_t)( ci->m_Socket ) );
             return false;
         }
         bytesToRead -= numBytes;
     }
 
-    TCPDEBUG( "Handle read: %i (%x)\n", size, ci->m_Socket );
+    TCPDEBUG( "Handle read: %i (%x)\n", size, (uint32_t)( ci->m_Socket ) );
 
     // get output location
     void * buffer = AllocBuffer( size );
@@ -621,12 +724,12 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
     char * dest = (char *)buffer;
     while ( bytesRemaining > 0 )
     {
-        int numBytes = (int)recv( ci->m_Socket, dest, bytesRemaining, 0 );
+        int numBytes = (int)recv( ci->m_Socket, dest, (int32_t)bytesRemaining, 0 );
         if ( numBytes <= 0 )
         {
             if ( WouldBlock() )
             {
-                if ( ci->m_ThreadQuitNotification || m_ShuttingDown )
+                if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) || AtomicLoadRelaxed( &m_ShuttingDown ) )
                 {
                     FreeBuffer( buffer );
                     return false;
@@ -635,7 +738,7 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
                 Thread::Sleep( 1 );
                 continue;
             }
-            TCPDEBUG( "recv error B.  Read: %i (Error: %i) (%x)\n", numBytes, GetLastError(), ci->m_Socket );
+            TCPDEBUG( "recv() failed (B). Error: %s (Read: %i, Socket: %x)\n", LAST_NETWORK_ERROR_STR, numBytes, (uint32_t)( ci->m_Socket ) );
             FreeBuffer( buffer );
             return false;
         }
@@ -654,9 +757,9 @@ bool TCPConnectionPool::HandleRead( ConnectionInfo * ci )
     return true;
 }
 
-// GetLastError
+// GetLastNetworkError
 //------------------------------------------------------------------------------
-int TCPConnectionPool::GetLastError() const
+int TCPConnectionPool::GetLastNetworkError() const
 {
     #if defined( __WINDOWS__ )
         return WSAGetLastError();
@@ -711,18 +814,81 @@ int TCPConnectionPool::Select( TCPSocket socket,
 
 // Accept
 //------------------------------------------------------------------------------
-TCPSocket TCPConnectionPool::Accept( TCPSocket a_Socket,
-                                     struct sockaddr * a_Address,
-                                     int * a_AddressSize ) const
+TCPSocket TCPConnectionPool::Accept( TCPSocket socket,
+                                     struct sockaddr * address,
+                                     int * addressSize ) const
 {
     #if defined( __WINDOWS__ )
-        return accept( a_Socket, a_Address, a_AddressSize );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return accept( a_Socket, a_Address, (unsigned int *)a_AddressSize );
+        // On Windows, the newSocket inherits WSA_FLAG_NO_HANDLE_INHERIT from socket
+        TCPSocket newSocket = accept( socket, address, addressSize );
+
+        // TODO: Re-enable
+        //DWORD flags;
+        //ASSERT( GetHandleInformation( (HANDLE)newSocket, &flags ) );
+        //ASSERT( ( flags & HANDLE_FLAG_INHERIT ) == 0 );
+        //(void)flags;
+    #elif defined( __LINUX__ )
+        // On Linux we can create the socket with inheritance disables (SOCK_CLOEXEC)
+        TCPSocket newSocket = accept4( socket, address, (unsigned int *)addressSize, SOCK_CLOEXEC );
+    #elif defined( __APPLE__ )
+        // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
+        TCPSocket newSocket = accept( socket, address, (unsigned int *)addressSize );
     #endif
+
+    if ( newSocket == INVALID_SOCKET )
+    {
+        TCPDEBUG( "accept() failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
+        return newSocket;
+    }
+
+    #if defined( __APPLE__ )
+        // OS X does not support atomic setting of CLOEXEC: see notes in CreateSocket
+        VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
+    #endif
+
+    return newSocket;
 }
 
-// CreateThread
+// CreateSocket
+//------------------------------------------------------------------------------
+TCPSocket TCPConnectionPool::CreateSocket() const
+{
+    #if defined( __LINUX__ )
+        // On Linux we can create the socket with inheritance disabled (SOCK_CLOEXEC)
+        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0 );
+    #elif defined( __WINDOWS__ )
+        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+
+        // TODO: Re-enable
+        // On Windows we can create the socket with inheritance disabled (WSA_FLAG_NO_HANDLE_INHERIT)
+        //TCPSocket newSocket = WSASocketW( AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT );
+    #else
+        // On OS X, we must explicitly set FD_CLOEXEC after creating the socket
+        TCPSocket newSocket = socket( AF_INET, SOCK_STREAM, 0 );
+    #endif
+
+    // Failure?
+    if ( newSocket == INVALID_SOCKET )
+    {
+        TCPDEBUG( "Create socket failed (Connect). Error: %s\n", LAST_NETWORK_ERROR_STR );
+        return newSocket;
+    }
+
+    #if defined( __APPLE__ )
+        // OS X does not support atomic setting of CLOEXEC, which exposes
+        // us to race conditions if another thread is spawning a process.
+        // The best we can do is reduce the likelyhood of problems by immediately
+        // setting the flag after creation.
+        // In practice, the listen socket is the most problematic one to be
+        // inherited (as it prevents re-use), but thankfully starting listening
+        // while spawning a process is not something we generally do.
+        VERIFY( fcntl( newSocket, F_SETFD, FD_CLOEXEC ) == 0 );
+    #endif
+
+    return newSocket;
+}
+
+// CreateListenThread
 //------------------------------------------------------------------------------
 void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uint16_t port )
 {
@@ -749,6 +915,9 @@ void TCPConnectionPool::CreateListenThread( TCPSocket socket, uint32_t host, uin
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TCPConnectionPool::ListenThreadWrapperFunction( void * data )
 {
+    TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( TCPConnectionPoolProfileHelper::THREAD_LISTEN );
+    PROFILE_FUNCTION
+
     ConnectionInfo * ci = (ConnectionInfo *)data;
     ci->m_TCPConnectionPool->ListenThreadFunction( ci );
     return 0;
@@ -763,7 +932,7 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
     struct sockaddr_in remoteAddrInfo;
     int remoteAddrInfoSize = sizeof( remoteAddrInfo );
 
-    while ( ci->m_ThreadQuitNotification == false )
+    while ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) == false )
     {
         // timout for select() operations
         // (modified by select, so we must recreate it)
@@ -775,9 +944,13 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         // (modified by the select() function, so we must recreate it)
         fd_set set;
         FD_ZERO( &set );
+        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
         FD_SET( (uint32_t)ci->m_Socket, &set );
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // 6319
+        PRAGMA_DISABLE_POP_MSVC // 4548
 
         // peek
         int num = Select( ci->m_Socket+1, &set, NULL, NULL, &timeout );
@@ -795,24 +968,21 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         // handle errors or socket shutdown
         if ( newSocket == INVALID_SOCKET )
         {
-            TCPDEBUG( "accept failed: %i\n", GetLastError() );
+            TCPDEBUG( "accept() failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
             break;
         }
 
         #ifdef TCPCONNECTION_DEBUG
             AStackString<32> addr;
             GetAddressAsString( remoteAddrInfo.sin_addr.s_addr, addr );
-            TCPDEBUG( "Connection accepted from %s : %i (%x)\n",  addr.Get(), ntohs( remoteAddrInfo.sin_port ), newSocket );
+            TCPDEBUG( "Connection accepted from %s : %i (%x)\n", addr.Get(), ntohs( remoteAddrInfo.sin_port ), (uint32_t)newSocket );
         #endif
 
-        // set non-blocking
-        SetNonBlocking( newSocket, true );
-
-        // Set send/recv buffer sizes
-        if ( !SetBufferSizes( newSocket ) )
-        {
-            break; // SetBufferSizes will close socket
-        }
+        // Configure socket
+        DisableSigPipe( newSocket );        // Prevent socket inheritence by child processes
+        DisableNagle( newSocket );          // Disable Nagle's algorithm
+        SetLargeBufferSizes( newSocket );   // Set send/recv buffer sizes
+        SetNonBlocking( newSocket );        // Set non-blocking
 
         // keep the new connected socket
         CreateConnectionThread( newSocket,
@@ -833,9 +1003,9 @@ void TCPConnectionPool::ListenThreadFunction( ConnectionInfo * ci )
         MutexHolder mh( m_ConnectionsMutex );
         ASSERT( m_ListenConnection == ci );
         m_ListenConnection = nullptr;
+        FDELETE ci;
+        m_ShutdownSemaphore.Signal(); // Wake main thread which may be waiting on shutdown
     }
-
-    FDELETE ci;
 
     // thread exit
     TCPDEBUG( "Listen thread exited\n" );
@@ -857,13 +1027,13 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
     #ifdef TCPCONNECTION_DEBUG
         AStackString<32> addr;
         GetAddressAsString( ci->m_RemoteAddress, addr );
-        TCPDEBUG( "Connected to %s : %i (%x)\n", addr.Get(), port, socket );
+        TCPDEBUG( "Connected to %s : %i (%x)\n", addr.Get(), port, (uint32_t)socket );
     #endif
 
     // Spawn thread to handle socket
     Thread::ThreadHandle h = Thread::CreateThread( &ConnectionThreadWrapperFunction,
                                             "TCPConnection",
-                                            ( 32 * KILOBYTE ),
+                                            ( 64 * KILOBYTE ),
                                             ci ); // user data argument
     ASSERT( h != INVALID_THREAD_HANDLE );
     Thread::DetachThread( h );
@@ -878,6 +1048,9 @@ ConnectionInfo * TCPConnectionPool::CreateConnectionThread( TCPSocket socket, ui
 //------------------------------------------------------------------------------
 /*static*/ uint32_t TCPConnectionPool::ConnectionThreadWrapperFunction( void * data )
 {
+    TCP_CONNECTION_POOL_PROFILE_SET_THREAD_NAME( TCPConnectionPoolProfileHelper::THREAD_CONNECTION );
+    PROFILE_FUNCTION
+
     ConnectionInfo * ci = (ConnectionInfo *)data;
     ci->m_TCPConnectionPool->ConnectionThreadFunction( ci );
     return 0;
@@ -893,7 +1066,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
     OnConnected( ci ); // Do callback
 
     // process socket events
-    while ( ci->m_ThreadQuitNotification == false )
+    while ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) == false )
     {
         // timout for select() operations
         // (modified by select, so we must recreate it)
@@ -905,9 +1078,13 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         // (modified by the select() function, so we must recreate it)
         fd_set readSet;
         FD_ZERO( &readSet );
+        PRAGMA_DISABLE_PUSH_MSVC( 4548 ) // warning C4548: expression before comma has no effect; expected expression with side-effect
         PRAGMA_DISABLE_PUSH_MSVC( 6319 ) // warning C6319: Use of the comma-operator in a tested expression...
+        PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wcomma" ) // possible misuse of comma operator here [-Wcomma]
         FD_SET( (uint32_t)ci->m_Socket, &readSet );
+        PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wcomma
         PRAGMA_DISABLE_POP_MSVC // C6319
+        PRAGMA_DISABLE_POP_MSVC // 4548
 
         int num = Select( ci->m_Socket+1, &readSet, NULL, NULL, &timeout );
         if ( num == 0 )
@@ -916,7 +1093,7 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
             continue;
         }
 
-        if ( ci->m_ThreadQuitNotification == true )
+        if ( AtomicLoadAcquire( &ci->m_ThreadQuitNotification ) )
         {
             break; // don't bother reading any pending data if shutting down
         }
@@ -931,7 +1108,9 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         }
         else
         {
+            PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wunreachable-code" ) // TOBO:B : Investigate - code will never be executed [-Wunreachable-code]
             ASSERT( false && "Unexpected" );
+            PRAGMA_DISABLE_POP_CLANG_WINDOWS // -Wunreachable-code
         }
     }
 
@@ -950,33 +1129,74 @@ void TCPConnectionPool::ConnectionThreadFunction( ConnectionInfo * ci )
         ConnectionInfo ** iter = m_Connections.Find( ci );
         ASSERT( iter );
         m_Connections.Erase( iter );
+        FDELETE ci;
+        if ( AtomicLoadRelaxed( &m_ShuttingDown ) )
+        {
+            m_ShutdownSemaphore.Signal(); // Wake main thread which will be waiting on shutdown
+        }
     }
-
-    FDELETE ci;
 
     // thread exit
     TCPDEBUG( "connection thread exited\n" );
 }
 
+// AllowSocketReuse
+//------------------------------------------------------------------------------
+void TCPConnectionPool::AllowSocketReuse( TCPSocket socket ) const
+{
+    static const int yes = 1;
+    int ret = setsockopt( socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof( yes ) );
+    if ( ret != 0 )
+    {
+        TCPDEBUG( "setsockopt(SO_REUSEADDR) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
+    }
+    #if defined( __APPLE__ )
+        // OS X changed the behavior or ADDR vs PORT, so we set both
+        ret = setsockopt( socket, SOL_SOCKET, SO_REUSEPORT, (const char *)&yes, sizeof( yes ) );
+        if ( ret != 0 )
+        {
+            TCPDEBUG( "setsockopt(SO_REUSEADDR) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
+        }
+    #endif
+}
+
 // DisableNagle
 //------------------------------------------------------------------------------
-bool TCPConnectionPool::DisableNagle( TCPSocket sockfd )
+void TCPConnectionPool::DisableNagle( TCPSocket socket ) const
 {
     // disable TCP nagle
     static const int disableNagle = 1;
-    const int ret = setsockopt( sockfd, IPPROTO_TCP, TCP_NODELAY, (const char *)&disableNagle, sizeof( disableNagle ) );
+    const int ret = setsockopt( socket, IPPROTO_TCP, TCP_NODELAY, (const char *)&disableNagle, sizeof( disableNagle ) );
     if ( ret != 0 )
     {
-        TCPDEBUG( "setsockopt TCP_NODELAY failed: %i\n", GetLastError() );
-        CloseSocket( sockfd );
-        return false;
+        TCPDEBUG( "setsockopt(TCP_NODELAY) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
     }
-    return true;
 }
 
-// SetBufferSizes
+// DisableSigPipe
 //------------------------------------------------------------------------------
-bool TCPConnectionPool::SetBufferSizes( TCPSocket socket )
+void TCPConnectionPool::DisableSigPipe( TCPSocket socket ) const
+{
+    // We handle socket errors at the point of interacting with the socket
+    // We don't want the default behaviour of sig pipe errors in any arbitrary
+    // kernel function we might call
+
+    #if defined( __WINDOWS__ )
+        // Nothing to do on Windows
+        (void)socket;
+    #elif defined( __LINUX__ )
+        // We disable SIGPIPE system wide in NetworkStartupHelper
+        (void)socket;
+    #elif defined( __APPLE__ )
+        // Must be done on every socket on OSX
+        int nosigpipe = 1;
+        VERIFY( setsockopt( socket, SOL_SOCKET, SO_NOSIGPIPE, (void *)&nosigpipe, sizeof(int) ) == 0 );
+    #endif
+}
+
+// SetLargeBufferSizes
+//------------------------------------------------------------------------------
+void TCPConnectionPool::SetLargeBufferSizes( TCPSocket socket ) const
 {
     #if defined( __APPLE__ )
         const uint32_t bufferSize = ( 5 * 1024 * 1024 ); // larger values fail on OS X
@@ -989,9 +1209,7 @@ bool TCPConnectionPool::SetBufferSizes( TCPSocket socket )
         int ret = setsockopt( socket, SOL_SOCKET, SO_RCVBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
         if ( ret != 0 )
         {
-            TCPDEBUG( "setsockopt SO_RCVBUF failed: %i\n", GetLastError() );
-            CloseSocket( socket );
-            return false;
+            TCPDEBUG( "setsockopt(SO_RCVBUF) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
         }
     }
 
@@ -1000,25 +1218,20 @@ bool TCPConnectionPool::SetBufferSizes( TCPSocket socket )
         int ret = setsockopt( socket, SOL_SOCKET, SO_SNDBUF, (const char *)&bufferSize, sizeof( bufferSize ) );
         if ( ret != 0 )
         {
-            TCPDEBUG( "setsockopt SO_SNDBUF failed: %i\n", GetLastError() );
-            CloseSocket( socket );
-            return false;
+            TCPDEBUG( "setsockopt(SO_SNDBUF) failed. Error: %s\n", LAST_NETWORK_ERROR_STR );
         }
     }
-
-    return true;
 }
 
+// SetNonBlocking
 //------------------------------------------------------------------------------
-void TCPConnectionPool::SetNonBlocking( TCPSocket socket, bool nonBlocking ) const
+void TCPConnectionPool::SetNonBlocking( TCPSocket socket ) const
 {
-    u_long optionValue = ( nonBlocking ? 1 : 0 );
+    u_long nonBlocking = 1;
     #if defined( __WINDOWS__ )
-        ioctlsocket( socket, FIONBIO, &optionValue );
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        ioctl( socket, FIONBIO, &optionValue );
+        VERIFY( ioctlsocket( socket, FIONBIO, &nonBlocking ) == 0 );
     #else
-        #error Unknown platform
+        VERIFY( ioctl( socket, FIONBIO, &nonBlocking ) == 0 );
     #endif
 }
 

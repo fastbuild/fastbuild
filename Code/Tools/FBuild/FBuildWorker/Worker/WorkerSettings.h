@@ -21,8 +21,9 @@ public:
     enum Mode
     {
         DISABLED        = 0, // Don't work for anyone
-        WHEN_IDLE       = 1, // Work when others when idle
-        DEDICATED       = 2  // Work for others always
+        WHEN_IDLE       = 1, // Work for others when idle
+        DEDICATED       = 2, // Work for others always
+        PROPORTIONAL    = 3  // Work for others proportional to free CPU
     };
     inline Mode GetMode() const { return m_Mode; }
     void SetMode( Mode m );
@@ -35,12 +36,20 @@ public:
     void SetStartMinimized( bool startMinimized );
     inline bool GetStartMinimzed() { return m_StartMinimized; }
 
+    // Time settings were last changed/written to disk
+    uint64_t GetSettingsWriteTime() const { return m_SettingsWriteTime; }
+  
+    inline uint32_t GetMinimumFreeMemoryMiB() { return m_MinimumFreeMemoryMiB; }
+    void SetMinimumFreeMemoryMiB( uint32_t value );
+
     void Load();
     void Save();
 private:
     Mode        m_Mode;
     uint32_t    m_NumCPUsToUse;
     bool        m_StartMinimized;
+    uint64_t    m_SettingsWriteTime;    // FileTime of settings when last changed/written to disk
+    uint32_t    m_MinimumFreeMemoryMiB; // Minimum OS free memory including virtual memory to let worker do its work
 };
 
 //------------------------------------------------------------------------------

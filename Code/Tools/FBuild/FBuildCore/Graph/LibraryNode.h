@@ -10,7 +10,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
-class BFFIterator;
 class CompilerNode;
 class Function;
 class NodeGraph;
@@ -23,8 +22,8 @@ class LibraryNode : public ObjectListNode
     REFLECT_NODE_DECLARE( LibraryNode )
 public:
     LibraryNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~LibraryNode();
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
+    virtual ~LibraryNode() override;
 
     static inline Node::Type GetTypeS() { return Node::LIBRARY_NODE; }
 
@@ -59,10 +58,12 @@ private:
     AString             m_LibrarianOptions;
     AString             m_LibrarianOutput;
     Array< AString >    m_LibrarianAdditionalInputs;
+    Array< AString >    m_Environment;
 
     // Internal State
     uint32_t            m_NumLibrarianAdditionalInputs  = 0;
     uint32_t            m_LibrarianFlags                = 0;
+    mutable const char * m_EnvironmentString            = nullptr;
 };
 
 //------------------------------------------------------------------------------

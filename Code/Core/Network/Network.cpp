@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Network.h"
 
 // Core
@@ -15,8 +13,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <Winsock2.h>
-    #include <ws2tcpip.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <arpa/inet.h>
@@ -40,8 +37,8 @@
     }
     else
     {
-        ASSERT( false && "This should never fail" );
         hostName = "Unknown";
+        ASSERT( false && "This should never fail" );
     }
 }
 
@@ -51,8 +48,17 @@
 {
     PROFILE_FUNCTION
 
+    // Fast path for "localhost". Although we have a fast path for detecting ip4
+    // format adresses, it can still take several ms to call
+    if ( hostName == "127.0.0.1" )
+    {
+        return 0x0100007f;
+    }
+
     // see if string it already in ip4 format
-    uint32_t ip = inet_addr( hostName.Get() );
+    PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // Deprecated...
+    uint32_t ip = inet_addr( hostName.Get() ); // TODO:C Consider using inet_pton()
+    PRAGMA_DISABLE_POP_MSVC // 4996
     if ( ip != INADDR_NONE )
     {
         return ip;
@@ -120,7 +126,7 @@
     }
 
     // return result of resolution (could also have failed)
-    return returnCode;
+    return (uint32_t)returnCode;
 }
 
 // NameResolutionThreadFunc

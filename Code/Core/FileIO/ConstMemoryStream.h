@@ -13,7 +13,7 @@ class ConstMemoryStream : public IOStream
 public:
     ConstMemoryStream();
     explicit ConstMemoryStream( const void * data, size_t size );
-    ~ConstMemoryStream();
+    virtual ~ConstMemoryStream() override;
 
     // memory stream specific functions
     inline const void * GetData() const { return m_Buffer; }

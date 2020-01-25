@@ -35,6 +35,9 @@ public:
     static void SetVarStruct( const AString & name,
                               const Array< const BFFVariable * > & members,
                               BFFStackFrame * frame );
+    static void SetVarStruct( const AString & name,
+                              Array<BFFVariable *> && members,
+                              BFFStackFrame * frame );
     static void SetVarArrayOfStructs( const AString & name,
                                       const Array< const BFFVariable * > & structs,
                                       BFFStackFrame * frame );
@@ -47,17 +50,18 @@ public:
                                      const BFFVariable * lhs,
                                      const BFFVariable * rhs,
                                      BFFStackFrame * frame,
-                                     const BFFIterator & operatorIter );
+                                     const BFFToken * operatorIter );
 
     // get a variable (caller passes complete name indicating type (user vs system))
     static const BFFVariable * GetVar( const char * name, BFFStackFrame * frame = nullptr );
     static const BFFVariable * GetVar( const AString & name, BFFStackFrame * frame = nullptr );
 
     // get a variable by name, either user or system
-    static const BFFVariable * GetVarAny( const AString & name );
+    static const BFFVariable * GetVarAny( const AString & nameOnly );
 
     // get all variables at this stack level only
     const Array< const BFFVariable * > & GetLocalVariables() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_Variables ); }
+    Array<BFFVariable *> & GetLocalVariables() { return m_Variables; }
 
     // get a variable at this stack level only
     const BFFVariable * GetLocalVar( const AString & name ) const;
@@ -70,6 +74,14 @@ public:
     BFFStackFrame * GetParent() const { return m_Next; }
 
     const BFFVariable * GetVariableRecurse( const AString & name ) const;
+
+    const AString & GetLastVariableSeen() const { return m_LastVariableSeen; }
+    BFFStackFrame * GetLastVariableSeenFrame() const { return m_LastVariableSeenFrame; }
+    void            SetLastVariableSeen( const AString & varName, BFFStackFrame * frame )
+    { 
+        m_LastVariableSeen = varName;
+        m_LastVariableSeenFrame = frame;
+    }
 
 private:
     const BFFVariable * GetVariableRecurse( const AString & nameOnly,
@@ -85,6 +97,10 @@ private:
 
     // pointer to parent scope
     BFFStackFrame * m_Next;
+
+    // Track last variable to allow omission of left hand side in operations on the same var
+    AString m_LastVariableSeen;
+    BFFStackFrame * m_LastVariableSeenFrame = nullptr;
 
     // the head of the linked list, from deepest to shallowest
     static BFFStackFrame * s_StackHead;

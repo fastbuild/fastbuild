@@ -1,0 +1,27 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Two Projects
+VCXProject( 'Proj1' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_BuildAndDeploy_PerSolutionConfig\proj1.vcxproj'
+}
+VCXProject( 'Proj2' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_BuildAndDeploy_PerSolutionConfig\proj2.vcxproj'
+}
+
+// A solution using that project, with NO Build and Deploy projects set
+VSSolution( 'Solution' )
+{
+    .SolutionProjects               = { 'Proj1', 'Proj2' }
+
+    .Config1                        = [ .Platform = 'Win32' .Config = 'Debug'   .SolutionBuildProject = 'Proj1' ]
+    .Config2                        = [ .Platform = 'Win32' .Config = 'Release' ]
+    .Config3                        = [ .Platform = 'x64'   .Config = 'Debug' ]
+    .Config4                        = [ .Platform = 'x64'   .Config = 'Release' .SolutionDeployProjects = 'Proj2' ]
+    .SolutionConfigs                = { .Config1, .Config2, .Config3, .Config4 }
+    .SolutionOutput                 = "$Out$\Test\ProjectGeneration\Solution_BuildAndDeploy_PerSolutionConfig\solution.sln"
+}

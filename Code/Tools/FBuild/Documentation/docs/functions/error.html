@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - Error</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='../home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>Error</h1>
+    <div class='newsitemheader'>Summary</div>
+    <div class='newsitembody'>
+      <p>
+Emits a custom error and halts BFF parsing.
+      </p>
+  <div class='code'>Error( "String or $VarName$" )</div>
+</div>
+	
+<div id='print' class='newsitemheader'>Details</div>
+<div class='newsitembody'>
+  <p>
+  The Error() function allows BFF parsing to be terminated and a custom error message
+  to be emitted. BFF parsing will have been considered to have failed and building
+  will not be possible.
+  </p>
+</div>
+
+<div id='print' class='newsitemheader'>Examples</div>
+<div class='newsitembody'>
+  <p>
+  The following sample BFF:
+  </p>
+  <div class='code'>.RequiredFASTBuildVersion = 97
+If( ._FASTBUILD_VERSION_ < .RequiredFASTBuildVersion )
+{
+    Error( 'FASTBuild v0.97 or later is required (found $_FASTBUILD_VERSION_STRING_$)' );
+}</div>
+</p>
+  <p>
+  Will generate the following output if the version is as expected:
+  </p>
+  <div class='output'>C:\Test\fbuild.bff(5,5): FASTBuild Error #1999 - Error() - User Error: FASTBuild v0.97 or later is required (found v0.96)
+    Error( 'FASTBuild v0.97 or later is required (found $_FASTBUILD_VERSION_STRING_$)' );
+    ^
+    \--here</div>
+</div>
+
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
+</body>
+</html>

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="common.js"></script>
 
 <html>
 <head>
@@ -8,18 +7,35 @@
 <title>FASTBuild - Error Reference</title>
 </head>
 <body>
-  <script>generateHeader()</script>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='home.html'><img src='img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
 
 <h1>Error Reference</h1>
 <h2>Categories</h2>
-<ul>
-  <li><a href='#1000'>1000 - 1099</a> General Parsing Errors</li>
-  <li><a href='#1100'>1100 - 1199</a> Function Parameter Errors</li>
-  <li><a href='#1200'>1200 - 1299</a> ForEach Specific Errors</li>
-  <li><a href='#1300'>1300 - 1399</a> Library Specific Errors</li>
-  <li><a href='#1400'>1400 - 1499</a> Copy Specific Errors</li>
-  <li><a href='#1500'>1500 - 1599</a> Compiler Specific Errors</li>
-</ul>
+<table>
+  <tr><th width=100>Range</th>                  <th width=200>Description</th></tr>
+  <tr><td><a href='#1000'>1000 - 1099</a></td>  <td>General Parsing Errors</td></tr>
+  <tr><td><a href='#1100'>1100 - 1199</a></td>  <td>Function Parameter Errors</td></tr>
+  <tr><td><a href='#1200'>1200 - 1299</a></td>  <td>ForEach Specific Errors</td></tr>
+  <tr><td><a href='#1300'>1300 - 1399</a></td>  <td>Library Specific Errors</td></tr>
+  <tr><td><a href='#1400'>1400 - 1499</a></td>  <td>Copy Specific Errors</td></tr>
+  <tr><td><a href='#1500'>1500 - 1599</a></td>  <td>Compiler Specific Errors</td></tr>
+  <tr><td><a href='#1999'>1999</a></td>         <td>User Defined Error</td></tr>
+</table>
 <h2 id='1000'>1001 - 1099 : General Parsing Errors</h2>
 <!--------------- 1001 --------------->
     <div class='newsitemheader'>1001 - Missing string start token " or '.</div>
@@ -538,13 +554,13 @@ The specified include file could not be opened.
 </div>
 
 <!--------------- 1033 --------------->
-    <div class='newsitemheader'>1033 - Error reading include '%s' (Error: %u).</div>
+    <div class='newsitemheader'>1033 - Error reading include. Error: %u (0x%x) File: '%s'".</div>
     <div class='newsitembody'>
 A read error occurred when reading the included file.
 <h4>Example Config:</h4>
 <div class='code'>#include "errorfile.bff"</div>
 <h4>Example Output:</h4>
-<div class='output'>c:\test\fbuild.bff(1):(11) FASTBuild Error #1033 - Error reading include 'errorfile.bff' (Error: 4).
+<div class='output'>c:\test\fbuild.bff(1):(11) FASTBuild Error #1033 - Error reading include. Error: 4 (0x04) File: 'errorfile.bff'
 #include "errorfile.bff"
           ^
           \--here
@@ -681,6 +697,36 @@ Exec('all')
 ^
 \--here</div>
 </div>
+
+<!--------------- 1044 --------------->
+    <div class='newsitemheader'>1044 - Operator expected.</div>
+    <div class='newsitembody'>
+An operator was expected at the current location.
+<h4>Example Config:</h4>
+<div class='code'>.Var "value"</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\Test\fbuild.bff(1,6): FASTBuild Error #1044 - Operator expected.
+.Var "value"
+     ^
+     \--here
+</div>
+</div>
+
+<!--------------- 1045 --------------->
+    <div class='newsitemheader'>1045 -  Extraneous token(s) following '%s' directive.</div>
+    <div class='newsitembody'>
+Extra tokens were found after what would otherwise be a valid directive.
+<h4>Example Config:</h4>
+<div class='code'>#if THING ExtraneousThing
+#endif</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1,11): FASTBuild Error #1045 - Extraneous token(s) following 'if' directive.
+#if THING ExtraneousThing
+          ^
+          \--here
+</div>
+</div>
+
 
 
 <!--------------- 1050 --------------->
@@ -1139,7 +1185,43 @@ Compiler( 'compiler' )
 \--here
 </div>
 </div>
+<!--------------- 1502 --------------->
+    <div class='newsitemheader'>1502 - LightCache only compatible with MSVC Compiler.</div>
+    <div class='newsitembody'>
+The LightCache is currently only supported when using the MSVC Compiler. This error will be generated if using any other compiler.
+<h4>Example Config:</h4>
+<div class='code'>Compiler( 'compiler' )
+{
+  .Executable 	= 'gcc'
+  .UseLightCache_Experimental = true
+}
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1,1): FASTBuild Error #1502 - Compiler() - LightCache only compatible with MSVC Compiler.
+Compiler( 'compiler' )
+^
+\--here
+</div>
+</div>
 
-  <script>generateFooter()</script>
+
+<h2 id='1999'>1999 : User Defined Error</h2>
+<!--------------- 1999 --------------->
+    <div class='newsitemheader'>1999 - User Error: '%s'</div>
+    <div class='newsitembody'>
+Use of the Error() function will result in a User Defined Error.
+<h4>Example Config:</h4>
+<div class='code'>Error( 'custom message' )
+</div>
+<h4>Example Output:</h4>
+<div class='output'>c:\test\fbuild.bff(1,1): FASTBuild Error #1999 - Error() - User Error: custom message
+Error( 'custom message' )
+^
+\--here
+</div>
+</div>
+
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

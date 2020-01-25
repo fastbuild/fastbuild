@@ -16,8 +16,8 @@ class DirectoryListNode : public Node
     REFLECT_NODE_DECLARE( DirectoryListNode )
 public:
     DirectoryListNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~DirectoryListNode();
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
+    virtual ~DirectoryListNode() override;
 
     const AString & GetPath() const { return m_Path; }
     const Array< FileIO::FileInfo > & GetFiles() const { return m_Files; }
@@ -25,6 +25,8 @@ public:
     static inline Node::Type GetTypeS() { return Node::DIRECTORY_LIST_NODE; }
 
     virtual bool IsAFile() const override { return false; }
+
+    virtual const AString & GetPrettyName() const override { return m_PrettyName.IsEmpty() ? m_Name : m_PrettyName; }
 
     static void FormatName( const AString & path,
                             const Array< AString > * patterns,
@@ -36,6 +38,10 @@ public:
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;
+
+    void MakePrettyName( const size_t totalFiles );
+
+    friend class CompilationDatabase; // For DoBuild - TODO:C This is not ideal
 
     // Reflected Properties
     friend class Function; // TODO:C Remove
@@ -49,6 +55,7 @@ private:
 
     // Internal State
     Array< FileIO::FileInfo > m_Files;
+    AString m_PrettyName;
 };
 
 //------------------------------------------------------------------------------

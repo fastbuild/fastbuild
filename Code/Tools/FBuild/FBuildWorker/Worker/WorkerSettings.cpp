@@ -7,18 +7,19 @@
 
 // Core
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 
 // system
 #if defined( __WINDOWS__ )
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Other
 //------------------------------------------------------------------------------
 #define FBUILDWORKER_SETTINGS_MIN_VERSION ( 1 )     // Oldest compatible version
-#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 2 ) // Current version
+#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 3 ) // Current version
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -26,6 +27,8 @@ WorkerSettings::WorkerSettings()
     : m_Mode( WHEN_IDLE )
     , m_NumCPUsToUse( 1 )
     , m_StartMinimized( false )
+    , m_SettingsWriteTime( 0 )
+    , m_MinimumFreeMemoryMiB( 1024 ) // 1 GiB
 {
     // half CPUs available to use by default
     uint32_t numCPUs = Env::GetNumProcessors();
@@ -62,6 +65,13 @@ void WorkerSettings::SetStartMinimized( bool startMinimized )
     m_StartMinimized = startMinimized;
 }
 
+// SetMinimumFreeMemoryMiB
+//------------------------------------------------------------------------------
+void WorkerSettings::SetMinimumFreeMemoryMiB( uint32_t value )
+{
+    m_MinimumFreeMemoryMiB = value;
+}
+
 // Load
 //------------------------------------------------------------------------------
 void WorkerSettings::Load()
@@ -73,10 +83,12 @@ void WorkerSettings::Load()
     FileStream f;
     if ( f.Open( settingsPath.Get(), FileStream::READ_ONLY ) )
     {
-        char header[ 4 ] = { 0 };
+        uint8_t header[ 4 ] = { 0 };
         f.Read( &header, 4 );
-        if ( ( header[ 3 ] < FBUILDWORKER_SETTINGS_MIN_VERSION ) ||
-             ( header[ 3 ] > FBUILDWORKER_SETTINGS_CURRENT_VERSION ) )
+
+        const uint8_t settingsVersion = header[ 3 ];
+        if ( ( settingsVersion < FBUILDWORKER_SETTINGS_MIN_VERSION ) ||
+             ( settingsVersion > FBUILDWORKER_SETTINGS_CURRENT_VERSION ) )
         {
             return; // version is too old, or newer, and cannot be read
         }
@@ -87,6 +99,10 @@ void WorkerSettings::Load()
         m_Mode = (Mode)mode;
         f.Read( m_NumCPUsToUse );
         f.Read( m_StartMinimized );
+
+        f.Close();
+
+        m_SettingsWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
     }
 }
 
@@ -105,15 +121,18 @@ void WorkerSettings::Save()
 
         // header
         ok &= ( f.Write( "FWS", 3 ) == 3 );
-        ok &= ( f.Write( uint8_t( FBUILDWORKER_SETTINGS_CURRENT_VERSION ) ) == 1 );
+        ok &= ( f.Write( uint8_t( FBUILDWORKER_SETTINGS_CURRENT_VERSION ) ) );
 
         // settings
         ok &= f.Write( (uint32_t)m_Mode );
         ok &= f.Write( m_NumCPUsToUse );
         ok &= f.Write( m_StartMinimized );
 
+        f.Close();
+
         if ( ok )
         {
+            m_SettingsWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
             return;
         }
     }

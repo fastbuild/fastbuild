@@ -3,11 +3,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "NetworkStartupHelper.h"
 
 #include "Core/Env/Assert.h"
+#include "Core/Process/Atomic.h"
 
 //------------------------------------------------------------------------------
 // Static Data
@@ -38,6 +37,7 @@ NetworkStartupHelper::NetworkStartupHelper()
 
     #if defined( __LINUX__ ) || defined( __OSX__ )
         // Disable SIGPIPE signals - we want to handle errors in the calling code
+        // On OS X, this doesn't actually work, so we must also disable per socket
         signal( SIGPIPE, SIG_IGN );
     #endif
 
@@ -57,7 +57,7 @@ NetworkStartupHelper::NetworkStartupHelper()
 /*static*/ bool NetworkStartupHelper::IsShuttingDown()
 {
     MutexHolder mh( s_Mutex );
-    return ( s_MasterShutdownFlag ) ? ( *s_MasterShutdownFlag ) : false;
+    return ( s_MasterShutdownFlag ) ? AtomicLoadRelaxed( s_MasterShutdownFlag ) : false;
 }
 
 //------------------------------------------------------------------------------

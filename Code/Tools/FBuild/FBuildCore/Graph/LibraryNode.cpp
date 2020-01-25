@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "LibraryNode.h"
 #include "DirectoryListNode.h"
 #include "UnityNode.h"
@@ -23,6 +21,7 @@
 #include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 
 // Core
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -39,6 +38,7 @@ REFLECT_NODE_BEGIN( LibraryNode, ObjectListNode, MetaName( "LibrarianOutput" ) +
 
     REFLECT( m_NumLibrarianAdditionalInputs,    "NumLibrarianAdditionalInputs", MetaHidden() )
     REFLECT( m_LibrarianFlags,                  "LibrarianFlags",               MetaHidden() )
+    REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
 REFLECT_END( LibraryNode )
 
 // CONSTRUCTOR
@@ -52,7 +52,7 @@ LibraryNode::LibraryNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .Librarian
     Dependencies librarian;
@@ -104,7 +104,10 @@ LibraryNode::LibraryNode()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-LibraryNode::~LibraryNode() = default;
+LibraryNode::~LibraryNode()
+{
+    FREE( (void *)m_EnvironmentString );
+}
 
 // IsAFile
 //------------------------------------------------------------------------------
@@ -138,12 +141,16 @@ LibraryNode::~LibraryNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult LibraryNode::DoBuild( Job * job )
 {
-    // Delete previous file(s) if doing a clean build
-    if ( FBuild::Get().GetOptions().m_ForceCleanBuild )
+    // Delete library from previous build (if present) if:
+    // - A clean build is being triggered
+    // - A non-msvc librarian is used (librarians like ar can cause duplicate
+    //                                symbols because of how they update archives)
+    if ( FBuild::Get().GetOptions().m_ForceCleanBuild ||
+         ( GetFlag( Flag::LIB_FLAG_LIB ) == false ) )
     {
-        if ( FileIO::FileExists( GetName().Get() ) )
+        if ( DoPreBuildFileDeletion( GetName() ) == false )
         {
-            FileIO::FileDelete( GetName().Get() );
+            return NODE_RESULT_FAILED; // HandleFileDeletion will have emitted an error
         }
     }
 
@@ -157,7 +164,7 @@ LibraryNode::~LibraryNode() = default;
     // use the exe launch dir as the working dir
     const char * workingDir = nullptr;
 
-    const char * environment = FBuild::Get().GetEnvironmentString();
+    const char * environment = Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
 
     EmitCompilationMessage( fullArgs );
 
@@ -206,7 +213,7 @@ LibraryNode::~LibraryNode() = default;
             job->ErrorPreformatted( memErr.Get() );
         }
 
-        FLOG_ERROR( "Failed to build Library (error %i) '%s'", result, GetName().Get() );
+        FLOG_ERROR( "Failed to build Library. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
         return NODE_RESULT_FAILED;
     }
     else
@@ -219,9 +226,8 @@ LibraryNode::~LibraryNode() = default;
         }
     }
 
-    // record time stamp for next time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    ASSERT( m_Stamp );
+    // record new file time
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }

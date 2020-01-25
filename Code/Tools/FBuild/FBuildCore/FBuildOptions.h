@@ -1,4 +1,4 @@
-// FBuild.cpp - The main FBuild interface class
+// FBuildOptions.h - Command line options processing
 //------------------------------------------------------------------------------
 #pragma once
 
@@ -53,7 +53,9 @@ public:
     bool        m_FastCancel                        = false;
     bool        m_WaitMode                          = false;
     bool        m_DisplayTargetList                 = false;
+    bool        m_ShowHiddenTargets                 = false;
     bool        m_DisplayDependencyDB               = false;
+    bool        m_GenerateCompilationDatabase       = false;
     bool        m_NoUnity                           = false;
 
     // Cache
@@ -81,9 +83,11 @@ public:
     bool        m_GenerateReport                    = false;
     bool        m_EnableMonitor                     = false;
 
-    // DB saving
+    // DB loading/saving
     bool        m_SaveDBOnCompletion                = false;
     bool        m_FixupErrorPaths                   = false;
+    bool        m_ForceDBMigration_Debug            = false; // Force migration even if bff has not changed (for tests)
+    bool        m_ContinueAfterDBMove               = false;
 
     // Debug helpers
     bool        m_DebugPreprocessor                 = false;

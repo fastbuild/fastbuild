@@ -8,7 +8,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 class NodeGraph;
 
@@ -19,8 +18,8 @@ class CopyDirNode : public Node
     REFLECT_NODE_DECLARE( CopyDirNode )
 public:
     explicit CopyDirNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~CopyDirNode();
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
+    virtual ~CopyDirNode() override;
 
     static inline Node::Type GetTypeS() { return Node::COPY_DIR_NODE; }
     virtual bool IsAFile() const override;

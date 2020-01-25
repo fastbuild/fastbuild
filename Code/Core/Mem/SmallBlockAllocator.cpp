@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "SmallBlockAllocator.h"
 
 // Core
@@ -24,13 +22,20 @@
     #include <sys/mman.h>
 #endif
 
+// Defines
+//------------------------------------------------------------------------------
+// An address with the MSB set is not a valid user-space address on Windows, Linux or OSX
+// We can take advantage of this to test if an allocation being freed is a bucket
+// allocation whether or not the SmallBlockAlloctor is initialized or not
+#define MEM_BUCKETS_NOT_INITIALIZED (void *)( (uint64_t)1 << 63 )
+
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ bool                                 SmallBlockAllocator::s_ThreadSafeAllocs( true );
 #if defined( DEBUG )
     /*static*/ uint64_t                         SmallBlockAllocator::s_ThreadSafeAllocsDebugOwnerThread( 0 );
 #endif
-/*static*/ void *                               SmallBlockAllocator::s_BucketMemoryStart( nullptr );
+/*static*/ void *                               SmallBlockAllocator::s_BucketMemoryStart( MEM_BUCKETS_NOT_INITIALIZED );
 /*static*/ uint32_t                             SmallBlockAllocator::s_BucketNextFreePageIndex( 0 );
 /*static*/ uint64_t                             SmallBlockAllocator::s_BucketMemBucketMemory[ BUCKET_NUM_BUCKETS * sizeof( MemBucket ) / sizeof (uint64_t) ];
 /*static*/ SmallBlockAllocator::MemBucket *     SmallBlockAllocator::s_Buckets( nullptr );
@@ -40,6 +45,8 @@
 //------------------------------------------------------------------------------
 NO_INLINE void SmallBlockAllocator::InitBuckets()
 {
+    ASSERT( s_BucketMemoryStart == MEM_BUCKETS_NOT_INITIALIZED );
+
     // Reserve the address space for the buckets to manage
     #if defined( __WINDOWS__ )
         s_BucketMemoryStart = ::VirtualAlloc( nullptr, BUCKET_ADDRESSSPACE_SIZE, MEM_RESERVE, PAGE_NOACCESS );
@@ -115,7 +122,7 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
     }
 
     // Lazy initialization of buckets to support static allocations
-    if ( s_BucketMemoryStart == nullptr )
+    if ( s_BucketMemoryStart == MEM_BUCKETS_NOT_INITIALIZED )
     {
         InitBuckets();
     }
@@ -169,7 +176,10 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
 bool SmallBlockAllocator::Free( void * ptr )
 {
     // Determine if this allocation belongs to the buckets
-    const size_t pageIndex = ( ( (char *)ptr - (char *)s_BucketMemoryStart) / MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE );
+    // Even if the buckets have nevere been initialized, this is safe
+    // as it will result in a page index out of bounds since for any valid
+    // pointer as no allocation can validly be outside of the user mode address space.
+    const size_t pageIndex = (size_t)( ( (char *)ptr - (char *)s_BucketMemoryStart) / MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE );
     if ( pageIndex >= BUCKET_MAPPING_TABLE_SIZE )
     {
         return false; // Not a bucket allocation
@@ -240,7 +250,7 @@ bool SmallBlockAllocator::Free( void * ptr )
 /*virtual*/ void * SmallBlockAllocator::MemBucket::AllocateMemoryForPage()
 {
     // Have we exhausted our page space?
-    if ( SmallBlockAllocator::s_BucketNextFreePageIndex >= BUCKET_NUM_PAGES )
+    if ( AtomicLoadRelaxed( &SmallBlockAllocator::s_BucketNextFreePageIndex ) >= BUCKET_NUM_PAGES )
     {
         return nullptr;
     }
@@ -257,14 +267,14 @@ bool SmallBlockAllocator::Free( void * ptr )
     // Commit the page
     void * newPage = (void *)( ( (size_t)SmallBlockAllocator::s_BucketMemoryStart ) + ( (size_t)pageIndex * MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE ) );
     #if defined( __WINDOWS__ )
-        ::VirtualAlloc( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE );
+        VERIFY( ::VirtualAlloc( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE ) );
     #else
         VERIFY( ::mprotect( newPage, MemPoolBlock::MEMPOOLBLOCK_PAGE_SIZE, PROT_READ | PROT_WRITE ) == 0 );
     #endif
 
     // Update page to bucket mapping table
     ASSERT( s_BucketMappingTable[ pageIndex ] ==  0 );
-    const size_t bucketIndex = ( this - SmallBlockAllocator::s_Buckets );
+    const size_t bucketIndex = (size_t)( this - SmallBlockAllocator::s_Buckets );
     ASSERT( bucketIndex <= 255 );
     s_BucketMappingTable[ pageIndex ] = (uint8_t)bucketIndex;
 

@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "SettingsNode.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -30,10 +28,12 @@
 REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
     REFLECT(        m_CachePath,                "CachePath",                MetaOptional() )
+    REFLECT(        m_CachePathMountPoint,      "CachePathMountPoint",      MetaOptional() )
     REFLECT(        m_CachePluginDLL,           "CachePluginDLL",           MetaOptional() )
     REFLECT_ARRAY(  m_Workers,                  "Workers",                  MetaOptional() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
+    REFLECT(        m_DisableDBMigration,       "DisableDBMigration",       MetaOptional() )
 REFLECT_END( SettingsNode )
 
 // CONSTRUCTOR
@@ -42,14 +42,16 @@ SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
 , m_WorkerConnectionLimit( 15 )
 , m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
+, m_DisableDBMigration( false )
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );
+    Env::GetEnvVariable( "FASTBUILD_CACHE_PATH_MOUNT_POINT", m_CachePathMountPointFromEnvVar );
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool SettingsNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
     // using a cache plugin?
     if ( m_CachePluginDLL.IsEmpty() == false )
@@ -81,12 +83,24 @@ SettingsNode::~SettingsNode() = default;
 //------------------------------------------------------------------------------
 const AString & SettingsNode::GetCachePath() const
 {
-    // Environment variable takes priority
-    if ( m_CachePathFromEnvVar.IsEmpty() == false )
+    // Settings() bff option overrides environment variable
+    if ( m_CachePath.IsEmpty() == false )
     {
-        return m_CachePathFromEnvVar;
+        return m_CachePath;
     }
-    return m_CachePath;
+    return m_CachePathFromEnvVar;
+}
+
+// GetCachePathMountPoint
+//------------------------------------------------------------------------------
+const AString & SettingsNode::GetCachePathMountPoint() const
+{
+    // Settings() bff option overrides environment variable
+    if ( m_CachePathMountPoint.IsEmpty() == false )
+    {
+        return m_CachePathMountPoint;
+    }
+    return m_CachePathMountPointFromEnvVar;
 }
 
 // GetCachePluginDLL

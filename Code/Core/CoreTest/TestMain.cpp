@@ -4,19 +4,18 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "TestFramework/UnitTest.h"
-#include "Core/Reflection/BindReflection.h"
 
 // main
 //------------------------------------------------------------------------------
 int main(int , char * [])
 {
-    BindReflection_Core();
-
     // Tests to run
+    REGISTER_TESTGROUP( TestArray )
     REGISTER_TESTGROUP( TestAtomic )
     REGISTER_TESTGROUP( TestAString )
     REGISTER_TESTGROUP( TestEnv )
     REGISTER_TESTGROUP( TestFileIO )
+    REGISTER_TESTGROUP( TestFileStream )
     REGISTER_TESTGROUP( TestHash )
     REGISTER_TESTGROUP( TestLevenshteinDistance )
     REGISTER_TESTGROUP( TestMemPoolBlock )

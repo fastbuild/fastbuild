@@ -1,13 +1,4 @@
 # FASTBuild
-External/SDK
-!External/SDK/VisualStudio/VisualStudio.bff
-!External/SDK/VisualStudio/VS2013.bff
-!External/SDK/VisualStudio/VS2015.bff
-!External/SDK/VisualStudio/VS2017.bff
-!External/SDK/Windows/Windows.bff
-!External/SDK/Windows/Windows10SDK.bff
-!External/SDK/Windows/Windows81SDK.bff
-External/MSan
 *.exe
 *.fdb
 *.log
@@ -36,11 +27,23 @@ Desktop.ini
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
-# Windows Installer files
-*.cab
-*.msi
-*.msm
-*.msp
+# SDKs
+External/SDK/Clang/Windows/3.4/
+External/SDK/Clang/Windows/3.6/
+External/SDK/Clang/Windows/3.7.1/
+External/SDK/Clang/Windows/5.0.1/
+External/SDK/Clang/Windows/6.0.0/
+External/SDK/Clang/Windows/7.0.1/
+External/SDK/Clang/Windows/8.0.0/
+External/SDK/Clang/Windows/9.0.0/
+External/SDK/CUDA_6.5.14/
+External/SDK/other/
+External/SDK/VisualStudio/2013/
+External/SDK/VisualStudio/2015/
+External/SDK/VisualStudio/2017/
+External/SDK/VisualStudio/2019/
+External/SDK/Windows/8.1/
+External/SDK/Windows/10/
 
 # Windows shortcuts
 *.lnk

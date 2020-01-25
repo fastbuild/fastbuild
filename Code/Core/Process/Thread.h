@@ -35,15 +35,15 @@ public:
     static bool IsThread( ThreadId threadId ) { return ( GetCurrentThreadId() == threadId ); }
     static bool IsMainThread() { return GetCurrentThreadId() == s_MainThreadId; }
 
-    static void Sleep( int32_t ms );
+    static void Sleep( uint32_t ms );
 
     static ThreadHandle CreateThread( ThreadEntryFunction entryFunc,
                                       const char * threadName = nullptr,
                                       uint32_t stackSize = ( 64 * KILOBYTE ),
                                       void * userData = nullptr
                                     );
-    static int WaitForThread( ThreadHandle handle );
-    static int WaitForThread( ThreadHandle handle, uint32_t timeoutMS, bool & timedOut );
+    static int32_t WaitForThread( ThreadHandle handle );
+    static int32_t WaitForThread( ThreadHandle handle, uint32_t timeoutMS, bool & timedOut );
     static void DetachThread( ThreadHandle handle );
     static void CloseHandle( ThreadHandle h );
 

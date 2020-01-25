@@ -5,7 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
-
+#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Helpers/FBuildStats.h"
 #include "WorkerPool/WorkerBrokerage.h"
 
@@ -16,7 +16,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFMacros;
 class Client;
 class Dependencies;
 class FileStream;
@@ -25,7 +24,6 @@ class IOStream;
 class JobQueue;
 class Node;
 class NodeGraph;
-class SettingsNode;
 
 // FBuild
 //------------------------------------------------------------------------------
@@ -40,6 +38,7 @@ public:
     bool Initialize( const char * nodeGraphDBFile = nullptr );
 
     // build a target
+    bool Build( const char * target );
     bool Build( const AString & target );
     bool Build( const Array< AString > & targets );
     bool Build( Node * nodeToBuild );
@@ -54,17 +53,15 @@ public:
 
     static const char * GetDefaultBFFFileName();
 
-    inline const SettingsNode * GetSettings() const { return m_Settings; }
-
-    void GetCacheFileName( uint64_t keyA, uint32_t keyB, uint64_t keyC, uint64_t keyD,
-                           AString & path ) const;
+    inline const SettingsNode * GetSettings() const { return m_DependencyGraph->GetSettings(); }
 
     void SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar );
     inline const char * GetEnvironmentString() const            { return m_EnvironmentString; }
     inline uint32_t     GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
 
-    void DisplayTargetList() const;
+    void DisplayTargetList( bool showHidden ) const;
     bool DisplayDependencyDB( const Array< AString > & targets ) const;
+    bool GenerateCompilationDatabase( const Array< AString > & targets ) const;
 
     class EnvironmentVarAndHash
     {
@@ -95,7 +92,7 @@ public:
     // attempt to cleanly stop the build
     static        void AbortBuild();
     static        void OnBuildError();
-    static inline bool GetStopBuild() { return s_StopBuild; }
+    static        bool GetStopBuild();
     static inline volatile bool * GetAbortBuildPointer() { return &s_AbortBuild; }
 
     inline ICache * GetCache() const { return m_Cache; }
@@ -105,7 +102,7 @@ public:
     bool CacheOutputInfo() const;
     bool CacheTrim() const;
 
-private:
+protected:
     bool GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const;
 
     void UpdateBuildStatus( const Node * node );
@@ -113,16 +110,12 @@ private:
     static bool s_StopBuild;
     static volatile bool s_AbortBuild;  // -fastcancel - TODO:C merge with StopBuild
 
-    BFFMacros * m_Macros;
-
     NodeGraph * m_DependencyGraph;
     JobQueue * m_JobQueue;
     Client * m_Client; // manage connections to worker servers
 
     AString m_DependencyGraphFile;
     ICache * m_Cache;
-
-    SettingsNode * m_Settings;
 
     Timer m_Timer;
     float m_LastProgressOutputTime;

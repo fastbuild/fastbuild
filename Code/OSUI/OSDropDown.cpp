@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "OSUI/PrecompiledHeader.h"
 #include "OSDropDown.h"
 
 // OSUI
@@ -15,12 +14,21 @@
 
 // system
 #if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h" // Must be before CommCtrl
     #include <CommCtrl.h>
-    #include <Windows.h>
 #endif
 
 // Defines
 //------------------------------------------------------------------------------
+
+// OSX Functions
+//------------------------------------------------------------------------------
+#if defined( __OSX__ )
+    void * DropDownOSX_Create( OSDropDown * owner, int32_t x, int32_t y, uint32_t w, uint32_t h );
+    void DropDownOSX_AddItem( OSDropDown * owner, const char * itemText );
+    void DropDownOSX_SetSelectedItem( OSDropDown * owner, uint32_t index );
+    uint32_t DropDownOSX_GetSelectedItem( const OSDropDown * owner );
+#endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -49,7 +57,7 @@ void OSDropDown::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
                                   "ComboBox",
                                   CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
                                   x, y,
-                                  w, h,
+                                  (int32_t)w, (int32_t)h,
                                   (HWND)m_Parent->GetHandle(),
                                   nullptr,
                                   nullptr, // TODO: ??? m_HInstance
@@ -57,6 +65,8 @@ void OSDropDown::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
 
         // Font
         SendMessage( (HWND)m_Handle, WM_SETFONT, (WPARAM)m_Font->GetFont(), (LPARAM)0 );
+    #elif defined( __OSX__ )
+        m_Handle = DropDownOSX_Create( this, x, y, w, h );
     #else
         (void)x;
         (void)y;
@@ -73,6 +83,8 @@ void OSDropDown::AddItem( const char * itemText )
 {
     #if defined( __WINDOWS__ )
         SendMessage( (HWND)m_Handle, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)itemText );
+    #elif defined( __OSX__ )
+        DropDownOSX_AddItem( this, itemText );
     #else
         (void)itemText;
     #endif
@@ -84,6 +96,8 @@ void OSDropDown::SetSelectedItem( size_t index )
 {
     #if defined( __WINDOWS__ )
         SendMessage( (HWND)m_Handle, CB_SETCURSEL, (WPARAM)uint32_t( index ), (LPARAM)0 );
+    #elif defined( __OSX__ )
+        DropDownOSX_SetSelectedItem( this, index );
     #else
         (void)index;
     #endif
@@ -95,6 +109,8 @@ size_t OSDropDown::GetSelectedItem() const
 {
     #if defined( __WINDOWS__ )
         return (size_t)SendMessage((HWND)m_Handle, (UINT)CB_GETCURSEL, (WPARAM)0, (LPARAM)0 );
+    #elif defined( __OSX__ )
+        return DropDownOSX_GetSelectedItem( this );
     #else
         ASSERT(false);
         return 0;

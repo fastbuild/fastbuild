@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "XCodeProjectNode.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -15,6 +13,7 @@
 #include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
 #include "Tools/FBuild/FBuildCore/Helpers/XCodeProjectGenerator.h"
 
+#include "Core/Env/Env.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
@@ -24,6 +23,9 @@
 REFLECT_STRUCT_BEGIN_BASE( XCodeProjectConfig )
     REFLECT( m_Config,  "Config",   MetaNone() )
     REFLECT( m_Target,  "Target",   MetaOptional() )
+    REFLECT( m_XCodeBaseSDK,            "XCodeBaseSDK",         MetaOptional() )
+    REFLECT( m_XCodeDebugWorkingDir,    "XCodeDebugWorkingDir", MetaOptional() )
+    REFLECT( m_XCodeIphoneOSDeploymentTarget, "XCodeIphoneOSDeploymentTarget", MetaOptional() )
 REFLECT_END( XCodeProjectConfig )
 
 REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
@@ -39,13 +41,16 @@ REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFi
     REFLECT( m_XCodeBuildToolPath,                  "XCodeBuildToolPath",           MetaOptional() )
     REFLECT( m_XCodeBuildToolArgs,                  "XCodeBuildToolArgs",           MetaOptional() )
     REFLECT( m_XCodeBuildWorkingDir,                "XCodeBuildWorkingDir",         MetaOptional() )
+    REFLECT( m_XCodeDocumentVersioning,             "XCodeDocumentVersioning",      MetaOptional() )
+    REFLECT_ARRAY( m_XCodeCommandLineArguments,         "XCodeCommandLineArguments",            MetaOptional() )
+    REFLECT_ARRAY( m_XCodeCommandLineArgumentsDisabled, "XCodeCommandLineArgumentsDisabled",    MetaOptional() )
 REFLECT_END( XCodeProjectNode )
 
 // XCodeProjectConfig::ResolveTargets
 //------------------------------------------------------------------------------
 /*static*/ bool XCodeProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
                                                     Array< XCodeProjectConfig > & configs,
-                                                    const BFFIterator * iter,
+                                                    const BFFToken * iter,
                                                     const Function * function )
 {
     // Must provide iter and function, or neither
@@ -68,7 +73,7 @@ REFLECT_END( XCodeProjectNode )
         {
             if ( iter && function )
             {
-                Error::Error_1104_TargetNotDefined( *iter, function, ".Target", config.m_Target );
+                Error::Error_1104_TargetNotDefined( iter, function, ".Target", config.m_Target );
                 return false;
             }
             ASSERT( false ); // Should not be possible to fail when restoring from serialized DB
@@ -83,7 +88,7 @@ REFLECT_END( XCodeProjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 XCodeProjectNode::XCodeProjectNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
     , m_XCodeOrganizationName( "Organization" )
     , m_XCodeBuildToolPath( "./FBuild" )
     , m_XCodeBuildToolArgs( "-ide $(FASTBUILD_TARGET)" )
@@ -96,7 +101,7 @@ XCodeProjectNode::XCodeProjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
@@ -118,7 +123,7 @@ XCodeProjectNode::XCodeProjectNode()
     m_StaticDependencies.Append( fileNodes );
 
     // Resolve Target names to Node pointers for later use
-    if ( XCodeProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
+    if ( XCodeProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, iter, function ) == false )
     {
         return false; // Initialize will have emitted an error
     }
@@ -160,6 +165,9 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     g.SetXCodeBuildToolPath( m_XCodeBuildToolPath );
     g.SetXCodeBuildToolArgs( m_XCodeBuildToolArgs );
     g.SetXCodeBuildWorkingDir( m_XCodeBuildWorkingDir );
+    g.SetXCodeDocumentVersioning( m_XCodeDocumentVersioning );
+    g.SetXCodeCommandLineArguments( m_XCodeCommandLineArguments );
+    g.SetXCodeCommandLineArgumentsDisabled( m_XCodeCommandLineArgumentsDisabled );
 
     // Add files
     for ( const Dependency & dep : m_StaticDependencies )
@@ -214,16 +222,67 @@ XCodeProjectNode::~XCodeProjectNode() = default;
     }
 
     // Add configs
-    for ( const auto& cfg : m_ProjectConfigs )
+    for ( const XCodeProjectConfig & cfg : m_ProjectConfigs )
     {
-        g.AddConfig( cfg.m_Config, cfg.m_TargetNode );
+        g.AddConfig( cfg );
     }
 
     // Generate project.pbxproj file
-    const AString & output = g.Generate();
-    if ( ProjectGeneratorBase::WriteIfDifferent( "XCodeProj", output, m_Name ) == false )
     {
-        return Node::NODE_RESULT_FAILED; // WriteIfDifferent will have emitted an error
+        const AString & output = g.GeneratePBXProj();
+        if ( ProjectGeneratorBase::WriteIfDifferent( "XCodeProj", output, m_Name ) == false )
+        {
+            return Node::NODE_RESULT_FAILED; // WriteIfDifferent will have emitted an error
+        }
+    }
+
+    // Get folder containing project.pbxproj
+    const char * projectFolderSlash = m_Name.FindLast( NATIVE_SLASH );
+    ASSERT( projectFolderSlash );
+    const AStackString<> folder( m_Name.Get(), projectFolderSlash );
+
+    // Generate user-specific xcschememanagement.plist
+    {
+        // Get the user name
+        AStackString<> userName;
+        if ( Env::GetLocalUserName( userName ) == false )
+        {
+            FLOG_ERROR( "Failed to determine username for '%s'", m_Name.Get() );
+            return Node::NODE_RESULT_FAILED;
+        }
+
+        // Create the plist
+        const AString & output = g.GenerateUserSchemeMangementPList();
+
+        // Write to disk if different
+        AStackString<> plist;
+        #if defined( __WINDOWS__ )
+            plist.Format( "%s\\xcuserdata\\%s.xcuserdatad\\xcschemes\\xcschememanagement.plist", folder.Get(), userName.Get() );
+        #else
+            plist.Format( "%s/xcuserdata/%s.xcuserdatad/xcschemes/xcschememanagement.plist", folder.Get(), userName.Get() );
+        #endif
+        if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, plist ) == false )
+        {
+            return Node::NODE_RESULT_FAILED; // WriteIfMissing will have emitted an error
+        }
+    }
+
+    // Generate .xcscheme file
+    {
+        // Create the plist
+        const AString & output = g.GenerateXCScheme();
+
+        // Write to disk if different
+        AStackString<> xcscheme;
+        #if defined( __WINDOWS__ )
+            xcscheme.Format( "%s\\xcshareddata\\xcschemes\\%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
+        #else
+            xcscheme.Format( "%s/xcshareddata/xcschemes/%s.xcscheme", folder.Get(), g.GetProjectName().Get() );
+        #endif
+        if ( ProjectGeneratorBase::WriteIfMissing( "XCodeProj", output, xcscheme ) == false )
+        {
+            return Node::NODE_RESULT_FAILED; // WriteIfMissing will have emitted an error
+        }
     }
 
     return Node::NODE_RESULT_OK;

@@ -9,7 +9,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // CompilerNode
@@ -19,8 +18,8 @@ class CompilerNode : public Node
     REFLECT_NODE_DECLARE( CompilerNode )
 public:
     explicit CompilerNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~CompilerNode();
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
+    virtual ~CompilerNode() override;
 
     virtual bool IsAFile() const override;
 
@@ -29,6 +28,7 @@ public:
     inline const ToolManifest & GetManifest() const { return m_Manifest; }
 
     inline bool SimpleDistributionMode() const { return m_SimpleDistributionMode; }
+    inline bool GetUseLightCache() const { return m_UseLightCache; }
     inline bool CanBeDistributed() const { return m_AllowDistribution; }
     #if defined( __WINDOWS__ )
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
@@ -51,27 +51,32 @@ public:
     };
     CompilerFamily GetCompilerFamily() const { return static_cast<CompilerFamily>( m_CompilerFamilyEnum ); }
 
-
     const AString & GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->GetName(); }
+    const char * GetEnvironmentString() const;
 
 private:
-    bool InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
+    bool InitializeCompilerFamily( const BFFToken * iter, const Function * function );
 
     virtual BuildResult DoBuild( Job * job ) override;
+    virtual void Migrate( const Node & oldNode ) override;
 
     // Exposed params
-    AString             m_Executable;
-    Array< AString >    m_ExtraFiles;
-    Array< AString >    m_CustomEnvironmentVariables;
+    AString                 m_Executable;
+    Array< AString >        m_ExtraFiles;
+    Array< AString >        m_CustomEnvironmentVariables;
+    bool                    m_AllowDistribution;
+    bool                    m_VS2012EnumBugFix;
+    bool                    m_ClangRewriteIncludes;
+    AString                 m_ExecutableRootPath;
+    AString                 m_CompilerFamilyString;
+    uint8_t                 m_CompilerFamilyEnum;
+    bool                    m_SimpleDistributionMode;
+    bool                    m_UseLightCache;
+    ToolManifest            m_Manifest;
+    Array< AString >        m_Environment;
 
-    bool            m_AllowDistribution;
-    bool            m_VS2012EnumBugFix;
-    bool            m_ClangRewriteIncludes;
-    AString         m_ExecutableRootPath;
-    AString         m_CompilerFamilyString;
-    uint8_t         m_CompilerFamilyEnum;
-    bool            m_SimpleDistributionMode;
-    ToolManifest    m_Manifest;
+    // Internal state
+    mutable const char *    m_EnvironmentString;
 };
 
 //------------------------------------------------------------------------------

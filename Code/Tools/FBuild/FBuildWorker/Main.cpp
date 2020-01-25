@@ -7,6 +7,7 @@
 #include "Worker/Worker.h"
 #include "Core/Env/Assert.h"
 #include "Core/Env/Env.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Mem/MemTracker.h"
 #include "Core/Process/Process.h"
@@ -16,7 +17,7 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Global Data
@@ -26,35 +27,21 @@ SystemMutex g_OneProcessMutex( "Global\\FBuildWorker" );
 
 // Functions
 //------------------------------------------------------------------------------
-int MainCommon( const AString & args, void * hInstance );
+int MainCommon( const AString & args );
 #if defined( __WINDOWS__ )
     int LaunchSubProcess( const AString & args );
 #endif
 
 //------------------------------------------------------------------------------
-void ShowMsgBox( const char * msg )
-{
-    #if defined( __WINDOWS__ )
-        MessageBoxA( nullptr, msg, "FBuildWorker", MB_OK );
-    #elif defined( __APPLE__ )
-        (void)msg; // TODO:MAC Implement ShowMsgBox
-    #elif defined( __LINUX__ )
-        (void)msg; // TODO:LINUX Implement ShowMsgBox
-    #else
-        #error Unknown Platform
-    #endif
-}
-
-//------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
     PRAGMA_DISABLE_PUSH_MSVC( 28251 ) // don't complain about missing annotations on WinMain
-    int WINAPI WinMain( HINSTANCE hInstance,
+    int WINAPI WinMain( HINSTANCE /*hInstance*/,
                         HINSTANCE /*hPrevInstance*/,
                         LPSTR lpCmdLine,
                         int /*nCmdShow*/ )
     {
         AStackString<> args( lpCmdLine );
-        return MainCommon( args, hInstance );
+        return MainCommon( args );
     }
     PRAGMA_DISABLE_POP_MSVC
 #else
@@ -69,7 +56,7 @@ void ShowMsgBox( const char * msg )
             }
             args += argv[ i ];
         }
-        return MainCommon( args, nullptr );
+        return MainCommon( args );
     }
 #endif
 
@@ -77,7 +64,7 @@ void ShowMsgBox( const char * msg )
 
 // MainCommon
 //------------------------------------------------------------------------------
-int MainCommon( const AString & args, void * hInstance )
+int MainCommon( const AString & args )
 {
     // don't buffer output
     VERIFY( setvbuf(stdout, nullptr, _IONBF, 0) == 0 );
@@ -97,7 +84,7 @@ int MainCommon( const AString & args, void * hInstance )
         // retry for upto 2 seconds, to allow some time for old worker to close
         if ( t.GetElapsed() > 5.0f )
         {
-            ShowMsgBox( "An FBuildWorker is already running!" );
+            Env::ShowMsgBox( "FBuildWorker", "An FBuildWorker is already running!" );
             return -1;
         }
         Thread::Sleep(100);
@@ -128,7 +115,7 @@ int MainCommon( const AString & args, void * hInstance )
     // start the worker and wait for it to be closed
     int ret;
     {
-        Worker worker( hInstance, args, options.m_ConsoleMode );
+        Worker worker( args, options.m_ConsoleMode );
         if ( options.m_OverrideCPUAllocation )
         {
             WorkerSettings::Get().SetNumCPUsToUse( options.m_CPUAllocation );
@@ -137,10 +124,12 @@ int MainCommon( const AString & args, void * hInstance )
         {
             WorkerSettings::Get().SetMode( options.m_WorkMode );
         }
+        if ( options.m_MinimumFreeMemoryMiB )
+        {
+            WorkerSettings::Get().SetMinimumFreeMemoryMiB( options.m_MinimumFreeMemoryMiB );
+        }
         ret = worker.Work();
     }
-
-    MEMTRACKER_DUMP_ALLOCATIONS
 
     return ret;
 }
@@ -161,8 +150,8 @@ int MainCommon( const AString & args, void * hInstance )
             if ( t.GetElapsed() > 5.0f )
             {
                 AStackString<> msg;
-                msg.Format( "Failed to make sub-process copy - error: %u (0x%x)\n\nSrc: %s\nDst: %s\n", Env::GetLastErr(), Env::GetLastErr(), exeName.Get(), exeNameCopy.Get() );
-                ShowMsgBox( msg.Get() );
+                msg.Format( "Failed to make sub-process copy. Error: %s\n\nSrc: %s\nDst: %s\n", LAST_ERROR_STR, exeName.Get(), exeNameCopy.Get() );
+                Env::ShowMsgBox( "FBuildWorker", msg.Get() );
                 return -2;
             }
             Thread::Sleep( 100 );

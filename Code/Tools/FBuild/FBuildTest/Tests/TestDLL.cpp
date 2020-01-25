@@ -293,10 +293,8 @@ void TestDLL::TestExeWithDLL_NoRebuild() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize( GetExeWithDLLDBFileName() ) );
 
-    const AStackString<> exe( "../tmp/Test/DLL/exe.exe" );
-
     // build executable with depends on DLLA
-    TEST_ASSERT( fBuild.Build( exe ) );
+    TEST_ASSERT( fBuild.Build( "../tmp/Test/DLL/exe.exe" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -330,7 +328,7 @@ void TestDLL::TestLinkWithCopy() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // build executable with depends on DLLA
-    TEST_ASSERT( fBuild.Build( AStackString<>( "DllBUsingCopy" ) ) );
+    TEST_ASSERT( fBuild.Build( "DllBUsingCopy" ) );
 
     // Check stats
     //               Seen,  Built,  Type

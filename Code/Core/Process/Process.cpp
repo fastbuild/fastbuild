@@ -3,13 +3,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Process.h"
 
 #include "Core/Env/Assert.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Math/Conversions.h"
+#include "Core/Math/Constants.h"
+#include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Time/Timer.h"
@@ -18,7 +18,7 @@
 #include "Core/Tracing/Tracing.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
     #include <TlHelp32.h>
 #endif
 
@@ -44,10 +44,9 @@ Process::Process( const volatile bool * masterAbortFlag,
 #if defined( __WINDOWS__ )
     , m_SharingHandles( false )
     , m_RedirectHandles( true )
-    , m_StdOutRead( nullptr )
-    , m_StdOutWrite( nullptr )
-    , m_StdErrRead( nullptr )
-    , m_StdErrWrite( nullptr )
+    , m_StdOutRead( INVALID_HANDLE_VALUE )
+    , m_StdErrRead( INVALID_HANDLE_VALUE )
+    , m_StdInWrite( INVALID_HANDLE_VALUE )
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     , m_ChildPID( -1 )
@@ -75,52 +74,75 @@ Process::~Process()
 // KillProcessTreeInternal
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-   void Process::KillProcessTreeInternal( uint32_t processID )
-   {
-       PROCESSENTRY32 pe;
+    void Process::KillProcessTreeInternal( const void * hProc, const uint32_t processID, const uint64_t processCreationTime )
+    {
+        PROCESSENTRY32 pe;
 
-       memset( &pe, 0, sizeof( PROCESSENTRY32) );
-       pe.dwSize = sizeof( PROCESSENTRY32 );
+        memset( &pe, 0, sizeof( PROCESSENTRY32) );
+        pe.dwSize = sizeof( PROCESSENTRY32 );
 
-       HANDLE hSnap = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, processID );
+        const HANDLE hSnap = ::CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
 
-       if ( ::Process32First( hSnap, &pe ) )
-       {
-           BOOL canContinue = TRUE;
+        if ( ::Process32First( hSnap, &pe ) )
+        {
+            // find child processes
+            do
+            {
+                // Ignore any process that is not a child
+                if ( pe.th32ParentProcessID != processID )
+                {
+                    continue;
+                }
 
-           // kill child processes
-           while ( canContinue )
-           {
-               if ( pe.th32ParentProcessID == processID )
-               {
-                   // Recursion
-                   KillProcessTreeInternal( pe.th32ProcessID );
+                // Handle pid re-use by ensuring process started after parent
+                const uint32_t childProcessId = pe.th32ProcessID;
+                const HANDLE hChildProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, childProcessId );
+                if ( hChildProc )
+                {
+                    const uint64_t childProcessCreationTime = GetProcessCreationTime( hChildProc );
+                    if ( childProcessCreationTime < processCreationTime )
+                    {
+                        ::CloseHandle( hChildProc );
+                        continue; // Cannot be a child because it was created before the parent
+                    }
 
-                   HANDLE hChildProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, pe.th32ProcessID );
+                    // We should never see the main process because that's handled above
+                    ASSERT( childProcessId != GetCurrentProcessId() );
 
-                   if ( hChildProc )
-                   {
-                       ::TerminateProcess( hChildProc, 1 );
-                       ::CloseHandle( hChildProc );
-                   }
-               }
-               canContinue = ::Process32Next( hSnap, &pe );
-           }
+                    // Recursion
+                    KillProcessTreeInternal( hChildProc, childProcessId, childProcessCreationTime );
 
-           // kill the main process
-           HANDLE hProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, processID );
+                    ::CloseHandle( hChildProc );
+                }
+            }
+            while ( ::Process32Next( hSnap, &pe ) );
+        }
 
-           if ( hProc )
-           {
-               ::TerminateProcess( hProc, 1 );
-               ::CloseHandle( hProc );
-           }
-       }
-       else
-       {
-           //OUTPUT( "Unable to kill process 0x%x. Last Error: %u", processID, GetLastError() );
-       }
-   }
+        ::CloseHandle( hSnap );
+
+        // kill this process on the way back up the recursion
+        ::TerminateProcess( (HANDLE)hProc, 1 );
+    }
+#endif
+
+// GetProcessStartTime
+//------------------------------------------------------------------------------
+#if defined( __WINDOWS__ )
+    /*static*/ uint64_t Process::GetProcessCreationTime( const void * hProc )
+    {
+        if ( hProc == 0 )
+        {
+            return 0;
+        }
+
+        // Get process start time
+        FILETIME creationFileTime, unused;
+        VERIFY( GetProcessTimes( (HANDLE)hProc, &creationFileTime, &unused, &unused, &unused ) );
+
+        // Return start time in a more convenient format
+        const uint64_t childProcessCreationTime = ( (uint64_t)creationFileTime.dwHighDateTime << 32 ) | creationFileTime.dwLowDateTime;
+        return childProcessCreationTime;
+    }
 #endif
 
 // KillProcessTree
@@ -128,10 +150,16 @@ Process::~Process()
 void Process::KillProcessTree()
 {
     #if defined( __WINDOWS__ )
-        KillProcessTreeInternal( GetProcessInfo().dwProcessId );
+        const uint32_t childProcessId = GetProcessInfo().dwProcessId;
+        const HANDLE hChildProc = ::OpenProcess( PROCESS_ALL_ACCESS, FALSE, childProcessId );
+        if ( hChildProc )
+        {
+            KillProcessTreeInternal( hChildProc, childProcessId, GetProcessCreationTime( hChildProc ) );
+            ::CloseHandle( hChildProc );
+        }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        // TODO: Kill process tree if necessary?
-        kill( m_ChildPID, SIGTERM );
+        // Kill all processes in the process group of the child process.
+        kill( -m_ChildPID, SIGKILL );
     #else
         #error Unknown platform
     #endif
@@ -150,7 +178,7 @@ bool Process::Spawn( const char * executable,
     ASSERT( !m_Started );
     ASSERT( executable );
 
-    if ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) )
+    if ( m_MasterAbortFlag && AtomicLoadRelaxed( m_MasterAbortFlag ) )
     {
         // Once master process has aborted, we no longer permit spawning sub-processes.
         return false;
@@ -183,23 +211,35 @@ bool Process::Spawn( const char * executable,
             }
             else
             {
-                if ( ! CreatePipe( &m_StdOutRead, &m_StdOutWrite, &sa, MEGABYTE ) )
+                HANDLE stdOutWrite = INVALID_HANDLE_VALUE;
+                HANDLE stdErrWrite = INVALID_HANDLE_VALUE;
+                HANDLE stdInRead = INVALID_HANDLE_VALUE;
+
+                bool ok = true;
+                ok = ok && CreatePipe( &m_StdOutRead, &stdOutWrite, &sa, MEGABYTE );
+                ok = ok && CreatePipe( &m_StdErrRead, &stdErrWrite, &sa, MEGABYTE );
+                ok = ok && CreatePipe( &stdInRead, &m_StdInWrite, &sa, MEGABYTE );
+
+                // Handle failure
+                if ( !ok )
                 {
+                    if ( m_StdOutRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdOutRead ); }
+                    if ( m_StdErrRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdErrRead ); }
+                    if ( m_StdInWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdInWrite ); }
+                    if ( stdOutWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( stdOutWrite ); }
+                    if ( stdErrWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( stdErrWrite ); }
+                    if ( stdInRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( stdInRead ); }
                     return false;
                 }
-                SetHandleInformation( m_StdOutRead, HANDLE_FLAG_INHERIT, 0 );
 
-                if ( ! CreatePipe( &m_StdErrRead, &m_StdErrWrite, &sa, MEGABYTE ) )
-                {
-                    VERIFY( CloseHandle( m_StdOutRead ) );
-                    VERIFY( CloseHandle( m_StdOutWrite ) );
-                    return false;
-                }
-                SetHandleInformation( m_StdErrRead, HANDLE_FLAG_INHERIT, 0 );
+                // Prevent child inheriting handles, to avoid deadlocks
+                VERIFY( SetHandleInformation( m_StdOutRead, HANDLE_FLAG_INHERIT, 0 ) );
+                VERIFY( SetHandleInformation( m_StdErrRead, HANDLE_FLAG_INHERIT, 0 ) );
+                VERIFY( SetHandleInformation( m_StdInWrite, HANDLE_FLAG_INHERIT, 0 ) );
 
-                si.hStdOutput = m_StdOutWrite;
-                si.hStdError = m_StdErrWrite;
-                si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+                si.hStdOutput = stdOutWrite;
+                si.hStdError = stdErrWrite;
+                si.hStdInput = stdInRead;
             }
             si.dwFlags |= STARTF_USESTDHANDLES;
         }
@@ -233,6 +273,14 @@ bool Process::Spawn( const char * executable,
         }
         PRAGMA_DISABLE_POP_MSVC // 6335
 
+        if ( m_RedirectHandles && !shareHandles )
+        {
+            // Close the "other" end of the pipes to avoid deadlocks
+            ::CloseHandle( si.hStdOutput );
+            ::CloseHandle( si.hStdError );
+            ::CloseHandle( si.hStdInput );
+        }
+
         m_Started = true;
         return true;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
@@ -243,6 +291,15 @@ bool Process::Spawn( const char * executable,
         int stdErrPipeFDs[ 2 ];
         VERIFY( pipe( stdOutPipeFDs ) == 0 );
         VERIFY( pipe( stdErrPipeFDs ) == 0 );
+
+        // Increase buffer sizes to reduce stalls
+        #if defined( __LINUX__ )
+            // On systems with many CPU cores, this can fail due to per-process
+            // limits being reached, so consider this a hint only.
+            // (We only increase the size of the stdout to avoid "wasting" memory
+            // accelerating the stderr, which is the uncommon case to write to)
+            fcntl( stdOutPipeFDs[ 1 ], F_SETPIPE_SZ, ( 512 * 1024 ) );
+        #endif
 
         // prepare args
         Array< AString > splitArgs( 64, true );
@@ -300,6 +357,11 @@ bool Process::Spawn( const char * executable,
         const bool isChild = ( childProcessPid == 0 );
         if ( isChild )
         {
+            // Put child process into its own process group.
+            // This will allow as to send signals to the whole group which we use to implement KillProcessTree.
+            // The new process group will have ID equal to the PID of the child process.
+            VERIFY( setpgid( 0, 0 ) == 0 );
+
             VERIFY( dup2( stdOutPipeFDs[ 1 ], STDOUT_FILENO ) != -1 );
             VERIFY( dup2( stdErrPipeFDs[ 1 ], STDERR_FILENO ) != -1 );
 
@@ -408,7 +470,7 @@ bool Process::IsRunning() const
 
 // WaitForExit
 //------------------------------------------------------------------------------
-int Process::WaitForExit()
+int32_t Process::WaitForExit()
 {
     ASSERT( m_Started );
     m_Started = false;
@@ -432,18 +494,13 @@ int Process::WaitForExit()
         }
 
         // cleanup
-        VERIFY( CloseHandle( GetProcessInfo().hProcess ) );
-        VERIFY( CloseHandle( GetProcessInfo().hThread ) );
+        VERIFY( ::CloseHandle( m_StdOutRead ) );
+        VERIFY( ::CloseHandle( m_StdErrRead ) );
+        VERIFY( ::CloseHandle( m_StdInWrite ) );
+        VERIFY( ::CloseHandle( GetProcessInfo().hProcess ) );
+        VERIFY( ::CloseHandle( GetProcessInfo().hThread ) );
 
-        if ( !m_SharingHandles && m_RedirectHandles )
-        {
-            VERIFY( CloseHandle( m_StdOutRead ) );
-            VERIFY( CloseHandle( m_StdOutWrite ) );
-            VERIFY( CloseHandle( m_StdErrRead ) );
-            VERIFY( CloseHandle( m_StdErrWrite ) );
-        }
-
-        return exitCode;
+        return (int32_t)exitCode;
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         VERIFY( close( m_StdOutRead ) == 0 );
         VERIFY( close( m_StdErrRead ) == 0 );
@@ -497,16 +554,11 @@ void Process::Detach()
 
     #if defined( __WINDOWS__ )
         // cleanup
-        VERIFY( CloseHandle( GetProcessInfo().hProcess ) );
-        VERIFY( CloseHandle( GetProcessInfo().hThread ) );
-
-        if ( !m_SharingHandles && m_RedirectHandles )
-        {
-            VERIFY( CloseHandle( m_StdOutRead ) );
-            VERIFY( CloseHandle( m_StdOutWrite ) );
-            VERIFY( CloseHandle( m_StdErrRead ) );
-            VERIFY( CloseHandle( m_StdErrWrite ) );
-        }
+        if ( m_StdOutRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdOutRead ); }
+        if ( m_StdErrRead != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdErrRead ); }
+        if ( m_StdInWrite != INVALID_HANDLE_VALUE ) { ::CloseHandle( m_StdInWrite ); }
+        VERIFY( ::CloseHandle( GetProcessInfo().hProcess ) );
+        VERIFY( ::CloseHandle( GetProcessInfo().hThread ) );
     #elif defined( __APPLE__ )
         // TODO:MAC Implement Process
     #elif defined( __LINUX__ )
@@ -530,11 +582,19 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
 
     Timer t;
 
+    #if defined( __LINUX__ )
+        // Start with a short sleep interval to allow rapid termination of
+        // short-lived processes. The timeout increases during periods of
+        // no output and reset when receiving output to balance responsiveness
+        // with overhead.
+        uint32_t sleepIntervalMS = 1;
+    #endif
+
     bool processExited = false;
     for ( ;; )
     {
-        const bool masterAbort = ( m_MasterAbortFlag && ( *m_MasterAbortFlag ) );
-        const bool abort = ( m_AbortFlag && ( *m_AbortFlag ) );
+        const bool masterAbort = ( m_MasterAbortFlag && AtomicLoadRelaxed( m_MasterAbortFlag ) );
+        const bool abort = ( m_AbortFlag && AtomicLoadRelaxed( m_AbortFlag ) );
         if ( abort || masterAbort )
         {
             PROFILE_SECTION( "Abort" )
@@ -551,6 +611,10 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
         // did we get some data?
         if ( ( prevOutSize != outSize ) || ( prevErrSize != errSize ) )
         {
+            #if defined( __LINUX__ )
+                // Reset sleep interval            
+                sleepIntervalMS = 1;
+            #endif
             continue; // try reading again right away incase there is more
         }
 
@@ -587,8 +651,19 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
                 }
 
                 // no data available, but process is still going, so wait
-                // TODO:C Replace this sleep with event-based wait
-                Thread::Sleep( 15 );
+                #if defined( __OSX__ )
+                    // On OSX there seems to be no way to set the pipe bufffer
+                    // size so we must instead wake up frequently to avoid the
+                    // writer being blocked.
+                    Thread::Sleep( 2 );
+                #else
+                    // TODO:C Investigate waiting on an event when process terminates
+                    // to reduce overall process spawn time
+                    Thread::Sleep( sleepIntervalMS );
+
+                    // Increase sleep interval upto limit
+                    sleepIntervalMS = Math::Min<uint32_t>( sleepIntervalMS * 2, 8 );
+                #endif
                 continue;
             }
         #endif
@@ -825,7 +900,7 @@ bool Process::ReadAllData( AutoPtr< char > & outMem, uint32_t * outMemSize,
     #elif defined( __LINUX__ )
         return ::getpid();
     #elif defined( __OSX__ )
-        return 0; // TODO: Implement GetCurrentId()
+        return ::getpid();
     #endif
 }
 

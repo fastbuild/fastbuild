@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Report.h"
 
 // FBuild
@@ -25,7 +23,7 @@
 
 // Globals
 //------------------------------------------------------------------------------
-uint32_t g_ReportNodeColors[Node::NUM_NODE_TYPES] = {
+uint32_t g_ReportNodeColors[] = {
                                   0x000000, // PROXY_NODE (never seen)
                                   0xFFFFFF, // COPY_FILE_NODE
                                   0xAAAAAA, // DIRECTORY_LIST_NODE
@@ -46,6 +44,7 @@ uint32_t g_ReportNodeColors[Node::NUM_NODE_TYPES] = {
                                   0xFF3030, // REMOVE_DIR_NODE
                                   0x77DDAA, // SLN_NODE
                                   0x77DDAA, // XCODEPROJECT_NODE
+                                  0x000000, // SETTINGS_NODE (never seen)
                                 };
 
 // CONSTRUCTOR
@@ -320,7 +319,7 @@ void Report::CreateOverview( const FBuildStats & stats )
     float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / (double)1000 );
     stats.FormatTime( totalLocalCPUInSeconds, buffer );
     float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
-    Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), localRatio );
+    Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)localRatio );
 
     // version info
     Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
@@ -329,7 +328,9 @@ void Report::CreateOverview( const FBuildStats & stats )
     time_t rawtime;
     struct tm * timeinfo;
     time( &rawtime );
-    timeinfo = localtime( &rawtime );
+    PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+    timeinfo = localtime( &rawtime ); // TODO:C Consider using localtime_s
+    PRAGMA_DISABLE_POP_MSVC // 4996
     char timeBuffer[ 256 ];
     // Mon 1-Jan-2000 - 18:01:15
     VERIFY( strftime( timeBuffer, 256, "%a %d-%b-%Y - %H:%M:%S", timeinfo ) > 0 );
@@ -379,7 +380,7 @@ void Report::DoCacheStats( const FBuildStats & stats )
         DoTableStart();
 
         // Headings
-        Write( "<tr><th>Library</th><th style=\"width:70px;\">Items</th><th style=\"width:90px;\">Out-of-Date</th><th style=\"width:90px;\">Cacheable</th><th style=\"width:70px;\">Hits</th><th style=\"width:70px;\">Misses</th><th style=\"width:60px;\">Stores</th></tr>\n" );
+        Write( "<tr><th>Library</th><th style=\"width:70px;\">Items</th><th style=\"width:90px;\">Out-of-Date</th><th style=\"width:90px;\">Cacheable</th><th style=\"width:70px;\">Hits</th><th style=\"width:70px;\">Misses</th><th style=\"width:60px;\">Stores</th><th style=\"width:100px;\">Store Time</th></tr>\n" );
 
         size_t numOutput( 0 );
 
@@ -401,19 +402,20 @@ void Report::DoCacheStats( const FBuildStats & stats )
             const float     outOfDateItemsPerc  = ( (float)outOfDateItems / (float)items ) * 100.0f;
 
             // cacheable
-            const uint32_t  cItems      = ls.objectCount_Cacheable;
-            const float     cItemsPerc  = ( (float)cItems / (float)outOfDateItems ) * 100.0f;
+            const uint32_t  cItems       = ls.objectCount_Cacheable;
+            const float     cItemsPerc   = ( (float)cItems / (float)outOfDateItems ) * 100.0f;
 
             // hits
-            const uint32_t  cHits       = ls.objectCount_CacheHits;
-            const float     cHitsPerc   = ( cItems > 0 ) ? ( (float)cHits / (float)cItems ) * 100.0f : 0.0f;
+            const uint32_t  cHits        = ls.objectCount_CacheHits;
+            const float     cHitsPerc    = ( cItems > 0 ) ? ( (float)cHits / (float)cItems ) * 100.0f : 0.0f;
 
             // misses
-            const uint32_t  cMisses     = ( cItems - cHits );
-            const float     cMissesPerc = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
+            const uint32_t  cMisses      = ( cItems - cHits );
+            const float     cMissesPerc  = ( cMisses > 0 ) ? 100.0f - cHitsPerc : 0.0f;
 
             // stores
             const uint32_t  cStores     = ls.objectCount_CacheStores;
+            const float     cStoreTime  = (float)ls.cacheTimeMS / 1000.0f; // ms to s
 
             // start collapsable section
             if ( numOutput == 10 )
@@ -421,15 +423,15 @@ void Report::DoCacheStats( const FBuildStats & stats )
                 DoToggleSection();
             }
 
-            Write( ( numOutput == 10 ) ? "<tr></tr><tr><td>%s</td><td style=\"width:70px;\">%u</td><td style=\"width:90px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:90px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:70px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:70px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:60px;\">%u</td></tr>\n"
-                                       : "<tr><td>%s</td><td>%u</td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u</td></tr>\n",
+            Write( ( numOutput == 10 ) ? "<tr></tr><tr><td>%s</td><td style=\"width:70px;\">%u</td><td style=\"width:90px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:90px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:70px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:70px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:60px;\">%u</td><td style=\"width:100px;\">%2.3fs</td></tr>\n"
+                                       : "<tr><td>%s</td><td>%u</td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u</td><td>%2.3fs</td></tr>\n",
                         libraryName,
                         items,
-                        outOfDateItems, outOfDateItemsPerc,
-                        cItems, cItemsPerc,
-                        cHits, cHitsPerc,
-                        cMisses, cMissesPerc,
-                        cStores  );
+                        outOfDateItems, (double)outOfDateItemsPerc,
+                        cItems, (double)cItemsPerc,
+                        cHits, (double)cHitsPerc,
+                        cMisses, (double)cMissesPerc,
+                        cStores, (double)cStoreTime );
             numOutput++;
         }
 
@@ -497,7 +499,7 @@ void Report::DoCPUTimeByType( const FBuildStats & stats )
 
         Write( "<tr><td>%s</td><td>%2.3fs</td><td>%u</td><td>%u</td>",
                     typeName,
-                    value,
+                    (double)value,
                     processed,
                     built );
         if ( type == Node::OBJECT_NODE )
@@ -518,12 +520,16 @@ void Report::DoCPUTimeByType( const FBuildStats & stats )
 //------------------------------------------------------------------------------
 void Report::DoCPUTimeByItem( const FBuildStats & stats )
 {
-    DoSectionTitle( "CPU Time by Item", "cpuTimeByItem" );
+    const FBuildOptions & options = FBuild::Get().GetOptions();
+    const bool cacheEnabled = ( options.m_UseCacheRead || options.m_UseCacheWrite );
+
+    DoSectionTitle("CPU Time by Item", "cpuTimeByItem");
 
     DoTableStart();
 
     // Headings
-    Write( "<tr><th style=\"width:100px;\">Time</th><th style=\"width:100px;\">Type</th><th>Name</th></tr>\n" );
+    Write( cacheEnabled ? "<tr><th style=\"width:100px;\">Time</th><th style=\"width:100px;\">Type</th><th style=\"width:120px;\">Cache</th><th>Name</th></tr>\n"
+                        : "<tr><th style=\"width:100px;\">Time</th><th style=\"width:100px;\">Type</th><th>Name</th></tr>\n");
 
     size_t numOutput = 0;
 
@@ -544,8 +550,20 @@ void Report::DoCPUTimeByItem( const FBuildStats & stats )
             DoToggleSection( (uint32_t)nodes.GetSize() - 10 );
         }
 
-        Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td>%s</td></tr>\n"
-                                   : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n", time, type, name );
+        if ( cacheEnabled )
+        {
+            const bool cacheHit = node->GetStatFlag(Node::STATS_CACHE_HIT);
+            const bool cacheStore = node->GetStatFlag(Node::STATS_CACHE_STORE);
+
+            Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td style=\"width:120px;\">%s</td><td>%s</td></tr>\n"
+                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A" ), name );
+        }
+        else
+        {
+            Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td>%s</td></tr>\n"
+                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, name);
+
+        }
         numOutput++;
     }
 
@@ -613,7 +631,7 @@ void Report::DoCPUTimeByLibrary()
         const char * name = ls.library->GetName().Get();
         Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%2.3fs</td><td style=\"width:50px;\">%2.1f</td><td style=\"width:70px;\">%u</td><td style=\"width:50px;\">%s</td><td>%s</td></tr>\n"
                                    : "<tr><td>%2.3fs</td><td>%2.1f</td><td>%u</td><td>%s</td><td>%s</td></tr>\n",
-                                        time, perc, objCount, type, name );
+                                        (double)time, (double)perc, objCount, type, name );
         numOutput++;
     }
 
@@ -735,7 +753,7 @@ void Report::DoPieChart( const Array< PieItem > & items, const char * units )
         {
             Write( "," );
         }
-        buffer.Format( "%2.3f", items[ i ].value );
+        buffer.Format( "%2.3f", (double)( items[ i ].value ) );
         Write( "%s", buffer.Get() );
     }
     Write( "];\n" );
@@ -785,7 +803,7 @@ void Report::DoSectionTitle( const char * sectionName, const char * sectionId )
 
 // DoTableStart
 //------------------------------------------------------------------------------
-void Report::DoTableStart( int width, const char * id, bool hidden )
+void Report::DoTableStart( uint32_t width, const char * id, bool hidden )
 {
     AStackString<> output;
     output.Format( "<table width=%u", width );
@@ -814,7 +832,7 @@ void Report::DoTableStop()
 //------------------------------------------------------------------------------
 void Report::DoToggleSection( size_t numMore )
 {
-    static int tableId = 0;
+    static uint32_t tableId = 0;
     ++tableId;
     AStackString<> tableIdStr;
     tableIdStr.Format( "table%u", tableId );
@@ -831,7 +849,7 @@ void Report::DoToggleSection( size_t numMore )
 
 // Write
 //------------------------------------------------------------------------------
-void Report::Write( const char * fmtString, ... )
+void Report::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > tmp;
 
@@ -895,6 +913,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
             if ( node->GetStatFlag( Node::STATS_CACHE_STORE ) )
             {
                 currentLib->objectCount_CacheStores++;
+                currentLib->cacheTimeMS += node->GetCachingTime();
             }
         }
 
@@ -931,6 +950,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
         currentLib->objectCount_Cacheable = 0;
         currentLib->objectCount_CacheHits = 0;
         currentLib->objectCount_CacheStores = 0;
+        currentLib->cacheTimeMS = 0;
 
         // count time for library/dll itself
         if ( node->GetStatFlag( Node::STATS_BUILT ) || node->GetStatFlag( Node::STATS_FAILED ) )

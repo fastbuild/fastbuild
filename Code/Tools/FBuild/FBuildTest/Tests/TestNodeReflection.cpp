@@ -6,7 +6,6 @@
 #include "FBuildTest.h"
 
 // FBuildCore
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -173,7 +172,7 @@ public:
     BaseNode()
         : Node( AStackString<>( "dummy" ), Node:: PROXY_NODE, 0 )
     {}
-    virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*funcStartIter*/, const Function * /*function*/ ) override { ASSERT( false ); return false; }
+    virtual bool Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*funcStartIter*/, const Function * /*function*/ ) override { ASSERT( false ); return false; }
     virtual bool IsAFile() const override { return true; }
 
     AString         m_String;
@@ -192,7 +191,7 @@ public:
         : Function( "dummyfunction" )
     {}
 
-    bool Populate( NodeGraph & ng, BFFIterator & iter, Node & n )
+    bool Populate( NodeGraph & ng, BFFToken * iter, Node & n )
     {
         return Function::PopulateProperties( ng, iter, &n );
     }
@@ -206,17 +205,17 @@ public:
 class TestHelper
 {
 public:
-    TestHelper( BaseNode * node ) : m_Node( node ) {}
-    ~TestHelper() { delete m_Node; }
+    explicit TestHelper( BaseNode * node ) : m_Node( node ) {}
+    ~TestHelper() { delete m_Node; delete m_Function; }
 
     NodeGraph           m_NodeGraph;
     FBuild              m_FBuild;
-    BFFIterator         m_Iterator = { "", 0, "filename", 0 };
+    BFFToken *          m_Token = nullptr;
     BaseNode *          m_Node;
     FunctionWrapper *   m_Function = new FunctionWrapper(); // Freed by FBuild destructor
     BFFStackFrame       m_Frame;
 
-    bool Populate() { return m_Function->Populate( m_NodeGraph, m_Iterator, *m_Node ); }
+    bool Populate() { return m_Function->Populate( m_NodeGraph, m_Token, *m_Node ); }
 
     void CheckFile( const AString & file ) const
     {

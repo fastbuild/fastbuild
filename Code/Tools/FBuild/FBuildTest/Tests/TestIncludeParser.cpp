@@ -64,7 +64,15 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 200642 ); // Ensure we're actually changing the data
+    const uint32_t numReplaces = 200642;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     Timer t;
 
@@ -87,7 +95,7 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
     }
 
     float time = t.GetElapsed();
-    OUTPUT( "MSVC                 : %2.3fs (%2.1f MiB/sec)\n", time, ( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+    OUTPUT( "MSVC                 : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
 }
 
 // TestMSVCPreprocessedOutput_Indent
@@ -127,7 +135,15 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 326 ); // Ensure we're actually changing the data
+    const uint32_t numReplaces = 326;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     Timer t;
 
@@ -150,7 +166,7 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
     }
 
     float time = t.GetElapsed();
-    OUTPUT( "MSVC /showincludes   : %2.3fs (%2.1f MiB/sec)\n", time, ( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+    OUTPUT( "MSVC /showincludes   : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
 }
 
 // TestMSVC_P
@@ -169,7 +185,7 @@ void TestIncludeParser::TestMSVC_P() const
     EnsureFileDoesNotExist( file );
 
     // Build
-    TEST_ASSERT( fBuild.Build( AStackString<>( "MSVC-P" ) ) );
+    TEST_ASSERT( fBuild.Build( "MSVC-P" ) );
 
     // make sure all output files are as expected
     EnsureFileExists( file );
@@ -198,7 +214,15 @@ void TestIncludeParser::TestMSVC_ShowIncludesWithWarnings() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 8 ); // Ensure we're actually changing the data
+    const uint32_t numReplaces = 8;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     const AString * buffers[2] = { &mem, &mem2 };
     for ( const AString * buffer : buffers )
@@ -230,11 +254,15 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    #if defined( __WINDOWS__ )
-        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 32600 ); // Ensure we're actually changing the data
-    #else
-        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == 32600 ); // Ensure we're actually changing the data
-    #endif
+    const uint32_t numReplaces = 32600;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     Timer t;
 
@@ -257,7 +285,7 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
     }
 
     float time = t.GetElapsed();
-    OUTPUT( "GCC                  : %2.3fs (%2.1f MiB/sec)\n", time, ( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+    OUTPUT( "GCC                  : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
 }
 
 // TestClangPreprocessedOutput
@@ -276,11 +304,15 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    #if defined( __WINDOWS__ )
-        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 29979 ); // Ensure we're actually changing the data
-    #else
-        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == 29979 ); // Ensure we're actually changing the data
-    #endif
+    const uint32_t numReplaces = 29979;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     Timer t;
 
@@ -303,7 +335,7 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
     }
 
     float time = t.GetElapsed();
-    OUTPUT( "Clang                : %2.3fs (%2.1f MiB/sec)\n", time, ( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+    OUTPUT( "Clang                : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
 }
 
 // TestClangMSExtensionsPreprocessedOutput
@@ -321,11 +353,15 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
 
     // Create a copy with alternate line endings
     AString mem2( mem );
-    #if defined( __WINDOWS__ )
-        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == 76778 ); // Ensure we're actually changing the data
-    #else
-        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == 76778 ); // Ensure we're actually changing the data
-    #endif
+    const uint32_t numReplaces = 76778;
+    if ( mem2.Find( "\r" ) )
+    {
+        TEST_ASSERT( mem2.Replace( "\r\n", "\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
+    else
+    {
+        TEST_ASSERT( mem2.Replace( "\n", "\r\n" ) == numReplaces ); // Ensure we're actually changing the data
+    }
 
     Timer t;
 
@@ -348,7 +384,7 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
     }
 
     float time = t.GetElapsed();
-    OUTPUT( "Clang (ms-extensions): %2.3fs (%2.1f MiB/sec)\n", time, ( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+    OUTPUT( "Clang (ms-extensions): %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
 }
 
 //

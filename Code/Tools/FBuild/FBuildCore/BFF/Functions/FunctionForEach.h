@@ -12,16 +12,15 @@ class FunctionForEach : public Function
 {
 public:
     explicit        FunctionForEach();
-    inline virtual ~FunctionForEach() = default;
+    inline virtual ~FunctionForEach() override = default;
 
     virtual bool AcceptsHeader() const override;
     virtual bool NeedsHeader() const override;
     virtual bool ParseFunction( NodeGraph & nodeGraph,
-                                const BFFIterator & functionNameStart,
-                                const BFFIterator * functionBodyStartToken,
-                                const BFFIterator * functionBodyStopToken,
-                                const BFFIterator * functionHeaderStartToken,
-                                const BFFIterator * functionHeaderStopToken ) const override;
+                                BFFParser & parser,
+                                const BFFToken * functionNameStart,
+                                const BFFTokenRange & headerRange,
+                                const BFFTokenRange & bodyRange ) const override;
 };
 
 //------------------------------------------------------------------------------

@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FunctionRemoveDir.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
@@ -27,9 +25,16 @@ FunctionRemoveDir::FunctionRemoveDir()
     return true;
 }
 
+// NeedsHeader
+//------------------------------------------------------------------------------
+/*virtual*/ bool FunctionRemoveDir::NeedsHeader() const
+{
+    return true;
+}
+
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionRemoveDir::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionRemoveDir::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
     if ( nodeGraph.FindNode( m_AliasForFunction ) )
     {

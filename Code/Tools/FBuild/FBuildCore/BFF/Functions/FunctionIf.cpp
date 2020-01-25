@@ -3,14 +3,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FunctionIf.h"
 
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
+#include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Strings/AStackString.h"
@@ -38,110 +37,185 @@ FunctionIf::FunctionIf()
 
 // ParseFunction
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionIf::ParseFunction(
-                    NodeGraph & nodeGraph,
-                    const BFFIterator & /*functionNameStart*/,
-                    const BFFIterator * functionBodyStartToken,
-                    const BFFIterator * functionBodyStopToken,
-                    const BFFIterator * functionHeaderStartToken,
-                    const BFFIterator * functionHeaderStopToken ) const
+/*virtual*/ bool FunctionIf::ParseFunction( NodeGraph & /*nodeGraph*/,
+                                            BFFParser & parser,
+                                            const BFFToken * /*functionNameStart*/,
+                                            const BFFTokenRange & headerRange,
+                                            const BFFTokenRange & bodyRange ) const
 {
-    bool conditionSuccess = false;
+    // Iterate the args
+    BFFTokenRange iter( headerRange );
 
-    // parse it all out
-    BFFIterator pos( *functionHeaderStartToken );
-    pos++; // skip opening token
-    pos.SkipWhiteSpace();
-
-    // Check for prefix not character
-    bool negated = false;
-    if ( *pos == '!' )
+    if ( iter.IsAtEnd() )
     {
-        negated = true;
-        pos++;
-    }
-
-    // Get first variable
-    const BFFIterator testVarNameBegin( pos );
-    const BFFVariable * testVar = GetVar( pos );
-    if ( testVar == nullptr )
-    {
-        return false; // GetVar will have emitted error
-    }
-
-    // at end?
-    if ( pos.GetCurrent() == functionHeaderStopToken->GetCurrent() )
-    {
-        return HandleSimpleBooleanExpression( nodeGraph, functionBodyStartToken, functionBodyStopToken, testVarNameBegin, testVar, negated );
-    }
-
-    // check for optional "not" token
-    bool foundNot = false;
-    bool foundIn = false;
-    bool foundEquals = false;
-    bool foundNotEquals = false;
-    if ( negated == false )
-    {
-        foundNot = pos.ParseExactString( "not" );
-        if ( foundNot )
-        {
-            pos.SkipWhiteSpace();
-        }
-
-        // check for "in"
-        foundIn = pos.ParseExactString( "in" );
-        if ( foundIn )
-        {
-            pos.SkipWhiteSpace();
-        }
-
-        // Check for == and !=
-        if ( ( foundNot == false ) && ( foundIn == false ) )
-        {
-            foundEquals = pos.ParseExactString( "==" );
-            if ( !foundEquals )
-            {
-                foundNotEquals = pos.ParseExactString( "!=" );
-            }
-        }
-        if ( foundEquals || foundNotEquals )
-        {
-            pos.SkipWhiteSpace();
-        }
-    }
-
-    const BFFIterator listVarNameBegin = pos;
-    const BFFVariable * listVar = GetVar( pos );
-    if ( listVar == nullptr )
-    {
-        return false; // GetVar will have emitted an error
-    }
-
-    if ( foundEquals || foundNotEquals )
-    {
-        return HandleSimpleCompare( nodeGraph, functionBodyStartToken, functionBodyStopToken, testVarNameBegin, testVar, listVarNameBegin, listVar, foundNotEquals );
-    }
-
-    // it can be of any supported type
-    if ( listVar->IsArrayOfStrings() == false )
-    {
-        Error::Error_1050_PropertyMustBeOfType( listVarNameBegin, this, listVar->GetName().Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
+        Error::Error_1007_ExpectedVariable( iter.GetCurrent(), this );
         return false;
     }
 
-    const Array< AString > & listArray = listVar->GetArrayOfStrings();
+    // Handle single boolean expression
+    // - Check for negation
+    bool negated = false;
+    if ( iter->IsOperator( "!" ) )
+    {
+        negated = true;
+        iter++;
+    }
+
+    if ( iter.IsAtEnd() )
+    {
+        Error::Error_1007_ExpectedVariable( iter.GetCurrent(), this );
+        return false;
+    }
+
+    // Get first variable
+    const BFFToken * lhsToken = iter.GetCurrent();
+    const BFFVariable * lhsVar = GetVar( lhsToken );
+    if ( lhsVar == nullptr )
+    {
+        return false; // GetVar will have emitted error
+    }
+    iter++; // Consume lhs
+
+    // at end?
+    if ( iter.IsAtEnd() )
+    {
+        return HandleSimpleBooleanExpression( parser, headerRange, bodyRange, lhsToken, lhsVar, negated );
+    }
+
+    // At end with negation previously seen means extraneous text
+    if ( negated )
+    {
+        Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), this, ')' ); // TODO:C Better error
+        return false;
+    }
+
+    // Determine operator for more complex expression
+    Operator op = Operator::OP_UNKNOWN;
+    const BFFToken * opToken = iter.GetCurrent();
+
+    // in
+    if ( iter->IsKeyword( BFF_KEYWORD_IN ) )
+    {
+        op = Operator::OP_IN;
+    }
+    // not in
+    else if ( iter->IsKeyword( BFF_KEYWORD_NOT ) )
+    {
+        iter++; // Consume additional keyword
+        if ( iter->IsKeyword( BFF_KEYWORD_IN ) )
+        {
+            op = Operator::OP_NOT_IN;
+        }
+    }
+    // ==
+    else if ( iter->IsOperator( "==" ) )
+    {
+        op = Operator::OP_EQUAL;
+    }
+    // !=
+    else if ( iter->IsOperator( "!=" ) )
+    {
+        op = Operator::OP_NOT_EQUAL;
+    }
+    // <=
+    else if ( iter->IsOperator( "<=" ) )
+    {
+        op = Operator::OP_LESS_THAN_OR_EQUAL;
+    }
+    // <  (must be checked after <=)
+    else if ( iter->IsOperator( "<" ) )
+    {
+        op = Operator::OP_LESS_THAN;
+    }
+    // >=
+    else if ( iter->IsOperator( ">=" ) )
+    {
+        op = Operator::OP_GREATER_THAN_OR_EQUAL;
+    }
+    // >  (must be checked after >=)
+    else if ( iter->IsOperator( ">" ) )
+    {
+        op = Operator::OP_GREATER_THAN;
+    }
+
+    // Handle unrecognized operator
+    if ( op == Operator::OP_UNKNOWN )
+    {
+        Error::Error_1042_UnknownOperator( iter.GetCurrent(), iter->GetValueString() );
+        return false;
+    }
+    iter++; // consume keyword or operator
+
+    // Get rhs
+    const BFFToken * rhsToken = iter.GetCurrent();
+    const BFFVariable * rhsVar = GetVar( rhsToken );
+    if ( rhsVar == nullptr )
+    {
+        return false; // GetVar will have emitted an error
+    }
+    iter++; // consume rhs
+
+    // Make sure there are no extraneous tokens
+    if ( iter.IsAtEnd() == false )
+    {
+        Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), this, ')' ); // TODO:C Better error
+        return false;
+    }
+
+    bool result;
+    if ( ( op == Operator::OP_IN ) || ( op == Operator::OP_NOT_IN ) )
+    {
+        result = HandleIn( parser, bodyRange, lhsToken, lhsVar, rhsToken, rhsVar, op);
+    }
+    else
+    {
+        result = HandleSimpleCompare( parser, bodyRange, lhsToken, lhsVar, rhsToken, rhsVar, opToken, op );
+    }
+
+    // If not at the end of the header, there are extraneous tokens
+    if ( iter.IsAtEnd() == false )
+    {
+        Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), this, ')' ); // TODO:C Better error
+        return false;
+    }
+
+    return result;
+}
+
+// HandleIn
+//------------------------------------------------------------------------------
+bool FunctionIf::HandleIn( BFFParser & parser,
+                           const BFFTokenRange & bodyRange,
+                           const BFFToken * lhsVarIter,
+                           const BFFVariable * lhsVar,
+                           const BFFToken * rhsVarIter,
+                           const BFFVariable * rhsVar,
+                           const Operator op ) const
+{
+    ASSERT( ( op == Operator::OP_IN ) || ( op == Operator::OP_NOT_IN ) );
+
+    // it can be of any supported type
+    if ( rhsVar->IsArrayOfStrings() == false )
+    {
+        Error::Error_1050_PropertyMustBeOfType( rhsVarIter, this, rhsVar->GetName().Get(), rhsVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS );
+        return false;
+    }
+
+    const Array< AString > & listArray = rhsVar->GetArrayOfStrings();
+
+    bool conditionSuccess = false;
 
     // now iterate over the first set of strings to see if any match the second set of strings
 
-    if ( testVar->IsString() )
+    if ( lhsVar->IsString() )
     {
         // Is string in array?
-        conditionSuccess = ( listArray.Find( testVar->GetString() ) != nullptr );
+        conditionSuccess = ( listArray.Find( lhsVar->GetString() ) != nullptr );
     }
-    else if ( testVar->IsArrayOfStrings() )
+    else if ( lhsVar->IsArrayOfStrings() )
     {
         // Is any string in array?
-        for ( const AString & testStr : testVar->GetArrayOfStrings() )
+        for ( const AString & testStr : lhsVar->GetArrayOfStrings() )
         {
             if ( listArray.Find( testStr ) )
             {
@@ -152,34 +226,21 @@ FunctionIf::FunctionIf()
     }
     else
     {
-        Error::Error_1050_PropertyMustBeOfType( testVarNameBegin, this, listVar->GetName().Get(), listVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
+        Error::Error_1050_PropertyMustBeOfType( lhsVarIter, this, lhsVar->GetName().Get(), lhsVar->GetType(), BFFVariable::VAR_ARRAY_OF_STRINGS, BFFVariable::VAR_STRING );
         return false;
     }
 
-    if ( foundNot )
+    if ( op == Operator::OP_NOT_IN )
     {
         conditionSuccess = !conditionSuccess;
-    }
-    ASSERT( negated == false ); // Should have reported error (! not allowed for "in")
-
-    pos.SkipWhiteSpace();
-
-    // If not at the end of the header, there are extraneous tokens
-    if ( pos.GetCurrent() != functionHeaderStopToken->GetCurrent() )
-    {
-        Error::Error_1002_MatchingClosingTokenNotFound( *functionHeaderStartToken, this, ')' );
-        return false;
     }
 
     // Parse if condition met
     if ( conditionSuccess )
     {
         // parse the function body
-        BFFParser subParser( nodeGraph );
-        BFFIterator subIter( *functionBodyStartToken );
-        subIter++; // skip opening token
-        subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
-        return subParser.Parse( subIter );
+        BFFTokenRange range( bodyRange );
+        return parser.Parse( range );
     }
     else
     {
@@ -189,10 +250,10 @@ FunctionIf::FunctionIf()
 
 // HandleSimpleBooleanExpression
 //------------------------------------------------------------------------------
-bool FunctionIf::HandleSimpleBooleanExpression( NodeGraph & nodeGraph,
-                                                const BFFIterator * functionBodyStartToken,
-                                                const BFFIterator * functionBodyStopToken,
-                                                const BFFIterator & testVarIter,
+bool FunctionIf::HandleSimpleBooleanExpression( BFFParser & parser,
+                                                const BFFTokenRange & /*headerRange*/,
+                                                const BFFTokenRange & bodyRange,
+                                                const BFFToken * testVarIter,
                                                 const BFFVariable * testVar,
                                                 const bool negated ) const
 {
@@ -211,26 +272,22 @@ bool FunctionIf::HandleSimpleBooleanExpression( NodeGraph & nodeGraph,
     if ( result )
     {
         // parse the function body
-        BFFParser subParser( nodeGraph );
-        BFFIterator subIter( *functionBodyStartToken );
-        subIter++; // skip opening token
-        subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
-        return subParser.Parse( subIter );
+        BFFTokenRange range( bodyRange );
+        return parser.Parse( range );
     }
     return true;
 }
 
-
 // HandleSimpleCompare
 //------------------------------------------------------------------------------
-bool FunctionIf::HandleSimpleCompare( NodeGraph & nodeGraph,
-                                      const BFFIterator * functionBodyStartToken,
-                                      const BFFIterator * functionBodyStopToken,
-                                      const BFFIterator & lhsVarIter,
+bool FunctionIf::HandleSimpleCompare( BFFParser & parser,
+                                      const BFFTokenRange & bodyRange,
+                                      const BFFToken * lhsVarIter,
                                       const BFFVariable * lhsVar,
-                                      const BFFIterator & rhsVarIter,
+                                      const BFFToken * rhsVarIter,
                                       const BFFVariable * rhsVar,
-                                      const bool negated ) const
+                                      const BFFToken * operatorIter,
+                                      const Operator op ) const
 {
     // Check types are equal
     if ( lhsVar->GetType() != rhsVar->GetType() )
@@ -244,11 +301,69 @@ bool FunctionIf::HandleSimpleCompare( NodeGraph & nodeGraph,
     bool result = false;
     if ( lhsVar->GetType() == BFFVariable::VAR_STRING )
     {
-        result = ( lhsVar->GetString() == rhsVar->GetString() );
+        const AString & lhs = lhsVar->GetString();
+        const AString & rhs = rhsVar->GetString();
+        switch ( op )
+        {
+            // Supported
+            case Operator::OP_EQUAL:                    result = ( lhs == rhs ); break;
+            case Operator::OP_NOT_EQUAL:                result = ( lhs != rhs ); break;
+            case Operator::OP_LESS_THAN:                result = ( lhs < rhs ); break;
+            case Operator::OP_LESS_THAN_OR_EQUAL:       result = ( lhs < rhs ) || ( lhs == rhs ); break;
+            case Operator::OP_GREATER_THAN:             result = ( lhs > rhs ); break;
+            case Operator::OP_GREATER_THAN_OR_EQUAL:    result = ( lhs > rhs ) || ( lhs == rhs ); break;
+
+            // Logic error
+            case Operator::OP_IN:
+            case Operator::OP_NOT_IN:
+            case Operator::OP_UNKNOWN: ASSERT( false ); // Should be impossible
+        }
     }
     else if ( lhsVar->GetType() == BFFVariable::VAR_BOOL )
     {
-        result = ( lhsVar->GetBool() == rhsVar->GetBool() );
+        const bool lhs = lhsVar->GetBool();
+        const bool rhs = rhsVar->GetBool();
+        switch ( op )
+        {
+            // Supported
+            case Operator::OP_EQUAL:                    result = ( lhs == rhs ); break;
+            case Operator::OP_NOT_EQUAL:                result = ( lhs != rhs ); break;
+
+            // Unsupported
+            case Operator::OP_LESS_THAN:
+            case Operator::OP_LESS_THAN_OR_EQUAL:
+            case Operator::OP_GREATER_THAN:
+            case Operator::OP_GREATER_THAN_OR_EQUAL:
+            {
+                Error::Error_1034_OperationNotSupported( rhsVarIter, lhsVar->GetType(), rhsVar->GetType(), operatorIter );
+                return false;
+            }
+
+            // Logic error
+            case Operator::OP_IN:
+            case Operator::OP_NOT_IN:
+            case Operator::OP_UNKNOWN: ASSERT( false ); // Should be impossible
+        }
+    }
+    else if ( lhsVar->GetType() == BFFVariable::VAR_INT )
+    {
+        const int32_t & lhs = lhsVar->GetInt();
+        const int32_t & rhs = rhsVar->GetInt();
+        switch ( op )
+        {
+            // Supported
+            case Operator::OP_EQUAL:                    result = ( lhs == rhs ); break;
+            case Operator::OP_NOT_EQUAL:                result = ( lhs != rhs ); break;
+            case Operator::OP_LESS_THAN:                result = ( lhs < rhs ); break;
+            case Operator::OP_LESS_THAN_OR_EQUAL:       result = ( lhs < rhs ) || ( lhs == rhs ); break;
+            case Operator::OP_GREATER_THAN:             result = ( lhs > rhs ); break;
+            case Operator::OP_GREATER_THAN_OR_EQUAL:    result = ( lhs > rhs ) || ( lhs == rhs ); break;
+
+            // Logic error
+            case Operator::OP_IN:
+            case Operator::OP_NOT_IN:
+            case Operator::OP_UNKNOWN: ASSERT( false ); // Should be impossible
+        }
     }
     else
     {
@@ -256,37 +371,29 @@ bool FunctionIf::HandleSimpleCompare( NodeGraph & nodeGraph,
         return false;
     }
 
-    // Handle negation
-    result = negated ? (!result) : result;
-
     // Parse body if condition is true
     if ( result )
     {
         // parse the function body
-        BFFParser subParser( nodeGraph );
-        BFFIterator subIter( *functionBodyStartToken );
-        subIter++; // skip opening token
-        subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
-        return subParser.Parse( subIter );
+        BFFTokenRange range( bodyRange );
+        return parser.Parse( range );
     }
     return true;
 }
 
 // GetVar
 //------------------------------------------------------------------------------
-const BFFVariable * FunctionIf::GetVar( BFFIterator & pos ) const
+const BFFVariable * FunctionIf::GetVar( const BFFToken * token ) const
 {
-    if ( ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL ) &&
-         ( *pos != BFFParser::BFF_DECLARE_VAR_PARENT ) )
+    if ( token->IsVariable() == false )
     {
-        Error::Error_1200_ExpectedVar( pos, this );
+        Error::Error_1200_ExpectedVar( token, this );
         return nullptr;
     }
 
-    const BFFIterator varNameBegin( pos );
     AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
     bool varParentScope = false;
-    if ( BFFParser::ParseVariableName( pos, varName, varParentScope ) == false )
+    if ( BFFParser::ParseVariableName( token, varName, varParentScope ) == false )
     {
         return nullptr; // ParseVariableName will have emitted error
     }
@@ -301,11 +408,10 @@ const BFFVariable * FunctionIf::GetVar( BFFIterator & pos ) const
 
     if ( ( varParentScope && ( nullptr == varFrame ) ) || ( var == nullptr ) )
     {
-        Error::Error_1009_UnknownVariable( varNameBegin, this, varName );
+        Error::Error_1009_UnknownVariable( token, this, varName );
         return nullptr;
     }
 
-    pos.SkipWhiteSpace();
     return var;
 }
 

@@ -10,7 +10,6 @@
 // Forward Declarations
 //------------------------------------------------------------------------------
 class Args;
-class BFFIterator;
 class CompilerNode;
 class Function;
 class NodeGraph;
@@ -23,8 +22,8 @@ class ObjectListNode : public Node
     REFLECT_NODE_DECLARE( ObjectListNode )
 public:
     ObjectListNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
-    virtual ~ObjectListNode();
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
+    virtual ~ObjectListNode() override;
 
     static inline Node::Type GetTypeS() { return Node::OBJECT_LIST_NODE; }
 
@@ -39,6 +38,10 @@ public:
     CompilerNode * GetPreprocessor() const;
 
     inline const AString & GetCompilerOptions() const { return m_CompilerOptions; }
+    void GetObjectFileName( const AString & fileName, const AString & baseDir, AString & objFile );
+
+    void EnumerateInputFiles( void (*callback)( const AString & inputFile, const AString & baseDir, void * userData ), void * userData ) const;
+
 protected:
     friend class FunctionObjectList;
 
@@ -49,7 +52,7 @@ protected:
     // internal helpers
     bool CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
     ObjectNode * CreateObjectNode( NodeGraph & nodeGraph,
-                                   const BFFIterator & iter,
+                                   const BFFToken * iter,
                                    const Function * function,
                                    const uint32_t flags,
                                    const uint32_t preprocessorFlags,
@@ -80,6 +83,7 @@ protected:
     Array< AString >    m_CompilerForceUsing;
     bool                m_CompilerInputAllowNoFiles         = false;
     bool                m_CompilerInputPathRecurse          = true;
+    bool                m_CompilerOutputKeepBaseExtension   = false;
     bool                m_DeoptimizeWritableFiles           = false;
     bool                m_DeoptimizeWritableFilesWithToken  = false;
     bool                m_AllowDistribution                 = true;

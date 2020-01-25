@@ -5,7 +5,9 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
+#include "Core/Containers/Move.h"
 #include "Core/Env/Assert.h"
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
 
 // Typedefs
@@ -26,6 +28,7 @@ public:
     explicit AString();
     explicit AString( uint32_t reserve );
     explicit AString( const AString & string );
+    explicit AString( AString && string );
     explicit AString( const char * string );
     explicit AString( const char * start, const char * end );
     ~AString();
@@ -48,9 +51,11 @@ public:
     // assignment
     inline AString & operator = ( const char * string ) { Assign( string ); return *this; }
     inline AString & operator = ( const AString & string ) { Assign( string ); return *this; }
+    inline AString & operator = ( AString && string ) { Assign( Move( string ) ); return *this; }
     void Assign( const char * string );
     void Assign( const char * start, const char * end );
     void Assign( const AString & string );
+    void Assign( AString && string );
     void Clear();
     void SetReserved( size_t capacity );
 
@@ -63,7 +68,7 @@ public:
     AString & operator += ( const AString & string );
     inline AString & Append( const AString & string ) { return this->operator +=( string ); }
     AString & Append( const char * string, size_t len );
-    AString & AppendFormat( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    AString & AppendFormat( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // comparison
     bool operator == ( const char * other ) const;
@@ -79,10 +84,11 @@ public:
     inline bool EqualsI( const char * other ) const { return ( CompareI( other ) == 0 ); }
     inline bool EqualsI( const AString & other ) const { return ( CompareI( other ) == 0 ); }
     inline bool operator < ( const AString & other ) const { return ( Compare( other ) < 0 ); }
+    inline bool operator > ( const AString & other ) const { return ( Compare( other ) > 0 ); }
 
     inline bool MemoryMustBeFreed() const { return ( ( m_ReservedAndFlags & MEM_MUST_BE_FREED_FLAG ) == MEM_MUST_BE_FREED_FLAG ); }
 
-    AString & Format( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    AString & Format( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
     AString & VFormat( const char * fmtString, va_list arg );
 
     void Tokenize( Array< AString > & tokens, char splitChar = ' ' ) const;
@@ -129,7 +135,6 @@ public:
     bool            EndsWith( const char * string ) const;
     bool            EndsWith( const AString & string ) const;
 
-    bool            EndsWithI( const char c ) const;
     bool            EndsWithI( const char * other ) const;
     bool            EndsWithI( const AString & other ) const;
 
@@ -137,7 +142,6 @@ public:
     bool            BeginsWith( const char * string ) const;
     bool            BeginsWith( const AString & string ) const;
 
-    bool            BeginsWithI( const char c ) const;
     bool            BeginsWithI( const char * string ) const;
     bool            BeginsWithI( const AString & string ) const;
 

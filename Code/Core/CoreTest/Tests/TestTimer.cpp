@@ -31,11 +31,11 @@ void TestTimer::Validate() const
 {
     Timer t;
     t.Start();
-    const uint64_t before = t.GetNow();
-    Thread::Sleep( 100 ); // sleep for 100ms
+    const int64_t before = t.GetNow();
+    Thread::Sleep( 10 ); // sleep for 100ms
     const float elapsed = t.GetElapsed();
     const float elapsedMS = t.GetElapsedMS();
-    const uint64_t after = t.GetNow();
+    const int64_t after = t.GetNow();
 
     // some time must have elapsed
     TEST_ASSERT( after > before );

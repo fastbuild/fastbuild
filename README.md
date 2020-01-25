@@ -2,10 +2,10 @@
 
 ## Branch policy
 
-| Branch | Purpose |
-| :----- | :----- |
-| master | Stable branch containing snapshot of latest release |
-| dev    | Development branch for integration of pull requests |
+| Branch | Purpose | Status |
+| :----- | :----- | :----- |
+| master | Stable branch containing snapshot of latest release | |
+| dev    | Development branch for integration of pull requests | [![Build Status](https://travis-ci.com/fastbuild/fastbuild.svg?branch=dev)](https://travis-ci.com/fastbuild/fastbuild) |
  
 Patches will only be accepted into the "dev" branch.**
 

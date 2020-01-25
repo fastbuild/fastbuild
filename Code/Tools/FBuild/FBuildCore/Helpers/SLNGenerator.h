@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Array.h"
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
@@ -25,7 +26,6 @@ public:
     ~SLNGenerator();
 
     const AString & GenerateSLN( const AString & solutionFile,
-                                 const Array< AString > & solutionBuildProjects,
                                  const AString & solutionVisualStudioVersion,
                                  const AString & solutionMinimumVisualStudioVersion,
                                  const Array< SolutionConfig > & solutionConfigs,
@@ -37,25 +37,21 @@ private:
     void WriteHeader( const AString & solutionVisualStudioVersion,
                       const AString & solutionMinimumVisualStudioVersion );
     void WriteProjectListings( const AString& solutionBasePath,
-                               const Array< AString > & solutionBuildProjects,
                                const Array< VCXProjectNode * > & projects,
                                const Array< SolutionFolder > & solutionFolders,
                                const Array< SolutionDependency > & solutionDependencies,
-                               Array< AString > & solutionBuildProjectGuids,
-                               Array< AString > & projectGuids,
                                Array< AString > & solutionProjectsToFolder );
     void WriteSolutionFolderListings( const Array< SolutionFolder > & solutionFolders,
                                       Array< AString > & solutionFolderPaths );
     void WriteSolutionConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs );
-    void WriteProjectConfigurationPlatforms( const Array< AString > & solutionBuildProjectGuids,
-                                             const Array< SolutionConfig > & solutionConfigs,
-                                             const Array< AString > & projectGuids );
+    void WriteProjectConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs,
+                                             const Array< VCXProjectNode * > & projects );
     void WriteNestedProjects( const Array< AString > & solutionProjectsToFolder,
                               const Array< AString > & solutionFolderPaths );
     void WriteFooter();
 
     // Helper to format some text
-    void Write( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    void Write( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // working buffer
     AString m_Output;

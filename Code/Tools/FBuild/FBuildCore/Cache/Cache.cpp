@@ -3,8 +3,6 @@
 
 // Incldues
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Cache.h"
 
 // FBuild
@@ -52,12 +50,27 @@ public:
 
 // Init
 //------------------------------------------------------------------------------
-/*virtual*/ bool Cache::Init( const AString & cachePath )
+/*virtual*/ bool Cache::Init( const AString & cachePath, const AString & cachePathMountPoint )
 {
     PROFILE_FUNCTION
 
     m_CachePath = cachePath;
     PathUtils::EnsureTrailingSlash( m_CachePath );
+
+    // Check cache mount point if option is enabled
+    #if defined( __WINDOWS__ )
+        (void)cachePathMountPoint; // Not supported on Windows
+    #else
+        if ( cachePathMountPoint.IsEmpty() == false )
+        {
+            if ( FileIO::GetDirectoryIsMountPoint( cachePathMountPoint ) == false )
+            {
+                FLOG_WARN( "Caching disabled because '%s' is not a mount point", cachePathMountPoint.Get() );
+                return false;
+            }
+        }
+    #endif
+
     if ( FileIO::EnsurePathExists( m_CachePath ) )
     {
         return true;
@@ -78,22 +91,20 @@ public:
 //------------------------------------------------------------------------------
 /*virtual*/ bool Cache::Publish( const AString & cacheId, const void * data, size_t dataSize )
 {
-    AStackString<> cacheFileName;
-    GetCacheFileName( cacheId, cacheFileName );
+    AStackString<> fullPath;
+    GetFullPathForCacheEntry( cacheId, fullPath );
 
     // make sure the cache output path exists
-    const char * lastSlash = cacheFileName.FindLast( NATIVE_SLASH );
-    AStackString<> cachePath( cacheFileName.Get(), lastSlash );
-    if ( !FileIO::EnsurePathExists( cachePath ) )
+    if ( !FileIO::EnsurePathExistsForFile( fullPath ) )
     {
         return false;
     }
 
     // open output cache (tmp) file
-    AStackString<> cacheFileTmpName( cacheFileName );
-    cacheFileTmpName += ".tmp";
+    AStackString<> fullPathTmp( fullPath );
+    fullPathTmp+= ".tmp";
     FileStream cacheTmpFile;
-    if( !cacheTmpFile.Open( cacheFileTmpName.Get(), FileStream::WRITE_ONLY ) )
+    if( !cacheTmpFile.Open( fullPathTmp.Get(), FileStream::WRITE_ONLY ) )
     {
         return false;
     }
@@ -105,21 +116,21 @@ public:
     if ( !cacheTmpWriteOk )
     {
         // failed to write to cache tmp file
-        FileIO::FileDelete( cacheFileTmpName.Get() ); // try to cleanup failure
+        FileIO::FileDelete( fullPathTmp.Get() ); // try to cleanup failure
         return false;
     }
 
     // rename tmp file to real file
-    if ( FileIO::FileMove( cacheFileTmpName, cacheFileName ) == false )
+    if ( FileIO::FileMove( fullPathTmp, fullPath ) == false )
     {
         // try to delete (possibly) existing file
-        FileIO::FileDelete( cacheFileName.Get() );
+        FileIO::FileDelete( fullPath.Get() );
 
         // try rename again
-        if ( FileIO::FileMove( cacheFileTmpName, cacheFileName ) == false )
+        if ( FileIO::FileMove( fullPathTmp, fullPath ) == false )
         {
             // problem renaming file
-            FileIO::FileDelete( cacheFileTmpName.Get() ); // try to cleanup tmp file
+            FileIO::FileDelete( fullPathTmp.Get() ); // try to cleanup tmp file
             return false;
         }
     }
@@ -134,11 +145,11 @@ public:
     data = nullptr;
     dataSize = 0;
 
-    AStackString<> cacheFileName;
-    GetCacheFileName( cacheId, cacheFileName );
+    AStackString<> fullPath;
+    GetFullPathForCacheEntry( cacheId, fullPath );
 
     FileStream cacheFile;
-    if ( cacheFile.Open( cacheFileName.Get(), FileStream::READ_ONLY ) )
+    if ( cacheFile.Open( fullPath.Get(), FileStream::READ_ONLY ) )
     {
         const size_t cacheFileSize = (size_t)cacheFile.GetFileSize();
         AutoPtr< char > mem( (char *)ALLOC( cacheFileSize ) );
@@ -179,7 +190,11 @@ public:
     {
         // Determine age bucket
         const uint64_t age = currentTime - info.m_LastWriteTime;
-        const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
+        #if defined( __WINDOWS__ )
+            const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)10000000 );
+        #else
+            const uint64_t oneDay = ( 24 * 60 * 60 * (uint64_t)1000000000 );
+        #endif
         uint32_t ageInDays = (uint32_t)( age / oneDay );
         if ( ageInDays >= 30 )
         {
@@ -211,7 +226,7 @@ public:
                 graphBar += '*';
             }
         }
-        OUTPUT( " %2u%c        | %8u | %10" PRIu64 " | %5.1f %s\n", i, ( i == 29 ) ? '+' : ' ', num, size, sizePerc, graphBar.Get() );
+        OUTPUT( " %2u%c        | %8u | %10" PRIu64 " | %5.1f %s\n", i, ( i == 29 ) ? '+' : ' ', num, size, (double)sizePerc, graphBar.Get() );
     }
     OUTPUT( "================================================================================\n" );
     OUTPUT( " Total      | %8u | %10" PRIu64 " |\n", total.m_NumFiles, total.m_NumBytes / MEGABYTE );
@@ -345,19 +360,20 @@ void Cache::GetCacheFiles( bool showProgress,
     }
 }
 
-// GetCacheFileName
+// GetFullPathForCacheEntry
 //------------------------------------------------------------------------------
-void Cache::GetCacheFileName( const AString & cacheId, AString & path ) const
+void Cache::GetFullPathForCacheEntry( const AString & cacheId,
+                                      AString & outFullPath ) const
 {
-    // format example: N:\\fbuild.cache\\23\\77\\2377DE32_FED872A1_AB62FEAA23498AAC.3
-    path.Format( "%s%c%c%c%c%c%c%s", m_CachePath.Get(),
-                                       cacheId[ 0 ],
-                                       cacheId[ 1 ],
-                                       NATIVE_SLASH,
-                                       cacheId[ 2 ],
-                                       cacheId[ 3 ],
-                                       NATIVE_SLASH,
-                                       cacheId.Get() );
+    // format example: N:\\fbuild.cache\\AA\\BB\\<ABCD.......>
+    outFullPath.Format( "%s%c%c%c%c%c%c%s", m_CachePath.Get(),
+                                            cacheId[ 0 ],
+                                            cacheId[ 1 ],
+                                            NATIVE_SLASH,
+                                            cacheId[ 2 ],
+                                            cacheId[ 3 ],
+                                            NATIVE_SLASH,
+                                            cacheId.Get() );
 }
 
 //------------------------------------------------------------------------------

@@ -3,13 +3,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "WorkerBrokerage.h"
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
+#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
 
 // Core
 #include "Core/Env/Env.h"
@@ -26,6 +26,7 @@
 WorkerBrokerage::WorkerBrokerage()
     : m_Availability( false )
     , m_Initialized( false )
+    , m_SettingsWriteTime( 0 )
 {
 }
 
@@ -34,8 +35,6 @@ WorkerBrokerage::WorkerBrokerage()
 void WorkerBrokerage::Init()
 {
     PROFILE_FUNCTION
-
-    ASSERT( Thread::IsMainThread() );
 
     if ( m_Initialized )
     {
@@ -51,9 +50,11 @@ void WorkerBrokerage::Init()
     {
         // <path>/<group>/<version>/
         #if defined( __WINDOWS__ )
-            m_BrokerageRoot.Format( "%s\\main\\%u\\", root.Get(), protocolVersion );
+            m_BrokerageRoot.Format( "%s\\main\\%u.windows\\", root.Get(), protocolVersion );
+        #elif defined( __OSX__ )
+            m_BrokerageRoot.Format( "%s/main/%u.osx/", root.Get(), protocolVersion );
         #else
-            m_BrokerageRoot.Format( "%s/main/%u/", root.Get(), protocolVersion );
+            m_BrokerageRoot.Format( "%s/main/%u.linux/", root.Get(), protocolVersion );
         #endif
     }
 
@@ -139,16 +140,44 @@ void WorkerBrokerage::SetAvailability(bool available)
         float elapsedTime = m_TimerLastUpdate.GetElapsedMS();
         if ( elapsedTime >= 10000.0f )
         {
-            //
-            // Ensure that the file will be recreated if cleanup is done on the brokerage path.
-            //
-            if ( !FileIO::FileExists( m_BrokerageFilePath.Get() ) )
+            // Write file if:
+            // - missing
+            // - settings have changed
+            const WorkerSettings & workerSettings = WorkerSettings::Get();
+            const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
+            if ( ( FileIO::FileExists( m_BrokerageFilePath.Get() ) == false ) ||
+                 ( settingsWriteTime > m_SettingsWriteTime ) )
             {
-                FileIO::EnsurePathExists( m_BrokerageRoot );
+                // Version
+                AStackString<> buffer;
+                buffer.AppendFormat( "Version: %s\n", FBUILD_VERSION_STRING );
 
-                // create file to signify availability
+                // Username
+                AStackString<> userName;
+                Env::GetLocalUserName( userName );
+                buffer.AppendFormat( "User: %s\n", userName.Get() );
+
+                // CPU Thresholds
+                static const uint32_t numProcessors = Env::GetNumProcessors();
+                buffer.AppendFormat( "CPUs: %u/%u\n", workerSettings.GetNumCPUsToUse(), numProcessors );
+
+                // Move
+                switch ( workerSettings.GetMode() )
+                {
+                    case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
+                    case WorkerSettings::WHEN_IDLE:     buffer += "Mode: idle\n";         break;
+                    case WorkerSettings::DEDICATED:     buffer += "Mode: dedicated\n";    break;
+                    case WorkerSettings::PROPORTIONAL:  buffer += "Mode: proportional\n"; break;
+                }
+
+                // Create/write file which signifies availability
+                FileIO::EnsurePathExists( m_BrokerageRoot );
                 FileStream fs;
                 fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
+                fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
+
+                // Take note of time we wrote the settings
+                m_SettingsWriteTime = settingsWriteTime;
 
                 // Restart the timer
                 m_TimerLastUpdate.Start();

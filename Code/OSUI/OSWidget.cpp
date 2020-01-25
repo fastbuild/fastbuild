@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "OSUI/PrecompiledHeader.h"
 #include "OSWidget.h"
 
 // OSUI
@@ -14,8 +13,8 @@
 
 // system
 #if defined( __WINDOWS__ )
+    #include "Core/Env/WindowsHeader.h" // Must be before CommCtrl
     #include <CommCtrl.h>
-    #include <Windows.h>
 #endif
 
 // Defines
@@ -31,9 +30,7 @@
 //------------------------------------------------------------------------------
 OSWidget::OSWidget( OSWindow * parentWindow )
     : m_Parent( parentWindow )
-    #if defined( __WINDOWS__ )
-        , m_Handle( nullptr )
-    #endif
+    , m_Handle( nullptr )
     , m_Initialized( false )
 {
     #if defined( __WINDOWS__ )

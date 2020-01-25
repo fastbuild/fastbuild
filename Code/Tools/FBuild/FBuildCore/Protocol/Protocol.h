@@ -4,6 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
 
 // Forward Declarations
@@ -27,11 +28,10 @@ class TCPConnectionPool;
 //------------------------------------------------------------------------------
 namespace Protocol
 {
-    enum { PROTOCOL_PORT = 31264 }; // Arbitrarily chosen port
-    enum { PROTOCOL_VERSION = 16 };
+    enum : uint16_t { PROTOCOL_PORT = 31264 }; // Arbitrarily chosen port
+    enum { PROTOCOL_VERSION = 20 };
 
-    enum { SERVER_STATUS_FREQUENCY_MS = 1000 }; // frequency of server status updates to client
-    enum { SERVER_STATUS_TIMEOUT_MS = 30000 };  // server is dead if time elapses between updates
+    enum { PROTOCOL_TEST_PORT = PROTOCOL_PORT + 1 }; // Different port for use by tests
 
     // Identifiers for all unique messages
     //------------------------------------------------------------------------------
@@ -51,8 +51,6 @@ namespace Protocol
 
         MSG_REQUEST_FILE        = 9, // Server -> Client : Ask client for a file
         MSG_FILE                = 10,// Server <- Client : Send a requested file
-
-        MSG_SERVER_STATUS       = 11,// Server -> Client : Send status / keep connection alive
 
         NUM_MESSAGES            // leave last
     };
@@ -98,13 +96,16 @@ namespace Protocol
 
         inline uint32_t GetProtocolVersion() const { return m_ProtocolVersion; }
         inline uint32_t GetNumJobsAvailable() const { return m_NumJobsAvailable; }
+        inline uint8_t  GetPlatform() const { return m_Platform; }
         const char * GetHostName() const { return m_HostName; }
     private:
         uint32_t        m_ProtocolVersion;
         uint32_t        m_NumJobsAvailable;
+        uint8_t         m_Platform;
+        uint8_t         m_Padding2[3];
         char            m_HostName[ 64 ];
     };
-    static_assert( sizeof( MsgConnection ) == sizeof( IMessage ) + 72, "MsgConnection message has incorrect size" );
+    static_assert( sizeof( MsgConnection ) == sizeof( IMessage ) + 76, "MsgConnection message has incorrect size" );
 
     // MsgStatus
     //------------------------------------------------------------------------------
@@ -198,12 +199,10 @@ namespace Protocol
         inline uint64_t GetToolId() const { return m_ToolId; }
         inline uint32_t GetFileId() const { return m_FileId; }
     private:
-        char     m_Padding2[ 4 ];
-        uint64_t m_ToolId;
         uint32_t m_FileId;
-        char     m_Padding3[ 4 ];
+        uint64_t m_ToolId;
     };
-    static_assert( sizeof( MsgRequestFile ) == sizeof( IMessage ) + 4/*alignment*/ + 12 + 4/*padding*/, "MsgRequestFile message has incorrect size" );
+    static_assert( sizeof( MsgRequestFile ) == sizeof( IMessage ) + 12, "MsgRequestFile message has incorrect size" );
 
     // MsgFile
     //------------------------------------------------------------------------------
@@ -215,12 +214,10 @@ namespace Protocol
         inline uint64_t GetToolId() const { return m_ToolId; }
         inline uint32_t GetFileId() const { return m_FileId; }
     private:
-        char     m_Padding2[ 4 ];
-        uint64_t m_ToolId;
         uint32_t m_FileId;
-        char     m_Padding3[ 4 ];
+        uint64_t m_ToolId;
     };
-    static_assert( sizeof( MsgFile ) == sizeof( IMessage ) + 4/*alignment*/ + 12 + 4/*padding*/, "MsgFile message has incorrect size" );
+    static_assert( sizeof( MsgFile ) == sizeof( IMessage ) + 12, "MsgFile message has incorrect size" );
 
     // MsgServerStatus
     //------------------------------------------------------------------------------

@@ -11,6 +11,16 @@
 //------------------------------------------------------------------------------
 class VSProjectConfig;
 class VSProjectFileType;
+class VSProjectImport;
+
+// VSProjectFilePair
+//------------------------------------------------------------------------------
+class VSProjectFilePair
+{
+public:
+    AString m_ProjectRelativePath;  // Paths to files are project-relatice
+    AString m_AbsolutePath;         // Folder structure is relative to BasePaths which can be outside of the project folder
+};
 
 // VSProjectGenerator
 //------------------------------------------------------------------------------
@@ -35,23 +45,22 @@ public:
 
     const AString & GenerateVCXProj( const AString & projectFile,
                                      const Array< VSProjectConfig > & configs,
-                                     const Array< VSProjectFileType > & fileTypes );
+                                     const Array< VSProjectFileType > & fileTypes,
+                                     const Array< VSProjectImport > & projectImports );
+
     const AString & GenerateVCXProjFilters( const AString & projectFile );
 
     static void FormatDeterministicProjectGUID( AString & guid, const AString & projectName );
 
 private:
     // Helper to format some text
-    void Write( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
+    void Write( const char * string );
+    void WriteF( const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // Helpers to format some xml
     void WritePGItem( const char * xmlTag, const AString & value );
 
     void GetFolderPath( const AString & fileName, AString & folder ) const;
-    static void GetProjectRelativePath( const AString & projectFolderPath,
-                                        const AString & fileName,
-                                        AString & outRelativeFileName );
-
     void CanonicalizeFilePaths( const AString & projectBasePath );
 
     // project details
@@ -68,7 +77,7 @@ private:
 
     // intermediate data
     bool m_FilePathsCanonicalized;
-    Array< AString > m_Files;
+    Array< VSProjectFilePair > m_Files;
 
     // working buffer
     AString m_Tmp;

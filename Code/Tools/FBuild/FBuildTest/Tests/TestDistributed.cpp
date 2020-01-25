@@ -8,6 +8,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
 #include "Tools/FBuild/FBuildCore/Protocol/Server.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
 #include "Tools/FBuild/FBuildCore/WorkerPool/JobQueueRemote.h"
 
 #include "Core/FileIO/FileIO.h"
@@ -16,6 +17,10 @@
 // Defines
 //------------------------------------------------------------------------------
 #define TEST_PROTOCOL_PORT ( Protocol::PROTOCOL_PORT + 1 ) // Avoid conflict with real worker
+
+#if !defined( __has_feature )
+    #define __has_feature( ... ) 0
+#endif
 
 // TestDistributed
 //------------------------------------------------------------------------------
@@ -31,7 +36,11 @@ private:
     void TestLocalRace();
     void RemoteRaceWinRemote();
     void AnonymousNamespaces();
-    void ErrorsAreCorrectlyReported() const;
+    void ErrorsAreCorrectlyReported_MSVC() const;
+    void ErrorsAreCorrectlyReported_Clang() const;
+    void WarningsAreCorrectlyReported_MSVC() const;
+    void WarningsAreCorrectlyReported_Clang() const;
+    void ShutdownMemoryLeak() const;
     void TestForceInclude() const;
     void TestZiDebugFormat() const;
     void TestZiDebugFormat_Local() const;
@@ -53,8 +62,12 @@ REGISTER_TESTS_BEGIN( TestDistributed )
     REGISTER_TEST( TestLocalRace )
     REGISTER_TEST( RemoteRaceWinRemote )
     REGISTER_TEST( AnonymousNamespaces )
-    REGISTER_TEST( ErrorsAreCorrectlyReported )
+    REGISTER_TEST( ShutdownMemoryLeak )
     #if defined( __WINDOWS__ )
+        REGISTER_TEST( ErrorsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
+        REGISTER_TEST( ErrorsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
+        REGISTER_TEST( WarningsAreCorrectlyReported_MSVC ) // TODO:B Enable for OSX and Linux
+        REGISTER_TEST( WarningsAreCorrectlyReported_Clang ) // TODO:B Enable for OSX and Linux
         REGISTER_TEST( TestForceInclude )
         REGISTER_TEST( TestZiDebugFormat )
         REGISTER_TEST( TestZiDebugFormat_Local )
@@ -97,15 +110,12 @@ void TestDistributed::TestHelper( const char * target, uint32_t numRemoteWorkers
         TEST_ASSERT( FileIO::FileExists( target ) == false );
     }
 
-    bool pass = fBuild.Build( AStackString<>( target ) );
+    bool pass = fBuild.Build( target );
     if ( !shouldFail )
     {
         TEST_ASSERT( pass );
-    }
 
-    // make sure all output files are as expected
-    if ( !shouldFail )
-    {
+        // make sure all output files are as expected
         TEST_ASSERT( FileIO::FileExists( target ) );
     }
 }
@@ -139,7 +149,7 @@ void TestDistributed::WithPCH() const
 void TestDistributed::RegressionTest_RemoteCrashOnErrorFormatting()
 {
     const char * target( "badcode" );
-    TestHelper( target, 4, true ); // compilation should fail
+    TestHelper( target, 1, true ); // compilation should fail
 }
 
 //------------------------------------------------------------------------------
@@ -159,7 +169,7 @@ void TestDistributed::TestLocalRace()
     }
     {
         const char * target( "badcode" );
-        TestHelper( target, 4, true, true ); // compilation should fail, allow race
+        TestHelper( target, 1, true, true ); // compilation should fail, allow race
     }
 }
 
@@ -175,15 +185,16 @@ void TestDistributed::RemoteRaceWinRemote()
     options.m_ForceCleanBuild = true;
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_NoLocalConsumptionOfRemoteJobs = true;
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
     FBuild fBuild( options );
 
     TEST_ASSERT( fBuild.Initialize() );
 
     // start a client to emulate the other end
     Server s( 1 );
-    s.Listen( Protocol::PROTOCOL_PORT );
+    s.Listen( TEST_PROTOCOL_PORT );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "RemoteRaceWinRemote" ) ) );
+    TEST_ASSERT( fBuild.Build( "RemoteRaceWinRemote" ) );
 }
 
 // AnonymousNamespaces
@@ -203,12 +214,12 @@ void TestDistributed::AnonymousNamespaces()
 void TestDistributed::TestForceInclude() const
 {
     const char * target( "../tmp/Test/Distributed/ForceInclude/ForceInclude.lib" );
-    TestHelper( target, 4 );
+    TestHelper( target, 1 );
 }
 
-// ErrorsAreCorrectlyReported
+// ErrorsAreCorrectlyReported_MSVC
 //------------------------------------------------------------------------------
-void TestDistributed::ErrorsAreCorrectlyReported() const
+void TestDistributed::ErrorsAreCorrectlyReported_MSVC() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
@@ -220,37 +231,166 @@ void TestDistributed::ErrorsAreCorrectlyReported() const
     options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
     options.m_DistributionPort = TEST_PROTOCOL_PORT;
 
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
     // start a client to emulate the other end
     Server s( 1 );
     s.Listen( TEST_PROTOCOL_PORT );
 
-    // MSVC
-    #if defined( __WINDOWS__ )
+    // Check that build fails
+    TEST_ASSERT( false == fBuild.Build( "ErrorsAreCorrectlyReported-MSVC" ) );
+
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "error C2143" ) && GetRecordedOutput().Find( "missing ';' before '}'" ) );
+}
+
+// ErrorsAreCorrectlyReported_Clang
+//------------------------------------------------------------------------------
+void TestDistributed::ErrorsAreCorrectlyReported_Clang() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ErrorsAreCorrectlyReported/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( TEST_PROTOCOL_PORT );
+
+    // Check that build fails
+    TEST_ASSERT( false == fBuild.Build( "ErrorsAreCorrectlyReported-Clang" ) );
+
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
+}
+
+// WarningsAreCorrectlyReported_MSVC
+//------------------------------------------------------------------------------
+void TestDistributed::WarningsAreCorrectlyReported_MSVC() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( TEST_PROTOCOL_PORT );
+
+    // Check that build passes
+    TEST_ASSERT( fBuild.Build( "WarningsAreCorrectlyReported-MSVC" ) );
+
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "warning C4101" ) && GetRecordedOutput().Find( "'x': unreferenced local variable" ) );
+}
+
+// WarningsAreCorrectlyReported_Clang
+//------------------------------------------------------------------------------
+void TestDistributed::WarningsAreCorrectlyReported_Clang() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/WarningsAreCorrectlyReported/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
+
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // start a client to emulate the other end
+    Server s( 1 );
+    s.Listen( TEST_PROTOCOL_PORT );
+
+    // Check that build passes
+    TEST_ASSERT( fBuild.Build( "WarningsAreCorrectlyReported-Clang" ) );
+
+    // Check that error is returned
+    TEST_ASSERT( GetRecordedOutput().Find( "warning: unused variable 'x' [-Wunused-variable]" ) );
+}
+
+// ShutdownMemoryLeak
+//------------------------------------------------------------------------------
+void TestDistributed::ShutdownMemoryLeak() const
+{
+    // Ensure clean shutdown (no leaks) if the build is aborted and there are
+    // available distributable jobs
+    //
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/ShutdownMemoryLeak/fbuild.bff";
+    options.m_AllowDistributed = true;
+    options.m_NumWorkerThreads = 1;
+    options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
+    options.m_AllowLocalRace = false;
+    options.m_ForceCleanBuild = true;
+    options.m_EnableMonitor = true; // make sure monitor code paths are tested as well
+    options.m_DistributionPort = TEST_PROTOCOL_PORT;
+
+    // Init
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // NOTE: No remote server created so jobs stay in m_DistributableJobs_Available queue
+
+    // Create thread that will abort build to simulate Crtl+C or other external stop
+    class Helper
+    {
+    public:
+        static uint32_t AbortBuild( void * data )
         {
-            FBuild fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
+            // Wait until some distributed jobs are available
+            Timer t;
+            float timeout = 5.0f;
+            #if __has_feature( thread_sanitizer ) || defined( __SANITIZE_THREAD__ )
+                // Code under ThreadSanitizer runs several time slower than normal, so we need a larger timeout.
+                timeout = 30.0f;
+            #endif
+            while ( t.GetElapsed() < timeout )
+            {
+                if ( Job::GetTotalLocalDataMemoryUsage() != 0 )
+                {
+                    *static_cast< bool * >( data ) = true;
+                    break;
+                }
+                Thread::Sleep( 1 );
+            }
 
-            // Check that build fails
-            TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-MSVC" ) ) );
-
-            // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "error C2143" ) && GetRecordedOutput().Find( "missing ';' before '}'" ) );
+            // Abort the build
+            FBuild::Get().AbortBuild();
+            return 0;
         }
-    #endif
+    };
+    bool detectedDistributedJobs = false;
+    Thread::ThreadHandle h = Thread::CreateThread( Helper::AbortBuild, nullptr, 64 * KILOBYTE, &detectedDistributedJobs );
 
-    // Clang
-    #if defined( __WINDOWS__ ) // TODO:B Enable for OSX and Linux
-        {
-            FBuild fBuild( options );
-            TEST_ASSERT( fBuild.Initialize() );
+    // Start build and check it was aborted
+    TEST_ASSERT( fBuild.Build( "ShutdownMemoryLeak" ) == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "FBuild: Error: BUILD FAILED: ShutdownMemoryLeak" ) )
 
-            // Check that build fails
-            TEST_ASSERT( false == fBuild.Build( AStackString<>( "ErrorsAreCorrectlyReported-Clang" ) ) );
+    Thread::WaitForThread( h );
+    Thread::CloseHandle( h );
 
-            // Check that error is returned
-            TEST_ASSERT( GetRecordedOutput().Find( "fatal error: expected ';' at end of declaration" ) );
-        }
-    #endif
+    TEST_ASSERT( detectedDistributedJobs );
 }
 
 // TestZiDebugFormat
@@ -274,7 +414,7 @@ void TestDistributed::TestZiDebugFormat() const
     Server s( 1 );
     s.Listen( TEST_PROTOCOL_PORT );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "remoteZi" ) ) );
+    TEST_ASSERT( fBuild.Build( "remoteZi" ) );
 }
 
 // TestZiDebugFormat_Local
@@ -295,7 +435,7 @@ void TestDistributed::TestZiDebugFormat_Local() const
     Server s( 1 );
     s.Listen( TEST_PROTOCOL_PORT );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "remoteZi" ) ) );
+    TEST_ASSERT( fBuild.Build( "remoteZi" ) );
 }
 
 // D8049_ToolLongDebugRecord
@@ -303,7 +443,7 @@ void TestDistributed::TestZiDebugFormat_Local() const
 void TestDistributed::D8049_ToolLongDebugRecord() const
 {
     FBuildTestOptions options;
-    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/fbuild.bff";
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestDistributed/D8049_ToolLongDebugRecord/fbuild.bff";
     options.m_AllowDistributed = true;
     options.m_NumWorkerThreads = 1;
     options.m_NoLocalConsumptionOfRemoteJobs = true; // ensure all jobs happen on the remote worker
@@ -319,7 +459,7 @@ void TestDistributed::D8049_ToolLongDebugRecord() const
     Server s( 1 );
     s.Listen( TEST_PROTOCOL_PORT );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "D8049" ) ) );
+    TEST_ASSERT( fBuild.Build( "D8049" ) );
 }
 
 //------------------------------------------------------------------------------

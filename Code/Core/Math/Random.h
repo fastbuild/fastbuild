@@ -31,7 +31,7 @@ public:
     // random index from 0 to size-1
     uint32_t GetRandIndex( uint32_t size )
     {
-        return ( (uint32_t)( (float) size * ( GetRand() / (CORE_RAND_MAX + 1.0) ) ) );
+        return ( (uint32_t)( (float) size * ( GetRand() / ( CORE_RAND_MAX + 1.0f ) ) ) );
     }
 
     // access the seed value

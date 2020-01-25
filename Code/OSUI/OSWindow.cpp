@@ -3,7 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "OSUI/PrecompiledHeader.h"
 #include "OSDropDown.h"
 #include "OSWindow.h"
 
@@ -12,13 +11,24 @@
 
 // system
 #if defined( __WINDOWS__ )
-    #include <Windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 // Defines
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
     #define IDI_MAIN_ICON                   101
+#endif
+
+// OSX Functions
+//------------------------------------------------------------------------------
+#if defined( __OSX__ )
+    void * WindowOSX_Create( OSWindow * owner, int32_t x, int32_t y, uint32_t w, uint32_t h );
+    void WindowOSX_Destroy( OSWindow * owner );
+    uint32_t WindowOSX_GetPrimaryScreenWidth();
+    void WindowOSX_MessageLoop();
+    void WindowOSX_SetTitle( OSWindow * owner, const char * title );
+    void WindowOSX_SetMinimized( bool minimized );
 #endif
 
 // WindowWndProc
@@ -40,6 +50,7 @@
                         {
                             return 0; // Handled
                         }
+                        break;
                     }
                     case SC_CLOSE:
                     {
@@ -47,6 +58,7 @@
                         {
                             return 0; // Handled
                         }
+                        break;
                     }
                 }
                 break;
@@ -77,6 +89,15 @@
                     window->OnDropDownSelectionChanged( dropDown );
                     return 0;
                 }
+                break;
+            }
+            case WM_QUIT:
+            {
+                if ( window->OnQuit() )
+                {
+                    return 0; // Handled
+                }
+                break;
             }
             default:
             {
@@ -97,7 +118,14 @@ OSWindow::OSWindow( void * hInstance ) :
     #endif
     m_ChildWidgets( 0, true )
 {
-    #if !defined( __WINDOWS__ )
+    #if defined( __WINDOWS__ )
+        // Obtain the executable HINSTANCE if not explictily provided
+        if ( m_HInstance == nullptr )
+        {
+            m_HInstance = GetModuleHandle( nullptr );
+            ASSERT( m_HInstance );
+        }
+    #else
         (void)hInstance;
     #endif
 }
@@ -111,6 +139,11 @@ OSWindow::~OSWindow()
         {
             DestroyWindow( (HWND)m_Handle );
         }
+    #elif defined( __OSX__ )
+        if ( m_Handle )
+        {
+            WindowOSX_Destroy( this );
+        }
     #endif
 }
 
@@ -123,7 +156,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
 
         // Register Window class
         AStackString<> uniqueWindowClass;
-        uniqueWindowClass.Format( "windowClass_%p", this );
+        uniqueWindowClass.Format( "windowClass_%p", (void *)this );
 
         WNDCLASSEX wc;
         wc.cbSize           = sizeof(WNDCLASSEX);
@@ -145,7 +178,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
                                  nullptr,                   // LPCTSTR lpWindowName,
                                  WS_CAPTION | WS_SYSMENU,   // DWORD dwStyle,
                                  x, y,                      // int x, int y,
-                                 w, h,                      // int nWidth, int nHeight,
+                                 (int32_t)w, (int32_t)h,    // int nWidth, int nHeight,
                                  nullptr,                   // HWND hWndParent,
                                  nullptr,                   // HMENU hMenu,
                                  nullptr,                   // HINSTANCE hInstance,
@@ -155,8 +188,10 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         // Set user data
         SetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA, (LONG_PTR)this );
         // User data doesn't take effect until you call SetWindowPos
-        VERIFY( SetWindowPos( (HWND)m_Handle, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER ) );
+        VERIFY( SetWindowPos( (HWND)m_Handle, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE ) );
         ASSERT( this == (void*)GetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA ) );
+    #elif defined( __OSX__ )
+        m_Handle = WindowOSX_Create( this, x, y, w, h );
     #else
         (void)x;
         (void)y;
@@ -180,11 +215,49 @@ void OSWindow::SetTitle( const char * title )
     #if defined( __WINDOWS__ )
         VERIFY( SetWindowText( (HWND)m_Handle, title ) );
     #elif defined( __APPLE__ )
-        (void)title; // TODO:MAC SetWindowText equivalent
+        WindowOSX_SetTitle( this, title );
     #elif defined( __LINUX__ )
         (void)title; // TODO:LINUX SetWindowText equivalent
     #else
         #error Unknown Platform
+    #endif
+}
+
+// SetMinimized
+//------------------------------------------------------------------------------
+void OSWindow::SetMinimized( bool minimized )
+{
+    #if defined( __WINDOWS__ )
+        ASSERT( false ); // TODO:B Unify with Windows functionality
+        (void)minimized;
+    #elif defined( __OSX__ )
+        WindowOSX_SetMinimized( minimized );
+    #else
+        (void)minimized;
+    #endif
+}
+
+// GetPrimaryScreenWidth
+//------------------------------------------------------------------------------
+/*sttaic*/ uint32_t OSWindow::GetPrimaryScreenWidth()
+{
+    #if defined( __WINDOWS__ )
+        return (uint32_t)GetSystemMetrics( SM_CXSCREEN );
+    #elif defined( __OSX__ )
+        return WindowOSX_GetPrimaryScreenWidth();
+    #else
+        return 1920; // TODO:LINUX Implement
+    #endif
+}
+
+// PumpMessages
+//------------------------------------------------------------------------------
+void OSWindow::PumpMessages()
+{
+    #if defined( __WINDOWS__ )
+        // TODO:B Move Windows message loop here
+    #elif defined( __OSX__ )
+        WindowOSX_MessageLoop();
     #endif
 }
 
@@ -198,6 +271,13 @@ void OSWindow::SetTitle( const char * title )
 // OnClose
 //------------------------------------------------------------------------------
 /*virtual*/ bool OSWindow::OnClose()
+{
+    return false; // Not handled by child class
+}
+
+// OnQuit
+//------------------------------------------------------------------------------
+/*virtual*/ bool OSWindow::OnQuit()
 {
     return false; // Not handled by child class
 }
@@ -221,6 +301,13 @@ void OSWindow::SetTitle( const char * title )
 /*virtual*/ void OSWindow::OnDropDownSelectionChanged( OSDropDown * dropDown )
 {
     (void)dropDown; // Derived class can ignore these events if desired
+}
+
+// OnTrayIconMenuItemSelected
+//------------------------------------------------------------------------------
+/*virtual*/ void OSWindow::OnTrayIconMenuItemSelected( uint32_t /*index*/ )
+{
+    // Derived class can ignore these events if desired
 }
 
 // GetChildFromHandle

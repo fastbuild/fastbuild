@@ -70,7 +70,7 @@ void TestTest::Build() const
     EnsureFileDoesNotExist( testExe );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) );
+    TEST_ASSERT( fBuild.Build( "Test" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( "../tmp/Test/Test/test.fdb" ) );
 
     // make sure all output is where it is expected
@@ -99,7 +99,7 @@ void TestTest::Build_NoRebuild() const
     TEST_ASSERT( fBuild.Initialize( "../tmp/Test/Test/test.fdb" ) );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) );
+    TEST_ASSERT( fBuild.Build( "Test" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -124,10 +124,10 @@ void TestTest::Fail_ReturnCode() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build and run test, expecting failure
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Fail_ReturnCode" ) ) == false );
+    TEST_ASSERT( fBuild.Build( "Fail_ReturnCode" ) == false );
 
     // Ensure failure was of the test
-    TEST_ASSERT( GetRecordedOutput().Find( "Test failed (error 1)" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "Error: 1 (0x01)" ) );
 }
 
 // Fail_Crash
@@ -140,7 +140,7 @@ void TestTest::Fail_Crash() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // Build and run test, expecting failure
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Fail_Crash" ) ) == false );
+    TEST_ASSERT( fBuild.Build( "Fail_Crash" ) == false );
 
     // Ensure failure was of the test
     TEST_ASSERT( GetRecordedOutput().Find( "Test failed" ) );
@@ -157,7 +157,7 @@ void TestTest::TimeOut() const
     TEST_ASSERT( fBuild.Initialize() );
 
     // build (via alias)
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Test" ) ) == false );
+    TEST_ASSERT( fBuild.Build( "Test" ) == false );
 
     // Ensure failure was of the test timing out
     TEST_ASSERT( GetRecordedOutput().Find( "Test timed out after" ) );

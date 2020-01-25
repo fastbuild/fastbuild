@@ -3,24 +3,19 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "CachePlugin.h"
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 // Core
-#include "Core/Containers/AutoPtr.h"
-#include "Core/FileIO/FileIO.h"
-#include "Core/FileIO/FileStream.h"
+#include "Core/Env/ErrorFormat.h"
 #include "Core/Mem/Mem.h"
-#include "Core/Strings/AStackString.h"
 #include "Core/Tracing/Tracing.h"
 
 // system
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
 #endif
 
 #if defined(__LINUX__) || defined(__APPLE__)
@@ -40,33 +35,22 @@
         m_DLL = ::LoadLibrary( dllName.Get() );
         if ( !m_DLL )
         {
-            FLOG_WARN( "Cache plugin '%s' load failed (0x%x).", dllName.Get(), (uint32_t)::GetLastError() );
+            FLOG_WARN( "Cache plugin load failed. Error: %s Plugin: %s", LAST_ERROR_STR, dllName.Get() );
             return;
         }
 
-        #if defined( WIN64 )
-            m_InitFunc      = (CacheInitFunc)       GetFunction( "CacheInit",       "?CacheInit@@YA_NPEBD@Z" );
-            m_ShutdownFunc  = (CacheShutdownFunc)   GetFunction( "CacheShutdown",   "?CacheShutdown@@YAXXZ"  );
-            m_PublishFunc   = (CachePublishFunc)    GetFunction( "CachePublish",    "?CachePublish@@YA_NPEBDPEBX_K@Z" );
-            m_RetrieveFunc  = (CacheRetrieveFunc)   GetFunction( "CacheRetrieve",   "?CacheRetrieve@@YA_NPEBDAEAPEAXAEA_K@Z" );
-            m_FreeMemoryFunc= (CacheFreeMemoryFunc) GetFunction( "CacheFreeMemory", "?CacheFreeMemory@@YAXPEAX_K@Z" );
-            m_OutputInfoFunc= (CacheOutputInfoFunc) GetFunction( "CacheOutputInfo", "?CacheOutputInfo@@YA_N_N@Z", true ); // Optional
-            m_TrimFunc      = (CacheTrimFunc)       GetFunction( "CacheTrim",       "?CacheTrim@@YA_N_NI@Z", true ); // Optional
-        #else
-            m_InitFunc      = (CacheInitFunc)       GetFunction( "CacheInit",       "?CacheInit@@YG_NPBD@Z" );
-            m_ShutdownFunc  = (CacheShutdownFunc)   GetFunction( "CacheShutdown",   "?CacheShutdown@@YGXXZ"  );
-            m_PublishFunc   = (CachePublishFunc)    GetFunction( "CachePublish",    "?CachePublish@@YG_NPBDPBX_K@Z" );
-            m_RetrieveFunc  = (CacheRetrieveFunc)   GetFunction( "CacheRetrieve",   "?CacheRetrieve@@YG_NPBDAAPAXAA_K@Z" );
-            m_FreeMemoryFunc= (CacheFreeMemoryFunc) GetFunction( "CacheFreeMemory", "?CacheFreeMemory@@YGXPAX_K@Z" );
-            m_OutputInfoFunc= (CacheOutputInfoFunc) GetFunction( "CacheOutputInfo", "?CacheOutputInfo@@YG_N_N@Z", true ); // Optional
-            m_TrimFunc      = (CacheTrimFunc)       GetFunction( "CacheTrim",       "?CacheTrim@@YG_N_NI@Z", true ); // Optional
-        #endif
-
+        m_InitFunc      = (CacheInitFunc)       GetFunction( "CacheInit",       "?CacheInit@@YA_NPEBD@Z" );
+        m_ShutdownFunc  = (CacheShutdownFunc)   GetFunction( "CacheShutdown",   "?CacheShutdown@@YAXXZ"  );
+        m_PublishFunc   = (CachePublishFunc)    GetFunction( "CachePublish",    "?CachePublish@@YA_NPEBDPEBX_K@Z" );
+        m_RetrieveFunc  = (CacheRetrieveFunc)   GetFunction( "CacheRetrieve",   "?CacheRetrieve@@YA_NPEBDAEAPEAXAEA_K@Z" );
+        m_FreeMemoryFunc= (CacheFreeMemoryFunc) GetFunction( "CacheFreeMemory", "?CacheFreeMemory@@YAXPEAX_K@Z" );
+        m_OutputInfoFunc= (CacheOutputInfoFunc) GetFunction( "CacheOutputInfo", "?CacheOutputInfo@@YA_N_N@Z", true ); // Optional
+        m_TrimFunc      = (CacheTrimFunc)       GetFunction( "CacheTrim",       "?CacheTrim@@YA_N_NI@Z", true ); // Optional
     #elif defined( __APPLE__ ) || defined( __LINUX__ )
         m_DLL = dlopen(dllName.Get(), RTLD_NOW);
         if ( !m_DLL )
         {
-            FLOG_WARN( "Cache plugin '%s' load failed (%s).", dllName.Get(), dlerror() );
+            FLOG_WARN( "Cache plugin load failed. Error: %s '%s' Plugin: %s", LAST_ERROR_STR, dlerror(), dllName.Get() );
             return;
         }
         m_InitFunc       = (CacheInitFunc)          GetFunction( "CacheInit" );
@@ -132,7 +116,7 @@ void * CachePlugin::GetFunction( const char * friendlyName, const char * mangled
 
 // Init
 //------------------------------------------------------------------------------
-/*virtual*/ bool CachePlugin::Init( const AString & cachePath )
+/*virtual*/ bool CachePlugin::Init( const AString & cachePath, const AString & /*cachePathMountPoint*/ )
 {
     // ensure all functions were found
     if ( m_InitFunc && m_ShutdownFunc && m_PublishFunc && m_RetrieveFunc && m_FreeMemoryFunc )
@@ -174,10 +158,7 @@ void * CachePlugin::GetFunction( const char * friendlyName, const char * mangled
 /*virtual*/ void CachePlugin::FreeMemory( void * data, size_t dataSize )
 {
     ASSERT( m_FreeMemoryFunc ); // should never get here without being valid
-    if ( m_FreeMemoryFunc )
-    {
-        (*m_FreeMemoryFunc)( data, dataSize );
-    }
+    (*m_FreeMemoryFunc)( data, dataSize );
 }
 
 // OutputInfo

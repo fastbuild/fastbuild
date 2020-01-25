@@ -9,6 +9,7 @@
 #include "Core/Env/Types.h"
 #include "Core/Containers/Array.h"
 #include "Core/Process/Mutex.h"
+#include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AString.h"
 
@@ -60,7 +61,7 @@ public:
     TCPConnectionPool();
     virtual ~TCPConnectionPool();
 
-    // derived classes must call this from their destructor if they rely on virtual callbacks
+    // Must be called explicitly before destruction
     void ShutdownAllConnections();
 
     // manage connections
@@ -69,7 +70,7 @@ public:
     const ConnectionInfo * Connect( const AString & host, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
     const ConnectionInfo * Connect( uint32_t hostIP, uint16_t port, uint32_t timeout = 2000, void * userData = nullptr );
     void Disconnect( const ConnectionInfo * ci );
-    void SetShuttingDown() { m_ShuttingDown = true; }
+    void SetShuttingDown();
 
     // query connection state
     size_t GetNumConnections() const;
@@ -82,7 +83,7 @@ public:
     static void GetAddressAsString( uint32_t addr, AString & address );
 
 protected:
-    // network events - NOTE: these happen in another thread!
+    // network events - NOTE: these happen in another thread! (but never at the same time)
     virtual void OnReceive( const ConnectionInfo *, void * /*data*/, uint32_t /*size*/, bool & /*keepMemory*/ ) {}
     virtual void OnConnected( const ConnectionInfo * ) {}
     virtual void OnDisconnected( const ConnectionInfo * ) {}
@@ -96,7 +97,7 @@ private:
     bool        HandleRead( ConnectionInfo * ci );
 
     // platform specific abstraction
-    int         GetLastError() const;
+    int         GetLastNetworkError() const;
     bool        WouldBlock() const;
     int         CloseSocket( TCPSocket socket ) const;
     int         Select( TCPSocket maxSocketPlusOne,
@@ -107,6 +108,7 @@ private:
     TCPSocket   Accept( TCPSocket socket,
                         struct sockaddr * address,
                         int * addressSize ) const;
+    TCPSocket   CreateSocket() const;
 
     struct SendBuffer
     {
@@ -124,9 +126,11 @@ private:
     void                ConnectionThreadFunction( ConnectionInfo * ci );
 
     // internal helpers
-    bool                DisableNagle( TCPSocket sockfd );
-    bool                SetBufferSizes( TCPSocket socket );
-    void                SetNonBlocking( TCPSocket socket, bool nonBlocking ) const;
+    void                AllowSocketReuse( TCPSocket socket ) const;
+    void                DisableNagle( TCPSocket socket ) const;
+    void                DisableSigPipe( TCPSocket socket ) const;
+    void                SetLargeBufferSizes( TCPSocket socket ) const;
+    void                SetNonBlocking( TCPSocket socket ) const;
 
     // listen socket related info
     ConnectionInfo *            m_ListenConnection;
@@ -136,6 +140,7 @@ private:
     Array< ConnectionInfo * >   m_Connections;
 
     bool                        m_ShuttingDown;
+    Semaphore                   m_ShutdownSemaphore;
 
     // object to manage network subsystem lifetime
 protected:

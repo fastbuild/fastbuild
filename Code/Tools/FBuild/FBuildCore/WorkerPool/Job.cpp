@@ -3,14 +3,13 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "Job.h"
 
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Env/Assert.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
@@ -59,7 +58,7 @@ void Job::Cancel()
 {
     ASSERT( m_IsLocal ); // Cancellation should only occur locally
     ASSERT( m_Abort == false ); // Job must be not already be cancelled
-    m_Abort = true;
+    AtomicStoreRelaxed( &m_Abort, true );
 }
 
 // OwnData
@@ -78,7 +77,7 @@ void Job::OwnData( void * data, size_t size, bool compressed )
         if ( m_IsLocal )
         {
             ASSERT( s_TotalLocalDataMemoryUsage >= m_DataSize );
-            AtomicSub64( &s_TotalLocalDataMemoryUsage, m_DataSize );
+            AtomicSub64( &s_TotalLocalDataMemoryUsage, (int32_t)m_DataSize );
         }
     }
 
@@ -90,13 +89,13 @@ void Job::OwnData( void * data, size_t size, bool compressed )
     // Update total memory use tracking
     if ( m_IsLocal )
     {
-        AtomicAdd64( &s_TotalLocalDataMemoryUsage, m_DataSize );
+        AtomicAdd64( &s_TotalLocalDataMemoryUsage, (int32_t)m_DataSize );
     }
 }
 
 // Error
 //------------------------------------------------------------------------------
-void Job::Error( const char * format, ... )
+void Job::Error( MSVC_SAL_PRINTF const char * format, ... )
 {
     AStackString< 8192 > buffer;
 
@@ -192,9 +191,9 @@ void Job::Deserialize( IOStream & stream )
     OwnData( data, dataSize, compressed );
 }
 
-// GetMessagesForMonitorLog
+// GetMessagesForLog
 //------------------------------------------------------------------------------
-void Job::GetMessagesForMonitorLog( AString & buffer ) const
+void Job::GetMessagesForLog( AString & buffer ) const
 {
     // The common case is that there are no messages
     if ( m_Messages.IsEmpty() )
@@ -216,12 +215,33 @@ void Job::GetMessagesForMonitorLog( AString & buffer ) const
     {
         buffer += msg;
     }
+}
+
+// GetMessagesForMonitorLog
+//------------------------------------------------------------------------------
+void Job::GetMessagesForMonitorLog( AString & buffer ) const
+{
+    // The common case is that there are no messages
+    if ( m_Messages.IsEmpty() )
+    {
+        return;
+    }
+
+    // concat all messages
+    GetMessagesForLog( buffer );
 
     // Escape some characters to simplify parsing in the log
     // (The monitor will knows how to restore them)
     buffer.Replace( '\n', (char)12 );
     buffer.Replace( '\r', (char)12 );
     buffer.Replace( '\"', '\'' ); // TODO:B The monitor can't differentiate ' and "
+}
+
+// GetTotalLocalDataMemoryUsage
+//------------------------------------------------------------------------------
+/*static*/ uint64_t Job::GetTotalLocalDataMemoryUsage()
+{
+    return (uint64_t)AtomicLoadRelaxed( &s_TotalLocalDataMemoryUsage );
 }
 
 //------------------------------------------------------------------------------

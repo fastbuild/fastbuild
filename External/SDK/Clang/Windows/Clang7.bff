@@ -1,0 +1,116 @@
+// Clang 7.x.x
+//------------------------------------------------------------------------------
+.Clang7_BasePath     = '../External/SDK/Clang/Windows/7.0.1'
+#if CI_BUILD
+    .Clang7_BasePath = 'C:\Program Files\LLVM'
+#endif
+
+// Compiler
+//------------------------------------------------------------------------------
+Compiler( 'Compiler-Clang7' )
+{
+    .Root                           = '$Clang7_BasePath$'
+    .Executable                     = '$Root$\bin\clang++.exe'
+}
+
+// ToolChain
+//------------------------------------------------------------------------------
+.ToolChain_Clang_Windows =
+[
+    // Clang for Windows relies on the VS being present:
+    //  - crt headers
+    //  - crt libs/dlls
+    //  - linker
+    Using( .ToolChain_VS_Windows_X64 )
+
+    .Platform                       = 'x64Clang'
+
+    // Compiler Options
+    .Compiler                       = 'Compiler-Clang7'
+    .CommonCompilerOptions          = ' -c -g'
+
+                                    // Include paths
+                                    + ' -I"./"'
+                                    + .VSIncludePaths
+
+                                    // x64
+                                    + ' -m64'
+
+                                    // Enable warnings
+                                    + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
+                                    + ' -Wextra'
+                                    + ' -Wshadow'
+
+                                    // No RTTI
+                                    + ' -fno-rtti'
+
+                                    // MS compatibility
+                                    + ' -fms-compatibility'
+                                    + ' -fms-extensions'
+                                    + ' -fmsc-version=$MSC_VER$'
+                                    + ' -Xclang -flto-visibility-public-std' // LTO visibility matches MSVC behaviour
+
+                                    // as of v6.0.0, these warnings fire inside system headers
+                                    + ' -Wno-#pragma-messages'          // warning : %s [-W#pragma-messages]
+                                    + ' -Wno-unknown-pragmas'           // unknown pragma ignored [-Wunknown-pragmas]
+                                    + ' -Wno-ignored-attributes'        // __declspec attribute 'restrict' is not supported [-Werror,-Wignored-attributes]
+                                    + ' -Wno-invalid-token-paste'       // pasting formed '"Use ""ADDRINFOEXW"', an invalid preprocessing token [-Winvalid-token-paste]
+                                    + ' -Wno-expansion-to-defined'      // macro expansion producing 'defined' has undefined behavior [-Wexpansion-to-defined]
+                                    + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
+                                    + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
+                                    + ' -Wno-int-to-void-pointer-cast'  // cast to 'void *' from smaller integer type 'unsigned long' [-Wint-to-void-pointer-cast]
+
+                                    // as of v7.0.1, these warnings fire inside system headers
+                                    + ' -Wno-reserved-id-macro'         // macro name is a reserved identifier [-Wreserved-id-macro]
+                                    + ' -Wno-c++98-compat-pedantic'     // variadic macros are incompatible with C++98 [-Wc++98-compat-pedantic]
+                                    + ' -Wno-language-extension-token'  // extension used [-Wlanguage-extension-token]
+                                    + ' -Wno-dollar-in-identifier-extension' // '$' in identifier [-Wdollar-in-identifier-extension]
+                                    + ' -Wno-undef'                     // '%s' is not defined, evaluates to 0 [-Wundef]
+                                    + ' -Wno-cast-qual'                 // cast from '%s' to '%s' drops const and volatile qualifiers [-Wcast-qual]
+                                    + ' -Wno-gnu-anonymous-struct'      // anonymous structs are a GNU extension [-Wgnu-anonymous-struct]'
+                                    + ' -Wno-zero-as-null-pointer-constant' // zero as null pointer constant [-Wzero-as-null-pointer-constant]
+                                    + ' -Wno-deprecated-dynamic-exception-spec' // dynamic exception specifications are deprecated [-Wdeprecated-dynamic-exception-spec]
+                                    + ' -Wno-nested-anon-types'         // anonymous types declared in an anonymous union are an extension [-Wnested-anon-types]
+                                    + ' -Wno-c99-extensions'            // flexible array members are a C99 feature [-Wc99-extensions]'
+                                    + ' -Wno-unused-value'              // expression result unused [-Wunused-value]
+                                    + ' -Wno-microsoft-enum-value'      // enumerator value is not representable in the underlying type 'int' [-Wmicrosoft-enum-value]
+                                    + ' -Wno-constant-logical-operand'  // use of logical '&&' with constant operand [-Wconstant-logical-operand]
+                                    + ' -Wno-sign-conversion'           // implicit conversion changes signedness : '%s' to '%s' [-Wsign-conversion]
+                                    + ' -Wno-cast-align'                // cast from '%s' (aka '%s') to '%s' increases required alignment from 2 to 8 [-Wcast-align]
+                                    + ' -Wno-pragma-pack'               // the current #pragma pack aligment value is modified in the included file [-Wpragma-pack]
+
+                                    // Disabled warnings that are not useful
+                                    + ' -Wno-invalid-offsetof'          // we get the offset of members in non-POD types
+                                    + ' -Wno-old-style-cast'            // we use old-style casts
+                                    + ' -Wno-exit-time-destructors'     // we have global class instances
+                                    + ' -Wno-global-constructors'       // we have global class instances
+                                    + ' -Wno-missing-prototypes'        // we don't want to have to duplicate the function signature in a prototype
+                                    + ' -Wno-missing-variable-declarations' // no previous extern declaration for non-static variable '%s' [-Wmissing-variable-declarations]
+
+                                    // Warnings that need investigating
+                                    + ' -Wno-keyword-macro'             // keyword is hidden by macro definition [-Wkeyword-macro]
+                                    + ' -Wno-deprecated'                // definition of implicit copy assignment operator for '%s' is deprecated because it has a user-declared destructor [-Wdeprecated]
+                                    + ' -Wno-switch-enum'               // %u enumeration values not explicitly handled in switch: '%s', '%s', '%s'... [-Wswitch-enum]
+
+    .CompilerOptions                = ' -o"%2" "%1" $CommonCompilerOptions$'
+    .CompilerOptionsC               = ' -x c -o"%2" "%1" $CommonCompilerOptions$'
+    .PCHOptions                     = ' -x c++-header "%1" -o"%2" $CommonCompilerOptions$'
+
+    // Librarian
+    .Librarian                      = '$Clang7_BasePath$\bin\llvm-ar.exe'
+    .LibrarianOptions               = 'rc "%2" "%1"' // NOTE: output must come first
+
+    // Linker
+    .Linker                         = '$Clang7_BasePath$\bin\lld-link.exe'
+    .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
+                                    + .VSLibPaths
+
+    // File Extensions
+    .LibExtension                   = '.a'
+    .ExeExtension                   = '.exe'
+
+    // Exception Control
+    .UseExceptions                  = ' -fexceptions'
+]
+
+//------------------------------------------------------------------------------

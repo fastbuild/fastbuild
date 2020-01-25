@@ -18,6 +18,8 @@ public:
     WorkerBrokerage();
     ~WorkerBrokerage();
 
+    inline const AString & GetBrokerageRoot() const { return m_BrokerageRoot; }
+
     // client interface
     void FindWorkers( Array< AString > & workerList );
 
@@ -32,6 +34,7 @@ private:
     AString             m_HostName;
     AString             m_BrokerageFilePath;
     Timer               m_TimerLastUpdate;      // Throttle network access
+    uint64_t            m_SettingsWriteTime;    // FileTime of settings time when last changed
 };
 
 //------------------------------------------------------------------------------

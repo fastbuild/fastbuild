@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "FBuildStats.h"
 
 // FBuild
@@ -52,8 +50,10 @@ FBuildStats::Stats::Stats()
     , m_NumCacheHits( 0 )
     , m_NumCacheMisses( 0 )
     , m_NumCacheStores( 0 )
+    , m_NumLightCache( 0 )
     , m_ProcessingTimeMS( 0 )
     , m_NumFailed( 0 )
+    , m_CachingTimeMS( 0 )
 {}
 
 // OnBuildStop
@@ -110,6 +110,8 @@ void FBuildStats::GatherPostBuildStatistics( Node * node )
         m_Totals.m_NumCacheHits     += m_PerTypeStats[ i ].m_NumCacheHits;
         m_Totals.m_NumCacheMisses   += m_PerTypeStats[ i ].m_NumCacheMisses;
         m_Totals.m_NumCacheStores   += m_PerTypeStats[ i ].m_NumCacheStores;
+        m_Totals.m_NumLightCache    += m_PerTypeStats[ i ].m_NumLightCache;
+        m_Totals.m_CachingTimeMS    += m_PerTypeStats[ i ].m_CachingTimeMS;
     }
 }
 
@@ -130,7 +132,7 @@ void FBuildStats::OutputSummary() const
         for ( size_t i=0; i<itemsToDisplay; ++i )
         {
             const Node * n = m_NodesByTime[ i ];
-            output.AppendFormat( "%-9.3f %s\n", ( (float)n->GetProcessingTime() / 1000.0f ), n->GetName().Get() );
+            output.AppendFormat( "%-9.3f %s\n", (double)( (float)n->GetProcessingTime() / 1000.0f ), n->GetPrettyName().Get() );
         }
         output += "\n";
     }
@@ -184,7 +186,7 @@ void FBuildStats::OutputSummary() const
         {
             hitPerc = ( (float)hits / float( hits + misses ) * 100.0f );
         }
-        output.AppendFormat( " - Hits       : %u (%2.1f %%)\n", hits, hitPerc );
+        output.AppendFormat( " - Hits       : %u (%2.1f %%)\n", hits, (double)hitPerc );
         output.AppendFormat( " - Misses     : %u\n", misses );
         output.AppendFormat( " - Stores     : %u\n", stores );
     }
@@ -197,10 +199,10 @@ void FBuildStats::OutputSummary() const
     float totalRemoteCPUInSeconds = (float)( (double)m_TotalRemoteCPUTimeMS / (double)1000 );
     FormatTime( totalLocalCPUInSeconds, buffer );
     float localRatio = ( totalLocalCPUInSeconds / m_TotalBuildTime );
-    output.AppendFormat( " - Local CPU  : %s (%2.1f:1)\n", buffer.Get(), localRatio );
+    output.AppendFormat( " - Local CPU  : %s (%2.1f:1)\n", buffer.Get(), (double)localRatio );
     FormatTime( totalRemoteCPUInSeconds, buffer );
     float remoteRatio = ( totalRemoteCPUInSeconds / m_TotalBuildTime );
-    output.AppendFormat( " - Remote CPU : %s (%2.1f:1)\n", buffer.Get(), remoteRatio );
+    output.AppendFormat( " - Remote CPU : %s (%2.1f:1)\n", buffer.Get(), (double)remoteRatio );
     output += "-----------------------------------------------------------------\n";
 
     OUTPUT( "%s", output.Get() );
@@ -217,10 +219,10 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
     }
 
     Node::Type nodeType = node->GetType();
-    Stats & stats = m_PerTypeStats[ nodeType ];
 
     if ( node->GetType() != Node::PROXY_NODE )
     {
+        Stats & stats = m_PerTypeStats[ nodeType ];
         stats.m_NumProcessed++;
 
         m_TotalLocalCPUTimeMS += node->GetProcessingTime();
@@ -259,6 +261,11 @@ void FBuildStats::GatherPostBuildStatisticsRecurse( Node * node )
         if ( node->GetStatFlag( Node::STATS_CACHE_STORE ) )
         {
             stats.m_NumCacheStores++;
+            stats.m_CachingTimeMS += node->GetCachingTime();
+        }
+        if ( node->GetStatFlag( Node::STATS_LIGHT_CACHE ) )
+        {
+            stats.m_NumLightCache++;
         }
     }
 
@@ -321,7 +328,7 @@ void FBuildStats::FormatTime( float timeInSeconds , AString & buffer ) const
         buffer += temp;
     }
 
-    temp.Format( "%2.3fs", timeInSeconds );
+    temp.Format( "%2.3fs", (double)timeInSeconds );
     buffer += temp;
 }
 

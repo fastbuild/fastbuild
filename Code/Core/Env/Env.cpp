@@ -3,15 +3,16 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/PrecompiledHeader.h"
-
 #include "Env.h"
 
 // Core
+#include "Core/Containers/Array.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Process/Atomic.h"
 
 #if defined( __WINDOWS__ )
-    #include <windows.h>
+    #include "Core/Env/WindowsHeader.h"
+    #include <Lmcons.h>
     #include <stdio.h>
 #endif
 
@@ -27,6 +28,7 @@
 #endif
 
 #if defined( __APPLE__ )
+    #include <mach-o/dyld.h>
     extern "C"
     {
         int *_NSGetArgc(void);
@@ -84,7 +86,7 @@
 
             for ( size_t processorID = 0; processorID < maxLogicalProcessorsInThisGroup; ++processorID )
             {
-                numProcessorsInThisGroup += ( ( groupProcessorMask.Mask & ( 1i64 << processorID ) ) != 0 ) ? 1 : 0;
+                numProcessorsInThisGroup += ( ( groupProcessorMask.Mask & ( uint64_t(1) << processorID ) ) != 0 ) ? 1 : 0;
             }
 
             numProcessorsInAllGroups += numProcessorsInThisGroup;
@@ -217,8 +219,14 @@ void Env::GetExePath( AString & output )
         GetModuleFileNameA( hModule, path, MAX_PATH );
         output = path;
     #elif defined( __APPLE__ )
-        const char ** argv = const_cast< const char ** >( *_NSGetArgv() );
-        output = argv[0];
+        // Get the required buffer size
+        uint32_t bufferSize = 0;
+        VERIFY( _NSGetExecutablePath( nullptr, &bufferSize ) == -1 );
+        ASSERT( bufferSize > 0 ); // Updated by _NSGetExecutablePath
+    
+        // Reserve enough space (-1 since bufferSize includes the null)
+        output.SetLength( bufferSize - 1 );
+        VERIFY( _NSGetExecutablePath( output.Get(), &bufferSize ) == 0 );
     #else
         char path[ PATH_MAX ];
         const ssize_t length = readlink( "/proc/self/exe", path, PATH_MAX );
@@ -228,9 +236,9 @@ void Env::GetExePath( AString & output )
     #endif
 }
 
-// IsStdOutRedirected
+// IsStdOutRedirectedInternal
 //------------------------------------------------------------------------------
-/*static*/ bool Env::IsStdOutRedirected()
+static bool IsStdOutRedirectedInternal()
 {
     #if defined( __WINDOWS__ )
         HANDLE h = GetStdHandle( STD_OUTPUT_HANDLE );
@@ -253,7 +261,7 @@ void Env::GetExePath( AString & output )
             return true; // Redirected to something that is not a pipe
         }
 
-        char buffer[ sizeof( FILE_NAME_INFO ) + MAX_PATH * sizeof( wchar_t ) ];
+        alignas( __alignof( FILE_NAME_INFO ) ) char buffer[ sizeof( FILE_NAME_INFO ) + MAX_PATH * sizeof( wchar_t ) ];
         if ( ! GetFileInformationByHandleEx( h, FileNameInfo, buffer, sizeof( buffer ) ) )
         {
             return true; // Redirected to something that doesn't have a name
@@ -277,7 +285,9 @@ void Env::GetExePath( AString & output )
             return true; // Redirected to a pipe that is not related to Cygwin/MSYS
         }
         int nChars = 0;
-        if ( ( swscanf( p, L"%*llx-pty%*d-to-master%n", &nChars ) == 0 ) && ( nChars > 0 ) )
+        PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+        if ( ( swscanf( p, L"%*llx-pty%*d-to-master%n", &nChars ) == 0 ) && ( nChars > 0 ) ) // TODO:C Consider using swscanf_s
+        PRAGMA_DISABLE_POP_MSVC // 4996
         {
             return false; // Pipe name matches the pattern, stdout is forwarded to a terminal by Cygwin/MSYS
         }
@@ -290,6 +300,49 @@ void Env::GetExePath( AString & output )
     #endif
 }
 
+// GetUserName
+//------------------------------------------------------------------------------
+/*static*/ bool Env::GetLocalUserName( AString & outUserName )
+{
+    #if defined( __WINDOWS__ )
+        char userName[ UNLEN + 1 ];
+        DWORD bufferSize = sizeof(userName);
+        if ( ::GetUserNameA( userName, &bufferSize ) == FALSE )
+        {
+            return false;
+        }
+        outUserName = userName;
+        return true;
+    #else
+        return GetEnvVariable( "USER", outUserName );
+    #endif
+}
+
+// IsStdOutRedirected
+//------------------------------------------------------------------------------
+/*static*/ bool Env::IsStdOutRedirected( const bool recheck )
+{
+    static volatile int32_t sCachedResult = 0; // 0 - not checked, 1 - true, 2 - false
+    const int32_t result = AtomicLoadRelaxed( &sCachedResult );
+    if ( recheck || ( result == 0 ) )
+    {
+        if ( IsStdOutRedirectedInternal() )
+        {
+            AtomicStoreRelaxed( &sCachedResult, 1 );
+            return true;
+        }
+        else
+        {
+            AtomicStoreRelaxed( &sCachedResult, 2 );
+            return false;
+        }
+    }
+    else
+    {
+        return ( result == 1 );
+    }
+}
+
 // GetLastErr
 //------------------------------------------------------------------------------
 /*static*/ uint32_t Env::GetLastErr()
@@ -300,6 +353,49 @@ void Env::GetExePath( AString & output )
         return errno;
     #else
         #error Unknown platform
+    #endif
+}
+
+// AllocEnvironmentString
+//------------------------------------------------------------------------------
+/*static*/ const char * Env::AllocEnvironmentString( const Array< AString > & environment )
+{
+    size_t len = 0;
+    const size_t numEnvVars = environment.GetSize();
+    for ( size_t i = 0; i < numEnvVars; ++i )
+    {
+        len += environment[i].GetLength() + 1;
+    }
+    len += 1; // for double null
+
+    // Now that the environment string length is calculated, allocate and fill.
+    char * mem = (char *)ALLOC( len );
+    const char * environmentString = mem;
+    for ( size_t i = 0; i < numEnvVars; ++i )
+    {
+        const AString & envVar = environment[i];
+        AString::Copy( envVar.Get(), mem, envVar.GetLength() + 1 );
+        mem += ( envVar.GetLength() + 1 );
+    }
+    *mem = 0;
+
+    return environmentString;
+}
+
+// ShowMsgBox
+//------------------------------------------------------------------------------
+void Env::ShowMsgBox( const char * title, const char * msg )
+{
+    #if defined( __WINDOWS__ )
+        MessageBoxA( nullptr, msg, title, MB_OK );
+    #elif defined( __APPLE__ )
+        (void)title;
+        (void)msg; // TODO:MAC Implement ShowMsgBox
+    #elif defined( __LINUX__ )
+        (void)title;
+        (void)msg; // TODO:LINUX Implement ShowMsgBox
+    #else
+        #error Unknown Platform
     #endif
 }
 
