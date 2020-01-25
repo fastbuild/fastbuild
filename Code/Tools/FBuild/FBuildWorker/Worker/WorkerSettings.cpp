@@ -27,8 +27,7 @@ WorkerSettings::WorkerSettings()
     : m_Mode( WHEN_IDLE )
     , m_NumCPUsToUse( 1 )
     , m_StartMinimized( false )
-    , m_WriteExtraInfoInBrokerFile( false )
-    , m_LastWriteTime( 0 )
+    , m_SettingsWriteTime( 0 )
     , m_MinimumFreeMemoryMiB( 1024 ) // 1 GiB
 {
     // half CPUs available to use by default
@@ -84,7 +83,7 @@ void WorkerSettings::Load()
     FileStream f;
     if ( f.Open( settingsPath.Get(), FileStream::READ_ONLY ) )
     {
-        char header[ 4 ] = { 0 };
+        uint8_t header[ 4 ] = { 0 };
         f.Read( &header, 4 );
 
         const uint8_t settingsVersion = header[ 3 ];
@@ -103,7 +102,7 @@ void WorkerSettings::Load()
 
         f.Close();
 
-        m_LastWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
+        m_SettingsWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
     }
 }
 
@@ -129,11 +128,11 @@ void WorkerSettings::Save()
         ok &= f.Write( m_NumCPUsToUse );
         ok &= f.Write( m_StartMinimized );
 
+        f.Close();
+
         if ( ok )
         {
-            f.Close();
-            m_LastWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
-
+            m_SettingsWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
             return;
         }
     }

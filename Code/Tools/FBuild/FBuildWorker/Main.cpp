@@ -124,10 +124,6 @@ int MainCommon( const AString & args )
         {
             WorkerSettings::Get().SetMode( options.m_WorkMode );
         }
-        if ( options.m_WriteExtraInfoInBrokerFile )
-        {
-            WorkerSettings::Get().SetWriteExtraInfoInBrokerFile( true );
-        }
         if ( options.m_MinimumFreeMemoryMiB )
         {
             WorkerSettings::Get().SetMinimumFreeMemoryMiB( options.m_MinimumFreeMemoryMiB );

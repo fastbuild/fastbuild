@@ -36,9 +36,6 @@ public:
     WorkerSettings::Mode m_WorkMode;
     uint32_t m_MinimumFreeMemoryMiB; // Minimum OS free memory including virtual memory to let worker do its work
 
-    // broker settings
-    bool m_WriteExtraInfoInBrokerFile;
-
     // Console mode
     bool m_ConsoleMode;
 
