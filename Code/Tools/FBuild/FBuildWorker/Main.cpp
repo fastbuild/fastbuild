@@ -124,6 +124,10 @@ int MainCommon( const AString & args )
         {
             WorkerSettings::Get().SetMode( options.m_WorkMode );
         }
+        if ( options.m_MinimumFreeMemoryInMB )
+        {
+            WorkerSettings::Get().SetMinimumFreeMemoryInMB( options.m_MinimumFreeMemoryInMB );
+        }
         ret = worker.Work();
     }
 

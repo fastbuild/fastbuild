@@ -36,12 +36,16 @@ public:
     void SetStartMinimized( bool startMinimized );
     inline bool GetStartMinimzed() { return m_StartMinimized; }
 
+    inline uint64_t GetMinimumFreeMemoryInMB() { return m_MinimumFreeMemoryInMB; }
+    void SetMinimumFreeMemoryInMB( uint64_t value );
+
     void Load();
     void Save();
 private:
     Mode        m_Mode;
     uint32_t    m_NumCPUsToUse;
     bool        m_StartMinimized;
+    uint64_t    m_MinimumFreeMemoryInMB; // Minimum OS free memory including virtual memory to let worker do its work. Unit is in MB
 };
 
 //------------------------------------------------------------------------------

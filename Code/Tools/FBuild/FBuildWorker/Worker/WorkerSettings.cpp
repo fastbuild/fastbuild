@@ -26,6 +26,7 @@ WorkerSettings::WorkerSettings()
     : m_Mode( WHEN_IDLE )
     , m_NumCPUsToUse( 1 )
     , m_StartMinimized( false )
+    , m_MinimumFreeMemoryInMB ( 1024 ) // 1 GB
 {
     // half CPUs available to use by default
     uint32_t numCPUs = Env::GetNumProcessors();
@@ -60,6 +61,13 @@ void WorkerSettings::SetNumCPUsToUse( uint32_t c )
 void WorkerSettings::SetStartMinimized( bool startMinimized )
 {
     m_StartMinimized = startMinimized;
+}
+
+// SetMinimumFreeMemoryInMB
+//------------------------------------------------------------------------------
+void WorkerSettings::SetMinimumFreeMemoryInMB( uint64_t value )
+{
+    m_MinimumFreeMemoryInMB = value;
 }
 
 // Load
