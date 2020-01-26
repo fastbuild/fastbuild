@@ -54,7 +54,7 @@ CSNode::CSNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CSNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -212,7 +212,8 @@ CSNode::~CSNode() = default;
         // something went wrong, print details
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );
-        goto failed;
+        FLOG_ERROR( "Failed to build Object. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
+        return NODE_RESULT_FAILED;
     }
 
     if ( !FileIO::FileExists( m_Name.Get() ) )
@@ -222,14 +223,9 @@ CSNode::~CSNode() = default;
     }
 
     // record new file time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
-
-failed:
-    FLOG_ERROR( "Failed to build Object. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-
-    return NODE_RESULT_FAILED;
 }
 
 // GetCompiler

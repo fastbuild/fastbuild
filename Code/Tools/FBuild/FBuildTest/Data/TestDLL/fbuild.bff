@@ -16,8 +16,8 @@ Settings {}
 [
     #if __WINDOWS__
         Using( .VisualStudioToolChain_X64 )
-        .CompilerOptions    + ' /DLL /MT'
-        .PCHOptions         + ' /DLL /MT'
+        .CompilerOptions    + ' /MT'
+        .PCHOptions         + ' /MT'
         .LinkerOptions      + ' /DLL'
                             + .CRTLibs_Static
                             + ' kernel32.lib'

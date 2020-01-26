@@ -31,7 +31,7 @@ FunctionCopy::FunctionCopy()
 
 // Commit
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionCopy::Commit( NodeGraph & nodeGraph, const BFFIterator & funcStartIter ) const
+/*virtual*/ bool FunctionCopy::Commit( NodeGraph & nodeGraph, const BFFToken * funcStartIter ) const
 {
     // make sure all required variables are defined
     Array< AString > sources( 16, true );
@@ -172,7 +172,7 @@ FunctionCopy::FunctionCopy()
 
 // GetSourceNodes
 //------------------------------------------------------------------------------
-bool FunctionCopy::GetSourceNodes( const BFFIterator & iter, Node * node, Array< Node * > & nodes ) const
+bool FunctionCopy::GetSourceNodes( const BFFToken * iter, Node * node, Array< Node * > & nodes ) const
 {
     if ( node->GetType() == Node::ALIAS_NODE )
     {

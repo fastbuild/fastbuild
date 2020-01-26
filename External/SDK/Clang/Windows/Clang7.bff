@@ -1,6 +1,9 @@
 // Clang 7.x.x
 //------------------------------------------------------------------------------
-.Clang7_BasePath = '../External/SDK/Clang/Windows/7.0.1'
+.Clang7_BasePath     = '../External/SDK/Clang/Windows/7.0.1'
+#if CI_BUILD
+    .Clang7_BasePath = 'C:\Program Files\LLVM'
+#endif
 
 // Compiler
 //------------------------------------------------------------------------------
@@ -56,9 +59,6 @@ Compiler( 'Compiler-Clang7' )
                                     + ' -Wno-nonportable-include-path'  // non-portable path to file '"%s"'; specified path differs in case from file name on disk [-Wnonportable-include-path]
                                     + ' -Wno-ignored-pragma-intrinsic'  // _bittest' is not a recognized builtin; consider including <intrin.h> to access non-builtin intrinsics [-Wignored-pragma-intrinsic]
                                     + ' -Wno-int-to-void-pointer-cast'  // cast to 'void *' from smaller integer type 'unsigned long' [-Wint-to-void-pointer-cast]
-                                    #if USING_VS2013
-                                        + ' -Wno-implicit-exception-spec-mismatch'
-                                    #endif
 
                                     // as of v7.0.1, these warnings fire inside system headers
                                     + ' -Wno-reserved-id-macro'         // macro name is a reserved identifier [-Wreserved-id-macro]
@@ -101,7 +101,7 @@ Compiler( 'Compiler-Clang7' )
     .LibrarianOptions               = 'rc "%2" "%1"' // NOTE: output must come first
 
     // Linker
-    //.Linker                       = From VS installation
+    .Linker                         = '$Clang7_BasePath$\bin\lld-link.exe'
     .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
                                     + .VSLibPaths
 

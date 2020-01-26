@@ -22,10 +22,11 @@ public:
     ~IdleDetection();
 
     // returns true if idle
-    void Update();
+    void Update( uint32_t idleThresholdPercent );
 
     // query status
     inline bool IsIdle() const { return m_IsIdle; }
+    inline float IsIdleFloat() const { return m_IsIdleFloat; }
 
 private:
     // struct to track processes with
@@ -41,7 +42,7 @@ private:
         uint64_t    m_LastTime;
     };
 
-    bool IsIdleInternal();
+    bool IsIdleInternal( uint32_t idleThresholdPercent, float & idleCurrent );
 
     static void GetSystemTotalCPUUsage( uint64_t & outIdleTime,
                                         uint64_t & outKernTime,
@@ -59,7 +60,10 @@ private:
     float   m_CPUUsageFASTBuild;
     float   m_CPUUsageTotal;
     bool    m_IsIdle;
+    float   m_IsIdleFloat;
+    float   m_IsIdleCurrent;
     int32_t m_IdleSmoother;
+    int32_t m_IdleFloatSmoother;
     Array< ProcessInfo > m_ProcessesInOurHierarchy;
     uint64_t m_LastTimeIdle;
     uint64_t m_LastTimeBusy;

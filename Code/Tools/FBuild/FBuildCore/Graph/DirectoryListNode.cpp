@@ -12,7 +12,9 @@
 // Core
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // Reflection
@@ -29,7 +31,7 @@ REFLECT_END( DirectoryListNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 DirectoryListNode::DirectoryListNode()
-    : Node( AString::GetEmpty(), Node::DIRECTORY_LIST_NODE, Node::FLAG_NONE )
+    : Node( AString::GetEmpty(), Node::DIRECTORY_LIST_NODE, Node::FLAG_ALWAYS_BUILD )
     , m_Recursive( true )
 {
     m_LastBuildTimeMs = 100;
@@ -37,7 +39,7 @@ DirectoryListNode::DirectoryListNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
     ASSERT( ( m_Recursive == true ) || ( m_Recursive == false ) );
 
@@ -194,6 +196,8 @@ DirectoryListNode::~DirectoryListNode() = default;
         }
     }
 
+    MakePrettyName( files.GetSize() );
+
     if ( FLog::ShowInfo() )
     {
         const size_t numFiles = m_Files.GetSize();
@@ -206,7 +210,41 @@ DirectoryListNode::~DirectoryListNode() = default;
         }
     }
 
+    // Hash the directory listing to represent the discovered files
+    // Note: We don't include any file attributes in this hash, because
+    // if a downstream node depends on the files, it will do so directly
+    // The hash only represents the list of discovered files
+    if ( m_Files.IsEmpty() )
+    {
+        m_Stamp = 1; // Non-zero
+    }
+    else
+    {
+        MemoryStream ms;
+        for ( const FileIO::FileInfo & file : m_Files )
+        {
+            ms.WriteBuffer( file.m_Name.Get(), file.m_Name.GetLength() );
+        }
+        m_Stamp = xxHash::Calc64( ms.GetData(), ms.GetSize() );
+    }
+
     return NODE_RESULT_OK;
+}
+
+// MakePrettyName
+//------------------------------------------------------------------------------
+void DirectoryListNode::MakePrettyName( const size_t totalFiles )
+{
+    AStackString<> prettyName( m_Path );
+    if (m_Recursive)
+    {
+        prettyName += " (recursive)";
+    }
+
+    const size_t numFiles = m_Files.GetSize();
+    prettyName.AppendFormat( ", files kept: %zu / %zu", numFiles, totalFiles );
+
+    m_PrettyName = prettyName;
 }
 
 //------------------------------------------------------------------------------

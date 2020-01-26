@@ -26,7 +26,7 @@ SLNGenerator::SLNGenerator() = default;
 //------------------------------------------------------------------------------
 SLNGenerator::~SLNGenerator() = default;
 
-// GenerateVCXProj
+// GenerateSLN
 //------------------------------------------------------------------------------
 const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
                                            const AString & solutionVisualStudioVersion,
@@ -377,7 +377,7 @@ void SLNGenerator::WriteFooter()
 
 // Write
 //------------------------------------------------------------------------------
-void SLNGenerator::Write( const char * fmtString, ... )
+void SLNGenerator::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > tmp;
 

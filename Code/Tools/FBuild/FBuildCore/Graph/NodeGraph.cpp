@@ -145,7 +145,7 @@ NodeGraph::~NodeGraph()
 
             // Migrate old DB info to new DB
             const SettingsNode * settings = newNG->GetSettings();
-            if ( settings->GetAllowDBMigration_Experimental() || forceMigration ) // TODO:B Remove when feature no longer experimental
+            if ( ( settings->GetDisableDBMigration() == false ) || forceMigration )
             {
                 newNG->Migrate( *oldNG );
             }
@@ -170,31 +170,9 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
 {
     ASSERT( m_UsedFiles.IsEmpty() ); // NodeGraph cannot be recycled
 
-    // open the configuration file
-    FLOG_INFO( "Loading BFF '%s'", bffFile );
-    FileStream bffStream;
-    if ( bffStream.Open( bffFile ) == false )
-    {
-        // missing bff is a fatal problem
-        FLOG_ERROR( "Failed to open BFF '%s'", bffFile );
-        return false;
-    }
-    const uint64_t rootBFFTimeStamp = FileIO::GetFileLastWriteTime( AStackString<>( bffFile ) );
-
-    // read entire config into memory
-    uint32_t size = (uint32_t)bffStream.GetFileSize();
-    AutoPtr< char > data( (char *)ALLOC( size + 1 ) ); // extra byte for null character sentinel
-    if ( bffStream.Read( data.Get(), size ) != size )
-    {
-        FLOG_ERROR( "Error reading BFF '%s'", bffFile );
-        return false;
-    }
-    const uint64_t rootBFFDataHash = xxHash::Calc64( data.Get(), size );
-
     // re-parse the BFF from scratch, clean build will result
     BFFParser bffParser( *this );
-    data.Get()[ size ] = '\0'; // data passed to parser must be NULL terminated
-    const bool ok = bffParser.Parse( data.Get(), size, bffFile, rootBFFTimeStamp, rootBFFDataHash ); // pass size excluding sentinel
+    const bool ok = bffParser.ParseFromFile( bffFile );
     if ( ok )
     {
         // Store a pointer to the SettingsNode as defined by the BFF, or create a
@@ -202,6 +180,14 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
         const AStackString<> settingsNodeName( "$$Settings$$" );
         const Node * settingsNode = FindNode( settingsNodeName );
         m_Settings = settingsNode ? settingsNode->CastTo< SettingsNode >() : CreateSettingsNode( settingsNodeName ); // Create a default
+
+        // Parser will populate m_UsedFiles
+        const Array<BFFFile *> & usedFiles = bffParser.GetUsedFiles();
+        m_UsedFiles.SetCapacity( usedFiles.GetSize() );
+        for ( const BFFFile * file : usedFiles )
+        {
+            m_UsedFiles.Append( UsedFile( file->GetFileName(), file->GetTimeStamp(), file->GetHash() ) );
+        }
     }
     return ok;
 }
@@ -601,35 +587,37 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
     }
 }
 
-// Display
+// SerializeToText
 //------------------------------------------------------------------------------
-void NodeGraph::Display( const Dependencies & deps ) const
+void NodeGraph::SerializeToText( const Dependencies & deps, AString & outBuffer ) const
 {
-    AString buffer( 10 * 1024 * 1024 );
+    s_BuildPassTag++;
 
-    const size_t numNodes = m_AllNodes.GetSize();
-    Array< bool > visited( numNodes, false );
-    visited.SetSize( numNodes );
-    memset( visited.Begin(), 0, numNodes );
-    for ( const Dependency & dep : deps )
+    if ( deps.IsEmpty() == false )
     {
-        DisplayRecurse( dep.GetNode(), visited, 0, buffer );
+        for ( const Dependency & dep : deps )
+        {
+            SerializeToText( dep.GetNode(), 0, outBuffer );
+        }
     }
-
-    OUTPUT("%s", buffer.Get());
+    else
+    {
+        for ( Node * node : m_AllNodes )
+        {
+            SerializeToText( node, 0, outBuffer );
+        }
+    }
 }
 
-// DisplayRecurse
+// SerializeToText
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::DisplayRecurse( Node * node, Array< bool > & visited, uint32_t depth, AString& outBuffer )
+/*static*/ void NodeGraph::SerializeToText( Node * node, uint32_t depth, AString& outBuffer )
 {
     // Print this even if it has been visited before so the edge is visible
     outBuffer.AppendFormat( "%*s%s %s\n", depth * 4, "", node->GetTypeName(), node->GetName().Get() );
 
     // Don't descend into already visited nodes
-    uint32_t nodeIndex = node->GetIndex();
-    ASSERT( nodeIndex != INVALID_NODE_INDEX );
-    if ( visited[ nodeIndex ] )
+    if ( node->GetBuildPassTag() == s_BuildPassTag )
     {
         if ( node->GetPreBuildDependencies().GetSize() ||
              node->GetStaticDependencies().GetSize() ||
@@ -639,17 +627,17 @@ void NodeGraph::Display( const Dependencies & deps ) const
         }
         return;
     }
-    visited[ nodeIndex ] = true;
+    node->SetBuildPassTag( s_BuildPassTag );
 
     // Dependencies
-    DisplayRecurse( "PreBuild", node->GetPreBuildDependencies(), visited, depth, outBuffer );
-    DisplayRecurse( "Static", node->GetStaticDependencies(), visited, depth, outBuffer );
-    DisplayRecurse( "Dynamic", node->GetDynamicDependencies(), visited, depth, outBuffer );
+    SerializeToText( "PreBuild", node->GetPreBuildDependencies(), depth, outBuffer );
+    SerializeToText( "Static", node->GetStaticDependencies(), depth, outBuffer );
+    SerializeToText( "Dynamic", node->GetDynamicDependencies(), depth, outBuffer );
 }
 
-// DisplayRecurse
+// SerializeToText
 //------------------------------------------------------------------------------
-/*static*/ void NodeGraph::DisplayRecurse( const char * title, const Dependencies & dependencies, Array< bool > & visited, uint32_t depth, AString & outBuffer )
+/*static*/ void NodeGraph::SerializeToText( const char * title, const Dependencies & dependencies, uint32_t depth, AString & outBuffer )
 {
     const Dependency * const end = dependencies.End();
     const Dependency * it = dependencies.Begin();
@@ -660,7 +648,7 @@ void NodeGraph::Display( const Dependencies & deps ) const
     for ( ; it != end; ++it )
     {
         Node * n = it->GetNode();
-        DisplayRecurse( n, visited, depth + 1, outBuffer );
+        SerializeToText( n, depth + 1, outBuffer );
     }
 }
 
@@ -777,11 +765,11 @@ FileNode * NodeGraph::CreateFileNode( const AString & fileName, bool cleanPath )
     {
         AStackString< 512 > fullPath;
         CleanPath( fileName, fullPath );
-        node = FNEW( FileNode( fullPath, Node::FLAG_TRIVIAL_BUILD ) );
+        node = FNEW( FileNode( fullPath, Node::FLAG_TRIVIAL_BUILD | Node::FLAG_ALWAYS_BUILD ) );
     }
     else
     {
-        node = FNEW( FileNode( fileName, Node::FLAG_TRIVIAL_BUILD ) );
+        node = FNEW( FileNode( fileName, Node::FLAG_TRIVIAL_BUILD | Node::FLAG_ALWAYS_BUILD) );
     }
 
     AddNode( node );
@@ -1047,6 +1035,13 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
                 {
                     upToDateCount++;
                 }
+
+                // Check for failure again propagatating overall state more quickly. This aallows failed
+                // builds to terminate moe quickly
+                if ( n->GetState() == Node::FAILED )
+                {
+                    failedCount++;
+                }
             }
         }
 
@@ -1084,7 +1079,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     // check pre-build dependencies
     if ( nodeToBuild->GetState() == Node::NOT_PROCESSED )
     {
-        // all static deps done?
+        // all pre-build deps done?
         bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
         if ( allDependenciesUpToDate == false )
         {
@@ -1116,14 +1111,29 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
     if ( nodeToBuild->GetState() != Node::DYNAMIC_DEPS_DONE )
     {
-        // static deps ready, update dynamic deps
-        bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
-        if ( nodeToBuild->DoDynamicDependencies( *this, forceClean ) == false )
+        // If static deps require us to rebuild, dynamic dependencies need regenerating
+        const bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
+        if ( forceClean ||
+             nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetStaticDependencies() ) )
         {
-            nodeToBuild->SetState( Node::FAILED );
-            return;
+            // Clear dynamic dependencies
+            nodeToBuild->m_DynamicDependencies.Clear();
+
+            // Explicitly mark node in a way that will result in it rebuilding should
+            // we cancel the build before builing this node
+            nodeToBuild->m_Stamp = 0;
+
+            // Regenerate dynamic dependencies
+            if ( nodeToBuild->DoDynamicDependencies( *this, forceClean ) == false )
+            {
+                nodeToBuild->SetState( Node::FAILED );
+                return;
+            }
+
+            // Continue through to check dynamic dependencies and build
         }
 
+        // Dynamic dependencies are ready to be checked
         nodeToBuild->SetState( Node::DYNAMIC_DEPS_DONE );
     }
 
@@ -1143,13 +1153,17 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     // building
     bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
     nodeToBuild->SetStatFlag( Node::STATS_PROCESSED );
-    if ( nodeToBuild->DetermineNeedToBuild( forceClean ) )
+    if ( forceClean ||
+         ( nodeToBuild->GetStamp() == 0 ) || // Avoid redundant messages from DetermineNeedToBuild
+         nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetStaticDependencies() ) ||
+         nodeToBuild->DetermineNeedToBuild( nodeToBuild->GetDynamicDependencies() ) )
     {
         nodeToBuild->m_RecursiveCost = cost;
         JobQueue::Get().AddJobToBatch( nodeToBuild );
     }
     else
     {
+        FLOG_INFO("Up-To-Date '%s'", nodeToBuild->GetName().Get());
         nodeToBuild->SetState( Node::UP_TO_DATE );
     }
 }
@@ -1257,7 +1271,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     if ( !isFullPath && makeFullPath )
     {
         // make a full path by prepending working dir
-        const AString & workingDir = FBuild::Get().GetWorkingDir();
+        const AString & workingDir = FBuild::IsValid() ? FBuild::Get().GetWorkingDir() : AString::GetEmpty();
 
         // we're making the assumption that we don't need to clean the workingDir
         ASSERT( workingDir.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
@@ -1394,49 +1408,6 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
     // sanity checks
     ASSERT( cleanPath.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
     ASSERT( cleanPath.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
-}
-
-// AddUsedFile
-//------------------------------------------------------------------------------
-void NodeGraph::AddUsedFile( const AString & fileName, uint64_t timeStamp, uint64_t dataHash )
-{
-    const size_t numFiles = m_UsedFiles.GetSize();
-    for ( size_t i=0 ;i<numFiles; ++i )
-    {
-        if ( PathUtils::ArePathsEqual( m_UsedFiles[i].m_FileName, fileName ) )
-        {
-            ASSERT( m_UsedFiles[ i ].m_Once == false ); // should not be trying to add a file a second time
-            return;
-        }
-    }
-    m_UsedFiles.Append( UsedFile( fileName, timeStamp, dataHash ) );
-}
-
-// IsOneUseFile
-//------------------------------------------------------------------------------
-bool NodeGraph::IsOneUseFile( const AString & fileName ) const
-{
-    const size_t numFiles = m_UsedFiles.GetSize();
-    ASSERT( numFiles ); // shouldn't be called if there are no files
-    for ( size_t i=0 ;i<numFiles; ++i )
-    {
-        if ( PathUtils::ArePathsEqual( m_UsedFiles[i].m_FileName, fileName ) )
-        {
-            return m_UsedFiles[ i ].m_Once;
-        }
-    }
-
-    // file never seen, so it can be included multiple time initially
-    // (if we hit a #once during parsing, we'll flag the file then)
-    return false;
-}
-
-// SetCurrentFileAsOneUse
-//------------------------------------------------------------------------------
-void NodeGraph::SetCurrentFileAsOneUse()
-{
-    ASSERT( !m_UsedFiles.IsEmpty() );
-    m_UsedFiles[ m_UsedFiles.GetSize() - 1 ].m_Once = true;
 }
 
 // FindNodeInternal
@@ -1652,6 +1623,12 @@ bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* 
     if ( PathUtils::ArePathsEqual( originalNodeGraphDBFile, nodeGraphDBFileClean ) == false )
     {
         FLOG_WARN( "Database has been moved (originally at '%s', now at '%s').", originalNodeGraphDBFile.Get(), nodeGraphDBFileClean.Get() );
+        if ( FBuild::Get().GetOptions().m_ContinueAfterDBMove )
+        {
+            // Allow build to continue (will be a clean build)
+            compatibleDB = false;
+            return true;
+        }
         return false;
     }
 
@@ -1749,6 +1726,16 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         return;
     }
 
+    // Migrate children before parents
+    for ( Dependency & dep : newNode.m_PreBuildDependencies )
+    {
+        MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
+    }
+    for ( Dependency& dep : newNode.m_StaticDependencies )
+    {
+        MigrateNode( oldNodeGraph, *dep.GetNode(), nullptr );
+    }
+
     // Get the matching node in the old DB
     const Node * oldNode;
     if ( oldNodeHint )
@@ -1800,6 +1787,15 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
         return;
     }
 
+    // Migrate static Dependencies
+    // - since everything matches, we only need to migrate the stamps
+    for ( Dependency & dep : newNode.m_StaticDependencies )
+    {
+        const size_t index = size_t( &dep - newNode.m_StaticDependencies.Begin() );
+        const Dependency & oldDep = oldNode->m_StaticDependencies[ index ];
+        dep.Stamp( oldDep.GetNodeStamp() );
+    }
+
     // Migrate Dynamic Dependencies
     {
         // New node should have no dynamic dependencies
@@ -1820,13 +1816,14 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
             }
             if ( newDepNode )
             {
-                newDeps.Append( Dependency( newDepNode, oldDep.IsWeak() ) );
+                newDeps.Append( Dependency( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() ) );
             }
             else
             {
                 // Create the dependency
                 newDepNode = Node::CreateNode( *this, oldDepNode->GetType(), oldDepNode->GetName() );
-                newDeps.Append( Dependency( newDepNode, oldDep.IsWeak() ) );
+                ASSERT( newDepNode );
+                newDeps.Append( Dependency( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() ) );
 
                 // Early out for FileNode (no properties and doesn't need Initialization)
                 if ( oldDepNode->GetType() == Node::FILE_NODE )
@@ -1838,7 +1835,8 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
                 MigrateProperties( (const void *)oldDepNode, (void *)newDepNode, newDepNode->GetReflectionInfoV() );
 
                 // Initialize the new node
-                VERIFY( newDepNode->Initialize( *this, BFFIterator(), nullptr ) );
+                const BFFToken * token = nullptr;
+                VERIFY( newDepNode->Initialize( *this, token, nullptr ) );
 
                 // Continue recursing
                 MigrateNode( oldNodeGraph, *newDepNode, oldDepNode );
@@ -2134,6 +2132,10 @@ bool NodeGraph::DoDependenciesMatch( const Dependencies & depsA, const Dependenc
         Node * nodeA = depsA[ i ].GetNode();
         Node * nodeB = depsB[ i ].GetNode();
         if ( nodeA->GetType() != nodeB->GetType() )
+        {
+            return false;
+        }
+        if ( nodeA->GetStamp() != nodeB->GetStamp() )
         {
             return false;
         }
