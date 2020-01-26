@@ -70,6 +70,13 @@ void OSWidget::Init()
     m_Initialized = true;
 }
 
+// Enable
+//------------------------------------------------------------------------------
+void OSWidget::Enable( bool enable )
+{
+    m_Parent->Enable( (HWND)m_Handle, enable );
+}
+
 // InitCommonControls
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )

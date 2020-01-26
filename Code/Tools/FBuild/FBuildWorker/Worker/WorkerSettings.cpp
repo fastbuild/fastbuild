@@ -25,6 +25,7 @@
 //------------------------------------------------------------------------------
 WorkerSettings::WorkerSettings()
     : m_Mode( WHEN_IDLE )
+    , m_IdleThresholdPercent( 20 )
     , m_NumCPUsToUse( 1 )
     , m_StartMinimized( false )
     , m_SettingsWriteTime( 0 )
@@ -49,6 +50,13 @@ WorkerSettings::~WorkerSettings() = default;
 void WorkerSettings::SetMode( Mode m )
 {
     m_Mode = m;
+}
+
+// SetIdleThresholdPercent
+//------------------------------------------------------------------------------
+void WorkerSettings::SetIdleThresholdPercent( uint32_t p )
+{
+    m_IdleThresholdPercent = p;
 }
 
 // SetNumCPUsToUse
@@ -97,6 +105,10 @@ void WorkerSettings::Load()
         uint32_t mode;
         f.Read( mode );
         m_Mode = (Mode)mode;
+        if (header[3] >= 3)
+        {
+            f.Read( m_IdleThresholdPercent );
+        }
         f.Read( m_NumCPUsToUse );
         f.Read( m_StartMinimized );
 
@@ -125,6 +137,7 @@ void WorkerSettings::Save()
 
         // settings
         ok &= f.Write( (uint32_t)m_Mode );
+        ok &= f.Write( m_IdleThresholdPercent );
         ok &= f.Write( m_NumCPUsToUse );
         ok &= f.Write( m_StartMinimized );
 

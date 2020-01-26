@@ -208,6 +208,21 @@ void OSWindow::AddChild( OSWidget * childWidget )
     m_ChildWidgets.Append( childWidget );
 }
 
+// Enable
+//------------------------------------------------------------------------------
+void OSWindow::Enable( void * handle, bool enable )
+{
+    #if defined( __WINDOWS__ )
+        EnableWindow( (HWND)handle, enable );
+    #elif defined( __APPLE__ )
+        // TODO:MAC EnableWindow equivalent
+    #elif defined( __LINUX__ )
+        // TODO:LINUX EnableWindow equivalent
+    #else
+        #error Unknown Platform
+    #endif
+}
+
 // SetTitle
 //------------------------------------------------------------------------------
 void OSWindow::SetTitle( const char * title )

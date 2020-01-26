@@ -309,9 +309,10 @@ void Worker::UpdateAvailability()
     const bool hasEnoughDiskSpace = HasEnoughDiskSpace();
     const bool hasEnoughMemory = HasEnoughMemory();
 
-    m_IdleDetection.Update();
-
     WorkerSettings & ws = WorkerSettings::Get();
+
+    m_IdleDetection.Update( ws.GetIdleThresholdPercent() );
+
     uint32_t numCPUsToUse = ws.GetNumCPUsToUse();
     switch( ws.GetMode() )
     {

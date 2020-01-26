@@ -28,6 +28,9 @@ public:
     inline Mode GetMode() const { return m_Mode; }
     void SetMode( Mode m );
 
+    inline uint32_t GetIdleThresholdPercent() const { return m_IdleThresholdPercent; }
+    void SetIdleThresholdPercent( uint32_t p );
+
     // CPU Usage limits
     inline uint32_t GetNumCPUsToUse() const { return m_NumCPUsToUse; }
     void SetNumCPUsToUse( uint32_t c );
@@ -46,6 +49,7 @@ public:
     void Save();
 private:
     Mode        m_Mode;
+    uint32_t	m_IdleThresholdPercent;
     uint32_t    m_NumCPUsToUse;
     bool        m_StartMinimized;
     uint64_t    m_SettingsWriteTime;    // FileTime of settings when last changed/written to disk

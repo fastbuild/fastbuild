@@ -20,6 +20,8 @@ public:
     void Init();
     inline bool IsInitialized() const { return m_Initialized; }
 
+    void Enable( bool enable );
+
     inline OSWindow * GetParentWindow() const { return m_Parent; }
     inline void * GetHandle() const { return m_Handle; }
 protected:
