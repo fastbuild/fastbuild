@@ -121,6 +121,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_CacheVerbose = true;
                 continue;
             }
+            else if ( thisArg == "-maxcachecompression" )
+            {
+                m_UseMaxCompressionForCache = true;
+                continue;
+            }
             else if ( thisArg == "-clean" )
             {
                 m_ForceCleanBuild = true;
