@@ -28,6 +28,7 @@
     void DropDownOSX_AddItem( OSDropDown * owner, const char * itemText );
     void DropDownOSX_SetSelectedItem( OSDropDown * owner, uint32_t index );
     uint32_t DropDownOSX_GetSelectedItem( const OSDropDown * owner );
+    void DropDownOSX_SetEnabled( const OSDropDown * owner, bool enabled );
 #endif
 
 // CONSTRUCTOR
@@ -114,6 +115,20 @@ size_t OSDropDown::GetSelectedItem() const
     #else
         ASSERT(false);
         return 0;
+    #endif
+}
+
+// SetEnabled
+//------------------------------------------------------------------------------
+void OSDropDown::SetEnabled( bool enabled )
+{
+    #if defined( __WINDOWS__ )
+        EnableWindow( (HWND)m_Handle, enabled );
+    #elif defined( __OSX__ )
+        DropDownOSX_SetEnabled( this, enabled );
+    #else
+        ASSERT( false );
+        (void)enabled; // TODO:LINUX EnableWindow equivalent
     #endif
 }
 

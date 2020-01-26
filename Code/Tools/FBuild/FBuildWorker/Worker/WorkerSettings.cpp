@@ -19,7 +19,7 @@
 // Other
 //------------------------------------------------------------------------------
 #define FBUILDWORKER_SETTINGS_MIN_VERSION ( 1 )     // Oldest compatible version
-#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 3 ) // Current version
+#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 4 ) // Current version
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ void WorkerSettings::Load()
         uint32_t mode;
         f.Read( mode );
         m_Mode = (Mode)mode;
-        if (header[3] >= 3)
+        if ( header[ 3 ] >= 4 )
         {
             f.Read( m_IdleThresholdPercent );
         }

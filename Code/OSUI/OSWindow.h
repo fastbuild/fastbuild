@@ -41,7 +41,6 @@ public:
         OSWidget *      GetChildFromHandle( void * handle );
     #endif
 
-    void Enable( void * handle, bool enable );
     void SetTitle( const char * title );
     void SetMinimized( bool minimized );
 

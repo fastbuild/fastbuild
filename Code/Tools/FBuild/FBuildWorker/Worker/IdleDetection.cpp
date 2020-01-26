@@ -101,7 +101,7 @@ void IdleDetection::Update( uint32_t idleThresholdPercent )
     }
 }
 
-//
+// IsIdleInternal
 //------------------------------------------------------------------------------
 bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleCurrent )
 {
