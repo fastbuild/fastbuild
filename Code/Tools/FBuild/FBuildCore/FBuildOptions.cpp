@@ -121,9 +121,24 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_CacheVerbose = true;
                 continue;
             }
-            else if ( thisArg == "-maxcachecompression" )
+            else if ( thisArg == "-cachecompressionlevel" )
             {
-                m_UseMaxCompressionForCache = true;
+                const int sizeIndex = ( i + 1 );
+                PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+                if ( ( sizeIndex >= argc ) ||
+                     ( sscanf( argv[ sizeIndex ], "%i", &m_CacheCompressionLevel ) != 1 ) || // TODO:C Consider using sscanf_s
+                     ( ( m_CacheCompressionLevel < -128 ) || ( m_CacheCompressionLevel > 12 ) ) ) // See Compressor for valid ranges
+                PRAGMA_DISABLE_POP_MSVC // 4996
+                {
+                    OUTPUT( "FBuild: Error: Missing or bad <level> for '-cachecompressionlevel' argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }
+                i++; // skip extra arg we've consumed
+                
+                // add to args we might pass to subprocess
+                m_Args += ' ';
+                m_Args += argv[ sizeIndex ];
                 continue;
             }
             else if ( thisArg == "-clean" )
@@ -487,6 +502,11 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
     OUTPUT( "----------------------------------------------------------------------\n"
             "Options:\n"
             " -cache[read|write] Control use of the build cache.\n"
+            " -cachecompressionlevel [level]\n"
+            "                Control compression for cache artifacts (default: -1)\n"
+            "                <= -1 : less compression, with -128 being the lowest\n"
+            "                ==  0 : disable compression\n"
+            "                >=  1 : more compression, with 12 being the highest\n"
             " -cacheinfo     Output cache statistics.\n"
             " -cachetrim [size] Trim the cache to the given size in MiB.\n"
             " -cacheverbose  Emit details about cache interactions.\n"
