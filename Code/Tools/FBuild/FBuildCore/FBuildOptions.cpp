@@ -71,7 +71,12 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         // options start with a '-'
         if ( thisArg.BeginsWith( '-' ) )
         {
-            if ( thisArg == "-cache" )
+            if ( thisArg == "-continueafterdbmove" )
+            {
+                m_ContinueAfterDBMove = true;
+                continue;
+            }
+            else if ( thisArg == "-cache" )
             {
                 m_UseCacheRead = true;
                 m_UseCacheWrite = true;
@@ -116,9 +121,34 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_CacheVerbose = true;
                 continue;
             }
+            else if ( thisArg == "-cachecompressionlevel" )
+            {
+                const int sizeIndex = ( i + 1 );
+                PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+                if ( ( sizeIndex >= argc ) ||
+                     ( sscanf( argv[ sizeIndex ], "%i", &m_CacheCompressionLevel ) != 1 ) || // TODO:C Consider using sscanf_s
+                     ( ( m_CacheCompressionLevel < -128 ) || ( m_CacheCompressionLevel > 12 ) ) ) // See Compressor for valid ranges
+                PRAGMA_DISABLE_POP_MSVC // 4996
+                {
+                    OUTPUT( "FBuild: Error: Missing or bad <level> for '-cachecompressionlevel' argument\n" );
+                    OUTPUT( "Try \"%s -help\"\n", programName.Get() );
+                    return OPTIONS_ERROR;
+                }
+                i++; // skip extra arg we've consumed
+                
+                // add to args we might pass to subprocess
+                m_Args += ' ';
+                m_Args += argv[ sizeIndex ];
+                continue;
+            }
             else if ( thisArg == "-clean" )
             {
                 m_ForceCleanBuild = true;
+                continue;
+            }
+            else if ( thisArg == "-compdb" )
+            {
+                m_GenerateCompilationDatabase = true;
                 continue;
             }
             else if ( thisArg == "-config" )
@@ -140,13 +170,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Args += '"';
                 continue;
             }
-            #ifdef DEBUG
-                else if ( thisArg == "-debug" )
-                {
-                    ASSERT( false && "Break due to '-debug' argument - attach debugger!" );
-                    continue;
-                }
-            #endif
+            else if ( thisArg == "-debug" )
+            {
+                Env::ShowMsgBox( "FBuild", "Please attach debugger and press ok\n\n(-debug command line used)" );
+                continue;
+            }
             else if ( thisArg == "-dist" )
             {
                 m_AllowDistributed = true;
@@ -265,10 +293,6 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 m_DisplayTargetList = true;
                 continue;
-            }
-            else if ( thisArg == "-compdb" )
-            {
-                m_GenerateCompilationDatabase = true;
             }
             else if ( thisArg == "-showalltargets" )
             {
@@ -478,12 +502,18 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
     OUTPUT( "----------------------------------------------------------------------\n"
             "Options:\n"
             " -cache[read|write] Control use of the build cache.\n"
+            " -cachecompressionlevel [level]\n"
+            "                Control compression for cache artifacts (default: -1)\n"
+            "                <= -1 : less compression, with -128 being the lowest\n"
+            "                ==  0 : disable compression\n"
+            "                >=  1 : more compression, with 12 being the highest\n"
             " -cacheinfo     Output cache statistics.\n"
             " -cachetrim [size] Trim the cache to the given size in MiB.\n"
             " -cacheverbose  Emit details about cache interactions.\n"
             " -clean         Force a clean build.\n"
             " -compdb        Generate JSON compilation database for specified targets.\n"
-            " -config [path] Explicitly specify the config file to use.\n" );
+            " -config [path] Explicitly specify the config file to use.\n"
+            " -continueafterdbmove Allow builds after a DB move.\n" );
 #ifdef DEBUG
     OUTPUT( " -debug         Break at startup, to attach debugger.\n" );
 #endif
@@ -535,7 +565,7 @@ void FBuildOptions::DisplayVersion() const
         #define VERSION_CONFIG ""
     #endif
     OUTPUT( "FASTBuild - " FBUILD_VERSION_STRING " " VERSION_CONFIG "- "
-            "Copyright 2012-2019 Franta Fulin - http://www.fastbuild.org\n" );
+            "Copyright 2012-2020 Franta Fulin - http://www.fastbuild.org\n" );
     #undef VERSION_CONFIG
 }
 

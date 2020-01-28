@@ -16,6 +16,7 @@
 // system
 #if defined( __WINDOWS__ )
     #include "Core/Env/WindowsHeader.h"
+    #include "Core/Time/Time.h"
 #endif
 #if defined( __LINUX__ ) || defined( __APPLE__ )
     #include <dirent.h>
@@ -32,7 +33,42 @@
 #endif
 #if defined( __APPLE__ )
     #include <copyfile.h>
+    #include <dlfcn.h>
     #include <sys/time.h>
+#endif
+
+// OSXHelper_utimensat
+//------------------------------------------------------------------------------
+#if defined( __APPLE__ )
+    // OS X 10.13 (High Sierra) adds support for utimensat
+    // OS X 10.13 (High Sierra) adds the Apple File System (APFS) which supports nsec time resolution
+    // OS X 10.14 (Mojave) uses APFS for all drives/devices
+    //
+    // We want to set higher resolution timestamps where possible, but we want to
+    // retain compatibility with older versions of OS X. To do this, we get the
+    // utimensat symbol dynamically from the C runtime.
+    //
+    class OSXHelper_utimensat
+    {
+    public:
+        typedef int (*FuncPtr)(int dirfd, const char *pathname, const struct timespec times[2], int flags);
+        
+        OSXHelper_utimensat()
+        {
+            // Open the c runtime library
+            m_LibCHandle = dlopen( "libc.dylib", RTLD_LAZY );
+            ASSERT( m_LibCHandle ); // This should never fail
+        
+            // See if utimensat exists
+            m_FuncPtr = (FuncPtr)dlsym( m_LibCHandle, "utimensat" );
+        }
+        ~OSXHelper_utimensat()
+        {
+            VERIFY( dlclose( m_LibCHandle ) == 0 );
+        }
+        void *          m_LibCHandle    = nullptr;
+        FuncPtr         m_FuncPtr       = nullptr;
+    } gOSXHelper_utimensat;
 #endif
 
 // Exists
@@ -615,11 +651,6 @@
         struct stat st;
         if ( lstat( fileName.Get(), &st ) == 0 )
         {
-            // OSX only supports setting filetimes at usec granularity
-            // so if we ever receive times with sub-usec granularity
-            // we will lose accuracy.
-            ASSERT( ( st.st_mtimespec.tv_nsec % 1000 ) == 0 );
-
             return ( ( (uint64_t)st.st_mtimespec.tv_sec * 1000000000ULL ) + (uint64_t)st.st_mtimespec.tv_nsec );
         }
     #elif defined( __LINUX__ )
@@ -663,18 +694,51 @@
 
         return true;
     #elif defined( __APPLE__ )
+        // Use higher precision function if available
+        if ( gOSXHelper_utimensat.m_FuncPtr )
+        {
+            struct timespec t[ 2 ];
+            t[0].tv_sec = fileTime / 1000000000ULL;
+            t[0].tv_nsec = ( fileTime % 1000000000ULL );
+            t[1] = t[0];
+            return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), t, 0 ) == 0 );
+        }
+    
+        // Fallback to regular low-resolution filetime setting
         struct timeval t[ 2 ];
         t[0].tv_sec = fileTime / 1000000000ULL;
-        ASSERT( ( ( fileTime % 1000000000ULL ) % 1000 ) == 0 ); // ensure no loss of accuracy
         t[0].tv_usec = ( fileTime % 1000000000ULL ) / 1000;
         t[1] = t[0];
         return ( utimes( fileName.Get(), t ) == 0 );
-    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+    #elif defined( __LINUX__ )
         struct timespec t[ 2 ];
         t[0].tv_sec = fileTime / 1000000000ULL;
         t[0].tv_nsec = ( fileTime % 1000000000ULL );
         t[1] = t[0];
         return ( utimensat( 0, fileName.Get(), t, 0 ) == 0 );
+    #else
+        #error Unknown platform
+    #endif
+}
+
+// SetFileLastWriteTimeToNow
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::SetFileLastWriteTimeToNow( const AString & fileName )
+{
+    #if defined( __WINDOWS__ )
+        const uint64_t fileTimeNow = Time::GetCurrentFileTime();
+        return SetFileLastWriteTime( fileName, fileTimeNow );
+    #elif defined( __APPLE__ )
+        // Use higher precision function if available
+        if ( gOSXHelper_utimensat.m_FuncPtr )
+        {
+            return ( (gOSXHelper_utimensat.m_FuncPtr)( 0, fileName.Get(), nullptr, 0 ) == 0 );
+        }
+    
+        // Fallback to regular low-resolution filetime setting
+        return ( utimes( fileName.Get(), nullptr ) == 0 );
+    #elif defined( __LINUX__ )
+        return ( utimensat( 0, fileName.Get(), nullptr, 0 ) == 0 );
     #else
         #error Unknown platform
     #endif
@@ -1353,7 +1417,6 @@
                 return;
             }
         }
-        f.Close();
     }
 #endif
 

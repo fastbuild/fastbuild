@@ -24,6 +24,7 @@ private:
     void TestLibMerge() const;
     void TestLibMerge_NoRebuild() const;
     void TestLibMerge_NoRebuild_BFFChange() const;
+    void DeleteFile() const;
 
     const char * GetBuildLibDBFileName() const { return "../tmp/Test/BuildAndLinkLibrary/buildlib.fdb"; }
     const char * GetMergeLibDBFileName() const { return "../tmp/Test/BuildAndLinkLibrary/mergelib.fdb"; }
@@ -39,6 +40,7 @@ REGISTER_TESTS_BEGIN( TestBuildAndLinkLibrary )
     REGISTER_TEST( TestLibMerge )
     REGISTER_TEST( TestLibMerge_NoRebuild )
     REGISTER_TEST( TestLibMerge_NoRebuild_BFFChange )
+    REGISTER_TEST( DeleteFile )
 REGISTER_TESTS_END
 
 // TestStackFramesEmpty
@@ -145,10 +147,10 @@ void TestBuildAndLinkLibrary::TestBuildLib_NoRebuild_BFFChange() const
     //               Seen,  Built,  Type
     CheckStatsNode ( 1,     1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( 7,     7,      Node::FILE_NODE ); // 3 cpps + 3 headers + librarian
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 3,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 1,     0,      Node::LIBRARY_NODE );
-    CheckStatsTotal( 13,    9 );
+    CheckStatsTotal( 13,    8 );
 }
 
 // TestLibMerge
@@ -229,11 +231,77 @@ void TestBuildAndLinkLibrary::TestLibMerge_NoRebuild_BFFChange() const
     // Check stats
     //               Seen,  Built,  Type
     CheckStatsNode ( 7,     7,      Node::FILE_NODE ); // 3 cpps + 3 headers + librarian
-    CheckStatsNode ( 1,     1,      Node::COMPILER_NODE ); // Compiler rebuils after migration
+    CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
     CheckStatsNode ( 1,     0,      Node::OBJECT_LIST_NODE );
     CheckStatsNode ( 3,     0,      Node::OBJECT_NODE );
     CheckStatsNode ( 3,     0,      Node::LIBRARY_NODE ); // 2 libs + merge lib
-    CheckStatsTotal( 15,    8 );
+    CheckStatsTotal( 15,    7 );
+}
+
+// DeleteFile
+//------------------------------------------------------------------------------
+//  - Ensure that libraries are rebuilt when files are deleted
+void TestBuildAndLinkLibrary::DeleteFile() const
+{
+    const char* fileA = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/FileA.cpp";
+    const char* fileB = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/FileB.cpp";
+    const char* database = "../tmp/Test/BuildAndLinkLibrary/DeleteFile/fbuild.fdb";
+
+    // Create two empty files
+    {
+        // Generate some header files
+        EnsureDirExists( "../tmp/Test/BuildAndLinkLibrary/DeleteFile/GeneratedInput/" );
+        FileStream f;
+        TEST_ASSERT( f.Open( fileA, FileStream::WRITE_ONLY ) );
+        f.Close();
+        TEST_ASSERT( f.Open( fileB, FileStream::WRITE_ONLY ) );
+        f.Close();
+    }
+
+    // Compile library for the two files
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestBuildAndLinkLibrary/DeleteFile/fbuild.bff";
+        options.m_ForceCleanBuild = true;
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "TestLib" ) );
+
+        // Save DB
+        TEST_ASSERT( fBuild.SaveDependencyGraph( database ) );
+
+        // Check stats
+        //              Seen,   Built,  Type
+        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1,      1,      Node::COMPILER_NODE );
+        CheckStatsNode( 2,      2,      Node::OBJECT_NODE );
+        CheckStatsNode( 1,      1,      Node::LIBRARY_NODE );
+    }
+
+    // Delete one of the input files
+    EnsureFileDoesNotExist( fileB );
+
+    // Compile library again
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/BuildAndLinkLibrary/DeleteFile/fbuild.bff";
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( database ) );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( "TestLib" ) );
+
+        // Check stats
+        //              Seen,   Built,  Type
+        CheckStatsNode( 1,      1,      Node::DIRECTORY_LIST_NODE );
+        CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
+        CheckStatsNode( 1,      0,      Node::OBJECT_NODE );    // NOTE: Only one object seen
+        CheckStatsNode( 1,      1,      Node::LIBRARY_NODE );   // NOTE: Library rebuilt
+    }
 }
 
 //------------------------------------------------------------------------------

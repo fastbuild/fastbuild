@@ -20,6 +20,7 @@ public:
     inline void *       GetDataMutable() { return (void *)m_Begin; }
     inline size_t       GetSize() const { return (size_t)( m_End - m_Begin ); }
     void                Reset();
+    void *              Release();
 
     uint64_t            WriteBuffer( IOStream & stream, uint64_t bytesToWrite );
 

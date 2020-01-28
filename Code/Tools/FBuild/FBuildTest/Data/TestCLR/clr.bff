@@ -44,17 +44,11 @@ Executable( 'BridgeTest-Exe' )
     .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
                         + ' /ENTRY:ExeMain'
                         + ' kernel32.lib'
-                        #if USING_VS2013
-                            + ' MSCOREE.lib'
-                            + ' msvcmrt.lib'
-                            + ' msvcrt.LIB'
-                        #else
-                            + ' libvcruntime.lib'
-                            + ' libucrt.lib'
-                            + ' libcmt.lib'
-                            + ' msvcmrt.lib'
-                            + ' WindowsApp.lib'
-                        #endif
+                        + ' libvcruntime.lib'
+                        + ' libucrt.lib'
+                        + ' libcmt.lib'
+                        + ' msvcmrt.lib'
+                        + ' WindowsApp.lib'
 
     .LinkerOutput       = '$Out$/Test/CLR/Bridge/Bridge.exe'
     .Libraries          = { 'BridgeTest-CPP',

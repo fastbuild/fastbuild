@@ -5,9 +5,7 @@
 // Enabled in DEBUG only
 //------------------------------------------------------------------------------
 #ifdef DEBUG
-    #if !defined( __APPLE__ ) // TODO:MAC Fix MemTracker
-        #define MEMTRACKER_ENABLED
-    #endif
+    #define MEMTRACKER_ENABLED
 #endif
 
 // MemTracker
@@ -51,6 +49,7 @@
         static void DumpAllocations();
 
         static inline uint32_t GetCurrentAllocationCount() { return s_AllocationCount; }
+        static inline uint32_t GetCurrentAllocationId() { return s_Id; }
 
         struct Allocation
         {

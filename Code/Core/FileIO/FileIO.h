@@ -57,6 +57,7 @@ public:
 
     static uint64_t GetFileLastWriteTime( const AString & fileName );
     static bool     SetFileLastWriteTime( const AString & fileName, uint64_t fileTime );
+    static bool     SetFileLastWriteTimeToNow( const AString & fileName );
 
     static bool     SetReadOnly( const char * fileName, bool readOnly );
     static bool     GetReadOnly( const char * fileName );

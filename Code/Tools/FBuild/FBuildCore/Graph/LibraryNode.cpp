@@ -52,7 +52,7 @@ LibraryNode::LibraryNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool LibraryNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .Librarian
     Dependencies librarian;
@@ -226,9 +226,8 @@ LibraryNode::~LibraryNode()
         }
     }
 
-    // record time stamp for next time
-    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    ASSERT( m_Stamp );
+    // record new file time
+    RecordStampFromBuiltFile();
 
     return NODE_RESULT_OK;
 }
