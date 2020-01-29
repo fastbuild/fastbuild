@@ -50,21 +50,25 @@ void WorkerBrokerage::Init()
     {
         // FASTBUILD_BROKERAGE_PATH can contain multiple paths separated by semi-colon. The worker will register itself into the first path only but
         // the additional paths are paths to additional broker roots allowed for finding remote workers(in order of priority)
-        const char* start = brokeragePath.Get();
-        const char* end = brokeragePath.GetEnd();
+        const char * start = brokeragePath.Get();
+        const char * end = brokeragePath.GetEnd();
         AStackString<> pathSeparator( ";" );
         while ( true )
         {
             AStackString<> root;
             AStackString<> brokerageRoot;
 
-            const char* separator = brokeragePath.Find( pathSeparator, start, end );
+            const char * separator = brokeragePath.Find( pathSeparator, start, end );
             if ( separator != nullptr )
-                root.Append( start, separator - start );
+            {
+                root.Append( start, (size_t)( separator - start ) );
+            }
             else
-                root.Append( start, end - start );
-            root.TrimStart(' ');
-            root.TrimEnd(' ');
+            {
+                root.Append( start, (size_t)( end - start ) );
+            }
+            root.TrimStart( ' ' );
+            root.TrimEnd( ' ' );
             // <path>/<group>/<version>/
             #if defined( __WINDOWS__ )
                 brokerageRoot.Format( "%s\\main\\%u.windows\\", root.Get(), protocolVersion );
@@ -75,23 +79,30 @@ void WorkerBrokerage::Init()
             #endif
 
             m_BrokerageRoots.Append( brokerageRoot );
-            if ( !m_BrokerageRootsPaths.IsEmpty() )
-                m_BrokerageRootsPaths.Append( pathSeparator );
+            if ( !m_BrokerageRootPaths.IsEmpty() )
+            {
+                m_BrokerageRootPaths.Append( pathSeparator );
+            }
 
-            m_BrokerageRootsPaths.Append( brokerageRoot );
+            m_BrokerageRootPaths.Append( brokerageRoot );
 
             if ( separator != nullptr )
+            {
                 start = separator + 1;
+            }
             else
+            {
                 break;
+            }
         }
     }
 
     Network::GetHostName(m_HostName);
 
-    AStackString<> filePath;
     if ( !m_BrokerageRoots.IsEmpty() )
+    {
         m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
+    }
     m_TimerLastUpdate.Start();
 
     m_Initialized = true;

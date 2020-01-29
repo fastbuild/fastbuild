@@ -19,7 +19,7 @@ public:
     ~WorkerBrokerage();
 
     inline const Array<AString> & GetBrokerageRoots() const { return m_BrokerageRoots; }
-    inline const AString & GetBrokerageRootsPaths() const { return m_BrokerageRootsPaths; }
+    inline const AString & GetBrokerageRootPaths() const { return m_BrokerageRootPaths; }
 
     // client interface
     void FindWorkers( Array< AString > & workerList );
@@ -30,7 +30,7 @@ private:
     void Init();
 
     Array<AString>      m_BrokerageRoots;
-    AString             m_BrokerageRootsPaths;
+    AString             m_BrokerageRootPaths;
     bool                m_Availability;
     bool                m_Initialized;
     AString             m_HostName;
