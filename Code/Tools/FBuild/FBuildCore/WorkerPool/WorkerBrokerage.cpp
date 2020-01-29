@@ -45,23 +45,53 @@ void WorkerBrokerage::Init()
     uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
 
     // root folder
-    AStackString<> root;
-    if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", root ) )
+    AStackString<> brokeragePath;
+    if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", brokeragePath) )
     {
-        // <path>/<group>/<version>/
-        #if defined( __WINDOWS__ )
-            m_BrokerageRoot.Format( "%s\\main\\%u.windows\\", root.Get(), protocolVersion );
-        #elif defined( __OSX__ )
-            m_BrokerageRoot.Format( "%s/main/%u.osx/", root.Get(), protocolVersion );
-        #else
-            m_BrokerageRoot.Format( "%s/main/%u.linux/", root.Get(), protocolVersion );
-        #endif
+        // FASTBUILD_BROKERAGE_PATH can contain multiple paths separated by semi-colon. The worker will register itself into the first path only but
+        // the additional paths are paths to additional broker roots allowed for finding remote workers(in order of priority)
+        const char* start = brokeragePath.Get();
+        const char* end = brokeragePath.GetEnd();
+        AStackString<> pathSeparator( ";" );
+        while ( true )
+        {
+            AStackString<> root;
+            AStackString<> brokerageRoot;
+
+            const char* separator = brokeragePath.Find( pathSeparator, start, end );
+            if ( separator != nullptr )
+                root.Append( start, separator - start );
+            else
+                root.Append( start, end - start );
+            root.TrimStart(' ');
+            root.TrimEnd(' ');
+            // <path>/<group>/<version>/
+            #if defined( __WINDOWS__ )
+                brokerageRoot.Format( "%s\\main\\%u.windows\\", root.Get(), protocolVersion );
+            #elif defined( __OSX__ )
+                brokerageRoot.Format( "%s/main/%u.osx/", root.Get(), protocolVersion );
+            #else
+                brokerageRoot.Format( "%s/main/%u.linux/", root.Get(), protocolVersion );
+            #endif
+
+            m_BrokerageRoots.Append( brokerageRoot );
+            if ( !m_BrokerageRootsPaths.IsEmpty() )
+                m_BrokerageRootsPaths.Append( pathSeparator );
+
+            m_BrokerageRootsPaths.Append( brokerageRoot );
+
+            if ( separator != nullptr )
+                start = separator + 1;
+            else
+                break;
+        }
     }
 
     Network::GetHostName(m_HostName);
 
     AStackString<> filePath;
-    m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoot.Get(), m_HostName.Get() );
+    if ( !m_BrokerageRoots.IsEmpty() )
+        m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
     m_TimerLastUpdate.Start();
 
     m_Initialized = true;
@@ -86,20 +116,27 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
 
     Init();
 
-    if ( m_BrokerageRoot.IsEmpty() )
+    if ( m_BrokerageRoots.IsEmpty() )
     {
         FLOG_WARN( "No brokerage root; did you set FASTBUILD_BROKERAGE_PATH?" );
         return;
     }
 
     Array< AString > results( 256, true );
-    if ( !FileIO::GetFiles( m_BrokerageRoot,
-                            AStackString<>( "*" ),
-                            false,
-                            &results ) )
+    for( AString& root : m_BrokerageRoots )
     {
-        FLOG_WARN( "No workers found in '%s'", m_BrokerageRoot.Get() );
-        return; // no files found
+        size_t filesBeforeSearch = results.GetSize();
+        if ( !FileIO::GetFiles(root,
+                                AStackString<>( "*" ),
+                                false,
+                                &results ) )
+        {
+            FLOG_WARN( "No workers found in '%s'", root.Get() );
+        }
+        else
+        {
+            FLOG_WARN( "%zu workers found in '%s'", results.GetSize() - filesBeforeSearch, root.Get() );
+        }
     }
 
     // presize
@@ -129,7 +166,7 @@ void WorkerBrokerage::SetAvailability(bool available)
     Init();
 
     // ignore if brokerage not configured
-    if ( m_BrokerageRoot.IsEmpty() )
+    if ( m_BrokerageRoots.IsEmpty() )
     {
         return;
     }
@@ -171,7 +208,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                 }
 
                 // Create/write file which signifies availability
-                FileIO::EnsurePathExists( m_BrokerageRoot );
+                FileIO::EnsurePathExists( m_BrokerageRoots[0] );
                 FileStream fs;
                 fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
                 fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
