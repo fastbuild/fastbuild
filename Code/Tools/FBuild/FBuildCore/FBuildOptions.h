@@ -90,6 +90,9 @@ public:
     bool        m_ForceDBMigration_Debug            = false; // Force migration even if bff has not changed (for tests)
     bool        m_ContinueAfterDBMove               = false;
 
+    // Debug helpers
+    bool        m_DebugPreprocessor                 = false;
+
     uint32_t    m_NumWorkerThreads                  = 0; // True default detected in constructor
     AString     m_ConfigFile;
 
