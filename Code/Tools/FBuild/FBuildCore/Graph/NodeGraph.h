@@ -83,6 +83,7 @@ public:
     {
         MISSING_OR_INCOMPATIBLE,
         LOAD_ERROR,
+        LOAD_ERROR_MOVED,
         OK_BFF_NEEDS_REPARSING,
         OK
     };
@@ -162,7 +163,11 @@ private:
     void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance = 5 ) const;
 
     struct UsedFile;
-    bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB ) const;
+    bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream,
+                                 const char* nodeGraphDBFile,
+                                 Array< UsedFile > & files,
+                                 bool & compatibleDB,
+                                 bool & movedDB ) const;
     uint32_t GetLibEnvVarHash() const;
 
     // load/save helpers

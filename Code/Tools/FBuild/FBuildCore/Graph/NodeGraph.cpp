@@ -116,7 +116,28 @@ NodeGraph::~NodeGraph()
     {
         case LoadResult::MISSING_OR_INCOMPATIBLE:
         case LoadResult::LOAD_ERROR:
+        case LoadResult::LOAD_ERROR_MOVED:
         {
+            // Failed due to moved DB?
+            if ( res == LoadResult::LOAD_ERROR_MOVED )
+            {
+                // Is moving considerd fatal?
+                if ( FBuild::Get().GetOptions().m_ContinueAfterDBMove == false )
+                {
+                    // Corrupt DB or other fatal problem
+                    FDELETE( oldNG );
+                    return nullptr;
+                }
+            }
+
+            // Failed due to corrupt DB? Make a backup to assist triage
+            if ( res == LoadResult::LOAD_ERROR )
+            {
+                AStackString<> corruptDBName( nodeGraphDBFile );
+                corruptDBName += ".corrupt";
+                FileIO::FileMove( AStackString<>( nodeGraphDBFile ), corruptDBName ); // Will overwrite if needed
+            }
+            
             // Create a fresh DB by parsing the BFF
             FDELETE( oldNG );
             NodeGraph * newNG = FNEW( NodeGraph );
@@ -212,7 +233,7 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
     NodeGraph::LoadResult res = Load( ms, nodeGraphDBFile );
     if ( res == LoadResult::LOAD_ERROR )
     {
-        FLOG_ERROR( "Database loading failed: '%s'", nodeGraphDBFile );
+        FLOG_ERROR( "Database corrupt (clean build will occur): '%s'", nodeGraphDBFile );
     }
     return res;
 }
@@ -221,11 +242,12 @@ NodeGraph::LoadResult NodeGraph::Load( const char * nodeGraphDBFile )
 //------------------------------------------------------------------------------
 NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraphDBFile )
 {
-    bool compatibleDB = true;
+    bool compatibleDB;
+    bool movedDB;
     Array< UsedFile > usedFiles;
-    if ( ReadHeaderAndUsedFiles( stream, nodeGraphDBFile, usedFiles, compatibleDB ) == false )
+    if ( ReadHeaderAndUsedFiles( stream, nodeGraphDBFile, usedFiles, compatibleDB, movedDB ) == false )
     {
-        return LoadResult::LOAD_ERROR;
+        return movedDB ? LoadResult::LOAD_ERROR_MOVED : LoadResult::LOAD_ERROR;
     }
 
     // old or otherwise incompatible DB version?
@@ -1590,8 +1612,12 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
 
 // ReadHeaderAndUsedFiles
 //------------------------------------------------------------------------------
-bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB ) const
+bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB, bool & movedDB ) const
 {
+    // Assume good DB by default (cases below will change flags if needed)
+    compatibleDB = true;
+    movedDB = false;
+
     // check for a valid header
     NodeGraphHeader ngh;
     if ( ( nodeGraphStream.Read( &ngh, sizeof( ngh ) ) != sizeof( ngh ) ) ||
@@ -1617,6 +1643,7 @@ bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* 
     NodeGraph::CleanPath( nodeGraphDBFileClean );
     if ( PathUtils::ArePathsEqual( originalNodeGraphDBFile, nodeGraphDBFileClean ) == false )
     {
+        movedDB = true;
         FLOG_WARN( "Database has been moved (originally at '%s', now at '%s').", originalNodeGraphDBFile.Get(), nodeGraphDBFileClean.Get() );
         if ( FBuild::Get().GetOptions().m_ContinueAfterDBMove )
         {
