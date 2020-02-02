@@ -522,15 +522,7 @@ void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     }
 
     // Display interactive Message Box
-    #if defined( __WINDOWS__ )
-        ::MessageBox( nullptr, buffer.Get(), "FBuild Worker", MB_OK );
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement ErrorMessage for non-console mode
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ErrorMessage for non-console mode
-    #else
-        #error Unknown Platform
-    #endif
+    Env::ShowMsgBox( "FBuildWorker", buffer.Get() );
 }
 
 //------------------------------------------------------------------------------

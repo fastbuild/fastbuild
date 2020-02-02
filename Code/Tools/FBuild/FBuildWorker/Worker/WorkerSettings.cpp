@@ -150,15 +150,7 @@ void WorkerSettings::Save()
         }
     }
 
-    #if defined( __WINDOWS__ )
-        MessageBox( nullptr, "Failed to save settings.", "FBuildWorker", MB_OK );
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement ShowMessageBox
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ShowMessageBox
-    #else
-        #error Unknown Platform
-    #endif
+    Env::ShowMsgBox( "FBuildWorker", "Failed to save settings." );
 }
 
 //------------------------------------------------------------------------------
