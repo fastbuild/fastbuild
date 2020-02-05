@@ -42,8 +42,7 @@ Client::Client( const Array< AString > & settingsWorkers,
                 int32_t workerConnectionRetryLimitSec,
                 uint32_t workerConnectionLimit,
                 bool detailedLogging )
-    : m_SettingsWorkers( settingsWorkers )
-    , m_WorkerList( 256, true )  // start with 256 capacity
+    : m_WorkerList( 256, true )  // start with 256 capacity
     , m_RetryingWorkers( true )  // begin with retrying of workers
     , m_NotifyJobQueue( false )  // don't notify yet, notify when no longer retrying workers
     , m_WorkerListRefreshIntervalSec( 0 )  // try immediately the first time
@@ -56,6 +55,14 @@ Client::Client( const Array< AString > & settingsWorkers,
     , m_WorkerConnectionLimit( workerConnectionLimit )
     , m_Port( port )
 {
+    for( const AString & settingsWorker : settingsWorkers )
+    {
+        WorkerBrokerage::WorkerInfo workerInfo;
+        workerInfo.basePath = ""; // none, since static worker list
+        workerInfo.name = settingsWorker;
+        m_SettingsWorkers.Append( workerInfo );
+    }
+
     m_Thread = Thread::CreateThread( ThreadFuncStatic,
                                      "Client",
                                      ( 64 * KILOBYTE ),
@@ -224,7 +231,7 @@ void Client::RetryWorkers()
                         m_WorkerListRefreshIntervalSec *= 2;
                     }
 
-                    Array< AString > previousWorkers;
+                    Array< WorkerBrokerage::WorkerInfo > previousWorkers;
                     FlattenWorkersPerJob( m_WorkerList, previousWorkers );
 
                     m_WorkerList.Clear();
@@ -233,17 +240,17 @@ void Client::RetryWorkers()
                         m_ExcludedWorkers,
                         m_WorkerList );
 
-                    Array< AString > currentWorkers;
+                    Array< WorkerBrokerage::WorkerInfo > currentWorkers;
                     FlattenWorkersPerJob( m_WorkerList, currentWorkers );
                     if ( currentWorkers.IsEmpty() )
                     {
-                        FLOG_WARN( "No matching workers found in '%s'", m_WorkerBrokerage.GetBrokerageRoot().Get() );
+                        FLOG_WARN( "No matching workers found in '%s'", m_WorkerBrokerage.GetBrokerageRootPaths().Get() );
                     }
 
-                    Array< AString > addedWorkers;
+                    Array< WorkerBrokerage::WorkerInfo > addedWorkers;
                     GetWorkerChanges( previousWorkers, currentWorkers, addedWorkers );
                     // don't remove any workers during refresh, since previous workers could be rebooting
-                    Array< AString > removedWorkers;
+                    Array< WorkerBrokerage::WorkerInfo > removedWorkers;
                     UpdateServerList( removedWorkers, addedWorkers );
 
                     const size_t numPreviousWorkers( previousWorkers.GetSize() );
@@ -296,7 +303,7 @@ void Client::RetryWorkers()
             m_WorkerList.Append( m_SettingsWorkers );
 
             m_RetryingWorkers = false;
-            Array< AString > removedWorkers;  // pass empty, since no removes
+            Array< WorkerBrokerage::WorkerInfo > removedWorkers;  // pass empty, since no removes
             UpdateServerList( removedWorkers, m_SettingsWorkers );  // pass workers in
             OutputNumWorkers();
             // set to notify the job queue
@@ -313,14 +320,14 @@ void Client::RetryWorkers()
 //------------------------------------------------------------------------------
 void Client::FlattenWorkersPerJob(
     const WorkersPerJob & workersPerJob,
-    Array< AString > & workers ) const
+    Array< WorkerBrokerage::WorkerInfo > & workers ) const
 {
     for ( size_t i=0; i<workersPerJob.GetSize(); ++i )
     {
-        const Array< AString > & workersForJob = workersPerJob.Get( i );
+        const Array< WorkerBrokerage::WorkerInfo > & workersForJob = workersPerJob.Get( i );
         for ( size_t j=0; j<workersForJob.GetSize(); ++j )
         {
-            const AString & worker = workersForJob.Get( j );
+            const WorkerBrokerage::WorkerInfo & worker = workersForJob.Get( j );
             if ( !workers.Find( worker ) && !m_ExcludedWorkers.Find( worker ) )
             {
                 workers.Append( worker );
@@ -332,9 +339,9 @@ void Client::FlattenWorkersPerJob(
 // GetWorkerChanges
 //------------------------------------------------------------------------------
 /*static*/ void Client::GetWorkerChanges(
-    const Array< AString > & previousWorkers,
-    const Array< AString > & currentWorkers,
-    Array< AString > & addedWorkers )
+    const Array< WorkerBrokerage::WorkerInfo > & previousWorkers,
+    const Array< WorkerBrokerage::WorkerInfo > & currentWorkers,
+    Array< WorkerBrokerage::WorkerInfo > & addedWorkers )
 {
     const size_t numCurrentWorkers = currentWorkers.GetSize();
 
@@ -343,7 +350,7 @@ void Client::FlattenWorkersPerJob(
     // find workers that were added (or changed)
     for ( size_t i=0; i<numCurrentWorkers; ++i )
     {
-        const AString & currentWorker = currentWorkers.Get( i );
+        const WorkerBrokerage::WorkerInfo & currentWorker = currentWorkers.Get( i );
         if ( !previousWorkers.Find( currentWorker ) )
         {
             // not found, so add it
@@ -358,26 +365,26 @@ void Client::FlattenWorkersPerJob(
 
 // ExcludeWorker
 //------------------------------------------------------------------------------
-void Client::ExcludeWorker( ServerState & ss, Array< AString > & newlyExcludedWorkers )
+void Client::ExcludeWorker( ServerState & ss, Array< WorkerBrokerage::WorkerInfo > & newlyExcludedWorkers )
 {
     if ( !ss.m_Excluded )
     {
         ss.m_Excluded = true;
-        if ( !m_ExcludedWorkers.Find( ss.m_RemoteName ) )
+        if ( !m_ExcludedWorkers.Find( ss.m_RemoteWorker ) )
         {
-            m_ExcludedWorkers.Append( ss.m_RemoteName );
-            newlyExcludedWorkers.Append( ss.m_RemoteName );
+            m_ExcludedWorkers.Append( ss.m_RemoteWorker );
+            newlyExcludedWorkers.Append( ss.m_RemoteWorker );
         }
     }
 }
 
 // HandleExcludedWorkers
 //------------------------------------------------------------------------------
-void Client::HandleExcludedWorkers( const Array< AString > & newlyExcludedWorkers )
+void Client::HandleExcludedWorkers( const Array< WorkerBrokerage::WorkerInfo > & newlyExcludedWorkers )
 {
     if ( !newlyExcludedWorkers.IsEmpty() )
     {
-        Array< AString > addedWorkers;  // leave empty, since not adding here
+        Array< WorkerBrokerage::WorkerInfo > addedWorkers;  // leave empty, since not adding here
         UpdateServerList( newlyExcludedWorkers, addedWorkers );
         // don't call OutputNumWorkers() here, since too frequent
         if ( !m_RetryingWorkers )
@@ -391,8 +398,8 @@ void Client::HandleExcludedWorkers( const Array< AString > & newlyExcludedWorker
 // UpdateServerList
 //------------------------------------------------------------------------------
 bool Client::UpdateServerList(
-    const Array < AString > & removedWorkers,
-    const Array < AString > & addedWorkers )
+    const Array < WorkerBrokerage::WorkerInfo > & removedWorkers,
+    const Array < WorkerBrokerage::WorkerInfo > & addedWorkers )
 {
     bool anyChangesApplied = false;
 
@@ -402,12 +409,12 @@ bool Client::UpdateServerList(
     Array< ServerState * > serverStatesToRemove;
     for ( size_t i=0; i<numRemovedWorkers; ++i )
     {
-        const AString & removedWorker = removedWorkers.Get( i );
+        const WorkerBrokerage::WorkerInfo & removedWorker = removedWorkers.Get( i );
         // find server to remove
         for ( size_t j=0; j<numServers; ++j )
         {
             ServerState * const ss = m_ServerList.Get( j );
-            if ( ss && ss->m_RemoteName == removedWorker )
+            if ( ss && ss->m_RemoteWorker == removedWorker )
             {
                 serverStatesToRemove.Append( ss );
                 anyChangesApplied = true;
@@ -439,8 +446,8 @@ bool Client::UpdateServerList(
         {
             // lock the server state
             MutexHolder mhSS( ss->m_Mutex );
-            ss->m_RemoteName = addedWorkers.Get( i );
-            ss->m_RemoteWorkerTags.SetWorkerName( ss->m_RemoteName );
+            ss->m_RemoteWorker = addedWorkers.Get( i );
+            ss->m_RemoteWorkerTags.SetWorkerName( ss->m_RemoteWorker.name );
             m_ServerList.Append( ss );
             anyChangesApplied = true;
         }
@@ -532,11 +539,11 @@ void Client::LookForWorkers()
     Random randomJob;
     size_t jobStartIndex = randomJob.GetRandIndex( (uint32_t)numJobs );
     bool connectionAttempted = false;
-    Array< AString > newlyExcludedWorkers;
+    Array< WorkerBrokerage::WorkerInfo > newlyExcludedWorkers;
     for ( size_t i=0; i<numJobs; ++i )
     {
         const size_t j( ( i + jobStartIndex ) % numJobs );
-        const Array< AString > & workersForJob = m_WorkerList.Get( j );
+        const Array< WorkerBrokerage::WorkerInfo > & workersForJob = m_WorkerList.Get( j );
         const size_t numWorkersForJob( workersForJob.GetSize() );
         // get a random worker for the job
         Random randomWorker;
@@ -544,12 +551,12 @@ void Client::LookForWorkers()
         for ( size_t k=0; k<numWorkersForJob; ++k )
         {
             const size_t l( ( k + workersStartIndex ) % numWorkersForJob );
-            const AString & workerForJob = workersForJob.Get( l );
+            const WorkerBrokerage::WorkerInfo & workerForJob = workersForJob.Get( l );
             ServerState * ss = nullptr;
             for ( size_t m=0; m<numWorkers; ++m )
             {
                 ServerState * const stateToCheck = m_ServerList.Get( m );
-                if ( stateToCheck && stateToCheck->m_RemoteName == workerForJob )
+                if ( stateToCheck && stateToCheck->m_RemoteWorker == workerForJob )
                 {
                     ss = stateToCheck;
                     break;
@@ -581,11 +588,11 @@ void Client::LookForWorkers()
 
                 ss->m_ConnectionDelayTimer.Start();  // reset time
 
-                DIST_INFO( "Connecting to: %s\n", ss->m_RemoteName.Get() );
-                const ConnectionInfo * ci = Connect( ss->m_RemoteName, m_Port, 2000 ); // 2000ms connection timeout
+                DIST_INFO( "Connecting to: %s\n", ss->m_RemoteWorker.name.Get() );
+                const ConnectionInfo * ci = Connect( ss->m_RemoteWorker.name, m_Port, 2000 ); // 2000ms connection timeout
                 if ( ci == nullptr )
                 {
-                    DIST_INFO( " - connection: %s (FAILED)\n", ss->m_RemoteName.Get() );
+                    DIST_INFO( " - connection: %s (FAILED)\n", ss->m_RemoteWorker.name.Get() );
                     if ( ss->m_ConnectionRetryIntervalSec == 0 )
                     {
                         ss->m_ConnectionRetryIntervalSec = 4;  // next retry is in >= 4 seconds
@@ -604,17 +611,17 @@ void Client::LookForWorkers()
                         timeIntervalString,
                         timeLimitString ) )
                     {
-                        OUTPUT( "%s did not respond, retrying in >= %s, retry limit %s\n", ss->m_RemoteName.Get(), timeIntervalString.Get(), timeLimitString.Get() );
+                        OUTPUT( "%s did not respond, retrying in >= %s, retry limit %s\n", ss->m_RemoteWorker.name.Get(), timeIntervalString.Get(), timeLimitString.Get() );
                     }
                     else
                     {
-                        OUTPUT( "%s no more retries\n", ss->m_RemoteName.Get() );
+                        OUTPUT( "%s no more retries\n", ss->m_RemoteWorker.name.Get() );
                         ExcludeWorker( *ss, newlyExcludedWorkers );
                     }
                 }
                 else
                 {
-                    DIST_INFO( " - connection: %s (OK)\n", ss->m_RemoteName.Get() );
+                    DIST_INFO( " - connection: %s (OK)\n", ss->m_RemoteWorker.name.Get() );
                     uint32_t numJobsAvailable = 0;
                     uint32_t numJobsAvailableForWorker = 0;
                     if ( JobQueue::IsValid() )
@@ -721,7 +728,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     ServerState * ss = (ServerState *)connection->GetUserData();
     if (ss != nullptr)
     {
-        workerName = ss->m_RemoteName;
+        workerName = ss->m_RemoteWorker.name;
     }
 
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u)\n",
@@ -743,7 +750,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     ServerState * ss = (ServerState *)connection->GetUserData();
     if (ss != nullptr)
     {
-        workerName = ss->m_RemoteName;
+        workerName = ss->m_RemoteWorker.name;
     }
 
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u, Payload: %u)\n",
@@ -826,7 +833,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
             {
                 // unknown message type
                 ASSERT( false ); // this indicates a protocol bug
-                DIST_INFO( "Protocol Error: %s\n", ss->m_RemoteName.Get() );
+                DIST_INFO( "Protocol Error: %s\n", ss->m_RemoteWorker.name.Get() );
                 Disconnect( connection );
                 break;
             }
@@ -900,8 +907,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
         }
 
         // output to signify remote start
-        FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
-        FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
+        FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteWorker.name.Get() );
+        FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteWorker.name.Get(), job->GetNode()->GetName().Get() );
 
         {
             PROFILE_SECTION( "SendJob" )
@@ -921,7 +928,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     ServerState * ss = (ServerState *)connection->GetUserData();
     if (ss != nullptr)
     {
-        AStackString<> workerName( ss->m_RemoteName );
+        AStackString<> workerName( ss->m_RemoteWorker.name );
 
         ConstMemoryStream ms( payload, payloadSize );
 
@@ -1353,13 +1360,14 @@ Client::ServerState::~ServerState()
 {
     MutexHolder mh( m_Mutex );
     ClearConnectionFields();
-    if ( !m_RemoteName.IsEmpty() )
+    if ( !m_RemoteWorker.name.IsEmpty() )
     {
         m_ConnectionRetryIntervalSec = 0;
         m_ConnectionRetryElapsedTimeSec = 0;
         JobQueue::Get().RemoveWorkerRecords( m_RemoteWorkerTags.GetWorkerName() );
         m_RemoteWorkerTags.Clear();
-        m_RemoteName.Clear();
+        m_RemoteWorker.basePath.Clear();
+        m_RemoteWorker.name.Clear();
     }
 }
 
@@ -1377,14 +1385,14 @@ void Client::ServerState::ClearConnectionFields()
 {
     if ( m_Connection )
     {
-        DIST_INFO( "Disconnected: %s\n", m_RemoteName.Get() );
+        DIST_INFO( "Disconnected: %s\n", m_RemoteWorker.name.Get() );
         if ( m_Jobs.IsEmpty() == false )
         {
             Job ** it = m_Jobs.Begin();
             const Job * const * end = m_Jobs.End();
             while ( it != end )
             {
-                FLOG_MONITOR( "FINISH_JOB TIMEOUT %s \"%s\" \n", m_RemoteName.Get(), (*it)->GetNode()->GetName().Get() );
+                FLOG_MONITOR( "FINISH_JOB TIMEOUT %s \"%s\" \n", m_RemoteWorker.name.Get(), (*it)->GetNode()->GetName().Get() );
                 JobQueue::Get().ReturnUnfinishedDistributableJob( *it );
                 ++it;
             }

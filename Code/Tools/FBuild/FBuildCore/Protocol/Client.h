@@ -42,7 +42,7 @@ public:
     ~Client();
 
 private:
-    typedef Array< Array< AString > > WorkersPerJob;
+    typedef Array< Array< WorkerBrokerage::WorkerInfo > > WorkersPerJob;
 
     class ServerState
     {
@@ -52,7 +52,7 @@ private:
             void Disconnect();
 
             const ConnectionInfo *     m_Connection;
-            AString                    m_RemoteName;
+            WorkerBrokerage::WorkerInfo m_RemoteWorker;
 
             Mutex                      m_Mutex;
             const Protocol::IMessage * m_CurrentMessage;
@@ -96,14 +96,14 @@ private:
     void        RetryWorkers();
     void        FlattenWorkersPerJob(
                             const WorkersPerJob & workersPerJob,
-                            Array< AString > & workers ) const;
+                            Array< WorkerBrokerage::WorkerInfo > & workers ) const;
     static void GetWorkerChanges(
-                            const Array< AString > & previousWorkers,
-                            const Array< AString > & currentWorkers,
-                            Array< AString > & addedWorkers );
-    void        ExcludeWorker( Client::ServerState & ss, Array< AString > & newlyExcludedWorkers );
-    void        HandleExcludedWorkers( const Array< AString > & newlyExcludedWorkers );
-    bool        UpdateServerList( const Array< AString > & removedWorkers, const Array< AString > & addedWorkers );
+                            const Array< WorkerBrokerage::WorkerInfo > & previousWorkers,
+                            const Array< WorkerBrokerage::WorkerInfo > & currentWorkers,
+                            Array< WorkerBrokerage::WorkerInfo > & addedWorkers );
+    void        ExcludeWorker( Client::ServerState & ss, Array< WorkerBrokerage::WorkerInfo > & newlyExcludedWorkers );
+    void        HandleExcludedWorkers( const Array< WorkerBrokerage::WorkerInfo > & newlyExcludedWorkers );
+    bool        UpdateServerList( const Array< WorkerBrokerage::WorkerInfo > & removedWorkers, const Array< WorkerBrokerage::WorkerInfo > & addedWorkers );
     size_t      GetNumValidWorkers() const;
     void        OutputNumWorkers();
     void        NotifyJobQueue();
@@ -115,9 +115,9 @@ private:
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream );
 
     WorkerBrokerage  m_WorkerBrokerage;
-    Array< AString > m_SettingsWorkers;  // workers from settings
+    Array< WorkerBrokerage::WorkerInfo > m_SettingsWorkers;  // workers from settings
     WorkersPerJob    m_WorkerList;       // workers to use
-    Array< AString > m_ExcludedWorkers;  // worker to no longer try
+    Array< WorkerBrokerage::WorkerInfo > m_ExcludedWorkers;  // worker to no longer try
     bool             m_RetryingWorkers;
     bool             m_NotifyJobQueue;
     Timer            m_WorkerListRefreshTimer;
