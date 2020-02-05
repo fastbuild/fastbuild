@@ -5,7 +5,6 @@
 //------------------------------------------------------------------------------
 #include "ObjectListNode.h"
 
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/FunctionObjectList.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -22,6 +21,7 @@
 // Core
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Strings/AStackString.h"
 
 // Reflection
@@ -81,7 +81,7 @@ ObjectListNode::ObjectListNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool ObjectListNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -440,17 +440,24 @@ ObjectListNode::~ObjectListNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult ObjectListNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult ObjectListNode::DoBuild( Job * /*job*/ )
 {
-    // consider ourselves to be as recent as the newest file
-    uint64_t timeStamp = 0;
-    const Dependency * const end = m_DynamicDependencies.End();
-    for ( const Dependency * it = m_DynamicDependencies.Begin(); it != end; ++it )
+    // Generate stamp
+    if ( m_DynamicDependencies.IsEmpty() )
     {
-        ObjectNode * on = it->GetNode()->CastTo< ObjectNode >();
-        timeStamp = Math::Max< uint64_t >( timeStamp, on->GetStamp() );
+        m_Stamp = 1; // Non-zero
     }
-    m_Stamp = timeStamp;
+    else
+    {
+        Array< uint64_t > stamps( m_DynamicDependencies.GetSize(), false );
+        for ( const Dependency & dep : m_DynamicDependencies )
+        {
+            ObjectNode * on = dep.GetNode()->CastTo< ObjectNode >();
+            ASSERT( on->GetStamp() );
+            stamps.Append( on->GetStamp() );
+        }
+        m_Stamp = xxHash::Calc64( &stamps[0], ( stamps.GetSize() * sizeof(uint64_t) ) );
+    }
 
     return NODE_RESULT_OK;
 }
@@ -475,8 +482,7 @@ void ObjectListNode::GetInputFiles( Args & fullArgs, const AString & pre, const 
                 if ( on->IsMSVC() )
                 {
                     fullArgs += pre;
-                    fullArgs += on->GetName();
-                    fullArgs += on->GetObjExtension();
+                    fullArgs += on->GetPCHObjectName();
                     fullArgs += post;
                     fullArgs.AddDelimiter();
                     continue;
@@ -639,8 +645,8 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
             preprocessorFlags = ObjectNode::DetermineFlags( GetPreprocessor(), m_PreprocessorOptions, false, usingPCH );
         }
 
-        BFFIterator dummyIter;
-        ObjectNode * objectNode = CreateObjectNode( nodeGraph, dummyIter, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
+        BFFToken * token = nullptr;
+        ObjectNode * objectNode = CreateObjectNode( nodeGraph, token, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
         if ( !objectNode )
         {
             FLOG_ERROR( "Failed to create node '%s'!", objFile.Get() );
@@ -656,15 +662,21 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
     else
     {
         ObjectNode * other = on->CastTo< ObjectNode >();
-        if ( inputFile != other->GetSourceFile() )
+
+        // Check for conflicts
+        const bool conflict = ( inputFile != other->GetSourceFile() ) ||
+                              ( m_Name != other->GetOwnerObjectList() );
+        if ( conflict )
         {
-            FLOG_ERROR( "Conflicting objects found:\n"
-                        " File A: %s\n"
-                        " File B: %s\n"
-                        " Both compile to: %s\n",
-                        inputFile->GetName().Get(),
-                        other->GetSourceFile()->GetName().Get(),
-                        objFile.Get() );
+            FLOG_ERROR( "Conflicting objects found for: %s\n"
+                        " Source A  : %s\n"
+                        " ObjectList: %s\n"
+                        "AND\n"
+                        " Source B  : %s\n"
+                        " ObjectList: %s\n",
+                        objFile.Get(),
+                        inputFile->GetName().Get(), m_Name.Get(),
+                        other->GetSourceFile()->GetName().Get(), other->GetOwnerObjectList().Get() );
             return false;
         }
     }
@@ -675,7 +687,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
 // CreateObjectNode
 //------------------------------------------------------------------------------
 ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
-                                               const BFFIterator & iter,
+                                               const BFFToken * iter,
                                                const Function * function,
                                                const uint32_t flags,
                                                const uint32_t preprocessorFlags,
@@ -714,6 +726,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_PreprocessorOptions = preprocessorOptions;
     node->m_Flags = flags;
     node->m_PreprocessorFlags = preprocessorFlags;
+    node->m_OwnerObjectList = m_Name;
 
     if ( !node->Initialize( nodeGraph, iter, function ) )
     {

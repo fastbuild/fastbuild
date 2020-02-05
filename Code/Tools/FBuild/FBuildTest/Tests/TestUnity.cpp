@@ -37,6 +37,7 @@ private:
     void TestGenerateFromExplicitList() const;
     void TestExcludedFiles() const;
     void IsolateFromUnity_Regression() const;
+    void UnityInputIsolatedFiles() const;
 };
 
 // Register Tests
@@ -51,6 +52,7 @@ REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( TestGenerateFromExplicitList ) // create a unity with manually provided files
     REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
     REGISTER_TEST( IsolateFromUnity_Regression )
+    REGISTER_TEST( UnityInputIsolatedFiles )
 REGISTER_TESTS_END
 
 // BuildGenerate
@@ -65,7 +67,7 @@ FBuildStats TestUnity::BuildGenerate( FBuildTestOptions options, bool useDB, boo
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestGenerateDBFileName() : nullptr ) );
 
     // Implement Unity and activate this test
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Unity-Test" ) ) );
+    TEST_ASSERT( fBuild.Build( "Unity-Test" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetTestGenerateDBFileName() ) );
 
     return fBuild.GetStats();
@@ -179,7 +181,7 @@ FBuildStats TestUnity::BuildCompile( FBuildTestOptions options, bool useDB, bool
     TEST_ASSERT( fBuild.Initialize( useDB ? GetTestCompileDBFileName() : nullptr ) );
 
     // Implement Unity and activate this test
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Unity-Compiled" ) ) );
+    TEST_ASSERT( fBuild.Build( "Unity-Compiled" ) );
     TEST_ASSERT( fBuild.SaveDependencyGraph( GetTestCompileDBFileName() ) );
 
     return fBuild.GetStats();
@@ -256,11 +258,11 @@ void TestUnity::TestCompile_NoRebuild_BFFChange() const
     CheckStatsNode ( stats, 1,      1,      Node::DIRECTORY_LIST_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::UNITY_NODE );
     CheckStatsNode ( stats, numF,   numF,   Node::FILE_NODE );
-    CheckStatsNode ( stats, 1,      1,      Node::COMPILER_NODE ); // Compiler rebuilds after migration
+    CheckStatsNode ( stats, 1,      0,      Node::COMPILER_NODE );
     CheckStatsNode ( stats, 3,      0,      Node::OBJECT_NODE );
     CheckStatsNode ( stats, 1,      0,      Node::LIBRARY_NODE );
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
-    CheckStatsTotal( stats, 8+numF, 4+numF );
+    CheckStatsTotal( stats, 8+numF, 3+numF );
 }
 
 // TestGenerateFromExplicitList
@@ -273,7 +275,7 @@ void TestUnity::TestGenerateFromExplicitList() const
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
 
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Unity-Explicit-Files" ) ) );
+    TEST_ASSERT( fBuild.Build( "Unity-Explicit-Files" ) );
 
     // Check stats
     //               Seen,  Built,  Type
@@ -292,28 +294,28 @@ void TestUnity::TestExcludedFiles() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFileName" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFileName" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePath" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePath" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePathRelative" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePathRelative" ) );
     }
 
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
 
-        TEST_ASSERT( fBuild.Build( AStackString<>( "ExcludeFilePattern" ) ) );
+        TEST_ASSERT( fBuild.Build( "ExcludeFilePattern" ) );
     }
 }
 
@@ -330,7 +332,24 @@ void TestUnity::IsolateFromUnity_Regression() const
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/IsolateFromUnity/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
-    TEST_ASSERT( fBuild.Build( AStackString<>( "Compile" ) ) );
+    TEST_ASSERT( fBuild.Build( "Compile" ) );
+}
+
+// UnityInputIsolatedFiles
+//------------------------------------------------------------------------------
+void TestUnity::UnityInputIsolatedFiles() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/UnityInputIsolatedFiles/fbuild.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "Compile" ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
+    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
 }
 
 //------------------------------------------------------------------------------

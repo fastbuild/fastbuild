@@ -15,7 +15,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
+class BFFToken;
 class CompilerNode;
 class FileNode;
 class Function;
@@ -82,7 +82,7 @@ public:
     {
         FLAG_NONE                   = 0x00,
         FLAG_TRIVIAL_BUILD          = 0x01, // DoBuild is performed locally in main thread
-        FLAG_NO_DELETE_ON_FAIL      = 0x02, // Don't delete output file on failure (for Test etc)
+        FLAG_ALWAYS_BUILD           = 0x02, // DoBuild is always performed (for e.g. directory listings)
     };
 
     enum StatsFlag
@@ -92,8 +92,9 @@ public:
         STATS_CACHE_HIT     = 0x04, // needed building, was cacheable & was retrieved from the cache
         STATS_CACHE_MISS    = 0x08, // needed building, was cacheable, but wasn't in cache
         STATS_CACHE_STORE   = 0x10, // needed building, was cacheable & was stored to the cache
-        STATS_BUILT_REMOTE  = 0x20, // node was built remotely
-        STATS_FAILED        = 0x40, // node needed building, but failed
+        STATS_LIGHT_CACHE   = 0x20, // used the LightCache
+        STATS_BUILT_REMOTE  = 0x40, // node was built remotely
+        STATS_FAILED        = 0x80, // node needed building, but failed
         STATS_REPORT_PROCESSED  = 0x4000, // seen during report processing
         STATS_STATS_PROCESSED   = 0x8000 // mark during stats gathering (leave this last)
     };
@@ -118,7 +119,7 @@ public:
     };
 
     explicit Node( const AString & name, Type type, uint32_t controlFlags );
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & funcStartIter, const Function * function ) = 0;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * funcStartIter, const Function * function ) = 0;
     virtual ~Node();
 
     inline uint32_t        GetNameCRC() const { return m_NameCRC; }
@@ -136,8 +137,9 @@ public:
     inline bool GetStatFlag( StatsFlag flag ) const { return ( ( m_StatsFlags & flag ) != 0 ); }
     inline void SetStatFlag( StatsFlag flag ) const { m_StatsFlags |= flag; }
 
-    inline uint32_t GetLastBuildTime() const    { return m_LastBuildTimeMs; }
+    uint32_t GetLastBuildTime() const;
     inline uint32_t GetProcessingTime() const   { return m_ProcessingTime; }
+    inline uint32_t GetCachingTime() const      { return m_CachingTime; }
     inline uint32_t GetRecursiveCost() const    { return m_RecursiveCost; }
 
     inline uint32_t GetProgressAccumulator() const { return m_ProgressAccumulator; }
@@ -169,6 +171,8 @@ public:
     inline uint32_t GetBuildPassTag() const             { return m_BuildPassTag; }
 
     const AString & GetName() const { return m_Name; }
+
+    virtual const AString & GetPrettyName() const { return GetName(); }
 
     bool IsHidden() const { return m_Hidden; }
 
@@ -209,13 +213,14 @@ protected:
 
     // each node must implement these core functions
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
-    virtual bool DetermineNeedToBuild( bool forceClean ) const;
+    virtual bool DetermineNeedToBuild( const Dependencies & deps ) const;
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );
 
-    inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
-    inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }
+    void SetLastBuildTime( uint32_t ms );
+    inline void     AddProcessingTime( uint32_t ms )  { m_ProcessingTime += ms; }
+    inline void     AddCachingTime( uint32_t ms )     { m_CachingTime += ms; }
 
     static void FixupPathForVSIntegration( AString & line );
     static void FixupPathForVSIntegration_GCC( AString & line, const char * tag );
@@ -230,13 +235,14 @@ protected:
     virtual void Migrate( const Node & oldNode );
 
     bool            InitializePreBuildDependencies( NodeGraph & nodeGraph,
-                                                    const BFFIterator & iter,
+                                                    const BFFToken * iter,
                                                     const Function * function,
                                                     const Array< AString > & preBuildDependencyNames );
 
     static const char * GetEnvironmentString( const Array< AString > & envVars,
                                               const char * & inoutCachedEnvString );
 
+    void RecordStampFromBuiltFile();
 
     AString m_Name;
 
@@ -251,6 +257,7 @@ protected:
     uint32_t        m_NameCRC;
     uint32_t m_LastBuildTimeMs; // time it took to do last known full build of this node
     uint32_t m_ProcessingTime;  // time spent on this node
+    uint32_t m_CachingTime;  // time spent caching this node
     mutable uint32_t m_ProgressAccumulator;
     uint32_t        m_Index;
     bool            m_Hidden;

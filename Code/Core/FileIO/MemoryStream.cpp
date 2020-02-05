@@ -44,6 +44,17 @@ void MemoryStream::Reset()
     m_End = m_Begin;
 }
 
+// Release
+//------------------------------------------------------------------------------
+void * MemoryStream::Release()
+{
+    void * mem = m_Begin;
+    m_Begin = nullptr;
+    m_End = nullptr;
+    m_MaxEnd = nullptr;
+    return mem;
+}
+
 // WriteBuffer
 //------------------------------------------------------------------------------
 uint64_t MemoryStream::WriteBuffer( IOStream & stream, uint64_t bytesToWrite )

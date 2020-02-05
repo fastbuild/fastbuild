@@ -1,0 +1,34 @@
+//
+// ConflictingObjects2
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// ObjectListA
+//------------------------------------------------------------------------------
+.ConfigNames = { 'Debug', 'Release' }
+.ObjectLists = {}
+ForEach( .ConfigName in .ConfigNames )
+{
+    ObjectList( 'ObjectList-$ConfigName$' )
+    {
+        .CompilerInputFiles         = 'Tools/FBuild/FBuildTest/Data/TestObjectList/ConflictingObjects/A/file.cpp'
+        .CompilerOutputPath         = '$Out$/Test/ObjectList/ConflictingObjects/'
+
+        // Differ by compiler options only
+        .CompilerOptions            + ' -D$ConfigName$'
+    }
+    ^ObjectLists + 'ObjectList-$ConfigName$'
+}
+
+// Both
+//------------------------------------------------------------------------------
+Alias( 'ObjectLists' )
+{
+    .Targets                    = .ObjectLists
+}

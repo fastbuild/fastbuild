@@ -19,12 +19,24 @@ Settings {}
                         + ' /D INTELLISENSE_QUOTED_SLASH_SPACE_DEFINE'
                         + ' -IIntellisense/Include/Path'
                         + ' -I Intellisense/Include/Space/Path'
-                        + ' -IIntellisense/Include/Slash/Path'
-                        + ' -I Intellisense/Include/Slash/Space/Path'
+                        + ' /IIntellisense/Include/Slash/Path'
+                        + ' /I Intellisense/Include/Slash/Space/Path'
                         + ' -I"Intellisense/Include/Quoted/Path"'
                         + ' -I "Intellisense/Include/Quoted/Space/Path"'
-                        + ' -I"Intellisense/Include/Quoted/Slash/Path"'
-                        + ' -I "Intellisense/Include/Quoted/Slash/Space/Path"'
+                        + ' /I"Intellisense/Include/Quoted/Slash/Path"'
+                        + ' /I "Intellisense/Include/Quoted/Slash/Space/Path"'
+                        + ' -isystemIntellisense/SystemInclude/Path'
+                        + ' -isystem Intellisense/SystemInclude/Space/Path'
+                        + ' -isystem"Intellisense/SystemInclude/Quoted/Path"'
+                        + ' -isystem "Intellisense/SystemInclude/Quoted/Space/Path"'
+                        + ' -isystem-afterIntellisense/SystemAfterInclude/Path'
+                        + ' -isystem-after Intellisense/SystemAfterInclude/Space/Path'
+                        + ' -isystem-after"Intellisense/SystemAfterInclude/Quoted/Path"'
+                        + ' -isystem-after "Intellisense/SystemAfterInclude/Quoted/Space/Path"'
+                        + ' -iquoteIntellisense/QuoteInclude/Path'
+                        + ' -iquote Intellisense/QuoteInclude/Space/Path'
+                        + ' -iquote"Intellisense/QuoteInclude/Quoted/Path"'
+                        + ' -iquote "Intellisense/QuoteInclude/Quoted/Space/Path"'
                         + ' -std:c++17'
                         + ' /std:c++14'
                         + ' /std:latest'
@@ -110,6 +122,26 @@ XCodeProject( 'Test-xcode' )
     .ProjectOutput      = '$Out$/Test.xcodeproj/project.pbxproj'
 }
 
+// Copy
+//------------------------------------------------------------------------------
+Copy( 'Copy' )
+{
+    .Source             = 'Executable' // This provides Intellisense info
+    .Dest               = '$Out$/Copy/'
+}
+VCXProject( 'Copy-proj' )
+{
+    .Config             = [ .Platform = 'Win32' .Config = 'Debug' .Target = 'Copy' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$\Copy.vcxproj'
+}
+XCodeProject( 'Copy-xcode' )
+{
+    .Config             = [ .Platform = 'OSX' .Config = 'Debug' .Target = 'Copy' ]
+    .ProjectConfigs     = { .Config }
+    .ProjectOutput      = '$Out$/Copy.xcodeproj/project.pbxproj'
+}
+
 // Alias to build
 //------------------------------------------------------------------------------
 Alias( 'Intellisense' )
@@ -123,6 +155,8 @@ Alias( 'Intellisense' )
                     'Executable-xcode'
                     'Test-proj'
                     'Test-xcode'
+                    'Copy-proj'
+                    'Copy-xcode'
                   }
 }
 

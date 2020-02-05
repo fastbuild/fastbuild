@@ -1,0 +1,16 @@
+//
+// Check Cache key generation isconsistent when interating with distributed compilation
+//
+//------------------------------------------------------------------------------
+#include "..\..\testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers        = { "127.0.0.1" }
+}
+
+ObjectList( 'ConsistentCacheKeys' )
+{
+    .CompilerInputFiles     = '$TestRoot$/Data/TestCache/ConsistentCacheKeys/file1.cpp'
+    .CompilerOutputPath     = '$Out$/Test/Cache/ConsistentCacheKeys/'
+}

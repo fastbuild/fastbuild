@@ -10,44 +10,17 @@
 
 // Activate
 //------------------------------------------------------------------------------
-#if__LINUX__
-    #if USING_GCC_4
-        #include "Linux/GCC4.bff"
-    #endif
-    #if USING_GCC_7
-        #include "Linux/GCC7.bff"
+#if __LINUX__
+    #if CI_BUILD
+        #include "Linux/GCC_CI.bff"
+    #else
+        #if USING_GCC_4
+            #include "Linux/GCC4.bff"
+        #endif
+        #if USING_GCC_7
+            #include "Linux/GCC7.bff"
+        #endif
     #endif
 #endif
 
-
-// Projects
-//--------------------------------------------------------------------------
-{
-    // Common
-    .ProjectBasePath                = '$_CURRENT_BFF_DIR_$/'
-    .ProjectInputPaths              = .ProjectBasePath
-    .ProjectAllowedFileExtensions   = '*.bff'
-
-    #if __WINDOWS__
-        // Visual Studio
-        VCXProject( 'GCC-proj' )
-        {
-            .ProjectOutput                  = '$_CURRENT_BFF_DIR_$/../../../tmp/VisualStudio/Projects/GCC.vcxproj'
-            .PlatformToolset                = 'v141'
-    
-            .ProjectX64Debug                = [ .Platform = 'x64' .Config = 'x64-Debug' ]
-            .ProjectX64Profile              = [ .Platform = 'x64' .Config = 'x64-Profile' ]
-            .ProjectX64Release              = [ .Platform = 'x64' .Config = 'x64-Release' ]
-            .ProjectX64ClangDebug           = [ .Platform = 'x64' .Config = 'x64Clang-Debug' ]
-            .ProjectX64ClangProfile         = [ .Platform = 'x64' .Config = 'x64Clang-Profile' ]
-            .ProjectX64ClangRelease         = [ .Platform = 'x64' .Config = 'x64Clang-Release' ]
-            .ProjectConfigs                 = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-                                                .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
-        }
-    #endif
-
-    #if __OSX__
-        // XCode - TODO:C Add project
-    #endif
-}
 //------------------------------------------------------------------------------

@@ -78,7 +78,7 @@ class SLNNode : public FileNode
     REFLECT_NODE_DECLARE( SLNNode )
 public:
     SLNNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~SLNNode() override;
 
     static inline Node::Type GetTypeS() { return Node::SLN_NODE; }
@@ -90,13 +90,13 @@ private:
 
     bool                    GatherProject( NodeGraph & nodeGraph,
                                            const Function * function,
-                                           const BFFIterator & iter,
+                                           const BFFToken * iter,
                                            const char * propertyName,
                                            const AString & projectName,
                                            Array< VCXProjectNode * > & inOutProjects ) const;
     bool                    GatherProjects( NodeGraph & nodeGraph,
                                             const Function * function,
-                                            const BFFIterator & iter,
+                                            const BFFToken * iter,
                                             const char * propertyName,
                                             const Array< AString > & projectNames,
                                             Array< VCXProjectNode * > & inOutProjects ) const;
