@@ -236,6 +236,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_EnableMonitor = true;
                 continue;
             }
+            else if (thisArg == "-nolocalrace")
+            {
+                m_AllowLocalRace = false;
+                continue;
+            }
             else if ( thisArg == "-nooutputbuffering" )
             {
                 // this doesn't do anything any more
