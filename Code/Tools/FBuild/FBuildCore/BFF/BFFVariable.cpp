@@ -257,7 +257,7 @@ void BFFVariable::SetValueArrayOfStructs( const Array< const BFFVariable * > & v
 
 // ConcatVarsRecurse
 //------------------------------------------------------------------------------
-BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFIterator & operatorIter ) const
+BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFToken * operatorIter ) const
 {
     const BFFVariable * const varDst = this;
     const BFFVariable * const varSrc = &other;

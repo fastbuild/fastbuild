@@ -73,7 +73,7 @@ struct VCXProjectNodeComp
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 SLNNode::SLNNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
 {
     m_LastBuildTimeMs = 100; // higher default than a file node
     m_Type = Node::SLN_NODE;
@@ -81,7 +81,7 @@ SLNNode::SLNNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool SLNNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool SLNNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // Solution Configs
     //------------------------------------------------------------------------------
@@ -261,14 +261,6 @@ SLNNode::SLNNode()
 //------------------------------------------------------------------------------
 SLNNode::~SLNNode() = default;
 
-// DetermineNeedToBuild
-//------------------------------------------------------------------------------
-/*virtual*/ bool SLNNode::DetermineNeedToBuild( bool /*forceClean*/ ) const
-{
-    // SLNNode always builds, but only writes the result if different
-    return true;
-}
-
 // DoBuild
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult SLNNode::DoBuild( Job * UNUSED( job ) )
@@ -372,7 +364,7 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
 //------------------------------------------------------------------------------
 bool SLNNode::GatherProject( NodeGraph & nodeGraph,
                              const Function * function,
-                             const BFFIterator & iter,
+                             const BFFToken * iter,
                              const char * propertyName,
                              const AString & projectName,
                              Array< VCXProjectNode * > & inOutProjects ) const
@@ -405,7 +397,7 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
 //------------------------------------------------------------------------------
 bool SLNNode::GatherProjects( NodeGraph & nodeGraph,
                               const Function * function,
-                              const BFFIterator & iter,
+                              const BFFToken * iter,
                               const char * propertyName,
                               const Array< AString > & projectNames,
                               Array< VCXProjectNode * > & inOutProjects ) const

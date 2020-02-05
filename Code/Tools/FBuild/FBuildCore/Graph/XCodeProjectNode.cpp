@@ -25,6 +25,7 @@ REFLECT_STRUCT_BEGIN_BASE( XCodeProjectConfig )
     REFLECT( m_Target,  "Target",   MetaOptional() )
     REFLECT( m_XCodeBaseSDK,            "XCodeBaseSDK",         MetaOptional() )
     REFLECT( m_XCodeDebugWorkingDir,    "XCodeDebugWorkingDir", MetaOptional() )
+    REFLECT( m_XCodeIphoneOSDeploymentTarget, "XCodeIphoneOSDeploymentTarget", MetaOptional() )
 REFLECT_END( XCodeProjectConfig )
 
 REFLECT_NODE_BEGIN( XCodeProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
@@ -49,7 +50,7 @@ REFLECT_END( XCodeProjectNode )
 //------------------------------------------------------------------------------
 /*static*/ bool XCodeProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
                                                     Array< XCodeProjectConfig > & configs,
-                                                    const BFFIterator * iter,
+                                                    const BFFToken * iter,
                                                     const Function * function )
 {
     // Must provide iter and function, or neither
@@ -72,7 +73,7 @@ REFLECT_END( XCodeProjectNode )
         {
             if ( iter && function )
             {
-                Error::Error_1104_TargetNotDefined( *iter, function, ".Target", config.m_Target );
+                Error::Error_1104_TargetNotDefined( iter, function, ".Target", config.m_Target );
                 return false;
             }
             ASSERT( false ); // Should not be possible to fail when restoring from serialized DB
@@ -87,7 +88,7 @@ REFLECT_END( XCodeProjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 XCodeProjectNode::XCodeProjectNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
     , m_XCodeOrganizationName( "Organization" )
     , m_XCodeBuildToolPath( "./FBuild" )
     , m_XCodeBuildToolArgs( "-ide $(FASTBUILD_TARGET)" )
@@ -100,7 +101,7 @@ XCodeProjectNode::XCodeProjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool XCodeProjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
@@ -122,7 +123,7 @@ XCodeProjectNode::XCodeProjectNode()
     m_StaticDependencies.Append( fileNodes );
 
     // Resolve Target names to Node pointers for later use
-    if ( XCodeProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
+    if ( XCodeProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, iter, function ) == false )
     {
         return false; // Initialize will have emitted an error
     }
@@ -133,14 +134,6 @@ XCodeProjectNode::XCodeProjectNode()
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 XCodeProjectNode::~XCodeProjectNode() = default;
-
-// DetermineNeedToBuild
-//------------------------------------------------------------------------------
-/*virtual*/ bool XCodeProjectNode::DetermineNeedToBuild( bool /*forceClean*/ ) const
-{
-    // XCodeProjectNode always builds, but only writes the result if different
-    return true;
-}
 
 // DoBuild
 //------------------------------------------------------------------------------

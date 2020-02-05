@@ -9,7 +9,7 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
+class BFFToken;
 
 // Helpers
 //------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ public:
     inline void Freeze() const { ++m_FreezeCount; }
     inline void Unfreeze() const { ASSERT( m_FreezeCount != 0 ); --m_FreezeCount; }
 
-    BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFIterator & operatorIter ) const;
+    BFFVariable * ConcatVarsRecurse( const AString & dstName, const BFFVariable & other, const BFFToken * operatorIter ) const;
 
     static const BFFVariable ** GetMemberByName( const AString & name, const Array< const BFFVariable * > & members );
 

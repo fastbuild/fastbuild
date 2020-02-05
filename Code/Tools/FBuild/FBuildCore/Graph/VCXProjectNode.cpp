@@ -106,7 +106,7 @@ REFLECT_END( VCXProjectNode )
 //------------------------------------------------------------------------------
 /*static*/ bool VSProjectConfig::ResolveTargets( NodeGraph & nodeGraph,
                                                  Array< VSProjectConfig > & configs,
-                                                 const BFFIterator * iter,
+                                                 const BFFToken * iter,
                                                  const Function * function )
 {
     // Must provide iter and function, or neither
@@ -129,7 +129,7 @@ REFLECT_END( VCXProjectNode )
         {
             if ( iter && function )
             {
-                Error::Error_1104_TargetNotDefined( *iter, function, ".Target", config.m_Target );
+                Error::Error_1104_TargetNotDefined( iter, function, ".Target", config.m_Target );
                 return false;
             }
             ASSERT( false ); // Should not be possible to fail when restoring from serialized DB
@@ -144,7 +144,7 @@ REFLECT_END( VCXProjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 VCXProjectNode::VCXProjectNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
     , m_ProjectSccEntrySAK( false )
 {
     m_Type = Node::VCXPROJECT_NODE;
@@ -164,7 +164,7 @@ VCXProjectNode::VCXProjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool VCXProjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool VCXProjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     ProjectGeneratorBase::FixupAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
@@ -211,7 +211,7 @@ VCXProjectNode::VCXProjectNode()
     }
 
     // Resolve Target names to Node pointers for later use
-    if ( VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, &iter, function ) == false )
+    if ( VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, iter, function ) == false )
     {
         return false; // Initialize will have emitted an error
     }
@@ -226,14 +226,6 @@ VCXProjectNode::VCXProjectNode()
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 VCXProjectNode::~VCXProjectNode() = default;
-
-// DetermineNeedToBuild
-//------------------------------------------------------------------------------
-/*virtual*/ bool VCXProjectNode::DetermineNeedToBuild( bool /*forceClean*/ ) const
-{
-    // VCXProjectNode always builds, but only writes the result if different
-    return true;
-}
 
 // DoBuild
 //------------------------------------------------------------------------------

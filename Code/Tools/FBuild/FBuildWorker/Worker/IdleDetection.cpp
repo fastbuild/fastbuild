@@ -22,10 +22,12 @@
     #include <stdlib.h>
     #include <sys/stat.h>
 #endif
+#if defined( __OSX__ )
+    #include <mach/mach_host.h>
+#endif
 
 // Defines
 //------------------------------------------------------------------------------
-#define IDLE_DETECTION_THRESHOLD_PERCENT ( 20.0f )
 #define IDLE_CHECK_DELAY_SECONDS ( 0.1f )
 
 // CONSTRUCTOR
@@ -58,10 +60,10 @@ IdleDetection::~IdleDetection() = default;
 
 // Update
 //------------------------------------------------------------------------------
-void IdleDetection::Update()
+void IdleDetection::Update( uint32_t idleThresholdPercent )
 {
     // apply smoothing based on current "idle" state
-    if ( IsIdleInternal( m_IsIdleCurrent ) )
+    if ( IsIdleInternal( idleThresholdPercent, m_IsIdleCurrent ) )
     {
         ++m_IdleSmoother;
     }
@@ -99,9 +101,9 @@ void IdleDetection::Update()
     }
 }
 
-//
+// IsIdleInternal
 //------------------------------------------------------------------------------
-bool IdleDetection::IsIdleInternal( float & idleCurrent )
+bool IdleDetection::IsIdleInternal( uint32_t idleThresholdPercent, float & idleCurrent )
 {
     // determine total cpu time (including idle)
     uint64_t systemTime = 0;
@@ -124,7 +126,7 @@ bool IdleDetection::IsIdleInternal( float & idleCurrent )
 
     // if the total CPU time is below the idle theshold, we don't need to
     // check to know acurately what the cpu use of FASTBuild is
-    if ( m_CPUUsageTotal < IDLE_DETECTION_THRESHOLD_PERCENT )
+    if ( m_CPUUsageTotal < idleThresholdPercent )
     {
         idleCurrent = 1.0f;
         return true;
@@ -165,7 +167,7 @@ bool IdleDetection::IsIdleInternal( float & idleCurrent )
     }
 
     idleCurrent = ( 1.0f - ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) * 0.01f ) );
-    return ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) < IDLE_DETECTION_THRESHOLD_PERCENT );
+    return ( ( m_CPUUsageTotal - m_CPUUsageFASTBuild ) < idleThresholdPercent );
 }
 
 // GetSystemTotalCPUUsage
@@ -182,10 +184,12 @@ bool IdleDetection::IsIdleInternal( float & idleCurrent )
         outUserTime = ((uint64_t)ftUser.dwHighDateTime << 32) | (uint64_t)ftUser.dwLowDateTime;
         outKernTime -= outIdleTime; // Kern time includes Idle, but we don't want that
     #elif defined( __OSX__ )
-        // TODO:OSX Implement GetSystemTotalCPUUsage
-        outIdleTime = 0;
-        outKernTime = 0;
-        outUserTime = 0;
+        host_cpu_load_info_data_t cpuInfo;
+        mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
+        VERIFY( host_statistics( mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpuInfo, &count ) == KERN_SUCCESS );
+        outIdleTime = cpuInfo.cpu_ticks[ CPU_STATE_IDLE ];
+        outKernTime = cpuInfo.cpu_ticks[ CPU_STATE_SYSTEM ];
+        outUserTime = cpuInfo.cpu_ticks[ CPU_STATE_USER ];
     #elif defined( __LINUX__ )
         // Read first line of /proc/stat
         AStackString< 1024 > procStat;

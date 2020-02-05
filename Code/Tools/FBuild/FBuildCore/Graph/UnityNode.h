@@ -10,7 +10,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class DirectoryListNode;
 class Function;
 
@@ -23,7 +22,7 @@ public:
     friend class FunctionUnity;
 
     explicit UnityNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~UnityNode() override;
 
     static inline Node::Type GetTypeS() { return Node::UNITY_NODE; }

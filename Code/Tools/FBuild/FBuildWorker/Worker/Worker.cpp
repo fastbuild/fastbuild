@@ -21,6 +21,7 @@
 
 #include "Core/Env/Env.h"
 #include "Core/Env/ErrorFormat.h"
+#include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
@@ -29,6 +30,9 @@
 #include "Core/Tracing/Tracing.h"
 
 // system
+#if defined( __WINDOWS__ )
+    #include <psapi.h>
+#endif
 #include <stdio.h>
 
 // CONSTRUCTOR
@@ -43,7 +47,8 @@ Worker::Worker( const AString & args, bool consoleMode )
     , m_RestartNeeded( false )
     #if defined( __WINDOWS__ )
         , m_LastDiskSpaceResult( -1 )
-    #endif
+        , m_LastMemoryCheckResult( -1 )
+#endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
@@ -224,8 +229,9 @@ uint32_t Worker::WorkThread()
 
     if ( err == 0 )  // if not already error'd
     {
-        const uint32_t brokerageStatus = m_WorkerBrokerage.GetBrokerageStatus();
-        if ( brokerageStatus != WorkerBrokerage::BrokerageSuccess )
+        const WorkerBrokerage::Status & brokerageStatus =
+            m_WorkerBrokerage.GetStatus();
+        if ( brokerageStatus.statusValue != WorkerBrokerage::BrokerageSuccess )
         {
             // skip display of error dialog here, since UI already shutdown
             return (uint32_t)-2;
@@ -272,16 +278,58 @@ bool Worker::HasEnoughDiskSpace()
     #endif
 }
 
+// HasEnoughMemory
+//------------------------------------------------------------------------------
+bool Worker::HasEnoughMemory()
+{
+    #if defined( __WINDOWS__ )
+        // Only check free memory every few seconds
+        float elapsedTime = m_TimerLastMemoryCheck.GetElapsedMS();
+        if ( ( elapsedTime < 1000.0f ) && ( m_LastMemoryCheckResult != -1 ) )
+        {
+            return ( m_LastMemoryCheckResult != 0 );
+        }
+        m_TimerLastMemoryCheck.Start();
+    
+        PERFORMANCE_INFORMATION memInfo;
+        memInfo.cb = sizeof( memInfo );
+        if ( GetPerformanceInfo( &memInfo, sizeof( memInfo ) ) )
+        {
+            const uint64_t limitMemSize = memInfo.CommitLimit * memInfo.PageSize;
+            const uint64_t currentMemSize = memInfo.CommitTotal * memInfo.PageSize;
+    
+            // Calculate the free memory in MiB.
+            const uint64_t freeMemSize = ( limitMemSize - currentMemSize ) / MEGABYTE;
+    
+            // Check if the free memory is high enough
+            WorkerSettings & ws = WorkerSettings::Get();
+            if ( freeMemSize > ws.GetMinimumFreeMemoryMiB() )
+            {
+                m_LastMemoryCheckResult = 1;
+                return true;
+            }
+        }
+    
+        // The machine doesn't have enough memory or query failed. Exclude this machine from worker pool.
+        m_LastMemoryCheckResult = 0;
+        return false;
+    #else
+        return true; // TODO:LINUX TODO:OSX Implement
+    #endif
+}
+
 // UpdateAvailability
 //------------------------------------------------------------------------------
 int Worker::UpdateAvailability()
 {
     // Check disk space
-    bool hasEnoughDiskSpace = HasEnoughDiskSpace();
-
-    m_IdleDetection.Update();
+    const bool hasEnoughDiskSpace = HasEnoughDiskSpace();
+    const bool hasEnoughMemory = HasEnoughMemory();
 
     WorkerSettings & ws = WorkerSettings::Get();
+
+    m_IdleDetection.Update( ws.GetIdleThresholdPercent() );
+
     uint32_t numCPUsToUse = ws.GetNumCPUsToUse();
     switch( ws.GetMode() )
     {
@@ -317,7 +365,7 @@ int Worker::UpdateAvailability()
     }
 
     // don't accept any new work while waiting for a restart
-    if ( m_RestartNeeded || ( hasEnoughDiskSpace == false ) )
+    if ( m_RestartNeeded || ( hasEnoughDiskSpace == false ) || ( hasEnoughMemory == false ) )
     {
         numCPUsToUse = 0;
     }
@@ -325,8 +373,9 @@ int Worker::UpdateAvailability()
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
 
     m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
-    const uint32_t brokerageStatus = m_WorkerBrokerage.GetBrokerageStatus();
-    if ( brokerageStatus != WorkerBrokerage::BrokerageSuccess )
+    const WorkerBrokerage::Status & brokerageStatus =
+        m_WorkerBrokerage.GetStatus();
+    if ( brokerageStatus.statusValue != WorkerBrokerage::BrokerageSuccess )
     {
         AStackString<> msg;
         m_WorkerBrokerage.GetStatusMsg( brokerageStatus, msg );
@@ -484,26 +533,16 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
 
 // ErrorMessageString
 //------------------------------------------------------------------------------
-void Worker::ErrorMessageString( MSVC_SAL_PRINTF const char * message ) const
+void Worker::ErrorMessageString( MSVC_SAL_PRINTF const char * buffer ) const
 {
     if ( InConsoleMode() )
     {
         // Forward to console
-        StatusMessage( "%s", message );
+        StatusMessage( "%s", buffer );
         return;
     }
 
-    // Display interactive Message Box
-    #if defined( __WINDOWS__ )
-        ::MessageBox( nullptr, message, "FBuild Worker",
-            MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST | MB_OK );
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement ErrorMessageString for non-console mode
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ErrorMessageString for non-console mode
-    #else
-        #error Unknown Platform
-    #endif
+    Env::ShowMsgBox( "FBuildWorker", buffer );
 }
 
 // ErrorMessage
