@@ -19,15 +19,66 @@ public:
     WorkerBrokerage();
     ~WorkerBrokerage();
 
-    inline const AString & GetBrokerageRoot() const { return m_BrokerageRoot; }
+    inline const Array<AString> & GetBrokerageRoots() const { return m_BrokerageRoots; }
+    inline const AString & GetBrokerageRootPaths() const { return m_BrokerageRootPaths; }
+
+    struct WorkerInfo
+    {
+        bool operator==(const WorkerInfo& rhs)
+        {
+            // use case insensitive compare, since hostnames are used as dir names
+            return basePath.CompareI(rhs.basePath) == 0 &&
+                name.CompareI(rhs.name) == 0;
+        }
+
+        AString basePath;
+        AString name;
+    };
+
+    enum FailureValue
+    {
+       NoFailure                 = 0,
+       FailureNoBrokeragePath    = 1,
+       FailureNoBrokerageAccess  = 2, 
+       FailureBrokerageTimeStamp = 3
+    };
+
+    enum StatusValue
+    {
+       BrokerageUninitialized  = 0,
+       BrokerageSuccess        = 1,
+       BrokerageFailure        = 2
+    };
+
+    struct StatusFailure
+    {
+        StatusFailure() : failureValue(NoFailure) {}
+
+        WorkerInfo workerInfo;
+        FailureValue failureValue;
+    };
+
+    struct Status
+    {
+        Array< StatusFailure > failures;
+        StatusValue statusValue;
+    };
+
+    inline const Status & GetStatus() const { return m_Status; }
+
+    void GetStatusMsg(
+        const Status & status,
+        AString & statusMsg ) const;
 
     // client interface
+
     void FindWorkers(
         const Array< Tags > & requiredWorkerTagsList,
-        const Array< AString > & excludedWorkers,
-        Array< Array< AString > > & workers );
+        const Array< WorkerInfo > & excludedWorkers,
+        Array< Array< WorkerInfo > > & workers );
 
     // server interface
+    bool ShouldUpdateAvailability() const;
     void SetAvailable( const Tags & workerTags );
     void SetUnavailable();
 private:
@@ -66,19 +117,24 @@ private:
             bool operator == ( const AString & other ) const;
             inline bool operator != ( const AString & other ) const { return !(*this == other ); }
 
-            AString               m_Key;
-            Array< AString> m_Workers;
+            AString             m_Key;
+            Array< WorkerInfo > m_Workers;
     };
 
-    void Init();
-    void ListDirContents( const AString & path, const bool includeDirs, Array< AString > & contents ) const;
+    void Init( const bool isWorker );
+
+    void ListDirContents(
+        const Array< AString > & roots,
+        const Array< AString > & paths,
+        const bool includeDirs,
+        Array< WorkerInfo > & contents ) const;
     void AddRootWorkers(
-        const Array< AString > & excludedWorkers,
+        const Array< WorkerInfo > & excludedWorkers,
         bool & rootWorkersValid,
-        Array< AString > & rootWorkers,
-        Array< AString > & rootWorkersToAdd ) const;
+        Array< WorkerInfo > & rootWorkers,
+        Array< WorkerInfo > & rootWorkersToAdd ) const;
     void GetTagCache(
-        const AString & key,
+        const WorkerInfo & key,
         Array< TagCache > & tagsCache,
         const TagCache * & foundTagCache ) const;
     void GetWorkersCache(
@@ -87,34 +143,34 @@ private:
         Array< WorkerCache > & workersCache,
         const WorkerCache * & foundWorkerCache ) const;
     void CalcWorkerIntersection(
-        const Array< AString > & workersToAdd,
-        Array< AString > & workersForJob ) const;
+        const Array< WorkerInfo > & workersToAdd,
+        Array< WorkerInfo > & workersForJob ) const;
     void GetWorkersToConsider(
         const bool privatePool,
         const bool firstTag,
-        const Array< AString > & workersForJob,
-        const Array< AString > & excludedWorkers,
+        const Array< WorkerInfo > & workersForJob,
+        const Array< WorkerInfo > & excludedWorkers,
         bool & rootWorkersValid,
-        Array< AString > & rootWorkers,
-        Array< AString > & workersToConsider ) const;
+        Array< WorkerInfo > & rootWorkers,
+        Array< WorkerInfo > & workersToConsider ) const;
     void HandleFoundKey(
         const bool privatePool,
         const bool firstTag,
         const Tag & requiredWorkerTag,
-        const Array< AString > & excludedWorkers,
+        const Array< WorkerInfo > & excludedWorkers,
         const TagCache * foundTagCache,
         bool & rootWorkersValid,
-        Array< AString > & rootWorkers,
+        Array< WorkerInfo > & rootWorkers,
         Array< WorkerCache > & workersCache,
-        Array< AString > & workersForJob ) const;
+        Array< WorkerInfo > & workersForJob ) const;
     void HandleNotFoundKey(
         const bool privatePool,
         const bool firstTag,
         const Tag & requiredWorkerTag,
-        const Array< AString > & excludedWorkers,
+        const Array< WorkerInfo > & excludedWorkers,
         bool & rootWorkersValid,
-        Array< AString > & rootWorkers,
-        Array< AString > & workersForJob ) const;
+        Array< WorkerInfo > & rootWorkers,
+        Array< WorkerInfo > & workersForJob ) const;
     void GetBrokerageRecordsFromTags(
         const Tags & workerTags,
         Array<BrokerageRecord> & brokerageRecords ) const;
@@ -128,14 +184,17 @@ private:
             const Array<BrokerageRecord> & addedBrokerageRecords );
     static void RemoveBrokerageFiles( const Array<BrokerageRecord> & brokerageRecords );
     
-    AString                m_BrokerageRoot;
-    AString                m_TagsRoot;
-    bool                   m_Availability;
-    bool                   m_Initialized;
-    AString                m_HostName;
-    Tags                   m_WorkerTags;
-    Array<BrokerageRecord> m_BrokerageRecords;
-    Timer                  m_TimerLastUpdate;      // Throttle network access
+    Array<AString>            m_BrokerageRoots;
+    AString                   m_BrokerageRootPaths;
+    bool                      m_Availability;
+    Status                    m_Status;
+    AString                   m_HostName;
+    AString                   m_UserName;
+    Tags                      m_WorkerTags;
+    Array<BrokerageRecord>    m_BrokerageRecords;
+    Timer                     m_TimerLastUpdate;      // Throttle network access
+    uint64_t                  m_SettingsWriteTime;    // FileTime of settings time when last changed
+    Array< AString >          m_FailingBrokerageFiles;
 };
 
 //------------------------------------------------------------------------------

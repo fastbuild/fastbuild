@@ -9,7 +9,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // CompilerNode
@@ -19,7 +18,7 @@ class CompilerNode : public Node
     REFLECT_NODE_DECLARE( CompilerNode )
 public:
     explicit CompilerNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~CompilerNode() override;
 
     virtual bool IsAFile() const override;
@@ -58,7 +57,7 @@ public:
     virtual const Tags & GetRequiredWorkerTags() const override { return m_RequiredWorkerTags; }
 
 private:
-    bool            InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
+    bool InitializeCompilerFamily( const BFFToken * iter, const Function * function );
 
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void Migrate( const Node & oldNode ) override;

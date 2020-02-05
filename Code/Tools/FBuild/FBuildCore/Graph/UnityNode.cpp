@@ -68,7 +68,7 @@ UnityNode::UnityNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool UnityNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool UnityNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )

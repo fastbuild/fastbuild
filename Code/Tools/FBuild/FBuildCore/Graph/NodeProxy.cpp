@@ -18,7 +18,7 @@ NodeProxy::~NodeProxy() = default;
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool NodeProxy::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*funcStartIter*/, const Function * /*function*/ )
+/*virtual*/ bool NodeProxy::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*functartIter*/, const Function * /*function*/ )
 {
     ASSERT( false ); // Should never get here
     return false;

@@ -10,7 +10,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // SettingsNode
@@ -20,7 +19,7 @@ class SettingsNode : public Node
     REFLECT_NODE_DECLARE( SettingsNode )
 public:
     explicit SettingsNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~SettingsNode() override;
 
     static inline Node::Type GetTypeS() { return Node::SETTINGS_NODE; }

@@ -7,7 +7,9 @@
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
+#include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
 
 // Core
 #include "Core/Env/Assert.h"
@@ -24,8 +26,9 @@
 //------------------------------------------------------------------------------
 WorkerBrokerage::WorkerBrokerage()
     : m_Availability( false )
-    , m_Initialized( false )
+    , m_SettingsWriteTime( 0 )
 {
+    m_Status.statusValue = BrokerageUninitialized;
 }
 
 // operator == (const BrokerageRecord &)
@@ -55,40 +58,146 @@ bool WorkerBrokerage::WorkerCache::operator == ( const AString & other ) const
 
 // Init
 //------------------------------------------------------------------------------
-void WorkerBrokerage::Init()
+void WorkerBrokerage::Init( const bool isWorker )
 {
     PROFILE_FUNCTION
 
-    if ( m_Initialized )
+    if ( m_Status.statusValue != BrokerageUninitialized )
     {
         return;
     }
 
-    // brokerage path includes version to reduce unnecessary comms attempts
+    // brokerage path includes version to reduce unnecssary comms attempts
     uint32_t protocolVersion = Protocol::PROTOCOL_VERSION;
 
+    Network::GetHostName( m_HostName );
+
     // root dir
-    AStackString<> root;
-    if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", root ) )
+    AStackString<> brokeragePath;
+    if ( Env::GetEnvVariable( "FASTBUILD_BROKERAGE_PATH", brokeragePath) )
     {
-        // <path>/<group>/<version>/
-        #if defined( __WINDOWS__ )
-            m_BrokerageRoot.Format( "%s\\main\\%u.windows\\", root.Get(), protocolVersion );
-        #elif defined( __OSX__ )
-            m_BrokerageRoot.Format( "%s/main/%u.osx/", root.Get(), protocolVersion );
-        #else
-            m_BrokerageRoot.Format( "%s/main/%u.linux/", root.Get(), protocolVersion );
-        #endif
-        m_TagsRoot = m_BrokerageRoot;
-        m_TagsRoot += NATIVE_SLASH;
-        m_TagsRoot += "tags";
+        // FASTBUILD_BROKERAGE_PATH can contain multiple paths separated by semi-colon. The worker will register itself into the first path only but
+        // the additional paths are paths to additional broker roots allowed for finding remote workers(in order of priority)
+        const char * start = brokeragePath.Get();
+        const char * end = brokeragePath.GetEnd();
+        AStackString<> pathSeparator( ";" );
+        while ( true )
+        {
+            AStackString<> root;
+            AStackString<> brokerageRoot;
+
+            const char * separator = brokeragePath.Find( pathSeparator, start, end );
+            if ( separator != nullptr )
+            {
+                root.Append( start, (size_t)( separator - start ) );
+            }
+            else
+            {
+                root.Append( start, (size_t)( end - start ) );
+            }
+            root.TrimStart( ' ' );
+            root.TrimEnd( ' ' );
+            // <path>/<group>/<version>/
+            #if defined( __WINDOWS__ )
+                brokerageRoot.Format( "%s\\main\\%u.windows\\", root.Get(), protocolVersion );
+            #elif defined( __OSX__ )
+                brokerageRoot.Format( "%s/main/%u.osx/", root.Get(), protocolVersion );
+            #else
+                brokerageRoot.Format( "%s/main/%u.linux/", root.Get(), protocolVersion );
+            #endif
+
+            m_BrokerageRoots.Append( brokerageRoot );
+            if ( !m_BrokerageRootPaths.IsEmpty() )
+            {
+                m_BrokerageRootPaths.Append( pathSeparator );
+            }
+
+            m_BrokerageRootPaths.Append( brokerageRoot );
+
+            if ( separator != nullptr )
+            {
+                start = separator + 1;
+            }
+            else
+            {
+                break;
+            }
+        }
     }
 
-    Network::GetHostName(m_HostName);
+    if ( isWorker )
+    {
+        m_TimerLastUpdate.Start();
 
-    m_TimerLastUpdate.Start();
+        WorkerInfo workerInfo;
+        workerInfo.basePath = "";
+        workerInfo.name = m_HostName;
 
-    m_Initialized = true;
+        if ( !m_BrokerageRoots.IsEmpty() )
+        {
+            // the worker only uses the first path in the roots
+            workerInfo.basePath = m_BrokerageRoots[0];
+            
+            FileIO::EnsurePathExists( workerInfo.basePath );
+            if ( !FileIO::DirectoryExists( workerInfo.basePath ) )
+            {
+                StatusFailure statusFailure;
+                statusFailure.workerInfo = workerInfo;
+                statusFailure.failureValue = FailureNoBrokerageAccess;
+                m_Status.failures.Append( statusFailure );
+            }
+        }
+        else
+        {
+            // no brokerage path
+            StatusFailure statusFailure;
+            statusFailure.workerInfo = workerInfo;
+            statusFailure.failureValue = FailureNoBrokeragePath;
+            m_Status.failures.Append( statusFailure );
+        }
+    }
+    else  // client
+    {
+        if ( !m_BrokerageRoots.IsEmpty() )
+        {
+            for( const AString & root : m_BrokerageRoots )
+            {
+                WorkerInfo workerInfo;
+                workerInfo.basePath = root;
+                workerInfo.name = m_HostName;
+
+                FileIO::EnsurePathExists( root );
+                if ( !FileIO::DirectoryExists( root ) )
+                {
+                    StatusFailure statusFailure;
+                    statusFailure.workerInfo = workerInfo;
+                    statusFailure.failureValue = FailureNoBrokerageAccess;
+                    m_Status.failures.Append( statusFailure );
+                }
+            }
+        }
+        else
+        {
+            // no brokerage path
+            WorkerInfo workerInfo;
+            workerInfo.basePath = "";
+            workerInfo.name = m_HostName;
+
+            StatusFailure statusFailure;
+            statusFailure.workerInfo = workerInfo;
+            statusFailure.failureValue = FailureNoBrokeragePath;
+            m_Status.failures.Append( statusFailure );
+        }
+    }
+    
+    if ( m_Status.failures.IsEmpty() )
+    {
+        m_Status.statusValue = BrokerageSuccess;
+    }
+    else
+    {
+        m_Status.statusValue = BrokerageFailure;
+    }
 }
 
 // DESTRUCTOR
@@ -101,48 +210,61 @@ WorkerBrokerage::~WorkerBrokerage()
 // ListDirContents
 //------------------------------------------------------------------------------
 void WorkerBrokerage::ListDirContents(
-    const AString & path, const bool includeDirs,
-    Array< AString > & contents ) const
+    const Array< AString > & roots,
+    const Array< AString > & paths,
+    const bool includeDirs,
+    Array< WorkerInfo > & contents ) const
 {
-    // wildcard search for any worker
-    // the filenames are the machine names
-    AStackString<> wildcardFileName( "*" );
-    Array< AString > pathResults( 256, true );  // start with 256 capacity
-    FileIO::GetFiles( path,
-                            wildcardFileName,  
-                            false,  // recurse
-                            includeDirs,
-                            &pathResults );
-    const size_t numResults = pathResults.GetSize();
-    contents.SetCapacity( numResults );
-    for ( size_t i=0; i<numResults; ++i )
+    Array< AString > results( 256, true );
+    size_t index = 0;
+    for( const AString & path : paths )
     {
-        const char * lastSlash = pathResults.Get( i ).FindLast( NATIVE_SLASH );
-        AStackString<> machineName( lastSlash + 1 );
-        contents.Append( machineName );
+        const AString & root = roots[ index ];
+        
+        FileIO::GetFiles(path,
+                         AStackString<>( "*" ),
+                         false,
+                         includeDirs,
+                         &results );
+        const size_t numResults = results.GetSize();
+        contents.SetCapacity( numResults );
+        for ( size_t i=0; i<numResults; ++i )
+        {
+            const char * lastSlash = results.Get( i ).FindLast( NATIVE_SLASH );
+            AStackString<> machineName( lastSlash + 1 );
+            WorkerInfo workerInfo;
+            workerInfo.basePath = root;
+            workerInfo.name = machineName;
+            contents.Append( workerInfo );
+        }
+        index += 1;
     }
 }
 
 // AddRootWorkers
 //------------------------------------------------------------------------------
 void WorkerBrokerage::AddRootWorkers(
-    const Array< AString > & excludedWorkers,
+    const Array< WorkerInfo > & excludedWorkers,
     bool & rootWorkersValid,
-    Array< AString > & rootWorkers,
-    Array< AString > & rootWorkersToAdd ) const
+    Array< WorkerInfo > & rootWorkers,
+    Array< WorkerInfo > & rootWorkersToAdd ) const
 {
     if ( !rootWorkersValid )
     {
         const bool includeDirs = false;  // just get files ( worker name files )
-        ListDirContents( m_BrokerageRoot, includeDirs, rootWorkers );
+        ListDirContents(
+            m_BrokerageRoots,  // roots
+            m_BrokerageRoots,  // paths: in this case same as roots
+            includeDirs,
+            rootWorkers );
         rootWorkersValid = true;
     }
     rootWorkersToAdd.SetCapacity( rootWorkers.GetSize() );
     for ( size_t i=0; i<rootWorkers.GetSize(); ++i )
     {
-        const AString & rootWorker = rootWorkers.Get( i );
+        const WorkerInfo & rootWorker = rootWorkers.Get( i );
         // use case insensitive compare, since hostnames are used as dir names
-        if ( rootWorker.CompareI( m_HostName ) != 0 &&
+        if ( rootWorker.name.CompareI( m_HostName ) != 0 &&
               !excludedWorkers.Find( rootWorker ) )
         {
             if ( !rootWorkersToAdd.Find( rootWorker ) )
@@ -156,37 +278,47 @@ void WorkerBrokerage::AddRootWorkers(
 // GetTagCache
 //------------------------------------------------------------------------------
 void WorkerBrokerage::GetTagCache(
-    const AString & key,
+    const WorkerInfo & key,
     Array< TagCache > & tagsCache,
     const TagCache * & foundTagCache ) const
 {
-    foundTagCache = tagsCache.Find( key );
+    foundTagCache = tagsCache.Find( key.name );
     if ( foundTagCache == nullptr )
     {
         TagCache tagCache;
-        tagCache.m_Key = key;
-        Array< AString > tagDirs;
-        AStackString<> keyDir( m_TagsRoot );
+        tagCache.m_Key = key.name;
+        Array< AString > roots;
+        roots.Append( key.basePath );
+        Array< AString > keyDirs;
+        AStackString<> keyDir( key.basePath );
+        keyDir += "tags";
         keyDir += NATIVE_SLASH;
-        keyDir += key;
+        keyDir += key.name;
+        keyDirs.Append( keyDir );
         const bool includeDirs = true;  // include dirs ( value dirs )
-        ListDirContents( keyDir, includeDirs, tagDirs );
+        Array< WorkerInfo > tagDirs;
+        ListDirContents(
+            roots,    // roots
+            keyDirs,  // paths
+            includeDirs,
+            tagDirs );
         for ( size_t i=0; i<tagDirs.GetSize(); ++i )
         {
-            const AString & tagDir = tagDirs.Get( i );
+            const WorkerInfo & tagDir = tagDirs.Get( i );
             AStackString<> valueToUse;
             // use case insensitive compare, since values are used as dir names
-            if ( !tagDir.EqualsI( TAG_TRUE_VALUE ) )
+            if ( !tagDir.name.EqualsI( TAG_TRUE_VALUE ) )
             {
                 // use case insensitive compare, since values are used as dir names
-                if ( tagDir.BeginsWithI( TAG_NOT_OPERATOR_DIR_PREFIX ) )
+                if ( tagDir.name.BeginsWithI( TAG_NOT_OPERATOR_DIR_PREFIX ) )
                 {
                     valueToUse = TAG_NOT_OPERATOR;
-                    valueToUse += ( tagDir.Get() + AString::StrLen( TAG_NOT_OPERATOR_DIR_PREFIX ) );
+                    valueToUse += ( tagDir.name.Get() +
+                        AString::StrLen( TAG_NOT_OPERATOR_DIR_PREFIX ) );
                 }
                 else
                 {
-                    valueToUse = tagDir;
+                    valueToUse = tagDir.name;
                 }
             }
             else
@@ -194,7 +326,7 @@ void WorkerBrokerage::GetTagCache(
                 // use empty valueToUse
             }
             Tag tag;
-            tag.SetKey( key );
+            tag.SetKey( key.name );
             tag.SetValue( valueToUse );
             tagCache.m_Tags.Append( tag );
         }
@@ -216,15 +348,27 @@ void WorkerBrokerage::GetWorkersCache(
     {
         WorkerCache workerCache;
         workerCache.m_Key += key;
-        AStackString<> valueDir( m_TagsRoot );
-        for ( size_t i=0; i<dirNameArray.GetSize(); ++i )
+
+        Array< AString > valueDirs;
+        for( const AString & root : m_BrokerageRoots )
         {
-            valueDir += NATIVE_SLASH;
-            valueDir += dirNameArray.Get( i );
+            AStackString<> valueDir( root );
+            valueDir += "tags";
+            for ( size_t i=0; i<dirNameArray.GetSize(); ++i )
+            {
+                valueDir += NATIVE_SLASH;
+                valueDir += dirNameArray.Get( i );
+            }
+            valueDirs.Append( valueDir );
         }
-        Array< AString > workerFileNames;
+
+        Array< WorkerInfo > workerFileNames;
         const bool includeDirs = false;  // just get files ( worker name files )
-        ListDirContents( valueDir, includeDirs, workerFileNames );
+        ListDirContents(
+            m_BrokerageRoots,  // roots
+            valueDirs,         // paths
+            includeDirs,
+            workerFileNames );
         for ( size_t i=0; i<workerFileNames.GetSize(); ++i )
         {
             workerCache.m_Workers.Append( workerFileNames.Get( i ) );
@@ -237,14 +381,14 @@ void WorkerBrokerage::GetWorkersCache(
 // CalcWorkerIntersection
 //------------------------------------------------------------------------------
 void WorkerBrokerage::CalcWorkerIntersection(
-    const Array< AString > & workersToAdd,
-    Array< AString > & workersForJob ) const
+    const Array< WorkerInfo > & workersToAdd,
+    Array< WorkerInfo > & workersForJob ) const
 {
     // calc intersection of workersForJob with workersToAdd
-    Array< AString> workersToRemove;
+    Array< WorkerInfo > workersToRemove;
     for ( size_t i=0; i<workersForJob.GetSize(); ++i )
     {
-        const AString & jobWorker = workersForJob.Get( i );
+        const WorkerInfo & jobWorker = workersForJob.Get( i );
         if ( !workersToAdd.Find( jobWorker ) )
         {
             workersToRemove.Append( jobWorker );
@@ -261,11 +405,11 @@ void WorkerBrokerage::CalcWorkerIntersection(
 void WorkerBrokerage::GetWorkersToConsider(
     const bool privatePool,
     const bool firstTag,
-    const Array< AString > & workersForJob,
-    const Array< AString > & excludedWorkers,
+    const Array< WorkerInfo > & workersForJob,
+    const Array< WorkerInfo > & excludedWorkers,
     bool & rootWorkersValid,
-    Array< AString > & rootWorkers,
-    Array< AString > & workersToConsider ) const
+    Array< WorkerInfo > & rootWorkers,
+    Array< WorkerInfo > & workersToConsider ) const
 {
     if ( privatePool )
     {
@@ -282,6 +426,11 @@ void WorkerBrokerage::GetWorkersToConsider(
             // since private pool workers are not listed in root folder
             workersToConsider = workersForJob;
         }
+    }
+    else if ( !workersForJob.IsEmpty() )
+    {
+        // performance optimization: use existing list if there is one
+        workersToConsider = workersForJob;
     }
     else
     {
@@ -301,14 +450,14 @@ void WorkerBrokerage::HandleFoundKey(
     const bool privatePool,
     const bool firstTag,
     const Tag & requiredWorkerTag,
-    const Array< AString > & excludedWorkers,
+    const Array< WorkerInfo > & excludedWorkers,
     const TagCache * foundTagCache,
     bool & rootWorkersValid,
-    Array< AString > & rootWorkers,
+    Array< WorkerInfo > & rootWorkers,
     Array< WorkerCache > & workersCache,
-    Array< AString > & workersForJob ) const
+    Array< WorkerInfo > & workersForJob ) const
 {
-    Array< AString> workersToAdd;
+    Array< WorkerInfo > workersToAdd;
     const Tags & foundTags = foundTagCache->m_Tags;
     for ( size_t i=0; i<foundTags.GetSize(); ++i )
     {
@@ -328,10 +477,10 @@ void WorkerBrokerage::HandleFoundKey(
             GetWorkersCache( workerCacheKey, dirNameArray, workersCache, foundWorkerCache);
             if ( foundWorkerCache != nullptr )
             {
-                const Array< AString > & foundWorkers = foundWorkerCache->m_Workers;
+                const Array< WorkerInfo > & foundWorkers = foundWorkerCache->m_Workers;
                 if ( requiredWorkerTag.GetKeyInverted() && requiredWorkerTag.GetValue().IsEmpty() )
                 {
-                    Array< AString > workersToConsider;
+                    Array< WorkerInfo > workersToConsider;
                     GetWorkersToConsider(
                         privatePool,
                         firstTag,
@@ -343,7 +492,7 @@ void WorkerBrokerage::HandleFoundKey(
                     // add root workers that are not in the found list ( computes inversion )
                     for ( size_t j=0; j<workersToConsider.GetSize(); ++j )
                     {
-                        const AString & rootWorkerToAdd = workersToConsider.Get( j );
+                        const WorkerInfo & rootWorkerToAdd = workersToConsider.Get( j );
                         if ( !foundWorkers.Find( rootWorkerToAdd ) )
                         {
                             if ( !workersToAdd.Find( rootWorkerToAdd ) )
@@ -358,9 +507,9 @@ void WorkerBrokerage::HandleFoundKey(
                     // add found workers
                     for ( size_t j=0; j<foundWorkers.GetSize(); ++j )
                     {
-                        const AString & foundWorker = foundWorkers.Get( j );
+                        const WorkerInfo & foundWorker = foundWorkers.Get( j );
                         // use case insensitive compare, since hostnames are used as dir names
-                        if ( foundWorker.CompareI( m_HostName ) != 0 && 
+                        if ( foundWorker.name.CompareI( m_HostName ) != 0 && 
                              !workersToAdd.Find( foundWorker ) && 
                              !excludedWorkers.Find( foundWorker ) )
                         {
@@ -389,15 +538,15 @@ void WorkerBrokerage::HandleNotFoundKey(
     const bool privatePool,
     const bool firstTag,
     const Tag & requiredWorkerTag,
-    const Array< AString > & excludedWorkers,
+    const Array< WorkerInfo > & excludedWorkers,
     bool & rootWorkersValid,
-    Array< AString > & rootWorkers,
-    Array< AString > & workersForJob ) const
+    Array< WorkerInfo > & rootWorkers,
+    Array< WorkerInfo > & workersForJob ) const
 {
     if ( requiredWorkerTag.GetKeyInverted() &&
          requiredWorkerTag.GetValue().IsEmpty() )
     {
-        Array< AString > workersToConsider;
+        Array< WorkerInfo > workersToConsider;
         GetWorkersToConsider(
             privatePool,
             firstTag,
@@ -423,33 +572,71 @@ void WorkerBrokerage::HandleNotFoundKey(
     }
 }
 
+// GetStatusMsg
+//------------------------------------------------------------------------------
+void WorkerBrokerage::GetStatusMsg(
+    const Status & status,
+    AString & statusMsg ) const
+{
+    if (status.statusValue == BrokerageFailure)
+    {
+        for( const StatusFailure & statusFailure : status.failures )
+        {
+            switch( statusFailure.failureValue )
+            {
+                case FailureNoBrokeragePath:
+                    statusMsg = "No brokerage root; did you set FASTBUILD_BROKERAGE_PATH?";
+                    break;
+                case FailureNoBrokerageAccess:
+                    statusMsg.Format( "No access to brokerage root %s",
+                        statusFailure.workerInfo.basePath.Get() );
+                    break;
+                case FailureBrokerageTimeStamp:
+                    {
+                        statusMsg = "Failed to set timestamp on brokerage file(s) ";
+                        for ( size_t i=0; i<m_FailingBrokerageFiles.GetSize(); ++i )
+                        {
+                            if ( i > 0 )
+                            {
+                                statusMsg += ", ";
+                            }
+                            statusMsg.Append( m_FailingBrokerageFiles.Get( i ) );
+                        }
+                    }
+                    break;
+                default:
+                    ASSERT( false ); // should never get here
+            }
+        }
+    }
+}
+
 // FindWorkers
 //------------------------------------------------------------------------------
 void WorkerBrokerage::FindWorkers(
     const Array< Tags > & requiredWorkerTagsList,
-    const Array< AString > & excludedWorkers,
-    Array< Array< AString > > & workers )
+    const Array< WorkerInfo > & excludedWorkers,
+    Array< Array< WorkerInfo > > & workers )
 {
     PROFILE_FUNCTION
 
-    Init();
+    Init( false );  // isWorker == false
 
-    if ( m_BrokerageRoot.IsEmpty() )
+    if ( m_Status.statusValue != WorkerBrokerage::BrokerageSuccess )
     {
-        FLOG_WARN( "No brokerage root; did you set FASTBUILD_BROKERAGE_PATH?" );
         return;
     }
 
     bool rootWorkersValid = false;
     bool rootTagDirsValid = false;
-    Array< AString > rootWorkers;
-    Array< AString > rootTagDirs;
+    Array< WorkerInfo > rootWorkers;
+    Array< WorkerInfo > rootTagDirs;
     Array< TagCache > tagsCache;
     Array< WorkerCache > workersCache;
     // loop over each job
     for ( size_t i=0; i<requiredWorkerTagsList.GetSize(); ++i )
     {
-        Array< AString > workersForJob;
+        Array< WorkerInfo > workersForJob;
         const Tags & jobRequiredTags = requiredWorkerTagsList.Get( i );
         Tags requiredWorkerTags;
         bool privatePool = false;
@@ -502,20 +689,31 @@ void WorkerBrokerage::FindWorkers(
             // loop over each dir name
             if ( !rootTagDirsValid )
             {
+                Array< AString > tagRoots( 256, true );
+                for( const AString & root : m_BrokerageRoots )
+                {
+                    AStackString<> tagRoot( root );
+                    tagRoot += "tags";
+                    tagRoots.Append( tagRoot );
+                }
                 const bool includeDirs = true;  // include dirs ( tag dirs )
-                ListDirContents( m_TagsRoot, includeDirs, rootTagDirs );
+                ListDirContents(
+                    m_BrokerageRoots,  // roots
+                    tagRoots,          // paths
+                    includeDirs,
+                    rootTagDirs );
                 rootTagDirsValid = true;
             }
             bool foundKey = false;
             for ( size_t k=0; k<rootTagDirs.GetSize(); ++k )
             {
-                const AString & keyDirName = rootTagDirs.Get( k );
+                const WorkerInfo & keyDir = rootTagDirs.Get( k );
                 // use case insensitive compare, since keys are used as dir names
-                if ( keyDirName.MatchesI( requiredWorkerTag.GetKey().Get() ) )
+                if ( keyDir.name.MatchesI( requiredWorkerTag.GetKey().Get() ) )
                 {
                     foundKey = true;
                     const TagCache * foundTagCache = nullptr;
-                    GetTagCache( keyDirName, tagsCache, foundTagCache );
+                    GetTagCache( keyDir, tagsCache, foundTagCache );
                     if ( foundTagCache != nullptr )
                     {
                         HandleFoundKey(
@@ -558,12 +756,16 @@ void WorkerBrokerage::GetBrokerageRecordsFromTags(
     const Tags & workerTags,
     Array<BrokerageRecord> & brokerageRecords ) const
 {
+    // the worker only uses the first path in the roots
+    AStackString<> tagsDir( m_BrokerageRoots[0] );
+    tagsDir += "tags";
+
     for ( size_t i=0; i<workerTags.GetSize(); ++i )
     {
         const Tag & workerTag = workerTags.Get( i );
         Array<AString> tagDirNames;
         workerTag.ToDirNameArray( tagDirNames );
-        AStackString<> brokerageFileDir( m_TagsRoot );
+        AStackString<> brokerageFileDir( tagsDir );
         const size_t numDirNames = tagDirNames.GetSize();
         if ( numDirNames > 0 )
         {
@@ -632,14 +834,28 @@ bool WorkerBrokerage::ApplyBrokerageRecordChanges(
     return anyChangesApplied;
 }
 
+// ShouldUpdateAvailability
+//------------------------------------------------------------------------------
+bool WorkerBrokerage::ShouldUpdateAvailability() const
+{
+    bool shouldUpdateAvailability = false;
+
+    // update availability if BrokerageSuccess
+    if ( m_Status.statusValue == WorkerBrokerage::BrokerageSuccess )
+    {
+        shouldUpdateAvailability = true;
+    }
+    return shouldUpdateAvailability;
+}
+
 // SetAvailable
 //------------------------------------------------------------------------------
-void WorkerBrokerage::SetAvailable( const Tags & workerTags )
+void WorkerBrokerage::SetAvailable(
+    const Tags & workerTags )
 {
-    Init();
+    Init( true );  // isWorker == true
 
-    // ignore if brokerage not configured
-    if ( m_BrokerageRoot.IsEmpty() )
+    if ( !ShouldUpdateAvailability() )
     {
         return;
     }
@@ -659,7 +875,7 @@ void WorkerBrokerage::SetAvailable( const Tags & workerTags )
         {
             // fall back to timer
             // check timer, to ensure that the files will be recreated if cleanup is done on the brokerage path
-            updateFiles = m_TimerLastUpdate.GetElapsedMS() >= 10000.0f;
+            updateFiles = m_TimerLastUpdate.GetElapsedMS() >= 60000.0f;
             // don't touch updateCache here
         }
         else
@@ -673,8 +889,14 @@ void WorkerBrokerage::SetAvailable( const Tags & workerTags )
         addedTags = workerTags;
         // update bools are true here, so just continue
     }
+
     if ( updateFiles )
     {
+        // the worker only uses the first path in the roots
+        WorkerInfo workerInfo;
+        workerInfo.basePath = m_BrokerageRoots[0];
+        workerInfo.name = m_HostName;
+
         if ( updateCache )
         {
             Array<BrokerageRecord> removedBrokerageRecords;
@@ -685,11 +907,11 @@ void WorkerBrokerage::SetAvailable( const Tags & workerTags )
             // update cache members
             m_WorkerTags.ApplyChanges( removedTags, addedTags );
 
-            AStackString<> brokerageFilePath( m_BrokerageRoot );
+            AStackString<> brokerageFilePath( workerInfo.basePath );
             brokerageFilePath += NATIVE_SLASH;
             brokerageFilePath += m_HostName;
             BrokerageRecord rootBrokerageRecord;
-            rootBrokerageRecord.m_DirPath = m_BrokerageRoot;
+            rootBrokerageRecord.m_DirPath = workerInfo.basePath;
             rootBrokerageRecord.m_FilePath = brokerageFilePath;
             if ( m_WorkerTags.ContainsPrivatePoolTag() )
             {
@@ -709,23 +931,106 @@ void WorkerBrokerage::SetAvailable( const Tags & workerTags )
             RemoveBrokerageFiles( removedBrokerageRecords );
         }
 
-        // create files to signify availability
+        m_FailingBrokerageFiles.Clear();
         for ( size_t i=0; i<m_BrokerageRecords.GetSize(); ++i )
         {
             const BrokerageRecord & brokerageRecord = m_BrokerageRecords.Get( i );
-            if ( !FileIO::FileExists( brokerageRecord.m_FilePath.Get() ) )
+
+            bool createBrokerageFile = false;
+
+            // Periodically update the modified time of brokerage file for workers that are still active,
+            // so an external script can easily delete older brokerage files (clean up orphaned ones
+            // from crashed workers).
+            const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow(
+                brokerageRecord.m_FilePath );
+            if ( !timeSetOK )
             {
+                if ( !FileIO::FileExists( brokerageRecord.m_FilePath.Get() ) )
+                {
+                    // create the dir path down to the file
+                    FileIO::EnsurePathExists( brokerageRecord.m_DirPath );
+                    createBrokerageFile = true;
+                }
+                else
+                {
+                    m_FailingBrokerageFiles.Append( brokerageRecord.m_FilePath );
+                }
+            }
+
+            // Write file if:
+            // - missing
+            // - settings have changed
+            const WorkerSettings & workerSettings = WorkerSettings::Get();
+            const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
+            if ( createBrokerageFile || 
+                 settingsWriteTime > m_SettingsWriteTime )
+            {
+                // Version
+                AStackString<> buffer;
+                buffer.AppendFormat( "Version: %s\n", FBUILD_VERSION_STRING );
+
+                // Username
+                AStackString<> userName;
+                Env::GetLocalUserName( userName );
+                buffer.AppendFormat( "User: %s\n", userName.Get() );
+
+                // CPU Thresholds
+                static const uint32_t numProcessors = Env::GetNumProcessors();
+                buffer.AppendFormat( "CPUs: %u/%u\n", workerSettings.GetNumCPUsToUse(), numProcessors );
+
+                // Move
+                switch ( workerSettings.GetMode() )
+                {
+                    case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
+                    case WorkerSettings::WHEN_IDLE:     buffer += "Mode: idle\n";         break;
+                    case WorkerSettings::DEDICATED:     buffer += "Mode: dedicated\n";    break;
+                    case WorkerSettings::PROPORTIONAL:  buffer += "Mode: proportional\n"; break;
+                }
+
+                // Create/write file which signifies availability
+                FileIO::EnsurePathExists( workerInfo.basePath );
                 FileStream fs;
-                // create the dir path down to the file
-                FileIO::EnsurePathExists( brokerageRecord.m_DirPath );
-                // create empty file; clients look at the dir names and filename,
-                // not the contents of the file
                 fs.Open( brokerageRecord.m_FilePath.Get(), FileStream::WRITE_ONLY );
+                fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
+
+                // Take note of time we wrote the settings
+                m_SettingsWriteTime = settingsWriteTime;
             }
         }
+
+        if ( m_FailingBrokerageFiles.IsEmpty() )
+        {
+            // if we got here then we are no longer in the failure
+            // case, so clear failures
+            m_Status.failures.Clear();
+            m_Availability = true;
+        }
+        else
+        {
+            if ( m_Status.failures.IsEmpty() )
+            {
+                StatusFailure statusFailure;
+                statusFailure.workerInfo = workerInfo;
+                statusFailure.failureValue = FailureBrokerageTimeStamp;
+                m_Status.failures.Append( statusFailure );
+            }
+            else
+            {
+                // we already have a failure, so skip this one
+                // to avoid growing m_Status.failures unbounded
+            }
+        }
+        if ( m_Status.failures.IsEmpty() )
+        {
+            m_Status.statusValue = BrokerageSuccess;
+        }
+        else
+        {
+            m_Status.statusValue = BrokerageFailure;
+        }
+
         // Restart the timer
         m_TimerLastUpdate.Start();
-        m_Availability = true;
     }
 }
 
@@ -733,10 +1038,9 @@ void WorkerBrokerage::SetAvailable( const Tags & workerTags )
 //------------------------------------------------------------------------------
 void WorkerBrokerage::SetUnavailable()
 {
-    Init();
+    Init( true );  // isWorker == true
 
-    // ignore if brokerage not configured
-    if ( m_BrokerageRoot.IsEmpty() )
+    if ( !ShouldUpdateAvailability() )
     {
         return;
     }

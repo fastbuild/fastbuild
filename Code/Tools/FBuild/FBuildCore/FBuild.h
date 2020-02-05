@@ -16,7 +16,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFMacros;
 class Client;
 class Dependencies;
 class FileStream;
@@ -116,8 +115,6 @@ protected:
 
     static bool s_StopBuild;
     static volatile bool s_AbortBuild;  // -fastcancel - TODO:C merge with StopBuild
-
-    BFFMacros * m_Macros;
 
     NodeGraph * m_DependencyGraph;
     JobQueue * m_JobQueue;

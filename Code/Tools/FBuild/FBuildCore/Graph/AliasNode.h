@@ -9,7 +9,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // AliasNode
@@ -19,7 +18,7 @@ class AliasNode : public Node
     REFLECT_NODE_DECLARE( AliasNode )
 public:
     explicit AliasNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~AliasNode() override;
 
     static inline Node::Type GetTypeS() { return Node::ALIAS_NODE; }

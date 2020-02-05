@@ -101,6 +101,8 @@ public:
 
     // Trimming
     void Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim );
+    void TrimStart( char charToTrimFromStart );
+    void TrimEnd( char charToTrimFromStart );
 
     // searching
     const char *    Find( char c, const char * startPos = nullptr, const char * endPos = nullptr ) const;

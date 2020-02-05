@@ -35,6 +35,7 @@ public:
     uint32_t m_CPUAllocation;
     bool m_OverrideWorkMode;
     WorkerSettings::Mode m_WorkMode;
+    uint32_t m_MinimumFreeMemoryMiB; // Minimum OS free memory including virtual memory to let worker do its work
     bool                 m_OverrideStartMinimized;
     bool                 m_StartMinimized;
     bool                 m_OverrideWorkerTags;

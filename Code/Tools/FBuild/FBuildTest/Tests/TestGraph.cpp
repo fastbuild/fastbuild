@@ -5,7 +5,6 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
@@ -49,6 +48,7 @@ private:
     void TestDeepGraph() const;
     void TestNoStopOnFirstError() const;
     void DBLocationChanged() const;
+    void DBCorrupt() const;
     void BFFDirtied() const;
     void DBVersionChanged() const;
 };
@@ -67,6 +67,7 @@ REGISTER_TESTS_BEGIN( TestGraph )
     REGISTER_TEST( TestDeepGraph )
     REGISTER_TEST( TestNoStopOnFirstError )
     REGISTER_TEST( DBLocationChanged )
+    REGISTER_TEST( DBCorrupt )
     REGISTER_TEST( BFFDirtied )
     REGISTER_TEST( DBVersionChanged )
 REGISTER_TESTS_END
@@ -250,56 +251,53 @@ void TestGraph::TestDirectoryListNode() const
     FBuild fb;
     NodeGraph * ng = fb.GetGraph();
     TEST_ASSERT( ng != nullptr );
-    if ( ng != nullptr)
+
+    // Generate a valid DirectoryListNode name
+    AStackString<> name;
+    #if defined( __WINDOWS__ )
+        const AStackString<> testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
+    #else
+        const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
+    #endif
+    Array< AString > patterns;
+    patterns.Append( AStackString<>( "library.*" ) );
+    DirectoryListNode::FormatName( testFolder,
+                                   &patterns,
+                                   true, // recursive
+                                   Array< AString >(), // excludePaths,
+                                   Array< AString >(), // excludeFiles,
+                                   Array< AString >(), // excludePatterns,
+                                   name );
+
+    // create the node, and make sure we can access it by name
+    DirectoryListNode * node = ng->CreateDirectoryListNode( name );
+    node->m_Path = testFolder;
+    node->m_Patterns = patterns;
+    BFFToken * token = nullptr;
+    TEST_ASSERT( node->Initialize( *ng, token, nullptr ) );
+    TEST_ASSERT( ng->FindNode( name ) == node );
+
+    TEST_ASSERT( fb.Build( node ) );
+
+    // make sure we got the expected results
+    TEST_ASSERT( node->GetFiles().GetSize() == 2 );
+    #if defined( __WINDOWS__ )
+        const char * fileName1 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.cpp";
+        const char * fileName2 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.o";
+    #else
+        const char * fileName1 = "Data/TestGraph/library.cpp";
+        const char * fileName2 = "Data/TestGraph/library.o";
+    #endif
+
+    // returned order depends on file system
+    if ( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName1 ) )
     {
-
-        // Generate a valid DirectoryListNode name
-        AStackString<> name;
-        #if defined( __WINDOWS__ )
-            const AStackString<> testFolder( "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\" );
-        #else
-            const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
-        #endif
-        Array< AString > patterns;
-        patterns.Append( AStackString<>( "library.*" ) );
-        DirectoryListNode::FormatName( testFolder,
-                                       &patterns,
-                                       true, // recursive
-                                       Array< AString >(), // excludePaths,
-                                       Array< AString >(), // excludeFiles,
-                                       Array< AString >(), // excludePatterns,
-                                       name );
-
-        // create the node, and make sure we can access it by name
-        DirectoryListNode * node = ng->CreateDirectoryListNode( name );
-        node->m_Path = testFolder;
-        node->m_Patterns = patterns;
-        BFFIterator iter;
-        TEST_ASSERT( node->Initialize( *ng, iter, nullptr ) );
-        TEST_ASSERT( ng->FindNode( name ) == node );
-
-        TEST_ASSERT( fb.Build( node ) );
-
-        // make sure we got the expected results
-        TEST_ASSERT( node->GetFiles().GetSize() == 2 );
-        #if defined( __WINDOWS__ )
-            const char * fileName1 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.cpp";
-            const char * fileName2 = "Tools\\FBuild\\FBuildTest\\Data\\TestGraph\\library.o";
-        #else
-            const char * fileName1 = "Data/TestGraph/library.cpp";
-            const char * fileName2 = "Data/TestGraph/library.o";
-        #endif
-
-        // returned order depends on file system
-        if ( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName1 ) )
-        {
-            TEST_ASSERT( node->GetFiles()[ 1 ].m_Name.EndsWith( fileName2 ) );
-        }
-        else
-        {
-            TEST_ASSERT( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName2 ) );
-            TEST_ASSERT( node->GetFiles()[ 1 ].m_Name.EndsWith( fileName1 ) );
-        }
+        TEST_ASSERT( node->GetFiles()[ 1 ].m_Name.EndsWith( fileName2 ) );
+    }
+    else
+    {
+        TEST_ASSERT( node->GetFiles()[ 0 ].m_Name.EndsWith( fileName2 ) );
+        TEST_ASSERT( node->GetFiles()[ 1 ].m_Name.EndsWith( fileName1 ) );
     }
 }
 
@@ -670,6 +668,58 @@ void TestGraph::DBLocationChanged() const
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile2 ) == true );
         TEST_ASSERT( AStackString<>( GetRecordedOutput() ).Replace( "Database has been moved", "", 2 ) == 2 ); // Find twice
+    }
+}
+
+// DBCorrupt
+//------------------------------------------------------------------------------
+void TestGraph::DBCorrupt() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseCorrupt/fbuild.bff";
+
+    // We'll save a valid DB, corrupt it and ensure that's detected
+    const char* dbFile = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb";
+    const char* dbFileCorrupt = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb.corrupt";
+
+    // Clear all copies of the DB first
+    EnsureFileDoesNotExist( dbFile );
+    EnsureFileDoesNotExist( dbFileCorrupt );
+
+    // Create a DB
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+    }
+
+    // Corrupt the DB
+    {
+        FileStream f;
+
+        // Read DB into memory
+        TEST_ASSERT( f.Open( dbFile, FileStream::READ_ONLY ) );
+        AString buffer;
+        buffer.SetLength( (uint32_t)f.GetFileSize() );
+        TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+        f.Close(); // Explicit close so we can re-open
+
+        // Corrupt it
+        buffer[0] = 'X';
+
+        // Save corrupt DB
+        TEST_ASSERT( f.Open( dbFile, FileStream::WRITE_ONLY ) );
+        TEST_ASSERT( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) );
+    }
+
+    // Initialization should report a warning, but still work
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
+        TEST_ASSERT( GetRecordedOutput().Find( "Database corrupt" ) );
+
+        // Backup of corrupt DB should exit
+        EnsureFileExists( dbFileCorrupt );
     }
 }
 

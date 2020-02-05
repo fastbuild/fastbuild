@@ -50,7 +50,7 @@ WorkerWindow::WorkerWindow()
     Network::GetHostName(m_HostName);
 
     // center the window on screen
-    const uint32_t w = 700;
+    const uint32_t w = 818;
     const uint32_t h = 300;
     const int32_t x = (int32_t)( GetPrimaryScreenWidth() - w );
     const int32_t y = 0;
@@ -94,7 +94,7 @@ WorkerWindow::WorkerWindow()
     // Mode drop down
     m_ModeDropDown = FNEW( OSDropDown( this ) );
     m_ModeDropDown->SetFont( m_Font );
-    m_ModeDropDown->Init( 100, 3, 210, 200 );
+    m_ModeDropDown->Init( 100, 3, 200, 200 );
     m_ModeDropDown->AddItem( "Disabled" );
     m_ModeDropDown->AddItem( "Work For Others When Idle" );
     m_ModeDropDown->AddItem( "Work For Others Always" );
@@ -106,10 +106,31 @@ WorkerWindow::WorkerWindow()
     m_ModeLabel->SetFont( m_Font );
     m_ModeLabel->Init( 5, 7, 95, 15, "Current Mode:" );
 
+    // Threshold drop down
+    m_ThresholdDropDown = FNEW( OSDropDown( this ) );
+    m_ThresholdDropDown->SetFont( m_Font );
+    m_ThresholdDropDown->Init( 376, 3, 54, 200 );
+    for ( uint32_t i = 1; i < 6; ++i )
+    {
+        AStackString<> buffer;
+        buffer.Format( "%u%%", i * 10 );
+        m_ThresholdDropDown->AddItem( buffer.Get() );
+    }
+    m_ThresholdDropDown->SetSelectedItem( ( WorkerSettings::Get().GetIdleThresholdPercent() / 10 ) - 1 );
+    if ( WorkerSettings::Get().GetMode() != WorkerSettings::WHEN_IDLE )
+    {
+        m_ThresholdDropDown->SetEnabled( false ); // Only active for Idle mode
+    }
+
+    // Threshold label
+    m_ThresholdLabel = FNEW( OSLabel( this ) );
+    m_ThresholdLabel->SetFont( m_Font );
+    m_ThresholdLabel->Init( 305, 7, 66, 15, "Threshold:" );
+
     // Resources drop down
     m_ResourcesDropDown = FNEW( OSDropDown( this ) );
     m_ResourcesDropDown->SetFont( m_Font );
-    m_ResourcesDropDown->Init( 359, 3, 126, 200 );
+    m_ResourcesDropDown->Init( 479, 3, 126, 200 );
     {
         // add items
         uint32_t numProcessors = Env::GetNumProcessors();
@@ -126,14 +147,14 @@ WorkerWindow::WorkerWindow()
     // Resources label
     m_ResourcesLabel = FNEW( OSLabel( this ) );
     m_ResourcesLabel->SetFont( m_Font );
-    m_ResourcesLabel->Init( 315, 7, 45, 15, "Using:" );
+    m_ResourcesLabel->Init( 435, 7, 44, 15, "Using:" );
 
     Tags tags = WorkerSettings::Get().GetWorkerTags();
     tags.Sort();  // sort for GUI
     const size_t numTags = tags.GetSize();
     // x position and width apply to both the tags drop down and tags none label below,
     // since we display either one or the other at runtime, in the same UI space
-    int32_t tagsControlXPos = 529;
+    int32_t tagsControlXPos = 648;
     int32_t tagsControlWidth = 150;
     if ( numTags > 0 )
     {
@@ -179,7 +200,7 @@ WorkerWindow::WorkerWindow()
     // Tags label
     m_TagsLabel = FNEW( OSLabel( this ) );
     m_TagsLabel->SetFont( m_Font );
-    m_TagsLabel->Init( 490, 7, 35, 15, "Tags:" );
+    m_TagsLabel->Init( 610, 7, 35, 15, "Tags:" );
 
     // splitter
     m_Splitter = FNEW( OSSplitter( this ) );
@@ -217,6 +238,8 @@ WorkerWindow::~WorkerWindow()
     FDELETE( m_Splitter );
     FDELETE( m_ResourcesLabel );
     FDELETE( m_ResourcesDropDown );
+    FDELETE( m_ThresholdLabel );
+    FDELETE( m_ThresholdDropDown );
     FDELETE( m_ModeLabel );
     FDELETE( m_ModeDropDown );
     FDELETE( m_ThreadList );
@@ -340,7 +363,14 @@ void WorkerWindow::Work()
     if ( dropDown == m_ModeDropDown )
     {
         WorkerSettings::Get().SetMode( (WorkerSettings::Mode)index );
-        somethingChanged = true;
+        
+        // Threshold dropdown is enabled when we're in Idle move
+        const bool idleMode = ( WorkerSettings::Get().GetMode() == WorkerSettings::WHEN_IDLE );
+        m_ThresholdDropDown->SetEnabled( idleMode );
+    }
+    else if ( dropDown == m_ThresholdDropDown )
+    {
+        WorkerSettings::Get().SetIdleThresholdPercent( (uint32_t)( index + 1 ) * 10 );
     }
     else if ( dropDown == m_ResourcesDropDown )
     {

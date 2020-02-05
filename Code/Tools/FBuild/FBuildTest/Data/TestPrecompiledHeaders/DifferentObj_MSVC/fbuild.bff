@@ -1,0 +1,41 @@
+//
+// DifferentObj_MSVC
+//
+// Ensure a PCH with an .obj name that doesn't match the .pc, .h .cpp is handled correctly
+//
+#include "..\testcommon.bff"
+
+// Settings & default ToolChain
+Using( .StandardEnvironment )
+Settings {} // use Standard Environment
+
+//
+// Build an object using precompiled headers
+//
+ObjectList( "PCHTest-lib" )
+{
+    .PCHInputFile               = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/PrecompiledHeader.cpp"
+    .PCHOutputFile              = "$Out$/Test/PrecompiledHeaders/DifferentObj_MSVC/PrecompiledHeader.pch"
+
+    // Set a different name for the obj file (the reason for this test)
+    .PCHOptions                 - ' /Fo"%3"'
+    .PCHOptions                 + ' /Fo"$PCHOutputFile$.different.obj"'
+
+    .CompilerInputPath          = "Tools/FBuild/FBuildTest/Data/TestPrecompiledHeaders/"
+    .CompilerInputPathRecurse   = false
+    .CompilerOutputPath         = "$Out$/Test/PrecompiledHeaders/DifferentObj_MSVC/"
+    .CompilerOptions            + ' /Yu"PrecompiledHeader.h" /Fp"$PCHOutputFile$"'
+                                + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
+    .PCHOptions                 + ' "/ITools/FBuild/FBuildTest/Data/TestPrecompiledHeaders"'
+}
+
+//
+// Link objects to ensure no debug info related mismatches
+//
+Executable( "PCHTest" )
+{
+    .LinkerOptions              + ' /ENTRY:main'
+
+    .LinkerOutput               = "$Out$/Test/PrecompiledHeaders/DifferentObj_MSVC/PCHTest.exe"
+    .Libraries                  = { "PCHTest-lib" }
+}

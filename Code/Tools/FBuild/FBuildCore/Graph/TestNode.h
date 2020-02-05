@@ -8,7 +8,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // TestNode
@@ -19,7 +18,7 @@ class TestNode : public FileNode
 public:
     TestNode();
 
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~TestNode() override;
 
     static inline Node::Type GetTypeS() { return Node::TEST_NODE; }
