@@ -18,6 +18,7 @@ private:
     void TestFixupFolderPath() const;
     void TestPathBeginsWith() const;
     void TestPathEndsWithFile() const;
+    void GetRelativePath() const;
 };
 
 // Register Tests
@@ -27,6 +28,7 @@ REGISTER_TESTS_BEGIN( TestPathUtils )
     REGISTER_TEST( TestFixupFolderPath )
     REGISTER_TEST( TestPathBeginsWith )
     REGISTER_TEST( TestPathEndsWithFile )
+    REGISTER_TEST( GetRelativePath )
 REGISTER_TESTS_END
 
 // TestFixupFolderPath
@@ -119,6 +121,76 @@ void TestPathUtils::TestPathEndsWithFile() const
         // Case sensitivity checks
         DOCHECK( "/folder/FILE.cpp", "file.cpp", false )
         DOCHECK( "/FILE.cpp", "file.cpp", false )
+    #endif
+
+    #undef DOCHECK
+}
+
+// GetRelativePath
+//------------------------------------------------------------------------------
+void TestPathUtils::GetRelativePath() const
+{
+    #define DOCHECK( base, path, expectedResult ) \
+    { \
+        AStackString<> result; \
+        PathUtils::GetRelativePath( AStackString<>( base ), \
+                                    AStackString<>( path ), \
+                                    result ); \
+        TEST_ASSERTM( result == expectedResult, "Expected: %s\nGot     : %s", expectedResult, result.Get() ); \
+    }
+
+    #if defined( __WINDOWS__ )
+        // Simple case
+        DOCHECK( "C:\\dir\\",   "C:\\dir\\file.cpp",    "file.cpp" )
+        DOCHECK( "C:\\dir\\",   "C:\\dir\\folder\\",    "folder\\" )
+        DOCHECK( "dir\\",       "dir\\file.cpp",        "file.cpp" )
+        DOCHECK( "dir\\",       "dir\\folder\\",        "folder\\" )
+
+        // Relative dirs
+        DOCHECK( "C:\\dir\\",   "C:\\other\\file.cpp",  "..\\other\\file.cpp" )
+        DOCHECK( "C:\\dir\\",   "C:\\other\\folder\\",  "..\\other\\folder\\" )
+        DOCHECK( "dir\\A\\",    "dir\\B\\file.cpp",      "..\\B\\file.cpp" )
+        DOCHECK( "dir\\A\\",    "dir\\B\\folder\\",      "..\\B\\folder\\" )
+
+        // Case-insensitive
+        DOCHECK( "C:\\dir\\",   "c:\\dir\\file.cpp",    "file.cpp" )
+        DOCHECK( "C:\\dir\\",   "C:\\DIR\\folder\\",    "folder\\" )
+        DOCHECK( "dir\\",       "DIR\\file.cpp",        "file.cpp" )
+        DOCHECK( "dir\\",       "DIR\\folder\\",        "folder\\" )
+
+        // Not relative
+        DOCHECK( "C:\\dir\\",   "X:\\file.cpp",         "X:\\file.cpp" )
+        DOCHECK( "C:\\dir\\",   "X:\\dir\\folder\\",    "X:\\dir\\folder\\" )
+        DOCHECK( "dir\\",       "file.cpp",             "file.cpp" )
+        DOCHECK( "dir\\",       "other\\folder\\",      "other\\folder\\" )
+
+        // UNC Path
+        DOCHECK( "\\server\\dir\\",   "\\server\\file.cpp",         "..\\file.cpp" )
+        DOCHECK( "\\server\\dir\\",   "\\server\\dir\\folder\\",    "folder\\" )
+
+        // Directory with substring matches
+        DOCHECK( "C:\\folder",   "C:\\folderA",         "..\\folderA" )
+    #else
+        // Simple case
+        DOCHECK( "/dir/",       "/dir/file.cpp",        "file.cpp" )
+        DOCHECK( "/dir/",       "/dir/folder/",         "folder/" )
+
+        // Relative dirs
+        DOCHECK( "/dir/",       "/other/file.cpp",      "../other/file.cpp" )
+        DOCHECK( "/dir/",       "/other/folder/",       "../other/folder/" )
+
+        #if defined( __OSX__ )
+            // Case-insensitive
+            DOCHECK( "/dir/",       "/dir/file.cpp",        "file.cpp" )
+            DOCHECK( "/dir/",       "/DIR/folder/",         "folder/" )
+        #endif
+
+        // Not relative
+        DOCHECK( "dir/",        "other/file.cpp",       "other/file.cpp" )
+        DOCHECK( "dir/",        "other/folder/",        "other/folder/" )
+
+        // Directory with substring matches
+        DOCHECK( "/folder",     "/folderA",             "../folderA" )
     #endif
 
     #undef DOCHECK

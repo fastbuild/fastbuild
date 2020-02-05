@@ -8,6 +8,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ExeNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DLLNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
@@ -376,6 +377,10 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                     return n;
                 }
                 break; // Nothing aliased - ignore
+            }
+            case Node::COPY_FILE_NODE:
+            {
+                return FindTargetForIntellisenseInfo( node->CastTo< CopyFileNode >()->GetSourceNode() );
             }
             default: break; // Unsupported type - ignore
         }

@@ -16,14 +16,13 @@ class RemoveDirNode : public Node
     REFLECT_NODE_DECLARE( RemoveDirNode )
 public:
     explicit RemoveDirNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~RemoveDirNode() override;
 
     static inline Node::Type GetTypeS() { return Node::REMOVE_DIR_NODE; }
     virtual bool IsAFile() const override;
 
 private:
-    virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
 
     // Exposed Properties
