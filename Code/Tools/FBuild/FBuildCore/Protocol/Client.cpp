@@ -35,7 +35,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 Client::Client( WorkerBrokerage & workerBrokerage,
-                const Array< AString > & workerList,
+                const Array< WorkerBrokerage::WorkerInfo > & workerList,
                 uint16_t port,
                 uint32_t workerConnectionLimit,
                 bool detailedLogging )
@@ -78,14 +78,14 @@ Client::~Client()
     ASSERT( ss );
 
     MutexHolder mh( ss->m_Mutex );
-    DIST_INFO( "Disconnected: %s\n", ss->m_RemoteName.Get() );
+    DIST_INFO( "Disconnected: %s\n", ss->m_RemoteWorker.name.Get() );
     if ( ss->m_Jobs.IsEmpty() == false )
     {
         Job ** it = ss->m_Jobs.Begin();
         const Job * const * end = ss->m_Jobs.End();
         while ( it != end )
         {
-            FLOG_MONITOR( "FINISH_JOB TIMEOUT %s \"%s\" \n", ss->m_RemoteName.Get(), (*it)->GetNode()->GetName().Get() );
+            FLOG_MONITOR( "FINISH_JOB TIMEOUT %s \"%s\" \n", ss->m_RemoteWorker.name.Get(), (*it)->GetNode()->GetName().Get() );
             JobQueue::Get().ReturnUnfinishedDistributableJob( *it );
             ++it;
         }
@@ -96,7 +96,8 @@ Client::~Client()
     // we had the connection drop between message and payload
     FREE( (void *)( ss->m_CurrentMessage ) );
 
-    ss->m_RemoteName.Clear();
+    ss->m_RemoteWorker.basePath.Clear();
+    ss->m_RemoteWorker.name.Clear();
     AtomicStoreRelaxed( &ss->m_Connection, static_cast< const ConnectionInfo * >( nullptr ) );
     ss->m_CurrentMessage = nullptr;
 }
@@ -194,7 +195,7 @@ void Client::LookForWorkers()
 
         // ignore blacklisted workers
         if ( ss.m_Blacklisted || 
-             m_WorkerBrokerage.GetBlacklistedWorkers().Find( ss.m_RemoteName ) )
+             m_WorkerBrokerage.GetBlacklistedWorkers().Find( ss.m_RemoteWorker ) )
         {
             continue;
         }
@@ -209,19 +210,19 @@ void Client::LookForWorkers()
             continue;
         }
 
-        DIST_INFO( "Connecting to: %s\n", m_WorkerList[ i ].Get() );
-        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], m_Port, 2000, &ss ); // 2000ms connection timeout
+        DIST_INFO( "Connecting to: %s\n", m_WorkerList[ i ].name.Get() );
+        const ConnectionInfo * ci = Connect( m_WorkerList[ i ].name, m_Port, 2000, &ss ); // 2000ms connection timeout
         if ( ci == nullptr )
         {
-            DIST_INFO( " - connection: %s (FAILED)\n", m_WorkerList[ i ].Get() );
+            DIST_INFO( " - connection: %s (FAILED)\n", m_WorkerList[ i ].name.Get() );
             ss.m_DelayTimer.Start(); // reset connection attempt delay
         }
         else
         {
-            DIST_INFO( " - connection: %s (OK)\n", m_WorkerList[ i ].Get() );
+            DIST_INFO( " - connection: %s (OK)\n", m_WorkerList[ i ].name.Get() );
             const uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
 
-            ss.m_RemoteName = m_WorkerList[ i ];
+            ss.m_RemoteWorker = m_WorkerList[ i ];
             AtomicStoreRelaxed( &ss.m_Connection, ci ); // success!
             ss.m_NumJobsAvailable = numJobsAvailable;
 
@@ -291,7 +292,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     }
 
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u)\n",
-                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
+                ((ServerState *)connection->GetUserData())->m_RemoteWorker.name.Get(),
                 (uint32_t)msg.GetType(),
                 msg.GetSize() );
 }
@@ -306,7 +307,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     }
 
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u, Payload: %u)\n",
-                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
+                ((ServerState *)connection->GetUserData())->m_RemoteWorker.name.Get(),
                 (uint32_t)msg.GetType(),
                 msg.GetSize(),
                 (uint32_t)memoryStream.GetSize() );
@@ -379,7 +380,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
         {
             // unknown message type
             ASSERT( false ); // this indicates a protocol bug
-            DIST_INFO( "Protocol Error: %s\n", ss->m_RemoteName.Get() );
+            DIST_INFO( "Protocol Error: %s\n", ss->m_RemoteWorker.name.Get() );
             Disconnect( connection );
             break;
         }
@@ -436,8 +437,8 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     ASSERT( toolId );
 
     // output to signify remote start
-    FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
-    FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
+    FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteWorker.name.Get() );
+    FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteWorker.name.Get(), job->GetNode()->GetName().Get() );
 
     {
         PROFILE_SECTION( "SendJob" )
@@ -495,7 +496,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         return;
     }
 
-    DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
+    DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteWorker.name.Get(),
                                           job->GetNode()->GetName().Get(),
                                           job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
 
@@ -513,7 +514,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             const Job::BlacklistRecord & blacklistRecord = blacklistRecords[ i ];
             AStackString<> errorMsg;
             m_WorkerBrokerage.BlacklistWorker(
-                blacklistRecord.workerName,
+                blacklistRecord.workerInfo,
                 blacklistRecord.blacklistReason,
                 errorMsg );
             if ( !errorMsg.IsEmpty() )
@@ -628,14 +629,15 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             }
 
             const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
-            const AString & workerName = m_WorkerList[ workerIndex ];
+            const WorkerBrokerage::WorkerInfo & workerInfo =
+                m_WorkerList[ workerIndex ];
 
             if ( ss->m_Blacklisted )
             {
                 // don't write to blacklist file here, since
                 // we do that above if job eventually succeeded
                 Job::BlacklistRecord blacklistRecord;
-                blacklistRecord.workerName = workerName;
+                blacklistRecord.workerInfo = workerInfo;
                 blacklistRecord.blacklistReason = "Node: ";
                 blacklistRecord.blacklistReason += nodeName;
                 blacklistRecord.blacklistReason += "\n";
@@ -651,7 +653,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                        " - Job Error Count   : %zu / %u\n"
                        " - Details           :\n"
                        "%s",
-                       workerName.Get(),
+                       workerInfo.name.Get(),
                        job->GetNode()->GetName().Get(),
                        job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT,
                        failureOutput.Get()
@@ -686,7 +688,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
         FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
                       result ? "SUCCESS" : "ERROR",
-                      ss->m_RemoteName.Get(),
+                      ss->m_RemoteWorker.name.Get(),
                       job->GetNode()->GetName().Get(),
                       msgBuffer.Get() );
     }

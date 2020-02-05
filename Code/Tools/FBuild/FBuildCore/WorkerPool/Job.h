@@ -7,6 +7,7 @@
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
 #include "Core/Strings/AString.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerBrokerage.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -60,7 +61,7 @@ public:
 
     struct BlacklistRecord
     {
-        AString workerName;
+        WorkerBrokerage::WorkerInfo workerInfo;
         AString blacklistReason;
     };
 

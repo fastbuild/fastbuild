@@ -33,7 +33,7 @@ class Client : public TCPConnectionPool
 {
 public:
     Client( WorkerBrokerage & workerBrokerage,
-            const Array< AString > & workerList,
+            const Array< WorkerBrokerage::WorkerInfo > & workerList,
             uint16_t port,
             uint32_t workerConnectionLimit,
             bool detailedLogging );
@@ -62,7 +62,7 @@ private:
     void            SendMessageInternal( const ConnectionInfo * connection, const Protocol::IMessage & msg, const MemoryStream & memoryStream );
 
     WorkerBrokerage &   m_WorkerBrokerage;
-    Array< AString >    m_WorkerList;   // workers to connect to
+    Array< WorkerBrokerage::WorkerInfo > m_WorkerList;   // workers to connect to
     volatile bool       m_ShouldExit;   // signal from main thread
     bool                m_DetailedLogging;
     Thread::ThreadHandle m_Thread;      // the thread to find and manage workers
@@ -75,7 +75,7 @@ private:
         explicit ServerState();
 
         const ConnectionInfo *  m_Connection;
-        AString                 m_RemoteName;
+        WorkerBrokerage::WorkerInfo m_RemoteWorker;
 
         Mutex                   m_Mutex;
         const Protocol::IMessage * m_CurrentMessage;
