@@ -10,6 +10,7 @@ Please link to any associated issues if appropriate.
 Please consider this checklist to assist with integration of your changes:
 
 The PR:
+- [ ] **Is created against the Dev branch** - PRs are only accepted against the development branch.
 - [ ] **Is self-contained** - A well-targetted, minimal change that doesn't mix multiple pieces of functionality. Unnecessary whitespace or formatting changes are avoided.
 - [ ] **Compiles on all platforms** - The PR compiles without error on Windows, OSX and Linux.
 - [ ] **Has accompanying tests** -  Tests for new functionality or regression tests for bug fixes are provided.
