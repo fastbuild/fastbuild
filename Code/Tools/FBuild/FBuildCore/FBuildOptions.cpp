@@ -532,6 +532,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -j<x>             Explicitly set LOCAL worker thread count X, instead of\n"
             "                   default of hardware thread count.\n"
             " -monitor          Emit a machine-readable file while building.\n"
+            " -nolocalrace      Disable local race of remotely started jobs.\n"
             " -noprogress       Don't show the progress bar while building.\n"
             " -nounity          (Experimental) Build files individually, ignoring Unity.\n"
             " -nostoponerror    On error, favor building as much as possible.\n"
