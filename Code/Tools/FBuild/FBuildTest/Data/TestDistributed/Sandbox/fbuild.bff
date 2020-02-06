@@ -102,6 +102,7 @@ Executable( "DummySandboxExe" )
         Using( .VisualStudioToolChain_X64 )
         .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
                             + ' Advapi32.lib'
+                            + ' User32.lib'
                             + ' kernel32.lib'
                             + .CRTLibs_Static
     #endif
