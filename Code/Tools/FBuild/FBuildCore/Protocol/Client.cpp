@@ -234,7 +234,7 @@ void Client::RetryWorkers()
                 Array< AString > currentWorkers(m_WorkerList);
                 if ( currentWorkers.IsEmpty() )
                 {
-                    FLOG_WARN( "No matching workers found in '%s'", m_WorkerBrokerage.GetBrokerageRoot().Get() );
+                    FLOG_WARN( "No matching workers found in '%s'", m_WorkerBrokerage.GetBrokerageRootPaths().Get() );
                 }
 
                 Array< AString > addedWorkers;
