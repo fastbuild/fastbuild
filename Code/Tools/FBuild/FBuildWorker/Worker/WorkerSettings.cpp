@@ -7,6 +7,7 @@
 
 // Core
 #include "Core/Env/Env.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 
 // system
@@ -17,15 +18,18 @@
 // Other
 //------------------------------------------------------------------------------
 #define FBUILDWORKER_SETTINGS_MIN_VERSION ( 1 )     // Oldest compatible version
-#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 3 ) // Current version
+#define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 4 ) // Current version
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 WorkerSettings::WorkerSettings()
-: m_Mode( WorkerSettings::WHEN_IDLE )
-, m_NumCPUsToUse( 1 )
-, m_StartMinimized( false )
-, m_SandboxEnabled( false )
+    : m_Mode( WHEN_IDLE )
+    , m_IdleThresholdPercent( 20 )
+    , m_NumCPUsToUse( 1 )
+    , m_StartMinimized( false )
+    , m_SettingsWriteTime( 0 )
+    , m_MinimumFreeMemoryMiB( 1024 ) // 1 GiB
+    , m_SandboxEnabled( false )
 {
     // half CPUs available to use by default
     uint32_t numCPUs = Env::GetNumProcessors();
@@ -51,6 +55,13 @@ void WorkerSettings::SetMode( const WorkerSettings::Mode m )
     m_Mode = m;
 }
 
+// SetIdleThresholdPercent
+//------------------------------------------------------------------------------
+void WorkerSettings::SetIdleThresholdPercent( uint32_t p )
+{
+    m_IdleThresholdPercent = p;
+}
+
 // SetNumCPUsToUse
 //------------------------------------------------------------------------------
 void WorkerSettings::SetNumCPUsToUse( const uint32_t c )
@@ -63,6 +74,13 @@ void WorkerSettings::SetNumCPUsToUse( const uint32_t c )
 void WorkerSettings::SetStartMinimized( const bool startMinimized )
 {
     m_StartMinimized = startMinimized;
+}
+
+// SetMinimumFreeMemoryMiB
+//------------------------------------------------------------------------------
+void WorkerSettings::SetMinimumFreeMemoryMiB( uint32_t value )
+{
+    m_MinimumFreeMemoryMiB = value;
 }
 
 // SetSandboxEnabled
@@ -104,10 +122,12 @@ void WorkerSettings::Load()
     FileStream f;
     if ( f.Open( settingsPath.Get(), FileStream::READ_ONLY ) )
     {
-        char header[ 4 ] = { 0 };
+        uint8_t header[ 4 ] = { 0 };
         f.Read( &header, 4 );
-        if ( ( header[ 3 ] < FBUILDWORKER_SETTINGS_MIN_VERSION ) ||
-             ( header[ 3 ] > FBUILDWORKER_SETTINGS_CURRENT_VERSION ) )
+
+        const uint8_t settingsVersion = header[ 3 ];
+        if ( ( settingsVersion < FBUILDWORKER_SETTINGS_MIN_VERSION ) ||
+             ( settingsVersion > FBUILDWORKER_SETTINGS_CURRENT_VERSION ) )
         {
             return; // version is too old, or newer, and cannot be read
         }
@@ -116,8 +136,16 @@ void WorkerSettings::Load()
         uint32_t mode;
         f.Read( mode );
         m_Mode = (Mode)mode;
+        if ( header[ 3 ] >= 4 )
+        {
+            f.Read( m_IdleThresholdPercent );
+        }
         f.Read( m_NumCPUsToUse );
         f.Read( m_StartMinimized );
+
+        f.Close();
+
+        m_SettingsWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
     }
 }
 
@@ -140,24 +168,20 @@ void WorkerSettings::Save()
 
         // settings
         ok &= f.Write( (uint32_t)m_Mode );
+        ok &= f.Write( m_IdleThresholdPercent );
         ok &= f.Write( m_NumCPUsToUse );
         ok &= f.Write( m_StartMinimized );
 
+        f.Close();
+
         if ( ok )
         {
+            m_SettingsWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
             return;
         }
     }
 
-    #if defined( __WINDOWS__ )
-        MessageBox( nullptr, "Failed to save settings.", "FBuildWorker", MB_OK );
-    #elif defined( __APPLE__ )
-        // TODO:MAC Implement ShowMessageBox
-    #elif defined( __LINUX__ )
-        // TODO:LINUX Implement ShowMessageBox
-    #else
-        #error Unknown Platform
-    #endif
+    Env::ShowMsgBox( "FBuildWorker", "Failed to save settings." );
 }
 
 //------------------------------------------------------------------------------

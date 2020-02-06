@@ -31,7 +31,7 @@ FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool FileNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*funcStartIter*/, const Function * /*function*/ )
+/*virtual*/ bool FileNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*funcStartIter*/, const Function * /*function*/ )
 {
     ASSERT( false ); // Should never get here
     return false;

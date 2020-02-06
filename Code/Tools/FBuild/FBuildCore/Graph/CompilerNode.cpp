@@ -51,7 +51,7 @@ CompilerNode::CompilerNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .Executable
     Dependencies compilerExeFile( 1, false );
@@ -142,7 +142,7 @@ CompilerNode::CompilerNode()
 
 // InitializeCompilerFamily
 //------------------------------------------------------------------------------
-bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Function * function )
+bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Function * function )
 {
     // Handle auto-detect
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )

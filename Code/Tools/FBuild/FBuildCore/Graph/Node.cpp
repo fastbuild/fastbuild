@@ -1129,6 +1129,13 @@ void Node::ReplaceDummyName( const AString & newName )
     }
     ASSERT( ( tokens[ 0 ] == "warning" ) || ( tokens[ 0 ] == "error" ) );
 
+    // Only try to fixup "line" errors and not other errors like:
+    // - warning 65 in function "Blah": var <x> was never used
+    if ( tokens[ 3 ] != "line" )
+    {
+        return;
+    }
+
     const char * problemType = tokens[ 0 ].Get(); // Warning or error
     const char * warningNum = tokens[ 1 ].Get();
     const char * warningLine = tokens[ 4 ].Get();
@@ -1155,7 +1162,7 @@ void Node::ReplaceDummyName( const AString & newName )
 
 // InitializePreBuildDependencies
 //------------------------------------------------------------------------------
-bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const Array< AString > & preBuildDependencyNames )
+bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const Array< AString > & preBuildDependencyNames )
 {
     if ( preBuildDependencyNames.IsEmpty() )
     {

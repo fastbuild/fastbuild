@@ -6,7 +6,6 @@
 #include "FBuild.h"
 
 #include "FLog.h"
-#include "BFF/BFFMacros.h"
 #include "BFF/BFFParser.h"
 #include "BFF/Functions/Function.h"
 #include "Cache/ICache.h"
@@ -80,8 +79,6 @@ FBuild::FBuild( const FBuildOptions & options )
                         _CRTDBG_LEAK_CHECK_DF );
     #endif
 
-    m_Macros = FNEW( BFFMacros() );
-
     // store all user provided options
     m_Options = options;
 
@@ -108,7 +105,6 @@ FBuild::~FBuild()
 
     Function::Destroy();
 
-    FDELETE m_Macros;
     FDELETE m_DependencyGraph;
     FDELETE m_Client;
     FREE( m_EnvironmentString );
@@ -512,7 +508,7 @@ bool FBuild::Build( Node * nodeToBuild )
         }
         else
         {
-            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRoot().Get() );
+            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRootPaths().Get() );
             m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
         }
     }

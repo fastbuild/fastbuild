@@ -70,6 +70,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_Flags,                               "Flags",                            MetaHidden() )
     REFLECT( m_PreprocessorFlags,                   "PreprocessorFlags",                MetaHidden() )
     REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT( m_OwnerObjectList,                     "OwnerObjectList",                  MetaHidden() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
@@ -83,8 +84,10 @@ ObjectNode::ObjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
+    ASSERT( m_OwnerObjectList.IsEmpty() == false ); // Must be set before we get here
+
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
     {
@@ -1269,97 +1272,101 @@ bool ObjectNode::RetrieveFromCache( Job * job, const AString & workingDir )
 
     ICache * cache = FBuild::Get().GetCache();
     ASSERT( cache );
-    if ( cache )
+
+    void * cacheData( nullptr );
+    size_t cacheDataSize( 0 );
+    if ( cache->Retrieve( cacheFileName, cacheData, cacheDataSize ) )
     {
-        void * cacheData( nullptr );
-        size_t cacheDataSize( 0 );
-        if ( cache->Retrieve( cacheFileName, cacheData, cacheDataSize ) )
+        const uint32_t retrieveTime = uint32_t( t.GetElapsedMS() );
+
+        // Hash the PCH result if we will need it later
+        uint64_t pchKey = 0;
+        if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
         {
-            const uint32_t retrieveTime = uint32_t( t.GetElapsedMS() );
-
-            // Hash the PCH result if we will need it later
-            uint64_t pchKey = 0;
-            if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
-            {
-                pchKey = xxHash::Calc64( cacheData, cacheDataSize );
-            }
-
-            const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
-
-            // do decompression
-            Compressor c;
-            if ( c.IsValidData( cacheData, cacheDataSize ) == false )
-            {
-                FLOG_WARN( "Cache returned invalid data (header) for '%s'", m_Name.Get() );
-                return false;
-            }
-            if ( c.Decompress( cacheData ) == false )
-            {
-                FLOG_WARN( "Cache returned invalid data (payload) for '%s'", m_Name.Get() );
-                return false;
-            }
-            const void * data = c.GetResult();
-            const size_t dataSize = c.GetResultSize();
-
-            const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
-
-            MultiBuffer buffer( data, dataSize );
-
-            Array< AString > fileNames( 4, false );
-            fileNames.Append( m_Name );
-
-            GetExtraCacheFilePaths( job, fileNames );
-
-            // Extract the files
-            const size_t numFiles = fileNames.GetSize();
-            for ( size_t i=0; i<numFiles; ++i )
-            {
-                if ( !buffer.ExtractFile( i, fileNames[ i ] ) )
-                {
-                    cache->FreeMemory( cacheData, cacheDataSize );
-                    FLOG_ERROR( "Failed to write local file during cache retrieval '%s'", fileNames[ i ].Get() );
-                    return false;
-                }
-
-                // Update file modification time
-                const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow( fileNames[ i ] );
-
-                // set the time on the local file
-                if ( timeSetOK == false )
-                {
-                    cache->FreeMemory( cacheData, cacheDataSize );
-                    FLOG_ERROR( "Failed to set timestamp after cache hit. Error: %s Target: '%s'", LAST_ERROR_STR, fileNames[ i ].Get() );
-                    return false;
-                }
-            }
-
-            cache->FreeMemory( cacheData, cacheDataSize );
-
-            FileIO::WorkAroundForWindowsFilePermissionProblem( m_Name );
-
-            // record new file time (note that time may differ from what we set above due to
-            // file system precision)
-            RecordStampFromBuiltFile();
-
-            // Output
-            AStackString<> output;
-            output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
-            if ( FBuild::Get().GetOptions().m_CacheVerbose )
-            {
-                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
-            }
-            FLOG_BUILD_DIRECT( output.Get() );
-
-            SetStatFlag( Node::STATS_CACHE_HIT );
-
-            // Dependent objects need to know the PCH key to be able to pull from the cache
-            if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
-            {
-                m_PCHCacheKey = pchKey;
-            }
-
-            return true;
+            pchKey = xxHash::Calc64( cacheData, cacheDataSize );
         }
+
+        const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
+
+        // do decompression
+        Compressor c;
+        if ( c.IsValidData( cacheData, cacheDataSize ) == false )
+        {
+            FLOG_WARN( "Cache returned invalid data (header)\n"
+                       " - File: '%s'\n"
+                       " - Key : %s\n",
+                       m_Name.Get(), cacheFileName.Get() );
+            return false;
+        }
+        if ( c.Decompress( cacheData ) == false )
+        {
+            FLOG_WARN( "Cache returned invalid data (payload)\n"
+                       " - File: '%s'\n"
+                       " - Key : %s\n",
+                       m_Name.Get(), cacheFileName.Get() );
+            return false;
+        }
+        const void * data = c.GetResult();
+        const size_t dataSize = c.GetResultSize();
+
+        const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
+
+        MultiBuffer buffer( data, dataSize );
+
+        Array< AString > fileNames( 4, false );
+        fileNames.Append( m_Name );
+
+        GetExtraCacheFilePaths( job, fileNames );
+
+        // Extract the files
+        const size_t numFiles = fileNames.GetSize();
+        for ( size_t i=0; i<numFiles; ++i )
+        {
+            if ( !buffer.ExtractFile( i, fileNames[ i ] ) )
+            {
+                cache->FreeMemory( cacheData, cacheDataSize );
+                FLOG_ERROR( "Failed to write local file during cache retrieval '%s'", fileNames[ i ].Get() );
+                return false;
+            }
+
+            // Update file modification time
+            const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow( fileNames[ i ] );
+
+            // set the time on the local file
+            if ( timeSetOK == false )
+            {
+                cache->FreeMemory( cacheData, cacheDataSize );
+                FLOG_ERROR( "Failed to set timestamp after cache hit. Error: %s Target: '%s'", LAST_ERROR_STR, fileNames[ i ].Get() );
+                return false;
+            }
+        }
+
+        cache->FreeMemory( cacheData, cacheDataSize );
+
+        FileIO::WorkAroundForWindowsFilePermissionProblem( m_Name );
+
+        // record new file time (note that time may differ from what we set above due to
+        // file system precision)
+        RecordStampFromBuiltFile();
+
+        // Output
+        AStackString<> output;
+        output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
+        if ( FBuild::Get().GetOptions().m_CacheVerbose )
+        {
+            output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+        }
+        FLOG_BUILD_DIRECT( output.Get() );
+
+        SetStatFlag( Node::STATS_CACHE_HIT );
+
+        // Dependent objects need to know the PCH key to be able to pull from the cache
+        if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
+        {
+            m_PCHCacheKey = pchKey;
+        }
+
+        return true;
     }
 
     // Output
@@ -1392,57 +1399,55 @@ void ObjectNode::WriteToCache( Job * job, const AString & workingDir )
 
     ICache * cache = FBuild::Get().GetCache();
     ASSERT( cache );
-    if ( cache )
+
+    Array< AString > fileNames( 4, false );
+    fileNames.Append( m_Name );
+
+    GetExtraCacheFilePaths( job, fileNames );
+
+    MultiBuffer buffer;
+    if ( buffer.CreateFromFiles( fileNames ) )
     {
-        Array< AString > fileNames( 4, false );
-        fileNames.Append( m_Name );
+        // try to compress
+        const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
+        Compressor c;
+        c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize(), FBuild::Get().GetOptions().m_CacheCompressionLevel );
+        const void * data = c.GetResult();
+        const size_t dataSize = c.GetResultSize();
+        const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
 
-        GetExtraCacheFilePaths( job, fileNames );
-
-        MultiBuffer buffer;
-        if ( buffer.CreateFromFiles( fileNames ) )
+        const uint32_t startPublish( stopCompress );
+        if ( cache->Publish( cacheFileName, data, dataSize ) )
         {
-            // try to compress
-            const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
-            Compressor c;
-            c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize() );
-            const void * data = c.GetResult();
-            const size_t dataSize = c.GetResultSize();
-            const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
+            // cache store complete
+            const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
 
-            const uint32_t startPublish( stopCompress );
-            if ( cache->Publish( cacheFileName, data, dataSize ) )
+            SetStatFlag( Node::STATS_CACHE_STORE );
+
+            // Dependent objects need to know the PCH key to be able to pull from the cache
+            if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
             {
-                // cache store complete
-                const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
-
-                SetStatFlag( Node::STATS_CACHE_STORE );
-
-                // Dependent objects need to know the PCH key to be able to pull from the cache
-                if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
-                {
-                    m_PCHCacheKey = xxHash::Calc64( data, dataSize );
-                }
-
-                const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
-                AddCachingTime( cachingTime );
-
-                // Output
-                if ( FBuild::Get().GetOptions().m_CacheVerbose )
-                {
-                    AStackString<> output;
-                    output.Format( "Obj: %s\n"
-                                   " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
-                                   GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, (size_t)buffer.GetDataSize(), cacheFileName.Get() );
-                    if ( m_PCHCacheKey != 0 )
-                    {
-                        output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
-                    }
-                    FLOG_BUILD_DIRECT( output.Get() );
-                }
-
-                return;
+                m_PCHCacheKey = xxHash::Calc64( data, dataSize );
             }
+
+            const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
+            AddCachingTime( cachingTime );
+
+            // Output
+            if ( FBuild::Get().GetOptions().m_CacheVerbose )
+            {
+                AStackString<> output;
+                output.Format( "Obj: %s\n"
+                                " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
+                                GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, (size_t)buffer.GetDataSize(), cacheFileName.Get() );
+                if ( m_PCHCacheKey != 0 )
+                {
+                    output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
+                }
+                FLOG_BUILD_DIRECT( output.Get() );
+            }
+
+            return;
         }
     }
 

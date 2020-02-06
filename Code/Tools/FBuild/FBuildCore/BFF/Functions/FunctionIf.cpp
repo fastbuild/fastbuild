@@ -5,11 +5,11 @@
 //------------------------------------------------------------------------------
 #include "FunctionIf.h"
 
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFStackFrame.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFVariable.h"
+#include "Tools/FBuild/FBuildCore/BFF/Tokenizer/BFFTokenRange.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 
 #include "Core/Strings/AStackString.h"
@@ -37,93 +37,103 @@ FunctionIf::FunctionIf()
 
 // ParseFunction
 //------------------------------------------------------------------------------
-/*virtual*/ bool FunctionIf::ParseFunction(
-                    NodeGraph & nodeGraph,
-                    const BFFIterator & /*functionNameStart*/,
-                    const BFFIterator * functionBodyStartToken,
-                    const BFFIterator * functionBodyStopToken,
-                    const BFFIterator * functionHeaderStartToken,
-                    const BFFIterator * functionHeaderStopToken ) const
+/*virtual*/ bool FunctionIf::ParseFunction( NodeGraph & /*nodeGraph*/,
+                                            BFFParser & parser,
+                                            const BFFToken * /*functionNameStart*/,
+                                            const BFFTokenRange & headerRange,
+                                            const BFFTokenRange & bodyRange ) const
 {
-    // parse it all out
-    BFFIterator pos( *functionHeaderStartToken );
-    pos++; // skip opening token
-    pos.SkipWhiteSpace();
+    // Iterate the args
+    BFFTokenRange iter( headerRange );
 
-    // Check for prefix not character
+    if ( iter.IsAtEnd() )
+    {
+        Error::Error_1007_ExpectedVariable( iter.GetCurrent(), this );
+        return false;
+    }
+
+    // Handle single boolean expression
+    // - Check for negation
     bool negated = false;
-    if ( *pos == '!' )
+    if ( iter->IsOperator( "!" ) )
     {
         negated = true;
-        pos++;
+        iter++;
+    }
+
+    if ( iter.IsAtEnd() )
+    {
+        Error::Error_1007_ExpectedVariable( iter.GetCurrent(), this );
+        return false;
     }
 
     // Get first variable
-    const BFFIterator lhsVarNameBegin( pos );
-    const BFFVariable * lhsVar = GetVar( pos );
+    const BFFToken * lhsToken = iter.GetCurrent();
+    const BFFVariable * lhsVar = GetVar( lhsToken );
     if ( lhsVar == nullptr )
     {
         return false; // GetVar will have emitted error
     }
+    iter++; // Consume lhs
 
     // at end?
-    if ( pos.GetCurrent() == functionHeaderStopToken->GetCurrent() )
+    if ( iter.IsAtEnd() )
     {
-        return HandleSimpleBooleanExpression( nodeGraph, functionBodyStartToken, functionBodyStopToken, lhsVarNameBegin, lhsVar, negated );
+        return HandleSimpleBooleanExpression( parser, headerRange, bodyRange, lhsToken, lhsVar, negated );
     }
 
     // At end with negation previously seen means extraneous text
     if ( negated )
     {
-        Error::Error_1002_MatchingClosingTokenNotFound( pos, this, ')' );
+        Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), this, ')' ); // TODO:C Better error
         return false;
     }
 
     // Determine operator for more complex expression
     Operator op = Operator::OP_UNKNOWN;
-    const BFFIterator operatorIter( pos );
+    const BFFToken * opToken = iter.GetCurrent();
 
     // in
-    if ( pos.ParseExactString( BFF_KEYWORD_IN ) )
+    if ( iter->IsKeyword( BFF_KEYWORD_IN ) )
     {
         op = Operator::OP_IN;
     }
     // not in
-    else if ( pos.ParseExactString( BFF_KEYWORD_NOT ) )
+    else if ( iter->IsKeyword( BFF_KEYWORD_NOT ) )
     {
-        pos.SkipWhiteSpace();
-        if ( pos.ParseExactString( BFF_KEYWORD_IN ) )
+        iter++; // Consume additional keyword
+        if ( iter->IsKeyword( BFF_KEYWORD_IN ) )
         {
             op = Operator::OP_NOT_IN;
         }
     }
     // ==
-    else if ( pos.ParseExactString( "==" ) )
+    else if ( iter->IsOperator( "==" ) )
     {
         op = Operator::OP_EQUAL;
     }
     // !=
-    else if ( pos.ParseExactString( "!=" ) )
+    else if ( iter->IsOperator( "!=" ) )
     {
         op = Operator::OP_NOT_EQUAL;
     }
     // <=
-    else if ( pos.ParseExactString( "<=" ) )
+    else if ( iter->IsOperator( "<=" ) )
     {
         op = Operator::OP_LESS_THAN_OR_EQUAL;
     }
     // <  (must be checked after <=)
-    else if ( pos.ParseExactString( "<" ) )
+    else if ( iter->IsOperator( "<" ) )
     {
         op = Operator::OP_LESS_THAN;
     }
     // >=
-    else if ( pos.ParseExactString( ">=" ) )
+    else if ( iter->IsOperator( ">=" ) )
     {
         op = Operator::OP_GREATER_THAN_OR_EQUAL;
     }
     // >  (must be checked after >=)
-    else if ( pos.ParseExactString( ">" ) )
+    else if ( iter->IsOperator( ">" ) )
     {
         op = Operator::OP_GREATER_THAN;
     }
@@ -131,40 +141,41 @@ FunctionIf::FunctionIf()
     // Handle unrecognized operator
     if ( op == Operator::OP_UNKNOWN )
     {
-        Error::Error_1042_UnknownOperator( pos, AString::GetEmpty() );
+        Error::Error_1042_UnknownOperator( iter.GetCurrent(), iter->GetValueString() );
         return false;
     }
+    iter++; // consume keyword or operator
 
-    pos.SkipWhiteSpace();
-
-    const BFFIterator rhsVarNameBegin = pos;
-    const BFFVariable * rhsVar = GetVar( pos );
+    // Get rhs
+    const BFFToken * rhsToken = iter.GetCurrent();
+    const BFFVariable * rhsVar = GetVar( rhsToken );
     if ( rhsVar == nullptr )
     {
         return false; // GetVar will have emitted an error
     }
+    iter++; // consume rhs
 
     // Make sure there are no extraneous tokens
-    if ( pos.GetCurrent() != functionHeaderStopToken->GetCurrent() )
+    if ( iter.IsAtEnd() == false )
     {
-        Error::Error_1002_MatchingClosingTokenNotFound(pos, this, ')');
+        Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), this, ')' ); // TODO:C Better error
         return false;
     }
 
     bool result;
     if ( ( op == Operator::OP_IN ) || ( op == Operator::OP_NOT_IN ) )
     {
-        result = HandleIn( nodeGraph, functionBodyStartToken, functionBodyStopToken, lhsVarNameBegin, lhsVar, rhsVarNameBegin, rhsVar, op);
+        result = HandleIn( parser, bodyRange, lhsToken, lhsVar, rhsToken, rhsVar, op);
     }
     else
     {
-        result = HandleSimpleCompare( nodeGraph, functionBodyStartToken, functionBodyStopToken, lhsVarNameBegin, lhsVar, rhsVarNameBegin, rhsVar, operatorIter, op );
+        result = HandleSimpleCompare( parser, bodyRange, lhsToken, lhsVar, rhsToken, rhsVar, opToken, op );
     }
 
     // If not at the end of the header, there are extraneous tokens
-    if ( pos.GetCurrent() != functionHeaderStopToken->GetCurrent() )
+    if ( iter.IsAtEnd() == false )
     {
-        Error::Error_1002_MatchingClosingTokenNotFound( *functionHeaderStartToken, this, ')' );
+        Error::Error_1002_MatchingClosingTokenNotFound( iter.GetCurrent(), this, ')' ); // TODO:C Better error
         return false;
     }
 
@@ -173,12 +184,11 @@ FunctionIf::FunctionIf()
 
 // HandleIn
 //------------------------------------------------------------------------------
-bool FunctionIf::HandleIn( NodeGraph & nodeGraph,
-                           const BFFIterator * functionBodyStartToken,
-                           const BFFIterator * functionBodyStopToken,
-                           const BFFIterator & lhsVarIter,
+bool FunctionIf::HandleIn( BFFParser & parser,
+                           const BFFTokenRange & bodyRange,
+                           const BFFToken * lhsVarIter,
                            const BFFVariable * lhsVar,
-                           const BFFIterator & rhsVarIter,
+                           const BFFToken * rhsVarIter,
                            const BFFVariable * rhsVar,
                            const Operator op ) const
 {
@@ -229,11 +239,8 @@ bool FunctionIf::HandleIn( NodeGraph & nodeGraph,
     if ( conditionSuccess )
     {
         // parse the function body
-        BFFParser subParser( nodeGraph );
-        BFFIterator subIter( *functionBodyStartToken );
-        subIter++; // skip opening token
-        subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
-        return subParser.Parse( subIter );
+        BFFTokenRange range( bodyRange );
+        return parser.Parse( range );
     }
     else
     {
@@ -243,10 +250,10 @@ bool FunctionIf::HandleIn( NodeGraph & nodeGraph,
 
 // HandleSimpleBooleanExpression
 //------------------------------------------------------------------------------
-bool FunctionIf::HandleSimpleBooleanExpression( NodeGraph & nodeGraph,
-                                                const BFFIterator * functionBodyStartToken,
-                                                const BFFIterator * functionBodyStopToken,
-                                                const BFFIterator & testVarIter,
+bool FunctionIf::HandleSimpleBooleanExpression( BFFParser & parser,
+                                                const BFFTokenRange & /*headerRange*/,
+                                                const BFFTokenRange & bodyRange,
+                                                const BFFToken * testVarIter,
                                                 const BFFVariable * testVar,
                                                 const bool negated ) const
 {
@@ -265,26 +272,21 @@ bool FunctionIf::HandleSimpleBooleanExpression( NodeGraph & nodeGraph,
     if ( result )
     {
         // parse the function body
-        BFFParser subParser( nodeGraph );
-        BFFIterator subIter( *functionBodyStartToken );
-        subIter++; // skip opening token
-        subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
-        return subParser.Parse( subIter );
+        BFFTokenRange range( bodyRange );
+        return parser.Parse( range );
     }
     return true;
 }
 
-
 // HandleSimpleCompare
 //------------------------------------------------------------------------------
-bool FunctionIf::HandleSimpleCompare( NodeGraph & nodeGraph,
-                                      const BFFIterator * functionBodyStartToken,
-                                      const BFFIterator * functionBodyStopToken,
-                                      const BFFIterator & lhsVarIter,
+bool FunctionIf::HandleSimpleCompare( BFFParser & parser,
+                                      const BFFTokenRange & bodyRange,
+                                      const BFFToken * lhsVarIter,
                                       const BFFVariable * lhsVar,
-                                      const BFFIterator & rhsVarIter,
+                                      const BFFToken * rhsVarIter,
                                       const BFFVariable * rhsVar,
-                                      const BFFIterator & operatorIter,
+                                      const BFFToken * operatorIter,
                                       const Operator op ) const
 {
     // Check types are equal
@@ -373,30 +375,25 @@ bool FunctionIf::HandleSimpleCompare( NodeGraph & nodeGraph,
     if ( result )
     {
         // parse the function body
-        BFFParser subParser( nodeGraph );
-        BFFIterator subIter( *functionBodyStartToken );
-        subIter++; // skip opening token
-        subIter.SetMax( functionBodyStopToken->GetCurrent() ); // limit to closing token
-        return subParser.Parse( subIter );
+        BFFTokenRange range( bodyRange );
+        return parser.Parse( range );
     }
     return true;
 }
 
 // GetVar
 //------------------------------------------------------------------------------
-const BFFVariable * FunctionIf::GetVar( BFFIterator & pos ) const
+const BFFVariable * FunctionIf::GetVar( const BFFToken * token ) const
 {
-    if ( ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL ) &&
-         ( *pos != BFFParser::BFF_DECLARE_VAR_PARENT ) )
+    if ( token->IsVariable() == false )
     {
-        Error::Error_1200_ExpectedVar( pos, this );
+        Error::Error_1200_ExpectedVar( token, this );
         return nullptr;
     }
 
-    const BFFIterator varNameBegin( pos );
     AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
     bool varParentScope = false;
-    if ( BFFParser::ParseVariableName( pos, varName, varParentScope ) == false )
+    if ( BFFParser::ParseVariableName( token, varName, varParentScope ) == false )
     {
         return nullptr; // ParseVariableName will have emitted error
     }
@@ -411,11 +408,10 @@ const BFFVariable * FunctionIf::GetVar( BFFIterator & pos ) const
 
     if ( ( varParentScope && ( nullptr == varFrame ) ) || ( var == nullptr ) )
     {
-        Error::Error_1009_UnknownVariable( varNameBegin, this, varName );
+        Error::Error_1009_UnknownVariable( token, this, varName );
         return nullptr;
     }
 
-    pos.SkipWhiteSpace();
     return var;
 }
 

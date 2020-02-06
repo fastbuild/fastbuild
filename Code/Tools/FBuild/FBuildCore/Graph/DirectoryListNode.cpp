@@ -39,7 +39,7 @@ DirectoryListNode::DirectoryListNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*iter*/, const Function * /*function*/ )
+/*virtual*/ bool DirectoryListNode::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*iter*/, const Function * /*function*/ )
 {
     ASSERT( ( m_Recursive == true ) || ( m_Recursive == false ) );
 

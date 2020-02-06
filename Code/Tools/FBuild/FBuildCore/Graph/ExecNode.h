@@ -17,7 +17,7 @@ class ExecNode : public FileNode
     REFLECT_NODE_DECLARE( ExecNode )
 public:
     explicit ExecNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~ExecNode() override;
 
     static inline Node::Type GetTypeS() { return Node::EXEC_NODE; }

@@ -288,9 +288,9 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
 
             // check number of includes found to prevent future regressions
             const Array< AString > & includes = parser.GetIncludes();
-            TEST_ASSERT( includes.GetSize() == 222 );
+            TEST_ASSERT( includes.GetSize() == 221 );
             #ifdef DEBUG
-                TEST_ASSERT( parser.GetNonUniqueCount() == 1029 );
+                TEST_ASSERT( parser.GetNonUniqueCount() == 308 );
             #endif
         }
     }
@@ -340,9 +340,9 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
 
             // check number of includes found to prevent future regressions
             const Array< AString > & includes = parser.GetIncludes();
-            TEST_ASSERT( includes.GetSize() == 280 );
+            TEST_ASSERT( includes.GetSize() == 279 );
             #ifdef DEBUG
-                TEST_ASSERT( parser.GetNonUniqueCount() == 1280 );
+                TEST_ASSERT( parser.GetNonUniqueCount() == 427 );
             #endif
         }
     }
@@ -483,9 +483,9 @@ void TestIncludeParser::ClangLineEndings() const
 
     // check number of includes found to prevent future regressions
     const Array< AString > & includes = parser.GetIncludes();
-    TEST_ASSERT( includes.GetSize() == 4 );
+    TEST_ASSERT( includes.GetSize() == 3 );
     #ifdef DEBUG
-        TEST_ASSERT( parser.GetNonUniqueCount() == 8 );
+        TEST_ASSERT( parser.GetNonUniqueCount() == 3 );
     #endif
 }
 

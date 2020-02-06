@@ -261,6 +261,7 @@ bool CIncludeParser::ParseGCC_Preprocessed(
     (void)compilerOutputSize;
 
     const char * pos = compilerOutput;
+    bool hasFlags = true;
 
     // special case for include on first line
     // (out of loop to keep loop logic simple)
@@ -286,6 +287,7 @@ bool CIncludeParser::ParseGCC_Preprocessed(
         }
         if ( strncmp( pos, "line ", 5 ) == 0 )
         {
+            hasFlags = false;
             pos += 5;
             goto foundInclude;
         }
@@ -342,8 +344,15 @@ bool CIncludeParser::ParseGCC_Preprocessed(
         {
             continue;
         }
+        pos++;
 
-        AddInclude( workingDir, lineStart, lineEnd );
+        // only add an include if the preprocessor included it (indicated by the `1` flag
+        // https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
+        // or if it is coming from -fms-extention which doesn't have flags
+        if ( strncmp( pos, " 1", 2 ) == 0 || !hasFlags )
+        {
+            AddInclude( workingDir, lineStart, lineEnd );
+        }
     }
 
     return true;

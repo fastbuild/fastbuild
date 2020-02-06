@@ -326,11 +326,13 @@ void TestCache::LightCache_IncludeUsingMacro() const
 
     const char * expectedFiles[] = { "file.1.cpp", "file.1.h", "file.2.cpp", "file.2.h", "file.h" };
 
+    // Single thread
+    options.m_NumWorkerThreads = 1; // Single threaded, to ensure dependency re-use
+
     // Write (single thread)
     {
         options.m_UseCacheRead = false;
         options.m_UseCacheWrite = true;
-        options.m_NumWorkerThreads = 1; // Single threaded, to ensure dependency re-use
 
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -349,7 +351,6 @@ void TestCache::LightCache_IncludeUsingMacro() const
     {
         options.m_UseCacheRead = true;
         options.m_UseCacheWrite = false;
-        options.m_NumWorkerThreads = 1;
 
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -364,11 +365,13 @@ void TestCache::LightCache_IncludeUsingMacro() const
         CheckForDependencies( fBuild, expectedFiles, sizeof( expectedFiles ) / sizeof( const char * ) );
     }
 
+    // Multiple threads
+    options.m_NumWorkerThreads = 2;
+
     // Write (multiple threads)
     {
         options.m_UseCacheRead = false;
         options.m_UseCacheWrite = true;
-        options.m_NumWorkerThreads = 2;
 
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
@@ -387,7 +390,6 @@ void TestCache::LightCache_IncludeUsingMacro() const
     {
         options.m_UseCacheRead = true;
         options.m_UseCacheWrite = false;
-        options.m_NumWorkerThreads = 2;
 
         FBuildForTest fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
