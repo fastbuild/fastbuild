@@ -10,7 +10,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // TestNode
@@ -26,7 +25,7 @@ public:
         const bool testAlwaysShowOutput, const bool allowDistribution,
         const Array< AString > & customEnvironmentVariables );
 
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~TestNode() override;
 
     static inline Node::Type GetTypeS() { return Node::TEST_NODE; }

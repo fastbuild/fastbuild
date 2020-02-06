@@ -55,6 +55,10 @@
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+            
+            #if __WINDOWS__
+                .CompilerOptions        + ' -D"PSAPI_VERSION=1"'
+            #endif
         }
 
         // Executable
@@ -88,6 +92,7 @@
                                             + ' Shell32.lib'
                                             + ' Comctl32.lib'
                                             + ' Gdi32.lib'
+                                            + ' psapi.lib'
                                             + .CRTLibs_Static
             #endif
             #if __OSX__

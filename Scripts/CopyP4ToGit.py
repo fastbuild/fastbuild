@@ -13,7 +13,7 @@ import shutil
 import stat
 import sys
 
-# get_files
+# get_files_recurse
 #-------------------------------------------------------------------------------
 def get_files_recurse(base_path, out_files):
     # traverse directory, and list directories as dirs and files as files
@@ -29,6 +29,8 @@ files = []
 get_files_recurse(os.path.join("..", "Code"), files)
 get_files_recurse(os.path.join("..", "External"), files)
 get_files_recurse(os.path.join("..", "Scripts"), files)
+files.append(os.path.join("..", ".travis.yml"))
+files.append(os.path.join("..", "pull_request_template.md"))
 
 print('Copying...')
 for file in files:
@@ -79,7 +81,7 @@ for file in files:
     # needs copying?
     if src_filetime != dst_filetime:
         # YES
-        print('COPY: {} -> {}'.format(src_file.encode("utf-8"), dst_file.encode("utf-8")))
+        print('COPY: {} -> {}'.format(src_file, dst_file))
 
         # Create dest dir if needed
         dst_path = os.path.dirname(os.path.normpath(dst_file))

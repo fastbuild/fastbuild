@@ -5,6 +5,10 @@
 //------------------------------------------------------------------------------
 #include "Compressor.h"
 
+// FBuildCore
+#include "Tools/FBuild/FBuildCore/FBuild.h"
+
+// Core
 #include "Core/Containers/AutoPtr.h"
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
@@ -12,7 +16,9 @@
 #include "Core/Mem/Mem.h"
 #include "Core/Profile/Profile.h"
 
+// External
 #include "lz4.h"
+#include "lz4hc.h"
 
 #include <memory.h>
 
@@ -52,7 +58,7 @@ bool Compressor::IsValidData( const void * data, size_t dataSize ) const
 
 // Compress
 //------------------------------------------------------------------------------
-bool Compressor::Compress( const void * data, size_t dataSize )
+bool Compressor::Compress( const void * data, size_t dataSize, int32_t compressionLevel )
 {
     PROFILE_FUNCTION
 
@@ -63,8 +69,25 @@ bool Compressor::Compress( const void * data, size_t dataSize )
     const int worstCaseSize = LZ4_compressBound( (int)dataSize );
     AutoPtr< char > output( (char *)ALLOC( (size_t)worstCaseSize ) );
 
+    int32_t compressedSize;
+
     // do compression
-    const int compressedSize = LZ4_compress_default( (const char*)data, output.Get(), (int)dataSize, worstCaseSize);
+    if ( compressionLevel > 0 )
+    {
+        // Higher compression, using LZ4HC
+        compressedSize = LZ4_compress_HC( (const char*)data, output.Get(), (int)dataSize, worstCaseSize, compressionLevel );
+    }
+    else if ( compressionLevel < 0 )
+    {
+        // Lower compression, using regular LZ4
+        const int32_t acceleration = ( 0 - compressionLevel );
+        compressedSize = LZ4_compress_fast( (const char*)data, output.Get(), (int)dataSize, worstCaseSize, acceleration );
+    }
+    else
+    {
+        // Disable compression
+        compressedSize = (int32_t)dataSize; // Act as if compression achieved nothing
+    }
 
     // did the compression yield any benefit?
     const bool compressed = ( compressedSize < (int)dataSize );

@@ -62,7 +62,7 @@ private:
         while ( ( cond ) == false )                 \
         {                                           \
             Thread::Sleep( 1 );                     \
-            TEST_ASSERT( t.GetElapsed() < 5.0f );   \
+            TEST_ASSERT( t.GetElapsed() < 30.0f );  \
         }                                           \
     }
 
