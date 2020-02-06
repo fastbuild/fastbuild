@@ -119,6 +119,10 @@ public:
                         const Array< AString > & customEnvironmentVariables,
                         const char * & inoutCachedEnvString ) const;
 
+    static void     GetRemoteRelativePath(
+                        const AString & root,
+                        const AString & otherFile,
+                        AString & otherFileRelativePath );
 private:
     mutable Mutex   m_Mutex;
 

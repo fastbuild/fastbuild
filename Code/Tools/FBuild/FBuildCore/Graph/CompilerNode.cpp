@@ -82,14 +82,13 @@ CompilerNode::CompilerNode()
 
     // Check for conflicting files
     AStackString<> relPathExe;
-    PathUtils::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
-
+    ToolManifest::GetRemoteRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
 
     const size_t numExtraFiles = extraFiles.GetSize();
     for ( size_t i=0; i<numExtraFiles; ++i )
     {
         AStackString<> relPathA;
-        PathUtils::GetRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
+        ToolManifest::GetRemoteRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
 
         // Conflicts with Exe?
         if ( PathUtils::ArePathsEqual( relPathA, relPathExe ) )
@@ -102,7 +101,7 @@ CompilerNode::CompilerNode()
         for ( size_t j=(i+1); j<numExtraFiles; ++j )
         {
             AStackString<> relPathB;
-            PathUtils::GetRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
+            ToolManifest::GetRemoteRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
 
             if ( PathUtils::ArePathsEqual( relPathA, relPathB ) )
             {

@@ -216,7 +216,7 @@ bool ToolManifest::DoBuild( const Dependencies & dependencies )
 
         // file name & sub-path (relative to remote folder)
         AStackString<> relativePath;
-        PathUtils::GetRelativePath( m_MainExecutableRootPath, f.GetName(), relativePath );
+        GetRemoteRelativePath( m_MainExecutableRootPath, f.GetName(), relativePath );
         *pos = xxHash::Calc32( relativePath );
         ++pos;
     }
@@ -562,6 +562,28 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
     return true; // file stored ok
 }
 
+// GetRemoteRelativePath
+//------------------------------------------------------------------------------
+/*static*/ void ToolManifest::GetRemoteRelativePath(
+    const AString & root, const AString & otherFile,
+    AString & otherFileRelativePath )
+{
+    AStackString<> rootWithTrailingSlash( root );
+    PathUtils::EnsureTrailingSlash( rootWithTrailingSlash );
+
+    if ( otherFile.BeginsWithI( rootWithTrailingSlash ) )
+    {
+        // file is in sub dir on master machine, so store with same relative location
+        otherFileRelativePath = ( otherFile.Get() + rootWithTrailingSlash.GetLength() );
+    }
+    else
+    {
+        // file is in some completely other directory, so put in same place as exe
+        const char * lastSlash = otherFile.FindLast( NATIVE_SLASH );
+        otherFileRelativePath = ( lastSlash ? lastSlash + 1 : otherFile.Get() );
+    }
+}
+
 // GetRemoteFilePath
 //------------------------------------------------------------------------------
 void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) const
@@ -572,7 +594,7 @@ void ToolManifest::GetRemoteFilePath( uint32_t fileId, AString & remotePath ) co
 
     // Get relative path for file and append
     AStackString<> relativePath;
-    PathUtils::GetRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].GetName(), relativePath );
+    GetRemoteRelativePath( m_MainExecutableRootPath, m_Files[ fileId ].GetName(), relativePath );
     remotePath += relativePath;
 }
 
