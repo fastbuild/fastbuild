@@ -591,10 +591,13 @@ bool ToolManifest::ReceiveFileData( uint32_t fileId, const void * data, size_t &
 //------------------------------------------------------------------------------
 /*static*/ void ToolManifest::GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath )
 {
-    if ( otherFile.BeginsWithI( root ) )
+    AStackString<> rootWithTrailingSlash( root );
+    PathUtils::EnsureTrailingSlash( rootWithTrailingSlash );
+
+    if ( otherFile.BeginsWithI( rootWithTrailingSlash ) )
     {
         // file is in sub dir on master machine, so store with same relative location
-        otherFileRelativePath = ( otherFile.Get() + root.GetLength() );
+        otherFileRelativePath = ( otherFile.Get() + rootWithTrailingSlash.GetLength() );
     }
     else
     {
