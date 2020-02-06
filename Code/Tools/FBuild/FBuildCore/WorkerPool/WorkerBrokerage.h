@@ -18,7 +18,8 @@ public:
     WorkerBrokerage();
     ~WorkerBrokerage();
 
-    inline const AString & GetBrokerageRoot() const { return m_BrokerageRoot; }
+    inline const Array<AString> & GetBrokerageRoots() const { return m_BrokerageRoots; }
+    inline const AString & GetBrokerageRootPaths() const { return m_BrokerageRootPaths; }
 
     // client interface
     void FindWorkers(
@@ -40,19 +41,23 @@ private:
     };
 
     void Init();
-    void ListDirContents( const AString & path, Array< AString > & contents ) const;
+    void ListDirContents(
+        const Array< AString > & paths,
+        Array< AString > & contents ) const;
     void GetWorkers(
         const Array< AString > & excludedWorkers,
         Array< AString > & workersToInclude ) const;
     void SetBrokerageRecord();
     void RemoveBrokerageFile();
-    
-    AString             m_BrokerageRoot;
+
+    Array<AString>      m_BrokerageRoots;
+    AString             m_BrokerageRootPaths;
     bool                m_Availability;
     bool                m_Initialized;
     AString             m_HostName;
     BrokerageRecord     m_BrokerageRecord;
     Timer               m_TimerLastUpdate;      // Throttle network access
+    uint64_t            m_SettingsWriteTime;    // FileTime of settings time when last changed
 };
 
 //------------------------------------------------------------------------------

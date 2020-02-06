@@ -18,7 +18,7 @@ NodeProxy::~NodeProxy() = default;
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool NodeProxy::Initialize( NodeGraph & /*nodeGraph*/, const BFFIterator & /*funcStartIter*/, const Function * /*function*/ )
+/*virtual*/ bool NodeProxy::Initialize( NodeGraph & /*nodeGraph*/, const BFFToken * /*functartIter*/, const Function * /*function*/ )
 {
     ASSERT( false ); // Should never get here
     return false;
@@ -34,7 +34,7 @@ NodeProxy::~NodeProxy() = default;
 
 // DetermineNeedToBuild
 //------------------------------------------------------------------------------
-/*virtual*/ bool NodeProxy::DetermineNeedToBuild( bool UNUSED( forceClean ) ) const
+/*virtual*/ bool NodeProxy::DetermineNeedToBuild( const Dependencies & /*deps*/ ) const
 {
     ASSERT( false ); // should never call this
     return false;

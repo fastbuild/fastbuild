@@ -5,7 +5,6 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
@@ -49,6 +48,7 @@ private:
     void TestDeepGraph() const;
     void TestNoStopOnFirstError() const;
     void DBLocationChanged() const;
+    void DBCorrupt() const;
     void BFFDirtied() const;
     void DBVersionChanged() const;
 };
@@ -67,6 +67,7 @@ REGISTER_TESTS_BEGIN( TestGraph )
     REGISTER_TEST( TestDeepGraph )
     REGISTER_TEST( TestNoStopOnFirstError )
     REGISTER_TEST( DBLocationChanged )
+    REGISTER_TEST( DBCorrupt )
     REGISTER_TEST( BFFDirtied )
     REGISTER_TEST( DBVersionChanged )
 REGISTER_TESTS_END
@@ -262,8 +263,8 @@ void TestGraph::TestDirectoryListNode() const
     DirectoryListNode * node = ng.CreateDirectoryListNode( name );
     node->m_Path = testFolder;
     node->m_Patterns = patterns;
-    BFFIterator iter;
-    TEST_ASSERT( node->Initialize( ng, iter, nullptr ) );
+    BFFToken * token = nullptr;
+    TEST_ASSERT( node->Initialize( ng, token, nullptr ) );
     TEST_ASSERT( ng.FindNode( name ) == node );
 
     TEST_ASSERT( fb.Build( node ) );
@@ -644,12 +645,71 @@ void TestGraph::DBLocationChanged() const
         TEST_ASSERT( FileIO::FileCopy( dbFile1, dbFile2 ) );
     }
 
-    // Check that the DB in the new location is detected as invalid and the user
-    // is notified appropriately
+    // Moving a DB should result in a messsage and a failed build
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile2 ) == false );
         TEST_ASSERT( GetRecordedOutput().Find( "Database has been moved" ) );
+    }
+
+    // With -continueafterdmove, message should be emitted, but build should pass
+    options.m_ContinueAfterDBMove = true;
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile2 ) == true );
+        TEST_ASSERT( AStackString<>( GetRecordedOutput() ).Replace( "Database has been moved", "", 2 ) == 2 ); // Find twice
+    }
+}
+
+// DBCorrupt
+//------------------------------------------------------------------------------
+void TestGraph::DBCorrupt() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseCorrupt/fbuild.bff";
+
+    // We'll save a valid DB, corrupt it and ensure that's detected
+    const char* dbFile = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb";
+    const char* dbFileCorrupt = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb.corrupt";
+
+    // Clear all copies of the DB first
+    EnsureFileDoesNotExist( dbFile );
+    EnsureFileDoesNotExist( dbFileCorrupt );
+
+    // Create a DB
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+    }
+
+    // Corrupt the DB
+    {
+        FileStream f;
+
+        // Read DB into memory
+        TEST_ASSERT( f.Open( dbFile, FileStream::READ_ONLY ) );
+        AString buffer;
+        buffer.SetLength( (uint32_t)f.GetFileSize() );
+        TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+        f.Close(); // Explicit close so we can re-open
+
+        // Corrupt it
+        buffer[0] = 'X';
+
+        // Save corrupt DB
+        TEST_ASSERT( f.Open( dbFile, FileStream::WRITE_ONLY ) );
+        TEST_ASSERT( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) );
+    }
+
+    // Initialization should report a warning, but still work
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
+        TEST_ASSERT( GetRecordedOutput().Find( "Database corrupt" ) );
+
+        // Backup of corrupt DB should exit
+        EnsureFileExists( dbFileCorrupt );
     }
 }
 

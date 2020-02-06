@@ -34,6 +34,7 @@ REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
     REFLECT(        m_TestTimeOut,              "TestTimeOut",              MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
     REFLECT(        m_TestAlwaysShowOutput,     "TestAlwaysShowOutput",     MetaOptional() )
     REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
 
     // Internal State
     REFLECT(        m_NumTestInputFiles,        "NumTestInputFiles",        MetaHidden() )
@@ -50,13 +51,14 @@ TestNode::TestNode()
     , m_TestAlwaysShowOutput( false )
     , m_TestInputPathRecurse( true )
     , m_NumTestInputFiles( 0 )
+    , m_EnvironmentString( nullptr )
 {
     m_Type = Node::TEST_NODE;
 }
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool TestNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -109,7 +111,17 @@ TestNode::TestNode()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-TestNode::~TestNode() = default;
+TestNode::~TestNode()
+{
+    FREE( (void *)m_EnvironmentString );
+}
+
+// GetEnvironmentString
+//------------------------------------------------------------------------------
+const char * TestNode::GetEnvironmentString() const
+{
+    return Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
+}
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
@@ -164,10 +176,12 @@ TestNode::~TestNode() = default;
 
     // spawn the process
     Process p( FBuild::Get().GetAbortBuildPointer() );
+    const char * environmentString = GetEnvironmentString();
+
     bool spawnOK = p.Spawn( GetTestExecutable()->GetName().Get(),
                             m_TestArguments.Get(),
                             workingDir,
-                            FBuild::Get().GetEnvironmentString() );
+                            environmentString );
 
     if ( !spawnOK )
     {

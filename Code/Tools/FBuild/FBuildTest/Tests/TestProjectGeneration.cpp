@@ -400,12 +400,14 @@ void TestProjectGeneration::IntellisenseAndCodeSense() const
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Library.vcxproj" );
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Executable.vcxproj" );
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Test.vcxproj" );
+    VCXProj_Intellisense_Check("../tmp/Test/ProjectGeneration/Intellisense/Copy.vcxproj");
 
     // Ensure XCode CodeSense info is present
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/ObjectList.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Library.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Executable.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Test.xcodeproj/project.pbxproj" );
+    XCodeProj_CodeSense_Check("../tmp/Test/ProjectGeneration/Intellisense/Copy.xcodeproj/project.pbxproj");
 }
 
 // VCXProj_Intellisense_Check

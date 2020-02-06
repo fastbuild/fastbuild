@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../favicon.ico">
 <title>FASTBuild - Command Line Options Reference</title>
 </head>
@@ -30,14 +31,18 @@
 
     <div class='newsitembody'>
 
-<table width=700>
+<table width=800>
   <tr>
-    <th width=150 align=left>Option</th>
+    <th width=250 align=left>Option</th>
     <th align=left>Summary</th>
   </tr>
   <tr>
     <td><a href="#cache">-cache[read|write]</a></td>
     <td>Use the build cache.</td>
+  </tr>
+  <tr>
+    <td><a href="#cachecompressionlevel">-cachecompressionlevel [level]</a></td>
+    <td>Control compression level of cache entries. (Default -1)</td>
   </tr>
   <tr>
     <td><a href="#cacheinfo">-cacheinfo</a></td>
@@ -62,6 +67,14 @@
   <tr>
     <td><a href="#config">-config [path]</a></td>
     <td>Explicity specify the config file to use.</td>
+  </tr>
+  <tr>
+    <td><a href="#continueafterdbmove">-continueafterdbmove</a></td>
+    <td>Allow build to continue after a DB move.</td>
+  </tr>
+  <tr>
+    <td><a href="#debug_fbuild">-debug</a></td>
+    <td>[Windows Only] Allow attaching a debugger immediately on startup.</td>
   </tr>
   <tr>
     <td><a href="#dist">-dist</a></td>
@@ -98,6 +111,10 @@
   <tr>
     <td><a href="#monitor">-monitor</a></td>
     <td>Output a machine readable file for use by 3rd party tools.</td>
+  </tr>
+  <tr>
+    <td><a href="#nolocalrace">-nolocalrace</a></td>
+    <td>Disable local race of remotely started jobs.</td>
   </tr>
   <tr>
     <td><a href="#noprogress">-noprogress</a></td>
@@ -188,6 +205,14 @@
     <td>Control worker CPUs allocation.</td>
   </tr>
   <tr>
+    <td><a href="#debug_fbuildworker">-debug</a></td>
+    <td>[Windows Only] Allow attaching a debugger immediately on startup.</td>
+  </tr>
+  <tr>
+    <td><a href="#minfreememory">-minfreememory=[MiB]</a></td>
+    <td>[Windows Only] Override the default minimum memory limit (in MiB).</td>
+  </tr>
+  <tr>
     <td><a href="#mode">-mode=[disabled|idle|dedicated|proportional]</a></td>
     <td>Control worker availability.</td>
   </tr>
@@ -211,6 +236,50 @@
     <div class='newsitembody'>
 <p>Emit summary of objects in the cache. This can be used to understand the total size
 of the cache and how quickly it is growing. (See the related <a href='#cachetrim'>-cachetrim</a>)</p>
+</div>
+
+    <div class='newsitemheader' id="cachecompressionlevel">-cachecompressionlevel [level]</div>
+    <div class='newsitembody'>
+<p>Control compression level of items stored in the cache. (Default -1)</p>
+<p>This can be used to increase the level of compression, trading increased CPU time when storing to the cache
+        in order to reduce network transfer and storage. This can be useful in network bandwidth limitted environments.
+        Since decompression speed remains fairly constant, an increase in compression time may also be a worthwhile
+        tradeoff for environments that populate a cache once for many users to consume (an automated build environment
+        for example).</p>
+<p>This can also be used to reduce the level of compression, with the reverse considerations. This can be useful in CPU
+        limitted environments with high network bandwidth availability.</p>
+<table>
+    <tr><th width=150>Level</th><th>Description</th></tr>
+    <tr><td>-128 to -1</td><td>LZ4 compression. Lower values are faster but compress less. Default is -1.</td></tr>
+    <tr><td>0</td><td>Compression is disabled.</td>
+    <tr><td>1 to 12</td><td>LZ4 HC compression. Higher values compress more, but are slower.</td></tr>
+</table>
+<p>Timings will vary depending on hardware and objects being cached, but example timings compressing a
+~900KiB object files file is as follows:
+    <div class="code">
+File : Tools/FBuild/FBuildTest/Data/TestCompressor/TestObjFile.o
+Size : 897329
+
+Compression             Decompression
+Level | Time (ms)  MB/s  Ratio | Time (ms)  MB/s
+------------------------------------------------
+0     |    0.232  3682.0  1.00 |    0.023 36863.9
+-256  |    0.489  1751.2  1.01 |    0.045 19003.8
+-128  |    0.536  1597.5  1.04 |    0.064 13405.2
+-64   |    0.722  1184.7  1.13 |    0.113  7542.3
+-32   |    0.938   912.4  1.30 |    0.180  4743.1
+-16   |    1.197   715.2  1.55 |    0.251  3410.4
+-8    |    1.394   614.0  1.85 |    0.268  3194.6
+-4    |    1.542   554.9  2.14 |    0.252  3396.2
+-2    |    1.563   547.4  2.30 |    0.243  3515.9
+<b>-1    |    1.591   538.0  2.40 |    0.240  3563.8  &lt;--- Default</b>
+1     |    6.927   123.5  2.85 |    0.247  3466.7
+3     |    7.362   116.2  2.91 |    0.253  3379.4
+6     |   12.173    70.3  2.96 |    0.311  2753.1
+9     |   18.928    45.2  2.97 |    0.308  2774.5
+12    |   48.765    17.5  2.98 |    0.299  2858.4
+    </div>
+</p>
 </div>
 
     <div class='newsitemheader' id="cachetrim">-cachetrim [sizeMiB]</div>
@@ -239,6 +308,19 @@ information and performance metrics. This can be used to assist troubleshooting.
     <div class='newsitembody'>
 <p>Explicity specify the config file to use.  By default, FASTBuild looks for "fbuild.bff" in the current directory.  This options allows a file to be explicitly
 specified instead.</p>
+</div>
+
+    <div class='newsitemheader' id="continueafterdbmove">--continueafterdbmove</div>
+    <div class='newsitembody'>
+<p>Allow build to continue after a DB move.</p>
+<p>FASTBuild's database is tied to the directory in which it was created and cannot be moved. If a move is detected, an error will be emitted. -continueafterdbmove allows the build
+to continue after this error has been emitted, ignoring and replacing the DB file.</p>
+</div>
+
+    <div class='newsitemheader' id="debug_fbuild">-debug</div>
+    <div class='newsitembody'>
+<p>[Windows Only] Display a message box on startup to allow a debugger to be attached. Can be useful if triaging problems with FASTBuild that can't
+be reproduced in the debugger.</p>
 </div>
 
     <div class='newsitemheader' id="dist">-dist</div>
@@ -321,6 +403,14 @@ of FASTBuild to distribute work efficiently.</p>
 <p>A machine readable file is written to %TEMP%/FastBuild/FastBuildLog.log and updated throughout the build. This file
 can be monitored by 3rd party applications to provide enhanced visualization of the build state.</p>
 </div>
+
+              <div class='newsitemheader' id="nolocalrace">-nolocalrace</div>
+    <div class='newsitembody'>
+<p>Disable local race of remotely started jobs. This can be useful for debugging.</p>
+<p><b>NOTE:</b> This option can prevent builds from completing (if remote workers become unresponsive for example).</p>
+<p><b>NOTE:</b> This option will generally degrade build performance.</p>
+</div>
+
 
     <div class='newsitemheader' id="noprogress">-noprogress</div>
     <div class='newsitembody'>
@@ -479,6 +569,18 @@ runs in UI-less mode)</p>
 <p>NOTE: The newly overridden options will be saved and used on subsequent restarts of the worker.</p>
 </div>
 
+    <div class='newsitemheader' id="debug_fbuildworker">-debug</div>
+    <div class='newsitembody'>
+<p>[Windows Only] Display a message box on startup to allow a debugger to be attached. Can be useful if triaging problems with FASTBuild that can't
+be reproduced in the debugger.</p>
+</div>
+
+    <div class='newsitemheader' id="minfreememory">-minfreememory</div>
+    <div class='newsitembody'>
+<p>[Windows Only] Override the default minimum memory limit (in MiB) from the default of 1024 (1 GiB). When a worked has less memory available
+than this amount it will not accept work.</p>
+</div>
+            minfreememory
 
     <div class='newsitemheader' id="mode">-mode=[disabled|idle|dedicated|proportional]</div>
     <div class='newsitembody'>
@@ -503,6 +605,6 @@ runs in UI-less mode)</p>
 </div>
 
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

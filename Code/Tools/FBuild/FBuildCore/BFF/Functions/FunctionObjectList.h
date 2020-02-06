@@ -28,8 +28,8 @@ protected:
     // helpers
     friend class ObjectNode; // TODO:C Remove
     friend class ObjectListNode; // TODO:C Remove
-    bool    CheckCompilerOptions( const BFFIterator & iter, const AString & compilerOptions, const uint32_t objFlags ) const;
-    bool    CheckMSVCPCHFlags( const BFFIterator & iter,
+    bool    CheckCompilerOptions( const BFFToken * iter, const AString & compilerOptions, const uint32_t objFlags ) const;
+    bool    CheckMSVCPCHFlags( const BFFToken * iter,
                                const AString & compilerOptions,
                                const AString & pchOptions,
                                const AString & pchOutputFile,

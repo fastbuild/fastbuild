@@ -9,6 +9,7 @@
 #include "Core/Env/Types.h"
 #include "Core/Containers/Array.h"
 #include "Core/Process/Mutex.h"
+#include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AString.h"
 
@@ -139,6 +140,7 @@ private:
     Array< ConnectionInfo * >   m_Connections;
 
     bool                        m_ShuttingDown;
+    Semaphore                   m_ShutdownSemaphore;
 
     // object to manage network subsystem lifetime
 protected:
