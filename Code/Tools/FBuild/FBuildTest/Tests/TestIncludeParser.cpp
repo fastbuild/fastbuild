@@ -23,6 +23,7 @@ private:
     DECLARE_TESTS
 
     void TestMSVCPreprocessedOutput() const;
+    void TestMSVCPreprocessedOutput_Absolute() const;
     void TestMSVCPreprocessedOutput_Indent() const;
     void TestMSVCShowIncludesOutput() const;
     void TestMSVC_P() const;
@@ -39,6 +40,7 @@ private:
 REGISTER_TESTS_BEGIN( TestIncludeParser )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( TestMSVCPreprocessedOutput );
+        REGISTER_TEST( TestMSVCPreprocessedOutput_Absolute );
         REGISTER_TEST( TestMSVCPreprocessedOutput_Indent );
         REGISTER_TEST( TestMSVCShowIncludesOutput );
         REGISTER_TEST( TestMSVC_P );
@@ -96,6 +98,27 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
 
     float time = t.GetElapsed();
     OUTPUT( "MSVC                 : %2.3fs (%2.1f MiB/sec)\n", (double)time, (double)( (float)( fileSize * repeatCount / ( 1024.0f * 1024.0f ) ) / time ) );
+}
+
+// TestMSVCPreprocessedOutput_Absolute
+//------------------------------------------------------------------------------
+void TestIncludeParser::TestMSVCPreprocessedOutput_Absolute() const
+{
+    // Test line starting with various tabs/spaces
+    const char * testData = "#line 1 \"C:\\resolvedabsolute.cpp\"\r\n"
+                            "#line 1 \"unresolvedmissing.h\"\r\n";
+    const size_t testDataSize = AString::StrLen( testData );
+
+    CIncludeParser parser;
+    TEST_ASSERT( parser.ParseMSCL_Preprocessed( testData, testDataSize ) );
+
+    // check number of includes found to prevent future regressions
+    const Array< AString > & includes = parser.GetIncludes();
+    TEST_ASSERT( includes.GetSize() == 1 );
+    TEST_ASSERT( includes[0] == "C:\\resolvedabsolute.cpp" );
+    #ifdef DEBUG
+        TEST_ASSERT( parser.GetNonUniqueCount() == 1 );
+    #endif
 }
 
 // TestMSVCPreprocessedOutput_Indent
@@ -395,7 +418,7 @@ void TestIncludeParser::TestEdgeCases() const
 
     // include on last line
     {
-        AStackString<> data( "#line 1 \"hello\"" );
+        AStackString<> data( "#line 1 \"C:\\hello.h\"" );
         CIncludeParser parser;
         TEST_ASSERT( parser.ParseMSCL_Preprocessed( data.Get(), data.GetLength() ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 1 );
