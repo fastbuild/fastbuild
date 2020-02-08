@@ -188,35 +188,24 @@ void WorkerBrokerage::SetAvailability(bool available)
         float elapsedTime = m_TimerLastUpdate.GetElapsedMS();
         if ( elapsedTime >= 10000.0f )
         {
-            bool createBrokerageFile = false;
+            // If settings have changed, (re)create the file 
+            // If settings have not changed, update the modification timestamp
+            const WorkerSettings & workerSettings = WorkerSettings::Get();
+            const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
+            bool createBrokerageFile = ( settingsWriteTime > m_SettingsWriteTime );
 
-            // Periodically update the modified time of brokerage file for workers that are still active,
-            // so an external script can easily delete older brokerage files (clean up orphaned ones
-            // from crashed workers).
-            const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow(
-                m_BrokerageFilePath );
-            if ( !timeSetOK )
+            if ( createBrokerageFile == false )
             {
-                if ( !FileIO::FileExists( m_BrokerageFilePath.Get() ) )
+                // Update the modified time
+                // (Allows an external process to delete orphaned files (from crashes/terminated workers)
+                if ( FileIO::SetFileLastWriteTimeToNow( m_BrokerageFilePath ) == false )
                 {
-                    // create the dir path down to the file
-                    FileIO::EnsurePathExists( m_BrokerageRoots[0] );
+                    // Failed to update time - try to create or recreate the file
                     createBrokerageFile = true;
-                }
-                else
-                {
-                    // failed to set write timestamp
-                    return;
                 }
             }
 
-            // Write file if:
-            // - missing
-            // - settings have changed
-            const WorkerSettings & workerSettings = WorkerSettings::Get();
-            const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
-            if ( createBrokerageFile ||
-                 ( settingsWriteTime > m_SettingsWriteTime ) )
+            if ( createBrokerageFile )
             {
                 // Version
                 AStackString<> buffer;
@@ -250,6 +239,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                 m_SettingsWriteTime = settingsWriteTime;
 
             }
+            
             // Restart the timer
             m_TimerLastUpdate.Start();
         }
