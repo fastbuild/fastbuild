@@ -188,12 +188,34 @@ void WorkerBrokerage::SetAvailability(bool available)
         float elapsedTime = m_TimerLastUpdate.GetElapsedMS();
         if ( elapsedTime >= 10000.0f )
         {
+            bool createBrokerageFile = false;
+
+            // Periodically update the modified time of brokerage file for workers that are still active,
+            // so an external script can easily delete older brokerage files (clean up orphaned ones
+            // from crashed workers).
+            const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow(
+                m_BrokerageFilePath );
+            if ( !timeSetOK )
+            {
+                if ( !FileIO::FileExists( m_BrokerageFilePath.Get() ) )
+                {
+                    // create the dir path down to the file
+                    FileIO::EnsurePathExists( m_BrokerageRoots[0] );
+                    createBrokerageFile = true;
+                }
+                else
+                {
+                    // failed to set write timestamp
+                    return;
+                }
+            }
+
             // Write file if:
             // - missing
             // - settings have changed
             const WorkerSettings & workerSettings = WorkerSettings::Get();
             const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
-            if ( ( FileIO::FileExists( m_BrokerageFilePath.Get() ) == false ) ||
+            if ( createBrokerageFile ||
                  ( settingsWriteTime > m_SettingsWriteTime ) )
             {
                 // Version
@@ -227,9 +249,9 @@ void WorkerBrokerage::SetAvailability(bool available)
                 // Take note of time we wrote the settings
                 m_SettingsWriteTime = settingsWriteTime;
 
-                // Restart the timer
-                m_TimerLastUpdate.Start();
             }
+            // Restart the timer
+            m_TimerLastUpdate.Start();
         }
     }
     else if ( m_Availability != available )
