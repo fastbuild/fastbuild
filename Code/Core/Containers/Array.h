@@ -213,7 +213,14 @@ Array< T >::Array( size_t initialCapacity, bool resizeable )
 template < class T >
 Array< T >::~Array()
 {
-    Destruct();
+    T * iter = m_Begin;
+    T * endIter = m_Begin + m_Size;
+    while ( iter < endIter )
+    {
+        iter->~T();
+        iter++;
+    }
+    Deallocate( m_Begin );
 }
 
 // Destruct
