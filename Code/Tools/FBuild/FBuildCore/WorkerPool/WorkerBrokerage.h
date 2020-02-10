@@ -49,6 +49,7 @@ private:
         Array< AString > & workersToInclude ) const;
     void SetBrokerageRecord();
     void RemoveBrokerageFile();
+    void PeriodicCleanup();
 
     Array<AString>      m_BrokerageRoots;
     AString             m_BrokerageRootPaths;
