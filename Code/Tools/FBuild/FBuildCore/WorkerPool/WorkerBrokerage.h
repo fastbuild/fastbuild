@@ -101,6 +101,7 @@ private:
     Timer               m_TimerLastUpdate;      // Throttle network access
     mutable Array< WorkerInfo >  m_BlacklistedWorkers;
     uint64_t            m_SettingsWriteTime;    // FileTime of settings time when last changed
+    Timer               m_TimerLastCleanBroker;
 };
 
 //------------------------------------------------------------------------------

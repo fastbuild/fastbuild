@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <link href="style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../favicon.ico">
 <title>FASTBuild - Command Line Options Reference</title>
 </head>
@@ -110,6 +111,10 @@
   <tr>
     <td><a href="#monitor">-monitor</a></td>
     <td>Output a machine readable file for use by 3rd party tools.</td>
+  </tr>
+  <tr>
+    <td><a href="#nolocalrace">-nolocalrace</a></td>
+    <td>Disable local race of remotely started jobs.</td>
   </tr>
   <tr>
     <td><a href="#noprogress">-noprogress</a></td>
@@ -399,6 +404,14 @@ of FASTBuild to distribute work efficiently.</p>
 <p>A machine readable file is written to %TEMP%/FastBuild/FastBuildLog.log and updated throughout the build. This file
 can be monitored by 3rd party applications to provide enhanced visualization of the build state.</p>
 </div>
+
+              <div class='newsitemheader' id="nolocalrace">-nolocalrace</div>
+    <div class='newsitembody'>
+<p>Disable local race of remotely started jobs. This can be useful for debugging.</p>
+<p><b>NOTE:</b> This option can prevent builds from completing (if remote workers become unresponsive for example).</p>
+<p><b>NOTE:</b> This option will generally degrade build performance.</p>
+</div>
+
 
     <div class='newsitemheader' id="noprogress">-noprogress</div>
     <div class='newsitembody'>

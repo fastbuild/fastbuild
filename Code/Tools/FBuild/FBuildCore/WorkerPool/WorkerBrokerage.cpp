@@ -5,6 +5,8 @@
 //------------------------------------------------------------------------------
 #include "WorkerBrokerage.h"
 
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
+
 // FBuild
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
@@ -20,6 +22,12 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Process/Thread.h"
+#include "Core/Time/Time.h"
+
+// Constants
+//------------------------------------------------------------------------------
+static const float sBrokerageElapsedTimeBetweenClean = ( 12 * 60 * 60.0f );
+static const uint32_t sBrokerageCleanOlderThan = ( 24 * 60 * 60 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -100,6 +108,7 @@ void WorkerBrokerage::Init()
     }
 
     m_TimerLastUpdate.Start();
+    m_TimerLastCleanBroker.Start( sBrokerageElapsedTimeBetweenClean ); // Set timer so we trigger right away
 
     WorkerInfo workerInfo;
     workerInfo.basePath = "";
@@ -449,21 +458,24 @@ void WorkerBrokerage::SetAvailability(bool available)
             }
             else
             {
-                bool createBrokerageFile = false;
-
-                if ( !FileIO::FileExists( m_BrokerageFilePath.Get() ) )
-                {
-                    FileIO::EnsurePathExists( workerInfo.basePath );
-                    createBrokerageFile = true;
-                }
-
-                // Write file if:
-                // - missing
-                // - settings have changed
+                // If settings have changed, (re)create the file 
+                // If settings have not changed, update the modification timestamp
                 const WorkerSettings & workerSettings = WorkerSettings::Get();
                 const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
-                if ( createBrokerageFile || 
-                     settingsWriteTime > m_SettingsWriteTime )
+                bool createBrokerageFile = ( settingsWriteTime > m_SettingsWriteTime );
+
+                if ( createBrokerageFile == false )
+                {
+                    // Update the modified time
+                    // (Allows an external process to delete orphaned files (from crashes/terminated workers)
+                    if ( FileIO::SetFileLastWriteTimeToNow( brokerageRecord.m_FilePath ) == false )
+                    {
+                        // Failed to update time - try to create or recreate the file
+                        createBrokerageFile = true;
+                    }
+                }
+
+                if ( createBrokerageFile )
                 {
                     // Version
                     AStackString<> buffer;
@@ -490,7 +502,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                     // Create/write file which signifies availability
                     FileIO::EnsurePathExists( workerInfo.basePath );
                     FileStream fs;
-                    fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
+                    fs.Open( brokerageRecord.m_FilePath.Get(), FileStream::WRITE_ONLY );
                     fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
 
                     // Take note of time we wrote the settings
@@ -511,6 +523,34 @@ void WorkerBrokerage::SetAvailability(bool available)
         m_TimerLastUpdate.Start();
         m_Availability = available;
     }
+
+    // Handle brokereage cleaning
+    if ( m_TimerLastCleanBroker.GetElapsed() >= sBrokerageElapsedTimeBetweenClean )
+    {
+        const uint64_t fileTimeNow = Time::FileTimeToSeconds( Time::GetCurrentFileTime() );
+
+        Array< AString > files( 256, true );
+        if ( !FileIO::GetFiles( m_BrokerageRoots[ 0 ],
+                                AStackString<>( "*" ),
+                                false,
+                                &files ) )
+        {
+            FLOG_WARN( "No workers found in '%s' (or inaccessible)", m_BrokerageRoots[ 0 ].Get() );
+        }
+
+        for ( const AString & file : files )
+        {
+            const uint64_t lastWriteTime = Time::FileTimeToSeconds( FileIO::GetFileLastWriteTime( file ) );
+            if ( ( fileTimeNow > lastWriteTime ) && ( ( fileTimeNow - lastWriteTime ) > sBrokerageCleanOlderThan ) )
+            {
+                FLOG_WARN( "Removing '%s' (too old)", file.Get() );
+                FileIO::FileDelete( file.Get() );
+            }
+        }
+
+        // Restart the timer
+        m_TimerLastCleanBroker.Start();
+    }    
 }
 
 //------------------------------------------------------------------------------
