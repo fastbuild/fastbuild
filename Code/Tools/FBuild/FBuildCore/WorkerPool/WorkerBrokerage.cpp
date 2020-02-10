@@ -350,7 +350,7 @@ void WorkerBrokerage::RemoveBrokerageFile()
 //------------------------------------------------------------------------------
 void WorkerBrokerage::PeriodicCleanup()
 {
-    // Handle brokereage cleaning
+    // Handle brokerage cleaning
     if ( m_TimerLastCleanBroker.GetElapsed() >= sBrokerageElapsedTimeBetweenClean )
     {
         const uint64_t fileTimeNow = Time::FileTimeToSeconds( Time::GetCurrentFileTime() );
