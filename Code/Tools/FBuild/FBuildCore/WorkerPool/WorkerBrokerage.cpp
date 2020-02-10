@@ -468,7 +468,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                 {
                     // Update the modified time
                     // (Allows an external process to delete orphaned files (from crashes/terminated workers)
-                    if ( FileIO::SetFileLastWriteTimeToNow( brokerageRecord.m_FilePath ) == false )
+                    if ( FileIO::SetFileLastWriteTimeToNow( m_BrokerageFilePath ) == false )
                     {
                         // Failed to update time - try to create or recreate the file
                         createBrokerageFile = true;
@@ -502,7 +502,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                     // Create/write file which signifies availability
                     FileIO::EnsurePathExists( workerInfo.basePath );
                     FileStream fs;
-                    fs.Open( brokerageRecord.m_FilePath.Get(), FileStream::WRITE_ONLY );
+                    fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
                     fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
 
                     // Take note of time we wrote the settings
