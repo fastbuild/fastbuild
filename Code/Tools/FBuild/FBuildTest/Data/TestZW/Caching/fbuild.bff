@@ -18,6 +18,7 @@ ObjectList( 'Caching' )
 {
     .CompilerOptions            + ' /ZW'
                                 + ' /EHsc'
+                                + ' /Zc:twoPhase-' // two-phase name lookup is not supported for C++/CLI, C++/CX, or OpenMP
                                 #if USING_VS2015
                                     + ' /AI"$VS2015_AllProcPath$/vcpackages"'
                                     + ' /AI"$WindowsDK_WinRTAssemblyPath$"'

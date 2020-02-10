@@ -5,6 +5,8 @@
 //------------------------------------------------------------------------------
 #include "WorkerBrokerage.h"
 
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
+
 // FBuild
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
@@ -21,6 +23,12 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Process/Thread.h"
+#include "Core/Time/Time.h"
+
+// Constants
+//------------------------------------------------------------------------------
+static const float sBrokerageElapsedTimeBetweenClean = ( 12 * 60 * 60.0f );
+static const uint32_t sBrokerageCleanOlderThan = ( 24 * 60 * 60 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -128,6 +136,7 @@ void WorkerBrokerage::Init( const bool isWorker )
     if ( isWorker )
     {
         m_TimerLastUpdate.Start();
+        m_TimerLastCleanBroker.Start( sBrokerageElapsedTimeBetweenClean ); // Set timer so we trigger right away
 
         WorkerInfo workerInfo;
         workerInfo.basePath = "";
@@ -591,19 +600,6 @@ void WorkerBrokerage::GetStatusMsg(
                     statusMsg.Format( "No access to brokerage root %s",
                         statusFailure.workerInfo.basePath.Get() );
                     break;
-                case FailureBrokerageTimeStamp:
-                    {
-                        statusMsg = "Failed to set timestamp on brokerage file(s) ";
-                        for ( size_t i=0; i<m_FailingBrokerageFiles.GetSize(); ++i )
-                        {
-                            if ( i > 0 )
-                            {
-                                statusMsg += ", ";
-                            }
-                            statusMsg.Append( m_FailingBrokerageFiles.Get( i ) );
-                        }
-                    }
-                    break;
                 default:
                     ASSERT( false ); // should never get here
             }
@@ -936,34 +932,24 @@ void WorkerBrokerage::SetAvailable(
         {
             const BrokerageRecord & brokerageRecord = m_BrokerageRecords.Get( i );
 
-            bool createBrokerageFile = false;
+            // If settings have changed, (re)create the file 
+            // If settings have not changed, update the modification timestamp
+            const WorkerSettings & workerSettings = WorkerSettings::Get();
+            const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
+            bool createBrokerageFile = ( settingsWriteTime > m_SettingsWriteTime );
 
-            // Periodically update the modified time of brokerage file for workers that are still active,
-            // so an external script can easily delete older brokerage files (clean up orphaned ones
-            // from crashed workers).
-            const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow(
-                brokerageRecord.m_FilePath );
-            if ( !timeSetOK )
+            if ( createBrokerageFile == false )
             {
-                if ( !FileIO::FileExists( brokerageRecord.m_FilePath.Get() ) )
+                // Update the modified time
+                // (Allows an external process to delete orphaned files (from crashes/terminated workers)
+                if ( FileIO::SetFileLastWriteTimeToNow( brokerageRecord.m_FilePath ) == false )
                 {
-                    // create the dir path down to the file
-                    FileIO::EnsurePathExists( brokerageRecord.m_DirPath );
+                    // Failed to update time - try to create or recreate the file
                     createBrokerageFile = true;
-                }
-                else
-                {
-                    m_FailingBrokerageFiles.Append( brokerageRecord.m_FilePath );
                 }
             }
 
-            // Write file if:
-            // - missing
-            // - settings have changed
-            const WorkerSettings & workerSettings = WorkerSettings::Get();
-            const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
-            if ( createBrokerageFile || 
-                 settingsWriteTime > m_SettingsWriteTime )
+            if ( createBrokerageFile )
             {
                 // Version
                 AStackString<> buffer;
@@ -998,28 +984,14 @@ void WorkerBrokerage::SetAvailable(
             }
         }
 
-        if ( m_FailingBrokerageFiles.IsEmpty() )
-        {
-            // if we got here then we are no longer in the failure
-            // case, so clear failures
-            m_Status.failures.Clear();
-            m_Availability = true;
-        }
-        else
-        {
-            if ( m_Status.failures.IsEmpty() )
-            {
-                StatusFailure statusFailure;
-                statusFailure.workerInfo = workerInfo;
-                statusFailure.failureValue = FailureBrokerageTimeStamp;
-                m_Status.failures.Append( statusFailure );
-            }
-            else
-            {
-                // we already have a failure, so skip this one
-                // to avoid growing m_Status.failures unbounded
-            }
-        }
+        // if we got here then we are no longer in the failure
+        // case, so clear failures
+        m_Status.failures.Clear();
+        m_Availability = true;
+
+        // Restart the timer
+        m_TimerLastUpdate.Start();
+
         if ( m_Status.failures.IsEmpty() )
         {
             m_Status.statusValue = BrokerageSuccess;
@@ -1028,10 +1000,9 @@ void WorkerBrokerage::SetAvailable(
         {
             m_Status.statusValue = BrokerageFailure;
         }
-
-        // Restart the timer
-        m_TimerLastUpdate.Start();
     }
+
+    PeriodicCleanup();
 }
 
 // SetUnavailable
@@ -1055,6 +1026,8 @@ void WorkerBrokerage::SetUnavailable()
         m_TimerLastUpdate.Start();
         m_Availability = false;
     }
+
+    PeriodicCleanup();
 }
 
 // RemoveBrokerageFiles
@@ -1073,6 +1046,40 @@ void WorkerBrokerage::SetUnavailable()
             FileIO::FileDelete( brokerageRecord.m_FilePath.Get() );
             // can't remove the dirs, since doing so would race with the dir creation logic of other workers
         }
+    }
+}
+
+// PeriodicCleanup
+//------------------------------------------------------------------------------
+void WorkerBrokerage::PeriodicCleanup()
+{
+    // Handle brokereage cleaning
+    if ( m_TimerLastCleanBroker.GetElapsed() >= sBrokerageElapsedTimeBetweenClean )
+    {
+        const uint64_t fileTimeNow = Time::FileTimeToSeconds( Time::GetCurrentFileTime() );
+
+        Array< AString > files( 256, true );
+        if ( !FileIO::GetFiles( m_BrokerageRoots[ 0 ],
+                                AStackString<>( "*" ),
+                                true,   // recursive so we cleanup tag and blacklist files
+                                false,  // includeDirs
+                                &files ) )
+        {
+            FLOG_WARN( "No workers found in '%s' (or inaccessible)", m_BrokerageRoots[ 0 ].Get() );
+        }
+
+        for ( const AString & file : files )
+        {
+            const uint64_t lastWriteTime = Time::FileTimeToSeconds( FileIO::GetFileLastWriteTime( file ) );
+            if ( ( fileTimeNow > lastWriteTime ) && ( ( fileTimeNow - lastWriteTime ) > sBrokerageCleanOlderThan ) )
+            {
+                FLOG_WARN( "Removing '%s' (too old)", file.Get() );
+                FileIO::FileDelete( file.Get() );
+            }
+        }
+
+        // Restart the timer
+        m_TimerLastCleanBroker.Start();
     }
 }
 

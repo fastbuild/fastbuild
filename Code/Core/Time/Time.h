@@ -13,6 +13,7 @@ class Time
 {
 public:
     static uint64_t GetCurrentFileTime();
+    static uint64_t FileTimeToSeconds( uint64_t filetime );
     static void FormatTime( const float timeInSeconds , const bool outputFractionalDigits, AString & buffer  );
 };
 

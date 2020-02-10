@@ -183,7 +183,8 @@ private:
             const Array<BrokerageRecord> & removedBrokerageRecords,
             const Array<BrokerageRecord> & addedBrokerageRecords );
     static void RemoveBrokerageFiles( const Array<BrokerageRecord> & brokerageRecords );
-    
+    void PeriodicCleanup();
+
     Array<AString>            m_BrokerageRoots;
     AString                   m_BrokerageRootPaths;
     bool                      m_Availability;
@@ -194,6 +195,7 @@ private:
     Array<BrokerageRecord>    m_BrokerageRecords;
     Timer                     m_TimerLastUpdate;      // Throttle network access
     uint64_t                  m_SettingsWriteTime;    // FileTime of settings time when last changed
+    Timer                     m_TimerLastCleanBroker;
     Array< AString >          m_FailingBrokerageFiles;
 };
 
