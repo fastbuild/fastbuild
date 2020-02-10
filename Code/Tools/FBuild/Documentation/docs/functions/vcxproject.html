@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Function Reference - VCXProject</title>
 </head>
@@ -53,6 +54,9 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
   // Reference Options
   .ProjectReferences              // (optional) References to assemblies (e.g "System.Core")
   .ProjectProjectReferences       // (optional) References to projects (e.g. "myproj.csproj|{guid}")
+
+  // Project Import Options
+  .ProjectProjectImports          // (optional) Array of ProjectImports, see below for details
 								  
   // Other Options
   .RootNamespace                  // (optional) Set RootNamespace for project
@@ -70,6 +74,14 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
 [
   .FileType                       // FileType to use (e.g. "CppForm")
   .Pattern                        // Pattern of files to apply to (e.g. "*\\Forms\\*.h")
+]
+
+// ProjectProjectImports - structs in the following format
+//-------------------------------------------------
+.ProjectImport =
+[
+  .Condition                      // Condition for import
+  .Project                        // Path to file to import
 ]
 
 // ProjectConfigs - structs in the following format
@@ -114,6 +126,11 @@ Generates a project file for use with Visual Studio, allowing integration of FAS
 .Xbox360DebuggerCommand         // (optional) Debugger command for Xbox360 only.
 .DebuggerFlavor                 // (optional) Debugger flavor.
 .AumidOverride                  // (optional) Aumid override (for XboxOne).
+.Keyword,                       // (optional) Keyword
+.ApplicationType,               // (optional) Application type
+.ApplicationTypeRevision,       // (optional) Application type revision
+.PackagePath,                   // (optional) Path to package to debug
+.AdditionalSymbolSearchPaths,   // (optional) Additional symbol search paths for debugging
 
 // Misc
 .PlatformToolset                // (optional) Specify PlatformToolset.
@@ -291,6 +308,33 @@ Example:
                             }</div>
 </div>
 
+
+
+<div class='newsitemheader'>Project Import Options</div>
+<div class='newsitembody'>
+
+      <p><b>.ProjectProjectImports</b> - ArrayOfStructs - (Optional)</p>
+      <p>Additional .targets files can be imported into a Visual Studio project. This can be useful
+      for better integration/debugging of non-native architectures.</p>
+      Example:
+<div class='code'>.ProjectImport          = [
+                            .Condition = "'$(ConfigurationType)' == 'Makefile'"
+                            .Project = "$(VCTargetsPath)\Platforms\$(Platform)\Custom.Makefile.targets"
+                          ]
+.ProjectProjectImports  = { .ProjectImport }</div>
+      NOTE: By default, the following project imports are active.
+<div class='code'>.ProjectImportPS4       = [
+                            .Condition = "'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets')"
+                            .Project = "$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets"
+                          ]
+.ProjectImportAndroid   = [
+                            .Condition = "'$(ConfigurationType)' == 'Makefile' and '$(AndroidAPILevel)' != '' and Exists('$(VCTargetsPath)\Application Type\$(ApplicationType)\$(ApplicationTypeRevision)\Android.Common.targets')"
+                            .Project = "$(VCTargetsPath)\Application Type\$(ApplicationType)\$(ApplicationTypeRevision)\Android.Common.targets"
+                          ]
+.ProjectProjectImports  = { .ProjectImportPS4, .ProjectImportAndroid }</div>
+</div>
+
+
 <div class='newsitemheader'>Other Options</div>
 <div class='newsitembody'>
       <p><b>.RootNamespace</b> - String - (Optional)</p>
@@ -432,7 +476,9 @@ Example:
 <hr>
 
       <p><b>LocalDebuggerCommand</b> - String - (Optional)</p>
-      <p>Executable to launch when debugging.</p>
+      <p>Explicitly specify the executable to launch when debugging. The LocalDebuggerCommand property of a
+Visual Studio project is usually set automatically by FASTBuild (extracted from the .Target specified per
+build configuration), but can be explicitily set via .LocalDebuggerCommand if desired.<p>
       Example:
 <div class='code'>.LocalDebuggerCommand  = 'tmp/bin/MyExe.exe'</div>
 <hr>
@@ -469,6 +515,26 @@ Example:
       <p>Aumid override (for XboxOne).</p>
 <hr>
 
+      <p><b>Keyword</b> - String - (Optional)</p>
+      <p>Keyword e.g. 'Android'</p>
+
+<hr>
+      <p><b>ApplicationType</b> - String - (Optional)</p>
+      <p>ApplicationType e.g. 'Android'</p>
+
+<hr>
+      <p><b>ApplicationTypeRevision</b> - String - (Optional)</p>
+      <p>ApplicationType e.g. '3.0'</p>
+
+<hr>
+      <p><b>PackagePath</b> - String - (Optional)</p>
+      <p>Path to the package to be used for debugging.</p>
+
+<hr>
+      <p><b>AdditionalSymbolSearchPaths</b> - String - (Optional)</p>
+      <p>Path to additional symbols to be used when debugging.</p>
+<hr>
+
       <p><b>PlatformToolset</b> - String - (Optional)</p>
       <p>Specify PlatformToolset.</p>
       Example:
@@ -484,6 +550,6 @@ Example:
 
 </div>
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

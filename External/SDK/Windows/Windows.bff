@@ -2,55 +2,15 @@
 //------------------------------------------------------------------------------
 
 // Windows SDK version is chosen automatically depending on the Visual Studio version
-#if USING_VS2013
-    // 2013 uses Windows 8.1 SDK
-    #define USING_WINDOWS81_SDK
-#else
-    // 2015 and newer uses Windows 10 SDK
-    #define USING_WINDOWS10_SDK
-#endif
+// 2015 and newer uses Windows 10 SDK
+#define USING_WINDOWS10_SDK
 
 // Activate
 //------------------------------------------------------------------------------
-#if USING_WINDOWS81_SDK
-    #include "Windows81SDK.bff"
-    .WindowsSDK_X64             = .Windows81_SDK_X64
-    Alias( 'ResourceCompiler' ) { .Targets = 'ResourceCompiler-Windows81' }
-#endif
 #if USING_WINDOWS10_SDK
     #include "Windows10SDK.bff"
     .WindowsSDK_X64             = .Windows10_SDK_X64
     Alias( 'ResourceCompiler' ) { .Targets = 'ResourceCompiler-Windows10' }
 #endif
 
-// Projects
-//--------------------------------------------------------------------------
-{
-    // Common
-    .ProjectBasePath                = '$_CURRENT_BFF_DIR_$/'
-    .ProjectInputPaths              = .ProjectBasePath
-    .ProjectAllowedFileExtensions   = '*.bff'
-
-    #if __WINDOWS__
-        // Visual Studio
-        VCXProject( 'Windows-proj' )
-        {
-            .ProjectOutput                  = '$_CURRENT_BFF_DIR_$/../../../tmp/VisualStudio/Projects/Windows.vcxproj'
-            .PlatformToolset                = .VS_PlatformToolset
-    
-            .ProjectX64Debug                = [ .Platform = 'x64' .Config = 'x64-Debug' ]
-            .ProjectX64Profile              = [ .Platform = 'x64' .Config = 'x64-Profile' ]
-            .ProjectX64Release              = [ .Platform = 'x64' .Config = 'x64-Release' ]
-            .ProjectX64ClangDebug           = [ .Platform = 'x64' .Config = 'x64Clang-Debug' ]
-            .ProjectX64ClangProfile         = [ .Platform = 'x64' .Config = 'x64Clang-Profile' ]
-            .ProjectX64ClangRelease         = [ .Platform = 'x64' .Config = 'x64Clang-Release' ]
-            .ProjectConfigs                 = { .ProjectX64Debug, .ProjectX64Profile, .ProjectX64Release,
-                                                .ProjectX64ClangDebug, .ProjectX64ClangProfile, .ProjectX64ClangRelease }
-        }
-    #endif
-
-    #if __OSX__
-        // TODO: Add project
-    #endif
-}
 //------------------------------------------------------------------------------

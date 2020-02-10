@@ -2,9 +2,10 @@
 
 // Per-Config
 #if __WINDOWS__
-Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-X86-Debug',   '$ProjectName$-X64-Debug', '$ProjectName$-X86Clang-Debug' } }
-Alias( '$ProjectName$-Profile' )         { .Targets = { '$ProjectName$-X86-Profile', '$ProjectName$-X64-Profile' } }
-Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-X86-Release', '$ProjectName$-X64-Release' } }
+Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64Clang-Debug' } }
+Alias( '$ProjectName$-Analyze' )         { .Targets = { '$ProjectName$-X64-Analyze' } }
+Alias( '$ProjectName$-Profile' )         { .Targets = { '$ProjectName$-X64-Profile', '$ProjectName$-X64Clang-Profile' } }
+Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-X64-Release', '$ProjectName$-X64Clang-Release' } }
 #endif
 #if __LINUX__
 Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-X64Linux-Debug',   '$ProjectName$-X64ClangLinux-Debug' } }
@@ -12,6 +13,7 @@ Alias( '$ProjectName$-Profile' )         { .Targets = { '$ProjectName$-X64Linux-
 Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-X64Linux-Release', '$ProjectName$-X64ClangLinux-Release' } }
 Alias( '$ProjectName$-ASan' )            { .Targets = { '$ProjectName$-X64Linux-ASan',    '$ProjectName$-X64ClangLinux-ASan' } }
 Alias( '$ProjectName$-MSan' )            { .Targets = { '$ProjectName$-X64ClangLinux-MSan' } }
+Alias( '$ProjectName$-TSan' )            { .Targets = { '$ProjectName$-X64Linux-TSan',    '$ProjectName$-X64ClangLinux-TSan' } }
 #endif
 #if __OSX__
 Alias( '$ProjectName$-Debug' )           { .Targets = { '$ProjectName$-X64OSX-Debug' } }
@@ -20,11 +22,10 @@ Alias( '$ProjectName$-Release' )         { .Targets = { '$ProjectName$-X64OSX-Re
 #endif
 
 // Per-Platform
-Alias( '$ProjectName$-X86' )             { .Targets = { '$ProjectName$-X86-Debug', '$ProjectName$-X86-Release', '$ProjectName$-X86-Profile' } }
-Alias( '$ProjectName$-X64' )             { .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64-Release', '$ProjectName$-X64-Profile' } }
-Alias( '$ProjectName$-X86Clang' )        { .Targets = { '$ProjectName$-X86Clang-Debug' } }
-Alias( '$ProjectName$-X64Linux' )        { .Targets = { '$ProjectName$-X64Linux-Debug', '$ProjectName$-X64Linux-Release', '$ProjectName$-X64Linux-Profile', '$ProjectName$-X64Linux-ASan' } }
-Alias( '$ProjectName$-X64ClangLinux' )   { .Targets = { '$ProjectName$-X64ClangLinux-Debug', '$ProjectName$-X64ClangLinux-Release', '$ProjectName$-X64ClangLinux-Profile', '$ProjectName$-X64ClangLinux-ASan', '$ProjectName$-X64ClangLinux-MSan' } }
+Alias( '$ProjectName$-X64' )             { .Targets = { '$ProjectName$-X64-Debug', '$ProjectName$-X64-Analyze', '$ProjectName$-X64-Release', '$ProjectName$-X64-Profile' } }
+Alias( '$ProjectName$-X64Clang' )        { .Targets = { '$ProjectName$-X64Clang-Debug', '$ProjectName$-X64Clang-Release', '$ProjectName$-X64Clang-Profile' } }
+Alias( '$ProjectName$-X64Linux' )        { .Targets = { '$ProjectName$-X64Linux-Debug', '$ProjectName$-X64Linux-Release', '$ProjectName$-X64Linux-Profile', '$ProjectName$-X64Linux-ASan', '$ProjectName$-X64Linux-TSan' } }
+Alias( '$ProjectName$-X64ClangLinux' )   { .Targets = { '$ProjectName$-X64ClangLinux-Debug', '$ProjectName$-X64ClangLinux-Release', '$ProjectName$-X64ClangLinux-Profile', '$ProjectName$-X64ClangLinux-ASan', '$ProjectName$-X64ClangLinux-MSan', '$ProjectName$-X64ClangLinux-TSan' } }
 Alias( '$ProjectName$-X64OSX' )          { .Targets = { '$ProjectName$-X64OSX-Debug', '$ProjectName$-X64OSX-Release', '$ProjectName$-X64OSX-Profile' } }
 
 // All

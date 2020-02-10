@@ -4,8 +4,8 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Strings/AStackString.h"
-
 
 // Macros
 //------------------------------------------------------------------------------
@@ -83,11 +83,11 @@ public:
     inline static bool ShowErrors() { return s_ShowErrors; }
     inline static bool IsMonitorEnabled() { return s_MonitorEnabled; }
 
-    static void Info( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
-    static void Build( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
-    static void Warning( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
-    static void Error( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
-    static void Monitor( const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Info( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Build( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Warning( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Error( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void Monitor( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
 
     // for large, already formatted messages
     static void BuildDirect( const char * message );

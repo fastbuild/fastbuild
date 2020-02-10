@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Function Reference - Test</title>
 </head>
@@ -55,6 +56,10 @@ Defines the execution of an executable as a test.</p>
    // Additional options
   .PreBuildDependencies    // (optional) Force targets to be built before this Test (Rarely needed,
                            // but useful when Test relies on externally generated files).
+
+  .Environment             // (optional) Environment variables to use for local build
+                           // If set, linker uses this environment
+                           // If not set, linker uses .Environment from your Settings node
 }
 </div>
     </div>
@@ -101,6 +106,12 @@ Defines the execution of an executable as a test.</p>
 	  <p>One or more nodes which must be built before this test is executed.</p>
 	  <p>The .PreBuildDependencies option ensures the specified targets are up-to-date before the
 	  Test() is executed.</p>
+
+      <hr>
+
+      <p><b>.Environment</b> - String or ArrayOfStrings - (Optional)</p>
+      <p>When set, overrides the environment for running a Test.</p>
+      <p>This allows you to have a different environment per Test if needed.</p>
     </div>
 
     <div class='newsitemheader'>
@@ -111,12 +122,12 @@ Defines the execution of an executable as a test.</p>
 <div class='code'>
 Test( 'MyCoreTests-Run' )
 {
-  .TestExecutable = 'MyCoreTests-Exe' // Must be previously defined with Executable()
+  .TestExecutable = 'MyCoreTests-Exe' // Must be previously defined, usually with Executable()
   .TestOutput = 'Tests/MyCoreTests_Output.txt'
 }
 </div>
     </div>
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

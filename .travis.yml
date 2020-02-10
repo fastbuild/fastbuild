@@ -2,15 +2,52 @@ language: cpp
 
 matrix:
   include:
-    # Linux, default compilers
+    #=====================================================================
+    # Compile & Run Tests (Unity)
+    #=====================================================================
     - os: linux
-    # OSX, default compilers
+      stage: Compile
+      name: "Linux: Debug/Profile/Release & Tests"
+    #---------------------------------------------------------------------
     - os: osx
+      stage: Compile
+      name: "OSX: Debug/Profile/Release & Tests"
       compiler: clang
-    # Windows, we expect MSVC 14.16.27023 to be installed.
+    #---------------------------------------------------------------------
     - os: windows
-    # Linux, latest supported compilers
+      stage: Compile
+      name: "Windows: Debug/Profile/Release & Tests"
+    #=====================================================================
+    # Compile Only (No Unity)
+    #=====================================================================
     - os: linux
+      stage: Compile
+      name: "Linux: Debug (NoUnity)"
+      env: CFG=nounity
+    #---------------------------------------------------------------------
+    - os: osx
+      stage: Compile
+      name: "OSX: Debug (NoUnity)"
+      compiler: clang
+      env: CFG=nounity
+    #---------------------------------------------------------------------
+    - os: windows
+      stage: Compile
+      name: "Windows: Debug (NoUnity)"
+      env: CFG=nounity
+    #=====================================================================
+    # Static Analysis
+    #=====================================================================
+    - os: windows
+      stage: StaticAnalysis
+      name: "Windows Analyze"
+      env: CFG=analyze
+    #=====================================================================
+    # Linux, Latest supported compilers
+    #=====================================================================
+    - os: linux
+      stage: Other
+      name: "Linux GCC8 & Clang8"
       env: GCC=gcc-8 CLANG=clang-8
       addons:
         apt:
@@ -21,8 +58,14 @@ matrix:
             - gcc-8
             - g++-8
             - clang-8
+    #=====================================================================
+    # Sanitizers
+    #=====================================================================
     # Linux, AddressSanitizer
+    #---------------------------------------------------------------------
     - os: linux
+      stage: Sanitizers
+      name: "Linux AddressSanitizer"
       env: CFG=asan CLANG=clang-8
       # Use latest clang when building with sanitizers.
       addons:
@@ -34,9 +77,29 @@ matrix:
             - clang-8
             - llvm-8 # for llvm-symbolizer
       sudo: true # LeakSanitizer doesn't work inside Travis containers, see https://github.com/travis-ci/travis-ci/issues/9033.
+    #---------------------------------------------------------------------
     # Linux, MemorySanitizer
+    #---------------------------------------------------------------------
     - os: linux
+      stage: Sanitizers
+      name: "Linux MemorySanitizer"
       env: CFG=msan CLANG=clang-8
+      # Use latest clang when building with sanitizers.
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-8
+          packages:
+            - clang-8
+            - llvm-8 # for llvm-symbolizer
+    #---------------------------------------------------------------------
+    # Linux, ThreadSanitizer
+    #---------------------------------------------------------------------
+    - os: linux
+      stage: Sanitizers
+      name: "Linux ThreadSanitizer"
+      env: CFG=tsan CLANG=clang-8
       # Use latest clang when building with sanitizers.
       addons:
         apt:
@@ -49,11 +112,18 @@ matrix:
   allow_failures:
     - env: CFG=asan CLANG=clang-8
     - env: CFG=msan CLANG=clang-8
+    - env: CFG=tsan CLANG=clang-8
   fast_finish: true
+
+stages:
+  - Compile
+  - StaticAnalysis
+  - Sanitizers
+  - Other
 
 install:
   # Download and unpack archive for a release version.
-  - DL_VER=0.98
+  - DL_VER=0.99
   - |
     case "${TRAVIS_OS_NAME}" in
     linux)   FN=FASTBuild-Linux-x64-v${DL_VER}.zip   FBUILD=fbuild ;;
@@ -65,12 +135,7 @@ install:
   - chmod +x ./${FBUILD}
   # Set up some variables for convenience.
   - |
-    case "${TRAVIS_OS_NAME}" in
-    linux)   NCPU=$(nproc) ;;
-    osx)     NCPU=$(sysctl -n hw.ncpu) ;;
-    windows) NCPU=${NUMBER_OF_PROCESSORS} ;;
-    esac
-  - FBUILD_CMD="../${FBUILD} -j${NCPU} -noprogress"
+  - FBUILD_CMD="../${FBUILD} -noprogress -nostoponerror -summary"
   - GCC=${GCC:-gcc}
   - GXX=${GCC/gcc/g++}
   - CLANG=${CLANG:-clang}
@@ -148,7 +213,7 @@ script:
   - |
     case "${TRAVIS_OS_NAME}:${CFG}" in
       linux:|osx:|windows:)
-        ${FBUILD_CMD} Tests
+        ${FBUILD_CMD} Exes Tests
         ;;
       linux:asan)
         ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-ASan
@@ -156,17 +221,27 @@ script:
       linux:msan)
         ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-MSan
         ;;
+      linux:tsan)
+        ${FBUILD_CMD} {CoreTest,FBuildTest}-RunTest-x64ClangLinux-TSan
+        ;;
     esac
   # Check non-unity build.
   - |
     case "${TRAVIS_OS_NAME}:${CFG}" in
-      linux:)
+      linux:nounity)
         ${FBUILD_CMD} -nounity -clean All-x64{,Clang}Linux-Debug
         ;;
-      osx:)
+      osx:nounity)
         ${FBUILD_CMD} -nounity -clean All-x64OSX-Debug
         ;;
-      windows:)
+      windows:nounity)
         ${FBUILD_CMD} -nounity -clean All-x64{,Clang}-Debug
+        ;;
+    esac
+  # Static Analysis
+  - |
+    case "${TRAVIS_OS_NAME}:${CFG}" in
+      windows:analyze)
+        ${FBUILD_CMD} All-x64-Analyze
         ;;
     esac

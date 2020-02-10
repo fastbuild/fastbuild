@@ -5,7 +5,6 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/BFF/BFFIterator.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
@@ -26,6 +25,7 @@
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/MemoryStream.h"
 #include "Core/FileIO/PathUtils.h"
+#include "Core/Math/Conversions.h"
 #include "Core/Process/Thread.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
@@ -48,6 +48,7 @@ private:
     void TestDeepGraph() const;
     void TestNoStopOnFirstError() const;
     void DBLocationChanged() const;
+    void DBCorrupt() const;
     void BFFDirtied() const;
     void DBVersionChanged() const;
 };
@@ -66,6 +67,7 @@ REGISTER_TESTS_BEGIN( TestGraph )
     REGISTER_TEST( TestDeepGraph )
     REGISTER_TEST( TestNoStopOnFirstError )
     REGISTER_TEST( DBLocationChanged )
+    REGISTER_TEST( DBCorrupt )
     REGISTER_TEST( BFFDirtied )
     REGISTER_TEST( DBVersionChanged )
 REGISTER_TESTS_END
@@ -74,8 +76,7 @@ REGISTER_TESTS_END
 //------------------------------------------------------------------------------
 void TestGraph::EmptyGraph() const
 {
-    NodeGraph * ng = FNEW( NodeGraph );
-    FDELETE ng;
+    NodeGraph ng;
 }
 
 // TestNodeTypes
@@ -262,8 +263,8 @@ void TestGraph::TestDirectoryListNode() const
     DirectoryListNode * node = ng.CreateDirectoryListNode( name );
     node->m_Path = testFolder;
     node->m_Patterns = patterns;
-    BFFIterator iter;
-    TEST_ASSERT( node->Initialize( ng, iter, nullptr ) );
+    BFFToken * token = nullptr;
+    TEST_ASSERT( node->Initialize( ng, token, nullptr ) );
     TEST_ASSERT( ng.FindNode( name ) == node );
 
     TEST_ASSERT( fb.Build( node ) );
@@ -543,8 +544,7 @@ void TestGraph::TestDeepGraph() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DeepGraph.bff";
-    options.m_UseCacheRead = true;
-    options.m_UseCacheWrite = true;
+    options.m_NumWorkerThreads = 1;
 
     const char * dbFile1 = "../tmp/Test/Graph/DeepGraph.fdb";
 
@@ -552,7 +552,7 @@ void TestGraph::TestDeepGraph() const
         // do a clean build
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
-        TEST_ASSERT( fBuild.Build( AStackString<>( "all" ) ) );
+        TEST_ASSERT( fBuild.Build( "all" ) );
 
         // save the DB
         TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile1 ) );
@@ -565,8 +565,8 @@ void TestGraph::TestDeepGraph() const
         // no op build
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile1 ) );
-        TEST_ASSERT( fBuild.Build( AStackString<>( "all" ) ) );
-        CheckStatsNode ( 30,        0,      Node::OBJECT_NODE );
+        TEST_ASSERT( fBuild.Build( "all" ) );
+        CheckStatsNode ( 1,         0,      Node::OBJECT_NODE );
 
         // make sure walking the graph wasn't slow (should be a good deal less
         // than 100ms, but allow for a lot of slack on the test machine)
@@ -587,7 +587,7 @@ void TestGraph::TestNoStopOnFirstError() const
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
-        TEST_ASSERT( fBuild.Build( AStackString<>( "all" ) ) == false ); // Expect build to fail
+        TEST_ASSERT( fBuild.Build( "all" ) == false ); // Expect build to fail
 
         // Check stats
         //               Seen,  Built,  Type
@@ -605,7 +605,7 @@ void TestGraph::TestNoStopOnFirstError() const
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize() );
-        TEST_ASSERT( fBuild.Build( AStackString<>( "all" ) ) == false ); // Expect build to fail
+        TEST_ASSERT( fBuild.Build( "all" ) == false ); // Expect build to fail
 
         // Check stats
         //               Seen,  Built,  Type
@@ -645,12 +645,71 @@ void TestGraph::DBLocationChanged() const
         TEST_ASSERT( FileIO::FileCopy( dbFile1, dbFile2 ) );
     }
 
-    // Check that the DB in the new location is detected as invalid and the user
-    // is notified appropriately
+    // Moving a DB should result in a messsage and a failed build
     {
         FBuild fBuild( options );
         TEST_ASSERT( fBuild.Initialize( dbFile2 ) == false );
         TEST_ASSERT( GetRecordedOutput().Find( "Database has been moved" ) );
+    }
+
+    // With -continueafterdmove, message should be emitted, but build should pass
+    options.m_ContinueAfterDBMove = true;
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile2 ) == true );
+        TEST_ASSERT( AStackString<>( GetRecordedOutput() ).Replace( "Database has been moved", "", 2 ) == 2 ); // Find twice
+    }
+}
+
+// DBCorrupt
+//------------------------------------------------------------------------------
+void TestGraph::DBCorrupt() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestGraph/DatabaseCorrupt/fbuild.bff";
+
+    // We'll save a valid DB, corrupt it and ensure that's detected
+    const char* dbFile = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb";
+    const char* dbFileCorrupt = "../tmp/Test/Graph/DatabaseCorrupt/fbuild.fdb.corrupt";
+
+    // Clear all copies of the DB first
+    EnsureFileDoesNotExist( dbFile );
+    EnsureFileDoesNotExist( dbFileCorrupt );
+
+    // Create a DB
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+        TEST_ASSERT( fBuild.SaveDependencyGraph( dbFile ) );
+    }
+
+    // Corrupt the DB
+    {
+        FileStream f;
+
+        // Read DB into memory
+        TEST_ASSERT( f.Open( dbFile, FileStream::READ_ONLY ) );
+        AString buffer;
+        buffer.SetLength( (uint32_t)f.GetFileSize() );
+        TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+        f.Close(); // Explicit close so we can re-open
+
+        // Corrupt it
+        buffer[0] = 'X';
+
+        // Save corrupt DB
+        TEST_ASSERT( f.Open( dbFile, FileStream::WRITE_ONLY ) );
+        TEST_ASSERT( f.WriteBuffer( buffer.Get(), buffer.GetLength() ) );
+    }
+
+    // Initialization should report a warning, but still work
+    {
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize( dbFile ) == true );
+        TEST_ASSERT( GetRecordedOutput().Find( "Database corrupt" ) );
+
+        // Backup of corrupt DB should exit
+        EnsureFileExists( dbFileCorrupt );
     }
 }
 
@@ -694,11 +753,29 @@ void TestGraph::BFFDirtied() const
         TEST_ASSERT( fBuild.GetSettings()->GetWorkerList().IsEmpty() == false );
     }
 
-    #if defined( __OSX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of HFS+
-    #elif defined( __LINUX__ )
-        Thread::Sleep( 1000 ); // Work around low time resolution of ext2/ext3/reiserfs and time caching used by used by others
-    #endif
+    // Modify file, ensuring filetime has changed (different file systems have different resolutions)
+    const uint64_t originalTime = FileIO::GetFileLastWriteTime( AStackString<>( copyOfBFF ) );
+    Timer t;
+    uint32_t sleepTimeMS = 2;
+    for ( ;; )
+    {
+        // Truncate file
+        FileStream fs;
+        TEST_ASSERT( fs.Open( copyOfBFF, FileStream::WRITE_ONLY ) );
+        fs.Close();
+
+        // See if the mod time has changed
+        if ( FileIO::GetFileLastWriteTime( AStackString<>( copyOfBFF ) ) != originalTime )
+        {
+            break; // All done
+        }
+
+        // Wait a while and try again
+        Thread::Sleep( sleepTimeMS );
+        sleepTimeMS = Math::Max<uint32_t>( sleepTimeMS * 2, 128 );
+
+        TEST_ASSERT( t.GetElapsed() < 10.0f ); // Sanity check fail test after a longtime
+    }
 
     // Modity BFF (make it empty)
     {
@@ -714,8 +791,13 @@ void TestGraph::BFFDirtied() const
         // Ensure user was informed of reparsing trigger
         TEST_ASSERT( GetRecordedOutput().Find( "has changed (reparsing will occur)" ) );
 
+        // Get cache path directly from property to ignore environment variables
+        const ReflectionInfo * ri = fBuild.GetSettings()->GetReflectionInfoV();
+        AStackString<> cachePath;
+        TEST_ASSERT( ri->GetProperty( (void *)fBuild.GetSettings(), "CachePath", &cachePath ) );
+
         // Make sure settings don't "leak" from the original BFF into the new one
-        TEST_ASSERT( fBuild.GetSettings()->GetCachePath().IsEmpty() );
+        TEST_ASSERT( cachePath.IsEmpty() );
         TEST_ASSERT( fBuild.GetEnvironmentStringSize() == 0 );
         TEST_ASSERT( fBuild.GetSettings()->GetWorkerList().IsEmpty() );
     }
@@ -732,9 +814,9 @@ void TestGraph::DBVersionChanged() const
 
     // Since we're poking this, we want to know if the layout ever changes somehow
     TEST_ASSERT( ms.GetFileSize() == 4 );
-    TEST_ASSERT( ( (const char *)ms.GetDataMutable() )[3] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
+    TEST_ASSERT( ( (const uint8_t *)ms.GetDataMutable() )[3] == NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION );
 
-    ( (char *)ms.GetDataMutable() )[3] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
+    ( (uint8_t *)ms.GetDataMutable() )[3] = ( NodeGraphHeader::NODE_GRAPH_CURRENT_VERSION - 1 );
 
     const char* oldDB       = "../tmp/Test/Graph/DBVersionChanged/fbuild.fdb";
     const char* emptyBFF    = "../tmp/Test/Graph/DBVersionChanged/fbuild.bff";

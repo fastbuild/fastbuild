@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Features - Distribution</title>
 </head>
@@ -46,7 +47,8 @@ FASTBuild can scale compilation across the network to utilize additional CPU pow
 
     <div id='alias' class='newsitemheader'>Compilation Settings</div>
     <div class='newsitembody'>
-<p>Some compilation settings are incompatible with distribution. If any object cannot be safely distributed, it will automatically be built locally instead. A build can safely mix distributable and non-distributable objects.</p>
+<p>Some compilation settings (listed below) are incompatible with distribution. If FASTBuild detects one of these incompatible
+settings, it will automatically build the impacted object(s) locally. A build can safely mix distributable and non-distributable objects.</p>
 <p>
 <b>GCC/SNC/Clang</b>
 <ul>
@@ -55,8 +57,9 @@ FASTBuild can scale compilation across the network to utilize additional CPU pow
 <b>MSVC</b>
 <ul>
   <li>/ZW (Consume Windows Runtime) cannot be used.</li>
-  <li>Precompiled Headers cannot be distributed.  They are machine-specific. (Objects using PCH can be distributed.)</li>
+  <li>Precompiled Headers cannot be distributed. (Objects using PCH can be distributed.)</li>
   <li>/clr (Managed C) cannot be distributed due to bugs in the Microsoft compiler's preprocessor.</li>
+  <li>/analyze cannot be distributed due to inconsistencies in the Microsoft compiler's preprocessor.</li>
 </ul>
 </p>
 </div>
@@ -90,6 +93,6 @@ FASTBuild can scale compilation across the network to utilize additional CPU pow
 
 
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

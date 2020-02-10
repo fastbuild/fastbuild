@@ -31,7 +31,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
-    REFLECT_STRUCT( m_Manifest,     "Manifest", ToolManifest, MetaHidden() )
+    REFLECT_STRUCT( m_Manifest,     "Manifest", ToolManifest, MetaHidden() + MetaIgnoreForComparison() )
 REFLECT_END( CompilerNode )
 
 // CONSTRUCTOR
@@ -51,7 +51,7 @@ CompilerNode::CompilerNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .Executable
     Dependencies compilerExeFile( 1, false );
@@ -129,6 +129,8 @@ CompilerNode::CompilerNode()
         return false;
     }
 
+    m_Manifest.Initialize( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables );
+
     return true;
 }
 
@@ -141,7 +143,7 @@ CompilerNode::CompilerNode()
 
 // InitializeCompilerFamily
 //------------------------------------------------------------------------------
-bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Function * function )
+bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Function * function )
 {
     // Handle auto-detect
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )
@@ -329,7 +331,7 @@ CompilerNode::~CompilerNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CompilerNode::DoBuild( Job * /*job*/ )
 {
-    if ( !m_Manifest.Generate( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables ) )
+    if ( !m_Manifest.DoBuild( m_StaticDependencies ) )
     {
         return Node::NODE_RESULT_FAILED; // Generate will have emitted error
     }
@@ -343,6 +345,17 @@ CompilerNode::~CompilerNode()
 const char * CompilerNode::GetEnvironmentString() const
 {
     return Node::GetEnvironmentString( m_Environment, m_EnvironmentString );
+}
+
+// Migrate
+//------------------------------------------------------------------------------
+/*virtual*/ void CompilerNode::Migrate( const Node & oldNode )
+{
+    // Migrate Node level properties
+    Node::Migrate( oldNode );
+
+    // Migrate the timestamp/hash info stored for the files in the ToolManifest
+    m_Manifest.Migrate( oldNode.CastTo<CompilerNode>()->GetManifest() );
 }
 
 //------------------------------------------------------------------------------

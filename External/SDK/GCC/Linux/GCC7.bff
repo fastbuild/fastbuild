@@ -20,7 +20,7 @@ Compiler( 'Compiler-GCC7' )
 .ToolChain_GCC_Linux =
 [
     .Platform                       = 'x64Linux'
- 
+
     // Compiler Options
     .Compiler                       = 'Compiler-GCC7'
     .CommonCompilerOptions          = ' -o "%2" "%1"'   // Input/Output
@@ -55,7 +55,7 @@ Compiler( 'Compiler-GCC7' )
     .ExeExtension                   = ''
 
     // Exception Control
-    .UseExceptions                  = ' -fexceptions' 
+    .UseExceptions                  = ' -fexceptions'
 ]
 
 //------------------------------------------------------------------------------

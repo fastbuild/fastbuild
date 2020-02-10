@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Function Reference - Settings</title>
 </head>
@@ -47,14 +48,13 @@ Defines global FASTBuild settings.
   .WorkerConnectionLimit            // (optional) Limit number of connected workers (default: 15)
   .DistributableJobMemoryLimitMiB   // (optional) Limit memory used locally to prep jobs (default: 2048)
   
-  // Experimental features
-  .AllowDBMigration_Experimental    // (optional) Migrate build state when bff changes to avoid rebuilds (default: false)
-                                    // This enables what will eventually be standard behaviour
-                                    // WARNING: This feature is experimental.
+  // Other
+  .DisableDBMigration               // Disable incremental parsing of bff files, forcing full builds
+                                    // on any bff change. This option will be removed in the future (default: false)
 }
 </div>
     </div>
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>
