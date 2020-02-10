@@ -5,6 +5,8 @@
 //------------------------------------------------------------------------------
 #include "WorkerBrokerage.h"
 
+#include "Tools/FBuild/FBuildWorker/Worker/WorkerSettings.h"
+
 // FBuild
 #include "Tools/FBuild/FBuildCore/Protocol/Protocol.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
@@ -20,6 +22,9 @@
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Process/Thread.h"
+#include "Core/Time/Time.h"
+
+const float elapsedTimeBetweenCleanBroker = 12 * 60 * 60.f;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -104,6 +109,7 @@ void WorkerBrokerage::Init()
         m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
     }
     m_TimerLastUpdate.Start();
+    m_TimerLastCleanBroker.Start( elapsedTimeBetweenCleanBroker );
 
     m_Initialized = true;
 }
@@ -233,15 +239,39 @@ void WorkerBrokerage::SetAvailability(bool available)
                 FileIO::EnsurePathExists( m_BrokerageRoots[0] );
                 FileStream fs;
                 fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
-                fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
-
-                // Take note of time we wrote the settings
-                m_SettingsWriteTime = settingsWriteTime;
-
             }
-            
             // Restart the timer
             m_TimerLastUpdate.Start();
+        }
+
+        const float elapsedTimeCleanBroker = m_TimerLastCleanBroker.GetElapsed();
+        if ( elapsedTimeCleanBroker >= elapsedTimeBetweenCleanBroker )
+        {
+            const uint64_t fileTimeNow = Time::FileTimeToSeconds( Time::GetCurrentFileTime() );
+
+            Array< AString > files( 256, true );
+            if ( !FileIO::GetFiles( m_BrokerageRoot,
+                                    AStackString<>( "*" ),
+                                    false,
+                                     &files ) )
+            {
+                FLOG_WARN("No workers found in '%s'", m_BrokerageRoot.Get());
+            }
+
+            const AString * iter = files.Begin();
+            const AString * const end = files.End();
+            for ( ; iter != end; ++iter )
+            {
+                const uint64_t lastWriteTime = Time::FileTimeToSeconds( FileIO::GetFileLastWriteTime( *iter ) );
+                if ( ( fileTimeNow > lastWriteTime ) && ( ( fileTimeNow - lastWriteTime ) > ( 24 * 60 * 60 ) ) )
+                {
+                    FLOG_WARN( "Removing '%s' (too old)", iter->Get() );
+                    FileIO::FileDelete( iter->Get() );
+                }
+            }
+
+            // Restart the timer
+            m_TimerLastCleanBroker.Start();
         }
     }
     else if ( m_Availability != available )
@@ -249,8 +279,9 @@ void WorkerBrokerage::SetAvailability(bool available)
         // remove file to remove availability
         FileIO::FileDelete( m_BrokerageFilePath.Get() );
 
-        // Restart the timer
+        // Restart the timers
         m_TimerLastUpdate.Start();
+        m_TimerLastCleanBroker.Start();
     }
     m_Availability = available;
 }
