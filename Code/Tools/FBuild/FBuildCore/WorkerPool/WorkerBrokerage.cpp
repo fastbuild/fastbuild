@@ -24,7 +24,10 @@
 #include "Core/Process/Thread.h"
 #include "Core/Time/Time.h"
 
-const float elapsedTimeBetweenCleanBroker = 12 * 60 * 60.f;
+// Constants
+//------------------------------------------------------------------------------
+static const float sBrokerageElapsedTimeBetweenClean = ( 12 * 60 * 60.0f );
+static const uint32_t sBrokerageCleanOlderThan = ( 24 * 60 * 60 );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -109,7 +112,7 @@ void WorkerBrokerage::Init()
         m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
     }
     m_TimerLastUpdate.Start();
-    m_TimerLastCleanBroker.Start( elapsedTimeBetweenCleanBroker );
+    m_TimerLastCleanBroker.Start( sBrokerageElapsedTimeBetweenClean ); // Set timer so we trigger right away
 
     m_Initialized = true;
 }
@@ -239,39 +242,15 @@ void WorkerBrokerage::SetAvailability(bool available)
                 FileIO::EnsurePathExists( m_BrokerageRoots[0] );
                 FileStream fs;
                 fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
+                fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
+
+                // Take note of time we wrote the settings
+                m_SettingsWriteTime = settingsWriteTime;
+
             }
+            
             // Restart the timer
             m_TimerLastUpdate.Start();
-        }
-
-        const float elapsedTimeCleanBroker = m_TimerLastCleanBroker.GetElapsed();
-        if ( elapsedTimeCleanBroker >= elapsedTimeBetweenCleanBroker )
-        {
-            const uint64_t fileTimeNow = Time::FileTimeToSeconds( Time::GetCurrentFileTime() );
-
-            Array< AString > files( 256, true );
-            if ( !FileIO::GetFiles( m_BrokerageRoot,
-                                    AStackString<>( "*" ),
-                                    false,
-                                     &files ) )
-            {
-                FLOG_WARN("No workers found in '%s'", m_BrokerageRoot.Get());
-            }
-
-            const AString * iter = files.Begin();
-            const AString * const end = files.End();
-            for ( ; iter != end; ++iter )
-            {
-                const uint64_t lastWriteTime = Time::FileTimeToSeconds( FileIO::GetFileLastWriteTime( *iter ) );
-                if ( ( fileTimeNow > lastWriteTime ) && ( ( fileTimeNow - lastWriteTime ) > ( 24 * 60 * 60 ) ) )
-                {
-                    FLOG_WARN( "Removing '%s' (too old)", iter->Get() );
-                    FileIO::FileDelete( iter->Get() );
-                }
-            }
-
-            // Restart the timer
-            m_TimerLastCleanBroker.Start();
         }
     }
     else if ( m_Availability != available )
@@ -279,11 +258,38 @@ void WorkerBrokerage::SetAvailability(bool available)
         // remove file to remove availability
         FileIO::FileDelete( m_BrokerageFilePath.Get() );
 
-        // Restart the timers
+        // Restart the timer
         m_TimerLastUpdate.Start();
-        m_TimerLastCleanBroker.Start();
     }
     m_Availability = available;
+    
+    // Handle brokereage cleaning
+    if ( m_TimerLastCleanBroker.GetElapsed() >= sBrokerageElapsedTimeBetweenClean )
+    {
+        const uint64_t fileTimeNow = Time::FileTimeToSeconds( Time::GetCurrentFileTime() );
+
+        Array< AString > files( 256, true );
+        if ( !FileIO::GetFiles( m_BrokerageRoots[ 0 ],
+                                AStackString<>( "*" ),
+                                false,
+                                &files ) )
+        {
+            FLOG_WARN( "No workers found in '%s' (or inaccessible)", m_BrokerageRoots[ 0 ].Get() );
+        }
+
+        for ( const AString & file : files )
+        {
+            const uint64_t lastWriteTime = Time::FileTimeToSeconds( FileIO::GetFileLastWriteTime( file ) );
+            if ( ( fileTimeNow > lastWriteTime ) && ( ( fileTimeNow - lastWriteTime ) > sBrokerageCleanOlderThan ) )
+            {
+                FLOG_WARN( "Removing '%s' (too old)", file.Get() );
+                FileIO::FileDelete( file.Get() );
+            }
+        }
+
+        // Restart the timer
+        m_TimerLastCleanBroker.Start();
+    }    
 }
 
 //------------------------------------------------------------------------------

@@ -39,15 +39,14 @@ uint64_t Time::GetCurrentFileTime()
     #endif
 }
 
+// FileTimeToSeconds
 //------------------------------------------------------------------------------
-uint64_t Time::FileTimeToSeconds(uint64_t _filetime)
+uint64_t Time::FileTimeToSeconds( uint64_t filetime )
 {
     #if defined( __WINDOWS__ )
-        return _filetime / 10000000U;
-    #elif defined( __APPLE__ ) || defined( __LINUX__ )
-        return _filetime / 1000000000ULL;
+        return ( filetime / 10000000U );
     #else
-        #error Unknown platform
+        return ( filetime / 1000000000ULL );
     #endif
 }
 //------------------------------------------------------------------------------

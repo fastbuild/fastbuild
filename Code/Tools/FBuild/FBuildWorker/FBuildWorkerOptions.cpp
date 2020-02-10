@@ -114,11 +114,6 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
             m_OverrideWorkMode = true;
             continue;
         }
-        else if ( token == "-allowbrokerclean" )
-        {
-            m_AllowBrokerClean = true;
-            continue;
-        }
         #if defined( __WINDOWS__ )
             else if ( token.BeginsWith( "-minfreememory=" ) )
             {

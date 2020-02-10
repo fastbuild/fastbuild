@@ -372,10 +372,6 @@ void Worker::UpdateUI()
     size_t numConnections = m_ConnectionPool->GetNumConnections();
     AStackString<> status;
     status.Format( "%u Connections", (uint32_t)numConnections );
-    if (WorkerSettings::Get().GetAllowBrokerClean())
-    {
-        status += " | Broker cleaner";
-    }
     if ( m_RestartNeeded )
     {
         status += " (Restart Pending)";

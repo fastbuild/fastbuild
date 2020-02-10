@@ -12,7 +12,7 @@ class Time
 {
 public:
     static uint64_t GetCurrentFileTime();
-    static uint64_t FileTimeToSeconds(uint64_t _filetime);
+    static uint64_t FileTimeToSeconds( uint64_t filetime );
 };
 
 //------------------------------------------------------------------------------
