@@ -41,7 +41,7 @@ class VSProjectBaseNode : public FileNode
     REFLECT_NODE_DECLARE( VSProjectBaseNode )
     VSProjectBaseNode();
 public:
-    //REMOVELUCIAN virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken* iter, const Function * function ) override;
+
     virtual ~VSProjectBaseNode() override;
 
     static inline Node::Type GetTypeS() { return Node::PROXY_NODE; }

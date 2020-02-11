@@ -109,8 +109,6 @@ public:
 
     static inline Node::Type GetTypeS() { return Node::VCXPROJECT_NODE; }
 
-    //REMOVELUCIAN const Array< VSProjectConfig > & GetConfigs() const { return m_ProjectConfigs; }
-
 private:
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void PostLoad( NodeGraph & nodeGraph ) override;
