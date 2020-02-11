@@ -4,13 +4,11 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "FileNode.h"
+#include "VSProjectBaseNode.h"
 
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
-#include "Core/Containers/Array.h"
 #include "Core/FileIO/FileIO.h"
-#include "Core/Strings/AString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -101,7 +99,7 @@ public:
 
 // VCXProjectNode
 //------------------------------------------------------------------------------
-class VCXProjectNode : public FileNode
+class VCXProjectNode : public VSProjectBaseNode
 {
     REFLECT_NODE_DECLARE( VCXProjectNode )
 public:
@@ -111,8 +109,7 @@ public:
 
     static inline Node::Type GetTypeS() { return Node::VCXPROJECT_NODE; }
 
-    const AString & GetProjectGuid() const { return m_ProjectGuid; }
-    const Array< VSProjectConfig > & GetConfigs() const { return m_ProjectConfigs; }
+    //REMOVELUCIAN const Array< VSProjectConfig > & GetConfigs() const { return m_ProjectConfigs; }
 
 private:
     virtual BuildResult DoBuild( Job * job ) override;
@@ -133,7 +130,6 @@ private:
     Array< VSProjectFileType > m_ProjectFileTypes;
 
     AString             m_RootNamespace;
-    AString             m_ProjectGuid;
     AString             m_DefaultLanguage;
     AString             m_ApplicationEnvironment;
     bool                m_ProjectSccEntrySAK = false;

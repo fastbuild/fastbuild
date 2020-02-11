@@ -32,6 +32,7 @@ Test
 Unity
 Using
 VCXProject
+VSProjectExternal
 VSSolution
 XCodeProject
 
@@ -160,9 +161,11 @@ ProjectFileTypes
 ProjectFiles
 ProjectFilesToExclude
 ProjectGuid
+ProjectTypeGuid
 ProjectInputPaths
 ProjectInputPathsExclude
 ProjectOutput
+ExternalProjectPath
 ProjectPatternToExclude
 ProjectProjectImports
 ProjectProjectReferences

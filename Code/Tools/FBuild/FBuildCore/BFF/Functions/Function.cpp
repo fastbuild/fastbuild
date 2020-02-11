@@ -24,6 +24,7 @@
 #include "FunctionUnity.h"
 #include "FunctionUsing.h"
 #include "FunctionVCXProject.h"
+#include "FunctionVSProjectExternal.h"
 #include "FunctionVSSolution.h"
 #include "FunctionXCodeProject.h"
 
@@ -58,7 +59,7 @@
 
 // Static
 //------------------------------------------------------------------------------
-/*static*/ Array<const Function *> g_Functions( 22, false );
+/*static*/ Array<const Function *> g_Functions( 23, false );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -111,6 +112,7 @@ Function::~Function() = default;
     g_Functions.Append( FNEW( FunctionUnity ) );
     g_Functions.Append( FNEW( FunctionUsing ) );
     g_Functions.Append( FNEW( FunctionVCXProject ) );
+    g_Functions.Append( FNEW( FunctionVSProjectExternal) );
     g_Functions.Append( FNEW( FunctionVSSolution ) );
     g_Functions.Append( FNEW( FunctionXCodeProject ) );
 }
