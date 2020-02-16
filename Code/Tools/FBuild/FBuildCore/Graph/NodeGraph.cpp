@@ -31,6 +31,7 @@
 #include "TestNode.h"
 #include "UnityNode.h"
 #include "VCXProjectNode.h"
+#include "VSProjectExternalNode.h"
 #include "XCodeProjectNode.h"
 
 // Core
@@ -921,12 +922,25 @@ CompilerNode * NodeGraph::CreateCompilerNode( const AString & name )
 
 // CreateVCXProjectNode
 //------------------------------------------------------------------------------
-VCXProjectNode * NodeGraph::CreateVCXProjectNode( const AString & name )
+VSProjectBaseNode* NodeGraph::CreateVCXProjectNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
     ASSERT( IsCleanPath( name ) );
 
     VCXProjectNode * node = FNEW( VCXProjectNode() );
+    node->SetName( name );
+    AddNode( node );
+    return node;
+}
+
+// CreateVSProjectExternalNode
+//------------------------------------------------------------------------------
+VSProjectBaseNode* NodeGraph::CreateVSProjectExternalNode(const AString& name)
+{
+    ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( name ) );
+
+    VSProjectExternalNode* node = FNEW(VSProjectExternalNode());
     node->SetName( name );
     AddNode( node );
     return node;

@@ -76,7 +76,7 @@ REFLECT_STRUCT_BEGIN_BASE( VSProjectImport )
     REFLECT(        m_Project,                      "Project",                      MetaNone() )
 REFLECT_END( VSProjectImport )
 
-REFLECT_NODE_BEGIN( VCXProjectNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
+REFLECT_NODE_BEGIN( VCXProjectNode, VSProjectBaseNode, MetaName( "ProjectOutput" ) + MetaFile() )
     REFLECT_ARRAY(  m_ProjectInputPaths,            "ProjectInputPaths",            MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_ProjectInputPathsExclude,     "ProjectInputPathsExclude",     MetaOptional() + MetaPath() )
     REFLECT_ARRAY(  m_ProjectFiles,                 "ProjectFiles",                 MetaOptional() + MetaFile() )
@@ -144,12 +144,11 @@ REFLECT_END( VCXProjectNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 VCXProjectNode::VCXProjectNode()
-    : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
+    : VSProjectBaseNode()
     , m_ProjectSccEntrySAK( false )
 {
     m_Type = Node::VCXPROJECT_NODE;
-    m_LastBuildTimeMs = 100; // higher default than a file node
-
+    m_projectTypeGuid = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
     ProjectGeneratorBase::GetDefaultAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
     // Additional default imports to allow debugging on some target platforms
@@ -214,6 +213,19 @@ VCXProjectNode::VCXProjectNode()
     if ( VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs, iter, function ) == false )
     {
         return false; // Initialize will have emitted an error
+    }
+
+    // copy to base class platform config tuples array
+    if (m_ProjectPlatformConfigTuples.IsEmpty())
+    {
+        VSProjectPlatformConfigTuple PlatCfgTuple;
+        m_ProjectPlatformConfigTuples.SetCapacity(m_ProjectConfigs.GetSize());
+        for (const VSProjectConfig& config : m_ProjectConfigs)
+        {
+            PlatCfgTuple.m_Config = config.m_Config;
+            PlatCfgTuple.m_Platform = config.m_Platform;
+            m_ProjectPlatformConfigTuples.Append(PlatCfgTuple);
+        }
     }
 
     // Store all dependencies
