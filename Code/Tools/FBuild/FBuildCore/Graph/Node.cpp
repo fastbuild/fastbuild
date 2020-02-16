@@ -1036,6 +1036,12 @@ void Node::ReplaceDummyName( const AString & newName )
     {
         return;
     }
+    // Ignore warnings from the underlying assembler such as:
+    // - warning 2006 in line 307: bad extension - using default
+    if ( tokens[5] != "of" )
+    {
+        return;
+    }
 
     const char * problemType = tokens[ 0 ].Get(); // Warning or error
     const char * warningNum = tokens[ 1 ].Get();
