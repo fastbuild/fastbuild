@@ -30,7 +30,6 @@ REFLECT_STRUCT_BEGIN_BASE( VSExternalProjectConfig )
 REFLECT_END( VSExternalProjectConfig )
 
 REFLECT_NODE_BEGIN( VSProjectExternalNode, VSProjectBaseNode, MetaName( "ExternalProjectPath" ) + MetaFile() )
-    REFLECT( m_ProjectGuid,     "ProjectGuid",     MetaOptional() )
     REFLECT( m_ProjectTypeGuid, "ProjectTypeGuid", MetaOptional() )
     REFLECT_ARRAY_OF_STRUCT( m_ProjectConfigs, "ProjectConfigs", VSExternalProjectConfig, MetaOptional() )
 REFLECT_END( VSProjectExternalNode )
@@ -237,6 +236,13 @@ void VSProjectExternalNode::CopyConfigs()
             m_ProjectPlatformConfigTuples.Append( platCfgTuple );
         }
     }
+}
+
+// GetProjectTypeGuid
+//------------------------------------------------------------------------------
+/*virtual*/ const AString & VSProjectExternalNode::GetProjectTypeGuid() const 
+{
+    return m_ProjectTypeGuid;
 }
 
 //------------------------------------------------------------------------------

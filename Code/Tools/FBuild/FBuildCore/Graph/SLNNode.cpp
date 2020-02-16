@@ -9,7 +9,9 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
+#include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VSProjectBaseNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/VSProjectExternalNode.h"
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
@@ -269,10 +271,14 @@ SLNNode::~SLNNode() = default;
 
     // projects
     Array< VSProjectBaseNode * > projects( m_StaticDependencies.GetSize(), false );
-    const Dependency * const end = m_StaticDependencies.End();
-    for ( const Dependency * it = m_StaticDependencies.Begin() ; it != end ; ++it )
+    for ( Dependency & dep : m_StaticDependencies )
     {
-        projects.Append( it->GetNode()->CastTo< VSProjectBaseNode >() );
+        Node * node = dep.GetNode();
+        VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
+                                        ? static_cast< VSProjectBaseNode * >( node->CastTo< VCXProjectNode >() )
+                                        : static_cast< VSProjectBaseNode * >( node->CastTo< VSProjectExternalNode >() );
+
+        projects.Append( projectNode );
     }
 
     // .sln solution file
@@ -383,7 +389,9 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
         Error::Error_1005_UnsupportedNodeType( iter, function, propertyName, node->GetName(), node->GetType() );
         return nullptr;
     }
-    VSProjectBaseNode * projectNode = node->CastTo< VSProjectBaseNode >();
+    VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
+                                    ? static_cast< VSProjectBaseNode * >( node->CastTo< VCXProjectNode >() )
+                                    : static_cast< VSProjectBaseNode * >( node->CastTo< VSProjectExternalNode >() );
 
     // Add to project list if not already there
     if ( inOutProjects.Find( projectNode ) == nullptr )

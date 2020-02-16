@@ -40,6 +40,9 @@ class NodeGraph;
 #define REFLECT_NODE_BEGIN( nodeName, baseNodeName, metaData )          \
     REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, metaData )
 
+#define REFLECT_NODE_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData ) \
+    REFLECT_STRUCT_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData )
+
 // FBuild
 //------------------------------------------------------------------------------
 class Node : public Struct
@@ -278,14 +281,7 @@ protected:
 template < class T >
 inline T * Node::CastTo() const
 {
-    if ( T::GetTypeS() != PROXY_NODE ) // all but the VSProjectBaseNode "heirs"
-    {
-        ASSERT( T::GetTypeS() == GetType() );
-    }
-    else // only the VSProjectBaseNode "heirs"
-    {
-        ASSERT( ( GetType() == VCXPROJECT_NODE ) || ( GetType() == VSPROJEXTERNAL_NODE ) );
-    }
+    ASSERT( T::GetTypeS() == GetType() );
     return (T *)this;
 }
 

@@ -117,6 +117,9 @@ private:
 
     bool Save( const AString & content, const AString & fileName ) const;
 
+    // VSProjectBaseNode interface
+    virtual const AString & GetProjectTypeGuid() const override;
+
     // Exposed
     Array< AString >    m_ProjectInputPaths;
     Array< AString >    m_ProjectInputPathsExclude;

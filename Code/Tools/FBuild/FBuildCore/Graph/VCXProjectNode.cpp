@@ -25,6 +25,10 @@
 // system
 #include <string.h> // for memcmp
 
+// Globals
+//------------------------------------------------------------------------------
+static const AString g_DefaultProjectTypeGuid( "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}");
+
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_STRUCT_BEGIN_BASE( VSProjectConfigBase )
@@ -88,7 +92,6 @@ REFLECT_NODE_BEGIN( VCXProjectNode, VSProjectBaseNode, MetaName( "ProjectOutput"
     REFLECT_ARRAY_OF_STRUCT(    m_ProjectFileTypes, "ProjectFileTypes",             VSProjectFileType,  MetaOptional() )
 
     REFLECT(        m_RootNamespace,                "RootNamespace",                MetaOptional() )
-    REFLECT(        m_ProjectGuid,                  "ProjectGuid",                  MetaOptional() )
     REFLECT(        m_DefaultLanguage,              "DefaultLanguage",              MetaOptional() )
     REFLECT(        m_ApplicationEnvironment,       "ApplicationEnvironment",       MetaOptional() )
     REFLECT(        m_ProjectSccEntrySAK,           "ProjectSccEntrySAK",           MetaOptional() )
@@ -148,7 +151,6 @@ VCXProjectNode::VCXProjectNode()
     , m_ProjectSccEntrySAK( false )
 {
     m_Type = Node::VCXPROJECT_NODE;
-    m_ProjectTypeGuid = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
 
     ProjectGeneratorBase::GetDefaultAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
@@ -337,21 +339,13 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
         old.Close();
     }
 
-    // only save if missing or ner
+    // only save if missing or new
     if ( needToWrite == false )
     {
         return true; // nothing to do.
     }
 
     FLOG_BUILD( "VCXProj: %s\n", fileName.Get() );
-
-    // ensure path exists (normally handled by framework, but VCXPorject
-    // is not a "file" node)
-    if ( EnsurePathExistsForFile( fileName ) == false )
-    {
-        FLOG_ERROR( "VCXProject - Invalid path. Error: %s Target: '%s'", LAST_ERROR_STR, fileName.Get() );
-        return false;
-    }
 
     // actually write
     FileStream f;
@@ -375,6 +369,13 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
 /*virtual*/ void VCXProjectNode::PostLoad( NodeGraph & nodeGraph )
 {
     VSProjectConfig::ResolveTargets( nodeGraph, m_ProjectConfigs );
+}
+
+// GetProjectTypeGuid
+//------------------------------------------------------------------------------
+/*virtual*/ const AString & VCXProjectNode::GetProjectTypeGuid() const
+{
+    return g_DefaultProjectTypeGuid;
 }
 
 //------------------------------------------------------------------------------

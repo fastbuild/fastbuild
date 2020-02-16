@@ -7,7 +7,8 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-REFLECT_NODE_BEGIN( VSProjectBaseNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
+REFLECT_NODE_BEGIN_ABSTRACT( VSProjectBaseNode, Node, MetaNone() )
+    REFLECT( m_ProjectGuid,     "ProjectGuid",     MetaOptional() )
 REFLECT_END( VSProjectBaseNode )
 
 // CONSTRUCTOR
@@ -15,7 +16,6 @@ REFLECT_END( VSProjectBaseNode )
 VSProjectBaseNode::VSProjectBaseNode()
     : FileNode( AString::GetEmpty(), Node::FLAG_ALWAYS_BUILD )
 {
-    m_Type = Node::PROXY_NODE;
     m_LastBuildTimeMs = 100; // higher default than a file node
 }
 

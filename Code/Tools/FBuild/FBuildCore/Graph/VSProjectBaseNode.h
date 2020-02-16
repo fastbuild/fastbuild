@@ -20,14 +20,10 @@
 //    declared in derived classes BFF parsing, or auto-generated, for correct
 //    mapping in SLNNode
 //------------------------------------------------------------------------------
-class VSProjectPlatformConfigTuple : public Struct
+class VSProjectPlatformConfigTuple
 {
 public:
     VSProjectPlatformConfigTuple() = default;
-    explicit VSProjectPlatformConfigTuple( const Struct & structCfg )
-        : Struct( structCfg )
-    {}
-    virtual ~VSProjectPlatformConfigTuple() = default;
 
     AString             m_Platform;
     AString             m_Config;
@@ -47,15 +43,16 @@ public:
 
     const AString & GetProjectGuid() const { return m_ProjectGuid; }
     const Array< VSProjectPlatformConfigTuple > & GetPlatformConfigTuples() const { return m_ProjectPlatformConfigTuples; }
-    const AString & GetProjectTypeGuid() const { return m_ProjectTypeGuid; }
+
+    // Derived projects implement this interface
+    virtual const AString & GetProjectTypeGuid() const = 0;
 
 protected:
-
     // Exposed
-    Array< VSProjectPlatformConfigTuple > m_ProjectPlatformConfigTuples;
-
     AString             m_ProjectGuid;
-    AString             m_ProjectTypeGuid;
+
+    // Internal
+    Array< VSProjectPlatformConfigTuple > m_ProjectPlatformConfigTuples;
 };
 
 //------------------------------------------------------------------------------

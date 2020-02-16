@@ -14,12 +14,6 @@ class VSExternalProjectConfig : public Struct
 {
     REFLECT_STRUCT_DECLARE( VSExternalProjectConfig )
 public:
-    VSExternalProjectConfig() = default;
-    explicit VSExternalProjectConfig( const VSExternalProjectConfig & otherConfig )
-    {
-        m_Config = otherConfig.m_Config;
-        m_Platform = otherConfig.m_Platform;
-    }
 
     AString             m_Platform;
     AString             m_Config;
@@ -41,7 +35,12 @@ private:
     virtual BuildResult DoBuild( Job* job ) override;
     void CopyConfigs();
 
-    Array< VSExternalProjectConfig > m_ProjectConfigs;
+    // VSProjectBaseNode interface
+    virtual const AString & GetProjectTypeGuid() const override;
+
+    // Exposed
+    AString                             m_ProjectTypeGuid;
+    Array< VSExternalProjectConfig >    m_ProjectConfigs;
 };
 
 //------------------------------------------------------------------------------
