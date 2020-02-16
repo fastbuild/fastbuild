@@ -107,6 +107,7 @@ ExecUseStdOutAsOutput
 ExecWorkingDir
 Executable
 ExecutableRootPath
+ExternalProjectPath
 ExtraFiles
 FileType
 FilesToExclude
@@ -161,17 +162,16 @@ ProjectFileTypes
 ProjectFiles
 ProjectFilesToExclude
 ProjectGuid
-ProjectTypeGuid
 ProjectInputPaths
 ProjectInputPathsExclude
 ProjectOutput
-ExternalProjectPath
 ProjectPatternToExclude
 ProjectProjectImports
 ProjectProjectReferences
 ProjectRebuildCommand
 ProjectReferences
 ProjectSccEntrySAK
+ProjectTypeGuid
 Projects
 Recursive
 RemoveExcludePaths
@@ -238,5 +238,6 @@ XCodeCommandLineArguments
 XCodeCommandLineArgumentsDisabled
 XCodeDebugWorkingDir
 XCodeDocumentVersioning
+XCodeIphoneOSDeploymentTarget
 XCodeOrganizationName
 Xbox360DebuggerCommand
