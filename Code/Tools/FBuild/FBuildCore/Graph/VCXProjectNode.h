@@ -8,7 +8,9 @@
 
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
+#include "Core/Containers/Array.h"
 #include "Core/FileIO/FileIO.h"
+#include "Core/Strings/AString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------

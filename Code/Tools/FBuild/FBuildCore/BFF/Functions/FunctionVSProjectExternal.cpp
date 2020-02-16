@@ -3,18 +3,15 @@
 
 // Includes
 //------------------------------------------------------------------------------
-// FBuild
 #include "FunctionVSProjectExternal.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
-#include "Tools/FBuild/FBuildCore/Graph/VSProjectExternalNode.h"
 
-// Core
-#include "Core/Strings/AStackString.h"
+// FBuild
+#include "Tools/FBuild/FBuildCore/Graph/VSProjectExternalNode.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionVSProjectExternal::FunctionVSProjectExternal()
-: Function( "VSProjectExternal" )
+    : Function( "VSProjectExternal" )
 {
 }
 

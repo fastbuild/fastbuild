@@ -8,13 +8,12 @@
 //------------------------------------------------------------------------------
 #include "FileNode.h"
 
+// Core
 #include "Core/Containers/Array.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-//class
-
 
 // VSProjectPlatformConfigTuple
 //  - this just stores an up to date copy of the platform / configuration tuples
@@ -25,10 +24,10 @@ class VSProjectPlatformConfigTuple : public Struct
 {
 public:
     VSProjectPlatformConfigTuple() = default;
-    explicit VSProjectPlatformConfigTuple(const Struct& structCfg)
-        : Struct(structCfg)
+    explicit VSProjectPlatformConfigTuple( const Struct & structCfg )
+        : Struct( structCfg )
     {}
-    virtual ~VSProjectPlatformConfigTuple(){}
+    virtual ~VSProjectPlatformConfigTuple() = default;
 
     AString             m_Platform;
     AString             m_Config;
@@ -48,7 +47,7 @@ public:
 
     const AString & GetProjectGuid() const { return m_ProjectGuid; }
     const Array< VSProjectPlatformConfigTuple > & GetPlatformConfigTuples() const { return m_ProjectPlatformConfigTuples; }
-    const AString& GetProjectTypeGuid() const { return m_projectTypeGuid; }
+    const AString & GetProjectTypeGuid() const { return m_ProjectTypeGuid; }
 
 protected:
 
@@ -56,7 +55,7 @@ protected:
     Array< VSProjectPlatformConfigTuple > m_ProjectPlatformConfigTuples;
 
     AString             m_ProjectGuid;
-    AString             m_projectTypeGuid;
+    AString             m_ProjectTypeGuid;
 };
 
 //------------------------------------------------------------------------------

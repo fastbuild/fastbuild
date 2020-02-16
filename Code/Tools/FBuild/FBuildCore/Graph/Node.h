@@ -278,10 +278,14 @@ protected:
 template < class T >
 inline T * Node::CastTo() const
 {
-    if (T::GetTypeS() != PROXY_NODE) // all but the VSProjectBaseNode "heirs"
-        ASSERT(T::GetTypeS() == GetType());
+    if ( T::GetTypeS() != PROXY_NODE ) // all but the VSProjectBaseNode "heirs"
+    {
+        ASSERT( T::GetTypeS() == GetType() );
+    }
     else // only the VSProjectBaseNode "heirs"
-        ASSERT(GetType() == VCXPROJECT_NODE || GetType() == VSPROJEXTERNAL_NODE);
+    {
+        ASSERT( ( GetType() == VCXPROJECT_NODE ) || ( GetType() == VSPROJEXTERNAL_NODE ) );
+    }
     return (T *)this;
 }
 

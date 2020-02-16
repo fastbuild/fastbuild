@@ -148,7 +148,8 @@ VCXProjectNode::VCXProjectNode()
     , m_ProjectSccEntrySAK( false )
 {
     m_Type = Node::VCXPROJECT_NODE;
-    m_projectTypeGuid = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
+    m_ProjectTypeGuid = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
+
     ProjectGeneratorBase::GetDefaultAllowedFileExtensions( m_ProjectAllowedFileExtensions );
 
     // Additional default imports to allow debugging on some target platforms
@@ -216,15 +217,15 @@ VCXProjectNode::VCXProjectNode()
     }
 
     // copy to base class platform config tuples array
-    if (m_ProjectPlatformConfigTuples.IsEmpty())
+    if ( m_ProjectPlatformConfigTuples.IsEmpty() )
     {
-        VSProjectPlatformConfigTuple PlatCfgTuple;
-        m_ProjectPlatformConfigTuples.SetCapacity(m_ProjectConfigs.GetSize());
-        for (const VSProjectConfig& config : m_ProjectConfigs)
+        VSProjectPlatformConfigTuple platCfgTuple;
+        m_ProjectPlatformConfigTuples.SetCapacity( m_ProjectConfigs.GetSize() );
+        for ( const VSProjectConfig& config : m_ProjectConfigs )
         {
-            PlatCfgTuple.m_Config = config.m_Config;
-            PlatCfgTuple.m_Platform = config.m_Platform;
-            m_ProjectPlatformConfigTuples.Append(PlatCfgTuple);
+            platCfgTuple.m_Config = config.m_Config;
+            platCfgTuple.m_Platform = config.m_Platform;
+            m_ProjectPlatformConfigTuples.Append( platCfgTuple );
         }
     }
 

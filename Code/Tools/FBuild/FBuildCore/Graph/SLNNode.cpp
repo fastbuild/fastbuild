@@ -64,7 +64,7 @@ REFLECT_END( SLNNode )
 //------------------------------------------------------------------------------
 struct VCXProjectNodeComp
 {
-    bool operator ()( const VSProjectBaseNode* a, const VSProjectBaseNode* b ) const
+    bool operator ()( const VSProjectBaseNode * a, const VSProjectBaseNode * b ) const
     {
         return ( a->GetName() < b->GetName() );
     }
@@ -171,7 +171,7 @@ SLNNode::SLNNode()
 
     // Gather all Project references and canonicalize project names
     //------------------------------------------------------------------------------
-    Array< VSProjectBaseNode* > projects( m_SolutionProjects.GetSize(), true );
+    Array< VSProjectBaseNode * > projects( m_SolutionProjects.GetSize(), true );
     // SolutionProjects
     if ( !GatherProjects( nodeGraph, function, iter, ".SolutionProjects", m_SolutionProjects, projects ) )
     {
@@ -219,13 +219,13 @@ SLNNode::SLNNode()
 
     // Check Project Configurations
     //------------------------------------------------------------------------------
-    for ( const VSProjectBaseNode* project : projects )
+    for ( const VSProjectBaseNode * project : projects )
     {
         // check that this Project contains all .SolutionConfigs
         for ( const SolutionConfig & solutionConfig : m_SolutionConfigs )
         {
             bool containsConfig = false;
-            for ( const VSProjectPlatformConfigTuple& projectConfig : project->GetPlatformConfigTuples() )
+            for ( const VSProjectPlatformConfigTuple & projectConfig : project->GetPlatformConfigTuples() )
             {
                 if ( ( projectConfig.m_Platform == solutionConfig.m_Platform ) &&
                      ( projectConfig.m_Config == solutionConfig.m_Config ) )
@@ -249,7 +249,7 @@ SLNNode::SLNNode()
     // Manage dependencies
     //------------------------------------------------------------------------------
     m_StaticDependencies.SetCapacity( projects.GetSize() );
-    for ( VSProjectBaseNode* project : projects )
+    for ( VSProjectBaseNode * project : projects )
     {
         m_StaticDependencies.Append( Dependency( project ) );
     }
@@ -268,7 +268,7 @@ SLNNode::~SLNNode() = default;
     SLNGenerator sg;
 
     // projects
-    Array< VSProjectBaseNode* > projects( m_StaticDependencies.GetSize(), false );
+    Array< VSProjectBaseNode * > projects( m_StaticDependencies.GetSize(), false );
     const Dependency * const end = m_StaticDependencies.End();
     for ( const Dependency * it = m_StaticDependencies.Begin() ; it != end ; ++it )
     {
@@ -367,7 +367,7 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
                              const BFFToken * iter,
                              const char * propertyName,
                              const AString & projectName,
-                             Array< VSProjectBaseNode* > & inOutProjects ) const
+                             Array< VSProjectBaseNode * > & inOutProjects ) const
 {
     // Get associated project file
     Node * node = nodeGraph.FindNode( projectName );
@@ -376,13 +376,14 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
         Error::Error_1104_TargetNotDefined( iter, function, propertyName, projectName );
         return nullptr;
     }
-    if ( node->GetType() != Node::VCXPROJECT_NODE && node->GetType() != Node::VSPROJEXTERNAL_NODE )
+    if ( ( node->GetType() != Node::VCXPROJECT_NODE ) &&
+         ( node->GetType() != Node::VSPROJEXTERNAL_NODE ) )
     {
         // don't know how to handle this type of node
         Error::Error_1005_UnsupportedNodeType( iter, function, propertyName, node->GetName(), node->GetType() );
         return nullptr;
     }
-    VSProjectBaseNode* projectNode = node->CastTo< VSProjectBaseNode >();
+    VSProjectBaseNode * projectNode = node->CastTo< VSProjectBaseNode >();
 
     // Add to project list if not already there
     if ( inOutProjects.Find( projectNode ) == nullptr )
@@ -400,7 +401,7 @@ bool SLNNode::GatherProjects( NodeGraph & nodeGraph,
                               const BFFToken * iter,
                               const char * propertyName,
                               const Array< AString > & projectNames,
-                              Array< VSProjectBaseNode* > & inOutProjects ) const
+                              Array< VSProjectBaseNode * > & inOutProjects ) const
 {
     for ( const AString & projectName : projectNames )
     {

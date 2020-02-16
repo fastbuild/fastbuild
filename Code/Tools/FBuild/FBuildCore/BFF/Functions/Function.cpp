@@ -112,7 +112,7 @@ Function::~Function() = default;
     g_Functions.Append( FNEW( FunctionUnity ) );
     g_Functions.Append( FNEW( FunctionUsing ) );
     g_Functions.Append( FNEW( FunctionVCXProject ) );
-    g_Functions.Append( FNEW( FunctionVSProjectExternal) );
+    g_Functions.Append( FNEW( FunctionVSProjectExternal ) );
     g_Functions.Append( FNEW( FunctionVSSolution ) );
     g_Functions.Append( FNEW( FunctionXCodeProject ) );
 }

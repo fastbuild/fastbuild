@@ -334,7 +334,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         case Node::COMPILER_NODE:       return nodeGraph.CreateCompilerNode( name );
         case Node::DLL_NODE:            return nodeGraph.CreateDLLNode( name );
         case Node::VCXPROJECT_NODE:     return nodeGraph.CreateVCXProjectNode( name );
-        case Node::VSPROJEXTERNAL_NODE: return nodeGraph.CreateVSProjectExternalNode(name);
+        case Node::VSPROJEXTERNAL_NODE: return nodeGraph.CreateVSProjectExternalNode( name );
         case Node::OBJECT_LIST_NODE:    return nodeGraph.CreateObjectListNode( name );
         case Node::COPY_DIR_NODE:       return nodeGraph.CreateCopyDirNode( name );
         case Node::SLN_NODE:            return nodeGraph.CreateSLNNode( name );

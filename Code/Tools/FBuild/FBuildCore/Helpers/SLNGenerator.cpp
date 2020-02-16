@@ -32,7 +32,7 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
                                            const AString & solutionVisualStudioVersion,
                                            const AString & solutionMinimumVisualStudioVersion,
                                            const Array< SolutionConfig > & solutionConfigs,
-                                           const Array< VSProjectBaseNode* > & projects,
+                                           const Array< VSProjectBaseNode * > & projects,
                                            const Array< SolutionDependency > & solutionDependencies,
                                            const Array< SolutionFolder > & solutionFolders )
 {
@@ -92,15 +92,15 @@ void SLNGenerator::WriteHeader( const AString & solutionVisualStudioVersion,
 // WriteProjectListings
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
-                                         const Array< VSProjectBaseNode* > & projects,
+                                         const Array< VSProjectBaseNode * > & projects,
                                          const Array< SolutionFolder > & solutionFolders,
                                          const Array< SolutionDependency > & solutionDependencies,
                                          Array< AString > & solutionProjectsToFolder )
 {
     // Project Listings
 
-    VSProjectBaseNode** const projectsEnd = projects.End();
-    for(VSProjectBaseNode** it = projects.Begin() ; it != projectsEnd ; ++it )
+    VSProjectBaseNode ** const projectsEnd = projects.End();
+    for( VSProjectBaseNode ** it = projects.Begin() ; it != projectsEnd ; ++it )
     {
         AStackString<> projectPath( (*it)->GetName() );
 
@@ -120,17 +120,17 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
         // retrieve projectGuid
         AStackString<> projectGuid( (*it)->GetProjectGuid() );
 
-        // projectGuid must be uppercase (visual does that, it changes the .sln otherwise)
+        // Visual Studio expects the GUID to be uppercase
         projectGuid.ToUpper();
 
         // retrieve projectTypeGuid
         AStackString<> projectTypeGuid( (*it)->GetProjectTypeGuid() );
 
-        // projectTypeGuid must be uppercase (visual does that, it changes the .sln otherwise)
+        // Visual Studio expects the GUID to be uppercase
         projectTypeGuid.ToUpper();
 
-        Write("Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n",
-            projectTypeGuid.Get(), projectName.Get(), solutionRelativePath.Get(), projectGuid.Get());
+        Write( "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n",
+               projectTypeGuid.Get(), projectName.Get(), solutionRelativePath.Get(), projectGuid.Get() );
 
         // Manage dependencies
         Array< AString > dependencyGUIDs( 64, true );
@@ -146,7 +146,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
             // get all the projects this project depends on
             for ( const AString & dependency : deps.m_Dependencies )
             {
-                for ( const VSProjectBaseNode* dependencyProject : projects )
+                for ( const VSProjectBaseNode * dependencyProject : projects )
                 {
                     if ( dependencyProject->GetName() == dependency )
                     {
@@ -260,12 +260,12 @@ void SLNGenerator::WriteSolutionConfigurationPlatforms( const Array< SolutionCon
 // WriteProjectConfigurationPlatforms
 //------------------------------------------------------------------------------
 void SLNGenerator::WriteProjectConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs,
-                                                       const Array< VSProjectBaseNode* > & projects )
+                                                       const Array< VSProjectBaseNode * > & projects )
 {
     Write( "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n" );
 
     // Solution Configuration Mappings to Projects
-    for( const VSProjectBaseNode* project : projects )
+    for( const VSProjectBaseNode * project : projects )
     {
         AStackString<> projectGuid( project->GetProjectGuid() );
         projectGuid.ToUpper();

@@ -7,10 +7,8 @@
 
 // Reflection
 //------------------------------------------------------------------------------
-
-REFLECT_NODE_BEGIN( VSProjectBaseNode, Node, MetaName("ProjectOutput") + MetaFile() )
+REFLECT_NODE_BEGIN( VSProjectBaseNode, Node, MetaName( "ProjectOutput" ) + MetaFile() )
 REFLECT_END( VSProjectBaseNode )
-
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -24,6 +22,5 @@ VSProjectBaseNode::VSProjectBaseNode()
 // DESTRUCTOR
 //------------------------------------------------------------------------------
 VSProjectBaseNode::~VSProjectBaseNode() = default;
-
 
 //------------------------------------------------------------------------------

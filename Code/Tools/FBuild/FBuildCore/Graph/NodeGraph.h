@@ -56,7 +56,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 139 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 140 };
 
     bool IsValid() const
     {
@@ -119,8 +119,8 @@ public:
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );
     CompilerNode * CreateCompilerNode( const AString & name );
-    VSProjectBaseNode* CreateVCXProjectNode( const AString & name );
-    VSProjectBaseNode* CreateVSProjectExternalNode(const AString& name);
+    VSProjectBaseNode * CreateVCXProjectNode( const AString & name );
+    VSProjectBaseNode * CreateVSProjectExternalNode( const AString& name );
     SLNNode * CreateSLNNode( const AString & name );
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );

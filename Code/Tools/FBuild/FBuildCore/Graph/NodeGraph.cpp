@@ -922,7 +922,7 @@ CompilerNode * NodeGraph::CreateCompilerNode( const AString & name )
 
 // CreateVCXProjectNode
 //------------------------------------------------------------------------------
-VSProjectBaseNode* NodeGraph::CreateVCXProjectNode( const AString & name )
+VSProjectBaseNode * NodeGraph::CreateVCXProjectNode( const AString & name )
 {
     ASSERT( Thread::IsMainThread() );
     ASSERT( IsCleanPath( name ) );
@@ -935,12 +935,12 @@ VSProjectBaseNode* NodeGraph::CreateVCXProjectNode( const AString & name )
 
 // CreateVSProjectExternalNode
 //------------------------------------------------------------------------------
-VSProjectBaseNode* NodeGraph::CreateVSProjectExternalNode(const AString& name)
+VSProjectBaseNode * NodeGraph::CreateVSProjectExternalNode(const AString& name)
 {
     ASSERT( Thread::IsMainThread() );
     ASSERT( IsCleanPath( name ) );
 
-    VSProjectExternalNode* node = FNEW(VSProjectExternalNode());
+    VSProjectExternalNode* node = FNEW( VSProjectExternalNode() );
     node->SetName( name );
     AddNode( node );
     return node;

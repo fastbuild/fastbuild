@@ -83,9 +83,9 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( Solution_BuildAndDeploy_Project )
     REGISTER_TEST( Solution_BuildAndDeploy_PerSolutionConfig )
     REGISTER_TEST( Solution_ExternalProject )
-#if defined( __WINDOWS__ )
-    REGISTER_TEST( Solution_ExternalProjectWrongData )
-#endif
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( Solution_ExternalProjectWrongData )
+    #endif
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
 REGISTER_TESTS_END
@@ -1176,34 +1176,34 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::Solution_ExternalProject() const
 {
-    AStackString<> solution("../tmp/Test/ProjectGeneration/Solution_ExternalProject/External.sln");
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/External.sln" );
 
     // Initialize
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild.bff";
     options.m_ForceCleanBuild = true;
     options.m_SaveDBOnCompletion = true;
-    FBuild fBuild(options);
-    TEST_ASSERT(fBuild.Initialize());
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
-    EnsureFileDoesNotExist(solution);
+    EnsureFileDoesNotExist( solution );
 
     // do build
-    TEST_ASSERT(fBuild.Build("ExternalProjectSolution"));
+    TEST_ASSERT( fBuild.Build("ExternalProjectSolution" ) );
 
     //
-    EnsureFileExists(solution);
+    EnsureFileExists( solution );
 
     // Check stats
-    //               Seen,  Built,  Type
-    CheckStatsNode(1, 1, Node::SLN_NODE);
-    CheckStatsNode(1, 1, Node::ALIAS_NODE);
+    //              Seen,   Built,  Type
+    CheckStatsNode( 1,      1,      Node::SLN_NODE );
+    CheckStatsNode( 1,      1,      Node::ALIAS_NODE );
 
     // because of the external module, peek how many of them were actually processed, depending if using the module is
     // enforced or not in the actual fbuild.bff 
     const FBuildStats& stats = FBuild::Get().GetStats();
-    const FBuildStats::Stats& nodeStatsExternal = stats.GetStatsFor(Node::VSPROJEXTERNAL_NODE);
+    const FBuildStats::Stats& nodeStatsExternal = stats.GetStatsFor( Node::VSPROJEXTERNAL_NODE );
     const size_t actualNumExtSeen = nodeStatsExternal.m_NumProcessed;
     const size_t actualNumExtBuilt = nodeStatsExternal.m_NumBuilt;
 
@@ -1217,23 +1217,23 @@ void TestProjectGeneration::Solution_ExternalProjectWrongData() const
     // this test really needs to use the external module on a wrong project, in order to validate a failure scenario
     // therefore it should only be ever run on windows, with properly installed VS
 
-    AStackString<> solution("../tmp/Test/ProjectGeneration/Solution_ExternalProject/ExternalWrongData.sln");
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/ExternalWrongData.sln" );
 
     // Initialize
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild_WrongData.bff";
     options.m_ForceCleanBuild = true;
     options.m_SaveDBOnCompletion = true;
-    FBuild fBuild(options);
-    TEST_ASSERT(fBuild.Initialize());
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
-    EnsureFileDoesNotExist(solution);
+    EnsureFileDoesNotExist( solution );
 
     // building will fail
-    TEST_ASSERT(fBuild.Build("ExternalWrongDataProjectSolution") == false);
+    TEST_ASSERT( fBuild.Build( "ExternalWrongDataProjectSolution" ) == false );
 
-    CheckStatsTotal(5, 2);
+    CheckStatsTotal( 5, 2 );
 }
 
 // XCode

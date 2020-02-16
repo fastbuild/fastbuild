@@ -12,10 +12,10 @@
 //------------------------------------------------------------------------------
 class VSExternalProjectConfig : public Struct
 {
-    REFLECT_STRUCT_DECLARE(VSExternalProjectConfig)
+    REFLECT_STRUCT_DECLARE( VSExternalProjectConfig )
 public:
     VSExternalProjectConfig() = default;
-    explicit VSExternalProjectConfig(const VSExternalProjectConfig& otherConfig)
+    explicit VSExternalProjectConfig( const VSExternalProjectConfig & otherConfig )
     {
         m_Config = otherConfig.m_Config;
         m_Platform = otherConfig.m_Platform;
