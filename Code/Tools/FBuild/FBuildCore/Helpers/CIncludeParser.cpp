@@ -356,6 +356,95 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
     return true;
 }
 
+// Parse
+//------------------------------------------------------------------------------
+bool CIncludeParser::ParseFXC_Output( const char * compilerOutput,
+                                      size_t compilerOutputSize )
+{
+    // we require null terminated input
+    ASSERT( compilerOutput[ compilerOutputSize ] == 0 );
+    (void)compilerOutputSize;
+
+    const char * pos = compilerOutput;
+    for (;;)
+    {
+        const char * lineStart = pos;
+
+        // find end of the line
+        pos = strchr( pos, '\n' );
+        if ( !pos )
+        {
+            break; // end of output
+        }
+
+        const char * lineEnd = ( lineStart < pos && pos[-1] == '\r' ) ? pos - 1 : pos;
+
+        ASSERT( *pos == '\n' );
+        ++pos; // skip \r for next line
+
+        // We only care about lines like 'Resolved to [{path}]'
+        if ( lineEnd - lineStart <= 14 )
+            continue;
+
+        if ( strncmp( lineStart, "Resolved to [", 13 ) != 0 )
+            continue;
+
+        if ( lineEnd[ -1 ] != ']' )
+            continue;
+
+        const char * includeStart = lineStart + 13;
+        const char * includeEnd = lineEnd - 1;
+
+        const char * ch = includeStart;
+
+        // validates the windows path
+        bool validated = ( includeStart < includeEnd );
+        size_t colonCount( 0 );
+        for ( ; validated && ( ch < includeEnd ); ++ch )
+        {
+            switch ( *ch )
+            {
+                // https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
+                case '<':
+                case '>':
+                case '"':
+                case '|':
+                case '?':
+                case '*':
+                {
+                    validated = false;
+                    break;
+                }
+                case ':':
+                {
+                    // This logic handles warnings which might otherwise appear as valid paths
+                    ++colonCount;
+                    if ( colonCount > 1 )
+                    {
+                        validated = false;
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        if ( validated )
+        {
+            const char c1 = includeStart[ 0 ];
+            const bool driveLetter = ( ( ( c1 >= 'A' ) && ( c1 <= 'Z' ) ) || ( ( c1 >= 'a' ) && ( c1 <= 'z' ) ) );
+            const bool validPath = driveLetter && ( includeStart[ 1 ] == ':' );
+            if ( validPath )
+            {
+                AddInclude( includeStart, includeEnd );
+            }
+        }
+    }
+
+    return true;
+}
+
 // SwapIncludes
 //------------------------------------------------------------------------------
 void CIncludeParser::SwapIncludes( Array< AString > & includes )

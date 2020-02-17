@@ -19,6 +19,7 @@ public:
     bool ParseMSCL_Output( const char * compilerOutput, size_t compilerOutputSize );
     bool ParseMSCL_Preprocessed( const char * compilerOutput, size_t compilerOutputSize );
     bool ParseGCC_Preprocessed( const char * compilerOutput, size_t compilerOutputSize );
+    bool ParseFXC_Output( const char * compilerOutput, size_t compilerOutputSize );
 
     const Array< AString > & GetIncludes() const { return m_Includes; }
 
