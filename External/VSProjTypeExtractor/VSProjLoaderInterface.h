@@ -37,7 +37,9 @@ class VspteModuleWrapper
 {
 private:
 	VspteModuleWrapper()
-	{}
+	{
+		Load();
+	}
 	~VspteModuleWrapper()
 	{
 		if (_hVSProjTypeExtractor)
@@ -51,26 +53,6 @@ private:
 			_Vspte_DeallocateProjDataCfgArray = nullptr;
 		}
 	}
-	Type_GetProjData _Vspte_GetProjData = nullptr;
-	Type_CleanUp _Vspte_CleanUp = nullptr;
-	Type_DeallocateProjDataCfgArray _Vspte_DeallocateProjDataCfgArray = nullptr;
-	HMODULE _hVSProjTypeExtractor = NULL;
-
-
-public:
-	/** @brief  Access to singleton
-
-	*/
-	static VspteModuleWrapper* Instance()
-	{
-		static VspteModuleWrapper s_Instance;
-		return &s_Instance;
-	}
-
-	/** @brief  Loads VSProjTypeExtractor.dll if possible
-
-		Needs to be called once before attempting to call @Vspte_GetProjData, @Vspte_DeallocateProjDataCfgArray or @Vspte_CleanUp
-	*/
 	void Load()
 	{
 		try {
@@ -88,6 +70,29 @@ public:
 		catch (...)
 		{
 		}
+	}
+	void Vspte_CleanUp()
+	{
+		if (_Vspte_CleanUp)
+		{
+			_Vspte_CleanUp();
+		}
+	}
+
+	Type_GetProjData _Vspte_GetProjData = nullptr;
+	Type_CleanUp _Vspte_CleanUp = nullptr;
+	Type_DeallocateProjDataCfgArray _Vspte_DeallocateProjDataCfgArray = nullptr;
+	HMODULE _hVSProjTypeExtractor = NULL;
+
+
+public:
+	/** @brief  Access to singleton
+
+	*/
+	static VspteModuleWrapper* Instance()
+	{
+		static VspteModuleWrapper s_Instance;
+		return &s_Instance;
 	}
 
 	/** @brief  Queries if VSProjTypeExtractor.dll was successfully loaded
@@ -129,20 +134,6 @@ public:
 		if (_Vspte_DeallocateProjDataCfgArray)
 		{
 			_Vspte_DeallocateProjDataCfgArray(pProjData);
-		}
-	}
-
-	/** @brief  Optionally closes the volatile solution and quits the Visual Studio instance
-
-		After a call to @Vspte_GetProjData, the Visual Studio instance is kept up and running with the volatile solution loaded,
-		in order to save time in subsequent calls to @Vspte_GetProjData. Cleanup is done anyway on application exit, so calling it
-		explicitely is not necessary, it's provided more for testing purposes
-	*/
-	void Vspte_CleanUp()
-	{
-		if (_Vspte_CleanUp)
-		{
-			_Vspte_CleanUp();
 		}
 	}
 };
