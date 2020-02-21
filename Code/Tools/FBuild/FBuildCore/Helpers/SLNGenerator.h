@@ -41,7 +41,8 @@ private:
                                const Array< SolutionFolder > & solutionFolders,
                                const Array< SolutionDependency > & solutionDependencies,
                                Array< AString > & solutionProjectsToFolder );
-    void WriteSolutionFolderListings( const Array< SolutionFolder > & solutionFolders,
+    void WriteSolutionFolderListings( const AString& solutionBasePath,
+                                      const Array< SolutionFolder > & solutionFolders,
                                       Array< AString > & solutionFolderPaths );
     void WriteSolutionConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs );
     void WriteProjectConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs,

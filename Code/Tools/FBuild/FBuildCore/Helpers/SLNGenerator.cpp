@@ -50,7 +50,7 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
     // construct sln file
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
     WriteProjectListings( solutionBasePath, projects, solutionFolders, solutionDependencies, solutionProjectsToFolder );
-    WriteSolutionFolderListings( solutionFolders, solutionFolderPaths );
+    WriteSolutionFolderListings(solutionBasePath, solutionFolders, solutionFolderPaths );
     Write( "Global\r\n" );
     WriteSolutionConfigurationPlatforms( solutionConfigs );
     WriteProjectConfigurationPlatforms( solutionConfigs, projects );
@@ -191,7 +191,8 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
 
 // WriteSolutionFolderListings
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteSolutionFolderListings( const Array< SolutionFolder > & solutionFolders,
+void SLNGenerator::WriteSolutionFolderListings( const AString& solutionBasePath,
+                                                const Array< SolutionFolder > & solutionFolders,
                                                 Array< AString > & solutionFolderPaths )
 {
     // Create every intermediate path
@@ -234,6 +235,29 @@ void SLNGenerator::WriteSolutionFolderListings( const Array< SolutionFolder > & 
 
         Write( "Project(\"{2150E333-8FDC-42A3-9474-1A3956D46DE8}\") = \"%s\", \"%s\", \"%s\"\r\n",
                solutionFolderName, solutionFolderName, solutionFolderGuid.Get() );
+
+        // lookup solution folder to find out if it contains items
+        for (const SolutionFolder& solutionFolder : solutionFolders)
+        {
+            if (solutionFolderPath.Compare(solutionFolder.m_Path) == 0)
+            {
+                if (solutionFolder.m_Items.GetSize() > 0)
+                {
+                    Write("\tProjectSection(SolutionItems) = preProject\r\n");
+                    for (const AString& item : solutionFolder.m_Items)
+                    {
+                        // make item path relative
+                        AStackString<> itemRelativePath;
+                        ProjectGeneratorBase::GetRelativePath(solutionBasePath, item, itemRelativePath);
+                        #if !defined( __WINDOWS__ )
+                            itemRelativePath.Replace('/', '\\'); // Convert to Windows-style slashes
+                        #endif
+                        Write("\t\t%s = %s\r\n", itemRelativePath.Get(), itemRelativePath.Get());
+                    }
+                    Write("\tEndProjectSection\r\n");
+                }
+            }
+        }
 
         Write( "EndProject\r\n" );
     }
