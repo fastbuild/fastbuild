@@ -15,6 +15,8 @@
 
 // system
 #if defined( __WINDOWS__ )
+    #include <windows.h>
+    #include <winioctl.h>
     #include "Core/Env/WindowsHeader.h"
     #include "Core/Time/Time.h"
 #endif
@@ -70,6 +72,23 @@
         FuncPtr         m_FuncPtr       = nullptr;
     } gOSXHelper_utimensat;
 #endif
+
+/*static*/ FileIO::SymlinkBehavior FileIO::ParseSymlinkBehavior( const AString& value )
+{
+	if ( value.IsEmpty() || value.CompareI( "FollowSrcAndDest" ) )
+	{
+		return FOLLOW_SRC_AND_DST;
+	}
+	if ( value.CompareI( "FollowSrc" ) )
+	{
+		return FOLLOW_SRC;
+	}
+	if ( value.CompareI( "NoFollow" ) )
+	{
+		return FOLLOW_NEITHER;
+	}
+	return INVALID_SYM_LINK_BEHAVIOR;
+}
 
 // Exists
 //------------------------------------------------------------------------------
@@ -147,12 +166,41 @@
 
 // Copy
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::FileCopy( const char * srcFileName, const char * dstFileName,
-                              bool allowOverwrite )
+/*static*/ bool FileIO::FileCopy( const char* srcFileName, const char* dstFileName,
+	SymlinkBehavior linkBehavior, bool allowOverwrite )
 {
 #if defined( __WINDOWS__ )
-    DWORD flags = COPY_FILE_COPY_SYMLINK;
-    flags = ( allowOverwrite ? flags : flags | COPY_FILE_FAIL_IF_EXISTS );
+	DWORD flags = ( linkBehavior == FOLLOW_NEITHER ) ? COPY_FILE_COPY_SYMLINK : 0U;
+	flags = ( allowOverwrite ? flags : flags | COPY_FILE_FAIL_IF_EXISTS );
+
+	if ( linkBehavior == FOLLOW_SRC && allowOverwrite )
+	{
+		DWORD dwAttrs = GetFileAttributes( dstFileName );
+		if ( dwAttrs != INVALID_FILE_ATTRIBUTES &&
+			( dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT ) )
+		{
+			HANDLE hFile = CreateFile( dstFileName, 0, FILE_SHARE_READ, 0,
+				OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, 0 );
+			VERIFY( hFile != INVALID_HANDLE_VALUE );
+			char buf[ 4096 ];
+			DWORD bufSize = 0;
+			bool isSymLink = false;
+			if ( DeviceIoControl( hFile, FSCTL_GET_REPARSE_POINT, NULL, 0, buf, sizeof( buf ), &bufSize, NULL ) )
+			{
+				ULONG* pTag = reinterpret_cast<ULONG*>( buf );
+				isSymLink = ( *pTag == IO_REPARSE_TAG_SYMLINK );
+			}
+			CloseHandle( hFile );
+
+			// CopyFileEx only supports FOLLOW_SRC_AND_DST and FOLLOW_NEITHER
+			// based on the COPY_FILE_COPY_SYMLINK flag.  
+			// (and COPY_FILE_COPY_SYMLINK isn't really FOLLOW_NEITHER)
+			if ( isSymLink && DeleteFile( dstFileName ) == 0 )
+			{
+				return false;
+			}
+		}
+	}
 
     BOOL result = CopyFileEx( srcFileName, dstFileName, nullptr, nullptr, nullptr, flags );
     if ( result == FALSE )
@@ -198,7 +246,17 @@
     // then copyfile() and fcopyfile() will use the information from the state
     // object; if it is NULL, then both functions will work normally, but less
     // control will be available to the caller.
-    bool result = ( copyfile( srcFileName, dstFileName, nullptr, COPYFILE_DATA | COPYFILE_XATTR | COPYFILE_NOFOLLOW ) == 0 );
+    copyfile_flags_t flags = COPYFILE_DATA | COPYFILE_XATTR;
+    switch ( linkBehavior )
+    {
+    case FOLLOW_NEITHER:
+        flags |= COPYFILE_NOFOLLOW_SRC;
+    case FOLLOW_SRC:
+        flags |= COPYFILE_NOFOLLOW_DST;
+    default:
+        ;
+    }
+    bool result = ( copyfile( srcFileName, dstFileName, nullptr, flags ) == 0 );
     return result;
 #elif defined( __LINUX__ )
     if ( allowOverwrite == false )
@@ -212,17 +270,39 @@
     struct stat stat_source;
     VERIFY( lstat( srcFileName, &stat_source ) == 0 );
 
-    // Special case symlinks.
-    if ( S_ISLNK( stat_source.st_mode ) )
+    if ( linkBehavior == FOLLOW_NEITHER )
     {
-        AString linkPath( stat_source.st_size + 1 );
-        ssize_t length = readlink( srcFileName, linkPath.Get(), linkPath.GetReserved() );
-        if ( length != stat_source.st_size )
+        // Special case symlinks.
+        if ( S_ISLNK( stat_source.st_mode ) )
         {
+            AString linkPath( stat_source.st_size + 1 );
+            ssize_t length = readlink( srcFileName, linkPath.Get(), linkPath.GetReserved() );
+            if ( length != stat_source.st_size )
+            {
+                return false;
+            }
+            linkPath.SetLength( length );
+            if ( symlink( linkPath.Get(), dstFileName ) == 0 )
+            {
+                return true;
+            }
+            // symlink will not clobber.
+            if ( errno == EEXIST )
+            {
+                return
+                    ( unlink( dstFileName ) == 0 ) &&
+                    ( symlink( linkPath.Get(), dstFileName ) == 0 );
+            }
             return false;
         }
-        linkPath.SetLength( length );
-        return symlink( linkPath.Get(), dstFileName ) == 0;
+    }
+
+    // Now that we know we're following the source, update the stats
+    // with the link target.  This also checks for a broken link. 
+    if ( S_ISLNK( stat_source.st_mode ) &&
+        stat( srcFileName, &stat_source ) != 0 )
+    {
+        return false;
     }
 
     int source = open( srcFileName, O_RDONLY, 0 );
@@ -234,11 +314,26 @@
     // Ensure dest file will be writable if it exists
     FileIO::SetReadOnly( dstFileName, false );
 
-    int dest = open( dstFileName, O_WRONLY | O_CREAT | O_TRUNC, 0644 );
+    int dstFlags = O_WRONLY | O_CREAT | O_TRUNC;
+    const bool noDstFollow = ( linkBehavior != FOLLOW_SRC_AND_DST );
+    if ( noDstFollow )
+    {
+        dstFlags |= O_NOFOLLOW;
+    }
+    int dest = open( dstFileName, dstFlags, 0644 );
     if ( dest < 0 )
     {
-        close( source );
-        return false;
+        if ( ( errno == ELOOP && noDstFollow ) &&
+            ( unlink( dstFileName ) == 0 ) &&
+            ( dest = open( dstFileName, dstFlags, 0644 ) ) )
+        {
+            // dest was a link, but unlink was able to remove it so open would work.
+        }
+        else
+        {
+            close( source );
+            return false;
+        }
     }
 
     // set permissions to match the source file's

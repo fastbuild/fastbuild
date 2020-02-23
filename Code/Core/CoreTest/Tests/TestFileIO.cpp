@@ -134,7 +134,7 @@ void TestFileIO::FileCopy() const
 
     // copy without overwrite allowed should fail
     const bool allowOverwrite = false;
-    TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), allowOverwrite ) == false );
+    TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), FileIO::DEFAULT_SYM_LINK_BEHAVIOR, allowOverwrite ) == false );
 
     // cleanup
     VERIFY( FileIO::FileDelete( path.Get() ) );
@@ -145,58 +145,125 @@ void TestFileIO::FileCopy() const
 //------------------------------------------------------------------------------
 void TestFileIO::FileCopySymlink() const
 {
-    #if defined( __WINDOWS__ ) || defined ( __APPLE__ )
-        // Not tested on Windows/MacOS as symlinks are directly supported
-        // by the file copy API.  Also on Windows, it would make unit
-        // tests require administrator privileges.
-    #elif defined ( __LINUX__ )
-        AStackString<> symlinkTarget( "symlink" );
+#if defined( __WINDOWS__ ) || defined ( __APPLE__ )
+	// Not tested on Windows/MacOS as symlinks are directly supported
+	// by the file copy API.  Also on Windows, it would make unit
+	// tests require administrator privileges.
+#elif defined ( __LINUX__ )
+	AStackString<> symlinkTarget( "symlink" );
 
-        // generate a process unique file path
-        AStackString<> path;
-        GenerateTempFileName( path );
+	// generate a process unique file path
+	AStackString<> path;
+	GenerateTempFileName( path );
 
-        // generate copy file name
-        AStackString<> pathCopy( path );
-        pathCopy += ".copy";
+	// generate copy file name
+	AStackString<> pathCopy( path );
+	pathCopy += ".copy";
 
-        // make sure nothing is left from previous runs
-        FileIO::FileDelete( path.Get() );
-        FileIO::FileDelete( pathCopy.Get() );
-        TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
-        TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == false );
+	AStackString<> path2( path );
+	path2 += "_2";
 
-        // create it
-        TEST_ASSERT( symlink( symlinkTarget.Get(), path.Get() ) == 0 );
+	AStackString<> tmpFollowedDest;
+	FileIO::GetTempDir( tmpFollowedDest );
+	tmpFollowedDest += symlinkTarget;
 
-        // copy it
-        TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get() ) );
-        TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
+	// make sure nothing is left from previous runs
+	FileIO::FileDelete( path.Get() );
+	FileIO::FileDelete( path2.Get() );
+	FileIO::FileDelete( pathCopy.Get() );
+	FileIO::FileDelete( tmpFollowedDest.Get() );
+	TEST_ASSERT( FileIO::FileExists( path.Get() ) == false );
+	TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == false );
+	TEST_ASSERT( FileIO::FileExists( tmpFollowedDest.Get() ) == false );
 
-        // validate link
-        AStackString<> linkPath;
-        ssize_t length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
-        TEST_ASSERT( length == symlinkTarget.GetLength() );
-        linkPath.SetLength( length );
-        TEST_ASSERT( linkPath == symlinkTarget );
+	// create it
+	TEST_ASSERT( symlink( symlinkTarget.Get(), path.Get() ) == 0 );
+	// Even though the link is broken, we still expect FileExists to be true
+	TEST_ASSERT( FileIO::FileExists( path.Get() ) == true );
 
-        // ensure attributes are transferred properly
-        FileIO::FileInfo sourceInfo;
-        TEST_ASSERT( FileIO::GetFileInfo( path, sourceInfo ) == true );
-        FileIO::FileInfo destInfo;
-        TEST_ASSERT( FileIO::GetFileInfo( pathCopy, destInfo ) == true );
-        TEST_ASSERT( destInfo.m_Attributes == sourceInfo.m_Attributes );
+	// copy it
+	TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), FileIO::FOLLOW_NEITHER ) );
+	TEST_ASSERT( FileIO::FileExists( pathCopy.Get() ) == true );
 
-        // copy without overwrite allowed should fail
-        const bool allowOverwrite = false;
-        TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), allowOverwrite ) == false );
+	// validate link
+	AStackString<> linkPath;
+	ssize_t length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
+	TEST_ASSERT( length == symlinkTarget.GetLength() );
+	linkPath.SetLength( length );
+	TEST_ASSERT( linkPath == symlinkTarget );
 
-        // cleanup
-        VERIFY( FileIO::FileDelete( path.Get() ) );
-        VERIFY( FileIO::FileDelete( pathCopy.Get() ) );
-    #else
-        #error Unknown platform
-    #endif
+	// ensure attributes are transferred properly
+	FileIO::FileInfo sourceInfo;
+	TEST_ASSERT( FileIO::GetFileInfo( path, sourceInfo ) == true );
+	FileIO::FileInfo destInfo;
+	TEST_ASSERT( FileIO::GetFileInfo( pathCopy, destInfo ) == true );
+	TEST_ASSERT( destInfo.m_Attributes == sourceInfo.m_Attributes );
+
+	// copy without overwrite allowed should fail
+	const bool allowOverwrite = false;
+	TEST_ASSERT( FileIO::FileCopy( path.Get(), pathCopy.Get(), FileIO::FOLLOW_NEITHER, allowOverwrite ) == false );
+
+	AStackString<> symlinkTarget2( path );
+
+	TEST_ASSERT( symlink( symlinkTarget2.Get(), path2.Get() ) == 0 );
+	// Even though the link is broken, we still expect FileExists to be true
+	TEST_ASSERT( FileIO::FileExists( path2.Get() ) == true );
+
+	// overwrite should allow the link to be regenerated
+	TEST_ASSERT( FileIO::FileCopy( path2.Get(), pathCopy.Get(), FileIO::FOLLOW_NEITHER ) == true );
+
+	// And it shouldn't have just followed the link and created a file named sympath
+	TEST_ASSERT( FileIO::FileExists( tmpFollowedDest.Get() ) == false );
+
+	length = readlink( pathCopy.Get(), linkPath.Get(), linkPath.GetReserved() );
+	TEST_ASSERT( length == symlinkTarget2.GetLength() );
+	linkPath.SetLength( length );
+	TEST_ASSERT( linkPath == symlinkTarget2 );
+
+	// Now try copying files around following or not
+	AStackString<> pathSrc( path );
+	pathSrc += ".txt";
+	{
+		FileStream f;
+		TEST_ASSERT( f.Open( pathSrc.Get(), FileStream::WRITE_ONLY ) );
+		AStackString<> testString( "This is a test\nThis is a test\nThis is a test\nThis is a test\nThis is a test\n" );
+		TEST_ASSERT( f.WriteBuffer( testString.Get(), testString.GetLength() ) );
+		f.Close();
+		TEST_ASSERT( FileIO::FileExists( pathSrc.Get() ) );
+	}
+
+	TEST_ASSERT( FileIO::FileCopy( pathSrc.Get(), path2.Get(), FileIO::FOLLOW_SRC_AND_DST, false ) == false );
+	// Even though the link is broken, the copy should fail instead of creating "symlink"
+	TEST_ASSERT( FileIO::FileCopy( pathSrc.Get(), path.Get(), FileIO::FOLLOW_SRC_AND_DST, false ) == false );
+
+	FileIO::FileInfo infoSrc;
+	TEST_ASSERT( FileIO::GetFileInfo( pathSrc, infoSrc ) );
+
+	// This should create the file "/tmp/symlink"
+	TEST_ASSERT( FileIO::FileCopy( pathSrc.Get(), path2.Get(), FileIO::FOLLOW_SRC_AND_DST ) );
+	TEST_ASSERT( FileIO::FileExists( tmpFollowedDest.Get() ) == true );
+	FileIO::FileInfo infoFollowed;
+	TEST_ASSERT( FileIO::GetFileInfo( tmpFollowedDest, infoFollowed ) );
+	TEST_ASSERT( infoSrc.m_Size == infoFollowed.m_Size );
+
+	FileIO::FileInfo info2;
+	TEST_ASSERT( FileIO::GetFileInfo( path2, info2 ) );
+	TEST_ASSERT( infoSrc.m_Size != info2.m_Size );
+
+	// Should copy "/tmp/symlink" to _2
+	TEST_ASSERT( FileIO::FileCopy( path.Get(), path2.Get(), FileIO::FOLLOW_SRC ) );
+	TEST_ASSERT( FileIO::GetFileInfo( pathSrc, infoSrc ) && FileIO::GetFileInfo( path2, info2 ) );
+	TEST_ASSERT( infoSrc.m_Size == info2.m_Size );
+
+	// cleanup
+	VERIFY( FileIO::FileDelete( path.Get() ) );
+	VERIFY( FileIO::FileDelete( path2.Get() ) );
+	VERIFY( FileIO::FileDelete( pathSrc.Get() ) );
+	VERIFY( FileIO::FileDelete( tmpFollowedDest.Get() ) );
+	VERIFY( FileIO::FileDelete( pathCopy.Get() ) );
+#else
+#error Unknown platform
+#endif
 }
 
 // FileMove
