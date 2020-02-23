@@ -449,7 +449,7 @@ Example:
 <div class='code'>.PreprocessorDefinitions = 'DEBUG;MY_LIB_DEFINE;__WINDOWS__;'</div>
 <hr>
       <p><b>IncludeSearchPath</b> - String - (Optional)</p>
-      <p>Include search paths for Intellisense can be manually specified. If the .Target for a configuration is specified, this will be populated automatically by detecting use of /I or -I
+      <p>Include search paths for Intellisense can be manually specified. If the .Target for a configuration is specified, this will be populated automatically by detecting use of /I, -I, -isystem, -isystem-after, /imsvc, -imsvc, -idirafter or -iquote
       in the compiler command line. Manual specification will override the automated detection.</p>
       Example:
 <div class='code'>.IncludeSearchPath = 'Code/Core/;Code/Engine/;'</div>

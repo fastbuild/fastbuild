@@ -412,16 +412,24 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                            Array< AString > & outIncludes,
                                                            bool escapeQuotes )
 {
-    StackArray< AString, 5 > prefixes;
-    prefixes.EmplaceBack( "/I" );
-    prefixes.EmplaceBack( "-I" );
-    prefixes.EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
-    prefixes.EmplaceBack( "-isystem" );
-    prefixes.EmplaceBack( "-iquote" );
+    // Different options add paths to the different groups which are then searched in the order of their priority.
+    // So we need to do multiple passes over arguments to get a list of paths in the correct order.
+    StackArray< StackArray< AString, 2 >, 5 > prefixes;
+    prefixes.SetSize( 5 );
+    prefixes[ 0 ].EmplaceBack( "/I" );
+    prefixes[ 0 ].EmplaceBack( "-I" );
+    prefixes[ 1 ].EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
+    prefixes[ 1 ].EmplaceBack( "-isystem" );
+    prefixes[ 2 ].EmplaceBack( "/imsvc" );
+    prefixes[ 2 ].EmplaceBack( "-imsvc" );
+    prefixes[ 3 ].EmplaceBack( "-idirafter" );
+    prefixes[ 4 ].EmplaceBack( "-iquote" );
 
-    // Extract various kinds of includes
-    const bool keepFullOption = false;
-    ExtractIntellisenseOptions( compilerArgs, prefixes, outIncludes, escapeQuotes, keepFullOption );
+    for ( const auto & group : prefixes )
+    {
+        const bool keepFullOption = false;
+        ExtractIntellisenseOptions( compilerArgs, group, outIncludes, escapeQuotes, keepFullOption );
+    }
 }
 
 // ExtractDefines
@@ -511,6 +519,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                         // use everything after token
                         optionBody.Assign( token.Get() + prefix.GetLength() );
                     }
+                    break;
                 }
             }
         }
