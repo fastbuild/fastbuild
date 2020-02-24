@@ -129,11 +129,7 @@ VSProjectExternalNode::~VSProjectExternalNode() = default;
             #if defined( __WINDOWS__ )
                 if ( m_ProjectTypeGuid.IsEmpty() || m_ProjectConfigs.IsEmpty() )
                 {
-                    if ( !VspteModuleWrapper::Instance()->IsLoaded() )
-                    {
-                        // load the module if not already loaded
-                        VspteModuleWrapper::Instance()->Load();
-                    }
+                    // the wrapper singleton will load the DLL only at the first invocation of the constructor
                     if ( VspteModuleWrapper::Instance()->IsLoaded() )
                     {
                         ExtractedProjData projData;
