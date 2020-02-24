@@ -380,14 +380,14 @@ bool SLNNode::GatherProject( NodeGraph & nodeGraph,
     if ( node == nullptr )
     {
         Error::Error_1104_TargetNotDefined( iter, function, propertyName, projectName );
-        return nullptr;
+        return false;
     }
     if ( ( node->GetType() != Node::VCXPROJECT_NODE ) &&
          ( node->GetType() != Node::VSPROJEXTERNAL_NODE ) )
     {
         // don't know how to handle this type of node
         Error::Error_1005_UnsupportedNodeType( iter, function, propertyName, node->GetName(), node->GetType() );
-        return nullptr;
+        return false;
     }
     VSProjectBaseNode * projectNode = ( node->GetType() == Node::VCXPROJECT_NODE )
                                     ? static_cast< VSProjectBaseNode * >( node->CastTo< VCXProjectNode >() )

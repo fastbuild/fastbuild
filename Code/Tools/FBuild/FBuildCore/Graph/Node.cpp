@@ -613,7 +613,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
          ( m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
          ( m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
     {
-        return nullptr;
+        return false;
     }
 
     // Properties
