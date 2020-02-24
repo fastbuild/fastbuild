@@ -989,10 +989,13 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     args.Tokenize( tokens );
 
     bool ignoreAllDefaultLibs = false;
+    bool isBstatic = false; // true while -Bstatic option is active
     Array< AString > defaultLibsToIgnore( 8, true );
     Array< AString > defaultLibs( 16, true );
     Array< AString > libs( 16, true );
-    Array< AString > dashlLibs( 16, true );
+    Array< AString > dashlDynamicLibs( 16, true );
+    Array< AString > dashlStaticLibs( 16, true );
+    Array< AString > dashlFiles( 16, true );
     Array< AString > libPaths( 16, true );
     Array< AString > envLibPaths( 32, true );
 
@@ -1060,8 +1063,41 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
             }
 
             // -l (lib)
-            if ( GetOtherLibsArg( "l", dashlLibs, it, end, false, msvc ) )
+            AString value;
+            if ( GetOtherLibsArg( "l", value, it, end, false, msvc ) )
             {
+                if ( value.BeginsWith( ':' ) )
+                {
+                    value.Trim( 1, 0 );
+                    dashlFiles.Append( Move( value ) );
+                }
+                else if ( isBstatic )
+                {
+                    dashlStaticLibs.Append( Move( value ) );
+                }
+                else
+                {
+                    dashlDynamicLibs.Append( Move( value ) );
+                }
+                continue;
+            }
+
+            // -Bdynamic (switching -l to looking up dynamic libraries before static libraries)
+            if ( token == "-Wl,-Bdynamic" || token == "-Bdynamic" ||
+                 token == "-Wl,-dy" || token == "-dy" ||
+                 token == "-Wl,-call_shared" || token == "-call_shared" )
+            {
+                isBstatic = false;
+                continue;
+            }
+
+            // -Bstatic (switching -l to looking up static libraries only)
+            if ( token == "-Wl,-Bstatic" || token == "-Bstatic" ||
+                 token == "-Wl,-dn" || token == "-dn" ||
+                 token == "-Wl,-non_shared" || token == "-non_shared" ||
+                 token == "-Wl,-static" ) // -static means something different in GCC, so we don't check for it.
+            {
+                isBstatic = true;
                 continue;
             }
 
@@ -1113,20 +1149,6 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
         }
     }
 
-    if ( !msvc )
-    {
-        // convert -l<name> style libs to lib<name>.a
-        const AString * const endDL = dashlLibs.End();
-        for ( const AString * itDL = dashlLibs.Begin(); itDL != endDL; ++itDL )
-        {
-            AStackString<> libName;
-            libName += "lib";
-            libName += *itDL;
-            libName += ".a";
-            libs.Append( libName );
-        }
-    }
-
     // any remaining default libs are treated the same as libs
     libs.Append( defaultLibs );
 
@@ -1150,21 +1172,9 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
         }
         else
         {
-            // check each libpath
-            const AString * const endP = libPaths.End();
-            for ( const AString * itP = libPaths.Begin(); itP != endP; ++itP )
+            if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, libPaths, *itL ) )
             {
-                if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, *itP, *itL, found ) )
-                {
-                    return false; // GetOtherLibrary will have emitted error
-                }
-
-                if ( found )
-                {
-                    break;
-                }
-
-                // keep searching lib paths...
+                return false; // GetOtherLibrary will have emitted error
             }
         }
 
@@ -1174,6 +1184,67 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
         //  b) User may have filtered some libs for platforms they don't care about (i.e. libs
         //     for PS4 on a PC developer's machine on a cross-platform team)
         // If the file is actually needed, the linker will emit an error during link-time.
+    }
+
+    // Convert -l options to nodes
+    if ( !msvc )
+    {
+        for ( const auto & lib : dashlDynamicLibs )
+        {
+            AStackString<> dynamicLib;
+            dynamicLib += "lib";
+            dynamicLib += lib;
+            dynamicLib += ".so";
+            AStackString<> staticLib;
+            staticLib += "lib";
+            staticLib += lib;
+            staticLib += ".a";
+
+            for ( const auto & path : libPaths )
+            {
+                bool found = false;
+
+                // Try to find dynamic library in this path
+                if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, path, dynamicLib, found ) )
+                {
+                    return false; // GetOtherLibrary will have emitted error
+                }
+                if ( found )
+                {
+                    break;
+                }
+
+                // Try to find static library in this path
+                if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, path, staticLib, found ) )
+                {
+                    return false; // GetOtherLibrary will have emitted error
+                }
+                if ( found )
+                {
+                    break;
+                }
+            }
+        }
+
+        for ( const auto & lib : dashlStaticLibs )
+        {
+            AStackString<> staticLib;
+            staticLib += "lib";
+            staticLib += lib;
+            staticLib += ".a";
+            if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, libPaths, staticLib ) )
+            {
+                return false; // GetOtherLibrary will have emitted error
+            }
+        }
+
+        for ( const auto & fileName : dashlFiles )
+        {
+            if ( !GetOtherLibrary( nodeGraph, iter, function, otherLibraries, libPaths, fileName ) )
+            {
+                return false; // GetOtherLibrary will have emitted error
+            }
+        }
     }
 
     return true;
@@ -1230,11 +1301,34 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     return true; // no error
 }
 
+// GetOtherLibrary
+//------------------------------------------------------------------------------
+/*static*/ bool LinkerNode::GetOtherLibrary( NodeGraph & nodeGraph,
+                                             const BFFToken * iter,
+                                             const Function * function,
+                                             Dependencies & libs,
+                                             const Array< AString > & paths,
+                                             const AString & lib )
+{
+    for ( const auto & path : paths )
+    {
+        bool found = false;
+        if ( !GetOtherLibrary( nodeGraph, iter, function, libs, path, lib, found ) )
+        {
+            return false; // GetOtherLibrary will have emitted error
+        }
+        if ( found )
+        {
+            break;
+        }
+    }
+    return true;
+}
 
 // GetOtherLibsArg
 //------------------------------------------------------------------------------
 /*static*/ bool LinkerNode::GetOtherLibsArg( const char * arg,
-                                             Array< AString > & list,
+                                             AString & value,
                                              const AString * & it,
                                              const AString * const & end,
                                              bool canonicalizePath,
@@ -1278,23 +1372,36 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     }
 
     // eliminate quotes
-    AStackString<> value;
     Args::StripQuotes( valueStart, valueEnd, value );
+
+    if ( canonicalizePath && !value.IsEmpty() )
+    {
+        NodeGraph::CleanPath( value );
+        PathUtils::EnsureTrailingSlash( value );
+    }
+
+    return true; // arg consumed
+}
+
+// GetOtherLibsArg
+//------------------------------------------------------------------------------
+/*static*/ bool LinkerNode::GetOtherLibsArg( const char * arg,
+                                             Array< AString > & list,
+                                             const AString * & it,
+                                             const AString * const & end,
+                                             bool canonicalizePath,
+                                             bool isMSVC )
+{
+    AString value;
+    if ( !GetOtherLibsArg( arg, value, it, end, canonicalizePath, isMSVC ) )
+    {
+        return false; // not our arg, not consumed
+    }
 
     // store if useful
     if ( value.IsEmpty() == false )
     {
-        if ( canonicalizePath )
-        {
-            AStackString<> cleanValue;
-            NodeGraph::CleanPath( value, cleanValue );
-            PathUtils::EnsureTrailingSlash( cleanValue );
-            list.Append( cleanValue );
-        }
-        else
-        {
-            list.Append( value );
-        }
+        list.Append( Move( value ) );
     }
 
     return true; // arg consumed

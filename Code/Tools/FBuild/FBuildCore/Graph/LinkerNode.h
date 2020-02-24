@@ -68,6 +68,13 @@ protected:
 
     static bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc );
     static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const AString & path, const AString & lib, bool & found );
+    static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const Array< AString > & paths, const AString & lib );
+    static bool GetOtherLibsArg( const char * arg,
+                                 AString & value,
+                                 const AString * & it,
+                                 const AString * const & end,
+                                 bool canonicalizePath,
+                                 bool isMSVC );
     static bool GetOtherLibsArg( const char * arg,
                                  Array< AString > & list,
                                  const AString * & it,
