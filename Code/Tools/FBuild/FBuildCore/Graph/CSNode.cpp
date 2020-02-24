@@ -47,7 +47,7 @@ CSNode::CSNode()
 , m_NumCompilerInputFiles( 0 )
 , m_NumCompilerReferences( 0 )
 {
-    m_CompilerInputPattern.Append( AStackString<>( "*.cs" ) );
+    m_CompilerInputPattern.EmplaceBack( "*.cs" );
     m_Type = CS_NODE;
     m_LastBuildTimeMs = 5000; // higher default than a file node
 }
@@ -105,7 +105,7 @@ CSNode::CSNode()
 
     // Store dependencies
     m_StaticDependencies.SetCapacity( 1 + m_CompilerInputPath.GetSize() + m_NumCompilerInputFiles + m_NumCompilerReferences );
-    m_StaticDependencies.Append( Dependency( compilerNode ) );
+    m_StaticDependencies.EmplaceBack( compilerNode );
     m_StaticDependencies.Append( compilerInputPath );
     m_StaticDependencies.Append( compilerInputFiles );
     m_StaticDependencies.Append( compilerReferences );
@@ -151,7 +151,7 @@ CSNode::~CSNode() = default;
                 return false;
             }
 
-            m_DynamicDependencies.Append( Dependency( sn ) );
+            m_DynamicDependencies.EmplaceBack( sn );
         }
         continue;
     }

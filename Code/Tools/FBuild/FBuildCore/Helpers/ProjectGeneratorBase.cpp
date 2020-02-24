@@ -303,7 +303,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     extensions.SetCapacity( sizeof( defaultExtensions ) / sizeof( char * ) );
     for ( auto & ext : defaultExtensions )
     {
-        extensions.Append( AStackString<>( ext ) );
+        extensions.EmplaceBack( ext );
     }
 }
 
@@ -410,11 +410,11 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                            bool escapeQuotes )
 {
     StackArray< AString, 5 > prefixes;
-    prefixes.Append( Move( AString( "/I" ) ) );
-    prefixes.Append( Move( AString( "-I" ) ) );
-    prefixes.Append( Move( AString( "-isystem-after" ) ) ); // NOTE: before -isystem so it's checked first
-    prefixes.Append( Move( AString( "-isystem" ) ) );
-    prefixes.Append( Move( AString( "-iquote" ) ) );
+    prefixes.EmplaceBack( "/I" );
+    prefixes.EmplaceBack( "-I" );
+    prefixes.EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
+    prefixes.EmplaceBack( "-isystem" );
+    prefixes.EmplaceBack( "-iquote" );
 
     // Extract various kinds of includes
     const bool keepFullOption = false;
@@ -428,8 +428,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                       bool escapeQuotes )
 {
     StackArray< AString, 2 > prefixes;
-    prefixes.Append( Move( AString( "/D" ) ) );
-    prefixes.Append( Move( AString( "-D" ) ) );
+    prefixes.EmplaceBack( "/D" );
+    prefixes.EmplaceBack( "-D" );
 
     // Extract various kinds of includes
     const bool keepFullOption = false;
@@ -442,8 +442,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                                 Array< AString > & outOptions )
 {
     StackArray< AString, 2 > prefixes;
-    prefixes.Append( Move( AString( "-std" ) ) );
-    prefixes.Append( Move( AString( "/std" ) ) );
+    prefixes.EmplaceBack( "-std" );
+    prefixes.EmplaceBack( "/std" );
 
     // Extract the options
     const bool escapeQuotes = false;

@@ -176,7 +176,7 @@ void TestCompilationDatabase::DoTest( const char * bffFile, const char * target,
     Dependencies deps;
     Node * node = ng.FindNode( AStackString<>( target ) );
     TEST_ASSERT( node != nullptr );
-    deps.Append( Dependency( node ) );
+    deps.EmplaceBack( node );
 
     CompilationDatabase compdb;
     const AString & actualResult = compdb.Generate( ng, deps );

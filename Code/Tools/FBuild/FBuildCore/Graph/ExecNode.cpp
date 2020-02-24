@@ -54,7 +54,7 @@ ExecNode::ExecNode()
 {
     m_Type = EXEC_NODE;
 
-    m_ExecInputPattern.Append( AStackString<>( "*.*" ) );
+    m_ExecInputPattern.EmplaceBack( "*.*" );
 }
 
 // Initialize
@@ -148,7 +148,7 @@ ExecNode::~ExecNode() = default;
                 return false;
             }
 
-            m_DynamicDependencies.Append( Dependency( sn ) );
+            m_DynamicDependencies.EmplaceBack( sn );
         }
     }
 

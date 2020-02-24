@@ -166,7 +166,7 @@ SLNNode::SLNNode()
         else
         {
             // Add new entry
-            collapsedFolders.Append( SolutionFolder( folder ) );
+            collapsedFolders.EmplaceBack( folder );
         }
     }
     m_SolutionFolders.Swap( collapsedFolders );
@@ -253,7 +253,7 @@ SLNNode::SLNNode()
     m_StaticDependencies.SetCapacity( projects.GetSize() );
     for ( VSProjectBaseNode * project : projects )
     {
-        m_StaticDependencies.Append( Dependency( project ) );
+        m_StaticDependencies.EmplaceBack( project );
     }
 
     return true;

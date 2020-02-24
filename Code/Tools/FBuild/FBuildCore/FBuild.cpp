@@ -252,7 +252,7 @@ bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDep
 
             return false;
         }
-        outDeps.Append( Dependency( node ) );
+        outDeps.EmplaceBack( node );
     }
 
     return true;
@@ -558,8 +558,7 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
     }
 
     // import new variable name with its hash value
-    const EnvironmentVarAndHash var( name, hash );
-    m_ImportedEnvironmentVars.Append( var );
+    m_ImportedEnvironmentVars.EmplaceBack( name, hash );
 
     return true;
 }
