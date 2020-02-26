@@ -31,6 +31,7 @@
 
             // Extra Compiler Options
             .CompilerOptions            + .LZ4IncludePaths
+            .CompilerOptions            + ' "-I../External/VSProjTypeExtractor"'
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'

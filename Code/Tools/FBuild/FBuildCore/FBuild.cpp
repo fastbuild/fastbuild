@@ -777,6 +777,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
             case Node::COMPILER_NODE:       break;
             case Node::DLL_NODE:            break;
             case Node::VCXPROJECT_NODE:     break;
+            case Node::VSPROJEXTERNAL_NODE: break;
             case Node::OBJECT_LIST_NODE:    displayName = true; hidden = node->IsHidden(); break;
             case Node::COPY_DIR_NODE:       break;
             case Node::SLN_NODE:            break;

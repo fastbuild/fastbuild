@@ -29,7 +29,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/VSProjectBaseNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
@@ -80,6 +80,7 @@
     "RemoveDir",
     "XCodeProj",
     "Settings",
+    "VSExtProj",
 };
 static Mutex g_NodeEnvStringMutex;
 /*static*/ const Tags Node::s_EmptyRequirementTags;
@@ -422,6 +423,7 @@ void Node::SetLastBuildTime( uint32_t ms )
         case Node::COMPILER_NODE:       return nodeGraph.CreateCompilerNode( name );
         case Node::DLL_NODE:            return nodeGraph.CreateDLLNode( name );
         case Node::VCXPROJECT_NODE:     return nodeGraph.CreateVCXProjectNode( name );
+        case Node::VSPROJEXTERNAL_NODE: return nodeGraph.CreateVSProjectExternalNode( name );
         case Node::OBJECT_LIST_NODE:    return nodeGraph.CreateObjectListNode( name );
         case Node::COPY_DIR_NODE:       return nodeGraph.CreateCopyDirNode( name );
         case Node::SLN_NODE:            return nodeGraph.CreateSLNNode( name );
@@ -700,7 +702,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
          ( m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
          ( m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
     {
-        return nullptr;
+        return false;
     }
 
     // Properties
@@ -1120,6 +1122,12 @@ void Node::ReplaceDummyName( const AString & newName )
     // Only try to fixup "line" errors and not other errors like:
     // - warning 65 in function "Blah": var <x> was never used
     if ( tokens[ 3 ] != "line" )
+    {
+        return;
+    }
+    // Ignore warnings from the underlying assembler such as:
+    // - warning 2006 in line 307: bad extension - using default
+    if ( tokens[5] != "of" )
     {
         return;
     }

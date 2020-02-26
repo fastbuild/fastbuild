@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="x64-Debug|x64">
+      <Configuration>x64-Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="x64-Analyze|x64">
+      <Configuration>x64-Analyze</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="x64-Profile|x64">
+      <Configuration>x64-Profile</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="x64-Release|x64">
+      <Configuration>x64-Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="x64Clang-Debug|x64">
+      <Configuration>x64Clang-Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="x64Clang-Profile|x64">
+      <Configuration>x64Clang-Profile</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="x64Clang-Release|x64">
+      <Configuration>x64Clang-Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\..\Code\Core\Containers\Array.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Containers\AutoPtr.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Containers\Forward.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Containers\Move.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Containers\Singleton.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Containers\Sort.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Core.bff" />
+    <CustomBuild Include="..\..\..\Code\Core\Core.natvis" />
+    <CustomBuild Include="..\..\..\Code\Core\Env\Assert.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Env\Assert.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Env\Env.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Env\Env.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Env\ErrorFormat.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Env\ErrorFormat.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Env\glibc_compat.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Env\MSVCStaticAnalysis.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Env\Types.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Env\WindowsHeader.h" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\ConstMemoryStream.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\ConstMemoryStream.h" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\FileIO.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\FileIO.h" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\FileStream.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\FileStream.h" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\IOStream.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\IOStream.h" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\MemoryStream.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\MemoryStream.h" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\PathUtils.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\FileIO\PathUtils.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Math\Constants.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Math\Conversions.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Math\CRC32.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Math\CRC32.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Math\Random.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Math\Random.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Math\Trig.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Math\xxHash.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Mem\Mem.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Mem\Mem.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Mem\MemDebug.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Mem\MemDebug.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Mem\MemPoolBlock.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Mem\MemPoolBlock.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Mem\MemTracker.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Mem\MemTracker.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Mem\SmallBlockAllocator.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Mem\SmallBlockAllocator.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Network\Network.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Network\Network.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Network\NetworkStartupHelper.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Network\NetworkStartupHelper.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Network\TCPConnectionPool.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Network\TCPConnectionPool.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\Atomic.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\Mutex.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\Mutex.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\Process.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\Process.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\Semaphore.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\Semaphore.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\SharedMemory.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\SharedMemory.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\SystemMutex.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\SystemMutex.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\Thread.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Process\Thread.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Profile\Profile.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Profile\ProfileManager.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Profile\ProfileManager.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\Meta_File.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\Meta_File.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\Meta_Hidden.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\Meta_Hidden.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\Meta_Optional.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\Meta_Optional.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\Meta_Path.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\Meta_Path.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\Meta_Range.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\Meta_Range.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\MetaData.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\MetaData.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\MetaData\MetaDataInterface.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\Object.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\Object.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\PropertyType.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\ReflectedProperty.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\ReflectedProperty.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\ReflectionInfo.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\ReflectionInfo.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\ReflectionIter.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\ReflectionIter.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\ReflectionMacros.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\ReflectionSettings.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\Struct.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Reflection\Struct.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Strings\AStackString.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Strings\AString.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Strings\AString.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Strings\LevenshteinDistance.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Strings\LevenshteinDistance.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Time\Time.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Time\Time.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Time\Timer.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Time\Timer.h" />
+    <CustomBuild Include="..\..\..\Code\Core\Tracing\Tracing.cpp" />
+    <CustomBuild Include="..\..\..\Code\Core\Tracing\Tracing.h" />
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <Keyword>MakeFileProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64-Debug|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64-Analyze|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64-Profile|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64-Release|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64Clang-Debug|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64Clang-Profile|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64Clang-Release|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='x64-Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='x64-Analyze|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='x64-Profile|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='x64-Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='x64Clang-Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='x64Clang-Profile|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='x64Clang-Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64-Debug|x64'">
+    <NMakeBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache $(ProjectName)-$(Configuration)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean $(ProjectName)-$(Configuration)</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WIN32;_WIN32;__WINDOWS__;WIN64;DEBUG;PROFILING_ENABLED;</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>..\..\..\Code\;..\..\..\External\SDK\VisualStudio\2019\Community\VC\Tools\MSVC\14.22.27905\include\;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\ucrt;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\um;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\shared;</NMakeIncludeSearchPath>
+    <AdditionalOptions>/std:c++17 </AdditionalOptions>
+    <IntDir>$(SolutionDir)\Temp</IntDir>
+    <OutDir>$(SolutionDir)\Temp</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64-Analyze|x64'">
+    <NMakeBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache $(ProjectName)-$(Configuration)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean $(ProjectName)-$(Configuration)</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WIN32;_WIN32;__WINDOWS__;WIN64;DEBUG;PROFILING_ENABLED;ANALYZE;</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>..\..\..\Code\;..\..\..\External\SDK\VisualStudio\2019\Community\VC\Tools\MSVC\14.22.27905\include\;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\ucrt;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\um;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\shared;</NMakeIncludeSearchPath>
+    <AdditionalOptions>/std:c++17 </AdditionalOptions>
+    <IntDir>$(SolutionDir)\Temp</IntDir>
+    <OutDir>$(SolutionDir)\Temp</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64-Profile|x64'">
+    <NMakeBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache $(ProjectName)-$(Configuration)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean $(ProjectName)-$(Configuration)</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WIN32;_WIN32;__WINDOWS__;WIN64;RELEASE;PROFILING_ENABLED;</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>..\..\..\Code\;..\..\..\External\SDK\VisualStudio\2019\Community\VC\Tools\MSVC\14.22.27905\include\;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\ucrt;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\um;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\shared;</NMakeIncludeSearchPath>
+    <AdditionalOptions>/std:c++17 </AdditionalOptions>
+    <IntDir>$(SolutionDir)\Temp</IntDir>
+    <OutDir>$(SolutionDir)\Temp</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64-Release|x64'">
+    <NMakeBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache $(ProjectName)-$(Configuration)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean $(ProjectName)-$(Configuration)</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WIN32;_WIN32;__WINDOWS__;WIN64;RELEASE;</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>..\..\..\Code\;..\..\..\External\SDK\VisualStudio\2019\Community\VC\Tools\MSVC\14.22.27905\include\;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\ucrt;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\um;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\shared;</NMakeIncludeSearchPath>
+    <AdditionalOptions>/std:c++17 </AdditionalOptions>
+    <IntDir>$(SolutionDir)\Temp</IntDir>
+    <OutDir>$(SolutionDir)\Temp</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64Clang-Debug|x64'">
+    <NMakeBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache $(ProjectName)-$(Configuration)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean $(ProjectName)-$(Configuration)</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WIN32;_WIN32;__WINDOWS__;WIN64;DEBUG;PROFILING_ENABLED;</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>..\..\..\Code\;..\..\..\External\SDK\VisualStudio\2019\Community\VC\Tools\MSVC\14.22.27905\include\;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\ucrt;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\um;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\shared;</NMakeIncludeSearchPath>
+    <AdditionalOptions>/std:c++17 </AdditionalOptions>
+    <IntDir>$(SolutionDir)\Temp</IntDir>
+    <OutDir>$(SolutionDir)\Temp</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64Clang-Profile|x64'">
+    <NMakeBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache $(ProjectName)-$(Configuration)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean $(ProjectName)-$(Configuration)</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WIN32;_WIN32;__WINDOWS__;WIN64;RELEASE;PROFILING_ENABLED;</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>..\..\..\Code\;..\..\..\External\SDK\VisualStudio\2019\Community\VC\Tools\MSVC\14.22.27905\include\;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\ucrt;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\um;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\shared;</NMakeIncludeSearchPath>
+    <AdditionalOptions>/std:c++17 </AdditionalOptions>
+    <IntDir>$(SolutionDir)\Temp</IntDir>
+    <OutDir>$(SolutionDir)\Temp</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x64Clang-Release|x64'">
+    <NMakeBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache $(ProjectName)-$(Configuration)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd $(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -fastcancel -cache -clean $(ProjectName)-$(Configuration)</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WIN32;_WIN32;__WINDOWS__;WIN64;RELEASE;</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>..\..\..\Code\;..\..\..\External\SDK\VisualStudio\2019\Community\VC\Tools\MSVC\14.22.27905\include\;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\ucrt;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\um;..\..\..\External\SDK\Windows\10\Include\10.0.17763.0\shared;</NMakeIncludeSearchPath>
+    <AdditionalOptions>/std:c++17 </AdditionalOptions>
+    <IntDir>$(SolutionDir)\Temp</IntDir>
+    <OutDir>$(SolutionDir)\Temp</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x64-Debug|x64'">
+    <BuildLog>
+    <Path>$(SolutionDir)\Temp\$(ProjectName)-$(Configuration).log</Path>
+    </BuildLog>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x64-Analyze|x64'">
+    <BuildLog>
+    <Path>$(SolutionDir)\Temp\$(ProjectName)-$(Configuration).log</Path>
+    </BuildLog>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x64-Profile|x64'">
+    <BuildLog>
+    <Path>$(SolutionDir)\Temp\$(ProjectName)-$(Configuration).log</Path>
+    </BuildLog>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x64-Release|x64'">
+    <BuildLog>
+    <Path>$(SolutionDir)\Temp\$(ProjectName)-$(Configuration).log</Path>
+    </BuildLog>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x64Clang-Debug|x64'">
+    <BuildLog>
+    <Path>$(SolutionDir)\Temp\$(ProjectName)-$(Configuration).log</Path>
+    </BuildLog>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x64Clang-Profile|x64'">
+    <BuildLog>
+    <Path>$(SolutionDir)\Temp\$(ProjectName)-$(Configuration).log</Path>
+    </BuildLog>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x64Clang-Release|x64'">
+    <BuildLog>
+    <Path>$(SolutionDir)\Temp\$(ProjectName)-$(Configuration).log</Path>
+    </BuildLog>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <Import Condition="'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets')" Project="$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets" />
+  <Import Condition="'$(ConfigurationType)' == 'Makefile' and '$(AndroidAPILevel)' != '' and Exists('$(VCTargetsPath)\Application Type\$(ApplicationType)\$(ApplicationTypeRevision)\Android.Common.targets')" Project="$(VCTargetsPath)\Application Type\$(ApplicationType)\$(ApplicationTypeRevision)\Android.Common.targets" />
+</Project>

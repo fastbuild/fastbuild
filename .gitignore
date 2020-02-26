@@ -7,8 +7,6 @@
 *.sdf
 *.suo
 *.user
-*.vcxproj
-*.vcxproj.filters
 tmp/
 ftmp/
 bin/

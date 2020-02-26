@@ -478,6 +478,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor(
         }
     }
 
+    // Do Clang unity fixup if needed
+    if ( GetFlag( FLAG_UNITY ) && IsClang() && GetCompiler()->IsClangUnityFixupEnabled() )
+    {
+        DoClangUnityFixup( job );
+    }
+
     // calculate the cache entry lookup
     if ( useCache )
     {
@@ -2917,6 +2923,108 @@ bool ObjectNode::GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) cons
     mem[ memSize ] = 0; // null terminate text buffer for parsing convenience
 
     return true;
+}
+
+// DoClangUnityFixup
+//------------------------------------------------------------------------------
+void ObjectNode::DoClangUnityFixup( Job * job ) const
+{
+    // Fixup preprocessed output so static analysis works well with Unity
+    //
+    // Static analysis only analyzes the "topmost" file, which in Unity is the
+    // Unity.cpp which contains no code. The compiler know which file is the topmost
+    // file by checking the directives left by the preprocessor, as described here:
+    //  - https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
+    //
+    // Be removing the "push" flags the preprocesser adds (1) when leaving the main cpp
+    // file and entering an inluded file only for the Unity, the compiler thinks
+    // the included files are the top-level files and applies analysis the same way
+    // as when they are built outside of Unity.
+    //
+    // We remove the "pop" flags (2) when returning to the unity as these must match the
+    // "pop"s
+    //
+    // We do this fixup even if not using -Xanalyze, so that:
+    // a) the behaviour is consistent, avoiding any problems that might show up only
+    //    with static analysis
+    // b) this behaviour may be useful for other types of warnings for similar reasons
+    //    (i.e. if Clang suppresses then because it thinks a file is not the "main" file)
+    //
+
+    // Sanity checks
+    ASSERT( IsClang() ); // Only necessary for Clang
+    ASSERT( GetFlag( FLAG_UNITY ) ); // Only makes sense to for Unity
+    ASSERT( job->IsDataCompressed() == false ); // Can't fixup compressed data
+
+    // We'll walk the output and fix it up in-place
+
+    AStackString<> srcFileName( GetSourceFile()->GetName() );
+    #if defined( __WINDOWS__ )
+        // Clang escapes backslashes, so we must do the same
+        srcFileName.Replace( "\\", "\\\\" );
+    #endif
+
+    // Build the string used to find "pop" directives when returning to this file
+    AStackString<> popDirectiveString;
+    popDirectiveString = " \"";
+    popDirectiveString += srcFileName;
+    popDirectiveString += "\" 2"; // 2 is "pop" flag
+
+    // Find the first instance of the primary filename (this ensured we ignore any
+    // injected "-include" stuff before that)
+    char * pos = strstr( (char *)job->GetData(), srcFileName.Get() );
+    ASSERT( pos );
+
+    // Find top-level push/pop pairs. We don't want mess with nested directives
+    // as these can be meaningful in other ways.
+    while ( pos )
+    {
+        // Searching for a "push" directive (i.e. leaving the unity file and pushing
+        // a file included by the Unity cpp)
+        pos = strstr( pos, "\n# 1 \"" );
+        if ( pos == nullptr )
+        {
+            return; // no more
+        }
+        pos += 6; // skip to string inside quotes
+
+        // Ignore special directives like <built-in>
+        if ( *pos == '<' )
+        {
+            continue; // Keep searching
+        }
+
+        // Find closing quote
+        pos = strchr( pos, '"' );
+        if ( pos == nullptr )
+        {
+            ASSERT( false ); // Unexpected/malformed
+            return;
+        }
+
+        // Found it?
+        if ( AString::StrNCmp( pos, "\" 1", 3 ) != 0 ) // Note: '1' flag for "push"
+        {
+            continue; // Keep searching
+        }
+
+        // Patch out "push" flag in-place
+        pos[ 2 ] = ' ';
+        pos += 3; // Skip closing quote, space and flag
+
+        // Find "pop" directive that returns us to the Unity file
+        char * popDirective = strstr( pos, popDirectiveString.Get() );
+        if ( popDirective == nullptr )
+        {
+            ASSERT( false ); // Unexpected/malformed
+            return;
+        }
+
+        // Pathc out "pop" flag to match the "push"
+        pos = ( popDirective + popDirectiveString.GetLength() - 1 );
+        ASSERT( *pos == '2' );
+        *pos = ' ';
+    }
 }
 
 //------------------------------------------------------------------------------

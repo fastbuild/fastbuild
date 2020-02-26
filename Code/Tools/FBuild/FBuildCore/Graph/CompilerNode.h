@@ -34,6 +34,7 @@ public:
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
     #endif
     inline bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
+    inline bool IsClangUnityFixupEnabled() const { return ( m_ClangFixupUnity_Disable == false ); }
 
     enum CompilerFamily : uint8_t
     {
@@ -63,20 +64,21 @@ private:
     virtual void Migrate( const Node & oldNode ) override;
 
     // Exposed params
-    AString          m_Executable;
-    Array< AString > m_ExtraFiles;
-    Array< AString > m_CustomEnvironmentVariables;
-    bool             m_AllowDistribution;
-    bool             m_VS2012EnumBugFix;
-    bool             m_ClangRewriteIncludes;
-    AString          m_ExecutableRootPath;
-    AString          m_CompilerFamilyString;
-    uint8_t          m_CompilerFamilyEnum;
-    bool             m_SimpleDistributionMode;
-    bool             m_UseLightCache;
-    ToolManifest     m_Manifest;
-    Array< AString > m_Environment;
-    Array< AString > m_RequiredWorkerTagStrings;
+    AString                 m_Executable;
+    Array< AString >        m_ExtraFiles;
+    Array< AString >        m_CustomEnvironmentVariables;
+    bool                    m_AllowDistribution;
+    bool                    m_VS2012EnumBugFix;
+    bool                    m_ClangRewriteIncludes;
+    bool                    m_ClangFixupUnity_Disable; // Temp flag to disable in case there are problems
+    AString                 m_ExecutableRootPath;
+    AString                 m_CompilerFamilyString;
+    uint8_t                 m_CompilerFamilyEnum;
+    bool                    m_SimpleDistributionMode;
+    bool                    m_UseLightCache;
+    ToolManifest            m_Manifest;
+    Array< AString >        m_Environment;
+    Array< AString >        m_RequiredWorkerTagStrings;
 
     // Internal state
     mutable const char *    m_EnvironmentString;

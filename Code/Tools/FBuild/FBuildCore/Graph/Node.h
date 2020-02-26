@@ -42,6 +42,9 @@ class NodeGraph;
 #define REFLECT_NODE_BEGIN( nodeName, baseNodeName, metaData )          \
     REFLECT_STRUCT_BEGIN( nodeName, baseNodeName, metaData )
 
+#define REFLECT_NODE_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData ) \
+    REFLECT_STRUCT_BEGIN_ABSTRACT( nodeName, baseNodeName, metaData )
+
 // FBuild
 //------------------------------------------------------------------------------
 class Node : public Struct
@@ -76,6 +79,7 @@ public:
         REMOVE_DIR_NODE     = 18,
         XCODEPROJECT_NODE   = 19,
         SETTINGS_NODE       = 20,
+        VSPROJEXTERNAL_NODE = 21,
         // Make sure you update 's_NodeTypeNames' in the cpp
         NUM_NODE_TYPES      // leave this last
     };
