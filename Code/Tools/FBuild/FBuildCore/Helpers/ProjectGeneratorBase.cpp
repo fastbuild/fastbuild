@@ -8,6 +8,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/AliasNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/CopyFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ExeNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/DLLNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
@@ -377,6 +378,10 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                 }
                 break; // Nothing aliased - ignore
             }
+            case Node::COPY_FILE_NODE:
+            {
+                return FindTargetForIntellisenseInfo( node->CastTo< CopyFileNode >()->GetSourceNode() );
+            }
             default: break; // Unsupported type - ignore
         }
     }
@@ -398,21 +403,66 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     return nullptr;
 }
 
+// ExtractIncludePaths
+//------------------------------------------------------------------------------
+/*static*/ void ProjectGeneratorBase::ExtractIncludePaths( const AString & compilerArgs,
+                                                           Array< AString > & outIncludes,
+                                                           bool escapeQuotes )
+{
+    StackArray< AString, 5 > prefixes;
+    prefixes.Append( Move( AString( "/I" ) ) );
+    prefixes.Append( Move( AString( "-I" ) ) );
+    prefixes.Append( Move( AString( "-isystem-after" ) ) ); // NOTE: before -isystem so it's checked first
+    prefixes.Append( Move( AString( "-isystem" ) ) );
+    prefixes.Append( Move( AString( "-iquote" ) ) );
+
+    // Extract various kinds of includes
+    const bool keepFullOption = false;
+    ExtractIntellisenseOptions( compilerArgs, prefixes, outIncludes, escapeQuotes, keepFullOption );
+}
+
+// ExtractDefines
+//------------------------------------------------------------------------------
+/*static*/ void ProjectGeneratorBase::ExtractDefines( const AString & compilerArgs,
+                                                      Array< AString > & outDefines,
+                                                      bool escapeQuotes )
+{
+    StackArray< AString, 2 > prefixes;
+    prefixes.Append( Move( AString( "/D" ) ) );
+    prefixes.Append( Move( AString( "-D" ) ) );
+
+    // Extract various kinds of includes
+    const bool keepFullOption = false;
+    ExtractIntellisenseOptions( compilerArgs, prefixes, outDefines, escapeQuotes, keepFullOption );
+}
+
+// ExtractAdditionalOptions
+//------------------------------------------------------------------------------
+/*static*/ void ProjectGeneratorBase::ExtractAdditionalOptions( const AString & compilerArgs,
+                                                                Array< AString > & outOptions )
+{
+    StackArray< AString, 2 > prefixes;
+    prefixes.Append( Move( AString( "-std" ) ) );
+    prefixes.Append( Move( AString( "/std" ) ) );
+
+    // Extract the options
+    const bool escapeQuotes = false;
+    const bool keepFullOption = true;
+    ExtractIntellisenseOptions( compilerArgs, prefixes, outOptions, escapeQuotes, keepFullOption );
+}
+
 // ExtractIntellisenseOptions
 //------------------------------------------------------------------------------
 /*static*/ void ProjectGeneratorBase::ExtractIntellisenseOptions( const AString & compilerArgs,
-                                                                  const char * option,
-                                                                  const char * alternateOption,
+                                                                  const Array< AString > & prefixes,
                                                                   Array< AString > & outOptions,
                                                                   bool escapeQuotes,
                                                                   bool keepFullOption )
 {
-    ASSERT( option );
+    ASSERT( prefixes.IsEmpty() == false );
+
     Array< AString > tokens;
     compilerArgs.Tokenize( tokens );
-
-    const size_t optionLen = AString::StrLen( option );
-    const size_t alternateOptionLen = alternateOption ? AString::StrLen( alternateOption ) : 0;
 
     for ( size_t i=0; i<tokens.GetSize(); ++i )
     {
@@ -427,39 +477,38 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
         AStackString<> optionBody;
 
         // Handle space between option and payload
-        if ( ( token == option ) || ( token == alternateOption ) )
+        for ( const AString & prefix : prefixes )
         {
-            // Handle an incomplete token at the end of list
-            if ( i == ( tokens.GetSize() - 1 ) )
+            if ( token == prefix )
             {
+                // Handle an incomplete token at the end of list
+                if ( i == (tokens.GetSize() - 1) )
+                {
+                    return;
+                }
+
+                // Use next token
+                optionBody = tokens[ i + 1 ];
                 break;
             }
+        }
 
-            // Use next token
-            optionBody = tokens[ i + 1 ];
-        }
-        else if ( token.BeginsWith( option ) )
+        if ( optionBody.IsEmpty() )
         {
-            if ( keepFullOption )
+            for ( const AString & prefix : prefixes )
             {
-                optionBody = token;
-            }
-            else
-            {
-                // use everything after token
-                optionBody.Assign( token.Get() + optionLen );
-            }
-        }
-        else if ( alternateOption && token.BeginsWith( alternateOption ) )
-        {
-            if ( keepFullOption )
-            {
-                optionBody = token;
-            }
-            else
-            {
-                // use everything after token
-                optionBody.Assign( token.Get() + alternateOptionLen );
+                if ( token.BeginsWith( prefix ) )
+                {
+                    if ( keepFullOption )
+                    {
+                        optionBody = token;
+                    }
+                    else
+                    {
+                        // use everything after token
+                        optionBody.Assign( token.Get() + prefix.GetLength() );
+                    }
+                }
             }
         }
 

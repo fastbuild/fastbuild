@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 class VSProjectConfig;
 class VSProjectFileType;
+class VSProjectImport;
 
 // VSProjectFilePair
 //------------------------------------------------------------------------------
@@ -44,7 +45,9 @@ public:
 
     const AString & GenerateVCXProj( const AString & projectFile,
                                      const Array< VSProjectConfig > & configs,
-                                     const Array< VSProjectFileType > & fileTypes );
+                                     const Array< VSProjectFileType > & fileTypes,
+                                     const Array< VSProjectImport > & projectImports );
+
     const AString & GenerateVCXProjFilters( const AString & projectFile );
 
     static void FormatDeterministicProjectGUID( AString & guid, const AString & projectName );

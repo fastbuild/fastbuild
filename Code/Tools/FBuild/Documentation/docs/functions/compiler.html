@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <link href="../style.css" rel="stylesheet" type="text/css">
 
-<html>
+<html lang="en-US">
 <head>
+<meta charset="utf-8">
 <link rel="shortcut icon" href="../../favicon.ico">
 <title>FASTBuild - Function Reference - Compiler</title>
 </head>
@@ -47,7 +48,10 @@ distribution, caching and more.
   .ClangRewriteIncludes         // (optional) Use Clang's -frewrite-includes option when preprocessing (default: true)
   .VS2012EnumBugFix             // (optional) Enable work-around for bug in VS2012 compiler (default: false)
   .Environment                  // (optional) Environment variables to use for local build
+  
+  // Temporary Options
   .UseLightCache_Experimental   // (optional) Enabled experimental "light" caching mode (default: false)
+  .ClangFixupUnity_Disable      // (optional) Disable preprocessor fixup for Unity files (default: false)
 }
 </div>
     </div>
@@ -216,20 +220,6 @@ This results in very unintuitive compile errors.</p>
 	<p>When set, overrides the environment for local compiles</p>
    <p>This allows you to have a different environment per compiler</p>
 
-  	<p><hr></p>
-
-	<p><b>.UseLightCache_Experimental</b> - Boolean - (Optional)</p>
-    <p>When set, activates "Light Caching" mode. Light Caching mode avoids using the compiler's
-    preprocessor for cache lookups, instead allowing FASTBuild to parse the files itself to gather the
-    required information. This parsing is significantly faster than for each file and additionally allows
-    FASTBuild to eliminate redundant file parsing between object files, further accelerating cache lookups.
-    <p><font color=red>NOTE:</font>This feature should be used with caution. While there are no known issues (it self disables
-    when know to not work - see other notes) it should be considered experimental.</p>
-    <p><font color=red>NOTE:</font>For now, Light Caching can only be used with the MSVC compiler. Support will be extended
-    to other compilers in future versions.</p>
-    <p><font color=red>NOTE:</font> Light Caching does not support macros using for include paths (i.e. "#include MY_INCLUDE_HEADER")
-    Support for this will be added in future versions.</p>
-
 </div>
 
 
@@ -349,6 +339,36 @@ Compiler( 'Compiler-x64Intel' )
 }</div>
 </div>
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+<!-- 
+	Temporary Options
+-->	
+<div id='alias' class='newsitemheader'>Temporary Options</div>
+
+<div class='newsitembody'>
+	<p><b>.UseLightCache_Experimental</b> - Boolean - (Optional)</p>
+    <p>When set, activates "Light Caching" mode. Light Caching mode avoids using the compiler's
+    preprocessor for cache lookups, instead allowing FASTBuild to parse the files itself to gather the
+    required information. This parsing is significantly faster than for each file and additionally allows
+    FASTBuild to eliminate redundant file parsing between object files, further accelerating cache lookups.
+    <p><font color=red>NOTE:</font> This feature should be used with caution. While there are no known issues (it self disables
+    when known to not work - see other notes) it should be considered experimental.</p>
+    <p><font color=red>NOTE:</font> For now, Light Caching can only be used with the MSVC compiler. Support will be extended
+    to other compilers in future versions.</p>
+    <p><font color=red>NOTE:</font> Light Caching does not support macros using for include paths (i.e. "#include MY_INCLUDE_HEADER")
+    Support for this will be added in future versions.</p>
+
+  	<p><hr></p>
+
+	<p><b>.ClangFixupUnity_Disable</b> - Boolean - (Optional)</p>
+	<p>Disable preprocessor fixup for Unity files (default: false).</p> 
+	<p>When compiling Unity files with Clang, FASTBuild will modify the preprocessed output so that
+	the files included by the Unity are considered to be the top level file(s), instead of the Unity file. This
+	makes Clang's warning behavior (particularly for static analysis) consistent between Unity and non-Unity
+	compilation.</p>
+	<p>This temporary option disables this behavior and is provided as a safety mechanism incase there are
+	unforseen problems with this feature. This toggle is expected to be removed in v1.01.</p>
+</div>
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

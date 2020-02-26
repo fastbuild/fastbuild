@@ -38,6 +38,8 @@ private:
     void TestExcludedFiles() const;
     void IsolateFromUnity_Regression() const;
     void UnityInputIsolatedFiles() const;
+    void ClangStaticAnalysis() const;
+    void ClangStaticAnalysis_InjectHeader() const;
 };
 
 // Register Tests
@@ -53,6 +55,8 @@ REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
     REGISTER_TEST( IsolateFromUnity_Regression )
     REGISTER_TEST( UnityInputIsolatedFiles )
+    REGISTER_TEST( ClangStaticAnalysis )
+    REGISTER_TEST( ClangStaticAnalysis_InjectHeader )
 REGISTER_TESTS_END
 
 // BuildGenerate
@@ -352,4 +356,41 @@ void TestUnity::UnityInputIsolatedFiles() const
     CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
 }
 
+// ClangStaticAnalysis
+//------------------------------------------------------------------------------
+void TestUnity::ClangStaticAnalysis() const
+{
+    //
+    // Ensure that use of Unity doesn't suppress static analysis warnings with Clang
+    //
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/fbuild.bff";
+    //options.m_NoUnity = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "Compile" ) ); // Success, regardless of warnings
+
+    // Check that the various problems we expect to find are found
+    TEST_ASSERT( GetRecordedOutput().Find( "Division by zero" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "Address of stack memory" ) );
+}
+
+// ClangStaticAnalysis_InjectHeader
+//------------------------------------------------------------------------------
+void TestUnity::ClangStaticAnalysis_InjectHeader() const
+{
+    //
+    // Ensure headers injected with -include don't prevent fixup from working
+    //
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/ClangStaticAnalysis/fbuild.bff";
+    //options.m_NoUnity = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "Compile-InjectHeader" ) ); // Success, regardless of warnings
+
+    // Check that the various problems we expect to find are found
+    TEST_ASSERT( GetRecordedOutput().Find( "Division by zero" ) );
+    TEST_ASSERT( GetRecordedOutput().Find( "Address of stack memory" ) );
+}
 //------------------------------------------------------------------------------

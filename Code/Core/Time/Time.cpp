@@ -39,4 +39,14 @@ uint64_t Time::GetCurrentFileTime()
     #endif
 }
 
+// FileTimeToSeconds
+//------------------------------------------------------------------------------
+uint64_t Time::FileTimeToSeconds( uint64_t filetime )
+{
+    #if defined( __WINDOWS__ )
+        return ( filetime / 10000000U );
+    #else
+        return ( filetime / 1000000000ULL );
+    #endif
+}
 //------------------------------------------------------------------------------

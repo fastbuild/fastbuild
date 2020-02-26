@@ -70,12 +70,10 @@ Compiler( 'Compiler-Clang8' )
 
     // Librarian
     .Librarian                      = '$Clang8_BasePath$\bin\llvm-ar.exe'
-    .Librarian                      = 'c:\Windows\System32\cmd.exe'
     .LibrarianOptions               = '/c echo %1 > %2' // 'rc "%2" "%1"' // NOTE: output must come first
 
     // Linker
     .Linker                         = '$Clang8_BasePath$\bin\lld-link.exe'
-    .Linker                         = 'c:\Windows\System32\cmd.exe'
     .LinkerOptions                  = '/NODEFAULTLIB /WX /NOLOGO /INCREMENTAL:NO /OUT:"%2" "%1" /DEBUG'
                                     + .VSLibPaths
 

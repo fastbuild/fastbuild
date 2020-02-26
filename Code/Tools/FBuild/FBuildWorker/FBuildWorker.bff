@@ -14,14 +14,28 @@
 
         // Windows Resources
         //--------------------------------------------------------------------------
-        ObjectList( '$ProjectName$-Res-$Platform$-$BuildConfigName$' )
-        {
-            .Compiler                   = 'ResourceCompiler'
-            .CompilerOutputExtension    = '.res'
-            .CompilerOptions            = '/nologo /fo"%2" "%1"'
-            .CompilerInputFiles         = 'Tools/FBuild/FBuildWorker/MainWindowResource.rc'
-            .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
-        }
+        #if __WINDOWS__
+            ObjectList( '$ProjectName$-Res-$Platform$-$BuildConfigName$' )
+            {
+                .Compiler                   = 'ResourceCompiler'
+                .CompilerOutputExtension    = '.res'
+                .CompilerOptions            = '/nologo /fo"%2" "%1"'
+                .CompilerInputFiles         = 'Tools/FBuild/FBuildWorker/MainWindowResource.rc'
+                .CompilerOutputPath         = '$OutputBase$/$ProjectName$/'
+            }
+        #endif
+
+        // OSX Resources
+        //--------------------------------------------------------------------------
+        #if __OSX__
+            Exec( '$ProjectName$-OSXRes-$Platform$-$BuildConfigName$' )
+            {
+                .ExecExecutable             = .Linker
+                .ExecInput                  = 'Tools/FBuild/Icons/16x16_blue.png'
+                .ExecArguments              = '-r -o "%2" -sectcreate binary trayicon "%1"'
+                .ExecOutput                 = '$OutputBase$/$ProjectName$/16x16_blue.o'
+            }
+        #endif
 
         // Unity
         //--------------------------------------------------------------------------
@@ -41,6 +55,10 @@
 
             // Output
             .CompilerOutputPath         = '$OutputBase$/$ProjectPath$/'
+            
+            #if __WINDOWS__
+                .CompilerOptions        + ' -D"PSAPI_VERSION=1"'
+            #endif
         }
 
         // Executable
@@ -57,6 +75,9 @@
                                         #if __WINDOWS__
                                             + 'FBuildWorker-Res-$Platform$-$BuildConfigName$'
                                         #endif
+                                        #if __OSX__
+                                            + '$ProjectName$-OSXRes-$Platform$-$BuildConfigName$' 
+                                        #endif
             #if __LINUX__
                 .LinkerOutput               = '$OutputBase$/$ProjectPath$/fbuildworker$ExeExtension$' // NOTE: lower case
             #else
@@ -71,7 +92,11 @@
                                             + ' Shell32.lib'
                                             + ' Comctl32.lib'
                                             + ' Gdi32.lib'
+                                            + ' psapi.lib'
                                             + .CRTLibs_Static
+            #endif
+            #if __OSX__
+                .LinkerOptions              + ' -framework Cocoa'
             #endif
             #if __LINUX__
                 .LinkerOptions              + ' -pthread -ldl -lrt'

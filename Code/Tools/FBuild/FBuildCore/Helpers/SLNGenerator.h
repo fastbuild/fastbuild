@@ -15,7 +15,7 @@ class SolutionConfig;
 class SolutionDependency;
 class SolutionFolder;
 class VSProjectConfig;
-class VCXProjectNode;
+class VSProjectBaseNode;
 
 // SLNGenerator
 //------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ public:
                                  const AString & solutionVisualStudioVersion,
                                  const AString & solutionMinimumVisualStudioVersion,
                                  const Array< SolutionConfig > & solutionConfigs,
-                                 const Array< VCXProjectNode * > & projects,
+                                 const Array< VSProjectBaseNode * > & projects,
                                  const Array< SolutionDependency > & solutionDependencies,
                                  const Array< SolutionFolder > & solutionFolders );
 
@@ -37,7 +37,7 @@ private:
     void WriteHeader( const AString & solutionVisualStudioVersion,
                       const AString & solutionMinimumVisualStudioVersion );
     void WriteProjectListings( const AString& solutionBasePath,
-                               const Array< VCXProjectNode * > & projects,
+                               const Array< VSProjectBaseNode * > & projects,
                                const Array< SolutionFolder > & solutionFolders,
                                const Array< SolutionDependency > & solutionDependencies,
                                Array< AString > & solutionProjectsToFolder );
@@ -45,7 +45,7 @@ private:
                                       Array< AString > & solutionFolderPaths );
     void WriteSolutionConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs );
     void WriteProjectConfigurationPlatforms( const Array< SolutionConfig > & solutionConfigs,
-                                             const Array< VCXProjectNode * > & projects );
+                                             const Array< VSProjectBaseNode * > & projects );
     void WriteNestedProjects( const Array< AString > & solutionProjectsToFolder,
                               const Array< AString > & solutionFolderPaths );
     void WriteFooter();

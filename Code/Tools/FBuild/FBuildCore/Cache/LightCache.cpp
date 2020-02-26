@@ -261,12 +261,9 @@ bool LightCache::Hash( ObjectNode * node,
 {
     PROFILE_FUNCTION
 
-    ProjectGeneratorBase::ExtractIntellisenseOptions( compilerArgs,
-                                                      "-I",
-                                                      "/I",
-                                                      m_IncludePaths,
-                                                      false,    //escapeQuotes,
-                                                      false );  //keepFullOption
+    ProjectGeneratorBase::ExtractIncludePaths( compilerArgs,
+                                               m_IncludePaths,
+                                               false ); // escapeQuotes
 
     // Ensure all includes are slash terminated
     for ( AString & includePath : m_IncludePaths )

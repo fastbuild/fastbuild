@@ -23,6 +23,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT( m_AllowDistribution,   "AllowDistribution",    MetaOptional() )
     REFLECT( m_VS2012EnumBugFix,    "VS2012EnumBugFix",     MetaOptional() )
     REFLECT( m_ClangRewriteIncludes, "ClangRewriteIncludes", MetaOptional() )
+    REFLECT( m_ClangFixupUnity_Disable, "ClangFixupUnity_Disable", MetaOptional() )
     REFLECT( m_ExecutableRootPath,  "ExecutableRootPath",   MetaOptional() + MetaPath() )
     REFLECT( m_SimpleDistributionMode,  "SimpleDistributionMode",   MetaOptional() )
     REFLECT( m_CompilerFamilyString,"CompilerFamily",       MetaOptional() )
@@ -41,6 +42,7 @@ CompilerNode::CompilerNode()
     , m_AllowDistribution( true )
     , m_VS2012EnumBugFix( false )
     , m_ClangRewriteIncludes( true )
+    , m_ClangFixupUnity_Disable( false )
     , m_CompilerFamilyString( "auto" )
     , m_CompilerFamilyEnum( static_cast< uint8_t >( CUSTOM ) )
     , m_SimpleDistributionMode( false )
@@ -51,7 +53,7 @@ CompilerNode::CompilerNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool CompilerNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .Executable
     Dependencies compilerExeFile( 1, false );
@@ -143,7 +145,7 @@ CompilerNode::CompilerNode()
 
 // InitializeCompilerFamily
 //------------------------------------------------------------------------------
-bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Function * function )
+bool CompilerNode::InitializeCompilerFamily( const BFFToken * iter, const Function * function )
 {
     // Handle auto-detect
     if ( m_CompilerFamilyString.EqualsI( "auto" ) )

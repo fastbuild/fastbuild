@@ -94,7 +94,8 @@ void VSProjectGenerator::AddFiles( const Array< AString > & files )
 //------------------------------------------------------------------------------
 const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile,
                                                      const Array< VSProjectConfig > & configs,
-                                                     const Array< VSProjectFileType > & fileTypes )
+                                                     const Array< VSProjectFileType > & fileTypes,
+                                                     const Array< VSProjectImport > & projectImports )
 {
     ASSERT( !m_ProjectGuid.IsEmpty() );
 
@@ -208,6 +209,22 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     WritePGItem( "ApplicationEnvironment", m_ApplicationEnvironment );
     Write( "  </PropertyGroup>\n" );
 
+    // Per-config Globals
+    for ( const VSProjectConfig & config : configs )
+    {
+        const bool needSection = ( config.m_Keyword.IsEmpty() == false ) ||
+                                 ( config.m_ApplicationType.IsEmpty() == false ) ||
+                                 ( config.m_ApplicationTypeRevision.IsEmpty() == false );
+        if ( needSection )
+        {
+            WriteF( "  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='%s|%s'\" Label=\"Globals\">\n", config.m_Config.Get(), config.m_Platform.Get() );
+            WritePGItem( "Keyword", config.m_Keyword );
+            WritePGItem( "ApplicationType", config.m_ApplicationType );
+            WritePGItem( "ApplicationTypeRevision", config.m_ApplicationTypeRevision );
+            Write( "  </PropertyGroup>\n" );
+        }
+    }
+
     // Default props
     Write( "  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />\n" );
 
@@ -290,7 +307,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > defines;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, false, false );
+                    ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, false );
                     AStackString<> definesStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( defines, definesStr, nullptr, ";" );
                     WritePGItem( "NMakePreprocessorDefinitions", definesStr );
@@ -305,7 +322,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > includePaths;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, false, false );
+                    ProjectGeneratorBase::ExtractIncludePaths( oln->GetCompilerOptions(), includePaths, false );
                     for ( AString & include : includePaths )
                     {
                         ProjectGeneratorBase::GetRelativePath( projectBasePath, include, include );
@@ -330,7 +347,7 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
                 if ( oln )
                 {
                     Array< AString > additionalOptions;
-                    ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "-std", "/std", additionalOptions, false, true );
+                    ProjectGeneratorBase::ExtractAdditionalOptions( oln->GetCompilerOptions(), additionalOptions );
                     AStackString<> additionalOptionsStr;
                     ProjectGeneratorBase::ConcatIntellisenseOptions( additionalOptions, additionalOptionsStr, nullptr, " " );
                     WritePGItem( "AdditionalOptions", additionalOptionsStr );
@@ -342,6 +359,8 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
             WritePGItem( "LocalDebuggerWorkingDirectory",   cIt->m_LocalDebuggerWorkingDirectory );
             WritePGItem( "IntDir",                          cIt->m_IntermediateDirectory );
             WritePGItem( "OutDir",                          cIt->m_OutputDirectory );
+            WritePGItem( "PackagePath",                     cIt->m_PackagePath );
+            WritePGItem( "AdditionalSymbolSearchPaths",     cIt->m_AdditionalSymbolSearchPaths );
             WritePGItem( "LayoutDir",                       cIt->m_LayoutDir );
             WritePGItem( "LayoutExtensionFilter",           cIt->m_LayoutExtensionFilter );
             Write( "  </PropertyGroup>\n" );
@@ -379,7 +398,10 @@ const AString & VSProjectGenerator::GenerateVCXProj( const AString & projectFile
     Write("  <Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />\n" );
     Write("  <ImportGroup Label=\"ExtensionTargets\">\n" );
     Write("  </ImportGroup>\n" );
-    Write("  <Import Condition=\"'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\\Platforms\\$(Platform)\\SCE.Makefile.$(Platform).targets')\" Project=\"$(VCTargetsPath)\\Platforms\\$(Platform)\\SCE.Makefile.$(Platform).targets\" />\n");
+    for ( const VSProjectImport & import : projectImports )
+    {
+        WriteF( "  <Import Condition=\"%s\" Project=\"%s\" />\n", import.m_Condition.Get(), import.m_Project.Get() );
+    }
     Write( "</Project>" ); // carriage return at end
 
     m_OutputVCXProj = m_Tmp;

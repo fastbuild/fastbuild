@@ -70,6 +70,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_Flags,                               "Flags",                            MetaHidden() )
     REFLECT( m_PreprocessorFlags,                   "PreprocessorFlags",                MetaHidden() )
     REFLECT( m_PCHCacheKey,                         "PCHCacheKey",                      MetaHidden() + MetaIgnoreForComparison() )
+    REFLECT( m_OwnerObjectList,                     "OwnerObjectList",                  MetaHidden() )
 REFLECT_END( ObjectNode )
 
 // CONSTRUCTOR
@@ -83,8 +84,10 @@ ObjectNode::ObjectNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool ObjectNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
+    ASSERT( m_OwnerObjectList.IsEmpty() == false ); // Must be set before we get here
+
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
     {
@@ -176,33 +179,6 @@ ObjectNode::~ObjectNode()
         ASSERT( srcFile->GetType() == Node::PROXY_NODE );
         FDELETE srcFile;
     }
-}
-
-// DoDynamicDependencies
-//------------------------------------------------------------------------------
-/*virtual*/ bool ObjectNode::DoDynamicDependencies( NodeGraph & /*nodeGraph*/, bool forceClean )
-{
-    // TODO:A Remove ObjectNode::DoDynamicDependencies
-    // - Dependencies added in Finalize need to be cleared if StaticDependencies
-    //   change. We should to that globally to remove the need for this code.
-
-    if (forceClean)
-    {
-        m_DynamicDependencies.Clear(); // We will update deps in Finalize after DoBuild
-        return true;
-    }
-
-    // If static deps would trigger a rebuild, invalidate dynamicdeps
-    const uint64_t stamp = GetStamp();
-    for ( const Dependency & dep : m_StaticDependencies )
-    {
-        if ( dep.GetNode()->GetStamp() > stamp )
-        {
-            m_DynamicDependencies.Clear(); // We will update deps in Finalize after DoBuild
-            return true;
-        }
-    }
-    return true;
 }
 
 // DoBuild
@@ -299,8 +275,20 @@ ObjectNode::~ObjectNode()
             FLOG_ERROR( "'%s' is not a FileNode (type: %s)", fn->GetName().Get(), fn->GetTypeName() );
             return false;
         }
+
+        // Ensure files that are seen for the first time here have their
+        // mod time recorded in the database
+        if ( ( fn->GetType() == Node::FILE_NODE ) &&
+             ( fn->GetStamp() == 0 ) &&
+             ( fn->GetStatFlag( Node::STATS_BUILT ) == false ) )
+        {
+            fn->CastTo< FileNode >()->DoBuild( nullptr );
+        }
+
         m_DynamicDependencies.Append( Dependency( fn ) );
     }
+
+    Node::Finalize( nodeGraph );
 
     return true;
 }
@@ -452,6 +440,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         {
             return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
         }
+    }
+
+    // Do Clang unity fixup if needed
+    if ( GetFlag( FLAG_UNITY ) && IsClang() && GetCompiler()->IsClangUnityFixupEnabled() )
+    {
+        DoClangUnityFixup( job );
     }
 
     // calculate the cache entry lookup
@@ -943,6 +937,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     }
 
     // Check GCC/Clang options
+    bool objectiveC = false;
     if ( flags & ( ObjectNode::FLAG_CLANG | ObjectNode::FLAG_GCC ) )
     {
         // Clang supported -fdiagnostics-color option (and defaulted to =auto) since its first release
@@ -953,8 +948,11 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 
         Array< AString > tokens;
         args.Tokenize( tokens );
-        for ( const AString & token : tokens )
+        const AString * const end = tokens.End();
+        for ( const AString * it = tokens.Begin(); it != end; ++it )
         {
+            const AString & token = *it;
+
             if ( token == "-fdiagnostics-color=auto" )
             {
                 flags |= ObjectNode::FLAG_DIAGNOSTICS_COLOR_AUTO;
@@ -967,6 +965,21 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             {
                 flags |= ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC;
             }
+            else if ( token == "-fobjc-arc" )
+            {
+                objectiveC = true;
+            }
+            else if ( token == "-x" )
+            {
+                if ( it < ( end - 1 ) )
+                {
+                    const AString & nextToken = *( it + 1);
+                    if ( nextToken == "objective-c" )
+                    {
+                        objectiveC = true;
+                    }
+                }
+            }
         }
     }
 
@@ -974,7 +987,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     if ( flags & ( ObjectNode::FLAG_CLANG | ObjectNode::FLAG_GCC | ObjectNode::FLAG_SNC | ObjectNode::CODEWARRIOR_WII | ObjectNode::GREENHILLS_WIIU ) )
     {
         // creation of the PCH must be done locally to generate a usable PCH
-        if ( !( flags & ObjectNode::FLAG_CREATING_PCH ) )
+        // Objective C/C++ cannot be distributed
+        if ( !creatingPCH && !objectiveC )
         {
             if ( isDistributableCompiler )
             {
@@ -1215,97 +1229,101 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
     ICache * cache = FBuild::Get().GetCache();
     ASSERT( cache );
-    if ( cache )
+
+    void * cacheData( nullptr );
+    size_t cacheDataSize( 0 );
+    if ( cache->Retrieve( cacheFileName, cacheData, cacheDataSize ) )
     {
-        void * cacheData( nullptr );
-        size_t cacheDataSize( 0 );
-        if ( cache->Retrieve( cacheFileName, cacheData, cacheDataSize ) )
+        const uint32_t retrieveTime = uint32_t( t.GetElapsedMS() );
+
+        // Hash the PCH result if we will need it later
+        uint64_t pchKey = 0;
+        if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
         {
-            const uint32_t retrieveTime = uint32_t( t.GetElapsedMS() );
-
-            // Hash the PCH result if we will need it later
-            uint64_t pchKey = 0;
-            if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
-            {
-                pchKey = xxHash::Calc64( cacheData, cacheDataSize );
-            }
-
-            const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
-
-            // do decompression
-            Compressor c;
-            if ( c.IsValidData( cacheData, cacheDataSize ) == false )
-            {
-                FLOG_WARN( "Cache returned invalid data (header) for '%s'", m_Name.Get() );
-                return false;
-            }
-            if ( c.Decompress( cacheData ) == false )
-            {
-                FLOG_WARN( "Cache returned invalid data (payload) for '%s'", m_Name.Get() );
-                return false;
-            }
-            const void * data = c.GetResult();
-            const size_t dataSize = c.GetResultSize();
-
-            const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
-
-            MultiBuffer buffer( data, dataSize );
-
-            Array< AString > fileNames( 4, false );
-            fileNames.Append( m_Name );
-
-            GetExtraCacheFilePaths( job, fileNames );
-
-            // Extract the files
-            const size_t numFiles = fileNames.GetSize();
-            for ( size_t i=0; i<numFiles; ++i )
-            {
-                if ( !buffer.ExtractFile( i, fileNames[ i ] ) )
-                {
-                    cache->FreeMemory( cacheData, cacheDataSize );
-                    FLOG_ERROR( "Failed to write local file during cache retrieval '%s'", fileNames[ i ].Get() );
-                    return false;
-                }
-
-                // Update file modification time
-                const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow( fileNames[ i ] );
-
-                // set the time on the local file
-                if ( timeSetOK == false )
-                {
-                    cache->FreeMemory( cacheData, cacheDataSize );
-                    FLOG_ERROR( "Failed to set timestamp after cache hit. Error: %s Target: '%s'", LAST_ERROR_STR, fileNames[ i ].Get() );
-                    return false;
-                }
-            }
-
-            cache->FreeMemory( cacheData, cacheDataSize );
-
-            FileIO::WorkAroundForWindowsFilePermissionProblem( m_Name );
-
-            // record new file time (note that time may differ from what we set above due to
-            // file system precision)
-            RecordStampFromBuiltFile();
-
-            // Output
-            AStackString<> output;
-            output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
-            if ( FBuild::Get().GetOptions().m_CacheVerbose )
-            {
-                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
-            }
-            FLOG_BUILD_DIRECT( output.Get() );
-
-            SetStatFlag( Node::STATS_CACHE_HIT );
-
-            // Dependent objects need to know the PCH key to be able to pull from the cache
-            if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
-            {
-                m_PCHCacheKey = pchKey;
-            }
-
-            return true;
+            pchKey = xxHash::Calc64( cacheData, cacheDataSize );
         }
+
+        const uint32_t startDecompress = uint32_t( t.GetElapsedMS() );
+
+        // do decompression
+        Compressor c;
+        if ( c.IsValidData( cacheData, cacheDataSize ) == false )
+        {
+            FLOG_WARN( "Cache returned invalid data (header)\n"
+                       " - File: '%s'\n"
+                       " - Key : %s\n",
+                       m_Name.Get(), cacheFileName.Get() );
+            return false;
+        }
+        if ( c.Decompress( cacheData ) == false )
+        {
+            FLOG_WARN( "Cache returned invalid data (payload)\n"
+                       " - File: '%s'\n"
+                       " - Key : %s\n",
+                       m_Name.Get(), cacheFileName.Get() );
+            return false;
+        }
+        const void * data = c.GetResult();
+        const size_t dataSize = c.GetResultSize();
+
+        const uint32_t stopDecompress = uint32_t( t.GetElapsedMS() );
+
+        MultiBuffer buffer( data, dataSize );
+
+        Array< AString > fileNames( 4, false );
+        fileNames.Append( m_Name );
+
+        GetExtraCacheFilePaths( job, fileNames );
+
+        // Extract the files
+        const size_t numFiles = fileNames.GetSize();
+        for ( size_t i=0; i<numFiles; ++i )
+        {
+            if ( !buffer.ExtractFile( i, fileNames[ i ] ) )
+            {
+                cache->FreeMemory( cacheData, cacheDataSize );
+                FLOG_ERROR( "Failed to write local file during cache retrieval '%s'", fileNames[ i ].Get() );
+                return false;
+            }
+
+            // Update file modification time
+            const bool timeSetOK = FileIO::SetFileLastWriteTimeToNow( fileNames[ i ] );
+
+            // set the time on the local file
+            if ( timeSetOK == false )
+            {
+                cache->FreeMemory( cacheData, cacheDataSize );
+                FLOG_ERROR( "Failed to set timestamp after cache hit. Error: %s Target: '%s'", LAST_ERROR_STR, fileNames[ i ].Get() );
+                return false;
+            }
+        }
+
+        cache->FreeMemory( cacheData, cacheDataSize );
+
+        FileIO::WorkAroundForWindowsFilePermissionProblem( m_Name );
+
+        // record new file time (note that time may differ from what we set above due to
+        // file system precision)
+        RecordStampFromBuiltFile();
+
+        // Output
+        AStackString<> output;
+        output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
+        if ( FBuild::Get().GetOptions().m_CacheVerbose )
+        {
+            output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+        }
+        FLOG_BUILD_DIRECT( output.Get() );
+
+        SetStatFlag( Node::STATS_CACHE_HIT );
+
+        // Dependent objects need to know the PCH key to be able to pull from the cache
+        if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
+        {
+            m_PCHCacheKey = pchKey;
+        }
+
+        return true;
     }
 
     // Output
@@ -1338,57 +1356,55 @@ void ObjectNode::WriteToCache( Job * job )
 
     ICache * cache = FBuild::Get().GetCache();
     ASSERT( cache );
-    if ( cache )
+
+    Array< AString > fileNames( 4, false );
+    fileNames.Append( m_Name );
+
+    GetExtraCacheFilePaths( job, fileNames );
+
+    MultiBuffer buffer;
+    if ( buffer.CreateFromFiles( fileNames ) )
     {
-        Array< AString > fileNames( 4, false );
-        fileNames.Append( m_Name );
+        // try to compress
+        const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
+        Compressor c;
+        c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize(), FBuild::Get().GetOptions().m_CacheCompressionLevel );
+        const void * data = c.GetResult();
+        const size_t dataSize = c.GetResultSize();
+        const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
 
-        GetExtraCacheFilePaths( job, fileNames );
-
-        MultiBuffer buffer;
-        if ( buffer.CreateFromFiles( fileNames ) )
+        const uint32_t startPublish( stopCompress );
+        if ( cache->Publish( cacheFileName, data, dataSize ) )
         {
-            // try to compress
-            const uint32_t startCompress( (uint32_t)t.GetElapsedMS() );
-            Compressor c;
-            c.Compress( buffer.GetData(), (size_t)buffer.GetDataSize() );
-            const void * data = c.GetResult();
-            const size_t dataSize = c.GetResultSize();
-            const uint32_t stopCompress( (uint32_t)t.GetElapsedMS() );
+            // cache store complete
+            const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
 
-            const uint32_t startPublish( (uint32_t)t.GetElapsedMS() );
-            if ( cache->Publish( cacheFileName, data, dataSize ) )
+            SetStatFlag( Node::STATS_CACHE_STORE );
+
+            // Dependent objects need to know the PCH key to be able to pull from the cache
+            if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
             {
-                // cache store complete
-                const uint32_t stopPublish( (uint32_t)t.GetElapsedMS() );
-
-                SetStatFlag( Node::STATS_CACHE_STORE );
-
-                // Dependent objects need to know the PCH key to be able to pull from the cache
-                if ( GetFlag( FLAG_CREATING_PCH ) && GetFlag( FLAG_MSVC ) )
-                {
-                    m_PCHCacheKey = xxHash::Calc64( data, dataSize );
-                }
-
-                const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
-                AddCachingTime( cachingTime );
-
-                // Output
-                if ( FBuild::Get().GetOptions().m_CacheVerbose )
-                {
-                    AStackString<> output;
-                    output.Format( "Obj: %s\n"
-                                   " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
-                                   GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, (size_t)buffer.GetDataSize(), cacheFileName.Get() );
-                    if ( m_PCHCacheKey != 0 )
-                    {
-                        output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
-                    }
-                    FLOG_BUILD_DIRECT( output.Get() );
-                }
-
-                return;
+                m_PCHCacheKey = xxHash::Calc64( data, dataSize );
             }
+
+            const uint32_t cachingTime = uint32_t( t.GetElapsedMS() );
+            AddCachingTime( cachingTime );
+
+            // Output
+            if ( FBuild::Get().GetOptions().m_CacheVerbose )
+            {
+                AStackString<> output;
+                output.Format( "Obj: %s\n"
+                                " - Cache Store: %u ms (Store: %u ms - Compress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n",
+                                GetName().Get(), cachingTime, ( stopPublish - startPublish ), ( stopCompress - startCompress ), dataSize, (size_t)buffer.GetDataSize(), cacheFileName.Get() );
+                if ( m_PCHCacheKey != 0 )
+                {
+                    output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
+                }
+                FLOG_BUILD_DIRECT( output.Get() );
+            }
+
+            return;
         }
     }
 
@@ -2714,6 +2730,108 @@ bool ObjectNode::GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) cons
     mem[ memSize ] = 0; // null terminate text buffer for parsing convenience
 
     return true;
+}
+
+// DoClangUnityFixup
+//------------------------------------------------------------------------------
+void ObjectNode::DoClangUnityFixup( Job * job ) const
+{
+    // Fixup preprocessed output so static analysis works well with Unity
+    //
+    // Static analysis only analyzes the "topmost" file, which in Unity is the
+    // Unity.cpp which contains no code. The compiler know which file is the topmost
+    // file by checking the directives left by the preprocessor, as described here:
+    //  - https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
+    //
+    // Be removing the "push" flags the preprocesser adds (1) when leaving the main cpp
+    // file and entering an inluded file only for the Unity, the compiler thinks
+    // the included files are the top-level files and applies analysis the same way
+    // as when they are built outside of Unity.
+    //
+    // We remove the "pop" flags (2) when returning to the unity as these must match the
+    // "pop"s
+    //
+    // We do this fixup even if not using -Xanalyze, so that:
+    // a) the behaviour is consistent, avoiding any problems that might show up only
+    //    with static analysis
+    // b) this behaviour may be useful for other types of warnings for similar reasons
+    //    (i.e. if Clang suppresses then because it thinks a file is not the "main" file)
+    //
+
+    // Sanity checks
+    ASSERT( IsClang() ); // Only necessary for Clang
+    ASSERT( GetFlag( FLAG_UNITY ) ); // Only makes sense to for Unity
+    ASSERT( job->IsDataCompressed() == false ); // Can't fixup compressed data
+
+    // We'll walk the output and fix it up in-place
+
+    AStackString<> srcFileName( GetSourceFile()->GetName() );
+    #if defined( __WINDOWS__ )
+        // Clang escapes backslashes, so we must do the same
+        srcFileName.Replace( "\\", "\\\\" );
+    #endif
+
+    // Build the string used to find "pop" directives when returning to this file
+    AStackString<> popDirectiveString;
+    popDirectiveString = " \"";
+    popDirectiveString += srcFileName;
+    popDirectiveString += "\" 2"; // 2 is "pop" flag
+
+    // Find the first instance of the primary filename (this ensured we ignore any
+    // injected "-include" stuff before that)
+    char * pos = strstr( (char *)job->GetData(), srcFileName.Get() );
+    ASSERT( pos );
+
+    // Find top-level push/pop pairs. We don't want mess with nested directives
+    // as these can be meaningful in other ways.
+    while ( pos )
+    {
+        // Searching for a "push" directive (i.e. leaving the unity file and pushing
+        // a file included by the Unity cpp)
+        pos = strstr( pos, "\n# 1 \"" );
+        if ( pos == nullptr )
+        {
+            return; // no more
+        }
+        pos += 6; // skip to string inside quotes
+
+        // Ignore special directives like <built-in>
+        if ( *pos == '<' )
+        {
+            continue; // Keep searching
+        }
+
+        // Find closing quote
+        pos = strchr( pos, '"' );
+        if ( pos == nullptr )
+        {
+            ASSERT( false ); // Unexpected/malformed
+            return;
+        }
+
+        // Found it?
+        if ( AString::StrNCmp( pos, "\" 1", 3 ) != 0 ) // Note: '1' flag for "push"
+        {
+            continue; // Keep searching
+        }
+
+        // Patch out "push" flag in-place
+        pos[ 2 ] = ' ';
+        pos += 3; // Skip closing quote, space and flag
+
+        // Find "pop" directive that returns us to the Unity file
+        char * popDirective = strstr( pos, popDirectiveString.Get() );
+        if ( popDirective == nullptr )
+        {
+            ASSERT( false ); // Unexpected/malformed
+            return;
+        }
+
+        // Pathc out "pop" flag to match the "push"
+        pos = ( popDirective + popDirectiveString.GetLength() - 1 );
+        ASSERT( *pos == '2' );
+        *pos = ' ';
+    }
 }
 
 //------------------------------------------------------------------------------

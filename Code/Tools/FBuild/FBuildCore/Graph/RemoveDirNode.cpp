@@ -27,7 +27,7 @@ REFLECT_END( RemoveDirNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 RemoveDirNode::RemoveDirNode()
-    : Node( AString::GetEmpty(), Node::REMOVE_DIR_NODE, Node::FLAG_NONE )
+    : Node( AString::GetEmpty(), Node::REMOVE_DIR_NODE, Node::FLAG_ALWAYS_BUILD )
     , m_RemovePathsRecurse( true )
 {
     m_RemovePatterns.Append( AStackString<>( "*" ) );
@@ -35,7 +35,7 @@ RemoveDirNode::RemoveDirNode()
 
 // Initialize
 //------------------------------------------------------------------------------
-/*virtual*/ bool RemoveDirNode::Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function )
+/*virtual*/ bool RemoveDirNode::Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function )
 {
     // .PreBuildDependencies
     if ( !InitializePreBuildDependencies( nodeGraph, iter, function, m_PreBuildDependencyNames ) )
@@ -75,13 +75,6 @@ RemoveDirNode::~RemoveDirNode() = default;
 /*virtual*/ bool RemoveDirNode::IsAFile() const
 {
     return false;
-}
-
-// DetermineNeedToBuild
-//------------------------------------------------------------------------------
-/*virtual*/ bool RemoveDirNode::DetermineNeedToBuild( bool /*forceClean*/ ) const
-{
-    return true; // Always runs RemoveDirNode
 }
 
 // DoBuild

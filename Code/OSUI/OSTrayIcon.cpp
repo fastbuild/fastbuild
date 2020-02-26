@@ -12,10 +12,24 @@
 #include "Core/Env/Assert.h"
 #include "Core/Strings/AString.h"
 
+// System
+//------------------------------------------------------------------------------
+#if defined( __OSX__ )
+    #include <mach-o/getsect.h>
+    #include <mach-o/ldsyms.h>
+#endif
+
 // Defines
 //------------------------------------------------------------------------------
 #define ID_TRAY_APP_ICON                5000
 #define IDI_TRAY_ICON                   102
+
+// OSX Functions
+//------------------------------------------------------------------------------
+#if defined( __OSX__ )
+    void * TrayIconOSX_Create( void * iconData, size_t iconDataSize );
+    void TrayIconOSX_SetMenu( OSTrayIcon * owner, OSMenu * menu );
+#endif
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -40,6 +54,13 @@ OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
 
         // Display
         Shell_NotifyIcon( NIM_ADD, &m_NotifyIconData );
+    #elif defined( __OSX__ )
+        size_t size;
+        void * ptr = getsectiondata( &_mh_execute_header, "binary", "trayicon", &size );
+        ASSERT( ptr && size );
+        m_Handle = TrayIconOSX_Create( ptr, size );
+        (void)parentWindow;
+        (void)toolTip;
     #else
         (void)parentWindow;
         (void)toolTip;
@@ -70,6 +91,19 @@ void OSTrayIcon::ShowNotification( const char * msg )
         (void)msg; // TODO:MAC Implement ShowBalloonTip
     #elif defined( __LINUX__ )
         (void)msg; // TODO:LINUX Implement ShowBalloonTip
+    #endif
+}
+
+// SetMenu
+//------------------------------------------------------------------------------
+void OSTrayIcon::SetMenu( OSMenu * menu )
+{
+    #if defined( __WINDOWS__ )
+        (void)menu; //TODO:B unify with Windows
+    #elif defined( __OSX__ )
+        TrayIconOSX_SetMenu( this, menu );
+    #else
+        (void)menu; // TODO:LINUX
     #endif
 }
 

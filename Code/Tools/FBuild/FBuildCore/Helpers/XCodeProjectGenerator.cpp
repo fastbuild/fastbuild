@@ -617,6 +617,10 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
         {
             WriteString( 4, "SDKROOT", config.m_XCodeBaseSDK );
         }
+        if ( config.m_XCodeIphoneOSDeploymentTarget.IsEmpty() == false )
+        {
+            WriteString( 4, "IPHONEOS_DEPLOYMENT_TARGET", config.m_XCodeIphoneOSDeploymentTarget );
+        }
         Write( "\t\t\t};\n"
                "\t\t\tname = %s;\n"
                "\t\t};\n",
@@ -669,7 +673,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
             // Defines
             {
                 Array< AString > defines;
-                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/D", "-D", defines, true, false );
+                ProjectGeneratorBase::ExtractDefines( oln->GetCompilerOptions(), defines, true );
                 WriteArray( 4, "GCC_PREPROCESSOR_DEFINITIONS", defines );
             }
 
@@ -689,7 +693,7 @@ void XCodeProjectGenerator::WriteBuildConfiguration()
             // User Include Paths
             {
                 Array< AString > includePaths;
-                ProjectGeneratorBase::ExtractIntellisenseOptions( oln->GetCompilerOptions(), "/I", "-I", includePaths, true, false );
+                ProjectGeneratorBase::ExtractIncludePaths( oln->GetCompilerOptions(), includePaths, true );
                 for ( AString & include : includePaths )
                 {
                     AStackString<> fullIncludePath;
@@ -775,6 +779,7 @@ bool XCodeProjectGenerator::ShouldQuoteString( const AString & value ) const
              ( c == '"' ) ||
              ( c == '?' ) ||
              ( c == '-' ) ||
+             ( c == '+' ) ||
              ( c == '=' ) )
         {
             return true;

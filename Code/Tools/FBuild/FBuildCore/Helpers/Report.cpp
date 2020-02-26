@@ -45,6 +45,7 @@ uint32_t g_ReportNodeColors[] = {
                                   0x77DDAA, // SLN_NODE
                                   0x77DDAA, // XCODEPROJECT_NODE
                                   0x000000, // SETTINGS_NODE (never seen)
+                                  0xFFFFFF, // VSPROJEXTERNAL_NODE
                                   0xFFFFFF, // TEXT_FILE_NODE
                                 };
 

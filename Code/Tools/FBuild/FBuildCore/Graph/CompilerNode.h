@@ -9,7 +9,6 @@
 
 // Forward Declarations
 //------------------------------------------------------------------------------
-class BFFIterator;
 class Function;
 
 // CompilerNode
@@ -19,7 +18,7 @@ class CompilerNode : public Node
     REFLECT_NODE_DECLARE( CompilerNode )
 public:
     explicit CompilerNode();
-    virtual bool Initialize( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function ) override;
+    virtual bool Initialize( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function ) override;
     virtual ~CompilerNode() override;
 
     virtual bool IsAFile() const override;
@@ -35,6 +34,7 @@ public:
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
     #endif
     inline bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
+    inline bool IsClangUnityFixupEnabled() const { return ( m_ClangFixupUnity_Disable == false ); }
 
     enum CompilerFamily : uint8_t
     {
@@ -56,7 +56,7 @@ public:
     const char * GetEnvironmentString() const;
 
 private:
-    bool InitializeCompilerFamily( const BFFIterator & iter, const Function * function );
+    bool InitializeCompilerFamily( const BFFToken * iter, const Function * function );
 
     virtual BuildResult DoBuild( Job * job ) override;
     virtual void Migrate( const Node & oldNode ) override;
@@ -68,6 +68,7 @@ private:
     bool                    m_AllowDistribution;
     bool                    m_VS2012EnumBugFix;
     bool                    m_ClangRewriteIncludes;
+    bool                    m_ClangFixupUnity_Disable; // Temp flag to disable in case there are problems
     AString                 m_ExecutableRootPath;
     AString                 m_CompilerFamilyString;
     uint8_t                 m_CompilerFamilyEnum;
