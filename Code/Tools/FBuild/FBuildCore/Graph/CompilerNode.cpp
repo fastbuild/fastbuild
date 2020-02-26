@@ -14,7 +14,6 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
-
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
