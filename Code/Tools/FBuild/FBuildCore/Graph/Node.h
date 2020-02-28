@@ -99,6 +99,7 @@ public:
         STATS_LIGHT_CACHE   = 0x20, // used the LightCache
         STATS_BUILT_REMOTE  = 0x40, // node was built remotely
         STATS_FAILED        = 0x80, // node needed building, but failed
+        STATS_FIRST_BUILD   = 0x100,// node has never been built before
         STATS_REPORT_PROCESSED  = 0x4000, // seen during report processing
         STATS_STATS_PROCESSED   = 0x8000 // mark during stats gathering (leave this last)
     };
