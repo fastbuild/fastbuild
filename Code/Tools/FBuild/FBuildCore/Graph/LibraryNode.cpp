@@ -132,7 +132,7 @@ LibraryNode::~LibraryNode()
     const size_t endIndex = m_StaticDependencies.GetSize();
     for ( size_t i=startIndex; i<endIndex; ++i )
     {
-        m_DynamicDependencies.Append( Dependency( m_StaticDependencies[ i ].GetNode() ) );
+        m_DynamicDependencies.EmplaceBack( m_StaticDependencies[ i ].GetNode() );
     }
     return true;
 }

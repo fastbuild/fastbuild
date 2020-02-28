@@ -30,7 +30,7 @@ RemoveDirNode::RemoveDirNode()
     : Node( AString::GetEmpty(), Node::REMOVE_DIR_NODE, Node::FLAG_ALWAYS_BUILD )
     , m_RemovePathsRecurse( true )
 {
-    m_RemovePatterns.Append( AStackString<>( "*" ) );
+    m_RemovePatterns.EmplaceBack( "*" );
 }
 
 // Initialize

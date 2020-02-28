@@ -1191,7 +1191,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
         }
 
         // found existing node
-        libs.Append( Dependency( node ) );
+        libs.EmplaceBack( node );
         found = true;
         return true; // no error
     }
@@ -1200,7 +1200,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( FileIO::FileExists( potentialNodeNameClean.Get() ) )
     {
         node = nodeGraph.CreateFileNode( potentialNodeNameClean );
-        libs.Append( Dependency( node ) );
+        libs.EmplaceBack( node );
         found = true;
         FLOG_INFO( "Additional library '%s' assumed to be '%s'\n", lib.Get(), potentialNodeNameClean.Get() );
         return true; // no error
@@ -1305,7 +1305,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     // node not found - create a new FileNode, assuming we are
     // linking against an externally built library
     node = nodeGraph.CreateFileNode( nodeName );
-    nodes.Append( Dependency( node ) );
+    nodes.EmplaceBack( node );
     return true;
 }
 
@@ -1322,7 +1322,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::LIBRARY_NODE )
     {
         // can link directly to it
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
         return true;
     }
 
@@ -1330,7 +1330,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::OBJECT_LIST_NODE )
     {
         // can link directly to it
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
         return true;
     }
 
@@ -1338,7 +1338,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::DLL_NODE )
     {
         // TODO:B Depend on import lib
-        nodes.Append( Dependency( node, 0, true ) ); // NOTE: Weak dependency
+        nodes.EmplaceBack( node, 0, true ); // NOTE: Weak dependency
         return true;
     }
 
@@ -1346,7 +1346,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::FILE_NODE )
     {
         // can link directy against it
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
         return true;
     }
 
@@ -1354,7 +1354,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::COPY_FILE_NODE )
     {
         // depend on copy - will use input at build time
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
         return true;
     }
 
@@ -1362,7 +1362,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
     if ( node->GetType() == Node::EXEC_NODE )
     {
         // depend on ndoe - will use exe output at build time
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
         return true;
     }
 

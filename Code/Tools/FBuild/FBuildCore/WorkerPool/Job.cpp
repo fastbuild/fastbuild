@@ -129,12 +129,12 @@ void Job::ErrorPreformatted( const char * message )
 
         if ( FLog::IsMonitorEnabled() )
         {
-            m_Messages.Append( AStackString<>( message ) );
+            m_Messages.EmplaceBack( message );
         }
     }
     else
     {
-        m_Messages.Append( AStackString<>( message ) );
+        m_Messages.EmplaceBack( message );
     }
 }
 

@@ -369,7 +369,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
     if ( m_Targets.IsEmpty() )
     {
         FLOG_INFO( "No target specified, defaulting to target 'all'" );
-        m_Targets.Append( AStackString<>( "all" ) );
+        m_Targets.EmplaceBack( "all" );
     }
 
     // When building multiple targets, try to build as much as possible

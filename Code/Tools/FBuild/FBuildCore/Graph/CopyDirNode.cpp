@@ -168,7 +168,7 @@ CopyDirNode::~CopyDirNode() = default;
                 }
             }
 
-            m_DynamicDependencies.Append( Dependency( n ) );
+            m_DynamicDependencies.EmplaceBack( n );
         }
     }
     return true;

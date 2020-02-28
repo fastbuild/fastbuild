@@ -62,7 +62,7 @@ UnityNode::UnityNode()
 , m_IsolatedFiles( 0, true )
 , m_UnityFileNames( 0, true )
 {
-    m_InputPattern.Append( AStackString<>( "*.cpp" ) );
+    m_InputPattern.EmplaceBack( "*.cpp" );
     m_LastBuildTimeMs = 100; // higher default than a file node
 }
 
@@ -409,7 +409,7 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 
                 if ( keep )
                 {
-                    files.Append( FileAndOrigin( filesIt, dirNode ) );
+                    files.EmplaceBack( filesIt, dirNode );
                 }
             }
         }
@@ -432,7 +432,7 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
                     fi->m_Attributes = 0; // No writable bits set
                 #endif
                 fi->m_Size = 0;
-                files.Append( FileAndOrigin( fi, nullptr ) );
+                files.EmplaceBack( fi, nullptr );
             }
         }
         else if ( node->IsAFile() )
@@ -442,7 +442,7 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
             if ( FileIO::GetFileInfo( node->GetName(), *fi ) )
             {
                 // only add files that exist
-                files.Append( FileAndOrigin( fi, nullptr ) );
+                files.EmplaceBack( fi, nullptr );
             }
             else
             {

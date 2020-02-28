@@ -92,8 +92,8 @@ void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, cons
     if ( ( data != nullptr ) && ( dataSize > 0 ) )
     {
         Array< AString > exclusions( 2, false );
-        exclusions.Append( AString( "Note: including file:" ) );
-        exclusions.Append( AString( "#line" ) );
+        exclusions.EmplaceBack( "Note: including file:" );
+        exclusions.EmplaceBack( "#line" );
 
         AStackString<> msg;
         msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );

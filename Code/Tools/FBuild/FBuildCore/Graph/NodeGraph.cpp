@@ -203,7 +203,7 @@ bool NodeGraph::ParseFromRoot( const char * bffFile )
         m_UsedFiles.SetCapacity( usedFiles.GetSize() );
         for ( const BFFFile * file : usedFiles )
         {
-            m_UsedFiles.Append( UsedFile( file->GetFileName(), file->GetTimeStamp(), file->GetHash() ) );
+            m_UsedFiles.EmplaceBack( file->GetFileName(), file->GetTimeStamp(), file->GetHash() );
         }
     }
     return ok;
@@ -1509,7 +1509,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
 
             if ( nodes.IsEmpty() )
             {
-                nodes.Append( NodeWithDistance( node, d ) );
+                nodes.EmplaceBack( node, d );
                 worstMinDistance = nodes.Top().m_Distance;
             }
             else if ( d >= worstMinDistance )
@@ -1517,7 +1517,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
                 ASSERT( nodes.IsEmpty() || nodes.Top().m_Distance == worstMinDistance );
                 if ( false == nodes.IsAtCapacity() )
                 {
-                    nodes.Append( NodeWithDistance( node, d ) );
+                    nodes.EmplaceBack( node, d );
                     worstMinDistance = d;
                 }
             }
@@ -1528,7 +1528,7 @@ void NodeGraph::FindNearestNodesInternal( const AString & fullPath, Array< NodeW
 
                 if ( false == nodes.IsAtCapacity() )
                 {
-                    nodes.Append(NodeWithDistance());
+                    nodes.EmplaceBack();
                 }
 
                 size_t pos = count;
@@ -1698,7 +1698,7 @@ bool NodeGraph::ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* 
             return false;
         }
 
-        files.Append( UsedFile( fileName, timeStamp, dataHash ) );
+        files.EmplaceBack( fileName, timeStamp, dataHash );
     }
 
     return true;
@@ -1852,14 +1852,14 @@ void NodeGraph::MigrateNode( const NodeGraph & oldNodeGraph, Node & newNode, con
             }
             if ( newDepNode )
             {
-                newDeps.Append( Dependency( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() ) );
+                newDeps.EmplaceBack( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() );
             }
             else
             {
                 // Create the dependency
                 newDepNode = Node::CreateNode( *this, oldDepNode->GetType(), oldDepNode->GetName() );
                 ASSERT( newDepNode );
-                newDeps.Append( Dependency( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() ) );
+                newDeps.EmplaceBack( newDepNode, oldDep.GetNodeStamp(), oldDep.IsWeak() );
 
                 // Early out for FileNode (no properties and doesn't need Initialization)
                 if ( oldDepNode->GetType() == Node::FILE_NODE )

@@ -157,7 +157,7 @@ const char * TestNode::GetEnvironmentString() const
                 return false;
             }
 
-            m_DynamicDependencies.Append( Dependency( sn ) );
+            m_DynamicDependencies.EmplaceBack( sn );
         }
         continue;
     }
