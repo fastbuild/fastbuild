@@ -373,9 +373,9 @@ void Report::DoCacheStats( const FBuildStats & stats )
         uint32_t totalCacheMisses( totalCacheable - totalCacheHits );
 
         Array< PieItem > pieItems( 3, false );
-        pieItems.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable), 0xFF8888 );
-        pieItems.EmplaceBack( "Cache Miss", (float)totalCacheMisses, 0xFFCC88 );
-        pieItems.EmplaceBack( "Cache Hit", (float)totalCacheHits, 0x88FF88 );
+        pieItems.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable), (uint32_t)0xFF8888 );
+        pieItems.EmplaceBack( "Cache Miss", (float)totalCacheMisses, (uint32_t)0xFFCC88 );
+        pieItems.EmplaceBack( "Cache Hit", (float)totalCacheHits, (uint32_t)0x88FF88 );
         DoPieChart(pieItems, "");
 
         DoTableStart();

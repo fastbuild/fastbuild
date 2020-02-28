@@ -175,7 +175,7 @@ void ToolManifest::Initialize( const AString & mainExecutableRoot, const Depende
     m_Files.SetCapacity( dependencies.GetSize() );
     for ( const Dependency & dep : dependencies )
     {
-        m_Files.EmplaceBack( dep.GetNode()->GetName(), 0, 0, 0 );
+        m_Files.EmplaceBack( dep.GetNode()->GetName(), (uint64_t)0, (uint32_t)0, (uint32_t)0 );
     }
 }
 
