@@ -243,8 +243,12 @@ void SLNGenerator::WriteSolutionFolderListings( const AString& solutionBasePath,
             {
                 if (solutionFolder.m_Items.GetSize() > 0)
                 {
+                    // make a local copy (to sort before writing to SLN, as Visual Studio will keep doing that after opening it):
+                    Array< AString > items;
+                    items.Append(solutionFolder.m_Items);
+                    items.Sort();
                     Write("\tProjectSection(SolutionItems) = preProject\r\n");
-                    for (const AString& item : solutionFolder.m_Items)
+                    for (const AString& item : items)
                     {
                         // make item path relative
                         AStackString<> itemRelativePath;
