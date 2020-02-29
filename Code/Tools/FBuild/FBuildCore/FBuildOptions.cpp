@@ -292,6 +292,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowCommandLines = true;
                 continue;
             }
+            else if ( thisArg == "-showcmdoutput" )
+            {
+                m_ShowCommandOutput = true;
+                continue;
+            }
             else if ( thisArg == "-showdeps" )
             {
                 m_DisplayDependencyDB = true;
@@ -317,6 +322,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             {
                 m_ShowVerbose = true;
                 m_ShowCommandLines = true;
+                m_ShowCommandOutput = true;
                 m_CacheVerbose = true;
                 continue;
             }
@@ -543,6 +549,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -quiet            Don't show build output.\n"
             " -report           Ouput report.html at build end. (Increases build time)\n"
             " -showcmds         Show command lines used to launch external processes.\n"
+            " -showcmdoutput    Show output of external processes.\n"
             " -showdeps         Show known dependency tree for specified targets.\n"
             " -showtargets      Display primary targets, excluding those marked \"Hidden\".\n"
             " -showalltargets   Display primary targets, including those marked \"Hidden\".\n"

@@ -214,7 +214,9 @@ ExecNode::~ExecNode() = default;
     const bool buildFailed = ( result != m_ExecReturnCode );
     
     // Print output if appropriate
-    if ( buildFailed || m_ExecAlwaysShowOutput )
+    if ( buildFailed ||
+        m_ExecAlwaysShowOutput ||
+        FBuild::Get().GetOptions().m_ShowCommandOutput )
     {
         Node::DumpOutput( job, memOut.Get(), memOutSize );
         Node::DumpOutput( job, memErr.Get(), memErrSize );

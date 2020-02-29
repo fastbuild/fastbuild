@@ -77,6 +77,7 @@ public:
     bool        m_ShowVerbose                       = false;
     bool        m_ShowCommandSummary                = true;
     bool        m_ShowCommandLines                  = false;
+    bool        m_ShowCommandOutput                 = false;
     bool        m_ShowErrors                        = true;
     bool        m_ShowProgress                      = false;
     bool        m_ShowSummary                       = false;

@@ -2454,11 +2454,30 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     // Handle special types of failures
     HandleSystemFailures( job, m_Result, m_Out.Get(), m_Err.Get() );
 
-    // output any errors (even if succeeded, there might be warnings)
-    if ( m_HandleOutput && m_Err.Get() )
+    if ( m_HandleOutput )
     {
-        const bool treatAsWarnings = true; // change msg formatting
-        DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
+        if ( FBuild::Get().GetOptions().m_ShowCommandOutput )
+        {
+            // Suppress /showIncludes - TODO:C leave in if user specified it
+            StackArray< AString > exclusions;
+            if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) &&
+                ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
+            {
+                exclusions.EmplaceBack( "Note: including file:" );
+            }
+
+            if ( m_Out.Get() ) { Node::DumpOutput( job, m_Out.Get(), m_OutSize, &exclusions ); }
+            if ( m_Err.Get() ) { Node::DumpOutput( job, m_Err.Get(), m_ErrSize, &exclusions ); }
+        }
+        else
+        {
+            // output any errors (even if succeeded, there might be warnings)
+            if ( m_Err.Get() )
+            {
+                const bool treatAsWarnings = true; // change msg formatting
+                DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
+            }
+        }
     }
 
     // failed?

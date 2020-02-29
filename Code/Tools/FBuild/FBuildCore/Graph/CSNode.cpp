@@ -205,13 +205,19 @@ CSNode::~CSNode() = default;
         return NODE_RESULT_FAILED;
     }
 
-    bool ok = ( result == 0 );
+    const bool ok = ( result == 0 );
+
+    // Show output if desired
+    const bool showOutput = ( ok == false ) ||
+                            FBuild::Get().GetOptions().m_ShowCommandOutput;
+    if ( showOutput )
+    {
+        Node::DumpOutput( job, memOut.Get(), memOutSize );
+        Node::DumpOutput( job, memErr.Get(), memErrSize );
+    }
 
     if ( !ok )
     {
-        // something went wrong, print details
-        Node::DumpOutput( job, memOut.Get(), memOutSize );
-        Node::DumpOutput( job, memErr.Get(), memErrSize );
         FLOG_ERROR( "Failed to build Object. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
         return NODE_RESULT_FAILED;
     }

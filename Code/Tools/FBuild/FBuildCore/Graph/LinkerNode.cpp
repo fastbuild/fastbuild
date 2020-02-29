@@ -288,11 +288,19 @@ LinkerNode::~LinkerNode()
         }
         else
         {
-            // If "warnings as errors" is enabled (/WX) we don't need to check
-            // (since compilation will fail anyway, and the output will be shown)
-            if ( GetFlag( LINK_FLAG_MSVC ) && !GetFlag( LINK_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
+            if ( FBuild::Get().GetOptions().m_ShowCommandOutput )
             {
-                HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+                if ( memOut.Get() ) { Node::DumpOutput( job, memOut.Get(), memOutSize ); }
+                if ( memErr.Get() ) { Node::DumpOutput( job, memErr.Get(), memErrSize ); }
+            }
+            else
+            {
+                // If "warnings as errors" is enabled (/WX) we don't need to check
+                // (since compilation will fail anyway, and the output will be shown)
+                if ( GetFlag( LINK_FLAG_MSVC ) && !GetFlag( LINK_FLAG_WARNINGS_AS_ERRORS_MSVC ) )
+                {
+                    HandleWarningsMSVC( job, GetName(), memOut.Get(), memOutSize );
+                }
             }
             break; // success!
         }
@@ -335,11 +343,18 @@ LinkerNode::~LinkerNode()
             return NODE_RESULT_FAILED;
         }
 
+        // Show output if desired
+        const bool showCommandOutput = ( result != 0 ) || 
+                                       FBuild::Get().GetOptions().m_ShowCommandOutput;
+        if ( showCommandOutput )
+        {
+            if ( memOut.Get() ) { Node::DumpOutput( job, memOut.Get(), memOutSize ); }
+            if ( memErr.Get() ) { Node::DumpOutput( job, memErr.Get(), memErrSize ); }
+        }
+
         // did the executable fail?
         if ( result != 0 )
         {
-            if ( memOut.Get() ) { FLOG_ERROR_DIRECT( memOut.Get() ); }
-            if ( memErr.Get() ) { FLOG_ERROR_DIRECT( memErr.Get() ); }
             FLOG_ERROR( "Failed to stamp %s. Error: %s Target: '%s' StampExe: '%s'", GetDLLOrExe(), ERROR_STR( result ), GetName().Get(), m_LinkerStampExe.Get() );
             return NODE_RESULT_FAILED;
         }
