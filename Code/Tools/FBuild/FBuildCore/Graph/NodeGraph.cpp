@@ -276,7 +276,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         {
             if ( !bffNeedsReparsing )
             {
-                FLOG_INFO( "BFF file '%s' missing or unopenable (reparsing will occur).", fileName.Get() );
+                FLOG_VERBOSE( "BFF file '%s' missing or unopenable (reparsing will occur).", fileName.Get() );
                 bffNeedsReparsing = true;
             }
             continue; // not opening the file is not an error, it could be not needed anymore
@@ -1194,7 +1194,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     }
     else
     {
-        FLOG_INFO("Up-To-Date '%s'", nodeToBuild->GetName().Get());
+        FLOG_VERBOSE( "Up-To-Date '%s'", nodeToBuild->GetName().Get() );
         nodeToBuild->SetState( Node::UP_TO_DATE );
     }
 }

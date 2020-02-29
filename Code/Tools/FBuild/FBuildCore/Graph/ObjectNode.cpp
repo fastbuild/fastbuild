@@ -582,7 +582,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         }
     }
 
-    const bool verbose = FLog::ShowInfo();
+    const bool verbose = FLog::ShowVerbose();
     const bool showCommands = ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines );
     const bool isRemote = ( job->IsLocal() == false );
     if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote )
@@ -751,7 +751,7 @@ bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
         parser.SwapIncludes( m_Includes );
     }
 
-    FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
+    FLOG_VERBOSE( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
 
     return true;
 }
@@ -805,7 +805,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         parser.SwapIncludes( m_Includes );
     }
 
-    FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
+    FLOG_VERBOSE( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
 
     return true;
 }
@@ -1491,7 +1491,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
         output += " <LOCAL>";
     }
     output += '\n';
-    if ( FLog::ShowInfo() || ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
+    if ( ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
     {
         output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable().Get() : GetCompiler() ? GetCompiler()->GetExecutable().Get() : "";
         output += ' ';

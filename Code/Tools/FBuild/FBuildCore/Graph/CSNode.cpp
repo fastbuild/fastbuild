@@ -246,7 +246,7 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
     output += "C#: ";
     output += GetName();
     output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += GetCompiler()->GetExecutable();
         output += ' ';

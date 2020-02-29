@@ -261,7 +261,7 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
     output += "Running Test: ";
     output += GetName();
     output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += GetTestExecutable()->GetName();
         output += ' ';

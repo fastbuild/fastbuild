@@ -74,7 +74,7 @@ public:
     uint16_t    m_DistributionPort                  = Protocol::PROTOCOL_PORT;
 
     // General Output
-    bool        m_ShowInfo                          = false;
+    bool        m_ShowVerbose                       = false;
     bool        m_ShowCommandLines                  = false;
     bool        m_ShowBuildCommands                 = true;
     bool        m_ShowErrors                        = true;

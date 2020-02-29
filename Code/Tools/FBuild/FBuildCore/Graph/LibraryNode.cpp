@@ -363,7 +363,7 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
     output += "Lib: ";
     output += GetName();
     output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += m_Librarian;
         output += ' ';

@@ -35,7 +35,7 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ bool FLog::s_ShowInfo = false;
+/*static*/ bool FLog::s_ShowVerbose = false;
 /*static*/ bool FLog::s_ShowBuildCommands = true;
 /*static*/ bool FLog::s_ShowErrors = true;
 /*static*/ bool FLog::s_ShowProgress = false;
@@ -52,7 +52,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 
 // Info
 //------------------------------------------------------------------------------
-/*static*/ void FLog::Info( MSVC_SAL_PRINTF const char * formatString, ... )
+/*static*/ void FLog::Verbose( MSVC_SAL_PRINTF const char * formatString, ... )
 {
     AStackString< 8192 > buffer;
 

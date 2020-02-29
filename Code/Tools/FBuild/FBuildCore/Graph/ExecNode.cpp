@@ -161,7 +161,7 @@ ExecNode::~ExecNode() = default;
 {
     if ( m_ExecAlways )
     {
-        FLOG_INFO( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
+        FLOG_VERBOSE( "Need to build '%s' (ExecAlways = true)", GetName().Get() );
         return true;
     }
     return Node::DetermineNeedToBuild( deps );
@@ -256,7 +256,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
     output += '\n';
 
     // verbose mode
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         AStackString< 1024 > verboseOutput;
         verboseOutput.Format( "%s %s\nWorkingDir: %s\nExpectedReturnCode: %i\n",

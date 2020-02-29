@@ -877,7 +877,7 @@ void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
     output += ": ";
     output += GetName();
     output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += m_Linker;
         output += ' ';
@@ -898,7 +898,7 @@ void LinkerNode::EmitStampMessage() const
     output += "Stamp: ";
     output += GetName();
     output += '\n';
-    if ( FLog::ShowInfo() || FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += linkerStampExe->GetName();
         output += ' ';
@@ -1202,7 +1202,7 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
         node = nodeGraph.CreateFileNode( potentialNodeNameClean );
         libs.EmplaceBack( node );
         found = true;
-        FLOG_INFO( "Additional library '%s' assumed to be '%s'\n", lib.Get(), potentialNodeNameClean.Get() );
+        FLOG_VERBOSE( "Additional library '%s' assumed to be '%s'\n", lib.Get(), potentialNodeNameClean.Get() );
         return true; // no error
     }
 

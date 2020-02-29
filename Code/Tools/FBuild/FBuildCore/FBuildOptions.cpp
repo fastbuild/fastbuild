@@ -278,7 +278,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-quiet" )
             {
                 m_ShowBuildCommands = false;
-                m_ShowInfo = false;
+                m_ShowVerbose = false;
                 continue;
             }
             else if ( thisArg == "-report" )
@@ -314,7 +314,8 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             }
             else if ( thisArg == "-verbose" )
             {
-                m_ShowInfo = true;
+                m_ShowVerbose = true;
+                m_ShowCommandLines = true;
                 m_CacheVerbose = true;
                 continue;
             }
@@ -368,7 +369,7 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
     // Default to build "all"
     if ( m_Targets.IsEmpty() )
     {
-        FLOG_INFO( "No target specified, defaulting to target 'all'" );
+        FLOG_VERBOSE( "No target specified, defaulting to target 'all'" );
         m_Targets.EmplaceBack( "all" );
     }
 
