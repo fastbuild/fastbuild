@@ -251,9 +251,12 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
 {
     // basic info
     AStackString< 2048 > output;
-    output += "Run: ";
-    output += GetName();
-    output += '\n';
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Run: ";
+        output += GetName();
+        output += '\n';
+    }
 
     // verbose mode
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
@@ -268,7 +271,7 @@ void ExecNode::EmitCompilationMessage( const AString & args ) const
     }
 
     // output all at once for contiguousness
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // GetFullArgs

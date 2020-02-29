@@ -243,9 +243,12 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
     // we combine everything into one string to ensure it is contiguous in
     // the output
     AStackString<> output;
-    output += "C#: ";
-    output += GetName();
-    output += '\n';
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "C#: ";
+        output += GetName();
+        output += '\n';
+    }
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += GetCompiler()->GetExecutable();
@@ -253,7 +256,7 @@ void CSNode::EmitCompilationMessage( const Args & fullArgs ) const
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // BuildArgs

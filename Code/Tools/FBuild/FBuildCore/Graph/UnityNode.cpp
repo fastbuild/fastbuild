@@ -117,7 +117,7 @@ UnityNode::~UnityNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult UnityNode::DoBuild( Job * UNUSED( job ) )
 {
-    bool hasOutputMessage = false; // print msg first time we actually save a file
+    bool hasEmittedMessage = false; // print msg first time we actually save a file
 
     // Ensure dest path exists
     // NOTE: Normally a node doesn't need to worry about this, but because
@@ -332,13 +332,16 @@ UnityNode::~UnityNode()
         // needs updating?
         if ( needToWrite )
         {
-            if ( hasOutputMessage == false )
+            if ( hasEmittedMessage == false )
             {
-                AStackString< 512 > buffer( "Uni: " );
-                buffer += GetName();
-                buffer += '\n';
-                FLOG_BUILD_DIRECT( buffer.Get() );
-                hasOutputMessage = true;
+                if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+                {
+                    AStackString< 512 > buffer( "Uni: " );
+                    buffer += GetName();
+                    buffer += '\n';
+                    FLOG_OUTPUT( buffer );
+                }
+                hasEmittedMessage = true;
             }
 
             if ( f.Open( unityName.Get(), FileStream::WRITE_ONLY ) == false )

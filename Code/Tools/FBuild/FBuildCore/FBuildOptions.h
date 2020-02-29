@@ -75,11 +75,13 @@ public:
 
     // General Output
     bool        m_ShowVerbose                       = false;
+    bool        m_ShowCommandSummary                = true;
     bool        m_ShowCommandLines                  = false;
-    bool        m_ShowBuildCommands                 = true;
     bool        m_ShowErrors                        = true;
     bool        m_ShowProgress                      = false;
     bool        m_ShowSummary                       = false;
+    bool        m_ShowTotalTimeTaken                = true;
+    bool        m_ShowPrintStatements               = true;
     bool        m_NoSummaryOnError                  = false;
     bool        m_GenerateReport                    = false;
     bool        m_EnableMonitor                     = false;

@@ -104,10 +104,13 @@ RemoveDirNode::~RemoveDirNode() = default;
             // we combine everything into one string to ensure it is contiguous in
             // the output
             AStackString<> output;
-            output += "Remove: ";
-            output += srcFile;
-            output += '\n';
-            FLOG_BUILD_DIRECT( output.Get() );
+            if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+            {
+                output += "Remove: ";
+                output += srcFile;
+                output += '\n';
+                FLOG_OUTPUT( output );
+            }
         }
     }
 

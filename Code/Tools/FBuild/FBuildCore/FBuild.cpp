@@ -83,7 +83,6 @@ FBuild::FBuild( const FBuildOptions & options )
 
     // poke options where required
     FLog::SetShowVerbose( m_Options.m_ShowVerbose );
-    FLog::SetShowBuildCommands( m_Options.m_ShowBuildCommands );
     FLog::SetShowErrors( m_Options.m_ShowErrors );
     FLog::SetShowProgress( m_Options.m_ShowProgress );
     FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );

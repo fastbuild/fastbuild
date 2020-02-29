@@ -360,9 +360,12 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
 void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
     AStackString<> output;
-    output += "Lib: ";
-    output += GetName();
-    output += '\n';
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Lib: ";
+        output += GetName();
+        output += '\n';
+    }
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += m_Librarian;
@@ -370,7 +373,7 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // GetLibrarian

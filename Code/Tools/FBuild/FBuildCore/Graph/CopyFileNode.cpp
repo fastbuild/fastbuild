@@ -99,12 +99,15 @@ void CopyFileNode::EmitCopyMessage() const
     // we combine everything into one string to ensure it is contiguous in
     // the output
     AStackString<> output;
-    output += "Copy: ";
-    output += m_StaticDependencies[ 0 ].GetNode()->GetName();
-    output += " -> ";
-    output += GetName();
-    output += '\n';
-    FLOG_BUILD_DIRECT( output.Get() );
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Copy: ";
+        output += m_StaticDependencies[ 0 ].GetNode()->GetName();
+        output += " -> ";
+        output += GetName();
+        output += '\n';
+    }
+    FLOG_OUTPUT( output );
 }
 
 //------------------------------------------------------------------------------

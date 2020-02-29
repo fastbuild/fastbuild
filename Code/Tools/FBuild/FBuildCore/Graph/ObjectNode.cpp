@@ -387,7 +387,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
-                FLOG_BUILD( " - Light cache cannot be used for '%s'\n", GetName().Get() );
+                FLOG_OUTPUT( " - Light cache cannot be used for '%s'\n", GetName().Get() );
             }
 
             // Fall through to generate preprocessed output for old style cache and distribution....
@@ -1307,13 +1307,17 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         RecordStampFromBuiltFile();
 
         // Output
-        AStackString<> output;
-        output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
-        if ( FBuild::Get().GetOptions().m_CacheVerbose )
+        if ( FBuild::Get().GetOptions().m_ShowCommandSummary ||
+             FBuild::Get().GetOptions().m_CacheVerbose )
         {
-            output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+            AStackString<> output;
+            output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
+            if ( FBuild::Get().GetOptions().m_CacheVerbose )
+            {
+                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+            }
+            FLOG_OUTPUT( output );
         }
-        FLOG_BUILD_DIRECT( output.Get() );
 
         SetStatFlag( Node::STATS_CACHE_HIT );
 
@@ -1329,9 +1333,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
     // Output
     if ( FBuild::Get().GetOptions().m_CacheVerbose )
     {
-        FLOG_BUILD( "Obj: %s\n"
-                    " - Cache Miss: %u ms '%s'\n",
-                    GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        FLOG_OUTPUT( "Obj: %s\n"
+                     " - Cache Miss: %u ms '%s'\n",
+                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
     }
 
     SetStatFlag( Node::STATS_CACHE_MISS );
@@ -1401,7 +1405,7 @@ void ObjectNode::WriteToCache( Job * job )
                 {
                     output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
                 }
-                FLOG_BUILD_DIRECT( output.Get() );
+                FLOG_OUTPUT( output );
             }
 
             return;
@@ -1411,9 +1415,9 @@ void ObjectNode::WriteToCache( Job * job )
     // Output
     if ( FBuild::Get().GetOptions().m_CacheVerbose )
     {
-        FLOG_BUILD( "Obj: %s\n"
-                    " - Cache Store Fail: %u ms '%s'\n",
-                    GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        FLOG_OUTPUT( "Obj: %s\n"
+                     " - Cache Store Fail: %u ms '%s'\n",
+                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
     }
 }
 
@@ -1476,21 +1480,24 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     // we combine everything into one string to ensure it is contiguous in
     // the output
     AStackString<> output;
-    output += "Obj: ";
-    if ( useDeoptimization )
+    if ( FBuild::IsValid()  && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        output += "**Deoptimized** ";
+        output += "Obj: ";
+        if ( useDeoptimization )
+        {
+            output += "**Deoptimized** ";
+        }
+        output += GetName();
+        if ( racingRemoteJob )
+        {
+            output += " <LOCAL RACE>";
+        }
+        else if ( stealingRemoteJob )
+        {
+            output += " <LOCAL>";
+        }
+        output += '\n';
     }
-    output += GetName();
-    if ( racingRemoteJob )
-    {
-        output += " <LOCAL RACE>";
-    }
-    else if ( stealingRemoteJob )
-    {
-        output += " <LOCAL>";
-    }
-    output += '\n';
     if ( ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
     {
         output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable().Get() : GetCompiler() ? GetCompiler()->GetExecutable().Get() : "";
@@ -1498,7 +1505,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // StripTokenWithArg

@@ -873,10 +873,13 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
 void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
 {
     AStackString<> output;
-    output += GetDLLOrExe();
-    output += ": ";
-    output += GetName();
-    output += '\n';
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += GetDLLOrExe();
+        output += ": ";
+        output += GetName();
+        output += '\n';
+    }
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += m_Linker;
@@ -884,7 +887,7 @@ void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // EmitStampMessage
@@ -892,20 +895,23 @@ void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
 void LinkerNode::EmitStampMessage() const
 {
     ASSERT( m_LinkerStampExe.IsEmpty() == false );
-    const Node * linkerStampExe = m_StaticDependencies.End()[ -1 ].GetNode();
 
     AStackString<> output;
-    output += "Stamp: ";
-    output += GetName();
-    output += '\n';
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Stamp: ";
+        output += GetName();
+        output += '\n';
+    }
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
+        const Node * linkerStampExe = m_StaticDependencies.End()[ -1 ].GetNode();
         output += linkerStampExe->GetName();
         output += ' ';
         output += m_LinkerStampExeArgs;
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // CanUseResponseFile

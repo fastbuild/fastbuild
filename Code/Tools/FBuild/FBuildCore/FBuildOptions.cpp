@@ -277,7 +277,8 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             }
             else if ( thisArg == "-quiet" )
             {
-                m_ShowBuildCommands = false;
+                m_ShowCommandSummary = false;
+                m_ShowTotalTimeTaken = false;
                 m_ShowVerbose = false;
                 continue;
             }

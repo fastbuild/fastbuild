@@ -258,9 +258,12 @@ const char * TestNode::GetEnvironmentString() const
 void TestNode::EmitCompilationMessage( const char * workingDir ) const
 {
     AStackString<> output;
-    output += "Running Test: ";
-    output += GetName();
-    output += '\n';
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Running Test: ";
+        output += GetName();
+        output += '\n';
+    }
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += GetTestExecutable()->GetName();
@@ -274,7 +277,7 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
             output += '\n';
         }
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 //------------------------------------------------------------------------------
