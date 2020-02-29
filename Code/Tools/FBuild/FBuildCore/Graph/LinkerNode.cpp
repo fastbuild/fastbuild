@@ -397,7 +397,7 @@ bool LinkerNode::DoPreLinkCleanup() const
     // thinks it can skip compilation (it outputs "Note: reusing persistent precompiled header %s")
     // If FASTBuild is building because we've not built before, then cleanup old files
     // to ensure VS2013/2015 /showincludes will work
-    if ( GetStamp() == 0 )
+    if ( GetStatFlag( STATS_FIRST_BUILD ) )
     {
         deleteFiles = true;
     }

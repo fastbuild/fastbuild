@@ -1152,6 +1152,8 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
             // Explicitly mark node in a way that will result in it rebuilding should
             // we cancel the build before builing this node
+            if ( nodeToBuild->m_Stamp == 0 )
+                nodeToBuild->SetStatFlag( Node::STATS_FIRST_BUILD );
             nodeToBuild->m_Stamp = 0;
 
             // Regenerate dynamic dependencies
