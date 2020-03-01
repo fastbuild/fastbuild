@@ -225,7 +225,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult Node::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult Node::DoBuild( Job * /*job*/ )
 {
     ASSERT( false ); // Derived class is missing implementation
     return Node::NODE_RESULT_FAILED;
@@ -233,7 +233,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 
 // DoBuild2
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult Node::DoBuild2( Job * UNUSED( job ), bool UNUSED( racingRemoteJob ) )
+/*virtual*/ Node::BuildResult Node::DoBuild2( Job * /*job*/, bool /*racingRemoteJob*/ )
 {
     ASSERT( false ); // Derived class is missing implementation
     return Node::NODE_RESULT_FAILED;
@@ -484,7 +484,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // SaveRemote
 //------------------------------------------------------------------------------
-/*virtual*/ void Node::SaveRemote( IOStream & UNUSED( stream ) ) const
+/*virtual*/ void Node::SaveRemote( IOStream & /*stream*/ ) const
 {
     // Should never get here.  Either:
     // a) Derived Node is missing SaveRemote implementation

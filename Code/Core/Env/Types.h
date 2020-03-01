@@ -47,8 +47,6 @@ typedef signed int          int32_t;
 #define KILOBYTE (1024)
 #define MEGABYTE (1024 * 1024)
 
-#define UNUSED( x )
-
 #if defined( __WINDOWS__ )
     #define THREAD_LOCAL __declspec( thread )
 #else

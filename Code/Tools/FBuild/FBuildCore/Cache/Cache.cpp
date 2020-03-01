@@ -166,7 +166,7 @@ public:
 
 // FreeMemory
 //------------------------------------------------------------------------------
-/*virtual*/ void Cache::FreeMemory( void * data, size_t UNUSED( dataSize ) )
+/*virtual*/ void Cache::FreeMemory( void * data, size_t /*dataSize*/ )
 {
     FREE( data );
 }

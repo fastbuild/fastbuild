@@ -46,21 +46,21 @@ REFLECT_END( UnityNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 UnityNode::UnityNode()
-: Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_ALWAYS_BUILD )
-, m_InputPathRecurse( true )
-, m_InputPattern( 1, true )
-, m_Files( 0, true )
-, m_OutputPath()
-, m_OutputPattern( "Unity*.cpp" )
-, m_NumUnityFilesToCreate( 1 )
-, m_PrecompiledHeader()
-, m_PathsToExclude( 0, true )
-, m_FilesToExclude( 0, true )
-, m_IsolateWritableFiles( false )
-, m_MaxIsolatedFiles( 0 )
-, m_ExcludePatterns( 0, true )
-, m_IsolatedFiles( 0, true )
-, m_UnityFileNames( 0, true )
+    : Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_ALWAYS_BUILD )
+    , m_InputPathRecurse( true )
+    , m_InputPattern( 1, true )
+    , m_Files( 0, true )
+    , m_OutputPath()
+    , m_OutputPattern( "Unity*.cpp" )
+    , m_NumUnityFilesToCreate( 1 )
+    , m_PrecompiledHeader()
+    , m_PathsToExclude( 0, true )
+    , m_FilesToExclude( 0, true )
+    , m_IsolateWritableFiles( false )
+    , m_MaxIsolatedFiles( 0 )
+    , m_ExcludePatterns( 0, true )
+    , m_IsolatedFiles( 0, true )
+    , m_UnityFileNames( 0, true )
 {
     m_InputPattern.EmplaceBack( "*.cpp" );
     m_LastBuildTimeMs = 100; // higher default than a file node
@@ -115,7 +115,7 @@ UnityNode::~UnityNode()
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult UnityNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult UnityNode::DoBuild( Job * /*job*/ )
 {
     bool hasEmittedMessage = false; // print msg first time we actually save a file
 

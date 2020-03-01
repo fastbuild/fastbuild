@@ -133,7 +133,7 @@ DirectoryListNode::~DirectoryListNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult DirectoryListNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult DirectoryListNode::DoBuild( Job * /*job*/ )
 {
     // NOTE: The DirectoryListNode makes no assumptions about whether no files
     // is an error or not.  That's up to the dependent nodes to decide.

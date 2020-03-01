@@ -265,7 +265,7 @@ SLNNode::~SLNNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult SLNNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult SLNNode::DoBuild( Job * /*job*/ )
 {
     SLNGenerator sg;
 

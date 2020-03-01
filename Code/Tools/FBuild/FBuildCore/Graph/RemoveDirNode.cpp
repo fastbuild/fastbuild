@@ -79,7 +79,7 @@ RemoveDirNode::~RemoveDirNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult RemoveDirNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult RemoveDirNode::DoBuild( Job * /*job*/ )
 {
     ASSERT( !m_StaticDependencies.IsEmpty() );
 

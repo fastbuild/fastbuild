@@ -26,7 +26,7 @@ REFLECT_END( CopyFileNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CopyFileNode::CopyFileNode()
-: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
 {
     m_Type = Node::COPY_FILE_NODE;
 }
@@ -56,7 +56,7 @@ CopyFileNode::~CopyFileNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult CopyFileNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult CopyFileNode::DoBuild( Job * /*job*/ )
 {
     EmitCopyMessage();
 

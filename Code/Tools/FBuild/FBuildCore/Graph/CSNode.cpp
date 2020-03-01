@@ -42,10 +42,10 @@ REFLECT_END( CSNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 CSNode::CSNode()
-: FileNode( AString::GetEmpty(), Node::FLAG_NONE )
-, m_CompilerInputPathRecurse( true )
-, m_NumCompilerInputFiles( 0 )
-, m_NumCompilerReferences( 0 )
+    : FileNode( AString::GetEmpty(), Node::FLAG_NONE )
+    , m_CompilerInputPathRecurse( true )
+    , m_NumCompilerInputFiles( 0 )
+    , m_NumCompilerReferences( 0 )
 {
     m_CompilerInputPattern.EmplaceBack( "*.cs" );
     m_Type = CS_NODE;
@@ -119,7 +119,7 @@ CSNode::~CSNode() = default;
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool CSNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+/*virtual*/ bool CSNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();

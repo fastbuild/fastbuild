@@ -244,7 +244,7 @@ VCXProjectNode::~VCXProjectNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult VCXProjectNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult VCXProjectNode::DoBuild( Job * /*job*/ )
 {
     VSProjectGenerator pg;
     pg.SetBasePaths( m_ProjectBasePaths );
