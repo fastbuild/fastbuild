@@ -26,9 +26,9 @@
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/RemoveDirNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/TextFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/TextFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VSProjectBaseNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
@@ -80,7 +80,6 @@
     "RemoveDir",
     "XCodeProj",
     "Settings",
-    "TextFile",
     "VSExtProj",
     "TextFile",
 };

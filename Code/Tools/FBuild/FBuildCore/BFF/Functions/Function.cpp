@@ -60,7 +60,7 @@
 
 // Static
 //------------------------------------------------------------------------------
-/*static*/ Array<const Function *> g_Functions( 23, false );
+/*static*/ Array<const Function *> g_Functions( 24, false );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------

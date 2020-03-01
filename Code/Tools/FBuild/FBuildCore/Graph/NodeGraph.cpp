@@ -1001,13 +1001,13 @@ SettingsNode * NodeGraph::CreateSettingsNode( const AString & name )
 //------------------------------------------------------------------------------
 TextFileNode* NodeGraph::CreateTextFileNode( const AString& nodeName )
 {
-  ASSERT( Thread::IsMainThread() );
-  ASSERT( IsCleanPath( nodeName ) );
+    ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( nodeName ) );
 
-  TextFileNode* node = FNEW( TextFileNode() );
-  node->SetName( nodeName );
-  AddNode( node );
-  return node;
+    TextFileNode* node = FNEW( TextFileNode() );
+    node->SetName( nodeName );
+    AddNode( node );
+    return node;
 }
 
 // AddNode

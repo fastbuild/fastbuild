@@ -29,17 +29,11 @@
       TextFile
     </div>
     <div class='newsitembody'>
-      <p>
-        Creates a text file as a build step.  The text file can then be used as part of a subsequent build step, though this TextFile node may
-        need to be listed explicitly. For example. when used as part of an ObjectList .CompilerOptions or scanned via wildcard,
-        it should be in the ObjectList's .PreBuildDependencies.
-      </p><p>
-        The destination directory will be created automatically, if needed.
-      </p><p>
-        By default, the text file will be updated if it is missing or the BFF has changed.
-      </p><p>
-        .TextFileInputStrings must contain at least one string, and none of the strings can be empty.  To output a blank line, you must write a space.
-      </p>
+        <p>Creates a text file which can used as part of a subsequent build step.</p>
+        <p>.TextFileInputStrings must contain at least one string, and none of the strings can be empty.</p>
+        <p><font color="red">WARNING:</font> Must not be used to generate response files or to externalize command line arguments for build steps that can be cached or distributed. This will
+        result in failed builds or incorrect caching.</p>
+        <p><font color="red">WARNING:</font> Many FASTBuild functions inspect command line arguments to help control behavior. Care must not taken not to hide command line arguments that are required for FASTBuild to function correctly.</p>
 <div class='code'>
 TextFile( alias )  ; (optional) Alias
 {
@@ -58,6 +52,6 @@ TextFile( alias )  ; (optional) Alias
 
 
 
-    </div><div class='footer'>&copy; 2012-2019 Franta Fulin</div></div></div>
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>
 </html>

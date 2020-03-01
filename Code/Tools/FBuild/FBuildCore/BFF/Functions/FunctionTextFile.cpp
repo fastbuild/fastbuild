@@ -1,19 +1,21 @@
-// FunctionTest
+// FunctionTextFile
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionTextFile.h"
-#include "Tools/FBuild/FBuildCore/FBuild.h"
-#include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/TextFileNode.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FunctionTextFile::FunctionTextFile()
-: Function( "TextFile" )
+    : Function( "TextFile" )
 {
 }
+
+// DESTRUCTOR
+//------------------------------------------------------------------------------
+/*virtual*/ FunctionTextFile::~FunctionTextFile() = default;
 
 // AcceptsHeader
 //------------------------------------------------------------------------------
