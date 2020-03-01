@@ -222,12 +222,6 @@ CSNode::~CSNode() = default;
         return NODE_RESULT_FAILED;
     }
 
-    if ( !FileIO::FileExists( m_Name.Get() ) )
-    {
-        FLOG_ERROR( "Object missing despite success for '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
-    }
-
     // record new file time
     RecordStampFromBuiltFile();
 
