@@ -21,6 +21,7 @@
 #include "FunctionRemoveDir.h"
 #include "FunctionSettings.h"
 #include "FunctionTest.h"
+#include "FunctionTextFile.h"
 #include "FunctionUnity.h"
 #include "FunctionUsing.h"
 #include "FunctionVCXProject.h"
@@ -109,6 +110,7 @@ Function::~Function() = default;
     g_Functions.Append( FNEW( FunctionRemoveDir ) );
     g_Functions.Append( FNEW( FunctionSettings ) );
     g_Functions.Append( FNEW( FunctionTest ) );
+    g_Functions.Append( FNEW( FunctionTextFile ) );
     g_Functions.Append( FNEW( FunctionUnity ) );
     g_Functions.Append( FNEW( FunctionUsing ) );
     g_Functions.Append( FNEW( FunctionVCXProject ) );

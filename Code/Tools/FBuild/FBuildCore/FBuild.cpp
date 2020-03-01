@@ -718,6 +718,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
             case Node::REMOVE_DIR_NODE:     break;
             case Node::XCODEPROJECT_NODE:   break;
             case Node::SETTINGS_NODE:       break;
+            case Node::TEXT_FILE_NODE:      displayName = true; hidden = node->IsHidden(); break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
         if ( displayName && ( !hidden || showHidden ) )
