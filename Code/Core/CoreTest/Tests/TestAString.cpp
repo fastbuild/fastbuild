@@ -38,6 +38,8 @@ private:
     void PatternMatchI() const;
     void Replace() const;
     void Trim() const;
+    void TrimStart() const;
+    void TrimEnd() const;
     void MoveConstructor() const;
     void MoveAssignment() const;
 
@@ -71,6 +73,8 @@ REGISTER_TESTS_BEGIN( TestAString )
     REGISTER_TEST( PatternMatchI )
     REGISTER_TEST( Replace )
     REGISTER_TEST( Trim )
+    REGISTER_TEST( TrimStart )
+    REGISTER_TEST( TrimEnd )
     REGISTER_TEST( MoveConstructor )
     REGISTER_TEST( MoveAssignment )
 REGISTER_TESTS_END
@@ -745,6 +749,86 @@ void TestAString::Trim() const
         test.Trim( 2, 2 );
         TEST_ASSERT( test.GetLength() == 5 );
         TEST_ASSERT( test  == "Hello" );
+    }
+}
+
+// TrimStart
+//------------------------------------------------------------------------------
+void TestAString::TrimStart() const
+{
+    {
+        // No trim (empty)
+        AStackString<> empty;
+        empty.TrimStart( 'x' );
+    }
+
+    {
+        // No trim (doesn't start with)
+        AStackString<> test( "String" );
+        test.TrimStart( 'x' );
+        TEST_ASSERT( test.GetLength() == 6 );
+    }
+
+    {
+        // No trim (doesn't start with)
+        AStackString<> test( "Stringxx" );
+        test.TrimStart( 'x' );
+        TEST_ASSERT( test.GetLength() == 8 );
+    }
+
+    {
+        // Trim
+        AStackString<> test( "xxString" );
+        test.TrimStart( 'x' );
+        TEST_ASSERT( test.GetLength() == 6 );
+        TEST_ASSERT( test == "String" );
+    }
+
+    {
+        // Trim (entire string)
+        AStackString<> test( "xxxx" );
+        test.TrimStart( 'x' );
+        TEST_ASSERT( test.IsEmpty() );
+    }
+}
+
+// TrimEnd
+//------------------------------------------------------------------------------
+void TestAString::TrimEnd() const
+{
+    {
+        // No trim (empty)
+        AStackString<> empty;
+        empty.TrimEnd( 'x' );
+    }
+
+    {
+        // No trim (doesn't end with)
+        AStackString<> test( "String" );
+        test.TrimEnd( 'x' );
+        TEST_ASSERT( test.GetLength() == 6 );
+    }
+
+    {
+        // No trim (doesn't end with)
+        AStackString<> test( "xxString" );
+        test.TrimEnd( 'x' );
+        TEST_ASSERT( test.GetLength() == 8 );
+    }
+
+    {
+        // Trim
+        AStackString<> test( "Stringxx" );
+        test.TrimEnd( 'x' );
+        TEST_ASSERT( test.GetLength() == 6 );
+        TEST_ASSERT( test == "String" );
+    }
+
+    {
+        // Trim (entire string)
+        AStackString<> test( "xxxx" );
+        test.TrimEnd( 'x' );
+        TEST_ASSERT( test.IsEmpty() );
     }
 }
 

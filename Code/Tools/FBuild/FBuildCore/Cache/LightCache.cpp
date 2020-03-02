@@ -429,7 +429,7 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
             return false;
         }
 
-        file.m_Includes.Append( IncludedFile::Include{ include, includeType } );
+        file.m_Includes.EmplaceBack( include, includeType );
         return true;
     }
 
@@ -441,7 +441,7 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
     }
 
     // Store the macro include which will be resolved later
-    file.m_Includes.Append( IncludedFile::Include{ macroName, IncludeType::MACRO } );
+    file.m_Includes.EmplaceBack( macroName, IncludeType::MACRO );
     return true;
 }
 

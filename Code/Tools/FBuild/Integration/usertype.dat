@@ -32,6 +32,7 @@ Test
 Unity
 Using
 VCXProject
+VSProjectExternal
 VSSolution
 XCodeProject
 
@@ -50,6 +51,7 @@ BuildLogFile
 CachePath
 CachePathMountPoint
 CachePluginDLL
+ClangFixupUnity_Disable
 ClangRewriteIncludes
 Compiler
 CompilerFamily
@@ -106,6 +108,7 @@ ExecUseStdOutAsOutput
 ExecWorkingDir
 Executable
 ExecutableRootPath
+ExternalProjectPath
 ExtraFiles
 FileType
 FilesToExclude
@@ -169,6 +172,7 @@ ProjectProjectReferences
 ProjectRebuildCommand
 ProjectReferences
 ProjectSccEntrySAK
+ProjectTypeGuid
 Projects
 Recursive
 RemoveExcludePaths
@@ -235,5 +239,6 @@ XCodeCommandLineArguments
 XCodeCommandLineArgumentsDisabled
 XCodeDebugWorkingDir
 XCodeDocumentVersioning
+XCodeIphoneOSDeploymentTarget
 XCodeOrganizationName
 Xbox360DebuggerCommand

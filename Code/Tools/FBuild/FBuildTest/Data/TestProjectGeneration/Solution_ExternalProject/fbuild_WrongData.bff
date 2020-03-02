@@ -1,0 +1,36 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Two "native" FASTBuild-generated projects
+VCXProject( 'Proj1w' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_ExternalProject\proj_native1w.vcxproj'
+}
+VCXProject( 'Proj2w' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_ExternalProject\proj_native2w.vcxproj'
+}
+
+
+// "foreign" WiX toolset project without specifying data (enforcing to use the loader)
+VSProjectExternal( 'ExternalDummyProject_3' )
+{
+    .ExternalProjectPath = 'Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/ExternalDummyProject_3.wixproj' // has to exist
+}
+
+VSSolution( 'ExternalWrongDataProjectSolution' )
+{
+    .SolutionProjects               = { 'Proj1w', 'Proj2w' }
+
+	// this will always fail, even if you have VSProjTypeExtractor / Visual Studio with WiX toolset support available (which is not likely the case on Travis CI)
+	// and should do so, that's what this test validates
+	.SolutionProjects               + { 'ExternalDummyProject_3' }
+	
+    .SolutionX64Debug               = [ .Platform = 'x64'   .Config = 'Debug' ]
+    .SolutionX64Release             = [ .Platform = 'x64'   .Config = 'Release' .SolutionDeployProjects = 'Proj1w' ]
+    .SolutionConfigs                = { .SolutionX64Debug, .SolutionX64Release }
+
+    .SolutionOutput                 = "$Out$\Test\ProjectGeneration\Solution_ExternalProject\ExternalWrongData.sln"
+}

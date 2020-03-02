@@ -46,23 +46,23 @@ REFLECT_END( UnityNode )
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 UnityNode::UnityNode()
-: Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_ALWAYS_BUILD )
-, m_InputPathRecurse( true )
-, m_InputPattern( 1, true )
-, m_Files( 0, true )
-, m_OutputPath()
-, m_OutputPattern( "Unity*.cpp" )
-, m_NumUnityFilesToCreate( 1 )
-, m_PrecompiledHeader()
-, m_PathsToExclude( 0, true )
-, m_FilesToExclude( 0, true )
-, m_IsolateWritableFiles( false )
-, m_MaxIsolatedFiles( 0 )
-, m_ExcludePatterns( 0, true )
-, m_IsolatedFiles( 0, true )
-, m_UnityFileNames( 0, true )
+    : Node( AString::GetEmpty(), Node::UNITY_NODE, Node::FLAG_ALWAYS_BUILD )
+    , m_InputPathRecurse( true )
+    , m_InputPattern( 1, true )
+    , m_Files( 0, true )
+    , m_OutputPath()
+    , m_OutputPattern( "Unity*.cpp" )
+    , m_NumUnityFilesToCreate( 1 )
+    , m_PrecompiledHeader()
+    , m_PathsToExclude( 0, true )
+    , m_FilesToExclude( 0, true )
+    , m_IsolateWritableFiles( false )
+    , m_MaxIsolatedFiles( 0 )
+    , m_ExcludePatterns( 0, true )
+    , m_IsolatedFiles( 0, true )
+    , m_UnityFileNames( 0, true )
 {
-    m_InputPattern.Append( AStackString<>( "*.cpp" ) );
+    m_InputPattern.EmplaceBack( "*.cpp" );
     m_LastBuildTimeMs = 100; // higher default than a file node
 }
 
@@ -115,9 +115,9 @@ UnityNode::~UnityNode()
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult UnityNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult UnityNode::DoBuild( Job * /*job*/ )
 {
-    bool hasOutputMessage = false; // print msg first time we actually save a file
+    bool hasEmittedMessage = false; // print msg first time we actually save a file
 
     // Ensure dest path exists
     // NOTE: Normally a node doesn't need to worry about this, but because
@@ -332,13 +332,16 @@ UnityNode::~UnityNode()
         // needs updating?
         if ( needToWrite )
         {
-            if ( hasOutputMessage == false )
+            if ( hasEmittedMessage == false )
             {
-                AStackString< 512 > buffer( "Uni: " );
-                buffer += GetName();
-                buffer += '\n';
-                FLOG_BUILD_DIRECT( buffer.Get() );
-                hasOutputMessage = true;
+                if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+                {
+                    AStackString< 512 > buffer( "Uni: " );
+                    buffer += GetName();
+                    buffer += '\n';
+                    FLOG_OUTPUT( buffer );
+                }
+                hasEmittedMessage = true;
             }
 
             if ( f.Open( unityName.Get(), FileStream::WRITE_ONLY ) == false )
@@ -409,7 +412,7 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
 
                 if ( keep )
                 {
-                    files.Append( FileAndOrigin( filesIt, dirNode ) );
+                    files.EmplaceBack( filesIt, dirNode );
                 }
             }
         }
@@ -432,7 +435,7 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
                     fi->m_Attributes = 0; // No writable bits set
                 #endif
                 fi->m_Size = 0;
-                files.Append( FileAndOrigin( fi, nullptr ) );
+                files.EmplaceBack( fi, nullptr );
             }
         }
         else if ( node->IsAFile() )
@@ -442,7 +445,7 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
             if ( FileIO::GetFileInfo( node->GetName(), *fi ) )
             {
                 // only add files that exist
-                files.Append( FileAndOrigin( fi, nullptr ) );
+                files.EmplaceBack( fi, nullptr );
             }
             else
             {

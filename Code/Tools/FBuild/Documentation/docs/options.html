@@ -165,6 +165,10 @@
     <td>Set local sandbox tmp dir.</td>
   </tr>
   <tr>
+    <td><a href="#showcmdoutput">-showcmdoutput</a></td>
+    <td>Show output of external processes.</td>
+  </tr>  
+  <tr>
     <td><a href="#showcmds">-showcmds</a></td>
     <td>Show command lines used to launch external processes.</td>
   </tr>
@@ -569,6 +573,20 @@ disable it for this run of FBuild.</p>
 </table></p>
 <p>You may alternatively set this value via the SandboxTmp field in your Settings node.</p>
 <p>By default, this option is a dir called sandbox, in your working dir.</p>
+</div>
+
+  <tr>
+    <td><a href="#showcmdoutput">-showcmdoutput</a></td>
+    <td>Show output of external processes.</td>
+  </tr>  
+    <div class='newsitemheader' id="showcmdoutput">-showcmdoutput</div>
+    <div class='newsitembody'>
+<p>Displays the full output of external processes regardless of outcome.</p>
+<p>Normally FASTBuild suppresses the output of external processes unless there
+are warnings or failures. In some cases (for debugging for example), it can be useful
+to see the complete output.</p>
+<p>NOTE: This option may have an impact on build performance.</p>
+<p></p>
 </div>
 
     <div class='newsitemheader' id="showcmds">-showcmds</div>

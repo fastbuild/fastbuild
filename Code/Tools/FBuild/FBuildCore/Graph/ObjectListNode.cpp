@@ -76,7 +76,7 @@ ObjectListNode::ObjectListNode()
 {
     m_LastBuildTimeMs = 10000;
 
-    m_CompilerInputPattern.Append( AStackString<>( "*.cpp" ) );
+    m_CompilerInputPattern.EmplaceBack( "*.cpp" );
 }
 
 // Initialize
@@ -191,7 +191,7 @@ ObjectListNode::ObjectListNode()
             Error::Error_1102_UnexpectedType( iter, function, "CompilerInputUnity", unity, n->GetType(), Node::UNITY_NODE );
             return false;
         }
-        compilerInputUnity.Append( Dependency( n ) );
+        compilerInputUnity.EmplaceBack( n );
     }
     m_NumCompilerInputUnity = (uint32_t)compilerInputUnity.GetSize();
 
@@ -226,14 +226,14 @@ ObjectListNode::ObjectListNode()
 
     // Store dependencies
     m_StaticDependencies.SetCapacity( m_StaticDependencies.GetSize() + 1 + ( preprocessorNode ? 1 : 0 ) + ( precompiledHeader ? 1 : 0 ) + compilerInputPath.GetSize() + m_NumCompilerInputUnity + m_NumCompilerInputFiles );
-    m_StaticDependencies.Append( Dependency( compilerNode ) );
+    m_StaticDependencies.EmplaceBack( compilerNode );
     if ( preprocessorNode )
     {
-        m_StaticDependencies.Append( Dependency( preprocessorNode ) );
+        m_StaticDependencies.EmplaceBack( preprocessorNode );
     }
     if ( precompiledHeader )
     {
-        m_StaticDependencies.Append( Dependency( precompiledHeader ) );
+        m_StaticDependencies.EmplaceBack( precompiledHeader );
     }
     m_StaticDependencies.Append( compilerInputPath );
     m_StaticDependencies.Append( compilerInputUnity );
@@ -395,7 +395,7 @@ ObjectListNode::~ObjectListNode() = default;
     // b) a DLL or executable links our .obj files
     if ( m_UsingPrecompiledHeader )
     {
-        m_DynamicDependencies.Append( Dependency( GetPrecompiledHeader() ) );
+        m_DynamicDependencies.EmplaceBack( GetPrecompiledHeader() );
     }
 
     return true;
@@ -680,7 +680,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
             return false;
         }
     }
-    m_DynamicDependencies.Append( Dependency( on ) );
+    m_DynamicDependencies.EmplaceBack( on );
     return true;
 }
 

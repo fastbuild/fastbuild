@@ -28,8 +28,9 @@
 #include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/SLNNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/TextFileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
-#include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/VSProjectBaseNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/XCodeProjectNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_AllowNonFile.h"
 #include "Tools/FBuild/FBuildCore/Graph/MetaData/Meta_EmbedMembers.h"
@@ -81,6 +82,8 @@
     "RemoveDir",
     "XCodeProj",
     "Settings",
+    "VSExtProj",
+    "TextFile",
 };
 static Mutex g_NodeEnvStringMutex;
 
@@ -167,7 +170,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
     // can also occur if explicitly dirtied in a previous build
     if ( m_Stamp == 0 )
     {
-        FLOG_INFO( "Need to build '%s' (first time or dirtied)", GetName().Get() );
+        FLOG_VERBOSE( "Need to build '%s' (first time or dirtied)", GetName().Get() );
         return true;
     }
 
@@ -178,7 +181,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         if ( lastWriteTime == 0 )
         {
             // file is missing on disk
-            FLOG_INFO( "Need to build '%s' (missing)", GetName().Get() );
+            FLOG_VERBOSE( "Need to build '%s' (missing)", GetName().Get() );
             return true;
         }
 
@@ -186,7 +189,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         {
             // on disk file doesn't match our file
             // (modified by some external process)
-            FLOG_INFO( "Need to build '%s' (externally modified - stamp = %" PRIu64 ", disk = %" PRIu64 ")", GetName().Get(), m_Stamp, lastWriteTime );
+            FLOG_VERBOSE( "Need to build '%s' (externally modified - stamp = %" PRIu64 ", disk = %" PRIu64 ")", GetName().Get(), m_Stamp, lastWriteTime );
             return true;
         }
     }
@@ -206,7 +209,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         if ( stamp == 0 )
         {
             // file missing - this may be ok, but node needs to build to find out
-            FLOG_INFO( "Need to build '%s' (dep missing: '%s')", GetName().Get(), n->GetName().Get() );
+            FLOG_VERBOSE( "Need to build '%s' (dep missing: '%s')", GetName().Get(), n->GetName().Get() );
             return true;
         }
 
@@ -215,7 +218,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
         const uint64_t oldStamp = dep.GetNodeStamp();
         if ( stamp != oldStamp )
         {
-            FLOG_INFO( "Need to build '%s' (dep changed: '%s', %" PRIu64 " -> %" PRIu64 ")", GetName().Get(), n->GetName().Get(), oldStamp, stamp );
+            FLOG_VERBOSE( "Need to build '%s' (dep changed: '%s', %" PRIu64 " -> %" PRIu64 ")", GetName().Get(), n->GetName().Get(), oldStamp, stamp );
             return true;
         }
     }
@@ -325,7 +328,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult Node::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult Node::DoBuild( Job * /*job*/ )
 {
     ASSERT( false ); // Derived class is missing implementation
     return Node::NODE_RESULT_FAILED;
@@ -333,7 +336,7 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 
 // DoBuild2
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult Node::DoBuild2( Job * UNUSED( job ), bool UNUSED( racingRemoteJob ) )
+/*virtual*/ Node::BuildResult Node::DoBuild2( Job * /*job*/, bool /*racingRemoteJob*/ )
 {
     ASSERT( false ); // Derived class is missing implementation
     return Node::NODE_RESULT_FAILED;
@@ -434,12 +437,14 @@ void Node::SetLastBuildTime( uint32_t ms )
         case Node::COMPILER_NODE:       return nodeGraph.CreateCompilerNode( name );
         case Node::DLL_NODE:            return nodeGraph.CreateDLLNode( name );
         case Node::VCXPROJECT_NODE:     return nodeGraph.CreateVCXProjectNode( name );
+        case Node::VSPROJEXTERNAL_NODE: return nodeGraph.CreateVSProjectExternalNode( name );
         case Node::OBJECT_LIST_NODE:    return nodeGraph.CreateObjectListNode( name );
         case Node::COPY_DIR_NODE:       return nodeGraph.CreateCopyDirNode( name );
         case Node::SLN_NODE:            return nodeGraph.CreateSLNNode( name );
         case Node::REMOVE_DIR_NODE:     return nodeGraph.CreateRemoveDirNode( name );
         case Node::XCODEPROJECT_NODE:   return nodeGraph.CreateXCodeProjectNode( name );
         case Node::SETTINGS_NODE:       return nodeGraph.CreateSettingsNode( name );
+        case Node::TEXT_FILE_NODE:      return nodeGraph.CreateTextFileNode( name );
         case Node::NUM_NODE_TYPES:      ASSERT( false ); return nullptr;
     }
 
@@ -583,7 +588,7 @@ void Node::SetLastBuildTime( uint32_t ms )
 
 // SaveRemote
 //------------------------------------------------------------------------------
-/*virtual*/ void Node::SaveRemote( IOStream & UNUSED( stream ) ) const
+/*virtual*/ void Node::SaveRemote( IOStream & /*stream*/ ) const
 {
     // Should never get here.  Either:
     // a) Derived Node is missing SaveRemote implementation
@@ -712,7 +717,7 @@ bool Node::Deserialize( NodeGraph & nodeGraph, IOStream & stream )
          ( m_StaticDependencies.Load( nodeGraph, stream ) == false ) ||
          ( m_DynamicDependencies.Load( nodeGraph, stream ) == false ) )
     {
-        return nullptr;
+        return false;
     }
 
     // Properties
@@ -1132,6 +1137,12 @@ void Node::ReplaceDummyName( const AString & newName )
     // Only try to fixup "line" errors and not other errors like:
     // - warning 65 in function "Blah": var <x> was never used
     if ( tokens[ 3 ] != "line" )
+    {
+        return;
+    }
+    // Ignore warnings from the underlying assembler such as:
+    // - warning 2006 in line 307: bad extension - using default
+    if ( tokens[5] != "of" )
     {
         return;
     }

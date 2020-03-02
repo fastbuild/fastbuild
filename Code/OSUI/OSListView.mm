@@ -132,7 +132,7 @@ void ListViewOSX_AddItem( OSListView * owner, const char * itemText )
     // Add item
     {
         MutexHolder mh( table->m_Mutex );
-        table->m_Columns[0]->m_Data.Append(AStackString<>(itemText));
+        table->m_Columns[ 0 ]->m_Data.EmplaceBack( itemText );
     }
     
     [table RefreshUI];

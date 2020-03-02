@@ -35,8 +35,7 @@ private:
     static FBuildOptions GetOptions()
     {
         FBuildOptions options;
-        options.m_ShowInfo = false; // disable variable trace messages, just in case
-        options.m_ShowBuildCommands = false; // disable output from Print function
+        options.m_ShowPrintStatements = false; // disable output from Print function TODO:C Why is this needed?
         options.m_ShowErrors = false; // disable error messages
         return options;
     }

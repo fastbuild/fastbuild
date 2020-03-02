@@ -135,6 +135,7 @@ public:
                                    0,               // DWORD dwCreationFlags
                                    nullptr      // LPDWORD lpThreadId
                                  );
+        ASSERT( h != nullptr );
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
         #if __has_feature( address_sanitizer ) || defined( __SANITIZE_ADDRESS__ )
             // AddressSanitizer instruments objects created on the stack by inserting redzones around them.
@@ -142,17 +143,16 @@ public:
             // To account for that double the requested stack size for the thread.
             stackSize *= 2;
         #endif
-        pthread_t h;
+        pthread_t h( 0 );
         pthread_attr_t threadAttr;
         VERIFY( pthread_attr_init( &threadAttr ) == 0 );
         VERIFY( pthread_attr_setstacksize( &threadAttr, stackSize ) == 0 );
         VERIFY( pthread_attr_setdetachstate( &threadAttr, PTHREAD_CREATE_JOINABLE ) == 0 );
         VERIFY( pthread_create( &h, &threadAttr, ThreadStartInfo::ThreadStartFunction, &info ) == 0 );
+        ASSERT( h != (pthread_t)0 );
     #else
         #error Unknown platform
     #endif
-
-    ASSERT( h != nullptr );
 
     return (Thread::ThreadHandle)h;
 }

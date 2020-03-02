@@ -263,7 +263,10 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 //------------------------------------------------------------------------------
 /*static*/ bool ProjectGeneratorBase::WriteToDisk( const char * generatorId, const AString & content, const AString & fileName )
 {
-    FLOG_BUILD( "%s: %s\n", generatorId, fileName.Get() );
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        FLOG_OUTPUT( "%s: %s\n", generatorId, fileName.Get() );
+    }
 
     // ensure path exists (normally handled by framework, but Projects
     // are not necessarily a single file)
@@ -303,7 +306,7 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
     extensions.SetCapacity( sizeof( defaultExtensions ) / sizeof( char * ) );
     for ( auto & ext : defaultExtensions )
     {
-        extensions.Append( AStackString<>( ext ) );
+        extensions.EmplaceBack( ext );
     }
 }
 
@@ -410,11 +413,11 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                            bool escapeQuotes )
 {
     StackArray< AString, 5 > prefixes;
-    prefixes.Append( Move( AString( "/I" ) ) );
-    prefixes.Append( Move( AString( "-I" ) ) );
-    prefixes.Append( Move( AString( "-isystem-after" ) ) ); // NOTE: before -isystem so it's checked first
-    prefixes.Append( Move( AString( "-isystem" ) ) );
-    prefixes.Append( Move( AString( "-iquote" ) ) );
+    prefixes.EmplaceBack( "/I" );
+    prefixes.EmplaceBack( "-I" );
+    prefixes.EmplaceBack( "-isystem-after" ); // NOTE: before -isystem so it's checked first
+    prefixes.EmplaceBack( "-isystem" );
+    prefixes.EmplaceBack( "-iquote" );
 
     // Extract various kinds of includes
     const bool keepFullOption = false;
@@ -428,8 +431,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                       bool escapeQuotes )
 {
     StackArray< AString, 2 > prefixes;
-    prefixes.Append( Move( AString( "/D" ) ) );
-    prefixes.Append( Move( AString( "-D" ) ) );
+    prefixes.EmplaceBack( "/D" );
+    prefixes.EmplaceBack( "-D" );
 
     // Extract various kinds of includes
     const bool keepFullOption = false;
@@ -442,8 +445,8 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
                                                                 Array< AString > & outOptions )
 {
     StackArray< AString, 2 > prefixes;
-    prefixes.Append( Move( AString( "-std" ) ) );
-    prefixes.Append( Move( AString( "/std" ) ) );
+    prefixes.EmplaceBack( "-std" );
+    prefixes.EmplaceBack( "/std" );
 
     // Extract the options
     const bool escapeQuotes = false;

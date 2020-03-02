@@ -46,6 +46,8 @@ Compiler( 'Compiler-VS2019-x64' )
                                     + ' /Zc:strictStrings'  // Require const only usage of string literals (VS2013+)
                                     + ' /fp:fast'
                                     + ' /diagnostics:caret' // Use improved warning/error messages
+                                    + ' /std:c++17'         // Enable c++17 features
+                                    + ' /permissive-'       // Require conformant code
 
                                     // Warnings
                                     + ' /Wall'              // Enable all warnings (we'll disable those that are not useful)
