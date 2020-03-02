@@ -1,0 +1,34 @@
+//
+// IncrementalLinking_MSVC
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+ObjectList( 'Obj' )
+{
+    .CompilerInputPath  = '$Out$/Test/TestLinker/IncrementalLinking_MSVC/'
+    .CompilerOutputPath = '$Out$/Test/TestLinker/IncrementalLinking_MSVC/out/'
+}
+
+Executable( 'Exe' )
+{
+    // Input
+    .Libraries          = { 'Obj' }
+
+    // Options
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+                            - ' /INCREMENTAL:NO'
+                            + ' /INCREMENTAL'
+                            + ' /VERBOSE'
+    #endif
+
+    // Output
+    .LinkerOutput       = '$Out$/Test/TestLinker/IncrementalLinking_MSVC/out/exe.exe'
+}

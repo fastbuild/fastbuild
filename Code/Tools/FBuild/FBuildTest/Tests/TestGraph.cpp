@@ -250,7 +250,7 @@ void TestGraph::TestDirectoryListNode() const
         const AStackString<> testFolder( "Tools/FBuild/FBuildTest/Data/TestGraph/" );
     #endif
     Array< AString > patterns;
-    patterns.Append( AStackString<>( "library.*" ) );
+    patterns.EmplaceBack( "library.*" );
     DirectoryListNode::FormatName( testFolder,
                                    &patterns,
                                    true, // recursive

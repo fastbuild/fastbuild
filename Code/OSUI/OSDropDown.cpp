@@ -56,7 +56,7 @@ void OSDropDown::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
 
         m_Handle = CreateWindowA( WC_COMBOBOX,
                                   "ComboBox",
-                                  CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
+                                  CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE | WS_VSCROLL,
                                   x, y,
                                   (int32_t)w, (int32_t)h,
                                   (HWND)m_Parent->GetHandle(),

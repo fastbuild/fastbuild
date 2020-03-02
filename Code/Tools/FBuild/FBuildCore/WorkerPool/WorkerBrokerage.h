@@ -37,6 +37,7 @@ private:
     AString             m_BrokerageFilePath;
     Timer               m_TimerLastUpdate;      // Throttle network access
     uint64_t            m_SettingsWriteTime;    // FileTime of settings time when last changed
+    Timer               m_TimerLastCleanBroker;
 };
 
 //------------------------------------------------------------------------------

@@ -133,7 +133,7 @@ DirectoryListNode::~DirectoryListNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult DirectoryListNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult DirectoryListNode::DoBuild( Job * /*job*/ )
 {
     // NOTE: The DirectoryListNode makes no assumptions about whether no files
     // is an error or not.  That's up to the dependent nodes to decide.
@@ -198,16 +198,18 @@ DirectoryListNode::~DirectoryListNode() = default;
 
     MakePrettyName( files.GetSize() );
 
-    if ( FLog::ShowInfo() )
+    if ( FLog::ShowVerbose() )
     {
+        AStackString<> buffer;
         const size_t numFiles = m_Files.GetSize();
-        FLOG_INFO( "Dir: '%s' (found %u files)\n",
-                            m_Name.Get(),
-                            (uint32_t)numFiles);
+        buffer.AppendFormat( "Dir: '%s' (found %u files)\n",
+                             m_Name.Get(),
+                             (uint32_t)numFiles );
         for ( size_t i=0; i<numFiles; ++i )
         {
-            FLOG_INFO( " - %s\n", m_Files[ i ].m_Name.Get() );
+            buffer.AppendFormat( " - %s\n", m_Files[ i ].m_Name.Get() );
         }
+        FLOG_VERBOSE( "%s", buffer.Get() );
     }
 
     // Hash the directory listing to represent the discovered files

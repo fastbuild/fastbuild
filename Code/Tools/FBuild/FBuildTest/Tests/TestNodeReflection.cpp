@@ -374,7 +374,7 @@ void TestNodeReflection::ArrayOfStrings_Optional_Set() const
 
     // Set string array
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
+    strings.EmplaceBack( "value" );
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), strings, nullptr );
 
     // Check array was set
@@ -406,8 +406,8 @@ void TestNodeReflection::ArrayOfStrings_Optional_EmptyElement() const
 
     // Non-empty array with empty element
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
-    strings.Append( AString::GetEmpty() );
+    strings.EmplaceBack( "value" );
+    strings.EmplaceBack();
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
@@ -443,7 +443,7 @@ void TestNodeReflection::ArrayOfStrings_Required_Set() const
 
     // Set string array
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
+    strings.EmplaceBack( "value" );
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), strings, nullptr );
 
     // Check array was set
@@ -475,8 +475,8 @@ void TestNodeReflection::ArrayOfStrings_Required_EmptyElement() const
 
     // Non-empty array with empty element
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
-    strings.Append( AString::GetEmpty() );
+    strings.EmplaceBack( "value" );
+    strings.EmplaceBack();
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".ArrayOfStrings" ), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
@@ -607,7 +607,7 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Optional_Set() const
 
     // Set string array
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
+    strings.EmplaceBack( "value" );
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), strings, nullptr );
 
     // Check the property was set and converted to a full paths
@@ -639,8 +639,8 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Optional_EmptyElement() const
 
     // Non-empty array with empty element
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
-    strings.Append( AString::GetEmpty() );
+    strings.EmplaceBack( "value" );
+    strings.EmplaceBack();
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
@@ -676,7 +676,7 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Required_Set() const
 
     // Set string array
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
+    strings.EmplaceBack( "value" );
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), strings, nullptr );
 
     // Check the property was set and converted to a full path
@@ -709,8 +709,8 @@ void TestNodeReflection::MetaFile_ArrayOfStrings_Required_EmptyElement() const
 
     // Non-empty array with empty element
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
-    strings.Append( AString::GetEmpty() );
+    strings.EmplaceBack( "value" );
+    strings.EmplaceBack();
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Files" ), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
@@ -841,7 +841,7 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Optional_Set() const
 
     // Set string array
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
+    strings.EmplaceBack( "value" );
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), strings, nullptr );
 
     // Check the property was set and converted to a full paths
@@ -873,8 +873,8 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Optional_EmptyElement() const
 
     // Non-empty array with empty element
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
-    strings.Append( AString::GetEmpty() );
+    strings.EmplaceBack( "value" );
+    strings.EmplaceBack();
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)
@@ -910,7 +910,7 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Required_Set() const
 
     // Set string array
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
+    strings.EmplaceBack( "value" );
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), strings, nullptr );
 
     // Check the property was set and converted to a full path
@@ -943,8 +943,8 @@ void TestNodeReflection::MetaPath_ArrayOfStrings_Required_EmptyElement() const
 
     // Non-empty array with empty element
     Array<AString> strings;
-    strings.Append( AStackString<>( "value" ) );
-    strings.Append( AString::GetEmpty() );
+    strings.EmplaceBack( "value" );
+    strings.EmplaceBack();
     helper.m_Frame.SetVarArrayOfStrings( AStackString<>( ".Paths" ), strings, nullptr );
 
     // Check failure (empty strings in arrays are not allowed)

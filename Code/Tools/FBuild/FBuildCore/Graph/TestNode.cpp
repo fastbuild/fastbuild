@@ -213,7 +213,7 @@ const char * TestNode::GetEnvironmentString() const
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
@@ -245,7 +245,7 @@ const char * TestNode::GetEnvironmentString() const
                 return false;
             }
 
-            m_DynamicDependencies.Append( Dependency( sn ) );
+            m_DynamicDependencies.EmplaceBack( sn );
         }
         continue;
     }
@@ -433,18 +433,21 @@ void TestNode::EmitCompilationMessage(
     const AString & workingDir, const AString & testExe ) const
 {
     AStackString<> output;
-    output += "Running Test: ";
-    output += GetName();
-    if ( racingRemoteJob )
+    if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        output += " <LOCAL RACE>";
+        output += "Running Test: ";
+        output += GetName();
+        if ( racingRemoteJob )
+        {
+            output += " <LOCAL RACE>";
+        }
+        else if ( stealingRemoteJob )
+        {
+            output += " <LOCAL>";
+        }
+        output += '\n';
     }
-    else if ( stealingRemoteJob )
-    {
-        output += " <LOCAL>";
-    }
-    output += '\n';
-    if ( FLog::ShowInfo() || ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
+    if ( ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
     {
         output += testExe;
         output += ' ';
@@ -457,7 +460,7 @@ void TestNode::EmitCompilationMessage(
             output += '\n';
         }
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // SaveRemote

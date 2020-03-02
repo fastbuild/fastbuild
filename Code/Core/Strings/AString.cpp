@@ -655,7 +655,7 @@ void AString::Trim( uint32_t startCharsToTrim, uint32_t endCharsToTrim )
     Assign( Get() + startCharsToTrim, GetEnd() - endCharsToTrim );
 }
 
-// TrimStart: Remove all occurences of charToTrimFromStart from the start of the string
+// TrimStart
 //------------------------------------------------------------------------------
 void AString::TrimStart( char charToTrimFromStart )
 {
@@ -669,7 +669,7 @@ void AString::TrimStart( char charToTrimFromStart )
     Trim( nbrCharsToRemoveFromStart, 0 );
 }
 
-// TrimEnd : Remove all occurences of charToTrimFromEnd from the end of the string
+// TrimEnd
 //------------------------------------------------------------------------------
 void AString::TrimEnd( char charToTrimFromEnd )
 {
@@ -682,7 +682,6 @@ void AString::TrimEnd( char charToTrimFromEnd )
 
     Trim( 0, nbrCharsToRemoveFromEnd );
 }
-
 
 // Replace ( char *, char * )
 //------------------------------------------------------------------------------

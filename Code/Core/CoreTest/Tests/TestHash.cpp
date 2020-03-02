@@ -140,11 +140,11 @@ void TestHash::CompareHashTimes_Small() const
 {
     // some different strings to hash
     Array< AString > strings( 32, true );
-    strings.Append( AString( " " ) );
-    strings.Append( AString( "shOrt" ) );
-    strings.Append( AString( "MediumstringMediumstring123456789" ) );
-    strings.Append( AString( "longstring_98274ncoif834JODhiorhmwe8r8wy48on87h8mhwejrijrdIERwurd9j,8chm8hiuorciwriowjri" ) );
-    strings.Append( AString( "c:\\files\\subdir\\project\\thing\\stuff.cpp" ) );
+    strings.EmplaceBack( " " );
+    strings.EmplaceBack( "shOrt" );
+    strings.EmplaceBack( "MediumstringMediumstring123456789" );
+    strings.EmplaceBack( "longstring_98274ncoif834JODhiorhmwe8r8wy48on87h8mhwejrijrdIERwurd9j,8chm8hiuorciwriowjri" );
+    strings.EmplaceBack( "c:\\files\\subdir\\project\\thing\\stuff.cpp" );
     const size_t numStrings = strings.GetSize();
     #if defined( DEBUG )
         const size_t numIterations = 10240;

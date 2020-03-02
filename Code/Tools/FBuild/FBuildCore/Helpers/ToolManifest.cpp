@@ -196,7 +196,7 @@ void ToolManifest::Initialize( const AString& mainExecutableRoot,
     m_Files.SetCapacity( dependencies.GetSize() );
     for ( const Dependency & dep : dependencies )
     {
-        m_Files.Append( ToolManifestFile( dep.GetNode()->GetName(), 0, 0, 0 ) );
+        m_Files.EmplaceBack( dep.GetNode()->GetName(), (uint64_t)0, (uint32_t)0, (uint32_t)0 );
     }
 }
 
@@ -314,7 +314,7 @@ void ToolManifest::DeserializeFromRemote( IOStream & ms )
         ms.Read( timeStamp );
         ms.Read( hash );
         ms.Read( uncompressedContentSize );
-        m_Files.Append( ToolManifestFile( name, timeStamp, hash, uncompressedContentSize ) );
+        m_Files.EmplaceBack( name, timeStamp, hash, uncompressedContentSize );
     }
 
     ms.Read( m_DeleteRemoteFilesWhenDone );
