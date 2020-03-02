@@ -50,6 +50,11 @@ private:
     void Solution_BuildAndDeploy_Project() const;
     void Solution_BuildAndDeploy_PerSolutionConfig() const;
 
+    // VSExternalProj
+    void VSExternalProj_ExternalProject() const;
+    void VSExternalProj_ExternalProjectWrongData() const;
+    void VSExternalProj_ExternalProject_MissingProjectGUID() const;
+
     // XCode
     void XCode() const;
 
@@ -80,6 +85,11 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( Solution_BuildAndDeploy_None )
     REGISTER_TEST( Solution_BuildAndDeploy_Project )
     REGISTER_TEST( Solution_BuildAndDeploy_PerSolutionConfig )
+    REGISTER_TEST( VSExternalProj_ExternalProject )
+    #if defined( __WINDOWS__ )
+        REGISTER_TEST( VSExternalProj_ExternalProjectWrongData )
+    #endif
+    REGISTER_TEST( VSExternalProj_ExternalProject_MissingProjectGUID )
     REGISTER_TEST( XCode )
     REGISTER_TEST( IntellisenseAndCodeSense )
 REGISTER_TESTS_END
@@ -1164,6 +1174,84 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
     // Ensure no other unexpected Build/Deploy settings are written
     TEST_ASSERT( solutionData.Find( ".Build." ) == nullptr );
     TEST_ASSERT( solutionData.Find( ".Deploy." ) == nullptr );
+}
+
+// VSExternalProj_ExternalProject
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VSExternalProj_ExternalProject() const
+{
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/External.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // do build
+    TEST_ASSERT( fBuild.Build( "ExternalProjectSolution" ) );
+
+    //
+    EnsureFileExists( solution );
+
+    // Check stats
+    //              Seen,   Built,  Type
+    CheckStatsNode( 1,      1,      Node::SLN_NODE );
+    CheckStatsNode( 1,      1,      Node::ALIAS_NODE );
+
+    // because of the external module, peek how many of them were actually processed, depending if using the module is
+    // enforced or not in the actual fbuild.bff 
+    const FBuildStats& stats = FBuild::Get().GetStats();
+    const FBuildStats::Stats& nodeStatsExternal = stats.GetStatsFor( Node::VSPROJEXTERNAL_NODE );
+    const size_t actualNumExtSeen = nodeStatsExternal.m_NumProcessed;
+    const size_t actualNumExtBuilt = nodeStatsExternal.m_NumBuilt;
+
+    CheckStatsTotal( 4 + actualNumExtSeen, 4 + actualNumExtBuilt );
+}
+
+// VSExternalProj_ExternalProjectWrongData
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VSExternalProj_ExternalProjectWrongData() const
+{
+    // this test really needs to use the external module on a wrong project, in order to validate a failure scenario
+    // therefore it should only be ever run on windows, with properly installed VS
+
+    AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_ExternalProject/ExternalWrongData.sln" );
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild_WrongData.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist( solution );
+
+    // building will fail
+    TEST_ASSERT( fBuild.Build( "ExternalWrongDataProjectSolution" ) == false );
+
+    CheckStatsTotal( 5, 2 );
+}
+
+// VSExternalProj_ExternalProject_MissingProjectGUID
+//------------------------------------------------------------------------------
+void TestProjectGeneration::VSExternalProj_ExternalProject_MissingProjectGUID() const
+{
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/fbuild_MissingProjectGUID.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+
+    // building will fail
+    TEST_ASSERT( fBuild.Build( "ExternalProject_MissingProjectGUID" ) == false );
+    TEST_ASSERT( GetRecordedOutput().Find( "Failed to extract <ProjectGuid>" ) );
 }
 
 // XCode

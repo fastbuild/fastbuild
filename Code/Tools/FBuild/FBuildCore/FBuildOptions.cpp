@@ -277,8 +277,9 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             }
             else if ( thisArg == "-quiet" )
             {
-                m_ShowBuildCommands = false;
-                m_ShowInfo = false;
+                m_ShowCommandSummary = false;
+                m_ShowTotalTimeTaken = false;
+                m_ShowVerbose = false;
                 continue;
             }
             else if ( thisArg == "-report" )
@@ -289,6 +290,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             else if ( thisArg == "-showcmds" )
             {
                 m_ShowCommandLines = true;
+                continue;
+            }
+            else if ( thisArg == "-showcmdoutput" )
+            {
+                m_ShowCommandOutput = true;
                 continue;
             }
             else if ( thisArg == "-showdeps" )
@@ -314,7 +320,9 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             }
             else if ( thisArg == "-verbose" )
             {
-                m_ShowInfo = true;
+                m_ShowVerbose = true;
+                m_ShowCommandLines = true;
+                m_ShowCommandOutput = true;
                 m_CacheVerbose = true;
                 continue;
             }
@@ -368,8 +376,8 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
     // Default to build "all"
     if ( m_Targets.IsEmpty() )
     {
-        FLOG_INFO( "No target specified, defaulting to target 'all'" );
-        m_Targets.Append( AStackString<>( "all" ) );
+        FLOG_VERBOSE( "No target specified, defaulting to target 'all'" );
+        m_Targets.EmplaceBack( "all" );
     }
 
     // When building multiple targets, try to build as much as possible
@@ -541,6 +549,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -quiet            Don't show build output.\n"
             " -report           Ouput report.html at build end. (Increases build time)\n"
             " -showcmds         Show command lines used to launch external processes.\n"
+            " -showcmdoutput    Show output of external processes.\n"
             " -showdeps         Show known dependency tree for specified targets.\n"
             " -showtargets      Display primary targets, excluding those marked \"Hidden\".\n"
             " -showalltargets   Display primary targets, including those marked \"Hidden\".\n"

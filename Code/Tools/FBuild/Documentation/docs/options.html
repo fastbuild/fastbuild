@@ -145,6 +145,10 @@
     <td>Output a report at build termination.</td>
   </tr>
   <tr>
+    <td><a href="#showcmdoutput">-showcmdoutput</a></td>
+    <td>Show output of external processes.</td>
+  </tr>  
+  <tr>
     <td><a href="#showcmds">-showcmds</a></td>
     <td>Show command lines used to launch external processes.</td>
   </tr>
@@ -467,6 +471,21 @@ suppressed.</p>
 </p>
 <p>NOTE: This option will lengthen the total build time, depending on the complexity of the build.</p>
 </div>
+
+  <tr>
+    <td><a href="#showcmdoutput">-showcmdoutput</a></td>
+    <td>Show output of external processes.</td>
+  </tr>  
+    <div class='newsitemheader' id="showcmdoutput">-showcmdoutput</div>
+    <div class='newsitembody'>
+<p>Displays the full output of external processes regardless of outcome.</p>
+<p>Normally FASTBuild suppresses the output of external processes unless there
+are warnings or failures. In some cases (for debugging for example), it can be useful
+to see the complete output.</p>
+<p>NOTE: This option may have an impact on build performance.</p>
+<p></p>
+</div>
+
 
     <div class='newsitemheader' id="showcmds">-showcmds</div>
     <div class='newsitembody'>

@@ -80,7 +80,7 @@ bool Dependencies::Load( NodeGraph & nodeGraph, IOStream & stream )
         }
 
         // Recombine dependency info
-        Append( Dependency( node, stamp, isWeak ) );
+        EmplaceBack( node, stamp, isWeak );
     }
     return true;
 }

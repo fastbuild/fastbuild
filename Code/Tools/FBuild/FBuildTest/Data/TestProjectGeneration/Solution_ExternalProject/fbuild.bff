@@ -1,0 +1,66 @@
+
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+// Two "native" FASTBuild-generated projects
+VCXProject( 'Proj1' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_ExternalProject\proj_native1.vcxproj'
+}
+VCXProject( 'Proj2' )
+{
+    .ProjectOutput              = '$Out$\Test\ProjectGeneration\Solution_ExternalProject\proj_native2.vcxproj'
+}
+
+
+// "foreign" project with all data provided here in the BFF (no parsing of the actual project file will happen)
+VSProjectExternal( 'ExternalDummyProject_3' )
+{
+    .ExternalProjectPath = 'Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/ExternalDummyProject_3.wixproj' // has to exist
+    .ProjectGuid = '{FA3D597E-38E6-4AE6-ACA1-22D2AF16F6A2}'
+
+    // set the correct WiX toolset project type GUID:
+    .ProjectTypeGuid = '{930C7802-8A8C-48F9-8165-68863BCCD9DD}'
+
+    .ProjectWin32Debug   = [ .Platform = 'Win32' .Config = 'Debug' ]
+    .ProjectWin32Release = [ .Platform = 'Win32' .Config = 'Release' ]
+    .ProjectX64Debug     = [ .Platform = 'x64'   .Config = 'Debug' ]
+    .ProjectX64Release   = [ .Platform = 'x64'   .Config = 'Release' ]
+    .ProjectConfigs      = { .ProjectWin32Debug, .ProjectWin32Release, .ProjectX64Debug, .ProjectX64Release }
+}
+
+// "foreign" C# project without specifying data (enforcing to use the loader)
+VSProjectExternal( 'External' )
+{
+    .ExternalProjectPath = 'Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/ExternalProject.csproj' // has to exist
+}
+
+// "foreign" C# project without specifying data (enforcing to use the loader)
+VSProjectExternal( 'ExternalMissingBraces' )
+{
+    .ExternalProjectPath = 'Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/ExternalProjectMissingBraces.csproj' // has to exist
+}
+
+// "foreign" Python project without specifying data (enforcing to use the loader)
+VSProjectExternal( 'ExternalDummyProject_2' )
+{
+    .ExternalProjectPath = 'Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_ExternalProject/ExternalDummyProject_2.pyproj' // has to exist
+}
+
+VSSolution( 'ExternalProjectSolution' )
+{
+    .SolutionProjects               = { 'Proj1', 'Proj2', 'ExternalDummyProject_3' }
+
+    // only uncomment this if you have VSProjTypeExtractor / Visual Studio with C# support available (which is not likely the case on Travis CI)
+    ;.SolutionProjects               + { 'External', 'ExternalMissingBraces' }
+    
+    // only uncomment this if you have VSProjTypeExtractor / Visual Studio with Python support available (which is not likely the case on Travis CI)
+    ;.SolutionProjects               + { 'ExternalDummyProject_2' }
+
+    .SolutionX64Debug               = [ .Platform = 'x64'   .Config = 'Debug' ]
+    .SolutionX64Release             = [ .Platform = 'x64'   .Config = 'Release' .SolutionDeployProjects = 'Proj1' ]
+    .SolutionConfigs                = { .SolutionX64Debug, .SolutionX64Release }
+
+    .SolutionOutput                 = "$Out$\Test\ProjectGeneration\Solution_ExternalProject\External.sln"
+}

@@ -150,6 +150,8 @@ private:
     bool CanUseResponseFile() const;
     bool GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) const;
 
+    void DoClangUnityFixup( Job * job ) const;
+
     friend class FunctionObjectList;
 
     class CompileHelper

@@ -163,7 +163,7 @@ FunctionCopy::FunctionCopy()
             return false; // Initialize will have emitted an error
         }
 
-        copyNodes.Append( Dependency( copyFileNode ) );
+        copyNodes.EmplaceBack( copyFileNode );
     }
 
     // handle alias creation
