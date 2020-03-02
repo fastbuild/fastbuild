@@ -1605,7 +1605,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     // we combine everything into one string to ensure it is contiguous in
     // the output
     AStackString<> output;
-    if ( FBuild::IsValid()  && FBuild::Get().GetOptions().m_ShowCommandSummary )
+    if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Obj: ";
         if ( useDeoptimization )
