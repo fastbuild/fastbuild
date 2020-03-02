@@ -1019,7 +1019,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
         // does not represent how long it takes to create this resource)
         node->SetLastBuildTime( timeTakenMS );
         node->SetStatFlag( Node::STATS_BUILT );
-        FLOG_INFO( "-Build: %u ms\t%s", timeTakenMS, node->GetName().Get() );
+        FLOG_VERBOSE( "-Build: %u ms\t%s", timeTakenMS, node->GetName().Get() );
     }
 
     if ( result == Node::NODE_RESULT_FAILED )

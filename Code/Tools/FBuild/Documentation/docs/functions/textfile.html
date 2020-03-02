@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<link href="../style.css" rel="stylesheet" type="text/css">
+
+<html>
+<head>
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>FASTBuild - Function Reference - TextFile</title>
+</head>
+<body>
+	<div class='outer'>
+        <div>
+            <div class='logobanner'>
+                <a href='../home.html'><img src='../img/logo.png' style='position:relative;'/></a>
+	            <div class='contact'><a href='../contact.html' class='othernav'>Contact</a> &nbsp; | &nbsp; <a href='../license.html' class='othernav'>License</a></div>
+	        </div>
+	    </div>
+	    <div id='main'>
+	        <div class='navbar'>
+	            <a href='../home.html' class='lnavbutton'>Home</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../features.html' class='navbutton'>Features</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../status.html' class='navbutton'>Status</a><div class='navbuttonbreak'><div class='navbuttonbreakinner'></div></div>
+	            <a href='../documentation.html' class='navbutton'>Documentation</a><div class='navbuttongap'></div>
+	            <a href='../download.html' class='rnavbutton'><b>Download</b></a>
+	        </div>
+	        <div class='inner'>
+
+<h1>TextFile</h1>
+    <div id='textfile' class='newsitemheader'>
+      TextFile
+    </div>
+    <div class='newsitembody'>
+        <p>Creates a text file which can used as part of a subsequent build step.</p>
+        <p>.TextFileInputStrings must contain at least one string, and none of the strings can be empty.</p>
+        <p><font color="red">WARNING:</font> Must not be used to generate response files or to externalize command line arguments for build steps that can be cached or distributed. This will
+        result in failed builds or incorrect caching.</p>
+        <p><font color="red">WARNING:</font> Many FASTBuild functions inspect command line arguments to help control behavior. Care must not taken not to hide command line arguments that are required for FASTBuild to function correctly.</p>
+<div class='code'>
+TextFile( alias )  ; (optional) Alias
+{
+    .TextFileOutput         ; Output file to generate
+    .TextFileInputStrings   ; Array of non-empty strings to be written to the output file, one per line.
+    .TextFileAlways         ; (optional) Generate the file even if it already exists with the current contents.
+
+    ; Additional options
+    .Hidden                 ; (optional) Hide a target from -showtargets (default false) 
+    .PreBuildDependencies   ; (optional) Force targets to be built before this TextFile (Rarely needed,
+                            ; but useful if the output would be deleted by an earlier step.)
+}
+</div>
+    </div>
+
+
+
+
+    </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
+</body>
+</html>

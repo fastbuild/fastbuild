@@ -21,6 +21,7 @@
 #include "FunctionRemoveDir.h"
 #include "FunctionSettings.h"
 #include "FunctionTest.h"
+#include "FunctionTextFile.h"
 #include "FunctionUnity.h"
 #include "FunctionUsing.h"
 #include "FunctionVCXProject.h"
@@ -59,7 +60,7 @@
 
 // Static
 //------------------------------------------------------------------------------
-/*static*/ Array<const Function *> g_Functions( 23, false );
+/*static*/ Array<const Function *> g_Functions( 24, false );
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -109,6 +110,7 @@ Function::~Function() = default;
     g_Functions.Append( FNEW( FunctionRemoveDir ) );
     g_Functions.Append( FNEW( FunctionSettings ) );
     g_Functions.Append( FNEW( FunctionTest ) );
+    g_Functions.Append( FNEW( FunctionTextFile ) );
     g_Functions.Append( FNEW( FunctionUnity ) );
     g_Functions.Append( FNEW( FunctionUsing ) );
     g_Functions.Append( FNEW( FunctionVCXProject ) );
@@ -524,7 +526,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
             return false;
         }
 
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
     }
     return true;
 }
@@ -623,7 +625,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         return false;
     }
 
-    nodes.Append( Dependency( node ) );
+    nodes.EmplaceBack( node );
     return true;
 }
 
@@ -675,7 +677,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
             return false;
         }
 
-        nodes.Append( Dependency( node ) );
+        nodes.EmplaceBack( node );
     }
     return true;
 }
@@ -726,7 +728,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     {
         // not found - create a new file node
         n = nodeGraph.CreateFileNode( nodeName );
-        nodes.Append( Dependency( n ) );
+        nodes.EmplaceBack( n );
         return true;
     }
 
@@ -734,7 +736,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     if ( n->IsAFile() )
     {
         // found file - just use as is
-        nodes.Append( Dependency( n ) );
+        nodes.EmplaceBack( n );
         return true;
     }
 
@@ -742,7 +744,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
     if ( n->GetType() == Node::OBJECT_LIST_NODE )
     {
         // use as-is
-        nodes.Append( Dependency( n ) );
+        nodes.EmplaceBack( n );
         return true;
     }
 
@@ -753,7 +755,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         if ( n->GetType() == Node::COPY_DIR_NODE )
         {
             // use as-is
-            nodes.Append( Dependency( n ) );
+            nodes.EmplaceBack( n );
             return true;
         }
     }
@@ -763,7 +765,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         if ( n->GetType() == Node::REMOVE_DIR_NODE )
         {
             // use as-is
-            nodes.Append( Dependency( n ) );
+            nodes.EmplaceBack( n );
             return true;
         }
     }
@@ -773,7 +775,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         if ( n->GetType() == Node::UNITY_NODE )
         {
             // use as-is
-            nodes.Append( Dependency( n ) );
+            nodes.EmplaceBack( n );
             return true;
         }
     }
@@ -783,7 +785,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph,
         if ( n->GetType() == Node::COMPILER_NODE )
         {
             // use as-is
-            nodes.Append( Dependency( n ) );
+            nodes.EmplaceBack( n );
             return true;
         }
     }
@@ -847,7 +849,7 @@ bool Function::GetStrings( const BFFToken * iter, Array< AString > & strings, co
 bool Function::ProcessAlias( NodeGraph & nodeGraph, const BFFToken * iter, Node * nodeToAlias ) const
 {
     Dependencies nodesToAlias( 1, false );
-    nodesToAlias.Append( Dependency( nodeToAlias ) );
+    nodesToAlias.EmplaceBack( nodeToAlias );
     return ProcessAlias( nodeGraph, iter, nodesToAlias );
 }
 

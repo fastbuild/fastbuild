@@ -265,7 +265,7 @@ void ReflectionInfo::SetArraySize( void * array, size_t size ) const
 
 // SetArraySizeV
 //------------------------------------------------------------------------------
-/*virtual*/ void ReflectionInfo::SetArraySizeV( void * UNUSED( array ), size_t UNUSED( size ) ) const
+/*virtual*/ void ReflectionInfo::SetArraySizeV( void * /*array*/, size_t /*size*/ ) const
 {
     ASSERT( false ); // Should be implemented by derived class!
 }

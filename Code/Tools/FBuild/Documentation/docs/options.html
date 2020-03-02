@@ -149,6 +149,10 @@
     <td>Set a local worker tag.</td>
   </tr>
   <tr>
+    <td><a href="#showcmdoutput">-showcmdoutput</a></td>
+    <td>Show output of external processes.</td>
+  </tr>  
+  <tr>
     <td><a href="#showcmds">-showcmds</a></td>
     <td>Show command lines used to launch external processes.</td>
   </tr>
@@ -499,6 +503,20 @@ tag can be a key or key=value string.</p>
 <p>To clear your tags, specify -T</p>
 <p>You may alternatively set local tags via the LocalWorkerTags field in your Settings node.</p>
 <p>By default, no tags are present except the OS tag</p>
+</div>
+
+  <tr>
+    <td><a href="#showcmdoutput">-showcmdoutput</a></td>
+    <td>Show output of external processes.</td>
+  </tr>  
+    <div class='newsitemheader' id="showcmdoutput">-showcmdoutput</div>
+    <div class='newsitembody'>
+<p>Displays the full output of external processes regardless of outcome.</p>
+<p>Normally FASTBuild suppresses the output of external processes unless there
+are warnings or failures. In some cases (for debugging for example), it can be useful
+to see the complete output.</p>
+<p>NOTE: This option may have an impact on build performance.</p>
+<p></p>
 </div>
 
     <div class='newsitemheader' id="showcmds">-showcmds</div>

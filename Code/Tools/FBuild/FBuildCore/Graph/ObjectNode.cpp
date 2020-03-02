@@ -140,12 +140,12 @@ ObjectNode::ObjectNode()
 
     // Store Dependencies
     m_StaticDependencies.SetCapacity( 1 + 1 + precompiledHeader.GetSize() + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
-    m_StaticDependencies.Append( Dependency( compiler ) );
+    m_StaticDependencies.EmplaceBack( compiler );
     m_StaticDependencies.Append( compilerInputFile );
     m_StaticDependencies.Append( precompiledHeader );
     if ( preprocessor )
     {
-        m_StaticDependencies.Append( Dependency( preprocessor ) );
+        m_StaticDependencies.EmplaceBack( preprocessor );
     }
     m_StaticDependencies.Append( compilerForceUsing );
 
@@ -169,8 +169,8 @@ ObjectNode::ObjectNode( const AString & objectName,
     m_LastBuildTimeMs = 5000; // higher default than a file node
 
     m_StaticDependencies.SetCapacity( 2 );
-    m_StaticDependencies.Append( Dependency( nullptr ) );
-    m_StaticDependencies.Append( Dependency( srcFile ) );
+    m_StaticDependencies.EmplaceBack( nullptr );
+    m_StaticDependencies.EmplaceBack( srcFile );
 }
 
 // DESTRUCTOR
@@ -307,7 +307,7 @@ ObjectNode::~ObjectNode()
             fn->CastTo< FileNode >()->DoBuild( nullptr );
         }
 
-        m_DynamicDependencies.Append( Dependency( fn ) );
+        m_DynamicDependencies.EmplaceBack( fn );
     }
 
     Node::Finalize( nodeGraph );
@@ -423,7 +423,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor(
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
-                FLOG_BUILD( " - Light cache cannot be used for '%s'\n", GetName().Get() );
+                FLOG_OUTPUT( " - Light cache cannot be used for '%s'\n", GetName().Get() );
             }
 
             // Fall through to generate preprocessed output for old style cache and distribution....
@@ -624,7 +624,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
             }
         }
 
-        const bool verbose = FLog::ShowInfo();
+        const bool verbose = FLog::ShowVerbose();
         const bool showCommands = ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines );
         const bool isRemote = ( job->IsLocal() == false );
 
@@ -843,7 +843,7 @@ bool ObjectNode::ProcessIncludesMSCL(
         parser.SwapIncludes( m_Includes );
     }
 
-    FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
+    FLOG_VERBOSE( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
 
     return true;
 }
@@ -897,7 +897,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         parser.SwapIncludes( m_Includes );
     }
 
-    FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
+    FLOG_VERBOSE( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
 
     return true;
 }
@@ -1407,13 +1407,17 @@ bool ObjectNode::RetrieveFromCache( Job * job, const AString & workingDir )
         RecordStampFromBuiltFile();
 
         // Output
-        AStackString<> output;
-        output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
-        if ( FBuild::Get().GetOptions().m_CacheVerbose )
+        if ( FBuild::Get().GetOptions().m_ShowCommandSummary ||
+             FBuild::Get().GetOptions().m_CacheVerbose )
         {
-            output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+            AStackString<> output;
+            output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
+            if ( FBuild::Get().GetOptions().m_CacheVerbose )
+            {
+                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+            }
+            FLOG_OUTPUT( output );
         }
-        FLOG_BUILD_DIRECT( output.Get() );
 
         SetStatFlag( Node::STATS_CACHE_HIT );
 
@@ -1429,9 +1433,9 @@ bool ObjectNode::RetrieveFromCache( Job * job, const AString & workingDir )
     // Output
     if ( FBuild::Get().GetOptions().m_CacheVerbose )
     {
-        FLOG_BUILD( "Obj: %s\n"
-                    " - Cache Miss: %u ms '%s'\n",
-                    GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        FLOG_OUTPUT( "Obj: %s\n"
+                     " - Cache Miss: %u ms '%s'\n",
+                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
     }
 
     SetStatFlag( Node::STATS_CACHE_MISS );
@@ -1501,7 +1505,7 @@ void ObjectNode::WriteToCache( Job * job, const AString & workingDir )
                 {
                     output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
                 }
-                FLOG_BUILD_DIRECT( output.Get() );
+                FLOG_OUTPUT( output );
             }
 
             return;
@@ -1511,9 +1515,9 @@ void ObjectNode::WriteToCache( Job * job, const AString & workingDir )
     // Output
     if ( FBuild::Get().GetOptions().m_CacheVerbose )
     {
-        FLOG_BUILD( "Obj: %s\n"
-                    " - Cache Store Fail: %u ms '%s'\n",
-                    GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        FLOG_OUTPUT( "Obj: %s\n"
+                     " - Cache Store Fail: %u ms '%s'\n",
+                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
     }
 }
 
@@ -1601,22 +1605,25 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     // we combine everything into one string to ensure it is contiguous in
     // the output
     AStackString<> output;
-    output += "Obj: ";
-    if ( useDeoptimization )
+    if ( FBuild::IsValid()  && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        output += "**Deoptimized** ";
+        output += "Obj: ";
+        if ( useDeoptimization )
+        {
+            output += "**Deoptimized** ";
+        }
+        output += GetName();
+        if ( racingRemoteJob )
+        {
+            output += " <LOCAL RACE>";
+        }
+        else if ( stealingRemoteJob )
+        {
+            output += " <LOCAL>";
+        }
+        output += '\n';
     }
-    output += GetName();
-    if ( racingRemoteJob )
-    {
-        output += " <LOCAL RACE>";
-    }
-    else if ( stealingRemoteJob )
-    {
-        output += " <LOCAL>";
-    }
-    output += '\n';
-    if ( FLog::ShowInfo() || ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
+    if ( ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
     {
         output += compiler;
         output += ' ';
@@ -1629,7 +1636,7 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
             output += '\n';
         }
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // StripTokenWithArg
@@ -2613,12 +2620,30 @@ bool ObjectNode::CompileHelper::SpawnCompiler(
             // Handle special types of failures
             HandleSystemFailures( job, m_Result, m_Out.Get(), m_Err.Get() );
 
-            // output any errors (even if succeeded, there might be warnings)
-            if ( m_HandleOutput && m_Err.Get() )
+            if ( m_HandleOutput )
             {
-                const bool treatAsWarnings = true; // change msg formatting
-                AStackString<> outputName( name );
-                DumpOutput( job, m_Err.Get(), m_ErrSize, outputName, treatAsWarnings );
+                if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandOutput )
+                {
+                    // Suppress /showIncludes - TODO:C leave in if user specified it
+                    StackArray< AString > exclusions;
+                    if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) &&
+                        ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
+                    {
+                        exclusions.EmplaceBack( "Note: including file:" );
+                    }
+
+                    if ( m_Out.Get() ) { Node::DumpOutput( job, m_Out.Get(), m_OutSize, &exclusions ); }
+                    if ( m_Err.Get() ) { Node::DumpOutput( job, m_Err.Get(), m_ErrSize, &exclusions ); }
+                }
+                else
+                {
+                    // output any errors (even if succeeded, there might be warnings)
+                    if ( m_Err.Get() )
+                    {
+                        const bool treatAsWarnings = true; // change msg formatting
+                        DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
+                    }
+                }
             }
 
             if ( m_Result != 0 )  // failed

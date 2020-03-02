@@ -166,7 +166,7 @@ SLNNode::SLNNode()
         else
         {
             // Add new entry
-            collapsedFolders.Append( SolutionFolder( folder ) );
+            collapsedFolders.EmplaceBack( folder );
         }
     }
     m_SolutionFolders.Swap( collapsedFolders );
@@ -253,7 +253,7 @@ SLNNode::SLNNode()
     m_StaticDependencies.SetCapacity( projects.GetSize() );
     for ( VSProjectBaseNode * project : projects )
     {
-        m_StaticDependencies.Append( Dependency( project ) );
+        m_StaticDependencies.EmplaceBack( project );
     }
 
     return true;
@@ -265,7 +265,7 @@ SLNNode::~SLNNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult SLNNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult SLNNode::DoBuild( Job * /*job*/ )
 {
     SLNGenerator sg;
 
@@ -347,7 +347,10 @@ bool SLNNode::Save( const AString & content, const AString & fileName ) const
         return true; // nothing to do.
     }
 
-    FLOG_BUILD( "SLN: %s\n", fileName.Get() );
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        FLOG_OUTPUT( "SLN: %s\n", fileName.Get() );
+    }
 
     // actually write
     FileStream f;

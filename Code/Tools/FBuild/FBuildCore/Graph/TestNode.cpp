@@ -130,7 +130,7 @@ const char * TestNode::GetEnvironmentString() const
 
 // DoDynamicDependencies
 //------------------------------------------------------------------------------
-/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool UNUSED( forceClean ) )
+/*virtual*/ bool TestNode::DoDynamicDependencies( NodeGraph & nodeGraph, bool /*forceClean*/ )
 {
     // clear dynamic deps from previous passes
     m_DynamicDependencies.Clear();
@@ -162,7 +162,7 @@ const char * TestNode::GetEnvironmentString() const
                 return false;
             }
 
-            m_DynamicDependencies.Append( Dependency( sn ) );
+            m_DynamicDependencies.EmplaceBack( sn );
         }
         continue;
     }
@@ -309,10 +309,13 @@ void TestNode::EmitCompilationMessage(
     const AString & workingDir, const AString & testExe ) const
 {
     AStackString<> output;
-    output += "Running Test: ";
-    output += GetName();
-    output += '\n';
-    if ( FLog::ShowInfo() || ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) )
+    if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        output += "Running Test: ";
+        output += GetName();
+        output += '\n';
+    }
+    if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         output += testExe;
         output += ' ';
@@ -325,7 +328,7 @@ void TestNode::EmitCompilationMessage(
             output += '\n';
         }
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 //------------------------------------------------------------------------------
