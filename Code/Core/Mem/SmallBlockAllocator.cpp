@@ -153,7 +153,7 @@ void * SmallBlockAllocator::Alloc( size_t size, size_t align )
         bucket.m_Mutex.Lock();
     }
 
-    void * ptr = bucket.Alloc( size );
+    void * ptr = bucket.Alloc();
 
     if ( s_ThreadSafeAllocs )
     {
