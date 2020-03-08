@@ -137,12 +137,12 @@ ObjectNode::ObjectNode()
 
     // Store Dependencies
     m_StaticDependencies.SetCapacity( 1 + 1 + precompiledHeader.GetSize() + ( preprocessor ? 1 : 0 ) + compilerForceUsing.GetSize() );
-    m_StaticDependencies.Append( Dependency( compiler ) );
+    m_StaticDependencies.EmplaceBack( compiler );
     m_StaticDependencies.Append( compilerInputFile );
     m_StaticDependencies.Append( precompiledHeader );
     if ( preprocessor )
     {
-        m_StaticDependencies.Append( Dependency( preprocessor ) );
+        m_StaticDependencies.EmplaceBack( preprocessor );
     }
     m_StaticDependencies.Append( compilerForceUsing );
 
@@ -164,8 +164,8 @@ ObjectNode::ObjectNode( const AString & objectName,
     m_LastBuildTimeMs = 5000; // higher default than a file node
 
     m_StaticDependencies.SetCapacity( 2 );
-    m_StaticDependencies.Append( Dependency( nullptr ) );
-    m_StaticDependencies.Append( Dependency( srcFile ) );
+    m_StaticDependencies.EmplaceBack( nullptr );
+    m_StaticDependencies.EmplaceBack( srcFile );
 }
 
 // DESTRUCTOR
@@ -285,7 +285,7 @@ ObjectNode::~ObjectNode()
             fn->CastTo< FileNode >()->DoBuild( nullptr );
         }
 
-        m_DynamicDependencies.Append( Dependency( fn ) );
+        m_DynamicDependencies.EmplaceBack( fn );
     }
 
     Node::Finalize( nodeGraph );
@@ -387,7 +387,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
-                FLOG_BUILD( " - Light cache cannot be used for '%s'\n", GetName().Get() );
+                FLOG_OUTPUT( " - Light cache cannot be used for '%s'\n", GetName().Get() );
             }
 
             // Fall through to generate preprocessed output for old style cache and distribution....
@@ -440,6 +440,12 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         {
             return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
         }
+    }
+
+    // Do Clang unity fixup if needed
+    if ( GetFlag( FLAG_UNITY ) && IsClang() && GetCompiler()->IsClangUnityFixupEnabled() )
+    {
+        DoClangUnityFixup( job );
     }
 
     // calculate the cache entry lookup
@@ -576,7 +582,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         }
     }
 
-    const bool verbose = FLog::ShowInfo();
+    const bool verbose = FLog::ShowVerbose();
     const bool showCommands = ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines );
     const bool isRemote = ( job->IsLocal() == false );
     if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote )
@@ -745,7 +751,7 @@ bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
         parser.SwapIncludes( m_Includes );
     }
 
-    FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
+    FLOG_VERBOSE( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
 
     return true;
 }
@@ -799,7 +805,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         parser.SwapIncludes( m_Includes );
     }
 
-    FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
+    FLOG_VERBOSE( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
 
     return true;
 }
@@ -1301,13 +1307,17 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         RecordStampFromBuiltFile();
 
         // Output
-        AStackString<> output;
-        output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
-        if ( FBuild::Get().GetOptions().m_CacheVerbose )
+        if ( FBuild::Get().GetOptions().m_ShowCommandSummary ||
+             FBuild::Get().GetOptions().m_CacheVerbose )
         {
-            output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+            AStackString<> output;
+            output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
+            if ( FBuild::Get().GetOptions().m_CacheVerbose )
+            {
+                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+            }
+            FLOG_OUTPUT( output );
         }
-        FLOG_BUILD_DIRECT( output.Get() );
 
         SetStatFlag( Node::STATS_CACHE_HIT );
 
@@ -1323,9 +1333,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
     // Output
     if ( FBuild::Get().GetOptions().m_CacheVerbose )
     {
-        FLOG_BUILD( "Obj: %s\n"
-                    " - Cache Miss: %u ms '%s'\n",
-                    GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        FLOG_OUTPUT( "Obj: %s\n"
+                     " - Cache Miss: %u ms '%s'\n",
+                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
     }
 
     SetStatFlag( Node::STATS_CACHE_MISS );
@@ -1395,7 +1405,7 @@ void ObjectNode::WriteToCache( Job * job )
                 {
                     output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
                 }
-                FLOG_BUILD_DIRECT( output.Get() );
+                FLOG_OUTPUT( output );
             }
 
             return;
@@ -1405,9 +1415,9 @@ void ObjectNode::WriteToCache( Job * job )
     // Output
     if ( FBuild::Get().GetOptions().m_CacheVerbose )
     {
-        FLOG_BUILD( "Obj: %s\n"
-                    " - Cache Store Fail: %u ms '%s'\n",
-                    GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        FLOG_OUTPUT( "Obj: %s\n"
+                     " - Cache Store Fail: %u ms '%s'\n",
+                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
     }
 }
 
@@ -1470,29 +1480,32 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     // we combine everything into one string to ensure it is contiguous in
     // the output
     AStackString<> output;
-    output += "Obj: ";
-    if ( useDeoptimization )
+    if ( FBuild::IsValid()  && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        output += "**Deoptimized** ";
+        output += "Obj: ";
+        if ( useDeoptimization )
+        {
+            output += "**Deoptimized** ";
+        }
+        output += GetName();
+        if ( racingRemoteJob )
+        {
+            output += " <LOCAL RACE>";
+        }
+        else if ( stealingRemoteJob )
+        {
+            output += " <LOCAL>";
+        }
+        output += '\n';
     }
-    output += GetName();
-    if ( racingRemoteJob )
-    {
-        output += " <LOCAL RACE>";
-    }
-    else if ( stealingRemoteJob )
-    {
-        output += " <LOCAL>";
-    }
-    output += '\n';
-    if ( FLog::ShowInfo() || ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
+    if ( ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
     {
         output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable().Get() : GetCompiler() ? GetCompiler()->GetExecutable().Get() : "";
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // StripTokenWithArg
@@ -2441,11 +2454,30 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     // Handle special types of failures
     HandleSystemFailures( job, m_Result, m_Out.Get(), m_Err.Get() );
 
-    // output any errors (even if succeeded, there might be warnings)
-    if ( m_HandleOutput && m_Err.Get() )
+    if ( m_HandleOutput )
     {
-        const bool treatAsWarnings = true; // change msg formatting
-        DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
+        if ( FBuild::Get().GetOptions().m_ShowCommandOutput )
+        {
+            // Suppress /showIncludes - TODO:C leave in if user specified it
+            StackArray< AString > exclusions;
+            if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) &&
+                ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
+            {
+                exclusions.EmplaceBack( "Note: including file:" );
+            }
+
+            if ( m_Out.Get() ) { Node::DumpOutput( job, m_Out.Get(), m_OutSize, &exclusions ); }
+            if ( m_Err.Get() ) { Node::DumpOutput( job, m_Err.Get(), m_ErrSize, &exclusions ); }
+        }
+        else
+        {
+            // output any errors (even if succeeded, there might be warnings)
+            if ( m_Err.Get() )
+            {
+                const bool treatAsWarnings = true; // change msg formatting
+                DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
+            }
+        }
     }
 
     // failed?
@@ -2724,6 +2756,108 @@ bool ObjectNode::GetVBCCPreprocessedOutput( ConstMemoryStream & outStream ) cons
     mem[ memSize ] = 0; // null terminate text buffer for parsing convenience
 
     return true;
+}
+
+// DoClangUnityFixup
+//------------------------------------------------------------------------------
+void ObjectNode::DoClangUnityFixup( Job * job ) const
+{
+    // Fixup preprocessed output so static analysis works well with Unity
+    //
+    // Static analysis only analyzes the "topmost" file, which in Unity is the
+    // Unity.cpp which contains no code. The compiler know which file is the topmost
+    // file by checking the directives left by the preprocessor, as described here:
+    //  - https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
+    //
+    // Be removing the "push" flags the preprocesser adds (1) when leaving the main cpp
+    // file and entering an inluded file only for the Unity, the compiler thinks
+    // the included files are the top-level files and applies analysis the same way
+    // as when they are built outside of Unity.
+    //
+    // We remove the "pop" flags (2) when returning to the unity as these must match the
+    // "pop"s
+    //
+    // We do this fixup even if not using -Xanalyze, so that:
+    // a) the behaviour is consistent, avoiding any problems that might show up only
+    //    with static analysis
+    // b) this behaviour may be useful for other types of warnings for similar reasons
+    //    (i.e. if Clang suppresses then because it thinks a file is not the "main" file)
+    //
+
+    // Sanity checks
+    ASSERT( IsClang() ); // Only necessary for Clang
+    ASSERT( GetFlag( FLAG_UNITY ) ); // Only makes sense to for Unity
+    ASSERT( job->IsDataCompressed() == false ); // Can't fixup compressed data
+
+    // We'll walk the output and fix it up in-place
+
+    AStackString<> srcFileName( GetSourceFile()->GetName() );
+    #if defined( __WINDOWS__ )
+        // Clang escapes backslashes, so we must do the same
+        srcFileName.Replace( "\\", "\\\\" );
+    #endif
+
+    // Build the string used to find "pop" directives when returning to this file
+    AStackString<> popDirectiveString;
+    popDirectiveString = " \"";
+    popDirectiveString += srcFileName;
+    popDirectiveString += "\" 2"; // 2 is "pop" flag
+
+    // Find the first instance of the primary filename (this ensured we ignore any
+    // injected "-include" stuff before that)
+    char * pos = strstr( (char *)job->GetData(), srcFileName.Get() );
+    ASSERT( pos );
+
+    // Find top-level push/pop pairs. We don't want mess with nested directives
+    // as these can be meaningful in other ways.
+    while ( pos )
+    {
+        // Searching for a "push" directive (i.e. leaving the unity file and pushing
+        // a file included by the Unity cpp)
+        pos = strstr( pos, "\n# 1 \"" );
+        if ( pos == nullptr )
+        {
+            return; // no more
+        }
+        pos += 6; // skip to string inside quotes
+
+        // Ignore special directives like <built-in>
+        if ( *pos == '<' )
+        {
+            continue; // Keep searching
+        }
+
+        // Find closing quote
+        pos = strchr( pos, '"' );
+        if ( pos == nullptr )
+        {
+            ASSERT( false ); // Unexpected/malformed
+            return;
+        }
+
+        // Found it?
+        if ( AString::StrNCmp( pos, "\" 1", 3 ) != 0 ) // Note: '1' flag for "push"
+        {
+            continue; // Keep searching
+        }
+
+        // Patch out "push" flag in-place
+        pos[ 2 ] = ' ';
+        pos += 3; // Skip closing quote, space and flag
+
+        // Find "pop" directive that returns us to the Unity file
+        char * popDirective = strstr( pos, popDirectiveString.Get() );
+        if ( popDirective == nullptr )
+        {
+            ASSERT( false ); // Unexpected/malformed
+            return;
+        }
+
+        // Pathc out "pop" flag to match the "push"
+        pos = ( popDirective + popDirectiveString.GetLength() - 1 );
+        ASSERT( *pos == '2' );
+        *pos = ' ';
+    }
 }
 
 //------------------------------------------------------------------------------

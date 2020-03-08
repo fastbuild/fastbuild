@@ -45,11 +45,8 @@ MemPoolBlock::~MemPoolBlock()
 
 // Alloc
 //------------------------------------------------------------------------------
-void * MemPoolBlock::Alloc( size_t size )
+void * MemPoolBlock::Alloc()
 {
-    // Only permitted to call with supported sizes
-    ASSERT( size <= m_BlockSize ); (void)size;
-
     if ( m_FreeBlockChain == nullptr )
     {
         if ( AllocPage() == false )

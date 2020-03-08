@@ -30,7 +30,7 @@
 //------------------------------------------------------------------------------
 #define CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS ( 0.1f )
 #define SYSTEM_ERROR_ATTEMPT_COUNT ( 3 )
-#define DIST_INFO( ... ) if ( m_DetailedLogging ) { FLOG_BUILD( __VA_ARGS__ ); }
+#define DIST_INFO( ... ) if ( m_DetailedLogging ) { FLOG_OUTPUT( __VA_ARGS__ ); }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -822,7 +822,10 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     ASSERT( toolId );
 
     // output to signify remote start
-    FLOG_BUILD( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        FLOG_OUTPUT( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
+    }
     FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
 
     {
@@ -992,7 +995,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
             job->OnSystemError();
 
             // debugging message
-            FLOG_INFO( "Remote System Failure!\n"
+            DIST_INFO( "Remote System Failure!\n"
                        " - Blacklisted Worker: %s\n"
                        " - Node              : %s\n"
                        " - Job Error Count   : %u / %u\n",

@@ -61,7 +61,7 @@ SettingsNode::SettingsNode()
     // using a cache plugin?
     if ( m_CachePluginDLL.IsEmpty() == false )
     {
-        FLOG_INFO( "CachePluginDLL: '%s'", m_CachePluginDLL.Get() );
+        FLOG_VERBOSE( "CachePluginDLL: '%s'", m_CachePluginDLL.Get() );
     }
 
     // "Environment"
