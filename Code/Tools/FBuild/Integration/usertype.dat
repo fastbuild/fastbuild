@@ -29,6 +29,7 @@ Print
 RemoveDir
 Settings
 Test
+TextFile
 Unity
 Using
 VCXProject
@@ -212,6 +213,9 @@ TestInputPattern
 TestOutput
 TestTimeOut
 TestWorkingDir
+TextFileAlways
+TextFileInputStrings
+TextFileOutput
 UnityInputExcludePath
 UnityInputExcludePattern
 UnityInputExcludedFiles
