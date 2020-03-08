@@ -450,7 +450,13 @@ void IdleDetection::UpdateProcessList()
             {
                 // dead process
                 #if defined( __WINDOWS__ )
+                    #if ( _MSC_VER <= 1900 ) // Avoid VS2015 false positive
+                        PRAGMA_DISABLE_PUSH_MSVC( 6001 ) // Using uninitialized memory
+                    #endif
                     CloseHandle( m_ProcessesInOurHierarchy[ i ].m_ProcessHandle );
+                    #if ( _MSC_VER <= 1900 ) // Avoid VS2015 false positive
+                        PRAGMA_DISABLE_POP_MSVC // 6001
+                    #endif
                 #endif
                 m_ProcessesInOurHierarchy.EraseIndex( i );
             }
