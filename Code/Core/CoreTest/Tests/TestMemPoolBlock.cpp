@@ -55,7 +55,7 @@ void TestMemPoolBlock::TestAllocs() const
     Array< void * > allocs( blockSize + 1, false );
     for ( size_t i=0; i<=blockSize; ++i )
     {
-        void * mem = block.Alloc( i );
+        void * mem = block.Alloc();
         TEST_ASSERT( mem );
         TEST_ASSERT( ( (size_t)mem % blockAlignment ) == 0 );
         allocs.Append( mem );
@@ -76,9 +76,9 @@ void TestMemPoolBlock::TestAllocsMultiplePages() const
     const size_t blockAlignment( 4 );
     MemPoolBlock block( blockSize, blockAlignment );
 
-    void * a = block.Alloc( 1 ); // 32 KiB
-    void * b = block.Alloc( 1 ); // 32 KiB
-    void * c = block.Alloc( 1 ); // 32 KiB, new page
+    void * a = block.Alloc(); // 32 KiB
+    void * b = block.Alloc(); // 32 KiB
+    void * c = block.Alloc(); // 32 KiB, new page
     block.Free( a );
     block.Free( b );
     block.Free( c );
@@ -145,7 +145,7 @@ void TestMemPoolBlock::TestSpeed()
             MemPoolBlock block( allocSize, 4 );
             for ( uint32_t i=0; i<numAllocs; ++i )
             {
-                uint32_t * mem = (uint32_t *)block.Alloc( allocSize );
+                uint32_t * mem = (uint32_t *)block.Alloc();
                 allocs.Append( mem );
             }
             for ( uint32_t i=0; i<numAllocs; ++i )

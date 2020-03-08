@@ -1124,7 +1124,13 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFToken
 void Node::RecordStampFromBuiltFile()
 {
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
-    ASSERT( m_Stamp != 0 );
+    
+    // An external tool might fail to write a file. Higher level code checks for
+    // that (see "missing despite success"), so we don't need to do anything here.
+    if ( m_Stamp == 0 )
+    {
+        return;
+    }
     
     // On OS X, the 'ar' tool (for making libraries) appears to clamp the
     // modification time of libraries to whole seconds. On HFS/HFS+ file systems,
