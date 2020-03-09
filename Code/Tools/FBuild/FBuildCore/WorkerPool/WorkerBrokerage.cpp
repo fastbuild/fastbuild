@@ -107,10 +107,6 @@ void WorkerBrokerage::Init()
 
     Network::GetHostName(m_HostName);
 
-    if ( !m_BrokerageRoots.IsEmpty() )
-    {
-        m_BrokerageFilePath.Format( "%s%s", m_BrokerageRoots[0].Get(), m_HostName.Get() );
-    }
     m_TimerLastUpdate.Start();
     m_TimerLastCleanBroker.Start( sBrokerageElapsedTimeBetweenClean ); // Set timer so we trigger right away
 
@@ -121,16 +117,63 @@ void WorkerBrokerage::Init()
 //------------------------------------------------------------------------------
 WorkerBrokerage::~WorkerBrokerage()
 {
-    // Ensure the file disapears when closing
-    if ( m_Availability )
+    RemoveBrokerageFile();
+}
+
+// ListDirContents
+//------------------------------------------------------------------------------
+void WorkerBrokerage::ListDirContents(
+    const Array< AString > & paths,
+    Array< AString > & contents ) const
+{
+    Array< AString > results( 256, true );
+    size_t index = 0;
+    for( const AString & path : paths )
     {
-        FileIO::FileDelete( m_BrokerageFilePath.Get() );
+        FileIO::GetFiles(path,
+                         AStackString<>( "*" ),
+                         false,
+                         &results );
+        const size_t numResults = results.GetSize();
+        contents.SetCapacity( numResults );
+        for ( size_t i=0; i<numResults; ++i )
+        {
+            const char * lastSlash = results[ i ].FindLast( NATIVE_SLASH );
+            AStackString<> machineName( lastSlash + 1 );
+            contents.Append( machineName );
+        }
+        index += 1;
+    }
+}
+
+// GetWorkers
+//------------------------------------------------------------------------------
+void WorkerBrokerage::GetWorkers(
+    const Array< AString > & excludedWorkers,
+    Array< AString > & workersToInclude ) const
+{
+    Array< AString > workers;
+    ListDirContents( m_BrokerageRoots, workers );
+    workersToInclude.SetCapacity( workers.GetSize() );
+    for ( size_t i=0; i<workers.GetSize(); ++i )
+    {
+        const AString & worker = workers[ i ];
+        if ( worker.CompareI( m_HostName ) != 0 &&
+              !excludedWorkers.Find( worker ) )
+        {
+            if ( !workersToInclude.Find( worker ) )
+            {
+                workersToInclude.Append( worker );
+            }
+        }
     }
 }
 
 // FindWorkers
 //------------------------------------------------------------------------------
-void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
+void WorkerBrokerage::FindWorkers(
+    const Array< AString > & excludedWorkers,
+    Array< AString > & workers )
 {
     PROFILE_FUNCTION
 
@@ -142,46 +185,28 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
         return;
     }
 
-    Array< AString > results( 256, true );
-    for( AString& root : m_BrokerageRoots )
-    {
-        size_t filesBeforeSearch = results.GetSize();
-        if ( !FileIO::GetFiles(root,
-                                AStackString<>( "*" ),
-                                false,
-                                &results ) )
-        {
-            FLOG_WARN( "No workers found in '%s'", root.Get() );
-        }
-        else
-        {
-            FLOG_WARN( "%zu workers found in '%s'", results.GetSize() - filesBeforeSearch, root.Get() );
-        }
-    }
+    GetWorkers( excludedWorkers, workers );
+}
 
-    // presize
-    if ( ( workerList.GetSize() + results.GetSize() ) > workerList.GetCapacity() )
+// SetBrokerageRecord
+//------------------------------------------------------------------------------
+void WorkerBrokerage::SetBrokerageRecord()
+{
+    if ( m_BrokerageRecord.m_DirPath.IsEmpty() )
     {
-        workerList.SetCapacity( workerList.GetSize() + results.GetSize() );
-    }
-
-    // convert worker strings
-    const AString * const end = results.End();
-    for ( AString * it = results.Begin(); it != end; ++it )
-    {
-        const AString & fileName = *it;
-        const char * lastSlash = fileName.FindLast( NATIVE_SLASH );
-        AStackString<> workerName( lastSlash + 1 );
-        if ( workerName.CompareI( m_HostName ) != 0 )
-        {
-            workerList.Append( workerName );
-        }
+        // include a record for the brokerage root
+        // will be searched for by client jobs
+        AStackString<> brokerageFilePath( m_BrokerageRoots[0] );
+        brokerageFilePath += NATIVE_SLASH;
+        brokerageFilePath += m_HostName;
+        m_BrokerageRecord.m_DirPath = m_BrokerageRoots[0];
+        m_BrokerageRecord.m_FilePath = brokerageFilePath;
     }
 }
 
-// SetAvailability
+// SetAvailable
 //------------------------------------------------------------------------------
-void WorkerBrokerage::SetAvailability(bool available)
+void WorkerBrokerage::SetAvailable()
 {
     Init();
 
@@ -191,79 +216,142 @@ void WorkerBrokerage::SetAvailability(bool available)
         return;
     }
 
-    if ( available )
+    bool updateFiles = true;
+    if ( m_Availability )
     {
-        // Check the last update time to avoid too much File IO.
-        float elapsedTime = m_TimerLastUpdate.GetElapsedMS();
-        if ( elapsedTime >= 10000.0f )
-        {
-            // If settings have changed, (re)create the file 
-            // If settings have not changed, update the modification timestamp
-            const WorkerSettings & workerSettings = WorkerSettings::Get();
-            const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
-            bool createBrokerageFile = ( settingsWriteTime > m_SettingsWriteTime );
-
-            if ( createBrokerageFile == false )
-            {
-                // Update the modified time
-                // (Allows an external process to delete orphaned files (from crashes/terminated workers)
-                if ( FileIO::SetFileLastWriteTimeToNow( m_BrokerageFilePath ) == false )
-                {
-                    // Failed to update time - try to create or recreate the file
-                    createBrokerageFile = true;
-                }
-            }
-
-            if ( createBrokerageFile )
-            {
-                // Version
-                AStackString<> buffer;
-                buffer.AppendFormat( "Version: %s\n", FBUILD_VERSION_STRING );
-
-                // Username
-                AStackString<> userName;
-                Env::GetLocalUserName( userName );
-                buffer.AppendFormat( "User: %s\n", userName.Get() );
-
-                // CPU Thresholds
-                static const uint32_t numProcessors = Env::GetNumProcessors();
-                buffer.AppendFormat( "CPUs: %u/%u\n", workerSettings.GetNumCPUsToUse(), numProcessors );
-
-                // Move
-                switch ( workerSettings.GetMode() )
-                {
-                    case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
-                    case WorkerSettings::WHEN_IDLE:     buffer.AppendFormat( "Mode: idle @ %u%%\n", workerSettings.GetIdleThresholdPercent() ); break;
-                    case WorkerSettings::DEDICATED:     buffer += "Mode: dedicated\n";    break;
-                    case WorkerSettings::PROPORTIONAL:  buffer += "Mode: proportional\n"; break;
-                }
-
-                // Create/write file which signifies availability
-                FileIO::EnsurePathExists( m_BrokerageRoots[0] );
-                FileStream fs;
-                fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
-                fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
-
-                // Take note of time we wrote the settings
-                m_SettingsWriteTime = settingsWriteTime;
-
-            }
-            
-            // Restart the timer
-            m_TimerLastUpdate.Start();
-        }
+        // already available; so nothing changed, don't do updates
+        // fall back to timer
+        // check timer, to ensure that the files will be recreated if cleanup is done on the brokerage path
+        updateFiles = m_TimerLastUpdate.GetElapsedMS() >= 10000.0f;
     }
-    else if ( m_Availability != available )
+    else  // not available
     {
-        // remove file to remove availability
-        FileIO::FileDelete( m_BrokerageFilePath.Get() );
+        // so we can write the files immediately on worker launch, update all
+        // update bool is true here, so just continue
+    }
+    if ( updateFiles )
+    {
+        SetBrokerageRecord();
+
+        // create files to signify availability
+        if ( !FileIO::FileExists( m_BrokerageRecord.m_FilePath.Get() ) )
+        {
+            FileStream fs;
+            // create the dir path down to the file
+            FileIO::EnsurePathExists( m_BrokerageRecord.m_DirPath );
+            // create empty file; clients look at the dir names and filename,
+            // not the contents of the file
+            fs.Open( m_BrokerageRecord.m_FilePath.Get(), FileStream::WRITE_ONLY );
+        }
+        // Restart the timer
+        m_TimerLastUpdate.Start();
+        m_Availability = true;
+    }
+
+    PeriodicCleanup();
+}
+
+// SetUnavailable
+//------------------------------------------------------------------------------
+void WorkerBrokerage::SetUnavailable()
+{
+    Init();
+
+    // ignore if brokerage not configured
+    if ( m_BrokerageRoots.IsEmpty() )
+    {
+        return;
+    }
+
+    bool updateFiles = true;
+    if ( m_Availability )
+    {
+        // already available; so nothing changed, don't do updates
+        // fall back to timer
+        // check timer, to ensure that the files will be recreated if cleanup is done on the brokerage path
+        updateFiles = m_TimerLastUpdate.GetElapsedMS() >= 10000.0f;
+    }
+    else  // not available
+    {
+        // so we can write the files immediately on worker launch, update all
+        // update bool is true here, so just continue
+    }
+    if ( updateFiles )
+    {
+        SetBrokerageRecord();
+
+        // If settings have changed, (re)create the file 
+        // If settings have not changed, update the modification timestamp
+        const WorkerSettings & workerSettings = WorkerSettings::Get();
+        const uint64_t settingsWriteTime = workerSettings.GetSettingsWriteTime();
+        bool createBrokerageFile = ( settingsWriteTime > m_SettingsWriteTime );
+
+        if ( createBrokerageFile == false )
+        {
+            // Update the modified time
+            // (Allows an external process to delete orphaned files (from crashes/terminated workers)
+            if ( FileIO::SetFileLastWriteTimeToNow( m_BrokerageRecord.m_FilePath ) == false )
+            {
+                // Failed to update time - try to create or recreate the file
+                createBrokerageFile = true;
+            }
+        }
+
+        if ( createBrokerageFile )
+        {
+            // Version
+            AStackString<> buffer;
+            buffer.AppendFormat( "Version: %s\n", FBUILD_VERSION_STRING );
+
+            // Username
+            AStackString<> userName;
+            Env::GetLocalUserName( userName );
+            buffer.AppendFormat( "User: %s\n", userName.Get() );
+
+            // CPU Thresholds
+            static const uint32_t numProcessors = Env::GetNumProcessors();
+            buffer.AppendFormat( "CPUs: %u/%u\n", workerSettings.GetNumCPUsToUse(), numProcessors );
+
+            // Move
+            switch ( workerSettings.GetMode() )
+            {
+                case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
+                case WorkerSettings::WHEN_IDLE:     buffer.AppendFormat( "Mode: idle @ %u%%\n",
+                    workerSettings.GetIdleThresholdPercent() ); break;
+                case WorkerSettings::DEDICATED:     buffer += "Mode: dedicated\n";    break;
+                case WorkerSettings::PROPORTIONAL:  buffer += "Mode: proportional\n"; break;
+            }
+
+            // Create/write file which signifies availability
+            FileIO::EnsurePathExists( m_BrokerageRecord.m_DirPath );
+            FileStream fs;
+            fs.Open( m_BrokerageRecord.m_FilePath.Get(), FileStream::WRITE_ONLY );
+            fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
+
+            // Take note of time we wrote the settings
+            m_SettingsWriteTime = settingsWriteTime;
+        }
 
         // Restart the timer
         m_TimerLastUpdate.Start();
     }
-    m_Availability = available;
-    
-    // Handle brokereage cleaning
+
+    PeriodicCleanup();
+}
+
+// RemoveBrokerageFile
+//------------------------------------------------------------------------------
+void WorkerBrokerage::RemoveBrokerageFile()
+{
+    // Ensure the file disappears
+    FileIO::FileDelete( m_BrokerageRecord.m_FilePath.Get() );
+}
+
+// PeriodicCleanup
+//------------------------------------------------------------------------------
+void WorkerBrokerage::PeriodicCleanup()
+{
+    // Handle brokerage cleaning
     if ( m_TimerLastCleanBroker.GetElapsed() >= sBrokerageElapsedTimeBetweenClean )
     {
         const uint64_t fileTimeNow = Time::FileTimeToSeconds( Time::GetCurrentFileTime() );

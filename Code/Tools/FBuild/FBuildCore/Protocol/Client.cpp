@@ -24,29 +24,34 @@
 #include "Core/Math/Random.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Tracing/Tracing.h"
 
 // Defines
 //------------------------------------------------------------------------------
 #define CLIENT_STATUS_UPDATE_FREQUENCY_SECONDS ( 0.1f )
-#define CONNECTION_REATTEMPT_DELAY_TIME ( 10.0f )
 #define SYSTEM_ERROR_ATTEMPT_COUNT ( 3 )
 #define DIST_INFO( ... ) if ( m_DetailedLogging ) { FLOG_OUTPUT( __VA_ARGS__ ); }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Client::Client( const Array< AString > & workerList,
+Client::Client( const Array< AString > & settingsWorkers,
                 uint16_t port,
+                int32_t workerListRefreshLimitSec,
                 uint32_t workerConnectionLimit,
                 bool detailedLogging )
-    : m_WorkerList( workerList )
+    : m_SettingsWorkers( settingsWorkers )
+    , m_WorkerList( 256, true )  // start with 256 capacity
+    , m_RetryingWorkers( true )  // begin with retrying of workers
+    , m_WorkerListRefreshIntervalSec( 0 )  // try immediately the first time
+    , m_WorkerListRefreshElapsedTimeSec( 0 )
+    , m_WorkerListRefreshLimitSec( workerListRefreshLimitSec )
     , m_ShouldExit( false )
+    , m_Exited( false )
     , m_DetailedLogging( detailedLogging )
+    , m_NextIncrementServerId( 0 )
     , m_WorkerConnectionLimit( workerConnectionLimit )
     , m_Port( port )
 {
-    // allocate space for server states
-    m_ServerList.SetSize( workerList.GetSize() );
-
     m_Thread = Thread::CreateThread( ThreadFuncStatic,
                                      "Client",
                                      ( 64 * KILOBYTE ),
@@ -72,31 +77,23 @@ Client::~Client()
 /*virtual*/ void Client::OnDisconnected( const ConnectionInfo * connection )
 {
     ASSERT( connection );
-    ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    MutexHolder mh( ss->m_Mutex );
-    DIST_INFO( "Disconnected: %s\n", ss->m_RemoteName.Get() );
-    if ( ss->m_Jobs.IsEmpty() == false )
+    ServerState * ss = GetServer( connection );
+    if ( ss )
     {
-        Job ** it = ss->m_Jobs.Begin();
-        const Job * const * end = ss->m_Jobs.End();
-        while ( it != end )
+        ss->Disconnect();
+
+        // since erasing server state below, only hold mutex for connection change
         {
-            FLOG_MONITOR( "FINISH_JOB TIMEOUT %s \"%s\" \n", ss->m_RemoteName.Get(), (*it)->GetNode()->GetName().Get() );
-            JobQueue::Get().ReturnUnfinishedDistributableJob( *it );
-            ++it;
+            MutexHolder ssMH( ss->m_Mutex );
+            if (ss->m_Connection != nullptr)
+            {
+                ss->m_Connection->SetUserData( nullptr );
+            }
         }
-        ss->m_Jobs.Clear();
+
+        MutexHolder mh( m_ServerListMutex );
+        RemoveServer( ss->m_Id );
     }
-
-    // This is usually null here, but might need to be freed if
-    // we had the connection drop between message and payload
-    FREE( (void *)( ss->m_CurrentMessage ) );
-
-    ss->m_RemoteName.Clear();
-    AtomicStoreRelaxed( &ss->m_Connection, static_cast< const ConnectionInfo * >( nullptr ) );
-    ss->m_CurrentMessage = nullptr;
 }
 
 // ThreadFuncStatic
@@ -139,6 +136,307 @@ void Client::ThreadFunc()
             break;
         }
     }
+
+    m_Exited = true;
+}
+
+// ShouldRetry
+//------------------------------------------------------------------------------
+/* static */ bool Client::ShouldRetry(
+    const float timeSinceLastRetry,
+    const uint32_t retryIntervalSec,
+    const int32_t retryLimitSec,
+    float & retryElapsedTimeSec,
+    AString & timeIntervalString,
+    AString & timeLimitString )
+{
+    bool shouldRetry = false;
+    if ( retryLimitSec >= 0 )  // finite retries
+    {
+        const uint32_t minutes = uint32_t( retryLimitSec / 60.0f );
+        const uint32_t seconds = uint32_t( retryLimitSec ) - ( minutes * 60 );
+        if ( minutes > 0 )
+        {
+            timeLimitString.Format( "%um %us\n", minutes, seconds );
+        }
+        else
+        {
+            timeLimitString.Format( "%us\n", seconds );
+        }
+        if ( retryLimitSec > 0 )
+        {
+            retryElapsedTimeSec += timeSinceLastRetry;
+            if ( retryElapsedTimeSec + retryIntervalSec <= (uint32_t) retryLimitSec )
+            {
+                  shouldRetry = true;
+            }
+            else  // retry limit exceeded
+            {
+                // leave shouldRetry = false
+            }
+        }
+        else  // retryLimitSec == 0 (no retries)
+        {
+            // leave shouldRetry = false
+        }
+    }
+    else  // infinite retries
+    {
+        timeLimitString.Assign( "infinite" );
+        shouldRetry = true;
+    }
+    if ( shouldRetry )
+    {
+        const uint32_t minutes = uint32_t( retryIntervalSec / 60.0f );
+        const uint32_t seconds = uint32_t( retryIntervalSec ) - ( minutes * 60 );
+        if ( minutes > 0 )
+        {
+            timeIntervalString.Format( "%um %us\n", minutes, seconds );
+        }
+        else
+        {
+            timeIntervalString.Format( "%us\n", seconds );
+        }
+    }
+    return shouldRetry;
+}
+
+// RetryWorkers
+//------------------------------------------------------------------------------
+void Client::RetryWorkers()
+{
+    if ( m_RetryingWorkers )
+    {
+        if ( m_SettingsWorkers.IsEmpty() )  // if dynamic workers
+        {
+            float timeSinceLastRetry = m_WorkerListRefreshTimer.GetElapsed();
+            if ( timeSinceLastRetry > m_WorkerListRefreshIntervalSec )
+            {
+                // reset timer here, since will be refreshing the worker list below
+                m_WorkerListRefreshTimer.Start();  // reset time
+                if ( m_WorkerListRefreshIntervalSec == 0 )
+                {
+                    m_WorkerListRefreshIntervalSec = 4;  // next retry is in >= 4 seconds
+                }
+                else
+                {
+                    // so we don't hit the network file share so much, use exponential backoff
+                    m_WorkerListRefreshIntervalSec *= 2;
+                }
+
+                Array< AString > previousWorkers(m_WorkerList);
+
+                m_WorkerList.Clear();
+                m_WorkerBrokerage.FindWorkers(
+                    m_ExcludedWorkers,
+                    m_WorkerList );
+
+                Array< AString > currentWorkers(m_WorkerList);
+                if ( currentWorkers.IsEmpty() )
+                {
+                    FLOG_WARN( "No matching workers found in '%s'", m_WorkerBrokerage.GetBrokerageRootPaths().Get() );
+                }
+
+                Array< AString > addedWorkers;
+                GetWorkerChanges( previousWorkers, currentWorkers, addedWorkers );
+                // don't remove any workers during refresh, since previous workers could be rebooting
+                Array< AString > removedWorkers;
+                UpdateServerList( removedWorkers, addedWorkers );
+
+                const size_t numPreviousWorkers( previousWorkers.GetSize() );
+                const size_t numCurrentWorkers( currentWorkers.GetSize() );
+                if ( numCurrentWorkers != numPreviousWorkers )
+                {
+                    OutputNumWorkers();
+                }
+
+                AStackString<> timeIntervalString;
+                AStackString<> timeLimitString;
+                if ( ShouldRetry( timeSinceLastRetry,
+                    m_WorkerListRefreshIntervalSec,
+                    m_WorkerListRefreshLimitSec,
+                    m_WorkerListRefreshElapsedTimeSec,
+                    timeIntervalString,
+                    timeLimitString ) )
+                {
+                    DIST_INFO( "Will refresh worker list in %s, retry limit %s\n", timeIntervalString.Get(), timeLimitString.Get() );
+                }
+                else
+                {
+                    DIST_INFO( "No more refreshes of worker list\n" );
+                    m_RetryingWorkers = false;
+                }
+            }
+            else
+            {
+                // elapsed time has not yet met retry interval, so use the existing list
+            }
+        }
+        else  // static workers
+        {
+            // this code block only runs once per run of the app
+            DIST_INFO( "Not refreshing worker list, since you specified a .Workers list in your Settings node\n" );
+
+            // use the settings workers for the first element of the worker list,
+            // since all jobs for static workers will use the same list
+            // append 1d array to 1st element of 2d array
+            m_WorkerList.Append( m_SettingsWorkers );
+
+            m_RetryingWorkers = false;
+            Array< AString > removedWorkers;  // pass empty, since no removes
+            UpdateServerList( removedWorkers, m_SettingsWorkers );  // pass workers in
+            OutputNumWorkers();
+        }
+    }
+}
+
+// GetWorkerChanges
+//------------------------------------------------------------------------------
+/*static*/ void Client::GetWorkerChanges(
+    const Array< AString > & previousWorkers,
+    const Array< AString > & currentWorkers,
+    Array< AString > & addedWorkers )
+{
+    const size_t numCurrentWorkers = currentWorkers.GetSize();
+
+    // don't remove any workers during refresh, since previous workers could be rebooting
+
+    // find workers that were added (or changed)
+    for ( size_t i=0; i<numCurrentWorkers; ++i )
+    {
+        const AString & currentWorker = currentWorkers[ i ];
+        if ( !previousWorkers.Find( currentWorker ) )
+        {
+            // not found, so add it
+            addedWorkers.Append( currentWorker );
+        }
+        else
+        {
+            // skip worker, since in previous workers
+        }
+    }
+}
+
+// ExcludeWorker
+//------------------------------------------------------------------------------
+void Client::ExcludeWorker( ServerState & ss, Array< AString > & newlyExcludedWorkers )
+{
+    if ( !ss.m_Excluded )
+    {
+        ss.m_Excluded = true;
+        if ( !m_ExcludedWorkers.Find( ss.m_RemoteName ) )
+        {
+            m_ExcludedWorkers.Append( ss.m_RemoteName );
+            newlyExcludedWorkers.Append( ss.m_RemoteName );
+        }
+    }
+}
+
+// HandleExcludedWorkers
+//------------------------------------------------------------------------------
+void Client::HandleExcludedWorkers( const Array< AString > & newlyExcludedWorkers )
+{
+    if ( !newlyExcludedWorkers.IsEmpty() )
+    {
+        Array< AString > addedWorkers;  // leave empty, since not adding here
+        UpdateServerList( newlyExcludedWorkers, addedWorkers );
+        // don't call OutputNumWorkers() here, since too frequent
+    }
+}
+
+// UpdateServerList
+//------------------------------------------------------------------------------
+bool Client::UpdateServerList(
+    const Array < AString > & removedWorkers,
+    const Array < AString > & addedWorkers )
+{
+    bool anyChangesApplied = false;
+
+    // remove servers
+    const size_t numRemovedWorkers = removedWorkers.GetSize();
+    const size_t numServers = m_ServerList.GetSize();
+    Array< ServerState * > serverStatesToRemove;
+    for ( size_t i=0; i<numRemovedWorkers; ++i )
+    {
+        const AString & removedWorker = removedWorkers[ i ];
+        // find server to remove
+        for ( size_t j=0; j<numServers; ++j )
+        {
+            ServerState & ss = m_ServerList[ j ];
+
+            if ( ss.m_RemoteName == removedWorker )
+            {
+                serverStatesToRemove.Append( &ss );
+                anyChangesApplied = true;
+                break;  // server found, so break out of inner loop
+            }
+        }
+    }
+    for ( size_t i=0; i<serverStatesToRemove.GetSize(); ++i )
+    {
+        ServerState * const ss = serverStatesToRemove[ i ];
+        ASSERT( ss );
+
+        // since erasing server state below, only hold mutex for connection change
+        {
+            MutexHolder ssMH( ss->m_Mutex );
+            if (ss->m_Connection != nullptr)
+            {
+                ss->m_Connection->SetUserData( nullptr );
+            }
+        }
+
+        // caller already holds m_ServerListMutex
+        RemoveServer( ss->m_Id );
+    }
+
+    // add servers
+    const size_t numAddedWorkers = addedWorkers.GetSize();
+    size_t serverIndex = m_ServerList.GetSize();
+    m_ServerList.SetSize( serverIndex + numAddedWorkers );
+    const size_t newSize = m_ServerList.GetSize();
+    for ( size_t workerIndex = 0;
+          serverIndex < newSize;
+          ++workerIndex, ++serverIndex )
+    {
+        ServerState & ss = m_ServerList[ serverIndex ];
+
+        // lock the server state
+        MutexHolder mhSS( ss.m_Mutex );
+
+        if ( !m_FreeServerIds.IsEmpty() )
+        {
+            ss.m_Id = m_FreeServerIds.Top();
+            m_FreeServerIds.Pop();
+        }
+        else
+        {
+            // No elements in free array, so use next available
+            ss.m_Id = m_NextIncrementServerId++;
+        }
+        ss.m_DetailedLogging = m_DetailedLogging;
+        ss.m_RemoteName = addedWorkers[ workerIndex ];
+        anyChangesApplied = true;
+    }
+
+    return anyChangesApplied;
+}
+
+// OutputNumWorkers
+//------------------------------------------------------------------------------
+void Client::OutputNumWorkers()
+{
+    AStackString<> workerOut;
+    const size_t numWorkers( m_ServerList.GetSize() );
+    if ( numWorkers > 0 )
+    {
+        AStackString<> compilationPrefix( "Distributed Compilation : " );
+        workerOut.Append( compilationPrefix );
+    }
+    AStackString<> numWorkersOut;
+    numWorkersOut.Format( "%u Worker(s) in list\n", (uint32_t)numWorkers );
+    workerOut.Append( numWorkersOut );
+    Tracing::Output( workerOut.Get() );
 }
 
 // LookForWorkers
@@ -149,13 +447,21 @@ void Client::LookForWorkers()
 
     MutexHolder mh( m_ServerListMutex );
 
+    RetryWorkers();
+
     const size_t numWorkers( m_ServerList.GetSize() );
+
+    if ( numWorkers == 0 )
+    {
+        return;
+    }
 
     // find out how many connections we have now
     size_t numConnections = 0;
     for ( size_t i=0; i<numWorkers; i++ )
     {
-        if ( AtomicLoadRelaxed( &m_ServerList[ i ].m_Connection ) )
+        ServerState & ss = m_ServerList[ i ];
+        if ( AtomicLoadRelaxed( &( ss.m_Connection ) ) )
         {
             numConnections++;
         }
@@ -173,63 +479,110 @@ void Client::LookForWorkers()
         return;
     }
 
-    // randomize the start index to better distribute workers when there
+    // find someone to connect to
+    // randomize the start indices to better distribute workers when there
     // are many workers/clients - otherwise all clients will attempt to connect
     // to the same subset of workers
-    Random r;
-    size_t startIndex = r.GetRandIndex( (uint32_t)numWorkers );
-
-    // find someone to connect to
-    for ( size_t j=0; j<numWorkers; j++ )
+    // get a random worker
+    Random randomWorker;
+    size_t workerStartIndex = randomWorker.GetRandIndex( (uint32_t)numWorkers );
+    Array< AString > newlyExcludedWorkers;
+    for ( size_t i=0; i<numWorkers; ++i )
     {
-        const size_t i( ( j + startIndex ) % numWorkers );
+        const size_t j( ( i + workerStartIndex ) % numWorkers );
+        const AString & worker = m_WorkerList[ j ];
+        ServerState * ss = nullptr;
+        for ( size_t m=0; m<numWorkers; ++m )
+        {
+            ServerState & stateToCheck = m_ServerList[ m ];
+            if ( stateToCheck.m_RemoteName == worker )
+            {
+                ss = &stateToCheck;
+                break;
+            }
+        }
 
-        ServerState & ss = m_ServerList[ i ];
-        if ( AtomicLoadRelaxed( &ss.m_Connection ) )
+        if ( ss == nullptr || AtomicLoadRelaxed( &( ss->m_Connection ) ) )
         {
             continue;
         }
+
+        MutexHolder mhSS( ss->m_Mutex );
 
         // ignore blacklisted workers
-        if ( ss.m_Blacklisted )
+        if ( ss->m_Blacklisted )
+        {
+            ExcludeWorker( *ss, newlyExcludedWorkers );
+            continue;
+        }
+
+        ASSERT( ss->m_Jobs.IsEmpty() );
+
+        float timeSinceLastRetry = ss->m_ConnectionDelayTimer.GetElapsed();
+        if ( timeSinceLastRetry <= ss->m_ConnectionRetryIntervalSec )
         {
             continue;
         }
 
-        // lock the server state
-        MutexHolder mhSS( ss.m_Mutex );
-
-        ASSERT( ss.m_Jobs.IsEmpty() );
-
-        if ( ss.m_DelayTimer.GetElapsed() < CONNECTION_REATTEMPT_DELAY_TIME )
-        {
-            continue;
-        }
-
-        DIST_INFO( "Connecting to: %s\n", m_WorkerList[ i ].Get() );
-        const ConnectionInfo * ci = Connect( m_WorkerList[ i ], m_Port, 2000, &ss ); // 2000ms connection timeout
+        DIST_INFO( "Connecting to: %s\n", ss->m_RemoteName.Get() );
+        const ConnectionInfo * ci = Connect( ss->m_RemoteName, m_Port, 2000 ); // 2000ms connection timeout
         if ( ci == nullptr )
         {
-            DIST_INFO( " - connection: %s (FAILED)\n", m_WorkerList[ i ].Get() );
-            ss.m_DelayTimer.Start(); // reset connection attempt delay
+            DIST_INFO( " - connection: %s (FAILED)\n", ss->m_RemoteName.Get() );
+            if ( ss->m_ConnectionRetryIntervalSec == 0 )
+            {
+                ss->m_ConnectionRetryIntervalSec = 4;  // next retry is in >= 4 seconds
+            }
+            else
+            {
+                // use exponential backoff, so
+                // 1. we don't hit the network so much, and
+                // 2. over time we choose machines that are connectible
+                //    rather than this machine
+                ss->m_ConnectionRetryIntervalSec *= 2;
+            }
+
+            // there is no time limit to connection retries,
+            // we want to continue retrying since a machine may become
+            // connectible later
+
+            AStackString<> timeIntervalString;
+            const uint32_t minutes = uint32_t( ss->m_ConnectionRetryIntervalSec / 60.0f );
+            const uint32_t seconds = uint32_t( ss->m_ConnectionRetryIntervalSec ) - ( minutes * 60 );
+            if ( minutes > 0 )
+            {
+                timeIntervalString.Format( "%um %us\n", minutes, seconds );
+            }
+            else
+            {
+                timeIntervalString.Format( "%us\n", seconds );
+            }
+            DIST_INFO( "%s did not respond, retrying in >= %s\n", ss->m_RemoteName.Get(), timeIntervalString.Get() );
         }
         else
         {
-            DIST_INFO( " - connection: %s (OK)\n", m_WorkerList[ i ].Get() );
-            const uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
+            DIST_INFO( " - connection: %s (OK)\n", ss->m_RemoteName.Get() );
+            uint32_t numJobsAvailableForWorker = 0;
+            if ( JobQueue::IsValid() )
+            {
+                numJobsAvailableForWorker =
+                    (uint32_t)(JobQueue::Get().GetNumDistributableJobsAvailable());
+            }
 
-            ss.m_RemoteName = m_WorkerList[ i ];
-            AtomicStoreRelaxed( &ss.m_Connection, ci ); // success!
-            ss.m_NumJobsAvailable = numJobsAvailable;
+            ci->SetUserData( (void *)(ss->m_Id) );
+            AtomicStoreRelaxed( &( ss->m_Connection ), ci ); // success!
+            ss->m_ConnectionRetryIntervalSec = 0;
+            ss->m_NumJobsAvailableForWorker = numJobsAvailableForWorker;
+            ss->m_StatusTimer.Start();
 
             // send connection msg
-            Protocol::MsgConnection msg( numJobsAvailable );
+            Protocol::MsgConnection msg( numJobsAvailableForWorker );
             SendMessageInternal( ci, msg );
         }
-
-        // limit to one connection attempt per iteration
-        return;
+        // limit to one connection attempt per LookForWorkers()
+        break;
     }
+    HandleExcludedWorkers( newlyExcludedWorkers );
 }
 
 // CommunicateJobAvailability
@@ -247,9 +600,6 @@ void Client::CommunicateJobAvailability()
     m_StatusUpdateTimer.Start(); // reset time
 
     // has status changed since we last sent it?
-    uint32_t numJobsAvailable = (uint32_t)JobQueue::Get().GetNumDistributableJobsAvailable();
-    Protocol::MsgStatus msg( numJobsAvailable );
-
     MutexHolder mh( m_ServerListMutex );
     if ( m_ServerList.IsEmpty() )
     {
@@ -257,24 +607,59 @@ void Client::CommunicateJobAvailability()
     }
 
     // update each server to know how many jobs we have now
-    ServerState * it = m_ServerList.Begin();
-    const ServerState * const end = m_ServerList.End();
-    while ( it != end )
+    for ( size_t i=0; i<m_ServerList.GetSize(); ++i )
     {
-        if ( AtomicLoadRelaxed( &it->m_Connection ) )
+        ServerState & ss = m_ServerList[ i ];
+
+        MutexHolder ssMH( ss.m_Mutex );
+        if ( const ConnectionInfo * connection = AtomicLoadRelaxed( &( ss.m_Connection ) ) )
         {
-            MutexHolder ssMH( it->m_Mutex );
-            if ( const ConnectionInfo * connection = AtomicLoadRelaxed( &it->m_Connection ) )
+            uint32_t numJobsAvailableForWorker =
+                (uint32_t)(JobQueue::Get().GetNumDistributableJobsAvailable());
+            if ( ss.m_NumJobsAvailableForWorker != numJobsAvailableForWorker )
             {
-                if ( it->m_NumJobsAvailable != numJobsAvailable )
-                {
-                    PROFILE_SECTION( "UpdateJobAvailability" )
-                    SendMessageInternal( connection, msg );
-                    it->m_NumJobsAvailable = numJobsAvailable;
-                }
+                PROFILE_SECTION( "UpdateJobAvailability" )
+                Protocol::MsgStatus msg( numJobsAvailableForWorker );
+                SendMessageInternal( connection, msg );
+                ss.m_NumJobsAvailableForWorker = numJobsAvailableForWorker;
             }
         }
-        ++it;
+    }
+}
+
+// GetServer
+//------------------------------------------------------------------------------
+Client::ServerState * Client::GetServer( const ConnectionInfo * connection ) const
+{
+    ASSERT( connection );
+
+    const size_t serverId = (size_t)connection->GetUserData();
+    const size_t numServers = m_ServerList.GetSize();
+    for ( size_t i=0; i < numServers; ++i )
+    {
+        const ServerState & ss = m_ServerList[ i ];
+        if ( ss.m_Id == serverId )
+        {
+            return &(m_ServerList[ i ]);
+        }
+    }
+    return nullptr;
+}
+
+// RemoveServer
+//------------------------------------------------------------------------------
+void Client::RemoveServer( const size_t serverId )
+{
+    const size_t numServers = m_ServerList.GetSize();
+    for ( size_t i=0; i < numServers; ++i )
+    {
+        ServerState & ss = m_ServerList[ i ];
+        if ( ss.m_Id == serverId )
+        {
+            m_ServerList.EraseIndex( i );
+            m_FreeServerIds.Append( serverId );
+            break;
+        }
     }
 }
 
@@ -288,7 +673,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     }
 
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u)\n",
-                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
+                GetServer( connection )->m_RemoteName.Get(),
                 (uint32_t)msg.GetType(),
                 msg.GetSize() );
 }
@@ -303,7 +688,7 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
     }
 
     DIST_INFO( "Send Failed: %s (Type: %u, Size: %u, Payload: %u)\n",
-                ((ServerState *)connection->GetUserData())->m_RemoteName.Get(),
+                GetServer( connection )->m_RemoteName.Get(),
                 (uint32_t)msg.GetType(),
                 msg.GetSize(),
                 (uint32_t)memoryStream.GetSize() );
@@ -317,27 +702,31 @@ void Client::SendMessageInternal( const ConnectionInfo * connection, const Proto
 
     MutexHolder mh( m_ServerListMutex );
 
-    ServerState * ss = (ServerState *)connection->GetUserData();
+    ServerState * ss = GetServer( connection );
     ASSERT( ss );
 
-    // are we expecting a msg, or the payload for a msg?
     void * payload = nullptr;
     size_t payloadSize = 0;
-    if ( ss->m_CurrentMessage == nullptr )
+
     {
-        // message
-        ss->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
-        if ( ss->m_CurrentMessage->HasPayload() )
+        MutexHolder ssMH( ss->m_Mutex );
+        // are we expecting a msg, or the payload for a msg?
+        if ( ss->m_CurrentMessage == nullptr )
         {
-            return;
+            // message
+            ss->m_CurrentMessage = static_cast< const Protocol::IMessage * >( data );
+            if ( ss->m_CurrentMessage->HasPayload() )
+            {
+                return;
+            }
         }
-    }
-    else
-    {
-        // payload
-        ASSERT( ss->m_CurrentMessage->HasPayload() );
-        payload = data;
-        payloadSize = size;
+        else
+        {
+            // payload
+            ASSERT( ss->m_CurrentMessage->HasPayload() );
+            payload = data;
+            payloadSize = size;
+        }
     }
 
     // determine message type
@@ -394,7 +783,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 {
     PROFILE_SECTION( "MsgRequestJob" )
 
-    ServerState * ss = (ServerState *)connection->GetUserData();
+    ServerState * ss = GetServer( connection );
     ASSERT( ss );
 
     // no jobs for blacklisted workers
@@ -453,7 +842,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
     PROFILE_SECTION( "MsgJobResult" )
 
     // find server
-    ServerState * ss = (ServerState *)connection->GetUserData();
+    ServerState * ss = GetServer( connection );
     ASSERT( ss );
 
     ConstMemoryStream ms( payload, payloadSize );
@@ -550,7 +939,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
                 // commit to cache?
                 if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
-                        objectNode->ShouldUseCache() )
+                        on->ShouldUseCache() )
                 {
                     objectNode->WriteToCache( job );
                 }
@@ -565,7 +954,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         AStackString<> msgBuffer;
         job->GetMessagesForLog( msgBuffer );
 
-        if ( objectNode->IsMSVC())
+        if ( objectNode->IsMSVC() )
         {
             if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
             {
@@ -598,37 +987,38 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         {
             // blacklist misbehaving worker
             ss->m_Blacklisted = true;
+            // no more jobs to this worker, so disconnect from it
+            // also, disconnect here allows the exclude logic to run in LookForWorkers()
+            Disconnect( ss->m_Connection );
 
             // take note of failure of job
             job->OnSystemError();
 
             // debugging message
-            const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
-            const AString & workerName = m_WorkerList[ workerIndex ];
             DIST_INFO( "Remote System Failure!\n"
                        " - Blacklisted Worker: %s\n"
                        " - Node              : %s\n"
-                       " - Job Error Count   : %u / %u\n"
-                       " - Details           :\n"
-                       "%s",
-                       workerName.Get(),
+                       " - Job Error Count   : %u / %u\n",
+                       ss->m_RemoteName.Get(),
                        job->GetNode()->GetName().Get(),
-                       job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT,
-                       failureOutput.Get()
+                       job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT
                       );
 
             // should we retry on another worker?
+            AStackString<> tmp;
             if ( job->GetSystemErrorCount() < SYSTEM_ERROR_ATTEMPT_COUNT )
             {
-                // re-queue job which will be re-attempted on another worker
+                // re-queue job, job will be re-attempted on another worker
                 JobQueue::Get().ReturnUnfinishedDistributableJob( job );
-                return;
+                // failed on this worker, add info about this to error output
+                tmp.Format( "FBuild: System error from worker %s\n", ss->m_RemoteName.Get() );
             }
-
-            // failed too many times on different workers, add info about this to
-            // error output
-            AStackString<> tmp;
-            tmp.Format( "FBuild: Error: Task failed on %u different workers\n", (uint32_t)SYSTEM_ERROR_ATTEMPT_COUNT );
+            else
+            {
+                // failed too many times on different workers, add info about this to
+                // error output
+                tmp.Format( "FBuild: System error from %u different workers\n", (uint32_t)SYSTEM_ERROR_ATTEMPT_COUNT );
+            }
             if ( failureOutput.EndsWith( '\n' ) == false )
             {
                 failureOutput += '\n';
@@ -637,6 +1027,11 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
         }
 
         Node::DumpOutput( nullptr, failureOutput.Get(), failureOutput.GetLength(), nullptr );
+
+        if ( systemError )
+        {
+            return;
+        }
     }
 
     if ( FLog::IsMonitorEnabled() )
@@ -721,7 +1116,7 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 //------------------------------------------------------------------------------
 const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const
 {
-    ServerState * ss = (ServerState *)connection->GetUserData();
+    ServerState * ss = GetServer( connection );
     ASSERT( ss );
 
     MutexHolder mh( ss->m_Mutex );
@@ -759,11 +1154,66 @@ bool Client::WriteFileToDisk( const AString & fileName, const MultiBuffer & mult
 Client::ServerState::ServerState()
     : m_Connection( nullptr )
     , m_CurrentMessage( nullptr )
-    , m_NumJobsAvailable( 0 )
+    , m_ConnectionRetryIntervalSec( 0 )  // try immediately the first time
+    , m_ConnectionRetryElapsedTimeSec( 0 )
+    , m_NumJobsAvailableForWorker( 0 )
     , m_Jobs( 16, true )
     , m_Blacklisted( false )
+    , m_Excluded( false )
+    , m_DetailedLogging( false )
 {
-    m_DelayTimer.Start( 999.0f );
+}
+
+// DESTRUCTOR( ServerState )
+//------------------------------------------------------------------------------
+Client::ServerState::~ServerState()
+{
+    // no need to get mutex since in dtor
+    ClearConnectionFields();
+    if ( !m_RemoteName.IsEmpty() )
+    {
+        m_ConnectionRetryIntervalSec = 0;
+        m_ConnectionRetryElapsedTimeSec = 0;
+        m_RemoteName.Clear();
+    }
+}
+
+// Disconnect ( ServerState )
+//------------------------------------------------------------------------------
+void Client::ServerState::Disconnect()
+{
+    MutexHolder mh( m_Mutex );
+    ClearConnectionFields();
+}
+
+// ClearConnectionFields ( ServerState )
+//------------------------------------------------------------------------------
+void Client::ServerState::ClearConnectionFields()
+{
+    if ( m_Connection )
+    {
+        DIST_INFO( "Disconnected: %s\n", m_RemoteName.Get() );
+        if ( m_Jobs.IsEmpty() == false )
+        {
+            Job ** it = m_Jobs.Begin();
+            const Job * const * end = m_Jobs.End();
+            while ( it != end )
+            {
+                FLOG_MONITOR( "FINISH_JOB TIMEOUT %s \"%s\" \n", m_RemoteName.Get(), (*it)->GetNode()->GetName().Get() );
+                JobQueue::Get().ReturnUnfinishedDistributableJob( *it );
+                ++it;
+            }
+            m_Jobs.Clear();
+        }
+
+        // This is usually null here, but might need to be freed if
+        // we had the connection drop between message and payload
+        FREE( (void *)( m_CurrentMessage ) );
+
+        AtomicStoreRelaxed( &m_Connection, static_cast< const ConnectionInfo * >( nullptr ) );
+        m_CurrentMessage = nullptr;
+        m_NumJobsAvailableForWorker = 0;
+    }
 }
 
 //------------------------------------------------------------------------------

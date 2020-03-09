@@ -368,29 +368,11 @@ bool FBuild::Build( Node * nodeToBuild )
     if ( m_Options.m_AllowDistributed )
     {
         const SettingsNode * settings = m_DependencyGraph->GetSettings();
-
-        Array< AString > workers;
-        if ( settings->GetWorkerList().IsEmpty() )
-        {
-            // check for workers through brokerage
-            // TODO:C This could be moved out of the main code path
-            m_WorkerBrokerage.FindWorkers( workers );
-        }
-        else
-        {
-            workers = settings->GetWorkerList();
-        }
-
-        if ( workers.IsEmpty() )
-        {
-            FLOG_WARN( "No workers available - Distributed compilation disabled" );
-            m_Options.m_AllowDistributed = false;
-        }
-        else
-        {
-            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRootPaths().Get() );
-            m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
-        }
+        m_Client = FNEW( Client(
+            settings->GetWorkerList(), m_Options.m_DistributionPort, 
+            settings->GetWorkerListRefreshLimitSec(),
+            settings->GetWorkerConnectionLimit(),
+            m_Options.m_DistVerbose ) );
     }
 
     m_Timer.Start();

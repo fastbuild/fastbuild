@@ -219,7 +219,7 @@ uint32_t Worker::WorkThread()
         WindowOSX_StopMessageLoop();
     #endif
 
-    m_WorkerBrokerage.SetAvailability( false );
+    m_WorkerBrokerage.SetUnavailable();
 
     return 0;
 }
@@ -354,8 +354,15 @@ void Worker::UpdateAvailability()
     }
 
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
-
-    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
+    
+    if ( numCPUsToUse > 0 )
+    {
+        m_WorkerBrokerage.SetAvailable();
+    }
+    else
+    {
+        m_WorkerBrokerage.SetUnavailable();
+    }
 }
 
 // UpdateUI

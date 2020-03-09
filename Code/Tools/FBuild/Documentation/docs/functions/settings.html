@@ -51,6 +51,18 @@ Defines global FASTBuild settings.
   // Other
   .DisableDBMigration               // Disable incremental parsing of bff files, forcing full builds
                                     // on any bff change. This option will be removed in the future (default: false)
+
+  .WorkerListRefreshLimit           // (optional) When not using a static worker list,
+                                    //            max number of seconds to refresh the network share worker list.
+                                    //            default: 300 (5 minutes, in case workers are rebooting)
+                                    //            0  means no retries
+                                    //            -1 means infinite retries
+
+  .WorkerConnectionRetryLimit       // (optional) When a worker does not respond to a connection request,
+                                    //            max number of seconds to retry a worker connection.
+                                    //            default: 300 (5 minutes, in case workers are rebooting)
+                                    //            0  means no retries
+                                    //            -1 means infinite retries
 }
 </div>
     </div>

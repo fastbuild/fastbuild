@@ -7,7 +7,6 @@
 #include "Tools/FBuild/FBuildCore/FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Helpers/FBuildStats.h"
-#include "WorkerPool/WorkerBrokerage.h"
 
 #include "Core/Containers/Array.h"
 #include "Core/Containers/Singleton.h"
@@ -126,8 +125,6 @@ protected:
     FBuildStats m_BuildStats;
 
     FBuildOptions m_Options;
-
-    WorkerBrokerage m_WorkerBrokerage;
 
     AString m_OldWorkingDir;
 
