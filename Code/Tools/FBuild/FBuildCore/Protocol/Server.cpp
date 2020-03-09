@@ -14,18 +14,35 @@
 
 #include "Core/Env/Env.h"
 #include "Core/FileIO/ConstMemoryStream.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/MemoryStream.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Server::Server( uint32_t numThreadsInJobQueue )
+Server::Server( const Options & serverOptions )
     : m_ShouldExit( false )
     , m_ClientList( 32, true )
 {
-    m_JobQueueRemote = FNEW( JobQueueRemote( numThreadsInJobQueue ? numThreadsInJobQueue : Env::GetNumProcessors() ) );
+    AStackString<> obfuscatedSandboxTmp;
+    if ( serverOptions.m_SandboxEnabled )
+    {
+        AStackString<> workingDir;
+        FileIO::GetCurrentDir( workingDir );
+        PathUtils::GetObfuscatedSandboxTmp(
+            serverOptions.m_SandboxEnabled,
+            workingDir,
+            serverOptions.m_SandboxTmp,
+            obfuscatedSandboxTmp );
+    }
+
+    m_JobQueueRemote = FNEW( JobQueueRemote(
+        serverOptions.m_NumThreadsInJobQueue ? serverOptions.m_NumThreadsInJobQueue : Env::GetNumProcessors(),
+        serverOptions.m_SandboxEnabled,
+        obfuscatedSandboxTmp ) );
 
     m_Thread = Thread::CreateThread( ThreadFuncStatic,
                                      "Server",

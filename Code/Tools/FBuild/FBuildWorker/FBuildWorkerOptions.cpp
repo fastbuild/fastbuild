@@ -5,11 +5,10 @@
 //------------------------------------------------------------------------------
 #include "FBuildWorkerOptions.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
+#include "Tools/FBuild/FBuildCore/Helpers/Args.h"
 
 // Core
-#include "Core/Containers/Array.h"
 #include "Core/Env/Env.h"
-#include "Core/Strings/AStackString.h"
 
 // system
 #include <stdio.h>
@@ -29,6 +28,13 @@ FBuildWorkerOptions::FBuildWorkerOptions() :
     m_OverrideWorkMode( false ),
     m_WorkMode( WorkerSettings::WHEN_IDLE ),
     m_MinimumFreeMemoryMiB( 0 ),
+    m_OverrideStartMinimized( false ),
+    m_StartMinimized( false ),
+    m_OverrideSandboxEnabled( false),
+    m_SandboxEnabled( false ),
+    m_OverrideSandboxExe( false),
+    m_OverrideSandboxArgs( false),
+    m_OverrideSandboxTmp( false ),
     m_ConsoleMode( false )
 {
     #ifdef __LINUX__
@@ -142,6 +148,60 @@ bool FBuildWorkerOptions::ProcessCommandLine( const AString & commandLine )
                 continue;
             }
         #endif
+        else if ( token == "-min" )
+        {
+            m_StartMinimized = true;
+            m_OverrideStartMinimized = true;
+            continue;
+        }
+        else if ( token == "-nomin" )
+        {
+            m_StartMinimized = false;
+            m_OverrideStartMinimized = true;
+            continue;
+        }
+        else if ( token == "-sandbox" )
+        {
+            m_SandboxEnabled = true;
+            m_OverrideSandboxEnabled = true;
+            continue;
+        }
+        else if ( token == "-nosandbox" )
+        {
+            m_SandboxEnabled = false;
+            m_OverrideSandboxEnabled = true;
+            continue;
+        }
+        else if ( token.BeginsWith( "-sandboxexe=" ) )
+        {
+            AStackString<> sandboxExe( token.Get() + 12 );
+            Args::StripQuotes(
+                sandboxExe.Get(),
+                sandboxExe.Get() + sandboxExe.GetLength(),
+                m_SandboxExe );
+            m_OverrideSandboxExe = true;
+            continue;
+        }
+        else if ( token.BeginsWith( "-sandboxargs=" ) )
+        {
+            AStackString<> sandboxArgs( token.Get() + 13 );
+            Args::StripQuotes(
+                sandboxArgs.Get(),
+                sandboxArgs.Get() + sandboxArgs.GetLength(),
+                m_SandboxArgs );
+            m_OverrideSandboxArgs = true;
+            continue;
+        }
+        else if ( token.BeginsWith( "-sandboxtmp=" ) )
+        {
+            AStackString<> sandboxTmp( token.Get() + 12 );
+            Args::StripQuotes(
+                sandboxTmp.Get(),
+                sandboxTmp.Get() + sandboxTmp.GetLength(),
+                m_SandboxTmp );
+            m_OverrideSandboxTmp = true;
+            continue;
+        }
 
         ShowUsageError();
         return false;
@@ -173,8 +233,27 @@ void FBuildWorkerOptions::ShowUsageError()
                        "        - idle : Accept work when PC is idle.\n"
                        "        - dedicated : Accept work always.\n"
                        "        - proportional : Accept work proportional to free CPUs.\n"
+                       " -min\n"
+                       "        Start minimized.\n"
+                       " -nomin\n"
+                       "        Don't start minimized.\n"
                        " -minfreememory <MiB>\n"
                        "        Set minimum free memory (MiB) required to accept work.\n"
+                       " -sandbox\n"
+                       "        Enable work execution sandbox.\n"
+                       " -nosandbox\n"
+                       "        Disable work execution sandbox.\n"
+                       " -sandboxexe=path\n"
+                       "        Set sandbox executable.\n"
+                       "        Example relative path : winc.exe\n"
+                       "        Example absolute path : \"C:\\fastbuild_data\\bin\\win64\\winc.exe\"\n"
+                       " -sandboxargs=args\n"
+                       "        Set sandbox args.\n"
+                       "        Example args : \"--affinity 1 --memory 10485760\"\n"
+                       " -sandboxtmp=path\n"
+                       "        Set sandbox tmp dir.\n"
+                       "        Example relative path : sandbox\n"
+                       "        Example absolute path : \"C:\\ProgramData\\fbuild\\sandbox\"\n"
                        " -nosubprocess\n"
                        "        (Windows) Don't spawn a sub-process worker copy.\n"
                        "---------------------------------------------------------------------------\n"

@@ -552,7 +552,9 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
                 if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
                         objectNode->ShouldUseCache() )
                 {
-                    objectNode->WriteToCache( job );
+                    AStackString<> workingDir;
+                    objectNode->GetWorkingDir( job, workingDir );
+                    objectNode->WriteToCache( job, workingDir );
                 }
             }
             else

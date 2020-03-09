@@ -28,7 +28,18 @@ class ToolManifest;
 class Server : public TCPConnectionPool
 {
 public:
-    Server( uint32_t numThreadsInJobQueue = 0 );
+    class Options
+    {
+        public:
+            inline explicit Options() {}
+            inline virtual ~Options() = default;
+
+            uint32_t m_NumThreadsInJobQueue = 0;
+            bool     m_SandboxEnabled = false;
+            AString  m_SandboxTmp;
+    };
+
+    Server( const Options & serverOptions );
     ~Server();
 
     static void GetHostForJob( const Job * job, AString & hostName );

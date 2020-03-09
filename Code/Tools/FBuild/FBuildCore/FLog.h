@@ -44,6 +44,13 @@ PRAGMA_DISABLE_PUSH_CLANG_WINDOWS( "-Wgnu-zero-variadic-macro-arguments" ) // to
     } while ( false );                              \
     PRAGMA_DISABLE_POP_MSVC
 
+#define FLOG_ERROR_STRING( message )             \
+    do {                                            \
+        FLog::ErrorString( message );    \
+    PRAGMA_DISABLE_PUSH_MSVC(4127)                  \
+    } while ( false );                              \
+    PRAGMA_DISABLE_POP_MSVC
+
 #define FLOG_ERROR( fmtString, ... )                \
     do {                                            \
         FLog::Error( fmtString, ##__VA_ARGS__ );    \
@@ -72,6 +79,7 @@ public:
     static void Verbose( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
     static void Output( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
     static void Warning( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
+    static void ErrorString( MSVC_SAL_PRINTF const char * message );
     static void Error( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
     static void Monitor( MSVC_SAL_PRINTF const char * formatString, ... ) FORMAT_STRING( 1, 2 );
 

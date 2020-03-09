@@ -1,0 +1,143 @@
+//
+// Sandbox
+//
+// Build steps to test sandbox
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers = { "127.0.0.1" }
+}
+
+#if __WINDOWS__
+.ExeExtension = '.exe'
+#endif
+
+#if __OSX__
+.ExeExtension = ''
+#endif
+
+#if __LINUX__
+.ExeExtension = ''
+#endif
+
+#if __WINDOWS__
+Using( .ToolChain_Clang_Windows )
+#endif
+
+#if __OSX__
+Using( .OSXClangToolChain )
+#endif
+
+#if __LINUX__
+Using( .LinuxGCCToolChain )
+#endif
+
+// Compile steps
+//------------------------------------------------------------------------------
+.TestObjectListStruct =
+[
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestDistributed/Sandbox/test.cpp'
+]
+
+ObjectList( "DummySandboxExe-Lib" )
+{
+#if __WINDOWS__
+    Using( .VisualStudioToolChain_X64 )
+#endif
+    .CompilerInputFiles = { './Tools/FBuild/FBuildTest/Data/TestDistributed/Sandbox/dummysandbox.cpp'
+                            './Core/Env/Env.cpp'
+                            './Core/Env/ErrorFormat.cpp'
+                            './Core/Mem/Mem.cpp'
+                            './Core/Mem/MemPoolBlock.cpp'
+                            './Core/Mem/SmallBlockAllocator.cpp'
+                            './Core/Process/Mutex.cpp'
+                            './Core/Process/Process.cpp'
+                            './Core/Process/Thread.cpp'
+                            './Core/Strings/AString.cpp'
+                            './Core/Time/Timer.cpp'
+                          }
+    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/Sandbox'
+
+#if __WINDOWS__
+    .CompilerOptions + ' /DRELEASE'
+                     + ' /I"./"'
+#endif
+
+#if __OSX__
+    .CompilerOptions + ' -DRELEASE'
+                     + ' -D__APPLE__'
+                     + ' -I./'
+#endif
+
+#if __LINUX__
+    .CompilerOptions + ' -DRELEASE'
+                     + ' -D__LINUX__'
+                     + ' -I./'
+#endif
+}
+
+ObjectList( "TestExe-Lib" )
+{
+    Using( .TestObjectListStruct )
+    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/Sandbox'
+}
+
+.ExecutableStruct =
+[
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+    #endif
+]
+
+Executable( "DummySandboxExe" )
+{
+    #if __WINDOWS__
+        Using( .VisualStudioToolChain_X64 )
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' Advapi32.lib'
+                            + ' User32.lib'
+                            + ' kernel32.lib'
+                            + .CRTLibs_Static
+    #endif
+    #if __LINUX__
+        Using( .LinuxGCCToolChain )
+        .LinkerOptions      + ' -pthread -ldl -lrt'
+    #endif
+    .Libraries          = { 'DummySandboxExe-Lib' }
+    .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/Sandbox/dummysandbox$ExeExtension$'
+}
+
+Executable( "TestExe" )
+{
+    Using( .ExecutableStruct )
+    #if __LINUX__
+        .LinkerOptions      + ' -B/usr/bin'
+    #endif
+    .Libraries          = { 'TestExe-Lib' }
+    .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/Sandbox/test$ExeExtension$'
+}
+
+// Test steps
+//------------------------------------------------------------------------------
+.TestStruct =
+[
+    .TestArguments = ''
+	.ExtraFiles = {}
+]
+
+// no Test for dummysandbox, since fbuild will call it via its sandbox exe option
+
+Test( "Test" )
+{
+    Using( .TestStruct )
+    .TestExecutable    = 'TestExe'
+	.Root              = '$StandardOutputBase$/Test/Distributed/Sandbox'
+    .TestOutput        = '$Root$/testoutput.txt'
+}

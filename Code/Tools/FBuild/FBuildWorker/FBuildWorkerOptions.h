@@ -30,11 +30,21 @@ public:
     #endif
 
     // resource usage
-    bool m_OverrideCPUAllocation;
-    uint32_t m_CPUAllocation;
-    bool m_OverrideWorkMode;
+    bool                 m_OverrideCPUAllocation;
+    uint32_t             m_CPUAllocation;
+    bool                 m_OverrideWorkMode;
     WorkerSettings::Mode m_WorkMode;
-    uint32_t m_MinimumFreeMemoryMiB; // Minimum OS free memory including virtual memory to let worker do its work
+    uint32_t             m_MinimumFreeMemoryMiB; // Minimum OS free memory including virtual memory to let worker do its work
+    bool                 m_OverrideStartMinimized;
+    bool                 m_StartMinimized;
+    bool                 m_OverrideSandboxEnabled;
+    bool                 m_SandboxEnabled;
+    bool                 m_OverrideSandboxExe;
+    AString              m_SandboxExe;
+    bool                 m_OverrideSandboxArgs;
+    AString              m_SandboxArgs;
+    bool                 m_OverrideSandboxTmp;
+    AString              m_SandboxTmp;
 
     // Console mode
     bool m_ConsoleMode;

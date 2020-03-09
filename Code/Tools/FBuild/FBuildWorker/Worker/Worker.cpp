@@ -23,6 +23,7 @@
 #include "Core/Env/ErrorFormat.h"
 #include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
 #include "Core/Profile/Profile.h"
@@ -37,8 +38,8 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Worker::Worker( const AString & args, bool consoleMode )
-    : m_ConsoleMode( consoleMode )
+Worker::Worker( const AString & args )
+    : m_ConsoleMode( false )
     , m_MainWindow( nullptr )
     , m_ConnectionPool( nullptr )
     , m_NetworkStartupHelper( nullptr )
@@ -51,8 +52,21 @@ Worker::Worker( const AString & args, bool consoleMode )
 #endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
+}
+
+// Initialize
+//------------------------------------------------------------------------------
+void Worker::Initialize( const bool consoleMode )
+{
+    m_ConsoleMode = consoleMode;
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
-    m_ConnectionPool = FNEW( Server );
+
+    Server::Options serverOptions;
+    serverOptions.m_NumThreadsInJobQueue = 0;
+    serverOptions.m_SandboxEnabled = m_WorkerSettings->GetSandboxEnabled();
+    serverOptions.m_SandboxTmp = m_WorkerSettings->GetSandboxTmp();
+
+    m_ConnectionPool = FNEW( Server ( serverOptions ) );
 
     Env::GetExePath( m_BaseExeName );
     #if defined( __WINDOWS__ )
@@ -166,17 +180,86 @@ uint32_t Worker::WorkThread()
     // We just create this folder whether it's needed or not
     {
         AStackString<> tmpPath;
-        VERIFY( FBuild::GetTempDir( tmpPath ) );
-        #if defined( __WINDOWS__ )
-            tmpPath += ".fbuild.tmp\\target\\include";
-        #else
-            tmpPath += "_fbuild.tmp/target/include";
-        #endif
-        if ( !FileIO::EnsurePathExists( tmpPath ) )
+        if ( m_WorkerSettings->GetSandboxEnabled() )
         {
-            ErrorMessage( "Failed to initialize tmp folder. Error: %s", LAST_ERROR_STR );
-            return (uint32_t)-2;
+            if ( !FileIO::EnsurePathExists( m_WorkerSettings->GetSandboxTmp() ) )
+            {
+                ErrorMessage( "Failed to create tmp folder %s (error %u)", m_WorkerSettings->GetSandboxTmp().Get(), Env::GetLastErr() );
+                return (uint32_t)-2;
+            }
+            tmpPath = m_WorkerSettings->GetObfuscatedSandboxTmp();
         }
+        else
+        {
+            VERIFY( FBuild::GetTempDir( tmpPath ) );
+        #if defined( __WINDOWS__ )
+            tmpPath += ".fbuild.tmp\\";
+        #else
+            tmpPath += "_fbuild.tmp/";
+        #endif
+        }
+        #if defined( __WINDOWS__ )
+            tmpPath += "target\\include";
+        #else
+            tmpPath += "target/include";
+        #endif
+
+        if ( m_WorkerSettings->GetSandboxEnabled() )
+        {
+        #if defined( __WINDOWS__ )
+            const AString & absSandboxExe = m_WorkerSettings->GetAbsSandboxExe();
+            const char * lastSlash = absSandboxExe.FindLast( NATIVE_SLASH );
+            if ( !lastSlash )
+            {
+                ErrorMessage( "Failed to get sandbox exe dir from sandbox exe\n" );
+                return (uint32_t)-2;
+            }
+            AStackString<> sandboxExeDir;
+            sandboxExeDir.Assign( absSandboxExe.Get(), lastSlash );
+            AStackString<> errorMsg;
+            if ( !FileIO::SetLowIntegrity(
+                sandboxExeDir,
+                FileIO::Read | FileIO::List,  // dir permissions
+                FileIO::Read | FileIO::Execute,  // file permissions
+                errorMsg ) )
+            {
+                ErrorMessageString( errorMsg.Get() );
+                return (uint32_t)-2;
+            }
+            if ( !FileIO::SetLowIntegrity(
+                m_WorkerSettings->GetSandboxTmp(),  // pass in root sandbox tmp dir
+                // for dir, don't allow List permission,
+                // since for security, we don't allow users in the built-in
+                // users group to list the working dir; low integrity client code should create
+                // a random number-named dir under the working dir to hide its files from other
+                // low integrity code and other users
+                FileIO::Read | FileIO::Execute,  // dir permissions
+                FileIO::Read | FileIO::Write | FileIO::Execute | FileIO::Delete,  // file permissions
+                errorMsg ) )
+            {
+                ErrorMessageString( errorMsg.Get() );
+                return (uint32_t)-2;
+            }
+        #endif
+
+            if ( !FileIO::EnsurePathExists( tmpPath ) )
+            {
+                // print the root sandbox tmp dir, not the obfuscated dir
+                // so we can hide the obfuscated dir from other processes
+                ErrorMessage( "Failed to create sandbox dir under %s Error: %s",
+                    m_WorkerSettings->GetSandboxTmp().Get(), LAST_ERROR_STR );
+                return (uint32_t)-2;
+            }
+        }
+        else
+        {
+            if ( !FileIO::EnsurePathExists( tmpPath ) )
+            {
+                ErrorMessage( "Failed to create tmp folder %s Error: %s", tmpPath.Get(), LAST_ERROR_STR );
+                return (uint32_t)-2;
+            }
+        }
+
         #if defined( __WINDOWS__ )
             tmpPath += "\\.lock";
         #else
@@ -245,7 +328,14 @@ bool Worker::HasEnoughDiskSpace()
 
         // Check available disk space of temp path
         AStackString<> tmpPath;
-        VERIFY( FBuild::GetTempDir( tmpPath ) );
+        if ( m_WorkerSettings->GetSandboxEnabled() )
+        {
+            tmpPath = m_WorkerSettings->GetObfuscatedSandboxTmp();
+        }
+        else
+        {
+            VERIFY( FBuild::GetTempDir( tmpPath ) );
+        }
         BOOL result = GetDiskFreeSpaceExA( tmpPath.Get(), (PULARGE_INTEGER)&freeBytesAvailable, (PULARGE_INTEGER)&totalNumberOfBytes, (PULARGE_INTEGER)&totalNumberOfFreeBytes );
         if ( result && ( freeBytesAvailable >= MIN_DISK_SPACE ) )
         {
@@ -503,6 +593,21 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     OUTPUT( "%s", buffer.Get() );
 }
 
+// ErrorMessageString
+//------------------------------------------------------------------------------
+void Worker::ErrorMessageString( MSVC_SAL_PRINTF const char * buffer ) const
+{
+    if ( InConsoleMode() )
+    {
+        // Forward to console
+        StatusMessage( "%s", buffer );
+        return;
+    }
+
+    // Display interactive Message Box
+    Env::ShowMsgBox( "FBuildWorker", buffer );
+}
+
 // ErrorMessage
 //------------------------------------------------------------------------------
 void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
@@ -514,15 +619,7 @@ void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     buffer.VFormat( fmtString, args );
     va_end( args );
 
-    if ( InConsoleMode() )
-    {
-        // Forward to console
-        StatusMessage( "%s", buffer.Get() );
-        return;
-    }
-
-    // Display interactive Message Box
-    Env::ShowMsgBox( "FBuildWorker", buffer.Get() );
+    ErrorMessageString( buffer.Get() );
 }
 
 //------------------------------------------------------------------------------

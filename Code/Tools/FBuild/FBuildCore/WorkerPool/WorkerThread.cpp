@@ -58,23 +58,51 @@ WorkerThread::~WorkerThread()
 
 // InitTmpDir
 //------------------------------------------------------------------------------
-/*static*/ void WorkerThread::InitTmpDir( bool remote )
+/*static*/ void WorkerThread::InitTmpDir(
+    const bool sandboxEnabled,
+    const AString & obfuscatedSandboxTmp,
+    bool remote )
 {
     PROFILE_FUNCTION
 
     AStackString<> tmpDirPath;
-    VERIFY( FBuild::GetTempDir( tmpDirPath ) );
+    if ( sandboxEnabled )
+    {
+        if ( !obfuscatedSandboxTmp.IsEmpty() )
+        {
+            tmpDirPath = obfuscatedSandboxTmp;
+            PathUtils::EnsureTrailingSlash( tmpDirPath );
+        }
+    }
+    else
+    {
+        VERIFY( FBuild::GetTempDir( tmpDirPath ) );
     #if defined( __WINDOWS__ )
         tmpDirPath += ".fbuild.tmp\\";
     #else
         tmpDirPath += "_fbuild.tmp/";
     #endif
+    }
 
-    // use the working dir hash to uniquify the path
-    const uint32_t workingDirHash = remote ? 0 : FBuild::Get().GetOptions().GetWorkingDirHash();
-    tmpDirPath.AppendFormat( "0x%08x", workingDirHash );
+    if ( remote )
+    {
+        tmpDirPath += "0";
+    }
+    else
+    {
+        const AString & workingDir = FBuild::Get().GetOptions().GetWorkingDir();
+        if ( tmpDirPath.BeginsWith( workingDir ) )
+        {
+            tmpDirPath += "0";
+        }
+        else
+        {
+            // use the working dir hash to uniquify the path
+            const uint32_t workingDirHash = remote ? 0 : FBuild::Get().GetOptions().GetWorkingDirHash();
+            tmpDirPath.AppendFormat( "0x%08x", workingDirHash );
+        }
+    }
     tmpDirPath += NATIVE_SLASH;
-
     VERIFY( FileIO::EnsurePathExists( tmpDirPath ) );
 
     MutexHolder lock( s_TmpRootMutex );

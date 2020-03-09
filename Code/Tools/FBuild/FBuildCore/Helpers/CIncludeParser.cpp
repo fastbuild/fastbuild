@@ -35,8 +35,9 @@ CIncludeParser::~CIncludeParser() = default;
 
 // Parse
 //------------------------------------------------------------------------------
-bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
-                                       size_t compilerOutputSize )
+bool CIncludeParser::ParseMSCL_Output(
+    const AString & workingDir, const char * compilerOutput,
+    size_t compilerOutputSize )
 {
     // we require null terminated input
     ASSERT( compilerOutput[ compilerOutputSize ] == 0 );
@@ -144,7 +145,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
             const bool validPath = driveLetter && ( includeStart[ 1 ] == ':' );
             if ( validPath )
             {
-                AddInclude( includeStart, includeEnd );
+                AddInclude( workingDir, includeStart, includeEnd );
             }
         }
     }
@@ -154,8 +155,9 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
 
 // Parse
 //------------------------------------------------------------------------------
-bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
-                                             size_t compilerOutputSize )
+bool CIncludeParser::ParseMSCL_Preprocessed(
+    const AString & workingDir, const char * compilerOutput,
+    size_t compilerOutputSize )
 {
     // we require null terminated input
     ASSERT( compilerOutput[ compilerOutputSize ] == 0 );
@@ -219,7 +221,7 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 
         const char * incEnd = pos;
 
-        AddInclude( incStart, incEnd );
+        AddInclude( workingDir, incStart, incEnd );
     }
 
     return true;
@@ -250,8 +252,9 @@ bool CIncludeParser::ParseMSCL_Preprocessed( const char * compilerOutput,
 
 // Parse
 //------------------------------------------------------------------------------
-bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
-                                            size_t compilerOutputSize )
+bool CIncludeParser::ParseGCC_Preprocessed(
+    const AString & workingDir, const char * compilerOutput,
+    size_t compilerOutputSize )
 {
     // we require null terminated input
     ASSERT( compilerOutput[ compilerOutputSize ] == 0 );
@@ -348,9 +351,8 @@ bool CIncludeParser::ParseGCC_Preprocessed( const char * compilerOutput,
         // or if it is coming from -fms-extention which doesn't have flags
         if ( strncmp( pos, " 1", 2 ) == 0 || !hasFlags )
         {
-            AddInclude( lineStart, lineEnd );
+            AddInclude( workingDir, lineStart, lineEnd );
         }
-
     }
 
     return true;
@@ -365,7 +367,7 @@ void CIncludeParser::SwapIncludes( Array< AString > & includes )
 
 // AddInclude
 //------------------------------------------------------------------------------
-void CIncludeParser::AddInclude( const char * begin, const char * end )
+void CIncludeParser::AddInclude( const AString & workingDir, const char * begin, const char * end )
 {
     #ifdef DEBUG
         m_NonUniqueCount++;
@@ -387,7 +389,7 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
     // robust check
     AStackString< 256 > include( begin, end );
     AStackString< 256 > cleanInclude;
-    NodeGraph::CleanPath( include, cleanInclude );
+    PathUtils::CleanPath( workingDir, include, cleanInclude );
     #if defined( __WINDOWS__ ) || defined( __OSX__ )
         // Windows and OSX are case-insensitive
         AStackString<> lowerCopy( cleanInclude );

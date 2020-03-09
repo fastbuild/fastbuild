@@ -29,25 +29,25 @@ private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
 
-    void EmitCompilationMessage( const char * workingDir ) const;
+    void EmitCompilationMessage( const AString & workingDir, const AString & testExe ) const;
 
-    AString             m_TestExecutable;
-    Array< AString >    m_TestInput;
-    Array< AString >    m_TestInputPath;
-    Array< AString >    m_TestInputPattern;
-    Array< AString >    m_TestInputExcludePath;
-    Array< AString >    m_TestInputExcludedFiles;
-    Array< AString >    m_TestInputExcludePattern;
-    AString             m_TestArguments;
-    AString             m_TestWorkingDir;
-    uint32_t            m_TestTimeOut;
-    bool                m_TestAlwaysShowOutput;
-    bool                m_TestInputPathRecurse;
-    Array< AString >    m_PreBuildDependencyNames;
+    AString          m_TestExecutable;
+    Array< AString > m_TestInput;
+    Array< AString > m_TestInputPath;
+    Array< AString > m_TestInputPattern;
+    Array< AString > m_TestInputExcludePath;
+    Array< AString > m_TestInputExcludedFiles;
+    Array< AString > m_TestInputExcludePattern;
+    AString          m_TestArguments;
+    AString          m_TestWorkingDir;
+    uint32_t         m_TestTimeOut;
+    bool             m_TestAlwaysShowOutput;
+    bool             m_TestInputPathRecurse;
+    Array< AString > m_PreBuildDependencyNames;
     Array< AString >    m_Environment;
 
     // Internal State
-    uint32_t            m_NumTestInputFiles;
+    uint32_t         m_NumTestInputFiles;
     mutable const char * m_EnvironmentString;
 };
 

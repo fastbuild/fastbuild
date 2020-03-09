@@ -16,9 +16,9 @@ public:
     explicit CIncludeParser();
     ~CIncludeParser();
 
-    bool ParseMSCL_Output( const char * compilerOutput, size_t compilerOutputSize );
-    bool ParseMSCL_Preprocessed( const char * compilerOutput, size_t compilerOutputSize );
-    bool ParseGCC_Preprocessed( const char * compilerOutput, size_t compilerOutputSize );
+    bool ParseMSCL_Output( const AString & workingDir, const char * compilerOutput, size_t compilerOutputSize );
+    bool ParseMSCL_Preprocessed( const AString & workingDir, const char * compilerOutput, size_t compilerOutputSize );
+    bool ParseGCC_Preprocessed( const AString & workingDir, const char * compilerOutput, size_t compilerOutputSize );
 
     const Array< AString > & GetIncludes() const { return m_Includes; }
 
@@ -31,7 +31,7 @@ public:
 private:
     static void ParseToNextLineStartingWithHash( const char * & pos );
 
-    void AddInclude( const char * begin, const char * end );
+    void AddInclude( const AString & workingDir, const char * begin, const char * end );
 
     // temporary data
     uint32_t            m_LastCRC1;

@@ -27,6 +27,7 @@ public:
     static bool GetFiles( const AString & path,
                           const AString & wildCard,
                           bool recurse,
+                          bool includeDirs,
                           Array< AString > * results );
     struct FileInfo
     {
@@ -74,12 +75,31 @@ public:
         FORCE_INLINE static void WorkAroundForWindowsFilePermissionProblem( const AString &, const uint32_t = 0, const uint32_t = 0 ) {}
     #endif
 
+    static bool ContainsValidDirChars( const AString & string, AString & errorMsg );
+    #if defined( __WINDOWS__ )
+    enum Permissions 
+    {   
+       None    = 0,
+       Read    = 1,
+       List    = 2,
+       Write   = 4,
+       Execute = 8,
+       Delete  = 16
+    };
+    static bool SetLowIntegrity( const AString & path,
+                                 const uint32_t dirPermissions,
+                                 const uint32_t filePermissions,
+                                 AString & errorMsg );
+    #endif
+
 private:
     static void GetFilesRecurse( AString & path,
                                  const AString & wildCard,
+                                 const bool includeDirs,
                                  Array< AString > * results );
     static void GetFilesNoRecurse( const char * path,
                                    const char * wildCard,
+                                   const bool includeDirs,
                                    Array< AString > * results );
     static void GetFilesRecurseEx( AString & path,
                                  const Array< AString > * patterns,
@@ -87,7 +107,33 @@ private:
     static void GetFilesNoRecurseEx( const char * path,
                                  const Array< AString > * patterns,
                                  Array< FileInfo > * results );
-    static bool IsMatch( const Array< AString > * patterns, const char * fileName );
+    static bool IsMatch( const Array< AString > * patterns,
+                                   const char * fileName );
+    #if defined( __WINDOWS__ )
+    static bool IsShortcutDir( const void * findData );
+    static bool IncludeFileObjectInResults(
+                                 const void * findData,
+                                 const bool includeDirs );
+    #elif defined( __LINUX__ ) || defined( __APPLE__ )
+    static bool IsShortcutDir( const void * entry );
+    #endif
+
+    #if defined( __WINDOWS__ )
+        static bool CheckAndSetPermissions(
+            const void * dir,
+            const void * usersSID,
+            const void * lowLabelSID,
+            const char lowLabelAceFlags,
+            const uint32_t usersDirAllowMask,
+            const uint32_t usersDirDenyMask,
+            const uint32_t usersChildAllowMask,
+            const uint32_t usersChildDenyMask,
+            const bool setPermissions,
+            void * & dacl,
+            bool & hasDesiredUsersDirPermissions,
+            bool & hasDesiredUsersChildPermissions,
+            bool & hasLowIntegrityPermission );
+    #endif
 
 };
 

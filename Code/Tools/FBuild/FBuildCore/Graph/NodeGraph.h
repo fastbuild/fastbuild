@@ -100,7 +100,7 @@ public:
     Node * FindNodeExact( const AString & nodeName ) const;
     Node * GetNodeByIndex( size_t index ) const;
     size_t GetNodeCount() const;
-    const SettingsNode * GetSettings() const { return m_Settings; }
+    SettingsNode * GetSettings() { return m_Settings; }
 
     void RegisterNode( Node * n );
 
@@ -130,8 +130,8 @@ public:
 
     void DoBuildPass( Node * nodeToBuild );
 
-    static void CleanPath( AString & name, bool makeFullPath = true );
-    static void CleanPath( const AString & name, AString & cleanPath, bool makeFullPath = true );
+    static void CleanPath( AString & name, const bool makeFullPath = true );
+    static void CleanPath( const AString & name, AString & cleanPath, const bool makeFullPath = true );
     #if defined( ASSERTS_ENABLED )
         static bool IsCleanPath( const AString & path );
     #endif
@@ -207,7 +207,7 @@ private:
     };
     Array< UsedFile > m_UsedFiles;
 
-    const SettingsNode * m_Settings;
+    SettingsNode * m_Settings;
 
     static uint32_t s_BuildPassTag;
 };

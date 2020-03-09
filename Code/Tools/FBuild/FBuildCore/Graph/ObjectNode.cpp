@@ -223,22 +223,29 @@ ObjectNode::~ObjectNode()
     // Graphing the current amount of distributable jobs
     FLOG_MONITOR( "GRAPH FASTBuild \"Distributable Jobs MemUsage\" MB %f\n", (double)( (float)Job::GetTotalLocalDataMemoryUsage() / (float)MEGABYTE ) );
 
+    AStackString<> workingDir;
+    GetWorkingDir( job, workingDir );
+
+    const bool useDedicatedPreprocessor = false;
+    const CompilerNode * specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
+    const AString & specificCompilerExe = specificCompiler ? specificCompiler->GetExecutable() : AString::GetEmpty();
+
     if ( usePreProcessor || useSimpleDist )
     {
-        return DoBuildWithPreProcessor( job, useDeoptimization, useCache, useSimpleDist );
+        return DoBuildWithPreProcessor( job, useDeoptimization, useCache, useSimpleDist, workingDir );
     }
 
     if ( GetFlag( FLAG_MSVC ) )
     {
-        return DoBuildMSCL_NoCache( job, useDeoptimization );
+        return DoBuildMSCL_NoCache( job, useDeoptimization, workingDir, specificCompilerExe );
     }
 
     if ( GetFlag( FLAG_QT_RCC ))
     {
-        return DoBuild_QtRCC( job );
+        return DoBuild_QtRCC( job, workingDir, specificCompilerExe );
     }
 
-    return DoBuildOther( job, useDeoptimization );
+    return DoBuildOther( job, useDeoptimization, workingDir, specificCompilerExe );
 }
 
 // DoBuild_Remote
@@ -249,7 +256,9 @@ ObjectNode::~ObjectNode()
     // the "normal" args when remote compiling
     bool useDeoptimization = job->IsLocal() && ShouldUseDeoptimization();
     bool stealingRemoteJob = job->IsLocal(); // are we stealing a remote job?
-    return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+    AStackString<> workingDir;
+    GetWorkingDir( job, workingDir );
+    return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, workingDir );
 }
 
 // Finalize
@@ -266,6 +275,7 @@ ObjectNode::~ObjectNode()
             it++ )
     {
         Node * fn = nodeGraph.FindNode( *it );
+        // if did not find the node
         if ( fn == nullptr )
         {
             fn = nodeGraph.CreateFileNode( *it );
@@ -309,22 +319,26 @@ ObjectNode::~ObjectNode()
 
 // DoBuildMSCL_NoCache
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult ObjectNode::DoBuildMSCL_NoCache( Job * job, bool useDeoptimization )
+/*virtual*/ Node::BuildResult ObjectNode::DoBuildMSCL_NoCache(
+    Job * job, bool useDeoptimization, const AString & workingDir,
+    const AString & compiler )
 {
     // Format compiler args string
     Args fullArgs;
     const bool showIncludes( true );
     const bool finalize( true );
-    if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, finalize ) )
+    if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization,
+              showIncludes, finalize, workingDir ) )
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
 
-    EmitCompilationMessage( fullArgs, useDeoptimization );
+    EmitCompilationMessage( fullArgs, useDeoptimization, workingDir, compiler );
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) ) // use response file for MSVC
+    if ( !ch.SpawnCompiler( job, GetName(), workingDir,
+        GetCompiler(), compiler, m_Name, fullArgs ) ) // use response file for MSVC
     {
         return NODE_RESULT_FAILED; // SpawnCompiler has logged error
     }
@@ -354,7 +368,7 @@ ObjectNode::~ObjectNode()
     }
 
     // compiled ok, try to extract includes
-    if ( ProcessIncludesMSCL( output, outputSize ) == false )
+    if ( ProcessIncludesMSCL( workingDir, output, outputSize ) == false )
     {
         return NODE_RESULT_FAILED; // ProcessIncludesMSCL will have emitted an error
     }
@@ -367,13 +381,15 @@ ObjectNode::~ObjectNode()
 
 // DoBuildWithPreProcessor
 //------------------------------------------------------------------------------
-Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist )
+Node::BuildResult ObjectNode::DoBuildWithPreProcessor(
+    Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist,
+    const AString & workingDir )
 {
     Args fullArgs;
     const bool showIncludes( false );
     const bool finalize( true );
     Pass pass = useSimpleDist ? PASS_PREP_FOR_SIMPLE_DISTRIBUTION : PASS_PREPROCESSOR_ONLY;
-    if ( !BuildArgs( job, fullArgs, pass, useDeoptimization, showIncludes, finalize ) )
+    if ( !BuildArgs( job, fullArgs, pass, useDeoptimization, showIncludes, finalize, workingDir ) )
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
@@ -398,8 +414,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             SetStatFlag( Node::STATS_LIGHT_CACHE ); // Light compatible
 
             // Try retrieve from cache
-            GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
-            if ( RetrieveFromCache( job ) )
+            GetCacheName( job, workingDir ); // Prepare the cache key (always done here even if write only mode)
+            if ( RetrieveFromCache( job, workingDir ) )
             {
                 return NODE_RESULT_OK_CACHE;
             }
@@ -413,7 +429,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
                 // so we directly compile from source as one-pass compilation is faster
                 const bool stealingRemoteJob = false; // never queued
                 const bool racingRemoteJob = false; // never queued
-                return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
+                return DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, workingDir );
             }
 
             // Fall through to generate preprocessed output for distribution....
@@ -422,13 +438,13 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
     if ( pass == PASS_PREPROCESSOR_ONLY )
     {
-        if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization ) == false )
+        if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization, workingDir ) == false )
         {
             return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
         }
 
         // preprocessed ok, try to extract includes
-        if ( ProcessIncludesWithPreProcessor( job ) == false )
+        if ( ProcessIncludesWithPreProcessor( job, workingDir ) == false )
         {
             return NODE_RESULT_FAILED; // ProcessIncludesWithPreProcessor will have emitted an error
         }
@@ -436,7 +452,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
     if ( pass == PASS_PREP_FOR_SIMPLE_DISTRIBUTION )
     {
-        if ( LoadStaticSourceFileForDistribution( fullArgs, job, useDeoptimization ) == false )
+        if ( LoadStaticSourceFileForDistribution( fullArgs, job, useDeoptimization, workingDir ) == false )
         {
             return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
         }
@@ -452,8 +468,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     if ( useCache )
     {
         // try to get from cache
-        GetCacheName( job ); // Prepare the cache key (always done here even if write only mode)
-        if ( RetrieveFromCache( job ) )
+        GetCacheName( job, workingDir ); // Prepare the cache key (always done here even if write only mode)
+        if ( RetrieveFromCache( job, workingDir ) )
         {
             return NODE_RESULT_OK_CACHE;
         }
@@ -477,18 +493,20 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
     // can't do the work remotely, so do it right now
     bool stealingRemoteJob = false; // never queued
     bool racingRemoteJob = false;
-    Node::BuildResult result = DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob );
-    if ( result != Node::NODE_RESULT_OK )
+    Node::BuildResult result = DoBuildWithPreProcessor2( job, useDeoptimization, stealingRemoteJob, racingRemoteJob, workingDir );
+    if ( result != NODE_RESULT_OK )
     {
         return result;
     }
 
-    return Node::NODE_RESULT_OK;
+    return NODE_RESULT_OK;
 }
 
 // DoBuildWithPreProcessor2
 //------------------------------------------------------------------------------
-Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob )
+Node::BuildResult ObjectNode::DoBuildWithPreProcessor2(
+    Job * job, bool useDeoptimization, bool stealingRemoteJob,
+    bool racingRemoteJob, const AString & workingDir )
 {
     // should never use preprocessor if using CLR
     ASSERT( GetFlag( FLAG_USING_CLR ) == false );
@@ -567,7 +585,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 
         const bool showIncludes( false );
         const bool finalize( true );
-        if ( !BuildArgs( job, fullArgs, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, finalize, tmpFileName ) )
+        if ( !BuildArgs( job, fullArgs, PASS_COMPILE_PREPROCESSED, useDeoptimization,
+                  showIncludes, finalize, workingDir, tmpFileName ) )
         {
             return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
         }
@@ -576,7 +595,8 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     {
         const bool showIncludes( false );
         const bool finalize( true );
-        if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, finalize ) )
+        if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization,
+              showIncludes, finalize, workingDir ) )
         {
             return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
         }
@@ -585,13 +605,33 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     const bool verbose = FLog::ShowVerbose();
     const bool showCommands = ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines );
     const bool isRemote = ( job->IsLocal() == false );
+
+    // Use the remotely synchronized compiler if building remotely
+    AStackString<> compiler;
+    if ( !isRemote )
+    {
+        compiler = GetCompiler()->GetExecutable();
+    }
+    else
+    {
+        ASSERT( job->GetToolManifest() );
+        job->GetToolManifest()->GetRemoteFilePath( 0, compiler );
+    }
+
     if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote )
     {
         // show that we are locally consuming a remote job
-        EmitCompilationMessage( fullArgs, useDeoptimization, stealingRemoteJob, racingRemoteJob, false, isRemote );
+        EmitCompilationMessage( fullArgs, useDeoptimization, workingDir,
+            compiler, stealingRemoteJob, racingRemoteJob, isRemote );
     }
 
-    bool result = BuildFinalOutput( job, fullArgs );
+        // We might not have preprocessed data if using the LightCache
+        if ( job->GetData() == nullptr )
+        {
+            usePreProcessedOutput = false;
+        }
+
+    bool result = BuildFinalOutput( job, fullArgs, workingDir, compiler );
 
     // cleanup temp file
     if ( tmpFileName.IsEmpty() == false )
@@ -619,7 +659,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         const bool useCache = ShouldUseCache();
         if ( m_Stamp && useCache )
         {
-            WriteToCache( job );
+            WriteToCache( job, workingDir );
         }
     }
 
@@ -628,7 +668,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 
 // DoBuild_QtRCC
 //------------------------------------------------------------------------------
-Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
+Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job, const AString & workingDir, const AString & compiler )
 {
     // spawn the process to gather dependencies
     {
@@ -637,15 +677,17 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         const bool showIncludes( false );
         const bool finalize( true );
         Args fullArgs;
-        if ( !BuildArgs( job, fullArgs, PASS_PREPROCESSOR_ONLY, useDeoptimization, showIncludes, finalize ) )
+        if ( !BuildArgs( job, fullArgs, PASS_PREPROCESSOR_ONLY, useDeoptimization,
+                  showIncludes, finalize, workingDir ) )
         {
             return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
         }
 
-        EmitCompilationMessage( fullArgs, false );
+        EmitCompilationMessage( fullArgs, false, workingDir, compiler );
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+        if ( !ch.SpawnCompiler( job, GetName(), workingDir,
+             GetCompiler(), compiler, m_Name, fullArgs ) )
         {
             return NODE_RESULT_FAILED; // compile has logged error
         }
@@ -681,13 +723,15 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         const bool showIncludes( false );
         const bool finalize( true );
         Args fullArgs;
-        if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, finalize ) )
+        if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization,
+                  showIncludes, finalize, workingDir ) )
         {
             return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
         }
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+        if ( !ch.SpawnCompiler( job, GetName(), workingDir,
+             GetCompiler(), compiler, m_Name, fullArgs ) )
         {
             return NODE_RESULT_FAILED; // compile has logged error
         }
@@ -701,22 +745,25 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
 
 // DoBuildOther
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult ObjectNode::DoBuildOther( Job * job, bool useDeoptimization )
+Node::BuildResult ObjectNode::DoBuildOther(
+    Job * job, bool useDeoptimization, const AString & workingDir, const AString & compiler )
 {
     // Format compiler args string
     Args fullArgs;
     const bool showIncludes( false );
     const bool finalize( true );
-    if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization, showIncludes, finalize ) )
+    if ( !BuildArgs( job, fullArgs, PASS_COMPILE, useDeoptimization,
+              showIncludes, finalize, workingDir ) )
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
 
-    EmitCompilationMessage( fullArgs, useDeoptimization );
+    EmitCompilationMessage( fullArgs, useDeoptimization, workingDir, compiler );
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+    if ( !ch.SpawnCompiler( job, GetName(), workingDir,
+         GetCompiler(), compiler, m_Name, fullArgs ) )
     {
         return NODE_RESULT_FAILED; // compile has logged error
     }
@@ -729,13 +776,14 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
 
 // ProcessIncludesMSCL
 //------------------------------------------------------------------------------
-bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
+bool ObjectNode::ProcessIncludesMSCL(
+    const AString & workingDir, const char * output, uint32_t outputSize )
 {
     Timer t;
 
     {
         CIncludeParser parser;
-        bool result = ( output && outputSize ) ? parser.ParseMSCL_Output( output, outputSize )
+        bool result = ( output && outputSize ) ? parser.ParseMSCL_Output( workingDir, output, outputSize )
                                                : false;
 
         if ( result == false )
@@ -758,7 +806,7 @@ bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
 
 // ProcessIncludesWithPreProcessor
 //------------------------------------------------------------------------------
-bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
+bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job, const AString & workingDir )
 {
     Timer t;
 
@@ -790,8 +838,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         {
             msvcStyle = GetFlag( FLAG_MSVC ) || GetFlag( FLAG_CUDA_NVCC );
         }
-        bool result = msvcStyle ? parser.ParseMSCL_Preprocessed( output, outputSize )
-                                : parser.ParseGCC_Preprocessed( output, outputSize );
+        bool result = msvcStyle ? parser.ParseMSCL_Preprocessed( workingDir, output, outputSize )
+                                : parser.ParseGCC_Preprocessed( workingDir, output, outputSize );
         if ( result == false )
         {
             FLOG_ERROR( "Failed to process includes for '%s'", GetName().Get() );
@@ -907,9 +955,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                 }
                 else
                 {
-                    flags |= ObjectNode::FLAG_STATIC_ANALYSIS_MSVC;
-                }
+                flags |= ObjectNode::FLAG_STATIC_ANALYSIS_MSVC;
             }
+        }
         }
 
         // 1) clr code cannot be distributed due to a compiler bug where the preprocessed using
@@ -1165,7 +1213,7 @@ const char * ObjectNode::GetObjExtension() const
 
 // GetCacheName
 //------------------------------------------------------------------------------
-const AString & ObjectNode::GetCacheName( Job * job ) const
+const AString & ObjectNode::GetCacheName( Job * job, const AString & workingDir ) const
 {
     // use already determined cache name if available?
     if ( job->GetCacheName().IsEmpty() == false )
@@ -1188,13 +1236,14 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
         const bool useDeoptimization = false;
         const bool showIncludes = false;
         const bool finalize = false; // Don't write args to reponse file
-        BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization, showIncludes, finalize );
+        BuildArgs( job, args, PASS_COMPILE_PREPROCESSED, useDeoptimization,
+            showIncludes, finalize, workingDir );
         commandLineKey = xxHash::Calc32( args.GetRawArgs().Get(), args.GetRawArgs().GetLength() );
     }
     ASSERT( commandLineKey );
 
     // ToolChain hash
-    const uint64_t toolChainKey = GetCompiler()->CastTo< CompilerNode >()->GetManifest().GetToolId();
+    const uint64_t toolChainKey = GetCompiler()->GetManifest().GetToolId();
     ASSERT( toolChainKey );
 
     // PCH dependency
@@ -1214,7 +1263,7 @@ const AString & ObjectNode::GetCacheName( Job * job ) const
 
 // RetrieveFromCache
 //------------------------------------------------------------------------------
-bool ObjectNode::RetrieveFromCache( Job * job )
+bool ObjectNode::RetrieveFromCache( Job * job, const AString & workingDir )
 {
     if ( FBuild::Get().GetOptions().m_UseCacheRead == false )
     {
@@ -1223,7 +1272,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
     PROFILE_FUNCTION
 
-    const AString & cacheFileName = GetCacheName(job);
+    const AString & cacheFileName = GetCacheName( job, workingDir );
 
     Timer t;
 
@@ -1344,7 +1393,7 @@ bool ObjectNode::RetrieveFromCache( Job * job )
 
 // WriteToCache
 //------------------------------------------------------------------------------
-void ObjectNode::WriteToCache( Job * job )
+void ObjectNode::WriteToCache( Job * job, const AString & workingDir )
 {
     if (FBuild::Get().GetOptions().m_UseCacheWrite == false)
     {
@@ -1353,7 +1402,7 @@ void ObjectNode::WriteToCache( Job * job )
 
     PROFILE_FUNCTION
 
-    const AString & cacheFileName = GetCacheName(job);
+    const AString & cacheFileName = GetCacheName( job, workingDir );
     ASSERT(!cacheFileName.IsEmpty());
 
     Timer t;
@@ -1472,9 +1521,34 @@ void ObjectNode::GetExtraCacheFilePaths( const Job * job, Array< AString > & out
     }
 }
 
+// GetWorkingDir
+//------------------------------------------------------------------------------
+void ObjectNode::GetWorkingDir( const Job * job, AString & workingDir ) const
+{
+    if ( job->IsLocal() )
+    {
+        // use user's working dir since include files may contain relative paths
+        workingDir = FBuild::Get().GetWorkingDir();
+    }
+    else
+    {
+        ASSERT( job->GetToolManifest() );
+        job->GetToolManifest()->GetRemotePath( workingDir );
+    }
+}
+
+// GetSpecificCompiler
+//------------------------------------------------------------------------------
+const CompilerNode * ObjectNode::GetSpecificCompiler( const bool useDedicatedPreprocessor ) const
+{
+    return useDedicatedPreprocessor ? GetDedicatedPreprocessor() : GetCompiler();
+}
+
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
-void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob, bool useDedicatedPreprocessor, bool isRemote ) const
+void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization,
+    const AString & workingDir, const AString & compiler, const bool stealingRemoteJob,
+    const bool racingRemoteJob, const bool isRemote ) const
 {
     // print basic or detailed output, depending on options
     // we combine everything into one string to ensure it is contiguous in
@@ -1500,10 +1574,30 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     }
     if ( ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
     {
-        output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable().Get() : GetCompiler() ? GetCompiler()->GetExecutable().Get() : "";
+        if ( GetSandboxEnabled() )
+        {
+            output += GetAbsSandboxExe();
+            output += ' ';
+            const AString & sandboxArgs = GetSandboxArgs();
+            if ( !sandboxArgs.IsEmpty() )
+            {
+                output += sandboxArgs;
+                output += ' ';
+            }
+        }
+        output += compiler;
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
+        if ( !workingDir.IsEmpty() )
+        {
+            output += "Working Dir: ";
+            output += workingDir;
+            output += '\n';
+        }
+        // hide sandbox tmp dir in any part of output (exe args and working dir)
+        // we want to keep the dir secret from other processes, since it is low integrity
+        HideSandboxTmpInString( output );
     }
     FLOG_OUTPUT( output );
 }
@@ -1565,10 +1659,55 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     }
 }
 
+// AddPathToArgs
+//------------------------------------------------------------------------------
+/* static */ void ObjectNode::AddPathToArgs(
+    const Job * job, const AString & basePath,
+    const AString & workingDir, const bool isOutputFile,
+    const AString & path, Args & fullArgs )
+{
+    if ( job->IsLocal() )
+    {
+        if ( GetSandboxEnabled() )
+        {
+            // use relative path, if we can; so we reduce command length
+            AStackString<> startingPath;
+            if ( isOutputFile) 
+            {
+                // use tmp dir, since it is a writable dir by the sandboxed process
+                Node::GetSandboxTmpFile( basePath, path, startingPath );
+            }
+            else
+            {
+                // use original path, since input files may reference each other
+                // using relative paths, so can't place them in sandbox tmp
+                startingPath = path;
+            }
+            AStackString<> relPath;
+            PathUtils::GetRelativePath( workingDir, startingPath, relPath );
+            fullArgs += relPath;
+        }
+        else
+        {
+            // use path as-is
+            fullArgs += path;
+        }
+    }
+    else  // remote
+    {
+        // no need to check GetSandboxEnabled() here,
+        // since sandbox dir already incorporated into remote workingDir
+        // use relative path, if we can; so we reduce command length
+        AStackString<> relPath;
+        PathUtils::GetRelativePath( workingDir, path, relPath );
+        fullArgs += relPath;
+    }
+}
 
 // BuildArgs
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool showIncludes, bool finalize, const AString & overrideSrcFile ) const
+bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization,
+    bool showIncludes, bool finalize, const AString & workingDir, const AString & overrideSrcFile ) const
 {
     PROFILE_FUNCTION
 
@@ -1825,19 +1964,24 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             }
         }
 
+        AStackString<> basePath( m_Name.Get(), m_Name.FindLast( NATIVE_SLASH ) );
+
         // %1 -> InputFile
         const char * found = token.Find( "%1" );
         if ( found )
         {
             fullArgs += AStackString<>( token.Get(), found );
+            AStackString<> inputFile;
             if ( overrideSrcFile.IsEmpty() )
             {
-                fullArgs += GetSourceFile()->GetName();
+                inputFile = GetSourceFile()->GetName();
             }
             else
             {
-                fullArgs += overrideSrcFile;
+                inputFile = overrideSrcFile;
             }
+            AddPathToArgs( job, basePath, workingDir, false, // isOutputFile=false
+                inputFile, fullArgs );
             fullArgs += AStackString<>( found + 2, token.GetEnd() );
             fullArgs.AddDelimiter();
             continue;
@@ -1848,7 +1992,8 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         if ( found )
         {
             fullArgs += AStackString<>( token.Get(), found );
-            fullArgs += m_Name;
+            AddPathToArgs( job, basePath, workingDir, true, // isOutputFile=true
+                m_Name, fullArgs );
             fullArgs += AStackString<>( found + 2, token.GetEnd() );
             fullArgs.AddDelimiter();
             continue;
@@ -1863,7 +2008,8 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
                 // handle /Option:%3 -> /Option:A
                 fullArgs += AStackString<>( token.Get(), found );
                 ASSERT( m_PCHObjectFileName.IsEmpty() == false ); // Should have been populated
-                fullArgs += m_PCHObjectFileName;
+                AddPathToArgs( job, basePath, workingDir, true, // isOutputFile=true
+                    m_PCHObjectFileName, fullArgs );
                 fullArgs += AStackString<>( found + 2, token.GetEnd() );
                 fullArgs.AddDelimiter();
                 continue;
@@ -2015,18 +2161,21 @@ void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre,
 
 // BuildPreprocessedOutput
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const
+bool ObjectNode::BuildPreprocessedOutput(
+    const Args & fullArgs, Job * job, bool useDeoptimization, const AString & workingDir ) const
 {
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
-    EmitCompilationMessage( fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor );
+    const CompilerNode * specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
+    const AString & specificCompilerExe = specificCompiler ? specificCompiler->GetExecutable() : AString::GetEmpty();
+
+    EmitCompilationMessage( fullArgs, useDeoptimization, workingDir,
+        specificCompilerExe, false, false );
 
     // spawn the process
     CompileHelper ch( false ); // don't handle output (we'll do that)
     // TODO:A Add checks in BuildArgs for length of dedicated preprocessor
     if ( !ch.SpawnCompiler( job, GetName(),
-         useDedicatedPreprocessor ? GetDedicatedPreprocessor() : GetCompiler(),
-         useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable() : GetCompiler()->GetExecutable(),
-         fullArgs ) )
+         workingDir, specificCompiler, specificCompilerExe, m_Name, fullArgs ) )
     {
         // only output errors in failure case
         // (as preprocessed output goes to stdout, normal logging is pushed to
@@ -2057,12 +2206,17 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
 
 // LoadStaticSourceFileForDistribution
 //------------------------------------------------------------------------------
-bool ObjectNode::LoadStaticSourceFileForDistribution( const Args & fullArgs, Job * job, bool useDeoptimization ) const
+bool ObjectNode::LoadStaticSourceFileForDistribution(
+    const Args & fullArgs, Job * job, bool useDeoptimization, const AString & workingDir ) const
 {
     // PreProcessing for SimpleDistribution is just loading the source file
 
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
-    EmitCompilationMessage(fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor);
+    const CompilerNode * specificCompiler = GetSpecificCompiler( useDedicatedPreprocessor );
+    const AString & specificCompilerExe = specificCompiler ? specificCompiler->GetExecutable() : AString::GetEmpty();
+
+    EmitCompilationMessage(fullArgs, useDeoptimization, workingDir,
+        specificCompilerExe, false, false );
 
     const AString & fileName = job->GetNode()->CastTo<ObjectNode>()->GetSourceFile()->CastTo<FileNode>()->GetName();
 
@@ -2329,25 +2483,12 @@ bool ObjectNode::WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpF
 
 // BuildFinalOutput
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
+bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs, const AString & workingDir, const AString & compiler ) const
 {
-    // Use the remotely synchronized compiler if building remotely
-    AStackString<> compiler;
-    AStackString<> workingDir;
-    if ( job->IsLocal() )
-    {
-        compiler = GetCompiler()->GetExecutable();
-    }
-    else
-    {
-        ASSERT( job->GetToolManifest() );
-        job->GetToolManifest()->GetRemoteFilePath( 0, compiler );
-        job->GetToolManifest()->GetRemotePath( workingDir );
-    }
-
     // spawn the process
     CompileHelper ch( true, job->GetAbortFlagPointer() );
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), compiler, fullArgs, workingDir.IsEmpty() ? nullptr : workingDir.Get() ) )
+    if ( !ch.SpawnCompiler( job, GetName(), workingDir,
+         GetCompiler(), compiler, m_Name, fullArgs ) )
     {
         // did spawn fail, or did we spawn and fail to compile?
         if ( ch.GetResult() != 0 )
@@ -2406,15 +2547,21 @@ ObjectNode::CompileHelper::CompileHelper( bool handleOutput, const volatile bool
 //------------------------------------------------------------------------------
 ObjectNode::CompileHelper::~CompileHelper() = default;
 
-// CompilHelper::SpawnCompiler
+// CompileHelper::SpawnCompiler
 //------------------------------------------------------------------------------
 bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
                                                const AString & name,
+                                               const AString & workingDir,
                                                const CompilerNode * compilerNode,
                                                const AString & compiler,
-                                               const Args & fullArgs,
-                                               const char * workingDir )
+                                               const AString & outputFile,
+                                               const Args & fullArgs )
 {
+    bool result = true;  // first assume success
+    AStackString<> compileExe;
+    Array<AString> tmpFiles;
+    compileExe = compiler;
+
     const char * environmentString = nullptr;
     if ( ( job->IsLocal() == false ) && ( job->GetToolManifest() ) )
     {
@@ -2426,75 +2573,148 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     }
 
     // spawn the process
-    if ( false == m_Process.Spawn( compiler.Get(),
-                                   fullArgs.GetFinalArgs().Get(),
-                                   workingDir,
-                                   environmentString ) )
+    AStackString<> spawnExe;
+    bool spawnOK = false;
+    if ( GetSandboxEnabled() )
     {
-        if ( m_Process.HasAborted() )
+        AStackString<> spawnArgs;
+        const AString & sandboxArgs = GetSandboxArgs();
+        if ( !sandboxArgs.IsEmpty() )
         {
-            return false;
+            spawnArgs += sandboxArgs;
+            spawnArgs += ' ';
         }
-
-        job->Error( "Failed to spawn process. Error: %s Target: '%s'\n", LAST_ERROR_STR, name.Get() );
-        job->OnSystemError();
-        return false;
+        AStackString<> doubleQuote( "\"" );
+        spawnArgs += doubleQuote;
+        // use relative path, if we can; so we reduce command length
+        AStackString<> compileExeRelPath;
+        PathUtils::GetRelativePath( workingDir, compileExe, compileExeRelPath );
+        spawnArgs += compileExeRelPath;
+        spawnArgs += doubleQuote;
+        spawnArgs += ' ';
+        spawnArgs += fullArgs.GetFinalArgs();
+        spawnExe = GetAbsSandboxExe();
+        // Spawn() expects nullptr, not empty string for working dir
+        // have to use abs path for spawnExe
+        spawnOK = m_Process.Spawn( spawnExe.Get(),
+           spawnArgs.Get(),
+           workingDir.IsEmpty() ? nullptr : workingDir.Get(),
+           environmentString );
     }
-
-    // capture all of the stdout and stderr
-    m_Process.ReadAllData( m_Out, &m_OutSize, m_Err, &m_ErrSize );
-
-    // Get result
-    m_Result = m_Process.WaitForExit();
-    if ( m_Process.HasAborted() )
+    else
     {
-        return false;
+        spawnExe = compileExe;
+        // Spawn() expects nullptr, not empty string for working dir
+        // have to use abs path for spawnExe
+        spawnOK = m_Process.Spawn( spawnExe.Get(),
+           fullArgs.GetFinalArgs().Get(),
+           workingDir.IsEmpty() ? nullptr : workingDir.Get(),
+           environmentString );
     }
-
-    // Handle special types of failures
-    HandleSystemFailures( job, m_Result, m_Out.Get(), m_Err.Get() );
-
-    if ( m_HandleOutput )
+    if ( spawnOK )
     {
-        if ( FBuild::Get().GetOptions().m_ShowCommandOutput )
+        // capture all of the stdout and stderr
+        m_Process.ReadAllData( m_Out, &m_OutSize, m_Err, &m_ErrSize );
+
+        // Get result
+        m_Result = m_Process.WaitForExit();
+        if ( !m_Process.HasAborted() )
         {
-            // Suppress /showIncludes - TODO:C leave in if user specified it
-            StackArray< AString > exclusions;
-            if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) &&
-                ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
+            // Handle special types of failures
+            HandleSystemFailures( job, m_Result, m_Out.Get(), m_Err.Get() );
+
+            // output any errors (even if succeeded, there might be warnings)
+            if ( m_HandleOutput )
             {
-                exclusions.EmplaceBack( "Note: including file:" );
+                if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandOutput )
+                {
+                    // Suppress /showIncludes - TODO:C leave in if user specified it
+                    StackArray< AString > exclusions;
+                    if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) &&
+                        ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
+                    {
+                        exclusions.EmplaceBack( "Note: including file:" );
+                    }
+
+                    if ( m_Out.Get() ) { Node::DumpOutput( job, m_Out.Get(), m_OutSize, &exclusions ); }
+                    if ( m_Err.Get() ) { Node::DumpOutput( job, m_Err.Get(), m_ErrSize, &exclusions ); }
+                }
+                else
+                {
+                    // output any errors (even if succeeded, there might be warnings)
+                    if ( m_Err.Get() )
+                    {
+                        const bool treatAsWarnings = true; // change msg formatting
+                        AStackString<> outputName( name );
+                        // hide sandbox tmp dir in output; we want to keep the dir secret from other processes, since it is low integrity
+                        HideSandboxTmpInString( outputName );
+                        DumpOutput( job, m_Err.Get(), m_ErrSize, outputName, treatAsWarnings );
+                    }
+                }
             }
 
-            if ( m_Out.Get() ) { Node::DumpOutput( job, m_Out.Get(), m_OutSize, &exclusions ); }
-            if ( m_Err.Get() ) { Node::DumpOutput( job, m_Err.Get(), m_ErrSize, &exclusions ); }
+            // passed?
+            if ( m_Result == 0 )
+            {
+                if ( GetSandboxEnabled() && job->IsLocal() )
+                {
+                    // copy output file from sandbox tmp to output dir
+                    AStackString<> basePath( outputFile.Get(), outputFile.FindLast( NATIVE_SLASH ) );
+                    AStackString<> tmpFile;
+                    Node::GetSandboxTmpFile( basePath, outputFile, tmpFile );
+                    // compile may not create an output file (preprocessor case)
+                    if ( FileIO::FileExists( tmpFile.Get() ) )
+                    {
+                        tmpFiles.Append( tmpFile );
+                        FileIO::FileCopy( tmpFile.Get(), outputFile.Get() );
+                    }
+                }
+            }
+            else  // failed
+            {
+                AStackString<> outputName( name );
+                // hide sandbox tmp dir in output; we want to keep the dir secret from other processes, since it is low integrity
+                HideSandboxTmpInString( outputName );
+
+                // output 'stdout' which may contain errors for some compilers
+                if ( m_HandleOutput )
+                {
+                    DumpOutput( job, m_Out.Get(), m_OutSize, outputName );
+                }
+
+                job->Error( "Failed to build Object Error: %s '%s'\n", ERROR_STR(m_Result), outputName.Get() );
+                result = false;
+            }
         }
         else
         {
-            // output any errors (even if succeeded, there might be warnings)
-            if ( m_Err.Get() )
-            {
-                const bool treatAsWarnings = true; // change msg formatting
-                DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
-            }
+            result = false;
         }
     }
-
-    // failed?
-    if ( m_Result != 0 )
+    else  // !spawnOK
     {
-        // output 'stdout' which may contain errors for some compilers
-        if ( m_HandleOutput )
+        AStackString<> outputName( name );
+        // hide sandbox tmp dir in output; we want to keep the dir secret from other processes, since it is low integrity
+        HideSandboxTmpInString( outputName );
+
+        if ( m_Process.HasAborted() )
         {
-            DumpOutput( job, m_Out.Get(), m_OutSize, name );
+            FLOG_ERROR( "Process unexpectedly aborted '%s'", outputName.Get() );
         }
-
-        job->Error( "Failed to build Object. Error: %s Target: '%s'\n", ERROR_STR( m_Result ), name.Get() );
-
-        return false;
+        else
+        {
+            job->Error( "Failed to spawn '%s' process Error: %s to build '%s'\n",
+                spawnExe.Get(), LAST_ERROR_STR, outputName.Get() );
+            job->OnSystemError();
+        }
+        result = false;
     }
-
-    return true;
+    for ( const AString & tmpFile : tmpFiles )
+    {
+        // delete the tmp files, so we don't grow disk space unbounded
+        FileIO::FileDelete( tmpFile.Get() );
+    }
+    return result;
 }
 
 // HandleSystemFailures

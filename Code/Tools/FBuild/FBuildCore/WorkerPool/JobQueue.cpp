@@ -103,29 +103,34 @@ Job * JobSubQueue::RemoveJob()
         return nullptr;
     }
 
-    VERIFY( AtomicDecU32( &m_Count ) != static_cast< uint32_t >( -1 ) );
-
-    Job * job = m_Jobs.Top();
-    m_Jobs.Pop();
-
-    return job;
+    Job * retJob = m_Jobs.Top();
+    if ( retJob )
+    {
+        VERIFY( AtomicDecU32( &m_Count ) != static_cast< uint32_t >( -1 ) );
+        m_Jobs.Pop();
+    }
+    return retJob;
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-JobQueue::JobQueue( uint32_t numWorkerThreads ) :
-    m_NumLocalJobsActive( 0 ),
-    m_DistributableJobs_Available( 1024, true ),
-    m_DistributableJobs_InProgress( 1024, true ),
-    m_CompletedJobs( 1024, true ),
-    m_CompletedJobsFailed( 1024, true ),
-    m_CompletedJobs2( 1024, true ),
-    m_CompletedJobsFailed2( 1024, true ),
-    m_Workers( numWorkerThreads, false )
+JobQueue::JobQueue( const uint32_t numWorkerThreads,
+    const bool sandboxEnabled,
+    const AString & obfuscatedSandboxTmp ) :
+m_NumLocalJobsActive( 0 ),
+m_DistributableJobs_Available( 1024, true ),
+m_DistributableJobs_InProgress( 1024, true ),
+m_CompletedJobs( 1024, true ),
+m_CompletedJobsFailed( 1024, true ),
+m_CompletedJobs2( 1024, true ),
+m_CompletedJobsFailed2( 1024, true ),
+m_Workers( numWorkerThreads, false )
 {
     PROFILE_FUNCTION
 
-    WorkerThread::InitTmpDir();
+    WorkerThread::InitTmpDir(
+        sandboxEnabled,
+        obfuscatedSandboxTmp );
 
     for ( uint32_t i=0; i<numWorkerThreads; ++i )
     {
@@ -212,6 +217,7 @@ bool JobQueue::HaveWorkersStopped() const
 size_t JobQueue::GetNumDistributableJobsAvailable() const
 {
     MutexHolder m( m_DistributedJobsMutex );
+
     return m_DistributableJobs_Available.GetSize();
 }
 

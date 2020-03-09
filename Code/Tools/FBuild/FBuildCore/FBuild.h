@@ -56,6 +56,9 @@ public:
     inline const SettingsNode * GetSettings() const { return m_DependencyGraph->GetSettings(); }
 
     void SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar );
+    void CoerceEnvironment( const AString & obfuscatedSandboxTmp );
+    inline const char * GetBaseEnvironmentString() const        { return m_BaseEnvironmentString; }
+    inline uint32_t     GetBaseEnvironmentStringSize() const    { return m_BaseEnvironmentStringSize; }
     inline const char * GetEnvironmentString() const            { return m_EnvironmentString; }
     inline uint32_t     GetEnvironmentStringSize() const        { return m_EnvironmentStringSize; }
 
@@ -131,6 +134,9 @@ protected:
 
     AString m_OldWorkingDir;
 
+    // a double-null terminated string
+    char *      m_BaseEnvironmentString;
+    uint32_t    m_BaseEnvironmentStringSize; // size excluding last null
     // a double-null terminated string
     char *      m_EnvironmentString;
     uint32_t    m_EnvironmentStringSize; // size excluding last null

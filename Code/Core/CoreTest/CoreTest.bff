@@ -52,6 +52,8 @@
                                                 + ' kernel32.lib'
                                                 + ' Ws2_32.lib'
                                                 + ' User32.lib'
+                                                + ' Advapi32.lib'  // for acl functions
+                                                + ' Bcrypt.lib'    // for BCryptGenRandom()
                                                 + .CRTLibs_Static
             #endif
             #if __LINUX__

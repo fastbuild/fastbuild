@@ -749,7 +749,7 @@ void TestGraph::BFFDirtied() const
         // Ensure Settings() are being read in, since tests below
         // are verifying they don't persist when the BFF changes
         TEST_ASSERT( fBuild.GetSettings()->GetCachePath().IsEmpty() == false );
-        TEST_ASSERT( fBuild.GetEnvironmentStringSize() > 0 );
+        TEST_ASSERT( fBuild.GetBaseEnvironmentStringSize() > 0 );
         TEST_ASSERT( fBuild.GetSettings()->GetWorkerList().IsEmpty() == false );
     }
 
@@ -798,7 +798,7 @@ void TestGraph::BFFDirtied() const
 
         // Make sure settings don't "leak" from the original BFF into the new one
         TEST_ASSERT( cachePath.IsEmpty() );
-        TEST_ASSERT( fBuild.GetEnvironmentStringSize() == 0 );
+        TEST_ASSERT( fBuild.GetBaseEnvironmentStringSize() == 0 );
         TEST_ASSERT( fBuild.GetSettings()->GetWorkerList().IsEmpty() );
     }
 }

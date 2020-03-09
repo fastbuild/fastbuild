@@ -15,6 +15,7 @@
 #include "Core/Env/Env.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
 
 // Defines
@@ -34,19 +35,26 @@ REFLECT_NODE_BEGIN( SettingsNode, Node, MetaNone() )
     REFLECT(        m_WorkerConnectionLimit,    "WorkerConnectionLimit",    MetaOptional() )
     REFLECT(        m_DistributableJobMemoryLimitMiB, "DistributableJobMemoryLimitMiB", MetaOptional() + MetaRange( DIST_MEMORY_LIMIT_MIN, DIST_MEMORY_LIMIT_MAX ) )
     REFLECT(        m_DisableDBMigration,       "DisableDBMigration",       MetaOptional() )
+    REFLECT(        m_SandboxEnabled,                 "SandboxEnabled",    MetaOptional() )
+    REFLECT(        m_SandboxExe,                     "SandboxExe",    MetaOptional() )
+    REFLECT(        m_SandboxArgs,                    "SandboxArgs",    MetaOptional() )
+    REFLECT(        m_SandboxTmp,                     "SandboxTmp",    MetaOptional() )
 REFLECT_END( SettingsNode )
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 SettingsNode::SettingsNode()
 : Node( AString::GetEmpty(), Node::SETTINGS_NODE, Node::FLAG_NONE )
-, m_WorkerConnectionLimit( 15 )
+, m_WorkerConnectionLimit( 15 )  // default: a maximum of 15 workers simultaneously connected
 , m_DistributableJobMemoryLimitMiB( DIST_MEMORY_LIMIT_DEFAULT )
 , m_DisableDBMigration( false )
+, m_SandboxEnabled( false )
 {
     // Cache path from environment
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH", m_CachePathFromEnvVar );
     Env::GetEnvVariable( "FASTBUILD_CACHE_PATH_MOUNT_POINT", m_CachePathMountPointFromEnvVar );
+
+    m_SandboxTmp += "sandbox";  // use relative path, for the default path
 }
 
 // Initialize
@@ -108,6 +116,108 @@ const AString & SettingsNode::GetCachePathMountPoint() const
 const AString & SettingsNode::GetCachePluginDLL() const
 {
     return m_CachePluginDLL;
+}
+
+// SetSandboxEnabled
+//------------------------------------------------------------------------------
+void SettingsNode::SetSandboxEnabled( const bool sandboxEnabled )
+{
+    m_SandboxEnabled = sandboxEnabled;
+}
+
+// SetSandboxExe
+//------------------------------------------------------------------------------
+void SettingsNode::SetSandboxExe( const AString & path )
+{
+    m_SandboxExe = path;
+}
+
+// GetAbsSandboxExe
+//------------------------------------------------------------------------------
+const AString & SettingsNode::GetAbsSandboxExe() const
+{
+    if ( m_SandboxEnabled && !m_SandboxExe.IsEmpty())
+    {
+        if ( m_AbsSandboxExe.IsEmpty() )
+        {
+            if ( PathUtils::IsFullPath( m_SandboxExe ) )
+            {
+                m_AbsSandboxExe = m_SandboxExe;
+            }
+            else
+            {
+                // can't use app dir here, since want exe and tmp paths to be consistent
+                // for what dir we use for base when expanding relative paths
+                if ( FBuild::IsValid() )
+                {
+                    AStackString<> workingDir;
+                    workingDir.Assign( FBuild::Get().GetWorkingDir() );
+                    PathUtils::CleanPath( workingDir, m_SandboxExe, m_AbsSandboxExe );
+                }
+            }
+        }
+        else
+        {
+            // use cached m_AbsSandboxExe value
+        }
+    }
+    else
+    {
+        m_AbsSandboxExe.Clear();
+    }
+    return m_AbsSandboxExe;
+}
+
+// SetSandboxArgs
+//------------------------------------------------------------------------------
+void SettingsNode::SetSandboxArgs( const AString & args )
+{
+    m_SandboxArgs = args;
+}
+
+// SetSandboxTmp
+//------------------------------------------------------------------------------
+void SettingsNode::SetSandboxTmp( const AString & path )
+{
+    m_SandboxTmp = path;
+}
+
+// GetObfuscatedSandboxTmp
+//------------------------------------------------------------------------------
+const AString & SettingsNode::GetObfuscatedSandboxTmp() const
+{
+    if ( m_SandboxEnabled && !m_SandboxTmp.IsEmpty())
+    {
+        if ( m_ObfuscatedSandboxTmp.IsEmpty() )
+        {
+            if ( FBuild::IsValid() )
+            {
+                AStackString<> workingDir;
+                workingDir.Assign( FBuild::Get().GetWorkingDir() );
+                PathUtils::GetObfuscatedSandboxTmp(
+                    m_SandboxEnabled,
+                    workingDir,
+                    m_SandboxTmp,
+                    m_ObfuscatedSandboxTmp );
+            }
+        }
+        else
+        {
+            // use cached m_ObfuscatedSandboxTmp value
+        }
+    }
+    else
+    {
+        m_ObfuscatedSandboxTmp.Clear();
+    }
+    return m_ObfuscatedSandboxTmp;
+}
+
+// SetObfuscatedSandboxTmp
+//------------------------------------------------------------------------------
+void SettingsNode::SetObfuscatedSandboxTmp( const AString & obfuscatedSandboxTmp )
+{
+    m_ObfuscatedSandboxTmp = obfuscatedSandboxTmp;
 }
 
 // ProcessEnvironment

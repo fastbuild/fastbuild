@@ -7,6 +7,7 @@
 
 #include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 #include "Tools/FBuild/FBuildCore/FBuild.h"
+#include "Tools/FBuild/FBuildCore/Graph/SettingsNode.h"
 
 #include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"
@@ -133,6 +134,21 @@ static FileStream * g_MonitorFileStream = nullptr;
     OutputInternal( "Warning:", buffer.Get() );
 }
 
+// ErrorString
+//------------------------------------------------------------------------------
+/*static*/ void FLog::ErrorString( MSVC_SAL_PRINTF const char * message )
+{
+    // we prevent output here, rather than where the macros is inserted
+    // as an error being output is not the normal code path, and a check
+    // before calling this function would bloat the code
+    if ( FLog::ShowErrors() == false )
+    {
+        return;
+    }
+
+    OutputInternal( "Error:", message );
+}
+
 // Error
 //------------------------------------------------------------------------------
 /*static*/ void FLog::Error( MSVC_SAL_PRINTF const char * formatString, ... )
@@ -200,9 +216,16 @@ static FileStream * g_MonitorFileStream = nullptr;
         //  - it's not uniquified per instance
         //  - we already have a .fbuild.tmp folder we should use
         AStackString<> fullPath;
-        FBuild::GetTempDir( fullPath );
+        if ( FBuild::Get().GetSettings()->GetSandboxEnabled() )
+        {
+            fullPath = FBuild::Get().GetSettings()->GetObfuscatedSandboxTmp();
+        }
+        else
+        {
+            FBuild::GetTempDir( fullPath );
+        }
         fullPath += "FastBuild";
-        if ( FileIO::DirectoryCreate( fullPath ) )
+        if( FileIO::DirectoryCreate(fullPath) )
         {
             fullPath += "/FastBuildLog.log";
 
@@ -215,7 +238,7 @@ static FileStream * g_MonitorFileStream = nullptr;
             }
             else
             {
-                Error( "Couldn't open monitor file for write at %s", fullPath.Get() );
+                Error("Couldn't open monitor file for write at %s", fullPath.Get());
 
                 delete g_MonitorFileStream;
                 g_MonitorFileStream = nullptr;
@@ -223,7 +246,7 @@ static FileStream * g_MonitorFileStream = nullptr;
         }
         else
         {
-            Error( "Couldn't create directory for monitor file at %s", fullPath.Get() );
+            Error("Couldn't create directory for monitor file at %s", fullPath.Get());
         }
     }
 

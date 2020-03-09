@@ -115,19 +115,86 @@ int MainCommon( const AString & args )
     // start the worker and wait for it to be closed
     int ret;
     {
-        Worker worker( args, options.m_ConsoleMode );
+        // construct worker
+        Worker worker( args );
+
+        // before initializing worker, set initial worker settings
+        bool anyOverrides = false;
+        WorkerSettings & workerSettings = WorkerSettings::Get();
         if ( options.m_OverrideCPUAllocation )
         {
-            WorkerSettings::Get().SetNumCPUsToUse( options.m_CPUAllocation );
+            workerSettings.SetNumCPUsToUse( options.m_CPUAllocation );
+            anyOverrides = true;
         }
         if ( options.m_OverrideWorkMode )
         {
-            WorkerSettings::Get().SetMode( options.m_WorkMode );
+            workerSettings.SetMode( options.m_WorkMode );
+            anyOverrides = true;
         }
         if ( options.m_MinimumFreeMemoryMiB )
         {
             WorkerSettings::Get().SetMinimumFreeMemoryMiB( options.m_MinimumFreeMemoryMiB );
+            anyOverrides = true;
         }
+        if ( options.m_OverrideStartMinimized )
+        {
+            workerSettings.SetStartMinimized( options.m_StartMinimized );
+            anyOverrides = true;
+        }
+        if ( options.m_OverrideSandboxEnabled )
+        {
+            workerSettings.SetSandboxEnabled( options.m_SandboxEnabled );
+            anyOverrides = true;
+        }
+        if ( options.m_OverrideSandboxExe )
+        {
+            workerSettings.SetSandboxExe( options.m_SandboxExe );
+            anyOverrides = true;
+        }
+        if ( options.m_OverrideSandboxArgs )
+        {
+            workerSettings.SetSandboxArgs( options.m_SandboxArgs );
+            anyOverrides = true;
+        }
+        if ( options.m_OverrideSandboxTmp )
+        {
+            workerSettings.SetSandboxTmp( options.m_SandboxTmp );
+            anyOverrides = true;
+        }
+
+        if ( anyOverrides )
+        {
+            // save our state out to the .settings file
+            workerSettings.Save();
+        }
+
+        // error check settings
+        if ( workerSettings.GetSandboxEnabled() )
+        {
+            const AString & absSandboxExe = workerSettings.GetAbsSandboxExe();
+            if ( absSandboxExe.IsEmpty() ||
+                 workerSettings.GetSandboxTmp().IsEmpty() )
+            {
+                AStackString<> sandboxError( "To enable the sandbox, please specify a non-empty sandbox exe " );
+                sandboxError += "and a non-empty sandbox tmp via the ";
+                sandboxError += "command line -sandboxexe and -sandboxtmp args\n";
+                Env::ShowMsgBox( "FBuildWorker", sandboxError.Get() );
+                return -1;
+            }
+            if ( !absSandboxExe.IsEmpty() && !FileIO::FileExists( absSandboxExe.Get() ) )
+            {
+                AStackString<> sandboxError;
+                sandboxError.Format( "sandbox executable '%s' was not found on disk\n", absSandboxExe.Get() );
+                Env::ShowMsgBox( "FBuildWorker", sandboxError.Get() );
+                return -1;
+            }
+        }
+        // the remaining sandbox init logic for the worker is in Worker.cpp 
+        
+        // worker settings are set, so initialize the worker
+        worker.Initialize( options.m_ConsoleMode );
+
+        // do work
         ret = worker.Work();
     }
 

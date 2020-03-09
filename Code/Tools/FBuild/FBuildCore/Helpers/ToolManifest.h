@@ -114,7 +114,10 @@ public:
     void            GetRemoteFilePath( uint32_t fileId, AString & exe ) const;
     const char *    GetRemoteEnvironmentString() const { return m_RemoteEnvironmentString; }
 
-    static void     GetRelativePath( const AString & root, const AString & otherFile, AString & otherFileRelativePath );
+    static void     GetRemoteRelativePath(
+                        const AString & root,
+                        const AString & otherFile,
+                        AString & otherFileRelativePath );
 private:
     mutable Mutex   m_Mutex;
 

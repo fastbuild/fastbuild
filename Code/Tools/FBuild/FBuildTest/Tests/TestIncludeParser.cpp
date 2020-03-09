@@ -10,6 +10,7 @@
 
 // Core
 #include "Core/Containers/AutoPtr.h"
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Time/Timer.h"
@@ -78,12 +79,14 @@ void TestIncludeParser::TestMSVCPreprocessedOutput() const
 
     const size_t repeatCount( 50 );
     const AString * buffers[2] = { &mem, &mem2 };
+    AStackString<> workingDir;
+    FileIO::GetCurrentDir( workingDir );
     for ( const AString * buffer : buffers )
     {
         for ( size_t i=0; i<repeatCount; ++i )
         {
             CIncludeParser parser;
-            TEST_ASSERT( parser.ParseMSCL_Preprocessed( buffer->Get(), buffer->GetLength() ) );
+            TEST_ASSERT( parser.ParseMSCL_Preprocessed( workingDir, buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
             const Array< AString > & includes = parser.GetIncludes();
@@ -111,8 +114,10 @@ void TestIncludeParser::TestMSVCPreprocessedOutput_Indent() const
                             " \t \t \t#line 1 \"C:\\fileF.cpp\"\r\n";
     const size_t testDataSize = AString::StrLen( testData );
 
+    AStackString<> workingDir;
+    FileIO::GetCurrentDir( workingDir );
     CIncludeParser parser;
-    TEST_ASSERT( parser.ParseMSCL_Preprocessed( testData, testDataSize ) );
+    TEST_ASSERT( parser.ParseMSCL_Preprocessed( workingDir, testData, testDataSize ) );
 
     // check number of includes found to prevent future regressions
     const Array< AString > & includes = parser.GetIncludes();
@@ -149,12 +154,14 @@ void TestIncludeParser::TestMSVCShowIncludesOutput() const
 
     const size_t repeatCount( 50 );
     const AString * buffers[2] = { &mem, &mem2 };
+    AStackString<> workingDir;
+    FileIO::GetCurrentDir( workingDir );
     for ( const AString * buffer : buffers )
     {
         for ( size_t i=0; i<repeatCount; ++i )
         {
             CIncludeParser parser;
-            TEST_ASSERT( parser.ParseMSCL_Output( buffer->Get(), buffer->GetLength() ) );
+            TEST_ASSERT( parser.ParseMSCL_Output( workingDir, buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
             const Array< AString > & includes = parser.GetIncludes();
@@ -225,10 +232,12 @@ void TestIncludeParser::TestMSVC_ShowIncludesWithWarnings() const
     }
 
     const AString * buffers[2] = { &mem, &mem2 };
+    AStackString<> workingDir;
+    FileIO::GetCurrentDir( workingDir );
     for ( const AString * buffer : buffers )
     {
         CIncludeParser parser;
-        TEST_ASSERT( parser.ParseMSCL_Output( buffer->Get(), buffer->GetLength() ) );
+        TEST_ASSERT( parser.ParseMSCL_Output( workingDir, buffer->Get(), buffer->GetLength() ) );
 
         // check number of includes found to prevent future regressions
         const Array< AString > & includes = parser.GetIncludes();
@@ -268,12 +277,14 @@ void TestIncludeParser::TestGCCPreprocessedOutput() const
 
     const size_t repeatCount( 50 );
     const AString * buffers[2] = { &mem, &mem2 };
+    AStackString<> workingDir;
+    FileIO::GetCurrentDir( workingDir );
     for ( const AString * buffer : buffers )
     {
         for ( size_t i=0; i<repeatCount; ++i )
         {
             CIncludeParser parser;
-            TEST_ASSERT( parser.ParseGCC_Preprocessed( buffer->Get(), buffer->GetLength() ) );
+            TEST_ASSERT( parser.ParseGCC_Preprocessed( workingDir, buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
             const Array< AString > & includes = parser.GetIncludes();
@@ -318,12 +329,14 @@ void TestIncludeParser::TestClangPreprocessedOutput() const
 
     const size_t repeatCount( 50 );
     const AString * buffers[2] = { &mem, &mem2 };
+    AStackString<> workingDir;
+    FileIO::GetCurrentDir( workingDir );
     for ( const AString * buffer : buffers )
     {
         for ( size_t i=0; i<repeatCount; ++i )
         {
             CIncludeParser parser;
-            TEST_ASSERT( parser.ParseGCC_Preprocessed( buffer->Get(), buffer->GetLength() ) );
+            TEST_ASSERT( parser.ParseGCC_Preprocessed( workingDir, buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
             const Array< AString > & includes = parser.GetIncludes();
@@ -367,12 +380,14 @@ void TestIncludeParser::TestClangMSExtensionsPreprocessedOutput() const
 
     const size_t repeatCount( 50 );
     const AString * buffers[2] = { &mem, &mem2 };
+    AStackString<> workingDir;
+    FileIO::GetCurrentDir( workingDir );
     for ( const AString * buffer : buffers )
     {
         for ( size_t i=0; i<repeatCount; ++i )
         {
             CIncludeParser parser;
-            TEST_ASSERT( parser.ParseGCC_Preprocessed( buffer->Get(), buffer->GetLength() ) );
+            TEST_ASSERT( parser.ParseGCC_Preprocessed( workingDir, buffer->Get(), buffer->GetLength() ) );
 
             // check number of includes found to prevent future regressions
             const Array< AString > & includes = parser.GetIncludes();
@@ -393,11 +408,14 @@ void TestIncludeParser::TestEdgeCases() const
 {
     FBuild fBuild; // needed fer CleanPath for relative dirs
 
+    AStackString<> workingDir;
+    FileIO::GetCurrentDir( workingDir );
+
     // include on last line
     {
         AStackString<> data( "#line 1 \"hello\"" );
         CIncludeParser parser;
-        TEST_ASSERT( parser.ParseMSCL_Preprocessed( data.Get(), data.GetLength() ) );
+        TEST_ASSERT( parser.ParseMSCL_Preprocessed( workingDir, data.Get(), data.GetLength() ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 1 );
         #ifdef DEBUG
             TEST_ASSERT( parser.GetNonUniqueCount() == 1 );
@@ -408,7 +426,7 @@ void TestIncludeParser::TestEdgeCases() const
     {
         AStackString<> data( "" );
         CIncludeParser parser;
-        TEST_ASSERT( parser.ParseMSCL_Preprocessed( data.Get(), data.GetLength() ) );
+        TEST_ASSERT( parser.ParseMSCL_Preprocessed( workingDir, data.Get(), data.GetLength() ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 0 );
         #ifdef DEBUG
             TEST_ASSERT( parser.GetNonUniqueCount() == 0 );
@@ -420,7 +438,7 @@ void TestIncludeParser::TestEdgeCases() const
         AStackString<> data( "#pragma message\"hello\"\n#   pragma message\"hello\"\n" );
         uint32_t dataLen = data.GetLength();
         CIncludeParser parser;
-        TEST_ASSERT( parser.ParseGCC_Preprocessed( data.Get(), dataLen ) );
+        TEST_ASSERT( parser.ParseGCC_Preprocessed( workingDir, data.Get(), dataLen ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 0 );
         #ifdef DEBUG
             TEST_ASSERT( parser.GetNonUniqueCount() == 0 );
@@ -432,7 +450,7 @@ void TestIncludeParser::TestEdgeCases() const
         AStackString<> data( "#line 15 \"hello\"\n#line 2 \"hello\"" );
         uint32_t dataLen = data.GetLength();
         CIncludeParser parser;
-        TEST_ASSERT( parser.ParseGCC_Preprocessed( data.Get(), dataLen ) );
+        TEST_ASSERT( parser.ParseGCC_Preprocessed( workingDir, data.Get(), dataLen ) );
         TEST_ASSERT( parser.GetIncludes().GetSize() == 1 );
         #ifdef DEBUG
             TEST_ASSERT( parser.GetNonUniqueCount() == 2 );
@@ -457,9 +475,11 @@ void TestIncludeParser::ClangLineEndings() const
                                       "# 3 \"C:\\Test\\EmptyClang\\Unity.cpp\" 2\n";
 
     FBuild fb; // needed for CleanPath
+    AStackString<> workingDir;
+    FileIO::GetCurrentDir( workingDir );
 
     CIncludeParser parser;
-    TEST_ASSERT( parser.ParseGCC_Preprocessed( preprocessedData, AString::StrLen( preprocessedData ) ) );
+    TEST_ASSERT( parser.ParseGCC_Preprocessed( workingDir, preprocessedData, AString::StrLen( preprocessedData ) ) );
 
     // check number of includes found to prevent future regressions
     const Array< AString > & includes = parser.GetIncludes();
