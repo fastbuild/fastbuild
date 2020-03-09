@@ -27,7 +27,8 @@ class WorkerSettings;
 class Worker
 {
 public:
-    explicit Worker( const AString & args, bool consoleMode );
+    explicit Worker( const AString & args );
+    void Initialize( const bool consoleMode );
     ~Worker();
 
     int32_t Work();
@@ -45,6 +46,7 @@ private:
     inline bool InConsoleMode() const { return m_ConsoleMode; }
 
     void StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
+    void ErrorMessageString( MSVC_SAL_PRINTF const char * message ) const;
     void ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const FORMAT_STRING( 2, 3 );
 
     bool                m_ConsoleMode;

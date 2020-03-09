@@ -54,6 +54,8 @@ public:
 
     const AString & GetExecutable() const { return m_StaticDependencies[ 0 ].GetNode()->GetName(); }
     const char * GetEnvironmentString() const;
+    const Array< AString > & GetCustomEnvironmentVariables() const { return m_CustomEnvironmentVariables; }
+    virtual const Tags & GetRequiredWorkerTags() const override { return m_RequiredWorkerTags; }
 
 private:
     bool InitializeCompilerFamily( const BFFToken * iter, const Function * function );
@@ -76,9 +78,11 @@ private:
     bool                    m_UseLightCache;
     ToolManifest            m_Manifest;
     Array< AString >        m_Environment;
+    Array< AString >        m_RequiredWorkerTagStrings;
 
     // Internal state
     mutable const char *    m_EnvironmentString;
+    mutable Tags            m_RequiredWorkerTags;
 };
 
 //------------------------------------------------------------------------------

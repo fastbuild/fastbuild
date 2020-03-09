@@ -29,9 +29,11 @@ class TCPConnectionPool;
 namespace Protocol
 {
     enum : uint16_t { PROTOCOL_PORT = 31264 }; // Arbitrarily chosen port
-    enum { PROTOCOL_VERSION = 20 };
+    enum { PROTOCOL_VERSION = 21 };
 
     enum { PROTOCOL_TEST_PORT = PROTOCOL_PORT + 1 }; // Different port for use by tests
+
+    enum { SERVER_STATUS_FREQUENCY_MS = 1000 }; // frequency of server status updates to client
 
     // Identifiers for all unique messages
     //------------------------------------------------------------------------------
@@ -51,6 +53,8 @@ namespace Protocol
 
         MSG_REQUEST_FILE        = 9, // Server -> Client : Ask client for a file
         MSG_FILE                = 10,// Server <- Client : Send a requested file
+
+        MSG_SERVER_STATUS       = 11,// Server -> Client : Send status / keep connection alive
 
         NUM_MESSAGES            // leave last
     };

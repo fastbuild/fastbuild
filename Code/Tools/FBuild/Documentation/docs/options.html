@@ -145,6 +145,10 @@
     <td>Output a report at build termination.</td>
   </tr>
   <tr>
+    <td><a href="#Ttag">-T[tag]</a></td>
+    <td>Set a local worker tag.</td>
+  </tr>
+  <tr>
     <td><a href="#showcmdoutput">-showcmdoutput</a></td>
     <td>Show output of external processes.</td>
   </tr>  
@@ -219,6 +223,18 @@
   <tr>
     <td><a href="#mode">-mode=[disabled|idle|dedicated|proportional]</a></td>
     <td>Control worker availability.</td>
+  </tr>
+  <tr>
+    <td><a href="#min">-min</a></td>
+    <td>Start minimized.</td>
+  </tr>
+  <tr>
+    <td><a href="#nomin">-nomin</a></td>
+    <td>Don't start minimized.</td>
+  </tr>
+  <tr>
+    <td><a href="#worker-Ttag">-T[tag]</a></td>
+    <td>Set a worker tag.</td>
   </tr>
   <tr>
     <td><a href="#nosubprocess">-nosubprocess</a></td>
@@ -472,6 +488,23 @@ suppressed.</p>
 <p>NOTE: This option will lengthen the total build time, depending on the complexity of the build.</p>
 </div>
 
+    <div class='newsitemheader' id="Ttag">-T[tag]</div>
+    <div class='newsitembody'>
+<p>Set a local worker tag.</p>
+<p>Use worker tags in conjunction with RequiredWorkerTags wildcard lists in your CompilerNode or TestNode
+<p>definitions, to restrict what jobs run on what workers.</p>
+<p>You may specify one or more -Ttag entries, where tag is a string you define.
+tag can be a key or key=value string.</p>
+<p>Example -Ttag entries : -TTopDownMemory -TTestHarness=TH1</p>
+<p>By default, workers are included in the general worker pool</p>
+<p>To place a worker in a private pool, add a tag with the private_ prefix</p>
+<p>Example: -Tprivate_BuildFarm1</p>
+<p>To run a job on workers in the private pool, include the tag in your RequiredWorkerTags</p>
+<p>To clear your tags, specify -T</p>
+<p>You may alternatively set local tags via the LocalWorkerTags field in your Settings node.</p>
+<p>By default, no tags are present except the OS tag</p>
+</div>
+
   <tr>
     <td><a href="#showcmdoutput">-showcmdoutput</a></td>
     <td>Show output of external processes.</td>
@@ -485,7 +518,6 @@ to see the complete output.</p>
 <p>NOTE: This option may have an impact on build performance.</p>
 <p></p>
 </div>
-
 
     <div class='newsitemheader' id="showcmds">-showcmds</div>
     <div class='newsitembody'>
@@ -615,6 +647,34 @@ than this amount it will not accept work.</p>
 </table>
 </p>
 <p>NOTE: The newly overridden options will be saved and used on subsequent restarts of the worker.</p>
+</div>
+
+    <div class='newsitemheader' id="min">-min</div>
+    <div class='newsitembody'>
+<p>Start minimized.</p>
+<p>FBuildWorker will start minimized.</p>
+<p>By default, FBuildWorker does not start minimized.</p>
+</div>
+
+    <div class='newsitemheader' id="nomin">-nomin</div>
+    <div class='newsitembody'>
+<p>Don't start minimized.</p>
+</div>
+
+    <div class='newsitemheader' id="worker-Ttag">-T[tag]</div>
+    <div class='newsitembody'>
+<p>Set a worker tag.</p>
+<p>Use worker tags in conjunction with RequiredWorkerTags wildcard lists in your CompilerNode or TestNode
+<p>definitions, to restrict what jobs run on what workers.</p>
+<p>You may specify one or more -Ttag entries, where tag is a string you define.
+tag can be a key or key=value string.</p>
+<p>Example -Ttag entries : -TTopDownMemory -TTestHarness=TH1</p>
+<p>By default, workers are included in the general worker pool</p>
+<p>To place a worker in a private pool, add a tag with the private_ prefix</p>
+<p>Example: -Tprivate_BuildFarm1</p>
+<p>To run a job on workers in the private pool, include the tag in your RequiredWorkerTags</p>
+<p>To clear your tags, specify -T</p>
+<p>By default, no tags are present except the OS tag</p>
 </div>
 
     <div class='newsitemheader' id="nosubprocess">-nosubprocess</div>

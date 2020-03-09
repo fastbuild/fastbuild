@@ -9,10 +9,13 @@
 #include "Core/Process/Semaphore.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
+#include "Core/Containers/Tags.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
 class FileStream;
+
+#define CORE_PHRASE "core_"
 
 // WorkerThread
 //------------------------------------------------------------------------------

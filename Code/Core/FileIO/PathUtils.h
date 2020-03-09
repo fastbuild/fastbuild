@@ -51,6 +51,9 @@ public:
     static void GetRelativePath( const AString & basePath,
                                  const AString & fileName,
                                  AString & outRelativeFileName );
+    static void CleanPath(
+        const AString & workingDir, const AString & name,
+        AString & fullPath, const bool makeFullPath = true );
 };
 
 //------------------------------------------------------------------------------

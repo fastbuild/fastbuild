@@ -133,6 +133,21 @@ static FileStream * g_MonitorFileStream = nullptr;
     OutputInternal( "Warning:", buffer.Get() );
 }
 
+// ErrorString
+//------------------------------------------------------------------------------
+/*static*/ void FLog::ErrorString( MSVC_SAL_PRINTF const char * message )
+{
+    // we prevent output here, rather than where the macros is inserted
+    // as an error being output is not the normal code path, and a check
+    // before calling this function would bloat the code
+    if ( FLog::ShowErrors() == false )
+    {
+        return;
+    }
+
+    OutputInternal( "Error:", message );
+}
+
 // Error
 //------------------------------------------------------------------------------
 /*static*/ void FLog::Error( MSVC_SAL_PRINTF const char * formatString, ... )

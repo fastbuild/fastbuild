@@ -37,6 +37,9 @@ public:
     // OR a previously saved NodeGraph DB (if available/matching the BFF)
     bool Initialize( const char * nodeGraphDBFile = nullptr );
 
+    // for graph tests to call
+    NodeGraph * GetGraph();
+
     // build a target
     bool Build( const char * target );
     bool Build( const AString & target );
@@ -54,6 +57,9 @@ public:
     static const char * GetDefaultBFFFileName();
 
     inline const SettingsNode * GetSettings() const { return m_DependencyGraph->GetSettings(); }
+
+    void GetCacheFileName( uint64_t preprocessedSourceKey, uint32_t commandLineKey, uint64_t toolChainKey, uint64_t pchKey,
+                           AString & path ) const;
 
     void SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar );
     inline const char * GetEnvironmentString() const            { return m_EnvironmentString; }

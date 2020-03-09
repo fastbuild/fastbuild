@@ -23,6 +23,7 @@
 #include "Core/Env/ErrorFormat.h"
 #include "Core/Env/Types.h"
 #include "Core/FileIO/FileIO.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Process.h"
 #include "Core/Profile/Profile.h"
@@ -37,8 +38,8 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Worker::Worker( const AString & args, bool consoleMode )
-    : m_ConsoleMode( consoleMode )
+Worker::Worker( const AString & args )
+    : m_ConsoleMode( false )
     , m_MainWindow( nullptr )
     , m_ConnectionPool( nullptr )
     , m_NetworkStartupHelper( nullptr )
@@ -51,8 +52,20 @@ Worker::Worker( const AString & args, bool consoleMode )
 #endif
 {
     m_WorkerSettings = FNEW( WorkerSettings );
+}
+
+// Initialize
+//------------------------------------------------------------------------------
+void Worker::Initialize( const bool consoleMode )
+{
+    m_ConsoleMode = consoleMode;
     m_NetworkStartupHelper = FNEW( NetworkStartupHelper );
-    m_ConnectionPool = FNEW( Server );
+
+    Server::Options serverOptions;
+    serverOptions.m_NumThreadsInJobQueue = 0;
+    serverOptions.m_WorkerTags = m_WorkerSettings->GetWorkerTags();
+
+    m_ConnectionPool = FNEW( Server ( serverOptions ) );
 
     Env::GetExePath( m_BaseExeName );
     #if defined( __WINDOWS__ )
@@ -168,15 +181,22 @@ uint32_t Worker::WorkThread()
         AStackString<> tmpPath;
         VERIFY( FBuild::GetTempDir( tmpPath ) );
         #if defined( __WINDOWS__ )
-            tmpPath += ".fbuild.tmp\\target\\include";
+            tmpPath += ".fbuild.tmp\\";
         #else
-            tmpPath += "_fbuild.tmp/target/include";
+            tmpPath += "_fbuild.tmp/";
         #endif
+        #if defined( __WINDOWS__ )
+            tmpPath += "target\\include";
+        #else
+            tmpPath += "target/include";
+        #endif
+
         if ( !FileIO::EnsurePathExists( tmpPath ) )
         {
             ErrorMessage( "Failed to initialize tmp folder. Error: %s", LAST_ERROR_STR );
             return (uint32_t)-2;
         }
+
         #if defined( __WINDOWS__ )
             tmpPath += "\\.lock";
         #else
@@ -219,7 +239,7 @@ uint32_t Worker::WorkThread()
         WindowOSX_StopMessageLoop();
     #endif
 
-    m_WorkerBrokerage.SetAvailability( false );
+    m_WorkerBrokerage.SetUnavailable();
 
     return 0;
 }
@@ -354,8 +374,16 @@ void Worker::UpdateAvailability()
     }
 
     WorkerThreadRemote::SetNumCPUsToUse( numCPUsToUse );
-
-    m_WorkerBrokerage.SetAvailability( numCPUsToUse > 0);
+    
+    if ( numCPUsToUse > 0 )
+    {
+        m_WorkerBrokerage.SetAvailable( ws.GetWorkerTags() );
+    }
+    else
+    {
+        // to avoid doing a lot of network file I/O when going idle and not idle,
+        // don't set unavailable here
+    }
 }
 
 // UpdateUI
@@ -391,7 +419,6 @@ void Worker::UpdateUI()
     {
         m_MainWindow->SetStatus( status.Get() );
     }
-
 
     if ( InConsoleMode() == false )
     {
@@ -503,6 +530,21 @@ void Worker::StatusMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     OUTPUT( "%s", buffer.Get() );
 }
 
+// ErrorMessageString
+//------------------------------------------------------------------------------
+void Worker::ErrorMessageString( MSVC_SAL_PRINTF const char * buffer ) const
+{
+    if ( InConsoleMode() )
+    {
+        // Forward to console
+        StatusMessage( "%s", buffer );
+        return;
+    }
+
+    // Display interactive Message Box
+    Env::ShowMsgBox( "FBuildWorker", buffer );
+}
+
 // ErrorMessage
 //------------------------------------------------------------------------------
 void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
@@ -514,15 +556,7 @@ void Worker::ErrorMessage( MSVC_SAL_PRINTF const char * fmtString, ... ) const
     buffer.VFormat( fmtString, args );
     va_end( args );
 
-    if ( InConsoleMode() )
-    {
-        // Forward to console
-        StatusMessage( "%s", buffer.Get() );
-        return;
-    }
-
-    // Display interactive Message Box
-    Env::ShowMsgBox( "FBuildWorker", buffer.Get() );
+    ErrorMessageString( buffer.Get() );
 }
 
 //------------------------------------------------------------------------------

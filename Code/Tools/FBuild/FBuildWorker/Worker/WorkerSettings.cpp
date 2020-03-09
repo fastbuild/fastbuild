@@ -18,6 +18,7 @@
 
 // Other
 //------------------------------------------------------------------------------
+#define SETTINGS_FILENAME ".settings"
 #define FBUILDWORKER_SETTINGS_MIN_VERSION ( 1 )     // Oldest compatible version
 #define FBUILDWORKER_SETTINGS_CURRENT_VERSION ( 4 ) // Current version
 
@@ -35,19 +36,22 @@ WorkerSettings::WorkerSettings()
     uint32_t numCPUs = Env::GetNumProcessors();
     m_NumCPUsToUse = Math::Max< uint32_t >( 1, numCPUs / 2 );
 
-    Load();
-
     // handle CPU downgrade
     m_NumCPUsToUse = Math::Min( Env::GetNumProcessors(), m_NumCPUsToUse );
+
+    // load the settings file
+    Load();
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-WorkerSettings::~WorkerSettings() = default;
+WorkerSettings::~WorkerSettings()
+{
+}
 
-// SetMode
+// SetWorkMode
 //------------------------------------------------------------------------------
-void WorkerSettings::SetMode( Mode m )
+void WorkerSettings::SetMode( const WorkerSettings::Mode m )
 {
     m_Mode = m;
 }
@@ -61,16 +65,49 @@ void WorkerSettings::SetIdleThresholdPercent( uint32_t p )
 
 // SetNumCPUsToUse
 //------------------------------------------------------------------------------
-void WorkerSettings::SetNumCPUsToUse( uint32_t c )
+void WorkerSettings::SetNumCPUsToUse( const uint32_t c )
 {
     m_NumCPUsToUse = c;
 }
 
 // SetStartMinimized
 //------------------------------------------------------------------------------
-void WorkerSettings::SetStartMinimized( bool startMinimized )
+void WorkerSettings::SetStartMinimized( const bool startMinimized )
 {
     m_StartMinimized = startMinimized;
+}
+
+// GetWorkerTags
+//------------------------------------------------------------------------------
+const Tags & WorkerSettings::GetWorkerTags() const
+{
+    if ( !m_WorkerTags.IsValid() )
+    {
+        const size_t numTags = m_BaseWorkerTagStrings.GetSize();
+        for ( size_t i=0; i<numTags; ++i )
+        {
+            m_BaseWorkerTags.ParseAndAddTag( m_BaseWorkerTagStrings.Get( i ) );
+        }
+        // always set valid, even if empty container
+        m_BaseWorkerTags.SetValid( true );
+        m_WorkerTags = m_BaseWorkerTags;
+    }
+    return m_WorkerTags;
+}
+
+// ApplyWorkerTags
+//------------------------------------------------------------------------------
+void WorkerSettings::ApplyWorkerTags( const Tags & workerTags )
+{
+    // ensure m_BaseWorkerTags is populated, before we apply changes to it
+    GetWorkerTags();
+
+    Tags removedTags;  // pass empty container, since only adding
+    m_BaseWorkerTags.ApplyChanges( removedTags, workerTags );
+    m_WorkerTags = m_BaseWorkerTags;
+
+    // update m_BaseWorkerTagStrings to match base changes
+    m_BaseWorkerTags.ToStringArray( m_BaseWorkerTagStrings );
 }
 
 // SetMinimumFreeMemoryMiB
@@ -112,6 +149,8 @@ void WorkerSettings::Load()
         f.Read( m_NumCPUsToUse );
         f.Read( m_StartMinimized );
 
+        f.Read( m_BaseWorkerTagStrings );
+
         f.Close();
 
         m_SettingsWriteTime = FileIO::GetFileLastWriteTime( settingsPath );
@@ -140,6 +179,7 @@ void WorkerSettings::Save()
         ok &= f.Write( m_IdleThresholdPercent );
         ok &= f.Write( m_NumCPUsToUse );
         ok &= f.Write( m_StartMinimized );
+        ok &= f.Write( m_BaseWorkerTagStrings );
 
         f.Close();
 

@@ -32,6 +32,8 @@ public:
     typedef const T *   ConstIter;
     Iter        Begin() const   { return m_Begin; }
     Iter        End() const     { return m_Begin + m_Size; }
+    inline T &  Get( size_t index ) { ASSERT( index < m_Size ); return m_Begin[ index ]; }
+    inline const T & Get( size_t index ) const { ASSERT( index < m_Size ); return m_Begin[ index ]; }
     inline T &          operator [] ( size_t index )        { ASSERT( index < m_Size ); return m_Begin[ index ]; }
     inline const T &    operator [] ( size_t index ) const  { ASSERT( index < m_Size ); return m_Begin[ index ]; }
     inline T &          Top()       { ASSERT( m_Size ); return *( m_Begin + m_Size - 1 ); }
@@ -85,6 +87,11 @@ public:
 
     Array & operator = ( const Array< T > & other );
     Array & operator = ( Array< T > && other );
+
+    template < class U >
+    bool operator == ( const Array< U > & other ) const;
+    template < class U >
+    inline bool operator != ( const Array< U > & other ) const { return !(*this == other ); }
 
     // query state
     inline bool     IsAtCapacity() const    { return ( m_Size == ( m_CapacityAndFlags & CAPACITY_MASK ) ); }
@@ -743,5 +750,28 @@ private:
     alignas(__alignof(T)) uint8_t m_Storage[ RESERVED * sizeof( T ) ];
     PRAGMA_DISABLE_POP_MSVC // 4324
 };
+
+// operator == (const Array< U > &)
+//------------------------------------------------------------------------------
+template < class T >
+template < class U >
+bool Array< T >::operator == ( const Array< U > & other ) const
+{
+    bool equal = false;
+    const size_t thisSize = GetSize();
+    if ( thisSize == other.GetSize() )
+    {
+        equal = true;  // first assume true
+        for ( size_t i = 0; i < thisSize; ++i )
+        {
+            if ( Get( i ) != other.Get( i ) )
+            {
+                equal = false;
+                break;
+            }
+        }
+    }
+    return equal;
+}
 
 //------------------------------------------------------------------------------

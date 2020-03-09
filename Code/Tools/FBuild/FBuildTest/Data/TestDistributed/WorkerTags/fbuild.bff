@@ -1,0 +1,178 @@
+//
+// WorkerTags
+//
+// Build steps to test worker tags
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../../testcommon.bff"
+Using( .StandardEnvironment )
+Settings
+{
+    .Workers = { "127.0.0.1" }
+}
+
+// Tags and os values
+//------------------------------------------------------------------------------
+#if __WINDOWS__
+.OSTag = 'OS=Windows-*-*'
+.ExeExtension = '.exe'
+#endif
+
+#if __LINUX__
+.OSTag = 'OS=Linux-*-*'
+.ExeExtension = ''
+#endif
+
+#if __OSX__
+.OSTag = 'OS=OSX-*-*'
+.ExeExtension = ''
+#endif
+
+.BaseTagsStruct =
+[
+    .RequiredWorkerTags =
+    {
+        '!raretag'
+        .OSTag
+    }
+]
+
+.CompilerTagsStruct =
+[
+    Using( .BaseTagsStruct )
+    .RequiredWorkerTags + 'InstalledCompilerA'
+    .RequiredWorkerTags + 'CompileHarness=CH1'
+]
+
+.TestTagsStruct =
+[
+    Using( .BaseTagsStruct )
+    .RequiredWorkerTags + 'InstalledTesterA'
+    .RequiredWorkerTags + 'TestHarness=*'
+]
+
+// Tagged compilers
+//------------------------------------------------------------------------------
+#if __WINDOWS__
+Using( .ToolChain_Clang_Windows )
+.CompilerStruct =
+[
+    .Root                           = '$Clang7_BasePath$'
+    .Executable                     = '$Root$\bin\clang++.exe'
+
+    Using( .CompilerTagsStruct )
+]
+Compiler( 'Compiler-ClangForWindows-Dist-Tags' )
+{
+    Using( .CompilerStruct )
+}
+#endif
+
+#if __LINUX__
+Using( .LinuxGCCToolChain )
+.CompilerStruct =
+[
+#if CI_BUILD
+    .Executable     = 'GXX_BINARY'
+    .ExtraFiles     = {
+                        '/usr/bin/as'
+                        'CC1_BINARY'
+                        'CC1PLUS_BINARY'
+                      }
+#else
+    #if USING_GCC_4
+    .Executable     = '/usr/bin/gcc-4.9'
+    .ExtraFiles     = {
+                        '/usr/bin/as'
+                        '$GCC4_BasePath$/cc1'
+                        '$GCC4_BasePath$/cc1plus'
+                      }
+    #endif
+    #if USING_GCC_7
+    .Executable     = '$GCC7_BasePath$/x86_64-linux-gnu-g++-7'
+    .ExtraFiles     = {
+                        '/usr/bin/as'
+                        '/usr/lib/gcc/x86_64-linux-gnu/7/cc1'
+                        '/usr/lib/gcc/x86_64-linux-gnu/7/cc1plus'
+                      }
+    #endif
+#endif
+    Using( .CompilerTagsStruct )
+]
+Compiler( 'Compiler-GCC-Dist-Tags' )
+{
+    Using( .CompilerStruct )
+}
+#endif
+
+#if __OSX__
+Using( .OSXClangToolChain )
+.CompilerStruct =
+[
+    .Executable     = '/usr/bin/clang++'
+    Using( .CompilerTagsStruct )
+]
+Compiler( 'Compiler-Clang-Dist-Tags' )
+{
+    Using( .CompilerStruct )
+}
+#endif
+
+// Compile steps
+//------------------------------------------------------------------------------
+.TestObjectListStruct =
+[
+    .CompilerInputFiles = 'Tools/FBuild/FBuildTest/Data/TestDistributed/WorkerTags/test.cpp'
+]
+
+ObjectList( "TestExe-Lib-Tags" )
+{
+    Using( .TestObjectListStruct )
+#if __WINDOWS__
+    .Compiler = 'Compiler-ClangForWindows-Dist-Tags'
+#endif
+
+#if __LINUX__
+    .Compiler = 'Compiler-GCC-Dist-Tags'
+#endif
+
+#if __OSX__
+    .Compiler = 'Compiler-Clang-Dist-Tags'
+#endif
+
+    .CompilerOutputPath = '$StandardOutputBase$/Test/Distributed/WorkerTags'
+}
+
+.ExecutableStruct =
+[
+    #if __WINDOWS__
+        .LinkerOptions      + ' /SUBSYSTEM:CONSOLE'
+                            + ' /ENTRY:main'
+    #endif
+]
+
+Executable( "TestExe-Tags" )
+{
+    Using( .ExecutableStruct )
+    .Libraries          = { 'TestExe-Lib-Tags' }
+    .LinkerOutput       = '$StandardOutputBase$/Test/Distributed/WorkerTags/test$ExeExtension$'
+}
+
+// Test steps
+//------------------------------------------------------------------------------
+.TestStruct =
+[
+    .TestArguments     = ''
+    Using( .TestTagsStruct )
+]
+
+Test( "Test-Tags" )
+{
+    Using( .TestStruct )
+    .TestExecutable    = 'TestExe-Tags'
+	.Root              = '$StandardOutputBase$/Test/Distributed/WorkerTags'
+    .TestOutput        = '$Root$/testoutput.txt'
+}

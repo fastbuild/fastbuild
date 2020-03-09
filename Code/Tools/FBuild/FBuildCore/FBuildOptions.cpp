@@ -354,6 +354,21 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                     continue;
                 }
             #endif
+            else if ( thisArg.BeginsWith( "-T" ) )
+            {
+                AStackString<> tagStr( thisArg.Get() + 2 );
+                if ( tagStr.GetLength() > 0 )
+                {
+                    m_LocalWorkerTags.ParseAndAddTag( tagStr );
+                }
+                else
+                {
+                    // -T by itself means clear the user's tags
+                    m_LocalWorkerTags.Clear();
+                }
+                m_OverrideLocalWorkerTags = true;
+                continue;
+            }
 
             // can't use FLOG_ERROR as FLog is not initialized
             OUTPUT( "FBuild: Error: Unknown argument '%s'\n", thisArg.Get() );
@@ -366,6 +381,9 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
             m_Targets.Append( thisArg );
         }
     }
+
+    // always set valid, even if empty container
+    m_LocalWorkerTags.SetValid( true );
 
     if ( progressOptionSpecified == false )
     {
@@ -554,6 +572,10 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -showtargets      Display primary targets, excluding those marked \"Hidden\".\n"
             " -showalltargets   Display primary targets, including those marked \"Hidden\".\n"
             " -summary          Show a summary at the end of the build.\n"
+            " -Ttag             Set a local worker tag.\n"
+            "                   You may specify one or more -Ttag entries.\n"
+            "                   Example : -TTopDownMemory -TTestHarness=TH1\n"
+            "                   To clear your tags, specify -T\n"
             " -verbose          Show detailed diagnostic info. (Increases built time)\n"
             " -version          Print version and exit.\n"
             " -vs               VisualStudio mode. Same as -ide.\n"

@@ -65,10 +65,13 @@ private:
     OSLabel *           m_ModeLabel;
     OSLabel *           m_ThresholdLabel;
     OSLabel *           m_ResourcesLabel;
+    OSLabel *           m_TagsLabel;
+    OSLabel *           m_TagsNoneLabel;
     OSListView *        m_ThreadList;
     OSDropDown *        m_ModeDropDown;
     OSDropDown *        m_ThresholdDropDown;
     OSDropDown *        m_ResourcesDropDown;
+    OSDropDown *        m_TagsDropDown;
     OSSplitter *        m_Splitter;
     OSMenu *            m_Menu;
 

@@ -574,7 +574,10 @@ bool TCPConnectionPool::SendInternal( const ConnectionInfo * connection, const T
     connection->m_InUse = true;
 #endif
 
-    ASSERT( connection->m_Socket != INVALID_SOCKET );
+    if ( connection->m_Socket == INVALID_SOCKET )
+    {
+        return false;
+    }
 
     TCPDEBUG( "Send: %i (%x)\n", totalBytes, (uint32_t)( connection->m_Socket ) );
 

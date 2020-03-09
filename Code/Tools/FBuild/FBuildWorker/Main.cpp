@@ -115,19 +115,59 @@ int MainCommon( const AString & args )
     // start the worker and wait for it to be closed
     int ret;
     {
-        Worker worker( args, options.m_ConsoleMode );
+        // construct worker
+        Worker worker( args );
+
+        // before initializing worker, set initial worker settings
+        bool anyOverrides = false;
+        WorkerSettings & workerSettings = WorkerSettings::Get();
         if ( options.m_OverrideCPUAllocation )
         {
-            WorkerSettings::Get().SetNumCPUsToUse( options.m_CPUAllocation );
+            workerSettings.SetNumCPUsToUse( options.m_CPUAllocation );
+            anyOverrides = true;
         }
         if ( options.m_OverrideWorkMode )
         {
-            WorkerSettings::Get().SetMode( options.m_WorkMode );
+            workerSettings.SetMode( options.m_WorkMode );
+            anyOverrides = true;
         }
         if ( options.m_MinimumFreeMemoryMiB )
         {
-            WorkerSettings::Get().SetMinimumFreeMemoryMiB( options.m_MinimumFreeMemoryMiB );
+            workerSettings.SetMinimumFreeMemoryMiB( options.m_MinimumFreeMemoryMiB );
+            anyOverrides = true;
         }
+        if ( options.m_OverrideStartMinimized )
+        {
+            workerSettings.SetStartMinimized( options.m_StartMinimized );
+            anyOverrides = true;
+        }
+        if ( options.m_OverrideWorkerTags )
+        {
+            workerSettings.ApplyWorkerTags( options.m_WorkerTags );
+            anyOverrides = true;
+        }
+
+        // remote workers store their tag keys and values
+        // as dir names on the shared network drive, so
+        // tag keys and values must contain valid dir chars
+        const Tags & workerTags = workerSettings.GetWorkerTags();
+        AStackString<> errorMsg;
+        if ( !workerTags.ContainsValidDirChars( errorMsg ) )
+        {
+            Env::ShowMsgBox( "FBuildWorker", errorMsg.Get() );
+            return -1;
+        }
+
+        if ( anyOverrides )
+        {
+            // save our state out to the .settings file
+            workerSettings.Save();
+        }
+
+        // worker settings are set, so initialize the worker
+        worker.Initialize( options.m_ConsoleMode );
+
+        // do work
         ret = worker.Work();
     }
 

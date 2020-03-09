@@ -27,6 +27,8 @@ public:
     static inline Platform GetPlatform();
     static inline const char * GetPlatformName( Platform platform );
     static inline const char * GetPlatformName() { return GetPlatformName( GetPlatform() ); }
+    static uint32_t GetPlatformBitness();
+    static void GetPlatformVersion( AString & versionString );
 
     static uint32_t GetNumProcessors();
 

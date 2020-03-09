@@ -31,11 +31,12 @@ public:
     explicit ObjectNode( const AString & objectName,
                          NodeProxy * srcFile,
                          const AString & compilerOptions,
+                         const Array< AString > & customEnvironmentVariables,
                          uint32_t flags );
     virtual ~ObjectNode() override;
 
     static inline Node::Type GetTypeS() { return Node::OBJECT_NODE; }
-
+    virtual const Tags & GetRequiredWorkerTags() const override;
 
     enum Flags
     {
@@ -97,27 +98,33 @@ public:
     const AString & GetPCHObjectName() const { return m_PCHObjectFileName; }
     const AString & GetOwnerObjectList() const { return m_OwnerObjectList; }
 private:
+    const CompilerNode * GetSpecificCompiler( const bool useDedicatedPreprocessor ) const;
     virtual BuildResult DoBuild( Job * job ) override;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
     virtual bool Finalize( NodeGraph & nodeGraph ) override;
 
     virtual void Migrate( const Node & oldNode ) override;
 
-    BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
-    BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
-    BuildResult DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob );
-    BuildResult DoBuild_QtRCC( Job * job );
-    BuildResult DoBuildOther( Job * job, bool useDeoptimization );
+    BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization, const AString & workingDir, const AString & compiler );
+    BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache,
+        bool useSimpleDist, const AString & workingDir );
+    BuildResult DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob,
+        bool racingRemoteJob, const AString & workingDir );
+    BuildResult DoBuild_QtRCC( Job * job, const AString & workingDir, const AString & compiler );
+    BuildResult DoBuildOther( Job * job, bool useDeoptimization, const AString & workingDir, const AString & compiler );
 
     bool ProcessIncludesMSCL( const char * output, uint32_t outputSize );
     bool ProcessIncludesWithPreProcessor( Job * job );
 
-    const AString & GetCacheName( Job * job ) const;
-    bool RetrieveFromCache( Job * job );
-    void WriteToCache( Job * job );
+    const AString & GetCacheName( Job * job, const AString & workingDir ) const;
+    bool RetrieveFromCache( Job * job, const AString & workingDir );
+    void WriteToCache( Job * job, const AString & workingDir );
     void GetExtraCacheFilePaths( const Job * job, Array< AString > & outFileNames ) const;
+    void GetWorkingDir( const Job * job, AString & workingDir ) const;
 
-    void EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob = false, bool racingRemoteJob = false, bool useDedicatedPreprocessor = false, bool isRemote = false ) const;
+    void EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, const AString & workingDir,
+        const AString & compiler, const bool stealingRemoteJob = false,
+        const bool racingRemoteJob = false, const bool isRemote = false ) const;
 
     enum Pass
     {
@@ -130,14 +137,18 @@ private:
     static bool StripTokenWithArg_MSVC( const char * tokenToCheckFor, const AString & token, size_t & index );
     static bool StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
     static bool StripToken_MSVC( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
-    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
+    static void AddPathToArgs( const Job * job, const AString & workingDir,
+                    const AString & path, Args & fullArgs );
+    bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization,
+                    bool useShowIncludes, bool finalize, const AString & workingDir,
+                    const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
-    bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
-    bool LoadStaticSourceFileForDistribution( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
+    bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization, const AString & workingDir ) const;
+    bool LoadStaticSourceFileForDistribution( const Args & fullArgs, Job * job, bool useDeoptimization, const AString & workingDir ) const;
     void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
     bool WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
-    bool BuildFinalOutput( Job * job, const Args & fullArgs ) const;
+    bool BuildFinalOutput( Job * job, const Args & fullArgs, const AString & workingDir, const AString & compiler ) const;
 
     inline bool GetFlag( uint32_t flag ) const { return ( ( m_Flags & flag ) != 0 ); }
     inline bool GetPreprocessorFlag( uint32_t flag ) const { return ( ( m_PreprocessorFlags & flag ) != 0 ); }
@@ -161,11 +172,12 @@ private:
 
         // start compilation
         bool SpawnCompiler( Job * job,
-                            const AString & name,
-                            const CompilerNode * compilerNode,
-                            const AString & compiler,
-                            const Args & fullArgs,
-                            const char * workingDir = nullptr );
+            const AString & name,
+            const AString & workingDir,
+            const CompilerNode * compilerNode,
+            const AString & compiler,
+            const Args & fullArgs,
+            const Array< AString > & customEnvironmentVariables );
 
         // determine overall result
         inline int                      GetResult() const { return m_Result; }
@@ -211,10 +223,11 @@ private:
     uint64_t            m_PCHCacheKey                       = 0;
     uint64_t            m_LightCacheKey                     = 0;
     AString             m_OwnerObjectList; // TODO:C This could be a pointer to the node in the future
+    Array< AString >    m_CustomEnvironmentVariables;
 
     // Not serialized
-    Array< AString >    m_Includes;
-    bool                m_Remote                            = false;
+    Array< AString >   m_Includes;
+    bool                m_Remote                                  = false;
 };
 
 //------------------------------------------------------------------------------

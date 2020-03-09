@@ -50,7 +50,7 @@ WorkerWindow::WorkerWindow()
     Network::GetHostName(m_HostName);
 
     // center the window on screen
-    const uint32_t w = 700;
+    const uint32_t w = 818;
     const uint32_t h = 300;
     const int32_t x = (int32_t)( GetPrimaryScreenWidth() - w );
     const int32_t y = 0;
@@ -109,7 +109,7 @@ WorkerWindow::WorkerWindow()
     // Threshold drop down
     m_ThresholdDropDown = FNEW( OSDropDown( this ) );
     m_ThresholdDropDown->SetFont( m_Font );
-    m_ThresholdDropDown->Init( 376, 3, 67, 200 );
+    m_ThresholdDropDown->Init( 376, 3, 54, 200 );
     for ( uint32_t i = 1; i < 6; ++i )
     {
         AStackString<> buffer;
@@ -130,7 +130,7 @@ WorkerWindow::WorkerWindow()
     // Resources drop down
     m_ResourcesDropDown = FNEW( OSDropDown( this ) );
     m_ResourcesDropDown->SetFont( m_Font );
-    m_ResourcesDropDown->Init( 498, 3, 150, 200 );
+    m_ResourcesDropDown->Init( 479, 3, 126, 200 );
     {
         // add items
         uint32_t numProcessors = Env::GetNumProcessors();
@@ -147,7 +147,60 @@ WorkerWindow::WorkerWindow()
     // Resources label
     m_ResourcesLabel = FNEW( OSLabel( this ) );
     m_ResourcesLabel->SetFont( m_Font );
-    m_ResourcesLabel->Init( 448, 7, 45, 15, "Using:" );
+    m_ResourcesLabel->Init( 435, 7, 44, 15, "Using:" );
+
+    Tags tags = WorkerSettings::Get().GetWorkerTags();
+    tags.Sort();  // sort for GUI
+    const size_t numTags = tags.GetSize();
+    // x position and width apply to both the tags drop down and tags none label below,
+    // since we display either one or the other at runtime, in the same UI space
+    int32_t tagsControlXPos = 648;
+    int32_t tagsControlWidth = 150;
+    if ( numTags > 0 )
+    {
+        // Tags drop down
+        m_TagsDropDown = FNEW( OSDropDown( this ) );
+        m_TagsDropDown->SetFont( m_Font );
+        m_TagsDropDown->Init( tagsControlXPos, 3, tagsControlWidth, 200 );
+        // The tags drop down only displays tags;
+        // its selection does not mean anything.
+        // So the user can see the first private pool tag,
+        // without dropping down the list, select it by default
+        int tagIndexToSelect = -1;
+        for ( size_t i=0; i<numTags; ++i )
+        {
+            const Tag & tag = tags.Get( i );
+            if ( tagIndexToSelect < 0 &&
+                 tag.IsPrivatePoolTag() )
+            {
+                tagIndexToSelect = (int)i;
+            }
+            AStackString<> tagString;
+            tag.ToString( tagString );
+            m_TagsDropDown->AddItem( tagString.Get() );
+        }
+        // if no private tags, then select the first tag in the list
+        if ( tagIndexToSelect < 0 )
+        {
+            tagIndexToSelect = 0;
+        }
+        m_TagsDropDown->SetSelectedItem( tagIndexToSelect );
+        m_TagsNoneLabel = nullptr;
+    }
+    else
+    {
+        // rather than an empty combo box, show a None label
+        // Tags None label
+        m_TagsNoneLabel = FNEW( OSLabel( this ) );
+        m_TagsNoneLabel->SetFont( m_Font );
+        m_TagsNoneLabel->Init( tagsControlXPos, 7, tagsControlWidth, 15, "None" );
+        m_TagsDropDown = nullptr;
+    }
+
+    // Tags label
+    m_TagsLabel = FNEW( OSLabel( this ) );
+    m_TagsLabel->SetFont( m_Font );
+    m_TagsLabel->Init( 610, 7, 35, 15, "Tags:" );
 
     // splitter
     m_Splitter = FNEW( OSSplitter( this ) );
@@ -305,6 +358,7 @@ void WorkerWindow::Work()
 //------------------------------------------------------------------------------
 /*virtual*/ void WorkerWindow::OnDropDownSelectionChanged( OSDropDown * dropDown )
 {
+    bool somethingChanged = false;
     const size_t index = dropDown->GetSelectedItem();
     if ( dropDown == m_ModeDropDown )
     {
@@ -321,8 +375,16 @@ void WorkerWindow::Work()
     else if ( dropDown == m_ResourcesDropDown )
     {
         WorkerSettings::Get().SetNumCPUsToUse( (uint32_t)index + 1 );
+        somethingChanged = true;
     }
-    WorkerSettings::Get().Save();
+    else if ( dropDown == m_TagsDropDown )
+    {
+        // nothing to do here (read only)
+    }
+    if ( somethingChanged )
+    {
+        WorkerSettings::Get().Save();
+    }
 }
 
 // OnTrayIconMenuItemSelected

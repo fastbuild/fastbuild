@@ -187,26 +187,19 @@ script:
     sed -i -e "1i\\
     #define CI_BUILD
     " fbuild.bff Tools/FBuild/FBuildTest/Data/testcommon.bff
+  # Put full paths to Clang binaries into config files.
   # Put full paths to GCC binaries into config files.
   - |
     case "${TRAVIS_OS_NAME}" in
-    linux)
-      sed -i -e "
+    linux|osx)
+      grep -r -l --include \*.bff GXX_BINARY .. | xargs sed -i -e "
+      s:CLANG_BINARY:$(which ${CLANG}):
+      s:CLANGXX_BINARY:$(which ${CLANGXX}):
       s:GCC_BINARY:$(which ${GCC}):
       s:GXX_BINARY:$(which ${GXX}):
       s:CC1_BINARY:$(${GCC} -print-prog-name=cc1):
       s:CC1PLUS_BINARY:$(${GCC} -print-prog-name=cc1plus):
-      " ../External/SDK/GCC/Linux/GCC_CI.bff
-      ;;
-    esac
-  # Put full paths to Clang binaries into config files.
-  - |
-    case "${TRAVIS_OS_NAME}" in
-    linux|osx)
-      sed -i -e "
-      s:CLANG_BINARY:$(which ${CLANG}):
-      s:CLANGXX_BINARY:$(which ${CLANGXX}):
-      " ../External/SDK/Clang/{Linux,OSX}/Clang_CI.bff
+      "
       ;;
     esac
   # Run tests in the selected configuration.

@@ -189,4 +189,10 @@ Protocol::MsgFile::MsgFile( uint64_t toolId, uint32_t fileId )
 {
 }
 
+// MsgServerStatus
+//------------------------------------------------------------------------------
+Protocol::MsgServerStatus::MsgServerStatus()
+    : Protocol::IMessage( Protocol::MSG_SERVER_STATUS, sizeof( MsgServerStatus ), true )  // tags payload
+{}
+
 //------------------------------------------------------------------------------

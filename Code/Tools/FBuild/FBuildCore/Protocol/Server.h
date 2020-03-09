@@ -6,6 +6,7 @@
 //------------------------------------------------------------------------------
 #include "Core/Network/TCPConnectionPool.h"
 #include "Core/Time/Timer.h"
+#include "Core/Containers/Tags.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -28,7 +29,17 @@ class ToolManifest;
 class Server : public TCPConnectionPool
 {
 public:
-    Server( uint32_t numThreadsInJobQueue = 0 );
+    class Options
+    {
+        public:
+            inline explicit Options() {}
+            inline virtual ~Options() = default;
+
+            uint32_t m_NumThreadsInJobQueue = 0;
+            Tags     m_WorkerTags;
+    };
+
+    Server( const Options & serverOptions );
     ~Server();
 
     static void GetHostForJob( const Job * job, AString & hostName );
@@ -54,29 +65,34 @@ private:
 
     void            FindNeedyClients();
     void            FinalizeCompletedJobs();
+    void            SendServerStatus();
     void            CheckWaitingJobs( const ToolManifest * manifest );
 
     void            RequestMissingFiles( const ConnectionInfo * connection, ToolManifest * manifest ) const;
 
     struct ClientState
     {
-        explicit ClientState( const ConnectionInfo * ci ) : m_CurrentMessage( nullptr ), m_Connection( ci ), m_NumJobsAvailable( 0 ), m_NumJobsRequested( 0 ), m_NumJobsActive( 0 ), m_WaitingJobs( 16, true ) {}
+        explicit ClientState( const ConnectionInfo * ci ) :
+            m_CurrentMessage( nullptr ), m_Connection( ci ), m_NumJobsAvailable( 0 ),
+            m_NumJobsRequested( 0 ), m_NumJobsActive( 0 ), m_WaitingJobs( 16, true ),
+            m_WorkerTagsSent( ) {}
 
         inline bool operator < ( const ClientState & other ) const { return ( m_NumJobsAvailable > other.m_NumJobsAvailable ); }
 
-        Mutex                   m_Mutex;
+        Mutex                      m_Mutex;
 
         const Protocol::IMessage * m_CurrentMessage;
-        const ConnectionInfo *  m_Connection;
-        uint32_t                m_NumJobsAvailable;
-        uint32_t                m_NumJobsRequested;
-        uint32_t                m_NumJobsActive;
+        const ConnectionInfo *     m_Connection;
+        uint32_t                   m_NumJobsAvailable;
+        uint32_t                   m_NumJobsRequested;
+        uint32_t                   m_NumJobsActive;
 
-        AString                 m_HostName;
+        AString                    m_HostName;
 
-        Array< Job * >          m_WaitingJobs; // jobs waiting for manifests/toolchains
+        Array< Job * >             m_WaitingJobs; // jobs waiting for manifests/toolchains
 
-        Timer                   m_StatusTimer;
+        Timer                      m_StatusTimer;
+        Tags                       m_WorkerTagsSent;
     };
 
     JobQueueRemote *        m_JobQueueRemote;
@@ -88,6 +104,7 @@ private:
 
     mutable Mutex           m_ToolManifestsMutex;
     Array< ToolManifest * > m_Tools;
+    Tags                    m_WorkerTags;
 };
 
 //------------------------------------------------------------------------------

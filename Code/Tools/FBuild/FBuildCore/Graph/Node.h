@@ -6,11 +6,13 @@
 //------------------------------------------------------------------------------
 // FBuild
 #include "Tools/FBuild/FBuildCore/Graph/Dependencies.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerRecords.h"
 
 // Core
 #include "Core/Containers/Array.h"
 #include "Core/Reflection/ReflectionMacros.h"
 #include "Core/Reflection/Struct.h"
+#include "Core/Containers/Tags.h"
 #include "Core/Strings/AString.h"
 
 // Forward Declarations
@@ -137,6 +139,13 @@ public:
 
     // each node must specify if it outputs a file
     virtual bool IsAFile() const = 0;
+    virtual bool EnsureCanBuild( Job * job ) const;
+    virtual const Tags & GetRequiredWorkerTags() const;
+    virtual const WorkerRecords & GetWorkerRecords() const;
+    virtual void UpdateWorkerRecord( const AString & workerName, const bool canBuildOnWorker ) const;
+    virtual void RemoveWorkerRecord( const AString & workerName ) const;
+
+    static void AddAutomaticTags( Tags & tags );
 
     inline State GetState() const { return m_State; }
 
@@ -193,6 +202,7 @@ public:
     inline const Dependencies & GetDynamicDependencies() const { return m_DynamicDependencies; }
 
 protected:
+    friend class Client;
     friend class FBuild;
     friend struct FBuildStats;
     friend class Function;
@@ -267,6 +277,7 @@ protected:
     mutable uint32_t m_ProgressAccumulator;
     uint32_t        m_Index;
     bool            m_Hidden;
+    mutable WorkerRecords m_WorkerRecords;
 
     Dependencies m_PreBuildDependencies;
     Dependencies m_StaticDependencies;
@@ -277,6 +288,7 @@ protected:
     #endif
 
     static const char * const s_NodeTypeNames[];
+    static const Tags         s_EmptyRequirementTags;
 };
 
 //------------------------------------------------------------------------------

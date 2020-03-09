@@ -5,6 +5,8 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Singleton.h"
+#include "Core/Containers/Tags.h"
+#include "Core/Strings/AString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -39,6 +41,9 @@ public:
     void SetStartMinimized( bool startMinimized );
     inline bool GetStartMinimzed() { return m_StartMinimized; }
 
+    const Tags & GetWorkerTags() const;
+    void         ApplyWorkerTags( const Tags & workerTags );
+
     // Time settings were last changed/written to disk
     uint64_t GetSettingsWriteTime() const { return m_SettingsWriteTime; }
   
@@ -54,6 +59,11 @@ private:
     bool        m_StartMinimized;
     uint64_t    m_SettingsWriteTime;    // FileTime of settings when last changed/written to disk
     uint32_t    m_MinimumFreeMemoryMiB; // Minimum OS free memory including virtual memory to let worker do its work
+
+    Array< AString > m_BaseWorkerTagStrings;
+
+    mutable Tags     m_BaseWorkerTags;
+    mutable Tags     m_WorkerTags;
 };
 
 //------------------------------------------------------------------------------

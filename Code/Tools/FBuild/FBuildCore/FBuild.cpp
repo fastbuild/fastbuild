@@ -167,7 +167,26 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
         return false;
     }
 
-    const SettingsNode * settings = m_DependencyGraph->GetSettings();
+    SettingsNode * settings = m_DependencyGraph->GetSettings();
+
+    if ( m_Options.m_OverrideLocalWorkerTags )
+    {
+        // merge, so that user can define most tags in settings and override only a few in options
+        settings->ApplyLocalWorkerTags( m_Options.m_LocalWorkerTags );
+    }
+    // overwrite options tags with the computed settings tags
+    m_Options.m_LocalWorkerTags = settings->GetLocalWorkerTags();
+
+    // remote workers store their tag keys and values
+    // as dir names on the shared network drive, so
+    // tag keys and values must contain valid dir chars
+    // for consistency, make local workers follow the same char requirements
+    AStackString<> errorMsg;
+    if ( !m_Options.m_LocalWorkerTags.ContainsValidDirChars( errorMsg ) )
+    {
+        FLOG_ERROR_STRING( errorMsg.Get() );
+        return false;
+    }
 
     // if the cache is enabled, make sure the path is set and accessible
     if ( m_Options.m_UseCacheRead || m_Options.m_UseCacheWrite || m_Options.m_CacheInfo || m_Options.m_CacheTrim )
@@ -189,8 +208,18 @@ bool FBuild::Initialize( const char * nodeGraphDBFile )
             m_Cache = nullptr;
         }
     }
-
     return true;
+}
+
+// GetGraph();
+//------------------------------------------------------------------------------
+NodeGraph * FBuild::GetGraph()
+{
+    if ( m_DependencyGraph == nullptr )
+    {
+        m_DependencyGraph = FNEW( NodeGraph );
+    }
+    return m_DependencyGraph;
 }
 
 // Build
@@ -216,6 +245,11 @@ bool FBuild::Build( const AString & target )
 bool FBuild::GetTargets( const Array< AString > & targets, Dependencies & outDeps ) const
 {
     ASSERT( !targets.IsEmpty() );
+
+    if ( m_DependencyGraph == nullptr )
+    {
+        return false;
+    }
 
     // Get the nodes for all the targets
     const size_t numTargets = targets.GetSize();
@@ -348,7 +382,10 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 //------------------------------------------------------------------------------
 void FBuild::SaveDependencyGraph( IOStream & stream, const char* nodeGraphDBFile ) const
 {
-    m_DependencyGraph->Save( stream, nodeGraphDBFile );
+    if ( m_DependencyGraph != nullptr )
+    {
+        m_DependencyGraph->Save( stream, nodeGraphDBFile );
+    }
 }
 
 // Build
@@ -361,36 +398,20 @@ bool FBuild::Build( Node * nodeToBuild )
     AtomicStoreRelaxed( &s_AbortBuild, false ); // allow multiple runs in same process
 
     // create worker threads
-    m_JobQueue = FNEW( JobQueue( m_Options.m_NumWorkerThreads ) );
+    // get values from options here, since some tests call Build() without calling Initialize()
+    m_JobQueue = FNEW( JobQueue( 
+        m_Options.m_NumWorkerThreads,
+        m_Options.m_LocalWorkerTags ) );
 
     // create the connection management system if needed
     // (must be after JobQueue is created)
     if ( m_Options.m_AllowDistributed )
     {
         const SettingsNode * settings = m_DependencyGraph->GetSettings();
-
-        Array< AString > workers;
-        if ( settings->GetWorkerList().IsEmpty() )
-        {
-            // check for workers through brokerage
-            // TODO:C This could be moved out of the main code path
-            m_WorkerBrokerage.FindWorkers( workers );
-        }
-        else
-        {
-            workers = settings->GetWorkerList();
-        }
-
-        if ( workers.IsEmpty() )
-        {
-            FLOG_WARN( "No workers available - Distributed compilation disabled" );
-            m_Options.m_AllowDistributed = false;
-        }
-        else
-        {
-            OUTPUT( "Distributed Compilation : %u Workers in pool '%s'\n", (uint32_t)workers.GetSize(), m_WorkerBrokerage.GetBrokerageRootPaths().Get() );
-            m_Client = FNEW( Client( workers, m_Options.m_DistributionPort, settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
-        }
+        m_Client = FNEW( Client(
+            settings->GetWorkerList(), m_Options.m_DistributionPort, 
+            settings->GetWorkerListRefreshLimitSec(), settings->GetWorkerConnectionRetryLimitSec(),
+            settings->GetWorkerConnectionLimit(), m_Options.m_DistVerbose ) );
     }
 
     m_Timer.Start();
@@ -407,6 +428,11 @@ bool FBuild::Build( Node * nodeToBuild )
     }
 
     bool stopping( false );
+
+    if ( m_DependencyGraph == nullptr )
+    {
+        return false;
+    }
 
     // keep doing build passes until completed/failed
     for ( ;; )
@@ -507,9 +533,11 @@ bool FBuild::Build( Node * nodeToBuild )
 void FBuild::SetEnvironmentString( const char * envString, uint32_t size, const AString & libEnvVar )
 {
     FREE( m_EnvironmentString );
+    // plus one, since incoming envString has null and need one more for double null terminator
     m_EnvironmentString = (char *)ALLOC( size + 1 );
     m_EnvironmentStringSize = size;
     AString::Copy( envString, m_EnvironmentString, size );
+
     m_LibEnvVar = libEnvVar;
 }
 
@@ -641,6 +669,12 @@ void FBuild::UpdateBuildStatus( const Node * node )
         FBuildStats & bs = m_BuildStats;
         bs.m_NodeTimeProgressms = 0;
         bs.m_NodeTimeTotalms = 0;
+
+        if ( m_DependencyGraph == nullptr )
+        {
+            return;
+        }
+
         m_DependencyGraph->UpdateBuildStatus( node, bs.m_NodeTimeProgressms, bs.m_NodeTimeTotalms );
         m_LastProgressCalcTime = m_Timer.GetElapsed();
 
@@ -683,10 +717,35 @@ void FBuild::UpdateBuildStatus( const Node * node )
     return "fbuild.bff";
 }
 
+// GetCacheFileName
+//------------------------------------------------------------------------------
+void FBuild::GetCacheFileName( uint64_t preprocessedSourceKey,
+                               uint32_t commandLineKey,
+                               uint64_t toolChainKey,
+                               uint64_t pchKey,
+                               AString & path ) const
+{
+    // cache version - bump if cache format is changed
+    static const int cacheVersion( 9 );
+
+    // format example: 2377DE32AB045A2D_FED872A1_AB62FEAA23498AAC-32A2B04375A2D7DE.7
+    path.Format( "%016" PRIX64 "_%08X_%016" PRIX64 "-%016" PRIX64 ".%u",
+                 preprocessedSourceKey,
+                 commandLineKey,
+                 toolChainKey,
+                 pchKey,
+                 cacheVersion );
+}
+
 // DisplayTargetList
 //------------------------------------------------------------------------------
 void FBuild::DisplayTargetList( bool showHidden ) const
 {
+    if ( m_DependencyGraph == nullptr )
+    {
+        return;
+    }
+
     OUTPUT( "FBuild: List of available targets\n" );
     const size_t totalNodes = m_DependencyGraph->GetNodeCount();
     for ( size_t i = 0; i < totalNodes; ++i )

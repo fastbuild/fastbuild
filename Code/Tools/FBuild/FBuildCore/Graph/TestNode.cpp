@@ -10,34 +10,39 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/DirectoryListNode.h"
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/Job.h"
+#include "Tools/FBuild/FBuildCore/WorkerPool/WorkerThread.h"
 
 #include "Core/Env/ErrorFormat.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
+#include "Core/FileIO/PathUtils.h"
 #include "Core/Math/Conversions.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Process/Process.h"
+#include "Core/Env/Env.h"
 
 // Reflection
 //------------------------------------------------------------------------------
 REFLECT_NODE_BEGIN( TestNode, Node, MetaName( "TestOutput" ) + MetaFile() )
-    REFLECT(        m_TestExecutable,           "TestExecutable",           MetaFile() )
-    REFLECT_ARRAY(  m_TestInput,                "TestInput",                MetaOptional() + MetaFile() )
-    REFLECT_ARRAY(  m_TestInputPath,            "TestInputPath",            MetaOptional() + MetaPath() )
-    REFLECT_ARRAY(  m_TestInputPattern,         "TestInputPattern",         MetaOptional() )
-    REFLECT(        m_TestInputPathRecurse,     "TestInputPathRecurse",     MetaOptional() )
-    REFLECT_ARRAY(  m_TestInputExcludePath,     "TestInputExcludePath",     MetaOptional() + MetaPath() )
-    REFLECT_ARRAY(  m_TestInputExcludedFiles,   "TestInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
-    REFLECT_ARRAY(  m_TestInputExcludePattern,  "TestInputExcludePattern",  MetaOptional() )
-    REFLECT(        m_TestArguments,            "TestArguments",            MetaOptional() )
-    REFLECT(        m_TestWorkingDir,           "TestWorkingDir",           MetaOptional() + MetaPath() )
-    REFLECT(        m_TestTimeOut,              "TestTimeOut",              MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
-    REFLECT(        m_TestAlwaysShowOutput,     "TestAlwaysShowOutput",     MetaOptional() )
-    REFLECT_ARRAY(  m_PreBuildDependencyNames,  "PreBuildDependencies",     MetaOptional() + MetaFile() + MetaAllowNonFile() )
-    REFLECT_ARRAY(  m_Environment,              "Environment",              MetaOptional() )
+    REFLECT(       m_TestExecutable,   "TestExecutable",      MetaFile() )
+    REFLECT_ARRAY( m_TestInput,        "TestInput",           MetaOptional() + MetaFile() )
+    REFLECT_ARRAY( m_TestInputPath,    "TestInputPath",       MetaOptional() + MetaPath() )
+    REFLECT_ARRAY( m_TestInputPattern, "TestInputPattern",    MetaOptional() )
+    REFLECT(       m_TestInputPathRecurse,    "TestInputPathRecurse",  MetaOptional() )
+    REFLECT_ARRAY( m_TestInputExcludePath,    "TestInputExcludePath",     MetaOptional() + MetaPath() )
+    REFLECT_ARRAY( m_TestInputExcludedFiles,  "TestInputExcludedFiles",   MetaOptional() + MetaFile( true ) )
+    REFLECT_ARRAY( m_TestInputExcludePattern, "TestInputExcludePattern",  MetaOptional() )
+    REFLECT(       m_TestArguments,           "TestArguments",        MetaOptional() )
+    REFLECT(       m_TestWorkingDir,          "TestWorkingDir",       MetaOptional() + MetaPath() )
+    REFLECT(       m_TestTimeOut,             "TestTimeOut",          MetaOptional() + MetaRange( 0, 4 * 60 * 60 ) ) // 4hrs
+    REFLECT(       m_TestAlwaysShowOutput,    "TestAlwaysShowOutput", MetaOptional() )
+    REFLECT_ARRAY( m_PreBuildDependencyNames, "PreBuildDependencies", MetaOptional() + MetaFile() + MetaAllowNonFile() )
+    REFLECT_ARRAY( m_Environment,             "Environment",          MetaOptional() )
+    REFLECT_ARRAY( m_RequiredWorkerTagStrings,   "RequiredWorkerTags",         MetaOptional() )
 
     // Internal State
-    REFLECT(        m_NumTestInputFiles,        "NumTestInputFiles",        MetaHidden() )
+    REFLECT(       m_NumTestInputFiles,          "NumTestInputFiles",          MetaHidden() )
 REFLECT_END( TestNode )
 
 // CONSTRUCTOR
@@ -165,112 +170,158 @@ const char * TestNode::GetEnvironmentString() const
     return true;
 }
 
+// GetRequiredWorkerTags
+//------------------------------------------------------------------------------
+/*virtual*/ const Tags & TestNode::GetRequiredWorkerTags() const
+{
+    if ( m_RequiredWorkerTags.IsEmpty() )
+    {
+        // get the tags from the strings
+        m_RequiredWorkerTags.ParseAndAddTags( m_RequiredWorkerTagStrings );
+    }
+    return m_RequiredWorkerTags;
+}
+
 // DoBuild
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult TestNode::DoBuild( Job * job )
 {
-    // If the workingDir is empty, use the current dir for the process
-    const char * workingDir = m_TestWorkingDir.IsEmpty() ? nullptr : m_TestWorkingDir.Get();
+    Node::BuildResult result = NODE_RESULT_OK;  // first assume success
 
-    EmitCompilationMessage( workingDir );
+    // get the tags from the strings
+    m_RequiredWorkerTags.ParseAndAddTags( m_RequiredWorkerTagStrings );
 
-    // spawn the process
-    Process p( FBuild::Get().GetAbortBuildPointer() );
-    const char * environmentString = GetEnvironmentString();
-
-    bool spawnOK = p.Spawn( GetTestExecutable()->GetName().Get(),
-                            m_TestArguments.Get(),
-                            workingDir,
-                            environmentString );
-
-    if ( !spawnOK )
+    if ( EnsureCanBuild( job ) )
     {
-        if ( p.HasAborted() )
+        AStackString<> workingDir;
+        AStackString<> testExe;
+        Array<AString> tmpFiles;
+        workingDir = m_TestWorkingDir;
+        testExe = GetTestExecutable()->GetName();
+
+        EmitCompilationMessage( workingDir, testExe );
+
+        // spawn the process
+        Process p( FBuild::GetAbortBuildPointer() );
+        const char * environmentString = GetEnvironmentString();
+
+        AStackString<> spawnExe;
+        bool spawnOK = false;
+        spawnExe = testExe;
+        // Spawn() expects nullptr, not empty string for working dir
+        // have to use abs path for spawnExe
+        spawnOK = p.Spawn( spawnExe.Get(),
+            m_TestArguments.Get(),
+            workingDir.IsEmpty() ? nullptr : workingDir.Get(),
+            environmentString );
+        if ( spawnOK )
         {
-            return NODE_RESULT_FAILED;
+            // capture all of the stdout and stderr
+            AutoPtr< char > memOut;
+            AutoPtr< char > memErr;
+            uint32_t memOutSize = 0;
+            uint32_t memErrSize = 0;
+            bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut * 1000 );
+            int exitStatus = p.WaitForExit();
+            if ( !p.HasAborted() )
+            {
+                if ( ( timedOut == true ) || ( exitStatus != 0 ) || ( m_TestAlwaysShowOutput == true ) )
+                {
+                    // print the test output
+                    Node::DumpOutput( job, memOut.Get(), memOutSize );
+                    Node::DumpOutput( job, memErr.Get(), memErrSize );
+                }
+
+                if ( timedOut == true )
+                {
+                    FLOG_ERROR( "Test timed out after %u s (%s)", m_TestTimeOut, m_TestExecutable.Get() );
+                    result = NODE_RESULT_FAILED;
+                }
+                else if ( exitStatus != 0 )
+                {
+                    FLOG_ERROR( "Test failed Error: %s '%s'", ERROR_STR(exitStatus), m_TestExecutable.Get() );
+                    result = NODE_RESULT_FAILED;
+                }
+
+                // write the test output (saved for pass or fail)
+                FileStream fs;
+                if ( fs.Open( GetName().Get(), FileStream::WRITE_ONLY ) )
+                {
+                    if ( ( memOut.Get() && ( fs.Write( memOut.Get(), memOutSize ) != memOutSize ) ) ||
+                         ( memErr.Get() && ( fs.Write( memErr.Get(), memErrSize ) != memErrSize ) ) )
+                    {
+                        AStackString<> outputName( GetName() );
+                        FLOG_ERROR( "Failed to write test output file '%s'", outputName.Get() );
+                        result = NODE_RESULT_FAILED;
+                    }
+                    fs.Close();
+                }
+                else
+                {
+                    AStackString<> outputName( GetName() );
+                    FLOG_ERROR( "Failed to open test output file '%s'", outputName.Get() );
+                    result = NODE_RESULT_FAILED;
+                }
+
+                if ( ( timedOut == false ) && ( exitStatus == 0 ) )
+                {
+                    // test passed
+                    // record new file time
+                    RecordStampFromBuiltFile();
+                }
+            }
+            else
+            {
+                FLOG_ERROR( "Test unexpectedly aborted '%s'", m_TestExecutable.Get() );
+                result = NODE_RESULT_FAILED;
+            }
         }
-
-        FLOG_ERROR( "Failed to spawn process for '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
+        else  // !spawnOK
+        {
+            if ( p.HasAborted() )
+            {
+                FLOG_ERROR( "Test unexpectedly aborted '%s'", m_TestExecutable.Get() );
+            }
+            else
+            {
+                FLOG_ERROR( "Failed to spawn '%s' process Error: %s\n",
+                    spawnExe.Get(), LAST_ERROR_STR );
+            }
+            result = NODE_RESULT_FAILED;
+        }
+        for ( const AString & tmpFile : tmpFiles )
+        {
+            // delete the tmp files, so we don't grow disk space unbounded
+            FileIO::FileDelete( tmpFile.Get() );
+        }
     }
-
-    // capture all of the stdout and stderr
-    AutoPtr< char > memOut;
-    AutoPtr< char > memErr;
-    uint32_t memOutSize = 0;
-    uint32_t memErrSize = 0;
-    bool timedOut = !p.ReadAllData( memOut, &memOutSize, memErr, &memErrSize, m_TestTimeOut * 1000 );
-
-    // Get result
-    int result = p.WaitForExit();
-    if ( p.HasAborted() )
+    else
     {
-        return NODE_RESULT_FAILED;
+        // EnsureCanBuild will have emitted an error
+        result = NODE_RESULT_FAILED;
     }
-
-    if ( ( timedOut == true ) || ( result != 0 ) || ( m_TestAlwaysShowOutput == true ) )
-    {
-        // something went wrong, print details
-        Node::DumpOutput( job, memOut.Get(), memOutSize );
-        Node::DumpOutput( job, memErr.Get(), memErrSize );
-    }
-
-    if ( timedOut == true )
-    {
-        FLOG_ERROR( "Test timed out after %u s (%s)", m_TestTimeOut, m_TestExecutable.Get() );
-    }
-    else if ( result != 0 )
-    {
-        FLOG_ERROR( "Test failed. Error: %s Target: '%s'", ERROR_STR( result ), GetName().Get() );
-    }
-
-    // write the test output (saved for pass or fail)
-    FileStream fs;
-    if ( fs.Open( GetName().Get(), FileStream::WRITE_ONLY ) == false )
-    {
-        FLOG_ERROR( "Failed to open test output file '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
-    }
-    if ( ( memOut.Get() && ( fs.Write( memOut.Get(), memOutSize ) != memOutSize ) ) ||
-         ( memErr.Get() && ( fs.Write( memErr.Get(), memErrSize ) != memErrSize ) ) )
-    {
-        FLOG_ERROR( "Failed to write test output file '%s'", GetName().Get() );
-        return NODE_RESULT_FAILED;
-    }
-    fs.Close();
-
-    // did the test fail?
-    if ( ( timedOut == true ) || ( result != 0 ) )
-    {
-        return NODE_RESULT_FAILED;
-    }
-
-    // test passed
-
-    // record new file time
-    RecordStampFromBuiltFile();
-
-    return NODE_RESULT_OK;
+    return result;
 }
 
 // EmitCompilationMessage
 //------------------------------------------------------------------------------
-void TestNode::EmitCompilationMessage( const char * workingDir ) const
+void TestNode::EmitCompilationMessage(
+    const AString & workingDir, const AString & testExe ) const
 {
     AStackString<> output;
-    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
         output += "Running Test: ";
         output += GetName();
         output += '\n';
     }
-    if ( FBuild::Get().GetOptions().m_ShowCommandLines )
+    if ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines )
     {
-        output += GetTestExecutable()->GetName();
+        output += testExe;
         output += ' ';
         output += m_TestArguments;
         output += '\n';
-        if ( workingDir )
+        if ( !workingDir.IsEmpty() )
         {
             output += "Working Dir: ";
             output += workingDir;

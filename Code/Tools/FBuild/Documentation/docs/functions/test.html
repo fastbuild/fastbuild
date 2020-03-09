@@ -35,23 +35,25 @@ Defines the execution of an executable as a test.</p>
 <div class='code'>Test( alias )      // (optional) Alias
 {
   // Options
-  .TestExecutable          // The executable file to run that will execute the tests
-  .TestOutput              // Output file for captured test output
+  .TestExecutable             // The executable file to run that will execute the tests
+  .TestOutput                 // Output file for captured test output
+  .ExtraFiles                 // (optional) Additional files (usually dlls) required by the test exe.
 
   // Additional inputs
-  .TestInput               // (optional) Input file(s) to pass to executable
-  .TestInputPath           // (optional) Path to find files in
-  .TestInputPattern        // (optional) Pattern(s) to use when finding files (default *.*)
-  .TestInputPathRecurse    // (optional) Recurse into dirs when finding files (default true)
-  .TestInputExcludePath    // (optional) Path(s) to exclude
-  .TestInputExcludedFiles  // (optional) File(s) to exclude from compilation (partial, root-relative of full path)
-  .TestInputExcludePattern // (optional) Pattern(s) to exclude
+  .TestInput                  // (optional) Input file(s) to pass to executable
+  .TestInputPath              // (optional) Path to find files in
+  .TestInputPattern           // (optional) Pattern(s) to use when finding files (default *.*)
+  .TestInputPathRecurse       // (optional) Recurse into dirs when finding files (default true)
+  .TestInputExcludePath       // (optional) Path(s) to exclude
+  .TestInputExcludedFiles     // (optional) File(s) to exclude from compilation
+                              //            (partial, root-relative of full path)
+  .TestInputExcludePattern    // (optional) Pattern(s) to exclude
 
   // Other
-  .TestArguments           // (optional) Arguments to pass to test executable
-  .TestWorkingDir          // (optional) Working dir for test execution
-  .TestTimeOut             // (optional) TimeOut (in seconds) for test (default: 0, no timeout)
-  .TestAlwaysShowOutput    // (optional) Show output of tests even when they don't fail (default: false)
+  .TestArguments              // (optional) Arguments to pass to test executable
+  .TestWorkingDir             // (optional) Working dir for test execution
+  .TestTimeOut                // (optional) TimeOut (in seconds) for test (default: 0, no timeout)
+  .TestAlwaysShowOutput       // (optional) Show output of tests even when they don't fail (default: false)
 
    // Additional options
   .PreBuildDependencies    // (optional) Force targets to be built before this Test (Rarely needed,
@@ -60,6 +62,8 @@ Defines the execution of an executable as a test.</p>
   .Environment             // (optional) Environment variables to use for local build
                            // If set, linker uses this environment
                            // If not set, linker uses .Environment from your Settings node
+  .RequiredWorkerTags      // (optional) List of wildcard tags required to run this test exe
+                           //            default: empty list
 }
 </div>
     </div>
@@ -113,7 +117,6 @@ Defines the execution of an executable as a test.</p>
       <p>When set, overrides the environment for running a Test.</p>
       <p>This allows you to have a different environment per Test if needed.</p>
     </div>
-
     <div class='newsitemheader'>
       Simple Example
     </div>
@@ -127,6 +130,20 @@ Test( 'MyCoreTests-Run' )
 }
 </div>
     </div>
+
+	<p><b>.RequiredWorkerTags</b> - String or ArrayOfStrings - (Optional)</p>
+	<p><p>Specify the worker tags required for the test exe.</p>
+<p>This option allows you to run the test exe on only those workers that match the required tags.</p>
+<p>Each entry is a wildcard string of the form: key, !key, key=value, or !key=value</p>
+<p>and can include * and ? chars</p>
+<p>Example list:</p>
+<p>{
+   'TopDownMemory',
+   'OS=Windows-*-*'
+   }</p>
+<p>To run a job on workers in a private pool, include the pool's private_ tag</p>
+<p>Example entry: 'private_TestFarm1'</p>
+</div>
 
     </div><div class='footer'>&copy; 2012-2020 Franta Fulin</div></div></div>
 </body>

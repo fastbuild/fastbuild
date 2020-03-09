@@ -257,37 +257,186 @@
     }
 
     const bool hasCommonSubPath = ( pathA != basePath.Get() );
-    if ( hasCommonSubPath == false )
+    if ( hasCommonSubPath )
     {
-        // No common sub-path, so use fileName as-is
+        // Build relative path
+
+        // For every remaining dir in the project path, go up one directory
+        outRelativeFileName.Clear();
+        for ( ;; )
+        {
+            const char c = *pathA;
+            if ( c == 0 )
+            {
+                break;
+            }
+            if ( ( c == '/' ) || ( c == '\\' ) )
+            {
+                outRelativeFileName += "..";
+                outRelativeFileName += NATIVE_SLASH;
+            }
+            ++pathA;
+        }
+
+        // Add remainder of source path relative to the common sub path
+        outRelativeFileName += pathB;
+    }
+    else
+    {
+        // No common sub-path, the path must be on a different drive from the working directory
+        // Therefore use path as-is
         outRelativeFileName = fileName;
-        return;
     }
+}
 
-    // Build relative path
+// CleanPath
+//------------------------------------------------------------------------------
+/*static*/ void PathUtils::CleanPath( const AString & workingDir, const AString & name, AString & cleanPath, const bool makeFullPath )
+{
+    ASSERT( &name != &cleanPath );
 
-    // For every remaining dir in the project path, go up one directory
-    outRelativeFileName.Clear();
-    for ( ;; )
+    char * dst;
+
+    //  - path can be fully qualified
+    bool isFullPath = PathUtils::IsFullPath( name );
+    if ( !isFullPath && makeFullPath )
     {
-        const char c = *pathA;
-        if ( c == 0 )
-        {
-            break;
-        }
-        if ( ( c == '/' ) || ( c == '\\' ) )
-        {
-            #if defined( __WINDOWS__ )
-                outRelativeFileName += "..\\";
-            #else
-                outRelativeFileName += "../";
-            #endif
-        }
-        ++pathA;
+        // make a full path by prepending working dir
+        // we're making the assumption that we don't need to clean the workingDir
+        ASSERT( workingDir.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
+        ASSERT( workingDir.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
+
+        // build the start of the path
+        cleanPath = workingDir;
+        cleanPath += NATIVE_SLASH;
+
+        // concatenate
+        uint32_t len = cleanPath.GetLength();
+
+        // make sure the dest will be big enough for the extra stuff
+        cleanPath.SetLength( cleanPath.GetLength() + name.GetLength() );
+
+        // set the output (which maybe a newly allocated ptr)
+        dst = cleanPath.Get() + len;
+
+        isFullPath = true;
+    }
+    else
+    {
+        // make sure the dest will be big enough
+        cleanPath.SetLength( name.GetLength() );
+
+        // copy from the start
+        dst = cleanPath.Get();
     }
 
-    // Add remainder of source path relative to the common sub path
-    outRelativeFileName += pathB;
+    // the untrusted part of the path we need to copy/fix
+    const char * src = name.Get();
+    const char * const srcEnd = name.GetEnd();
+
+    // clean slashes
+    char lastChar = NATIVE_SLASH; // consider first item to follow a path (so "..\file.dat" works)
+    #if defined( __WINDOWS__ )
+        while ( *src == NATIVE_SLASH || *src == OTHER_SLASH ) { ++src; } // strip leading slashes
+    #endif
+
+    const char * lowestRemovableChar = cleanPath.Get();
+    if ( isFullPath )
+    {
+        #if defined( __WINDOWS__ )
+            lowestRemovableChar += 3; // e.g. "c:\"
+        #else
+            lowestRemovableChar += 1; // e.g. "/"
+        #endif
+    }
+
+    while ( src < srcEnd )
+    {
+        const char thisChar = *src;
+
+        // hit a slash?
+        if ( ( thisChar == NATIVE_SLASH ) || ( thisChar == OTHER_SLASH ) )
+        {
+            // write it the correct way
+            *dst = NATIVE_SLASH;
+            dst++;
+
+            // skip until non-slashes
+            while ( ( *src == NATIVE_SLASH ) || ( *src == OTHER_SLASH ) )
+            {
+                src++;
+            }
+            lastChar = NATIVE_SLASH;
+            continue;
+        }
+        else if ( thisChar == '.' )
+        {
+            if ( lastChar == NATIVE_SLASH ) // fixed up slash, so we only need to check backslash
+            {
+                // check for \.\ (or \./)
+                char nextChar = *( src + 1 );
+                if ( ( nextChar == NATIVE_SLASH ) || ( nextChar == OTHER_SLASH ) )
+                {
+                    src++; // skip . and slashes
+                    while ( ( *src == NATIVE_SLASH ) || ( *src == OTHER_SLASH ) )
+                    {
+                        ++src;
+                    }
+                    continue; // leave lastChar as-is, since we added nothing
+                }
+
+                // check for \..\ (or \../)
+                if ( nextChar == '.' )
+                {
+                    nextChar = *( src + 2 );
+                    if ( ( nextChar == NATIVE_SLASH ) || ( nextChar == OTHER_SLASH ) || ( nextChar == '\0' ) )
+                    {
+                        src+=2; // skip .. and slashes
+                        while ( ( *src == NATIVE_SLASH ) || ( *src == OTHER_SLASH ) )
+                        {
+                            ++src;
+                        }
+
+                        if ( dst > lowestRemovableChar )
+                        {
+                            --dst; // remove slash
+
+                            while ( dst > lowestRemovableChar ) // e.g. "c:\"
+                            {
+                                --dst;
+                                if ( *dst == NATIVE_SLASH ) // only need to check for cleaned slashes
+                                {
+                                    ++dst; // keep this slash
+                                    break;
+                                }
+                            }
+                        }
+                        else if( !isFullPath )
+                        {
+                            *dst++ = '.';
+                            *dst++ = '.';
+                            *dst++ = NATIVE_SLASH;
+                            lowestRemovableChar = dst;
+                        }
+
+                        continue;
+                    }
+                }
+            }
+        }
+
+        // write non-slash character
+        *dst++ = *src++;
+        lastChar = thisChar;
+    }
+
+    // correct length of destination
+    cleanPath.SetLength( (uint16_t)( dst - cleanPath.Get() ) );
+    ASSERT( AString::StrLen( cleanPath.Get() ) == cleanPath.GetLength() );
+
+    // sanity checks
+    ASSERT( cleanPath.Find( OTHER_SLASH ) == nullptr ); // bad slashes removed
+    ASSERT( cleanPath.Find( NATIVE_DOUBLE_SLASH ) == nullptr ); // redundant slashes removed
 }
 
 //------------------------------------------------------------------------------

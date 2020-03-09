@@ -9,10 +9,10 @@
 #include "Tools/FBuild/FBuildCore/BFF/Functions/Function.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
+#include "Core/Containers/Tags.h"
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
-
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -29,6 +29,7 @@ REFLECT_NODE_BEGIN( CompilerNode, Node, MetaNone() )
     REFLECT( m_CompilerFamilyString,"CompilerFamily",       MetaOptional() )
     REFLECT_ARRAY( m_Environment,   "Environment",          MetaOptional() )
     REFLECT( m_UseLightCache,       "UseLightCache_Experimental", MetaOptional() )
+    REFLECT_ARRAY( m_RequiredWorkerTagStrings, "RequiredWorkerTags",  MetaOptional() )
 
     // Internal
     REFLECT( m_CompilerFamilyEnum,  "CompilerFamilyEnum",   MetaHidden() )
@@ -82,14 +83,13 @@ CompilerNode::CompilerNode()
 
     // Check for conflicting files
     AStackString<> relPathExe;
-    ToolManifest::GetRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
-
+    ToolManifest::GetRemoteRelativePath( m_ExecutableRootPath, m_Executable, relPathExe );
 
     const size_t numExtraFiles = extraFiles.GetSize();
     for ( size_t i=0; i<numExtraFiles; ++i )
     {
         AStackString<> relPathA;
-        ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
+        ToolManifest::GetRemoteRelativePath( m_ExecutableRootPath, extraFiles[ i ].GetNode()->GetName(), relPathA );
 
         // Conflicts with Exe?
         if ( PathUtils::ArePathsEqual( relPathA, relPathExe ) )
@@ -102,7 +102,7 @@ CompilerNode::CompilerNode()
         for ( size_t j=(i+1); j<numExtraFiles; ++j )
         {
             AStackString<> relPathB;
-            ToolManifest::GetRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
+            ToolManifest::GetRemoteRelativePath( m_ExecutableRootPath, extraFiles[ j ].GetNode()->GetName(), relPathB );
 
             if ( PathUtils::ArePathsEqual( relPathA, relPathB ) )
             {
@@ -131,7 +131,10 @@ CompilerNode::CompilerNode()
         return false;
     }
 
-    m_Manifest.Initialize( m_ExecutableRootPath, m_StaticDependencies, m_CustomEnvironmentVariables );
+    // get the tags from the strings
+    m_RequiredWorkerTags.ParseAndAddTags( m_RequiredWorkerTagStrings );
+
+    m_Manifest.Initialize( m_ExecutableRootPath, m_StaticDependencies );
 
     return true;
 }
@@ -338,7 +341,7 @@ CompilerNode::~CompilerNode()
         return Node::NODE_RESULT_FAILED; // Generate will have emitted error
     }
 
-    m_Stamp = m_Manifest.GetTimeStamp();
+    m_Stamp = Math::Max( m_Stamp, m_Manifest.GetTimeStamp() );
     return Node::NODE_RESULT_OK;
 }
 
