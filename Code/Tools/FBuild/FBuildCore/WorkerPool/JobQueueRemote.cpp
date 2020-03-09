@@ -277,11 +277,10 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 {
     Timer timer; // track how long the item takes
 
-    ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
-
+    Node * node = job->GetNode();
     if ( job->IsLocal() )
     {
-        FLOG_MONITOR( "START_JOB local \"%s\" \n", job->GetNode()->GetName().Get() );
+        FLOG_MONITOR( "START_JOB local \"%s\" \n", node->GetName().Get() );
     }
 
     // remote tasks must output to a tmp file
@@ -306,18 +305,33 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         return Node::NODE_RESULT_FAILED;
     }
 
-    // Delete any left over PDB from a previous run (to be sure we have a clean pdb)
-    if ( node->IsUsingPDB() && ( job->IsLocal() == false ) )
+    Node::Type nodeType = node->GetType();
+    switch ( nodeType )
     {
-        AStackString<> pdbName;
-        node->GetPDBName( pdbName );
-        FileIO::FileDelete( pdbName.Get() );
+        case Node::OBJECT_NODE:
+            {
+                ObjectNode * on = node->CastTo< ObjectNode >();
+                // Delete any left over PDB from a previous run (to be sure we have a clean pdb)
+                if ( on->IsUsingPDB() && ( job->IsLocal() == false ) )
+                {
+                    AStackString<> pdbName;
+                    on->GetPDBName( pdbName );
+                    FileIO::FileDelete( pdbName.Get() );
+                }
+            }
+            break;
+        case Node::TEST_NODE:
+            // no PDB to delete
+            break;
+        default:
+            ASSERT( false );
+            break;
     }
 
     Node::BuildResult result;
     {
         PROFILE_SECTION( racingRemoteJob ? "RACE" : "LOCAL" );
-        result = ((Node *)node )->DoBuild2( job, racingRemoteJob );
+        result = node->DoBuild2( job, racingRemoteJob );
     }
 
     // Ignore result if job was cancelled
@@ -371,12 +385,26 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
         // Cleanup obj file
         FileIO::FileDelete( node->GetName().Get() );
 
-        // Cleanup PDB file
-        if ( node->IsUsingPDB() )
+        switch ( nodeType )
         {
-            AStackString<> pdbName;
-            node->GetPDBName( pdbName );
-            FileIO::FileDelete( pdbName.Get() );
+            case Node::OBJECT_NODE:
+                {
+                    ObjectNode * on = node->CastTo< ObjectNode >();
+                    // Cleanup PDB file
+                    if ( on->IsUsingPDB() )
+                    {
+                        AStackString<> pdbName;
+                        on->GetPDBName( pdbName );
+                        FileIO::FileDelete( pdbName.Get() );
+                    }
+                }
+                break;
+            case Node::TEST_NODE:
+                // no PDB to cleanup
+                break;
+            default:
+                ASSERT( false );
+                break;
         }
     }
 
@@ -401,33 +429,64 @@ void JobQueueRemote::FinishedProcessingJob( Job * job, bool success )
 //------------------------------------------------------------------------------
 /*static*/ bool JobQueueRemote::ReadResults( Job * job )
 {
-    const ObjectNode * node = job->GetNode()->CastTo< ObjectNode >();
-    const bool includePDB = node->IsUsingPDB();
-    const bool usingStaticAnalysis = node->IsUsingStaticAnalysisMSVC();
+    const Node * node = job->GetNode();
+    Node::Type nodeType = node->GetType();
+    bool includePDB = false;
+    bool usingStaticAnalysis = false;
+    switch ( nodeType )
+    {
+        case Node::OBJECT_NODE:
+            {
+                ObjectNode * on = node->CastTo< ObjectNode >();
+                includePDB = on->IsUsingPDB();
+                usingStaticAnalysis = on->IsUsingStaticAnalysisMSVC();
+            }
+            break;
+        case Node::TEST_NODE:
+            // no other files to include
+            break;
+        default:
+            ASSERT( false );
+            break;
+    }
 
     // Detemine list of files to send
 
-    // 1. Object file
+    // 1. main file
     //---------------
     Array< AString > fileNames( 3, false );
     fileNames.Append( node->GetName() );
 
-    // 2. PDB file (optional)
-    //-----------------------
-    if ( includePDB )
+    switch ( nodeType )
     {
-        AStackString<> pdbFileName;
-        node->GetPDBName( pdbFileName );
-        fileNames.Append( pdbFileName );
-    }
+        case Node::OBJECT_NODE:
+            {
+                ObjectNode * on = node->CastTo< ObjectNode >();
+                // 2. PDB file (optional)
+                //-----------------------
+                if ( includePDB )
+                {
+                    AStackString<> pdbFileName;
+                    on->GetPDBName( pdbFileName );
+                    fileNames.Append( pdbFileName );
+                }
 
-    // 3. .nativecodeanalysis.xml file (optional)
-    //--------------------------------------------
-    if ( usingStaticAnalysis )
-    {
-        AStackString<> xmlFileName;
-        node->GetNativeAnalysisXMLPath( xmlFileName );
-        fileNames.Append( xmlFileName );
+                // 3. .nativecodeanalysis.xml file (optional)
+                //--------------------------------------------
+                if ( usingStaticAnalysis )
+                {
+                    AStackString<> xmlFileName;
+                    on->GetNativeAnalysisXMLPath( xmlFileName );
+                    fileNames.Append( xmlFileName );
+                }
+            }
+            break;
+        case Node::TEST_NODE:
+            // no PDB to include
+            break;
+        default:
+            ASSERT( false );
+            break;
     }
 
     MultiBuffer mb;

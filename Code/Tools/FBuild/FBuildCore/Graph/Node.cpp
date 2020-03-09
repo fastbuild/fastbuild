@@ -464,8 +464,15 @@ void Node::SetLastBuildTime( uint32_t ms )
     }
 
     // read contents
-    ASSERT( (Node::Type)nodeType == Node::OBJECT_NODE );
-    return ObjectNode::LoadRemote( stream );
+    Node* n = nullptr;
+    switch ( (Node::Type)nodeType )
+    {
+        case Node::OBJECT_NODE:         n = ObjectNode::LoadRemote( stream );          break;
+        case Node::TEST_NODE:           n = TestNode::LoadRemote( stream );            break;
+        default:
+            ASSERT( false );         break;
+    }
+    return n;
 }
 
 // SaveRemote
@@ -473,9 +480,6 @@ void Node::SetLastBuildTime( uint32_t ms )
 /*static*/ void Node::SaveRemote( IOStream & stream, const Node * node )
 {
     ASSERT( node );
-
-    // only 1 type of node is ever serialized over the network
-    ASSERT( node->GetType() == Node::OBJECT_NODE );
 
     // save type
     uint32_t nodeType = (uint32_t)node->GetType();

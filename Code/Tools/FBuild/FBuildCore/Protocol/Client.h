@@ -22,7 +22,6 @@ namespace Protocol
     class MsgRequestJob;
     class MsgRequestManifest;
     class MsgRequestFile;
-    class MsgServerStatus;
 }
 class ToolManifest;
 

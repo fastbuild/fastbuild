@@ -148,7 +148,8 @@ void WorkerBrokerage::FindWorkers( Array< AString > & workerList )
         size_t filesBeforeSearch = results.GetSize();
         if ( !FileIO::GetFiles(root,
                                 AStackString<>( "*" ),
-                                false,
+                                false, // recurse
+                                false, // includeDirs
                                 &results ) )
         {
             FLOG_WARN( "No workers found in '%s'", root.Get() );
@@ -271,7 +272,8 @@ void WorkerBrokerage::SetAvailability(bool available)
         Array< AString > files( 256, true );
         if ( !FileIO::GetFiles( m_BrokerageRoots[ 0 ],
                                 AStackString<>( "*" ),
-                                false,
+                                false, // recurse
+                                false, // includeDirs
                                 &files ) )
         {
             FLOG_WARN( "No workers found in '%s' (or inaccessible)", m_BrokerageRoots[ 0 ].Get() );

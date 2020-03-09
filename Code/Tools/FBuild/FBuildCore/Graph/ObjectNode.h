@@ -31,6 +31,7 @@ public:
     explicit ObjectNode( const AString & objectName,
                          NodeProxy * srcFile,
                          const AString & compilerOptions,
+                         const Array< AString > & customEnvironmentVariables,
                          uint32_t flags );
     virtual ~ObjectNode() override;
 
@@ -165,6 +166,7 @@ private:
                             const CompilerNode * compilerNode,
                             const AString & compiler,
                             const Args & fullArgs,
+                            const Array< AString > & customEnvironmentVariables,
                             const char * workingDir = nullptr );
 
         // determine overall result
@@ -211,6 +213,7 @@ private:
     uint64_t            m_PCHCacheKey                       = 0;
     uint64_t            m_LightCacheKey                     = 0;
     AString             m_OwnerObjectList; // TODO:C This could be a pointer to the node in the future
+    Array< AString >    m_CustomEnvironmentVariables;
 
     // Not serialized
     Array< AString >    m_Includes;

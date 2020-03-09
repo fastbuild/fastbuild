@@ -99,9 +99,9 @@
 #endif
 }
 
-// Delete directory
+// _DirectoryDelete
 //------------------------------------------------------------------------------
-/*static*/ bool FileIO::DirectoryDelete( const AString & path )
+/*static*/ bool FileIO::_DirectoryDelete( const AString & path )
 {
 #if defined( __WINDOWS__ )
     BOOL result = RemoveDirectory( path.Get() );
@@ -120,6 +120,55 @@
 #else
     #error Unknown platform
 #endif
+}
+
+// DirectoryDelete
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::DirectoryDelete(
+    const AString & path, const bool recurse )
+{
+    if ( recurse )
+    {
+        bool anySucceeded = false;
+        bool anyFailed = false;
+        Array< AString > results;
+        FileIO::GetFiles( path,
+                          AStackString<>( "*" ),
+                          true,  // recurse
+                          true,  // includeDirs
+                          &results );
+
+        // add the incoming path to the list
+        results.Append( path );
+
+        // sort results in reverse order and
+        // delete one dir at a time
+        DescendingCompare sorter;
+        results.Sort( sorter );
+
+        const AString * iter = results.Begin();
+        const AString * const end = results.End();
+        for ( ; iter != end; ++iter )
+        {
+            // only delete directories
+            if ( DirectoryExists( *iter ) )
+            {
+                if ( _DirectoryDelete( *iter ) )
+                {
+                    anySucceeded = true;
+                }
+                else
+                {
+                    anyFailed = true;
+                }
+            }
+        }
+        return anySucceeded && !anyFailed;
+    }
+    else
+    {
+        return _DirectoryDelete( path );
+    }
 }
 
 // Delete
@@ -278,7 +327,8 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FileIO::GetFiles( const AString & path,
                                   const AString & wildCard,
-                                  bool recurse,
+                                  const bool recurse,
+                                  const bool includeDirs,
                                   Array< AString > * results )
 {
     ASSERT( results );
@@ -289,11 +339,11 @@
         // make a copy of the path as it will be modified during recursion
         AStackString< 256 > pathCopy( path );
         PathUtils::EnsureTrailingSlash( pathCopy );
-        GetFilesRecurse( pathCopy, wildCard, results );
+        GetFilesRecurse( pathCopy, wildCard, includeDirs, results );
     }
     else
     {
-        GetFilesNoRecurse( path.Get(), wildCard.Get(), results );
+        GetFilesNoRecurse( path.Get(), wildCard.Get(), includeDirs, results );
     }
 
     return ( results->GetSize() != oldSize );
@@ -851,10 +901,73 @@
     }
 #endif
 
+#if defined( __WINDOWS__ )
+// IsShortcutDir
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::IsShortcutDir(
+    const void * findData )
+{
+    ASSERT( findData );
+    WIN32_FIND_DATA * pFindData = (WIN32_FIND_DATA*)findData;
+    // shortcut dirs are . and ..
+    return ( pFindData->cFileName[ 0 ] == '.' &&
+         ( ( pFindData->cFileName[ 1 ] == '.' ) || ( pFindData->cFileName[ 1 ] == '\000' ) ) );
+}
+#elif defined( __LINUX__ ) || defined( __APPLE__ )
+// IsShortcutDir
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::IsShortcutDir( const void * entry )
+{
+    ASSERT( entry );
+    dirent * pEntry = (dirent*)entry;
+    // shortcut dirs are . and ..
+    bool isShortcutDir = false;
+    if ( pEntry->d_name[ 0 ] == '.' )
+    {
+        if ( ( pEntry->d_name[ 1 ] == 0 ) ||
+             ( ( pEntry->d_name[ 1 ] == '.' ) && ( pEntry->d_name[ 2 ] == 0 ) ) )
+        {
+            isShortcutDir = true;;
+        }
+    }
+    return isShortcutDir;
+}
+#endif
+
+#if defined( __WINDOWS__ )
+// IncludeFileObjectInResults
+//------------------------------------------------------------------------------
+/*static*/ bool FileIO::IncludeFileObjectInResults(
+    const void * findData,
+    const bool includeDirs )
+{
+    ASSERT( findData );
+    WIN32_FIND_DATA * pFindData = (WIN32_FIND_DATA*)findData;
+    bool includeFileObject = true;  // first assume true
+    if ( pFindData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+    {
+        if ( includeDirs )
+        {
+            // ignore . and ..
+            if ( IsShortcutDir( findData ) )
+            {
+                includeFileObject = false;
+            }
+        }
+        else
+        {
+            includeFileObject = false;
+        }
+    }
+    return includeFileObject;
+}
+#endif
+
 // GetFilesRecurse
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesRecurse( AString & pathCopy,
                                          const AString & wildCard,
+                                         const bool includeDirs,
                                          Array< AString > * results )
 {
     const uint32_t baseLength = pathCopy.GetLength();
@@ -877,8 +990,7 @@
                 // ignore magic '.' and '..' folders
                 // (don't need to check length of name, as all names are at least 1 char
                 // which means index 0 and 1 are valid to access)
-                if ( findData.cFileName[ 0 ] == '.' &&
-                     ( ( findData.cFileName[ 1 ] == '.' ) || ( findData.cFileName[ 1 ] == '\000' ) ) )
+                if ( IsShortcutDir( &findData ) )
                 {
                     continue;
                 }
@@ -886,7 +998,7 @@
                 pathCopy.SetLength( baseLength );
                 pathCopy += findData.cFileName;
                 pathCopy += NATIVE_SLASH;
-                GetFilesRecurse( pathCopy, wildCard, results );
+                GetFilesRecurse( pathCopy, wildCard, includeDirs, results );
             }
         }
         while ( FindNextFile( hFind, &findData ) != 0 );
@@ -903,7 +1015,7 @@
 
         do
         {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            if ( !IncludeFileObjectInResults( &findData, includeDirs ) )
             {
                 continue;
             }
@@ -962,21 +1074,21 @@
             if ( isDir )
             {
                 // ignore . and ..
-                if ( entry->d_name[ 0 ] == '.' )
+                if ( IsShortcutDir( entry ) )
                 {
-                    if ( ( entry->d_name[ 1 ] == 0 ) ||
-                         ( ( entry->d_name[ 1 ] == '.' ) && ( entry->d_name[ 2 ] == 0 ) ) )
-                    {
-                        continue;
-                    }
+                    continue;
                 }
 
                 // regular dir
                 pathCopy.SetLength( baseLength );
                 pathCopy += entry->d_name;
                 pathCopy += NATIVE_SLASH;
-                GetFilesRecurse( pathCopy, wildCard, results );
-                continue;
+                GetFilesRecurse( pathCopy, wildCard, includeDirs, results );
+
+                if ( !includeDirs )
+                {
+                    continue;
+                }
             }
 
             // file - does it match wildcard?
@@ -997,6 +1109,7 @@
 //------------------------------------------------------------------------------
 /*static*/ void FileIO::GetFilesNoRecurse( const char * path,
                                            const char * wildCard,
+                                           const bool includeDirs,
                                            Array< AString > * results )
 {
     AStackString< 256 > pathCopy( path );
@@ -1015,7 +1128,7 @@
 
         do
         {
-            if ( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            if ( !IncludeFileObjectInResults( &findData, includeDirs ) )
             {
                 continue;
             }
@@ -1071,9 +1184,8 @@
             }
 
             // dir?
-            if ( isDir )
+            if ( isDir && !includeDirs )
             {
-                // ignore dirs
                 continue;
             }
 
@@ -1090,7 +1202,6 @@
         #error Unknown platform
     #endif
 }
-
 
 // GetFilesRecurse
 //------------------------------------------------------------------------------

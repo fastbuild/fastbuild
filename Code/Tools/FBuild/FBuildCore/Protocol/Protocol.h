@@ -29,7 +29,7 @@ class TCPConnectionPool;
 namespace Protocol
 {
     enum : uint16_t { PROTOCOL_PORT = 31264 }; // Arbitrarily chosen port
-    enum { PROTOCOL_VERSION = 20 };
+    enum { PROTOCOL_VERSION = 21 };
 
     enum { PROTOCOL_TEST_PORT = PROTOCOL_PORT + 1 }; // Different port for use by tests
 
@@ -218,15 +218,6 @@ namespace Protocol
         uint64_t m_ToolId;
     };
     static_assert( sizeof( MsgFile ) == sizeof( IMessage ) + 12, "MsgFile message has incorrect size" );
-
-    // MsgServerStatus
-    //------------------------------------------------------------------------------
-    class MsgServerStatus : public IMessage
-    {
-    public:
-        MsgServerStatus();
-    };
-    static_assert( sizeof( MsgServerStatus ) == sizeof( IMessage ), "MsgServerStatus message has incorrect size" );
 };
 
 //------------------------------------------------------------------------------

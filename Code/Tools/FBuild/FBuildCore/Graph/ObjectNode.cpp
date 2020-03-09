@@ -101,6 +101,8 @@ ObjectNode::ObjectNode()
         return false; // GetCompilerNode will have emitted an error
     }
 
+    m_CustomEnvironmentVariables = compiler->GetCustomEnvironmentVariables();
+
     // .CompilerInputFile
     Dependencies compilerInputFile;
     if ( !Function::GetFileNode( nodeGraph, iter, function, m_CompilerInputFile, ".CompilerInputFile", compilerInputFile ) )
@@ -154,10 +156,12 @@ ObjectNode::ObjectNode()
 ObjectNode::ObjectNode( const AString & objectName,
                         NodeProxy * srcFile,
                         const AString & compilerOptions,
+                        const Array< AString > & customEnvironmentVariables,
                         uint32_t flags )
 : FileNode( objectName, Node::FLAG_NONE )
 , m_CompilerOptions( compilerOptions )
 , m_Flags( flags )
+, m_CustomEnvironmentVariables( customEnvironmentVariables )
 , m_Remote( true )
 {
     m_Type = OBJECT_NODE;
@@ -324,7 +328,8 @@ ObjectNode::~ObjectNode()
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) ) // use response file for MSVC
+    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(),
+        GetCompiler()->GetExecutable(), fullArgs, m_CustomEnvironmentVariables ) ) // use response file for MSVC
     {
         return NODE_RESULT_FAILED; // SpawnCompiler has logged error
     }
@@ -645,7 +650,8 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         EmitCompilationMessage( fullArgs, false );
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(),
+            GetCompiler()->GetExecutable(), fullArgs, m_CustomEnvironmentVariables ) )
         {
             return NODE_RESULT_FAILED; // compile has logged error
         }
@@ -687,7 +693,8 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         }
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(),
+            GetCompiler()->GetExecutable(), fullArgs, m_CustomEnvironmentVariables ) )
         {
             return NODE_RESULT_FAILED; // compile has logged error
         }
@@ -716,7 +723,8 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), GetCompiler()->GetExecutable(), fullArgs ) )
+    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(),
+        GetCompiler()->GetExecutable(), fullArgs, m_CustomEnvironmentVariables ) )
     {
         return NODE_RESULT_FAILED; // compile has logged error
     }
@@ -818,17 +826,20 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     AStackString<> sourceFile;
     uint32_t flags;
     AStackString<> compilerArgs;
+    Array< AString > customEnvironmentVariables;
     if ( ( stream.Read( name ) == false ) ||
          ( stream.Read( sourceFile ) == false ) ||
          ( stream.Read( flags ) == false ) ||
-         ( stream.Read( compilerArgs ) == false ) )
+         ( stream.Read( compilerArgs ) == false ) ||
+         ( stream.Read( customEnvironmentVariables ) == false ) )
     {
         return nullptr;
     }
 
     NodeProxy * srcFile = FNEW( NodeProxy( sourceFile ) );
 
-    return FNEW( ObjectNode( name, srcFile, compilerArgs, flags ) );
+    return FNEW( ObjectNode( name, srcFile, compilerArgs,
+        customEnvironmentVariables, flags ) );
 }
 
 // DetermineFlags
@@ -1090,6 +1101,8 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
     {
         stream.Write( m_CompilerOptions );
     }
+
+    stream.Write( m_CustomEnvironmentVariables );
 }
 
 // GetCompiler
@@ -2026,7 +2039,7 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
     if ( !ch.SpawnCompiler( job, GetName(),
          useDedicatedPreprocessor ? GetDedicatedPreprocessor() : GetCompiler(),
          useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable() : GetCompiler()->GetExecutable(),
-         fullArgs ) )
+         fullArgs, m_CustomEnvironmentVariables ) )
     {
         // only output errors in failure case
         // (as preprocessed output goes to stdout, normal logging is pushed to
@@ -2347,7 +2360,9 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 
     // spawn the process
     CompileHelper ch( true, job->GetAbortFlagPointer() );
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), compiler, fullArgs, workingDir.IsEmpty() ? nullptr : workingDir.Get() ) )
+    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler(), compiler,
+        fullArgs, m_CustomEnvironmentVariables,
+        workingDir.IsEmpty() ? nullptr : workingDir.Get() ) )
     {
         // did spawn fail, or did we spawn and fail to compile?
         if ( ch.GetResult() != 0 )
@@ -2408,17 +2423,23 @@ ObjectNode::CompileHelper::~CompileHelper() = default;
 
 // CompilHelper::SpawnCompiler
 //------------------------------------------------------------------------------
-bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
-                                               const AString & name,
-                                               const CompilerNode * compilerNode,
-                                               const AString & compiler,
-                                               const Args & fullArgs,
-                                               const char * workingDir )
+bool ObjectNode::CompileHelper::SpawnCompiler(
+    Job * job,
+    const AString & name,
+    const CompilerNode * compilerNode,
+    const AString & compiler,
+    const Args & fullArgs,
+    const Array< AString > & customEnvironmentVariables,
+    const char * workingDir )
 {
     const char * environmentString = nullptr;
+    const char * ownedEnvironmentString = nullptr;
     if ( ( job->IsLocal() == false ) && ( job->GetToolManifest() ) )
     {
-        environmentString = job->GetToolManifest()->GetRemoteEnvironmentString();
+        environmentString =
+            job->GetToolManifest()->GetRemoteEnvironmentString(
+                customEnvironmentVariables,
+                ownedEnvironmentString );
     }
     else
     {
@@ -2426,10 +2447,17 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     }
 
     // spawn the process
-    if ( false == m_Process.Spawn( compiler.Get(),
-                                   fullArgs.GetFinalArgs().Get(),
-                                   workingDir,
-                                   environmentString ) )
+    const bool spawnOK = m_Process.Spawn(
+        compiler.Get(),
+        fullArgs.GetFinalArgs().Get(),
+        workingDir,
+        environmentString );
+
+    FREE( (void *)ownedEnvironmentString );
+    ownedEnvironmentString = nullptr;
+    environmentString = nullptr;
+
+    if ( !spawnOK )
     {
         if ( m_Process.HasAborted() )
         {

@@ -18,6 +18,18 @@ public:
     }
 };
 
+// DescendingCompare
+//------------------------------------------------------------------------------
+class DescendingCompare
+{
+public:
+    template < class T >
+    inline bool operator () ( const T & a, const T & b ) const
+    {
+        return ( a > b );
+    }
+};
+
 // AscendingCompareDeref
 //------------------------------------------------------------------------------
 class AscendingCompareDeref

@@ -9,6 +9,7 @@
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Graph/CompilerNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/FileNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/Node.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
@@ -395,54 +396,77 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
     PROFILE_SECTION( "MsgRequestJob" )
 
     ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    // no jobs for blacklisted workers
-    if ( ss->m_Blacklisted )
+    if (ss != nullptr)
     {
+        // no jobs for blacklisted workers
+        if ( ss->m_Blacklisted )
+        {
+            MutexHolder mh( ss->m_Mutex );
+            Protocol::MsgNoJobAvailable msg;
+            SendMessageInternal( connection, msg );
+            return;
+        }
+
+        Job * job = JobQueue::Get().GetDistributableJobToProcess( true );  // remote=true
+        if ( job == nullptr )
+        {
+            PROFILE_SECTION( "NoJob" )
+            // tell the client we don't have anything right now
+            // (we completed or gave away the job already)
+            MutexHolder mh( ss->m_Mutex );
+            Protocol::MsgNoJobAvailable msg;
+            SendMessageInternal( connection, msg );
+            return;
+        }
+
+        // send the job to the client
+        MemoryStream stream;
+        job->Serialize( stream );
+
         MutexHolder mh( ss->m_Mutex );
-        Protocol::MsgNoJobAvailable msg;
-        SendMessageInternal( connection, msg );
-        return;
-    }
 
-    Job * job = JobQueue::Get().GetDistributableJobToProcess( true );
-    if ( job == nullptr )
-    {
-        PROFILE_SECTION( "NoJob" )
-        // tell the client we don't have anything right now
-        // (we completed or gave away the job already)
-        MutexHolder mh( ss->m_Mutex );
-        Protocol::MsgNoJobAvailable msg;
-        SendMessageInternal( connection, msg );
-        return;
-    }
+        ss->m_Jobs.Append( job ); // Track in-flight job
 
-    // send the job to the client
-    MemoryStream stream;
-    job->Serialize( stream );
+        // if tool is explicitly specified, get the id of the tool manifest
+        uint64_t toolId = 0;
+        Node* node = job->GetNode();
+        Node::Type nodeType = node->GetType();
+        switch ( nodeType )
+        {
+            case Node::OBJECT_NODE:
+                {
+                    Node * cn = node->CastTo< ObjectNode >()->GetCompiler();
+                    const ToolManifest * manifest = &(cn->CastTo< CompilerNode >()->GetManifest());
+                    toolId = manifest->GetToolId();
+                }
+                break;
+            case Node::TEST_NODE:
+                {
+                    const ToolManifest * manifest = &(node->CastTo< TestNode >()->GetManifest());
+                    toolId = manifest->GetToolId();
+                }
+                break;
+            default:
+                ASSERT( false );
+                break;
+        }
 
-    MutexHolder mh( ss->m_Mutex );
+        // output to signify remote start
+        if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+        {
+            FLOG_OUTPUT( "-> Obj: %s <REMOTE: %s>\n",
+                job->GetNode()->GetName().Get(),
+                ss->m_RemoteName.Get() );
+        }
+        FLOG_MONITOR( "START_JOB %s \"%s\" \n",
+            ss->m_RemoteName.Get(),
+            job->GetNode()->GetName().Get() );
 
-    ss->m_Jobs.Append( job ); // Track in-flight job
-
-    // if tool is explicity specified, get the id of the tool manifest
-    Node * n = job->GetNode()->CastTo< ObjectNode >()->GetCompiler();
-    const ToolManifest & manifest = n->CastTo< CompilerNode >()->GetManifest();
-    uint64_t toolId = manifest.GetToolId();
-    ASSERT( toolId );
-
-    // output to signify remote start
-    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
-    {
-        FLOG_OUTPUT( "-> Obj: %s <REMOTE: %s>\n", job->GetNode()->GetName().Get(), ss->m_RemoteName.Get() );
-    }
-    FLOG_MONITOR( "START_JOB %s \"%s\" \n", ss->m_RemoteName.Get(), job->GetNode()->GetName().Get() );
-
-    {
-        PROFILE_SECTION( "SendJob" )
-        Protocol::MsgJob msg( toolId );
-        SendMessageInternal( connection, msg, stream );
+        {
+            PROFILE_SECTION( "SendJob" )
+            Protocol::MsgJob msg( toolId );
+            SendMessageInternal( connection, msg, stream );
+        }
     }
 }
 
@@ -454,204 +478,259 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgJobR
 
     // find server
     ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    ConstMemoryStream ms( payload, payloadSize );
-
-    uint32_t jobId = 0;
-    ms.Read( jobId );
-
-    AStackString<> name;
-    ms.Read( name );
-
-    bool result = false;
-    ms.Read( result );
-
-    bool systemError = false;
-    ms.Read( systemError );
-
-    Array< AString > messages;
-    ms.Read( messages );
-
-    uint32_t buildTime;
-    ms.Read( buildTime );
-
-    // get result data (built data or errors if failed)
-    uint32_t size = 0;
-    ms.Read( size );
-    const void * data = (const char *)ms.GetData() + ms.Tell();
-
+    if (ss != nullptr)
     {
-        MutexHolder mh( ss->m_Mutex );
-        VERIFY( ss->m_Jobs.FindDerefAndErase( jobId ) );
-    }
+        AStackString<> workerName( ss->m_RemoteName );
 
-    // Has the job been cancelled in the interim?
-    // (Due to a Race by the main thread for example)
-    Job * job = JobQueue::Get().OnReturnRemoteJob( jobId );
-    if ( job == nullptr )
-    {
-        // don't save result as we were cancelled
-        return;
-    }
+        ConstMemoryStream ms( payload, payloadSize );
 
-    DIST_INFO( "Got Result: %s - %s%s\n", ss->m_RemoteName.Get(),
-                                          job->GetNode()->GetName().Get(),
-                                          job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
+        uint32_t jobId = 0;
+        ms.Read( jobId );
 
-    job->SetMessages( messages );
+        AStackString<> name;
+        ms.Read( name );
 
-    if ( result == true )
-    {
-        // built ok - serialize to disc
-        MultiBuffer mb( data, ms.GetSize() - ms.Tell() );
+        bool result = false;
+        ms.Read( result );
 
-        ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
-        const AString & nodeName = objectNode->GetName();
-        if ( Node::EnsurePathExistsForFile( nodeName ) == false )
+        bool systemError = false;
+        ms.Read( systemError );
+
+        Array< AString > messages;
+        ms.Read( messages );
+
+        uint32_t buildTime;
+        ms.Read( buildTime );
+
+        // get result data (built data or errors if failed)
+        uint32_t size = 0;
+        ms.Read( size );
+        const void * data = (const char *)ms.GetData() + ms.Tell();
+
         {
-            FLOG_ERROR( "Failed to create path for '%s'", nodeName.Get() );
-            result = false;
+            MutexHolder mh( ss->m_Mutex );
+            VERIFY( ss->m_Jobs.FindDerefAndErase( jobId ) );
         }
-        else
+
+        // Has the job been cancelled in the interim?
+        // (Due to a Race by the main thread for example)
+        Job * job = JobQueue::Get().OnReturnRemoteJob( jobId );
+        if ( job == nullptr )
         {
-            size_t fileIndex = 0;
+            // don't save result as we were cancelled
+            return;
+        }
 
-            const ObjectNode * on = job->GetNode()->CastTo< ObjectNode >();
+        DIST_INFO( "Got Result: %s - %s%s\n", workerName.Get(),
+                                              job->GetNode()->GetName().Get(),
+                                              job->GetDistributionState() == Job::DIST_RACE_WON_REMOTELY ? " (Won Race)" : "" );
 
-            // 1. Object file
-            result = WriteFileToDisk( nodeName, mb, fileIndex++ );
+        job->SetMessages( messages );
 
-            // 2. PDB file (optional)
-            if ( result && on->IsUsingPDB() )
+        if ( result == true )
+        {
+            // built ok - serialize to disc
+
+            MultiBuffer mb( data, (size_t)(ms.GetSize() - ms.Tell()) );
+
+            Node* node = job->GetNode();
+            Node::Type nodeType = node->GetType();
+            ObjectNode * objectNode = nullptr;
+            switch ( nodeType )
             {
-                AStackString<> pdbName;
-                on->GetPDBName( pdbName );
-                result = WriteFileToDisk( pdbName, mb, fileIndex++ );
+                case Node::OBJECT_NODE:
+                    objectNode = node->CastTo< ObjectNode >();
+                    break;
+                case Node::TEST_NODE:
+                    // nothing to do here
+                    break;
+                default:
+                    ASSERT( false );
+                    break;
             }
 
-            // 3. .nativecodeanalysis.xml (optional)
-            if ( result && on->IsUsingStaticAnalysisMSVC() )
+            const AString & nodeName = node->GetName();
+            if ( Node::EnsurePathExistsForFile( nodeName ) == false )
             {
-                AStackString<> xmlFileName;
-                on->GetNativeAnalysisXMLPath( xmlFileName );
-                result = WriteFileToDisk( xmlFileName, mb, fileIndex++ );
-            }
-
-            if ( result )
-            {
-                // record new file time
-                objectNode->RecordStampFromBuiltFile();
-
-                // record time taken to build
-                objectNode->SetLastBuildTime( buildTime );
-                objectNode->SetStatFlag(Node::STATS_BUILT);
-                objectNode->SetStatFlag(Node::STATS_BUILT_REMOTE);
-
-                // commit to cache?
-                if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
-                        objectNode->ShouldUseCache() )
-                {
-                    objectNode->WriteToCache( job );
-                }
+                FLOG_ERROR( "Failed to create path for '%s'", nodeName.Get() );
+                result = false;
             }
             else
             {
-                objectNode->GetStatFlag( Node::STATS_FAILED );
+                size_t fileIndex = 0;
+
+                // 1. main output file
+                result = WriteFileToDisk( nodeName, mb, fileIndex++ );
+
+                switch ( nodeType )
+                {
+                    case Node::OBJECT_NODE:
+                        {
+                            // 2. PDB file (optional)
+                            if ( result && objectNode->IsUsingPDB() )
+                            {
+                                AStackString<> pdbName;
+                                objectNode->GetPDBName( pdbName );
+                                result = WriteFileToDisk( pdbName, mb, fileIndex++ );
+                            }
+
+                            // 3. .nativecodeanalysis.xml (optional)
+                            if ( result && objectNode->IsUsingStaticAnalysisMSVC() )
+                            {
+                                AStackString<> xmlFileName;
+                                objectNode->GetNativeAnalysisXMLPath( xmlFileName );
+                                result = WriteFileToDisk( xmlFileName, mb, fileIndex++ );
+                            }
+                        }
+                        break;
+                    case Node::TEST_NODE:
+                        // nothing to do here, since relying on single WriteFileToDisk() above
+                        break;
+                    default:
+                        ASSERT( false );
+                        break;
+                }
+
+                if ( result == true )
+                {
+                    // record new file time
+                    node->RecordStampFromBuiltFile();
+
+                    // record time taken to build
+                    node->SetLastBuildTime( buildTime );
+                    node->SetStatFlag(Node::STATS_BUILT);
+                    node->SetStatFlag(Node::STATS_BUILT_REMOTE);
+
+                    // commit to cache?
+                    switch ( nodeType )
+                    {
+                        case Node::OBJECT_NODE:
+                            if ( FBuild::Get().GetOptions().m_UseCacheWrite &&
+                                    objectNode->ShouldUseCache() )
+                            {
+                                objectNode->WriteToCache( job );
+                            }
+                            break;
+                        case Node::TEST_NODE:
+                            // nothing to do here, since tests do not use cache
+                            break;
+                        default:
+                            ASSERT( false );
+                            break;
+                    }
+                }
+                else
+                {
+                    node->GetStatFlag( Node::STATS_FAILED );
+                }
             }
+
+            switch ( nodeType )
+            {
+                case Node::OBJECT_NODE:
+                    {
+                        // get list of messages during remote work
+                        AStackString<> msgBuffer;
+                        job->GetMessagesForLog( msgBuffer );
+
+                        if ( objectNode->IsMSVC() )
+                        {
+                            if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
+                            {
+                                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                            }
+                        }
+                        else if ( objectNode->IsClang() || objectNode->IsGCC() )
+                        {
+                            if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
+                            {
+                                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
+                            }
+                        }
+                    }
+                    break;
+                case Node::TEST_NODE:
+                    // nothing to do here
+                    break;
+                default:
+                    ASSERT( false );
+                    break;
+            }
+        }
+        else
+        {
+            ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
+
+            // failed - build list of errors
+            const AString & nodeName = job->GetNode()->GetName();
+            AStackString< 8192 > failureOutput;
+            failureOutput.Format( "PROBLEM: %s\n", nodeName.Get() );
+            for ( const AString * it = messages.Begin(); it != messages.End(); ++it )
+            {
+                failureOutput += *it;
+            }
+
+            // was it a system error?
+            if ( systemError )
+            {
+                // blacklist misbehaving worker
+                ss->m_Blacklisted = true;
+                // no more jobs to this worker, so disconnect from it
+                // also, disconnect here allows the exclude logic to run in LookForWorkers()
+                Disconnect( ss->m_Connection );
+
+                // take note of failure of job
+                job->OnSystemError();
+
+                // debugging message
+                DIST_INFO( "Remote System Failure!\n"
+                           " - Blacklisted Worker: %s\n"
+                           " - Node              : %s\n"
+                           " - Job Error Count   : %u / %u\n"
+                           " - Details           :\n"
+                           "%s",
+                           workerName.Get(),
+                           job->GetNode()->GetName().Get(),
+                           job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT,
+                           failureOutput.Get()
+                          );
+
+                // should we retry on another worker?
+                if ( job->GetSystemErrorCount() < SYSTEM_ERROR_ATTEMPT_COUNT )
+                {
+                    // re-queue job which will be re-attempted on another worker
+                    JobQueue::Get().ReturnUnfinishedDistributableJob( job );
+                    return;
+                }
+
+                // failed too many times on different workers, add info about this to
+                // error output
+                AStackString<> tmp;
+                tmp.Format( "FBuild: Error: Task failed on %u different workers\n", (uint32_t)SYSTEM_ERROR_ATTEMPT_COUNT );
+                if ( failureOutput.EndsWith( '\n' ) == false )
+                {
+                    failureOutput += '\n';
+                }
+                failureOutput += tmp;
+            }
+
+            Node::DumpOutput( nullptr, failureOutput.Get(), failureOutput.GetLength(), nullptr );
         }
 
-        // get list of messages during remote work
-        AStackString<> msgBuffer;
-        job->GetMessagesForLog( msgBuffer );
+        if ( FLog::IsMonitorEnabled() )
+        {
+            AStackString<> msgBuffer;
+            job->GetMessagesForMonitorLog( msgBuffer );
 
-        if ( objectNode->IsMSVC())
-        {
-            if ( objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_MSVC ) == false )
-            {
-                FileNode::HandleWarningsMSVC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
-            }
+            FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
+                          result ? "SUCCESS" : "ERROR",
+                          workerName.Get(),
+                          job->GetNode()->GetName().Get(),
+                          msgBuffer.Get() );
         }
-        else if ( objectNode->IsClang() || objectNode->IsGCC() )
-        {
-            if ( !objectNode->GetFlag( ObjectNode::FLAG_WARNINGS_AS_ERRORS_CLANGGCC ) )
-            {
-                FileNode::HandleWarningsClangGCC( job, objectNode->GetName(), msgBuffer.Get(), msgBuffer.GetLength() );
-            }
-        }
+
+        JobQueue::Get().FinishedProcessingJob( job, result, true ); // remote job
     }
-    else
-    {
-        ((FileNode *)job->GetNode())->GetStatFlag( Node::STATS_FAILED );
-
-        // failed - build list of errors
-        const AString & nodeName = job->GetNode()->GetName();
-        AStackString< 8192 > failureOutput;
-        failureOutput.Format( "PROBLEM: %s\n", nodeName.Get() );
-        for ( const AString * it = messages.Begin(); it != messages.End(); ++it )
-        {
-            failureOutput += *it;
-        }
-
-        // was it a system error?
-        if ( systemError )
-        {
-            // blacklist misbehaving worker
-            ss->m_Blacklisted = true;
-
-            // take note of failure of job
-            job->OnSystemError();
-
-            // debugging message
-            const size_t workerIndex = (size_t)( ss - m_ServerList.Begin() );
-            const AString & workerName = m_WorkerList[ workerIndex ];
-            DIST_INFO( "Remote System Failure!\n"
-                       " - Blacklisted Worker: %s\n"
-                       " - Node              : %s\n"
-                       " - Job Error Count   : %u / %u\n"
-                       " - Details           :\n"
-                       "%s",
-                       workerName.Get(),
-                       job->GetNode()->GetName().Get(),
-                       job->GetSystemErrorCount(), SYSTEM_ERROR_ATTEMPT_COUNT,
-                       failureOutput.Get()
-                      );
-
-            // should we retry on another worker?
-            if ( job->GetSystemErrorCount() < SYSTEM_ERROR_ATTEMPT_COUNT )
-            {
-                // re-queue job which will be re-attempted on another worker
-                JobQueue::Get().ReturnUnfinishedDistributableJob( job );
-                return;
-            }
-
-            // failed too many times on different workers, add info about this to
-            // error output
-            AStackString<> tmp;
-            tmp.Format( "FBuild: Error: Task failed on %u different workers\n", (uint32_t)SYSTEM_ERROR_ATTEMPT_COUNT );
-            if ( failureOutput.EndsWith( '\n' ) == false )
-            {
-                failureOutput += '\n';
-            }
-            failureOutput += tmp;
-        }
-
-        Node::DumpOutput( nullptr, failureOutput.Get(), failureOutput.GetLength(), nullptr );
-    }
-
-    if ( FLog::IsMonitorEnabled() )
-    {
-        AStackString<> msgBuffer;
-        job->GetMessagesForMonitorLog( msgBuffer );
-
-        FLOG_MONITOR( "FINISH_JOB %s %s \"%s\" \"%s\"\n",
-                      result ? "SUCCESS" : "ERROR",
-                      ss->m_RemoteName.Get(),
-                      job->GetNode()->GetName().Get(),
-                      msgBuffer.Get() );
-    }
-
-    JobQueue::Get().FinishedProcessingJob( job, result, true ); // remote job
 }
 
 // Process( MsgRequestManifest )
@@ -721,21 +800,41 @@ void Client::Process( const ConnectionInfo * connection, const Protocol::MsgRequ
 //------------------------------------------------------------------------------
 const ToolManifest * Client::FindManifest( const ConnectionInfo * connection, uint64_t toolId ) const
 {
+    const ToolManifest * m = nullptr;
     ServerState * ss = (ServerState *)connection->GetUserData();
-    ASSERT( ss );
-
-    MutexHolder mh( ss->m_Mutex );
-
-    for ( Job ** it = ss->m_Jobs.Begin();
-          it != ss->m_Jobs.End();
-          ++it )
+    if (ss != nullptr)
     {
-        Node * n = ( *it )->GetNode()->CastTo< ObjectNode >()->GetCompiler();
-        const ToolManifest & m = n->CastTo< CompilerNode >()->GetManifest();
-        if ( m.GetToolId() == toolId )
+        MutexHolder mh( ss->m_Mutex );
+
+        uint64_t manifestToolId = 0;
+        for ( Job ** it = ss->m_Jobs.Begin();
+              it != ss->m_Jobs.End();
+              ++it )
         {
-            // found a job with the same toolid
-            return &m;
+            Node* node = ( *it )->GetNode();
+            Node::Type nodeType = node->GetType();
+            switch ( nodeType )
+            {
+                case Node::OBJECT_NODE:
+                    {
+                        Node * cn = node->CastTo< ObjectNode >()->GetCompiler();
+                        m = &(cn->CastTo< CompilerNode >()->GetManifest());
+                        manifestToolId = m->GetToolId();
+                    }
+                    break;
+                case Node::TEST_NODE:
+                    m = &(node->CastTo< TestNode >()->GetManifest());
+                    manifestToolId = m->GetToolId();
+                    break;
+                default:
+                    ASSERT( false );
+                    break;
+            }
+           if ( manifestToolId == toolId )
+            {
+                // found a job with the same toolid
+                return m;
+            }
         }
     }
 
