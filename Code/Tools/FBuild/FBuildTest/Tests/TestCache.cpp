@@ -27,6 +27,7 @@ private:
     void Read() const;
     void ReadWrite() const;
     void ConsistentCacheKeysWithDist() const;
+    void TestCacheWithRelativePaths() const;
 
     void LightCache_IncludeUsingMacro() const;
     void LightCache_IncludeHierarchy() const;
@@ -55,6 +56,7 @@ REGISTER_TESTS_BEGIN( TestCache )
     REGISTER_TEST( Read )
     REGISTER_TEST( ReadWrite )
     REGISTER_TEST( ConsistentCacheKeysWithDist )
+    REGISTER_TEST( TestCacheWithRelativePaths )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( LightCache_IncludeUsingMacro )
         REGISTER_TEST( LightCache_IncludeHierarchy )
@@ -310,6 +312,73 @@ void TestCache::ConsistentCacheKeysWithDist() const
     AStackString<> hitKey( hitQuote1 + 1, hitQuote2 );
     TEST_ASSERT( storeKey.IsEmpty() == false );
     TEST_ASSERT( storeKey == hitKey );
+}
+
+// TestCacheWithRelativePaths
+//------------------------------------------------------------------------------
+void TestCache::TestCacheWithRelativePaths() const
+{
+    FBuildTestOptions options;
+    options.m_ForceCleanBuild = true;
+    options.m_CacheVerbose = true;
+
+    #define CACHE_TEST( numCache, expectedNumCache ) \
+    { \
+        FBuildForTest fBuild( options ); \
+        TEST_ASSERT( fBuild.Initialize() ); \
+        TEST_ASSERT( fBuild.Build( "ObjectList_Rel" ) ); \
+        TEST_ASSERT( numCache == expectedNumCache ); \
+    }
+
+    // Normal caching using compiler's preprocessor
+    {
+        PROFILE_SECTION( "Normal" )
+
+        options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/CacheWithRelativePaths/cache.bff";
+
+        // Write Only
+        {
+            options.m_UseCacheRead = false;
+            options.m_UseCacheWrite = true;
+
+            CACHE_TEST( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores, 2 )
+        }
+
+        // Read Only
+        {
+            options.m_UseCacheRead = true;
+            options.m_UseCacheWrite = false;
+
+            CACHE_TEST( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits, 2 )
+        }
+    }
+
+    // Light cache
+    #if defined( __WINDOWS__ )
+        {
+            PROFILE_SECTION( "Light" )
+
+            options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestCache/CacheWithRelativePaths/lightcache.bff";
+
+            // Write Only
+            {
+                options.m_UseCacheRead = false;
+                options.m_UseCacheWrite = true;
+
+                CACHE_TEST( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores, 2 )
+            }
+
+            // Read Only
+            {
+                options.m_UseCacheRead = true;
+                options.m_UseCacheWrite = false;
+
+                CACHE_TEST( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits, 2 )
+            }
+        }
+    #endif
+
+    #undef CACHE_TEST
 }
 
 // LightCache_IncludeUsingMacro

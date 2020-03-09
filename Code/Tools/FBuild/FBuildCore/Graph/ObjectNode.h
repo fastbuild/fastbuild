@@ -130,6 +130,7 @@ private:
     static bool StripTokenWithArg_MSVC( const char * tokenToCheckFor, const AString & token, size_t & index );
     static bool StripToken( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
     static bool StripToken_MSVC( const char * tokenToCheckFor, const AString & token, bool allowStartsWith = false );
+    static bool AddRelativeIncludeToArgs( const char * tokenToCheckFor, const AString & token, const AString & workingDir, Args & fullArgs );
     bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, bool finalize, const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
@@ -199,6 +200,7 @@ private:
     bool                m_DeoptimizeWritableFilesWithToken  = false;
     bool                m_AllowDistribution                 = true;
     bool                m_AllowCaching                      = true;
+    bool                m_UseRelativePaths                  = false;
     Array< AString >    m_CompilerForceUsing;
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;
