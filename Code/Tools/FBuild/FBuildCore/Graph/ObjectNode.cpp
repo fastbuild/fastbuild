@@ -1590,6 +1590,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     }
     fullArgs.Clear();
 
+    // Get base path if needed
+    AStackString<> basePath;
+    const bool useRelativePaths = job->IsLocal() && // TODO:C We'd want to support this remotely as well
+                                  job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetUseRelativePaths();
+    if ( useRelativePaths )
+    {
+        basePath = FBuild::Get().GetOptions().GetWorkingDir(); // NOTE: FBuild only valid locally
+        PathUtils::EnsureTrailingSlash( basePath );
+    }
+
     const bool isMSVC           = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_MSVC ) : GetFlag( FLAG_MSVC );
     const bool isClang          = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CLANG ) : GetFlag( FLAG_CLANG );
     const bool isGCC            = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_GCC ) : GetFlag( FLAG_GCC );
@@ -1832,7 +1842,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             fullArgs += AStackString<>( token.Get(), found );
             if ( overrideSrcFile.IsEmpty() )
             {
-                fullArgs += GetSourceFile()->GetName();
+                if ( useRelativePaths )
+                {
+                    AStackString<> relativeFileName;
+                    PathUtils::GetRelativePath( basePath, GetSourceFile()->GetName(), relativeFileName );
+                    fullArgs += relativeFileName;
+                }
+                else
+                {
+                    fullArgs += GetSourceFile()->GetName();
+                }
             }
             else
             {
@@ -1848,7 +1867,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         if ( found )
         {
             fullArgs += AStackString<>( token.Get(), found );
-            fullArgs += m_Name;
+            if ( useRelativePaths )
+            {
+                AStackString<> relativeFileName;
+                PathUtils::GetRelativePath( basePath, m_Name, relativeFileName );
+                fullArgs += relativeFileName;
+            }
+            else
+            {
+                fullArgs += m_Name;
+            }
             fullArgs += AStackString<>( found + 2, token.GetEnd() );
             fullArgs.AddDelimiter();
             continue;
@@ -2806,7 +2834,7 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     // Find the first instance of the primary filename (this ensured we ignore any
     // injected "-include" stuff before that)
     char * pos = strstr( (char *)job->GetData(), srcFileName.Get() );
-    ASSERT( pos );
+    ASSERT( pos ); // TODO:A This fails because the path is now relative
 
     // Find top-level push/pop pairs. We don't want mess with nested directives
     // as these can be meaningful in other ways.

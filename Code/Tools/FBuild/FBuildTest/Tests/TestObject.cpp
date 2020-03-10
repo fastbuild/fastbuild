@@ -30,6 +30,7 @@ private:
     void Preprocessor() const;
     void TestStaleDynamicDeps() const;
     void ModTimeChangeBackwards() const;
+    void CacheUsingRelativePaths() const;
 };
 
 // Register Tests
@@ -39,6 +40,7 @@ REGISTER_TESTS_BEGIN( TestObject )
     REGISTER_TEST( Preprocessor )
     REGISTER_TEST( TestStaleDynamicDeps )       // Test dynamic deps are cleared when necessary
     REGISTER_TEST( ModTimeChangeBackwards )
+    REGISTER_TEST( CacheUsingRelativePaths )
 REGISTER_TESTS_END
 
 // MSVCArgHelpers
@@ -320,6 +322,101 @@ void TestObject::ModTimeChangeBackwards() const
         CheckStatsNode( 1,      0,      Node::COMPILER_NODE );
         CheckStatsNode( 2,      0,      Node::OBJECT_NODE );
         CheckStatsNode( 1,      0,      Node::LIBRARY_NODE );
+    }
+}
+
+// CacheUsingRelativePaths
+//------------------------------------------------------------------------------
+void TestObject::CacheUsingRelativePaths() const
+{
+    // Source files
+    const char * srcPath = "Tools/FBuild/FBuildTest/Data/TestObject/CacheUsingRelativePaths/";
+    const char * fileA = "File.cpp";
+    const char * fileB = "Subdir/Header.h";
+    const char * fileC = "fbuild.bff";
+    const char * files[] = { fileA, fileB, fileC };
+
+    // Dest paths
+    const char * dstPathA = "../tmp/Test/Object/CacheUsingRelativePaths/A/Code";
+    const char * dstPathB = "../tmp/Test/Object/CacheUsingRelativePaths/B/Code";
+    const char * dstPaths[] = { dstPathA, dstPathB };
+
+    #if defined( __WINDOWS__ )
+        const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.obj";
+    #else
+        const char * objFileA = "../tmp/Test/Object/CacheUsingRelativePaths/A/out/File.o";
+    #endif
+
+    // Copy file structure to both destinations
+    for ( const char * dstPath : dstPaths )
+    {
+        for ( const char * file : files )
+        {
+            AStackString<> src, dst;
+            src.Format( "%s/%s", srcPath, file );
+            dst.Format( "%s/%s", dstPath, file );
+            TEST_ASSERT( FileIO::EnsurePathExistsForFile( dst ) );
+            TEST_ASSERT( FileIO::FileCopy( src.Get(), dst.Get() ) );
+        }
+    }
+
+    // Build in path A, writing to the cache
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "fbuild.bff";
+        options.m_UseCacheWrite = true;
+        //options.m_ForceCleanBuild = true;
+        AStackString<> codeDir;
+        GetCodeDir( codeDir );
+        codeDir.Trim( 0, 5 ); // Remove Code/
+        codeDir += "tmp/Test/Object/CacheUsingRelativePaths/A/Code/";
+        options.SetWorkingDir( codeDir );
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+        TEST_ASSERT( fBuild.GetStats().GetCacheStores() == 1 );
+    }
+
+    // Check some problematic cases in the object file
+    {
+        // Read obj file into memory
+        AString buffer;
+        {
+            FileStream f;
+            TEST_ASSERT( f.Open( objFileA ) );
+            buffer.SetLength( (uint32_t)f.GetFileSize() );
+            TEST_ASSERT( f.ReadBuffer( buffer.Get(), f.GetFileSize() ) == f.GetFileSize() );
+            buffer.Replace( (char)0, ' ' ); // Make string seaches simpler
+        }
+
+        // Check __FILE__ paths are relative
+        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_1(./Subdir/Header.h)FILE_MACRO_END_1" ) );
+        TEST_ASSERT( buffer.Find( "FILE_MACRO_START_2(File.cpp)FILE_MACRO_END_2" ) );
+    }
+
+    // Build in path B, reading from the cache
+    {
+        // Init
+        FBuildTestOptions options;
+        options.m_ConfigFile = "fbuild.bff";
+        options.m_UseCacheRead = true;
+        //options.m_ForceCleanBuild = true;
+        AStackString<> codeDir;
+        GetCodeDir( codeDir );
+        codeDir.Trim( 0, 5 ); // Remove Code/
+        codeDir += "tmp/Test/Object/CacheUsingRelativePaths/B/Code/";
+        options.SetWorkingDir( codeDir );
+        FBuild fBuild( options );
+        TEST_ASSERT( fBuild.Initialize() );
+
+        // Compile
+        TEST_ASSERT( fBuild.Build( AStackString<>( "ObjectList" ) ) );
+
+        TEST_ASSERT( fBuild.GetStats().GetCacheHits() == 1 );
     }
 }
 

@@ -51,6 +51,7 @@ distribution, caching and more.
   
   // Temporary Options
   .UseLightCache_Experimental   // (optional) Enabled experimental "light" caching mode (default: false)
+  .UseRelativePaths_Experimental// (optional) Enabled experimental relative path use (default: false)
   .ClangFixupUnity_Disable      // (optional) Disable preprocessor fixup for Unity files (default: false)
 }
 </div>
@@ -356,6 +357,14 @@ Compiler( 'Compiler-x64Intel' )
     to other compilers in future versions.</p>
     <p><font color=red>NOTE:</font> Light Caching does not support macros using for include paths (i.e. "#include MY_INCLUDE_HEADER")
     Support for this will be added in future versions.</p>
+
+  	<p><hr></p>
+
+	<p><b>.UseRelativePaths_Experimental</b> - Boolean - (Optional)</p>
+	<p>Use relative paths where possible. This is an experiment to lay a possible foundation for path-independent
+	caching.</p>
+
+    <p><font color=red>NOTE:</font> This feature is incomplete and should not be used.</p>
 
   	<p><hr></p>
 
