@@ -46,11 +46,14 @@ public:
         IncludeType                 m_Type;
     };
 
+    ~IncludedFile();
+
     uint64_t                        m_FileNameHash;
     AString                         m_FileName;
     bool                            m_Exists;
     uint64_t                        m_ContentHash;
     Array< Include >                m_Includes;
+    Array< const IncludeDefine* >   m_IncludeDefines;
 
     inline bool operator == ( const AString & fileName ) const      { return ( m_FileName == fileName ); }
     inline bool operator == ( const IncludedFile & other ) const    { return ( ( m_FileNameHash == other.m_FileNameHash ) && ( m_FileName == other.m_FileName ) ); }
@@ -207,6 +210,16 @@ public:
     IncludeType                     m_Type;
 };
 
+// DESTRUCTOR
+//------------------------------------------------------------------------------
+IncludedFile::~IncludedFile()
+{
+    for ( const IncludeDefine* def : m_IncludeDefines )
+    {
+        FDELETE def;
+    }
+}
+
 // IncludedFileBucket
 //------------------------------------------------------------------------------
 class IncludedFileBucket
@@ -240,16 +253,6 @@ LightCache::LightCache()
     , m_IncludeStack( 32, true )
     , m_ProblemParsing( false )
 {
-}
-
-// DESTRUCTOR
-//------------------------------------------------------------------------------
-LightCache::~LightCache()
-{
-    for ( const IncludeDefine * def : m_IncludeDefines )
-    {
-        FDELETE def;
-    }
 }
 
 // Hash
@@ -447,7 +450,7 @@ bool LightCache::ParseDirective_Include( IncludedFile & file, const char * & pos
 
 // ParseDirective_Define
 //------------------------------------------------------------------------------
-bool LightCache::ParseDirective_Define( IncludedFile & /*file*/, const char * & pos )
+bool LightCache::ParseDirective_Define( IncludedFile & file, const char * & pos )
 {
     // skip "include" and whitespace
     ASSERT( AString::StrNCmp( pos, "define", 6 ) == 0 );
@@ -473,7 +476,7 @@ bool LightCache::ParseDirective_Define( IncludedFile & /*file*/, const char * & 
     }
 
     // Take not of the macro and the path it defines
-    m_IncludeDefines.Append( FNEW( IncludeDefine( macroName, include, includeType ) ) );
+    file.m_IncludeDefines.Append( FNEW( IncludeDefine( macroName, include, includeType ) ) );
 
     return true;
 }
@@ -596,8 +599,9 @@ void LightCache::ProcessInclude( const AString & include, IncludeType type )
         {
 
             // Find macro - expand each possible value
-            for ( const IncludeDefine * def : m_IncludeDefines )
+            for ( size_t i = 0, count = m_IncludeDefines.GetSize(); i < count; ++i )
             {
+                const IncludeDefine* def = m_IncludeDefines[i];
                 if ( def->m_Macro == include )
                 {
                     ProcessInclude( def->m_Include, def->m_Type );
@@ -788,6 +792,11 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         const IncludedFile * location = bucket.m_HashSet.Find( fileName, fileNameHash );
         if ( location )
         {
+            for ( const IncludeDefine* def : location->m_IncludeDefines )
+            {
+                m_IncludeDefines.Append( def );
+            }
+
             return location; // File previously handled so we can re-use the result
         }
     }
@@ -820,6 +829,11 @@ const IncludedFile * LightCache::FileExists( const AString & fileName )
         // Store to shared cache
         MutexHolder mh( bucket.m_Mutex );
         retval = bucket.m_HashSet.Insert( newFile );
+    }
+
+    for ( const IncludeDefine* def : retval->m_IncludeDefines )
+    {
+        m_IncludeDefines.Append( def );
     }
 
     return retval;

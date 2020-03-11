@@ -24,7 +24,6 @@ class LightCache
 {
 public:
     LightCache();
-    ~LightCache();
 
     bool Hash( ObjectNode * node,                // Object to be compiled
                const AString & compilerArgs,     // Args to extract include paths from
