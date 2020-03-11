@@ -376,6 +376,7 @@ bool BFFTokenizer::HandleIdentifier( const char * & pos, const char * /*end*/, c
     if ( ( identifier == BFF_KEYWORD_DEFINE ) ||
          ( identifier == BFF_KEYWORD_ELSE ) ||
          ( identifier == BFF_KEYWORD_EXISTS ) ||
+         ( identifier == BFF_KEYWORD_FILE_EXISTS ) ||
          ( identifier == BFF_KEYWORD_IF ) ||
          ( identifier == BFF_KEYWORD_IMPORT ) ||
          ( identifier == BFF_KEYWORD_INCLUDE ) ||
@@ -589,6 +590,14 @@ bool BFFTokenizer::HandleDirective_If( const BFFFile & file, const char * & pos,
             return false;
         }
     }
+    else if ( argsIter->IsKeyword( BFF_KEYWORD_FILE_EXISTS ) )
+    {
+        argsIter++; // consume keyword
+        if ( HandleDirective_IfFileExists( argsIter, result ) == false )
+        {
+            return false;
+        }
+    }
     else if ( argsIter->IsIdentifier() )
     {
         if ( HandleDirective_IfDefined( argsIter, result ) == false )
@@ -697,6 +706,41 @@ bool BFFTokenizer::HandleDirective_IfExists( BFFTokenRange & iter, bool & outRes
     // TODO:C Move ImportEnvironmentVar to BFFTokenizer
     FBuild::Get().ImportEnvironmentVar( varName.Get(), optional, varValue, varHash );
     outResult = ( varHash != 0 ); // a hash of 0 means the env var was not found
+    return true;
+}
+
+// HandleDirective_IfFileExists
+//------------------------------------------------------------------------------
+bool BFFTokenizer::HandleDirective_IfFileExists( BFFTokenRange & iter, bool & outResult )
+{
+    // Expect open bracket
+    if ( iter->IsRoundBracket( '(' ) == false )
+    {
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter.GetCurrent(), "file_exists", '(' );
+        return false;
+    }
+    iter++; // consume open (
+
+    // Expect string
+    if ( iter->IsString() == false )
+    {
+        // TODO:C Better error?
+        Error::Error_1030_UnknownDirective( iter.GetCurrent(), iter->GetValueString() );
+        return false;
+    }
+    const AString & fileName = iter->GetValueString();
+    iter++; // consume string value
+
+    // Expect close bracket
+    if ( iter->IsRoundBracket( ')' ) == false )
+    {
+        Error::Error_1031_UnexpectedCharFollowingDirectiveName( iter.GetCurrent(), "file_exists", ')' );
+        return false;
+    }
+    iter++; // consume close )
+
+    // check if file exists
+    outResult = FBuild::Get().AddFileExistsCheck( fileName );
     return true;
 }
 

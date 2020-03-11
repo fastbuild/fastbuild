@@ -14,7 +14,7 @@
             <Keywords name="Numbers, suffix2"></Keywords>
             <Keywords name="Numbers, range"></Keywords>
             <Keywords name="Operators1">+ - =</Keywords>
-            <Keywords name="Operators2">+ - = define else endif exists false if import in include not once true undef</Keywords>
+            <Keywords name="Operators2">+ - = define else endif exists false file_exists if import in include not once true undef</Keywords>
             <Keywords name="Folders in code1, open"></Keywords>
             <Keywords name="Folders in code1, middle"></Keywords>
             <Keywords name="Folders in code1, close"></Keywords>

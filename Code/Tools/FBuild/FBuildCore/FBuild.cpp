@@ -562,6 +562,13 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
     return true;
 }
 
+// AddFileExistsCheck
+//------------------------------------------------------------------------------
+bool FBuild::AddFileExistsCheck( const AString & fileName )
+{
+    return m_FileExistsInfo.CheckFile( fileName );
+}
+
 // GetLibEnvVar
 //------------------------------------------------------------------------------
 void FBuild::GetLibEnvVar( AString & value ) const

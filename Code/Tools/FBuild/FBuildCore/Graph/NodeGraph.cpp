@@ -398,6 +398,20 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         }
     }
 
+    // Files use in file_exists checks
+    BFFFileExists fileExistsInfo;
+    if ( fileExistsInfo.Load( stream ) == false )
+    {
+        return LoadResult::LOAD_ERROR;
+    }
+    bool added;
+    const AString * changedFile = fileExistsInfo.CheckForChanges( added );
+    if ( changedFile )
+    {
+        FLOG_WARN( "File used in file_exists was %s '%s' - BFF will be re-parsed\n", added ? "added" : "removed", changedFile->Get() );
+        bffNeedsReparsing = true;
+    }
+
     ASSERT( m_AllNodes.GetSize() == 0 );
 
     // Read nodes
@@ -434,6 +448,9 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
 
     // Everything OK - propagate global settings
     //------------------------------------------------
+
+    // file_exists files
+    FBuild::Get().GetFileExistsInfo() = fileExistsInfo;
 
     // Environment
     if ( envStringSize > 0 )
@@ -540,6 +557,9 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
         const uint32_t libEnvVarHash = GetLibEnvVarHash();
         stream.Write( libEnvVarHash );
     }
+
+    // Write file_exists tracking info
+    FBuild::Get().GetFileExistsInfo().Save( stream );
 
     // Write nodes
     size_t numNodes = m_AllNodes.GetSize();
