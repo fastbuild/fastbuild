@@ -136,61 +136,64 @@ void TestCompressor::CompressHelper( const char * fileName ) const
     OUTPUT( "File           : %s\n", fileName );
     OUTPUT( "Size           : %u\n", (uint32_t)dataSize );
 
-    // compress the data to obtain size
-    Compressor comp;
-    comp.Compress( data.Get(), dataSize );
-    size_t compressedSize = comp.GetResultSize();
-    AutoPtr< char > compressedData( (char *)ALLOC( compressedSize ) );
-    memcpy( compressedData.Get(), comp.GetResult(), compressedSize );
-    float compressedPerc = ( (float)compressedSize / (float)dataSize ) * 100.0f;
-    OUTPUT( "Compressed Size: %u (%2.1f%% of original)\n", (uint32_t)compressedSize, (double)compressedPerc );
+    OUTPUT( "        Compression             Decompression\n" );
+    OUTPUT( "Level | Time (ms)  MB/s  Ratio | Time (ms)  MB/s\n" );
+    OUTPUT( "------------------------------------------------\n" );
 
-    // decompress to check we get original data back
-    Compressor decomp;
-    TEST_ASSERT( decomp.Decompress( compressedData.Get() ) );
-    size_t uncompressedSize = decomp.GetResultSize();
-    TEST_ASSERT( uncompressedSize == dataSize );
-    TEST_ASSERT( memcmp( data.Get(), decomp.GetResult(), uncompressedSize ) == 0 );
+    // Compress at various compression levels
+    const int32_t compressionLevels[] =
+    { 
+        0,                                          // Disabled
+        -256, -128, -64, -32, -16, -8, -4, -2, -1,  // LZ4
+        1, 3, 6, 9, 12                              // LZ4 HC
+    };
 
-    // speed checks
-    //--------------
-    const uint32_t numRepeats = 50;
-
-    // compress the data several times to get more stable throughput value
-    Timer t;
-    for ( uint32_t i = 0; i < numRepeats; ++i )
+    for ( int32_t compressionLevel : compressionLevels )
     {
-        Compressor c;
-        c.Compress( data.Get(), dataSize );
-        TEST_ASSERT( c.GetResultSize() == compressedSize );
-    }
-    float compressTimeTaken = t.GetElapsed();
-    double compressThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / (double)compressTimeTaken ) / 1024.0;
-    OUTPUT( "     Comp Speed: %2.1f MB/s - %2.3fs (%u repeats)\n", (double)compressThroughputMBs, (double)compressTimeTaken, numRepeats );
+        // compress/decompress the data several times to get more stable throughput value
+        const uint32_t numRepeats = 4; // Increase to get more consistent numbers
+        double compressTimeTaken = 0.0;
+        double decompressTimeTaken = 0.0;
+        uint64_t compressedSize;
 
-    // decompress the data
-    Timer t2;
-    for ( uint32_t i = 0; i < numRepeats; ++i )
-    {
-        Compressor d;
-        TEST_ASSERT( d.Decompress( compressedData.Get() ) );
-        TEST_ASSERT( d.GetResultSize() == dataSize );
-    }
-    float decompressTimeTaken = t2.GetElapsed();
-    double decompressThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / (double)decompressTimeTaken ) / 1024.0;
-    OUTPUT( "   Decomp Speed: %2.1f MB/s - %2.3fs (%u repeats)\n", (double)decompressThroughputMBs, (double)decompressTimeTaken, numRepeats );
+        // Compression speed
+        AutoPtr< Compressor, DeleteDeletor > c;
+        for ( uint32_t i = 0; i < numRepeats; ++i )
+        {
+            // Compress
+            c = FNEW( Compressor );
+            Timer t;
+            c.Get()->Compress( data.Get(), dataSize, compressionLevel );
+            compressedSize = c.Get()->GetResultSize();
+            compressTimeTaken += t.GetElapsedMS();
+        }
 
-    // time memcpy to compare with
-    Timer t0;
-    for ( uint32_t i = 0; i < numRepeats; ++i )
-    {
-        char * mem = (char *)ALLOC( dataSize );
-        memcpy( mem, data.Get(), dataSize );
-        FREE( mem );
+        // Decompression speed
+        for ( uint32_t i = 0; i < numRepeats; ++i )
+        {
+            // Decompress
+            Timer t2;
+            Compressor d;
+            TEST_ASSERT( d.Decompress( c.Get()->GetResult() ) );
+            TEST_ASSERT( d.GetResultSize() == dataSize );
+            decompressTimeTaken += t2.GetElapsedMS();
+
+            // Sanity check decompression returns original results
+            if ( i == 0 )
+            {
+                TEST_ASSERT( memcmp( data.Get(), d.GetResult(), dataSize ) == 0 );
+            }
+        }
+
+        const double compressThroughputMBs    = ( ( (double)dataSize * (double)numRepeats ) / ( compressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double decompressThroughputMBs  = ( ( (double)dataSize * (double)numRepeats ) / ( decompressTimeTaken / 1000.0 ) ) / (double)MEGABYTE;
+        const double ratio = ( (double)dataSize / (double)compressedSize );
+
+        OUTPUT( "%-5i | %8.3f %7.1f %5.2f | %8.3f %7.1f\n", compressionLevel,
+                                                            (compressTimeTaken / numRepeats), compressThroughputMBs, (double)ratio,
+                                                            (decompressTimeTaken / numRepeats), decompressThroughputMBs );
     }
-    float memcpyTimeTaken = t0.GetElapsed();
-    double memcpyThroughputMBs = ( ( (double)dataSize / 1024.0 * (double)numRepeats ) / (double)memcpyTimeTaken ) / 1024.0;
-    OUTPUT( "   MemCpy Speed: %2.1f MB/s - %2.3fs (%u repeats)\n", (double)memcpyThroughputMBs, (double)memcpyTimeTaken, numRepeats );
+    OUTPUT( "------------------------------------------------\n" );
 }
 
 // TestHeaderValidity

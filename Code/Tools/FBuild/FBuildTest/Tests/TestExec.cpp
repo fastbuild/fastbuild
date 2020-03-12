@@ -293,7 +293,7 @@ void TestExec::Build_ExecCommand_ExpectedFailures() const
 
     // build
     Array< AString > targets( 2, false );
-    targets.Append( AStackString<>( "ExecCommandTest_OneInput_ReturnCode_ExpectFail" ) );
-    targets.Append( AStackString<>( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" ) );
+    targets.EmplaceBack( "ExecCommandTest_OneInput_ReturnCode_ExpectFail" );
+    targets.EmplaceBack( "ExecCommandTest_OneInput_WrongOutput_ExpectFail" );
     TEST_ASSERT( !fBuild.Build( targets ) );
 }

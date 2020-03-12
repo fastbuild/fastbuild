@@ -1,6 +1,7 @@
 // Visual Studio 2015
 //------------------------------------------------------------------------------
 .VS2015_BasePath        = '$_CURRENT_BFF_DIR_$/2015'
+.VS2015_ToolchainPath    = '$VS2015_BasePath$'
 
 // X64 Compiler
 //------------------------------------------------------------------------------
@@ -99,5 +100,19 @@ Compiler( 'Compiler-VS2015-x64' )
 // _MSC_VER
 //------------------------------------------------------------------------------
 .VS2015_MSC_VER                     = '1900'
+
+// VisualStudioSettings
+//------------------------------------------------------------------------------
+.VisualStudioSettings_VS2015 = 
+[
+    .VS_Version                     = '14.??.?????'
+    .VS_Version_HumanReadable       = '2015'
+    .VS_SolutionVersion             = '14'
+    .MSC_VER                        = .VS2015_MSC_VER
+    .VS_ToolchainPath               = .VS2015_ToolchainPath
+    .ToolChain_VS_Windows_X64       = .ToolChain_VS2015_Windows_X64
+    .VS_PATH                        = .VS_2015_PATH
+    .VS_PlatformToolset             = .VS_2015_PlatformToolset
+]
 
 //------------------------------------------------------------------------------

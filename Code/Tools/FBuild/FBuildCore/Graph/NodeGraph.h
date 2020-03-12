@@ -4,6 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Tools/FBuild/FBuildCore/BFF/BFFFileExists.h"
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
@@ -37,8 +38,10 @@ class RemoveDirNode;
 class SettingsNode;
 class SLNNode;
 class TestNode;
+class TextFileNode;
 class UnityNode;
 class VCXProjectNode;
+class VSProjectExternalNode;
 class XCodeProjectNode;
 
 // NodeGraphHeader
@@ -83,6 +86,7 @@ public:
     {
         MISSING_OR_INCOMPATIBLE,
         LOAD_ERROR,
+        LOAD_ERROR_MOVED,
         OK_BFF_NEEDS_REPARSING,
         OK
     };
@@ -117,11 +121,13 @@ public:
     CSNode * CreateCSNode( const AString & csAssemblyName );
     TestNode * CreateTestNode( const AString & testOutput );
     CompilerNode * CreateCompilerNode( const AString & name );
-    VCXProjectNode * CreateVCXProjectNode( const AString & name );
+    VSProjectBaseNode * CreateVCXProjectNode( const AString & name );
+    VSProjectBaseNode * CreateVSProjectExternalNode( const AString& name );
     SLNNode * CreateSLNNode( const AString & name );
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
     SettingsNode * CreateSettingsNode( const AString & name );
+    TextFileNode * CreateTextFileNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );
 
@@ -162,7 +168,11 @@ private:
     void FindNearestNodesInternal( const AString & fullPath, Array< NodeWithDistance > & nodes, const uint32_t maxDistance = 5 ) const;
 
     struct UsedFile;
-    bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream, const char* nodeGraphDBFile, Array< UsedFile > & files, bool & compatibleDB ) const;
+    bool ReadHeaderAndUsedFiles( IOStream & nodeGraphStream,
+                                 const char* nodeGraphDBFile,
+                                 Array< UsedFile > & files,
+                                 bool & compatibleDB,
+                                 bool & movedDB ) const;
     uint32_t GetLibEnvVarHash() const;
 
     // load/save helpers

@@ -50,6 +50,7 @@ protected:
     bool HandleDirective_Else( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter );
     bool HandleDirective_If( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter );
     bool HandleDirective_IfExists( BFFTokenRange & iter, bool & outResult );
+    bool HandleDirective_IfFileExists( BFFTokenRange & iter, bool & outResult );
     bool HandleDirective_IfDefined( BFFTokenRange & iter, bool & outResult );
     bool ParseToEndIf( const char * & pos, const char * end, const BFFFile & file, bool allowElse, const char * & outBlockEnd, bool * outIsElse );
     bool HandleDirective_Import( const BFFFile & file, const char * & pos, const char * end, BFFTokenRange & argsIter );

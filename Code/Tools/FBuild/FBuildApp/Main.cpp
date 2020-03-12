@@ -215,17 +215,20 @@ int Main(int argc, char * argv[])
     }
 
     // final line of output - status of build
-    float totalBuildTime = t.GetElapsed();
-    uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
-    totalBuildTime -= ( minutes * 60.0f );
-    const float seconds = totalBuildTime;
-    if ( minutes > 0 )
+    if ( options.m_ShowTotalTimeTaken )
     {
-        FLOG_BUILD( "Time: %um %05.3fs\n", minutes, (double)seconds );
-    }
-    else
-    {
-        FLOG_BUILD( "Time: %05.3fs\n", (double)seconds );
+        float totalBuildTime = t.GetElapsed();
+        uint32_t minutes = uint32_t( totalBuildTime / 60.0f );
+        totalBuildTime -= ( minutes * 60.0f );
+        const float seconds = totalBuildTime;
+        if ( minutes > 0 )
+        {
+            FLOG_OUTPUT( "Time: %um %05.3fs\n", minutes, (double)seconds );
+        }
+        else
+        {
+            FLOG_OUTPUT( "Time: %05.3fs\n", (double)seconds );
+        }
     }
 
     ctrlCHandler.DeregisterHandler(); // Ensure this happens before FBuild is destroyed

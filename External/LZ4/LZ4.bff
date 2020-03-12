@@ -52,6 +52,7 @@
             // Input - Only build specific files we use
             .CompilerInputFiles         = {
                                             '$LZ4BasePath$\lz4.c'
+                                            '$LZ4BasePath$\lz4hc.c'
                                             '$LZ4BasePath$\xxhash.c'
                                           }
 
@@ -60,10 +61,15 @@
                                         + .LZ4IncludePaths
                                         + .LZ4CompilerOptions
 
-                                        // Remove flags that disable opimizations
                                         #if __WINDOWS__
+                                            // Remove flags that disable opimizations
                                             - ' /Od'
                                             - ' /RTC1'
+
+                                            // VS2015 gives false positives
+                                            #if USING_VS2015
+                                                - ' /analyze'
+                                            #endif
                                         #else
                                             - ' -O0'
                                         #endif

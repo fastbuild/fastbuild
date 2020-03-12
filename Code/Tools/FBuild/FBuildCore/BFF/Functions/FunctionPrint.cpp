@@ -4,6 +4,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "FunctionPrint.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFKeywords.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
@@ -62,7 +63,10 @@ FunctionPrint::FunctionPrint()
         }
         tmp += '\n';
 
-        FLOG_BUILD_DIRECT( tmp.Get() );
+        if ( FBuild::Get().GetOptions().m_ShowPrintStatements )
+        {
+            FLOG_OUTPUT( tmp );
+        }
     }
     else if ( varToken->IsVariable() )
     {
@@ -91,7 +95,10 @@ FunctionPrint::FunctionPrint()
         }
 
         // dump the contents
-        PrintVarRecurse( *var, 0 );
+        if ( FBuild::Get().GetOptions().m_ShowPrintStatements )
+        {
+            PrintVarRecurse( *var, 0 );
+        }
     }
     else
     {
@@ -117,7 +124,7 @@ FunctionPrint::FunctionPrint()
         indentStr += "    ";
     }
     ++indent;
-    FLOG_BUILD( "%s", indentStr.Get() );
+    FLOG_OUTPUT( "%s", indentStr.Get() );
 
     switch ( var.GetType() )
     {
@@ -126,51 +133,51 @@ FunctionPrint::FunctionPrint()
         {
             AStackString<> value( var.GetString() );
             value.Replace( "'", "^'" ); // escape single quotes
-            FLOG_BUILD( "%s = '%s'\n", var.GetName().Get(), value.Get() );
+            FLOG_OUTPUT( "%s = '%s'\n", var.GetName().Get(), value.Get() );
             break;
         }
         case BFFVariable::VAR_BOOL:
         {
-            FLOG_BUILD( "%s = %s\n", var.GetName().Get(), var.GetBool() ? BFF_KEYWORD_TRUE : BFF_KEYWORD_FALSE );
+            FLOG_OUTPUT( "%s = %s\n", var.GetName().Get(), var.GetBool() ? BFF_KEYWORD_TRUE : BFF_KEYWORD_FALSE );
             break;
         }
         case BFFVariable::VAR_ARRAY_OF_STRINGS:
         {
             const auto & strings = var.GetArrayOfStrings();
-            FLOG_BUILD( "%s = // ArrayOfStrings, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)strings.GetSize(), indentStr.Get() );
+            FLOG_OUTPUT( "%s = // ArrayOfStrings, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)strings.GetSize(), indentStr.Get() );
             for ( const AString & string : strings )
             {
                 AStackString<> value( string );
                 value.Replace( "'", "^'" ); // escape single quotes
-                FLOG_BUILD( "%s    '%s'\n", indentStr.Get(), value.Get() );
+                FLOG_OUTPUT( "%s    '%s'\n", indentStr.Get(), value.Get() );
             }
-            FLOG_BUILD( "%s}\n", indentStr.Get() );
+            FLOG_OUTPUT( "%s}\n", indentStr.Get() );
             break;
         }
         case BFFVariable::VAR_INT:
         {
-            FLOG_BUILD( "%s = %i\n", var.GetName().Get(), var.GetInt() );
+            FLOG_OUTPUT( "%s = %i\n", var.GetName().Get(), var.GetInt() );
             break;
         }
         case BFFVariable::VAR_STRUCT:
         {
-            FLOG_BUILD( "%s = // Struct\n%s[\n", var.GetName().Get(), indentStr.Get() );
+            FLOG_OUTPUT( "%s = // Struct\n%s[\n", var.GetName().Get(), indentStr.Get() );
             for ( const BFFVariable * subVar : var.GetStructMembers() )
             {
                 PrintVarRecurse( *subVar, indent );
             }
-            FLOG_BUILD( "%s]\n", indentStr.Get() );
+            FLOG_OUTPUT( "%s]\n", indentStr.Get() );
             break;
         }
         case BFFVariable::VAR_ARRAY_OF_STRUCTS:
         {
             const auto & structs = var.GetArrayOfStructs();
-            FLOG_BUILD( "%s = // ArrayOfStructs, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)structs.GetSize(), indentStr.Get() );
+            FLOG_OUTPUT( "%s = // ArrayOfStructs, size: %u\n%s{\n", var.GetName().Get(), (uint32_t)structs.GetSize(), indentStr.Get() );
             for ( const BFFVariable * subVar : structs )
             {
                 PrintVarRecurse( *subVar, indent );
             }
-            FLOG_BUILD( "%s}\n", indentStr.Get() );
+            FLOG_OUTPUT( "%s}\n", indentStr.Get() );
             break;
         }
         case BFFVariable::MAX_VAR_TYPES: ASSERT( false ); break; // Something is terribly wrong

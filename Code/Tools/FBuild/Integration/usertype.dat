@@ -3,6 +3,7 @@ else
 endif
 exists
 false
+file_exists
 if
 import
 in
@@ -29,9 +30,11 @@ Print
 RemoveDir
 Settings
 Test
+TextFile
 Unity
 Using
 VCXProject
+VSProjectExternal
 VSSolution
 XCodeProject
 
@@ -50,6 +53,7 @@ BuildLogFile
 CachePath
 CachePathMountPoint
 CachePluginDLL
+ClangFixupUnity_Disable
 ClangRewriteIncludes
 Compiler
 CompilerFamily
@@ -106,6 +110,7 @@ ExecUseStdOutAsOutput
 ExecWorkingDir
 Executable
 ExecutableRootPath
+ExternalProjectPath
 ExtraFiles
 FileType
 FilesToExclude
@@ -169,6 +174,7 @@ ProjectProjectReferences
 ProjectRebuildCommand
 ProjectReferences
 ProjectSccEntrySAK
+ProjectTypeGuid
 Projects
 Recursive
 RemoveExcludePaths
@@ -208,6 +214,9 @@ TestInputPattern
 TestOutput
 TestTimeOut
 TestWorkingDir
+TextFileAlways
+TextFileInputStrings
+TextFileOutput
 UnityInputExcludePath
 UnityInputExcludePattern
 UnityInputExcludedFiles
@@ -224,6 +233,7 @@ UnityOutputPath
 UnityOutputPattern
 UnityPCH
 UseLightCache_Experimental
+UseRelativePaths_Experimental
 VS2012EnumBugFix
 WorkerConnectionLimit
 Workers
@@ -235,5 +245,6 @@ XCodeCommandLineArguments
 XCodeCommandLineArgumentsDisabled
 XCodeDebugWorkingDir
 XCodeDocumentVersioning
+XCodeIphoneOSDeploymentTarget
 XCodeOrganizationName
 Xbox360DebuggerCommand

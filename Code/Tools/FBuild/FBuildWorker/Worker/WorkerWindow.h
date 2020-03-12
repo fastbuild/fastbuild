@@ -63,9 +63,11 @@ private:
     OSTrayIcon *        m_TrayIcon;
     OSFont *            m_Font;
     OSLabel *           m_ModeLabel;
+    OSLabel *           m_ThresholdLabel;
     OSLabel *           m_ResourcesLabel;
     OSListView *        m_ThreadList;
     OSDropDown *        m_ModeDropDown;
+    OSDropDown *        m_ThresholdDropDown;
     OSDropDown *        m_ResourcesDropDown;
     OSSplitter *        m_Splitter;
     OSMenu *            m_Menu;
