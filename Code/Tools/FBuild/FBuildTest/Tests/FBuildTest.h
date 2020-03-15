@@ -35,7 +35,7 @@ protected:
     void EnsureDirDoesNotExist( const AString & dirPath ) const { EnsureDirDoesNotExist( dirPath.Get() ); }
     void EnsureDirExists( const char * dirPath ) const;
     void EnsureDirExists( const AString & dirPath ) const { EnsureDirExists( dirPath.Get() ); }
-    void LoadFileContentsAsString( const char* fileName, AString& outString ) const;
+    void LoadFileContentsAsString( const char * fileName, AString & outString ) const;
 
     // Helpers to invoke builds or parse bff files
     void Parse( const char * fileName, bool expectFailure = false ) const;
@@ -56,6 +56,7 @@ protected:
     static void GetCodeDir( AString & codeDir );
 
     const AString & GetRecordedOutput() const { return s_RecordedOutput; }
+
 private:
     mutable AString m_OriginalWorkingDir;
     static bool s_DebuggerAttached;
@@ -79,12 +80,13 @@ public:
 class FBuildForTest : public FBuild
 {
 public:
-    FBuildForTest( FBuildOptions & options ) : FBuild( options ) {}
+    FBuildForTest( FBuildOptions & options )
+        : FBuild( options ) {}
 
     size_t GetRecursiveDependencyCount( const Node * node ) const;
     size_t GetRecursiveDependencyCount( const char * nodeName ) const;
 
-    void GetNodesOfType( Node::Type type, Array<const Node*>& outNodes ) const;
+    void GetNodesOfType( Node::Type type, Array<const Node*> & outNodes ) const;
     const Node * GetNode( const char * nodeName ) const;
 
     void SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const;

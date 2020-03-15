@@ -7,7 +7,7 @@
 
 // main
 //------------------------------------------------------------------------------
-int main(int , char * [])
+int main( int, char *[] )
 {
     // tests to run
     REGISTER_TESTGROUP( TestAlias )

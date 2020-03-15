@@ -5,8 +5,9 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 
 #include "Core/Containers/AutoPtr.h"
 #include "Core/FileIO/FileIO.h"
@@ -242,7 +243,6 @@ void TestUnity::TestCompile_NoRebuild() const
     CheckStatsNode ( stats, 1,      1,      Node::ALIAS_NODE );
     CheckStatsTotal( stats, 8+numF, 3+numF );
 }
-
 
 // TestCompile_NoRebuild_BFFChange
 //------------------------------------------------------------------------------

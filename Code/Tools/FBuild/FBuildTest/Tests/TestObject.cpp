@@ -6,8 +6,8 @@
 #include "FBuildTest.h"
 
 // FBuildCore
-#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
 
@@ -72,7 +72,6 @@ void TestObject::MSVCArgHelpers() const
     }
 }
 
-
 // Preprocessor
 //------------------------------------------------------------------------------
 void TestObject::Preprocessor() const
@@ -115,8 +114,6 @@ void TestObject::Preprocessor() const
         CheckStatsNode ( 1,     0,      Node::COMPILER_NODE );
         CheckStatsNode ( 1,     0,      Node::OBJECT_NODE ); // 1x cpp
     }
-
-
 }
 
 // TestStaleDynamicDeps
@@ -175,7 +172,7 @@ void TestObject::TestStaleDynamicDeps() const
     }
 
     // Delete one of the generated headers
-    EnsureFileDoesNotExist(fileB);
+    EnsureFileDoesNotExist( fileB );
 
     // TODO:B Get rid of this (needed to work around poor filetime granularity)
     #if defined( __OSX__ )
@@ -208,7 +205,7 @@ void TestObject::ModTimeChangeBackwards() const
 {
     const AStackString<> fileA( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileA.cpp" );
     const AStackString<> fileB( "../tmp/Test/Object/ModTimeChangeBackwards/GeneratedInput/FileB.cpp" );
-    const char* database = "../tmp/Test/Object/ModTimeChangeBackwards/fbuild.fdb";
+    const char * database = "../tmp/Test/Object/ModTimeChangeBackwards/fbuild.fdb";
 
     // Generate full path file fileA
     AStackString<> fileAFullPath;
