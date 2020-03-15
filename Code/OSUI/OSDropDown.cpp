@@ -113,7 +113,7 @@ size_t OSDropDown::GetSelectedItem() const
     #elif defined( __OSX__ )
         return DropDownOSX_GetSelectedItem( this );
     #else
-        ASSERT(false);
+        ASSERT( false );
         return 0;
     #endif
 }
