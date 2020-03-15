@@ -26,12 +26,12 @@ public:
     static bool IsShuttingDown();
 
 private:
-static bool s_Started;
-static Mutex s_Mutex;
-static volatile bool * s_MasterShutdownFlag;
-#if defined( __WINDOWS__ )
-    static WSADATA s_WSAData;
-#endif
+    static bool s_Started;
+    static Mutex s_Mutex;
+    static volatile bool * s_MasterShutdownFlag;
+    #if defined( __WINDOWS__ )
+        static WSADATA s_WSAData;
+    #endif
 };
 
 //------------------------------------------------------------------------------

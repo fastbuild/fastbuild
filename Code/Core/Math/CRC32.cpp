@@ -131,7 +131,7 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
 /*static*/ uint32_t CRC32::Update( uint32_t crc32, const void * buffer, size_t len )
 {
     const uint8_t * bytes = (uint8_t*)buffer;
-    for ( size_t i=0; i <len; i++ )
+    for ( size_t i = 0; i < len; i++ )
     {
         crc32 = ( crc32 >> 8 ) ^ g_CRC32Table[ ( crc32 ^ bytes[ i ] ) & 0x000000FF ];
     }
@@ -143,7 +143,7 @@ static RES CRC_SlicingBy8(const BYTE* buf, SIZE_T len)
 /*static*/ uint32_t CRC32::UpdateLower( uint32_t crc32, const void * buffer, size_t len )
 {
     const uint8_t * bytes = (uint8_t*)buffer;
-    for ( size_t i=0; i <len; i++ )
+    for ( size_t i = 0; i < len; i++ )
     {
         uint8_t b = bytes[ i ];
         if ( ( b >= 'A' ) && ( b <= 'Z' ) )

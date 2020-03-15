@@ -82,13 +82,12 @@ private:
                                    const char * wildCard,
                                    Array< AString > * results );
     static void GetFilesRecurseEx( AString & path,
-                                 const Array< AString > * patterns,
-                                 Array< FileInfo > * results );
+                                   const Array< AString > * patterns,
+                                   Array< FileInfo > * results );
     static void GetFilesNoRecurseEx( const char * path,
-                                 const Array< AString > * patterns,
-                                 Array< FileInfo > * results );
+                                     const Array< AString > * patterns,
+                                     Array< FileInfo > * results );
     static bool IsMatch( const Array< AString > * patterns, const char * fileName );
-
 };
 
 //------------------------------------------------------------------------------

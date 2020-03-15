@@ -53,7 +53,7 @@ void TestMemPoolBlock::TestAllocs() const
 
     // allocate every size upto the block size
     Array< void * > allocs( blockSize + 1, false );
-    for ( size_t i=0; i<=blockSize; ++i )
+    for ( size_t i = 0; i <= blockSize; ++i )
     {
         void * mem = block.Alloc();
         TEST_ASSERT( mem );
@@ -62,7 +62,7 @@ void TestMemPoolBlock::TestAllocs() const
     }
 
     // free them
-    for ( size_t i=0; i<allocs.GetSize(); ++i )
+    for ( size_t i = 0; i < allocs.GetSize(); ++i )
     {
         block.Free( allocs[ i ] );
     }
@@ -104,12 +104,12 @@ void TestMemPoolBlock::TestSpeed()
         Array< void * > allocs( numAllocs, false );
         Timer t1;
         {
-            for ( uint32_t i=0; i<numAllocs; ++i )
+            for ( uint32_t i = 0; i < numAllocs; ++i )
             {
                 uint32_t * mem = (uint32_t *)malloc( allocSize );
                 allocs.Append( mem );
             }
-            for ( uint32_t i=0; i<numAllocs; ++i )
+            for ( uint32_t i = 0; i < numAllocs; ++i )
             {
                 void * mem = allocs[ i ];
                 free( mem );
@@ -123,12 +123,12 @@ void TestMemPoolBlock::TestSpeed()
         Array< void * > allocs( numAllocs, false );
         Timer t2;
         {
-            for ( uint32_t i=0; i<numAllocs; ++i )
+            for ( uint32_t i = 0; i < numAllocs; ++i )
             {
                 uint32_t * mem = (uint32_t *)ALLOC( allocSize );
                 allocs.Append( mem );
             }
-            for ( uint32_t i=0; i<numAllocs; ++i )
+            for ( uint32_t i = 0; i < numAllocs; ++i )
             {
                 void * mem = allocs[ i ];
                 FREE( mem );
@@ -143,12 +143,12 @@ void TestMemPoolBlock::TestSpeed()
         Timer t3;
         {
             MemPoolBlock block( allocSize, 4 );
-            for ( uint32_t i=0; i<numAllocs; ++i )
+            for ( uint32_t i = 0; i < numAllocs; ++i )
             {
                 uint32_t * mem = (uint32_t *)block.Alloc();
                 allocs.Append( mem );
             }
-            for ( uint32_t i=0; i<numAllocs; ++i )
+            for ( uint32_t i = 0; i < numAllocs; ++i )
             {
                 void * mem = allocs[ i ];
                 block.Free( mem );
