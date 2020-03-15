@@ -39,7 +39,7 @@ enum ReturnCodes
 //------------------------------------------------------------------------------
 int WrapperMainProcess( const AString & args, const FBuildOptions & options, SystemMutex & finalProcess );
 int WrapperIntermediateProcess( const FBuildOptions & options );
-int Main(int argc, char * argv[]);
+int Main( int argc, char * argv[] );
 
 // Misc
 //------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ SharedMemory g_SharedMemory;
 
 // main
 //------------------------------------------------------------------------------
-int main(int argc, char * argv[])
+int main( int argc, char * argv[] )
 {
     // This wrapper is purely for profiling scope
     int result = Main( argc, argv );
@@ -66,7 +66,7 @@ int main(int argc, char * argv[])
 
 // Main
 //------------------------------------------------------------------------------
-int Main(int argc, char * argv[])
+int Main( int argc, char * argv[] )
 {
     PROFILE_FUNCTION
 
@@ -99,8 +99,8 @@ int Main(int argc, char * argv[])
     #endif
 
     // don't buffer output
-    VERIFY( setvbuf(stdout, nullptr, _IONBF, 0) == 0 );
-    VERIFY( setvbuf(stderr, nullptr, _IONBF, 0) == 0 );
+    VERIFY( setvbuf( stdout, nullptr, _IONBF, 0 ) == 0 );
+    VERIFY( setvbuf( stderr, nullptr, _IONBF, 0 ) == 0 );
 
     // ensure only one FASTBuild instance is running at a time
     SystemMutex mainProcess( options.GetMainProcessMutexName().Get() );
