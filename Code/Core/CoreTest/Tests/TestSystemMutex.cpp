@@ -56,7 +56,7 @@ void TestSystemMutex::LeakRegression() const
     #endif
 
     SystemMutex m( mutexName.Get() );
-    for ( uint32_t i=0; i<testCount; ++i )
+    for ( uint32_t i = 0; i < testCount; ++i )
     {
         TEST_ASSERT( m.TryLock() );
         m.Unlock();

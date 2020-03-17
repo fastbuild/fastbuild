@@ -98,7 +98,7 @@ void FBuildTest::EnsureDirExists( const char * dirPath ) const
 
 // LoadFileContentsAsString
 //------------------------------------------------------------------------------
-void FBuildTest::LoadFileContentsAsString( const char* fileName, AString& outString ) const
+void FBuildTest::LoadFileContentsAsString( const char * fileName, AString & outString ) const
 {
     FileStream f;
     TEST_ASSERT( f.Open( fileName ) );
@@ -157,7 +157,7 @@ bool FBuildTest::ParseFromString( const char * bffContents,
     else
     {
         // Failure
-        
+
         // Did we expected to fail?
         if ( expectedError )
         {
@@ -278,9 +278,9 @@ FBuildTestOptions::FBuildTestOptions()
 size_t FBuildForTest::GetRecursiveDependencyCount( const Node * node ) const
 {
     size_t count = 0;
-    const Dependencies * depLists[3] = { &node->GetPreBuildDependencies(),
-                                            &node->GetStaticDependencies(),
-                                            &node->GetDynamicDependencies() };
+    const Dependencies * depLists[ 3 ] = { &node->GetPreBuildDependencies(),
+                                           &node->GetStaticDependencies(),
+                                           &node->GetDynamicDependencies() };
     for ( const Dependencies * depList : depLists )
     {
         for ( const Dependency & dep : *depList )
@@ -325,7 +325,7 @@ const Node * FBuildForTest::GetNode( const char * nodeName ) const
 
 // SerializeDepGraphToText
 //------------------------------------------------------------------------------
-void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString& outBuffer ) const
+void FBuildForTest::SerializeDepGraphToText( const char * nodeName, AString & outBuffer ) const
 {
     Node * node = m_DependencyGraph->FindNode( AStackString<>( nodeName ) );
     Dependencies deps( 1, false );

@@ -15,7 +15,7 @@
 
 // Defines
 //------------------------------------------------------------------------------
-#define ID_TRAY_EXIT_CONTEXT_MENU_ITEM  3000
+#define ID_TRAY_EXIT_CONTEXT_MENU_ITEM 3000
 
 // OSX Functions
 //------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ bool OSMenu::ShowAndWaitForSelection( uint32_t & outIndex )
         // display popup menu at mouse position
         POINT curPoint;
         GetCursorPos( &curPoint );
-        SetForegroundWindow( (HWND)m_Menu );
+        SetForegroundWindow( (HWND)m_Parent->GetHandle() );
 
         // Show menu and block until hidden
         // NOTE: TPM_RETURNCMD makes this BOOL return actually a UINT

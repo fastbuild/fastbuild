@@ -676,7 +676,7 @@ void TestCache::Analyze_MSVC_WarningsOnly_WriteFromDist() const
     TEST_ASSERT( fBuild.GetStats().GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 2 );
 
     // Check for expected warnings
-    const AString& output = GetRecordedOutput();
+    const AString & output = GetRecordedOutput();
     // file1.cpp
     TEST_ASSERT( output.Find( "warning C6201" ) && output.Find( "Index '32' is out of valid index range" ) );
     TEST_ASSERT( output.Find( "warning C6386" ) && output.Find( "Buffer overrun while writing to 'buffer'" ) );
@@ -745,10 +745,10 @@ void TestCache::CheckForDependencies( const FBuildForTest & fBuild, const char *
 {
     Array< const Node * > nodes;
     fBuild.GetNodesOfType( Node::FILE_NODE, nodes );
-    for ( size_t i=0; i<numFiles; ++i )
+    for ( size_t i = 0; i < numFiles; ++i )
     {
         AStackString<> file( files[ i ] );
-        #if defined( __WINDOWS__)
+        #if defined( __WINDOWS__ )
             file.Replace( '/', '\\' ); // Allow calling code to not have to care about the platform
         #endif
         bool found = false;

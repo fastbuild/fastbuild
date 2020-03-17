@@ -4,8 +4,8 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/Env/Types.h"
 #include "Core/Containers/AutoPtr.h"
+#include "Core/Env/Types.h"
 
 // Process
 //------------------------------------------------------------------------------
@@ -47,6 +47,7 @@ public:
     #endif
     bool HasAborted() const { return m_HasAborted; }
     static uint32_t GetCurrentId();
+
 private:
     #if defined( __WINDOWS__ )
         void KillProcessTreeInternal( const void * hProc, // HANDLE

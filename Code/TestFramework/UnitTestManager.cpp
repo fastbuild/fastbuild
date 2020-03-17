@@ -146,7 +146,7 @@ bool UnitTestManager::RunTests( const char * testGroup )
         {
             test->RunTests();
         }
-        catch (...)
+        catch ( ... )
         {
             OUTPUT( " - Test '%s' *** FAILED ***\n", s_TestInfos[ s_NumTests - 1 ].m_TestName );
             s_TestInfos[ s_NumTests - 1 ].m_TestGroup->PostTest( false );
@@ -163,9 +163,9 @@ bool UnitTestManager::RunTests( const char * testGroup )
     uint32_t numPassed = 0;
     float totalTime = 0.0f;
     UnitTest * lastGroup = nullptr;
-    for ( size_t i=0; i<s_NumTests; ++i )
+    for ( size_t i = 0; i < s_NumTests; ++i )
     {
-        const TestInfo& info = s_TestInfos[ i ];
+        const TestInfo & info = s_TestInfos[ i ];
         if ( info.m_TestGroup != lastGroup )
         {
             OUTPUT( "------------------------------------------------------------\n" );
@@ -203,7 +203,7 @@ void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
 {
     // record info for this test
     ASSERT( s_NumTests < MAX_TESTS );
-    TestInfo& info = s_TestInfos[ s_NumTests ];
+    TestInfo & info = s_TestInfos[ s_NumTests ];
     info.m_TestGroup = testGroup;
     info.m_TestName = testName;
     ++s_NumTests;
@@ -228,7 +228,7 @@ void UnitTestManager::TestBegin( UnitTest * testGroup, const char * testName )
 //------------------------------------------------------------------------------
 void UnitTestManager::TestEnd()
 {
-    TestInfo& info = s_TestInfos[ s_NumTests - 1 ];
+    TestInfo & info = s_TestInfos[ s_NumTests - 1 ];
 
     info.m_TestGroup->PostTest( true );
 
@@ -311,6 +311,5 @@ void UnitTestManager::TestEnd()
     // throw will be caught by the unit test framework and noted as a failure
     throw "Test Failed";
 }
-
 
 //------------------------------------------------------------------------------

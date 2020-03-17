@@ -4,9 +4,9 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Containers/Array.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Env/Types.h"
-#include "Core/Containers/Array.h"
 #include "Core/Process/Mutex.h"
 
 // Macros

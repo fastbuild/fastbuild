@@ -9,14 +9,14 @@ class AString;
 // Defines
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    #define NATIVE_SLASH ( '\\' )
-    #define NATIVE_SLASH_STR ( "\\" )
+    #define NATIVE_SLASH        ( '\\' )
+    #define NATIVE_SLASH_STR    ( "\\" )
     #define NATIVE_DOUBLE_SLASH ( "\\\\" )
     #define OTHER_SLASH ( '/' )
     #define OTHER_DOUBLE_SLASH ( "//" )
 #elif defined( __LINUX__ ) || defined( __APPLE__ )
-    #define NATIVE_SLASH ( '/' )
-    #define NATIVE_SLASH_STR ( "/" )
+    #define NATIVE_SLASH        ( '/' )
+    #define NATIVE_SLASH_STR    ( "/" )
     #define NATIVE_DOUBLE_SLASH ( "//" )
     #define OTHER_SLASH ( '\\' )
     #define OTHER_DOUBLE_SLASH ( "\\\\" )
@@ -24,7 +24,7 @@ class AString;
 
 // For places that explicitly need slashes a certain way
 // use these defines to signify the intent
-#define BACK_SLASH ( '\\' )
+#define BACK_SLASH    ( '\\' )
 #define FORWARD_SLASH ( '/' )
 
 // FileIO

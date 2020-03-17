@@ -6,10 +6,10 @@
 #include "Network.h"
 
 // Core
-#include "Core/Strings/AString.h"
 #include "Core/Network/NetworkStartupHelper.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
+#include "Core/Strings/AString.h"
 
 // system
 #if defined( __WINDOWS__ )
@@ -82,7 +82,7 @@
     int returnCode( 0 );
     uint32_t remainingTimeMS( timeoutMS );
     const uint32_t sleepInterval( 100 ); // Check exit condition periodically - TODO:C would be better to use an event
-    for (;;)
+    for ( ;; )
     {
         returnCode = Thread::WaitForThread( handle, sleepInterval, timedOut );
 

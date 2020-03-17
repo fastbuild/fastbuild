@@ -3,8 +3,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "OSDropDown.h"
 #include "OSWindow.h"
+
+// OSUI
+#include "OSUI/OSDropDown.h"
 
 #include "Core/Env/Assert.h"
 #include "Core/Strings/AStackString.h"
@@ -17,7 +19,7 @@
 // Defines
 //------------------------------------------------------------------------------
 #if defined( __WINDOWS__ )
-    #define IDI_MAIN_ICON                   101
+    #define IDI_MAIN_ICON 101
 #endif
 
 // OSX Functions

@@ -6,8 +6,8 @@
 //------------------------------------------------------------------------------
 #include "NetworkStartupHelper.h"
 
-#include "Core/Env/Types.h"
 #include "Core/Containers/Array.h"
+#include "Core/Env/Types.h"
 #include "Core/Process/Mutex.h"
 #include "Core/Process/Semaphore.h"
 #include "Core/Process/Thread.h"

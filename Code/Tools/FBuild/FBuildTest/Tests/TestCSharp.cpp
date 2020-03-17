@@ -5,8 +5,9 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-#include "Tools/FBuild/FBuildCore/FBuild.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
+#include "Tools/FBuild/FBuildCore/FBuild.h"
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
@@ -98,7 +99,6 @@ void TestCSharp::TestSingleFile_NoRebuild() const
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsTotal( 4,     2 );
 }
-
 
 // TestSingleFile_NoRebuild_BFFChange
 //------------------------------------------------------------------------------
@@ -236,7 +236,6 @@ void TestCSharp::TestMultipleAssemblies() const
     CheckStatsNode ( 1,     1,      Node::ALIAS_NODE );
     CheckStatsTotal( 8,     8 );
 }
-
 
 // TestMultipleAssemblies_NoRebuild
 //------------------------------------------------------------------------------

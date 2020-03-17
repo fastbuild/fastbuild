@@ -34,6 +34,7 @@ public:
 
     // Assign human readable name to current thread
     static void SetThreadName( const char * threadName );
+
 private:
     // when a thread is finished with an event buffer (full or forced syncrhonization)
     // it's passed to the ProfileManager to
@@ -44,7 +45,7 @@ private:
     {
         Thread::ThreadId        m_ThreadId;
         AStackString< 32 >      m_ThreadName;
-        const ProfileEvent  *   m_Events;
+        const ProfileEvent *    m_Events;
         size_t                  m_NumEvents;
     };
     static Array< ProfileEventInfo > s_ProfileEventInfo;
