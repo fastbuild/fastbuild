@@ -2484,7 +2484,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 
     if ( m_HandleOutput )
     {
-        if ( FBuild::Get().GetOptions().m_ShowCommandOutput )
+        if ( job->IsLocal() && FBuild::Get().GetOptions().m_ShowCommandOutput )
         {
             // Suppress /showIncludes - TODO:C leave in if user specified it
             StackArray< AString > exclusions;

@@ -241,12 +241,13 @@ void WorkerBrokerage::SetAvailability(bool available)
                 // Create/write file which signifies availability
                 FileIO::EnsurePathExists( m_BrokerageRoots[0] );
                 FileStream fs;
-                fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
-                fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
+                if (fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY ))
+                {
+                    fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
 
-                // Take note of time we wrote the settings
-                m_SettingsWriteTime = settingsWriteTime;
-
+                    // Take note of time we wrote the settings
+                    m_SettingsWriteTime = settingsWriteTime;
+                }
             }
             
             // Restart the timer
