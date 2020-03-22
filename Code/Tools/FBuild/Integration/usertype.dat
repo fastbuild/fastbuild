@@ -126,6 +126,7 @@ Librarian
 LibrarianAdditionalInputs
 LibrarianOptions
 LibrarianOutput
+LibrarianType
 Libraries
 Linker
 LinkerAssemblyResources
