@@ -8,6 +8,9 @@
 // FBuildCore
 #include "Tools/FBuild/FBuildCore/Graph/LibraryNode.h"
 
+// Core
+#include <Core/Strings/AStackString.h>
+
 // TestLibrary
 //------------------------------------------------------------------------------
 class TestLibrary : public FBuildTest
@@ -22,29 +25,28 @@ private:
 // Register Tests
 //------------------------------------------------------------------------------
 REGISTER_TESTS_BEGIN( TestLibrary )
-    REGISTER_TEST(LibraryType)                 // Test library detection code
+    REGISTER_TEST( LibraryType )    // Test library detection code
 REGISTER_TESTS_END
 
-// LinkerType
+// LibraryType
 //------------------------------------------------------------------------------
 void TestLibrary::LibraryType() const
 {
-    uint32_t flags = 0;
+    #define TEST_LIBRARYTYPE( exeName, expectedFlag ) \
+    { \
+        const uint32_t flags = LibraryNode::DetermineFlags( AStackString<>( "auto" ), \
+                                                            AStackString<>( exeName ), \
+                                                            AString::GetEmpty() ); \
+        TEST_ASSERT( ( flags & expectedFlag ) == expectedFlag ); \
+    }
 
-    flags = LibraryNode::DetermineFlags( AString( "auto" ), AString( "link" ), AString( "" ));
-    TEST_ASSERT(( flags & LibraryNode::LIB_FLAG_LIB ) == LibraryNode::LIB_FLAG_LIB );
+    TEST_LIBRARYTYPE( "link",       LibraryNode::LIB_FLAG_LIB );
+    TEST_LIBRARYTYPE( "lib",        LibraryNode::LIB_FLAG_LIB );
+    TEST_LIBRARYTYPE( "ar",         LibraryNode::LIB_FLAG_AR );
+    TEST_LIBRARYTYPE( "orbis-ar",   LibraryNode::LIB_FLAG_ORBIS_AR );
+    TEST_LIBRARYTYPE( "\\ax",       LibraryNode::LIB_FLAG_GREENHILLS_AX );
 
-    flags = LibraryNode::DetermineFlags( AString( "auto" ), AString( "lib" ), AString( "" ));
-    TEST_ASSERT(( flags & LibraryNode::LIB_FLAG_LIB ) == LibraryNode::LIB_FLAG_LIB );
-
-    flags = LibraryNode::DetermineFlags( AString( "auto" ), AString( "ar" ), AString( "" ));
-    TEST_ASSERT(( flags & LibraryNode::LIB_FLAG_AR ) == LibraryNode::LIB_FLAG_AR );
-
-    flags = LibraryNode::DetermineFlags( AString( "auto" ), AString( "orbis-ar" ), AString( "" ));
-    TEST_ASSERT(( flags & LibraryNode::LIB_FLAG_ORBIS_AR ) == LibraryNode::LIB_FLAG_ORBIS_AR );
-
-    flags = LibraryNode::DetermineFlags( AString( "auto" ), AString( "\\ax" ), AString( "" ));
-    TEST_ASSERT(( flags & LibraryNode::LIB_FLAG_GREENHILLS_AX ) == LibraryNode::LIB_FLAG_GREENHILLS_AX );
+    #undef TEST_LIBRARYTYPE
 }
 
 //------------------------------------------------------------------------------

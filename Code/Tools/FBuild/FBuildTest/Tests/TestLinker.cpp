@@ -319,25 +319,21 @@ void TestLinker::IncrementalLinking_MSVC() const
 //------------------------------------------------------------------------------
 void TestLinker::LinkerType() const
 {
-    uint32_t flags = 0;
+    #define TEST_LINKERTYPE( exeName, expectedFlag ) \
+    { \
+        const uint32_t flags = LinkerNode::DetermineLinkerTypeFlags( AStackString<>( "auto" ), \
+                                                                     AStackString<>( exeName ) ); \
+        TEST_ASSERT( ( flags & expectedFlag ) == expectedFlag ); \
+    }
 
-    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "link" ));
-    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_MSVC ) == LinkerNode::LINK_FLAG_MSVC );
+    TEST_LINKERTYPE( "link",        LinkerNode::LINK_FLAG_MSVC );
+    TEST_LINKERTYPE( "gcc",         LinkerNode::LINK_FLAG_GCC );
+    TEST_LINKERTYPE( "ps3ppuld",    LinkerNode::LINK_FLAG_SNC );
+    TEST_LINKERTYPE( "orbis-ld",    LinkerNode::LINK_FLAG_ORBIS_LD );
+    TEST_LINKERTYPE( "elxr",        LinkerNode::LINK_FLAG_GREENHILLS_ELXR );
+    TEST_LINKERTYPE( "mwldeppc",    LinkerNode::LINK_FLAG_CODEWARRIOR_LD );
 
-    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "gcc" ));
-    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_GCC ) == LinkerNode::LINK_FLAG_GCC );
-
-    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "ps3ppuld" ));
-    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_SNC ) == LinkerNode::LINK_FLAG_SNC );
-
-    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "orbis-ld" ));
-    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_ORBIS_LD ) == LinkerNode::LINK_FLAG_ORBIS_LD );
-
-    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "elxr" ));
-    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_GREENHILLS_ELXR ) == LinkerNode::LINK_FLAG_GREENHILLS_ELXR );
-
-    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "mwldeppc" ));
-    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_CODEWARRIOR_LD ) == LinkerNode::LINK_FLAG_CODEWARRIOR_LD );
+    #undef TEST_LINKERTYPE
 }
 
 //------------------------------------------------------------------------------

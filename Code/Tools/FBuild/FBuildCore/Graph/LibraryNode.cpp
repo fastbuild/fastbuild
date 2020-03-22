@@ -316,20 +316,20 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
 {
     uint32_t flags = 0;
 
-    if ( librarianType.IsEmpty() || ( librarianType == "auto" ))
+    if ( librarianType.IsEmpty() || ( librarianType == "auto" ) )
     {
         // Detect based upon librarian executable name
         if ( librarianName.EndsWithI( "lib.exe" ) ||
-            librarianName.EndsWithI( "lib" ) ||
-            librarianName.EndsWithI( "link.exe" ) ||
-            librarianName.EndsWithI( "link" ))
+             librarianName.EndsWithI( "lib" ) ||
+             librarianName.EndsWithI( "link.exe" ) ||
+             librarianName.EndsWithI( "link" ) )
         {
             flags |= LIB_FLAG_LIB;
         }
         else if ( librarianName.EndsWithI( "ar.exe" ) ||
-            librarianName.EndsWithI( "ar" ))
+                  librarianName.EndsWithI( "ar" ) )
         {
-            if ( librarianName.FindI( "orbis-ar" ))
+            if ( librarianName.FindI( "orbis-ar" ) )
             {
                 flags |= LIB_FLAG_ORBIS_AR;
             }
@@ -339,7 +339,7 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
             }
         }
         else if ( librarianName.EndsWithI( "\\ax.exe" ) ||
-            librarianName.EndsWithI( "\\ax" ))
+                  librarianName.EndsWithI( "\\ax" ) )
         {
             flags |= LIB_FLAG_GREENHILLS_AX;
         }
@@ -364,16 +364,17 @@ bool LibraryNode::BuildArgs( Args & fullArgs ) const
         }
     }
 
-    if ( flags & LIB_FLAG_LIB ) {
+    if ( flags & LIB_FLAG_LIB )
+    {
         // Parse args for some other flags
         Array< AString > tokens;
-        args.Tokenize(tokens);
+        args.Tokenize( tokens );
 
         const AString* const end = tokens.End();
-        for (const AString* it = tokens.Begin(); it != end; ++it)
+        for ( const AString * it = tokens.Begin(); it != end; ++it )
         {
             const AString& token = *it;
-            if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ))
+            if ( LinkerNode::IsLinkerArg_MSVC( token, "WX" ) )
             {
                 flags |= LIB_FLAG_WARNINGS_AS_ERRORS_MSVC;
                 continue;
