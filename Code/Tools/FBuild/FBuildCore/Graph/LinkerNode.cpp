@@ -655,7 +655,7 @@ void LinkerNode::GetAssemblyResourceFiles( Args & fullArgs, const AString & pre,
             flags |= LinkerNode::LINK_FLAG_GREENHILLS_ELXR;
         }
         else if ( ( linkerName.EndsWithI( "mwldeppc.exe" ) ) ||
-            ( linkerName.EndsWithI( "mwldeppc." ) ) )
+            ( linkerName.EndsWithI( "mwldeppc" ) ) )
         {
             flags |= LinkerNode::LINK_FLAG_CODEWARRIOR_LD;
         }

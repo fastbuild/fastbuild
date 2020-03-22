@@ -45,6 +45,9 @@ Builds a statically linked library.
   ; Options for librarian
   .Librarian                ; Librarian to collect intermediate objects
   .LibrarianOptions         ; Options for librarian
+  .LibrarianType            ; (optional) Specify the librarian type. Valid options include:
+                            ; auto, msvc, ar, ar-orbis, greenhills-ax
+                            ; Default is 'auto' (use the librarian executable name to detect)
   .LibrarianOutput          ; Output path for lib file
   .LibrarianAdditionalInputs; (optional) Additional inputs to merge into library
 

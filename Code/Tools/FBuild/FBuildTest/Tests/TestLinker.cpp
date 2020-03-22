@@ -27,6 +27,7 @@ private:
     void ArgHelpers_MSVC() const;
     void LibrariesOnCommandLine() const;
     void IncrementalLinking_MSVC() const;
+    void LinkerType() const;
 };
 
 // Register Tests
@@ -38,6 +39,7 @@ REGISTER_TESTS_BEGIN( TestLinker )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( IncrementalLinking_MSVC )
     #endif
+    REGISTER_TEST( LinkerType )                 // Test linker detection code
 REGISTER_TESTS_END
 
 // ArgHelpers
@@ -311,6 +313,31 @@ void TestLinker::IncrementalLinking_MSVC() const
             TEST_ASSERT( output.Find( "performing full link" ) == nullptr );
         }
     #endif
+}
+
+// LinkerType
+//------------------------------------------------------------------------------
+void TestLinker::LinkerType() const
+{
+    uint32_t flags = 0;
+
+    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "link" ));
+    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_MSVC ) == LinkerNode::LINK_FLAG_MSVC );
+
+    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "gcc" ));
+    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_GCC ) == LinkerNode::LINK_FLAG_GCC );
+
+    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "ps3ppuld" ));
+    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_SNC ) == LinkerNode::LINK_FLAG_SNC );
+
+    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "orbis-ld" ));
+    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_ORBIS_LD ) == LinkerNode::LINK_FLAG_ORBIS_LD );
+
+    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "elxr" ));
+    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_GREENHILLS_ELXR ) == LinkerNode::LINK_FLAG_GREENHILLS_ELXR );
+
+    flags = LinkerNode::DetermineLinkerTypeFlags( AString( "auto" ), AString( "mwldeppc" ));
+    TEST_ASSERT(( flags & LinkerNode::LINK_FLAG_CODEWARRIOR_LD ) == LinkerNode::LINK_FLAG_CODEWARRIOR_LD );
 }
 
 //------------------------------------------------------------------------------
