@@ -1487,6 +1487,10 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
         {
             output += "**Deoptimized** ";
         }
+		if ( GetFlag( FLAG_ISOLATED_FROM_UNITY ) )
+	    {
+        	output += "**Isolated** ";
+    	}
         output += GetName();
         if ( racingRemoteJob )
         {

@@ -233,7 +233,7 @@ UnityNode::~UnityNode()
                 numIsolated++;
                 filesInThisUnity.Top().SetIsolated( true );
 
-                FLOG_INFO( "Isolate file '%s' from unity", files[ index ].GetName().Get() );
+                FLOG_OUTPUT( "Isolate file '%s' from unity\n", files[ index ].GetName().Get() );
             }
 
             // count the file, whether we wrote it or not, to keep unity files stable
@@ -590,7 +590,7 @@ bool UnityNode::GetIsolatedFilesFromList( Array< AString > & files ) const
             }
             else
             {
-                FLOG_INFO( "Imported %u isolated files from list '%s'", (uint32_t)files.GetSize(), m_IsolateListFile.Get() );
+                FLOG_OUTPUT( "Imported %u isolated files from list '%s'\n", (uint32_t)files.GetSize(), m_IsolateListFile.Get() );
 
                 for ( AString& filename : files )
                 {
