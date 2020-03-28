@@ -49,6 +49,7 @@ private:
     void Solution_BuildAndDeploy_None() const;
     void Solution_BuildAndDeploy_Project() const;
     void Solution_BuildAndDeploy_PerSolutionConfig() const;
+    void Solution_Items() const;
 
     // VSExternalProj
     void VSExternalProj_ExternalProject() const;
@@ -85,6 +86,7 @@ REGISTER_TESTS_BEGIN( TestProjectGeneration )
     REGISTER_TEST( Solution_BuildAndDeploy_None )
     REGISTER_TEST( Solution_BuildAndDeploy_Project )
     REGISTER_TEST( Solution_BuildAndDeploy_PerSolutionConfig )
+    REGISTER_TEST( Solution_Items )
     REGISTER_TEST( VSExternalProj_ExternalProject )
     #if defined( __WINDOWS__ )
         REGISTER_TEST( VSExternalProj_ExternalProjectWrongData )
@@ -1175,6 +1177,36 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
     TEST_ASSERT( solutionData.Find( ".Build." ) == nullptr );
     TEST_ASSERT( solutionData.Find( ".Deploy." ) == nullptr );
 }
+
+// Solution_Items
+//------------------------------------------------------------------------------
+void TestProjectGeneration::Solution_Items() const
+{
+    AStackString<> solution("../tmp/Test/ProjectGeneration/Solution_Items/soution_with_items.sln");
+
+    // Initialize
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Items/fbuild.bff";
+    options.m_ForceCleanBuild = true;
+    FBuild fBuild(options);
+    TEST_ASSERT(fBuild.Initialize());
+
+    // Delete old files from previous runs
+    EnsureFileDoesNotExist(solution);
+
+    // do build
+    TEST_ASSERT(fBuild.Build("Solution_with_items"));
+
+    //
+    EnsureFileExists(solution);
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode(1, 1, Node::SLN_NODE);
+    CheckStatsNode(1, 1, Node::ALIAS_NODE);
+    CheckStatsTotal(6, 6);
+}
+
 
 // VSExternalProj_ExternalProject
 //------------------------------------------------------------------------------

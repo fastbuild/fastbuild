@@ -119,6 +119,7 @@ ForcedUsingAssemblies
 Hidden
 IncludeSearchPath
 IntermediateDirectory
+Items
 Keyword
 LayoutDir
 LayoutExtensionFilter
