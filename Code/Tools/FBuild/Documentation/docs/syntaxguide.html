@@ -162,10 +162,16 @@ Examples:
 <tr><td>__OSX__</td><td>Defined if running on OS X</td></tr>
 <tr><td>__WINDOWS__</td><td>Defined if running on Windows</td></tr>
 </table>
-<p>Additionally, the "exists" operator can be used to branch on the existence of an environment variable.</p>
+<p>Additionally "exists" can be used to branch on the existence of an environment variable.</p>
 Example:
 <div class='code'>#if exists(MY_ENV_VAR)
     #import MY_ENV_VAR
+#endif
+</div>
+<p>Additionally "file_exists" can be used to detect the existence of external files.</p>
+Example:
+<div class='code'>#if file_exists("file.dat")
+    //
 #endif
 </div>
 

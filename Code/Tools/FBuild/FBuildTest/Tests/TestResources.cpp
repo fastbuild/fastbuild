@@ -67,7 +67,6 @@ void TestResources::BuildResource() const
     CheckStatsNode ( 1,     1,      Node::EXE_NODE );
 }
 
-
 // BuildResource_NoRebuild
 //------------------------------------------------------------------------------
 void TestResources::BuildResource_NoRebuild() const

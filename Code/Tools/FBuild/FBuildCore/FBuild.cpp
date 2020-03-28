@@ -82,8 +82,7 @@ FBuild::FBuild( const FBuildOptions & options )
     VERIFY( FileIO::GetCurrentDir( m_OldWorkingDir ) );
 
     // poke options where required
-    FLog::SetShowInfo( m_Options.m_ShowInfo );
-    FLog::SetShowBuildCommands( m_Options.m_ShowBuildCommands );
+    FLog::SetShowVerbose( m_Options.m_ShowVerbose );
     FLog::SetShowErrors( m_Options.m_ShowErrors );
     FLog::SetShowProgress( m_Options.m_ShowProgress );
     FLog::SetMonitorEnabled( m_Options.m_EnableMonitor );
@@ -292,7 +291,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
 
     PROFILE_FUNCTION
 
-    FLOG_INFO( "Saving DepGraph '%s'", nodeGraphDBFile );
+    FLOG_VERBOSE( "Saving DepGraph '%s'", nodeGraphDBFile );
 
     Timer t;
 
@@ -341,7 +340,7 @@ bool FBuild::SaveDependencyGraph( const char * nodeGraphDBFile ) const
         return false;
     }
 
-    FLOG_INFO( "Saving DepGraph Complete in %2.3fs", (double)t.GetElapsed() );
+    FLOG_VERBOSE( "Saving DepGraph Complete in %2.3fs", (double)t.GetElapsed() );
     return true;
 }
 
@@ -563,6 +562,13 @@ bool FBuild::ImportEnvironmentVar( const char * name, bool optional, AString & v
     return true;
 }
 
+// AddFileExistsCheck
+//------------------------------------------------------------------------------
+bool FBuild::AddFileExistsCheck( const AString & fileName )
+{
+    return m_FileExistsInfo.CheckFile( fileName );
+}
+
 // GetLibEnvVar
 //------------------------------------------------------------------------------
 void FBuild::GetLibEnvVar( AString & value ) const
@@ -719,6 +725,7 @@ void FBuild::DisplayTargetList( bool showHidden ) const
             case Node::REMOVE_DIR_NODE:     break;
             case Node::XCODEPROJECT_NODE:   break;
             case Node::SETTINGS_NODE:       break;
+            case Node::TEXT_FILE_NODE:      displayName = true; hidden = node->IsHidden(); break;
             case Node::NUM_NODE_TYPES:      ASSERT( false );                        break;
         }
         if ( displayName && ( !hidden || showHidden ) )

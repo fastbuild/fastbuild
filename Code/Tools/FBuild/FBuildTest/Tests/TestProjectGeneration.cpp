@@ -5,12 +5,12 @@
 //------------------------------------------------------------------------------
 #include "FBuildTest.h"
 
-// FBuild
-#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
-#include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
+// FBuildCore
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
+#include "Tools/FBuild/FBuildCore/Helpers/ProjectGeneratorBase.h"
+#include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
 // Core
 #include "Core/FileIO/FileIO.h"
@@ -412,14 +412,14 @@ void TestProjectGeneration::IntellisenseAndCodeSense() const
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Library.vcxproj" );
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Executable.vcxproj" );
     VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Test.vcxproj" );
-    VCXProj_Intellisense_Check("../tmp/Test/ProjectGeneration/Intellisense/Copy.vcxproj");
+    VCXProj_Intellisense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Copy.vcxproj" );
 
     // Ensure XCode CodeSense info is present
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/ObjectList.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Library.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Executable.xcodeproj/project.pbxproj" );
     XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Test.xcodeproj/project.pbxproj" );
-    XCodeProj_CodeSense_Check("../tmp/Test/ProjectGeneration/Intellisense/Copy.xcodeproj/project.pbxproj");
+    XCodeProj_CodeSense_Check( "../tmp/Test/ProjectGeneration/Intellisense/Copy.xcodeproj/project.pbxproj" );
 }
 
 // VCXProj_Intellisense_Check
@@ -580,13 +580,13 @@ void TestProjectGeneration::XCodeProj_CodeSense_Check( const char * projectFile 
     }
 
     // Check we found them all
-    for ( size_t i=0; i<NUM_DEFINES; ++i )
+    for ( size_t i = 0; i < NUM_DEFINES; ++i )
     {
-        TEST_ASSERT( definesOk[ i ]  );
+        TEST_ASSERT( definesOk[ i ] );
     }
-    for ( size_t i=0; i<NUM_INCLUDES; ++i )
+    for ( size_t i = 0; i < NUM_INCLUDES; ++i )
     {
-        TEST_ASSERT( includesOk[ i ]  );
+        TEST_ASSERT( includesOk[ i ] );
     }
 }
 

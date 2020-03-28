@@ -1,0 +1,19 @@
+//
+// TestTextFile
+//
+//------------------------------------------------------------------------------
+
+// Use the standard test environment
+//------------------------------------------------------------------------------
+#include "../testcommon.bff"
+Using( .StandardEnvironment )
+Settings {}
+
+TextFile( 'TextFile' )
+{
+    .TextFileOutput         = '$Out$/Test/TextFile/textfile.txt'
+    .TextFileInputStrings   = {
+                                'Line1'
+                                'Line2'
+                              }
+}

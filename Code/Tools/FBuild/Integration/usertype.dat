@@ -3,6 +3,7 @@ else
 endif
 exists
 false
+file_exists
 if
 import
 in
@@ -29,6 +30,7 @@ Print
 RemoveDir
 Settings
 Test
+TextFile
 Unity
 Using
 VCXProject
@@ -125,6 +127,7 @@ Librarian
 LibrarianAdditionalInputs
 LibrarianOptions
 LibrarianOutput
+LibrarianType
 Libraries
 Linker
 LinkerAssemblyResources
@@ -213,6 +216,9 @@ TestInputPattern
 TestOutput
 TestTimeOut
 TestWorkingDir
+TextFileAlways
+TextFileInputStrings
+TextFileOutput
 UnityInputExcludePath
 UnityInputExcludePattern
 UnityInputExcludedFiles
@@ -229,6 +235,7 @@ UnityOutputPath
 UnityOutputPattern
 UnityPCH
 UseLightCache_Experimental
+UseRelativePaths_Experimental
 VS2012EnumBugFix
 WorkerConnectionLimit
 Workers

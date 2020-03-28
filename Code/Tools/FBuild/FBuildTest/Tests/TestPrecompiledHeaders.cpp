@@ -358,7 +358,6 @@ void TestPrecompiledHeaders::PreventUselessCacheTraffic_MSVC() const
         TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheHits == 0 );
         TEST_ASSERT( stats.GetStatsFor( Node::OBJECT_NODE ).m_NumCacheStores == 0 );
     }
-
 }
 
 // CacheUniqueness
@@ -500,7 +499,6 @@ void TestPrecompiledHeaders::Deoptimization() const
     // Make sure nothing was deoptimized
     TEST_ASSERT( GetRecordedOutput().FindI( "**Deoptimized**" ) == nullptr );
 }
-
 
 // PrecompiledHeaderCacheAnalyze_MSVC
 //------------------------------------------------------------------------------

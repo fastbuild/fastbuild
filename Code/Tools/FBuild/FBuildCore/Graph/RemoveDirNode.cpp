@@ -79,7 +79,7 @@ RemoveDirNode::~RemoveDirNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult RemoveDirNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult RemoveDirNode::DoBuild( Job * /*job*/ )
 {
     ASSERT( !m_StaticDependencies.IsEmpty() );
 
@@ -104,10 +104,13 @@ RemoveDirNode::~RemoveDirNode() = default;
             // we combine everything into one string to ensure it is contiguous in
             // the output
             AStackString<> output;
-            output += "Remove: ";
-            output += srcFile;
-            output += '\n';
-            FLOG_BUILD_DIRECT( output.Get() );
+            if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+            {
+                output += "Remove: ";
+                output += srcFile;
+                output += '\n';
+                FLOG_OUTPUT( output );
+            }
         }
     }
 

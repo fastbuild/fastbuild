@@ -25,18 +25,19 @@ public:
     // random float from 0.0f to 1.0f
     float GetRandFloat()
     {
-        return ( (float) GetRand() ) / ( (float)CORE_RAND_MAX );
+        return ( (float)GetRand() ) / ( (float)CORE_RAND_MAX );
     }
 
     // random index from 0 to size-1
     uint32_t GetRandIndex( uint32_t size )
     {
-        return ( (uint32_t)( (float) size * ( GetRand() / ( CORE_RAND_MAX + 1.0f ) ) ) );
+        return ( (uint32_t)( (float)size * ( GetRand() / ( CORE_RAND_MAX + 1.0f ) ) ) );
     }
 
     // access the seed value
     inline void     SetSeed( uint32_t seed ) { m_Seed = seed; }
     inline uint32_t GetSeed() const { return m_Seed; }
+
 private:
     uint32_t m_Seed;
 };

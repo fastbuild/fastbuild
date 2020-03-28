@@ -7,14 +7,14 @@
 
 #include "Core/Env/Assert.h"
 #include "Core/FileIO/FileIO.h"
-#include "Core/Math/Conversions.h"
 #include "Core/Math/Constants.h"
+#include "Core/Math/Conversions.h"
 #include "Core/Process/Atomic.h"
 #include "Core/Process/Thread.h"
 #include "Core/Profile/Profile.h"
-#include "Core/Time/Timer.h"
 #include "Core/Strings/AStackString.h"
 #include "Core/Strings/AString.h"
+#include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
 
 #if defined( __WINDOWS__ )
@@ -40,7 +40,7 @@
 //------------------------------------------------------------------------------
 Process::Process( const volatile bool * masterAbortFlag,
                   const volatile bool * abortFlag )
-: m_Started( false )
+    : m_Started( false )
 #if defined( __WINDOWS__ )
     , m_SharingHandles( false )
     , m_RedirectHandles( true )

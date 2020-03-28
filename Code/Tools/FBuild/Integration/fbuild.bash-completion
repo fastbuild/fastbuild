@@ -33,6 +33,7 @@ _fbuild() {
 		-quiet
 		-report
 		-showalltargets
+		-showcmdoutput
 		-showcmds
 		-showdeps
 		-showtargets

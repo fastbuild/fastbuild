@@ -387,7 +387,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
             // Light cache could not be used (can't parse includes)
             if ( FBuild::Get().GetOptions().m_CacheVerbose )
             {
-                FLOG_BUILD( " - Light cache cannot be used for '%s'\n", GetName().Get() );
+                FLOG_OUTPUT( " - Light cache cannot be used for '%s'\n", GetName().Get() );
             }
 
             // Fall through to generate preprocessed output for old style cache and distribution....
@@ -582,7 +582,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
         }
     }
 
-    const bool verbose = FLog::ShowInfo();
+    const bool verbose = FLog::ShowVerbose();
     const bool showCommands = ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines );
     const bool isRemote = ( job->IsLocal() == false );
     if ( stealingRemoteJob || racingRemoteJob || verbose || showCommands || isRemote )
@@ -751,7 +751,7 @@ bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
         parser.SwapIncludes( m_Includes );
     }
 
-    FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
+    FLOG_VERBOSE( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
 
     return true;
 }
@@ -805,7 +805,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         parser.SwapIncludes( m_Includes );
     }
 
-    FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
+    FLOG_VERBOSE( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
 
     return true;
 }
@@ -1307,13 +1307,17 @@ bool ObjectNode::RetrieveFromCache( Job * job )
         RecordStampFromBuiltFile();
 
         // Output
-        AStackString<> output;
-        output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
-        if ( FBuild::Get().GetOptions().m_CacheVerbose )
+        if ( FBuild::Get().GetOptions().m_ShowCommandSummary ||
+             FBuild::Get().GetOptions().m_CacheVerbose )
         {
-            output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+            AStackString<> output;
+            output.Format( "Obj: %s <CACHE>\n", GetName().Get() );
+            if ( FBuild::Get().GetOptions().m_CacheVerbose )
+            {
+                output.AppendFormat( " - Cache Hit: %u ms (Retrieve: %u ms - Decompress: %u ms) (Compressed: %zu - Uncompressed: %zu) '%s'\n", uint32_t( t.GetElapsedMS() ), retrieveTime, stopDecompress - startDecompress, cacheDataSize, dataSize, cacheFileName.Get() );
+            }
+            FLOG_OUTPUT( output );
         }
-        FLOG_BUILD_DIRECT( output.Get() );
 
         SetStatFlag( Node::STATS_CACHE_HIT );
 
@@ -1329,9 +1333,9 @@ bool ObjectNode::RetrieveFromCache( Job * job )
     // Output
     if ( FBuild::Get().GetOptions().m_CacheVerbose )
     {
-        FLOG_BUILD( "Obj: %s\n"
-                    " - Cache Miss: %u ms '%s'\n",
-                    GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        FLOG_OUTPUT( "Obj: %s\n"
+                     " - Cache Miss: %u ms '%s'\n",
+                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
     }
 
     SetStatFlag( Node::STATS_CACHE_MISS );
@@ -1401,7 +1405,7 @@ void ObjectNode::WriteToCache( Job * job )
                 {
                     output.AppendFormat( " - PCH Key: %" PRIx64 "\n", m_PCHCacheKey );
                 }
-                FLOG_BUILD_DIRECT( output.Get() );
+                FLOG_OUTPUT( output );
             }
 
             return;
@@ -1411,9 +1415,9 @@ void ObjectNode::WriteToCache( Job * job )
     // Output
     if ( FBuild::Get().GetOptions().m_CacheVerbose )
     {
-        FLOG_BUILD( "Obj: %s\n"
-                    " - Cache Store Fail: %u ms '%s'\n",
-                    GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
+        FLOG_OUTPUT( "Obj: %s\n"
+                     " - Cache Store Fail: %u ms '%s'\n",
+                     GetName().Get(), uint32_t( t.GetElapsedMS() ), cacheFileName.Get() );
     }
 }
 
@@ -1476,29 +1480,32 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     // we combine everything into one string to ensure it is contiguous in
     // the output
     AStackString<> output;
-    output += "Obj: ";
-    if ( useDeoptimization )
+    if ( FBuild::IsValid()  && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        output += "**Deoptimized** ";
+        output += "Obj: ";
+        if ( useDeoptimization )
+        {
+            output += "**Deoptimized** ";
+        }
+        output += GetName();
+        if ( racingRemoteJob )
+        {
+            output += " <LOCAL RACE>";
+        }
+        else if ( stealingRemoteJob )
+        {
+            output += " <LOCAL>";
+        }
+        output += '\n';
     }
-    output += GetName();
-    if ( racingRemoteJob )
-    {
-        output += " <LOCAL RACE>";
-    }
-    else if ( stealingRemoteJob )
-    {
-        output += " <LOCAL>";
-    }
-    output += '\n';
-    if ( FLog::ShowInfo() || ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
+    if ( ( FBuild::IsValid() && FBuild::Get().GetOptions().m_ShowCommandLines ) || isRemote )
     {
         output += useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetExecutable().Get() : GetCompiler() ? GetCompiler()->GetExecutable().Get() : "";
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
     }
-    FLOG_BUILD_DIRECT( output.Get() );
+    FLOG_OUTPUT( output );
 }
 
 // StripTokenWithArg
@@ -1582,6 +1589,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         m_CompilerOptions.Tokenize( tokens );
     }
     fullArgs.Clear();
+
+    // Get base path if needed
+    AStackString<> basePath;
+    const bool useRelativePaths = job->IsLocal() && // TODO:C We'd want to support this remotely as well
+                                  job->GetNode()->CastTo<ObjectNode>()->GetCompiler()->GetUseRelativePaths();
+    if ( useRelativePaths )
+    {
+        basePath = FBuild::Get().GetOptions().GetWorkingDir(); // NOTE: FBuild only valid locally
+        PathUtils::EnsureTrailingSlash( basePath );
+    }
 
     const bool isMSVC           = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_MSVC ) : GetFlag( FLAG_MSVC );
     const bool isClang          = ( useDedicatedPreprocessor ) ? GetPreprocessorFlag( FLAG_CLANG ) : GetFlag( FLAG_CLANG );
@@ -1825,7 +1842,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             fullArgs += AStackString<>( token.Get(), found );
             if ( overrideSrcFile.IsEmpty() )
             {
-                fullArgs += GetSourceFile()->GetName();
+                if ( useRelativePaths )
+                {
+                    AStackString<> relativeFileName;
+                    PathUtils::GetRelativePath( basePath, GetSourceFile()->GetName(), relativeFileName );
+                    fullArgs += relativeFileName;
+                }
+                else
+                {
+                    fullArgs += GetSourceFile()->GetName();
+                }
             }
             else
             {
@@ -1841,7 +1867,16 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
         if ( found )
         {
             fullArgs += AStackString<>( token.Get(), found );
-            fullArgs += m_Name;
+            if ( useRelativePaths )
+            {
+                AStackString<> relativeFileName;
+                PathUtils::GetRelativePath( basePath, m_Name, relativeFileName );
+                fullArgs += relativeFileName;
+            }
+            else
+            {
+                fullArgs += m_Name;
+            }
             fullArgs += AStackString<>( found + 2, token.GetEnd() );
             fullArgs.AddDelimiter();
             continue;
@@ -2447,11 +2482,30 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     // Handle special types of failures
     HandleSystemFailures( job, m_Result, m_Out.Get(), m_Err.Get() );
 
-    // output any errors (even if succeeded, there might be warnings)
-    if ( m_HandleOutput && m_Err.Get() )
+    if ( m_HandleOutput )
     {
-        const bool treatAsWarnings = true; // change msg formatting
-        DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
+        if ( job->IsLocal() && FBuild::Get().GetOptions().m_ShowCommandOutput )
+        {
+            // Suppress /showIncludes - TODO:C leave in if user specified it
+            StackArray< AString > exclusions;
+            if ( ( compilerNode->GetCompilerFamily() == CompilerNode::CompilerFamily::MSVC ) &&
+                ( fullArgs.GetFinalArgs().Find( " /showIncludes" ) ) )
+            {
+                exclusions.EmplaceBack( "Note: including file:" );
+            }
+
+            if ( m_Out.Get() ) { Node::DumpOutput( job, m_Out.Get(), m_OutSize, &exclusions ); }
+            if ( m_Err.Get() ) { Node::DumpOutput( job, m_Err.Get(), m_ErrSize, &exclusions ); }
+        }
+        else
+        {
+            // output any errors (even if succeeded, there might be warnings)
+            if ( m_Err.Get() )
+            {
+                const bool treatAsWarnings = true; // change msg formatting
+                DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
+            }
+        }
     }
 
     // failed?
@@ -2780,7 +2834,7 @@ void ObjectNode::DoClangUnityFixup( Job * job ) const
     // Find the first instance of the primary filename (this ensured we ignore any
     // injected "-include" stuff before that)
     char * pos = strstr( (char *)job->GetData(), srcFileName.Get() );
-    ASSERT( pos );
+    ASSERT( pos ); // TODO:A This fails because the path is now relative
 
     // Find top-level push/pop pairs. We don't want mess with nested directives
     // as these can be meaningful in other ways.

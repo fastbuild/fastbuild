@@ -46,6 +46,7 @@ uint32_t g_ReportNodeColors[] = {
                                   0x77DDAA, // XCODEPROJECT_NODE
                                   0x000000, // SETTINGS_NODE (never seen)
                                   0xFFFFFF, // VSPROJEXTERNAL_NODE
+                                  0xFFFFFF, // TEXT_FILE_NODE
                                 };
 
 // CONSTRUCTOR
@@ -1093,7 +1094,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
     uint32_t key = ( hash & 0xFFFF );
 
     // insert new item
-    IncludeStats * newStats = (IncludeStats *)m_Pool.Alloc( sizeof( IncludeStats ) );
+    IncludeStats * newStats = (IncludeStats *)m_Pool.Alloc();
     newStats->node = node;
     newStats->count = 0;
     newStats->inPCH = false;

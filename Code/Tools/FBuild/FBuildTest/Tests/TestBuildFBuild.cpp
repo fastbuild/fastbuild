@@ -175,7 +175,7 @@ void TestBuildFBuild::DBSavePerformance() const
     MemoryStream ms( 64 * 1024 * 1024, 1024 * 1024 );
 
     Timer t;
-    for ( size_t i=0; i<100; ++i )
+    for ( size_t i = 0; i < 100; ++i )
     {
         ms.Reset();
         fBuild.SaveDependencyGraph( ms, "unused.fdb" );

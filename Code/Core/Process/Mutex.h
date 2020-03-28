@@ -47,6 +47,7 @@ public:
     {
         m_Mutex.Unlock();
     }
+
 private:
     MutexHolder( const MutexHolder & other ) = delete;
     void operator = ( MutexHolder & ) = delete;

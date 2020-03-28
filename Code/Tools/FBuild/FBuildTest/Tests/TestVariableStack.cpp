@@ -97,7 +97,7 @@ void TestVariableStack::TestStackFramesOverride() const
 //------------------------------------------------------------------------------
 void TestVariableStack::TestStackFramesParent() const
 {
-    const BFFVariable *v = nullptr;
+    const BFFVariable * v = nullptr;
 
     // a stack frame with a variable
     BFFStackFrame sf1;

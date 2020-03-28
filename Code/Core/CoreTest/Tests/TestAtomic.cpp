@@ -30,7 +30,7 @@
         AtomicIncU32( &data.m_BarrierCounter );                                                 \
         while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}                           \
                                                                                                 \
-        for ( size_t i=0; i<1000000; ++i )                                                      \
+        for ( size_t i = 0; i < 1000000; ++i )                                                  \
         {                                                                                       \
             function( &data.m_Count );                                                          \
         }                                                                                       \
@@ -50,7 +50,7 @@
         AtomicIncU32( &data.m_BarrierCounter );                                                 \
         while ( AtomicLoadAcquire( &data.m_BarrierCounter ) != 2 ) {}                           \
                                                                                                 \
-        for ( size_t i=0; i<1000000; ++i )                                                      \
+        for ( size_t i = 0; i < 1000000; ++i )                                                  \
         {                                                                                       \
             function( &data.m_Count );                                                          \
         }                                                                                       \

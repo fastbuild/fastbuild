@@ -263,7 +263,10 @@ void ProjectGeneratorBase::AddConfig( const ProjectGeneratorBaseConfig & config 
 //------------------------------------------------------------------------------
 /*static*/ bool ProjectGeneratorBase::WriteToDisk( const char * generatorId, const AString & content, const AString & fileName )
 {
-    FLOG_BUILD( "%s: %s\n", generatorId, fileName.Get() );
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        FLOG_OUTPUT( "%s: %s\n", generatorId, fileName.Get() );
+    }
 
     // ensure path exists (normally handled by framework, but Projects
     // are not necessarily a single file)

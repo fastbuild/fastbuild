@@ -4,6 +4,7 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Tools/FBuild/FBuildCore/BFF/BFFFileExists.h"
 #include "Tools/FBuild/FBuildCore/Helpers/SLNGenerator.h"
 #include "Tools/FBuild/FBuildCore/Helpers/VSProjectGenerator.h"
 
@@ -37,6 +38,7 @@ class RemoveDirNode;
 class SettingsNode;
 class SLNNode;
 class TestNode;
+class TextFileNode;
 class UnityNode;
 class VCXProjectNode;
 class VSProjectExternalNode;
@@ -56,7 +58,7 @@ public:
     }
     inline ~NodeGraphHeader() = default;
 
-    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 142 };
+    enum : uint8_t { NODE_GRAPH_CURRENT_VERSION = 145 };
 
     bool IsValid() const
     {
@@ -125,6 +127,7 @@ public:
     ObjectListNode * CreateObjectListNode( const AString & listName );
     XCodeProjectNode * CreateXCodeProjectNode( const AString & name );
     SettingsNode * CreateSettingsNode( const AString & name );
+    TextFileNode * CreateTextFileNode( const AString & name );
 
     void DoBuildPass( Node * nodeToBuild );
 

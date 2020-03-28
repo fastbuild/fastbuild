@@ -244,7 +244,7 @@ VCXProjectNode::~VCXProjectNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult VCXProjectNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult VCXProjectNode::DoBuild( Job * /*job*/ )
 {
     VSProjectGenerator pg;
     pg.SetBasePaths( m_ProjectBasePaths );
@@ -345,7 +345,10 @@ bool VCXProjectNode::Save( const AString & content, const AString & fileName ) c
         return true; // nothing to do.
     }
 
-    FLOG_BUILD( "VCXProj: %s\n", fileName.Get() );
+    if ( FBuild::Get().GetOptions().m_ShowCommandSummary )
+    {
+        FLOG_OUTPUT( "VCXProj: %s\n", fileName.Get() );
+    }
 
     // actually write
     FileStream f;

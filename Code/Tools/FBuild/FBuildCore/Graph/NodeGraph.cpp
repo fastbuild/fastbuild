@@ -29,6 +29,7 @@
 #include "SettingsNode.h"
 #include "SLNNode.h"
 #include "TestNode.h"
+#include "TextFileNode.h"
 #include "UnityNode.h"
 #include "VCXProjectNode.h"
 #include "VSProjectExternalNode.h"
@@ -276,7 +277,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         {
             if ( !bffNeedsReparsing )
             {
-                FLOG_INFO( "BFF file '%s' missing or unopenable (reparsing will occur).", fileName.Get() );
+                FLOG_VERBOSE( "BFF file '%s' missing or unopenable (reparsing will occur).", fileName.Get() );
                 bffNeedsReparsing = true;
             }
             continue; // not opening the file is not an error, it could be not needed anymore
@@ -397,6 +398,20 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         }
     }
 
+    // Files use in file_exists checks
+    BFFFileExists fileExistsInfo;
+    if ( fileExistsInfo.Load( stream ) == false )
+    {
+        return LoadResult::LOAD_ERROR;
+    }
+    bool added;
+    const AString * changedFile = fileExistsInfo.CheckForChanges( added );
+    if ( changedFile )
+    {
+        FLOG_WARN( "File used in file_exists was %s '%s' - BFF will be re-parsed\n", added ? "added" : "removed", changedFile->Get() );
+        bffNeedsReparsing = true;
+    }
+
     ASSERT( m_AllNodes.GetSize() == 0 );
 
     // Read nodes
@@ -433,6 +448,9 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
 
     // Everything OK - propagate global settings
     //------------------------------------------------
+
+    // file_exists files
+    FBuild::Get().GetFileExistsInfo() = fileExistsInfo;
 
     // Environment
     if ( envStringSize > 0 )
@@ -539,6 +557,9 @@ void NodeGraph::Save( IOStream & stream, const char* nodeGraphDBFile ) const
         const uint32_t libEnvVarHash = GetLibEnvVarHash();
         stream.Write( libEnvVarHash );
     }
+
+    // Write file_exists tracking info
+    FBuild::Get().GetFileExistsInfo().Save( stream );
 
     // Write nodes
     size_t numNodes = m_AllNodes.GetSize();
@@ -996,6 +1017,19 @@ SettingsNode * NodeGraph::CreateSettingsNode( const AString & name )
     return node;
 }
 
+// CreateTextFileNode
+//------------------------------------------------------------------------------
+TextFileNode* NodeGraph::CreateTextFileNode( const AString& nodeName )
+{
+    ASSERT( Thread::IsMainThread() );
+    ASSERT( IsCleanPath( nodeName ) );
+
+    TextFileNode* node = FNEW( TextFileNode() );
+    node->SetName( nodeName );
+    AddNode( node );
+    return node;
+}
+
 // AddNode
 //------------------------------------------------------------------------------
 void NodeGraph::AddNode( Node * node )
@@ -1152,6 +1186,12 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
             // Explicitly mark node in a way that will result in it rebuilding should
             // we cancel the build before builing this node
+            if ( nodeToBuild->m_Stamp == 0 )
+            {
+                // Note that this is the first time we're building (since Node can't check
+                // stamp as we clear it below)
+                nodeToBuild->SetStatFlag( Node::STATS_FIRST_BUILD );
+            }
             nodeToBuild->m_Stamp = 0;
 
             // Regenerate dynamic dependencies
@@ -1194,7 +1234,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     }
     else
     {
-        FLOG_INFO("Up-To-Date '%s'", nodeToBuild->GetName().Get());
+        FLOG_VERBOSE( "Up-To-Date '%s'", nodeToBuild->GetName().Get() );
         nodeToBuild->SetState( Node::UP_TO_DATE );
     }
 }

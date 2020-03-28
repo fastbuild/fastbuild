@@ -18,7 +18,7 @@
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
 FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
-: Node( fileName, Node::FILE_NODE, controlFlags )
+    : Node( fileName, Node::FILE_NODE, controlFlags )
 {
     ASSERT( fileName.EndsWith( "\\" ) == false );
     #if defined( __WINDOWS__ )
@@ -43,7 +43,7 @@ FileNode::~FileNode() = default;
 
 // DoBuild
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult FileNode::DoBuild( Job * UNUSED( job ) )
+/*virtual*/ Node::BuildResult FileNode::DoBuild( Job * /*job*/ )
 {
     // NOTE: Not calling RecordStampFromBuiltFile as this is not a built file
     m_Stamp = FileIO::GetFileLastWriteTime( m_Name );

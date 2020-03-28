@@ -233,7 +233,7 @@ void WorkerBrokerage::SetAvailability(bool available)
                 switch ( workerSettings.GetMode() )
                 {
                     case WorkerSettings::DISABLED:      buffer += "Mode: disabled\n";     break;
-                    case WorkerSettings::WHEN_IDLE:     buffer += "Mode: idle\n";         break;
+                    case WorkerSettings::WHEN_IDLE:     buffer.AppendFormat( "Mode: idle @ %u%%\n", workerSettings.GetIdleThresholdPercent() ); break;
                     case WorkerSettings::DEDICATED:     buffer += "Mode: dedicated\n";    break;
                     case WorkerSettings::PROPORTIONAL:  buffer += "Mode: proportional\n"; break;
                 }
@@ -241,12 +241,13 @@ void WorkerBrokerage::SetAvailability(bool available)
                 // Create/write file which signifies availability
                 FileIO::EnsurePathExists( m_BrokerageRoots[0] );
                 FileStream fs;
-                fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY );
-                fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
+                if (fs.Open( m_BrokerageFilePath.Get(), FileStream::WRITE_ONLY ))
+                {
+                    fs.WriteBuffer( buffer.Get(), buffer.GetLength() );
 
-                // Take note of time we wrote the settings
-                m_SettingsWriteTime = settingsWriteTime;
-
+                    // Take note of time we wrote the settings
+                    m_SettingsWriteTime = settingsWriteTime;
+                }
             }
             
             // Restart the timer
