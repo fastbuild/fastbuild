@@ -163,8 +163,9 @@ SLNNode::SLNNode()
         {
             // Merge list of projects
             found->m_Projects.Append( folder.m_Projects );
+            
             // Merge list of items
-            found->m_Items.Append(folder.m_Items);
+            found->m_Items.Append( folder.m_Items );
         }
         else
         {

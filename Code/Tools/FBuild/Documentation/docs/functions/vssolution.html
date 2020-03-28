@@ -69,8 +69,8 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
 //---------------------------------------------------
 [
   .Path                               // Folder path in Solution
-  .Projects                           // Project(s) to represent in this folder
-  .Items                              // Solution Item(s) (files) to represent in this folder
+  .Projects                           // (optional) Project(s) to include in this folder
+  .Items                              // (optional) Solution Item(s) (files) to include in this folder
 ]
 
 // SolutionDependencies - structs in the following format
@@ -167,7 +167,7 @@ Generates a Solution file for use with Visual Studio, allowing integration of FA
       
       <p><b>.SolutionFolders</b> - Array of SolutionFolder Structure(s) - (Optional)</p>
       <p>Projects and solution items within a Solution can be organized into folders. Folders may
-	  contain projects and/or items, or even none of them, then they will appear empty.</p>
+	  contain projects and/or items, or can be empty.</p>
       Example:
       <div class='code'>.FolderA =
 [

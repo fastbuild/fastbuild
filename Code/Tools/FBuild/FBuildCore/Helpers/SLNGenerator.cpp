@@ -50,7 +50,7 @@ const AString & SLNGenerator::GenerateSLN( const AString & solutionFile,
     // construct sln file
     WriteHeader( solutionVisualStudioVersion, solutionMinimumVisualStudioVersion );
     WriteProjectListings( solutionBasePath, projects, solutionFolders, solutionDependencies, solutionProjectsToFolder );
-    WriteSolutionFolderListings(solutionBasePath, solutionFolders, solutionFolderPaths );
+    WriteSolutionFolderListings( solutionBasePath, solutionFolders, solutionFolderPaths );
     Write( "Global\r\n" );
     WriteSolutionConfigurationPlatforms( solutionConfigs );
     WriteProjectConfigurationPlatforms( solutionConfigs, projects );
@@ -191,7 +191,7 @@ void SLNGenerator::WriteProjectListings( const AString& solutionBasePath,
 
 // WriteSolutionFolderListings
 //------------------------------------------------------------------------------
-void SLNGenerator::WriteSolutionFolderListings( const AString& solutionBasePath,
+void SLNGenerator::WriteSolutionFolderListings( const AString & solutionBasePath,
                                                 const Array< SolutionFolder > & solutionFolders,
                                                 Array< AString > & solutionFolderPaths )
 {
@@ -237,28 +237,28 @@ void SLNGenerator::WriteSolutionFolderListings( const AString& solutionBasePath,
                solutionFolderName, solutionFolderName, solutionFolderGuid.Get() );
 
         // lookup solution folder to find out if it contains items
-        for (const SolutionFolder& solutionFolder : solutionFolders)
+        for ( const SolutionFolder& solutionFolder : solutionFolders )
         {
-            if (solutionFolderPath.Compare(solutionFolder.m_Path) == 0)
+            if ( solutionFolderPath.EqualsI( solutionFolder.m_Path ) )
             {
-                if (solutionFolder.m_Items.GetSize() > 0)
+                if ( solutionFolder.m_Items.IsEmpty() == false )
                 {
                     // make a local copy (to sort before writing to SLN, as Visual Studio will keep doing that after opening it):
                     Array< AString > items;
-                    items.Append(solutionFolder.m_Items);
+                    items.Append( solutionFolder.m_Items );
                     items.Sort();
-                    Write("\tProjectSection(SolutionItems) = preProject\r\n");
-                    for (const AString& item : items)
+                    Write( "\tProjectSection(SolutionItems) = preProject\r\n" );
+                    for ( const AString & item : items )
                     {
                         // make item path relative
                         AStackString<> itemRelativePath;
-                        ProjectGeneratorBase::GetRelativePath(solutionBasePath, item, itemRelativePath);
+                        ProjectGeneratorBase::GetRelativePath( solutionBasePath, item, itemRelativePath );
                         #if !defined( __WINDOWS__ )
-                            itemRelativePath.Replace('/', '\\'); // Convert to Windows-style slashes
+                            itemRelativePath.Replace( '/', '\\' ); // Convert to Windows-style slashes
                         #endif
-                        Write("\t\t%s = %s\r\n", itemRelativePath.Get(), itemRelativePath.Get());
+                        Write( "\t\t%s = %s\r\n", itemRelativePath.Get(), itemRelativePath.Get() );
                     }
-                    Write("\tEndProjectSection\r\n");
+                    Write( "\tEndProjectSection\r\n" );
                 }
             }
         }

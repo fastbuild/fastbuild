@@ -1182,29 +1182,28 @@ void TestProjectGeneration::Solution_BuildAndDeploy_PerSolutionConfig() const
 //------------------------------------------------------------------------------
 void TestProjectGeneration::Solution_Items() const
 {
-    AStackString<> solution("../tmp/Test/ProjectGeneration/Solution_Items/soution_with_items.sln");
+    const AStackString<> solution( "../tmp/Test/ProjectGeneration/Solution_Items/solution_with_items.sln" );
 
     // Initialize
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestProjectGeneration/Solution_Items/fbuild.bff";
-    options.m_ForceCleanBuild = true;
-    FBuild fBuild(options);
-    TEST_ASSERT(fBuild.Initialize());
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
 
     // Delete old files from previous runs
-    EnsureFileDoesNotExist(solution);
+    EnsureFileDoesNotExist( solution );
 
     // do build
-    TEST_ASSERT(fBuild.Build("Solution_with_items"));
+    TEST_ASSERT( fBuild.Build( "Solution_with_items" ) );
 
     //
-    EnsureFileExists(solution);
+    EnsureFileExists( solution );
 
     // Check stats
     //               Seen,  Built,  Type
-    CheckStatsNode(1, 1, Node::SLN_NODE);
-    CheckStatsNode(1, 1, Node::ALIAS_NODE);
-    CheckStatsTotal(6, 6);
+    CheckStatsNode(  1,     1,      Node::SLN_NODE );
+    CheckStatsNode(  1,     1,      Node::ALIAS_NODE );
+    CheckStatsTotal( 6,     6 );
 }
 
 
