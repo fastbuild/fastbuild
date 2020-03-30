@@ -2565,6 +2565,11 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
             job->Error( "Remote failure: STATUS_INVALID_IMAGE_FORMAT (0xC000007B) - Check Compiler() settings!\n" );
             return;
         }
+        if ( (uint32_t)result == 0xC0000135 ) // STATUS_DLL_NOT_FOUND
+        {
+            job->Error( "Remote failure: STATUS_DLL_NOT_FOUND (0xC0000135) - Check Compiler() settings!\n" );
+            return;
+        }
 
         const ObjectNode * objectNode = job->GetNode()->CastTo< ObjectNode >();
 

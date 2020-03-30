@@ -227,7 +227,7 @@ This results in very unintuitive compile errors.</p>
 <div id='compiler' class='newsitemheader'>Examples</div>
     <div class='newsitembody'>
 
-<b>MSVC - 2019 (v16.2)</b>
+<b>MSVC - 2019 (v16.5.1)</b>
 <div class='code'>// VisualStudio 2019 x64 Compiler
 .VS2017_BasePath         = 'C:\Program Files (x86)\Microsoft Visual Studio\2017\2017\Community'
 .VS2017_Version          = '14.16.27023'
@@ -247,6 +247,7 @@ Compiler( 'Compiler-VS2017-x64' )
                     '$Root$/msvcp140.dll'
                     '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
                     '$Root$/vcruntime140.dll'
+                    '$Root$/vcruntime140_1.dll' // Required as of 16.5.1 (14.25.28610)
                     '$Root$/1033/clui.dll'
                     '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
                   }

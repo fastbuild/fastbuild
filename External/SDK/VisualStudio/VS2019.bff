@@ -1,7 +1,7 @@
 // Visual Studio 2019
 //------------------------------------------------------------------------------
 .VS2019_BasePath         = '$_CURRENT_BFF_DIR_$/2019/Community'
-.VS2019_Version          = '14.22.27905'
+.VS2019_Version          = '14.25.28610'
 .VS2019_ToolchainPath    = '$VS2019_BasePath$/VC/Tools/MSVC/$VS2019_Version$'
 
 // X64 Compiler
@@ -21,6 +21,7 @@ Compiler( 'Compiler-VS2019-x64' )
                     '$Root$/msvcp140.dll'
                     '$Root$/tbbmalloc.dll' // Required as of 16.2 (14.22.27905)
                     '$Root$/vcruntime140.dll'
+                    '$Root$/vcruntime140_1.dll' // Required as of 16.5.1 (14.25.28610)
                     '$Root$/1033/clui.dll'
                     '$Root$/1033/mspft140ui.dll' // Localized messages for static analysis
                   }
