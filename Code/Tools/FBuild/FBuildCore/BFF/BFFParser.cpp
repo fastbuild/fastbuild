@@ -292,7 +292,8 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
     // Check this is an operator we support
     if ( ( opToken->IsOperator( BFF_VARIABLE_ASSIGNMENT ) == false ) &&
          ( opToken->IsOperator( BFF_VARIABLE_CONCATENATION ) == false ) &&
-         ( opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) == false ) )
+         ( opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) == false ) &&
+         ( opToken->IsOperator( BFF_VARIABLE_ASSIGNMENT_OPTIONAL ) == false ) )
     {
         Error::Error_1034_OperationNotSupported( opToken, BFFVariable::VAR_ANY, BFFVariable::VAR_ANY, opToken );
         return false;
@@ -300,13 +301,14 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
 
     // What operator type is this?
     const bool concat = opToken->IsOperator( BFF_VARIABLE_CONCATENATION );
+    const bool optional = opToken->IsOperator( BFF_VARIABLE_ASSIGNMENT_OPTIONAL );
     const bool subtract = opToken->IsOperator( BFF_VARIABLE_SUBTRACTION );
 
     const BFFToken * rhsToken = iter.GetCurrent();
     if ( rhsToken->IsString() )
     {
         iter++; // Consume the rhs
-        return StoreVariableString( varName, rhsToken, opToken, frame );
+        return StoreVariableString( varName, rhsToken, opToken, frame, optional );
     }
     else if ( rhsToken->IsCurlyBracket( '{' ) ) // Open Scope
     {
@@ -315,7 +317,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
         {
             return false; // FindBracedRange will have emitted an error
         }
-        return StoreVariableArray( varName, bracedRange, opToken, frame );
+        return StoreVariableArray( varName, bracedRange, opToken, frame, optional );
     }
     else if ( rhsToken->IsSquareBracket( '[' ) ) // Open Struct
     {
@@ -324,7 +326,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
         {
             return false; // FindBracedRange will have emitted an error
         }
-        return StoreVariableStruct( varName, bracedRange, opToken, frame );
+        return StoreVariableStruct( varName, bracedRange, opToken, frame, optional );
     }
     else if ( rhsToken->IsNumber() )
     {
@@ -360,7 +362,7 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
         {
             newVal = i;
         }
-        return StoreVariableInt( varName, newVal, frame );
+        return StoreVariableInt( varName, newVal, frame, optional );
     }
     else if ( rhsToken->IsBooelan() )
     {
@@ -386,12 +388,12 @@ bool BFFParser::ParseVariableDeclaration( BFFTokenRange & iter, const AString & 
 
         iter++; // Consume the rhs
 
-        return StoreVariableBool( varName, rhsToken->GetBoolean(), frame );
+        return StoreVariableBool( varName, rhsToken->GetBoolean(), frame, optional );
     }
     else if ( rhsToken->IsVariable() )
     {
         iter++; // Consume the rhs
-        return StoreVariableToVariable( varName, rhsToken, opToken, frame );
+        return StoreVariableToVariable( varName, rhsToken, opToken, frame, optional );
     }
 
     Error::Error_1017_UnexepectedCharInVariableValue( rhsToken );
@@ -575,10 +577,17 @@ bool BFFParser::FindBracedRangeRecurse( BFFTokenRange & iter ) const
 bool BFFParser::StoreVariableString( const AString & name,
                                      const BFFToken * rhsString,
                                      const BFFToken * opToken,
-                                     BFFStackFrame * frame )
+                                     BFFStackFrame * frame,
+                                     bool optional )
 {
     ASSERT( rhsString->IsString() );
     ASSERT( opToken->IsOperator() );
+
+    if ( optional && BFFStackFrame::GetVar( name ) != nullptr )
+    {
+        FLOG_INFO( "Skipped registration of optional <String> variable '%s'", name.Get() );
+        return true;
+    }
 
     // unescape and subsitute embedded variables
     AStackString< 2048 > value;
@@ -689,11 +698,18 @@ bool BFFParser::StoreVariableString( const AString & name,
 bool BFFParser::StoreVariableArray( const AString & name,
                                     const BFFTokenRange & tokenRange,
                                     const BFFToken * opToken,
-                                    BFFStackFrame * frame )
+                                    BFFStackFrame * frame,
+                                    bool optional )
 {
     ASSERT( opToken->IsOperator( BFF_VARIABLE_ASSIGNMENT ) ||
             opToken->IsOperator( BFF_VARIABLE_CONCATENATION ) ||
             opToken->IsOperator( BFF_VARIABLE_SUBTRACTION ) );
+
+    if ( optional && BFFStackFrame::GetVar( name ) != nullptr )
+    {
+        FLOG_INFO( "Skipped registration of optional <Array> variable '%s'", name.Get() );
+        return true;
+    }
 
     StackArray<AString> values;
     StackArray<const BFFVariable *> structValues;
@@ -938,9 +954,15 @@ bool BFFParser::StoreVariableArray( const AString & name,
 bool BFFParser::StoreVariableStruct( const AString & name,
                                      const BFFTokenRange & tokenRange,
                                      const BFFToken * operatorToken,
-                                     BFFStackFrame * frame )
+                                     BFFStackFrame * frame,
+                                     bool optional )
 {
-    // find existing
+    if ( optional && BFFStackFrame::GetVar( name ) != nullptr )
+    {
+        FLOG_INFO( "Skipped registration of optional <Struct> variable '%s'", name.Get() );
+        return true;
+    }
+
     const BFFVariable * var = BFFStackFrame::GetVar( name, frame );
 
     // are we concatenating?
@@ -984,27 +1006,44 @@ bool BFFParser::StoreVariableStruct( const AString & name,
 
 // StoreVariableBool
 //------------------------------------------------------------------------------
-bool BFFParser::StoreVariableBool( const AString & name, bool value, BFFStackFrame * frame )
+bool BFFParser::StoreVariableBool( const AString & name, bool value, BFFStackFrame * frame, bool optional )
 {
+    if ( optional && BFFStackFrame::GetVar( name ) != nullptr )
+    {
+        FLOG_INFO( "Skipped registration of optional <Bool> variable '%s'", name.Get() );
+        return true;
+    }
+
     // Register this variable
     BFFStackFrame::SetVarBool( name, value, frame );
+
+    FLOG_INFO( "Registered <bool> variable '%s' with value '%s'", name.Get(), value ? "true" : "false" );
 
     return true;
 }
 
 // StoreVariableInt
 //------------------------------------------------------------------------------
-bool BFFParser::StoreVariableInt( const AString & name, int value, BFFStackFrame * frame )
+bool BFFParser::StoreVariableInt( const AString & name, int value, BFFStackFrame * frame, bool optional )
 {
+    if ( optional && BFFStackFrame::GetVar( name ) != nullptr )
+    {
+        FLOG_INFO( "Skipped registration of optional <Int> variable '%s'", name.Get() );
+        return true;
+    }
+
     BFFStackFrame::SetVarInt( name, value, frame );
+    FLOG_INFO( "Registered <int> variable '%s' with value '%i'", name.Get(), value );
 
     return true;
 }
 
 // StoreVariableToVariable
 //------------------------------------------------------------------------------
-bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken * rhsToken, const BFFToken * operatorToken, BFFStackFrame * dstFrame )
+bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken * rhsToken, const BFFToken * operatorToken, BFFStackFrame * dstFrame, bool optional )
 {
+
+    // parse source variable
     AStackString< MAX_VARIABLE_NAME_LENGTH > srcName;
 
     bool srcParentScope = false;
@@ -1032,6 +1071,11 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
 
     // find dst var
     const BFFVariable * varDst = BFFStackFrame::GetVar( dstName, dstFrame );
+    if ( optional && varDst != nullptr )
+    {
+        FLOG_INFO( "Skipped registration of optional variable '%s'", dstName.Get() );
+        return true;
+    }
 
     const char opChar = operatorToken->GetValueString()[ 0 ];
     const bool concat = ( opChar== BFF_VARIABLE_CONCATENATION );
@@ -1273,12 +1317,12 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, const BFFToken
             {
                 newVal = varSrc->GetInt();
             }
-            return StoreVariableInt( dstName, newVal, dstFrame );
+            return StoreVariableInt( dstName, newVal, dstFrame, optional );
         }
 
         if ( ( srcType == BFFVariable::VAR_BOOL ) && !concat && !subtract )
         {
-            return StoreVariableBool( dstName, varSrc->GetBool(), dstFrame );
+            return StoreVariableBool( dstName, varSrc->GetBool(), dstFrame, optional );
         }
 
         if ( ( srcType == BFFVariable::VAR_STRUCT ) && !subtract )
