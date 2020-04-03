@@ -45,19 +45,19 @@ matrix:
     #=====================================================================
     # Linux, Latest supported compilers
     #=====================================================================
-    - os: linux
-      stage: Other
-      name: "Linux GCC8 & Clang8"
-      env: GCC=gcc-8 CLANG=clang-8
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-8
-          packages:
-            - gcc-8
-            - g++-8
-            - clang-8
+    #- os: linux
+    #  stage: Other
+    #  name: "Linux GCC8 & Clang8"
+    #  env: GCC=gcc-8 CLANG=clang-8
+    #  addons:
+    #    apt:
+    #      sources:
+    #        - ubuntu-toolchain-r-test
+    #        - llvm-toolchain-trusty-8
+    #      packages:
+    #        - gcc-8
+    #        - g++-8
+    #        - clang-8
     #=====================================================================
     # Sanitizers
     #=====================================================================
@@ -119,7 +119,7 @@ stages:
   - Compile
   - StaticAnalysis
   - Sanitizers
-  - Other
+  #- Other
 
 install:
   # Download and unpack archive for a release version.
