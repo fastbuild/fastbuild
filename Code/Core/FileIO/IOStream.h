@@ -60,6 +60,8 @@ public:
     // manage memory-mapped aligned data
     void AlignRead( size_t alignment );
     void AlignWrite( size_t alignment );
+
+    bool ReadLines( Array< AString > & lines );
 };
 
 // Read ( Array< T > )

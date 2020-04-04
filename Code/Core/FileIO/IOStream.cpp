@@ -58,4 +58,70 @@ void IOStream::AlignWrite( size_t alignment )
     ASSERT( ( Tell() % alignment ) == 0 );
 }
 
+// AlignWrite
+//------------------------------------------------------------------------------
+bool IOStream::ReadLines( Array< AString > & lines )
+{
+    const uint64_t size = GetFileSize();
+
+    const int bufferSize = 2048;
+    char buffer[2048];
+
+    uint64_t start = Tell();
+    uint64_t i = start;
+    for ( ; i<size ; ++i )
+    {
+        int8_t ch;
+        Read( ch );
+
+        uint64_t stop = start;
+
+        if ( ch  == '\n' || ch == '\r' )
+        {
+            stop = i;
+
+            if ( ch == '\r' )
+            {
+                Read( ch );
+                if ( ch != '\n' )
+                {
+                    Seek( i );
+                }
+                else
+                {
+                    i++;
+                }
+            }
+        }
+
+        ASSERT( start<=stop );
+
+        if ( start < stop )
+        {
+            const int b = int( stop - start );
+            lines.Append( AString( &buffer[0], &buffer[b] ) );
+            start = i+1;
+        }
+        else
+        {
+            const int b = int( i - start );
+            if ( b >= bufferSize )
+            {
+                ASSERT( false );
+                return false;
+            }
+
+            buffer[b] = char(ch);
+        }
+    }
+
+    if (start < i)
+    {
+        const int b = int( i - start );
+        lines.Append( AString( &buffer[0], &buffer[b] ) );
+    }
+
+    return true;
+}
+
 //------------------------------------------------------------------------------

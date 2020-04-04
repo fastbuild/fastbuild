@@ -37,20 +37,27 @@ public:
         FileAndOrigin()
             : m_Info( nullptr )
             , m_DirListOrigin( nullptr )
+            , m_Isolated( false )
         {}
 
         FileAndOrigin( FileIO::FileInfo * info, DirectoryListNode * dirListOrigin )
             : m_Info( info )
             , m_DirListOrigin( dirListOrigin )
+            , m_Isolated( false )
         {}
 
         inline const AString &              GetName() const             { return m_Info->m_Name; }
         inline bool                         IsReadOnly() const          { return m_Info->IsReadOnly(); }
         inline const DirectoryListNode *    GetDirListOrigin() const    { return m_DirListOrigin; }
 
+        inline bool                         IsIsolated() const          { return m_Isolated; }
+        inline void                         SetIsolated( bool value )   { m_Isolated = value; }
+
+
     protected:
         FileIO::FileInfo *      m_Info;
         DirectoryListNode *     m_DirListOrigin;
+        bool                    m_Isolated;
     };
     inline const Array< FileAndOrigin > & GetIsolatedFileNames() const { return m_IsolatedFiles; }
 
@@ -62,6 +69,7 @@ private:
     virtual bool IsAFile() const override { return false; }
 
     bool GetFiles( Array< FileAndOrigin > & files );
+    bool GetIsolatedFilesFromList( Array< AString > & files ) const;
     void FilterForceIsolated( Array< FileAndOrigin > & files, Array< FileAndOrigin > & isolatedFiles );
 
     // Exposed properties
@@ -79,6 +87,7 @@ private:
     Array< AString > m_FilesToIsolate;
     bool m_IsolateWritableFiles;
     uint32_t m_MaxIsolatedFiles;
+    AString m_IsolateListFile;
     Array< AString > m_ExcludePatterns;
     Array< FileAndOrigin > m_IsolatedFiles;
     Array< AString > m_PreBuildDependencyNames;
