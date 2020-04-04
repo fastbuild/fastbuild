@@ -95,10 +95,25 @@ UnityNode::UnityNode()
         return false; // GetObjectListNodes will have emitted an error
     }
 
+    Dependencies isolateFileListNodes;
+    if ( m_IsolateListFile.IsEmpty() == false )
+    {
+        if ( !Function::GetFileNode( nodeGraph,
+                                     iter,
+                                     function,
+                                      m_IsolateListFile,
+                                     "UnityInputIsolateListFile",
+                                     isolateFileListNodes ) )
+        {
+            return false; // GetFileNode will have emitted an error
+        }
+    }
+
     ASSERT( m_StaticDependencies.IsEmpty() );
     m_StaticDependencies.Append( dirNodes );
     m_StaticDependencies.Append( objectListNodes );
     m_StaticDependencies.Append( fileNodes );
+    m_StaticDependencies.Append( isolateFileListNodes );
 
     return true;
 }
@@ -454,6 +469,11 @@ bool UnityNode::GetFiles( Array< FileAndOrigin > & files )
                 fi->m_Size = 0;
                 files.EmplaceBack( fi, nullptr );
             }
+        }
+        else if ( node->GetName() == m_IsolateListFile )
+        {
+            // Don't try to compile the UnityInputIsolateListFile
+            continue;
         }
         else if ( node->IsAFile() )
         {
