@@ -1453,7 +1453,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
                                 }
                             }
                         }
-                        else if( !isFullPath )
+                        else if ( !isFullPath )
                         {
                             *dst++ = '.';
                             *dst++ = '.';

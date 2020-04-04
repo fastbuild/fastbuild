@@ -47,7 +47,7 @@ bool PosixMapMemory( const char * name,
         return false;
     }
 
-    if( create )
+    if ( create )
     {
         VERIFY( ftruncate( *mapFile, length ) == 0 );
     }
@@ -84,7 +84,7 @@ SharedMemory::~SharedMemory()
             CloseHandle( m_MapFile );
         }
     #elif defined( __LINUX__ ) || defined( __APPLE__ )
-        if( m_MapFile != -1 )
+        if ( m_MapFile != -1 )
         {
             close( m_MapFile );
             shm_unlink( m_Name.Get() );

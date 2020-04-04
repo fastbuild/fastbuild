@@ -1001,7 +1001,7 @@ void Node::ReplaceDummyName( const AString & newName )
     AStackString<> beforeTag( line.Get(), tag );
 
     const char * openBracket = beforeTag.Find( '(' );
-    if( openBracket == nullptr )
+    if ( openBracket == nullptr )
     {
         return; // failed to find bracket where expected
     }

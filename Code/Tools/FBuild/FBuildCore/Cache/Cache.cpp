@@ -102,9 +102,9 @@ public:
 
     // open output cache (tmp) file
     AStackString<> fullPathTmp( fullPath );
-    fullPathTmp+= ".tmp";
+    fullPathTmp += ".tmp";
     FileStream cacheTmpFile;
-    if( !cacheTmpFile.Open( fullPathTmp.Get(), FileStream::WRITE_ONLY ) )
+    if ( !cacheTmpFile.Open( fullPathTmp.Get(), FileStream::WRITE_ONLY ) )
     {
         return false;
     }

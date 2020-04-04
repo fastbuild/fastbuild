@@ -171,7 +171,7 @@ static FileStream * g_MonitorFileStream = nullptr;
 //------------------------------------------------------------------------------
 /*static*/ void FLog::OutputInternal( const char * type, const char * message )
 {
-    if( type == nullptr )
+    if ( type == nullptr )
     {
         OUTPUT( "%s", message );
         return;

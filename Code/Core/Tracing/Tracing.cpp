@@ -33,7 +33,7 @@
         PROFILE_FUNCTION
 
         const bool messageConsumed = s_Callbacks.DispatchCallbacksDebugSpam( message );
-        if( messageConsumed )
+        if ( messageConsumed )
         {
             return; // Callback swallowed output
         }

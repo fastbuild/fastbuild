@@ -85,7 +85,7 @@
             }
             case WM_COMMAND:
             {
-                if( HIWORD(wParam) == CBN_SELCHANGE )
+                if ( HIWORD(wParam) == CBN_SELCHANGE )
                 {
                     OSDropDown * dropDown = (OSDropDown *)window->GetChildFromHandle((void *)lParam);
                     window->OnDropDownSelectionChanged( dropDown );
