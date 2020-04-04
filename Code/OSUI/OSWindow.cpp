@@ -165,11 +165,11 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         wc.style            = 0;
         wc.lpfnWndProc      = WindowWndProc;
         wc.cbClsExtra       = 0;
-        wc.cbWndExtra       = sizeof(void*); // For GWLP_USERDATA
+        wc.cbWndExtra       = sizeof(void *); // For GWLP_USERDATA
         wc.hInstance        = (HINSTANCE)m_HInstance;
-        wc.hIcon            = (HICON)LoadIcon( (HINSTANCE)m_HInstance, MAKEINTRESOURCE(IDI_MAIN_ICON) );
-        wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
-        wc.hbrBackground    = (HBRUSH)(COLOR_WINDOW);
+        wc.hIcon            = (HICON)LoadIcon( (HINSTANCE)m_HInstance, MAKEINTRESOURCE( IDI_MAIN_ICON ) );
+        wc.hCursor          = LoadCursor( NULL, IDC_ARROW );
+        wc.hbrBackground    = (HBRUSH)( COLOR_WINDOW );
         wc.lpszMenuName     = NULL;
         wc.lpszClassName    = uniqueWindowClass.Get();
         wc.hIconSm          = wc.hIcon;
@@ -191,7 +191,7 @@ void OSWindow::Init( int32_t x, int32_t y, uint32_t w, uint32_t h )
         SetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA, (LONG_PTR)this );
         // User data doesn't take effect until you call SetWindowPos
         VERIFY( SetWindowPos( (HWND)m_Handle, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE ) );
-        ASSERT( this == (void*)GetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA ) );
+        ASSERT( this == (void *)GetWindowLongPtr( (HWND)m_Handle, GWLP_USERDATA ) );
     #elif defined( __OSX__ )
         m_Handle = WindowOSX_Create( this, x, y, w, h );
     #else
@@ -241,7 +241,7 @@ void OSWindow::SetMinimized( bool minimized )
 
 // GetPrimaryScreenWidth
 //------------------------------------------------------------------------------
-/*sttaic*/ uint32_t OSWindow::GetPrimaryScreenWidth()
+/*static*/ uint32_t OSWindow::GetPrimaryScreenWidth()
 {
     #if defined( __WINDOWS__ )
         return (uint32_t)GetSystemMetrics( SM_CXSCREEN );

@@ -109,7 +109,7 @@ void OSDropDown::SetSelectedItem( size_t index )
 size_t OSDropDown::GetSelectedItem() const
 {
     #if defined( __WINDOWS__ )
-        return (size_t)SendMessage((HWND)m_Handle, (UINT)CB_GETCURSEL, (WPARAM)0, (LPARAM)0 );
+        return (size_t)SendMessage( (HWND)m_Handle, (UINT)CB_GETCURSEL, (WPARAM)0, (LPARAM)0 );
     #elif defined( __OSX__ )
         return DropDownOSX_GetSelectedItem( this );
     #else

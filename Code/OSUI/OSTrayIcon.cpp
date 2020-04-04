@@ -36,7 +36,7 @@
 OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
 {
     #if defined( __WINDOWS__ )
-        ZeroMemory( &m_NotifyIconData, sizeof( NOTIFYICONDATA ) );
+        ZeroMemory( &m_NotifyIconData, sizeof(NOTIFYICONDATA) );
         m_NotifyIconData.cbSize = sizeof(NOTIFYICONDATA);
         m_NotifyIconData.hWnd = (HWND)parentWindow->GetHandle();
         m_NotifyIconData.uID = ID_TRAY_APP_ICON;
@@ -44,7 +44,7 @@ OSTrayIcon::OSTrayIcon( OSWindow * parentWindow, const AString & toolTip )
                                   NIF_MESSAGE | // want click msgs
                                   NIF_TIP;      // provide tool tip
         m_NotifyIconData.uCallbackMessage = OSUI_WM_TRAYICON; // Message handled in parentWindow's procedure
-        m_NotifyIconData.hIcon = (HICON)LoadIcon( (HINSTANCE)parentWindow->GetHInstance(), MAKEINTRESOURCE(IDI_TRAY_ICON) );
+        m_NotifyIconData.hIcon = (HICON)LoadIcon( (HINSTANCE)parentWindow->GetHInstance(), MAKEINTRESOURCE( IDI_TRAY_ICON ) );
         ASSERT( m_NotifyIconData.hIcon );
 
         if ( toolTip.IsEmpty() == false )
