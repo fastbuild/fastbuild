@@ -113,12 +113,12 @@
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-OSWindow::OSWindow( void * hInstance ) :
+OSWindow::OSWindow( void * hInstance )
+    : m_Handle( nullptr )
     #if defined( __WINDOWS__ )
-        m_Handle( nullptr ),
-        m_HInstance( hInstance ),
+        , m_HInstance( hInstance )
     #endif
-    m_ChildWidgets( 0, true )
+    , m_ChildWidgets( 0, true )
 {
     #if defined( __WINDOWS__ )
         // Obtain the executable HINSTANCE if not explictily provided
