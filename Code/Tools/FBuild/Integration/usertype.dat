@@ -223,6 +223,7 @@ UnityInputExcludePath
 UnityInputExcludePattern
 UnityInputExcludedFiles
 UnityInputFiles
+UnityInputIsolateListFile
 UnityInputIsolateWritableFiles
 UnityInputIsolateWritableFilesLimit
 UnityInputIsolatedFiles

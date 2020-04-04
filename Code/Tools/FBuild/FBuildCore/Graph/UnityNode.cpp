@@ -145,8 +145,7 @@ UnityNode::~UnityNode()
     // TODO:A Sort files for consistent ordering across file systems/platforms
 
     // get isolated files from list
-    Array< AString > isolatedFilesFromList( 32, true );
-
+    StackArray< AString > isolatedFilesFromList;
     if ( !GetIsolatedFilesFromList( isolatedFilesFromList ) )
     {
         return NODE_RESULT_FAILED; // GetFiles will have emitted an error
@@ -218,14 +217,7 @@ UnityNode::~UnityNode()
             // files read from isolated list are excluded from the unity
             if ( !isolate )
             {
-                for ( const AString& isolatedFile : isolatedFilesFromList )
-                {
-                    if ( isolatedFile == files[ index ].GetName() )
-                    {
-                        isolate = true;
-                        break;
-                    }
-                }
+                isolate = ( isolatedFilesFromList.Find( files[ index ].GetName() ) != nullptr );
             }
 
             if ( isolate )
@@ -233,7 +225,7 @@ UnityNode::~UnityNode()
                 numIsolated++;
                 filesInThisUnity.Top().SetIsolated( true );
 
-                FLOG_OUTPUT( "Isolate file '%s' from unity\n", files[ index ].GetName().Get() );
+                FLOG_VERBOSE( "Isolate file '%s' from unity\n", files[ index ].GetName().Get() );
             }
 
             // count the file, whether we wrote it or not, to keep unity files stable
@@ -570,37 +562,47 @@ void UnityNode::EnumerateInputFiles( void (*callback)( const AString & inputFile
 //------------------------------------------------------------------------------
 bool UnityNode::GetIsolatedFilesFromList( Array< AString > & files ) const
 {
-    bool ok = true;
-
-    if ( !m_IsolateListFile.IsEmpty() && FileIO::FileExists( m_IsolateListFile.Get() ) )
+    if ( m_IsolateListFile.IsEmpty() )
     {
-        FileStream input;
-
-        if ( false == input.Open( m_IsolateListFile.Get() ) )
-        {
-            FLOG_ERROR( "FBuild: Error: Unity can't open isolated list file: '%s'\n", m_IsolateListFile.Get() );
-            ok = false;
-        }
-        else
-        {
-            if ( false == input.ReadLines( files ) )
-            {
-                FLOG_ERROR( "FBuild: Error: Unity failed to read lines from isolated list file: '%s'\n", m_IsolateListFile.Get() );
-                ok = false;
-            }
-            else
-            {
-                FLOG_OUTPUT( "Imported %u isolated files from list '%s'\n", (uint32_t)files.GetSize(), m_IsolateListFile.Get() );
-
-                for ( AString& filename : files )
-                {
-                    NodeGraph::CleanPath( filename );
-                }
-            }
-        }
+        return true; // No list specified so option is disabled
+    }
+    
+    // Open file
+    FileStream input;
+    if ( input.Open( m_IsolateListFile.Get() ) == false )
+    {
+        FLOG_ERROR( "FBuild: Error: Unity can't open isolated list file: '%s'\n", m_IsolateListFile.Get() );
+        return false;
     }
 
-    return ok;
+    // Read file into memory
+    AStackString<> buffer;
+    buffer.SetLength( (uint32_t)input.GetFileSize() );
+    if ( input.ReadBuffer( buffer.Get(), buffer.GetLength() ) != buffer.GetLength() )
+    {
+        FLOG_ERROR( "FBuild: Error: Unity failed to read lines from isolated list file: '%s'\n", m_IsolateListFile.Get() );
+        return false;
+    }
+
+    // Split lines
+    buffer.Replace( '\r', '\n' );
+    buffer.Tokenize( files, '\n' ); // Will discard empty lines
+
+    FLOG_VERBOSE( "Imported %u isolated files from list '%s'\n", (uint32_t)files.GetSize(), m_IsolateListFile.Get() );
+
+    for ( AString & filename : files )
+    {
+        // Remove leading/trailing whitespace
+        filename.TrimEnd( ' ' );
+        filename.TrimEnd( '\t' );
+        filename.TrimStart( ' ' );
+        filename.TrimStart( '\t' );
+
+        // Convert to canonical path
+        NodeGraph::CleanPath( filename );
+    }
+
+    return true;
 }
 
 //------------------------------------------------------------------------------

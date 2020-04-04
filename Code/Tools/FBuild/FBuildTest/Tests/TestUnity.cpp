@@ -39,6 +39,7 @@ private:
     void TestExcludedFiles() const;
     void IsolateFromUnity_Regression() const;
     void UnityInputIsolatedFiles() const;
+    void IsolateListFile() const;
     void ClangStaticAnalysis() const;
     void ClangStaticAnalysis_InjectHeader() const;
 };
@@ -56,6 +57,7 @@ REGISTER_TESTS_BEGIN( TestUnity )
     REGISTER_TEST( TestExcludedFiles )      // Ensure files are correctly excluded
     REGISTER_TEST( IsolateFromUnity_Regression )
     REGISTER_TEST( UnityInputIsolatedFiles )
+    REGISTER_TEST( IsolateListFile )
     REGISTER_TEST( ClangStaticAnalysis )
     REGISTER_TEST( ClangStaticAnalysis_InjectHeader )
 REGISTER_TESTS_END
@@ -345,6 +347,23 @@ void TestUnity::UnityInputIsolatedFiles() const
 {
     FBuildTestOptions options;
     options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/UnityInputIsolatedFiles/fbuild.bff";
+    FBuild fBuild( options );
+    TEST_ASSERT( fBuild.Initialize() );
+    TEST_ASSERT( fBuild.Build( "Compile" ) );
+
+    // Check stats
+    //               Seen,  Built,  Type
+    CheckStatsNode ( 1,     1,      Node::UNITY_NODE );
+    CheckStatsNode ( 2,     2,      Node::OBJECT_NODE );
+    CheckStatsNode ( 1,     1,      Node::OBJECT_LIST_NODE );
+}
+
+// IsolateListFile
+//------------------------------------------------------------------------------
+void TestUnity::IsolateListFile() const
+{
+    FBuildTestOptions options;
+    options.m_ConfigFile = "Tools/FBuild/FBuildTest/Data/TestUnity/IsolateListFile/fbuild.bff";
     FBuild fBuild( options );
     TEST_ASSERT( fBuild.Initialize() );
     TEST_ASSERT( fBuild.Build( "Compile" ) );
